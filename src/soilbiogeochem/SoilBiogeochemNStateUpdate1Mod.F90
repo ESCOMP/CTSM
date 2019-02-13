@@ -121,7 +121,6 @@ contains
 
       ! decomposition fluxes
    if (.not. use_soil_matrixcn) then
-!      print*,'before donor n transfer,source,',nf%decomp_npools_sourcesink_col(1,2,5)
       do k = 1, ndecomp_cascade_transitions
          do j = 1, nlevdecomp
             ! column loop
@@ -136,7 +135,6 @@ contains
       end do
 
 
-!      print*,'after donor n transfer,source,',nf%decomp_npools_sourcesink_col(1,2,5)
       do k = 1, ndecomp_cascade_transitions
          if ( cascade_receiver_pool(k) /= 0 ) then  ! skip terminal transitions
             do j = 1, nlevdecomp
@@ -162,7 +160,6 @@ contains
             end do
          end if
       end do
-!      print*,'after receiver n transfer,source,',nf%decomp_npools_sourcesink_col(1,2,5)
    end if  ! 
 
       if (.not. use_nitrif_denitrif) then

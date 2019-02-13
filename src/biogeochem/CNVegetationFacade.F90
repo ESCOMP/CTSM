@@ -94,6 +94,7 @@ module CNVegetationFacade
   use dynCNDVMod                      , only : dynCNDV_init, dynCNDV_interp
   use CNPrecisionControlMod           , only: CNPrecisionControl
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
+  use GridcellType                    , only : grc
   !
   implicit none
   private
@@ -855,8 +856,8 @@ contains
     call CNDriverNoLeaching(bounds,                                         &
          num_soilc, filter_soilc,                       &
          num_soilp, filter_soilp,                       &
-         num_actfirep, filter_actfirep, &
          num_actfirec, filter_actfirec, &
+         num_actfirep, filter_actfirep, &
          num_pcropp, filter_pcropp, doalb,              &
          this%cnveg_state_inst,                                                        &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst,                           &
@@ -950,8 +951,8 @@ contains
     call CNDriverLeaching(bounds, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
-         num_actfirep, filter_actfirep(1:num_actfirep), &
-         num_actfirec, filter_actfirec(1:num_actfirec), &
+         num_actfirec, filter_actfirec, &
+         num_actfirep, filter_actfirep, &
          waterstatebulk_inst, waterfluxbulk_inst, soilstate_inst, this%cnveg_state_inst, &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
@@ -961,7 +962,6 @@ contains
          this%c13_cnveg_carbonflux_inst,this%c14_cnveg_carbonflux_inst, &
          c13_soilbiogeochem_carbonstate_inst,c13_soilbiogeochem_carbonflux_inst,&
          c14_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonflux_inst)
-
     ! Set controls on very low values in critical state variables 
 
     call t_startf('CNPrecisionControl')
@@ -970,14 +970,15 @@ contains
          this%c14_cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
     call t_stopf('CNPrecisionControl')
 
+!    if(bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'before soilprecisioncotrol,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
     call t_startf('SoilBiogeochemPrecisionControl')
     call SoilBiogeochemPrecisionControl(num_soilc, filter_soilc,  &
          soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst,soilbiogeochem_nitrogenstate_inst)
     call t_stopf('SoilBiogeochemPrecisionControl')
+!    if(bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'after soilprecisioncotrol,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
 
     ! Call to all CN summary routines
-
     call  CNDriverSummarizeStates(bounds, &
          num_allc, filter_allc, &
          num_soilc, filter_soilc, &
@@ -1176,7 +1177,7 @@ contains
     real(r8) :: net_carbon_exchange_grc(bounds%begg:bounds%endg)  ! function result: net carbon exchange between land and atmosphere, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for source (gC/m2/s)
     !
     ! !LOCAL VARIABLES:
-
+    integer g
     character(len=*), parameter :: subname = 'get_net_carbon_exchange_grc'
     !-----------------------------------------------------------------------
 

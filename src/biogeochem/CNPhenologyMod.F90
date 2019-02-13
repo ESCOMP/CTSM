@@ -663,7 +663,6 @@ contains
            
          tranr=0.0002_r8   
          ! set carbon fluxes for shifting storage pools to transfer pools 
-!         if(p .eq. 2)print*,'evergreen'
 
          if (use_matrixcn) then    
             matrix_phtransfer(p,ileafst_to_ileafxf_phc)   =  matrix_phtransfer(p,ileafst_to_ileafxf_phc) + tranr/dt
@@ -1042,7 +1041,6 @@ contains
                end if                                                              !mm
 
                ! set onset_flag if critical growing degree-day sum is exceeded
-!               if(p .eq. 8)print*,'onset_gdd',onset_gdd(p),crit_onset_gdd,soilt,fracday
                if (onset_gdd(p) > crit_onset_gdd) then                             !n
                   onset_flag(p) = 1.0_r8
                   dormant_flag(p) = 0.0_r8
@@ -1060,8 +1058,8 @@ contains
                     matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
                     matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt
 
-                    matrix_nphtransfer(p,ileafst_to_ileafxf_phc)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
-                    matrix_nphtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt
+                    matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + fstor2tran/dt
+                    matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + fstor2tran/dt
                     if (woody(ivt(p)) == 1.0_r8) then                               !p
                          matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + fstor2tran/dt
                          matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
@@ -1076,7 +1074,6 @@ contains
                   end if 
 !                  else
                                                                !o
-!                    if(p .eq. 8)print*,'leafc_storage_to_xfer in CNSeasonDecidPhenology',leafc_storage_to_xfer(p),fstor2tran,leafc_storage(p),dt
                     leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
                     frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
                     if (woody(ivt(p)) == 1.0_r8) then                                !q
@@ -1435,7 +1432,6 @@ contains
                ! then test for soil temperature criteria
 
                ! Adding in Kyla's rainfall trigger when fun on. RF. prec10 (mm/s) needs to be higher than 8mm over 10 days. 
-!               if(p .eq. 8)print*,'onset_swi',onset_swi(p),crit_onset_swi,additional_onset_condition
                if (onset_swi(p) > crit_onset_swi.and. additional_onset_condition)  then
                   onset_flag(p) = 1._r8
               
@@ -1490,7 +1486,6 @@ contains
                      end if
                   end if
 !                 else
-!                  if(p .eq. 8)print*,' leafc_storage_to_xfer in CNStressDecidPhenology',leafc_storage_to_xfer(p),fstor2tran,leafc_storage(p),dt
                   leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
                   frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
                   if (woody(ivt(p)) == 1.0_r8) then
@@ -1609,7 +1604,6 @@ contains
 
                ! reduced the amount of stored carbon flowing to display pool by only counting the delta
                ! between leafc and leafc_store in the flux. RosieF, Nov5 2015. 
-!               if(p .eq. 8)print*,'leafc_storage_to_xfer in CNStreesDeci when onsetflag .ne.1',leafc_storage_to_xfer(p),bgtr(p),leafc_storage(p),leafc(p)
                leafc_storage_to_xfer(p)  = max(0.0_r8,(leafc_storage(p)-leafc(p))) * bgtr(p)
                frootc_storage_to_xfer(p) = max(0.0_r8,(frootc_storage(p)-frootc(p))) * bgtr(p)
                if (use_matrixcn) then
@@ -2604,7 +2598,6 @@ contains
          ! only calculate these fluxes during onset period
          if (onset_flag(p) == 1._r8) then
 
-!            if(p .eq. 8)print*,'onset'
             ! The transfer rate is a linearly decreasing function of time,
             ! going to zero on the last timestep of the onset period
 
@@ -2631,7 +2624,6 @@ contains
                   matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + t1
                end if
             end if
-!         if (p .eq.7)print *, '66666',  matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc),matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn)
 !           else
             leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)
             frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)
@@ -2648,7 +2640,6 @@ contains
                deadcrootn_xfer_to_deadcrootn(p) = t1 * deadcrootn_xfer(p)
             end if
 !            end if ! use_matrixcn
-!            if(p .eq. 8)print*,'leafc_xfer_to_leafc',t1,leafc_xfer(p),leafc_xfer_to_leafc(p)
          end if ! end if onset period
 
          ! calculate the background rate of transfer growth (used for stress
@@ -2656,7 +2647,6 @@ contains
          ! pools should be moved to displayed growth in each timestep.
 
          if (bgtr(p) > 0._r8) then
-!            if(p .eq. 2)print*,'onset background'
             if(use_matrixcn)then
                matrix_phtransfer(p,ileafxf_to_ileaf_phc) = matrix_phtransfer(p,ileafxf_to_ileaf_phc) + 1.0_r8 / dt
                matrix_phtransfer(p,ifrootxf_to_ifroot_phc) = matrix_phtransfer(p,ifrootxf_to_ifroot_phc) + 1.0_r8 / dt
@@ -2675,7 +2665,6 @@ contains
                   matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + 1.0_r8 / dt
                end if
             end if
-!         if (p .eq.7)print *, '77777', matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc), matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn)
 !          else
             leafc_xfer_to_leafc(p)   = leafc_xfer(p) / dt
             frootc_xfer_to_frootc(p) = frootc_xfer(p) / dt
@@ -2691,7 +2680,6 @@ contains
                livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p) / dt
                deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p) / dt
             end if
-!            if(p .eq. 8)print*,'leafc_xfer_to_leafc',leafc_xfer(p),dt,leafc_xfer_to_leafc(p)
 !          end if !use_matrixcn
          end if ! end if bgtr
       end do ! end patch loop
@@ -2840,6 +2828,7 @@ contains
                   if(frootc(p) .gt. 0)then
                      matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
                   end if
+!                  if(p .eq. 10580)print*,'mfroot to litter,phen1',matrix_phtransfer(p,ileaf_to_iout_phc),matrix_phtransfer(p,ifroot_to_iout_phc),leafc_to_litter(p),frootc_to_litter(p),leafc(p), frootc(p)
                end if ! use_matrixcn
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
@@ -2878,6 +2867,7 @@ contains
                   if(frootc(p) .gt. 0)then
                      matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
                   end if
+!                  if(p .eq. 10580)print*,'mfroot to litter,phen2',matrix_phtransfer(p,ifroot_to_iout_phc)
                end if !use_matrixcn
             end if
             
@@ -2896,6 +2886,7 @@ contains
                      if(frootc(p) .gt. 0)then
                         matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
                      end if
+!                     if(p .eq. 10580)print*,'mfroot to litter,phen3',matrix_phtransfer(p,ifroot_to_iout_phc)
                   end if
                end if
             end if 
@@ -3120,6 +3111,7 @@ contains
             if (use_matrixcn) then
                matrix_phtransfer(p,ileaf_to_iout_phc)  = bglfr(p)
                matrix_phtransfer(p,ifroot_to_iout_phc) = bglfr(p)
+!               if(p .eq. 10580)print*,'mfroot to litter,phen4',matrix_phtransfer(p,ifroot_to_iout_phc)
             end if
             if ( use_fun ) then
                leafc_to_litter_fun(p)     = leafc_to_litter(p)
@@ -3305,7 +3297,6 @@ contains
       ! patch loop
       do fp = 1,num_soilp
          p = filter_soilp(fp)
-!        print *, 'ppp',  filter_soilp(fp),ivt(p)
          ! only calculate these fluxes for woody types
          if (woody(ivt(p)) > 0._r8) then
 
@@ -3350,7 +3341,6 @@ contains
 !            if(.not. use_matrixcn)then
             livecrootc_to_deadcrootc(p) = ctovr
             livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p))
-!            if(p .eq. 8)print*,'livecrootc_to_deadcrootc',livecrootc_to_deadcrootc(p),livecrootc(p),lwtop
             if(use_matrixcn)then
                matrix_phtransfer(p,ilivecroot_to_ideadcroot_phc)  = lwtop
                matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = lwtop / deadwdcn(ivt(p))
@@ -3389,7 +3379,6 @@ contains
                
 
          end if
-!         if (p .eq.7)print *, 'TTTTT', matrix_nphtransfer(p,ideadstem,ilivestem), matrix_n2phtransfer(p,ideadstem,ilivestem) 
 
       end do
 
@@ -3530,7 +3519,6 @@ contains
                      phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
                           + leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
 
-!                     if(j .eq. 1)print*,'phenology_c_to_litr_met',phenology_c_to_litr_met_c(c,j),leafc_to_litter(p),lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                      ! leaf litter nitrogen fluxes
                      phenology_n_to_litr_met_n(c,j) = phenology_n_to_litr_met_n(c,j) &
                           + leafn_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)

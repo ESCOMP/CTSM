@@ -11,7 +11,7 @@ module SoilBiogeochemCarbonFluxType
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con 
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
-  use clm_varctl                         , only : use_fates, use_soil_matrixcn
+  use clm_varctl                         , only : use_fates, use_soil_matrixcn, use_vertsoilc
   use SPMMod                             , only : sparse_matrix_type, diag_matrix_type, vector_type
   
   ! 
@@ -206,6 +206,7 @@ contains
 
         Ntrans = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
 !        call this%Asoilc%InitSM                 (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+ndecomp_pools*nlevdecomp)
+        !print*,'before InitAKsoilc',begc,endc
         call this%AKsoilc%InitSM                (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+ndecomp_pools*nlevdecomp)
         call this%AVsoil%InitSM                 (ndecomp_pools*nlevdecomp,begc,endc,decomp_cascade_con%Ntri_setup)
 !        print*,'Ntrans',Ntrans,decomp_cascade_con%Ntri_setup,ndecomp_pools*nlevdecomp
@@ -828,6 +829,14 @@ contains
 !       this%matrix_decomp_fire_k_col = value_column
 !       this%matrix_decomp_k_col = value_column
        call this%matrix_Cinput%SetValueV_scaler(num_column,filter_column,value_column)
+       if(.not. use_vertsoilc)then
+          do k = 1,decomp_cascade_con%Ntri_setup
+             do fi = 1,num_column
+                i = filter_column(fi)
+                this%tri_ma_vr(i,k) = value_column
+             end do
+          end do
+       end if
     end if
 !    print*,'after setting C matrix for soil'
     do j = 1, nlevdecomp_full

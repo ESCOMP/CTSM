@@ -60,7 +60,7 @@ contains
      integer                                , intent(in)    :: num_soilp       ! number of soil patches in filter
      integer                                , intent(in)    :: filter_soilp(:) ! filter for soil patches
      integer                                , intent(in)    :: num_actfirep       ! number of soil patches in filter
-     integer                                , intent(in)    :: filter_actfirep(1:num_actfirep) ! filter for soil patches
+     integer                                , intent(in)    :: filter_actfirep(:) ! filter for soil patches
      type(cnveg_carbonstate_type)           , intent(inout) :: cnveg_carbonstate_inst  
      type(cnveg_nitrogenstate_type)         , intent(inout) :: cnveg_nitrogenstate_inst
      type(cnveg_carbonflux_type)            , intent(inout) :: cnveg_carbonflux_inst
@@ -224,6 +224,7 @@ contains
      
      real(r8):: dt        ! time step (seconds)
      real(r8):: secspyear        ! time step (seconds)
+     integer :: yr,mon,day,sec
 !KO     real(r8),dimension(1:3*nvegcpool) :: tempdump
  
 !	
@@ -815,11 +816,12 @@ contains
          )
     !-----------------------------------------------------------------------
      ! set time steps
+     !print*,'here0'
       call t_startf('CN veg matrix-init')
       dt = real( get_step_size(), r8 )
       secspyear = get_days_per_year() * secspday
+     
 
-!      print*,'matrix_nalloc at beg',matrix_nalloc(:,5),matrix_Ninput(5)
 !      if(.not. SMInitialized)then
 !         call Avegc%InitSM(nvegcpool)
 !         call AKphvegc%InitSM(nvegcpool)
@@ -967,14 +969,16 @@ contains
       do k=1,ncphtrans
          do fp = 1,num_soilp
             p = filter_soilp(fp)
+!            if(p .eq. 24 .and. ((receiver_phc(k) .eq. ileaf) .or. (doner_phc(k) .eq. ileaf)))print*,'matrix_phtransfer',p,k,doner_phc(k),receiver_phc(k),matrix_phtransfer(p,k) * dt
             matrix_phturnover(p,doner_phc(k)) = matrix_phturnover(p,doner_phc(k)) + matrix_phtransfer(p,k) * dt
-!            if(p .eq. 5)print*,'matrix_phturnover',k,p,doner_phc(k),matrix_phtransfer(p,k),matrix_phturnover(p,1:3)
+!            if(p .eq. 10580 .and. ((doner_phc(k) .eq. ileaf) .or. (doner_phc(k) .eq. ifroot)))print*,'matrix_phturnover',doner_phc(k),receiver_phc(k),matrix_phturnover(p,doner_phc(k)),matrix_phtransfer(p,k) * dt
          end do
       end do
 
       do k=1,ncgmtrans
          do fp = 1,num_soilp
             p = filter_soilp(fp)
+!            if(p .eq. 24 .and. ((receiver_gmc(k) .eq. ileaf) .or. (doner_gmc(k) .eq. ileaf)))print*,'matrix_gmtransfer',p,k,doner_gmc(k),receiver_gmc(k),matrix_gmtransfer(p,k) * dt
             matrix_gmturnover(p,doner_gmc(k)) = matrix_gmturnover(p,doner_gmc(k)) + matrix_gmtransfer(p,k) * dt
          end do
       end do
@@ -982,6 +986,7 @@ contains
       do k=1,ncfitrans
          do fp = 1,num_soilp
             p = filter_soilp(fp)
+!            if(p .eq. 24 .and. ((receiver_fic(k) .eq. ileaf) .or. (doner_fic(k) .eq. ileaf)))print*,'matrix_fitransfer',p,k,doner_fic(k),receiver_fic(k),matrix_fitransfer(p,k) * dt
             matrix_fiturnover(p,doner_fic(k)) = matrix_fiturnover(p,doner_fic(k)) + matrix_fitransfer(p,k)* dt
          end do
       end do
@@ -993,7 +998,6 @@ contains
          end do
       end do
 
-!      print*,'fiturnover',matrix_nphturnover(5,19) 
 
       do k=1,nngmtrans
          do fp = 1,num_soilp
@@ -1002,18 +1006,14 @@ contains
          end do
       end do
 
-!      print*,'fiturnover',matrix_ngmturnover(5,19) 
 
       do k=1,nnfitrans
          do fp = 1,num_soilp
             p = filter_soilp(fp)
             matrix_nfiturnover(p,doner_fin(k)) = matrix_nfiturnover(p,doner_fin(k)) + matrix_nfitransfer(p,k)* dt
-!            if(p .eq. 166819)print*,'nfiturnover',k,doner_fin(k),matrix_nfiturnover(doner_fin(k),p),matrix_nfitransfer(k,p)
-!            if(p .eq. 5)print*,'nfiturnover',k,doner_fin(k),matrix_nfiturnover(doner_fin(k),p),matrix_nfitransfer(k,p)
          end do
       end do
 
-!      print*,'fiturnover',matrix_nfiturnover(5,19)
       
       if(ncphtrans .gt. ncphouttrans)then
          do k=1,ncphtrans-ncphouttrans
@@ -1099,8 +1099,6 @@ contains
       call t_startf('CN veg matrix-set old value')
       do fp = 1,num_soilp
          p = filter_soilp(fp)
-!         print*,'deadcrootc',p,deadcrootc(p)
-!         if(p .eq. 5)print*,'leafxfer',leafc_xfer(p),Xoldvegc%V(ileaf_xf)
          Xvegc%V(p,ileaf)         = leafc(p)
          Xvegc%V(p,ileaf_st)      = leafc_storage(p)
          Xvegc%V(p,ileaf_xf)      = leafc_xfer(p)
@@ -1137,6 +1135,7 @@ contains
 !         Xfirelossvegc%V(p,ideadcroot)    = deadcrootc(p)
 !         Xfirelossvegc%V(p,ideadcroot_st) = deadcrootc_storage(p)
 !         Xfirelossvegc%V(p,ideadcroot_xf) = deadcrootc_xfer(p)
+!         if(p .eq. 6851)print*,'begin of CNVegmatrix',Xvegc%V(p,ifroot_st),frootc_storage(p),ifroot_st
       end do
 
       do fp = 1,num_soilp
@@ -1147,7 +1146,10 @@ contains
             Xvegc%V(p,igrain_xf)  = grainc_xfer(p)
          end if
       end do
-!         if(p .eq. 49261)print*,'Xoldvegc',Xoldvegc%V
+            do fp = 1,num_soilp
+               p = filter_soilp(fp)
+!               if(p .eq. 6851)print*,'after ini-1',p,Xvegc%V(p,1:nvegcpool)
+            end do
       if ( use_c13 )then
          do fp = 1,num_soilp
             p = filter_soilp(fp)
@@ -1237,6 +1239,11 @@ contains
          Xvegn%V(p,iretransn)     = retransn(p)
       end do
 
+            do fp = 1,num_soilp
+               p = filter_soilp(fp)
+!               if(p .eq. 6851)print*,'after ini0',p,Xvegc%V(p,1:nvegcpool)
+            end do
+
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          if(ivt(p) >= npcropmin)then
@@ -1246,7 +1253,6 @@ contains
          end if
       end do
 
-!         if(p .eq. 166819)print*,'Xoldvegn%V',Xoldvegn%V(:)
       if (is_beg_curr_year())then
          do fp = 1,num_soilp
             p = filter_soilp(fp)
@@ -1311,6 +1317,10 @@ contains
             end if
          end do
       end if
+            do fp = 1,num_soilp
+               p = filter_soilp(fp)
+!               if(p .eq. 6851)print*,'after ini',p,Xvegc%V(p,1:nvegcpool)
+            end do
 !         leafc0(p)                = max(leafc0(p),epsi)
 !         leafc0_storage(p)        = max(leafc0_storage(p), epsi)
 !         leafc0_xfer(p)           = max(leafc0_xfer(p), epsi)
@@ -1359,23 +1369,29 @@ contains
 !            grainn0_xfer(p)          = max(grainn0_xfer(p), epsi)
 !         end if
          call t_stopf('CN veg matrix-set old value')
-
+         !print*,'input'
          call t_startf('CN veg matrix-matrix multi.')
+            do fp = 1,num_soilp
+               p = filter_soilp(fp)
+!               if(p .eq. 6851)print*,'before input',p,Xvegc%V(p,1:nvegcpool)
+            end do
          do i=1,nvegcpool
             do fp = 1,num_soilp
                p = filter_soilp(fp)
+!               if(p .eq. 24)print*,'Cinput',i,matrix_alloc(p,i),matrix_Cinput(p) * dt
                vegmatrixc_input%V(p,i) = matrix_alloc(p,i) * matrix_Cinput(p) * dt
-!               if(p .eq. 5 .and. i .le. 2)print*,'matrix_alloc',matrix_alloc(p,i),matrix_Cinput(p)
+!               if(p .eq. 10580)print*,'input',i,matrix_alloc(p,i),matrix_Cinput(p) * dt
             end do
-!            if(p .eq. 5)print*,'alloc',i,matrix_alloc(i,p),matrix_Cinput(p)
          end do
-!         if(p .eq. 49261)print*,'input',vegmatrixc_input(1),matrix_alloc(1,p), matrix_Cinput(p)
-!         print*,'input',p,matrix_Cinput(p)
+
+!       do fp = 1,num_soilp
+!          p = filter_soilp(fp)
+!          if(bounds%begp .eq. 20037)print*,'matrix_Cinput(p)',p,matrix_Cinput(p) * dt
+!       end do
 !         vegmatrixc_transfer(:,:) = (matmul(matmul(matrix_phtransfer(p,1:nvegcpool,:),matrix_phturnover(p,:,:)),vegmatrixc_old(:,:)) &
 !                                   + matmul(matmul(matrix_gmtransfer(p,1:nvegcpool,:),matrix_gmturnover(p,:,:)),vegmatrixc_old(:,:)) &
 !                                   + matmul(matmul(matrix_fitransfer(p,1:nvegcpool,:),matrix_fiturnover(p,:,:)),vegmatrixc_old(:,:))) * dt
 !         vegmatrixc_new(:) = matmul(vegmatrixc_old(:,:),rowonec(:))  +  vegmatrixc_input(:) + matmul(vegmatrixc_transfer(:,:),rowonec(:)) 
-         !print*,'before setValueA',receiver_phc(1:ncphtrans-ncphouttrans),doner_phc   (1:ncphtrans-ncphouttrans)
          if(ncphtrans .gt. ncphouttrans)then
 !            do i=1,ncphtrans-ncphouttrans
 !               do fp = 1,num_soilp
@@ -1387,54 +1403,50 @@ contains
             AI_phc = receiver_phc(1:ncphtrans-ncphouttrans)
             AJ_phc = doner_phc   (1:ncphtrans-ncphouttrans)
 !            end if
-!            print*,'Aphconed',Aphconed(5,1:10),AI_phc(1:10),AJ_phc(1:10)
              
-!            print*,'here0,RI',RI_phc
-!            print*,'here0,CI',CI_phc,init_ready_aphc
-            call AKphvegc%SetValueA(num_soilp,filter_soilp,Aphconed,AI_phc,AJ_phc,ncphtrans-ncphouttrans,init_ready_aphc,list_aphc,RI_phc,CI_phc)
-!            print*,'here1,RI',RI_phc
-!            print*,'here1,CI',CI_phc
+!            if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'Aphconed',Aphconed(3998,:)
+            call AKphvegc%SetValueA(bounds%begp,bounds%endp,num_soilp,filter_soilp,Aphconed,&
+                 AI_phc,AJ_phc,ncphtrans-ncphouttrans,init_ready_aphc,list_aphc,RI_phc,CI_phc)
+!            if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'afteer AKphvegc%SetValueA',AKphvegc%M(3998,:)
          else
             call AKphvegc%SetValueA_diag(num_soilp,filter_soilp,-1._r8)
-!            print*,'here2'
          end if
-!         print*,'after setValueA',Aphvegc%M(5,1:10),Aphvegc%RI(1:10),Aphvegc%CI(1:10)
 !         Kconed = matrix_phturnover(1:nvegcpool,p) * dt
-!         if(p .eq. 166819)print*,'before ph:SetValueDM',Kconed
-         call Kvegc%SetValueDM(num_soilp,filter_soilp,matrix_phturnover)
-!         print*,'before SPMMAK',Kvegc%DM(5,1:6)
-!         print*,'here1'
-!         print*,'AKallvegc%NE',AKallvegc%NE,AKallvegc%RI
-!         print*,'AKallvegc%CI',AKallvegc%CI
+         !print*,'here0.1'
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'before KvegSetValueDM,matrix_phturnover',matrix_phturnover(3998,:)
+         call Kvegc%SetValueDM(bounds%begp,bounds%endp,num_soilp,filter_soilp,matrix_phturnover(bounds%begp:bounds%endp,1:nvegcpool))
+         !print*,'here0.3'
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'before SPMP_AK,Kvegc',Kvegc%DM(3998,:)
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'before SPMP_AK,AKphvegc',AKphvegc%M(3998,:)
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'before SPMP_AK,AKphvegc%RI',AKphvegc%RI
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'before SPMP_AK,AKphvegc%CI',AKphvegc%CI
+!         if(bounds%begp .le. 10580 .and. bounds%endp .ge. 10580)print*,'leafphk and frootphk',Kvegc%DM(10580,1),Kvegc%DM(10580,4),matrix_phturnover(10580,1),matrix_phturnover(10580,4)
          call AKphvegc%SPMM_AK(num_soilp,filter_soilp,Kvegc)
-!         print*,'after SPMM_AK',Aphvegc%M(5,1:10),Aphvegc%RI(1:10),Aphvegc%CI(1:10)
-!         if(p .eq. 49261)print*,'AKphvegc',AKphvegc%NE,Avegc%NE,Kvegc%DM,AKphvegc%RI,AKphvegc%CI,AKphvegc%M
-         !print*,'after SPMMAK'
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'after SPMM_AK,AKphvegc',AKphvegc%M(3998,:)
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'after SPMM_AK,AKphvegc%RI',AKphvegc%RI
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'after SPMM_AK,AKphvegc%CI',AKphvegc%CI
 !         A_C( = matrix_phtransfer(1:ncphtrans-ncphouttrans,p) 
 !         K_C = matrix_phturnover(1:nvegcpool,p)
 !         AK_C = 0
 !         call dgemm('N','N',nvegcpool,nvegcpool,nvegcpool,dt,A_C,nvegcpool,K_C,nvegcpool,0._r8,AK_C,nvegcpool)
+         !print*,'here1'
+            do fp = 1,num_soilp
+               p = filter_soilp(fp)
+            end do
          if(ncgmtrans .gt. ncgmouttrans)then
 !            Agmconed = matrix_gmtransfer(1:ncgmtrans-ncgmouttrans,p) 
 !            if(.not. init_ready_agmc)then
             AI_gmc = receiver_gmc(1:ncgmtrans-ncgmouttrans)
             AJ_gmc = doner_gmc   (1:ncgmtrans-ncgmouttrans)
 !            end if
-            call AKgmvegc%SetValueA(num_soilp,filter_soilp,Agmconed,AI_gmc,AJ_gmc,ncgmtrans-ncgmouttrans,init_ready_agmc,list_agmc,RI_gmc,CI_gmc)
+            call AKgmvegc%SetValueA(bounds%begp,bounds%endp,num_soilp,filter_soilp,Agmconed,&
+                 AI_gmc,AJ_gmc,ncgmtrans-ncgmouttrans,init_ready_agmc,list_agmc,RI_gmc,CI_gmc)
          else
-            !print*,'before SetValueA_diag'
             call AKgmvegc%SetValueA_diag(num_soilp,filter_soilp,-1._r8)
          end if
 !         Kconed   = matrix_gmturnover(1:nvegcpool,p) * dt
-            !print*,'before SetValueDM'
-!         if(p .eq. 166819)print*,'before gm:SetValueDM',Kconed
-         call Kvegc%SetValueDM(num_soilp,filter_soilp,matrix_gmturnover)
-            !print*,'before SPMMAK_GM'
-!         print*,'here2'
+         call Kvegc%SetValueDM(bounds%begp,bounds%endp,num_soilp,filter_soilp,matrix_gmturnover(bounds%begp:bounds%endp,1:nvegcpool))
          call AKgmvegc%SPMM_AK(num_soilp,filter_soilp,Kvegc)
-!         if(p .eq. 49261)print*,'AKgmvegc',AKgmvegc%NE,Avegc%NE,Kvegc%DM,AKgmvegc%RI,AKgmvegc%CI,AKgmvegc%M
-!         print*,'AKgmvegc',AKgmvegc%NE,Avegc%NE,Kvegc%DM
-            !print*,'after SPMMAK_GM'
 !         A_C = matrix_gmtransfer(p,1:nvegcpool,:)
 !         K_C = matrix_gmturnover(p,:,:)
 !         call dgemm('N','N',nvegcpool,nvegcpool,nvegcpool,dt,A_C,nvegcpool,K_C,nvegcpool,1._r8,AK_C,nvegcpool)
@@ -1444,26 +1456,19 @@ contains
             AI_fic = receiver_fic(1:ncfitrans-ncfiouttrans)
             AJ_fic = doner_fic   (1:ncfitrans-ncfiouttrans)
 !            end if
-            !print*,'before SetValeA_Fire',AI_fic,AJ_fic,ncfitrans-ncfiouttrans,Aficoned
-            call AKfivegc%SetValueA(num_soilp,filter_soilp,Aficoned,AI_fic,AJ_fic,ncfitrans-ncfiouttrans,init_ready_afic,list_afic,RI_fic,CI_fic)
+            call AKfivegc%SetValueA(bounds%begp,bounds%endp,num_soilp,filter_soilp,Aficoned,&
+                 AI_fic,AJ_fic,ncfitrans-ncfiouttrans,init_ready_afic,list_afic,RI_fic,CI_fic)
          else
             call AKfivegc%SetValueA_diag(num_soilp,filter_soilp,-1._r8)
          end if
 !         Kconed   = matrix_fiturnover(1:nvegcpool,p) * dt
-            !print*,'before SetValueDM'
-!         if(p .eq. 166819)print*,'before fi:SetValueDM',Kconed
-         call Kvegc%SetValueDM(num_soilp,filter_soilp,matrix_fiturnover)
-            !print*,'before SPMMAK_fire'
-!         print*,'here3'
+         call Kvegc%SetValueDM(bounds%begp,bounds%endp,num_soilp,filter_soilp,matrix_fiturnover(bounds%begp:bounds%endp,1:nvegcpool))
          call AKfivegc%SPMM_AK(num_soilp,filter_soilp,Kvegc)
-!         if(p .eq. 49261)print*,'AKfivegc',AKfivegc%NE,Avegc%NE,Kvegc%DM,AKfivegc%RI,AKfivegc%CI,AKfivegc%M
 !         if(num_actfirep .ne. 0)then
 
 !            do fp=1,num_soilp
 !               p = filter_soilp(fp)
 !               do i=1,AKfivegc%NE
-!                  print*,'before fire X',p,Xfirelossvegc%V(p,AKfivegc%CI(i)),Xvegc%V(p,AKfivegc%CI(i))
-!                  print*,'AKfire',AKfivegc%M(p,i),AKfivegc%RI(i),AKfivegc%CI(i)
 !               end do
 !            end do
 
@@ -1473,36 +1478,53 @@ contains
  !              p = filter_soilp(fp)
  !              do i = 1,nvegcpool
  !                 fire_closs (p) = fire_closs(p) + (Xfirelossvegc%V(p,i) - Xvegc%V(p,i)) / dt
-!                  print*,'fire_closs in matrix',p,i,fire_closs(p),(Xfirelossvegc%V(p,i) - Xvegc%V(p,i))/ dt
  !              end do
-!               print*,'veg closs in matrix',p,fire_closs(p)
  !           end do
  !        end if   
 !         A_C = matrix_fitransfer(p,1:nvegcpool,:)
 !         K_C = matrix_fiturnover(p,:,:)
 !         call dgemm('N','N',nvegcpool,nvegcpool,nvegcpool,dt,A_C,nvegcpool,K_C,nvegcpool,1._r8,AK_C,nvegcpool)
-            !print*,'before SPMP1'
-!            if(p .eq. 5)print*,'before SPMP1,AKphvegc',AKphvegc%M(1),AKphvegc%M(4),AKphvegc%M(2),AKphvegc%M(3),AKphvegc%M(5),AKphvegc%SM
-!            print*,'before SPMP1,AKgmvegc',AKgmvegc%M
-         !print*,'here0'
-         !print*,'list_phc_phgmc',list_phc_phgmc
-!         print*,'here4'
-!        print*,'list_ready SPMP_AB',AKgmvegc%M
-!        print*,'list_ready,AKtmp1vegc',AKtmp1vegc%M
-!        print*,'list_ready',list_ready_tmp1vegc,AKphvegc%NE,AKgmvegc%NE
-!        print*,'list',list_phc_phgmc(1:AKphvegc%NE)
-!        print*,'list2',list_gmc_phgmc(1:Agmvegc%NE)
-!        print*,'list1',AKallvegc%NE,list_phc_phgmc(1:AKallvegc%NE)
 !         call AKallvegc%SPMP_AB(num_soilp,filter_soilp,Agmvegc,list_ready_tmp1vegc,list_phc_phgmc(1:AKallvegc%NE),list_gmc_phgmc(1:Agmvegc%NE),&
 !                                NE_AKphgmc,RI_AKphgmc,CI_AKphgmc)
-!         print*,'before SPMP2,AKtmp1vegc',AKtmp1vegc%M(5,1:10),AKtmp1vegc%RI(1:10),AKtmp1vegc%CI(1:10)
-!         print*,'before SPMP2,Aphvegc',Aphvegc%M(5,1:10),Aphvegc%RI(1:10),Aphvegc%CI(1:10)
-!         print*,'before SPMP2,Agmvegc',Agmvegc%M(5,1:10),Agmvegc%RI(1:10),Agmvegc%CI(1:10)
-!         print*,'before SPMP2,Afivegc',Afivegc%M(5,1:10),Afivegc%RI(1:10),Afivegc%CI(1:10)
-!            print*,'before SPMP2,AKfivegc',AKfivegc%M,AKfivegc%CI,AKfivegc%RI
-!         print*,'here5'
 !         call AKallvegc%SPMP_AB(num_soilp,filter_soilp,Afivegc,list_ready_tmp2vegc,list_phgmc_phgmfic(1:AKallvegc%NE),list_fic_phgmfic(1:Afivegc%NE),&
 !                                NE_AKallvegc,RI_AKallvegc,CI_AKallvegc)
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'before SPMP_AB,AKfivegc',num_actfirep,AKfivegc%M(3998,:)
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'before SPMP_AB,AKfivegc%RI',AKfivegc%RI
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'before SPMP_AB,AKfivegc%CI',AKfivegc%CI
+!            do fp = 1,num_soilp
+!               p = filter_soilp(fp)
+!               if(p .eq. 6851)print*,'before SPMP_AB',p,Xvegc%V(p,1:nvegcpool)
+!            end do
+!         if(bounds%begp .le. 10580 .and. bounds%endp .ge. 10580 .and. AKphvegc%NE .ge. 0)then
+!            do i=1,AKphvegc%NE
+!               if(AKphvegc%RI(i) .eq. 4)then
+!                  print*,'AKphvegc,froot',AKphvegc%RI(i),AKphvegc%CI(i),AKphvegc%M(10580,i)
+!               end if
+!               if(AKphvegc%RI(i) .eq. 1)then
+!                  print*,'AKphvegc,leaf',AKphvegc%RI(i),AKphvegc%CI(i),AKphvegc%M(10580,i)
+!               end if
+!            end do
+!         end if
+!         if(bounds%begp .le. 10580 .and. bounds%endp .ge. 10580 .and. AKgmvegc%NE .ge. 0)then
+!            do i=1,AKgmvegc%NE
+!               if(AKgmvegc%RI(i) .eq. 4)then
+!                  print*,'AKgmvegc,froot',AKgmvegc%RI(i),AKgmvegc%CI(i),AKgmvegc%M(10580,i)
+!               end if
+!               if(AKgmvegc%RI(i) .eq. 1)then
+!                  print*,'AKgmvegc,leaf',AKgmvegc%RI(i),AKgmvegc%CI(i),AKgmvegc%M(10580,i)
+!               end if
+!            end do
+!         end if
+!         if(bounds%begp .le. 10580 .and. bounds%endp .ge. 10580 .and. AKfivegc%NE .ge. 0)then
+!            do i=1,AKfivegc%NE
+!               if(AKfivegc%RI(i) .eq. 4)then
+!                  print*,'AKfivegc,froot',AKfivegc%RI(i),AKfivegc%CI(i),AKfivegc%M(10580,i)
+!               end if
+!               if(AKfivegc%RI(i) .eq. 1)then
+!                  print*,'AKfivegc,leaf',AKfivegc%RI(i),AKfivegc%CI(i),AKfivegc%M(10580,i)
+!               end if
+!            end do
+!         end if
          if(num_actfirep .eq. 0)then
             call AKallvegc%SPMP_AB(num_soilp,filter_soilp,AKphvegc,AKgmvegc,list_ready_phgmc,list_A=list_phc_phgm,list_B=list_gmc_phgm,&
                  NE_AB=NE_AKallvegc,RI_AB=RI_AKallvegc,CI_AB=CI_AKallvegc)
@@ -1511,36 +1533,63 @@ contains
                  list_B=list_gmc_phgmfi,list_C=list_fic_phgmfi,NE_ABC=NE_AKallvegc,RI_ABC=RI_AKallvegc,CI_ABC=CI_AKallvegc,&
                  use_actunit_list_C=.True.,num_actunit_C=num_actfirep,filter_actunit_C=filter_actfirep)
          end if
-         
-!            print*,'before SPMMAX',Xoldvegc%V(ideadstem)
-!         print*,'AKall',AKtmp2vegc%M(5,1:10),AKtmp2vegc%RI(1:10),AKtmp2vegc%CI(1:10)
-!        print*,'here6'
-!         if(p .eq. 49261)print*,'AKtmp2vegc',AKtmp2vegc%NE,Avegc%NE,Kvegc%DM,AKtmp2vegc%RI,AKtmp2vegc%CI,AKtmp2vegc%M
-!         print*,'AKtmp2vegc%M',AKtmp2vegc%M(5,:)
-!         print*,'RI',AKtmp2vegc%RI
-!         print*,'CI',AKtmp2vegc%CI
-!         print*,'Xoldvegc',Xvegc%V(5,1:10)
+!         if(bounds%begp .le. 10580 .and. bounds%endp .ge. 10580)then
+!            do i=1,NE_AKallvegc
+!               if(AKallvegc%RI(i) .eq. 4)then
+!                  print*,'AKallvegc,froot',AKallvegc%RI(i),AKallvegc%CI(i),AKallvegc%M(10580,i)
+!!               end if
+ !              if(AKallvegc%RI(i) .eq. 1)then
+ !                 print*,'AKallvegc,leaf',AKallvegc%RI(i),AKallvegc%CI(i),AKallvegc%M(10580,i)
+ !              end if
+ !           end do
+ !        end if
+!         print*,'here5'
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'Xveg before SPMMAX',Xvegc%V(3998,:),nvegcpool,ivt(3998),ivt(3998),npcropmin
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'Akallvegc',AKallvegc%M(3998,:)
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'RI',AKallvegc%RI
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'CI',AKallvegc%CI
+!         do i=1,nvegcpool
+!            do fp = 1,num_soilp
+!               p = filter_soilp(fp)
+!               if(p .eq. 6851)print*,'before update Xvegcveg',p,Xvegc%V(p,1:nvegcpool),AKallvegc%M(p,1:10)
+!               if(p .eq. 6851)print*,'RI',AKallvegc%RI(1:10)
+!               if(p .eq. 6851)print*,'CI',AKallvegc%CI(1:10)
+!            end do
+!         end do
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'Xveg after SPMMAX',Xvegc%V(3998,:)
+!         do i = 1,nvegcpool
+!            do fp = 1,num_soilp
+!               p = filter_soilp(fp)
+!               if(p .eq. 10580)print*,'Xvegc,before AX to froot',p,i,Xvegc%V(p,i)
+!            end do
+!         end do
          call Xvegc%SPMM_AX(num_soilp,filter_soilp,AKallvegc)
-!         print*,'Xoldvegc after SPMMAX',Xvegc%V(5,1:10)
-!            if(p .eq. 5)print*,'after SPMMAX',p,Xnewvegc%V(ileaf),vegmatrixc_input(ileaf),vegmatrixc_input(ileaf_st),vegmatrixc_input(ileaf_xf),Xoldvegc%V(:)
-         do i=1,nvegcpool
+!         do i = 1,nvegcpool
+!            do fp = 1,num_soilp
+!               p = filter_soilp(fp)
+!               if(p .eq. 10580)print*,'Xvegc,after AX to froot',p,i,Xvegc%V(p,i)
+!            end do
+!         end do
+         do i = 1,nvegcpool
             do fp = 1,num_soilp
                p = filter_soilp(fp)
-!               if(p .eq. 5 .and. i .eq. 2)print*,'deltaXleaf',Xnewvegc%V(p,i),vegmatrixc_input%V(p,i),Xoldvegc%V(p,i)
+!               if(p .eq. 6851 .and. i .eq. 5)print*,'Cinput to veg',Xvegc%V(p,i),vegmatrixc_input%V(p,i)
                Xvegc%V(p,i) = Xvegc%V(p,i) + vegmatrixc_input%V(p,i) 
+!               if(p .eq. 10580)print*,'input to froot',p,i,Xvegc%V(p,i),vegmatrixc_input%V(p,i)
             end do
          end do
-!         if(p .eq. 49296)print*,'Xnewvegc',Xnewvegc%V
-!            if(p .eq. 5)print*,'after addinput',Xnewvegc%V(ileaf),Xnewvegc%V(ileaf_st),Xnewvegc%V(ileaf_xf)
-         !print*,'input',vefiatrixc_input(ilivestem),vefiatrixc_old(ilivestem),AK_C(ilivestem,:)
+         
+
+!         do fp = 1,num_soilp
+!            p = filter_soilp(fp)
+!            if(bounds%begp .eq. 20037)print*,'after update Xvegcveg',p,Xvegc%V(p,1:nvegcpool),cnveg_carbonstate_inst%cpool_patch(p),cnveg_carbonstate_inst%gresp_storage_patch(p),cnveg_carbonstate_inst%gresp_xfer_patch(p)
+!            if(bounds%begp .eq. 20037)print*,'after update Xvegctotal',p,sum(Xvegc%V(p,1:nvegcpool))+cnveg_carbonstate_inst%cpool_patch(p)+cnveg_carbonstate_inst%gresp_storage_patch(p)+cnveg_carbonstate_inst%gresp_xfer_patch(p)
+!         end do
+!         if(bounds%begp .le. 3998 .and. bounds%endp .ge. 3998)print*,'Xveg after input',Xvegc%V(3998,:)
 !         vegmatrixc_new = vegmatrixc_input + vegmatrixc_old
 !         call dgemv('N',nvegcpool,nvegcpool,1._r8,AK_C,nvegcpool,vegmatrixc_old,1,1._r8,vegmatrixc_new,1)
-            !print*,'after Xnew updated'
 
          if ( use_c13 ) then
-!           print*,'before matrix_old transfer',matrix_phtransfer(p,ideadcroot,:),matrix_gmtransfer(p,ideadcroot,:),matrix_fitransfer(p,ideadcroot,:)
-!           print*,'before matrix_old turnover',matrix_phturnover(p,ideadcroot,:),matrix_gmturnover(p,ideadcroot,:),matrix_fiturnover(p,ideadcroot,:)
-!           print*,'before matrix_old C input',matrix_alloc(p,:),matrix_C13input(p)
 
             do i=1,nvegcpool
                do fp = 1,num_soilp
@@ -1571,12 +1620,10 @@ contains
                   Xveg13c%V(p,i) = Xveg13c%V(p,i) + vegmatrixc13_input%V(p,i) 
                end do
             end do
+
 !            vegmatrixc13_new = vegmatrixc13_input + vegmatrixc13_old
 !            call dgemv('N',nvegcpool,nvegcpool,1._r8,AK_C,nvegcpool,vegmatrixc13_old,1,1._r8,vegmatrixc13_new,1)
-!            print*,'after matrix_old deadcrootc',p,vegmatrixc13_old(ideadcroot,ideadcroot), vegmatrixc13_input(ideadcroot)
-!            print*,'after matrix_old deadcrootc',p,vegmatrixc13_new(:), vegmatrixc13_transfer(ideadcroot,:) * dt
          end if
-
          if ( use_c14 ) then
             do i=1,nvegcpool
                do fp = 1,num_soilp
@@ -1588,9 +1635,10 @@ contains
 !                                   + matmul(matmul(matrix_gmtransfer(p,1:nvegcpool,:),matrix_gmturnover(p,:,:)),vegmatrixc14_old(:,:)) &
 !                                   + matmul(matmul(matrix_fitransfer(p,1:nvegcpool,:),matrix_fiturnover(p,:,:)),vegmatrixc14_old(:,:))) * dt
 !            vegmatrixc14_new(:) = matmul(vegmatrixc14_old(:,:),rowonec(:))  +  vegmatrixc14_input(:) + matmul(vegmatrixc14_transfer(:,:),rowonec(:))
+         !print*,'here6'
+
 
             call Xveg14c%SPMM_AX(num_soilp,filter_soilp,AKallvegc)
-
             do i=1,nvegcpool
                do fp = 1,num_soilp
                   p = filter_soilp(fp)
@@ -1614,10 +1662,6 @@ contains
 !         if(p .eq. 1 .or. p .eq. 15)write(513,"(A,I,19E17.9)"),'Cinput,alloc',p,matrix_Cinput(p)*dt,matrix_alloc(p,:) 
                             
 !         if(p .eq. -9999)then
-!             print*,'before matrix_old retransn',p,vegmatrixn_old(iretransn,iretransn)
-!             print*,'before matrix_old frootn',p,vegmatrixn_old(ifroot,ifroot)
-!            print*,'before matrix_old leafn',p,vegmatrixn_old(p,ileaf)
-!         print*,'before matrix_old',p,vegmatrixn_old(p,:)
 !         end if
 !N matrix
 !            print*,'Cinput to deadcrootn',matrix_Cinput(p)*matrix_alloc(p,ideadcroot)*dt
@@ -1684,52 +1728,40 @@ contains
 !         tmp=(matmul(matmul(matrix_nfitransfer(p,1:nvegnpool,:),matrix_nfiturnover(p,:,:)),vegmatrixc_old(p,:))) * dt
 !         if(p .eq. 16)print*,'nfitrans retransn',tmp(iretransn)
 !         if(p .eq. 16)print*,'nfitrans frootn',tmp(ifroot)
+         !print*,'here7'
          do i=1,nvegnpool
             do fp = 1,num_soilp
                p = filter_soilp(fp)
+!               if(p .eq. 2111 .and. i .eq. 1)print*,'matrix_nalloc',matrix_nalloc(p,i),matrix_Ninput(p) * dt
                vegmatrixn_input%V(p,i) = matrix_nalloc(p,i) * matrix_Ninput(p) * dt
-!               if(p .eq. 5 .and. i .le. 19)print*,'matrix_nalloc',matrix_nalloc(p,i),matrix_Ninput(p)
             end do
          end do
+         !print*,'here7.1'
 !         vegmatrixn_transfer(:,:) = (matmul(matmul(matrix_nphtransfer(p,1:nvegnpool,:),matrix_nphturnover(p,:,:)),vegmatrixn_old(:,:)) &
 !                                   + matmul(matmul(matrix_ngmtransfer(p,1:nvegnpool,:),matrix_ngmturnover(p,:,:)),vegmatrixn_old(:,:)) &
 !                                   + matmul(matmul(matrix_nfitransfer(p,1:nvegnpool,:),matrix_nfiturnover(p,:,:)),vegmatrixn_old(:,:))) * dt
 !         vegmatrixn_new(:) = matmul(vegmatrixn_old(:,:),rowonen(:)) +  vegmatrixn_input(:) + matmul(vegmatrixn_transfer(:,:),rowonen(:))
 
-         !print*,'before updated Xvegn',receiver_phn(1:nnphtrans-nnphouttrans),doner_phn   (1:nnphtrans-nnphouttrans),matrix_nphtransfer(1:nnphtrans-nnphouttrans,p)
          if(nnphtrans .gt. nnphouttrans)then
 !            Aphnoned = matrix_nphtransfer(1:nnphtrans-nnphouttrans,p)
 !            if(.not. init_ready_aphn)then
              AI_phn = receiver_phn(1:nnphtrans-nnphouttrans)
              AJ_phn = doner_phn   (1:nnphtrans-nnphouttrans)
 !            end if
- !           print*,'SetValueA',Avegn%M
- !           print*,'SetValueA,Avegn%NE',Avegn%NE 
-!            print*,'init_ready_aphn',init_ready_aphn,list_aphn
-!            print*,'n',nnphtrans,nnphouttrans
-!            print*,'SetValueA,RI',AJ_phn
-!            print*,'SetValueA,CI',AI_phn
-!            print*,'SetValueA,DM',Kvegn%DM
-!            print*,'SetValueA,AKallvegn%M',AKallvegn%M(5,:),list_aphn,init_ready_aphn
-            call AKphvegn%SetValueA(num_soilp,filter_soilp,Aphnoned,AI_phn,AJ_phn,nnphtrans-nnphouttrans,init_ready_aphn,list_aphn,RI_phn,CI_phn)
+            call AKphvegn%SetValueA(bounds%begp,bounds%endp,num_soilp,filter_soilp,Aphnoned,&
+                 AI_phn,AJ_phn,nnphtrans-nnphouttrans,init_ready_aphn,list_aphn,RI_phn,CI_phn)
          else
             call AKphvegn%SetValueA_diag(num_soilp,filter_soilp,-1._r8)
          end if
-         !print*,'before SetValueDM_phK'
 !         Knoned   = matrix_nphturnover(1:nvegnpool,p) * dt
-!         if(p .eq. 166819)print*,'before nph:SetValueDM',Knoned
-         call Kvegn%SetValueDM(num_soilp,filter_soilp,matrix_nphturnover)
-         !print*,'before SPMMAK'
-!         print*,'here7'
-!         print*,'SPMM_AK',Aphvegn%M
-!         print*,'SPMM_AK,Avegn%NE',Aphvegn%NE
-!         print*,'SPMM_AK,RI',Aphvegn%RI
-!         print*,'SPMM_AK,CI',Aphvegn%CI
-!         print*,'SPMM_AK,DM',Kvegn%DM
-!         print*,'SPMM_AK,AKphvegn%M',AKphvegn%M
+         !print*,'here7.2'
+         call Kvegn%SetValueDM(bounds%begp,bounds%endp,num_soilp,filter_soilp,matrix_nphturnover(bounds%begp:bounds%endp,1:nvegnpool))
          call AKphvegn%SPMM_AK(num_soilp,filter_soilp,Kvegn)
-!         print*,'AKphvegn',AKphvegn%NE,Avegn%NE,Kvegn%DM
-!         if(p .eq. 5)print*,'AKphvegn',AKphvegn%M(1),AKphvegn%M(4),AKphvegn%M(2),AKphvegn%M(3),AKphvegn%M(5)
+!         if(bounds%begp .le. 2111 .and. bounds%endp .ge. 2111)print*,'AKphvegn',AKphvegn%M(2111,1),AKphvegn%RI(1),AKphvegn%CI(1),AKphvegn%M(2111,2),AKphvegn%RI(2),AKphvegn%CI(2)
+         !print*,'here7.3'
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'AKphvegn',AKphvegn%M(6851,1:5)
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'RI',AKphvegn%RI(1:5)
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'CI',AKphvegn%CI(1:5)
 
          if(nngmtrans .gt. nngmouttrans)then
 !            Agmnoned = matrix_ngmtransfer(1:nngmtrans-nngmouttrans,p)
@@ -1737,17 +1769,20 @@ contains
              AI_gmn = receiver_gmn(1:nngmtrans-nngmouttrans)
              AJ_gmn = doner_gmn   (1:nngmtrans-nngmouttrans)
 !            end if
-            call AKgmvegn%SetValueA(num_soilp,filter_soilp,Agmnoned,AI_gmn,AJ_gmn,nngmtrans-nngmouttrans,init_ready_agmn,list_agmn,RI_gmn,CI_gmn)
+            call AKgmvegn%SetValueA(bounds%begp,bounds%endp,num_soilp,filter_soilp,Agmnoned,&
+                 AI_gmn,AJ_gmn,nngmtrans-nngmouttrans,init_ready_agmn,list_agmn,RI_gmn,CI_gmn)
          else
             call AKgmvegn%SetValueA_diag(num_soilp,filter_soilp,-1._r8)
          end if
 !         Knoned   = matrix_ngmturnover(1:nvegnpool,p) * dt
-!         if(p .eq. 166819)print*,'before ngm:SetValueDM',Knoned
-         call Kvegn%SetValueDM(num_soilp,filter_soilp,matrix_ngmturnover)
-!         print*,'here8'
+         !print*,'here7.4'
+         call Kvegn%SetValueDM(bounds%begp,bounds%endp,num_soilp,filter_soilp,matrix_ngmturnover(bounds%begp:bounds%endp,1:nvegnpool))
          call AKgmvegn%SPMM_AK(num_soilp,filter_soilp,Kvegn)
-!         print*,'AKphvegn',AKgmvegn%NE,Avegn%NE,Kvegn%DM
-!         if(p .eq. 5)print*,'AKgmvegn',AKgmvegn%M(1),AKgmvegn%M(4),AKgmvegn%M(2),AKgmvegn%M(3),AKgmvegn%M(5)
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'AKgmvegn',AKgmvegn%M(6851,1:5)
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'RI',AKgmvegn%RI(1:5)
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'CI',AKgmvegn%CI(1:5)
+!         if(bounds%begp .le. 2111 .and. bounds%endp .ge. 2111)print*,'AKgmvegn',AKgmvegn%M(2111,1),AKphvegn%RI(1),AKphvegn%CI(1)
+         !print*,'here7.5'
 !         A_C = matrix_gmtransfer(p,1:nvegcpool,:)
 !         K_C = matrix_gmturnover(p,:,:)
 !         call dgemm('N','N',nvegcpool,nvegcpool,nvegcpool,dt,A_C,nvegcpool,K_C,nvegcpool,1._r8,AK_C,nvegcpool)
@@ -1757,27 +1792,25 @@ contains
              AI_fin = receiver_fin(1:nnfitrans-nnfiouttrans)
              AJ_fin = doner_fin   (1:nnfitrans-nnfiouttrans)
 !            end if
-            call AKfivegn%SetValueA(num_soilp,filter_soilp,Afinoned,AI_fin,AJ_fin,nnfitrans-nnfiouttrans,init_ready_afin,list_afin,RI_fin,CI_fin)
+            call AKfivegn%SetValueA(bounds%begp,bounds%endp,num_soilp,filter_soilp,Afinoned,&
+                 AI_fin,AJ_fin,nnfitrans-nnfiouttrans,init_ready_afin,list_afin,RI_fin,CI_fin)
          else
             call AKfivegn%SetValueA_diag(num_soilp,filter_soilp,-1._r8)
          end if
+         !print*,'here7.6'
 !         Knoned   = matrix_nfiturnover(1:nvegnpool,p) * dt
-!         if(p .eq. 5)print*,'Knoned',matrix_nfiturnover(1,p)*dt
-!         if(p .eq. 166819)print*,'before nfi:SetValueDM',Knoned
-         call Kvegn%SetValueDM(num_soilp,filter_soilp,matrix_nfiturnover)
-!         print*,'here9'
+         call Kvegn%SetValueDM(bounds%begp,bounds%endp,num_soilp,filter_soilp,matrix_nfiturnover(bounds%begp:bounds%endp,1:nvegnpool))
          call AKfivegn%SPMM_AK(num_soilp,filter_soilp,Kvegn)
-!         if(p .eq. 5)print*,'AKfivegn',AKfivegn%M(1),AKfivegn%M(4),AKfivegn%M(2),AKfivegn%M(3),AKfivegn%M(5)
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'AKfivegn',AKfivegn%M(6851,1:5)
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'RI',AKfivegn%RI(1:5)
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'CI',AKfivegn%CI(1:5)
+!         if(bounds%begp .le. 2111 .and. bounds%endp .ge. 2111)print*,'AKfivegn',AKfivegn%M(2111,1),AKfivegn%RI(1),AKfivegn%CI(1)
+         !print*,'here7.7'
 !         A_C = matrix_fitransfer(p,1:nvegcpool,:)
 !         K_C = matrix_fiturnover(p,:,:)
 !         call dgemm('N','N',nvegcpool,nvegcpool,nvegcpool,dt,A_C,nvegcpool,K_C,nvegcpool,1._r8,AK_C,nvegcpool)
-!         print*,'list_ready',list_ready,AKphvegn%NE,AKgmvegn%NE
-         !print*,'list_phn_phgmn',list_phn_phgmn
-         !print*,'list_gmn_phgmn',list_gmn_phgmn
-!         print*,'here10'
 !         call AKallvegn%SPMP_AB(num_soilp,filter_soilp,AKgmvegn,list_ready_tmp1vegn,list_phn_phgmn(1:AKallvegn%NE),list_gmn_phgmn(1:AKgmvegn%NE),&
 !                                NE_AKphgmn,RI_AKphgmn,CI_AKphgmn)
-!         print*,'here11'
 !         call AKallvegn%SPMP_AB(num_soilp,filter_soilp,Afivegn,list_ready_tmp2vegn,list_phgmn_phgmfin(1:AKallvegn%NE),list_fin_phgmfin(1:Afivegn%NE),&
 !                                NE_AKallvegn,RI_AKallvegn,CI_AKallvegn)
          
@@ -1792,32 +1825,25 @@ contains
          
 !         list_ready = .TRUE.
 
-!         if(p .eq. 5)print*,'AKall_N',AKtmp2vegn%M(1),AKtmp2vegn%M(4),AKtmp2vegn%M(2),AKtmp2vegn%M(3),AKtmp2vegn%M(5)
-!         print*,'here12'
-!         print*,'AKtmp2vegn%M',AKtmp2vegn%M(5,:)
-!         print*,'RI',AKtmp2vegn%RI
-!         print*,'CI',AKtmp2vegn%CI
-!         print*,'Xoldvegn',Xoldvegn%V(5,:)
+         !print*,'here7.8'ph
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'Xvegn,before update',Xvegn%V(6851,1:19)
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'Xvegn,after update',Xvegn%V(6851,1:19)
          call Xvegn%SPMM_AX(num_soilp,filter_soilp,AKallvegn)
-!         if(p .eq. 5)print*,'after SPMMAX_N',p,Xnewvegn%V(ileaf),vegmatrixn_input(ileaf),vegmatrixn_input(ileaf_st),vegmatrixn_input(ileaf_xf),Xoldvegn%V(:)
           
          do i=1,nvegnpool
             do fp = 1,num_soilp
                p = filter_soilp(fp)
-!               if(p .eq. 5 .and. i .eq. 19)print*,'deltaNleaf',Xnewvegn%V(p,i),vegmatrixn_input%V(p,i),Xoldvegn%V(p,i)
                Xvegn%V(p,i) = Xvegn%V(p,i) + vegmatrixn_input%V(p,i)
             end do
          end do
-!         if(p .eq. 5)print*,'after addinput_N',Xnewvegn%V(ileaf),Xnewvegn%V(ileaf_st),Xnewvegn%V(ileaf_xf)
-         !print*,'input',vefiatrixc_input(ilivestem),vefiatrixc_old(ilivestem),AK_C(ilivestem,:)
+
+!         if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'Xvegn,after input',Xvegn%V(6851,1:19),vegmatrixn_input%V(6851,1:19)
+         !print*,'here7.9'
 !         A_N = matrix_nphtransfer(p,1:nvegnpool,:)
 !         K_N = matrix_nphturnover(p,:,:)
-!               if(p .eq. 5 .and. i .eq. 19)print*,'deltaNleaf',Xnewvegn%V(p,i),vegmatrixn_input%V(p,i),Xoldvegn%V(p,i)
 !               Xvegn%V(p,i) = Xvegn%V(p,i) + vegmatrixn_input%V(p,i)
 !            end do
 !         end do
-!         if(p .eq. 5)print*,'after addinput_N',Xnewvegn%V(ileaf),Xnewvegn%V(ileaf_st),Xnewvegn%V(ileaf_xf)
-         !print*,'input',vefiatrixc_input(ilivestem),vefiatrixc_old(ilivestem),AK_C(ilivestem,:)
 !         A_N = matrix_nphtransfer(p,1:nvegnpool,:)
 !         K_N = matrix_nphturnover(p,:,:)
 !         AK_N = 0
@@ -1831,17 +1857,15 @@ contains
 !
 !         vegmatrixn_new = vegmatrixn_input + vegmatrixn_old
 !         call dgemv('N',nvegnpool,nvegnpool,1._r8,AK_N,nvegnpool,vegmatrixn_old,1,1._r8,vegmatrixn_new,1)
-            !print*,'after  updated Xvegn'
 
          call t_stopf('CN veg matrix-matrix multi.')
 
 !         if(p .eq. 16)then
-!            print*,'after matrix_new',p,vegmatrixn_new(p,iretransn)
-!            print*,'after matrix_new',p,Xnewvegn%V(p,ifroot)
 !         end if
  
 ! 
 
+         !print*,'here8'
          call t_startf('CN veg matrix-accum. trans.')
          if(isspinup .or. is_outmatrix)then
             do fp = 1,num_soilp
@@ -1867,56 +1891,54 @@ contains
                end if
             end do
 
-            !print*,'before accumulated deadcrootc_acc',matrix_calloc_leafst_acc(p),vegmatrixc_input(ileaf_st),matrix_cturnover_leafst_acc(p),vegmatrixc_transfer(ileaf_st,ileaf_st)
 
-          ! print*,'here1'
+         !print*,'here8,5'
             do fp = 1,num_soilp
                p = filter_soilp(fp)
                matrix_ctransfer_leafst_to_leafxf_acc(p)           = matrix_ctransfer_leafst_to_leafxf_acc(p) &
                                                                   + matrix_phtransfer(p,ileafst_to_ileafxf_phc) &
-                                                                  * matrix_phturnover(p,ileaf_st)*leafc_storage(p)
+                                                                  * dt * leafc_storage(p) !matrix_phturnover(p,ileaf_st)*leafc_storage(p)
                matrix_ctransfer_leafxf_to_leaf_acc(p)             = matrix_ctransfer_leafxf_to_leaf_acc(p) &
                                                                   + matrix_phtransfer(p,ileafxf_to_ileaf_phc) &
-                                                                  * matrix_phturnover(p,ileaf_xf)*leafc_xfer(p)
+                                                                  * dt * leafc_xfer(p)!matrix_phturnover(p,ileaf_xf)*leafc_xfer(p)
                matrix_ctransfer_frootst_to_frootxf_acc(p)         = matrix_ctransfer_frootst_to_frootxf_acc(p) &
                                                                   + matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) &
-                                                                  * matrix_phturnover(p,ifroot_st)*frootc_storage(p)
+                                                                  * dt * frootc_storage(p)!matrix_phturnover(p,ifroot_st)*frootc_storage(p)
                matrix_ctransfer_frootxf_to_froot_acc(p)           = matrix_ctransfer_frootxf_to_froot_acc(p) &
                                                                   + matrix_phtransfer(p,ifrootxf_to_ifroot_phc) &
-                                                                  * matrix_phturnover(p,ifroot_xf)*frootc_xfer(p)
+                                                                  * dt * frootc_xfer(p)!matrix_phturnover(p,ifroot_xf)*frootc_xfer(p)
                matrix_ctransfer_livestemst_to_livestemxf_acc(p)   = matrix_ctransfer_livestemst_to_livestemxf_acc(p) &
                                                                   + matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) &
-                                                                  * matrix_phturnover(p,ilivestem_st)*livestemc_storage(p)
+                                                                  * dt * livestemc_storage(p)!matrix_phturnover(p,ilivestem_st)*livestemc_storage(p)
                matrix_ctransfer_livestemxf_to_livestem_acc(p)     = matrix_ctransfer_livestemxf_to_livestem_acc(p) &
                                                                   + matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc) &
-                                                                  * matrix_phturnover(p,ilivestem_xf)*livestemc_xfer(p)
+                                                                  * dt * livestemc_xfer(p)!matrix_phturnover(p,ilivestem_xf)*livestemc_xfer(p)
                matrix_ctransfer_deadstemst_to_deadstemxf_acc(p)   = matrix_ctransfer_deadstemst_to_deadstemxf_acc(p) &
                                                                   + matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) &
-                                                                  * matrix_phturnover(p,ideadstem_st)*deadstemc_storage(p)
+                                                                  * dt * deadstemc_storage(p)!matrix_phturnover(p,ideadstem_st)*deadstemc_storage(p)
                matrix_ctransfer_deadstemxf_to_deadstem_acc(p)     = matrix_ctransfer_deadstemxf_to_deadstem_acc(p) &
                                                                   + matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc) &
-                                                                  * matrix_phturnover(p,ideadstem_xf)*deadstemc_xfer(p)
+                                                                  * dt * deadstemc_xfer(p)!matrix_phturnover(p,ideadstem_xf)*deadstemc_xfer(p)
                matrix_ctransfer_livecrootst_to_livecrootxf_acc(p) = matrix_ctransfer_livecrootst_to_livecrootxf_acc(p) &
                                                                   + matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) &
-                                                                  * matrix_phturnover(p,ilivecroot_st)*livecrootc_storage(p)
+                                                                  * dt * livecrootc_storage(p)!matrix_phturnover(p,ilivecroot_st)*livecrootc_storage(p)
                matrix_ctransfer_livecrootxf_to_livecroot_acc(p)   = matrix_ctransfer_livecrootxf_to_livecroot_acc(p) &
                                                                   + matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) &
-                                                                  * matrix_phturnover(p,ilivecroot_xf)*livecrootc_xfer(p)
+                                                                  * dt * livecrootc_xfer(p)!matrix_phturnover(p,ilivecroot_xf)*livecrootc_xfer(p)
                matrix_ctransfer_deadcrootst_to_deadcrootxf_acc(p) = matrix_ctransfer_deadcrootst_to_deadcrootxf_acc(p) &
                                                                   + matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) &
-                                                                  * matrix_phturnover(p,ideadcroot_st)*deadcrootc_storage(p)
+                                                                  * dt * deadcrootc_storage(p)!matrix_phturnover(p,ideadcroot_st)*deadcrootc_storage(p)
                matrix_ctransfer_deadcrootxf_to_deadcroot_acc(p)   = matrix_ctransfer_deadcrootxf_to_deadcroot_acc(p) &
                                                                   + matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) &
-                                                                  * matrix_phturnover(p,ideadcroot_st)*deadcrootc_xfer(p)
+                                                                  * dt * deadcrootc_xfer(p)!matrix_phturnover(p,ideadcroot_st)*deadcrootc_xfer(p)
                matrix_ctransfer_livestem_to_deadstem_acc(p)       = matrix_ctransfer_livestem_to_deadstem_acc(p) &
-                                                                  +(matrix_phtransfer(p,ilivestem_to_ideadstem_phc)*matrix_phturnover(p,ilivestem) &
-                                                                  + matrix_fitransfer(p,ilivestem_to_ideadstem_fic)*matrix_fiturnover(p,ilivestem))&
-                                                                  * livestemc(p)
+                                                                  +(matrix_phtransfer(p,ilivestem_to_ideadstem_phc)&!matrix_phturnover(p,ilivestem) &
+                                                                  + matrix_fitransfer(p,ilivestem_to_ideadstem_fic))&!matrix_fiturnover(p,ilivestem))&
+                                                                  * dt * livestemc(p) 
                matrix_ctransfer_livecroot_to_deadcroot_acc(p)     = matrix_ctransfer_livecroot_to_deadcroot_acc(p) &
-                                                                  +(matrix_phtransfer(p,ilivecroot_to_ideadcroot_phc)*matrix_phturnover(p,ilivecroot) &
-                                                                  + matrix_fitransfer(p,ilivecroot_to_ideadcroot_fic)*matrix_fiturnover(p,ilivecroot))&
-                                                                  * livecrootc(p)
-           !print*,'here2'
+                                                                  +(matrix_phtransfer(p,ilivecroot_to_ideadcroot_phc)&!*matrix_phturnover(p,ilivecroot) &
+                                                                  + matrix_fitransfer(p,ilivecroot_to_ideadcroot_fic))&!*matrix_fiturnover(p,ilivecroot))&
+                                                                  * dt * livecrootc(p)
 !            if(ivt(p) >= npcropmin)then
 !               matrix_ctransfer_grainst_to_grainxf_acc(p)      = matrix_ctransfer_grainst_to_grainxf_acc(p) &
 !                                                               + matrix_phAK_C(igrain_xf,igrain_st)*Xoldvegc%V(igrain_st)
@@ -1994,9 +2016,8 @@ contains
                                                    * grainc_xfer(p)
                end if
             end do
-           !print*,'here3'
 
-            !print*,'matrix_ctransfer_acc,ideadcroot',p,matrix_ctransfer_deadcrootxf_to_deadcroot_acc(p),matrix_ctransfer_livecroot_to_deadcroot_acc(p),matrix_cturnover_deadcroot_acc(p)
+         !print*,'here9'
 
             do fp = 1,num_soilp
                p = filter_soilp(fp)
@@ -2026,48 +2047,48 @@ contains
                p = filter_soilp(fp)
                matrix_ntransfer_leafst_to_leafxf_acc(p)           = matrix_ntransfer_leafst_to_leafxf_acc(p) &
                                                                   + matrix_nphtransfer(p,ileafst_to_ileafxf_phn) &
-                                                                  * matrix_nphturnover(p,ileaf_st)*leafn_storage(p)
+                                                                  * dt * leafn_storage(p)!matrix_nphturnover(p,ileaf_st)*leafn_storage(p)
                matrix_ntransfer_leafxf_to_leaf_acc(p)             = matrix_ntransfer_leafxf_to_leaf_acc(p) &
                                                                   + matrix_nphtransfer(p,ileafxf_to_ileaf_phn) & 
-                                                                  * matrix_nphturnover(p,ileaf_xf)*leafn_xfer(p)
+                                                                  * dt * leafn_xfer(p)!matrix_nphturnover(p,ileaf_xf)*leafn_xfer(p)
                matrix_ntransfer_frootst_to_frootxf_acc(p)         = matrix_ntransfer_frootst_to_frootxf_acc(p) &
                                                                   + matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) & 
-                                                                  * matrix_nphturnover(p,ifroot_st)*frootn_storage(p)
+                                                                  * dt * frootn_storage(p)!matrix_nphturnover(p,ifroot_st)*frootn_storage(p)
                matrix_ntransfer_frootxf_to_froot_acc(p)           = matrix_ntransfer_frootxf_to_froot_acc(p) &
                                                                   + matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) & 
-                                                                  * matrix_nphturnover(p,ifroot_xf)*frootn_xfer(p)
+                                                                  * dt * frootn_xfer(p)!matrix_nphturnover(p,ifroot_xf)*frootn_xfer(p)
                matrix_ntransfer_livestemst_to_livestemxf_acc(p)   = matrix_ntransfer_livestemst_to_livestemxf_acc(p) &
                                                                   + matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) & 
-                                                                  * matrix_nphturnover(p,ilivestem_st)*livestemn_storage(p)
+                                                                  * dt * livestemn_storage(p)!matrix_nphturnover(p,ilivestem_st)*livestemn_storage(p)
                matrix_ntransfer_livestemxf_to_livestem_acc(p)     = matrix_ntransfer_livestemxf_to_livestem_acc(p) &
                                                                   + matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn) & 
-                                                                  * matrix_nphturnover(p,ilivestem_xf)*livestemn_xfer(p)
+                                                                  * dt * livestemn_xfer(p)!matrix_nphturnover(p,ilivestem_xf)*livestemn_xfer(p)
                matrix_ntransfer_deadstemst_to_deadstemxf_acc(p)   = matrix_ntransfer_deadstemst_to_deadstemxf_acc(p) &
                                                                   + matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) & 
-                                                                  * matrix_nphturnover(p,ideadstem_st)*deadstemn_storage(p)
+                                                                  * dt * deadstemn_storage(p)!matrix_nphturnover(p,ideadstem_st)*deadstemn_storage(p)
                matrix_ntransfer_deadstemxf_to_deadstem_acc(p)     = matrix_ntransfer_deadstemxf_to_deadstem_acc(p) &
                                                                   + matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn) & 
-                                                                  * matrix_nphturnover(p,ideadstem_xf)*deadstemn_storage(p)
+                                                                  * dt * deadstemn_xfer(p)!matrix_nphturnover(p,ideadstem_xf)*deadstemn_storage(p)
                matrix_ntransfer_livecrootst_to_livecrootxf_acc(p) = matrix_ntransfer_livecrootst_to_livecrootxf_acc(p) &
                                                                   + matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) & 
-                                                                  * matrix_nphturnover(p,ilivecroot_st)*livecrootn_storage(p)
+                                                                  * dt * livecrootn_storage(p)!matrix_nphturnover(p,ilivecroot_st)*livecrootn_storage(p)
                matrix_ntransfer_livecrootxf_to_livecroot_acc(p)   = matrix_ntransfer_livecrootxf_to_livecroot_acc(p) &
                                                                   + matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) & 
-                                                                  * matrix_nphturnover(p,ilivecroot_xf)*livecrootn_xfer(p)
+                                                                  * dt * livecrootn_xfer(p)!matrix_nphturnover(p,ilivecroot_xf)*livecrootn_xfer(p)
                matrix_ntransfer_deadcrootst_to_deadcrootxf_acc(p) = matrix_ntransfer_deadcrootst_to_deadcrootxf_acc(p) &
                                                                   + matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) &
-                                                                  * matrix_nphturnover(p,ideadcroot_st)*deadcrootn_storage(p)
+                                                                  * dt * deadcrootn_storage(p)!matrix_nphturnover(p,ideadcroot_st)*deadcrootn_storage(p)
                matrix_ntransfer_deadcrootxf_to_deadcroot_acc(p)   = matrix_ntransfer_deadcrootxf_to_deadcroot_acc(p) &
                                                                   + matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) & 
-                                                                  * matrix_nphturnover(p,ideadcroot_st)*deadcrootn_xfer(p)
+                                                                  * dt * deadcrootn_xfer(p)!matrix_nphturnover(p,ideadcroot_st)*deadcrootn_xfer(p)
                matrix_ntransfer_livestem_to_deadstem_acc(p)       = matrix_ntransfer_livestem_to_deadstem_acc(p) &
-                                                                  +(matrix_nphtransfer(p,ilivestem_to_ideadstem_phn)*matrix_nphturnover(p,ilivestem) &
-                                                                  + matrix_nfitransfer(p,ilivestem_to_ideadstem_fin)*matrix_nfiturnover(p,ilivestem)) &
-                                                                  * livestemn(p)
+                                                                  +(matrix_nphtransfer(p,ilivestem_to_ideadstem_phn) &!*matrix_nphturnover(p,ilivestem) &
+                                                                  + matrix_nfitransfer(p,ilivestem_to_ideadstem_fin)) &!*matrix_nfiturnover(p,ilivestem)) &
+                                                                  * dt * livestemn(p)
                matrix_ntransfer_livecroot_to_deadcroot_acc(p)     = matrix_ntransfer_livecroot_to_deadcroot_acc(p) &
-                                                                  +(matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn)*matrix_nphturnover(p,ilivecroot) &
-                                                                  + matrix_nfitransfer(p,ilivecroot_to_ideadcroot_fin)*matrix_nfiturnover(p,ilivecroot)) &
-                                                                  * livecrootn(p)
+                                                                  +(matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) &!*matrix_nphturnover(p,ilivecroot) &
+                                                                  + matrix_nfitransfer(p,ilivecroot_to_ideadcroot_fin)) &!*matrix_nfiturnover(p,ilivecroot)) &
+                                                                  * dt * livecrootn(p)
 !            if(ivt(p) >= npcropmin)then
 !               matrix_ntransfer_grainst_to_grainxf_acc(p)      = matrix_ntransfer_grainst_to_grainxf_acc(p) &
 !                                                               + matrix_phAK_C(igrain_xf,igrain_st)*Xoldvegn%V(igrain_st)
@@ -2076,56 +2097,55 @@ contains
 !                                                               + AK_C(igrain,igrain_xf)*Xoldvegn%V(igrain_xf)
 !                                                               + vegmatrixc_transfer(igrain,igrain_xf)
 !            end if
-           !print*,'here4'
 
                matrix_ntransfer_retransn_to_leaf_acc(p)           = matrix_ntransfer_retransn_to_leaf_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ileaf_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_retransn_to_leafst_acc(p)         = matrix_ntransfer_retransn_to_leafst_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ileafst_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_retransn_to_froot_acc(p)          = matrix_ntransfer_retransn_to_froot_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ifroot_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_retransn_to_frootst_acc(p)        = matrix_ntransfer_retransn_to_frootst_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ifrootst_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_retransn_to_livestem_acc(p)       = matrix_ntransfer_retransn_to_livestem_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ilivestem_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_retransn_to_livestemst_acc(p)     = matrix_ntransfer_retransn_to_livestemst_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ilivestemst_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_retransn_to_deadstem_acc(p)       = matrix_ntransfer_retransn_to_deadstem_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ideadstem_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_retransn_to_deadstemst_acc(p)     = matrix_ntransfer_retransn_to_deadstemst_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ideadstemst_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_retransn_to_livecroot_acc(p)      = matrix_ntransfer_retransn_to_livecroot_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ilivecroot_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_retransn_to_livecrootst_acc(p)    = matrix_ntransfer_retransn_to_livecrootst_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ilivecrootst_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_retransn_to_deadcroot_acc(p)      = matrix_ntransfer_retransn_to_deadcroot_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ideadcroot_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_retransn_to_deadcrootst_acc(p)    = matrix_ntransfer_retransn_to_deadcrootst_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_ideadcrootst_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                matrix_ntransfer_leaf_to_retransn_acc(p)           = matrix_ntransfer_leaf_to_retransn_acc(p) &
                                                                   + matrix_nphtransfer(p,ileaf_to_iretransn_phn) & 
-                                                                  * matrix_nphturnover(p,ileaf)*leafn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,ileaf)*leafn(p)
                matrix_ntransfer_froot_to_retransn_acc(p)          = matrix_ntransfer_froot_to_retransn_acc(p) &
                                                                   + matrix_nphtransfer(p,ifroot_to_iretransn_phn) & 
-                                                                  * matrix_nphturnover(p,ifroot)*frootn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,ifroot)*frootn(p)
                matrix_ntransfer_livestem_to_retransn_acc(p)       = matrix_ntransfer_livestem_to_retransn_acc(p) &
                                                                   + matrix_nphtransfer(p,ilivestem_to_iretransn_phn) & 
-                                                                  * matrix_nphturnover(p,ilivestem)*livestemn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,ilivestem)*livestemn(p)
                matrix_ntransfer_livecroot_to_retransn_acc(p)      = matrix_ntransfer_livecroot_to_retransn_acc(p) &
                                                                   + matrix_nphtransfer(p,ilivecroot_to_iretransn_phn) & 
-                                                                  * matrix_nphturnover(p,ilivecroot)*livecrootn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,ilivecroot)*livecrootn(p)
             end do
 
             do fp = 1,num_soilp
@@ -2133,14 +2153,14 @@ contains
                if(ivt(p) >= npcropmin)then
                   matrix_ntransfer_retransn_to_grain_acc(p)       = matrix_ntransfer_retransn_to_grain_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_igrain_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                   matrix_ntransfer_retransn_to_grainst_acc(p)     = matrix_ntransfer_retransn_to_grainst_acc(p) &
                                                                   + matrix_nphtransfer(p,iretransn_to_igrainst_phn) & 
-                                                                  * matrix_nphturnover(p,iretransn)*retransn(p)
+                                                                  * dt * retransn(p)!matrix_nphturnover(p,iretransn)*retransn(p)
                end if
             end do
-           !print*,'here5'
 
+         !print*,'here10'
             do fp = 1,num_soilp
                p = filter_soilp(fp)
                matrix_nturnover_leaf_acc(p)           = matrix_nturnover_leaf_acc(p) &
@@ -2205,22 +2225,20 @@ contains
                p = filter_soilp(fp)
                if(ivt(p) >= npcropmin)then
                   matrix_nturnover_grain_acc(p)       = matrix_nturnover_grain_acc(p) &
-                                                      + (matrix_nphturnover(p,igrain)+matrix_ngmturnover(p,igrain)+matrix_nfiturnover(p,igrain)) &
-                                                      * grainn(p)
+                                                      + (matrix_nphturnover(p,igrain)+matrix_ngmturnover(p,igrain)+matrix_nfiturnover(p,igrain)) !&
+!                                                      * grainn(p)
                   matrix_nturnover_grainst_acc(p)     = matrix_nturnover_grainst_acc(p) &
-                                                      + (matrix_nphturnover(p,igrain_st)+matrix_ngmturnover(p,igrain_st)+matrix_nfiturnover(p,igrain_st)) &
-                                                      * grainn_storage(p)
+                                                      + (matrix_nphturnover(p,igrain_st)+matrix_ngmturnover(p,igrain_st)+matrix_nfiturnover(p,igrain_st)) !&
+!                                                      * grainn_storage(p)
                   matrix_nturnover_grainxf_acc(p)     = matrix_nturnover_grainxf_acc(p) &
-                                                      + (matrix_nphturnover(p,igrain_xf)+matrix_ngmturnover(p,igrain_xf)+matrix_nfiturnover(p,igrain_xf)) & 
-                                                      * grainn_xfer(p)
+                                                      + (matrix_nphturnover(p,igrain_xf)+matrix_ngmturnover(p,igrain_xf)+matrix_nfiturnover(p,igrain_xf)) !& 
+!                                                      * grainn_xfer(p)
                end if
             end do
          end if
-           !print*,'here6'
          call t_stopf('CN veg matrix-accum. trans.')
 
          call t_startf('CN veg matrix-assign new value')
-!         if(p .eq. 5)print*,'leafc_xfer at end',leafc_xfer(p),Xnewvegc%V(ileaf_xf)
          do fp = 1,num_soilp
             p = filter_soilp(fp)
             leafc(p)               = Xvegc%V(p,ileaf)
@@ -2251,7 +2269,6 @@ contains
                grainc_xfer(p)         = Xvegc%V(p,igrain_xf)
             end if
          end do
-           !print*,'here7'
          
 !KO         if (is_end_curr_year())then
 !KO            tempdump(1)  = leafc(p)
@@ -2347,7 +2364,6 @@ contains
             end do
          end if
  
-           !print*,'here7.1'
          do fp = 1,num_soilp
             p = filter_soilp(fp)
             leafn(p)               = Xvegn%V(p,ileaf)
@@ -2379,8 +2395,8 @@ contains
                grainn_xfer(p)         = Xvegn%V(p,igrain_xf)
             end if
          end do
-           !print*,'here8'
          call t_stopf('CN veg matrix-assign new value')
+         !print*,'here11'
          if(isspinup .or. is_outmatrix)then
             if(is_end_curr_year())then
                do fp = 1,num_soilp
@@ -2412,6 +2428,7 @@ contains
 !               write(bounds%begp+1101000000,"(I,18E17.9)"),p,matrix_calloc_acc
 !!!!!->               write(bounds%begp+1101000000,"(I,18E17.9)"),p,(tempdump(i),i=1,18)
 
+                 !print*,'before ctransfer',p,matrix_ctransfer_leafxf_to_leaf_acc(p)
                   matrix_ctransfer_acc(ileaf_xf,ileaf_st)           = matrix_ctransfer_leafst_to_leafxf_acc(p)
                   matrix_ctransfer_acc(ileaf,ileaf_xf)              = matrix_ctransfer_leafxf_to_leaf_acc(p)
                   matrix_ctransfer_acc(ifroot_xf,ifroot_st)         = matrix_ctransfer_frootst_to_frootxf_acc(p)
@@ -2481,29 +2498,29 @@ contains
 !                               matrix_ctransfer_acc(ideadstem,ilivestem), matrix_ctransfer_acc(ideadcroot,ilivecroot),&
 !                               matrix_ctransfer_fire_livestem_to_deadstem_acc(p),matrix_ctransfer_fire_livecroot_to_deadcroot_acc(p)
 
-              !print*,'here9'
-                  matrix_ctransfer_acc(ileaf,ileaf)                 = matrix_cturnover_leaf_acc(p)               
-                  matrix_ctransfer_acc(ileaf_st,ileaf_st)           = matrix_cturnover_leafst_acc(p)               
-                  matrix_ctransfer_acc(ileaf_xf,ileaf_xf)           = matrix_cturnover_leafxf_acc(p)               
-                  matrix_ctransfer_acc(ifroot,ifroot)               = matrix_cturnover_froot_acc(p)               
-                  matrix_ctransfer_acc(ifroot_st,ifroot_st)         = matrix_cturnover_frootst_acc(p)               
-                  matrix_ctransfer_acc(ifroot_xf,ifroot_xf)         = matrix_cturnover_frootxf_acc(p)               
-                  matrix_ctransfer_acc(ilivestem,ilivestem)         = matrix_cturnover_livestem_acc(p)               
-                  matrix_ctransfer_acc(ilivestem_st,ilivestem_st)   = matrix_cturnover_livestemst_acc(p)               
-                  matrix_ctransfer_acc(ilivestem_xf,ilivestem_xf)   = matrix_cturnover_livestemxf_acc(p)               
-                  matrix_ctransfer_acc(ideadstem,ideadstem)         = matrix_cturnover_deadstem_acc(p)               
-                  matrix_ctransfer_acc(ideadstem_st,ideadstem_st)   = matrix_cturnover_deadstemst_acc(p)               
-                  matrix_ctransfer_acc(ideadstem_xf,ideadstem_xf)   = matrix_cturnover_deadstemxf_acc(p)               
-                  matrix_ctransfer_acc(ilivecroot,ilivecroot)       = matrix_cturnover_livecroot_acc(p)               
-                  matrix_ctransfer_acc(ilivecroot_st,ilivecroot_st) = matrix_cturnover_livecrootst_acc(p)               
-                  matrix_ctransfer_acc(ilivecroot_xf,ilivecroot_xf) = matrix_cturnover_livecrootxf_acc(p)               
-                  matrix_ctransfer_acc(ideadcroot,ideadcroot)       = matrix_cturnover_deadcroot_acc(p)               
-                  matrix_ctransfer_acc(ideadcroot_st,ideadcroot_st) = matrix_cturnover_deadcrootst_acc(p)               
-                  matrix_ctransfer_acc(ideadcroot_xf,ideadcroot_xf) = matrix_cturnover_deadcrootxf_acc(p)               
+                 !print*,'before cturnover',p,matrix_cturnover_leaf_acc(p),matrix_cturnover_leafxf_acc(p)
+                  matrix_ctransfer_acc(ileaf,ileaf)                 = -matrix_cturnover_leaf_acc(p)               
+                  matrix_ctransfer_acc(ileaf_st,ileaf_st)           = -matrix_cturnover_leafst_acc(p)               
+                  matrix_ctransfer_acc(ileaf_xf,ileaf_xf)           = -matrix_cturnover_leafxf_acc(p)               
+                  matrix_ctransfer_acc(ifroot,ifroot)               = -matrix_cturnover_froot_acc(p)               
+                  matrix_ctransfer_acc(ifroot_st,ifroot_st)         = -matrix_cturnover_frootst_acc(p)               
+                  matrix_ctransfer_acc(ifroot_xf,ifroot_xf)         = -matrix_cturnover_frootxf_acc(p)               
+                  matrix_ctransfer_acc(ilivestem,ilivestem)         = -matrix_cturnover_livestem_acc(p)               
+                  matrix_ctransfer_acc(ilivestem_st,ilivestem_st)   = -matrix_cturnover_livestemst_acc(p)               
+                  matrix_ctransfer_acc(ilivestem_xf,ilivestem_xf)   = -matrix_cturnover_livestemxf_acc(p)               
+                  matrix_ctransfer_acc(ideadstem,ideadstem)         = -matrix_cturnover_deadstem_acc(p)               
+                  matrix_ctransfer_acc(ideadstem_st,ideadstem_st)   = -matrix_cturnover_deadstemst_acc(p)               
+                  matrix_ctransfer_acc(ideadstem_xf,ideadstem_xf)   = -matrix_cturnover_deadstemxf_acc(p)               
+                  matrix_ctransfer_acc(ilivecroot,ilivecroot)       = -matrix_cturnover_livecroot_acc(p)               
+                  matrix_ctransfer_acc(ilivecroot_st,ilivecroot_st) = -matrix_cturnover_livecrootst_acc(p)               
+                  matrix_ctransfer_acc(ilivecroot_xf,ilivecroot_xf) = -matrix_cturnover_livecrootxf_acc(p)               
+                  matrix_ctransfer_acc(ideadcroot,ideadcroot)       = -matrix_cturnover_deadcroot_acc(p)               
+                  matrix_ctransfer_acc(ideadcroot_st,ideadcroot_st) = -matrix_cturnover_deadcrootst_acc(p)               
+                  matrix_ctransfer_acc(ideadcroot_xf,ideadcroot_xf) = -matrix_cturnover_deadcrootxf_acc(p)               
                   if(ivt(p) >= npcropmin)then
-                     matrix_ctransfer_acc(igrain,igrain)            = matrix_cturnover_grain_acc(p)               
-                     matrix_ctransfer_acc(igrain_st,igrain_st)      = matrix_cturnover_grainst_acc(p)               
-                     matrix_ctransfer_acc(igrain_xf,igrain_xf)      = matrix_cturnover_grainxf_acc(p)               
+                     matrix_ctransfer_acc(igrain,igrain)            = -matrix_cturnover_grain_acc(p)               
+                     matrix_ctransfer_acc(igrain_st,igrain_st)      = -matrix_cturnover_grainst_acc(p)               
+                     matrix_ctransfer_acc(igrain_xf,igrain_xf)      = -matrix_cturnover_grainxf_acc(p)               
                   end if
 
 !KO            if(leafc0(p) < 1.e-8)then
@@ -2751,30 +2768,30 @@ contains
                   matrix_ntransfer_acc(iretransn,ilivestem)     = matrix_ntransfer_livestem_to_retransn_acc(p)               
                   matrix_ntransfer_acc(iretransn,ilivecroot)    = matrix_ntransfer_livecroot_to_retransn_acc(p)               
    
-                  matrix_ntransfer_acc(ileaf,ileaf)                 = matrix_nturnover_leaf_acc(p)               
-                  matrix_ntransfer_acc(ileaf_st,ileaf_st)           = matrix_nturnover_leafst_acc(p)               
-                  matrix_ntransfer_acc(ileaf_xf,ileaf_xf)           = matrix_nturnover_leafxf_acc(p)               
-                  matrix_ntransfer_acc(ifroot,ifroot)               = matrix_nturnover_froot_acc(p)               
-                  matrix_ntransfer_acc(ifroot_st,ifroot_st)         = matrix_nturnover_frootst_acc(p)               
-                  matrix_ntransfer_acc(ifroot_xf,ifroot_xf)         = matrix_nturnover_frootxf_acc(p)               
-                  matrix_ntransfer_acc(ilivestem,ilivestem)         = matrix_nturnover_livestem_acc(p)               
-                  matrix_ntransfer_acc(ilivestem_st,ilivestem_st)   = matrix_nturnover_livestemst_acc(p)               
-                  matrix_ntransfer_acc(ilivestem_xf,ilivestem_xf)   = matrix_nturnover_livestemxf_acc(p)               
-                  matrix_ntransfer_acc(ideadstem,ideadstem)         = matrix_nturnover_deadstem_acc(p)               
-                  matrix_ntransfer_acc(ideadstem_st,ideadstem_st)   = matrix_nturnover_deadstemst_acc(p)               
-                  matrix_ntransfer_acc(ideadstem_xf,ideadstem_xf)   = matrix_nturnover_deadstemxf_acc(p)               
-                  matrix_ntransfer_acc(ilivecroot,ilivecroot)       = matrix_nturnover_livecroot_acc(p)               
-                  matrix_ntransfer_acc(ilivecroot_st,ilivecroot_st) = matrix_nturnover_livecrootst_acc(p)               
-                  matrix_ntransfer_acc(ilivecroot_xf,ilivecroot_xf) = matrix_nturnover_livecrootxf_acc(p)               
-                  matrix_ntransfer_acc(ideadcroot,ideadcroot)       = matrix_nturnover_deadcroot_acc(p)               
-                  matrix_ntransfer_acc(ideadcroot_st,ideadcroot_st) = matrix_nturnover_deadcrootst_acc(p)               
-                  matrix_ntransfer_acc(ideadcroot_xf,ideadcroot_xf) = matrix_nturnover_deadcrootxf_acc(p)               
+                  matrix_ntransfer_acc(ileaf,ileaf)                 = -matrix_nturnover_leaf_acc(p)               
+                  matrix_ntransfer_acc(ileaf_st,ileaf_st)           = -matrix_nturnover_leafst_acc(p)               
+                  matrix_ntransfer_acc(ileaf_xf,ileaf_xf)           = -matrix_nturnover_leafxf_acc(p)               
+                  matrix_ntransfer_acc(ifroot,ifroot)               = -matrix_nturnover_froot_acc(p)               
+                  matrix_ntransfer_acc(ifroot_st,ifroot_st)         = -matrix_nturnover_frootst_acc(p)               
+                  matrix_ntransfer_acc(ifroot_xf,ifroot_xf)         = -matrix_nturnover_frootxf_acc(p)               
+                  matrix_ntransfer_acc(ilivestem,ilivestem)         = -matrix_nturnover_livestem_acc(p)               
+                  matrix_ntransfer_acc(ilivestem_st,ilivestem_st)   = -matrix_nturnover_livestemst_acc(p)               
+                  matrix_ntransfer_acc(ilivestem_xf,ilivestem_xf)   = -matrix_nturnover_livestemxf_acc(p)               
+                  matrix_ntransfer_acc(ideadstem,ideadstem)         = -matrix_nturnover_deadstem_acc(p)               
+                  matrix_ntransfer_acc(ideadstem_st,ideadstem_st)   = -matrix_nturnover_deadstemst_acc(p)               
+                  matrix_ntransfer_acc(ideadstem_xf,ideadstem_xf)   = -matrix_nturnover_deadstemxf_acc(p)               
+                  matrix_ntransfer_acc(ilivecroot,ilivecroot)       = -matrix_nturnover_livecroot_acc(p)               
+                  matrix_ntransfer_acc(ilivecroot_st,ilivecroot_st) = -matrix_nturnover_livecrootst_acc(p)               
+                  matrix_ntransfer_acc(ilivecroot_xf,ilivecroot_xf) = -matrix_nturnover_livecrootxf_acc(p)               
+                  matrix_ntransfer_acc(ideadcroot,ideadcroot)       = -matrix_nturnover_deadcroot_acc(p)               
+                  matrix_ntransfer_acc(ideadcroot_st,ideadcroot_st) = -matrix_nturnover_deadcrootst_acc(p)               
+                  matrix_ntransfer_acc(ideadcroot_xf,ideadcroot_xf) = -matrix_nturnover_deadcrootxf_acc(p)               
                   if(ivt(p) >= npcropmin)then
-                     matrix_ntransfer_acc(igrain,igrain)            = matrix_nturnover_grain_acc(p)               
-                     matrix_ntransfer_acc(igrain_st,igrain_st)      = matrix_nturnover_grainst_acc(p)               
-                     matrix_ntransfer_acc(igrain_xf,igrain_xf)      = matrix_nturnover_grainxf_acc(p)               
+                     matrix_ntransfer_acc(igrain,igrain)            = -matrix_nturnover_grain_acc(p)               
+                     matrix_ntransfer_acc(igrain_st,igrain_st)      = -matrix_nturnover_grainst_acc(p)               
+                     matrix_ntransfer_acc(igrain_xf,igrain_xf)      = -matrix_nturnover_grainxf_acc(p)               
                   end if
-                  matrix_ntransfer_acc(iretransn,iretransn)         = matrix_nturnover_retransn_acc(p)               
+                  matrix_ntransfer_acc(iretransn,iretransn)         = -matrix_nturnover_retransn_acc(p)               
 
                   do i=1,nvegcpool
                     if(matrix_ctransfer_acc(i,i) .eq. 0)then
@@ -2786,16 +2803,7 @@ contains
                        matrix_ntransfer_acc(i,i) = 1.e+36
                     end if
                   end do
-               !print*,'here10'
 !              end if
-               !print*,'before divided by retransn0,matrix_ntransfer_acc,matrix_nalloc_acc',deadcrootc0(p),matrix_ctransfer_acc(1:nvegnpool,ideadcroot),matrix_calloc_acc(ideadcroot)
-               !print*,'end of yr,deadcrootc0',deadcrootc0(p), matrix_ctransfer_acc(1:nvegcpool,ideadcroot)
-               !print*,'before divided by leafc0,transfer out',p,matrix_ctransfer_acc(1:nvegcpool,ileaf_st),leafc0_storage(p)
-               !print*,'before divided by leafc0,tranfer in',p,matrix_ctransfer_acc(ileaf_st,1:nvegcpool),leafc0_storage(p)
-               !print*,'alloc',p,matrix_calloc_acc(:)
-!                print*,'matrix_ctransfer_acc',p,ileaf,nvegcpool
-!                print*,'leafc0',leafc0(p)
-!                print*,'matrix_ctransfer_acc(1:nvegcpool,ileaf)',matrix_ctransfer_acc(1:nvegcpool,ileaf)
                   matrix_ctransfer_acc(1:nvegcpool,ileaf)         = matrix_ctransfer_acc(1:nvegcpool,ileaf)         / leafc0(p)
                   matrix_ctransfer_acc(1:nvegcpool,ileaf_st)      = matrix_ctransfer_acc(1:nvegcpool,ileaf_st)      / leafc0_storage(p)
                   matrix_ctransfer_acc(1:nvegcpool,ileaf_xf)      = matrix_ctransfer_acc(1:nvegcpool,ileaf_xf)      / leafc0_xfer(p)
@@ -2845,28 +2853,27 @@ contains
                   end if
                   matrix_ntransfer_acc(1:nvegnpool,iretransn)  = matrix_ntransfer_acc(1:nvegnpool,iretransn) / retransn0(p)
                 
-                  !print*,'here11'
                   call t_stopf('CN veg matrix-prepare AK^-1')
                   call t_startf('CN veg matrix-inv matrix operation')
-   !               print*,'matrix_ctransfer_acc,matrix_nalloc_acc',matrix_ctransfer_acc,matrix_calloc_acc(:)
+                  !print*,'before capc',p,leafc0(p),leafc0_storage(p),leafc0_xfer(p),frootc0(p),frootc0_storage(p),frootc0_xfer(p),livestemc0(p),livestemc0_storage(p),livestemc0_xfer(p),deadstemc0(p),deadstemc0_storage(p),deadstemc0_xfer(p),livecrootc0(p),livecrootc0_storage(p),livecrootc0_xfer(p),deadcrootc0(p),deadcrootc0_storage(p),deadcrootc0_xfer(p)
+!                  do i=1,nvegcpool
+!                     print*,'transfer',p,matrix_ctransfer_acc(i,1:nvegcpool)
+!                  end do
+!                  print*,'calloc',matrix_calloc_acc(1:nvegcpool)
                   call inverse(matrix_ctransfer_acc(1:nvegcpool,1:nvegcpool),AKinvc(1:nvegcpool,1:nvegcpool),nvegcpool)
-!               print*,'AKinvc',AKinvc(ideadcroot,1:nvegnpool),matrix_calloc_acc(1:nvegnpool)
                   vegmatrixc_rt(:) = -matmul(AKinvc(1:nvegcpool,1:nvegcpool),matrix_calloc_acc(1:nvegcpool))
-!               print*,'after updating vegmatrixn_rt',nvegcpool,vegmatrixc_rt(ideadcroot)
+!                  print*,'after capc',p,vegmatrixc_rt(1:nvegcpool)
 ! N  
+!                  print*,'before capn',p,leafn0(p),leafn0_storage(p),leafn0_xfer(p),frootn0(p),frootn0_storage(p),frootn0_xfer(p),livestemn0(p),livestemn0_storage(p),livestemn0_xfer(p),deadstemn0(p),deadstemn0_storage(p),deadstemn0_xfer(p),livecrootn0(p),livecrootn0_storage(p),livecrootn0_xfer(p),deadcrootn0(p),deadcrootn0_storage(p),deadcrootn0_xfer(p)
                   call inverse(matrix_ntransfer_acc(1:nvegnpool,1:nvegnpool),AKinvn(1:nvegnpool,1:nvegnpool),nvegnpool)
                   vegmatrixn_rt(:) = -matmul(AKinvn(1:nvegnpool,1:nvegnpool),matrix_nalloc_acc(1:nvegnpool))
+!                  print*,'after capn',p,vegmatrixn_rt(1:nvegnpool)
                   call t_stopf('CN veg matrix-inv matrix operation')
-                  !print*,'here12'
 !            do i=1,nvegpool
-!               print*,'AKinv',i, AKinv(i,i), AKinvn(i,i)
 !            end do
-!          if(p .eq.7) print*,'input', matrix_alloc(p,ideadstem)* matrix_Cinput(p) * dt, livestemc(p)*((matrix_phtransfer(p,ideadstem,ilivestem)*matrix_phturnover(p,ilivestem,ilivestem)) &
 !                                                                                             + (matrix_fitransfer(p,ideadstem,ilivestem)*matrix_fiturnover(p,ilivestem,ilivestem)))   
  
                   call t_startf('CN veg matrix-finalize spinup')
-!               print*,'leafc_storage_cap',vegmatrixc_rt(ileaf_st)
-!          if(p .eq.7)print*,'output',deadstemc(p)*((matrix_phtransfer(p,iout,ideadstem)*matrix_phturnover(p,ideadstem,ideadstem))+ (matrix_fitransfer(p,iout,ideadstem)*matrix_fiturnover(p,ideadstem,ideadstem)))
                   if(is_first_step_of_this_run_segment())then
 !!!!!->                   write(bounds%begp+1104000000,"(2I,4E17.9)"),p,patch%itype(p),patch%wtgcell(p),grc%latdeg(patch%gridcell(p)),grc%londeg(patch%gridcell(p)),grc%area(patch%gridcell(p))
                   end if
@@ -2894,7 +2901,6 @@ contains
                         grainc(p)                 = vegmatrixc_rt(igrain)
                         grainc_storage(p)         = vegmatrixc_rt(igrain_st)
                      end if
-!               print *, 'leafacc',p,vegmatrixc_rt(:),vegmatrixn_rt(:)
                      leafn(p)                  = vegmatrixn_rt(ileaf)
                      leafn_storage(p)          = vegmatrixn_rt(ileaf_st)
       !               leafn_xfer(p)             = vegmatrixn_rt(ileaf_xf)
@@ -2917,7 +2923,6 @@ contains
                         grainn(p)                  = vegmatrixn_rt(igrain)
                      end if
                   end if
-               !print*,'here13'
                   if(is_outmatrix)then
                      matrix_cap_leafc(p)                  = vegmatrixc_rt(ileaf)
                      matrix_cap_leafc_storage(p)          = vegmatrixc_rt(ileaf_st)
@@ -3104,7 +3109,6 @@ contains
    !               matrix_cturnover_fire_deadcroot_acc(p)                = 0._r8
    !               matrix_cturnover_fire_deadcrootst_acc(p)                = 0._r8
    !               matrix_cturnover_fire_deadcrootxf_acc(p)                = 0._r8
-                  !print*,'here14'
                   if(ivt(p) >= npcropmin)then
                      matrix_cturnover_grain_acc(p)               = 0._r8 
                      matrix_cturnover_grainst_acc(p)                = 0._r8
@@ -3203,6 +3207,7 @@ contains
             end if
          end if
    
+         !print*,'here12'
 !        matrix_Cinput(p) = 0._r8
 !        matrix_C13input(p) = 0._r8
 !        matrix_C14input(p) = 0._r8       
@@ -3213,8 +3218,11 @@ contains
 !         matrix_ngmtransfer(p,:,:) = 0._r8
 !         matrix_nfitransfer(p,:,:) = 0._r8
 !         matrix_Ninput(p) = 0._r8
+      call vegmatrixc_input%ReleaseV()
+      call vegmatrixc13_input%ReleaseV()
+      call vegmatrixc14_input%ReleaseV()
+      call vegmatrixn_input%ReleaseV()
          
-            !print*,'end of loop patch'
     
    end associate 
  end subroutine CNVegMatrix

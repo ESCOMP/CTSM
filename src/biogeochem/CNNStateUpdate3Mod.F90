@@ -69,9 +69,6 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
 
-!            if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!               print*,'begin of NSupdate matrix inupt',c,j,nf_soil%matrix_Cinput%V(c,j,i_met_lit)
-!            end if
             if (.not. use_nitrif_denitrif) then
                ! mineral N loss due to leaching
                ns_soil%sminn_vr_col(c,j) = ns_soil%sminn_vr_col(c,j) - nf_soil%sminn_leached_vr_col(c,j) * dt
@@ -101,9 +98,6 @@ contains
                  nf_veg%fire_mortality_n_to_cwdn_col(c,j) * dt
 
             ! patch-level wood to column-level litter (uncombusted wood)
-!               if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!                  print*,'before fire update matrix inupt',c,j,nf_soil%matrix_Ninput%V(c,j,i_met_lit),nf_veg%m_n_to_litr_met_fire_col(c,j)
-!               end if
                nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + &
                  nf_veg%m_n_to_litr_met_fire_col(c,j)* dt
                nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) + &
@@ -133,9 +127,6 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
-!         if(p .eq. 8)print*,'deadstemn_to_fire',ns_veg%deadstemn_patch(p),nf_veg%m_deadstemn_to_fire_patch(p) * dt
-!         if(p .eq. 8)print*,'livestemn_to_deadstemn',nf_veg%m_livestemn_to_deadstemn_fire_patch(p) * dt
-!         if(p .eq. 8)print*,'deadstemn_to_litter_fire',nf_veg%m_deadstemn_to_litter_fire_patch(p) * dt
          if(.not. use_matrixcn)then 
          !from fire displayed pools
             ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p) -                           &

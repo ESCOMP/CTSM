@@ -390,7 +390,6 @@ contains
        end if
     end do
     this_filter(nc)%num_soilc = fs
-
     ! Create soil filter at patch-level
 
     fs = 0

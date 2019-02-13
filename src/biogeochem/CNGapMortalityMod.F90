@@ -410,6 +410,7 @@ contains
          end if
         
  !        if(p .eq. 16 .and. use_matrixcn)print*,'after update ngmtransfer 1',cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ifroot)*cnveg_nitrogenstate_inst%frootn_patch(p)*1800,m
+!         if(p .eq. 10580)print*,'gap',cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc),cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc)
       end do ! end of patch loop
 
       ! gather all patch-level litterfall fluxes to the column

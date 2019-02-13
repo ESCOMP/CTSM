@@ -1395,6 +1395,7 @@ contains
         if(f .ne. 0 .or. f .ne. baf_crop(c))then
            num_actfirec = num_actfirec + 1
            filter_actfirec(num_actfirec) = c
+!           print*,'num_actfirec',num_actfirec,c
         end if
 
         ! change CC for litter from 0.4_r8 to 0.5_r8 and CC for CWD from 0.2_r8

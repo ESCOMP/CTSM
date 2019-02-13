@@ -79,9 +79,6 @@ contains
                ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%gap_mortality_n_to_cwdn_col(c,j)       * dt
             else
-!               if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!                  print*,'before gap mortality N input to soil',nf_soil%matrix_input_col(c,j,i_met_lit),nf_veg%gap_mortality_n_to_litr_met_n_col(c,j)
-!               end if
                nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
                  nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + nf_veg%gap_mortality_n_to_litr_met_n_col(c,j) * dt
                nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
@@ -98,7 +95,6 @@ contains
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
-!         if(p .eq. 8)print*,'ns_veg%deadstemn_patch in gap',ns_veg%deadstemn_patch(p),nf_veg%m_deadstemn_to_litter_patch(p) * dt
         if(.not.  use_matrixcn)then
          ! displayed pools
          ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p)                           &
@@ -201,9 +197,6 @@ contains
                ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%harvest_n_to_cwdn_col(c,j)       * dt
             else
-!               if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!                  print*,'before harvest N input soil',nf_soil%matrix_input_col(c,j,i_met_lit),nf_veg%harvest_n_to_litr_met_n_col(c,j)
-!               end if
                nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
                  nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + nf_veg%harvest_n_to_litr_met_n_col(c,j) * dt
                nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
@@ -221,7 +214,6 @@ contains
          p = filter_soilp(fp)
 
          ! displayed pools
-!         if(p .eq. 8)print*,'deadstemn_patch in harvest',ns_veg%deadstemn_patch(p),nf_veg%wood_harvestn_patch(p) * dt
          if(.not. use_matrixcn)then
             ns_veg%leafn_patch(p) = ns_veg%leafn_patch(p)                           &
               - nf_veg%hrv_leafn_to_litter_patch(p) * dt

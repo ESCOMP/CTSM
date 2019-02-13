@@ -2491,13 +2491,16 @@ contains
             this%totvegn_col(c)                              
 
        ! total column nitrogen, including patch (TOTCOLN)
-
        this%totn_col(c) = this%totn_p2c_col(c)               + &
             soilbiogeochem_nitrogenstate_inst%cwdn_col(c)    + &
             soilbiogeochem_nitrogenstate_inst%totlitn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%totsomn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%sminn_col(c)   + &
             soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
+
+!       if(c .eq. 1411 .or. c .eq. 2677)print*,'this%totn_col(c)',this%totn_col(c),this%totn_p2c_col(c),soilbiogeochem_nitrogenstate_inst%cwdn_col(c),soilbiogeochem_nitrogenstate_inst%totlitn_col(c),soilbiogeochem_nitrogenstate_inst%totsomn_col(c),soilbiogeochem_nitrogenstate_inst%sminn_col(c),soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
+
+!       if(c .eq. 32397)print*,'totn_col',c,this%totn_p2c_col(c),soilbiogeochem_nitrogenstate_inst%cwdn_col(c),soilbiogeochem_nitrogenstate_inst%totlitn_col(c),soilbiogeochem_nitrogenstate_inst%totsomn_col(c),soilbiogeochem_nitrogenstate_inst%sminn_col(c),soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
 
     end do
     

@@ -63,7 +63,7 @@ contains
     integer                                  , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                                  , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                                  , intent(in)    :: num_actfirec       ! number of soil columns in filter
-    integer                                  , intent(in)    :: filter_actfirec(1:num_actfirec) ! filter for soil columns
+    integer                                  , intent(in)    :: filter_actfirec(:) ! filter for soil columns
     type(cnveg_carbonflux_type)              , intent(inout) :: cnveg_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)    , intent(inout) :: soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonflux_type)     , intent(inout) :: soilbiogeochem_carbonflux_inst
@@ -130,8 +130,8 @@ contains
 !    type(vector_type) :: matrix_Cinput14_vector
 !    type(vector_type) :: matrix_Ninput_vector
 
-    real(r8),dimension(bounds%begc:bounds%endc,ndecomp_pools_vr,1) ::  soilmatrixc_cap,soilmatrixn_cap
-    real(r8), dimension(ndecomp_pools_vr,ndecomp_pools_vr)   ::  AKinv,AKinvn
+    real(r8),dimension(bounds%begc:bounds%endc,1:ndecomp_pools_vr,1) ::  soilmatrixc_cap,soilmatrixn_cap
+    real(r8), dimension(1:ndecomp_pools_vr,1:ndecomp_pools_vr)   ::  AKinv,AKinvn
 !    real(r8),dimension(ndecomp_pools,1) :: emulator_Cinter_1,emulator_Cinter_next_1,emulator_Cinput_1
 
     real(r8),dimension(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools) :: cn_decomp_pools
@@ -146,6 +146,7 @@ contains
 !    real(r8), dimension(num_soilc,nlevdecomp) :: tot_n_to_litr_met_n23,tot_n_to_litr_cel_n23,tot_n_to_litr_lig_n23,tot_n_to_cwdn23
     integer :: Ntrans
     integer tranlist_a
+    integer j_decomp,j_lev
     integer,dimension(:) :: kk(bounds%begc:bounds%endc)
     integer,dimension(:) :: kfire_i(1:ndecomp_pools_vr)
     integer,dimension(:) :: kfire_j(1:ndecomp_pools_vr)
@@ -277,10 +278,20 @@ contains
          list_V_AKV              => decomp_cascade_con%list_V_AKV &
          )
 
+     !print*,'here0,NE',AKXcacc%NE
+     !print*,'here0'
+!            do i=1,ndecomp_pools_vr
+!               do fc = 1,num_soilc
+!                  c = filter_soilc(fc)
+!                  print*,'here6.22',fc,begc,endc,c,i,abs(cs_soil%tran_acc(c,i,i))
+!               end do
+!            end do
      ! set time steps
       call t_startf('CN Soil matrix-init. matrix')
       dt = real( get_step_size(), r8 )
+!         print*,'begin decomp0',cs_soil%decomp0_cpools_vr_col(:,10,1),cs_soil%decomp_cpools_vr_col(:,10,1)
 
+      Ntrans = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
       epsi = 1.e-30_r8 
 
       isbegofyear = is_beg_curr_year()
@@ -342,6 +353,12 @@ contains
 !         end do
 !      enddo
      !print*,'here1'
+            do i=1,ndecomp_pools_vr
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+!                  print*,'here6.22',fc,begc,endc,c,i,abs(cs_soil%tran_acc(c,i,i))
+               end do
+            end do
 !             cmatrix_in    = 0.0_r8
       call t_startf('CN Soil matrix-assign matrix-a-na')
 !      do k = 1, ndecomp_cascade_transitions
@@ -390,8 +407,20 @@ contains
          end if
       end do
 
+!         do j=1,Ntrans
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'here6.238',c,A_i(j),A_j(j),j,a_ma_vr(c,j),num_actfirec
+!            end do
+!         end do
       call t_stopf('CN Soil matrix-assign matrix-a-na')
     !print*,'here2'
+!            do i=1,ndecomp_pools_vr
+!               do fc = 1,num_soilc
+!                  c = filter_soilc(fc)
+!                  print*,'here6.22',fc,begc,endc,c,i,abs(cs_soil%tran_acc(c,i,i))
+!               end do
+!            end do
       call t_startf('CN Soil matrix-assign matrix-in')
       do i = 1,ndecomp_pools
          if(is_litter(i))then
@@ -412,6 +441,8 @@ contains
             end do
          end if
       end do
+
+!      if(bounds%begc .le. 32397 .and. bounds%endc .ge. 32397)print*,'Ksoil',Ksoil%DM(32397,8)
       call t_stopf('CN Soil matrix-assign matrix-in')
       call t_startf('CN Soil matrix-assign matrix-tri')
 
@@ -462,6 +493,12 @@ contains
             end do
          end do
       end do
+!         do j=1,ndecomp_pools_vr
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'matrix_Cinter%V here3.2',c,j,matrix_Cinter%V(c,j)
+!            end do
+!         end do
       if ( use_c13 )then
          do i = 1,ndecomp_pools
             do j = 1, nlevdecomp
@@ -494,9 +531,17 @@ contains
       
       call t_startf('CN Soil matrix-assign matrix-decomp0')
 
+!      print*,'before decomp0',cs_soil%decomp0_cpools_vr_col(:,10,1),cs_soil%decomp_cpools_vr_col(:,10,1)!,cs_soil%decomp0_cpools_vr_col(:,9,10)
       if (isbegofyear)then  
-         cs_soil%decomp0_cpools_vr_col=cs_soil%decomp_cpools_vr_col
-         ns_soil%decomp0_npools_vr_col=ns_soil%decomp_npools_vr_col
+         do i = 1,ndecomp_pools
+            do j = 1, nlevdecomp
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  cs_soil%decomp0_cpools_vr_col(c,j,i)=cs_soil%decomp_cpools_vr_col(c,j,i)
+                  ns_soil%decomp0_npools_vr_col(c,j,i)=ns_soil%decomp_npools_vr_col(c,j,i)
+               end do
+            end do
+         end do
 !                  cs_soil%decomp0_cpools_vr_col(c,j,i) = max(cs_soil%decomp_cpools_vr_col(c,j,i),epsi)
 !                  ns_soil%decomp0_npools_vr_col(c,j,i) = max(ns_soil%decomp_npools_vr_col(c,j,i),epsi)
          where(cs_soil%decomp0_cpools_vr_col .lt. epsi)
@@ -505,15 +550,21 @@ contains
          where(ns_soil%decomp0_npools_vr_col .lt. epsi)
             ns_soil%decomp0_npools_vr_col = epsi
          end where
+!         print*,'after decomp0',cs_soil%decomp0_cpools_vr_col(:,10,1),cs_soil%decomp_cpools_vr_col(:,10,1)!,cs_soil%decomp0_cpools_vr_col(:,9,10)
       end if
       call t_stopf('CN Soil matrix-assign matrix-decomp0')
    
 
      !print*,'here3'
+!            do i=1,ndecomp_pools_vr
+!               do fc = 1,num_soilc
+!                  c = filter_soilc(fc)
+!                  print*,'here6.22',fc,begc,endc,c,i,abs(cs_soil%tran_acc(c,i,i))
+!               end do
+!            end do
 !          tranvert = matmul(a_ma_vr,kk_ma_vr)-tri_ma_vr-kk_fire_vr  !intermediate calculatio
 !          ntranvert = matmul(na_ma_vr,kk_ma_vr)-tri_ma_vr-kk_fire_vr  !intermediate calculatio
 
-      Ntrans = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
 !         do fc = 1,num_soilc
 !            c = filter_soilc(fc)
 
@@ -522,16 +573,31 @@ contains
 !            do j=1,Ntrans
 !               Aoned = a_ma_vr(:,c)
 !            end do
+!         do j=1,Ntrans
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+               !print*,'here6.2385',a_ma_vr(c,j),c,A_i(j),A_j(j),j
+!            end do
+!         end do
       !Set C transfer matrix A from a_ma_vr
-      call AKsoilc%SetValueA(num_soilc,filter_soilc,a_ma_vr,A_i,A_j,Ntrans,init_readyAsoilc,list_Asoilc,RI_a,CI_a)
+!      print*,'before AK%setValue',num_soilc,size(filter_soilc),size(a_ma_vr),size(A_i),size(A_j),size(list_Asoilc),size(RI_a),size(CI_a),begc,endc
+      call AKsoilc%SetValueA(begc,endc,num_soilc,filter_soilc,a_ma_vr,A_i,A_j,Ntrans,init_readyAsoilc,list_Asoilc,RI_a,CI_a)
+!         do j=1,Ntrans
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'here6.239',AKsoilc%M(c,j),c,AKsoilc%RI(j),AKsoilc%CI(j),j
+!            end do
+!         end do
+      !print*,'here3.1'
 
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SetValueAK1')
 
       call t_startf('CN Soil matrix-matrix mult1-lev3-SetValueAK2')
 
+      !print*,'here3.2'
 !            Aoned = na_ma_vr(c,:)
       !Set N transfer matrix A from a_ma_vr
-      call AKsoiln%SetValueA(num_soilc,filter_soilc,na_ma_vr,A_i,A_j,Ntrans,init_readyAsoiln,list_Asoiln,RI_na,CI_na)
+      call AKsoiln%SetValueA(begc,endc,num_soilc,filter_soilc,na_ma_vr,A_i,A_j,Ntrans,init_readyAsoiln,list_Asoiln,RI_na,CI_na)
 
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SetValueAK2')
 
@@ -543,20 +609,24 @@ contains
             
       call t_startf('CN Soil matrix-matrix mult1-lev3-SPMM_AK1')
       ! calculate matrix Ac*K for C
+      !print*,'here3.3'
       call AKsoilc%SPMM_AK(num_soilc,filter_soilc,Ksoil)
+      !print*,'here3.4'
 
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SPMM_AK1')
 
       call t_startf('CN Soil matrix-matrix mult1-lev3-SPMM_AK2')
       ! calculate matrix An*K for N
       call AKsoiln%SPMM_AK(num_soilc,filter_soilc,Ksoil)
+      !print*,'here3.5'
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SPMM_AK2')
 !         index_ready1 = .True.
 
 !         trioned = tri_ma_vr(c,:) * (-dt)
 !     print*,'here3.2',Ntri_setup,c
-!     print*,'tri_i',tri_i
-!     print*,'tri_j',tri_j
+!     if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'tri_i',tri_i
+!     if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'tri_j',tri_j
+!     if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'tri_ma_vr',Ntri_setup,tri_ma_vr
 !     print*,'trioned',trioned
 !      init_readyAVsoil = .False.
 !      print*,'init_readyAVsoil1',init_readyAVsoil
@@ -565,7 +635,7 @@ contains
 !      print*,'tri_i',tri_i
 !      print*,'tri_j',tri_j
 !      print*,'Ntri_setup',Ntri_setup
-      call AVsoil%SetValueSM(num_soilc,filter_soilc,tri_ma_vr,tri_i,tri_j,Ntri_setup)!,init_readyAVsoil)
+      call AVsoil%SetValueSM(begc,endc,num_soilc,filter_soilc,tri_ma_vr(begc:endc,1:Ntri_setup),tri_i,tri_j,Ntri_setup)!,init_readyAVsoil)
 !      print*,'AVsoil%NE',AVsoil%NE
 !      print*,'AVsoil%RI',AVsoil%RI
 !      print*,'AVsoil%CI',AVsoil%CI
@@ -573,6 +643,7 @@ contains
 !      print*,'AVsoil',AVsoil%NE,Ntri_setup
 !     print*,'here3.25'
 
+      !print*,'here3.6'
 !            AKonedfire = matrix_decomp_fire_k(c,:) * (-dt)
 !      if(.not. init_readyAKfiresoil)then
       do j=1,ndecomp_pools_vr
@@ -581,9 +652,10 @@ contains
       end do
 !      end if
 !     print*,'here3.3'
+      !print*,'here3.7'
       ! Set fire decomposition matrix Kfire from matrix_decomp_fire_k
 !      call AKVfiresoil%SetValueSM(num_soilc,filter_soilc,matrix_decomp_fire_k,kfire_i,kfire_j,ndecomp_pools_vr,init_readyAKfiresoil)
-      call AKfiresoil%SetValueSM(num_soilc,filter_soilc,matrix_decomp_fire_k,kfire_i,kfire_j,ndecomp_pools_vr)
+      call AKfiresoil%SetValueSM(begc,endc,num_soilc,filter_soilc,matrix_decomp_fire_k(begc:endc,1:ndecomp_pools_vr),kfire_i,kfire_j,ndecomp_pools_vr)
 
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SetValueAV,AKfire')
 !     print*,'here3.4'
@@ -612,6 +684,28 @@ contains
 !      print*,'num_actfirec',num_actfirec,AKallsoilc%NE,list_AK_AKV
 !      print*,'list_V_AKV',list_V_AKV
 !      print*,'num_actfirec',num_actfirec,filter_actfirec
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'before SPMP_ABC,AKsoilc',AKsoilc%M(8,:)
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'RI',AKsoilc%RI(:)
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'CI',AKsoilc%CI(:)
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'before SPMP_ABC,AVsoil',AVsoil%M(8,:)
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'RI',AVsoil%RI(:)
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'CI',AVsoil%CI(:)
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'before SPMP_ABC,AKfiresoil',AKfiresoil%M(8,:)
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'RI',AKfiresoil%RI(:)
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'CI',AKfiresoil%CI(:)
+!         do j=1,Ntrans
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'here6.240',c,A_i(j),A_j(j),AKsoilc%RI(j),AKsoilc%CI(j),j,AKsoilc%M(c,j),num_actfirec
+!            end do
+!         end do
+!         do j=1,n_all_entries
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'here6.241',c,j,all_i(j),all_j(j),AKallsoilc%M(c,j),num_actfirec
+!            end do
+!         end do
+      !print*,'here3.8'
       if(num_actfirec .eq. 0)then
          call AKallsoilc%SPMP_AB(num_soilc,filter_soilc,AKsoilc,AVsoil,list_ready1_nofire,list_A=list_AK_AKV, list_B=list_V_AKV,&
               NE_AB=NE_AKallsoilc,RI_AB=RI_AKallsoilc,CI_AB=CI_AKallsoilc)
@@ -626,6 +720,12 @@ contains
               list_B=list_V_AKVfire,list_C=list_fire_AKVfire,NE_ABC=NE_AKallsoiln,RI_ABC=RI_AKallsoiln,CI_ABC=CI_AKallsoiln,&
               use_actunit_list_C=.True.,num_actunit_C=num_actfirec,filter_actunit_C=filter_actfirec)
       end if
+!         do j=1,n_all_entries
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'here6.242',c,j,all_i(j),all_j(j),AKallsoilc%M(c,j)
+!            end do
+!         end do
 !      print*,'after SPMP_ABC,list_V_AKV',list_V_AKV
 !      print*,'after SPMP_ABC,num_actfirec',num_actfirec,AKallsoilc%NE,list_AK_AKV
 !      print*,'AKsoilc',AKsoilc%M(1,140:145)
@@ -671,12 +771,42 @@ contains
 !            if(c .eq. 1)print*,'AKallsoilc_CI',AKallsoilc%CI(1:10)
  
 !      call matrix_Cinter%SetValueV(num_soilc,filter_soilc,matrix_Cinter)
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'CinterV before SPMM_AX',matrix_Cinter%V(8,:),AKallsoilc%NE
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'Akallsoilc',AKallsoilc%M(8,:)
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'RI',AKallsoilc%RI
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'CI',AKallsoilc%CI
+!         do j=1,n_all_entries
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'here3.3',c,j,all_i(j),all_j(j),AKallsoilc%M(c,j)
+!            end do
+!         end do
+!         do j=1,ndecomp_pools_vr
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'matrix_Cinter%V here3.4',c,j,matrix_Cinter%V(c,j)
+!            end do
+!         end do
+      !print*,'here3.9'
       call matrix_Cinter%SPMM_AX(num_soilc,filter_soilc,AKallsoilc)
+!         do j=1,ndecomp_pools_vr
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'matrix_Cinter%V here3.5',c,j,matrix_Cinter%V(c,j)
+!            end do
+!         end do
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'CinterV after SPMM_AX',matrix_Cinter%V(8,:)
 !      print*,'matrix_Cinter',matrix_Cinter%V(1,21:)
 !      print*,'matrix_Cinter_next',matrix_Cinter_next%V(1,21:)
             
 !      call matrix_Ninter%SetValueV(num_soilc,filter_soilc,matrix_Ninter)
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'NinterV before SPMM_AX',matrix_Ninter%V(8,:)
+!      if(bounds%begc .le. 32397 .and. bounds%endc .ge. 32397)print*,'Ninter before SPMMAX',matrix_Ninter%V(32397,8)
+!     if(bounds%begc .le. 1411 .and. bounds%endc .ge. 1411)print*,'before SPMMAX',matrix_Ninter%V(1411,21:30),AKallsoiln%M(1411,79),AKallsoiln%M(1411,82),AKallsoiln%M(1411,258),AKallsoiln%RI(79),AKallsoiln%RI(82),AKallsoiln%RI(258)!,AKallsoiln%RI,Akallsoilc%CI
       call matrix_Ninter%SPMM_AX(num_soilc,filter_soilc,AKallsoiln)
+!     if(bounds%begc .le. 1411 .and. bounds%endc .ge. 1411)print*,'after SPMMAX',matrix_Ninter%V(1411,21:30)      
+!      if(bounds%begc .le. 8 .and. bounds%endc .ge. 8)print*,'NinterV after SPMM_AX',matrix_Ninter%V(8,:)
+!      if(bounds%begc .le. 32397 .and. bounds%endc .ge. 32397)print*,'Ninter after SPMMAX',matrix_Ninter%V(32397,8)
 
 !     print*,'here3.8'
       if ( use_c13)then
@@ -689,6 +819,12 @@ contains
          call matrix_Cinter14%SPMM_AX(num_soilc,filter_soilc,AKallsoilc)
       end if
 
+!      do j=1,ndecomp_pools_vr
+!         do fc = 1,num_soilc
+!            c = filter_soilc(fc)
+!            print*,'matrix_Cinter%V here3.6',c,j,matrix_Cinter%V(c,j)
+!         end do
+!      end do
       do j = 1, ndecomp_pools_vr
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -696,9 +832,17 @@ contains
             matrix_Cinter%V(c,j) = matrix_Cinput%V(c,j) + matrix_Cinter%V(c,j)
  
 !            if(j .le. 20 .and. j .ge. 21 .and. c .eq. 1)print*,'matrix_Ninter',c,matrix_Ninter_next%V(c,j),matrix_Ninput_vector%V(c,j),matrix_Ninter%V(c,j)
+!            if(c .eq. 1411 .and. j .ge. 21 .and. j .le. 30)print*,'Cinter before input',c,j,matrix_Ninter%V(c,j),matrix_Ninput%V(c,j)
             matrix_Ninter%V(c,j) = matrix_Ninput%V(c,j) + matrix_Ninter%V(c,j)
+!            if(c .eq. 1411 .and. j .ge. 21 .and. j .le. 30)print*,'Cinter after input',c,j,matrix_Ninter%V(c,j),matrix_Ninput%V(c,j)
          end do
       end do
+!      do j=1,ndecomp_pools_vr
+!         do fc = 1,num_soilc
+!            c = filter_soilc(fc)
+!            print*,'matrix_Cinter%V here3.7',c,j,matrix_Cinter%V(c,j)
+!         end do
+!      end do
 
       if ( use_c13)then
          do j = 1, ndecomp_pools_vr
@@ -731,14 +875,15 @@ contains
                end do
 !               end if
             end do
-!      print*,'hr',c,hr(c) * dt
 
+!      if(bounds%begc .le. 12285 .and. bounds%endc .ge. 12285)print*,'hr',12285,hr(12285) * dt
+
+!            print*,'filter_actfirec in CNSoilMatrix',num_actfirec,filter_actfirec(1:num_actfirec)
             if(num_actfirec .ne. 0)then
                do i=1,ndecomp_pools
                   do j=1,nlevdecomp
                      do fc = 1,num_actfirec
                         c = filter_actfirec(fc)
-!                        print*,'m_decomp_cpools_to_fire',c,i,j,m_decomp_cpools_to_fire(c,i)
                         fire_delta = AKfiresoil%M(c,j+(i-1)*nlevdecomp)*Cinter_old(c,j+(i-1)*nlevdecomp)*dzsoi_decomp(j) / dt
 !                           - matrix_decomp_fire_k(c,j+(i-1)*nlevdecomp)*Cinter_old(c,j+(i-1)*nlevdecomp)*dzsoi_decomp(j) / dt
 !                           + Cinter_old(c,j+(i-1)*nlevdecomp)*dzsoi_decomp(j) 
@@ -757,6 +902,11 @@ contains
 
 
      !print*,'here4'
+            do i=1,ndecomp_pools_vr
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+               end do
+            end do
       call t_startf('CN Soil matrix-assign back')
 
       do i=1,ndecomp_pools
@@ -764,6 +914,7 @@ contains
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                cs_soil%decomp_cpools_vr_col(c,j,i) = matrix_Cinter%V(c,j+(i-1)*nlevdecomp)
+!               if(month .eq. 10)print*,'decomp_cpools',c,j,i,cs_soil%decomp_cpools_vr_col(c,j,i)
                ns_soil%decomp_npools_vr_col(c,j,i) = matrix_Ninter%V(c,j+(i-1)*nlevdecomp)
             end do
          end do
@@ -794,13 +945,14 @@ contains
       call t_stopf('CN Soil matrix-assign back')
 
       if(use_soil_matrixcn .and. (is_outmatrix .or. isspinup))then
-      call t_startf('CN Soil matrix-spinup & output1')
+         call t_startf('CN Soil matrix-spinup & output1')
             
          do j=1,ndecomp_pools*nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                cs_soil%in_acc (c,j) = cs_soil%in_acc (c,j) + matrix_Cinput%V(c,j)
                ns_soil%in_nacc(c,j) = ns_soil%in_nacc(c,j) + matrix_Ninput%V(c,j)
+    !           if(j .eq. 121 .and. (c .eq. 2852 .or. c .eq. 2856 .or. c .eq. 2857 .or. c .eq. 2748 .or. c .eq. 2770 .or. c .eq. 2771))print*,'soil3n,input',c,ns_soil%in_nacc(c,j), matrix_Ninput%V(c,j),matrix_Ninter%V(c,j),col%wtgcell(c)
             end do
          end do
 
@@ -858,7 +1010,7 @@ contains
 !               Koned = matrix_Cinter(c,:)
      !print*,'here5.1'
      !print*,'here5.3'
-         call Xdiagsoil%SetValueDM(num_soilc,filter_soilc,matrix_Ninter%V)
+         call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,Ninter_old(begc:endc,1:ndecomp_pools_vr))
      !print*,'here5.5'
          call t_startf('CN Soil matrix-spinup & output1.5')
          call AKallsoiln%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
@@ -866,10 +1018,38 @@ contains
 
 !            Koned = matrix_Ninter(c,:)
      !print*,'here5.4'
-         call Xdiagsoil%SetValueDM(num_soilc,filter_soilc,matrix_Cinter%V)
+!         do j=1,ndecomp_pools_vr
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'matrix_Cinter%V',c,j,matrix_Cinter%V(c,j)
+!            end do
+!         end do
+!         do fc = 1,num_soilc
+!            c = filter_soilc(fc)
+!            print*,'lat,lon',c,grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+!         end do
+         call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,Cinter_old(begc:endc,1:ndecomp_pools_vr))
      !print*,'here5.2'
          call t_startf('CN Soil matrix-spinup & output1.6')
+!         do j=1,n_all_entries
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'here6.2429',c,j,all_i(j),all_j(j),AKallsoilc%M(c,j)
+!            end do
+!         end do
+!         do j=1,ndecomp_pools_vr
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'Xdiagsoil',c,j,Xdiagsoil%DM(c,j)
+!            end do
+!         end do
          call AKallsoilc%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
+!         do j=1,n_all_entries
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               print*,'here6.243',c,j,all_i(j),all_j(j),AKallsoilc%M(c,j)
+!            end do
+!         end do
         
          call t_stopf('CN Soil matrix-spinup & output1.6')
 !     print*,'here5.6'
@@ -878,27 +1058,72 @@ contains
      !print*,'here5.6,AKXcinc',AKXcinc%M(1:AKXcinc%NE)
          call t_startf('CN Soil matrix-spinup & output2')
 
-         do j=1,AKallsoiln%NE
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               AKXnacc%M(c,j) = AKXnacc%M(c,j) + AKallsoiln%M(c,j)
-            end do
-         end do
+!        do j=1,n_all_entries
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               if(all_i(j) .eq. 121 .and. c .ge. 2852 .and. c .le. 2852)print*,'here6.244,2852',c,j,all_i(j),all_j(j),AKXnacc%M(c,j),AKallsoiln%M(c,j)
+!               if(all_i(j) .eq. 121 .and. c .ge. 2856 .and. c .le. 2856)print*,'here6.244,2856',c,j,all_i(j),all_j(j),AKXnacc%M(c,j),AKallsoiln%M(c,j)
+!               if(all_i(j) .eq. 121 .and. c .ge. 2857 .and. c .le. 2857)print*,'here6.244,2857',c,j,all_i(j),all_j(j),AKXnacc%M(c,j),AKallsoiln%M(c,j)
+!               if(all_i(j) .eq. 121 .and. c .ge. 2748 .and. c .le. 2748)print*,'here6.244,2748',c,j,all_i(j),all_j(j),AKXnacc%M(c,j),AKallsoiln%M(c,j)
+!               if(all_i(j) .eq. 121 .and. c .ge. 2770 .and. c .le. 2770)print*,'here6.244,2770',c,j,all_i(j),all_j(j),AKXnacc%M(c,j),AKallsoiln%M(c,j)
+!               if(all_i(j) .eq. 121 .and. c .ge. 2771 .and. c .le. 2771)print*,'here6.244,2771',c,j,all_i(j),all_j(j),AKXnacc%M(c,j),AKallsoiln%M(c,j)
+!            end do
+!         end do
+         call AKXnacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoiln)
+!         do j=1,AKallsoiln%NE
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               AKXnacc%M(c,j) = AKXnacc%M(c,j) + AKallsoiln%M(c,j)
+!            end do
+!         end do
          call t_stopf('CN Soil matrix-spinup & output2')
 !     print*,'here5.7',c
 !     print*,'here5.7',AKXnacc(c,:)
 !     print*,'here5.7',AKXninc%M(1:AKXninc%NE)
          call t_startf('CN Soil matrix-spinup & output3')
-         do j=1,AKallsoilc%NE
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               AKXcacc%M(c,j) = AKXcacc%M(c,j) + AKallsoilc%M(c,j)
-            end do
-         end do
+
+
+         call AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoilc)
+
+
+!         do j=1,n_all_entries
+!            if(bounds%begc .le. 7856 .and. bounds%endc .ge. 7873 .and. all_j(j) .eq. 132)print*,'AKXcacc1',j,AKXcacc%M(7856,j),AKXcacc%M(7861,j),AKXcacc%M(7867,j),AKXcacc%M(7869,j),AKXcacc%M(7871,j),AKXcacc%M(7873,j)
+!            if(bounds%begc .le. 7856 .and. bounds%endc .ge. 7873 .and. all_i(j) .eq. 132)print*,'AKXcacc2',j,AKXcacc%M(7856,j),AKXcacc%M(7861,j),AKXcacc%M(7867,j),AKXcacc%M(7869,j),AKXcacc%M(7871,j),AKXcacc%M(7873,j)
+!         end do
+!         print*,'hereNE',AKXcacc%NE,AKallsoilc%NE
+!         print*,'hereRI1',AKXcacc%RI
+!         print*,'hereRI2',AKallsoilc%RI
+!         print*,'hereCI1',AKXcacc%CI
+!         print*,'hereCI2',AKallsoilc%CI
+!         do j=1,AKallsoilc%NE
+!            do fc = 1,num_soilc
+!               c = filter_soilc(fc)
+!               AKXcacc%M(c,j) = AKXcacc%M(c,j) + AKallsoilc%M(c,j)
+!            end do
+!         end do
          call t_stopf('CN Soil matrix-spinup & output3')
      !print*,'here5.8'
                   
-     !print*,'here6',is_end_curr_year()!,is_end_curr_year()
+!     print*,'here6',is_end_curr_year(),ndecomp_pools_vr!,is_end_curr_year()
+!            do i=1,ndecomp_pools_vr
+!               do fc = 1,num_soilc
+!                  c = filter_soilc(fc)
+!                  print*,'here6.22',fc,begc,endc,c,i,abs(cs_soil%tran_acc(c,i,i))
+!               end do
+!            end do
+!         do fc = 1,num_soilc
+!            c = filter_soilc(fc)
+!            if(bounds%begc .le. 6851 .and. bounds%endc .ge. 6851)print*,'c',c,grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+!            if(c .ge. 7856 .and. c .le. 7873)print*,'in cap update',c, cs_soil%matrix_cap_decomp_cpools_vr_col(c,12,7)
+         !end do
+!            do i=1,ndecomp_pools
+!               do j = 1,nlevdecomp
+!                  do fc = 1,num_soilc
+!                     c = filter_soilc(fc)
+!                     if(j .le. 3 .and. i .eq. 7 .and. (c .eq. 2852 .or. c .eq. 2856 .or. c .eq. 2857 .or. c .eq. 2748 .or. c .eq. 2770 .or. c .eq. 2771))print*,'soil3n,cap,each step',c,j,i,ns_soil%matrix_cap_decomp_npools_vr_col(c,j,i),col%wtgcell(c)
+!                  end do
+!               enddo
+!            end do
          call t_startf('CN Soil matrix-calc. C capacity')
          if(is_end_curr_year())then
             do fc = 1,num_soilc
@@ -913,18 +1138,25 @@ contains
 !               end if
 !            end if
             !print*,'here6.1'
+!            do i=1,ndecomp_pools_vr
+!               do fc = 1,num_soilc
+!                  c = filter_soilc(fc)
+!                  if(begc .eq. 2277)print*,'here6.23',fc,begc,endc,c,i,abs(cs_soil%tran_acc(c,i,i))
+!                  print*,'here6.23',fc,begc,endc,c,i,abs(cs_soil%tran_acc(c,i,i))
+!               end do
+!            end do
 !            if(bounds%begc .le. 115568 .and. bounds%endc .ge. 115568)then
 !               c = 115570
 !               if(abs(ns_soil%tran_nacc(c,113,113)) .lt. epsi)then
 !                  tmptmp=1._r8
 !               end if
 !            end if
-            do i = 1,ndecomp_pools
-               do j = 1,nlevdecomp
-                  do fc = 1,num_soilc
-                     c = filter_soilc(fc)
-                     cs_soil%in_acc(c,j+(i-1)*nlevdecomp)   = cs_soil%in_acc_2d(c,j,i) 
-                     ns_soil%in_nacc(c,j+(i-1)*nlevdecomp)  = ns_soil%in_nacc_2d(c,j,i) 
+!            do i = 1,ndecomp_pools
+!               do j = 1,nlevdecomp
+!                  do fc = 1,num_soilc
+!                     c = filter_soilc(fc)
+!                     cs_soil%in_acc(c,j+(i-1)*nlevdecomp)   = cs_soil%in_acc_2d(c,j,i) 
+!                     ns_soil%in_nacc(c,j+(i-1)*nlevdecomp)  = ns_soil%in_nacc_2d(c,j,i) 
 !                     if(j < nlevdecomp)then
 !                           cs_soil%tran_acc(c,j+(i-1)*nlevdecomp,j+1+(i-1)*nlevdecomp) = cs_soil%vert_up_tran_acc(c,j,i) &
 !                                   / cs_soil%decomp0_cpools_vr_col(c,j+1,i)
@@ -941,16 +1173,37 @@ contains
 !                                      / cs_soil%decomp0_cpools_vr_col(c,j,i)
 !                        ns_soil%tran_nacc(c,j+(i-1)*nlevdecomp,j+(i-1)*nlevdecomp) = ns_soil%exit_nacc(c,j,i) & 
 !                                      / ns_soil%decomp0_npools_vr_col(c,j,i)
-                  end do
-               end do
-            end do
+!                  end do
+!               end do
+!            end do
+!            do i=1,ndecomp_pools_vr
+!               do fc = 1,num_soilc
+!                  c = filter_soilc(fc)
+                  !if(begc .eq. 2277)print*,'here6.24',fc,begc,endc,c,i,abs(cs_soil%tran_acc(c,i,i))
+!                  print*,'here6.24',fc,begc,endc,c,i,abs(cs_soil%tran_acc(c,i,i))
+!               end do
+!            end do
+!         print*,'before here1',cs_soil%decomp0_cpools_vr_col(:,10,1),cs_soil%decomp_cpools_vr_col(:,10,1)!,cs_soil%decomp0_cpools_vr_col(:,9,10)
             do j=1,n_all_entries
+               j_lev    = mod(all_j(j)-1,nlevdecomp)+1
+               j_decomp = (all_j(j) - j_lev)/nlevdecomp + 1
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
-                  cs_soil%tran_acc(c,all_i(j),all_j(j))  = AKXcacc%M(c,j)
-                  ns_soil%tran_nacc(c,all_i(j),all_j(j)) = AKXnacc%M(c,j)
-!                  print*,'here6.1',c,j,ns_soil%tran_nacc(c,all_i(j),all_j(j)),all_i(j),all_j(j)
+!                  print*,'tran_acc set',c,j,all_i(j),all_j(j),j_lev,j_decomp,AKXcacc%M(c,j),cs_soil%decomp0_cpools_vr_col(c,j_lev,j_decomp)
+                  cs_soil%tran_acc(c,all_i(j),all_j(j))  = AKXcacc%M(c,j) / cs_soil%decomp0_cpools_vr_col(c,j_lev,j_decomp)
+                  !print*,'aftertran_acc',cs_soil%tran_acc(c,all_i(j),all_j(j))
+                  !print*,'tran_nacc set',c,j,all_i(j),all_j(j),j_lev,j_decomp,AKXnacc%M(c,j),ns_soil%decomp0_npools_vr_col(c,j_lev,j_decomp)
+                  ns_soil%tran_nacc(c,all_i(j),all_j(j)) = AKXnacc%M(c,j) / ns_soil%decomp0_npools_vr_col(c,j_lev,j_decomp)
+                  !print*,'aftertran_nacc',ns_soil%tran_nacc(c,all_i(j),all_j(j))
+!                  print*,'here6.245',c,j,cs_soil%tran_acc(c,all_i(j),all_j(j)),all_i(j),all_j(j),AKXcacc%M(c,j)
 !                  print*,'here6.1',ns_soil%tran_nacc(1,120,120)
+!                   if(all_i(j) .eq. 132 .and. c .ge. 7856 .and. c .le. 7873)print*,'in cap2',c, j,AKXcacc%M(c,j),all_i(j),all_j(j),cs_soil%decomp0_cpools_vr_col(c,j_lev,j_decomp)
+!                   if(all_i(j) .eq. 121 .and. c .ge. 2852 .and. c .le. 2852)print*,'in cap1,2852',c, j,AKXnacc%M(c,j),all_i(j),all_j(j),ns_soil%decomp0_npools_vr_col(c,j_lev,j_decomp)
+!                   if(all_i(j) .eq. 121 .and. c .ge. 2856 .and. c .le. 2856)print*,'in cap1,2856',c, j,AKXnacc%M(c,j),all_i(j),all_j(j),ns_soil%decomp0_npools_vr_col(c,j_lev,j_decomp)
+!                   if(all_i(j) .eq. 121 .and. c .ge. 2857 .and. c .le. 2857)print*,'in cap1,2857',c, j,AKXnacc%M(c,j),all_i(j),all_j(j),ns_soil%decomp0_npools_vr_col(c,j_lev,j_decomp)
+!                   if(all_i(j) .eq. 121 .and. c .ge. 2748 .and. c .le. 2748)print*,'in cap1,2748',c, j,AKXnacc%M(c,j),all_i(j),all_j(j),ns_soil%decomp0_npools_vr_col(c,j_lev,j_decomp)
+!                   if(all_i(j) .eq. 121 .and. c .ge. 2770 .and. c .le. 2770)print*,'in cap1,2770',c, j,AKXnacc%M(c,j),all_i(j),all_j(j),ns_soil%decomp0_npools_vr_col(c,j_lev,j_decomp)
+!                   if(all_i(j) .eq. 121 .and. c .ge. 2771 .and. c .le. 2771)print*,'in cap1,2771',c, j,AKXnacc%M(c,j),all_i(j),all_j(j),ns_soil%decomp0_npools_vr_col(c,j_lev,j_decomp)
                end do
             end do
 
@@ -975,7 +1228,21 @@ contains
 !                  end do
 !               end do
          
+            
             !print*,'here6.2'
+!            do i=1,ndecomp_pools_vr
+!               do fc = 1,num_soilc
+!                  c = filter_soilc(fc)
+                  !if(begc .eq. 2277)print*,'here6.25',fc,begc,endc,c,i,abs(cs_soil%tran_acc(c,i,i))
+!                  print*,'here6.25',fc,begc,endc,c,i,abs(cs_soil%tran_acc(c,i,i))
+!               end do
+!            end do
+!            if(begc .eq. 2277)then
+!               if(abs(cs_soil%tran_acc(2282,132,132) .le. epsi))then
+!                  cs_soil%tran_acc(c,i,i) = 1.e+36_r8
+!               end if
+!               print*,'2277',abs(cs_soil%tran_acc(2282,132,132)
+!            end if
             do i=1,ndecomp_pools_vr
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
@@ -1013,19 +1280,25 @@ contains
                   end if 
                end do
             end do
+!         print*,'here2 decomp0',cs_soil%decomp0_cpools_vr_col(:,10,1),cs_soil%decomp_cpools_vr_col(:,10,1)
 !            print*,ns_soil%tran_nacc(1,120,120)
 !    print*,'here6.3'!,ns_soil%tran_nacc(2,115,115)
-!     print*,'here7'
+     !print*,'here7'
 
             do fc = 1,num_soilc
                c = filter_soilc(fc)
+!               print*,'inacc',cs_soil%in_acc(c,1:ndecomp_pools_vr)
+!               do i=1,140
+!                  print*,'tranacc',i,cs_soil%tran_acc(c,i,1:ndecomp_pools_vr)
+!               end do
                call inverse(cs_soil%tran_acc(c,1:ndecomp_pools_vr,1:ndecomp_pools_vr),AKinv(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ndecomp_pools_vr)
                call inverse(ns_soil%tran_nacc(c,1:ndecomp_pools_vr,1:ndecomp_pools_vr),AKinvn(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ndecomp_pools_vr)
                soilmatrixc_cap(c,:,1) = -matmul(AKinv(1:ndecomp_pools_vr,1:ndecomp_pools_vr),cs_soil%in_acc(c,1:ndecomp_pools_vr))
                soilmatrixn_cap(c,:,1) = -matmul(AKinvn(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ns_soil%in_nacc(c,1:ndecomp_pools_vr))
             end do
          
-!     print*,'here8'
+!            print*,'after cap decomp0',cs_soil%decomp0_cpools_vr_col(:,10,1),cs_soil%decomp_cpools_vr_col(:,10,1)
+    !print*,'here8'
             do i=1,ndecomp_pools
                do j = 1,nlevdecomp
                   do fc = 1,num_soilc
@@ -1038,13 +1311,18 @@ contains
                         cs_soil%decomp_cpools_vr_col(c,j,i) =  soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
                         ns_soil%decomp_npools_vr_col(c,j,i) =  soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)
                      end if
+!                    print*,'in cap1 decomp0',i,j,c,cs_soil%decomp0_cpools_vr_col(:,10,1),cs_soil%decomp_cpools_vr_col(:,10,1)
                      cs_soil%matrix_cap_decomp_cpools_vr_col(c,j,i) = soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
+!                    print*,'in cap2 decomp0',i,j,c,cs_soil%decomp0_cpools_vr_col(:,10,1),cs_soil%decomp_cpools_vr_col(:,10,1)
                      ns_soil%matrix_cap_decomp_npools_vr_col(c,j,i) = soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)
+!                     if(j .eq. 12 .and. i .eq. 7 .and. c .le. 7856 .and. c .ge. 7873)print*,'in capcal',c, cs_soil%matrix_cap_decomp_cpools_vr_col(c,j,i)
 !                     cs_soil%matrix_pot_decomp_cpools_vr_col(c,j,i) = soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1) - cs_soil%decomp_cpools_vr_col(c,j,i)
 !                     ns_soil%matrix_pot_decomp_npools_vr_col(c,j,i) = soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1) - ns_soil%decomp_npools_vr_col(c,j,i)
+!                     if(j .eq. 1 .and. i .eq. 7 .and. (c .eq. 2852 .or. c .eq. 2856 .or. c .eq. 2857 .or. c .eq. 2748 .or. c .eq. 2770 .or. c .eq. 2771))print*,'soil3n,cap',c,j,i,ns_soil%matrix_cap_decomp_npools_vr_col(c,j,i),col%wtgcell(c)
                   end do
                end do
             end do
+!            print*,'after cap1 decomp0',cs_soil%decomp0_cpools_vr_col(:,10,1),cs_soil%decomp_cpools_vr_col(:,10,1)
             do j=1,n_all_entries
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
@@ -1052,21 +1330,27 @@ contains
                   AKXnacc%M(c,j) = 0._r8
                end do
             end do
-!               cs_soil%in_acc   (c,:)   = 0.
+
+!            print*,'before in decomp0',cs_soil%decomp0_cpools_vr_col(:,10,1),cs_soil%decomp_cpools_vr_col(:,10,1)
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               cs_soil%in_acc   (c,:)   = 0._r8
+               ns_soil%in_nacc  (c,:)   = 0._r8
+            end do
 !               cs_soil%vert_up_tran_acc(c,:,:)   = 0.0_r8 
 !               cs_soil%vert_down_tran_acc(c,:,:) = 0.0_r8 
 !               cs_soil%exit_acc(c,:,:)           = 0.0_r8 
 !               cs_soil%hori_tran_acc(c,:,:)      = 0.0_r8 
 
-!               ns_soil%in_nacc  (c,:)   = 0.
 !               ns_soil%vert_up_tran_nacc(c,:,:)   = 0.0_r8 
 !               ns_soil%vert_down_tran_nacc(c,:,:) = 0.0_r8 
 !               ns_soil%exit_nacc(c,:,:)           = 0.0_r8 
 !               ns_soil%hori_tran_nacc(c,:,:)      = 0.0_r8 
          end if
-!         print*,'here9'
+         !print*,'here9'
          call t_stopf('CN Soil matrix-calc. C capacity')
       end if !is out_matrix
+!         print*,'end decomp0',cs_soil%decomp0_cpools_vr_col(:,10,1),cs_soil%decomp_cpools_vr_col(:,10,1)
 
    end associate 
  end subroutine CNSoilMatrix

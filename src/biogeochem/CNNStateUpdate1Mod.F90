@@ -81,7 +81,6 @@ contains
                ( nf_veg%dwt_livecrootn_to_cwdn_col(c,j) + nf_veg%dwt_deadcrootn_to_cwdn_col(c,j) ) * dt
     !      else
     !         if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-    !            print*,'before phenology N input to soil',nf_soil%matrix_input_col(c,j,i_met_lit),nf_veg%dwt_frootn_to_litr_met_n_col(c,j) 
     !         end if
     !         nf_soil%matrix_input_col(c,j,i_met_lit) = nf_soil%matrix_input_col(c,j,i_met_lit) + &
     !           nf_veg%dwt_frootn_to_litr_met_n_col(c,j) * dt
@@ -176,12 +175,10 @@ contains
 
          ! phenology: transfer growth fluxes
         if(.not. use_matrixcn)then
-!         if(p .eq. 16)print*,'before frootn from xfer',ns_veg%frootn_patch(p),nf_veg%frootn_xfer_to_frootn_patch(p)*dt
          ns_veg%leafn_patch(p)       = ns_veg%leafn_patch(p)       + nf_veg%leafn_xfer_to_leafn_patch(p)*dt
          ns_veg%leafn_xfer_patch(p)  = ns_veg%leafn_xfer_patch(p)  - nf_veg%leafn_xfer_to_leafn_patch(p)*dt
          ns_veg%frootn_patch(p)      = ns_veg%frootn_patch(p)      + nf_veg%frootn_xfer_to_frootn_patch(p)*dt
          ns_veg%frootn_xfer_patch(p) = ns_veg%frootn_xfer_patch(p) - nf_veg%frootn_xfer_to_frootn_patch(p)*dt
-!         if(p .eq. 16)print*,'after frootn from xfer',ns_veg%frootn_patch(p)
 
          if (woody(ivt(p)) == 1.0_r8) then
             ns_veg%livestemn_patch(p)       = ns_veg%livestemn_patch(p)       + nf_veg%livestemn_xfer_to_livestemn_patch(p)*dt
@@ -205,20 +202,15 @@ contains
          end if
 
          ! phenology: litterfall and retranslocation fluxes
-!         if(p .eq. 16)print*,'before retransn from leafn',ns_veg%retransn_patch(p),nf_veg%leafn_to_retransn_patch(p)*dt
-!         if(p .eq. 16)print*,'before phenology frootn to litter',ns_veg%frootn_patch(p),nf_veg%frootn_to_litter_patch(p)*dt
          ns_veg%leafn_patch(p)    = ns_veg%leafn_patch(p)    - nf_veg%leafn_to_litter_patch(p)*dt
          ns_veg%frootn_patch(p)   = ns_veg%frootn_patch(p)   - nf_veg%frootn_to_litter_patch(p)*dt
          ns_veg%leafn_patch(p)    = ns_veg%leafn_patch(p)    - nf_veg%leafn_to_retransn_patch(p)*dt
          ns_veg%retransn_patch(p) = ns_veg%retransn_patch(p) + nf_veg%leafn_to_retransn_patch(p)*dt
-!         if(p .eq. 16)print*,'after retransn from leafn',ns_veg%retransn_patch(p)
-!         if(p .eq. 16)print*,'after phenology frootn to litter',ns_veg%frootn_patch(p)
         end if ! use_matrixcn
 
          ! live wood turnover and retranslocation fluxes
          if (woody(ivt(p)) == 1._r8) then
           if(.not. use_matrixcn)then
-!            if(p .eq. 16)print*,'before retransn from livestemn and livecrootn',ns_veg%retransn_patch(p),nf_veg%livestemn_to_retransn_patch(p)*dt, nf_veg%livecrootn_to_retransn_patch(p)*dt
             ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_deadstemn_patch(p)*dt
             ns_veg%deadstemn_patch(p)    = ns_veg%deadstemn_patch(p)  + nf_veg%livestemn_to_deadstemn_patch(p)*dt
             ns_veg%livecrootn_patch(p)   = ns_veg%livecrootn_patch(p) - nf_veg%livecrootn_to_deadcrootn_patch(p)*dt
@@ -228,14 +220,11 @@ contains
             ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
             ns_veg%livecrootn_patch(p)   = ns_veg%livecrootn_patch(p) - nf_veg%livecrootn_to_retransn_patch(p)*dt
             ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livecrootn_to_retransn_patch(p)*dt
-!            if(p .eq. 16)print*,'after retransn from livestemn and livecrootn',ns_veg%retransn_patch(p),nf_veg%livestemn_to_retransn_patch(p)*dt, nf_veg%livecrootn_to_retransn_patch(p)*dt
           end if !use_matrixcn
 !            ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
         end if 
          if (ivt(p) >= npcropmin) then ! Beth adds retrans from froot
             if(.not. use_matrixcn)then
-!               if(p .eq. 16)print*,'before retransn from livestemn and frootn',ns_veg%retransn_patch(p),nf_veg%livestemn_to_retransn_patch(p)*dt, nf_veg%frootn_to_retransn_patch(p)*dt
-!               if(p .eq. 16)print*,'before phenology frootn to retransn',ns_veg%frootn_patch(p),nf_veg%frootn_to_retransn_patch(p)*dt
                ns_veg%frootn_patch(p)       = ns_veg%frootn_patch(p)     - nf_veg%frootn_to_retransn_patch(p)*dt
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%frootn_to_retransn_patch(p)*dt
                ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_litter_patch(p)*dt
@@ -243,10 +232,7 @@ contains
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
                ns_veg%grainn_patch(p)       = ns_veg%grainn_patch(p) &
                    - (nf_veg%grainn_to_food_patch(p) + nf_veg%grainn_to_seed_patch(p))*dt
-!               if(p .eq. 16)print*,'after retransn from cropn',ns_veg%retransn_patch(p)
-!               if(p .eq. 16)print*,'after phenology frootn to retransn',ns_veg%frootn_patch(p)
             end if
-!            if(p .eq. 18)print*,'nxfer to grainn',ns_veg%grainn_patch(p),nf_veg%grainn_xfer_to_grainn_patch(p)*dt
             ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
                  - nf_veg%crop_seedn_to_leaf_patch(p) * dt &
                  + nf_veg%grainn_to_seed_patch(p) * dt
@@ -259,8 +245,6 @@ contains
          
          ! allocation fluxes
          if (.not. use_matrixcn) then
-!            if(p .eq. 16)print*,'before retransn to npool and to free',ns_veg%retransn_patch(p),nf_veg%retransn_to_npool_patch(p)*dt,nf_veg%free_retransn_to_npool_patch(p)*dt
-!            if(p .eq. 16)print*,'before frootn from npool',ns_veg%frootn_patch(p),nf_veg%npool_to_frootn_patch(p)*dt
             ns_veg%npool_patch(p)           = ns_veg%npool_patch(p)          + nf_veg%retransn_to_npool_patch(p)*dt
             ns_veg%retransn_patch(p)        = ns_veg%retransn_patch(p)       - nf_veg%retransn_to_npool_patch(p)*dt
             ns_veg%npool_patch(p)           = ns_veg%npool_patch(p)          + nf_veg%free_retransn_to_npool_patch(p)*dt
@@ -273,13 +257,10 @@ contains
             ns_veg%frootn_patch(p)          = ns_veg%frootn_patch(p)         + nf_veg%npool_to_frootn_patch(p)*dt
             ns_veg%npool_patch(p)           = ns_veg%npool_patch(p)          - nf_veg%npool_to_frootn_storage_patch(p)*dt
             ns_veg%frootn_storage_patch(p)  = ns_veg%frootn_storage_patch(p) + nf_veg%npool_to_frootn_storage_patch(p)*dt
-!            if(p .eq. 16)print*,'after retransn to npool and to free',ns_veg%retransn_patch(p)
-!            if(p .eq. 16)print*,'before frootn from npool',ns_veg%frootn_patch(p)
          else
             ns_veg%npool_patch(p)           = ns_veg%npool_patch(p)          + nf_veg%retransn_to_npool_patch(p)*dt
             ns_veg%npool_patch(p)           = ns_veg%npool_patch(p)          + nf_veg%free_retransn_to_npool_patch(p)*dt
             if(ns_veg%retransn_patch(p) .ne. 0)then
-!               if(p .eq. 5)print*,'nphtransfer_retransn_out',nf_veg%iretransn_to_iout_ph,nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph),nf_veg%free_retransn_to_npool_patch(p),ns_veg%retransn_patch(p)
                nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) = nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) + nf_veg%free_retransn_to_npool_patch(p) / ns_veg%retransn_patch(p)
             end if
             ns_veg%npool_patch(p)           = ns_veg%npool_patch(p)          - nf_veg%npool_to_leafn_patch(p)*dt
@@ -317,7 +298,6 @@ contains
             ns_veg%npool_patch(p)              = ns_veg%npool_patch(p)              - nf_veg%npool_to_deadcrootn_storage_patch(p)*dt
           end if
          end if
-!         if(p .eq. 8)print*,'deadstemn,npool_to,',ns_veg%deadstemn_patch(p),nf_veg%npool_to_deadstemn_patch(p)*dt
 
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             if(.not. use_matrixcn) then
@@ -337,7 +317,6 @@ contains
             end if
          end if
 
-!         if(p .eq. 18)print*,'npool to leafn',ns_veg%leafn_patch(p),nf_veg%npool_to_leafn_patch(p)*dt
          ! move storage pools into transfer pools
          if(.not. use_matrixcn) then
             ns_veg%leafn_storage_patch(p)  = ns_veg%leafn_storage_patch(p)  - nf_veg%leafn_storage_to_xfer_patch(p)*dt
