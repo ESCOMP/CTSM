@@ -655,11 +655,12 @@ contains
        end if
     end do
     if(flag=='write')then
-       do i = 1,ndecomp_pools
-          do j = 1,nlevdecomp
-             this%in_nacc_2d(:,j,i) = this%in_nacc(:,j+(i-1)*nlevdecomp)
+       if(use_soil_matrixcn)then
+          do i = 1,ndecomp_pools
+             do j = 1,nlevdecomp
+                this%in_nacc_2d(:,j,i) = this%in_nacc(:,j+(i-1)*nlevdecomp)
+             end do
           end do
-       end do
        do i = 1,decomp_cascade_con%n_all_entries
           found = .false.
           j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
@@ -721,6 +722,7 @@ contains
              if(.not. found)write(*,*),'Error in storing matrix restart variables',i,i_decomp,j_decomp,i_lev,j_lev
           end if
        end do
+       end if
     end if
     do k = 1, ndecomp_pools
        varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'n'
