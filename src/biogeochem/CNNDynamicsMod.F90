@@ -12,6 +12,7 @@ module CNNDynamicsMod
   use clm_varctl                      , only : use_nitrif_denitrif, use_vertsoilc, nfix_timeconst
   use subgridAveMod                   , only : p2c
   use atm2lndType                     , only : atm2lnd_type
+  use Wateratm2lndBulkType            , only : wateratm2lndbulk_type
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
 !KO
@@ -27,8 +28,8 @@ module CNNDynamicsMod
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use WaterStateType                  , only : waterstate_type
-  use WaterFluxType                   , only : waterflux_type
+  use WaterStateBulkType              , only : waterstatebulk_type
+  use WaterFluxBulkType               , only : waterfluxbulk_type
   !JV
   use SoilStateType                   , only : soilstate_type
   !JV
@@ -130,11 +131,12 @@ contains
   end subroutine CNNDynamicsReadNML
 
   subroutine CNNDeposition(bounds, num_soilc, filter_soilc, &
-       atm2lnd_inst, soilbiogeochem_nitrogenflux_inst, cnveg_carbonstate_inst, &
+       atm2lnd_inst, wateratm2lndbulk_inst, &
+       soilbiogeochem_nitrogenflux_inst, cnveg_carbonstate_inst, &
        soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
-       waterstate_inst, soilstate_inst, temperature_inst, &
-       waterflux_inst, frictionvel_inst)
+       waterstatebulk_inst, soilstate_inst, temperature_inst, &
+       waterfluxbulk_inst, frictionvel_inst)
     use CNSharedParamsMod    , only: use_fun
     !KO
     use clm_varctl           , only: use_fan
@@ -159,6 +161,7 @@ contains
     integer                  , intent(in)    :: filter_soilc(:) ! filter for soil columns
 !KO
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
+    type(wateratm2lndbulk_type), intent(in)  :: wateratm2lndbulk_inst
     type(soilbiogeochem_nitrogenflux_type) , intent(inout) :: soilbiogeochem_nitrogenflux_inst
 !KO
     type(cnveg_carbonstate_type)           , intent(inout) :: cnveg_carbonstate_inst
@@ -166,10 +169,10 @@ contains
     type(cnveg_nitrogenflux_type)          , intent(inout) :: cnveg_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type), intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(soilbiogeochem_carbonflux_type)   , intent(inout) :: soilbiogeochem_carbonflux_inst
-    type(waterstate_type)                  , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)              , intent(in)    :: waterstatebulk_inst
     type(soilstate_type)                   , intent(in)    :: soilstate_inst
     type(temperature_type)                 , intent(inout) :: temperature_inst
-    type(waterflux_type)                   , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)               , intent(in)    :: waterfluxbulk_inst
     type(frictionvel_type)                 , intent(inout) :: frictionvel_inst
 
     integer, parameter :: num_substeps = 4, balance_check_freq = 1000
@@ -375,16 +378,16 @@ contains
        watertend = 0.0_r8
 
        ! use the calculated tend
-       watertend = waterstate_inst%h2osoi_tend_tsl_col(c) * 1e-3 ! to meters/sec (ie. m3/m2/s)
+       watertend = waterstatebulk_inst%h2osoi_tend_tsl_col(c) * 1e-3 ! to meters/sec (ie. m3/m2/s)
        
        tg = temperature_inst%t_grnd_col(c)
-       theta = waterstate_inst%h2osoi_vol_col(c,1)
+       theta = waterstatebulk_inst%h2osoi_vol_col(c,1)
        thetasat = soilstate_inst%watsat_col(c,1)
        bsw = soilstate_inst%bsw_col(c,1)
        theta = min(theta, 0.98_r8*thetasat)
-       infiltr_m_s = max(waterflux_inst%qflx_infl_col(c), 0.0) * 1e-3 
-       evap_m_s = waterflux_inst%qflx_evap_grnd_col(c) * 1e-3
-       runoff_m_s = max(waterflux_inst%qflx_runoff_col(c), 0.0) * 1e-3
+       infiltr_m_s = max(waterfluxbulk_inst%qflx_infl_col(c), 0.0) * 1e-3 
+       evap_m_s = waterfluxbulk_inst%qflx_evap_grnd_col(c) * 1e-3
+       runoff_m_s = max(waterfluxbulk_inst%qflx_runoff_col(c), 0.0) * 1e-3
        soilpsi = soilstate_inst%soilpsi_col(c,1)
 
        !
@@ -427,7 +430,7 @@ contains
        do ind_substep = 1, num_substeps
           call update_npool(tg, ratm, &
                theta, thetasat, infiltr_m_s, evap_m_s, &
-               atm2lnd_inst%forc_q_downscaled_col(c), watertend, &
+               wateratm2lndbulk_inst%forc_q_downscaled_col(c), watertend, &
                runoff_m_s, tandep, (/0.0_r8, 0.0_r8, sum(tanprod)/), water_init_grz, &
                bsw, poolranges_grz, Hconc_grz, dz_layer_grz, tanpools3, &
                fluxes3(1:5,:), garbage, dt/num_substeps, status, 3)
@@ -499,7 +502,7 @@ contains
           end if
 
           call update_4pool(tg, ratm, theta, thetasat, infiltr_m_s, evap_m_s, &
-               atm2lnd_inst%forc_q_downscaled_col(c), watertend, &
+               wateratm2lndbulk_inst%forc_q_downscaled_col(c), watertend, &
                runoff_m_s, tandep, sum(tanprod), bsw, depth_slurry, &
                poolranges_slr, tanpools4, Hconc_slr, fluxes4(1:5,:), garbage, dt / num_substeps, status)
           if (status /= 0) then
@@ -590,7 +593,7 @@ contains
        do ind_substep = 1, num_substeps
           ! Fertilizer pools f0...f2
           call update_npool(tg, ratm, theta, thetasat, infiltr_m_s, evap_m_s, &
-               atm2lnd_inst%forc_q_downscaled_col(c), watertend, &
+               wateratm2lndbulk_inst%forc_q_downscaled_col(c), watertend, &
                runoff_m_s, 0.0_r8, tanprod_from_urea, water_init_fert, bsw, &
                poolranges_fert, Hconc_fert, dz_layer_fert, tanpools3, fluxes3(1:5,:), &
                garbage, dt/num_substeps, status, numpools=3)
@@ -603,7 +606,7 @@ contains
 
           ! Fertilizer pool f3
           call update_npool(tg, ratm, theta, thetasat, infiltr_m_s, evap_m_s, &
-               atm2lnd_inst%forc_q_downscaled_col(c), watertend, &
+               wateratm2lndbulk_inst%forc_q_downscaled_col(c), watertend, &
                runoff_m_s, fert_generic, (/0.0_r8/), water_init_fert, bsw, &
                !(/360*24*3600.0_r8/), (/10**(-6.0_r8)/), dz_layer_fert, ns%tan_f3_col(c:c), fluxes3(1:5,1:1), &
                (/360*24*3600.0_r8/), (/10**(-ph_crop)/), dz_layer_fert, ns%tan_f3_col(c:c), fluxes3(1:5,1:1), &
@@ -902,7 +905,8 @@ contains
              write(iulog, *) 'bad tan_manure col_grass', flux_grass_spread_tan, col%wtgcell(col_grass)
           end if
        else if (flux_grass_spread > 0) then
-          call endrun('Cannot spread manure')
+          continue
+          !call endrun('Cannot spread manure')
        end if
 
     end do ! grid

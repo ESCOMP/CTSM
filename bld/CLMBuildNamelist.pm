@@ -2876,19 +2876,20 @@ sub setup_logic_fan {
   #
    my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
    print "FAN MODE: $opts->{'fan'}\n";
-   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-       if ( $opts->{'fan'} ) {
-	   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fan',
-		       'use_cn'=>$nl_flags->{'use_cn'}, 'use_ed'=>$nl_flags->{'use_ed'} );
-	   $nl_flags->{'use_fan'} = $nl->get_value('use_fan');
-	   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_nh3_to_atm',
-		       'fan_mode'=>$opts->{'fan'});
-	   $nl_flags->{'fan_nh3_to_atm'} = $nl->get_value('fan_nh3_to_atm');
-	   
-       }
-     if ( value_is_true( $nl_flags->{'use_ed'} ) && value_is_true( $nl_flags->{'use_fan'} ) ) {
-        fatal_error("Cannot turn use_fan on when use_ed is on\n" );
-     }
+   if ( $opts->{'fan'} ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fan',
+		   'use_cn'=>$nl_flags->{'use_cn'}, 'use_ed'=>$nl_flags->{'use_ed'} );
+       $nl_flags->{'use_fan'} = $nl->get_value('use_fan');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_nh3_to_atm',
+		   'fan_mode'=>$opts->{'fan'});
+       $nl_flags->{'fan_nh3_to_atm'} = $nl->get_value('fan_nh3_to_atm');
+       
+   }
+   if ( &value_is_true( $nl_flags->{'use_ed'} ) && &value_is_true( $nl_flags->{'use_fan'} ) ) {
+       fatal_error("Cannot turn use_fan on when use_ed is on\n" );
+   }
+   if ( !&value_is_true( $nl_flags->{'use_crop'} ) && &value_is_true( $nl_flags->{'use_fan'} ) ) {
+       fatal_error("Cannot turn use_fan on when use_crop is off\n" );
    }
 }
 
@@ -3061,7 +3062,7 @@ sub setup_logic_nitrogen_deposition2 {
   # Nitrogen deposition2 for bgc=CN
   #
 
-  if ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_mode'} ne "none" && value_is_true( $nl_flags->{'use_fan'} ) ) {
+  if ( $nl_flags->{'bgc_mode'} ne "none" && value_is_true( $nl_flags->{'use_fan'} ) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep2mapalgo', 'phys'=>$nl_flags->{'phys'}, 
                 'bgc'=>$nl_flags->{'bgc_mode'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
@@ -3082,7 +3083,7 @@ sub setup_logic_nitrogen_deposition2 {
                 'bgc'=>$nl_flags->{'bgc_mode'},
                 'hgrid'=>"360x720cru" );
 
-  } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_mode'} =~/cn|bgc/ && value_is_true( $nl_flags->{'use_fan'} ) ) {
+  } elsif ( $nl_flags->{'bgc_mode'} =~/cn|bgc/ && value_is_true( $nl_flags->{'use_fan'} ) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep2mapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
@@ -3125,7 +3126,7 @@ sub setup_logic_nitrogen_deposition3 {
   # Nitrogen deposition3 for bgc=CN
   #
 
-  if ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_mode'} ne "none" && value_is_true( $nl_flags->{'use_fan'} ) ) {
+  if ( $nl_flags->{'bgc_mode'} ne "none" && value_is_true( $nl_flags->{'use_fan'} ) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep3mapalgo', 'phys'=>$nl_flags->{'phys'}, 
                 'bgc'=>$nl_flags->{'bgc_mode'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
@@ -3146,7 +3147,7 @@ sub setup_logic_nitrogen_deposition3 {
                 'bgc'=>$nl_flags->{'bgc_mode'},
                 'hgrid'=>"360x720cru" );
 
-  } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_mode'} =~/cn|bgc/ && value_is_true( $nl_flags->{'use_fan'} ) ) {
+  } elsif ( $nl_flags->{'bgc_mode'} =~/cn|bgc/ && value_is_true( $nl_flags->{'use_fan'} ) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep3mapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
@@ -3731,11 +3732,8 @@ sub write_output_files {
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
   push @groups, "clm_canopy_inparm";
-  
-  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-      push @groups, "ndep2dyn_nml";
-      push @groups, "ndep3dyn_nml";
-  }
+  push @groups, "ndep2dyn_nml";
+  push @groups, "ndep3dyn_nml";
 
   my $outfile;
   $outfile = "$opts->{'dir'}/lnd_in";

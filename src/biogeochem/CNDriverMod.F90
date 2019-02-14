@@ -275,11 +275,12 @@ contains
 !KO         atm2lnd_inst, soilbiogeochem_nitrogenflux_inst)
 !KO
     call CNNDeposition(bounds, num_soilc, filter_soilc, &
-         atm2lnd_inst, soilbiogeochem_nitrogenflux_inst, cnveg_carbonstate_inst, &
+         atm2lnd_inst, wateratm2lndbulk_inst, &
+         soilbiogeochem_nitrogenflux_inst, cnveg_carbonstate_inst, &
          soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
-         waterstate_inst, soilstate_inst, temperature_inst, &
-         waterflux_inst, frictionvel_inst)
+         waterstatebulk_inst, soilstate_inst, temperature_inst, &
+         waterfluxbulk_inst, frictionvel_inst)
 !KO
     call t_stopf('CNDeposition')
     

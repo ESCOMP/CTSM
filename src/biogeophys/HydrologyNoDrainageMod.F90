@@ -277,7 +277,7 @@ contains
       call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
            filter_hydrologyc, soilstate_inst, canopystate_inst, waterfluxbulk_inst, energyflux_inst)
 
-      if ( use_fan ) call store_tsl_moisture(waterstate_inst)
+      if ( use_fan ) call store_tsl_moisture(waterstatebulk_inst)
       if ( use_fates ) then
          call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, waterfluxbulk_inst)
       end if
@@ -285,7 +285,7 @@ contains
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
            soilhydrology_inst, soilstate_inst, waterfluxbulk_inst, waterstatebulk_inst, temperature_inst, &
            canopystate_inst, energyflux_inst, soil_water_retention_curve)
-      if ( use_fan ) call eval_tsl_moist_tend(waterstate_inst)
+      if ( use_fan ) call eval_tsl_moist_tend(waterstatebulk_inst)
 
       if (use_vichydro) then
          ! mapping soilmoist from CLM to VIC layers for runoff calculations
@@ -434,9 +434,7 @@ contains
       ! Calculate temperature of near-surface soil layer
       ! Calculate soil temperature and total water (liq+ice) in top 10cm of soil
       ! Calculate soil temperature and total water (liq+ice) in top 17cm of soil
-!KO
-      ! Calculate total water (liq+ice) in top 5cm of soil
-!KO
+
       do fc = 1, num_nolakec
          c = filter_nolakec(fc)
          l = col%landunit(c)
@@ -444,11 +442,6 @@ contains
             t_soi_10cm(c) = 0._r8
             tsoi17(c) = 0._r8
             h2osoi_liqice_10cm(c) = 0._r8
-!KO
-            if ( use_fan ) then
-               waterstate_inst%h2osoi_liqice_5cm_col(c) = 0._r8
-            end if
-!KO
             h2osoi_liq_tot(c) = 0._r8
             h2osoi_ice_tot(c) = 0._r8
          end if
@@ -472,30 +465,12 @@ contains
                   end if
                end if
 
-               !JV
-               if ( use_fan ) then
-                  if (zi(c,j-1) < 0.05_r8) then
-                     if (zi(c,j) < 0.05_r8) then
-                        fracl = 1.0_r8
-                     else
-                        fracl = (0.05_r8 - zi(c,j-1)) / dz(c,j)   
-                     end if
-                     waterstate_inst%h2osoi_liqice_5cm_col(c) = &
-                          waterstate_inst%h2osoi_liqice_5cm_col(c) + &
-                          (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
-                          fracl                     
-                  end if
-               end if
-               !JV
-
                if (zi(c,j) <= 0.1_r8) then
                   fracl = 1._r8
                   t_soi_10cm(c) = t_soi_10cm(c) + t_soisno(c,j)*dz(c,j)*fracl
                   h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + &
                        (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
                        fracl
-                  !KO
-                  !KO
                else
                   if (zi(c,j) > 0.1_r8 .and. zi(c,j-1) < 0.1_r8) then
                      fracl = (0.1_r8 - zi(c,j-1))/dz(c,j)
@@ -684,23 +659,21 @@ contains
 
   contains
 
-    subroutine store_tsl_moisture(waterstate_inst)
-      type(waterstate_type), intent(inout) :: waterstate_inst
-      print *, 'store flux'
-      associate(h2osoi_tend_tsl => waterstate_inst%h2osoi_tend_tsl_col(bounds%begc:bounds%endc), &
-           h2osoi_liq_tsl => waterstate_inst%h2osoi_liq_col(bounds%begc:bounds%endc,1))
+    subroutine store_tsl_moisture(waterstatebulk_inst)
+      type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
+      associate(h2osoi_tend_tsl => waterstatebulk_inst%h2osoi_tend_tsl_col(bounds%begc:bounds%endc), &
+           h2osoi_liq_tsl => waterstatebulk_inst%h2osoi_liq_col(bounds%begc:bounds%endc,1))
         h2osoi_tend_tsl = h2osoi_liq_tsl
       end associate
     end subroutine store_tsl_moisture
 
-    subroutine eval_tsl_moist_tend(waterstate_inst)
-      type(waterstate_type), intent(inout) :: waterstate_inst
-      print *, 'eval tend'
-      associate(h2osoi_tend_tsl => waterstate_inst%h2osoi_tend_tsl_col(bounds%begc:bounds%endc), &
-           h2osoi_liq_tsl => waterstate_inst%h2osoi_liq_col(bounds%begc:bounds%endc,1))
+    subroutine eval_tsl_moist_tend(waterstatebulk_inst)
+      type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
+      associate(h2osoi_tend_tsl => waterstatebulk_inst%h2osoi_tend_tsl_col(bounds%begc:bounds%endc), &
+           h2osoi_liq_tsl => waterstatebulk_inst%h2osoi_liq_col(bounds%begc:bounds%endc,1))
         h2osoi_tend_tsl = (h2osoi_liq_tsl - h2osoi_tend_tsl) / dtime
       end associate
-      print *, 'done'
+
     end subroutine eval_tsl_moist_tend
     
   end subroutine HydrologyNoDrainage

@@ -790,9 +790,6 @@ contains
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_state_inst,                                               &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
-       atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
-       canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
-       photosyns_inst, soilhydrology_inst, energyflux_inst,          &
        atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
        wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
        photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
