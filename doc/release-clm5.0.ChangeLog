@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.18
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed Feb 13 16:15:32 MST 2019
+Date: Wed Feb 13 19:01:26 MST 2019
 One-line Summary: Add NoAnthro compset, reduce fields on fsurdat in mksurfdata_map, initial add of tools/contrib directory
 
 Purpose of this version:
