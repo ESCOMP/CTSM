@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 950;
+my $ntests = 956;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 600;
+   $ntests += 603;
 }
 plan( tests=>$ntests );
 
@@ -317,6 +317,7 @@ foreach my $options (
                       "-bgc fates  -use_case 2000_control -no-megan",
                       "-bgc cn  -use_case 1850-2100_rcp8.5_transient -namelist '&a start_ymd=19201023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
+                      "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
                      ) {
    my $file = $startfile;
    &make_env_run();
@@ -860,6 +861,16 @@ my %failtest = (
                                    },
      "elevWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
                                      namelst=>"fire_emis_elevated=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "noanthro_w_crop"            =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -crop -use_case 1850_noanthro_control",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "noanthro_w_irrig"           =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control",
+                                     namelst=>"irrigate=T",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },

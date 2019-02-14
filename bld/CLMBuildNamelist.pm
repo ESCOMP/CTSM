@@ -2428,7 +2428,12 @@ sub setup_logic_initial_conditions {
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_how_close" );
           my $close = $nl->get_value("init_interp_how_close");
           foreach my $sim_yr ( split( /,/, $nl->get_value("init_interp_sim_years") )) {
-             my $how_close = abs($st_year - $sim_yr);
+             my $how_close = undef;
+             if ( $nl_flags->{'sim_year'} eq "PtVg" ) {
+                $how_close = abs(1850 - $sim_yr);
+             } else {
+                $how_close = abs($st_year - $sim_yr);
+             }
              if ( ($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close) ) {
                 $close = $how_close;
                 $settings{'sim_year'} = $sim_yr;
