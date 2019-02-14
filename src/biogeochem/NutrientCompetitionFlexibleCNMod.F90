@@ -1392,8 +1392,10 @@ contains
                cpool_to_resp(p) = cpool_to_leafc_resp(p) + cpool_to_leafc_storage_resp(p)  + cpool_to_frootc_resp(p) + &
                     cpool_to_frootc_storage_resp(p) + cpool_to_livecrootc_resp(p) + cpool_to_livecrootc_storage_resp(p) + &
                     cpool_to_livestemc_resp(p) + cpool_to_livestemc_storage_resp(p)
-
-               matrix_Cinput(p) = matrix_Cinput(p) - cpool_to_resp(p)
+                
+               if(use_matrixcn)then
+                  matrix_Cinput(p) = matrix_Cinput(p) - cpool_to_resp(p)
+               end if
 
             end if   ! end of if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then   
 
