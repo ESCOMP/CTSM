@@ -769,7 +769,7 @@ contains
     end do
     
     call update_pools(tanpools, fluxes, dt, numpools, 5, fixed)
-    !print *, 'pools just after', tanpools
+
     tanpools = tanpools + tanprod*dt
     if(any(isnan(tanpools))) then
        status = err_nan+100
@@ -786,7 +786,6 @@ contains
        
        return
     end if
-    
     
     if (abs(sum(tanpools - tanpools_old) + (sum(fluxes)-tandep_remaining-sum(tanprod))*dt + garbage) &
          > max(sum(tanpools_old)*1e-2, 1d-2)) then

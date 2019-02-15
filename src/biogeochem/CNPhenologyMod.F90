@@ -1947,7 +1947,6 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
-            !write(iulog,*) 'cropmodel, manu', manure_avail, manu(p) 
             if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
                cphase(p) = 2._r8
                if (abs(onset_counter(p)) > 1.e-6_r8) then
