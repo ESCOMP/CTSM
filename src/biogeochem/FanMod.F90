@@ -49,7 +49,7 @@ module FanMod
   real(r8), parameter, public :: soildepth_reservoir = 0.04_r8
 
   integer, parameter, public :: err_bad_theta = 1, err_negative_tan = 2, err_negative_flux = 3, &
-       err_balance_tan = 4, err_balance_nitr = 5, err_nan = 6, err_bad_subst = 7
+       err_balance_tan = 4, err_balance_nitr = 5, err_nan = 6, err_bad_subst = 7, err_bad_type = 8
 
   integer, parameter, public :: subst_tan = 1, subst_urea = 2
   
@@ -907,7 +907,7 @@ contains
 
   end function eval_perc
 
-  subroutine eval_fluxes_storage(nitr_input, tempr_outside, windspeed, fract_direct, &
+  subroutine eval_fluxes_storage(nitr_input, barntype, tempr_outside, windspeed, fract_direct, &
        volat_coef_barns, volat_coef_stores, &
        tan_fract_excr, fluxes_nitr, fluxes_tan, status)
     !
@@ -918,6 +918,7 @@ contains
     ! 
     implicit none
     real(r8), intent(in) :: nitr_input ! total nitrogen excreted by animals in housings
+    character(len=*), intent(in) :: barntype ! "closed" (pigs, poultry) or "open" (others)
     real(r8), intent(in) :: tempr_outside ! K
     real(r8), intent(in) :: windspeed ! m/s
     real(r8), intent(in) :: fract_direct ! fraction of manure N applied before storage
@@ -929,13 +930,16 @@ contains
     integer, intent(out) :: status ! see top of the module.
 
     ! parameters for the Gyldenkaerne et al. parameterization
-    real(r8), parameter :: Tfloor_barns = 4.0_8, Tfloor_stores = 1.0_8
-    real(r8), parameter :: Tmin_barns = 0_8
-    real(r8), parameter :: Tmax_barns = 12.5_8
-    real(r8), parameter :: tempr_D = 3.0
-    real(r8), parameter :: Vmin_barns = 0.2_8
-    real(r8), parameter :: Vmax_barns = 0.228_8
-    real(r8), parameter :: pA = 0.89_8, pB = 0.26_8  
+    real(r8), parameter :: Tfloor_barns = 4.0_r8, Tfloor_stores = 1.0_r8
+    real(r8), parameter :: Tmin_barns = 0.01_r8
+    real(r8), parameter :: Tmax_barns = 12.5_r8
+    real(r8), parameter :: tempr_D = 3.0_r8
+    real(r8), parameter :: Trec = 21.0_r8
+    real(r8), parameter :: Vmin_barns = 0.2_r8
+    !real(r8), parameter :: Vmax_barns = 0.228_r8
+    real(r8), parameter :: pA = 0.89_r8, pB = 0.26_r8  
+    real(r8), parameter :: DTlow = 0.5_r8, DThigh = 1.0_r8
+    real(r8) :: Vmax_barns ! depends on barntype
     
     real(r8) :: flux_avail, flux_avail_tan, tempr_stores, tempr_barns, vent_barns, flux_direct, flux_direct_tan, &
          & flux_barn, flux_store, tempr_C
@@ -944,7 +948,26 @@ contains
     fluxes_tan = 0.0_r8
     tempr_C = tempr_outside - 273
     
+    select case(barntype)
+    case ('open')
+       Vmax_barns = 0.228_r8
     tempr_barns = max(tempr_C+tempr_D, Tfloor_barns)
+    case ('closed')
+       Vmax_barns = 0.40_r8
+       if (Trec + DTlow * (tempr_C - Tmin_barns) < Tmin_barns) then
+          tempr_barns = Tmin_barns
+       else if (tempr_C < Tmin_barns) then
+          tempr_barns = Trec + DTlow * (tempr_C - Tmin_barns)
+       else if (tempr_C > Tmax_barns) then
+          tempr_barns = Trec + DThigh * (tempr_C - Tmax_barns)
+       else
+          tempr_barns = Trec
+       end if
+    case default
+       status = err_bad_type
+       return
+    end select
+
     if (tempr_C < Tmin_barns) then
        vent_barns = Vmin_barns
     else if (tempr_C > Tmax_barns) then
@@ -957,12 +980,12 @@ contains
     flux_avail_tan = nitr_input * tan_fract_excr
 
     if (flux_avail < -1e-15 .or. flux_avail_tan < -1e-15) then
-       status = err_negative_flux
+       status = err_negative_flux*1000
        return
     end if
     
     flux_barn = flux_avail_tan * volat_coef_barns * tempr_barns**pA * vent_barns**pB
-
+    flux_barn = min(flux_avail_tan, flux_barn) ! hopefully uncommon
     fluxes_tan(iflx_air_barns) = flux_barn
     fluxes_nitr(iflx_air_barns) = flux_barn
     
@@ -970,7 +993,8 @@ contains
     flux_avail_tan = flux_avail_tan - flux_barn
 
     if (flux_avail < 0 .or. flux_avail_tan < 0) then
-       status = err_negative_flux
+       !print *, flux_avail_tan, flux_avail, flux_barn, tempr_barns, vent_barns, tempr_C
+       status = err_negative_flux*10000
        return
     end if
     
@@ -993,7 +1017,7 @@ contains
     flux_avail = flux_avail - flux_store
     flux_avail_tan = flux_avail_tan - flux_store
     if (flux_avail < 0) then
-       status = err_negative_flux
+       status = err_negative_flux*10
        return
     end if
 
@@ -1011,7 +1035,7 @@ contains
     end if
 
     if (any(fluxes_nitr < 0) .or. any(fluxes_tan < 0)) then
-       status = err_negative_flux
+       status = err_negative_flux*100
        return
     end if
     
@@ -1140,7 +1164,7 @@ contains
     real(r8) :: fluxes_nitr(4), fluxes_tan(4)
     
     do ii = 1, nn
-       call eval_fluxes_storage(manure_excr(ii), tempr_outside(ii), windspeed(ii), fract_direct(ii), &
+       call eval_fluxes_storage(manure_excr(ii), 'open', tempr_outside(ii), windspeed(ii), fract_direct(ii), &
             & volat_coef_barns, volat_coef_stores, tan_fract_excr, &
             & fluxes_nitr, fluxes_tan, status)
 
