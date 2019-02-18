@@ -659,10 +659,6 @@ contains
            num_actfirep = num_actfirep + 1
            filter_actfirep(num_actfirep) = p
         end if
-!        if(p .eq. 5228)print*,'after fire m_leaf_stor',leafc_storage(p),f,cc_other(patch%itype(p)),fm_other(patch%itype(p))
-!        if(p .eq. 5228)print*,'after fire m_deadcroot',deadcrootc(p),m,fm_droot(patch%itype(p))
-!        if( .not. use_matrixcn)then
-        !print*,'m_leafc',p,leafc(p),leafc_storage(p),leafc_xfer(p),frootc(p),frootc_storage(p),frootc_xfer(p),livestemc(p),livestemc_storage(p),livestemc_xfer(p),deadstemc(p),deadstemc_storage(p),deadstemc_xfer(p),livecrootc(p),livecrootc_storage(p),livecrootc_xfer(p),deadcrootc(p),deadcrootc_storage(p),deadcrootc_xfer(p),f,f * cc_dstem(patch%itype(p)) * m, f * cc_leaf(patch%itype(p)),f * cc_other(patch%itype(p)), f * cc_lstem(patch%itype(p))
         m_leafc_to_fire(p)               =  leafc(p)              * f * cc_leaf(patch%itype(p))
         m_leafc_storage_to_fire(p)       =  leafc_storage(p)      * f * cc_other(patch%itype(p))
         m_leafc_xfer_to_fire(p)          =  leafc_xfer(p)         * f * cc_other(patch%itype(p))
@@ -705,7 +701,6 @@ contains
         m_deadcrootn_xfer_to_fire(p)     =  deadcrootn_xfer(p)    * f * cc_other(patch%itype(p)) 
         m_deadcrootn_storage_to_fire(p)  =  deadcrootn_storage(p) * f * cc_other(patch%itype(p))
         m_retransn_to_fire(p)            =  retransn(p)           * f * cc_other(patch%itype(p))
-!        else
         if(use_matrixcn)then
            matrix_fitransfer(p,ileaf_to_iout_fic)         = matrix_fitransfer(p,ileaf_to_iout_fic)         + f * cc_leaf(patch%itype(p))
            matrix_fitransfer(p,ileafst_to_iout_fic)      = matrix_fitransfer(p,ileafst_to_iout_fic)      + f * cc_other(patch%itype(p))
@@ -748,7 +743,6 @@ contains
         end if
         ! mortality due to fire
         ! carbon pools
-!        if( .not. use_matrixcn)then
         m_leafc_to_litter_fire(p)                   =  leafc(p) * f * &
              (1._r8 - cc_leaf(patch%itype(p))) * &
              fm_leaf(patch%itype(p))
@@ -890,7 +884,6 @@ contains
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p)) 
 
-!        else
         if(use_matrixcn)then
            matrix_fitransfer(p,ileaf_to_iout_fic)           = matrix_fitransfer(p,ileaf_to_iout_fic) &
              + f * (1._r8 - cc_leaf(patch%itype(p))) * fm_leaf(patch%itype(p))
@@ -975,15 +968,6 @@ contains
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 			 
            matrix_nfitransfer(p,iretransn_to_iout_fin)          = matrix_nfitransfer(p,iretransn_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p))) * fm_other(patch%itype(p)) 			 
-           !CiPEHR
-!           if(p .eq. 12 .or. p .eq. 13)write(512,"(A,I,11E17.9)"),'fire',p,f*dt,cc_leaf(patch%itype(p)),cc_lstem(patch%itype(p)),cc_dstem(patch%itype(p)),cc_other(patch%itype(p)),fm_other(patch%itype(p)),fm_root(patch%itype(p)),fm_lroot(patch%itype(p)),fm_droot(patch%itype(p)),fm_leaf(patch%itype(p)),fm_lstem(patch%itype(p))
-           !SPRUCE
-!           if(p .eq. 2 .or. p .eq. 8)write(512,"(A,I,11E17.9)"),'fire',p,f*dt,cc_leaf(patch%itype(p)),cc_lstem(patch%itype(p)),cc_dstem(patch%itype(p)),cc_other(patch%itype(p)),fm_other(patch%itype(p)),fm_root(patch%itype(p)),fm_lroot(patch%itype(p)),fm_droot(patch%itype(p)),fm_leaf(patch%itype(p)),fm_lstem(patch%itype(p))
-           !SEV
-!           if(p .eq. 1 .or. p .eq. 15)write(512,"(A,I,11E17.9)"),'fire',p,f*dt,cc_leaf(patch%itype(p)),cc_lstem(patch%itype(p)),cc_dstem(patch%itype(p)),cc_other(patch%itype(p)),fm_other(patch%itype(p)),fm_root(patch%itype(p)),fm_lroot(patch%itype(p)),fm_droot(patch%itype(p)),fm_leaf(patch%itype(p)),fm_lstem(patch%itype(p))
-!           if(p .eq. 5228)print*,'after fire m_leaf_stor',m_leafc_storage_to_litter_fire(p),m_leafc_storage_to_fire(p)
-!           if(p .eq. 5228)print*,'after fire m_deadcroot',m_deadcrootc_to_litter_fire(p),m_deadcrootc_to_fire(p)
-           if(p .eq. 10580)print*,'froot to litter fire',matrix_fitransfer(p,ifroot_to_iout_fic)
         end if	 			 
 
         if (use_cndv) then

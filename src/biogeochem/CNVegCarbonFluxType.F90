@@ -376,8 +376,6 @@ module CNVegCarbonFluxType
      real(r8), pointer :: matrix_C14input_patch        (:)      ! U-matrix for carbon input
      real(r8), pointer :: matrix_alloc_patch          (:,:)     ! B-matrix for carbon
  
-!     real(r8), pointer :: matrix_phtransfer_patch     (:,:,:)   ! A-matrix_phenology
-!     real(r8), pointer :: matrix_phturnover_patch     (:,:,:)   ! C-matrix_phenology
      real(r8), pointer :: matrix_phtransfer_patch              (:,:)   ! A-matrix_phenology
      real(r8), pointer :: matrix_phturnover_patch              (:,:)   ! C-matrix_phenology
      integer,  pointer :: matrix_phtransfer_doner_patch        (:)   ! A-matrix_phenology
@@ -385,15 +383,11 @@ module CNVegCarbonFluxType
      integer,  pointer :: actpatch_fire                        (:)   ! A-matrix_phenology
      integer           :: num_actpatch_fire                           ! A-matrix_phenology
   
-!     real(r8), pointer :: matrix_gmtransfer_patch     (:,:,:)   ! A-matrix_gap mortality
-!     real(r8), pointer :: matrix_gmturnover_patch     (:,:,:)   ! C-matrix_gap mortality
      real(r8), pointer :: matrix_gmtransfer_patch     (:,:)   ! A-matrix_gap mortality
      real(r8), pointer :: matrix_gmturnover_patch     (:,:)   ! C-matrix_gap mortality
      integer,  pointer :: matrix_gmtransfer_doner_patch        (:)   ! A-matrix_gap mortality
      integer,  pointer :: matrix_gmtransfer_receiver_patch     (:)   ! A-matrix_gap mortality
   
-!     real(r8), pointer :: matrix_fitransfer_patch     (:,:,:)   ! A-matrix_fire
-!     real(r8), pointer :: matrix_fiturnover_patch     (:,:,:)   ! C-matrix_fire	 
      real(r8), pointer :: matrix_fitransfer_patch     (:,:)   ! A-matrix_fire
      real(r8), pointer :: matrix_fiturnover_patch     (:,:)   ! C-matrix_fire	 
      integer,  pointer :: matrix_fitransfer_doner_patch        (:)   ! A-matrix_fire
@@ -467,13 +461,9 @@ module CNVegCarbonFluxType
      integer,pointer :: list_agmc(:)
      integer,pointer :: list_afic(:)
 
-!     type(sparse_matrix_type) :: Aphvegc
-!     type(sparse_matrix_type) :: Agmvegc
-!     type(sparse_matrix_type) :: Afivegc
      type(sparse_matrix_type) :: AKphvegc
      type(sparse_matrix_type) :: AKgmvegc
      type(sparse_matrix_type) :: AKfivegc
-!     type(sparse_matrix_type) :: AKtmp1vegc
      type(sparse_matrix_type) :: AKallvegc
      integer                  :: NE_AKallvegc
      integer,pointer,dimension(:)  :: RI_AKallvegc
@@ -489,12 +479,8 @@ module CNVegCarbonFluxType
      integer,pointer,dimension(:)  :: CI_fic
      type(diag_matrix_type)   :: Kvegc
      type(vector_type)        :: Xvegc
-!     type(vector_type)        :: Xfirelossvegc
-!     type(vector_type)        :: Xnewvegc
      type(vector_type)        :: Xveg13c
-!     type(vector_type)        :: Xnewveg13c
      type(vector_type)        :: Xveg14c
-!     type(vector_type)        :: Xnewveg14c
 
      ! Objects that help convert once-per-year dynamic land cover changes into fluxes
      ! that are dribbled throughout the year
@@ -1100,7 +1086,6 @@ contains
     allocate(this%leafc_change_patch      (begp:endp)) ; this%leafc_change_patch      (:) = nan
     allocate(this%soilc_change_patch      (begp:endp)) ; this%soilc_change_patch      (:) = nan
 ! Matrix
-    !print*,'nvegcpool',nvegcpool
     if(use_matrixcn)then
        allocate(this%matrix_Cinput_patch         (begp:endp))                         ; this%matrix_Cinput_patch      (:) = nan
        allocate(this%matrix_C13input_patch       (begp:endp))                         ; this%matrix_C13input_patch      (:) = nan    !for isotop
@@ -1122,25 +1107,19 @@ contains
        allocate(this%matrix_fitransfer_doner_patch (1:ncfitrans))           ; this%matrix_fitransfer_doner_patch(:) = -9999
        allocate(this%matrix_fitransfer_receiver_patch (1:ncfitrans))        ; this%matrix_fitransfer_receiver_patch(:) = -9999
   
-!       print*,'ncphtrans,nvegcpool',ncphtrans,nvegcpool,ncfitrans
        allocate(this%list_phc_phgmc (1:ncphtrans+nvegcpool))    ; this%list_phc_phgmc(:) = -9999
        allocate(this%list_gmc_phgmc (1:nvegcpool))              ; this%list_gmc_phgmc(:) = -9999
        allocate(this%list_phc_phgmfic (1:ncphtrans+nvegcpool)); this%list_phc_phgmfic(:) = -9999
        allocate(this%list_gmc_phgmfic (1:nvegcpool))          ; this%list_gmc_phgmfic(:) = -9999
        allocate(this%list_fic_phgmfic (1:ncfitrans+nvegcpool)); this%list_fic_phgmfic(:) = -9999
 
-!       print*,'ncphtrans-ncphouttrans',ncphtrans-ncphouttrans,ncgmtrans-ncgmouttrans,ncfitrans-ncfiouttrans,begp,endp,nvegcpool,ncphtrans-ncphouttrans+ncfitrans-ncfiouttrans+nvegcpool
        allocate(this%list_aphc(1:ncphtrans-ncphouttrans)); this%list_aphc = -9999
        allocate(this%list_agmc(1:ncgmtrans-ncgmouttrans)); this%list_agmc = -9999
        allocate(this%list_afic(1:ncfitrans-ncfiouttrans)); this%list_afic = -9999
 
-!       call this%Aphvegc%InitSM (nvegcpool,begp,endp,ncphtrans-ncphouttrans+nvegcpool)
-!       call this%Agmvegc%InitSM (nvegcpool,begp,endp,ncgmtrans-ncgmouttrans+nvegcpool)
-!       call this%Afivegc%InitSM (nvegcpool,begp,endp,ncfitrans-ncfiouttrans+nvegcpool)
        call this%AKphvegc%InitSM(nvegcpool,begp,endp,ncphtrans-ncphouttrans+nvegcpool)
        call this%AKgmvegc%InitSM(nvegcpool,begp,endp,ncgmtrans-ncgmouttrans+nvegcpool)
        call this%AKfivegc%InitSM(nvegcpool,begp,endp,ncfitrans-ncfiouttrans+nvegcpool)
-!       call this%AKtmp1vegc%InitSM(nvegcpool,begp,endp,ncphtrans-ncphouttrans+nvegcpool)
        call this%AKallvegc%InitSM(nvegcpool,begp,endp,ncphtrans-ncphouttrans+ncfitrans-ncfiouttrans+nvegcpool)
        this%NE_AKallvegc = ncphtrans-ncphouttrans+ncfitrans-ncfiouttrans+nvegcpool
        allocate(this%RI_AKallvegc(1:this%NE_AKallvegc));this%RI_AKallvegc(:) = -9999
@@ -1156,15 +1135,11 @@ contains
        allocate(this%CI_fic(1:ncfitrans-ncfiouttrans+nvegcpool));this%CI_fic(:) = -9999
        call this%Kvegc%InitDM(nvegcpool,begp,endp)
        call this%Xvegc%InitV(nvegcpool,begp,endp)
-!       call this%Xfirelossvegc%InitV(nvegcpool,begp,endp)
-!       call this%Xnewvegc%InitV(nvegcpool,begp,endp)
        if(use_c13)then
           call this%Xveg13c%InitV(nvegcpool,begp,endp)
-!          call this%Xnewveg13c%InitV(nvegcpool,begp,endp)
        end if
        if(use_c14)then
           call this%Xveg14c%InitV(nvegcpool,begp,endp)
-!          call this%Xnewveg14c%InitV(nvegcpool,begp,endp)
        end if
     end if
 
@@ -4304,13 +4279,6 @@ contains
              this%matrix_fitransfer_patch (i,j) = value_patch
           end do
        end do   
-!       this%matrix_alloc_patch = value_patch
-!       this%matrix_phturnover_patch = value_patch
-!       this%matrix_gmturnover_patch = value_patch
-!       this%matrix_fiturnover_patch = value_patch
-!       this%matrix_phtransfer_patch = value_patch
-!       this%matrix_gmtransfer_patch = value_patch
-!       this%matrix_fitransfer_patch = value_patch
     end if
 
     if ( use_crop )then
@@ -4556,7 +4524,6 @@ contains
                this%froot_mr_patch(p)    + &
                this%livestem_mr_patch(p) + &
                this%livecroot_mr_patch(p)
-!          if(p .ge. 20038 .and. p .le. 20042)print*,'mr_patch',this%cpool_to_resp_patch(p),this%leaf_mr_patch(p),this%froot_mr_patch(p),this%livestem_mr_patch(p),this%livecroot_mr_patch(p)
        end if
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%mr_patch(p) = &
@@ -4619,7 +4586,6 @@ contains
                this%mr_patch(p)      + &
                this%gr_patch(p)      + &
                this%xsmrpool_to_atm_patch(p) ! xsmr... is -ve (slevis)
-!       if(bounds%begc .le. 34208 .and. bounds%endc .ge. 34208)print*,'ar_patch',p,this%mr_patch(p),this%gr_patch(p),this%xsmrpool_to_atm_patch(p),this%soilc_change_patch(p)
        else         
              this%ar_patch(p) =           &
                   this%mr_patch(p)      + &
@@ -4634,7 +4600,6 @@ contains
        this%gpp_patch(p) = &
             this%psnsun_to_cpool_patch(p) + &
             this%psnshade_to_cpool_patch(p)
-!       if(p .eq. 16)print*,'gpp_patch(p)',this%gpp_patch(p),this%psnsun_to_cpool_patch(p),this%psnshade_to_cpool_patch(p),this%ar_patch(p),this%xsmrpool_to_atm_patch(p),this%mr_patch(p),this%gr_patch(p)
 
        ! net primary production (NPP)      
        this%npp_patch(p) =      &
@@ -4868,13 +4833,6 @@ contains
             this%hrv_deadcrootc_storage_to_litter_patch(p) + &
             this%hrv_deadcrootc_xfer_to_litter_patch(p)   
 
-!       print*,'fire closs in summary',p,this%fire_closs_patch(p) - this%m_gresp_storage_to_fire_patch(p) - this%m_gresp_xfer_to_fire_patch(p) &
-!           + this%m_leafc_to_litter_fire_patch(p) + this%m_leafc_storage_to_litter_fire_patch(p) + this%m_leafc_xfer_to_litter_fire_patch(p) &
-!           + this%m_frootc_to_litter_fire_patch(p) + this%m_frootc_storage_to_litter_fire_patch(p) + this%m_frootc_xfer_to_litter_fire_patch(p) &
-!           + this%m_livestemc_to_litter_fire_patch(p) + this%m_livestemc_storage_to_litter_fire_patch(p) + this%m_livestemc_xfer_to_litter_fire_patch(p) &
-!           + this%m_deadstemc_to_litter_fire_patch(p) + this%m_deadstemc_storage_to_litter_fire_patch(p) + this%m_deadstemc_xfer_to_litter_fire_patch(p) &
-!           + this%m_livecrootc_to_litter_fire_patch(p) + this%m_livecrootc_storage_to_litter_fire_patch(p) + this%m_livecrootc_xfer_to_litter_fire_patch(p) &
-!           + this%m_deadcrootc_to_litter_fire_patch(p) + this%m_deadcrootc_storage_to_litter_fire_patch(p) + this%m_deadcrootc_xfer_to_litter_fire_patch(p) 
        ! (Slash Harvest Flux) - Additional Wood Harvest Veg C Losses
        this%slash_harvestc_patch(p) = &
             this%hrv_leafc_to_litter_patch(p)              + &
@@ -4926,11 +4884,9 @@ contains
          this%ar_patch(bounds%begp:bounds%endp), &
          this%ar_col(bounds%begc:bounds%endc))
     
-!    if(bounds%begp .eq. 20037)print*,'begp,endp,gppp',bounds%begp,bounds%endp,this%npp_patch(bounds%begp:bounds%endp)*1800,this%gpp_patch(bounds%begp:bounds%endp)*1800,this%mr_patch(bounds%begp:bounds%endp)*1800,this%gr_patch(bounds%begp:bounds%endp)*1800
     call p2c(bounds, num_soilc, filter_soilc, &
          this%gpp_patch(bounds%begp:bounds%endp), &
          this%gpp_col(bounds%begc:bounds%endc))
-!    if(bounds%begc .le. 12285 .and. bounds%endc .ge. 12285)print*,'begc,endc,gppc',bounds%begc,bounds%endc,this%gpp_col(bounds%begc:bounds%endc)*1800
 
     ! this code is to calculate an exponentially-relaxed npp value for use in NDynamics code
 
@@ -4985,12 +4941,10 @@ contains
        ! carbon losses to fire, including patch losses
        this%fire_closs_col(c) = this%fire_closs_p2c_col(c) 
        do l = 1, ndecomp_pools
-          !print*,'fire_closs from soil',c,l,this%m_decomp_cpools_to_fire_col(c,l),this%fire_closs_col(c)
           this%fire_closs_col(c) = &
                this%fire_closs_col(c) + &
                this%m_decomp_cpools_to_fire_col(c,l)
        end do
-!       print*,'fire_closs from soil',c,this%fire_closs_p2c_col(c),this%fire_closs_col(c) - this%fire_closs_p2c_col(c),this%fire_closs_col(c)
 
        ! total soil respiration, heterotrophic + root respiration (SR)
        this%sr_col(c) = &
@@ -5001,8 +4955,6 @@ contains
        this%er_col(c) = &
             this%ar_col(c) + &
             soilbiogeochem_hr_col(c)
-!       if(c .eq. 34208)print*,'er_col',soilbiogeochem_hr_col(c),this%ar_col(c) 
-!       if(c .eq. 12285) print*,'er_col',c,this%er_col(c)*1800,soilbiogeochem_hr_col(c)*1800,this%ar_col(c)*1800
        
        ! coarse woody debris heterotrophic respiration
        this%cwdc_hr_col(c) = 0._r8
@@ -5012,7 +4964,6 @@ contains
        this%nep_col(c) = &
             this%gpp_col(c) - &
             this%er_col(c)
-!       if(c .eq. 12285) print*,'gpp_col',c,this%gpp_col(c)*1800,this%gpp_col(c)*1800-this%ar_col(c)*1800
     end do
 
     call c2g( bounds = bounds, &

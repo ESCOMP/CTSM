@@ -229,9 +229,6 @@ contains
     ! zero the column-level C and N fluxes
     ! --------------------------------------------------
     
-!    if(use_soil_matrixcn .and. bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'begin Noleaching,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
-!    if(begc .le. 1411 .and. endc .ge. 1411)print*,'leafn begin noleach',begp,endp,cnveg_nitrogenstate_inst%leafn_patch(2111)
-!    print*,'begin Noleaching',cnveg_carbonstate_inst%grainc_patch(24),cnveg_carbonstate_inst%leafc_patch(24)
     call t_startf('CNZero')
     ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Without this, the filter is full of garbage
     ! in some situations
@@ -319,7 +316,6 @@ contains
          cnveg_carbonflux_inst, cnveg_nitrogenstate_inst)
     call t_stopf('CNMResp')
 
-!    if(use_soil_matrixcn .and. bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'after CNMResp,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
     !--------------------------------------------
     ! Soil Biogeochemistry
     !--------------------------------------------
@@ -333,7 +329,6 @@ contains
             canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     end if
 
-    !if(bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'here1,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
     ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)
     call SoilBiogeochemPotential (bounds, num_soilc, filter_soilc,                                                    &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,                  &
@@ -372,7 +367,6 @@ contains
 !     if(begp .le. 8428 .and. endp .ge. 8428)then
 !     end if
      !RF: moved ths call to before nutrient_demand, so that croplive didn't change half way through crop N cycle. 
-!    if(bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'here2,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
      if ( use_fun ) then
        call t_startf('CNPhenology_phase1')
        call CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
@@ -406,7 +400,6 @@ contains
 
      ! get the column-averaged plant_ndemand (needed for following call to SoilBiogeochemCompetition)
 
-!    if(bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'here3,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
      call p2c(bounds, num_soilc, filter_soilc,                    &
          cnveg_nitrogenflux_inst%plant_ndemand_patch(begp:endp), &
          soilbiogeochem_state_inst%plant_ndemand_col(begc:endc))
@@ -467,7 +460,6 @@ contains
     ! CNphenology needs to be called after above calls, since it depends on current
     ! time-step fluxes to new growth on the lastlitterfall timestep in deciduous systems
 
-!    if(bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'here4,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
     call t_startf('CNPhenology')
 
     if ( .not. use_fun ) then
@@ -574,7 +566,6 @@ contains
             isotope='c14')
     end if
 
-!    print*,'before CStateUpdate1',cnveg_carbonstate_inst%grainc_patch(24),cnveg_carbonstate_inst%leafc_patch(24)
     ! Update all prognostic carbon state variables (except for gap-phase mortality and fire fluxes)
     call CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
          crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
@@ -596,7 +587,6 @@ contains
              
 
     call t_stopf('CNUpdate1')
-!    if(bounds%begc .le. 1411 .and. bounds%endc .ge. 1411)print*,'leafn after NStateupdate 1',cnveg_nitrogenstate_inst%leafn_patch(2111),use_nguardrail
     if ( use_nguardrail ) then
        call t_startf('CNPrecisionControl')
        call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
@@ -604,7 +594,6 @@ contains
             c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
        call t_stopf('CNPrecisionControl')
     end if
-!    if(bounds%begc .le. 1411 .and. bounds%endc .ge. 1411)print*,'leafn after precision control',cnveg_nitrogenstate_inst%leafn_patch(2111)
 
     call t_startf('SoilBiogeochemStateUpdate1')
     call SoilBiogeochemNStateUpdate1(num_soilc, filter_soilc,  &
@@ -666,7 +655,6 @@ contains
             isotope='c14')
     end if
 
-!    print*,'before CStateUpdate2',cnveg_carbonstate_inst%grainc_patch(24),cnveg_carbonstate_inst%leafc_patch(24)
     ! Update all the prognostic carbon state variables affected by gap-phase mortality fluxes
     call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
          cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
@@ -682,7 +670,6 @@ contains
             c14_soilbiogeochem_carbonflux_inst)
     end if
 
-!    print*,'after CStateUpdate2',cnveg_carbonstate_inst%grainc_patch(24),cnveg_carbonstate_inst%leafc_patch(24)
     ! Update all the prognostic nitrogen state variables affected by gap-phase mortality fluxes
     call NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, &
          cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst,soilbiogeochem_nitrogenstate_inst, &
@@ -844,7 +831,6 @@ contains
     end if
     call t_stopf('CNUpdate3')
 
-!    if(bounds%begc .le. 1411 .and. bounds%endc .ge. 1411)print*,'leafn after Csupdate 3',cnveg_nitrogenstate_inst%leafn_patch(2111)
     if ( use_nguardrail ) then
        call t_startf('CNPrecisionControl')
        call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
@@ -852,11 +838,6 @@ contains
             c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
        call t_stopf('CNPrecisionControl')
     end if
-!    if(bounds%begc .le. 1411 .and. bounds%endc .ge. 1411)print*,'leafn after precisioncontrol',cnveg_nitrogenstate_inst%leafn_patch(2111)
-!    if(use_soil_matrixcn .and. bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'end of Noleaching,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
-
-!!!!!!!soil matrix!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     end associate
 
@@ -923,9 +904,6 @@ contains
     ! Mineral nitrogen dynamics (deposition, fixation, leaching)
     
     
-!    if(bounds%begc .le. 1411 .and. bounds%endc .ge. 1411)print*,'leafn begin leach',cnveg_nitrogenstate_inst%leafn_patch(2111)
-!    if(use_soil_matrixcn .and. bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'begin of leaching,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
-    !print*,'before SoilBiogeochemNLeaching'
     call t_startf('SoilBiogeochemNLeaching')
     call SoilBiogeochemNLeaching(bounds, num_soilc, filter_soilc, &
          waterstatebulk_inst, waterfluxbulk_inst, soilbiogeochem_nitrogenstate_inst, &
@@ -936,14 +914,11 @@ contains
 
     call t_startf('NUpdate3')
 
-!    print*,'before NstateUpdate3'
     call NstateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
          cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
 
     call t_stopf('NUpdate3')
-!    print*,'before CNVegmatrix'
-!    print*,'before CNVegmatrix',cnveg_carbonstate_inst%grainc_patch(24),cnveg_carbonstate_inst%leafc_patch(24)
     if(use_matrixcn)then
        call t_startf('CNVMatrix')
        call CNVegMatrix(bounds,num_soilp,filter_soilp,num_actfirep,filter_actfirep,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst,&
@@ -952,7 +927,6 @@ contains
                          c14_cnveg_carbonflux_inst)
        call t_stopf('CNVMatrix')
     end if
-!    print*,'after CNVegmatrix',cnveg_carbonstate_inst%grainc_patch(24),cnveg_carbonstate_inst%leafc_patch(24)
 
     if(use_soil_matrixcn)then
        call t_startf('CNSoilMatrix')
@@ -966,40 +940,6 @@ contains
     call t_stopf('CNSoilMatrix')
     end if
     
-!      if(use_soil_matrixcn .and. bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'after CNSoilMatrix,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
-!      call get_curr_date(yr, mon, day, sec)
-!      if(bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'curr_date,yr,mon,day,sec',yr, mon, day, sec
-!      print*,'curr_date,yr,mon,day,sec',yr,mon,day,sec
-!      if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'cs_veg,nsveg',cnveg_carbonstate_inst%leafc_patch(6851),cnveg_carbonstate_inst%leafc_storage_patch(6851),cnveg_carbonstate_inst%leafc_xfer_patch(6851),cnveg_nitrogenstate_inst%leafn_patch(6851),cnveg_nitrogenstate_inst%leafn_storage_patch(6851),cnveg_nitrogenstate_inst%leafn_xfer_patch(6851)
-!      if(bounds%begp .le. 6851 .and. bounds%endp .ge. 6851)print*,'after CNSoilMatrix'
-    !if(bounds%begc .le. 1411 .and. bounds%endc .ge. 1411)print*,'leafn end leach',cnveg_nitrogenstate_inst%leafn_patch(2111)
-!    print*,'after CNsoilmatrix'
-!    if(is_end_curr_year())then
-!       do fp=1,num_soilp
-!          p = filter_soilp(fp)
-!          print*,'p',p,grc%latdeg(patch%gridcell(p)),grc%londeg(patch%gridcell(p))
-!          print*,'leafc',cnveg_carbonstate_inst%leafc_patch(p)
-!          print*,'leafc_storage',cnveg_carbonstate_inst%leafc_storage_patch(p)
-!          print*,'leafc_xfer',cnveg_carbonstate_inst%leafc_xfer_patch(p)
-!          print*,'frootc',cnveg_carbonstate_inst%frootc_patch(p)
-!          print*,'frootc_storage',cnveg_carbonstate_inst%frootc_storage_patch(p)
-!          print*,'frootc_xfer',cnveg_carbonstate_inst%frootc_xfer_patch(p)
-!          print*,'livestemc',cnveg_carbonstate_inst%livestemc_patch(p)
-!          print*,'livestemc_storage',cnveg_carbonstate_inst%livestemc_storage_patch(p)
-!          print*,'livestemc_xfer',cnveg_carbonstate_inst%livestemc_xfer_patch(p)
-!          print*,'deadstemc',cnveg_carbonstate_inst%deadstemc_patch(p)
-!          print*,'deadstemc_storage',cnveg_carbonstate_inst%deadstemc_storage_patch(p)
-!          print*,'deadstemc_xfer',cnveg_carbonstate_inst%deadstemc_xfer_patch(p)
-!          print*,'livecrootc',cnveg_carbonstate_inst%livecrootc_patch(p)
-!          print*,'livecrootc_storage',cnveg_carbonstate_inst%livecrootc_storage_patch(p)
-!          print*,'livecrootc_xfer',cnveg_carbonstate_inst%livecrootc_xfer_patch(p)
-!          print*,'deadcrootc',cnveg_carbonstate_inst%deadcrootc_patch(p)
-!          print*,'deadcrootc_storage',cnveg_carbonstate_inst%deadcrootc_storage_patch(p)
-!          print*,'deadcrootc_xfer',cnveg_carbonstate_inst%deadcrootc_xfer_patch(p)
-!       end do
-!    end if
-!    if(use_soil_matrixcn .and. bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'end of leaching,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
-!    print*,'end of oleaching',cnveg_carbonstate_inst%grainc_patch(24),cnveg_carbonstate_inst%leafc_patch(24)
   end subroutine CNDriverLeaching
 
   !-----------------------------------------------------------------------
@@ -1056,7 +996,6 @@ contains
        call c14_soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc)
     end if
     call soilbiogeochem_nitrogenstate_inst%summary(bounds, num_allc, filter_allc)
-!    if(bounds%begc .le. 32397 .and. bounds%endc .ge. 32397)print*,'after soilNstate summary',soilbiogeochem_nitrogenstate_inst%sminn_col(32397)
     ! ----------------------------------------------
     ! cnveg carbon/nitrogen state summary
     ! ----------------------------------------------
@@ -1086,7 +1025,6 @@ contains
             soilbiogeochem_ctrunc_col=c14_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
     end if
 
-!    if(bounds%begc .le. 32397 .and. bounds%endc .ge. 32397)print*,'before Nstate summary',soilbiogeochem_nitrogenstate_inst%sminn_col(32397)
     call cnveg_nitrogenstate_inst%Summary(bounds, num_allc, filter_allc, &
          num_soilc, filter_soilc, num_soilp, filter_soilp, &
          soilbiogeochem_nitrogenstate_inst)

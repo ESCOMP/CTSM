@@ -2828,7 +2828,6 @@ contains
                   if(frootc(p) .gt. 0)then
                      matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
                   end if
-!                  if(p .eq. 10580)print*,'mfroot to litter,phen1',matrix_phtransfer(p,ileaf_to_iout_phc),matrix_phtransfer(p,ifroot_to_iout_phc),leafc_to_litter(p),frootc_to_litter(p),leafc(p), frootc(p)
                end if ! use_matrixcn
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
@@ -2867,7 +2866,6 @@ contains
                   if(frootc(p) .gt. 0)then
                      matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
                   end if
-!                  if(p .eq. 10580)print*,'mfroot to litter,phen2',matrix_phtransfer(p,ifroot_to_iout_phc)
                end if !use_matrixcn
             end if
             
@@ -2886,7 +2884,6 @@ contains
                      if(frootc(p) .gt. 0)then
                         matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
                      end if
-!                     if(p .eq. 10580)print*,'mfroot to litter,phen3',matrix_phtransfer(p,ifroot_to_iout_phc)
                   end if
                end if
             end if 
@@ -3111,7 +3108,6 @@ contains
             if (use_matrixcn) then
                matrix_phtransfer(p,ileaf_to_iout_phc)  = bglfr(p)
                matrix_phtransfer(p,ifroot_to_iout_phc) = bglfr(p)
-!               if(p .eq. 10580)print*,'mfroot to litter,phen4',matrix_phtransfer(p,ifroot_to_iout_phc)
             end if
             if ( use_fun ) then
                leafc_to_litter_fun(p)     = leafc_to_litter(p)

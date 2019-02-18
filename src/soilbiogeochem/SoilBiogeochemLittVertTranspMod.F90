@@ -173,9 +173,6 @@ contains
          som_adv_coef     => soilbiogeochem_state_inst%som_adv_coef_col ,  & ! Output: [real(r8) (:,:) ]  SOM advective flux (m/s)                               
          som_diffus_coef  => soilbiogeochem_state_inst%som_diffus_coef_col, & ! Output: [real(r8) (:,:) ]  SOM diffusivity due to bio/cryo-turbation (m2/s)  
          tri_ma_vr        => soilbiogeochem_carbonflux_inst%tri_ma_vr &
-!        matrix_a_tri     => soilbiogeochem_carbonflux_inst%matrix_a_tri_col, & ! Output: "A"-for matrix 
-!        matrix_b_tri     => soilbiogeochem_carbonflux_inst%matrix_b_tri_col, & ! Output: "B"-for matrix
-!        matrix_c_tri     => soilbiogeochem_carbonflux_inst%matrix_c_tri_col  & ! Output: "C"-for matrix
          )
 
       !Set parameters of vertical mixing of SOM
@@ -417,11 +414,7 @@ contains
                            c_tri(c,j) = -(d_p1_zp1(c,j) * aaa(pe_p1(c,j)) + max(-f_p1(c,j), 0._r8))
                            b_tri(c,j) = - a_tri(c,j) - c_tri(c,j) + a_p_0
                            r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + (a_p_0 - adv_flux(c,j)) * conc_trcr(c,j)
- !if use soil_matrix                          
                            if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn)then !vertical matrix are the same for all pools
-!                              matrix_a_tri(c,j) = a_tri(c,j) 
-!                              matrix_c_tri(c,j) = c_tri(c,j)
-!                              matrix_b_tri(c,j) = b_tri(c,j) - a_p_0
                               do i = 1,ndecomp_pools-1 !excluding cwd
                                  tri_ma_vr(c,1+(i-1)*(nlevdecomp*3-2)) = (b_tri(c,j) - a_p_0) / dzsoi_decomp(j) * (-dtime)
                                  tri_ma_vr(c,3+(i-1)*(nlevdecomp*3-2)) = c_tri(c,j) / dzsoi_decomp(j) * (-dtime)
@@ -432,11 +425,7 @@ contains
                            c_tri(c,j) = -(d_p1_zp1(c,j) * aaa(pe_p1(c,j)) + max(-f_p1(c,j), 0._r8))
                            b_tri(c,j) = - a_tri(c,j) - c_tri(c,j) + a_p_0
                            r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + a_p_0 * conc_trcr(c,j)
-   !if use soil_matrix     
                            if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn)then                   
-!                              matrix_a_tri(c,j) = a_tri(c,j) ! Eqn 5.47 Patankar
-!                              matrix_c_tri(c,j) = c_tri(c,j)
-!                              matrix_b_tri(c,j) = b_tri(c,j) - a_p_0
                               do i = 1,ndecomp_pools-1
                                  tri_ma_vr(c,j*3-4+(i-1)*(nlevdecomp*3-2)) = a_tri(c,j) / dzsoi_decomp(j) * (-dtime)
                                  if(j .ne. nlevdecomp)then
@@ -451,7 +440,6 @@ contains
                            c_tri(c,j) = 0._r8 
                            r_tri(c,j) = 0._r8
                         endif
-!for matrix-zgdu
                      enddo ! fc; column
                   enddo ! j; nlevdecomp
 
@@ -494,11 +482,7 @@ contains
                      do j = 1,nlevdecomp
                         do fc =1,num_soilc
                            c = filter_soilc(fc)
-!                           if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!                              print*,'matrix_input in Vertical transfer',i_type,c,j,s,matrix_input(c,1,1),source(c,1,1)
-!                           end if
                            matrix_input(c,j+(s-1)*nlevdecomp) = matrix_input(c,j+(s-1)*nlevdecomp) + source(c,j,s)
-!                           if(c .eq. 1411 .and. j .le. 10 .and. s .eq. 2)print*,'after vertlit',c,j,s,matrix_input(c,j+(s-1)*nlevdecomp),source(c,j,s)
                         end do
                      end do
                   end if  !soil_matrix

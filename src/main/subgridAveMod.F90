@@ -248,7 +248,6 @@ contains
        c = filterc(fc)
        colarr(c) = 0._r8
        do p = col%patchi(c), col%patchf(c)
-!          if(c .eq. 12285)print*,'p2c',c,p,patcharr(p),patch%wtcol(p)
           if (patch%active(p)) colarr(c) = colarr(c) + patcharr(p) * patch%wtcol(p)
        end do
     end do

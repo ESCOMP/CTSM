@@ -402,8 +402,7 @@ contains
     !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch, froot_carbon, croot_carbon)
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
-!       if(bounds_clump%begc .le. 7066 .and. bounds_clump%endc .ge. 7066)print*,'prev_date,yr,mon,day,sec,7856',yr_prev, mon_prev, day_prev, sec_prev,bounds_clump%begc,bounds_clump%endc
-!       if(use_matrixcn .and. bounds_clump%begc .le. 2748 .and. bounds_clump%endc .ge. 2748)print*,'prev_date,yr,mon,day,sec,7697',yr_prev, mon_prev, day_prev, sec_prev,bounds_clump%begc,bounds_clump%endc
+!       print*,'prev_date,yr,mon,day,sec,7697',yr_prev, mon_prev, day_prev, sec_prev,bounds_clump%begc,bounds_clump%endc
 
        call t_startf('drvinit')
 
@@ -1192,7 +1191,6 @@ contains
     ! History/Restart output
     ! ============================================================================
 
-    !print*,'before histrest'
     if (.not. use_noio) then
 
        call t_startf('clm_drv_io')

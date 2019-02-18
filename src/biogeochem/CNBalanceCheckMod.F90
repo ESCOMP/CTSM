@@ -103,7 +103,6 @@ contains
     
     do fc = 1,num_soilc
        c = filter_soilc(fc)
-!       if(c .eq. 12285)print*,'begcb',totcolc(c)
        col_begcb(c) = totcolc(c)
        col_begnb(c) = totcoln(c)
     end do
@@ -204,19 +203,6 @@ contains
                write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
             end if
          end if
-!         if(c .eq. 7066)then
-!            print*,'column cbalance error0   = ', col_errcb(c), c
-!            print*,'delta store              = ',col_endcb(c)-col_begcb(c)
-!            print*,'--- Inputs ---'
-!            print*,'gpp                      = ',gpp(c)*dt
-!            print*,'--- Outputs ---'
-!            print*,'er                       = ',er(c)*dt
-!            print*,'col_fire_closs           = ',col_fire_closs(c)*dt
-!            print*,'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
-!            print*,'wood_harvestc            = ',wood_harvestc(c)*dt
-!            print*,'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
-!            print*,'-1*som_c_leached         = ',som_c_leached(c)*dt
-!         end if
       end do ! end of columns loop
 
       if (err_found) then

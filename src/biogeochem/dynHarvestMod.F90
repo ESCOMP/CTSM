@@ -476,7 +476,6 @@ contains
             end if
                
          end if  ! end tree block
-!         if(p .eq. 10580)print*,'frootc to litter harvest',cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc),cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc)
       end do ! end of pft loop
 
       ! gather all patch-level litterfall fluxes from harvest to the column

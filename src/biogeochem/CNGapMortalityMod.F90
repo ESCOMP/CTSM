@@ -198,10 +198,6 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)
-!           print*,'ioutc in gap mortality',ioutc,ideadstem
-!         if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
-!             print*,'begin of CNGapMortality',c,soilbiogeochem_nitrogenflux_inst%matrix_input_col(c,1,1)
-!         end if
 
          if (use_cndv) then
             ! Stress mortality from lpj's subr Mortality.
@@ -271,7 +267,6 @@ contains
          cnveg_carbonflux_inst%m_deadcrootc_storage_to_litter_patch(p)  = cnveg_carbonstate_inst%deadcrootc_storage_patch(p)  * m
          cnveg_carbonflux_inst%m_gresp_storage_to_litter_patch(p)       = cnveg_carbonstate_inst%gresp_storage_patch(p)       * m
          
-!
          cnveg_carbonflux_inst%m_leafc_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%leafc_xfer_patch(p)          * m
          cnveg_carbonflux_inst%m_frootc_xfer_to_litter_patch(p)         = cnveg_carbonstate_inst%frootc_xfer_patch(p)         * m
          cnveg_carbonflux_inst%m_livestemc_xfer_to_litter_patch(p)      = cnveg_carbonstate_inst%livestemc_xfer_patch(p)      * m
@@ -279,11 +274,7 @@ contains
          cnveg_carbonflux_inst%m_livecrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%livecrootc_xfer_patch(p)     * m
          cnveg_carbonflux_inst%m_deadcrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%deadcrootc_xfer_patch(p)     * m
          cnveg_carbonflux_inst%m_gresp_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%gresp_xfer_patch(p)          * m
-!         if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
-!             print*,'before matrix',c,soilbiogeochem_nitrogenflux_inst%matrix_input_col(c,1,1)
-!         end if
          if (use_matrixcn) then 
-!            if(p .eq. 166984)print*,'gm leaf',m
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc)         = m
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc)        = m
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc)     = m
@@ -305,17 +296,8 @@ contains
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc) = m
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemxf_to_iout_gmc)  = m
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc) = m
-            !CiPEHR
-!            if(p .eq. 13 .or. p .eq. 12)write(511,*),'gap_mortality',p,m*1800
-            !SPRUCE
-!            if(p .eq. 2 .or. p .eq. 8)write(511,*),'gap_mortality',p,m*1800
-            !SEV
-!            if(p .eq. 1 .or. p .eq. 15)write(511,*),'gap_mortality',p,m*1800
          end if
 
-!         if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
-!             print*,'after matrix',c,soilbiogeochem_nitrogenflux_inst%matrix_input_col(c,1,1)
-!         end if
          !------------------------------------------------------
          ! patch-level gap mortality nitrogen fluxes
          !------------------------------------------------------
@@ -339,7 +321,6 @@ contains
            if (use_matrixcn) then  		   
              cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     + m
              cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    + m
-!             if(p .eq. 8)print*,'after update ngmtransfer',cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout),m
            end if
          end if
 
@@ -362,12 +343,7 @@ contains
          cnveg_nitrogenflux_inst%m_deadstemn_xfer_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_xfer_patch(p)     * m
          cnveg_nitrogenflux_inst%m_livecrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%livecrootn_xfer_patch(p)    * m
          cnveg_nitrogenflux_inst%m_deadcrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_xfer_patch(p)    * m
-!N-matrix added by Z.Du
-!         if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
-!             print*,'before_matrix2',c,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!         end if
          if (use_matrixcn) then	 
-!            print*,'ioutn in gap mortality',ioutn,ileaf,iretransn
             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileaf_to_iout_gmn)        = m
             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifroot_to_iout_gmn)       = m
             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestem_to_iout_gmn)    = m
@@ -395,9 +371,6 @@ contains
             end if
          end if
 
-!         if(abs(grc%latdeg(patch%gridcell(p))+40.0) .le. 0.01 .and. abs(grc%londeg(patch%gridcell(p))-150) .le. 0.01)then
-!             print*,'after_matrix2',c,soilbiogeochem_nitrogenflux_inst%matrix_input_col(c,1,1)
-!         end if
          ! added by F. Li and S. Levis
          if (use_cndv) then
             if (woody(ivt(p)) == 1._r8)then
@@ -409,14 +382,10 @@ contains
             end if
          end if
         
- !        if(p .eq. 16 .and. use_matrixcn)print*,'after update ngmtransfer 1',cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ioutn,ifroot)*cnveg_nitrogenstate_inst%frootn_patch(p)*1800,m
-!         if(p .eq. 10580)print*,'gap',cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc),cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc)
       end do ! end of patch loop
 
       ! gather all patch-level litterfall fluxes to the column
       ! for litter C and N inputs
-!if(bounds%begp .le. 691 .and. bounds%endp .ge. 691)print*,'before gap_patchtocolumn',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!if(bounds%begp .le. 1472 .and. bounds%endc .ge. 1472)print*,'before gap_patchtocolumn',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
 
       call CNGap_PatchToColumn(bounds, num_soilc, filter_soilc, &
            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
@@ -425,8 +394,6 @@ contains
            croot_prof_patch(bounds%begp:bounds%endp, 1:nlevdecomp_full), &
            stem_prof_patch(bounds%begp:bounds%endp, 1:nlevdecomp_full))
 
-!if(bounds%begp .le. 691 .and. bounds%endp .ge. 691)print*,'after gap_patchtocolumn',340,soilbiogeochem_nitrogenflux_inst%matrix_input_col(340,1,1)
-!if(bounds%begp .le. 1472 .and. bounds%endc .ge. 1472)print*,'after gap_patchtocolumn',743,soilbiogeochem_nitrogenflux_inst%matrix_input_col(743,1,1)
     end associate
 
   end subroutine CNGapMortality

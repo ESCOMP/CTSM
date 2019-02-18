@@ -346,13 +346,11 @@ contains
          else ! no FUN. :( we get N available from the FPG calculation in soilbiogeochemistry competition. 
             sminn_to_npool(p) = plant_ndemand(p) * fpg(c)        
          end if
-!         if (.not. use_matrixcn) then
             plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
             plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
          if (use_matrixcn)then 
             matrix_Ninput(p) =  sminn_to_npool(p)! + retransn_to_npool(p) 
-!            matrix_Cinput(p) =  matrix_Ninput(p) * (c_allometry(p)/n_allometry(p))
-             matrix_Cinput(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
+            matrix_Cinput(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
          end if
        if(.not.use_fun)then  !ORIGINAL CLM(CN) downregulation code. 
             excess_cflux(p) = availc(p) - plant_calloc(p)
@@ -389,12 +387,10 @@ contains
 
          nlc = plant_calloc(p) / c_allometry(p)
  
-!       if (.not. use_matrixcn) then
             cpool_to_leafc(p)          = nlc * fcur
             cpool_to_leafc_storage(p)  = nlc * (1._r8 - fcur)
             cpool_to_frootc(p)         = nlc * f1 * fcur
             cpool_to_frootc_storage(p) = nlc * f1 * (1._r8 - fcur)
-!            print*,'cpool_to_frootc_storage',p,nlc,f1,(1-fcur),cpool_to_frootc_storage(p),plant_calloc(p),c_allometry(p)
             if (woody(ivt(p)) == 1._r8) then
                cpool_to_livestemc(p)          = nlc * f3 * f4 * fcur
                cpool_to_livestemc_storage(p)  = nlc * f3 * f4 * (1._r8 - fcur)
@@ -418,9 +414,7 @@ contains
                cpool_to_grainc_storage(p)     = nlc * f5 * (1._r8 -fcur)
             end if
 
- !      else
          ! corresponding N fluxes
-!         if (.not. use_matrixcn) then
             npool_to_leafn(p)          = (nlc / cnl) * fcur
             npool_to_leafn_storage(p)  = (nlc / cnl) * (1._r8 - fcur)
             npool_to_frootn(p)         = (nlc * f1 / cnfr) * fcur
@@ -435,7 +429,6 @@ contains
                npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
                npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
             end if
-!         end if  ! use_matrixcn
             if (ivt(p) >= npcropmin) then ! skip 2 generic crops
                cng = graincn(ivt(p))
                npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
@@ -511,8 +504,6 @@ contains
          ! fluxes that get released on a given timestep are calculated in growth_resp(),
          ! but that the storage of C for growth resp during display of transferred
          ! growth is assigned here.
-!        if (.not. use_matrixcn)then
-!        if(p .eq. 10580) print*, 'matrix C alloc',p,matrix_alloc(p,:),matrix_Cinput(p)
          gresp_storage = cpool_to_leafc_storage(p) + cpool_to_frootc_storage(p)
          if (woody(ivt(p)) == 1._r8) then
             gresp_storage = gresp_storage + cpool_to_livestemc_storage(p)
@@ -525,19 +516,6 @@ contains
             gresp_storage = gresp_storage + cpool_to_livestemc_storage(p)
             gresp_storage = gresp_storage + cpool_to_grainc_storage(p)
          end if
-!         else
-!            gresp_storage = plant_calloc(p) * (matrix_alloc(p,ileaf_st) + matrix_alloc(p,ifroot_st))
-!            if (woody(ivt(p)) == 1._r8) then
-!               gresp_storage = gresp_storage + plant_calloc(p) * matrix_alloc(p,ilivestem_st)
-!               gresp_storage = gresp_storage + plant_calloc(p) * matrix_alloc(p,ideadstem_st)
-
- !              gresp_storage = gresp_storage + plant_calloc(p) * matrix_alloc(p,ilivecroot_st)
- !              gresp_storage = gresp_storage + plant_calloc(p) * matrix_alloc(p,ideadcroot_st)
- !           end if
- !           if (ivt(p) >= npcropmin) then
- !              print*,'crop matrix is not ready yet'
- !           end if
- !        end if
          cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
          if(use_matrixcn)then
             matrix_Cinput(p) = plant_calloc(p)

@@ -221,13 +221,7 @@ contains
      call AKfire%SetValueA_diag(num_soilc,filter_c,1._r8)
      allocate(decomp_cascade_con%list_fire_AKVfire(1:AKfire%NE))
    
-!     call AKtmp1%InitSM(ndecomp_pools*nlevdecomp,1,1)
-!     call AKtmp2%InitSM(ndecomp_pools*nlevdecomp,1,1)
-
      list_ready = .false.
-!     call AV%SPMP_AB(num_soilc,filter_c,AKfire,list_ready)
-!     allocate(decomp_cascade_con%list_Vfire_all (1:AV%NE))
-!     list_ready = .false.
      call AKallsoil%InitSM(ndecomp_pools*nlevdecomp,1,1)
      call AKallsoil%SPMP_ABC(num_soilc,filter_c,AK,AV,AKfire,list_ready)
 
@@ -237,11 +231,8 @@ contains
      decomp_cascade_con%all_i = AKallsoil%RI
      decomp_cascade_con%all_j = AKallsoil%CI
 
-!     print*,'allocating list variables'
-!     print*,'Variable sizes',AV%NE,AKfire%NE,AKtmp1%NE,AK%NE
      allocate(decomp_cascade_con%list_Asoilc    (1:(ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp))
      allocate(decomp_cascade_con%list_Asoiln    (1:(ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp))
-!     print*,'after allocating list variables'
 
    end subroutine InitSoilTransfer
 
