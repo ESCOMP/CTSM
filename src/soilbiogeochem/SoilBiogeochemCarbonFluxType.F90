@@ -34,7 +34,6 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: decomp_cascade_ctransfer_col              (:,:)   ! vertically-integrated (diagnostic) C transferred along decomposition cascade (gC/m2/s)
      real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate constant for decomposition (1./sec)
 ! for soil-matrix
-!     real(r8), pointer :: matrix_decomp_k_col                       (:,:) ! rate constant for decomposition (1./sec)
      real(r8), pointer :: hr_vr_col                                 (:,:)   ! (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
      real(r8), pointer :: o_scalar_col                              (:,:)   ! fraction by which decomposition is limited by anoxia
      real(r8), pointer :: w_scalar_col                              (:,:)   ! fraction by which decomposition is limited by moisture availability
@@ -58,15 +57,10 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: FATES_c_to_litr_lig_c_col                 (:,:)   ! total lignin    litter coming from ED. gC/m3/s
 
      ! track tradiagonal matrix  
-!     real(r8), pointer :: matrix_a_tri_col                               (:,:)   ! subdiagonal coefficients
-!     real(r8), pointer :: matrix_b_tri_col                               (:,:)   ! diagonal coefficients 
-!     real(r8), pointer :: matrix_c_tri_col                               (:,:)   ! superdiagonal coefficients
-!     real(r8), pointer :: matrix_input_col                               (:,:,:)   ! source coefficients
      real(r8), pointer :: matrix_decomp_fire_k_col                               (:,:)   ! source coefficients
      real(r8), pointer :: tri_ma_vr                               (:,:)   ! superdiagonal coefficients
 
 
-!     type(sparse_matrix_type) :: Asoilc
      type(sparse_matrix_type) :: AKsoilc
      type(sparse_matrix_type) :: AVsoil
      type(sparse_matrix_type) :: AKfiresoil
@@ -80,7 +74,6 @@ module SoilBiogeochemCarbonFluxType
      integer,pointer,dimension(:)     :: CI_AKallsoilc
      integer,pointer,dimension(:)     :: RI_a
      integer,pointer,dimension(:)     :: CI_a
-!     type(sparse_matrix_type) :: AKXcinc
 
      integer,pointer,dimension(:)     :: actcol_fire
      integer                          :: num_actcol_fire
@@ -88,20 +81,11 @@ module SoilBiogeochemCarbonFluxType
      type(diag_matrix_type)   :: Ksoil
      type(diag_matrix_type)   :: Xdiagsoil
      
-!     type(vector_type)        :: matrix_Cinter
-!     type(vector_type)        :: matrix_Cinter_next
-!     type(vector_type)        :: matrix_Cinter13
-!     type(vector_type)        :: matrix_Cinter14
-!     type(vector_type)        :: matrix_Cinter13_next
-!     type(vector_type)        :: matrix_Cinter14_next
      type(vector_type)        :: matrix_Cinput
-!     type(vector_type)        :: matrix_Cinput13
-!     type(vector_type)        :: matrix_Cinput14
 
    contains
 
      procedure , public  :: Init   
-!     procedure , private :: InitTransfer 
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory
      procedure , private :: InitCold
@@ -122,9 +106,6 @@ contains
      character(len=3) , intent(in) :: carbon_type ! one of ['c12', c13','c14']
 
      call this%InitAllocate ( bounds)
-    ! if(use_soil_matrixcn)then
-    !    call this%InitTransfer ()
-    ! end if
      call this%InitHistory ( bounds, carbon_type )
      call this%InitCold (bounds )
 
@@ -173,9 +154,6 @@ contains
 
      allocate(this%decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))                    
      this%decomp_k_col(:,:,:)= spval
-     ! for soil-matrix
-!     if(use_soil_matrixcn)then
-!     end if
 
      allocate(this%decomp_cpools_leached_col(begc:endc,1:ndecomp_pools))              
      this%decomp_cpools_leached_col(:,:)= nan
@@ -189,27 +167,11 @@ contains
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
   
      if(use_soil_matrixcn)then
-! for  matrix 
-!     allocate(this%matrix_a_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_a_tri_col(:,:,:)= nan
-!     allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_b_tri_col(:,:,:)= nan
-!     allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_c_tri_col(:,:,:)= nan
-!     allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
-!        allocate(this%matrix_a_tri_col(begc:endc,1:nlevdecomp));  this%matrix_a_tri_col(:,:)= nan
-!        allocate(this%matrix_b_tri_col(begc:endc,1:nlevdecomp));  this%matrix_b_tri_col(:,:)= nan
-!        allocate(this%matrix_c_tri_col(begc:endc,1:nlevdecomp));  this%matrix_c_tri_col(:,:)= nan
         allocate(this%tri_ma_vr(begc:endc,1:decomp_cascade_con%Ntri_setup))
-!        allocate(this%matrix_input_col(begc:endc,1:nlevdecomp,1:ndecomp_pools));  this%matrix_input_col(:,:,:)= nan
         allocate(this%matrix_decomp_fire_k_col(begc:endc,1:nlevdecomp*ndecomp_pools));  this%matrix_decomp_fire_k_col(:,:)= nan
-!        allocate(this%matrix_decomp_k_col(begc:endc,1:nlevdecomp*ndecomp_pools))                    
- 
-!        this%matrix_decomp_k_col(:,:)= spval
-
         Ntrans = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
-!        call this%Asoilc%InitSM                 (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+ndecomp_pools*nlevdecomp)
-        !print*,'before InitAKsoilc',begc,endc
         call this%AKsoilc%InitSM                (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+ndecomp_pools*nlevdecomp)
         call this%AVsoil%InitSM                 (ndecomp_pools*nlevdecomp,begc,endc,decomp_cascade_con%Ntri_setup)
-!        print*,'Ntrans',Ntrans,decomp_cascade_con%Ntri_setup,ndecomp_pools*nlevdecomp
         call this%AKfiresoil%InitSM             (ndecomp_pools*nlevdecomp,begc,endc,ndecomp_pools*nlevdecomp)
         call this%AKVfiresoil%InitSM            (ndecomp_pools*nlevdecomp,begc,endc,decomp_cascade_con%Ntri_setup+nlevdecomp)
         this%NE_AKVfiresoil = decomp_cascade_con%Ntri_setup+nlevdecomp
@@ -222,19 +184,9 @@ contains
         Ntrans_diag = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp+ndecomp_pools_vr
         allocate(this%RI_a(1:Ntrans_diag)); this%RI_a(1:Ntrans_diag) = -9999
         allocate(this%CI_a(1:Ntrans_diag)); this%CI_a(1:Ntrans_diag) = -9999
-!        call this%AKXcinc%InitSM                (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+decomp_cascade_con%Ntri_setup+nlevdecomp)
         call this%Ksoil%InitDM                  (ndecomp_pools*nlevdecomp,begc,endc)
         call this%Xdiagsoil%InitDM              (ndecomp_pools*nlevdecomp,begc,endc)
-!        call this%matrix_Cinter%InitV        (ndecomp_pools*nlevdecomp,begc,endc)
-!        call this%matrix_Cinter_next%InitV   (ndecomp_pools*nlevdecomp,begc,endc)
-!        call this%matrix_Cinter13%InitV      (ndecomp_pools*nlevdecomp,begc,endc)
-!        call this%matrix_Cinter14%InitV      (ndecomp_pools*nlevdecomp,begc,endc)
-!        call this%matrix_Cinter13_next%InitV (ndecomp_pools*nlevdecomp,begc,endc)
-!        call this%matrix_Cinter14_next%InitV (ndecomp_pools*nlevdecomp,begc,endc)
         call this%matrix_Cinput%InitV(ndecomp_pools*nlevdecomp,begc,endc)
-!        call this%matrix_Cinput13%InitV(ndecomp_pools*nlevdecomp,begc,endc)
-!        call this%matrix_Cinput14%InitV(ndecomp_pools*nlevdecomp,begc,endc)
-
      end if
      if ( use_fates ) then
         ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
@@ -335,7 +287,7 @@ contains
                 ptr_col=data2dptr, default='inactive')
         end do
     !for soil-matrix   
-        if(use_soil_matrixcn)then
+!        if(use_soil_matrixcn)then
 !           do k = 1, ndecomp_pools
            ! decomposition k
 !              data2dptr => this%matrix_decomp_k_col(:,:,k)
@@ -345,7 +297,7 @@ contains
 !                   avgflag='A', long_name=longname, &
 !                   ptr_col=data2dptr, default='inactive')
 !           end do
-        end if
+!        end if
 
         this%decomp_cascade_hr_col(begc:endc,:)             = spval
         this%decomp_cascade_hr_vr_col(begc:endc,:,:)        = spval
@@ -689,7 +641,6 @@ contains
 
     ! initialize fields for special filters
 
-    !print*,'special_col in SoilBiogeochemCarbonFluxType.F90',special_col
     call this%SetValues (num_column=num_special_col, filter_column=special_col, &
          value_column=0._r8)
 
@@ -808,26 +759,15 @@ contains
     end do
 
 ! for matrix 
-!    print*,'before set value C matrix for soil'
     if(use_soil_matrixcn)then
        do k = 1, ndecomp_pools
           do j = 1, nlevdecomp
              do fi = 1,num_column
                 i = filter_column(fi)
-             !print*,'before setvalues,matrix_input_col',j,k,this%matrix_input_col(1,j,k)
-!                this%matrix_a_tri_col(i,j) = value_column
-!                this%matrix_b_tri_col(i,j) = value_column
-!                this%matrix_c_tri_col(i,j) = value_column
-!                this%matrix_input_col(i,j,k) = value_column
                 this%matrix_decomp_fire_k_col(i,j+nlevdecomp*(k-1)) = value_column
-!                this%matrix_decomp_k_col(i,j+nlevdecomp*(k-1))      = value_column
-             !print*,'after setvalues,matrix_input_col',j,k,this%matrix_input_col(1,j,k)
              end do
           end do
        end do
-!       this%matrix_input_col = value_column
-!       this%matrix_decomp_fire_k_col = value_column
-!       this%matrix_decomp_k_col = value_column
        call this%matrix_Cinput%SetValueV_scaler(num_column,filter_column,value_column)
        if(.not. use_vertsoilc)then
           do k = 1,decomp_cascade_con%Ntri_setup
@@ -838,7 +778,6 @@ contains
           end do
        end if
     end if
-!    print*,'after setting C matrix for soil'
     do j = 1, nlevdecomp_full
        do fi = 1,num_column
           i = filter_column(fi)
@@ -961,9 +900,6 @@ contains
        end associate
 
     ! total heterotrophic respiration (HR)
-    !print*,'hr in summary',this%hr_col
-    !print*,'lithr in summary',this%lithr_col
-    !print*,'somhr in summary',this%somhr_col
     if(.not. use_soil_matrixcn)then
        do fc = 1,num_soilc
           c = filter_soilc(fc)

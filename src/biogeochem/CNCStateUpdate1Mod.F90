@@ -305,9 +305,6 @@ contains
               cs_veg%livestemc_patch(p)       = cs_veg%livestemc_patch(p)      + cf_veg%livestemc_xfer_to_livestemc_patch(p)*dt
               cs_veg%livestemc_xfer_patch(p)  = cs_veg%livestemc_xfer_patch(p) - cf_veg%livestemc_xfer_to_livestemc_patch(p)*dt
               cs_veg%grainc_patch(p)          = cs_veg%grainc_patch(p)         + cf_veg%grainc_xfer_to_grainc_patch(p)*dt
-!               if (p .eq. 10580)print*,'grainc',cs_veg%grainc_patch(p), cf_veg%grainc_xfer_to_grainc_patch(p)*dt
-!              if(p .eq. 24)print*,'xfer to grain',cs_veg%grainc_patch(p),cf_veg%grainc_xfer_to_grainc_patch(p)*dt
-!              if(p .eq. 24)print*,'xfer to leaf',cs_veg%leafc_patch(p),cf_veg%leafc_xfer_to_leafc_patch(p)*dt
               cs_veg%grainc_xfer_patch(p)     = cs_veg%grainc_xfer_patch(p)    - cf_veg%grainc_xfer_to_grainc_patch(p)*dt
            end if
 
@@ -327,12 +324,9 @@ contains
               cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_litter_patch(p)*dt
               cs_veg%grainc_patch(p)     = cs_veg%grainc_patch(p) &
                    - (cf_veg%grainc_to_food_patch(p) + cf_veg%grainc_to_seed_patch(p))*dt
-!              if(p .eq. 24)print*,'grain to food and seed',cs_veg%grainc_patch(p),(cf_veg%grainc_to_food_patch(p) + cf_veg%grainc_to_seed_patch(p))*dt
-!              if(p .eq. 24)print*,'grain to litter',cs_veg%leafc_patch(p),(cf_veg%leafc_to_litter_patch(p) )*dt
               cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
                    - cf_veg%crop_seedc_to_leaf_patch(p) * dt &
                    + cf_veg%grainc_to_seed_patch(p) * dt
-!              if (p .eq. 10580)print*,'grainc',cs_veg%grainc_patch(p), cf_veg%grainc_to_food_patch(p)* dt,cf_veg%grainc_to_seed_patch(p)*dt,cs_veg%cropseedc_deficit_patch(p)
            end if
         else
            if (ivt(p) >= npcropmin) then
@@ -447,18 +441,13 @@ contains
                cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p)  + cf_veg%cpool_to_livestemc_storage_patch(p)*dt
                cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_grainc_patch(p)*dt
                cs_veg%grainc_patch(p)             = cs_veg%grainc_patch(p)             + cf_veg%cpool_to_grainc_patch(p)*dt
-!              if (p .eq. 10580)print*,'grainc',cs_veg%grainc_patch(p),cf_veg%cpool_to_grainc_patch(p)*dt
-!               if(p .eq. 24)print*,'Cinput to grain',cs_veg%grainc_patch(p),cf_veg%cpool_to_grainc_patch(p)*dt
-!               if(p .eq. 24)print*,'Cinput to leaf',cs_veg%leafc_patch(p),cf_veg%cpool_to_leafc_patch(p)*dt
                cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_grainc_storage_patch(p)*dt
                cs_veg%grainc_storage_patch(p)     = cs_veg%grainc_storage_patch(p)     + cf_veg%cpool_to_grainc_storage_patch(p)*dt
             else
                cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt
                cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_storage_patch(p)*dt
                cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_grainc_patch(p)*dt
-!            cs_veg%grainc_patch(p)             = cs_veg%grainc_patch(p)             + cf_veg%cpool_to_grainc_patch(p)*dt
                cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_grainc_storage_patch(p)*dt
-!            cs_veg%grainc_storage_patch(p)     = cs_veg%grainc_storage_patch(p)     + cf_veg%cpool_to_grainc_storage_patch(p)*dt 
             end if  !use_matrixcn
          end if
 

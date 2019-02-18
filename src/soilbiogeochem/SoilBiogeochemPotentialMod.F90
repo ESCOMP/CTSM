@@ -152,9 +152,6 @@ contains
                   if ( decomp_npools_vr(c,j,l) > 0._r8 ) then
                      cn_decomp_pools(c,j,l) = decomp_cpools_vr(c,j,l) / decomp_npools_vr(c,j,l)
                   end if
-!                  if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!                     print*,'here1 cn_decomp_pools',c,j,l,decomp_cpools_vr(c,j,l),decomp_npools_vr(c,j,l),cn_decomp_pools(c,j,l)
-!                  end if
                end do
             end do
          else
@@ -162,9 +159,6 @@ contains
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
                   cn_decomp_pools(c,j,l) = initial_cn_ratio(l)
-!                  if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!                     print*,'here1 cn_decomp_pools',c,j,l,initial_cn_ratio(l),cn_decomp_pools(c,j,l)
-!                  end if
                end do
             end do
          end if
@@ -184,7 +178,6 @@ contains
                     decomp_k(c,j,cascade_donor_pool(k)) > 0._r8 ) then
                   p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) &
                        * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
-!               if(k .eq. 1 .and. j .eq. 1)print*,'p_decomp_cpool_loss2',p_decomp_cpool_loss(c,j,k),decomp_k(c,j,cascade_donor_pool(k)),pathfrac_decomp_cascade(c,j,k),decomp_cpools_vr(c,j,cascade_donor_pool(k))
                   if ( .not. floating_cn_ratio_decomp_pools(cascade_receiver_pool(k)) ) then  !! not transition of cwd to litter
 
                      if (cascade_receiver_pool(k) /= i_atm ) then  ! not 100% respiration
@@ -192,29 +185,17 @@ contains
 
                         if (decomp_npools_vr(c,j,cascade_donor_pool(k)) > 0._r8) then
                            ratio = cn_decomp_pools(c,j,cascade_receiver_pool(k))/cn_decomp_pools(c,j,cascade_donor_pool(k))
-!                           if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!                              print*,'ratio',c,j,k,ratio,cn_decomp_pools(c,j,cascade_receiver_pool(k)),cn_decomp_pools(c,j,cascade_donor_pool(k))
-!                           end if
                         endif
 
                         pmnf_decomp_cascade(c,j,k) = (p_decomp_cpool_loss(c,j,k) * (1.0_r8 - rf_decomp_cascade(c,j,k) - ratio) &
                              / cn_decomp_pools(c,j,cascade_receiver_pool(k)) )
 
-!                        if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!                           print*,'here1 pmnf_decomp_cascade',c,j,k,pmnf_decomp_cascade(c,j,k),p_decomp_cpool_loss(c,j,k),rf_decomp_cascade(c,j,k),ratio,cn_decomp_pools(c,j,cascade_receiver_pool(k))
-!                        end if
                      else   ! 100% respiration
                         pmnf_decomp_cascade(c,j,k) = - p_decomp_cpool_loss(c,j,k) / cn_decomp_pools(c,j,cascade_donor_pool(k))
-!                        if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!                           print*,'here2 pmnf_decomp_cascade',c,j,k,pmnf_decomp_cascade(c,j,k),p_decomp_cpool_loss(c,j,k),cn_decomp_pools(c,j,cascade_donor_pool(k))
-!                        end if
                      endif
 
                   else   ! CWD -> litter
                      pmnf_decomp_cascade(c,j,k) = 0._r8
-!                     if(abs(grc%latdeg(col%gridcell(c))+40.0) .le. 0.01 .and. abs(grc%londeg(col%gridcell(c))-150) .le. 0.01)then
-!                        print*,'here3 pmnf_decomp_cascade',c,j,k,pmnf_decomp_cascade(c,j,k)
-!                    end if
                   end if
                end if
             end do
@@ -255,11 +236,8 @@ contains
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               !
                p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) &
                     * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
-!               if(k .eq. 1 .and. j .eq. 1)print*,'p_decomp_cpool_loss1',p_decomp_cpool_loss(c,j,k),decomp_k(c,j,cascade_donor_pool(k)),pathfrac_decomp_cascade(c,j,k),decomp_cpools_vr(c,j,cascade_donor_pool(k))
-               !
             end do
          end do
       end do

@@ -2370,7 +2370,6 @@ contains
           call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livecroot_to_deadcroot_acc', xtype=ncd_double,  &
                dim1name='pft', long_name='', units='', &
                interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch)
-          !print*,'io restart matrix_ctransfer_livecroot_to_deadcroot_acc',this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch
 
           call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livecroot_acc', xtype=ncd_double,  &
                dim1name='pft', long_name='', units='', &
@@ -2388,7 +2387,6 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='deadcrootc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_patch) 
-       !print*,'io restart deadcrootc',this%deadcrootc_patch
 
        call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_storage', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -4023,7 +4021,6 @@ contains
 
        ! total vegetation carbon, excluding cpool (TOTVEGC)
 
-!       if(patch%column(p) .eq. 7066)print*,'totc_patch',p,this%leafc_patch(p),this%frootc_patch(p),this%livestemc_patch(p),this%deadstemc_patch(p),this%livecrootc_patch(p),this%deadcrootc_patch(p),this%grainc_patch(p),this%storvegc_patch(p),this%xsmrpool_patch(p),this%ctrunc_patch(p),this%cropseedc_deficit_patch(p)
        this%totvegc_patch(p) = &
             this%dispvegc_patch(p) + &
             this%storvegc_patch(p)
@@ -4044,18 +4041,15 @@ contains
             this%livestemc_patch(p)    + &
             this%deadcrootc_patch(p)   + &
             this%livecrootc_patch(p)
-!       if(p .eq. 20042) print*,'vegc_patch',this%leafc_patch(p),this%leafc_storage_patch(p),this%leafc_xfer_patch(p),this%frootc_patch(p),this%frootc_storage_patch(p),this%frootc_xfer_patch(p),this%livestemc_patch(p),this%livestemc_storage_patch(p),this%livestemc_xfer_patch(p),this%deadstemc_patch(p),this%deadstemc_storage_patch(p),this%deadstemc_xfer_patch(p),this%livecrootc_patch(p),this%livecrootc_storage_patch(p),this%livecrootc_xfer_patch(p),this%deadcrootc_patch(p),this%deadcrootc_storage_patch(p),this%deadcrootc_xfer_patch(p)
     end do
 
     ! --------------------------------------------
     ! column level summary
     ! --------------------------------------------
 
-!    if(bounds%begp .eq. 20037)print*,'this%totvegc_patch(bounds%begp:bounds%endp)',this%totvegc_patch(bounds%begp:bounds%endp)
     call p2c(bounds, num_soilc, filter_soilc, &
          this%totvegc_patch(bounds%begp:bounds%endp), &
          this%totvegc_col(bounds%begc:bounds%endc))
-!    if(bounds%begp .eq. 20037)print*,'after p2c',this%totvegc_col(bounds%begc:bounds%endc)
 
     call p2c(bounds, num_soilc, filter_soilc, &
          this%totc_patch(bounds%begp:bounds%endp), &
@@ -4077,7 +4071,6 @@ contains
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
             soilbiogeochem_ctrunc_col(c)
-!       if(c .eq. 7066)print*,'summary,totc',c,this%totc_col(c),this%totc_p2c_col(c),soilbiogeochem_cwdc_col(c),soilbiogeochem_totlitc_col(c),soilbiogeochem_totsomc_col(c),soilbiogeochem_ctrunc_col(c)
     end do
 
   end subroutine Summary_carbonstate

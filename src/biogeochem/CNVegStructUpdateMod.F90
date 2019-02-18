@@ -227,7 +227,6 @@ contains
                hbot(p) = max(0._r8, min(3._r8, htop(p)-1._r8))
 
             else if (ivt(p) >= npcropmin) then ! prognostic crops
-                if(p .eq. 24)print*,'peaklai1',tlai(p),laimx(ivt(p))
                if (tlai(p) >= laimx(ivt(p))) peaklai(p) = 1 ! used in CNAllocation
 
                if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
@@ -239,7 +238,6 @@ contains
                end if
 
                ! "stubble" after harvest
-                if(p .eq. 24)print*,'peaklai2',harvdate(p),tlai(p)
                if (harvdate(p) < 999 .and. tlai(p) == 0._r8) then
                   tsai(p) = 0.25_r8*(1._r8-farea_burned(c)*0.90_r8)    !changed by F. Li and S. Levis
                   htmx(p) = 0._r8

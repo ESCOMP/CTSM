@@ -970,13 +970,11 @@ contains
          this%c14_cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
     call t_stopf('CNPrecisionControl')
 
-!    if(bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'before soilprecisioncotrol,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
     call t_startf('SoilBiogeochemPrecisionControl')
     call SoilBiogeochemPrecisionControl(num_soilc, filter_soilc,  &
          soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst,soilbiogeochem_nitrogenstate_inst)
     call t_stopf('SoilBiogeochemPrecisionControl')
-!    if(bounds%begc .le. 7856 .and. bounds%endc .ge. 7856)print*,'after soilprecisioncotrol,x0',soilbiogeochem_carbonstate_inst%decomp0_cpools_vr_col(7856,12,7),soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(7856,12,7)
 
     ! Call to all CN summary routines
     call  CNDriverSummarizeStates(bounds, &

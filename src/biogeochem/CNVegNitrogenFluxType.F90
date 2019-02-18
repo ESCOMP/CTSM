@@ -356,18 +356,14 @@ module CNVegNitrogenFluxType
      integer,pointer :: list_agmn(:)
      integer,pointer :: list_afin(:)
 
-!     type(sparse_matrix_type) :: Aphvegn
-!     type(sparse_matrix_type) :: Agmvegn
-!     type(sparse_matrix_type) :: Afivegn
-     type(sparse_matrix_type) :: AKphvegn
-     type(sparse_matrix_type) :: AKgmvegn
-     type(sparse_matrix_type) :: AKfivegn
-!     type(sparse_matrix_type) :: AKtmp1vegn
-     type(sparse_matrix_type) :: AKallvegn
-     integer                  :: NE_AKallvegn
+     type(sparse_matrix_type)      :: AKphvegn
+     type(sparse_matrix_type)      :: AKgmvegn
+     type(sparse_matrix_type)      :: AKfivegn
+     type(sparse_matrix_type)      :: AKallvegn
+     integer                       :: NE_AKallvegn
      integer,pointer,dimension(:)  :: RI_AKallvegn
      integer,pointer,dimension(:)  :: CI_AKallvegn
-     integer                  :: NE_AKphgmn
+     integer                       :: NE_AKphgmn
      integer,pointer,dimension(:)  :: RI_AKphgmn
      integer,pointer,dimension(:)  :: CI_AKphgmn
      integer,pointer,dimension(:)  :: RI_phn
@@ -376,9 +372,8 @@ module CNVegNitrogenFluxType
      integer,pointer,dimension(:)  :: CI_gmn
      integer,pointer,dimension(:)  :: RI_fin
      integer,pointer,dimension(:)  :: CI_fin
-     type(diag_matrix_type)   :: Kvegn
-     type(vector_type)        :: Xvegn
-!     type(vector_type)        :: Xnewvegn
+     type(diag_matrix_type)        :: Kvegn
+     type(vector_type)             :: Xvegn
 
    contains
 
@@ -993,7 +988,6 @@ contains
     allocate(this%cost_nretrans_patch          (begp:endp)) ;    this%cost_nretrans_patch        (:) = nan
     allocate(this%nuptake_npp_fraction_patch   (begp:endp)) ;    this%nuptake_npp_fraction_patch            (:) = nan
 	! Matrix
-!    print*,'nvegnpool',nvegnpool
     if(use_matrixcn)then
        allocate(this%matrix_Ninput_patch          (begp:endp)) ;              this%matrix_Ninput_patch      (:) = nan
        allocate(this%matrix_nalloc_patch          (begp:endp,1:nvegnpool)) ;   this%matrix_nalloc_patch      (:,:) = nan
@@ -1023,13 +1017,9 @@ contains
        allocate(this%list_agmn(1:nngmtrans-nngmouttrans)); this%list_agmn = -9999
        allocate(this%list_afin(1:nnfitrans-nnfiouttrans)); this%list_afin = -9999
 
-!       call this%Aphvegn%InitSM (nvegnpool,begp,endp,nnphtrans-nnphouttrans+nvegnpool)
-!       call this%Agmvegn%InitSM (nvegnpool,begp,endp,nngmtrans-nngmouttrans+nvegnpool)
-!       call this%Afivegn%InitSM (nvegnpool,begp,endp,nnfitrans-nnfiouttrans+nvegnpool)
        call this%AKphvegn%InitSM(nvegnpool,begp,endp,nnphtrans-nnphouttrans+nvegnpool)
        call this%AKgmvegn%InitSM(nvegnpool,begp,endp,nngmtrans-nngmouttrans+nvegnpool)
        call this%AKfivegn%InitSM(nvegnpool,begp,endp,nnfitrans-nnfiouttrans+nvegnpool)
-!       call this%AKtmp1vegn%InitSM(nvegnpool,begp,endp,nnphtrans-nnphouttrans+nvegnpool)
        call this%AKallvegn%InitSM(nvegnpool,begp,endp,nnphtrans-nnphouttrans+nnfitrans-nnfiouttrans+nvegnpool)
        this%NE_AKallvegn = nnphtrans-nnphouttrans+nnfitrans-nnfiouttrans+nvegnpool
        allocate(this%RI_AKallvegn(1:this%NE_AKallvegn));this%RI_AKallvegn(:) = -9999
@@ -1045,7 +1035,6 @@ contains
        allocate(this%CI_fin(1:nnfitrans-nnfiouttrans+nvegnpool));this%CI_fin(:) = -9999
        call this%Kvegn%InitDM(nvegnpool,begp,endp)
        call this%Xvegn%InitV(nvegnpool,begp,endp)
-!       call this%Xnewvegn%InitV(nvegnpool,begp,endp)
      end if
 
   end subroutine InitAllocate
@@ -1943,11 +1932,6 @@ contains
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%plant_nalloc_patch)
 		 
-!    call restartvar(ncid=ncid, flag=flag, varname='matrix_plant_nalloc', xtype=ncd_double,  &
-!         dim1name='pft', &
-!         long_name='', units='', &
-!         interpinic_flag='interp', readvar=readvar, data=this%matrix_Ninput_patch)	 
-
      if ( use_fun ) then
 !       set_missing_vals_to_constant for BACKWARDS_COMPATIBILITY(wrw, 2018-06-28) re. issue #426
 !       special land units previously set to spval, not 0
@@ -1957,7 +1941,7 @@ contains
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nactive_patch) 
         call set_missing_vals_to_constant(this%Nactive_patch, 0._r8)
-!    
+    
         call restartvar(ncid=ncid, flag=flag, varname='Nnonmyc', xtype=ncd_double,       &
              dim1name='pft', &
              long_name='', units='', &
@@ -2025,7 +2009,7 @@ contains
                 interpinic_flag='interp', readvar=readvar, data=this%Necm_nh4_patch)
            call set_missing_vals_to_constant(this%Necm_nh4_patch, 0._r8)
         end if
-!
+
         call restartvar(ncid=ncid, flag=flag, varname='Npassive', xtype=ncd_double,      &
              dim1name='pft', &
              long_name='', units='', &
@@ -2321,15 +2305,7 @@ contains
           end do
        end do
 
-!       this%matrix_nalloc_patch      = value_patch
-!       this%matrix_nphturnover_patch = value_patch
-!       this%matrix_ngmturnover_patch = value_patch
-!       this%matrix_nfiturnover_patch = value_patch
-!       this%matrix_nphtransfer_patch = value_patch
-!       this%matrix_ngmtransfer_patch = value_patch
-!       this%matrix_nfitransfer_patch = value_patch
     end if
-!    print*,'zero nalloc',this%matrix_nalloc_patch(:,5)
     do k = 1, ndecomp_pools
        do j = 1, nlevdecomp_full
           do fi = 1,num_column
