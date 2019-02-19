@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-  ctsm1.0.dev027   negins 02/19/2019 non-constant time init for soil hydrology types are moved to SoilHydrologyType.F
+  ctsm1.0.dev027   negins 02/19/2019 non-constant time init for soil hydrology types are moved to SoilHydrologyType.F90
   ctsm1.0.dev026   slevis 02/05/2019 Collapse unmanaged PFTs to the N most dominant
   ctsm1.0.dev025    sacks 01/23/2019 History fields for vertically-resolved sums of soil C and N, and minor fixes
   ctsm1.0.dev024   slevis 01/14/2019 Remove unnecessary restart variables

@@ -2,23 +2,22 @@
 Tag name:  ctsm1.0.dev027
 Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
 Date: Tue Feb 19 12:57:12 MST 2019
-One-line Summary: Non-constant time initialization for soil hydrology types are moved to SoilHydrologyType.F
+One-line Summary: Non-constant time initialization for soil hydrology types are moved to /src/biogeophys/SoilHydrologyType.F90. 
 
 Purpose of changes
 ------------------
 
-[Fill this in with details]
-Initalization of time-varying `zwt`, `zwt_perched`, and `frost_table` are moved to `InitCold` in `SoilHydrologyType`.
+Initalization of time-varying `zwt`, `zwt_perched`, and `frost_table` are moved to `InitCold` in `SoilHydrologyType.F90`.
 
-Previously, `zwt`, `zwt_perched`, and `frost_table` were initialized in `SoilHydrologyInitTimeConstMod`.
+Previously, `zwt`, `zwt_perched`, and `frost_table` were initialized in `SoilHydrologyInitTimeConstMod.F90`, which caused confusions.
 
 Bugs fixed or introduced
 ------------------------
-Issues fixed (include CTSM Issue #575)
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#575 ("Some variables initialized in SoilHydrologyInitTimeConstMod are not time-constant")
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
-None
 
 Does this tag change answers significantly for any of the following physics configurations?
 (Details of any changes will be given in the "Answer changes" section below.)
@@ -32,23 +31,22 @@ Does this tag change answers significantly for any of the following physics conf
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions):
+Caveats for users (e.g., need to interpolate initial conditions): none
 
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
 
-Changes made to namelist defaults (e.g., changed parameter values):
+Changes made to namelist defaults (e.g., changed parameter values): none
 
-Changes to the datasets (e.g., parameter, surface or initial files):
+Changes to the datasets (e.g., parameter, surface or initial files): none
 
-Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+Substantial timing or memory changes: none
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
-NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
 
-Changes to tests or testing:
+Changes to tests or testing: none
 
 Code reviewed by:
 Bill Sacks
@@ -56,33 +54,34 @@ Erik Kluzek
 
 CTSM testing:
 
- [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
   build-namelist tests:
 
-    cheyenne - PASS 
+    cheyenne - not run 
 
   tools-tests (test/tools):
 
-    cheyenne - PASS
+    cheyenne - not run
 
   PTCLM testing (tools/shared/PTCLM/test):
 
-     cheyenne - PASS
+     cheyenne - not run
 
   regular tests (aux_clm):
 
-    cheyenne OK
-    hobart OK 
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, except for the expected failures.
 
 CTSM tag used for the baseline comparisons: 
 ctsm1.0.dev026
 
 Answer changes
 -------------
-None
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: no
+
 
 Detailed list of changes
 ------------------------
@@ -90,7 +89,10 @@ Detailed list of changes
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
 
 Pull Requests that document the changes (include PR ids):
+PR #631 Soil hydrology initialization of time-constant variables moved to SoilHydrologyType
 https://github.com/ESCOMP/ctsm/pull/631
+
+
 ===============================================================
 ===============================================================
 Tag name:  ctsm1.0.dev026
