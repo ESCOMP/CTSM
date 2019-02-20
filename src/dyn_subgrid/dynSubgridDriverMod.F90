@@ -20,6 +20,8 @@ module dynSubgridDriverMod
   use dynpftFileMod                , only : dynpft_init, dynpft_interp
   use dyncropFileMod               , only : dyncrop_init, dyncrop_interp
   use dynHarvestMod                , only : dynHarvest_init, dynHarvest_interp
+  ! use new lake file module
+  use dynlakeFileMod               , only : dynlake_init, dynlake_interp
   use dynLandunitAreaMod           , only : update_landunit_weights
   use subgridWeightsMod            , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
   use reweightMod                  , only : reweight_wrapup
@@ -41,7 +43,10 @@ module dynSubgridDriverMod
   use CropType                     , only : crop_type
   use glc2lndMod                   , only : glc2lnd_type
   use filterMod                    , only : filter, filter_inactive_and_active
-  !
+ 
+
+
+  
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   private
@@ -120,6 +125,12 @@ contains
        call dynHarvest_init(bounds_proc, harvest_filename=get_flanduse_timeseries())
     end if
 
+    
+    ! Initialize stuff for prescribed transient lakes
+	! error if keyword argument like for dynamical land units above: dynlake_filename=get_flanduse_timeseries()
+    call dynlake_init(bounds_proc, dynlake_filename=get_flanduse_timeseries())
+    
+    
     ! ------------------------------------------------------------------------
     ! Set initial subgrid weights for aspects that are read from file. This is relevant
     ! for cold start and use_init_interp-based initialization.
