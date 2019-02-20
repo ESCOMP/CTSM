@@ -11,6 +11,7 @@ module lnd2atmMod
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_megan_mod        , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod    , only : shr_fire_emis_mechcomps_n
+  use shr_fan_mod          ,   only : shr_fan_to_atm
   use clm_varpar           , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon           , only : rair, grav, cpair, hfus, tfrz, spval
   use clm_varctl           , only : iulog, use_lch4, use_fan
@@ -320,7 +321,7 @@ contains
     end if
 
     ! nh3 flux
-    if (use_fan) then
+    if (shr_fan_to_atm) then
        call c2g(bounds,     &
             sbgc_nf_inst%nh3_total_col (bounds%begc:bounds%endc), &
             lnd2atm_inst%flux_nh3_grc  (bounds%begg:bounds%endg), &
