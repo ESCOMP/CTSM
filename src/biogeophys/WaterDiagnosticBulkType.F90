@@ -575,15 +575,6 @@ contains
 
     call this%Restart(bounds, ncid, flag=flag)
 
-    call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('SNOUNLOAD'), &
-         xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name=this%info%lname('Canopy snow unloading'), &
-         units='kg/m2', &
-         interpinic_flag='interp', readvar=readvar, data=this%snounload_patch)
-
-
     if(use_luna)then
        call restartvar(ncid=ncid, flag=flag, &
             varname=this%info%fname('rh10'), &
