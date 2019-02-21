@@ -15,7 +15,7 @@ module surfrdMod
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog, scmlat, scmlon, single_column
   use clm_varctl      , only : use_cndv, use_crop
-  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_nat_pfts, collapse_crop_var
+  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_nat_pfts, collapse_crop_var, collapse_to_dom_landunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
   use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid, ncd_inqdlen
   use pio
@@ -472,6 +472,7 @@ contains
     ! as soil color and percent sand and clay
     !
     ! !USES:
+    use clm_varctl      , only : n_dom_landunits
     use clm_varpar      , only : maxpatch_glcmec, nlevurb
     use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice_mec
     use clm_instur      , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec
@@ -577,6 +578,38 @@ contains
     if (.not. readvar) call endrun( msg=' ERROR: TOPO_GLC_MEC NOT on surfdata file'//errMsg(sourcefile, __LINE__))
 
     topo_glc_mec(:,:) = max(topo_glc_mec(:,:), 0._r8)
+
+    ! Select N dominant landunits
+    ! ---------------------------
+    ! n_dom_landunits set by user in namelist
+    ! Call resembles the surfrd_veg_all call collapse_nat_pfts that selects
+    ! n_dom_pfts (also set by the user in the namelist)
+    !
+    ! Development steps:
+    ! 1. Rank special landunits only, without affecting the vegetated landunits
+    ! 2. When (1) works, continue: Rank the vegetated landunits as one value
+    !    against the special landunits. If the vegetated landunits get rejected
+    !    as not dominant, this information will need to transmit to
+    !    surfrd_veg_all
+    !
+    ! Currently ranking pcturb_tot against pctwet, pctlak, pctgla when seeking
+    ! N dominant landunits. Alternatively could rank eachindividual pcturb
+    ! against the others, but this would reduce the likelihood of an urban
+    ! landunit making it among the dominant.
+    !
+    ! I don't seem to need to adjust glacier info (above) when pctgla --> 0
+    call collapse_to_dom_landunits(pctwet, pctlak, pcturb, pcturb_tot, pctgla, &
+                                   begg, endg, n_dom_landunits, numurbl)
+    ! UNDER CONSTRUCTION
+    ! Additionally remove landunits using thresholds set by user in namelist
+    ! Remove corresponding thresholds from the mksurfdat tool
+    ! Found two such cases (had expected to encounter them for every landunit):
+    !       mkurbanparCommonMod.F90 MIN_DENS = 0.1 and
+    !       mksurfdat.F90 toosmallPFT = 1.e-10
+    !call collapse_individual_landunits(pctwet, pctlak, pcturb_tot, pctgla, &
+    !                                   toosmall_wetland, toosmall_lake, &
+    !                                   toosmall_urban, toosmall_glacier, &
+    !                                   begg, endg)
 
     pctspec = pctwet + pctlak + pcturb_tot + pctgla
 

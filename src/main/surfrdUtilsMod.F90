@@ -23,6 +23,7 @@ module surfrdUtilsMod
   public :: convert_cft_to_pft  ! Conversion of crop CFT to natural veg PFT:w
   public :: collapse_crop_types ! Collapse unused crop types into types used in this run
   public :: collapse_nat_pfts  ! Collapse to dominant pfts
+  public :: collapse_to_dom_landunits  ! Collapse to dominant landunits
   public :: collapse_crop_var  ! Collapse crop variables according to cft weights determined in previous "collapse" subroutines
 
   character(len=*), parameter, private :: sourcefile = &
@@ -144,6 +145,109 @@ contains
     end do
 
   end subroutine convert_cft_to_pft
+
+  !-----------------------------------------------------------------------
+  subroutine collapse_to_dom_landunits(pctwet, pctlak, pcturb, pcturb_tot, pctgla, begg, endg, n_dom_landunits, numurbl)
+    !
+    ! DESCRIPTION
+    ! Collapse to the top N dominant landunits (n_dom_landunits)
+    !
+    ! !USES:
+    use array_utils, only: find_k_max_indices
+    !
+    ! !ARGUMENTS:
+    ! Use begg and endg rather than 'bounds', because bounds may not be
+    ! available yet when this is called
+    integer, intent(in) :: begg  ! Beginning grid cell index
+    integer, intent(in) :: endg  ! Ending grid cell index
+    integer, intent(in) :: n_dom_landunits  ! # dominant landunits
+    integer, intent(in) :: numurbl  ! # urban landunits
+    ! These arrays modified in-place
+    real(r8), intent(inout) :: pctwet(begg:endg)
+    real(r8), intent(inout) :: pctlak(begg:endg)
+    real(r8), intent(inout) :: pcturb(begg:endg, numurbl)
+    real(r8), intent(inout) :: pcturb_tot(begg:endg)
+    real(r8), intent(inout) :: pctgla(begg:endg)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g  ! gridcell index
+    integer :: m  ! landunit index
+    integer :: n  ! index of the order of the dominant pfts
+    integer, allocatable :: max_indices(:)  ! array of dominant pft index values
+    integer, parameter :: landunits_lb = 1  ! lower bound of wt_landunits array
+    integer, parameter :: landunits_ub = 4  ! upper bound of wt_landunits array
+    real(r8) :: wt_landunits(landunits_ub)  ! 1: pctwet, 2: pctlak, 3: pcturb_tot, 4: pctgla
+    real(r8) :: wt_landunits_sum  ! sum of landunits weights
+    real(r8) :: wt_dom_landunit_sum  ! sum of dominant landunits wgts
+
+    character(len=*), parameter :: subname = 'collapse_to_dom_landunits'
+
+    !-----------------------------------------------------------------------
+
+    ! Find the top N dominant landunits to collapse the data to
+    ! n_dom_landunits < 0 is not allowed (error check in controlMod.F90)
+    ! Default value n_dom_landunits = 0 or a user-selected
+    !               n_dom_landunits = landunits_ub (EXISTS?) both mean
+    ! "do not collapse landunits" and skip over this subroutine's work
+    if (n_dom_landunits > 0 .and. n_dom_landunits < landunits_ub) then
+       allocate(max_indices(n_dom_landunits))
+       do g = begg, endg
+          max_indices = 0  ! initialize
+          wt_landunits(landunits_lb) = pctwet(g)
+          wt_landunits(2) = pctlak(g)
+          wt_landunits(3) = pcturb_tot(g)
+          wt_landunits(landunits_ub) = pctgla(g)
+          call find_k_max_indices(wt_landunits, landunits_lb, &
+                                  n_dom_landunits, max_indices)
+
+          ! TEMPORARY: Adjust to actual sum because this will not be 1
+          !            until we include the vegetated landunits
+          !            TODO when we do: remove all instances of wt_landunits_sum
+          wt_landunits_sum = sum(wt_landunits)
+          ! Adjust wt_landunits by normalizing the dominant weights to 1
+          ! (currently they sum to <= 1) and setting the remaining weights to 0.
+          wt_dom_landunit_sum = 0._r8  ! initialize the dominant landunit sum
+          do n = 1, n_dom_landunits
+             m = max_indices(n)
+             wt_dom_landunit_sum = wt_landunits(m) + wt_dom_landunit_sum
+          end do
+          ! Normalize dominant landunit weights to 1
+          if (wt_dom_landunit_sum <= 0._r8) then
+!            AFFECTED BY TEMPORARY ABOVE
+!            call endrun(msg = subname//' wt_dom_landunit_sum should never be <= 0'//&
+!                 ' but it is at g = '//g//' ' // errMsg(sourcefile, __LINE__))
+          else
+             do n = 1, n_dom_landunits
+                m = max_indices(n)
+                wt_landunits(m) = wt_landunits(m) * wt_landunits_sum / wt_dom_landunit_sum
+             end do
+          end if
+          ! Set non-dominant landunit weights to 0
+          do m = landunits_lb, landunits_ub
+             if (.not. any(max_indices == m)) then
+                wt_landunits(m) = 0._r8
+             end if
+          end do
+
+          ! Map back to the variables expected in the calling subroutine
+          pctwet(g) = wt_landunits(landunits_lb)
+          pctlak(g) = wt_landunits(2)
+          pcturb_tot(g) = wt_landunits(3)
+          pctgla(g) = wt_landunits(landunits_ub)
+          if (pcturb_tot(g) == 0._r8) then
+             pcturb(g,:) = 0._r8
+          end if
+
+       end do
+
+       ! Error checks
+!      AFFECTED BY TEMPORARY ABOVE
+!      call check_sums_equal_1(wt_landunits, begg, 'wt_landunits', subname)
+
+       deallocate(max_indices)
+    end if
+
+  end subroutine collapse_to_dom_landunits
 
   !-----------------------------------------------------------------------
   subroutine collapse_nat_pfts(wt_nat_patch, natpft_size, begg, endg, n_dom_pfts)
