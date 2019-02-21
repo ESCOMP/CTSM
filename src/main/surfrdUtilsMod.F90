@@ -147,13 +147,14 @@ contains
   end subroutine convert_cft_to_pft
 
   !-----------------------------------------------------------------------
-  subroutine collapse_to_dom_landunits(pctwet, pctlak, pcturb, pcturb_tot, pctgla, begg, endg, n_dom_landunits, numurbl)
+  subroutine collapse_to_dom_landunits(wt_lunit, begg, endg, n_dom_landunits)
     !
     ! DESCRIPTION
     ! Collapse to the top N dominant landunits (n_dom_landunits)
     !
     ! !USES:
     use array_utils, only: find_k_max_indices
+    use landunit_varcon, only: max_lunit, istsoil
     !
     ! !ARGUMENTS:
     ! Use begg and endg rather than 'bounds', because bounds may not be
@@ -161,22 +162,15 @@ contains
     integer, intent(in) :: begg  ! Beginning grid cell index
     integer, intent(in) :: endg  ! Ending grid cell index
     integer, intent(in) :: n_dom_landunits  ! # dominant landunits
-    integer, intent(in) :: numurbl  ! # urban landunits
     ! These arrays modified in-place
-    real(r8), intent(inout) :: pctwet(begg:endg)
-    real(r8), intent(inout) :: pctlak(begg:endg)
-    real(r8), intent(inout) :: pcturb(begg:endg, numurbl)
-    real(r8), intent(inout) :: pcturb_tot(begg:endg)
-    real(r8), intent(inout) :: pctgla(begg:endg)
+    real(r8), intent(inout) :: wt_lunit(begg:endg, max_lunit)
     !
     ! !LOCAL VARIABLES:
     integer :: g  ! gridcell index
     integer :: m  ! landunit index
     integer :: n  ! index of the order of the dominant pfts
+    integer, parameter :: landunits_lb = istsoil
     integer, allocatable :: max_indices(:)  ! array of dominant pft index values
-    integer, parameter :: landunits_lb = 1  ! lower bound of wt_landunits array
-    integer, parameter :: landunits_ub = 4  ! upper bound of wt_landunits array
-    real(r8) :: wt_landunits(landunits_ub)  ! 1: pctwet, 2: pctlak, 3: pcturb_tot, 4: pctgla
     real(r8) :: wt_landunits_sum  ! sum of landunits weights
     real(r8) :: wt_dom_landunit_sum  ! sum of dominant landunits wgts
 
@@ -185,31 +179,27 @@ contains
     !-----------------------------------------------------------------------
 
     ! Find the top N dominant landunits to collapse the data to
-    ! n_dom_landunits < 0 is not allowed (error check in controlMod.F90)
+    ! n_dom_landunits < 0 or > max_lunit not allowed (controlMod.F90 checks it)
     ! Default value n_dom_landunits = 0 or a user-selected
-    !               n_dom_landunits = landunits_ub (EXISTS?) both mean
+    !               n_dom_landunits = max_lunit both mean
     ! "do not collapse landunits" and skip over this subroutine's work
-    if (n_dom_landunits > 0 .and. n_dom_landunits < landunits_ub) then
+    if (n_dom_landunits > 0 .and. n_dom_landunits < max_lunit) then
        allocate(max_indices(n_dom_landunits))
        do g = begg, endg
           max_indices = 0  ! initialize
-          wt_landunits(landunits_lb) = pctwet(g)
-          wt_landunits(2) = pctlak(g)
-          wt_landunits(3) = pcturb_tot(g)
-          wt_landunits(landunits_ub) = pctgla(g)
-          call find_k_max_indices(wt_landunits, landunits_lb, &
+          call find_k_max_indices(wt_lunit(g,:), landunits_lb, &
                                   n_dom_landunits, max_indices)
 
           ! TEMPORARY: Adjust to actual sum because this will not be 1
           !            until we include the vegetated landunits
           !            TODO when we do: remove all instances of wt_landunits_sum
-          wt_landunits_sum = sum(wt_landunits)
+          wt_landunits_sum = sum(wt_lunit(g,:))
           ! Adjust wt_landunits by normalizing the dominant weights to 1
           ! (currently they sum to <= 1) and setting the remaining weights to 0.
           wt_dom_landunit_sum = 0._r8  ! initialize the dominant landunit sum
           do n = 1, n_dom_landunits
              m = max_indices(n)
-             wt_dom_landunit_sum = wt_landunits(m) + wt_dom_landunit_sum
+             wt_dom_landunit_sum = wt_lunit(g,m) + wt_dom_landunit_sum
           end do
           ! Normalize dominant landunit weights to 1
           if (wt_dom_landunit_sum <= 0._r8) then
@@ -219,24 +209,15 @@ contains
           else
              do n = 1, n_dom_landunits
                 m = max_indices(n)
-                wt_landunits(m) = wt_landunits(m) * wt_landunits_sum / wt_dom_landunit_sum
+                wt_lunit(g,m) = wt_lunit(g,m) * wt_landunits_sum / wt_dom_landunit_sum
              end do
           end if
           ! Set non-dominant landunit weights to 0
-          do m = landunits_lb, landunits_ub
+          do m = landunits_lb, max_lunit
              if (.not. any(max_indices == m)) then
-                wt_landunits(m) = 0._r8
+                wt_lunit(g,m) = 0._r8
              end if
           end do
-
-          ! Map back to the variables expected in the calling subroutine
-          pctwet(g) = wt_landunits(landunits_lb)
-          pctlak(g) = wt_landunits(2)
-          pcturb_tot(g) = wt_landunits(3)
-          pctgla(g) = wt_landunits(landunits_ub)
-          if (pcturb_tot(g) == 0._r8) then
-             pcturb(g,:) = 0._r8
-          end if
 
        end do
 

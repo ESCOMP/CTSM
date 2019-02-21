@@ -121,6 +121,7 @@ contains
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
+    use landunit_varcon                  , only : max_lunit
     !
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
@@ -365,8 +366,8 @@ contains
           call endrun(msg=' ERROR: expecting n_dom_pfts between 0 and 14 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
-       if (n_dom_landunits < 0) then
-          call endrun(msg=' ERROR: expecting n_dom_landunits >= 0 where 0 is the default value that tells the model to do nothing ' // &
+       if (n_dom_landunits < 0 .or. n_dom_landunits > max_lunit) then
+          call endrun(msg=' ERROR: expecting n_dom_landunits between 0 and  max_lunit where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 

@@ -579,38 +579,6 @@ contains
 
     topo_glc_mec(:,:) = max(topo_glc_mec(:,:), 0._r8)
 
-    ! Select N dominant landunits
-    ! ---------------------------
-    ! n_dom_landunits set by user in namelist
-    ! Call resembles the surfrd_veg_all call collapse_nat_pfts that selects
-    ! n_dom_pfts (also set by the user in the namelist)
-    !
-    ! Development steps:
-    ! 1. Rank special landunits only, without affecting the vegetated landunits
-    ! 2. When (1) works, continue: Rank the vegetated landunits as one value
-    !    against the special landunits. If the vegetated landunits get rejected
-    !    as not dominant, this information will need to transmit to
-    !    surfrd_veg_all
-    !
-    ! Currently ranking pcturb_tot against pctwet, pctlak, pctgla when seeking
-    ! N dominant landunits. Alternatively could rank eachindividual pcturb
-    ! against the others, but this would reduce the likelihood of an urban
-    ! landunit making it among the dominant.
-    !
-    ! I don't seem to need to adjust glacier info (above) when pctgla --> 0
-    call collapse_to_dom_landunits(pctwet, pctlak, pcturb, pcturb_tot, pctgla, &
-                                   begg, endg, n_dom_landunits, numurbl)
-    ! UNDER CONSTRUCTION
-    ! Additionally remove landunits using thresholds set by user in namelist
-    ! Remove corresponding thresholds from the mksurfdat tool
-    ! Found two such cases (had expected to encounter them for every landunit):
-    !       mkurbanparCommonMod.F90 MIN_DENS = 0.1 and
-    !       mksurfdat.F90 toosmallPFT = 1.e-10
-    !call collapse_individual_landunits(pctwet, pctlak, pcturb_tot, pctgla, &
-    !                                   toosmall_wetland, toosmall_lake, &
-    !                                   toosmall_urban, toosmall_glacier, &
-    !                                   begg, endg)
-
     pctspec = pctwet + pctlak + pcturb_tot + pctgla
 
     ! Error check: glacier, lake, wetland, urban sum must be less than 100
@@ -649,6 +617,37 @@ contains
     call CheckUrban(begg, endg, pcturb(begg:endg,:), subname)
 
     deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,urban_region_id,pctspec)
+
+    ! Select N dominant landunits
+    ! ---------------------------
+    ! n_dom_landunits set by user in namelist
+    ! Call resembles the surfrd_veg_all call collapse_nat_pfts that selects
+    ! n_dom_pfts (also set by the user in the namelist)
+    !
+    ! Development steps:
+    ! 1. Rank special landunits only, without affecting the vegetated landunits
+    ! 2. When (1) works, continue: Rank the vegetated landunits as one value
+    !    against the special landunits. If the vegetated landunits get rejected
+    !    as not dominant, this information will need to transmit to
+    !    surfrd_veg_all
+    !
+    ! Currently ranking each individual pcturb against the other special
+    ! landunits, which reduces the likelihood of an urban landunit making it
+    ! among the dominant.
+
+    call collapse_to_dom_landunits(wt_lunit, begg, endg, n_dom_landunits)
+
+    ! UNDER CONSTRUCTION
+    ! Additionally remove landunits using thresholds set by user in namelist
+    ! ----------------------------------------------------------------------
+    ! Remove corresponding thresholds from the mksurfdat tool
+    ! Found two such cases (had expected to encounter them for every landunit):
+    !       mkurbanparCommonMod.F90 MIN_DENS = 0.1 and
+    !       mksurfdat.F90 toosmallPFT = 1.e-10
+    !
+    !call collapse_individual_landunits(wt_lunit, begg, endg, &
+    !                                   toosmall_wetland, toosmall_lake, &
+    !                                   toosmall_urban, toosmall_glacier)
 
   end subroutine surfrd_special
 
