@@ -46,7 +46,8 @@ Notes of particular relevance for developers: (including Code reviews and testin
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
 
-Changes to tests or testing: none
+Changes to tests or testing: Updated a test.  The test added in previous tag included decStart with transient glaciers, which would not work. Hence, this test is modified so the compset does not include G.
+Test IHistClm50SpG is updated to IHistClm50Sp.
 
 Code reviewed by:
 Bill Sacks
