@@ -171,7 +171,6 @@ contains
     integer :: n  ! index of the order of the dominant pfts
     integer, parameter :: landunits_lb = istsoil
     integer, allocatable :: max_indices(:)  ! array of dominant pft index values
-    real(r8) :: wt_landunits_sum  ! sum of landunits weights
     real(r8) :: wt_dom_landunit_sum  ! sum of dominant landunits wgts
 
     character(len=*), parameter :: subname = 'collapse_to_dom_landunits'
@@ -190,10 +189,6 @@ contains
           call find_k_max_indices(wt_lunit(g,:), landunits_lb, &
                                   n_dom_landunits, max_indices)
 
-          ! TEMPORARY: Adjust to actual sum because this will not be 1
-          !            until we include the vegetated landunits
-          !            TODO when we do: remove all instances of wt_landunits_sum
-          wt_landunits_sum = sum(wt_lunit(g,:))
           ! Adjust wt_landunits by normalizing the dominant weights to 1
           ! (currently they sum to <= 1) and setting the remaining weights to 0.
           wt_dom_landunit_sum = 0._r8  ! initialize the dominant landunit sum
@@ -203,13 +198,12 @@ contains
           end do
           ! Normalize dominant landunit weights to 1
           if (wt_dom_landunit_sum <= 0._r8) then
-!            AFFECTED BY TEMPORARY ABOVE
-!            call endrun(msg = subname//' wt_dom_landunit_sum should never be <= 0'//&
-!                 ' but it is at g = '//g//' ' // errMsg(sourcefile, __LINE__))
+             call endrun(msg = subname//' wt_dom_landunit_sum should never be <= 0'//&
+                  ' but it is here ' // errMsg(sourcefile, __LINE__))
           else
              do n = 1, n_dom_landunits
                 m = max_indices(n)
-                wt_lunit(g,m) = wt_lunit(g,m) * wt_landunits_sum / wt_dom_landunit_sum
+                wt_lunit(g,m) = wt_lunit(g,m) / wt_dom_landunit_sum
              end do
           end if
           ! Set non-dominant landunit weights to 0
@@ -222,8 +216,7 @@ contains
        end do
 
        ! Error checks
-!      AFFECTED BY TEMPORARY ABOVE
-!      call check_sums_equal_1(wt_landunits, begg, 'wt_landunits', subname)
+       call check_sums_equal_1(wt_lunit, begg, 'wt_landunits', subname)
 
        deallocate(max_indices)
     end if

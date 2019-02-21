@@ -285,7 +285,7 @@ contains
     !    o real % abundance PFTs (as a percent of vegetated area)
     !
     ! !USES:
-    use clm_varctl  , only : create_crop_landunit
+    use clm_varctl  , only : create_crop_landunit, n_dom_landunits
     use fileutils   , only : getfil
     use domainMod   , only : domain_type, domain_init, domain_clean
     use clm_instur  , only : wt_lunit, topo_glc_mec
@@ -406,6 +406,26 @@ contains
 
     call check_sums_equal_1(wt_lunit, begg, 'wt_lunit', subname)
 
+    ! Select N dominant landunits
+    ! ---------------------------
+    ! n_dom_landunits set by user in namelist
+    ! Call resembles the surfrd_veg_all call collapse_nat_pfts that selects
+    ! n_dom_pfts (also set by the user in the namelist)
+
+    call collapse_to_dom_landunits(wt_lunit, begg, endg, n_dom_landunits)
+
+    ! UNDER CONSTRUCTION
+    ! Additionally remove landunits using thresholds set by user in namelist
+    ! ----------------------------------------------------------------------
+    ! Remove corresponding thresholds from the mksurfdat tool
+    ! Found two such cases (had expected to encounter them for every landunit):
+    !       mkurbanparCommonMod.F90 MIN_DENS = 0.1 and
+    !       mksurfdat.F90 toosmallPFT = 1.e-10
+    !
+    !call collapse_individual_landunits(wt_lunit, begg, endg, &
+    !                                   toosmall_wetland, toosmall_lake, &
+    !                                   toosmall_urban, toosmall_glacier)
+
     if ( masterproc )then
        write(iulog,*) 'Successfully read surface boundary data'
        write(iulog,*)
@@ -472,7 +492,6 @@ contains
     ! as soil color and percent sand and clay
     !
     ! !USES:
-    use clm_varctl      , only : n_dom_landunits
     use clm_varpar      , only : maxpatch_glcmec, nlevurb
     use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice_mec
     use clm_instur      , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec
@@ -617,37 +636,6 @@ contains
     call CheckUrban(begg, endg, pcturb(begg:endg,:), subname)
 
     deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,urban_region_id,pctspec)
-
-    ! Select N dominant landunits
-    ! ---------------------------
-    ! n_dom_landunits set by user in namelist
-    ! Call resembles the surfrd_veg_all call collapse_nat_pfts that selects
-    ! n_dom_pfts (also set by the user in the namelist)
-    !
-    ! Development steps:
-    ! 1. Rank special landunits only, without affecting the vegetated landunits
-    ! 2. When (1) works, continue: Rank the vegetated landunits as one value
-    !    against the special landunits. If the vegetated landunits get rejected
-    !    as not dominant, this information will need to transmit to
-    !    surfrd_veg_all
-    !
-    ! Currently ranking each individual pcturb against the other special
-    ! landunits, which reduces the likelihood of an urban landunit making it
-    ! among the dominant.
-
-    call collapse_to_dom_landunits(wt_lunit, begg, endg, n_dom_landunits)
-
-    ! UNDER CONSTRUCTION
-    ! Additionally remove landunits using thresholds set by user in namelist
-    ! ----------------------------------------------------------------------
-    ! Remove corresponding thresholds from the mksurfdat tool
-    ! Found two such cases (had expected to encounter them for every landunit):
-    !       mkurbanparCommonMod.F90 MIN_DENS = 0.1 and
-    !       mksurfdat.F90 toosmallPFT = 1.e-10
-    !
-    !call collapse_individual_landunits(wt_lunit, begg, endg, &
-    !                                   toosmall_wetland, toosmall_lake, &
-    !                                   toosmall_urban, toosmall_glacier)
 
   end subroutine surfrd_special
 
