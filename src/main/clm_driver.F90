@@ -55,11 +55,6 @@ module clm_driver
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
-!KO
-  !use ndep2StreamMod         , only : ndep2_interp
-  !use ndep3StreamMod         , only : ndep3_interp
-  
-  !KO
   use FanStreamMod           , only : fanstream_interp
   use ActiveLayerMod         , only : alt_calc
   use ch4Mod                 , only : ch4, ch4_init_balance_check
@@ -385,12 +380,10 @@ contains
        call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
        call t_stopf('bgc_interp')
     end if
-!KO
-    if (use_cn .and. use_fan) then
+
+    if (use_fan) then
        call fanstream_interp(bounds_proc, atm2lnd_inst)
-       !call ndep3_interp(bounds_proc, atm2lnd_inst)
     end if
-!KO
 
     ! Get time varying urban data
     call urbantv_inst%urbantv_interp(bounds_proc)

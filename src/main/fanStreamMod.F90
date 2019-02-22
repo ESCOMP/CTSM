@@ -4,7 +4,7 @@ module FanStreamMod
   ! !DESCRIPTION: 
   ! Contains methods for reading in FAN nitrogen deposition (in the form of
   ! manure) data file
-  ! Also includes functions for dynamic ndep2 file handling and 
+  ! Also includes functions for fan stream file handling and 
   ! interpolation.
   !
   ! !USES
@@ -37,9 +37,9 @@ module FanStreamMod
 
   ! ! PRIVATE TYPES
   type(shr_strdata_type)  :: sdat_grz, sdat_sgrz, sdat_ngrz, sdat_urea, sdat_nitr, sdat_soilph         ! input data streams
-  integer :: stream_year_first_ndep2      ! first year in stream to use
-  integer :: stream_year_last_ndep2       ! last year in stream to use
-  integer :: model_year_align_ndep2       ! align stream_year_firstndep2 with 
+  integer :: stream_year_first_fan      ! first year in stream to use
+  integer :: stream_year_last_fan       ! last year in stream to use
+  integer :: model_year_align_fan       ! align stream_year_firstndep2 with 
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -70,169 +70,177 @@ contains
    integer            :: nu_nml    ! unit for namelist file
    integer            :: nml_error ! namelist i/o error flag
    type(mct_ggrid)    :: dom_clm   ! domain information 
-   character(len=CL)  :: stream_fldFileName_ndep2
-   character(len=CL)  :: ndep2mapalgo = 'bilinear'
+   character(len=CL)  :: stream_fldFileName_fan
+   character(len=CL)  :: fan_mapalgo = 'bilinear'
    character(*), parameter :: shr_strdata_unset = 'NOT_SET'
    character(*), parameter :: subName = "('ndep2dyn_init')"
    character(*), parameter :: F00 = "('(ndep2dyn_init) ',4a)"
    !-----------------------------------------------------------------------
 
-   namelist /ndep2dyn_nml/        &
-        stream_year_first_ndep2,  &
-	stream_year_last_ndep2,   &
-        model_year_align_ndep2,   &
-        ndep2mapalgo,             &
-        stream_fldFileName_ndep2
+   namelist /fan_nml/        &
+        stream_year_first_fan,  &
+	stream_year_last_fan,   &
+        model_year_align_fan,   &
+        fan_mapalgo,             &
+        stream_fldFileName_fan
 
    ! Default values for namelist
-    stream_year_first_ndep2  = 1                ! first year in stream to use
-    stream_year_last_ndep2   = 1                ! last  year in stream to use
-    model_year_align_ndep2   = 1                ! align stream_year_first_ndep2 with this model year
-    stream_fldFileName_ndep2 = ' '
+    stream_year_first_fan  = 1                ! first year in stream to use
+    stream_year_last_fan   = 1                ! last  year in stream to use
+    model_year_align_fan   = 1                ! align stream_year_first_fan with this model year
+    stream_fldFileName_fan = ' '
 
-   ! Read ndep2dyn_nml namelist
+   ! Read fandyn_nml namelist
    if (masterproc) then
       nu_nml = getavu()
       open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
-      call shr_nl_find_group_name(nu_nml, 'ndep2dyn_nml', status=nml_error)
+      call shr_nl_find_group_name(nu_nml, 'fan_nml', status=nml_error)
       if (nml_error == 0) then
-         read(nu_nml, nml=ndep2dyn_nml,iostat=nml_error)
+         read(nu_nml, nml=fan_nml,iostat=nml_error)
          if (nml_error /= 0) then
-            call endrun(msg=' ERROR reading ndep2dyn_nml namelist'//errMsg(sourcefile, __LINE__))
+            call endrun(msg=' ERROR reading fan_nml namelist'//errMsg(sourcefile, __LINE__))
          end if
       else
-         call endrun(msg=' ERROR finding ndep2dyn_nml namelist'//errMsg(sourcefile, __LINE__))
+         call endrun(msg=' ERROR finding fan_nml namelist'//errMsg(sourcefile, __LINE__))
       end if
       close(nu_nml)
       call relavu( nu_nml )
    endif
 
-   call shr_mpi_bcast(stream_year_first_ndep2, mpicom)
-   call shr_mpi_bcast(stream_year_last_ndep2, mpicom)
-   call shr_mpi_bcast(model_year_align_ndep2, mpicom)
-   call shr_mpi_bcast(stream_fldFileName_ndep2, mpicom)
+   call shr_mpi_bcast(stream_year_first_fan, mpicom)
+   call shr_mpi_bcast(stream_year_last_fan, mpicom)
+   call shr_mpi_bcast(model_year_align_fan, mpicom)
+   call shr_mpi_bcast(stream_fldFileName_fan, mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
       write(iulog,*) 'ndep2dyn stream settings:'
-      write(iulog,*) '  stream_year_first_ndep2  = ',stream_year_first_ndep2
-      write(iulog,*) '  stream_year_last_ndep2   = ',stream_year_last_ndep2   
-      write(iulog,*) '  model_year_align_ndep2   = ',model_year_align_ndep2   
-      write(iulog,*) '  stream_fldFileName_ndep2 = ',stream_fldFileName_ndep2
+      write(iulog,*) '  stream_year_first_fan  = ',stream_year_first_fan
+      write(iulog,*) '  stream_year_last_fan   = ',stream_year_last_fan   
+      write(iulog,*) '  model_year_align_fan   = ',model_year_align_fan   
+      write(iulog,*) '  stream_fldFileName_fan = ',stream_fldFileName_fan
       write(iulog,*) ' '
    endif
 
    call clm_domain_mct (bounds, dom_clm)
 
-   call shr_strdata_create(sdat_grz,name="clmndep2grz",    &
+   ! Manure N from year-round grazing livestock
+   !
+   call shr_strdata_create(sdat_grz,name="clmfangrz",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
-        yearFirst=stream_year_first_ndep2,          &
-        yearLast=stream_year_last_ndep2,            &
-        yearAlign=model_year_align_ndep2,           &
+        yearFirst=stream_year_first_fan,          &
+        yearLast=stream_year_last_fan,            &
+        yearAlign=model_year_align_fan,           &
         offset=0,                                   &
         domFilePath='',                             &
-        domFileName=trim(stream_fldFileName_ndep2), &
+        domFileName=trim(stream_fldFileName_fan), &
         domTvarName='time',                         &
         domXvarName='x' ,                           &
         domYvarName='y' ,                           &  
         domAreaName='area',                         &
         domMaskName='mask',                         &
         filePath='',                                &
-        filename=(/trim(stream_fldFileName_ndep2)/),&
+        filename=(/trim(stream_fldFileName_fan)/),&
         fldListFile='manure_grz',                   &
         fldListModel='manure_grz',                  &
         fillalgo='none',                            &
-        mapalgo=ndep2mapalgo,                       &
+        mapalgo=fan_mapalgo,                       &
         calendar=get_calendar(),                    &
 	taxmode='extend'                            )
 
    if (masterproc) then
-      call shr_strdata_print(sdat_grz,'CLMNDEP2 data')
+      call shr_strdata_print(sdat_grz,'CLMFAN data')
    endif
 
-   call shr_strdata_create(sdat_sgrz,name="clmndep2sgrz",    &
+   ! Manure N from seasonally grazing livestock
+   !
+   call shr_strdata_create(sdat_sgrz,name="clmfansgrz",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
-        yearFirst=stream_year_first_ndep2,          &
-        yearLast=stream_year_last_ndep2,            &
-        yearAlign=model_year_align_ndep2,           &
+        yearFirst=stream_year_first_fan,          &
+        yearLast=stream_year_last_fan,            &
+        yearAlign=model_year_align_fan,           &
         offset=0,                                   &
         domFilePath='',                             &
-        domFileName=trim(stream_fldFileName_ndep2), &
+        domFileName=trim(stream_fldFileName_fan), &
         domTvarName='time',                         &
         domXvarName='x' ,                           &
         domYvarName='y' ,                           &  
         domAreaName='area',                         &
         domMaskName='mask',                         &
         filePath='',                                &
-        filename=(/trim(stream_fldFileName_ndep2)/),&
+        filename=(/trim(stream_fldFileName_fan)/),&
         fldListFile='manure_sgrz',                 &
         fldListModel='manure_sgrz',                &
         fillalgo='none',                            &
-        mapalgo=ndep2mapalgo,                       &
+        mapalgo=fan_mapalgo,                       &
         calendar=get_calendar(),                    &
 	taxmode='extend'                            )
 
    if (masterproc) then
-      call shr_strdata_print(sdat_sgrz,'CLMNDEP2 data')
+      call shr_strdata_print(sdat_sgrz,'CLMFAN data')
    endif
 
-   call shr_strdata_create(sdat_ngrz,name="clmndep2ngrz",    &
+   ! Manure N from non-grazing livestock
+   !
+   call shr_strdata_create(sdat_ngrz,name="clmfanngrz",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
-        yearFirst=stream_year_first_ndep2,          &
-        yearLast=stream_year_last_ndep2,            &
-        yearAlign=model_year_align_ndep2,           &
+        yearFirst=stream_year_first_fan,          &
+        yearLast=stream_year_last_fan,            &
+        yearAlign=model_year_align_fan,           &
         offset=0,                                   &
         domFilePath='',                             &
-        domFileName=trim(stream_fldFileName_ndep2), &
+        domFileName=trim(stream_fldFileName_fan), &
         domTvarName='time',                         &
         domXvarName='x' ,                           &
         domYvarName='y' ,                           &  
         domAreaName='area',                         &
         domMaskName='mask',                         &
         filePath='',                                &
-        filename=(/trim(stream_fldFileName_ndep2)/),&
+        filename=(/trim(stream_fldFileName_fan)/),&
         fldListFile='manure_ngrz',                  &
         fldListModel='manure_ngrz',                 &
         fillalgo='none',                            &
-        mapalgo=ndep2mapalgo,                       &
+        mapalgo=fan_mapalgo,                       &
         calendar=get_calendar(),                    &
 	taxmode='extend'                            )
 
    if (masterproc) then
-      call shr_strdata_print(sdat_ngrz,'CLMNDEP2 data')
+      call shr_strdata_print(sdat_ngrz,'CLMFAN data')
    endif
 
-   call shr_strdata_create(sdat_urea,name="clmndep2urea",    &
+   ! Fraction of urea N in synthetic fertilizer N
+   !
+   call shr_strdata_create(sdat_urea,name="clmfanurea",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
-        yearFirst=stream_year_first_ndep2,          &
-        yearLast=stream_year_last_ndep2,            &
-        yearAlign=model_year_align_ndep2,           &
+        yearFirst=stream_year_first_fan,          &
+        yearLast=stream_year_last_fan,            &
+        yearAlign=model_year_align_fan,           &
         offset=0,                                   &
         domFilePath='',                             &
-        domFileName=trim(stream_fldFileName_ndep2), &
+        domFileName=trim(stream_fldFileName_fan), &
         domTvarName='time',                         &
         domXvarName='x' ,                           &
         domYvarName='y' ,                           &  
         domAreaName='area',                         &
         domMaskName='mask',                         &
         filePath='',                                &
-        filename=(/trim(stream_fldFileName_ndep2)/),&
+        filename=(/trim(stream_fldFileName_fan)/),&
         fldListFile='fract_urea',                &
         fldListModel='fract_urea',               &
         fillalgo='none',                            &
@@ -241,28 +249,30 @@ contains
 	taxmode='extend'                            )
 
    if (masterproc) then
-      call shr_strdata_print(sdat_urea,'CLMNDEP2 data')
+      call shr_strdata_print(sdat_urea,'CLMFAN data')
    endif
 
-   call shr_strdata_create(sdat_nitr,name="clmndep2nitr",    &
+   ! Fraction of nitrate N in synthetic fertilizer N
+   !
+   call shr_strdata_create(sdat_nitr,name="clmfannitr",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
-        yearFirst=stream_year_first_ndep2,          &
-        yearLast=stream_year_last_ndep2,            &
-        yearAlign=model_year_align_ndep2,           &
+        yearFirst=stream_year_first_fan,          &
+        yearLast=stream_year_last_fan,            &
+        yearAlign=model_year_align_fan,           &
         offset=0,                                   &
         domFilePath='',                             &
-        domFileName=trim(stream_fldFileName_ndep2), &
+        domFileName=trim(stream_fldFileName_fan), &
         domTvarName='time',                         &
         domXvarName='x' ,                           &
         domYvarName='y' ,                           &  
         domAreaName='area',                         &
         domMaskName='mask',                         &
         filePath='',                                &
-        filename=(/trim(stream_fldFileName_ndep2)/),&
+        filename=(/trim(stream_fldFileName_fan)/),&
         fldListFile='fract_nitr',                &
         fldListModel='fract_nitr',               &
         fillalgo='none',                            &
@@ -270,25 +280,27 @@ contains
         calendar=get_calendar(),                    &
 	taxmode='extend'                            )
 
-   call shr_strdata_create(sdat_soilph,name="clmndep2ph",    &
+   ! Soil pH (to be moved to surface dataset)
+   ! 
+   call shr_strdata_create(sdat_soilph,name="clmfanph",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,              &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,     &
         nxg=ldomain%ni, nyg=ldomain%nj,             &
-        yearFirst=stream_year_first_ndep2,          &
-        yearLast=stream_year_last_ndep2,            &
-        yearAlign=model_year_align_ndep2,           &
+        yearFirst=stream_year_first_fan,          &
+        yearLast=stream_year_last_fan,            &
+        yearAlign=model_year_align_fan,           &
         offset=0,                                   &
         domFilePath='',                             &
-        domFileName=trim(stream_fldFileName_ndep2), &
+        domFileName=trim(stream_fldFileName_fan), &
         domTvarName='time',                         &
         domXvarName='x' ,                           &
         domYvarName='y' ,                           &  
         domAreaName='area',                         &
         domMaskName='mask',                         &
         filePath='',                                &
-        filename=(/trim(stream_fldFileName_ndep2)/),&
+        filename=(/trim(stream_fldFileName_fan)/),&
         fldListFile='soilph',                &
         fldListModel='fansoilph',               &
         fillalgo='none',                            &
@@ -297,7 +309,7 @@ contains
 	taxmode='extend'                            )
 
    if (masterproc) then
-      call shr_strdata_print(sdat_soilph,'CLMNDEP2 data')
+      call shr_strdata_print(sdat_soilph,'CLMFAN data')
    endif
 
    
@@ -329,7 +341,7 @@ contains
    mcdate = year*10000 + mon*100 + day
    dayspyr = get_days_per_year( )
 
-   call shr_strdata_advance(sdat_grz, mcdate, sec, mpicom, 'clmndep2grz')
+   call shr_strdata_advance(sdat_grz, mcdate, sec, mpicom, 'clmfangrz')
 
    ig = 0
    do g = bounds%begg,bounds%endg
@@ -337,7 +349,7 @@ contains
       atm2lnd_inst%forc_ndep_grz_grc(g) = sdat_grz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
    end do
 
-   call shr_strdata_advance(sdat_sgrz, mcdate, sec, mpicom, 'clmndep2sgrz')
+   call shr_strdata_advance(sdat_sgrz, mcdate, sec, mpicom, 'clmfansgrz')
 
    ig = 0
    do g = bounds%begg,bounds%endg
@@ -345,7 +357,7 @@ contains
       atm2lnd_inst%forc_ndep_sgrz_grc(g) = sdat_sgrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
    end do
 
-   call shr_strdata_advance(sdat_ngrz, mcdate, sec, mpicom, 'clmndep2ngrz')
+   call shr_strdata_advance(sdat_ngrz, mcdate, sec, mpicom, 'clmfanngrz')
 
    ig = 0
    do g = bounds%begg,bounds%endg
@@ -353,7 +365,7 @@ contains
       atm2lnd_inst%forc_ndep_ngrz_grc(g) = sdat_ngrz%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
    end do
    
-   call shr_strdata_advance(sdat_urea, mcdate, sec, mpicom, 'clmndep2urea')
+   call shr_strdata_advance(sdat_urea, mcdate, sec, mpicom, 'clmfanurea')
 
    ig = 0
    do g = bounds%begg,bounds%endg
@@ -361,7 +373,7 @@ contains
       atm2lnd_inst%forc_ndep_urea_grc(g) = sdat_urea%avs(1)%rAttr(1,ig)
    end do
 
-   call shr_strdata_advance(sdat_nitr, mcdate, sec, mpicom, 'clmndep2nitr')
+   call shr_strdata_advance(sdat_nitr, mcdate, sec, mpicom, 'clmfannitr')
 
    ig = 0
    do g = bounds%begg,bounds%endg
@@ -369,7 +381,7 @@ contains
       atm2lnd_inst%forc_ndep_nitr_grc(g) = sdat_nitr%avs(1)%rAttr(1,ig)
    end do
 
-   call shr_strdata_advance(sdat_soilph, mcdate, sec, mpicom, 'clmndep2ph')
+   call shr_strdata_advance(sdat_soilph, mcdate, sec, mpicom, 'clmfanph')
 
    ig = 0
    do g = bounds%begg,bounds%endg
