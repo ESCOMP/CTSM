@@ -642,6 +642,7 @@ contains
     real(r8) :: heat_col(bounds%begc:bounds%endc)  ! sum of heat content for all columns [J/m^2]
     real(r8) :: heat_liquid_col(bounds%begc:bounds%endc) ! sum of heat content for all columns: liquid water, excluding latent heat [J/m^2]
     real(r8) :: cv_liquid_col(bounds%begc:bounds%endc) ! sum of liquid heat capacity for all columns [J/(m^2 K)]
+    real(r8) :: heat_lake_col(bounds%begc:bounds%endc) ! heat content of lake column [J/m^2]
 
     real(r8) :: heat_liquid_grc(bounds%begg:bounds%endg) ! heat_liquid_col averaged to grid cell [J/m^2]
     real(r8) :: cv_liquid_grc(bounds%begg:bounds%endg) ! cv_liquid_col averaged to grid cell [J/(m^2 K)]
@@ -662,7 +663,8 @@ contains
          soilstate_inst, temperature_inst, waterstatebulk_inst, &
          heat = heat_col(bounds%begc:bounds%endc), &
          heat_liquid = heat_liquid_col(bounds%begc:bounds%endc), &
-         cv_liquid = cv_liquid_col(bounds%begc:bounds%endc))
+         cv_liquid = cv_liquid_col(bounds%begc:bounds%endc), &
+         heat_lake = heat_lake_col(bounds%begc:bounds%endc))
 
     call c2g(bounds, &
          carr = heat_col(bounds%begc:bounds%endc), &

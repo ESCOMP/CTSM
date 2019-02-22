@@ -1001,6 +1001,9 @@ contains
           fin(c) = fin(c) + phi(c,j)
        end do
     end do
+!	write(iulog,*)'Energy content of lake after calculating lake temperature (J/m²)', ncvts
+
+
 
     call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
          caller = 'LakeTemperature-2', &
@@ -1020,6 +1023,7 @@ contains
           if (j == 1) fin(c) = fin(c) + phi_soil(c)
        end do
     end do
+
 
 
     ! Check energy conservation.
