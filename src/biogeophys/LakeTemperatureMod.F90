@@ -997,6 +997,9 @@ contains
           fin(c) = fin(c) + phi(c,j)
        end do
     end do
+!	write(iulog,*)'Energy content of lake after calculating lake temperature (J/m²)', ncvts
+
+
 
     do j = -nlevsno + 1, nlevgrnd
        do fc = 1, num_lakec
@@ -1013,6 +1016,7 @@ contains
           if (j == 1) fin(c) = fin(c) + phi_soil(c)
        end do
     end do
+
 
 
     ! Check energy conservation.

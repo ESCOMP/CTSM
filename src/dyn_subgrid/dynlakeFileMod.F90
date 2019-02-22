@@ -54,6 +54,7 @@ contains
     ! !USES:
     use ncdio_pio      , only : check_dim
     use dynTimeInfoMod , only : YEAR_POSITION_START_OF_TIMESTEP
+
 	
     !
     ! !ARGUMENTS:
@@ -62,7 +63,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: num_points     ! number of spatial points
-    
+	 
     character(len=*), parameter :: subname = 'dynlake_init'
     !-----------------------------------------------------------------------
     
@@ -91,6 +92,7 @@ contains
          dyn_file = dynlake_file, varname=lake_varname, &
          dim1name=grlnd, conversion_factor=100._r8, &
          do_check_sums_equal_1=.false., data_shape=[num_points])
+
  
   end subroutine dynlake_init
   
