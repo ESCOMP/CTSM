@@ -64,6 +64,12 @@ This should show no diffs
 
 (10) Push master and tag to ESCOMP/ctsm
 
+(11) Update the CTSM upcoming tags project, if necessary
+     (https://github.com/ESCOMP/ctsm/projects/6)
+
+(12) Add tag to the CESM test database
+     (https://csegweb.cgd.ucar.edu/testdb)
+
 ---- NOTES ----
 
 (3) -- Always test on your fork with a feature-branch so that we can change tag order if needed. Put 
