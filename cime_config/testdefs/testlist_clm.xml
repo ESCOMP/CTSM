@@ -1240,22 +1240,13 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
-  <test name="SMS_D_Ly2" grid="1x1_numaIA" compset="IHistClm50BgcCropGs" testmods="clm/ciso_bombspike1963">
+  <test name="ERS_D_Ld5" grid="f10_f10_musgs" compset="IHistClm50BgcQianGs" testmods="clm/ciso_bombspike1963DecStart">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">03:40:00</option>
-      <option name="tput_tolerance">0.5</option>
-    </options>
-  </test>
-  <test name="SMS_D_Ly2" grid="1x1_brazil" compset="IHistClm50BgcQianGs" testmods="clm/ciso_bombspike1963">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">03:40:00</option>
-      <option name="tput_tolerance">0.5</option>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment"  >Want a test of the c13 and c14 timeseries that crosses the year boundary. Ideally this test would include crops (in order to cover as much code as possible combined with the c13/c14 timeseries, even though there are no direct interactions between these timeseries and crops), but crop DecStart tests currently fail because of https://github.com/ESCOMP/ctsm/issues/404 and I didn't want to add another long test just to test these options, so for now using a compset without crops. Using a compset with SGLC to avoid problems with CISM in DecStart tests; the only IHistClm50Bgc compset we have with SGLC is this Qian compset, so I'm using this one.</option>
     </options>
   </test>
   <test name="SMS_D_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm45BgcCropQianGs" testmods="clm/cropMonthOutput">
