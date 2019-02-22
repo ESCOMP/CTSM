@@ -78,6 +78,7 @@ module TotalWaterAndHeatMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: AccumulateLiquidWaterHeat ! For use by ComputeHeat* routines: accumulate quantities that we need to count for liquid water, for a single column
+  private :: AccumulateLiquidWaterHeatLake ! same as above but able to read in 2D lake temperature
   private :: TempToHeat                ! For use by ComputeHeat* routines: convert temperature to heat content
 
   character(len=*), parameter, private :: sourcefile = &
@@ -800,7 +801,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine ComputeHeatLake(bounds, num_lakec, filter_lakec, &
        soilstate_inst, temperature_inst, waterstatebulk_inst, &
-       heat, heat_liquid, cv_liquid)
+       heat, heat_liquid, cv_liquid, heat_lake)
     !
     ! !DESCRIPTION:
     ! Compute total heat content for all lake columns
@@ -812,7 +813,13 @@ contains
     !
     ! Note: Changes to this routine - for anything involving liquid or ice - should
     ! generally be accompanied by similar changes to ComputeLiqIceMassLake
-    !
+     
+
+
+    ! REMOVE THIS when done developing
+    use clm_varctl          , only : iulog
+
+
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)  :: bounds
     integer                  , intent(in)  :: num_lakec
@@ -824,6 +831,8 @@ contains
     real(r8) , intent(inout) :: heat( bounds%begc: )        ! sum of heat content for all columns [J/m^2]
     real(r8) , intent(inout) :: heat_liquid( bounds%begc: ) ! sum of heat content for all columns: liquid water, excluding latent heat [J/m^2]
     real(r8) , intent(inout) :: cv_liquid( bounds%begc: )   ! sum of liquid heat capacity for all columns [J/(m^2 K)]
+    real(r8) , intent(inout) :: heat_lake( bounds%begc: )   ! heat content of the lake water in column [J/m^2]
+
     !
     ! !LOCAL VARIABLES:
     integer :: fc
@@ -832,6 +841,7 @@ contains
     real(r8) :: heat_dry_mass(bounds%begc:bounds%endc) ! sum of heat content: dry mass [J/m^2]
     real(r8) :: heat_ice(bounds%begc:bounds%endc)      ! sum of heat content: ice [J/m^2]
     real(r8) :: latent_heat_liquid(bounds%begc:bounds%endc) ! sum of latent heat content of liquid water [J/m^2]
+    real(r8) :: latent_heat_liquid_lake(bounds%begc:bounds%endc) ! sum of latent heat content of liquid water of lake itself [J/m^2]
 
     character(len=*), parameter :: subname = 'ComputeHeatLake'
     !-----------------------------------------------------------------------
@@ -843,8 +853,10 @@ contains
     associate( &
          snl          => col%snl, & ! number of snow layers
          dz           => col%dz, &  ! layer depth (m)
+         lakedepth    => col%lakedepth, & ! lake depth (m)
          watsat       => soilstate_inst%watsat_col, & ! volumetric soil water at saturation (porosity)
          csol         => soilstate_inst%csol_col, & ! heat capacity, soil solids (J/m**3/Kelvin)
+         t_lake       => temperature_inst%t_lake_col,  & ! lake temperature (K)
          t_soisno     => temperature_inst%t_soisno_col, & ! soil temperature (Kelvin)
          dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Input:  [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
          h2osoi_liq   => waterstatebulk_inst%h2osoi_liq_col, & ! liquid water (kg/m2)
@@ -902,6 +914,21 @@ contains
     ! TODO(wjs, 2017-03-11) Include heat content of water in lakes, once we include
     ! lake water as an explicit water state (https://github.com/ESCOMP/ctsm/issues/200)
 
+    ! calculate heat content of lake itself
+    !set condition on heat_lake when is present (optional argument)? 
+    do fc = 1, num_lakec
+          c = filter_lakec(fc)
+          call AccumulateLiquidWaterHeatLake( &
+               temp = t_lake(c,:), &
+               h2o = lakedepth(c)*1000, &
+               cv_liquid = cv_liquid(c), &
+               heat_liquid = heat_lake(c), &
+               latent_heat_liquid = latent_heat_liquid_lake(c))
+    end do
+
+     write(iulog,*) 'lake heat (J/m^2)', heat_lake(c)
+
+! Add lake heat here if wanted to incorporate
     do fc = 1, num_lakec
        c = filter_lakec(fc)
        heat(c) = heat_dry_mass(c) + heat_ice(c) + heat_liquid(c) + latent_heat_liquid(c)
@@ -1086,6 +1113,45 @@ contains
     heat_liquid = heat_liquid + TempToHeat(temp = temp, cv = cv)
     latent_heat_liquid = latent_heat_liquid + h2o*hfus
   end subroutine AccumulateLiquidWaterHeat
+
+! Repeating same module, quick fix to account for 2D temperature field of lake temp. (to be removed)
+  !-----------------------------------------------------------------------
+  subroutine AccumulateLiquidWaterHeatLake(temp, h2o, &
+       heat_liquid, latent_heat_liquid, cv_liquid)
+    !
+    ! !DESCRIPTION:
+    ! In the course of accumulating heat contents: Accumulate quantities that we need to
+    ! count for liquid water, for a single column
+    
+    use clm_varpar     ,only : nlevlak 
+!
+    ! !ARGUMENTS:
+    real(r8), intent(in) :: temp(:)  ! temperature [K]
+    real(r8), intent(in) :: h2o   ! water mass [kg/m^2]
+
+    real(r8), intent(inout) :: heat_liquid        ! accumulated total heat content of liquid water for this column, excluding latent heat [J/m^2]
+    real(r8), intent(inout) :: latent_heat_liquid ! accumulated total latent heat content of liquid water for this column [J/m^2]
+    real(r8), intent(inout), optional :: cv_liquid ! accumulated total liquid heat capacity for this column [J/(m^2 K)]
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: cv  ! heat capacity [J/(m^2 K)]
+    integer  :: j   ! do loop index
+    character(len=*), parameter :: subname = 'AccumulateLiquidWaterHeatLake'
+    !-----------------------------------------------------------------------
+
+    cv = h2o*cpliq
+    if (present(cv_liquid)) then
+       cv_liquid = cv_liquid + cv
+    end if
+    
+    ! loop over lake levels
+    do j = 1,nlevlak
+        heat_liquid = heat_liquid + TempToHeat(temp = temp(j), cv = cv)
+    end do
+    latent_heat_liquid = latent_heat_liquid + h2o*hfus
+
+  end subroutine AccumulateLiquidWaterHeatLake
+
 
   !-----------------------------------------------------------------------
   pure function TempToHeat(temp, cv) result(heat)

@@ -255,6 +255,10 @@ contains
     if (get_do_harvest()) then
        call dynHarvest_interp(bounds_proc)
     end if
+	
+	! add lake interp (condition to be added later)
+	
+	call dynlake_interp(bounds_proc)
 
     ! ==========================================================================
     ! Do land cover change that does not require I/O
