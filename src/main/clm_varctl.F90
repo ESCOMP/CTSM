@@ -141,6 +141,15 @@ module clm_varctl
 
   integer, public :: n_dom_pfts = 0  ! # of dominant soil patches; determines the number of active soil patches; default = 0 means "do nothing"
 
+  integer, public :: toosmall_soil = 0  ! threshold above which the model keeps the soil landunit; default = 0 means "do nothing"
+  integer, public :: toosmall_crop = 0  ! threshold above which the model keeps the crop landunit; default = 0 means "do nothing"
+  integer, public :: toosmall_glacier = 0  ! threshold above which the model keeps the glacier landunit; default = 0 means "do nothing"
+  integer, public :: toosmall_lake = 0  ! threshold above which the model keeps the lake landunit; default = 0 means "do nothing"
+  integer, public :: toosmall_wetland = 0  ! threshold above which the model keeps the wetland landunit; default = 0 means "do nothing"
+  integer, public :: toosmall_urb_tbd = 0  ! threshold above which the model keeps the urban TBD landunit; default = 0 means "do nothing"
+  integer, public :: toosmall_urb_hd = 0  ! threshold above which the model keeps the urban HD landunit; default = 0 means "do nothing"
+  integer, public :: toosmall_urb_md = 0  ! threshold above which the model keeps the urban MD landunit; default = 0 means "do nothing"
+
   !----------------------------------------------------------
   ! BGC logic and datasets
   !----------------------------------------------------------

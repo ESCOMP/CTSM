@@ -15,7 +15,9 @@ module surfrdMod
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog, scmlat, scmlon, single_column
   use clm_varctl      , only : use_cndv, use_crop
-  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_nat_pfts, collapse_crop_var
+  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, &
+                               collapse_nat_pfts, collapse_crop_var, &
+                               collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
   use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid, ncd_inqdlen
   use pio
@@ -285,7 +287,10 @@ contains
     !    o real % abundance PFTs (as a percent of vegetated area)
     !
     ! !USES:
-    use clm_varctl  , only : create_crop_landunit
+    use clm_varctl  , only : create_crop_landunit, toosmall_soil, &
+                             toosmall_crop, toosmall_glacier, toosmall_lake, &
+                             toosmall_wetland, toosmall_urb_tbd, &
+                             toosmall_urb_hd, toosmall_urb_md
     use fileutils   , only : getfil
     use domainMod   , only : domain_type, domain_init, domain_clean
     use clm_instur  , only : wt_lunit, topo_glc_mec
@@ -405,6 +410,19 @@ contains
     call ncd_pio_closefile(ncid)
 
     call check_sums_equal_1(wt_lunit, begg, 'wt_lunit', subname)
+
+    ! Remove landunits using thresholds set by user in namelist
+    ! ---------------------------------------------------------
+    ! TODO Remove corresponding thresholds from the mksurfdat tool
+    !      Found 2 such cases (had expected to encounter one per landunit):
+    !         mkurbanparCommonMod.F90 MIN_DENS = 0.1 and
+    !         mksurfdat.F90 toosmallPFT = 1.e-10
+
+    call collapse_individual_lunits(wt_lunit, begg, endg, toosmall_soil, &
+                                    toosmall_crop, toosmall_glacier, & 
+                                    toosmall_lake, toosmall_wetland, &
+                                    toosmall_urb_tbd, toosmall_urb_hd, &
+                                    toosmall_urb_md)
 
     if ( masterproc )then
        write(iulog,*) 'Successfully read surface boundary data'

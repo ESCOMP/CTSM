@@ -256,6 +256,17 @@ contains
     ! number of active pfts to n_dom_pfts.
     namelist /clm_inparm/ n_dom_pfts
 
+    ! Thresholds above which the model keeps the soil, crop, glacier, lake,
+    ! wetland, and urban landunits
+    namelist /clm_inparm/ toosmall_soil
+    namelist /clm_inparm/ toosmall_crop
+    namelist /clm_inparm/ toosmall_glacier
+    namelist /clm_inparm/ toosmall_lake
+    namelist /clm_inparm/ toosmall_wetland
+    namelist /clm_inparm/ toosmall_urb_tbd
+    namelist /clm_inparm/ toosmall_urb_hd
+    namelist /clm_inparm/ toosmall_urb_md
+
     ! flag for SSRE diagnostic
     namelist /clm_inparm/ use_SSRE
 
@@ -361,6 +372,46 @@ contains
 
        if (n_dom_pfts < 0) then
           call endrun(msg=' ERROR: expecting n_dom_pfts between 0 and 14 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_soil < 0 .or. toosmall_soil > 100) then
+          call endrun(msg=' ERROR: expecting toosmall_soil between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_crop < 0 .or. toosmall_crop > 100) then
+          call endrun(msg=' ERROR: expecting toosmall_crop between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_glacier < 0 .or. toosmall_glacier > 100) then
+          call endrun(msg=' ERROR: expecting toosmall_glacier between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_lake < 0 .or. toosmall_lake > 100) then
+          call endrun(msg=' ERROR: expecting toosmall_lake between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_wetland < 0 .or. toosmall_wetland > 100) then
+          call endrun(msg=' ERROR: expecting toosmall_wetland between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_urb_tbd < 0 .or. toosmall_urb_tbd > 100) then
+          call endrun(msg=' ERROR: expecting toosmall_urb_tbd between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_urb_hd < 0 .or. toosmall_urb_hd > 100) then
+          call endrun(msg=' ERROR: expecting toosmall_urb_hd between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_urb_md < 0 .or. toosmall_urb_md > 100) then
+          call endrun(msg=' ERROR: expecting toosmall_urb_md between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
@@ -636,6 +687,17 @@ contains
     ! slevis: maxpatch_pft is MPI_LOGICAL? Doesn't matter since obsolete.
     call mpi_bcast(n_dom_pfts, 1, MPI_INTEGER, 0, mpicom, ier)
 
+    ! Thresholds above which the model keeps the soil, crop, glacier, lake,
+    ! wetland, and urban landunits
+    call mpi_bcast(toosmall_soil, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(toosmall_crop, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(toosmall_glacier, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(toosmall_lake, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(toosmall_wetland, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(toosmall_urb_tbd, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(toosmall_urb_hd, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(toosmall_urb_md, 1, MPI_INTEGER, 0, mpicom, ier)
+
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
     if (use_cn) then
@@ -838,6 +900,14 @@ contains
        write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     end if
     write(iulog,*) '   Number of ACTIVE PFTS (0 means input pft data NOT collapsed to n_dom_pfts) =', n_dom_pfts
+    write(iulog,*) '   Threshold above which the model keeps the soil landunit =', toosmall_soil
+    write(iulog,*) '   Threshold above which the model keeps the crop landunit =', toosmall_crop
+    write(iulog,*) '   Threshold above which the model keeps the glacier landunit =', toosmall_glacier
+    write(iulog,*) '   Threshold above which the model keeps the lake landunit =', toosmall_lake
+    write(iulog,*) '   Threshold above which the model keeps the wetland landunit =', toosmall_wetland
+    write(iulog,*) '   Threshold above which the model keeps the urban TBD landunit =', toosmall_urb_tbd
+    write(iulog,*) '   Threshold above which the model keeps the urban MD landunit =', toosmall_urb_md
+    write(iulog,*) '   Threshold above which the model keeps the urban HD landunit =', toosmall_urb_hd
     if (use_cn) then
        if (suplnitro /= suplnNon)then
           write(iulog,*) '   Supplemental Nitrogen mode is set to run over Patches: ', &

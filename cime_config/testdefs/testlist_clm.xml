@@ -785,6 +785,15 @@
       <option name="comment"  >test n_dom_pfts set to 2 in a transient vegetation case with December start</option>
     </options>
   </test>
+  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50BgcCropGs" testmods="clm/rm_individual_lunits_decStart">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >test toosmall_* (soil, crop, glacier, lake, wetland, urban) all set to 5% (ie keep the landunits in gridcells where they exceed 5%) in a transient vegetation case with December start</option>
+    </options>
+  </test>
   <test name="ERS_D_Ld12" grid="f10_f10_musgs" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_spunup_inc_dec_bgc">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>

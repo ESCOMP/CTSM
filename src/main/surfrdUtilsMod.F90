@@ -23,6 +23,7 @@ module surfrdUtilsMod
   public :: convert_cft_to_pft  ! Conversion of crop CFT to natural veg PFT:w
   public :: collapse_crop_types ! Collapse unused crop types into types used in this run
   public :: collapse_nat_pfts  ! Collapse to dominant pfts
+  public :: collapse_individual_lunits  ! Collapse landunits by user-defined thresholds
   public :: collapse_crop_var  ! Collapse crop variables according to cft weights determined in previous "collapse" subroutines
 
   character(len=*), parameter, private :: sourcefile = &
@@ -144,6 +145,77 @@ contains
     end do
 
   end subroutine convert_cft_to_pft
+
+  !-----------------------------------------------------------------------
+  subroutine collapse_individual_lunits(wt_lunit, begg, endg, toosmall_soil, &
+                                        toosmall_crop, toosmall_glacier, &
+                                        toosmall_lake, toosmall_wetland, &
+                                        toosmall_urb_tbd, toosmall_urb_hd, &
+                                        toosmall_urb_md)
+    ! DESCRIPTION
+    ! Keep landunits above the user-defined thresholds and remove the rest
+    !
+    ! !USES:
+    use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+                               istdlak, istwet, isturb_tbd, isturb_hd, &
+                               isturb_md
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: begg  ! Beginning grid cell index
+    integer, intent(in) :: endg  ! Ending grid cell index
+    integer, intent(in) :: toosmall_soil  ! Soil landunit threshold (%)
+    integer, intent(in) :: toosmall_crop  ! Crop landunit threshold (%)
+    integer, intent(in) :: toosmall_glacier  ! Glacier landunit threshold (%)
+    integer, intent(in) :: toosmall_lake  ! Lake landunit threshold (%)
+    integer, intent(in) :: toosmall_wetland  ! Wetland landunit threshold (%)
+    integer, intent(in) :: toosmall_urb_tbd  ! Urban TBD landunit threshold (%)
+    integer, intent(in) :: toosmall_urb_hd  ! Urban HD landunit threshold (%)
+    integer, intent(in) :: toosmall_urb_md  ! Urban MD landunit threshold (%)
+    ! This array modified in-place
+    ! Weights of landunits per grid cell
+    real(r8), intent(inout) :: wt_lunit(begg:endg, max_lunit)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g  ! grid cell indexes
+    integer :: m  ! landunit indexes
+    integer :: max_landunit  ! landunit with largest fraction
+    real(r8) :: toosmall(max_lunit)  ! Array of the thresholds (fraction)
+    real(r8) :: residual(max_lunit)  ! Array of wt_lunit residuals (fraction)
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(wt_lunit) == (/endg, max_lunit/)), errMsg(sourcefile, __LINE__))
+
+    ! Copy the user-defined percent thresholds into array of fractions
+    toosmall(istsoil) = toosmall_soil / 100._r8
+    toosmall(istcrop) = toosmall_crop / 100._r8
+    toosmall(istice_mec) = toosmall_glacier / 100._r8
+    toosmall(istdlak) = toosmall_lake / 100._r8
+    toosmall(istwet) = toosmall_wetland / 100._r8
+    toosmall(isturb_tbd) = toosmall_urb_tbd / 100._r8
+    toosmall(isturb_hd) = toosmall_urb_hd / 100._r8
+    toosmall(isturb_md) = toosmall_urb_md / 100._r8
+
+    ! Loop through gridcells and landunits
+    do g = begg, endg
+       residual = 0._r8  ! initialize
+       do m = 1, max_lunit
+          ! Remove landunits that are too small
+          if (wt_lunit(g,m) > 0._r8 .and. wt_lunit(g,m) <= toosmall(m)) then
+             residual(m) = wt_lunit(g,m)
+             wt_lunit(g,m) = 0._r8
+          end if
+       end do
+       ! If all landunits got removed, go back and keep the largest landunit
+       if (sum(wt_lunit(g,:)) == 0._r8) then
+          max_landunit = maxloc(residual, 1)
+          wt_lunit(g,max_landunit) = residual(max_landunit)
+       end if
+    end do
+
+    ! Renormalize wt_lunit
+    call renormalize(wt_lunit, begg, 1._r8)
+
+  end subroutine collapse_individual_lunits
 
   !-----------------------------------------------------------------------
   subroutine collapse_nat_pfts(wt_nat_patch, natpft_size, begg, endg, n_dom_pfts)
