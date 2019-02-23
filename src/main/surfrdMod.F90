@@ -416,18 +416,6 @@ contains
     call collapse_to_dominant(wt_lunit(begg:endg,:), istsoil, max_lunit, &
                               begg, endg, n_dom_landunits)
 
-    ! UNDER CONSTRUCTION
-    ! Additionally remove landunits using thresholds set by user in namelist
-    ! ----------------------------------------------------------------------
-    ! Remove corresponding thresholds from the mksurfdat tool
-    ! Found two such cases (had expected to encounter them for every landunit):
-    !       mkurbanparCommonMod.F90 MIN_DENS = 0.1 and
-    !       mksurfdat.F90 toosmallPFT = 1.e-10
-    !
-    !call collapse_individual_landunits(wt_lunit, begg, endg, &
-    !                                   toosmall_wetland, toosmall_lake, &
-    !                                   toosmall_urban, toosmall_glacier)
-
     if ( masterproc )then
        write(iulog,*) 'Successfully read surface boundary data'
        write(iulog,*)

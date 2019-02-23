@@ -59,7 +59,9 @@ contains
      ! need to be collapsed.
      use pftconMod, only: pftcon
      use clm_instur, only: wt_lunit
-     use landunit_varcon, only: max_lunit, istsoil
+     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+                                istdlak, istwet, isturb_tbd, isturb_hd, &
+                                isturb_md
 
      implicit none
      integer :: test  ! test number in loop of tests
@@ -68,6 +70,7 @@ contains
      real(r8), allocatable :: wt_expected(:,:)
      real(r8), allocatable :: wt_in_out(:,:)  ! used in subr. call
      real(r8) :: expctd(9)
+     real(r8), parameter :: input_value(9) = (/40._r8, 35._r8, 30._r8, 15._r8, 11._r8, 10._r8, 5._r8, 4._r8, 0._r8/)
 
      ! Set relevant pftcon values to defaults; override where necessary
      call pftcon%InitForTesting()
@@ -77,12 +80,12 @@ contains
 
      ! INPUT VALUES
      wt_lunit(begg:,:) = 0._r8  ! initialize
-     wt_lunit(begg:,1) = (/ 15._r8, 11._r8, 15._r8/)  ! landunit 1
-     wt_lunit(begg:,2) = (/  5._r8,  5._r8,  5._r8/)  ! ...
-     wt_lunit(begg:,4) = (/ 10._r8, 10._r8, 35._r8/)
-     wt_lunit(begg:,5) = (/ 40._r8, 30._r8, 10._r8/)
-     wt_lunit(begg:,6) = (/ 30._r8, 40._r8,  0._r8/)  ! ...
-     wt_lunit(begg:,7) = (/  0._r8,  4._r8, 35._r8/)  ! landunit 7
+     wt_lunit(begg:,istsoil) = (/ input_value(4), input_value(5), input_value(4)/)
+     wt_lunit(begg:,istcrop) = (/ input_value(7), input_value(7), input_value(7)/)
+     wt_lunit(begg:,istice_mec) = (/ input_value(6), input_value(6), input_value(2)/)
+     wt_lunit(begg:,istdlak) = (/ input_value(1), input_value(3), input_value(6)/)
+     wt_lunit(begg:,istwet) = (/ input_value(3), input_value(1),  input_value(9)/)
+     wt_lunit(begg:,isturb_tbd) = (/ input_value(9),  input_value(8), input_value(2)/)
      wt_lunit(:,:) = wt_lunit(:,:) / 100._r8
      call check_sums_equal_1( wt_lunit, begg, "test_check_sums_add_to_1", &
                               "should not trigger an error")
@@ -93,37 +96,46 @@ contains
         if (test == 1 .or. test == 5) then
            wt_expected = wt_lunit
         else if (test == 2) then  ! n_dom_landunits = 1
-           expctd(1) = 40._r8 / 40._r8
-           expctd(2) = 35._r8 / 35._r8
+           expctd(1) = input_value(1) / input_value(1)
+           expctd(2) = input_value(2) / input_value(2)
            wt_expected(begg:,:) = 0._r8  ! initialize
-           wt_expected(begg:,4) = (/ 0._r8, 0._r8, expctd(2) /)  ! landunit 4
-           wt_expected(begg:,5) = (/ expctd(1), 0._r8, 0._r8 /)  ! landunit 5
-           wt_expected(begg:,6) = (/ 0._r8, expctd(1), 0._r8 /)  ! landunit 6
+           wt_expected(begg:,istice_mec) = (/ 0._r8, 0._r8, expctd(2) /)
+           wt_expected(begg:,istdlak) = (/ expctd(1), 0._r8, 0._r8 /)
+           wt_expected(begg:,istwet) = (/ 0._r8, expctd(1), 0._r8 /)
         else if (test == 3) then  ! n_dom_landunits = 2
-           expctd(1) = 40._r8 / 70._r8
-           expctd(2) = 30._r8 / 70._r8
-           expctd(3) = 35._r8 / 70._r8
+           expctd(1) = input_value(1) / (input_value(1) + input_value(3))
+           expctd(2) = input_value(3) / (input_value(1) + input_value(3))
+           expctd(3) = input_value(2) / (input_value(2) + input_value(2))
            wt_expected(begg:,:) = 0._r8  ! initialize
-           wt_expected(begg:,4) = (/ 0._r8, 0._r8, expctd(3) /)  ! landunit 4
-           wt_expected(begg:,5) = (/ expctd(1), expctd(2), 0._r8 /)  ! ...
-           wt_expected(begg:,6) = (/ expctd(2), expctd(1), 0._r8 /)  ! ...
-           wt_expected(begg:,7) = (/ 0._r8, 0._r8, expctd(3) /)  ! landunit 7
+           wt_expected(begg:,istice_mec) = (/ 0._r8, 0._r8, expctd(3) /)
+           wt_expected(begg:,istdlak) = (/ expctd(1), expctd(2), 0._r8 /)
+           wt_expected(begg:,istwet) = (/ expctd(2), expctd(1), 0._r8 /)
+           wt_expected(begg:,isturb_tbd) = (/ 0._r8, 0._r8, expctd(3) /)
         else if (test == 4) then  ! n_dom_landunits = 3
-           expctd(1) = 40._r8 / 85._r8
-           expctd(2) = 30._r8 / 85._r8
-           expctd(3) = 15._r8 / 85._r8
-           expctd(4) = 40._r8 / 81._r8
-           expctd(5) = 30._r8 / 81._r8
-           expctd(6) = 11._r8 / 81._r8
-           expctd(7) = 35._r8 / 85._r8
-           expctd(8) = 35._r8 / 85._r8
-           expctd(9) = 15._r8 / 85._r8
+           expctd(1) = input_value(1) / &
+                      (input_value(1) + input_value(3) + input_value(4))
+           expctd(2) = input_value(3) / &
+                      (input_value(1) + input_value(3) + input_value(4))
+           expctd(3) = input_value(4) / &
+                      (input_value(1) + input_value(3) + input_value(4))
+           expctd(4) = input_value(1) / &
+                      (input_value(1) + input_value(3) + input_value(5))
+           expctd(5) = input_value(3) / &
+                      (input_value(1) + input_value(3) + input_value(5))
+           expctd(6) = input_value(5) / &
+                      (input_value(1) + input_value(3) + input_value(5))
+           expctd(7) = input_value(2) / &
+                      (input_value(2) + input_value(2) + input_value(4))
+           expctd(8) = input_value(2) / &
+                      (input_value(2) + input_value(2) + input_value(4))
+           expctd(9) = input_value(4) / &
+                      (input_value(2) + input_value(2) + input_value(4))
            wt_expected(begg:,:) = 0._r8  ! initialize
-           wt_expected(begg:,1) = (/ expctd(3), expctd(6), expctd(9) /)  ! ... 1
-           wt_expected(begg:,4) = (/ 0._r8, 0._r8, expctd(8) /)  ! landunit 4
-           wt_expected(begg:,5) = (/ expctd(1), expctd(5), 0._r8 /)  ! ... 5
-           wt_expected(begg:,6) = (/ expctd(2), expctd(4), 0._r8 /)  ! ... 6
-           wt_expected(begg:,7) = (/ 0._r8, 0._r8, expctd(7) /)  ! landunit 7
+           wt_expected(begg:,istsoil) = (/ expctd(3), expctd(6), expctd(9) /)
+           wt_expected(begg:,istice_mec) = (/ 0._r8, 0._r8, expctd(8) /)
+           wt_expected(begg:,istdlak) = (/ expctd(1), expctd(5), 0._r8 /)
+           wt_expected(begg:,istwet) = (/ expctd(2), expctd(4), 0._r8 /)
+           wt_expected(begg:,isturb_tbd) = (/ 0._r8, 0._r8, expctd(7) /)
         end if
 
         call check_sums_equal_1( wt_expected, begg, "test_check_sums_add_to_1", &
