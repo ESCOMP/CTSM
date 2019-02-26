@@ -167,6 +167,17 @@ Changes answers relative to baseline: YES
     agreed that it isn't worth trying to understand these other
     (isolated) differences.
 
+    Also note: While most f09_g17 tests are bit-for-bit with the earlier
+    tag (because now use_init_interp is .false. for those tests),
+    `SMS_Ld2_D.f09_g17.I1850Clm50BgcCropCmip6.cheyenne_intel.clm-basic_interp`
+    differs in some glc forcing fields for a few grid cells in
+    Antarctica. This is perhaps not surprising, since this test needs to
+    use interpolation to get fields for the Antarctica virtual columns;
+    so, while I don't completely understand the cause of these answer
+    changes, I suspect the root cause is similar to the isolated answer
+    changes I saw sprinkled around the world for
+    `ERP_Ld5.f19_g17.I1850Clm50Bgc.cheyenne_intel.clm-default`.
+
    If bitwise differences were observed, how did you show they were no worse
    than roundoff? N/A
 
