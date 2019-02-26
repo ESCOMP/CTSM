@@ -12,6 +12,7 @@ from ctsm.machine_utils import get_machine_name, make_link
 from ctsm.machine import create_machine
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_NOBATCH
 
 from CIME.test_utils import get_tests_from_xml  # pylint: disable=import-error
 from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-error
@@ -44,7 +45,12 @@ def main(cime_path):
     args = _commandline_args()
     process_logging_args(args)
     logger.info('Running on machine: %s', args.machine_name)
+    if args.job_launcher_nobatch:
+        job_launcher_type = JOB_LAUNCHER_NOBATCH
+    else:
+        job_launcher_type = None
     machine = create_machine(machine_name=args.machine_name,
+                             job_launcher_type=job_launcher_type,
                              defaults=MACHINE_DEFAULTS,
                              account=args.account,
                              job_launcher_queue=args.job_launcher_queue,
@@ -268,6 +274,10 @@ or tests listed individually on the command line (via the -t/--testname argument
                         help='String giving extra arguments to pass to create_test\n'
                         '(To allow the argument parsing to accept this, enclose the string\n'
                         'in quotes, with a leading space, as in " --my-arg foo".)')
+
+    parser.add_argument('--job-launcher-nobatch', action='store_true',
+                        help='Run create_test on the login node, even if this machine\n'
+                        'is set up to submit create_test to a compute node by default.')
 
     parser.add_argument('--job-launcher-queue',
                         help='Queue to which the create_test command is submitted.\n'
