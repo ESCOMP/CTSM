@@ -1,4 +1,114 @@
 ===============================================================
+Tag name:  ctsm1.0.dev029
+Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
+Date:  Tue Feb 26 13:33:30 MST 2019
+One-line Summary: Collapse landunits to the N most dominant
+
+Purpose of changes
+------------------
+
+ Allows the collapse to fewer landunits using the concept of 
+ N most dominant for the purpose of faster runs, eg in the context
+ of NWP (Numerical Weather Prediction).
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #581
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist variable n_dom_landunits with valid integer values from 0 to
+ max_lunit currently equal to 9, where 0 means “do nothing” and other
+ values determine the number of active landunits when running the model.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+ ERS_D_Ld10.f10_f10_musgs.IHistClm50BgcCropGs.cheyenne_intel.clm-collapse_to_dominant_decStart
+ now replaces (by combining with) this test introduced in ctsm1.0.dev026
+ ERS_D_Ld10.f10_f10_musgs.IHistClm50BgcCropGs.cheyenne_intel.clm-collapse_nat_pfts_decStart
+ I added subroutine test_collapse_to_dom_landunits to test_surfrdUtils.pf
+ to include new Unit Tests. In same file I renamed
+ subroutine test_collapse_nat_pfts to test_collapse_to_dom_pfts
+ to accurately describe the contents of the subroutine.
+
+Code reviewed by:
+ Erik Kluzek
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- 
+    hobart ------ 
+
+CTSM tag used for the baseline comparisons: 
+ ctsm1.0.dev027
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ No
+
+Detailed list of changes
+------------------------
+
+ Replaced existing subroutine collapse_nat_pfts with
+ subroutine collapse_to_dominant which can collapse to the
+ N dominant landunits or N dominant pfts by performing the
+ same actions on the data.
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/639
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev027
 Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
 Date: Tue Feb 19 12:57:12 MST 2019
