@@ -1,4 +1,81 @@
 ===============================================================
+Tag name:  ctsm1.0.dev030
+Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
+Date:  Tue Feb 27 09:32:17 MST 2019
+One-line Summary: Limit landunit presence with thresholds set in the namelist
+
+Purpose of changes
+------------------
+
+ Introduce user-defined namelist parameters to use as thresholds
+ above which landunit areas are kept and
+ below which landunit areas are removed.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #581
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist variables with valid integer values from 0 to 100, where
+ 0 means "do nothing" and other values determine the threshold above
+ which to keep the landunit in a gridcell. The new variables are:
+ toosmall_soil
+ toosmall_crop
+ toosmall_glacier
+ toosmall_lake
+ toosmall_wetland
+ toosmall_urb_tbd
+ toosmall_urb_hd
+ toosmall_urb_md
+
+---------------------------------------------
+
+Changes to tests or testing: Yes
+ New standard suite test
+ <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50BgcCropGs" testmods="clm/rm_individual_lunits_decStart">
+ and new unit test subroutine test_collapse_individual_lunits
+ in test_surfrdUtils.pf
+
+Code reviewed by: Erik Kluzek
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm):
+
+    cheyenne ---- 
+    hobart ------ 
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev029
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Detailed list of changes
+------------------------
+ Introduced call to new subroutine collapse_individual_lunits that uses
+ the user-defined namelist variables listed above to determine whether
+ a landunit gets kept or removed from a gridcell.
+
+Pull Requests that document the changes (include PR ids): #641
+ (https://github.com/ESCOMP/ctsm/pull/641)
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev027
 Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
 Date: Tue Feb 19 12:57:12 MST 2019
