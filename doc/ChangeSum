@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev029   slevis 02/26/2019 Collapse landunits to the N most dominant
   ctsm1.0.dev028    sacks 02/26/2019 Interpolate out-of-the-box initial conditions and remove expensive tests
   ctsm1.0.dev027   negins 02/19/2019 non-constant time init for soil hydrology types are moved to SoilHydrologyType.F90
   ctsm1.0.dev026   slevis 02/05/2019 Collapse unmanaged PFTs to the N most dominant
