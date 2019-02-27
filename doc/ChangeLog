@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev029
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
-Date:  Tue Feb 26 22:17:28 MST 2019
+Date:  Tue Feb 26 23:29:21 MST 2019
 One-line Summary: Collapse landunits to the N most dominant
 
 Purpose of changes
@@ -20,7 +20,7 @@ Issues fixed (include CTSM Issue #): #581
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
 
-Does this tag change answers significantly for any of the following physics configurations?
+Does this tag change answers significantly for any of the following physics configurations? No
 
     [Put an [X] in the box for any configuration with significant answer changes.]
 
@@ -31,26 +31,27 @@ Does this tag change answers significantly for any of the following physics conf
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions):
+Caveats for users (e.g., need to interpolate initial conditions): None
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
  New namelist variable n_dom_landunits with valid integer values from 0 to
  max_lunit currently equal to 9, where 0 means “do nothing” and other
  values determine the number of active landunits when running the model.
 
-Changes made to namelist defaults (e.g., changed parameter values):
+Changes made to namelist defaults (e.g., changed parameter values): None
 
-Changes to the datasets (e.g., parameter, surface or initial files):
+Changes to the datasets (e.g., parameter, surface or initial files): None
 
-Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+Substantial timing or memory changes: None
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
-NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   There is a question left in on whether the collapse call needs to also
+   be moved to inside dynamic landunits reading.
 
-Changes to tests or testing:
+Changes to tests or testing: Yes
  ERS_D_Ld10.f10_f10_musgs.IHistClm50BgcCropGs.cheyenne_intel.clm-collapse_to_dominant_decStart
  now replaces (by combining with) this test introduced in ctsm1.0.dev026
  ERS_D_Ld10.f10_f10_musgs.IHistClm50BgcCropGs.cheyenne_intel.clm-collapse_nat_pfts_decStart
@@ -59,8 +60,7 @@ Changes to tests or testing:
  subroutine test_collapse_nat_pfts to test_collapse_to_dom_pfts
  to accurately describe the contents of the subroutine.
 
-Code reviewed by:
- Erik Kluzek
+Code reviewed by: Erik Kluzek
 
 CTSM testing:
 
@@ -68,15 +68,7 @@ CTSM testing:
 
   build-namelist tests:
 
-    cheyenne - 
-
-  tools-tests (test/tools):
-
-    cheyenne - 
-
-  PTCLM testing (tools/shared/PTCLM/test):
-
-     cheyenne - 
+    cheyenne - PASS
 
   regular tests (aux_clm):
 
@@ -90,8 +82,7 @@ CTSM tag used for the baseline comparisons:
 Answer changes
 --------------
 
-Changes answers relative to baseline:
- No
+Changes answers relative to baseline: No
 
 Detailed list of changes
 ------------------------
@@ -101,9 +92,9 @@ Detailed list of changes
  N dominant landunits or N dominant pfts by performing the
  same actions on the data.
 
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
 
-Pull Requests that document the changes (include PR ids):
+Pull Requests that document the changes (include PR ids): #639
  https://github.com/ESCOMP/ctsm/pull/639
 
 ===============================================================
