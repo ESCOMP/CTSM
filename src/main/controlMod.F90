@@ -121,6 +121,7 @@ contains
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
+    use landunit_varcon                  , only : max_lunit
     !
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
@@ -252,9 +253,11 @@ contains
     ! maxpatch_pft will eventually be removed from the perl and the namelist
     namelist /clm_inparm/ maxpatch_pft
 
-    ! Number of dominant pfts. Enhance ctsm performance by reducing the
-    ! number of active pfts to n_dom_pfts.
+    ! Number of dominant pfts and landunits. Enhance ctsm performance by
+    ! reducing the number of active pfts to n_dom_pfts and
+    ! active landunits to n_dom_landunits.
     namelist /clm_inparm/ n_dom_pfts
+    namelist /clm_inparm/ n_dom_landunits
 
     ! Thresholds above which the model keeps the soil, crop, glacier, lake,
     ! wetland, and urban landunits
@@ -372,6 +375,10 @@ contains
 
        if (n_dom_pfts < 0) then
           call endrun(msg=' ERROR: expecting n_dom_pfts between 0 and 14 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+       if (n_dom_landunits < 0 .or. n_dom_landunits > max_lunit) then
+          call endrun(msg=' ERROR: expecting n_dom_landunits between 0 and  max_lunit where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
@@ -682,10 +689,12 @@ contains
     ! maxpatch_pft will eventually be removed from the perl and the namelist
     call mpi_bcast(maxpatch_pft, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    ! Number of dominant pfts. Enhance ctsm performance by reducing the
-    ! number of active pfts to n_dom_pfts.
+    ! Number of dominant pfts and landunits. Enhance ctsm performance by
+    ! reducing the number of active pfts to n_dom_pfts and
+    ! active landunits to n_dom_landunits.
     ! slevis: maxpatch_pft is MPI_LOGICAL? Doesn't matter since obsolete.
     call mpi_bcast(n_dom_pfts, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(n_dom_landunits, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! Thresholds above which the model keeps the soil, crop, glacier, lake,
     ! wetland, and urban landunits
@@ -900,6 +909,7 @@ contains
        write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     end if
     write(iulog,*) '   Number of ACTIVE PFTS (0 means input pft data NOT collapsed to n_dom_pfts) =', n_dom_pfts
+    write(iulog,*) '   Number of ACTIVE LANDUNITS (0 means input landunit data NOT collapsed to n_dom_landunits) =', n_dom_landunits
     write(iulog,*) '   Threshold above which the model keeps the soil landunit =', toosmall_soil
     write(iulog,*) '   Threshold above which the model keeps the crop landunit =', toosmall_crop
     write(iulog,*) '   Threshold above which the model keeps the glacier landunit =', toosmall_glacier
