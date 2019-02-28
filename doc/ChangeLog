@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev030
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
-Date:  Tue Feb 27 09:32:17 MST 2019
+Date:  Tue Feb 27 22:39:17 MST 2019
 One-line Summary: Limit landunit presence with thresholds set in the namelist
 
 Purpose of changes
@@ -54,7 +54,7 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- 
+    cheyenne ---- OK
     hobart ------ 
 
 CTSM tag used for the baseline comparisons: ctsm1.0.dev029
@@ -72,7 +72,7 @@ Detailed list of changes
  a landunit gets kept or removed from a gridcell.
 
 Pull Requests that document the changes (include PR ids): #641
- (https://github.com/ESCOMP/ctsm/pull/641)
+ https://github.com/ESCOMP/ctsm/pull/641
 
 ===============================================================
 ===============================================================
