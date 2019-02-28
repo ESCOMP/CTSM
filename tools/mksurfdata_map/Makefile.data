@@ -114,7 +114,7 @@ DEBUG:
 standard : $(STANDARD)
 
 global-present : FORCE
-	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res $(STANDARD_RES) $(BACKGROUND)
+	$(MKSURFDATA) -no-crop -vic -glc_nec 10 -y 2000 -res $(STANDARD_RES) $(BACKGROUND)
 
 global-present-f05 : FORCE
 	$(MKSURFDATA) -no-crop -glc_nec 10 -y 1850,2000 -res 0.47x0.63 $(BACKGROUND)
@@ -150,9 +150,40 @@ global-transient-f05 : FORCE
 #
 # global with future scenarios
 #
-global-future : FORCE
+global-future : global-SSP1-2.6 global-SSP3-7.0 global-SSP5-3.4 global-SSP2-4.5 \
+                global-SSP1-1.9 global-SSP4-3.4 global-SSP4-6.0 global-SSP5-8.5
+
+global-SSP1-2.6 : FORCE
 	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2100 \
-	-ssp_rcp SSP1-2.6,SSP3-7.0,SSP5-3.4,SSP2-4.5,SSP1-1.9,SSP4-3.4,SSP4-6.0,SSP5-8.5 -res $(FUTURE_RES) $(BACKGROUND)
+	-ssp_rcp SSP1-2.6 -res $(FUTURE_RES) $(BACKGROUND)
+
+global-SSP3-7.0 : FORCE
+	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP3-7.0 -res $(FUTURE_RES) $(BACKGROUND)
+
+global-SSP5-3.4 : FORCE
+	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP5-3.4 -res $(FUTURE_RES) $(BACKGROUND)
+
+global-SSP2-4.5 : FORCE
+	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP2-4.5 -res $(FUTURE_RES) $(BACKGROUND)
+
+global-SSP1-1.9 : FORCE
+	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP1-1.9 -res $(FUTURE_RES) $(BACKGROUND)
+
+global-SSP4-3.4 : FORCE
+	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP4-3.4 -res $(FUTURE_RES) $(BACKGROUND)
+
+global-SSP4-6.0 : FORCE
+	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP4-6.0 -res $(FUTURE_RES) $(BACKGROUND)
+
+global-SSP5-8.5 : FORCE
+	$(MKSURFDATA) -no-crop -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP5-8.5 -res $(FUTURE_RES) $(BACKGROUND)
 
 #
 # tropics
@@ -237,10 +268,40 @@ crop-global-transient-f05 : FORCE
 #
 # Crop with future scenarios
 #
-crop-global-future : FORCE
-	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
-	-ssp_rcp SSP1-2.6,SSP3-7.0,SSP5-3.4,SSP2-4.5,SSP1-1.9,SSP4-3.4,SSP4-6.0,SSP5-8.5 -res $(FUTURE_RES) $(BACKGROUND)
+crop-global-future : crop-global-SSP1-2.6 crop-global-SSP3-7.0 crop-global-SSP5-3.4 crop-global-SSP2-4.5 \
+                     crop-global-SSP1-1.9 crop-global-SSP4-3.4 crop-global-SSP4-6.0 crop-global-SSP5-8.5
 
+crop-global-SSP1-2.6 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP1-2.6 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP3-7.0 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP3-7.0 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP5-3.4 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP5-3.4 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP2-4.5 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP2-4.5 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP1-1.9 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP1-1.9 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP4-3.4 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP4-3.4 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP4-6.0 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP4-6.0 -res $(FUTURE_RES) $(BACKGROUND)
+
+crop-global-SSP5-8.5 : FORCE
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2100 \
+	-ssp_rcp SSP5-8.5 -res $(FUTURE_RES) $(BACKGROUND)
 
 #
 # urban
