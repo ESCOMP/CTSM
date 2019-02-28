@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 950;
+my $ntests = 946;
 if ( defined($opts{'compare'}) ) {
    $ntests += 600;
 }
@@ -218,7 +218,7 @@ print "==================================================\n";
 
 # Exercise a bunch of options
 my $options = "-co2_ppmv 250 ";
-   $options .= " -res 0.9x1.25 -ssp_rcp SSP-2.6 -envxml_dir .";
+   $options .= " -res 0.9x1.25 -ssp_rcp SSP1-2.6 -envxml_dir .";
 
    &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
@@ -274,7 +274,7 @@ print "=========================================================================
 
 # irrig, verbose, clm_demand, ssp_rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP2-2.6", "-test", "-sim_year 1850",
+foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
@@ -283,7 +283,7 @@ foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp S
                      ) {
    my $file = $startfile;
    &make_env_run();
-   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+   eval{ system( "$bldnml -res 0.9x1.25 -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
    $cfiles->shownmldiff( "default", $mode );
@@ -320,7 +320,7 @@ foreach my $options (
                      ) {
    my $file = $startfile;
    &make_env_run();
-   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+   eval{ system( "$bldnml -res 0.9x1.25 -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
    $cfiles->shownmldiff( "default", $mode );
@@ -1277,8 +1277,10 @@ foreach my $res ( @tran_res ) {
 # Transient ssp_rcp scenarios
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
-my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
-foreach my $usecase ( "1850_control", "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient", "1850-2100_rcp6_transient", "1850-2100_rcp8.5_transient" ) {
+my @tran_res = ( "0.9x1.25", "1.9x2.5", "10x15" );
+foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient",
+                      "1850-2100_SSP5-3.4_transient", "1850-2100_SSP2-4.5_transient", "1850-2100_SSP1-1.9_transient",
+                      "1850-2100_SSP4-6.0_transient" ) {
    foreach my $res ( @tran_res ) {
       $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
       &make_env_run();

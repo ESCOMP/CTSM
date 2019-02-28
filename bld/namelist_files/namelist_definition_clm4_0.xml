@@ -649,6 +649,16 @@ Horizontal grid resolutions for mksurfdata input files
 Check that the resolution and land-mask is valid before continuing.
 </entry>
 
+<entry id="ssp_rcp" type="char*8" category="default_settings"
+       group="default_settings"  
+       valid_values="hist">
+Shared Socioeconomic Pathway (SSP) and Representative Concentration Pathway (RCP) combination for future scenarios 
+The form is SSPn-m.m Where n is the SSP number and m.m is RCP radiative forcing at peak or 2100 in W/m^2
+n is just the whole number of the specific SSP scenario. The lower numbers have higher mitigation
+- the higher numbers less mitigation, more than one SSP can result in the same RCP forcing
+hist means do NOT use a future scenario, just use historical data.
+</entry>
+
 <entry id="note" type="integer"  category="default_settings"
        group="default_settings" valid_values="0,1" >
 Add a note to the output namelist about the options given to build-namelist

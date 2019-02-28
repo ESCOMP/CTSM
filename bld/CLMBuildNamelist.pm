@@ -1124,13 +1124,13 @@ sub setup_cmdl_ssp_rcp {
   if ( $opts->{$var} ne "default" ) {
     $val = $opts->{$var};
   } else {
-    $val = $defaults->get_value($var);
+    $val = remove_leading_and_trailing_quotes( $defaults->get_value($var) );
   }
   $nl_flags->{'ssp_rcp'} = $val;
   $opts->{'ssp_rcp'} = $nl_flags->{'ssp_rcp'};
   my $group = $definition->get_group_name($var);
-  $nl->set_variable_value($group, $var, $val);
-  if (  ! $definition->is_valid_value( $var, $val ) ) {
+  $nl->set_variable_value($group, $var, quote_string($val) );
+  if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
     my @valid_values   = $definition->get_valid_values( $var );
     $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
   }
@@ -4195,7 +4195,7 @@ sub check_use_case_name {
                   "in namelist_files/use_cases/README\n";
   my $desc = "[a-zA-Z0-9]*";
   my $ssp_rcp  = "SSP[0-9]-[0-9\.]+";
-  if (      $use_case =~ /^[0-9]+-[0-9]+([a-zA-Z0-9_\.]*)_transient$/ ) {
+  if (      $use_case =~ /^[0-9]+-[0-9]+([a-zA-Z0-9_\.-]*)_transient$/ ) {
     my $string = $1;
     if (      $string =~ /^_($ssp_rcp)_*($desc)$/ ) {
        # valid name
