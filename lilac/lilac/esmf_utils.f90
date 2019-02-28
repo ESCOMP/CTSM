@@ -2,7 +2,6 @@ module esmf_utils
 
   ! Wrappers and derived types exposing ESMF components to LILAC
 
-
 #include "ESMF.h"
   use ESMF
 
@@ -32,7 +31,6 @@ module esmf_utils
   ! Consider renaming ESMFInfoType (add lilac to name)
   type, public :: ESMFInfoType
      private
-     character(len=ESMF_MAXSTR) :: name
 
      type(ESMF_VM)                :: vm
      type(ESMF_State)             :: land_import
@@ -52,26 +50,15 @@ module esmf_utils
 
 contains
 
-  subroutine init(self, name, atmos_register, land_register, cpl_register)
+  subroutine start(self, rc)
     implicit none
-    class(ESMFInfoType), intent(inout)         :: self
-    character(len=ESMF_MAXSTR), intent(in)     :: name
-    procedure(userRoutine)    :: atmos_register
-    procedure(userRoutine)    :: land_register
-    procedure(userCplRoutine) :: cpl_register
+    integer, intent(in) :: rc=ESMF_SUCCESS
 
-    ! Local variables
-    character(len=ESMF_MAXSTR)            :: cname1, cname2, cplname
-    integer                               :: localPet, petCount, rc=ESMF_SUCCESS
+    integer             :: localPet, petCount
 
-    character(len=*), parameter :: subname=trim(modname)//':(init) '
+    character(len=*), parameter :: subname=trim(modname)//':(start) '
 
-    call ESMF_LogWrite(subname//"esmf_info%init()", ESMF_LOGMSG_INFO)
-
-    self%name = trim(name)
-
-    ! Create section
-    !-------------------------------------------------------------------------
+    call ESMF_LogWrite(subname//"esmf_info%start()", ESMF_LOGMSG_INFO)
 
     ! Initialize framework and get back default global VM
 
@@ -83,6 +70,26 @@ contains
     call ESMF_VMGet(self%vm, petCount=petCount, localPet=localPet, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
+  end subroutine start
+
+  subroutine init(self, atmos_register, land_register, cpl_register, rc)
+    implicit none
+    class(ESMFInfoType), intent(inout)         :: self
+    procedure(userRoutine)                     :: atmos_register
+    procedure(userRoutine)                     :: land_register
+    procedure(userCplRoutine)                  :: cpl_register
+    integer, intent(in)                        :: rc=ESMF_SUCCESS
+
+    ! Local variables
+    character(len=ESMF_MAXSTR)            :: cname1, cname2, cplname
+    integer                               :: rc=ESMF_SUCCESS
+
+    character(len=*), parameter :: subname=trim(modname)//':(init) '
+
+    call ESMF_LogWrite(subname//"esmf_info%init()", ESMF_LOGMSG_INFO)
+
+    ! Create section
+    !-------------------------------------------------------------------------
     ! Create the 2 model components and a coupler
     cname1 = "land"
     ! use petList to define land on all PET
@@ -142,19 +149,15 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     call ESMF_LogWrite(subname//"Atmosphere Initialize finished", ESMF_LOGMSG_INFO)
 
-    ! call ESMF_CPLCompInitialize twice (once for each grid comp)
-
   end subroutine init
 
-  subroutine run(self)
+  subroutine run(self, rc)
     implicit none
     class(ESMFInfoType), intent(inout)  :: self
     integer :: rc=ESMF_SUCCESS
     character(len=*), parameter :: subname=trim(modname)//':(run) '
 
     call ESMF_LogWrite(subname//"esmf_info%run()", ESMF_LOGMSG_INFO)
-
-    ! TODO: need some help on order of imports/exports/runs and whether the land/atm both need import/export states
 
     ! atmosphere run
     ! copy the atmos state and put it into atmos export
@@ -163,8 +166,7 @@ contains
     call ESMF_LogWrite(subname//"Atmosphere Run returned", ESMF_LOGMSG_INFO)
 
     ! coupler run
-    call ESMF_CplCompRun(self%cpl_comp, importState=self%atmos_export, exportState=self%land_import, &
-         rc=rc)
+    call ESMF_CplCompRun(self%cpl_comp, importState=self%atmos_export, exportState=self%land_import, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     call ESMF_LogWrite(subname//"Coupler Run returned", ESMF_LOGMSG_INFO)
 
@@ -184,7 +186,7 @@ contains
 
   end subroutine run
 
-  subroutine final(self)
+  subroutine final(self, rc)
     implicit none
     class(ESMFInfoType), intent(inout)  :: self
     integer :: rc=ESMF_SUCCESS

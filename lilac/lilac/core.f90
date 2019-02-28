@@ -11,6 +11,7 @@ module lilac
   !--------------------------------------------------------------------------
   ! Public interfaces
   !--------------------------------------------------------------------------
+  public :: start
   public :: init
   public :: run
   public :: final
@@ -22,8 +23,7 @@ module lilac
   type, public :: LilacType
      private
 
-     type(ESMFInfoType)             :: esmf_info
-     character(len=ESMF_MAXSTR)     :: name
+     type(ESMFInfoType) :: esmf_info
 
    contains
      procedure, public  :: init  => init
@@ -55,66 +55,85 @@ module lilac
 
 contains
 
-  subroutine init(self, name)
+  subroutine start(self, rc)
+    implicit none
+    class(LilacType), intent(inout)        :: self
+    integer, intent(in)                    :: rc=ESMF_SUCCESS
+
+    character(len=*), parameter :: subname=trim(modname)//':(init) '
+
+    call ESMF_LogWrite(subname//"Starting lilac and setting up ESMF", ESMF_LOGMSG_INFO)
+
+    ! Initialize ESMF structures
+    call self%esmf_info%start(rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+  end subroutine start
+
+  subroutine init(self, clock, x2a_state, a2x_state, rc)
     implicit none
     class(LilacType), intent(inout)  :: self
-    character(len=ESMF_MAXSTR), intent(in)     :: name
+    type(ESMF_Clock)                 :: clock  ! Input synchronization clock
+    type(ESMF_State)                 :: x2a_state
+    type(ESMF_State)                 :: a2x_state
+    integer, intent(in)              :: rc=ESMF_SUCCESS
 
     character(len=*), parameter :: subname=trim(modname)//':(init) '
 
     call ESMF_LogWrite(subname//"Initializing lilac", ESMF_LOGMSG_INFO)
 
-    self%name = trim(name)
-
-    ! Initialize ESMF structures
-    call self%esmf_info%init(name, atmos_register, land_register, cpl_register)
+    call self%esmf_info%start(atmos_register, land_register, cpl_register, rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
   end subroutine init
 
-  subroutine run(self)
+  subroutine run(self, clock, x2a_state, a2x_state, rc)
     implicit none
     class(LilacType), intent(inout)  :: self
+    type(ESMF_Clock)                 :: clock  ! Input synchronization clock
+    type(ESMF_State)                 :: x2a_state
+    type(ESMF_State)                 :: a2x_state
+    integer, intent(in)              :: rc=ESMF_SUCCESS
 
     character(len=*), parameter :: subname=trim(modname)//':(run) '
 
     call ESMF_LogWrite(subname//"Running lilac", ESMF_LOGMSG_INFO)
 
-    call self%esmf_info%run()
+    call self%esmf_info%run(rc, )
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
   end subroutine run
 
-  subroutine final(self)
+  subroutine final(self, rc)
     implicit none
     class(LilacType), intent(inout)  :: self
+    integer, intent(in)              :: rc=ESMF_SUCCESS
 
     character(len=*), parameter :: subname=trim(modname)//':(final) '
 
     call ESMF_LogWrite(subname//"Finalizing lilac", ESMF_LOGMSG_INFO)
 
-    call self%esmf_info%final()
+    call self%esmf_info%final(rc)
 
   end subroutine final
 
   subroutine atmos_register(comp, rc)
     type(ESMF_GridComp)   :: comp   ! must not be optional
-    integer, intent(out)  :: rc     ! must not be optional
+    integer, intent(in)   :: rc=ESMF_SUCCESS
+
     character(len=*), parameter :: subname=trim(modname)//':(atmos_register) '
 
     ! Set the entry points for standard ESMF Component methods
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, &
-         userRoutine=atmos_init, rc=rc)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, userRoutine=atmos_init, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, &
-         userRoutine=atmos_copy_atm_to_lilac, phase=1, rc=rc)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, userRoutine=atmos_copy_atm_to_lilac, phase=1, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, &
-         userRoutine=atmos_copy_lilac_to_atm, phase=2, rc=rc)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, userRoutine=atmos_copy_lilac_to_atm, phase=2, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, &
-         userRoutine=atmos_final, rc=rc)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, userRoutine=atmos_final, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
     rc = ESMF_SUCCESS
