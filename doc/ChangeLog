@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev030
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
-Date:  Tue Feb 28 07:43:17 MST 2019
+Date:  Tue Feb 28 16:27:17 MST 2019
 One-line Summary: Limit landunit presence with thresholds set in the namelist
 
 Purpose of changes
@@ -70,6 +70,9 @@ Detailed list of changes
  Introduced call to new subroutine collapse_individual_lunits that uses
  the user-defined namelist variables listed above to determine whether
  a landunit gets kept or removed from a gridcell.
+
+ Introduced error checks that do not allow coexistence of transient simulations
+ and the toosmall_* variables OR the n_dom_pfts/n_dom_landunits variables.
 
 Pull Requests that document the changes (include PR ids): #641
  https://github.com/ESCOMP/ctsm/pull/641
