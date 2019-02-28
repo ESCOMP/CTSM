@@ -2316,12 +2316,25 @@ sub setup_logic_do_transient_pfts {
    # generated
    my $cannot_be_true = "";
 
+   my $n_dom_pfts = $nl->get_value( 'n_dom_pfts' );
+   my $n_dom_landunits = $nl->get_value( 'n_dom_landunits' );
+   my $toosmall_soil = $nl->get_value( 'toosmall_soil' );
+   my $toosmall_crop = $nl->get_value( 'toosmall_crop' );
+   my $toosmall_glacier = $nl->get_value( 'toosmall_glacier' );
+   my $toosmall_lake = $nl->get_value( 'toosmall_lake' );
+   my $toosmall_wetland = $nl->get_value( 'toosmall_wetland' );
+   my $toosmall_urb_tbd = $nl->get_value( 'toosmall_urb_tbd' );
+   my $toosmall_urb_hd = $nl->get_value( 'toosmall_urb_hd' );
+   my $toosmall_urb_md = $nl->get_value( 'toosmall_urb_md' );
+
    if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
       $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
    } elsif (&value_is_true($nl->get_value('use_cndv'))) {
       $cannot_be_true = "$var cannot be combined with use_cndv";
    } elsif (&value_is_true($nl->get_value('use_fates'))) {
       $cannot_be_true = "$var cannot be combined with use_fates";
+   } elsif ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urb_tbd > 0 || $toosmall_urb_hd > 0 || $toosmall_urb_md > 0) {
+      $cannot_be_true = "$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soi > 0, toosmall_crop > 0, toosmall_glacier > 0, toosmall_lake > 0, toosmall_wetland > 0, toosmall_urb_tbd > 0, toosmall_urb_hd > 0, toosmall_urb_md > 0";
    }
 
    if ($cannot_be_true) {
@@ -2370,6 +2383,17 @@ sub setup_logic_do_transient_crops {
    # generated
    my $cannot_be_true = "";
 
+   my $n_dom_pfts = $nl->get_value( 'n_dom_pfts' );
+   my $n_dom_landunits = $nl->get_value( 'n_dom_landunits' );
+   my $toosmall_soil = $nl->get_value( 'toosmall_soil' );
+   my $toosmall_crop = $nl->get_value( 'toosmall_crop' );
+   my $toosmall_glacier = $nl->get_value( 'toosmall_glacier' );
+   my $toosmall_lake = $nl->get_value( 'toosmall_lake' );
+   my $toosmall_wetland = $nl->get_value( 'toosmall_wetland' );
+   my $toosmall_urb_tbd = $nl->get_value( 'toosmall_urb_tbd' );
+   my $toosmall_urb_hd = $nl->get_value( 'toosmall_urb_hd' );
+   my $toosmall_urb_md = $nl->get_value( 'toosmall_urb_md' );
+
    if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
       $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
    } elsif (&value_is_true($nl->get_value('use_fates'))) {
@@ -2377,6 +2401,8 @@ sub setup_logic_do_transient_crops {
       # do_transient_crops. However, this hasn't been tested, so to be safe,
       # we are not allowing this combination for now.
       $cannot_be_true = "$var has not been tested with ED, so for now these two options cannot be combined";
+   } elsif ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urb_tbd > 0 || $toosmall_urb_hd > 0 || $toosmall_urb_md > 0) {
+      $cannot_be_true = "$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soi > 0, toosmall_crop > 0, toosmall_glacier > 0, toosmall_lake > 0, toosmall_wetland > 0, toosmall_urb_tbd > 0, toosmall_urb_hd > 0, toosmall_urb_md > 0";
    }
 
    if ($cannot_be_true) {

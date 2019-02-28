@@ -908,7 +908,7 @@ contains
     ! - Bare ground could be up to 1 patch before collapsing.
     ! - Pfts could be up to 14 before collapsing if create_crop_landunit = .T.
     ! - Pfts could be up to 16 before collapsing if create_crop_landunit = .F.
-    ! The call does not appear in subroutine dynpft_interp: SHOULD IT?
+    ! TODO Add the same call to subroutine dynpft_interp for transient runs
     call collapse_to_dominant(wt_nat_patch(begg:endg,:), natpft_lb, natpft_ub, &
                               begg, endg, n_dom_pfts)
   end subroutine surfrd_veg_all

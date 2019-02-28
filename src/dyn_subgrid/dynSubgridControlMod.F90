@@ -186,7 +186,11 @@ contains
     ! Check consistency of namelist settingsn
     !
     ! !USES:
-    use clm_varctl     , only : iulog, use_cndv, use_fates, use_cn, use_crop
+    use clm_varctl, only : iulog, use_cndv, use_fates, use_cn, use_crop, &
+                           n_dom_pfts, n_dom_landunits, toosmall_soil, &
+                           toosmall_crop, toosmall_glacier, toosmall_lake, &
+                           toosmall_wetland, toosmall_urb_tbd, &
+                           toosmall_urb_hd, toosmall_urb_md
     !
     ! !ARGUMENTS:
     !
@@ -220,6 +224,23 @@ contains
        end if
        if (use_fates) then
           write(iulog,*) 'ERROR: do_transient_pfts is incompatible with use_fates'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+    end if
+
+    if (dyn_subgrid_control_inst%do_transient_pfts .or. dyn_subgrid_control_inst%do_transient_crops) then
+       if (n_dom_pfts > 0 .or. n_dom_landunits > 0 &
+           .or. toosmall_soil > 0 .or. toosmall_crop > 0 &
+           .or. toosmall_glacier > 0 .or. toosmall_lake > 0 &
+           .or. toosmall_wetland > 0 .or. toosmall_urb_tbd > 0 &
+           .or. toosmall_urb_hd > 0 .or. toosmall_urb_md > 0) then
+          write(iulog,*) 'ERROR: do_transient_pfts and do_transient_crops are &
+                       incompatible with any of the following set to > 0: &
+                       n_dom_pfts > 0, n_dom_landunits > 0, &
+                       toosmall_soil > 0, toosmall_crop > 0, &
+                       toosmall_glacier > 0, toosmall_lake > 0, &
+                       toosmall_wetland > 0, toosmall_urb_tbd > 0, &
+                       toosmall_urb_hd > 0, toosmall_urb_md > 0.'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end if
