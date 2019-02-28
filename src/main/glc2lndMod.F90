@@ -249,6 +249,12 @@ contains
     ! If glc_present is true, then the given fields are all assumed to be valid; if
     ! glc_present is false, then these fields are ignored.
     !
+    ! !USES:
+    use clm_varctl, only : n_dom_pfts, n_dom_landunits, toosmall_soil, &
+                           toosmall_crop, toosmall_glacier, toosmall_lake, &
+                           toosmall_wetland, toosmall_urb_tbd, &
+                           toosmall_urb_hd, toosmall_urb_md
+    !
     ! !ARGUMENTS:
     class(glc2lnd_type), intent(inout) :: this
     type(bounds_type)  , intent(in)    :: bounds
@@ -290,6 +296,23 @@ contains
        if (glc_do_dynglacier) then
           call endrun(' ERROR: With glc_present false (e.g., a stub glc model), glc_do_dynglacier must be false '// &
                errMsg(sourcefile, __LINE__))
+       end if
+    end if
+
+    if (glc_do_dynglacier) then
+       if (n_dom_pfts > 0 .or. n_dom_landunits > 0 &
+           .or. toosmall_soil > 0 .or. toosmall_crop > 0 &
+           .or. toosmall_glacier > 0 .or. toosmall_lake > 0 &
+           .or. toosmall_wetland > 0 .or. toosmall_urb_tbd > 0 &
+           .or. toosmall_urb_hd > 0 .or. toosmall_urb_md > 0) then
+          write(iulog,*) 'ERROR: glc_do_dynglacier is &
+                       incompatible with any of the following set to > 0: &
+                       n_dom_pfts > 0, n_dom_landunits > 0, &
+                       toosmall_soil > 0, toosmall_crop > 0, &
+                       toosmall_glacier > 0, toosmall_lake > 0, &
+                       toosmall_wetland > 0, toosmall_urb_tbd > 0, &
+                       toosmall_urb_hd > 0, toosmall_urb_md > 0.'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end if
 
