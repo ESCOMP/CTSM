@@ -263,15 +263,15 @@ program lilac_data_driver
   ! Coupler to Atmosphere Fields
   FBout = ESMF_FieldBundleCreate(name="x2a_fields", rc=rc)
   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-  
+
   ! Create individual states and add to field bundle
   do n = 1,fldsFrCpl_num
-    ! create field
-    field = ESMF_FieldCreate(lmesh, ESMF_TYPEKIND_R8, meshloc=meshloc, name=trim(fldsFrCpl(n)%stdname), rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    ! add field to field bundle
-    call ESMF_FieldBundleAdd(FBout, (/field/), rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+     ! create field
+     field = ESMF_FieldCreate(lmesh, ESMF_TYPEKIND_R8, meshloc=meshloc, name=trim(fldsFrCpl(n)%stdname), rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+     ! add field to field bundle
+     call ESMF_FieldBundleAdd(FBout, (/field/), rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
   enddo
 
   ! Add FB to state
@@ -281,20 +281,20 @@ program lilac_data_driver
   ! Atmosphere to Coupler Fields
   FBout = ESMF_FieldBundleCreate(name="a2x_fields", rc=rc)
   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-  
+
   ! Create individual states and add to field bundle
   do n = 1,fldsToCpl_num
-    ! create field
-    field = ESMF_FieldCreate(lmesh, ESMF_TYPEKIND_R8, meshloc=meshloc, name=trim(fldsToCpl(n)%stdname), rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    ! initialize with default value
-    call ESMF_FieldGet(lfield, farrayPtr=fldptr, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    ldptr = fldsToCpl(n)%default_value
+     ! create field
+     field = ESMF_FieldCreate(lmesh, ESMF_TYPEKIND_R8, meshloc=meshloc, name=trim(fldsToCpl(n)%stdname), rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+     ! initialize with default value
+     call ESMF_FieldGet(lfield, farrayPtr=fldptr, rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+     ldptr = fldsToCpl(n)%default_value
 
-    ! add field to field bundle
-    call ESMF_FieldBundleAdd(FBout, (/field/), rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+     ! add field to field bundle
+     call ESMF_FieldBundleAdd(FBout, (/field/), rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
   enddo
 
   ! Add FB to state
@@ -308,20 +308,20 @@ program lilac_data_driver
 
   call ESMF_ClockGet(Eclock, currTime=CurrTime, rc=rc)
   do while (CurrTime < StopTime)
-    call ESMF_ClockAdvance(EClock, rc=rc)
-    call ESMF_ClockGet(EClock, currTime=CurrTime, rc=rc)
-    call ESMF_TimeGet( CurrTime, yy=yy, mm=mm, dd=dd, s=sec, rc=rc )
-    write(iunit,'(1x,2a,4i6)') subname,' lilac_drv ymds=',yy,mm,dd,sec
-    call shr_sys_flush(iunit)
+     call ESMF_ClockAdvance(EClock, rc=rc)
+     call ESMF_ClockGet(EClock, currTime=CurrTime, rc=rc)
+     call ESMF_TimeGet( CurrTime, yy=yy, mm=mm, dd=dd, s=sec, rc=rc )
+     write(iunit,'(1x,2a,4i6)') subname,' lilac_drv ymds=',yy,mm,dd,sec
+     call shr_sys_flush(iunit)
 
-    ! can manually override the alarms as needed
-    call ESMF_AlarmRingerOff(EAlarm_rest, rc=rc)
-    if (mod(dd,5)==0 .and. sec==0) call ESMF_AlarmRingerOn(EAlarm_rest,rc)
+     ! can manually override the alarms as needed
+     call ESMF_AlarmRingerOff(EAlarm_rest, rc=rc)
+     if (mod(dd,5)==0 .and. sec==0) call ESMF_AlarmRingerOn(EAlarm_rest,rc)
 
-    ! run lilac
-    write(iunit,*) subname,' call lilac%run',yy,mm,dd,sec
-    call lilac%run(EClock, x2a_state, a2x_state, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+     ! run lilac
+     write(iunit,*) subname,' call lilac%run',yy,mm,dd,sec
+     call lilac%run(EClock, x2a_state, a2x_state, rc=rc)
+     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
   enddo
 
   !----------------------------------------------
@@ -362,14 +362,14 @@ subroutine fldlist_add(num, fldlist, stdname, default_value, units)
   endif
   fldlist(num)%stdname = trim(stdname)
   if(present(default_value)) then
-    fldlist(num)%default_value = default_value
+     fldlist(num)%default_value = default_value
   else
-    fldlist(num)%default_value = 0.
+     fldlist(num)%default_value = 0.
   end if
   if(present(units)) then
-    fldlist(num)%units = trim(units)
+     fldlist(num)%units = trim(units)
   else
-    fldlist(num)%units = ""
+     fldlist(num)%units = ""
   end if
 
 end subroutine fldlist_add
