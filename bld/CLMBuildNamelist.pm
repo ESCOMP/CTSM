@@ -1258,17 +1258,21 @@ sub setup_cmdl_run_type {
 
   my $val;
   my $var = "clm_start_type";
+  my $ic_date = $nl->get_value('start_ymd');
+  my $st_year = int( $ic_date / 10000);
   if (defined $opts->{$var}) {
     if ($opts->{$var} eq "default" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
-                  'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+                  'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
+                  'sim_year'=>$st_year );
     } else {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, quote_string( $opts->{$var} ) );
     }
   } else {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
-                  'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+                  'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
+                  'sim_year'=>$st_year );
   }
   $nl_flags->{'clm_start_type'} = $nl->get_value($var);
 }
@@ -2429,7 +2433,12 @@ sub setup_logic_initial_conditions {
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_how_close" );
           my $close = $nl->get_value("init_interp_how_close");
           foreach my $sim_yr ( split( /,/, $nl->get_value("init_interp_sim_years") )) {
-             my $how_close = abs($st_year - $sim_yr);
+             my $how_close = undef;
+             if ( $nl_flags->{'sim_year'} eq "PtVg" ) {
+                $how_close = abs(1850 - $sim_yr);
+             } else {
+                $how_close = abs($st_year - $sim_yr);
+             }
              if ( ($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close) ) {
                 $close = $how_close;
                 $settings{'sim_year'} = $sim_yr;
@@ -3139,7 +3148,8 @@ sub setup_logic_c_isotope {
         my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
         if ( defined($use_c14_bombspike) && &value_is_true($use_c14_bombspike) ) {
            add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
-                   'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike') );
+                   'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike'),
+                   'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
         }
       } else {
         if ( defined($nl->get_value('use_c14_bombspike')) ||
@@ -3158,7 +3168,8 @@ sub setup_logic_c_isotope {
         my $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
         if ( defined($use_c13_timeseries) && &value_is_true($use_c13_timeseries) ) {
            add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
-                   'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries') );
+                   'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries'), 
+                   'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
         }
       } else {
         if ( defined($nl->get_value('use_c13_timeseries')) ||
@@ -3236,9 +3247,13 @@ sub setup_logic_nitrogen_deposition {
                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
     }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
-                'use_cn'=>$nl_flags->{'use_cn'}, 
-                'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                'hgrid'=>"0.9x1.25" );
+                'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+    if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
+                   'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+    }
   } else {
     # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
     if ( defined($nl->get_value('stream_year_first_ndep')) ||
@@ -3352,7 +3367,7 @@ sub setup_logic_popd_streams {
                     'sim_year_range'=>$nl_flags->{'sim_year_range'}, 'cnfireson'=>$nl_flags->{'cnfireson'});
       }
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'phys'=>$nl_flags->{'phys'},
-                  'cnfireson'=>$nl_flags->{'cnfireson'}, 'hgrid'=>"0.5x0.5" );
+                  'cnfireson'=>$nl_flags->{'cnfireson'}, 'hgrid'=>"0.5x0.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
     } else {
       # If bgc is NOT CN/CNDV or fire_method==nofire then make sure none of the popdens settings are set
       if ( defined($nl->get_value('stream_year_first_popdens')) ||

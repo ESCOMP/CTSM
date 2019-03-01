@@ -1,4 +1,234 @@
 ===============================================================
+Tag name:  release-clm5.0.18
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Feb 13 19:01:26 MST 2019
+One-line Summary: Add NoAnthro compset, reduce fields on fsurdat in mksurfdata_map, initial add of tools/contrib directory
+
+Purpose of this version:
+------------------------
+
+New NoAnthro compsets: I1850Clm50BgcNoAnthro, I1850Clm50SpNoAnthro and tests for it.
+More updates to surface dataset generation, to reduce the fields that are output, removing ones
+that aren't used.
+
+New tools/contrib directory with initial add of some useful scripts for users. Currently unsupported
+and only expected to run on cheyenne. The following scripts are added:
+
+   run_clm_historical ---- does all the setup and submission required to do a 1850-2010 CLM historical
+   subset_surfdata ------- create regional domain, surface data, and rtm directional files by 
+          extracting data from global datasets 
+   singlept -------------- create single point domain, surface data, and datm forcing files by 
+           extracting data from global datasets
+   SpinupStability.ncl --- This script assesses the equilibrium state of a spinup run
+   run_clmtowers --------- This script will run any number of flux tower sites.
+
+Add new default f09 Potential Vegetation (PtVg) surface dataset. For mksurfdata new high resolution
+PFT datasets (at 3x3min) for 2005. New rawdata PFT files from 0850-1849.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many changes missing)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): Fixes #629 #557 #262
+   #629 -- Unused fields from fsurdat files
+   #557 -- No anthro compset
+   #262 -- hirespft option doesn't work for mksurfdata.pl
+
+Science changes since: release-clm5.0.17
+   None
+
+Software changes since: release-clm5.0.17
+   PtVg and pre-millenial raw PFT datasets
+   reduce fields created on fsurdat files
+
+Changes to User Interface since: release-clm5.0.17
+   New NoAnthro compsets: I1850Clm50BgcNoAnthro, I1850Clm50SpNoAnthro
+   Add new option "-vic" to mksurfdata.pl to output fields needed for VIC (only have a few resolutions with VIC on by default)
+   Add 2005 high resolution datasets that can be used for the -hirespft option to mksrfdata.pl
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+    hobart --- OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  regular tests (prealpha):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+    hobart_nag ----- OK
+
+  regular tests (prebeta):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.17
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: Change cime to cime5.6.11 (just a name change)
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime5.6.11
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #619 #620 #634
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #619 -- Begin adding "contrib" tools directory
+  #620 -- Add NoAnthro compset and tests
+  #634 -- Remove some of the fields added to fsurdat files in mksurfdata_map
+
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.17
+Originator(s): Keith Oleson, Bill Sacks
+Date: Wed Jan 23 11:03:22 MST 2019
+One-line Summary: History fields for vertically-resolved sums of soil C and N, and minor fixes
+
+Purpose of this version:
+------------------------
+
+Main change is from Keith Oleson: Add history fields for
+vertically-resolved sums of SOIL1C, SOIL2C, and SOIL3C for C12, C13,
+C14, and similarly for N. New fields are SOILC_vr, C13_SOILC_vr, and
+C14_SOILC_vr, and SOILN_vr. For runs that use the output_bgc usermods,
+including cmip6 runs, we no longer output 'SOIL1C_vr', 'SOIL1N_vr',
+'SOIL2C_vr', 'SOIL2N_vr', 'SOIL3C_vr', 'SOIL3N_vr'; instead we output
+'SOILC_vr', 'SOILN_vr', and similarly for C isotopes.
+
+Also minor fixes:
+- Output cpl hist files in SSP test (resolves ESCOMP/ctsm#61)
+- Remove FATES-related commented-out code in OzoneMod (this has been
+  moved to https://github.com/ESCOMP/ctsm/issues/618)
+- Minor tweak to run_sys_tests
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#61
+
+Science changes since: release-clm5.0.16
+   None
+
+Software changes since: release-clm5.0.16
+   See above
+
+Changes to User Interface since: release-clm5.0.16
+   None
+
+Testing:
+--------
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+    hobart --- not run
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+    hobart --- not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+     hobart --- not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+  regular tests (prealpha):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+  regular tests (prebeta):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.16
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime_cesm2_1_rel_06
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: ctsm1.0.dev025
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/551
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.16
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Jan 15 15:13:43 MST 2019

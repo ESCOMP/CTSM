@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.18     erik 02/13/2019 Add NoAnthro compset, reduce fields on fsurdat in mksurfdata_map, initial add of tools/contrib directory
+release-clm5.0.17    sacks 01/23/2019 History fields for vertically-resolved sums of soil C and N, and minor fixes
+  ctsm1.0.dev025     sacks 01/23/2019 History fields for vertically-resolved sums of soil C and N, and minor fixes
 release-clm5.0.16     erik 01/15/2019 PtVg and ssp_rcp future scenario options and Antarctica wetlands fix to mksurfdata, and option to dribble crop harvest XSMRPOOL flux to atmosphere
 release-clm5.0.15    sacks 12/06/2018 Option for rain-to-snow to immediately run off in some regions
 release-clm5.0.14     erik 11/29/2018 Update cime and fix surface dataset for f05 1850 non-crop case
