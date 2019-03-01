@@ -89,7 +89,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <stomatalcond_method phys="clm4_5"                         >Ball-Berry1987</stomatalcond_method>
 
 <!-- Carbon isotope concentration files -->
-<atm_c13_filename use_c13=".true." use_c13_timeseries=".true."                    >lnd/clm2/isotopes/atm_delta_C13_CMIP6_1850-2015_yearly_v2.0_c171012.nc</atm_c13_filename>
+<atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="hist"     >lnd/clm2/isotopes/atm_delta_C13_CMIP6_1850-2015_yearly_v2.0_c171012.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP119_1850-2100_yearly_c181209.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP1-2.6" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP126_1850-2100_yearly_c181209.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP2-4.5" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP245_1850-2100_yearly_c181209.nc</atm_c13_filename>
@@ -97,7 +97,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP5-3.4" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP34os_1850-2100_yearly_c181209.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP5-8.5" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP5B_1850-2100_yearly_c181209.nc</atm_c13_filename>
 
-<atm_c14_filename use_c14=".true." use_c14_bombspike =".true."                    >lnd/clm2/isotopes/atm_delta_C14_CMIP6_3x1_global_1850-2015_yearly_v2.0_c171012.nc</atm_c14_filename>
+<atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="hist"     >lnd/clm2/isotopes/atm_delta_C14_CMIP6_3x1_global_1850-2015_yearly_v2.0_c171012.nc</atm_c14_filename>
 <atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="SSP1-1.9" >lnd/clm2/isotopes/atm_delta_C14_CMIP6_SSP119_3x1_global_1850-2100_yearly_c181209.nc</atm_c14_filename>
 <atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="SSP1-2.6" >lnd/clm2/isotopes/atm_delta_C14_CMIP6_SSP126_3x1_global_1850-2100_yearly_c181209.nc</atm_c14_filename>
 <atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="SSP2-4.5" >lnd/clm2/isotopes/atm_delta_C14_CMIP6_SSP245_3x1_global_1850-2100_yearly_c181209.nc</atm_c14_filename>
@@ -1136,11 +1136,6 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
 
-<!-- Use CMIP5 ndep forcing for CLM4.5 cases -->
-<ndep_taxmode            phys="clm4_5" use_cn=".true.">extend</ndep_taxmode>
-<ndep_varlist            phys="clm4_5" use_cn=".true.">NDEP_year</ndep_varlist>
-<stream_fldfilename_ndep phys="clm4_5" use_cn=".true." ssp_rcp="hist"
->lnd/clm2/ndepdata/fndep_clm_hist_simyr1849-2006_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
 >lnd/clm2/ndepdata/fndep_clm_SSP585_b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190211.nc</stream_fldfilename_ndep>
 <!-- Currently duplicate SSP5-8.5 ndep for SSP5-3.4 -->
@@ -1151,8 +1146,18 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <!-- Currently duplicate SSP1.2.6 ndep for SSP1-1.9 -->
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-1.9"
 >lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-1.9-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
+<ndep_taxmode            phys="clm5_0" use_cn=".true.">cycle</ndep_taxmode>
+<ndep_varlist            phys="clm5_0" use_cn=".true.">NDEP_month</ndep_varlist>
 
 <!-- Use old CMIP5 rcp for other cases -->
+<ndep_taxmode            phys="clm5_0" use_cn=".true." ssp_rcp="SSP3-7.0" >cycle</ndep_taxmode>
+<ndep_varlist            phys="clm5_0" use_cn=".true." ssp_rcp="SSP3-7.0" >NDEP_month</ndep_varlist>
+<ndep_taxmode            phys="clm5_0" use_cn=".true." ssp_rcp="SSP4-6.0" >cycle</ndep_taxmode>
+<ndep_varlist            phys="clm5_0" use_cn=".true." ssp_rcp="SSP4-6.0" >NDEP_month</ndep_varlist>
+<ndep_taxmode            phys="clm5_0" use_cn=".true." ssp_rcp="SSP2-4.5" >cycle</ndep_taxmode>
+<ndep_varlist            phys="clm5_0" use_cn=".true." ssp_rcp="SSP2-4.5" >NDEP_month</ndep_varlist>
+<ndep_taxmode            phys="clm5_0" use_cn=".true." ssp_rcp="SSP4-3.4" >cycle</ndep_taxmode>
+<ndep_varlist            phys="clm5_0" use_cn=".true." ssp_rcp="SSP4-3.4" >NDEP_month</ndep_varlist>
 <stream_fldfilename_ndep phys="clm5_0" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP3-7.0"
 >lnd/clm2/ndepdata/fndep_clm_rcp8.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm5_0" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP4-6.0"
@@ -1161,6 +1166,12 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm5_0" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP4-3.4"
 >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
+
+<!-- Use CMIP5 ndep forcing for CLM4.5 cases -->
+<ndep_taxmode            phys="clm4_5" use_cn=".true.">extend</ndep_taxmode>
+<ndep_varlist            phys="clm4_5" use_cn=".true.">NDEP_year</ndep_varlist>
+<stream_fldfilename_ndep phys="clm4_5" use_cn=".true." ssp_rcp="hist"
+>lnd/clm2/ndepdata/fndep_clm_hist_simyr1849-2006_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 
 <!-- And old CMIP5 for clm4_5 cases -->
 <stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP1-1.9"
@@ -1179,9 +1190,6 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP5-8.5"
 >lnd/clm2/ndepdata/fndep_clm_rcp8.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-
-<ndep_taxmode phys="clm5_0" use_cn=".true." >cycle</ndep_taxmode>
-<ndep_varlist phys="clm5_0" use_cn=".true." >NDEP_month</ndep_varlist>
 
 <ndepmapalgo                use_cn=".true." >bilinear</ndepmapalgo>
 
