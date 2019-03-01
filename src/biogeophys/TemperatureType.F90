@@ -117,6 +117,9 @@ module TemperatureType
      real(r8), pointer    :: fact_col              (:,:) ! used in computing tridiagonal matrix
      real(r8), pointer    :: c_h2osfc_col          (:)   ! heat capacity of surface water
 
+     ! lake heat
+     real(r8), pointer    :: lake_heat              (:)  ! total heat of lake water (J/m²)
+     
    contains
 
      procedure, public  :: Init
@@ -279,6 +282,7 @@ contains
     allocate(this%fact_col                 (begc:endc, -nlevsno+1:nlevgrnd)) ; this%fact_col                 (:,:) = nan
     allocate(this%c_h2osfc_col             (begc:endc))                      ; this%c_h2osfc_col             (:)   = nan
 
+    allocate(this%lake_heat                (begc:endc))                      ; this%lake_heat                (:)   = nan
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -620,6 +624,11 @@ contains
             ptr_patch=this%t_veg10_night_patch, default='inactive')
     endif
 
+    ! add lake heat history field here
+    this%lake_heat(begc:endc) = spval
+    call hist_addfld1d (fname='LAKE_HEAT', units='J/m^2', &
+            avgflag='A', long_name='Heat content of gridcell lake water', &
+            ptr_col=this%lake_heat, default='active')
 
   end subroutine InitHistory
 
