@@ -22,7 +22,7 @@ module clm_initializeMod
   use ColumnType      , only : col           ! instance          
   use PatchType       , only : patch         ! instance            
   use reweightMod     , only : reweight_wrapup
-  use filterMod       , only : allocFilters, filter
+  use filterMod       , only : allocFilters, filter, filter_inactive_and_active
   use FatesInterfaceMod, only : set_fates_global_elements
 
   use clm_instMod       
@@ -278,6 +278,7 @@ contains
     use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
     use DaylengthMod          , only : InitDaylength
     use dynSubgridDriverMod   , only : dynSubgrid_init
+    use dynConsBiogeophysMod  , only : dyn_hwcontent_set_baselines
     use fileutils             , only : getfil
     use initInterpMod         , only : initInterp
     use subgridWeightsMod     , only : init_subgrid_weights_mod
@@ -448,6 +449,20 @@ contains
     call init_subgrid_weights_mod(bounds_proc)
     call dynSubgrid_init(bounds_proc, glc_behavior, crop_inst)
     call t_stopf('init_dyn_subgrid')
+
+    ! ------------------------------------------------------------------------
+    ! Initialize baseline water and energy states needed for dynamic subgrid operation
+    ! ------------------------------------------------------------------------
+
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+
+       call dyn_hwcontent_set_baselines(bounds_clump, &
+            filter_inactive_and_active(nc)%num_icemecc, &
+            filter_inactive_and_active(nc)%icemecc, &
+            urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
+    end do
 
     ! ------------------------------------------------------------------------
     ! Initialize modules (after time-manager initialization in most cases)

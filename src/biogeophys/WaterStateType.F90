@@ -40,7 +40,9 @@ module WaterStateType
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
 
-     real(r8), pointer :: wa_col                 (:)     ! col water in the unconfined aquifer (mm) 
+     real(r8), pointer :: wa_col                 (:)   ! col water in the unconfined aquifer (mm)
+     real(r8), pointer :: dynbal_baseline_liq_col(:)   ! baseline liquid water content subtracted from each column's total liquid water calculation (positive values are subtracted to avoid counting liquid water content of "virtual" states; negative values are added to account for missing states in the model) (mm H2O)
+     real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (positive values are subtracted to avoid counting ice content of "virtual" states; negative values are added to account for missing states in the model) (mm H2O)
 
      real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
 
@@ -132,6 +134,12 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%wa_col, name = 'wa_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%dynbal_baseline_liq_col, name = 'dynbal_baseline_liq_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%dynbal_baseline_ice_col, name = 'dynbal_baseline_ice_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
@@ -489,6 +497,12 @@ contains
             end if
          end do
       end if
+
+      ! Initialize dynbal_baseline_liq_col and dynbal_baseline_ice_col: for some columns,
+      ! these are set elsewhere in initialization, but we need them to be 0 for columns
+      ! for which they are not explicitly set.
+      this%dynbal_baseline_liq_col(bounds%begc:bounds%endc) = 0._r8
+      this%dynbal_baseline_ice_col(bounds%begc:bounds%endc) = 0._r8
 
     end associate
 
