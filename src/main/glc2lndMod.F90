@@ -249,12 +249,6 @@ contains
     ! If glc_present is true, then the given fields are all assumed to be valid; if
     ! glc_present is false, then these fields are ignored.
     !
-    ! !USES:
-    use clm_varctl, only : n_dom_pfts, n_dom_landunits, toosmall_soil, &
-                           toosmall_crop, toosmall_glacier, toosmall_lake, &
-                           toosmall_wetland, toosmall_urb_tbd, &
-                           toosmall_urb_hd, toosmall_urb_md
-    !
     ! !ARGUMENTS:
     class(glc2lnd_type), intent(inout) :: this
     type(bounds_type)  , intent(in)    :: bounds
