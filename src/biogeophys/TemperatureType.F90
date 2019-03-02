@@ -95,6 +95,7 @@ module TemperatureType
 
      ! Heat content
      real(r8), pointer :: beta_col                 (:)   ! coefficient of convective velocity [-]
+     real(r8), pointer :: dynbal_baseline_heat_col (:)   ! baseline heat content subtracted from each column's total heat calculation (positive values are subtracted to avoid counting heat content of "virtual" states; negative values are added to account for missing states in the model)
      real(r8), pointer :: heat1_grc                (:)   ! grc initial gridcell total heat content
      real(r8), pointer :: heat2_grc                (:)   ! grc post land cover change total heat content
      real(r8), pointer :: liquid_water_temp1_grc   (:)   ! grc initial weighted average liquid water temperature (K)
@@ -257,6 +258,7 @@ contains
 
     ! Heat content
     allocate(this%beta_col                 (begc:endc))                      ; this%beta_col                 (:)   = nan
+    allocate(this%dynbal_baseline_heat_col (begc:endc))                      ; this%dynbal_baseline_heat_col (:)   = nan
     allocate(this%heat1_grc                (begg:endg))                      ; this%heat1_grc                (:)   = nan
     allocate(this%heat2_grc                (begg:endg))                      ; this%heat2_grc                (:)   = nan
     allocate(this%liquid_water_temp1_grc   (begg:endg))                      ; this%liquid_water_temp1_grc   (:)   = nan
@@ -839,6 +841,11 @@ contains
        if (col%itype(c) == icol_road_imperv) this%emg_col(c) = em_improad_lun(l)
        if (col%itype(c) == icol_road_perv  ) this%emg_col(c) = em_perroad_lun(l)
     end do
+
+    ! Initialize dynbal_baseline_heat_col: for some columns, this is set elsewhere in
+    ! initialization, but we need it to be 0 for columns for which it is not explicitly
+    ! set.
+    this%dynbal_baseline_heat_col(bounds%begc:bounds%endc) = 0._r8
 
   end subroutine InitCold
 

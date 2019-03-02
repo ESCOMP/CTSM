@@ -60,6 +60,9 @@ module WaterstateType
                                                         ! When FATES is coupled in with plant hydraulics turned on, this storage
                                                         ! term is set to non-zero. (kg/m2 H2O)
 
+     real(r8), pointer :: dynbal_baseline_liq_col(:)   ! baseline liquid water content subtracted from each column's total liquid water calculation (positive values are subtracted to avoid counting liquid water content of "virtual" states; negative values are added to account for missing states in the model) (mm H2O)
+     real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (positive values are subtracted to avoid counting ice content of "virtual" states; negative values are added to account for missing states in the model) (mm H2O)
+
      real(r8), pointer :: snw_rds_col            (:,:) ! col snow grain radius (col,lyr)    [m^-6, microns]
      real(r8), pointer :: snw_rds_top_col        (:)   ! col snow grain radius (top layer)  [m^-6, microns]
      real(r8), pointer :: h2osno_top_col         (:)   ! col top-layer mass of snow  [kg]
@@ -203,6 +206,9 @@ contains
     allocate(this%tws_grc                (begg:endg))                     ; this%tws_grc                (:)   = nan
 
     allocate(this%total_plant_stored_h2o_col(begc:endc))                  ; this%total_plant_stored_h2o_col(:) = nan
+
+    allocate(this%dynbal_baseline_liq_col(begc:endc))                     ; this%dynbal_baseline_liq_col(:)   = nan
+    allocate(this%dynbal_baseline_ice_col(begc:endc))                     ; this%dynbal_baseline_ice_col(:)   = nan
 
     allocate(this%snw_rds_col            (begc:endc,-nlevsno+1:0))        ; this%snw_rds_col            (:,:) = nan
     allocate(this%snw_rds_top_col        (begc:endc))                     ; this%snw_rds_top_col        (:)   = nan
@@ -859,6 +865,12 @@ contains
          end do
       end do
 
+
+      ! Initialize dynbal_baseline_liq_col and dynbal_baseline_ice_col: for some columns,
+      ! these are set elsewhere in initialization, but we need them to be 0 for columns
+      ! for which they are not explicitly set.
+      this%dynbal_baseline_liq_col(bounds%begc:bounds%endc) = 0._r8
+      this%dynbal_baseline_ice_col(bounds%begc:bounds%endc) = 0._r8
     end associate
 
   end subroutine InitCold
