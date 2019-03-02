@@ -1,0 +1,5 @@
+This test keeps landunits with areas exceeding the correspondng
+namelist thresholds and removes the rest. Simplifies the gridcell
+representation for the purpose of running faster.
+
+NB: This test is testing the 10x15 resolution only.

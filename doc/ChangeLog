@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev030
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
-Date:  Tue Feb 28 16:27:17 MST 2019
+Date:  Tue Mar 01 17:23:38 MST 2019
 One-line Summary: Limit landunit presence with thresholds set in the namelist
 
 Purpose of changes
@@ -42,11 +42,16 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
 
 Changes to tests or testing: Yes
  New standard suite test
- <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50BgcCropGs" testmods="clm/rm_individual_lunits_decStart">
+ ERS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-rm_individual_lunits
  and new unit test subroutine test_collapse_individual_lunits
  in test_surfrdUtils.pf
+ Modified standard suite test
+ ERS_D_Ld10.f10_f10_musgs.IHistClm50BgcCropGs.cheyenne_intel.clm-collapse_to_dominant_decStart
+ to
+ ERS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-collapse_to_dominant
+ because introduced fatal error when namelist parameters toosmall_* > 0 or n_dom_* > 0 in transient simulations
 
-Code reviewed by: Erik Kluzek
+Code reviewed by: Erik Kluzek, Bill Sacks
 
 CTSM testing:
 
