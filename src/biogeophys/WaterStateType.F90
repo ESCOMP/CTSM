@@ -976,6 +976,22 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%rh10_af_patch)
     endif
 
+    call restartvar(ncid=ncid, flag=flag, &
+         varname='DYNBAL_BASELINE_LIQ', &
+         xtype=ncd_double, &
+         dim1name='column', &
+         long_name="baseline liquid water mass subtracted from each column's total water calculation", &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_liq_col)
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname='DYNBAL_BASELINE_ICE', &
+         xtype=ncd_double, &
+         dim1name='column', &
+         long_name="baseline ice mass subtracted from each column's total ice calculation", &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
+
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then
        do c = bounds%begc, bounds%endc
