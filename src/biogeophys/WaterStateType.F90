@@ -608,6 +608,21 @@ contains
          long_name=this%info%lname('water in the unconfined aquifer'), units='mm', &
          interpinic_flag='interp', readvar=readvar, data=this%wa_col)
 
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('DYNBAL_BASELINE_LIQ'), &
+         xtype=ncd_double, &
+         dim1name='column', &
+         long_name=this%info%lname("baseline liquid water mass subtracted from each column's total water calculation"), &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_liq_col)
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('DYNBAL_BASELINE_ICE'), &
+         xtype=ncd_double, &
+         dim1name='column', &
+         long_name=this%info%lname("baseline ice mass subtracted from each column's total ice calculation"), &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
 
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then

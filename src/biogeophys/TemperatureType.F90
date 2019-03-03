@@ -95,7 +95,7 @@ module TemperatureType
 
      ! Heat content
      real(r8), pointer :: beta_col                 (:)   ! coefficient of convective velocity [-]
-     real(r8), pointer :: dynbal_baseline_heat_col (:)   ! baseline heat content subtracted from each column's total heat calculation (positive values are subtracted to avoid counting heat content of "virtual" states; negative values are added to account for missing states in the model)
+     real(r8), pointer :: dynbal_baseline_heat_col (:)   ! baseline heat content subtracted from each column's total heat calculation (positive values are subtracted to avoid counting heat content of "virtual" states; negative values are added to account for missing states in the model) [J/m^2]
      real(r8), pointer :: heat1_grc                (:)   ! grc initial gridcell total heat content
      real(r8), pointer :: heat2_grc                (:)   ! grc post land cover change total heat content
      real(r8), pointer :: liquid_water_temp1_grc   (:)   ! grc initial weighted average liquid water temperature (K)
@@ -988,6 +988,12 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='taf', xtype=ncd_double, dim1name='landunit',                       &
          long_name='urban canopy air temperature', units='K',                                                         &
          interpinic_flag='interp', readvar=readvar, data=this%taf_lun)
+
+    call restartvar(ncid=ncid, flag=flag, varname='DYNBAL_BASELINE_HEAT', xtype=ncd_double, &
+         dim1name='column', &
+         long_name="baseline heat content subtracted from each column's total heat calculation", &
+         units='J/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_heat_col)
 
     if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='gdd1020', xtype=ncd_double,  &
