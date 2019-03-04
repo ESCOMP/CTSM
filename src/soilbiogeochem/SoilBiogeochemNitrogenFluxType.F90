@@ -53,7 +53,9 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: manure_runoff_col                          (:)   ! NH4 runoff flux from manure, gN/m2/s
      real(r8), pointer :: fert_runoff_col                            (:)   ! NH4 runoff flux from fertilizer, gN/m2/s
 
-     real(r8), pointer :: nh3_total_col                              (:)   ! Total NH3 emission from agriculture
+     real(r8), pointer :: nh3_total_col                              (:)   ! Total NH3 emission from agriculture, gN/m2/s
+     real(r8), pointer :: fan_totnout                                (:)   ! Total input N into FAN pools, gN/m2/s
+     real(r8), pointer :: fan_totnin                                 (:)   ! Total output N from FAN pools, gN/m2/s
      
      ! decomposition fluxes
      real(r8), pointer :: decomp_cascade_ntransfer_vr_col           (:,:,:) ! col vert-res transfer of N from donor to receiver pool along decomp. cascade (gN/m3/s)
@@ -226,6 +228,8 @@ contains
        allocate(this%nh3_otherfert_col              (begc:endc))                   ; this%nh3_otherfert_col          (:)   = spval
        allocate(this%nh3_total_col                  (begc:endc))                   ; this%nh3_total_col              (:)   = spval
 
+       allocate(this%nh3_total_col                  (begc:endc))                   ; this%nh3_total_col              (:)   = spval
+
        allocate(this%manure_no3_prod_col            (begc:endc))                   ; this%manure_no3_prod_col        (:)   = spval
        allocate(this%fert_no3_prod_col              (begc:endc))                   ; this%fert_no3_prod_col          (:)   = spval
        allocate(this%manure_nh4_to_soil_col         (begc:endc))                   ; this%manure_nh4_to_soil_col     (:)   = spval
@@ -233,7 +237,10 @@ contains
        allocate(this%manure_runoff_col              (begc:endc))                   ; this%manure_runoff_col          (:)   = spval
        allocate(this%fert_runoff_col                (begc:endc))                   ; this%fert_runoff_col            (:)   = spval
     end if
-
+    ! Allocate FAN summary fluxes even if FAN is off and set them to 0.
+    allocate(this%fan_totnin                        (begc:endc))                   ; this%fan_totnin                 (:)   = 0.0_r8
+    allocate(this%fan_totnout                       (begc:endc))                   ; this%fan_totnout                (:)   = 0.0_r8
+    
     allocate(this%sminn_to_plant_col                (begc:endc))                   ; this%sminn_to_plant_col         (:)   = nan
     allocate(this%potential_immob_col               (begc:endc))                   ; this%potential_immob_col        (:)   = nan
     allocate(this%actual_immob_col                  (begc:endc))                   ; this%actual_immob_col           (:)   = nan
@@ -371,115 +378,121 @@ contains
          ptr_col=this%ndep_to_sminn_col)
 
     if (use_fan) then
-        this%man_tan_appl_col(begc:endc) = spval
-        call hist_addfld1d( fname='MAN_TAN_APP', units='gN/m^2/s', &
-             avgflag='A', long_name='Manure TAN applied on soil', &
-             ptr_col=this%man_tan_appl_col)
+       this%man_tan_appl_col(begc:endc) = spval
+       call hist_addfld1d( fname='MAN_TAN_APP', units='gN/m^2/s', &
+            avgflag='A', long_name='Manure TAN applied on soil', &
+            ptr_col=this%man_tan_appl_col)
 
-        this%man_n_appl_col(begc:endc) = spval
-        call hist_addfld1d( fname='MAN_N_APP', units='gN/m^2/s', &
-             avgflag='A', long_name='Manure N applied on soil', &
-             ptr_col=this%man_n_appl_col)
+       this%man_n_appl_col(begc:endc) = spval
+       call hist_addfld1d( fname='MAN_N_APP', units='gN/m^2/s', &
+            avgflag='A', long_name='Manure N applied on soil', &
+            ptr_col=this%man_n_appl_col)
 
-        this%man_n_grz_col(begc:endc) = spval
-        call hist_addfld1d( fname='MAN_N_GRZ', units='gN/m^2/s', &
-             avgflag='A', long_name='Manure N from grazing animals', &
-             ptr_col=this%man_n_grz_col)
+       this%man_n_grz_col(begc:endc) = spval
+       call hist_addfld1d( fname='MAN_N_GRZ', units='gN/m^2/s', &
+            avgflag='A', long_name='Manure N from grazing animals', &
+            ptr_col=this%man_n_grz_col)
 
-        this%man_n_mix_col(begc:endc) = spval
-        call hist_addfld1d( fname='MAN_N_MIX', units='gN/m^2/s', &
-             avgflag='A', long_name='Manure N in produced mixed systems', &
-             ptr_col=this%man_n_mix_col)
+       this%man_n_mix_col(begc:endc) = spval
+       call hist_addfld1d( fname='MAN_N_MIX', units='gN/m^2/s', &
+            avgflag='A', long_name='Manure N in produced mixed systems', &
+            ptr_col=this%man_n_mix_col)
 
-        this%man_n_barns_col(begc:endc) = spval
-        call hist_addfld1d( fname='MAN_N_BARNS', units='gN/m^2/s', &
-             avgflag='A', long_name='Manure N in produced barns', &
-             ptr_col=this%man_n_barns_col)
+       this%man_n_barns_col(begc:endc) = spval
+       call hist_addfld1d( fname='MAN_N_BARNS', units='gN/m^2/s', &
+            avgflag='A', long_name='Manure N in produced barns', &
+            ptr_col=this%man_n_barns_col)
 
-        this%fert_n_appl_col(begc:endc) = spval
-        call hist_addfld1d( fname='FERT_N_APP', units='gN/m^2/s', &
-             avgflag='A', long_name='Fertilizer N applied on soil', &
-             ptr_col=this%fert_n_appl_col)
+       this%fert_n_appl_col(begc:endc) = spval
+       call hist_addfld1d( fname='FERT_N_APP', units='gN/m^2/s', &
+            avgflag='A', long_name='Fertilizer N applied on soil', &
+            ptr_col=this%fert_n_appl_col)
 
-        this%otherfert_n_appl_col(begc:endc) = spval
-        call hist_addfld1d( fname='OTHERFERT_N_APP', units='gN/m^2/s', &
-             avgflag='A', long_name='Non-urea fertilizer N applied on soil', &
-             ptr_col=this%otherfert_n_appl_col)
-        
-        this%man_n_transf_col(begc:endc) = spval
-        call hist_addfld1d( fname='MAN_N_TRANSF', units='gN/m^2/s', &
-             avgflag='A', long_name='Manure N moved from crop to natural column', &
-             ptr_col=this%man_n_transf_col)
-        
-        this%nh3_barns_col(begc:endc) = spval
-        call hist_addfld1d( fname='NH3_BARNS', units='gN/m^2/s', &
-             avgflag='A', long_name='NH3 emitted from animal housings', &
-             ptr_col=this%nh3_barns_col)
-        
-        this%nh3_stores_col(begc:endc) = spval
-        call hist_addfld1d( fname='NH3_STORES', units='gN/m^2/s', &
-             avgflag='A', long_name='NH3 emitted from stored manure', &
-             ptr_col=this%nh3_stores_col)
+       this%otherfert_n_appl_col(begc:endc) = spval
+       call hist_addfld1d( fname='OTHERFERT_N_APP', units='gN/m^2/s', &
+            avgflag='A', long_name='Non-urea fertilizer N applied on soil', &
+            ptr_col=this%otherfert_n_appl_col)
 
-        this%nh3_grz_col(begc:endc) = spval
-        call hist_addfld1d( fname='NH3_GRZ', units='gN/m^2/s', &
-             avgflag='A', long_name='NH3 emitted from manure on pastures', &
-             ptr_col=this%nh3_grz_col)
+       this%man_n_transf_col(begc:endc) = spval
+       call hist_addfld1d( fname='MAN_N_TRANSF', units='gN/m^2/s', &
+            avgflag='A', long_name='Manure N moved from crop to natural column', &
+            ptr_col=this%man_n_transf_col)
 
-        this%nh3_man_app_col(begc:endc) = spval
-        call hist_addfld1d( fname='NH3_MAN_APP', units='gN/m^2/s', &
-             avgflag='A', long_name='NH3 emitted from manure applied on crops and grasslands', &
-             ptr_col=this%nh3_man_app_col)
+       this%nh3_barns_col(begc:endc) = spval
+       call hist_addfld1d( fname='NH3_BARNS', units='gN/m^2/s', &
+            avgflag='A', long_name='NH3 emitted from animal housings', &
+            ptr_col=this%nh3_barns_col)
 
-        this%nh3_fert_col(begc:endc) = spval
-        call hist_addfld1d( fname='NH3_FERT', units='gN/m^2/s', &
-             avgflag='A', long_name='NH3 emitted from fertilizer applied on crops', &
-             ptr_col=this%nh3_fert_col)
+       this%nh3_stores_col(begc:endc) = spval
+       call hist_addfld1d( fname='NH3_STORES', units='gN/m^2/s', &
+            avgflag='A', long_name='NH3 emitted from stored manure', &
+            ptr_col=this%nh3_stores_col)
 
-        this%nh3_otherfert_col(begc:endc) = spval
-        call hist_addfld1d( fname='NH3_OTHERFERT', units='gN/m^2/s', &
-             avgflag='A', long_name='NH3 emitted from fertilizers other than urea', &
-             ptr_col=this%nh3_otherfert_col)
+       this%nh3_grz_col(begc:endc) = spval
+       call hist_addfld1d( fname='NH3_GRZ', units='gN/m^2/s', &
+            avgflag='A', long_name='NH3 emitted from manure on pastures', &
+            ptr_col=this%nh3_grz_col)
 
-        
-        this%nh3_total_col(begc:endc) = spval
-        call hist_addfld1d( fname='NH3_TOTAL', units='gN/m^2/s', &
-             avgflag='A', long_name='Total NH3 emitted from fertilizers and manure', &
-             ptr_col=this%nh3_total_col)
+       this%nh3_man_app_col(begc:endc) = spval
+       call hist_addfld1d( fname='NH3_MAN_APP', units='gN/m^2/s', &
+            avgflag='A', long_name='NH3 emitted from manure applied on crops and grasslands', &
+            ptr_col=this%nh3_man_app_col)
 
-        
-        this%manure_no3_prod_col(begc:endc) = spval
-        call hist_addfld1d( fname='MANURE_NO3_PROD', units='gN/m^2/s', &
-             avgflag='A', long_name='Manure nitrification flux', &
-             ptr_col=this%manure_no3_prod_col)
+       this%nh3_fert_col(begc:endc) = spval
+       call hist_addfld1d( fname='NH3_FERT', units='gN/m^2/s', &
+            avgflag='A', long_name='NH3 emitted from fertilizer applied on crops', &
+            ptr_col=this%nh3_fert_col)
 
-        this%fert_no3_prod_col(begc:endc) = spval
-        call hist_addfld1d( fname='FERT_NO3_PROD', units='gN/m^2/s', &
-             avgflag='A', long_name='Fertilizer nitrification flux', &
-             ptr_col=this%fert_no3_prod_col)
+       this%nh3_otherfert_col(begc:endc) = spval
+       call hist_addfld1d( fname='NH3_OTHERFERT', units='gN/m^2/s', &
+            avgflag='A', long_name='NH3 emitted from fertilizers other than urea', &
+            ptr_col=this%nh3_otherfert_col)
 
-        this%fert_nh4_to_soil_col(begc:endc) = spval
-        call hist_addfld1d( fname='FERT_NH4_TO_SOIL', units='gN/m^2/s', &
-             avgflag='A', long_name='Flux of NH4 to soil mineral pools, fertilizer', &
-             ptr_col=this%fert_nh4_to_soil_col)
+       this%nh3_total_col(begc:endc) = spval
+       call hist_addfld1d( fname='NH3_TOTAL', units='gN/m^2/s', &
+            avgflag='A', long_name='Total NH3 emitted from fertilizers and manure', &
+            ptr_col=this%nh3_total_col)
 
-        this%manure_nh4_to_soil_col(begc:endc) = spval
-        call hist_addfld1d( fname='MANURE_NH3_TO_SOIL', units='gN/m^2/s', &
-             avgflag='A', long_name='Flux of NH4 to soil mineral pools, manure', &
-             ptr_col=this%manure_nh4_to_soil_col)
+       this%manure_no3_prod_col(begc:endc) = spval
+       call hist_addfld1d( fname='MANURE_NO3_PROD', units='gN/m^2/s', &
+            avgflag='A', long_name='Manure nitrification flux', &
+            ptr_col=this%manure_no3_prod_col)
 
-        
-        this%manure_runoff_col(begc:endc) = spval
-        call hist_addfld1d( fname='MANURE_RUNOFF', units='gN/m^2/s', &
-             avgflag='A', long_name='NH4 in surface runoff, manure', &
-             ptr_col=this%manure_runoff_col)
+       this%fert_no3_prod_col(begc:endc) = spval
+       call hist_addfld1d( fname='FERT_NO3_PROD', units='gN/m^2/s', &
+            avgflag='A', long_name='Fertilizer nitrification flux', &
+            ptr_col=this%fert_no3_prod_col)
 
-        this%fert_runoff_col(begc:endc) = spval
-        call hist_addfld1d( fname='FERT_RUNOFF', units='gN/m^2/s', &
-             avgflag='A', long_name='NH4 in surface runoff, fertilizer', &
-             ptr_col=this%fert_runoff_col)
-     end if
+       this%fert_nh4_to_soil_col(begc:endc) = spval
+       call hist_addfld1d( fname='FERT_NH4_TO_SOIL', units='gN/m^2/s', &
+            avgflag='A', long_name='Flux of NH4 to soil mineral pools, fertilizer', &
+            ptr_col=this%fert_nh4_to_soil_col)
 
+       this%manure_nh4_to_soil_col(begc:endc) = spval
+       call hist_addfld1d( fname='MANURE_NH3_TO_SOIL', units='gN/m^2/s', &
+            avgflag='A', long_name='Flux of NH4 to soil mineral pools, manure', &
+            ptr_col=this%manure_nh4_to_soil_col)
+
+
+       this%manure_runoff_col(begc:endc) = spval
+       call hist_addfld1d( fname='MANURE_RUNOFF', units='gN/m^2/s', &
+            avgflag='A', long_name='NH4 in surface runoff, manure', &
+            ptr_col=this%manure_runoff_col)
+
+       this%fert_runoff_col(begc:endc) = spval
+       call hist_addfld1d( fname='FERT_RUNOFF', units='gN/m^2/s', &
+            avgflag='A', long_name='NH4 in surface runoff, fertilizer', &
+            ptr_col=this%fert_runoff_col)
+    end if
+
+    this%fan_totnin(begc:endc) = spval
+    call hist_addfld1d(fname='FAN_TOTNIN', units='gN/m^2/s', &
+         avgflag='A', long_name='Total N input into FAN', &
+         ptr_col=this%fan_totnin, default='inactive')
+    call hist_addfld1d(fname='FAN_TOTNOUT', units='gN/m^2/s', &
+         avgflag='A', long_name='Total N output from FAN', &
+         ptr_col=this%fan_totnout, default='inactive')
+    
     if (use_fun) then
        default = 'inactive'
     else

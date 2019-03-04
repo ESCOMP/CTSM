@@ -71,6 +71,8 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: man_tan_stored_col(:)                ! col (gN/m2) manure TAN in storage
      real(r8), pointer :: fan_grz_fract_col(:)                 ! col unitless fraction of animals grazing
 
+     real(r8), pointer :: fan_totn_col(:)                      ! col (gN/m2) total N in FAN pools
+     
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: decomp_npools_col            (:,:)   ! col (gN/m2)  decomposing (litter, cwd, soil) N pools
      real(r8), pointer :: decomp_npools_1m_col         (:,:)   ! col (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 1 meter
@@ -195,6 +197,8 @@ contains
        allocate(this%fan_grz_fract_col(begc:endc)) ; this%fan_grz_fract_col(:) = nan
 
     end if
+    ! Always allocate FAN total N, stays 0 if FAN is inactive.
+    allocate(this%fan_totn_col(begc:endc)) ; this%fan_totn_col(:) = nan
 
   end subroutine InitAllocate
 
@@ -465,8 +469,12 @@ contains
             avgflag='A', long_name='Fraction of animals grazing', &
             ptr_col=this%fan_grz_fract_col)
 
-
     end if
+
+    this%fan_totn_col(begc:endc) = spval
+    call hist_addfld1d (fname='FAN_TOTN', units='gN/m2', &
+         avgflag='A', long_name='FAN total N', &
+         ptr_col=this%fan_totn_col, default='inactive')
     
     
     if (use_nitrif_denitrif) then
@@ -582,7 +590,7 @@ contains
              this%man_n_stored_col(c) = 0.0_r8
              
           end if
-
+          this%fan_totn_col(c) = 0.0_r8
        end if
     end do
 
@@ -789,8 +797,11 @@ contains
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%fan_grz_fract_col)
 
-       !JV
     end if
+    call restartvar(ncid=ncid, flag=flag, varname='fan_totn', xtype=ncd_double, &
+         dim1name='column', long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%fan_totn_col)
+
 
     if (use_nitrif_denitrif) then
        ! smin_nh4
