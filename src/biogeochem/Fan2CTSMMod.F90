@@ -926,8 +926,8 @@ contains
             + nf%manure_no3_prod_col(c) + nf%manure_nh4_to_soil_col(c) &
             + nf%man_n_transf_col(c) + flux_loss
 
-       nf%fan_totnin(c) = fluxin
-       nf%fan_totnout(c) = fluxout
+       nf%fan_totnin_col(c) = fluxin
+       nf%fan_totnout_col(c) = fluxout
        
     end do
     
