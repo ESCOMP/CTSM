@@ -3074,6 +3074,14 @@ sub setup_logic_fan_nml {
                 'bgc'=>$nl_flags->{'bgc_mode'},
                 'hgrid'=>"360x720cru" );
 
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_crop',
+		'use_cn'=>$nl_flags->{'use_cn'}, 'use_ed'=>$nl_flags->{'use_ed'} );
+    $nl_flags->{'fan_to_bgc_crop'} = $nl->get_value('fan_to_bgc_crop');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_veg',
+		'use_cn'=>$nl_flags->{'use_cn'}, 'use_ed'=>$nl_flags->{'use_ed'} );
+    $nl_flags->{'use_veg'} = $nl->get_value('fan_to_bgc_veg');
+    
+    
   } elsif ( $nl_flags->{'bgc_mode'} =~/cn|bgc/ && value_is_true( $nl_flags->{'use_fan'} ) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_mapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},

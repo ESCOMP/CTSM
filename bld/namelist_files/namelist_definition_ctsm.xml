@@ -1589,6 +1589,15 @@ Mapping method from FAN Nitrogen (manure) deposition input file to the model res
     copy     = copy using the same indices
 </entry>
 
+<entry id="fan_to_bgc_crop" type="logical" category="physics"
+       group="fan_nml" valid_values="" >
+Toggle to connect the FAN N pools to soil biogeochemistry for CROP columns
+</entry>
+
+<entry id="fan_to_bgc_veg" type="logical" category="physics"
+       group="fan_nml" valid_values="" >
+Toggle to connect the FAN N pools to soil biogeochemistry for NATIVE VEGETATION columns
+</entry>
 
 <!-- ========================================================================================  -->
 <!-- finundatied stream -->
