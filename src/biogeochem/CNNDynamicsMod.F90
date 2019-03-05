@@ -190,6 +190,16 @@ contains
       end do
     end associate
     
+    if (use_fan) then
+       call fan_eval(bounds, num_soilc, filter_soilc, &
+            atm2lnd_inst, wateratm2lndbulk_inst, &
+            cnveg_nitrogenflux_inst, &
+            soilbiogeochem_nitrogenflux_inst, &
+            soilbiogeochem_nitrogenstate_inst, &
+            waterstatebulk_inst, soilstate_inst, temperature_inst, &
+            waterfluxbulk_inst, frictionvel_inst)
+    end if
+    
   end subroutine CNNDeposition
   
   !-----------------------------------------------------------------------
