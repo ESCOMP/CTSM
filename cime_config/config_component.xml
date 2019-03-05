@@ -109,16 +109,16 @@
       <value compset="^1850_"		            >1850_control</value>
       <value compset="^1850_.*_CLM50%[^_]*NOANTHRO" >1850_noanthro_control</value>
       <value compset="^HIST_"		            >20thC_transient</value>
-      <value compset="^SSP5-8.5_"	   	    >1850-2100_SSP5-8.5_transient</value>
-      <value compset="^SSP1-2.6_"	   	    >1850-2100_SSP1-2.6_transient</value>
-      <value compset="^SSP3-7.0_"	   	    >1850-2100_SSP3-7.0_transient</value>
-      <value compset="^SSP5-3.4_"	   	    >1850-2100_SSP5-3.4_transient</value>
-      <value compset="^SSP2-4.5_"	   	    >1850-2100_SSP2-4.5_transient</value>
-      <value compset="^SSP1-1.9_"	   	    >1850-2100_SSP1-1.9_transient</value>
-      <value compset="^SSP4-3.4_"	   	    >1850-2100_SSP4-3.4_transient</value>
-      <value compset="^SSP4-6.0_"	   	    >1850-2100_SSP4-6.0_transient</value>
-      <value compset="^SSP5-8.5_"	   	    >1850-2100_SSP5-8.5_transient</value>
-      <value compset="^AMIP_"		            >20thC_transient</value>
+      <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
+      <value compset="^SSP126_"	                    >1850-2100_SSP1-2.6_transient</value>
+      <value compset="^SSP370_"	                    >1850-2100_SSP3-7.0_transient</value>
+      <value compset="^SSP534_"	                    >1850-2100_SSP5-3.4_transient</value>
+      <value compset="^SSP245_"	                    >1850-2100_SSP2-4.5_transient</value>
+      <value compset="^SSP119_"	                    >1850-2100_SSP1-1.9_transient</value>
+      <value compset="^SSP434_"	                    >1850-2100_SSP4-3.4_transient</value>
+      <value compset="^SSP460_"	                    >1850-2100_SSP4-6.0_transient</value>
+      <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
+      <value compset="^AMIP_"	                    >20thC_transient</value>
       <value compset="^PIPD_"                       >1850-2100_rcp4.5_transient</value>
     </values>
     <group>run_component_clm</group>
