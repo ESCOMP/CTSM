@@ -1442,7 +1442,7 @@ contains
     use pftconMod        , only : nirrig_trp_corn, nirrig_sugarcane, nirrig_trp_soybean
     use pftconMod        , only : nirrig_cotton, nirrig_rice
     use clm_varcon       , only : spval, secspday
-    use clm_varctl       , only : use_fertilizer, use_fan
+    use clm_varctl       , only : use_fertilizer
     use clm_varctl       , only : use_c13, use_c14
     use clm_varcon       , only : c13ratio, c14ratio
     use LandunitType     , only: lun
@@ -1537,8 +1537,7 @@ contains
          crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch, & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
          cphase            =>    crop_inst%cphase_patch                        , & ! Output: [real(r8) (:)]   phenology phase
          fert              =>    cnveg_nitrogenflux_inst%fert_patch            , & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 
-         manu              =>    cnveg_nitrogenflux_inst%manu_patch            , & ! Output: [real(r8) (:) ]  (gN/m2/s) manure applied each timestep 
-         manurestore       =>    soilbiogeochem_nitrogenstate_inst%man_n_stored_col & ! Input:  [real(r8) (:) ]  manure nitrogen available for fertilization
+         manure            =>    cnveg_nitrogenflux_inst%manure_patch            & ! Output: [real(r8) (:) ]  (gN/m2/s) manure applied each timestep 
          )
 
       ! get time info
@@ -1954,16 +1953,11 @@ contains
                   onset_counter(p) = dt
                   fert_counter(p)  = ndays_on * secspday
                   if (ndays_on .gt. 0) then
-                     if (use_fan) then
-                        fert(p) = fertnitro(p) / fert_counter(p)
-                        manu(p) = manurestore(c) / fert_counter(p)
-                        ! manurestore(c) not changed here but in FAN code
-                     else
-                        fert(p) = (manunitro(ivt(p)) * 1000._r8 + fertnitro(p))/ fert_counter(p)
-                     end if
+                     fert(p) = fertnitro(p) / fert_counter(p)
+                     manure(p) = (manunitro(ivt(p)) * 1000._r8) / fert_counter(p)
                   else
                      fert(p) = 0._r8
-                     if (use_fan) manu(p) = 0._r8
+                     manure(p) = 0._r8
                   end if
                else
                   ! this ensures no re-entry to onset of phase2
@@ -2022,7 +2016,7 @@ contains
 
               if (fert_counter(p) <= 0._r8) then
                  fert(p) = 0._r8
-                 if (use_fan) manu(p) = 0._r8
+                 manure(p) = 0._r8
               else ! continue same fert application every timestep
                  fert_counter(p) = fert_counter(p) - dtrad
               end if

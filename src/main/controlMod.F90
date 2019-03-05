@@ -121,6 +121,7 @@ contains
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
+    use Fan2CTSMMod                      , only : fan_readnml
     !
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
@@ -241,9 +242,7 @@ contains
 
     namelist /clm_inparm/ use_hydrstress
 
-!KO
     namelist /clm_inparm/ use_fan
-!KO
 
     namelist /clm_inparm/ use_dynroot
 
@@ -479,7 +478,7 @@ contains
     call HumanIndexReadNML      ( NLFilename )
     call LunaReadNML            ( NLFilename )
     call FrictionVelReadNML     ( NLFilename )
-
+    
     ! ----------------------------------------------------------------------
     ! Broadcast all control information if appropriate
     ! ----------------------------------------------------------------------
@@ -506,6 +505,10 @@ contains
        call DecompCascadeBGCreadNML( NLFilename )
     end if
 
+    if ( use_fan ) then
+       call fan_readnml ( NLFilename )
+    end if
+    
     ! ----------------------------------------------------------------------
     ! consistency checks
     ! ----------------------------------------------------------------------

@@ -9,6 +9,7 @@ module FanStreamMod
   !
   ! !USES
   use shr_kind_mod, only: r8 => shr_kind_r8, CL => shr_kind_cl
+  use clm_varcon, only : ispval
   use shr_strdata_mod
   use shr_stream_mod
   use shr_string_mod
@@ -33,14 +34,17 @@ module FanStreamMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: fanstream_init     ! position datasets for dynamic ndep2
   public :: fanstream_interp   ! interpolates between two years of ndep2 file data
-!KO  public :: clm_domain_mct ! Sets up MCT domain for this resolution
+  public :: set_bcast_fanstream_pars
+  
 
   ! ! PRIVATE TYPES
   type(shr_strdata_type)  :: sdat_grz, sdat_sgrz, sdat_ngrz, sdat_urea, sdat_nitr, sdat_soilph         ! input data streams
-  integer :: stream_year_first_fan      ! first year in stream to use
-  integer :: stream_year_last_fan       ! last year in stream to use
-  integer :: model_year_align_fan       ! align stream_year_firstndep2 with 
-
+  integer :: stream_year_first_fan = ispval      ! first year in stream to use
+  integer :: stream_year_last_fan = ispval       ! last year in stream to use
+  integer :: model_year_align_fan = ispval       ! align stream_year_firstndep2 with 
+  character(len=CL)  :: stream_fldFileName_fan
+  character(len=CL)  :: fan_mapalgo = 'bilinear'
+     
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !==============================================================================
@@ -49,6 +53,26 @@ contains
 
   !==============================================================================
 
+  subroutine set_bcast_fanstream_pars(str_yr_first, str_yr_last, mdl_yr_align, mapalgo, str_filename)
+    integer, intent(in) :: str_yr_first, str_yr_last, mdl_yr_align
+    character(len=*), intent(in) :: str_filename, mapalgo
+
+    stream_year_first_fan = str_yr_first
+    stream_year_last_fan = str_yr_last
+    model_year_align_fan = mdl_yr_align
+    stream_fldFileName_fan = str_filename
+    fan_mapalgo = mapalgo
+
+    call shr_mpi_bcast(stream_year_first_fan, mpicom)
+    call shr_mpi_bcast(stream_year_last_fan, mpicom)
+    call shr_mpi_bcast(model_year_align_fan, mpicom)
+    call shr_mpi_bcast(stream_fldFileName_fan, mpicom)
+    call shr_mpi_bcast(fan_mapalgo, mpicom)
+    
+  end subroutine set_bcast_fanstream_pars
+
+  !************************************************************************************
+  
   subroutine fanstream_init(bounds, NLFilename)
    !    
    ! Initialize data stream information.  
@@ -70,48 +94,15 @@ contains
    integer            :: nu_nml    ! unit for namelist file
    integer            :: nml_error ! namelist i/o error flag
    type(mct_ggrid)    :: dom_clm   ! domain information 
-   character(len=CL)  :: stream_fldFileName_fan
-   character(len=CL)  :: fan_mapalgo = 'bilinear'
    character(*), parameter :: shr_strdata_unset = 'NOT_SET'
    character(*), parameter :: subName = "('ndep2dyn_init')"
    character(*), parameter :: F00 = "('(ndep2dyn_init) ',4a)"
    !-----------------------------------------------------------------------
 
-   namelist /fan_nml/        &
-        stream_year_first_fan,  &
-	stream_year_last_fan,   &
-        model_year_align_fan,   &
-        fan_mapalgo,             &
-        stream_fldFileName_fan
-
-   ! Default values for namelist
-    stream_year_first_fan  = 1                ! first year in stream to use
-    stream_year_last_fan   = 1                ! last  year in stream to use
-    model_year_align_fan   = 1                ! align stream_year_first_fan with this model year
-    stream_fldFileName_fan = ' '
-
-   ! Read fandyn_nml namelist
-   if (masterproc) then
-      nu_nml = getavu()
-      open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
-      call shr_nl_find_group_name(nu_nml, 'fan_nml', status=nml_error)
-      if (nml_error == 0) then
-         read(nu_nml, nml=fan_nml,iostat=nml_error)
-         if (nml_error /= 0) then
-            call endrun(msg=' ERROR reading fan_nml namelist'//errMsg(sourcefile, __LINE__))
-         end if
-      else
-         call endrun(msg=' ERROR finding fan_nml namelist'//errMsg(sourcefile, __LINE__))
-      end if
-      close(nu_nml)
-      call relavu( nu_nml )
-   endif
-
-   call shr_mpi_bcast(stream_year_first_fan, mpicom)
-   call shr_mpi_bcast(stream_year_last_fan, mpicom)
-   call shr_mpi_bcast(model_year_align_fan, mpicom)
-   call shr_mpi_bcast(stream_fldFileName_fan, mpicom)
-
+   if (stream_year_first_fan == ispval) then
+      call endrun(msg='ERROR stream_year_first_fan not set at '//errMsg(sourcefile, __LINE__))
+   end if
+   
    if (masterproc) then
       write(iulog,*) ' '
       write(iulog,*) 'ndep2dyn stream settings:'

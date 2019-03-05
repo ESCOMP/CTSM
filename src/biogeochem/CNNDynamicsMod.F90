@@ -15,14 +15,12 @@ module CNNDynamicsMod
   use Wateratm2lndBulkType            , only : wateratm2lndbulk_type
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
-!KO
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
   use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
   use TemperatureType                 , only : temperature_type
   use FrictionVelocityMod             , only : frictionvel_type
   use clm_varctl                      , only : iulog
   use shr_infnan_mod                  , only : isnan => shr_infnan_isnan
-!KO
   use CNVegNitrogenStateType	      , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType	      , only : cnveg_nitrogenflux_type
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
@@ -30,16 +28,16 @@ module CNNDynamicsMod
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use WaterStateBulkType              , only : waterstatebulk_type
   use WaterFluxBulkType               , only : waterfluxbulk_type
-  !JV
   use SoilStateType                   , only : soilstate_type
-  !JV
-  use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
-  use WaterFluxBulkType                   , only : waterfluxbulk_type
+  use WaterDiagnosticBulkType         , only : waterdiagnosticbulk_type
+  use WaterFluxBulkType               , only : waterfluxbulk_type
   use CropType                        , only : crop_type
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
   use perf_mod                        , only : t_startf, t_stopf
   use FanMod
+  use clm_varctl                      , only: use_fan
+
   !
   implicit none
   private
@@ -138,32 +136,25 @@ contains
        waterstatebulk_inst, soilstate_inst, temperature_inst, &
        waterfluxbulk_inst, frictionvel_inst)
     use CNSharedParamsMod    , only: use_fun
-    !KO
-    use clm_varctl           , only: use_fan
-!   use subgridAveMod        , only: p2c
     use clm_time_manager     , only: get_step_size, get_curr_date, get_curr_calday, get_nstep
 
     use clm_varpar           , only: max_patch_per_col
     use LandunitType         , only: lun
-    use shr_sys_mod      , only : shr_sys_flush
-!KO    use ColumnType           , only: col
+    use shr_sys_mod          , only : shr_sys_flush
     use GridcellType         , only: grc
-    use clm_varctl     , only : iulog
-    use abortutils     , only : endrun
-    use pftconMod, only : nc4_grass, nc3_nonarctic_grass
-    use landunit_varcon,      only:  istsoil, istcrop
-    use clm_varcon, only : spval, ispval
-    use fan2ctsm
+    use clm_varctl           , only : iulog
+    use abortutils           , only : endrun
+    use pftconMod            , only : nc4_grass, nc3_nonarctic_grass
+    use landunit_varcon      , only:  istsoil, istcrop
+    use clm_varcon           , only : spval, ispval
+    use Fan2ctsmMod
     
     type(bounds_type)        , intent(in)    :: bounds  
-!KO
     integer                  , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                  , intent(in)    :: filter_soilc(:) ! filter for soil columns
-!KO
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
     type(wateratm2lndbulk_type), intent(in)  :: wateratm2lndbulk_inst
     type(soilbiogeochem_nitrogenflux_type) , intent(inout) :: soilbiogeochem_nitrogenflux_inst
-!KO
     type(cnveg_carbonstate_type)           , intent(inout) :: cnveg_carbonstate_inst
     type(cnveg_nitrogenstate_type)         , intent(inout) :: cnveg_nitrogenstate_inst
     type(cnveg_nitrogenflux_type)          , intent(inout) :: cnveg_nitrogenflux_inst
@@ -311,6 +302,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNNFert(bounds, num_soilc, filter_soilc, &
        cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst)
+    use Fan2CTSMMod, only : fan_to_sminn
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update the nitrogen fertilizer for crops
@@ -327,19 +319,33 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: c,fc                 ! indices
+    real(r8) :: manure_col(bounds%begc:bounds%endc)
+    
     !-----------------------------------------------------------------------
 
     associate(                                                                  &   
-         fert          =>    cnveg_nitrogenflux_inst%fert_patch ,               & ! Input:  [real(r8) (:)]  nitrogen fertilizer rate (gN/m2/s)                
+         fert          =>    cnveg_nitrogenflux_inst%fert_patch ,               & ! Input:  [real(r8) (:)]  nitrogen fertilizer rate (gN/m2/s)
+         manure        =>    cnveg_nitrogenflux_inst%manure_patch ,             & ! Input:  [real(r8) (:)]  manure nitrogen rate (gN/m2/s)                
          fert_to_sminn =>    soilbiogeochem_nitrogenflux_inst%fert_to_sminn_col & ! Output: [real(r8) (:)]                                                    
          )
-      
       call p2c(bounds, num_soilc, filter_soilc, &
            fert(bounds%begp:bounds%endp), &
            fert_to_sminn(bounds%begc:bounds%endc))
-
+      call p2c(bounds, num_soilc, filter_soilc, &
+           manure(bounds%begp:bounds%endp), &
+           manure_col)
+      ! Add the manure N processed above:
+      do fc = 1, fc
+         c = filter_soilc(fc)
+         fert_to_sminn(c) = fert_to_sminn(c) + manure_col(c)
+      end do
+      
     end associate
 
+    ! Fan may overwrite fert_to_sminn for some or all columns if enabled.
+    !
+    if (use_fan) call fan_to_sminn(filter_soilc, num_soilc, soilbiogeochem_nitrogenflux_inst)
+    
   end subroutine CNNFert
 
   !-----------------------------------------------------------------------

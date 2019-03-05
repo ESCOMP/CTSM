@@ -1,6 +1,6 @@
-module fan2ctsm
+module Fan2CTSMMod
   use FanMod
-  use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_kind_mod, only : r8 => shr_kind_r8, CL => shr_kind_cl
   use decompMod                       , only : bounds_type
   use atm2lndType                     , only : atm2lnd_type
   use Wateratm2lndBulkType            , only : wateratm2lndbulk_type
@@ -73,6 +73,9 @@ module fan2ctsm
   real(r8), parameter :: max_grazing_fract = 0.65_r8
   ! Normalization constants for barn and storage emissions.
   real(r8), parameter :: volat_coef_barns_open = 0.03_r8, volat_coef_barns_closed = 0.025, volat_coef_stores = 0.025_r8
+
+  ! Fraction of manure N moved from crop to native columns (manure spreading)
+  real(r8) :: fract_spread_grass = 1.0_r8
   
   logical :: fan_to_bgc_crop = .false.
   logical :: fan_to_bgc_veg = .false.
@@ -89,6 +92,7 @@ contains
     use shr_nl_mod     , only : shr_nl_find_group_name
     use abortutils     , only : endrun
     use shr_mpi_mod    , only : shr_mpi_bcast
+    use FanStreamMod   , only : set_bcast_fanstream_pars
     
     character(len=*), intent(in) :: NLFilename ! Namelist filename
 
@@ -96,8 +100,15 @@ contains
     integer :: unitn                ! unit for namelist file
     character(len=*), parameter :: subname = 'fan_readnml'
     character(len=*), parameter :: nmlname = 'fan_nml'
+    integer :: stream_year_first_fan      ! first year in stream to use
+    integer :: stream_year_last_fan       ! last year in stream to use
+    integer :: model_year_align_fan       ! align stream_year_firstndep2 with 
+    character(len=CL)  :: stream_fldFileName_fan
+    character(len=CL)  :: fan_mapalgo
 
-    namelist /fan_nml/ use_fan, fan_to_bgc_crop, fan_to_bgc_veg
+    namelist /fan_nml/ fan_to_bgc_crop, fan_to_bgc_veg, stream_year_first_fan,  &
+         stream_year_last_fan, model_year_align_fan, fan_mapalgo, stream_fldFileName_fan, &
+         fract_spread_grass
 
     if (masterproc) then
        unitn = getavu()
@@ -115,9 +126,17 @@ contains
        call relavu(unitn)
     end if
 
-    call shr_mpi_bcast(use_fan, mpicom)
+    call set_bcast_fanstream_pars(stream_year_first_fan,  stream_year_last_fan, &
+         model_year_align_fan, fan_mapalgo, stream_fldFileName_fan)
+
     call shr_mpi_bcast(fan_to_bgc_crop, mpicom)
     call shr_mpi_bcast(fan_to_bgc_veg, mpicom)
+    call shr_mpi_bcast(fract_spread_grass, mpicom)
+
+    if (fract_spread_grass > 1 .or. fract_spread_grass < 0) then
+       call endrun(msg="ERROR invalid fract_spread_grass")
+    end if
+
     
     !call mpi_bcast(fan_to_bgc_crop, 1, MPI_LOGICAL, 0, mpicom, ierr)
     !call mpi_bcast(fan_to_bgc_veg, 1, MPI_LOGICAL, 0, mpicom, ierr)
@@ -161,13 +180,13 @@ contains
     type(frictionvel_type)                 , intent(in) :: frictionvel_inst
 
     ! Local variables
-    integer, parameter :: num_substeps = 4, balance_check_freq = 1000
+    integer, parameter :: num_substeps = 4, balance_check_freq = 1
     integer :: c, g, patchcounter, p, status, c1, c2, l, fc, ind_substep
     real(r8) :: dt, ndep_org(3), orgpools(3), tanprod(3), watertend, fluxes(6,3), tanpools3(3), ratm, tandep, &
          fluxes2(6,2), fluxes3(6,3), fluxes4(6,4), tanpools2(2), tanpools4(4), fluxes_tmp(6), garbage_total
 
     real(r8) :: Hconc_grz(3), Hconc_slr(4), pH_soil, pH_crop
-    real(r8) :: fert_inc_tan, fert_inc_no3
+    real(r8) :: fert_inc_tan, fert_inc_no3, old(num_soilc)
     logical :: do_balance_checks
     real(r8) :: tg, garbage, theta, thetasat, infiltr_m_s, evap_m_s, runoff_m_s, org_n_tot, &
          nstored_old, nsoilman_old, nsoilfert_old, fert_to_air, fert_to_soil, fert_total, fert_urea, fert_tan, &
@@ -206,10 +225,12 @@ contains
     call p2c(bounds, num_soilc, filter_soilc, &
          cnv_nf%fert_patch(bounds%begp:bounds%endp), &
          nf%fert_n_appl_col(bounds%begc:bounds%endc))
-    call p2c(bounds, num_soilc, filter_soilc, &
-         cnv_nf%manu_patch(bounds%begp:bounds%endp), &
-         nf%man_n_appl_col(bounds%begc:bounds%endc))
 
+    !call p2c(bounds, num_soilc, filter_soilc, &
+    !     cnv_nf%manu_patch(bounds%begp:bounds%endp), &
+    !     nf%man_n_appl_col(bounds%begc:bounds%endc))
+    nf%man_n_appl_col(bounds%begc:bounds%endc) = 0.0_r8
+    
     if (any(nf%man_n_appl_col > 100)) then
        write(iulog, *) maxval(nf%man_n_appl_col)
        call endrun('bad man_n_appl_col')
@@ -287,7 +308,7 @@ contains
 
        if (nf%man_n_appl_col(c) > 1e12 .or. ngrz(c) > 1e12) then
           write(iulog, *) c, nf%man_n_appl_col(c), ngrz(c), cnv_nf%fert_patch(col%patchi(c):col%patchf(c)), &
-               cnv_nf%manu_patch(col%patchi(c):col%patchf(c))
+               cnv_nf%manure_patch(col%patchi(c):col%patchf(c))
           call endrun('nf%man_n_appl_col(c) is spval')
        end if
 
@@ -590,12 +611,41 @@ contains
        write(iulog, *) 'SoilPH check:', soilph_min, soilph_max, def_ph_count
     end if
 
+    old = ns%fan_totn_col(filter_soilc(1:num_soilc))
+
     call update_summary(ns, nf, filter_soilc, num_soilc)
+
+    call debug_balance(ns, nf, old, filter_soilc(1:num_soilc))
+    
+    call debug_balance(ns, nf, old, (/1/))
+    
+    call debug_balance(ns, nf, old, (/2/))
     
     end associate
 
   contains
 
+    subroutine debug_balance(ns, nf, oldn, columns)
+      type(soilbiogeochem_nitrogenstate_type), intent(in) :: ns
+      type(soilbiogeochem_nitrogenflux_type), intent(in) :: nf
+      real(r8) :: oldn(:)
+      integer :: columns(:)
+
+      real(r8) :: newn(size(old))
+
+      newn = ns%fan_totn_col
+      
+    
+      print *, 'FAN SUMMARY', columns
+      print *, 'old total:', sum(oldn(columns))
+      print *, 'new total:', sum(newn(columns))
+      print *, 'delta:', sum(oldn(columns)) - sum(newn(columns))
+      print *, 'new flux:', (sum(nf%fan_totnin(columns)) - sum(nf%fan_totnout(columns)))*dt
+      !print *, 'total from funct', get_total_n(ns, nf, 'pools_manure') + get_total_n(ns, nf, 'pools_fertilizer')
+      
+    end subroutine debug_balance
+      
+    
     real(r8) function get_total_n(ns, nf, which) result(total)
       type(soilbiogeochem_nitrogenstate_type), intent(in) :: ns
       type(soilbiogeochem_nitrogenflux_type), intent(in) :: nf
@@ -719,7 +769,7 @@ contains
     real(r8) :: tempr_ave, windspeed_ave ! windspeed and temperature averaged over agricultural patches
     real(r8) :: tempr_barns, tempr_stores, vent_barns, flux_grass_crop, tempr_min_10day, &
          flux_grass_graze, flux_grass_spread, flux_grass_spread_tan, flux_grass_crop_tan
-    real(r8) :: cumflux, totalinput, total_to_store
+    real(r8) :: cumflux, totalinput, total_to_store, total_to_store_tan
     real(r8) :: fluxes_nitr(4,2), fluxes_tan(4,2)
     ! The fraction of manure applied continuously on grasslands (if present in the gridcell)
     real(r8), parameter :: kg_to_g = 1e3_r8
@@ -851,8 +901,14 @@ contains
                 ! Simplification as of 2019: no explicit manure storage. Flux to storage
                 ! will be spread "immediately".
                 total_to_store = sum(fluxes_nitr(iflx_to_store,:))
-                flux_grass_spread = flux_grass_spread + total_to_store*col%wtgcell(c)
-                flux_grass_spread_tan = flux_grass_spread_tan + sum(fluxes_tan(iflx_to_store,:))*col%wtgcell(c)
+                total_to_store_tan = sum(fluxes_tan(iflx_to_store,:))
+
+                n_manure_spread_col(c) = (1.0_r8 - fract_spread_grass) * total_to_store
+                tan_manure_spread_col(c) = (1.0_r8 - fract_spread_grass) * total_to_store_tan
+
+                flux_grass_spread = flux_grass_spread + fract_spread_grass * total_to_store*col%wtgcell(c)
+                flux_grass_spread_tan = flux_grass_spread_tan + fract_spread_grass * total_to_store_tan*col%wtgcell(c)
+                
                 man_n_transf(c) = man_n_transf(c) + total_to_store
 
                 nh3_flux_stores(c) = sum(fluxes_nitr(iflx_air_stores,:))
@@ -898,7 +954,7 @@ contains
     integer, intent(in)    :: filter_soilc(:) ! filter for soil columns
 
     integer :: c, fc
-    real(r8) :: total, fluxout, fluxin, flux_loss
+    real(r8) :: total, fluxout, fluxin, flux_loss    
     
     do fc = 1, num_soilc
        c = filter_soilc(fc)
@@ -939,7 +995,8 @@ contains
   subroutine fan_to_sminn(filter_soilc, num_soilc, sbgc_nf)
     use ColumnType, only : col
     use LandunitType   , only: lun
-    use landunit_varcon, only : istcrop
+    use landunit_varcon, only : istcrop, istsoil
+    
     integer, intent(in) :: filter_soilc(:)
     integer, intent(in) :: num_soilc
     type(soilbiogeochem_nitrogenflux_type), intent(inout) :: sbgc_nf
@@ -954,11 +1011,11 @@ contains
             + sbgc_nf%manure_no3_prod_col(c) + sbgc_nf%manure_nh4_to_soil_col(c)
        if (lun%itype(col%landunit(c)) == istcrop .and. fan_to_bgc_crop) then
           sbgc_nf%fert_to_sminn_col(c) = fan_nitr
-       else if (fan_to_bgc_veg) then
+       else if (lun%itype(col%landunit(c)) == istsoil .and. fan_to_bgc_veg) then
           sbgc_nf%fert_to_sminn_col(c) = fan_nitr
        end if
     end do
     
   end subroutine fan_to_sminn
   
-end module fan2ctsm
+end module Fan2CTSMMod
