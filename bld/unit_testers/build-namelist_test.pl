@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 952;
+my $ntests = 860;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 600;
+   $ntests += 531;
 }
 plan( tests=>$ntests );
 
@@ -1079,10 +1079,12 @@ foreach my $res ( @resolutions ) {
              $res eq "ne4np4"      ||
              $res eq "2.5x3.33"    ||
              $res eq "0.23x0.31"   ||
+             $res eq "0.47x0.63"   ||
              $res eq "94x192"      ||
              $res eq "8x16"        ||
              $res eq "32x64"       ||
              $res eq "128x256"     ||
+             $res eq "360x720cru"  ||
              $res eq "512x1024" ) {
       next;
    }
@@ -1112,7 +1114,7 @@ print "==================================================\n";
 
 $mode = "-phys clm4_5";
 system( "../configure -s $mode" );
-my @resolutions = ( "4x5", "10x15", "ne30np4", "ne120np4", "ne16np4", "1.9x2.5", "0.9x1.25" );
+my @resolutions = ( "4x5", "10x15", "ne30np4", "ne16np4", "1.9x2.5", "0.9x1.25" );
 my @regional;
 my $nlbgcmode = "bgc";
 my $mode = "clm45-$nlbgcmode";
@@ -1199,7 +1201,7 @@ print "==================================================\n";
 # Check for crop resolutions
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
-my @crop_res = ( "1x1_numaIA", "1x1_smallvilleIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne30np4", "ne120np4" );
+my @crop_res = ( "1x1_numaIA", "1x1_smallvilleIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne30np4" );
 foreach my $res ( @crop_res ) {
    $options = "-bgc bgc -crop -res $res -envxml_dir .";
    &make_env_run();
@@ -1265,7 +1267,7 @@ foreach my $res ( @glc_res ) {
 # Transient 20th Century simulations
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
-my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne120np4", "10x15" );
+my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 10;
 foreach my $res ( @tran_res ) {
@@ -1322,7 +1324,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
                      "-bgc sp -envxml_dir . -vichydro", "-bgc bgc -dynamic_vegetation", "-bgc bgc -clm_demand flanduse_timeseries -sim_year 1850-2000",
                      "-bgc bgc -envxml_dir . -namelist '&a use_c13=.true.,use_c14=.true.,use_c14_bombspike=.true./'" );
   foreach my $clmopts ( @clmoptions ) {
-     my @clmres = ( "ne120np4", "10x15", "0.9x1.25", "1.9x2.5" );
+     my @clmres = ( "10x15", "0.9x1.25", "1.9x2.5" );
      foreach my $res ( @clmres ) {
         $options = "-res $res -envxml_dir . ";
         &make_env_run( );
@@ -1343,7 +1345,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
   my @clmoptions = ( "-bgc bgc -envxml_dir .", 
                      "-bgc sp -envxml_dir .", );
   foreach my $clmopts ( @clmoptions ) {
-     my @clmres = ( "ne16np4", "360x720cru" );
+     my @clmres = ( "ne16np4" );
      foreach my $res ( @clmres ) {
         $options = "-res $res -envxml_dir . ";
         &make_env_run( );

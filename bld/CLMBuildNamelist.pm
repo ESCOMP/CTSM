@@ -1164,18 +1164,20 @@ sub setup_cmdl_spinup {
   if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
     $nl_flags->{'spinup'} = $cfg->get('spinup');
   } elsif ( $physv->as_long() >= $physv->as_long("clm4_5")) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
-                $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{$var},
-                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'} );
-    if ( $nl->get_value("spinup_state") ne 0 ) {
-      $nl_flags->{'bgc_spinup'} = "on";
-      if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
-         $log->fatal_error("spinup_state is accelerated (=1 or 2) which is for a BGC mode of CN or BGC," .
-                     " but the BGC mode is Satellite Phenology, change one or the other");
-      }
-      if ( $nl_flags->{'clm_accelerated_spinup'} eq "off" ) {
-         $log->fatal_error("spinup_state is accelerated, but clm_accelerated_spinup is off, change one or the other");
-      }
+     if ( &value_is_true($nl_flags->{'use_cn'}) ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
+                    $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{$var},
+                    use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'} );
+        if ( $nl->get_value("spinup_state") ne 0 ) {
+          $nl_flags->{'bgc_spinup'} = "on";
+          if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
+             $log->fatal_error("spinup_state is accelerated (=1 or 2) which is for a BGC mode of CN or BGC," .
+                         " but the BGC mode is Satellite Phenology, change one or the other");
+          }
+          if ( $nl_flags->{'clm_accelerated_spinup'} eq "off" ) {
+              $log->fatal_error("spinup_state is accelerated, but clm_accelerated_spinup is off, change one or the other");
+          }
+        }
     } else {
       $nl_flags->{'bgc_spinup'} = "off";
       $val = $defaults->get_value($var);
