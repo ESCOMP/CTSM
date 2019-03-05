@@ -144,6 +144,7 @@ contains
     use landunit_varcon, only:  istsoil, istcrop
     use clm_varcon, only : spval, ispval
     use decompMod, only : bounds_type
+    use subgridAveMod, only: p2c
 
     type(bounds_type)        , intent(in)    :: bounds  
     integer                  , intent(in)    :: num_soilc       ! number of soil columns in filter
@@ -381,10 +382,10 @@ contains
                bsw, poolranges_grz, Hconc_grz, dz_layer_grz, tanpools3, &
                fluxes3(1:5,:), garbage, dt/num_substeps, status, 3)
           if (status /= 0) then
-             write(iulog, *) 'status = ', status, tanpools2, ratm, theta, thetasat, tandep, tanprod
+             write(iulog, *) 'status = ', status, tanpools3, ratm, theta, thetasat, tandep, tanprod
              call endrun(msg='update_npool status /= 0')
           end if
-          if (debug_fan .and. any(isnan(tanpools2))) then
+          if (debug_fan .and. any(isnan(tanpools3))) then
              call endrun('nan2')
           end if
           fluxes_tmp = fluxes_tmp + sum(fluxes3, dim=2)
