@@ -54,8 +54,8 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: fert_runoff_col                            (:)   ! NH4 runoff flux from fertilizer, gN/m2/s
 
      real(r8), pointer :: nh3_total_col                              (:)   ! Total NH3 emission from agriculture, gN/m2/s
-     real(r8), pointer :: fan_totnout                                (:)   ! Total input N into FAN pools, gN/m2/s
-     real(r8), pointer :: fan_totnin                                 (:)   ! Total output N from FAN pools, gN/m2/s
+     real(r8), pointer :: fan_totnout_col                            (:)   ! Total input N into FAN pools, gN/m2/s
+     real(r8), pointer :: fan_totnin_col                                 (:)   ! Total output N from FAN pools, gN/m2/s
      
      ! decomposition fluxes
      real(r8), pointer :: decomp_cascade_ntransfer_vr_col           (:,:,:) ! col vert-res transfer of N from donor to receiver pool along decomp. cascade (gN/m3/s)
@@ -238,8 +238,8 @@ contains
        allocate(this%fert_runoff_col                (begc:endc))                   ; this%fert_runoff_col            (:)   = spval
     end if
     ! Allocate FAN summary fluxes even if FAN is off and set them to 0.
-    allocate(this%fan_totnin                        (begc:endc))                   ; this%fan_totnin                 (:)   = 0.0_r8
-    allocate(this%fan_totnout                       (begc:endc))                   ; this%fan_totnout                (:)   = 0.0_r8
+    allocate(this%fan_totnin_col                    (begc:endc))                   ; this%fan_totnin_col             (:)   = spval
+    allocate(this%fan_totnout_col                   (begc:endc))                   ; this%fan_totnout_col            (:)   = spval
     
     allocate(this%sminn_to_plant_col                (begc:endc))                   ; this%sminn_to_plant_col         (:)   = nan
     allocate(this%potential_immob_col               (begc:endc))                   ; this%potential_immob_col        (:)   = nan
@@ -485,13 +485,14 @@ contains
             ptr_col=this%fert_runoff_col)
     end if
 
-    this%fan_totnin(begc:endc) = spval
+    this%fan_totnin_col(begc:endc) = spval
     call hist_addfld1d(fname='FAN_TOTNIN', units='gN/m^2/s', &
          avgflag='A', long_name='Total N input into FAN', &
-         ptr_col=this%fan_totnin, default='inactive')
+         ptr_col=this%fan_totnin_col, default='inactive')
+    this%fan_totnout_col(begc:endc) = spval
     call hist_addfld1d(fname='FAN_TOTNOUT', units='gN/m^2/s', &
          avgflag='A', long_name='Total N output from FAN', &
-         ptr_col=this%fan_totnout, default='inactive')
+         ptr_col=this%fan_totnout_col, default='inactive')
     
     if (use_fun) then
        default = 'inactive'
@@ -1162,6 +1163,8 @@ contains
        this%ninputs_col(i)                   = value_column
        this%noutputs_col(i)                  = value_column
        this%som_n_leached_col(i)             = value_column
+       this%fan_totnin_col(i)                = value_column
+       this%fan_totnout_col(i)               = value_column
     end do
 
     if ( use_fan ) then

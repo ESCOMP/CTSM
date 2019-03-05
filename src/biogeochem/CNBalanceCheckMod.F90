@@ -266,10 +266,13 @@ contains
          f_n2o_nit           => soilbiogeochem_nitrogenflux_inst%f_n2o_nit_col           , & ! Input:  [real(r8) (:) ]  (gN/m2/s) flux of N2o from nitrification 
          som_n_leached       => soilbiogeochem_nitrogenflux_inst%som_n_leached_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total SOM N loss from vertical transport
 
+         fan_totnin          => soilbiogeochem_nitrogenflux_inst%fan_totnin_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total N input into the FAN pools
+         fan_totnout         => soilbiogeochem_nitrogenflux_inst%fan_totnout_col         , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total N output from the FAN pools
+      
          col_fire_nloss      => cnveg_nitrogenflux_inst%fire_nloss_col                   , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total column-level fire N loss 
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
          grainn_to_cropprodn => cnveg_nitrogenflux_inst%grainn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) grain N to 1-year crop product pool
-
+         
          totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
          )
 
@@ -294,6 +297,8 @@ contains
             col_ninputs(c) = col_ninputs(c) + fert_to_sminn(c) + soyfixn_to_sminn(c)
          end if
 
+         col_ninputs(c) = col_ninputs(c) + fan_totnin(c)
+
          ! calculate total column-level outputs
          col_noutputs(c) = denit(c) + col_fire_nloss(c)
 
@@ -315,7 +320,8 @@ contains
          end if
 
          col_noutputs(c) = col_noutputs(c) - som_n_leached(c)
-
+         col_noutputs(c) = col_noutputs(c) + fan_totnout(c)
+         
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
