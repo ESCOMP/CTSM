@@ -2486,6 +2486,7 @@ sub setup_logic_dynamic_subgrid {
    setup_logic_do_transient_crops($opts, $nl_flags, $definition, $defaults, $nl, $physv);
    setup_logic_do_harvest($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_dynbal_baselines');
 }
 
 sub setup_logic_do_transient_pfts {

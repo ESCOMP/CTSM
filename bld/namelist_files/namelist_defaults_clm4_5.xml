@@ -2546,6 +2546,13 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
 
 <!-- =========================================  -->
+<!-- Defaults for dynamic subgrid               -->
+<!-- (some other defaults for dynamic subgrid   -->
+<!-- are set in the BuildNamelist code)         -->
+<!-- =========================================  -->
+<reset_dynbal_baselines>.false.</reset_dynbal_baselines>
+
+<!-- =========================================  -->
 <!-- Defaults for init_interp                   -->
 <!-- =========================================  -->
 
