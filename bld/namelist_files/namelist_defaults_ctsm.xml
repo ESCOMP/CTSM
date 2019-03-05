@@ -1051,7 +1051,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <fan_mapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</fan_mapalgo>
 <fan_mapalgo use_cn=".true."   hgrid="1x1_tropicAtl"       >nn</fan_mapalgo>
 <fan_mapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</fan_mapalgo>
-
+<fan_to_bgc_crop>.false.</fan_to_bgc_crop>
+<fan_to_bgc_veg>.false.</fan_to_bgc_veg>
 
 <!-- LAI streams namelist defaults -->
 <use_lai_streams        >.false.</use_lai_streams>
