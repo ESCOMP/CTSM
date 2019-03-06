@@ -2603,8 +2603,11 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <use_aereoxid_prog use_fates=".true.">.true.</use_aereoxid_prog>
 
 <finundation_res finundation_method="TWS_inversion">1.9x2.5</finundation_res>
+<finundation_res finundation_method="ZWT_inversion">1.9x2.5</finundation_res>
 
 <stream_fldfilename_ch4finundated finundation_method="TWS_inversion" hgrid="1.9x2.5"
+>lnd/clm2/paramdata/finundated_inversiondata_0.9x1.25_c170706.nc</stream_fldfilename_ch4finundated>
+<stream_fldfilename_ch4finundated finundation_method="ZWT_inversion" hgrid="1.9x2.5"
 >lnd/clm2/paramdata/finundated_inversiondata_0.9x1.25_c170706.nc</stream_fldfilename_ch4finundated>
 
 <!-- =========================================  -->
