@@ -242,8 +242,8 @@
   </compset>
 
   <compset>
-    <alias>ISSP226Clm50BgcCrop</alias>
-    <lname>SSP226_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <alias>ISSP126Clm50BgcCrop</alias>
+    <lname>SSP126_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -259,11 +259,6 @@
   <compset>
     <alias>ISSP370Clm50BgcCrop</alias>
     <lname>SSP370_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>ISSP334Clm50BgcCrop</alias>
-    <lname>SSP334_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>

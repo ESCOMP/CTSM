@@ -103,7 +103,7 @@
     <type>char</type>
     <default_value>UNSET</default_value>
     <values>
-      <!-- Use rcp4.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
+      <!-- Use SSP5-8.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
       <value compset="^2010_"		            >2010_control</value>
       <value compset="^2000_"		            >2000_control</value>
       <value compset="^1850_"		            >1850_control</value>
@@ -119,7 +119,7 @@
       <value compset="^SSP460_"	                    >1850-2100_SSP4-6.0_transient</value>
       <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
       <value compset="^AMIP_"	                    >20thC_transient</value>
-      <value compset="^PIPD_"                       >1850-2100_rcp4.5_transient</value>
+      <value compset="^PIPD_"                       >1850-2100_SSP5-8.5_transient</value>
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>
