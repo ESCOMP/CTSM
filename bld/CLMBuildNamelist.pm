@@ -2897,13 +2897,11 @@ sub setup_logic_methane {
     # Get resolution to read streams file for
     #
     my $finundation_method = remove_leading_and_trailing_quotes($nl->get_value('finundation_method' ));
-    if ( $finundation_method eq "TWS_inversion" ) {
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'finundation_res', 
-                'finundation_method'=>$finundation_method );
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ch4finundated', 
-                'finundation_method'=>$finundation_method,
-                'finundation_res'=>$nl->get_value('finundation_res') );
-    }
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'finundation_res', 
+             'finundation_method'=>$finundation_method );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ch4finundated', 
+             'finundation_method'=>$finundation_method,
+             'finundation_res'=>$nl->get_value('finundation_res') );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_aereoxid_prog',
                 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
     #

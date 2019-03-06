@@ -12,7 +12,7 @@
     The notation for the compset longname is
     TIME_ATM[%phys]_LND[%phys]_ICE[%phys]_OCN[%phys]_ROF[%phys]_GLC[%phys]_WAV[%phys][_BGC%phys]
     Where for the CAM specific compsets below the following is supported
-    TIME = Time period (e.g. 2000, HIST, SSP5-8.5...)
+    TIME = Time period (e.g. 2000, HIST, SSP585...)
     ATM  = [CAM40, CAM50, CAM55]
     LND  = [CLM40, CLM45, CLM50, SLND]
     ICE  = [CICE, DICE, SICE]
@@ -238,47 +238,47 @@
   <!-- Future scenario compsets -->
   <compset>
     <alias>ISSP585Clm50BgcCrop</alias>
-    <lname>SSP5-8.5_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <lname>SSP585_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP226Clm50BgcCrop</alias>
-    <lname>SSP2-2.6_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <lname>SSP226_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP119Clm50BgcCrop</alias>
-    <lname>SSP1-1.9_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <lname>SSP119_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP245Clm50BgcCrop</alias>
-    <lname>SSP2-4.5_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <lname>SSP245_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP370Clm50BgcCrop</alias>
-    <lname>SSP3-7.0_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <lname>SSP370_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP334Clm50BgcCrop</alias>
-    <lname>SSP3-3.4_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <lname>SSP334_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP434Clm50BgcCrop</alias>
-    <lname>SSP4-3.4_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <lname>SSP434_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP460Clm50BgcCrop</alias>
-    <lname>SSP4-6.0_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <lname>SSP460_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP534Clm50BgcCrop</alias>
-    <lname>SSP5-3.4_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <lname>SSP534_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
 
