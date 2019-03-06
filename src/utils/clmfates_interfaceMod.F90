@@ -2259,6 +2259,27 @@ contains
        this%fates(nc)%bc_in(s)%z_sisl(1:nlevsoil)     = col%z(c,1:nlevsoil)
        this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp) = &
              dzsoi_decomp(1:nlevdecomp)
+
+       if (use_vertsoilc) then
+          do j=1,nlevsoil
+             this%fates(nc)%bc_in(s)%decomp_id(j) = j
+             ! Check to make sure that dz = dz_decomp_sisl when vertical soil dynamics
+             ! are active
+             if(abs(this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)-this%fates(nc)%bc_in(s)%dz_sisl(j))<1.e-10_r8)then
+                write(iulog,*) 'when vertical soil decomp dynamics are on'
+                write(iulog,*) 'fates assumes that the decomposition depths equal the soil depths'
+                write(iulog,*) 'layer: ',j
+                write(iulog,*) 'dz_decomp_sisl(j): ',this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)
+                write(iulog,*) 'dz_sisl(j): ',this%fates(nc)%bc_in(s)%dz_sisl(j)
+                call endrun(msg=errMsg(sourcefile, __LINE__))
+             end if
+          end do
+       else
+          do j=1,nlevsoil
+             this%fates(nc)%bc_in(s)%decomp_id(j) = 1
+          end do
+       end if
+
     end do
 
     return
