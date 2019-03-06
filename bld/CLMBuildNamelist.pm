@@ -1533,7 +1533,7 @@ sub process_namelist_inline_logic {
   ################################
   # namelist group: fan_nml #
   ################################
-  setup_logic_fan_nml($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  # setup_logic_fan_nml($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
   ##################################
   # namelist group: cnmresp_inparm #
@@ -2868,14 +2868,50 @@ sub setup_logic_fan {
   # Flags to control FAN (Flow of Agricultural Nitrogen) nitrogen deposition (manure and fertilizer)
   #
    my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-   if ( $opts->{'fan'} ) {
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fan',
-		   'use_cn'=>$nl_flags->{'use_cn'}, 'use_ed'=>$nl_flags->{'use_ed'} );
-       $nl_flags->{'use_fan'} = $nl->get_value('use_fan');
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_nh3_to_atm',
-		   'fan_mode'=>$opts->{'fan'});
-       $nl_flags->{'fan_nh3_to_atm'} = $nl->get_value('fan_nh3_to_atm');
+   my $fan_mode = $opts->{'fan'};
+   print "FAN MODE: $fan_mode\n";
+   if ($fan_mode eq 'default') { $fan_mode = 'off'; }
+
+   if (!($fan_mode =~ /atm|soil|full|on|off/)) {
+       $log->fatal_error("fan_mode not one of atm, soil, full, on, off\n" );
    }
+   #print "USE_FAN 1:", $nl->get_value('use_fan');
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fan',
+	       'fan_mode'=>$fan_mode );
+   print "USE_FAN 2:", $nl->get_value('use_fan');
+
+   $nl_flags->{'use_fan'} = $nl->get_value('use_fan');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_nh3_to_atm',
+	       'fan_mode'=>$fan_mode);
+   $nl_flags->{'fan_nh3_to_atm'} = $nl->get_value('fan_nh3_to_atm');
+
+   if ( !($fan_mode eq 'off') ) {
+    
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_mapalgo');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_fan', 
+		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_fan', 
+		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+
+    # Set align year, if first and last years are different
+       if ( $nl->get_value('stream_year_first_fan') != $nl->get_value('stream_year_last_fan') ) {
+	   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_fan', 
+		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+       }
+
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_fan');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_crop',
+		   'fan_mode'=>$fan_mode);
+       #$nl_flags->{'fan_to_bgc_crop'} = $nl->get_value('fan_to_bgc_crop');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_veg',
+		   'fan_mode'=>$fan_mode);
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fract_spread_grass',
+		   'fan_mode'=>$fan_mode);
+
+
+   }
+   
    if ( &value_is_true( $nl_flags->{'use_ed'} ) && &value_is_true( $nl_flags->{'use_fan'} ) ) {
        fatal_error("Cannot turn use_fan on when use_ed is on\n" );
    }
@@ -3762,8 +3798,9 @@ sub add_default {
 
   # check whether the variable has a value in the namelist object -- if so then skip to end
   my $val = $nl->get_variable_value($group, $var);
-  if (! defined $val) {
+  print "ifdef $var $val\n";
 
+  if (! defined $val) {
     # Look for a specified value in the options hash
 
     if (defined $settings{'val'}) {

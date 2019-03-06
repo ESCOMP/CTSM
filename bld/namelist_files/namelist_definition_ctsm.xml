@@ -669,7 +669,7 @@ Toggle to turn on the plant hydraulic stress model
 </entry>
 
 <entry id="use_fan" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".false.">
+        group="clm_inparm" valid_values="">
 Toggle to turn on the Flow of Agricultural Nitrogen (FAN) model
 </entry>
 
@@ -1591,10 +1591,15 @@ Mapping method from FAN Nitrogen (manure) deposition input file to the model res
 
 <entry id="fan_to_bgc_crop" type="logical" category="physics"
        group="fan_nml" valid_values="" >
-Toggle to connect the FAN N pools to soil biogeochemistry for CROP columns
+Fraction (0...1) of manure N moved from crops to native vegetation column
 </entry>
 
 <entry id="fan_to_bgc_veg" type="logical" category="physics"
+       group="fan_nml" valid_values="" >
+Toggle to connect the FAN N pools to soil biogeochemistry for NATIVE VEGETATION columns
+</entry>
+
+<entry id="fract_spread_grass" type="real" category="physics"
        group="fan_nml" valid_values="" >
 Toggle to connect the FAN N pools to soil biogeochemistry for NATIVE VEGETATION columns
 </entry>

@@ -452,12 +452,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_hydrstress phys="clm5_0" use_fates=".false.">.true.</use_hydrstress>
 
 <!-- flow of agricultural nitrogen (fan) model -->
-<use_fan phys="clm4_5" use_cn=".true.">.true.</use_fan>
-<use_fan phys="clm4_5" use_cn=".false.">.false.</use_fan>
-<use_fan phys="clm5_0" use_cn=".true.">.true.</use_fan>
-<use_fan phys="clm5_0" use_cn=".false.">.false.</use_fan>
-<use_fan phys="clm5_0" use_ed=".true." >.false.</use_fan>
-<use_fan fan_mode='disable'>.false.</use_fan>
+<use_fan>.false.</use_fan>
+<use_fan fan_mode='atm'>.true.</use_fan>
+<use_fan fan_mode='on'>.true.</use_fan>
+<use_fan fan_mode='soil'>.true.</use_fan>
+<use_fan fan_mode='full'>.true.</use_fan>
+
+
 <!--
 
      Initial condition files to use and or interpolate from
@@ -1015,44 +1016,52 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 
 <!--KO-->
 <!-- FAN Nitrogen (manure) deposition streams namelist defaults -->
-<stream_year_first_fan use_cn=".true."   sim_year="2000" >2010</stream_year_first_fan>
-<stream_year_last_fan  use_cn=".true."   sim_year="2000" >2010</stream_year_last_fan>
+<stream_year_first_fan   sim_year="2000" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="2000" >2010</stream_year_last_fan>
 
-<stream_year_first_fan use_cn=".true."   sim_year="1850" >2010</stream_year_first_fan>
-<stream_year_last_fan  use_cn=".true."   sim_year="1850" >2010</stream_year_last_fan>
+<stream_year_first_fan   sim_year="1850" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="1850" >2010</stream_year_last_fan>
 
-<stream_year_first_fan use_cn=".true."   sim_year="1000" >2010</stream_year_first_fan>
-<stream_year_last_fan  use_cn=".true."   sim_year="1000" >2010</stream_year_last_fan>
+<stream_year_first_fan   sim_year="1000" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="1000" >2010</stream_year_last_fan>
 
-<stream_year_first_fan use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2010</stream_year_first_fan>
-<stream_year_last_fan  use_cn=".true."   sim_year="constant" sim_year_range="1000-1002" >2010</stream_year_last_fan>
+<stream_year_first_fan   sim_year="constant" sim_year_range="1000-1002" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="constant" sim_year_range="1000-1002" >2010</stream_year_last_fan>
 
-<stream_year_first_fan use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2010</stream_year_first_fan>
-<stream_year_last_fan  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2010</stream_year_last_fan>
+<stream_year_first_fan   sim_year="constant" sim_year_range="1000-1004" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="constant" sim_year_range="1000-1004" >2010</stream_year_last_fan>
 
-<stream_year_first_fan use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2010</stream_year_first_fan>
-<stream_year_last_fan  use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2010</stream_year_last_fan>
+<stream_year_first_fan   sim_year="constant" sim_year_range="1850-2000" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="constant" sim_year_range="1850-2000" >2010</stream_year_last_fan>
 
-<stream_year_first_fan use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2010</stream_year_first_fan>
-<stream_year_last_fan  use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2010</stream_year_last_fan>
+<stream_year_first_fan   sim_year="constant" sim_year_range="1850-2100" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="constant" sim_year_range="1850-2100" >2010</stream_year_last_fan>
 
-<stream_year_first_fan use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_first_fan>
-<stream_year_last_fan  use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_last_fan>
+<stream_year_first_fan   sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_first_fan>
+<stream_year_last_fan    sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_last_fan>
 
 <stream_fldfilename_fan>nitrogen.nc</stream_fldfilename_fan>
 
-<fan_mapalgo use_cn=".true."                               >bilinear</fan_mapalgo>
+<fan_mapalgo                               >bilinear</fan_mapalgo>
 
-<fan_mapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</fan_mapalgo>
-<fan_mapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</fan_mapalgo>
-<fan_mapalgo use_cn=".true."   hgrid="1x1_vancouverCAN"    >nn</fan_mapalgo>
-<fan_mapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</fan_mapalgo>
-<fan_mapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</fan_mapalgo>
-<fan_mapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</fan_mapalgo>
-<fan_mapalgo use_cn=".true."   hgrid="1x1_tropicAtl"       >nn</fan_mapalgo>
-<fan_mapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</fan_mapalgo>
-<fan_to_bgc_crop>.false.</fan_to_bgc_crop>
+<fan_mapalgo   hgrid="1x1_brazil"          >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_mexicocityMEX"   >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_vancouverCAN"    >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_urbanc_alpha"    >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_camdenNJ"        >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_asphaltjungleNJ" >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="1x1_tropicAtl"       >nn</fan_mapalgo>
+<fan_mapalgo   hgrid="5x5_amazon"          >nn</fan_mapalgo>
+
+<fan_to_bgc_crop fan_mode="soil">.true.</fan_to_bgc_crop>
+<fan_to_bgc_crop fan_mode="full">.true.</fan_to_bgc_crop>
+<fan_to_bgc_crop fan_mode="atm">.false.</fan_to_bgc_crop>
 <fan_to_bgc_veg>.false.</fan_to_bgc_veg>
+<fract_spread_grass fan_mode="on">1.0</fract_spread_grass>
+<fract_spread_grass fan_mode="soil">0.0</fract_spread_grass>
+<fract_spread_grass fan_mode="full">0.0</fract_spread_grass>
+<fract_spread_grass fan_mode="atm">1.0</fract_spread_grass>
+
 
 <!-- LAI streams namelist defaults -->
 <use_lai_streams        >.false.</use_lai_streams>
