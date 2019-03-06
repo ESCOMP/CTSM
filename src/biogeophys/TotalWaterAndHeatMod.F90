@@ -652,9 +652,12 @@ contains
     ! average liquid water temperature. For example, if we're subtracting out a baseline
     ! water amount because a particular water state is fictitious, we probably shouldn't
     ! include that particular state when determining the weighted average temperature of
-    ! liquid water. For now, though, we're just subtracting out the ice from glacier
-    ! columns (we're not subtracting any liquid water states), so I think we're okay not
-    ! correcting for that here.
+    ! liquid water. And conversely, if we're adding a state via these baselines, should
+    ! we also add some water temperature of that state? The tricky thing here is what to
+    ! do when we end up subtracting water due to the baselines, so for now I'm simply not
+    ! trying to account for the temperature of these baselines at all. This amounts to
+    ! assuming that the baselines that we add / subtract are at the average temperature
+    ! of the real liquid water in the column.
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
        heat(c) = heat(c) - dynbal_baseline_heat(c)
@@ -912,9 +915,12 @@ contains
     ! average liquid water temperature. For example, if we're subtracting out a baseline
     ! water amount because a particular water state is fictitious, we probably shouldn't
     ! include that particular state when determining the weighted average temperature of
-    ! liquid water. For now, though, we're just subtracting out the ice from glacier
-    ! columns (we're not subtracting any liquid water states), so I think we're okay not
-    ! correcting for that here.
+    ! liquid water. And conversely, if we're adding a state via these baselines, should
+    ! we also add some water temperature of that state? The tricky thing here is what to
+    ! do when we end up subtracting water due to the baselines, so for now I'm simply not
+    ! trying to account for the temperature of these baselines at all. This amounts to
+    ! assuming that the baselines that we add / subtract are at the average temperature
+    ! of the real liquid water in the column.
     do fc = 1, num_lakec
        c = filter_lakec(fc)
        heat(c) = heat(c) - dynbal_baseline_heat(c)
