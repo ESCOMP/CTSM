@@ -173,7 +173,9 @@
       <value compset="_BGC%BDRD"   >diagnostic</value>
       <value compset="_BGC%BPRP"   >prognostic</value>
       <value compset="HIST.*_DATM" >diagnostic</value>
+      <!-- This requires a coordination with a cime tag 
       <value compset="SSP.*_DATM"  >diagnostic</value>
+      -->
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>
