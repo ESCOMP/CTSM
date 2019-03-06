@@ -106,8 +106,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="SSP5-8.5" >lnd/clm2/isotopes/atm_delta_C14_CMIP6_SSP5B_3x1_global_1850-2100_yearly_c181209.nc</atm_c14_filename>
 
 <!-- Irrigation default -->
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false." sim_year_range="1850-2100">.true.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true."  sim_year_range="1850-2100">.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5"                    sim_year_range="1850-2100">.false.</irrigate>
+
 <irrigate use_crop=".true." >.false.</irrigate>
 <irrigate use_crop=".false.">.true.</irrigate>
+
 
 <!-- MEGAN model -->
 <megan clm_accelerated_spinup="on" >0</megan>
@@ -1050,6 +1055,14 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <fsnowaging  >lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
 
 <!-- Nitrogen deposition streams namelist defaults -->
+<stream_year_first_ndep phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2100</stream_year_last_ndep>
+<model_year_align_ndep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >1850</model_year_align_ndep>
+
+<stream_year_first_ndep phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2100</stream_year_last_ndep>
+<model_year_align_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >1850</model_year_align_ndep>
+
 <stream_year_first_ndep use_cn=".true."   sim_year="2010" >2010</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   sim_year="2010" >2010</stream_year_last_ndep>
 
@@ -1193,6 +1206,14 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <lightngmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</lightngmapalgo>
 
 <!-- Population density streams namelist defaults -->
+<stream_year_first_popdens phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >1850</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
+<model_year_align_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >1850</model_year_align_popdens>
+
+<stream_year_first_popdens phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >1850</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
+<model_year_align_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >1850</model_year_align_popdens>
+
 <stream_year_first_popdens use_cn=".true."   sim_year="2010" >2010</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="2010" >2010</stream_year_last_popdens>
 
@@ -1249,6 +1270,10 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <popdensmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</popdensmapalgo>
 
 <!-- Urban time varying streams namelist defaults -->
+<stream_year_first_urbantv phys="clm5_0" sim_year_range="1850-2100" >1850</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm5_0" sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
+<model_year_align_urbantv  phys="clm5_0" sim_year_range="1850-2100" >1850</model_year_align_urbantv>
+
 <stream_year_first_urbantv phys="clm4_5"  >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm4_5"  >2000</stream_year_last_urbantv>
 

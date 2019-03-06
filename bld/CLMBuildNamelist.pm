@@ -1890,7 +1890,8 @@ sub setup_logic_irrigate {
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrigate',
-                'use_crop'=>$nl_flags->{'use_crop'}, 'use_cndv'=>$nl_flags->{'use_cndv'} );
+                'use_crop'=>$nl_flags->{'use_crop'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 
+                'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, );
     if ( &value_is_true($nl->get_value('irrigate') ) ) {
        $nl_flags->{'irrigate'} = ".true."
     } else {
