@@ -110,6 +110,8 @@ contains
          stream_year_last_fan, model_year_align_fan, fan_mapalgo, stream_fldFileName_fan, &
          fract_spread_grass
 
+    if (.not. use_fan) return
+    
     if (masterproc) then
        unitn = getavu()
        write(iulog, *) 'Read in ' // nmlname // '  namelist'
@@ -611,15 +613,14 @@ contains
        write(iulog, *) 'SoilPH check:', soilph_min, soilph_max, def_ph_count
     end if
 
-    old = ns%fan_totn_col(filter_soilc(1:num_soilc))
-
+    !old = ns%fan_totn_col(filter_soilc(1:num_soilc))
     call update_summary(ns, nf, filter_soilc, num_soilc)
 
-    call debug_balance(ns, nf, old, filter_soilc(1:num_soilc))
+    !call debug_balance(ns, nf, old, filter_soilc(1:num_soilc))
     
-    call debug_balance(ns, nf, old, (/1/))
-    
-    call debug_balance(ns, nf, old, (/2/))
+    !do fc = 1, num_soilc
+    !   call debug_balance(ns, nf, old, (/fc/))
+    !end do
     
     end associate
 
@@ -640,8 +641,7 @@ contains
       print *, 'old total:', sum(oldn(columns))
       print *, 'new total:', sum(newn(columns))
       print *, 'delta:', sum(oldn(columns)) - sum(newn(columns))
-      print *, 'new flux:', (sum(nf%fan_totnin(columns)) - sum(nf%fan_totnout(columns)))*dt
-      !print *, 'total from funct', get_total_n(ns, nf, 'pools_manure') + get_total_n(ns, nf, 'pools_fertilizer')
+      print *, 'new flux:', (sum(nf%fan_totnin_col(columns)) - sum(nf%fan_totnout_col(columns)))*dt
       
     end subroutine debug_balance
       
@@ -860,7 +860,6 @@ contains
                 
                 ! Evaluate the NH3 losses, separate for ruminants (open barns) and others
                 ! (poultry and pigs, closed barns). Note the slicing of fluxes(:,:) and fluxes_tan(:,:).
-                man_n_transf(c) = flux_grazing
                 nh3_flux_stores(c) = 0.0
 
                 if (flux_avail_rum < 0) then 
@@ -909,7 +908,7 @@ contains
                 flux_grass_spread = flux_grass_spread + fract_spread_grass * total_to_store*col%wtgcell(c)
                 flux_grass_spread_tan = flux_grass_spread_tan + fract_spread_grass * total_to_store_tan*col%wtgcell(c)
                 
-                man_n_transf(c) = man_n_transf(c) + total_to_store
+                man_n_transf(c) = flux_grazing + fract_spread_grass*total_to_store
 
                 nh3_flux_stores(c) = sum(fluxes_nitr(iflx_air_stores,:))
                 nh3_flux_barns(c) = sum(fluxes_nitr(iflx_air_barns,:))
@@ -965,24 +964,28 @@ contains
        total = total + ns%tan_f0_col(c) + ns%tan_f1_col(c) + ns%tan_f2_col(c) + ns%tan_f3_col(c)
        total = total + ns%fert_u0_col(c) + ns%fert_u1_col(c)
        ns%fan_totn_col(c) = total
-
+       
        if (lun%itype(col%landunit(c)) == istcrop) then
           ! no grazing, man_n_appl is from the same column and not counted as input
-          fluxin = nf%man_n_barns_col(c) + nf%fert_n_appl_col(c)
+          fluxin = nf%man_n_mix_col(c) + nf%fert_n_appl_col(c)
+          print *, 'crop', fc, fluxin
        else
           ! no barns or fertilization. man_n_appl is transferred from crop columns and not
           ! included in the other inputs.
           fluxin = nf%man_n_grz_col(c) + nf%man_n_appl_col(c)
+          print *, 'veg', fc, fluxin
        end if
 
        flux_loss = nf%nh3_man_app_col(c) + nf%nh3_grz_col(c) + nf%manure_runoff_col(c) &
             + nf%nh3_stores_col(c) + nf%nh3_barns_col(c) &
             + nf%nh3_fert_col(c) + nf%fert_runoff_col(c)
-              
+       print *, 'flux_loss', flux_loss
        fluxout = nf%fert_no3_prod_col(c) + nf%fert_nh4_to_soil_col(c) &
             + nf%manure_no3_prod_col(c) + nf%manure_nh4_to_soil_col(c) &
             + nf%man_n_transf_col(c) + flux_loss
-
+       print *, 'flux_out', fluxout
+       print *, 'transf', nf%man_n_transf_col(c)
+       
        nf%fan_totnin_col(c) = fluxin
        nf%fan_totnout_col(c) = fluxout
        
@@ -1003,9 +1006,11 @@ contains
 
     integer :: c, fc
     real(r8) :: fan_nitr
+
+    if (.not. (fan_to_bgc_veg .or. fan_to_bgc_crop)) return
     
     do fc = 1, num_soilc
-       c = filter_soilc(c)
+       c = filter_soilc(fc)
        fan_nitr &
             = sbgc_nf%fert_no3_prod_col(c) + sbgc_nf%fert_nh4_to_soil_col(c) &
             + sbgc_nf%manure_no3_prod_col(c) + sbgc_nf%manure_nh4_to_soil_col(c)
