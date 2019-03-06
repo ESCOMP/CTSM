@@ -58,7 +58,6 @@ module CNNDynamicsMod
   end type params_type
   type(params_type) :: params_inst
   
-  logical, private, parameter :: debug_fan = .false.
   !-----------------------------------------------------------------------
 
 contains
