@@ -1551,6 +1551,15 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="SMS_Ld5" grid="f10_f10_musgs" compset="ISSP585Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Transient production low res future scenario case with isotopes with a december 2050 start</option>
+    </options>
+  </test>
   <test name="SMS_Lm1" grid="f09_g17_gl4" compset="I1850Clm50Bgc" testmods="clm/clm50KitchenSink">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
