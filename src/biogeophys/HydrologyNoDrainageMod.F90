@@ -19,6 +19,7 @@ Module HydrologyNoDrainageMod
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use IrrigationMod, only : irrigation_type
+  use WaterType , only : water_type
   use WaterFluxBulkType     , only : waterfluxbulk_type
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
@@ -32,32 +33,28 @@ Module HydrologyNoDrainageMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public  :: IrrigationWithdrawals  ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
+  public  :: CalcAndWithdrawIrrigationFluxes  ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
   public  :: HydrologyNoDrainage    ! Calculates soil/snow hydrology without drainage
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine IrrigationWithdrawals(bounds, &
-       num_hydrologyc, filter_hydrologyc, &
+  subroutine CalcAndWithdrawIrrigationFluxes(bounds, &
        num_soilc, filter_soilc, &
        num_soilp, filter_soilp, &
        soilhydrology_inst, soilstate_inst, &
        irrigation_inst, &
-       waterdiagnosticbulk_inst, waterfluxbulk_inst, waterstatebulk_inst)
+       water_inst)
     !
     ! !DESCRIPTION:
     ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
     !
     ! !USES:
-    use SoilHydrologyMod       , only : CalcAvailableUnconfinedAquifer
     use SoilHydrologyMod       , only : WithdrawGroundwaterIrrigation
     !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds
-    integer                        , intent(in)    :: num_hydrologyc       ! number of points in filter_hydrologyc
-    integer                        , intent(in)    :: filter_hydrologyc(:) ! column filter for hydrologically-active points
     integer                        , intent(in)    :: num_soilc            ! number of points in filter_soilc
     integer                        , intent(in)    :: filter_soilc(:)      ! column filter for soil points
     integer                        , intent(in)    :: num_soilp            ! number of points in filter_soilp
@@ -65,37 +62,30 @@ contains
     type(soilhydrology_type)       , intent(in)    :: soilhydrology_inst
     type(soilstate_type)           , intent(in)    :: soilstate_inst
     type(irrigation_type)          , intent(inout) :: irrigation_inst
-    type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterfluxbulk_type)       , intent(inout) :: waterfluxbulk_inst
-    type(waterstatebulk_type)      , intent(inout) :: waterstatebulk_inst
+    type(water_type)               , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
+    integer :: i  ! tracer index
 
-    character(len=*), parameter :: subname = 'IrrigationWithdrawals'
+    character(len=*), parameter :: subname = 'CalcAndWithdrawIrrigationFluxes'
     !-----------------------------------------------------------------------
 
-    ! Calculate amount of water available for groundwater irrigation
-    if (irrigation_inst%UseGroundwaterIrrigation()) then
-       call CalcAvailableUnconfinedAquifer(bounds, num_hydrologyc, &
-            filter_hydrologyc, soilhydrology_inst, soilstate_inst, &
-            waterdiagnosticbulk_inst)
-    end if
-
     ! Calculate irrigation flux
-    call irrigation_inst%ApplyIrrigation(bounds, num_soilc, &
+    call irrigation_inst%CalcIrrigationFluxes(bounds, num_soilc, &
          filter_soilc, num_soilp, filter_soilp, &
-         waterfluxbulk_inst, &
-         available_gw_uncon = waterdiagnosticbulk_inst%available_gw_uncon_col(bounds%begc:bounds%endc))
+         soilhydrology_inst, soilstate_inst, &
+         water_inst)
 
     ! Remove groundwater irrigation
     if (irrigation_inst%UseGroundwaterIrrigation()) then
-       call WithdrawGroundwaterIrrigation(bounds, num_hydrologyc, &
-            filter_hydrologyc, soilhydrology_inst, soilstate_inst, &
-            waterstatebulk_inst, &
-            waterfluxbulk_inst)
+       do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+          call WithdrawGroundwaterIrrigation(bounds, num_soilc, filter_soilc, &
+               water_inst%bulk_and_tracers(i)%waterflux_inst, &
+               water_inst%bulk_and_tracers(i)%waterstate_inst)
+       end do
     end if
 
-  end subroutine IrrigationWithdrawals
+  end subroutine CalcAndWithdrawIrrigationFluxes
 
   !-----------------------------------------------------------------------
   subroutine HydrologyNoDrainage(bounds, &

@@ -153,7 +153,6 @@ sub GetListofNeededFiles {
                list       => $list,
                usrdat     => undef,
                help       => undef,
-               phys       => "clm4_5",
              );
 
   my $cmdline = "@ARGV";
@@ -189,10 +188,10 @@ sub GetListofNeededFiles {
   }
   my %inputopts;
   my @nl_definition_files    = (
-                                 "$cfgdir/namelist_files/namelist_definition_$opts{'phys'}.xml"
+                                 "$cfgdir/namelist_files/namelist_definition_ctsm.xml"
                                );
   $inputopts{'nldef_files'}    = \@nl_definition_files;
-  $inputopts{'empty_cfg_file'} = "$cfgdir/config_files/config_definition_$opts{'phys'}.xml";
+  $inputopts{'empty_cfg_file'} = "$cfgdir/config_files/config_definition_ctsm.xml";
 
   my $definition = Build::NamelistDefinition->new( $nl_definition_files[0] );
   foreach my $nl_defin_file ( @nl_definition_files ) {
@@ -209,7 +208,7 @@ sub GetListofNeededFiles {
   }
 
   # Input options
-  push @nl_defaults_files, "$cfgdir/namelist_files/namelist_defaults_$opts{'phys'}.xml";
+  push @nl_defaults_files, "$cfgdir/namelist_files/namelist_defaults_ctsm.xml";
   if ( defined($opts{'usrdat'}) ) {
       push @nl_defaults_files, "$cfgdir/namelist_files/namelist_defaults_usr_files.xml";
   }
@@ -257,13 +256,10 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
            if ( $sim_year ne 1850 && $sim_year ne 2000 && $sim_year > 1800 ) { next YEAR; }
 
            my @bgcsettings   = $cfg->get_valid_values( "bgc" );
-           #my @glc_meclasses = $cfg->get_valid_values( "glc_nec" );
-           my @glc_meclasses = ( 0, 10 );
-           print "glc_nec = @glc_meclasses bgc=@bgcsettings\n" if $printing;
+           print "bgc=@bgcsettings\n" if $printing;
            #
            # Loop over all possible BGC settings
            #
-	   my $phys = $opts{'phys'};
            foreach my $bgc ( @bgcsettings ) {
               $settings{'bgc'} = $bgc;
               my @crop_vals;
@@ -272,47 +268,29 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
               } else {
                  @crop_vals = ( "off" );
               }
+              $settings{'glc_nec'} = 10;
               #
-              # Loop over all possible glc_nec settings
+              # Loop over all possible crop settings
               #
-              foreach my $glc_nec ( @glc_meclasses ) {
-                 $settings{'glc_nec'} = $glc_nec;
-                 #
-                 # Loop over all possible crop settings
-                 #
-                 foreach my $crop ( @crop_vals ) {
-                   $settings{'crop'} = $crop;
-                   if ( $crop eq "on" ) {
-                     $settings{'maxpft'} = 78;
-                   } else {
-                     $settings{'maxpft'} = 17;
-                   }
-                   my @irrigset;
-                   if ( $glc_nec  == 0 && $sim_year == 2000 ) {
-                     @irrigset= ( ".true.", ".false." );
-                   } else {
-                     @irrigset= ( ".false." );
-                   }
-                   #
-                   # Loop over irrigation settings
-                   #
-                   foreach my $irrig ( @irrigset ) {
-                     $settings{'irrig'}     = $irrig;
-                     $inputopts{'namelist'} = "clm_inparm";
-                     &GetListofNeededFiles( \%inputopts, \%settings, \%files );
-                     if ( $printTimes >= 1 ) {
-                       $inputopts{'printing'} = 0;
-                     }
-                   }
+              foreach my $crop ( @crop_vals ) {
+                 $settings{'crop'} = $crop;
+                 if ( $crop eq "on" ) {
+                    $settings{'maxpft'} = 78;
+                 } else {
+                    $settings{'maxpft'} = 17;
                  }
-               }
-            }
-         }
+                 $inputopts{'namelist'} = "clm_inparm";
+                 &GetListofNeededFiles( \%inputopts, \%settings, \%files );
+                 if ( $printTimes >= 1 ) {
+                    $inputopts{'printing'} = 0;
+                 }
+              }
+           }
+        }
         #
         # Now do sim-year ranges
         #
         $settings{'bgc'}       = "cn";
-        $settings{'irrig'}     = ".false.";
         $inputopts{'namelist'} = "clm_inparm";
         foreach my $sim_year_range ( $definition->get_valid_values( "sim_year_range", 'noquotes'=>1 ) ) {
            $settings{'sim_year_range'} = $sim_year_range;

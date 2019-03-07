@@ -1,4 +1,1028 @@
 ===============================================================
+Tag name:  ctsm1.0.dev029
+Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
+Date: Tue Feb 26 23:42:39 MST 2019
+One-line Summary: Collapse landunits to the N most dominant
+
+Purpose of changes
+------------------
+
+ Allows the collapse to fewer landunits using the concept of 
+ N most dominant for the purpose of faster runs, eg in the context
+ of NWP (Numerical Weather Prediction).
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #581
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist variable n_dom_landunits with valid integer values from 0 to
+ max_lunit currently equal to 9, where 0 means “do nothing” and other
+ values determine the number of active landunits when running the model.
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   There is a question left in on whether the collapse call needs to also
+   be moved to inside dynamic landunits reading.
+
+Changes to tests or testing: Yes
+ ERS_D_Ld10.f10_f10_musgs.IHistClm50BgcCropGs.cheyenne_intel.clm-collapse_to_dominant_decStart
+ now replaces (by combining with) this test introduced in ctsm1.0.dev026
+ ERS_D_Ld10.f10_f10_musgs.IHistClm50BgcCropGs.cheyenne_intel.clm-collapse_nat_pfts_decStart
+ I added subroutine test_collapse_to_dom_landunits to test_surfrdUtils.pf
+ to include new Unit Tests. In same file I renamed
+ subroutine test_collapse_nat_pfts to test_collapse_to_dom_pfts
+ to accurately describe the contents of the subroutine.
+
+Code reviewed by: Erik Kluzek
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+
+CTSM tag used for the baseline comparisons: 
+ ctsm1.0.dev028
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Detailed list of changes
+------------------------
+
+ Replaced existing subroutine collapse_nat_pfts with
+ subroutine collapse_to_dominant which can collapse to the
+ N dominant landunits or N dominant pfts by performing the
+ same actions on the data.
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #639
+ https://github.com/ESCOMP/ctsm/pull/639
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev028
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Feb 26 14:35:01 MST 2019
+One-line Summary: Interpolate out-of-the-box initial conditions and remove expensive tests
+
+Purpose of changes
+------------------
+
+Two main changes (plus some small additional changes):
+
+1. Removed / reworked some expensive tests
+
+2. Interpolated all out-of-the-box initial conditions, so that the
+   out-of-the-box version is now compatible with our current
+   configuration. The changes from before were (a) our standard
+   configuration now uses the gx1v7 rather than gx1v6 land mask; (b)
+   many inactive points are now absent in memory.
+
+See https://github.com/ESCOMP/ctsm/pull/622 for details.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#312
+- Partially addresses ESCOMP/ctsm#275 (just a bit)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- New finidat files
+
+Substantial timing or memory changes:
+- Faster initialization times for cases that no longer need to interpolate initial conditions
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Removed or reworked expensive tests: see details in https://github.com/ESCOMP/ctsm/pull/622
+
+Code reviewed by: Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok: tests pass, baselines fail as expected
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev027
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all configurations that still need use_init_interp = .true.
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated carefully, but expected to be larger than roundoff/same climate
+
+  Answers change for cases that still need to do interpolation from
+  these out-of-the-box finidat files.
+
+  I first confirmed that the new finidat files are good via:
+
+  - Compared `ncdump -h` of old vs. new initial conditions files
+
+  - Ran the following tests, with comparison against master; verified that
+    these all pass and are bit-for-bit, that they use the new initial
+    conditions files, and that they now have `use_init_interp` unset
+    (whereas they used to have `use_init_interp` set to `.true.`); note
+    that these cover 6 of the 7 new initial conditions files:
+
+    ```
+    SMS_Ld1.f09_g17.I1850Clm45BgcGs.cheyenne_intel.clm-default
+    SMS_Ld1.f09_g17.I1850Clm45BgcCruGs.cheyenne_intel.clm-default
+    SMS_Ld1.f09_g17.I1850Clm50Sp.cheyenne_intel.clm-default
+    SMS_Ld1.f09_g17.I1850Clm50BgcCrop.cheyenne_intel.clm-ciso
+    SMS_Ld1.f09_g17.I1850Clm50BgcCropCru.cheyenne_intel.clm-ciso
+    SMS_Ld1.f09_g17.I1850Clm50SpCru.cheyenne_intel.clm-default
+    ```
+
+  - To cover the last new initial conditions file, ran the following test
+    (with the same checks as above: passes and bit-for-bit, checked
+    finidat, and checked `use_init_interp`), with `./xmlchange
+    LND_TUNING_MODE=clm5_0_cam6.0` (for the baseline for this test, I set
+    `init_interp_method = 'use_finidat_areas'`, which I also used in
+    interpolating this initial conditions file):
+    
+    ```
+    SMS_Ld1.f09_g17.I1850Clm50BgcCrop.cheyenne_intel
+    ```
+
+  Details on answer changes:
+
+    As noted above, these changes are bit-for-bit for configurations
+    that can now use the out-of-the-box initial conditions without
+    interpolation. However, answers change for configurations that still
+    require interpolation of the out-of-the-box initial conditions
+    (e.g., because they are at a different resolution than the finidat
+    file).
+
+    I expected these answer changes around the Caspian Sea, due to the
+    fact that we are now effectively interpolating twice from the
+    original file: once to produce the new out-of-the-box file (which
+    includes an interpolation from `gx1v6` to `gx1v7`, and so
+    interpolates onto the Caspian Sea region) and once to go from
+    `f09_g17` to the target resolution (rather than interpolating
+    directly from `f09_g16` to the target resolution).
+
+    However, when I ran a test with comparison to baselines -
+    `ERP_Ld5.f19_g17.I1850Clm50Bgc.cheyenne_intel.clm-default` - I saw
+    changes in regions further afield than simply around the Caspian
+    Sea. See images in https://github.com/ESCOMP/ctsm/pull/622 for
+    details. It's possible that the other differences are also due to
+    the Caspian Sea change, but it's also possible that there is some
+    other cause here that I don't understand. But Erik Kluzek and I
+    agreed that it isn't worth trying to understand these other
+    (isolated) differences.
+
+    Also note: While most f09_g17 tests are bit-for-bit with the earlier
+    tag (because now use_init_interp is .false. for those tests),
+    `SMS_Ld2_D.f09_g17.I1850Clm50BgcCropCmip6.cheyenne_intel.clm-basic_interp`
+    differs in some glc forcing fields for a few grid cells in
+    Antarctica. This is perhaps not surprising, since this test needs to
+    use interpolation to get fields for the Antarctica virtual columns;
+    so, while I don't completely understand the cause of these answer
+    changes, I suspect the root cause is similar to the isolated answer
+    changes I saw sprinkled around the world for
+    `ERP_Ld5.f19_g17.I1850Clm50Bgc.cheyenne_intel.clm-default`.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/622
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev027
+Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
+Date: Tue Feb 19 12:57:12 MST 2019
+One-line Summary: Non-constant time initialization for soil hydrology types are moved to SoilHydrologyType.F90. 
+
+Purpose of changes
+------------------
+
+Initalization of time-varying `zwt`, `zwt_perched`, and `frost_table` are moved to `InitCold` in `SoilHydrologyType.F90`.
+
+Previously, `zwt`, `zwt_perched`, and `frost_table` were initialized in `SoilHydrologyInitTimeConstMod.F90`, which caused confusions.
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#575 ("Some variables initialized in SoilHydrologyInitTimeConstMod are not time-constant")
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: Updated a test.  The test added in previous tag included decStart with transient glaciers, which would not work. Hence, this test is modified so the compset does not include G.
+Test IHistClm50SpG is updated to IHistClm50Sp.
+
+Code reviewed by:
+Bill Sacks
+Erik Kluzek
+
+CTSM testing:
+
+
+  build-namelist tests:
+
+    cheyenne - not run 
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, except for the expected failures.
+
+CTSM tag used for the baseline comparisons: 
+ctsm1.0.dev026
+
+Answer changes
+-------------
+
+Changes answers relative to baseline: no
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+PR #631 Soil hydrology initialization of time-constant variables moved to SoilHydrologyType
+https://github.com/ESCOMP/ctsm/pull/631
+
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev026
+Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
+Date:  Tue Feb  5 17:08:48 MST 2019
+One-line Summary: Collapse unmanaged PFTs to the N most dominant
+
+Purpose of changes
+------------------
+
+To run simulations fast for applications such as NWP (Numerical Weather
+Prediction), allow collapsing natural PFT's to the number the user wants.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 457
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+New namelist parameter n_dom_pfts with valid integer values from 0 to
+14, where 0 means “do nothing” and other values determine the number
+of active pfts when running the model
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None (unless new option invoked)
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: updated tests, added new test
+Updated standard testing test  <test name="ERS_D_Ld10"
+grid="f10_f10_musgs" compset="IHistClm50SpG"
+testmods="clm/collapse_pfts_78_to_16_decStart_f10">  to include decStart
+(December start). Confirmed that answers were bit-for-bit same with
+baseline before introducing the change.
+Added standard testing test  <test name="ERS_D_Ld10"
+grid="f10_f10_musgs" compset="IHistClm50BgcCropGs"
+testmods="clm/collapse_nat_pfts_decStart">  to test n_dom_pfts = 2 in a
+transient vegetation case with December start.
+Added subroutine test_collapse_nat_pfts to test_surfrdUtils.pf to
+include new Unit Tests.
+
+Code reviewed by:
+Erik Kluzek
+Bill Sacks
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+
+CTSM tag used for the baseline comparisons: 
+ctsm1.0.dev025
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/588 -- NWP collapse pfts to the N most dominant
+https://github.com/ESCOMP/ctsm/pull/583 -- Add routine to find indices of max k values in data
+
+Added new subroutines collapse_nat_pfts and collapse_crop_var and called
+them from surfrdMod.F90. The second of these subroutines is not needed
+when collapsing unmanaged PFTs; however, I created it early in the PR
+and decided to keep it for use soon with crop-related variables like
+irrigation water and fertilizer.
+
+Bill Sacks made changes to include subroutine find_k_max_indices for the
+benefit of this PR (#583)
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev025
+Originator(s): Keith Oleson, Bill Sacks
+Date: Wed Jan 23 10:48:01 MST 2019
+One-line Summary: History fields for vertically-resolved sums of soil C and N, and minor fixes
+
+Purpose of changes
+------------------
+
+Main change is from Keith Oleson: Add history fields for
+vertically-resolved sums of SOIL1C, SOIL2C, and SOIL3C for C12, C13,
+C14, and similarly for N. New fields are SOILC_vr, C13_SOILC_vr, and
+C14_SOILC_vr, and SOILN_vr. For runs that use the output_bgc usermods,
+including cmip6 runs, we no longer output 'SOIL1C_vr', 'SOIL1N_vr',
+'SOIL2C_vr', 'SOIL2N_vr', 'SOIL3C_vr', 'SOIL3N_vr'; instead we output
+'SOILC_vr', 'SOILN_vr', and similarly for C isotopes.
+
+Also minor fixes:
+- Output cpl hist files in SSP test (resolves ESCOMP/ctsm#61)
+- Remove FATES-related commented-out code in OzoneMod (this has been
+  moved to https://github.com/ESCOMP/ctsm/issues/618)
+- Minor tweak to run_sys_tests
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#61
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values):
+- For runs that use the output_bgc usermods, including cmip6 runs, we no
+  longer output 'SOIL1C_vr', 'SOIL1N_vr', 'SOIL2C_vr', 'SOIL2N_vr',
+  'SOIL3C_vr', 'SOIL3N_vr'; instead we output 'SOILC_vr', 'SOILN_vr',
+  and similarly for C isotopes.
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Bill Sacks; Erik Kluzek reviewed the changes to the SSP test
+
+
+CTSM testing:
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    hobart ------ pass
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev024
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/551
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev024
+Originator(s):  slevis (Samuel Levis,SLevis Consulting, LLC, 303-665-1310)
+Date:  Mon Jan 14 11:07:04 MST 2019
+One-line Summary: Remove unnecessary restart variables
+
+Purpose of changes
+------------------
+
+Remove unnecessary restart variables to conserve on computing resources
+and disk space
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 285
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Substantial timing or memory changes:
+
+Notes of particular relevance for developers:
+Code reviewed by Bill Sacks.
+Standard testing (cheyenne and hobart) OK
+Unit testing PASS
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+Code reviewed by: Bill Sacks
+
+CTSM testing:
+Regular testing (cheyenne and hobart) OK
+Unit testing PASS
+
+CTSM tag used for the baseline comparisons: 
+ctsm1.0.dev023
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO (bfb)
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/598
+
+Variables removed from restart:
+plant_nalloc
+pot_f_nit_vr*
+f_nit_vr*
+root_depth
+qflx_floodg
+snounload
+qflx_snofrz_lyr
+sminn_to_plant_fun_patch
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev023
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Jan 10 13:00:42 MST 2019
+One-line Summary: Remove CLM4.0
+
+Purpose of changes
+------------------
+
+Remove CLM4.0. This consists of removing code and other files that are
+specific to CLM4.0, and doing some resulting cleanup of code that was
+shared between CLM4.0 and later versions (primarily in build-namelist).
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves #455 (Remove CLM4.0)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Can no longer run CLM4.0 cases
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- CLM4.0 compsets no longer supported
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: Removed CLM4.0 tests
+
+Code reviewed by: Erik Kluzek
+
+
+CTSM testing:
+
+  build-namelist tests:
+
+    cheyenne - pass
+
+  tools-tests (test/tools):
+
+    cheyenne - pass
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - ok
+
+       Total number of tests             = 52
+       Number of tests that PASS         = 51
+       Number of tests that Fail         = 1
+       Number of compare tests that PASS = 37
+       Number of compare tests that Fail = 4
+       Number of tests without compare   = 11
+
+       The one failing test is:
+       FAIL fail-no_towerdata.-d+/glade/p/cesmdata/cseg/inputdata++-s+RF-Bra+--debug+--pftgrid+--soilgrid.
+
+       These same failures occurred in ctsm1.0.dev022 (including the
+       compare tests that Fail). Erik Kluzek says these failures are
+       okay.
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    hobart ------ pass
+
+  Notes on testing:
+
+  - Most testing done on b5380c7e8. Since then, updated to a version of
+    cime that fixes cime's configure tool (but this isn't invoked in
+    system tests, so I didn't rerun the system tests) and pointed cime
+    to a tag rather than a hash.
+
+  - For tools tests: In baseline, cherry-picked commit 148bc2158 into
+    cime
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev022
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: points to branch tag off of cime5.7.5
+  (ctsm/ctsm1.0/cime5.7.5/n01), with changes for:
+  (1) Removal of support for CLM4.0 (equivalent to the changes in
+      https://github.com/ESMCI/cime/pull/2968)
+
+  (2) Fix for cime configure (cherry-picked 148bc2158)
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/609 (Remove CLM4.0)
+- https://github.com/ESCOMP/ctsm/pull/601 (Print git status and related
+  info when running run_sys_tests)
+
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev022
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Jan  8 11:01:38 MST 2019
+One-line Summary: Set tracer version of irrigation fluxes
+
+Purpose of changes
+------------------
+
+Set tracer version of irrigation fluxes.
+
+This required a substantial rewrite of ApplyIrrigation (now renamed to
+CalcIrrigationFluxes). The problem was that the code was written to
+compute the total irrigation withdrawal from groundwater, then use this
+to compute the application fluxes (drip/sprinkler), then later divide
+this total withdrawal by layer. But for tracer fluxes to be computed
+correctly, we needed to reorder this, so that the per-layer withdrawals
+are determined before determining the application fluxes. This is
+because the application flux needs to know the tracer concentrations of
+the source, which requires knowing which layers the source is drawing
+from. This was made more challenging because of the mix of patch-level
+and column-level variables at play: irrigation demand is patch-level,
+groundwater availability and extraction is column-level, but application
+is back to patch-level.
+
+In a somewhat-related change, I also reworked the passing of information
+between soil hydrology (groundwater availability) and irrigation:
+Previously, there was some near-duplicate code in
+CalcAvailableUnconfinedAquifer (which was called prior to
+ApplyIrrigation) and WithdrawGroundwaterIrrigation (which was called
+after ApplyIrrigation). I have reworked the code to remove this
+duplication, calling the new CalcIrrigWithdrawals in the midst of
+CalcIrrigationFluxes. In doing so, I reconciled an accidental
+discrepancy between the two original routines (see
+https://github.com/escomp/ctsm/issues/595).
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#521 (Set tracer versions of fluxes set by
+  ApplyIrrigation)
+- Resolves ESCOMP/ctsm#593 (Generalize groundwater irrigation availability to
+  handle multiple patches per column)
+- Resolves ESCOMP/ctsm#595 (Inconsistency between CalcAvailableUnconfinedAquifer
+  and WithdrawGroundwaterIrrigation)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by:
+
+- Sean Swenson reviewed the initial parts of the rework of
+  ApplyIrrigation and the passing of information between soil hydrology
+  and irrigation
+
+CTSM testing:
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, expected baseline failures as noted below
+
+  Additional manual testing:
+
+  - Out of the box, the one-timestep tracer consistency test
+    (SMS_D_Ln1.f10_f10_musgs.I2000Clm50BgcCropGs.hobart_nag.clm-tracer_consistency)
+    passed when the new check was inserted after the irrigation call,
+    even without the changes in this tag. Presumably this is because no
+    irrigation was being done in the first time step of this test. To
+    confirm that the changes here were both necessary and effective, I
+    hacked the code to force irrigation of all types (surface and
+    groundwater) on the first time step (see
+    https://github.com/billsacks/ctsm/commit/d28a03145). I confirmed
+    that this test, with those code hacks, failed before the changes in
+    this tag, and passed with these changes in place.
+
+  - I used a multi-step process to confirm that these changes are only
+    roundoff-level different for groundwater irrigation (because
+    feedbacks in the system result in
+    SMS_D_Ld5.f10_f10_musgs.I2000Clm50BgcCrop.hobart_nag.clm-irrig_alternate
+    looking greater-than-roundoff-level different from the baseline):
+
+    (1) Confirmed that e507fe603 is only roundoff-level different from
+        baseline using cprnc output from this test.
+
+    (2) Confirmed that a4a1a626c is only roundoff-level different from
+        e507fe603. This was the tricky part. I did this by introducing
+        some temporary code that (a) computed some fluxes in both the
+        old and new ways, (b) compared the old and new methods for each
+        point and time step, confirming that they were no more than
+        roundoff-level different, then (c) set the fluxes to the old
+        method. I confirmed that this was bit-for-bit with e507fe603,
+        and the checks for greater-than-roundoff-level differences
+        between the old and new methods were never triggered. (See
+        https://github.com/billsacks/ctsm/commit/7d23e9e and the earlier
+        commits on that branch.)
+
+    (3) Confirmed that remaining changes an the branch are bit-for-bit
+        with a4a1a626c.
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev021
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+
+      - Small answer changes when groundwater irrigation is enabled. In
+        principle, could change answers by greater than roundoff due to
+        fix of #595, but I didn't see any answer changes in my 7-month
+        test due to that change. Other than that, just roundoff-level
+        changes.
+
+      - Answer changes when tracers are enabled.
+
+      - Roundoff-level changes in the diagnostic field,
+        QIRRIG_FROM_SURFACE, for many tests
+
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      See notes under "what code configurations" for details.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/600
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev021
 Originator(s):  mvr (Mathew Rothstein,UCAR/CSEG,303-497-1304)
 Date: Wed Dec 26 16:29:06 MST 2018
