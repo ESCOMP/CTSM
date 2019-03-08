@@ -1,4 +1,149 @@
 ===============================================================
+Tag name:  ctsm1.0.dev030
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Mar  8 15:08:34 MST 2019
+One-line Summary: Update CIME; hookup expected test fails
+
+Purpose of changes
+------------------
+
+Two main changes:
+
+(1) Update to latest cime (from ctsm/ctsm1.0/cime5.7.5/n01 to
+    cime5.7.9). Some of the important changes are:
+    - Fix for recent cheyenne system changes
+    - New domain file for f19_g17 (changes answers at the roundoff
+      level)
+    - New domain file for T31_g37 (changes answers by greater than
+      roundoff)
+
+(2) In system tests: Annotate cs.status output with expected failures
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes ESCOMP/ctsm#654
+
+CIME Issues fixed (include issue #): (Many)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none?
+   The PFS test showed a significant speedup (170s in the previous tag,
+   124s in this tag). However, some other tests showed either a slowdown
+   or not much change. So I'm not sure there is a consistent pattern of
+   speedup in this tag.
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, some baselines failed as noted below
+
+    Most testing done with cime at eb2eb704f - excluded PR #3030, which
+    updated support for CAM-SE grids (but the changes in this PR were
+    very limited). Ran SSP tests with the final version of cime (so I'd
+    have a few tests covering the latest cime).
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev029
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: f19_g17, T31_g37
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+      - f19_g17: roundoff-level, presumably due to new domain file (some
+        diffs grew to greater than roundoff-level: some methane
+        variables in a long test -
+        SMS_Lm13.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-cropMonthOutput;
+        and many variables in test with flooding -
+        ERP_P180x2_D.f19_g17.I2000Clm50SpRtmFl.cheyenne_intel.clm-default)
+
+      - T31_g37: greater than roundoff-level, presumably due to new
+        domain file from cime commit 4fcf592ee
+
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: ctsm/ctsm1.0/cime5.7.5/n01 -> cime5.7.9
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/602
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev029
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
 Date: Tue Feb 26 23:42:39 MST 2019
