@@ -1,4 +1,4 @@
-!!finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/iclm45fates-finit-s1.4.0-a3.0.0-1x1br.clm2.r.0111-01-01-00000.nc'
+!!   USES THE DEFAULT INITIALIZATION FILE SPECIFIED IN bld/namelist_files/namelist_defaults_clm4_5.xml
 hist_mfilt        = 365
 hist_nhtfrq       = -24
 hist_empty_htapes = .true.
