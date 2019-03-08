@@ -24,6 +24,7 @@ module dynSubgridControlMod
   public :: get_flanduse_timeseries ! return the value of the flanduse_timeseries file name
   public :: get_do_transient_pfts   ! return the value of the do_transient_pfts control flag
   public :: get_do_transient_crops  ! return the value of the do_transient_crops control flag
+  public :: get_do_transient_lakes  ! return the value of the do_transient_lakes control flag
   public :: run_has_transient_landcover ! returns true if any aspects of prescribed transient landcover are enabled
   public :: get_do_harvest          ! return the value of the do_harvest control flag
   public :: get_for_testing_allow_non_annual_changes ! return true if user has requested to allow area changes at times other than the year boundary, for testing purposes
@@ -39,6 +40,7 @@ module dynSubgridControlMod
      character(len=fname_len) :: flanduse_timeseries = ' ' ! transient landuse dataset
      logical :: do_transient_pfts  = .false. ! whether to apply transient natural PFTs from dataset
      logical :: do_transient_crops = .false. ! whether to apply transient crops from dataset
+     logical :: do_transient_lakes = .false. ! whether to apply transient lakes from dataset 
      logical :: do_harvest         = .false. ! whether to apply harvest from dataset
 
      ! The following is only meant for testing: Whether area changes are allowed at times
@@ -113,6 +115,7 @@ contains
     character(len=fname_len) :: flanduse_timeseries
     logical :: do_transient_pfts
     logical :: do_transient_crops
+    logical :: do_transient_lakes
     logical :: do_harvest
     logical :: for_testing_allow_non_annual_changes
     logical :: for_testing_zero_dynbal_fluxes
@@ -127,6 +130,7 @@ contains
          flanduse_timeseries, &
          do_transient_pfts, &
          do_transient_crops, &
+         do_transient_lakes, &
          do_harvest, &
          for_testing_allow_non_annual_changes, &
          for_testing_zero_dynbal_fluxes
@@ -135,6 +139,7 @@ contains
     flanduse_timeseries = ' '
     do_transient_pfts  = .false.
     do_transient_crops = .false.
+    do_transient_lakes = .false.
     do_harvest         = .false.
     for_testing_allow_non_annual_changes = .false.
     for_testing_zero_dynbal_fluxes = .false.
@@ -158,6 +163,7 @@ contains
     call shr_mpi_bcast (flanduse_timeseries, mpicom)
     call shr_mpi_bcast (do_transient_pfts, mpicom)
     call shr_mpi_bcast (do_transient_crops, mpicom)
+    call shr_mpi_bcast (do_transient_lakes, mpicom)
     call shr_mpi_bcast (do_harvest, mpicom)
     call shr_mpi_bcast (for_testing_allow_non_annual_changes, mpicom)
     call shr_mpi_bcast (for_testing_zero_dynbal_fluxes, mpicom)
@@ -166,6 +172,7 @@ contains
          flanduse_timeseries = flanduse_timeseries, &
          do_transient_pfts = do_transient_pfts, &
          do_transient_crops = do_transient_crops, &
+         do_transient_lakes = do_transient_lakes, &
          do_harvest = do_harvest, &
          for_testing_allow_non_annual_changes = for_testing_allow_non_annual_changes, &
          for_testing_zero_dynbal_fluxes = for_testing_zero_dynbal_fluxes)
@@ -203,6 +210,11 @@ contains
        end if
        if (dyn_subgrid_control_inst%do_transient_crops) then
           write(iulog,*) 'ERROR: do_transient_crops can only be true if you are running with'
+          write(iulog,*) 'a flanduse_timeseries file (currently flanduse_timeseries is blank)'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+       if (dyn_subgrid_control_inst%do_transient_lakes) then
+          write(iulog,*) 'ERROR: do_transient_lakes can only be true if you are running with'
           write(iulog,*) 'a flanduse_timeseries file (currently flanduse_timeseries is blank)'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
@@ -245,6 +257,14 @@ contains
        end if
     end if
 
+    if (dyn_subgrid_control_inst%do_transient_lakes) then
+       if (use_fates) then
+          write(iulog,*) 'ERROR: do_transient_lakes currently does not work with use_fates'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+    end if
+    
+    
   end subroutine check_namelist_consistency
 
   !-----------------------------------------------------------------------
@@ -284,6 +304,18 @@ contains
     get_do_transient_crops = dyn_subgrid_control_inst%do_transient_crops
 
   end function get_do_transient_crops
+  
+  !-----------------------------------------------------------------------
+  logical function get_do_transient_lakes()
+    ! !DESCRIPTION:
+    ! Return the value of the do_transient_lakes control flag
+    !-----------------------------------------------------------------------
+    
+    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+
+    get_do_transient_lakes = dyn_subgrid_control_inst%do_transient_lakes
+
+  end function get_do_transient_lakes
 
   !-----------------------------------------------------------------------
   logical function run_has_transient_landcover()
