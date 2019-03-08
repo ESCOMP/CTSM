@@ -70,17 +70,6 @@
     </phase>
   </test>
 
-  <test name="PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel">
-    <phase name="GENERATE">
-      <status>FAIL</status>
-      <issue>ESMCI/cime#2917</issue>
-    </phase>
-    <phase name="BASELINE">
-      <status>FAIL</status>
-      <issue>ESMCI/cime#2917</issue>
-    </phase>
-  </test>
-
   <!-- fates test suite failures -->
 
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.hobart_nag.clm-Fates">
