@@ -1056,6 +1056,7 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <fan_to_bgc_crop fan_mode="soil">.true.</fan_to_bgc_crop>
 <fan_to_bgc_crop fan_mode="full">.true.</fan_to_bgc_crop>
 <fan_to_bgc_crop fan_mode="atm">.false.</fan_to_bgc_crop>
+<fan_to_bgc_crop fan_mode="on">.false.</fan_to_bgc_crop>
 <fan_to_bgc_veg>.false.</fan_to_bgc_veg>
 <fract_spread_grass fan_mode="on">1.0</fract_spread_grass>
 <fract_spread_grass fan_mode="soil">0.0</fract_spread_grass>
