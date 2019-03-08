@@ -12,7 +12,7 @@ module dynSubgridDriverMod
   use decompMod                    , only : bounds_type, BOUNDS_LEVEL_PROC, BOUNDS_LEVEL_CLUMP
   use decompMod                    , only : get_proc_clumps, get_clump_bounds
   use dynSubgridControlMod         , only : get_flanduse_timeseries
-  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops
+  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops, get_do_transient_lakes
   use dynSubgridControlMod         , only : get_do_harvest
   use dynPriorWeightsMod           , only : prior_weights_type
   use dynPatchStateUpdaterMod      , only : patch_state_updater_type
@@ -256,10 +256,9 @@ contains
        call dynHarvest_interp(bounds_proc)
     end if
 	
-	! add lake interp (condition to be added later)
-	
-	call dynlake_interp(bounds_proc)
-
+    if (get_do_transient_lakes()) then
+       call dynlake_interp(bounds_proc)
+    end if
     ! ==========================================================================
     ! Do land cover change that does not require I/O
     ! ==========================================================================
