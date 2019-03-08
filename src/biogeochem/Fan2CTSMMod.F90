@@ -228,7 +228,7 @@ contains
     soilph_max = -999
     def_ph_count = 0
     dt = real(get_step_size(), r8)
-    do_balance_checks = mod(get_nstep(), balance_check_freq) == 0
+    do_balance_checks = balance_check_freq > 0 .and. mod(get_nstep(), balance_check_freq) == 0
 
     associate(&
          ngrz => soilbiogeochem_nitrogenflux_inst%man_n_grz_col, &
@@ -399,7 +399,7 @@ contains
           ph_soil = 6.5_r8
           def_ph_count = def_ph_count + 1
        end if
-       Hconc_grz(3) = 10**-(ph_soil)
+       Hconc_grz(3) = 10**(-ph_soil)
        soilph_max = max(soilph_max, ph_soil)
        soilph_min = min(soilph_min, ph_soil)
 
@@ -458,7 +458,7 @@ contains
        tanpools4(4) = ns%tan_s3_col(c)
 
        ph_crop = min(max(ph_soil, ph_crop_min), ph_crop_max)
-       Hconc_slr(4) = 10**-(ph_crop)
+       Hconc_slr(4) = 10**(-ph_crop)
 
        fluxes_tmp = 0.0
        garbage_total = 0.0
@@ -625,7 +625,7 @@ contains
       real(r8) :: oldn(:)
       integer :: columns(:)
 
-      real(r8) :: newn(size(old))
+      real(r8) :: newn(size(oldn))
 
       newn = ns%fan_totn_col
       
@@ -885,6 +885,7 @@ contains
                    write(iulog, *) 'status = ', status
                    call endrun(msg='eval_fluxes_storage failed for other livestock')
                 end if
+
                 cumflux = cumflux + sum(fluxes_nitr)
                 
                 if (fluxes_tan(iflx_to_store,1) < 0) then
