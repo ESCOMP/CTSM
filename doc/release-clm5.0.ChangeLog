@@ -1,4 +1,95 @@
 ===============================================================
+Tag name:  release-clm5.0.19
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri Mar  8 13:58:16 MST 2019
+One-line Summary: Update cime version to one with updates for cheyenne after the Mar/5th/2019 downtime that resulting in mpt2.16 not being able to be used
+
+Purpose of this version:
+------------------------
+
+Update cime version with changes needed to run on cheyenne after the Mar/5th/2019 downtime that resulted in the model
+NOT being able to run 
+
+CIME important updates:
+  Update fv1.9x2.5,gx1v7 grids
+  Initial port to CGD machine izumi
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many changes missing)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #655 #654
+
+Science changes since: None
+
+Software changes since:  New f19_g17 grids, works on izumi, works on cheyenne_intel after the downtime
+
+Changes to User Interface since: None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.18
+
+Changes answers relative to baseline: Yes, but only f19_g17 resolutions
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: any at f19_g17 resolution
+    - what platforms/compilers: All
+    - nature of change: larger than roundoff/same climate
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime5.6.12
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #656
+(https://github.com/ESCOMP/ctsm/pull)
+   #656 -- update cime
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.18
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Feb 13 19:01:26 MST 2019

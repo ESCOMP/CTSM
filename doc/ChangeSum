@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.19     erik 03/08/2019 Update cime version to one with updates for cheyenne after the Mar/5th/2019 downtime that resulting in mpt2.16 not being able to be used
 release-clm5.0.18     erik 02/13/2019 Add NoAnthro compset, reduce fields on fsurdat in mksurfdata_map, initial add of tools/contrib directory
 release-clm5.0.17    sacks 01/23/2019 History fields for vertically-resolved sums of soil C and N, and minor fixes
   ctsm1.0.dev025     sacks 01/23/2019 History fields for vertically-resolved sums of soil C and N, and minor fixes
