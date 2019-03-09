@@ -102,6 +102,7 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : allocate_bcout
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
+   use FatesInterfaceMod     , only : InitPARTEHGlobals
 
    use FatesHistoryInterfaceMod, only : fates_history_interface_type
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
@@ -463,6 +464,7 @@ contains
 
          end do
 
+        
 
          ! Initialize site-level static quantities dictated by the HLM
          ! currently ground layering depth
@@ -494,8 +496,17 @@ contains
 
       end do
       !$OMP END PARALLEL DO
+
+      ! This will initialize all globals associated with the chosen
+      ! Plant Allocation and Reactive Transport hypothesis. This includes
+      ! mapping tables and global variables. These will be read-only
+      ! and only required once per machine instance (thus no requirements
+      ! to have it instanced on each thread
+      
+      call InitPARTEHGlobals()
       
 
+      
       call this%init_history_io(bounds_proc)
 
       ! Report Fates Parameters (debug flag in lower level routines)
