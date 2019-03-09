@@ -2613,6 +2613,7 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_78pfts_CMIP6_simyr1850_c181003.nc</fs
 <use_fates_ed_prescribed_phys  use_fates=".true.">.false.</use_fates_ed_prescribed_phys>
 <use_fates_logging             use_fates=".true.">.false.</use_fates_logging>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
+<fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
 
 <!-- =========================================  -->
 <!-- Defaults for init_interp                   -->
