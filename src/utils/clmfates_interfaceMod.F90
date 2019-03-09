@@ -44,7 +44,7 @@ module CLMFatesInterfaceMod
    use SoilStateType     , only : soilstate_type 
    use clm_varctl        , only : iulog
    use clm_varctl        , only : use_vertsoilc
-   use clm_varctl        , only : fates_parteh_mode
+   use clm_varctl        , only : fates_parteh_model
    use clm_varctl        , only : use_fates_spitfire
    use clm_varctl        , only : use_fates_planthydro
    use clm_varctl        , only : use_fates_ed_st3
@@ -293,7 +293,7 @@ contains
       call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1)) ! RGK: FATES IGNORES
                                                                           ! AND DOESNT TOUCH
                                                                           ! THE BARE SOIL PATCH
-      call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
+      call set_fates_ctrlparms('parteh_model',ival=fates_parteh_model)
 
 
       if(is_restart()) then
