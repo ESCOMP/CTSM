@@ -842,7 +842,15 @@ contains
           ! Set the bareground patch indicator
           patch%is_bareground(col%patchi(c)) = .true.
           npatch = this%fates(nc)%sites(s)%youngest_patch%patchno
-          patch%wt_ed(col%patchi(c)) = 1.0-sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch))
+
+          ! Precision errors on the canopy_fraction_pa sum, even small (e-12)
+          ! do exist, and can create potentially negetive bare-soil fractions
+          ! (ie -1e-12 or smaller). Even though this is effectively zero,
+          ! it can generate weird logic scenarios in the ctsm/elm code, so we
+          ! protext it here with a lower bound of 0.0_r8.
+
+          patch%wt_ed(col%patchi(c)) = max(0.0_r8, &
+               1.0_r8-sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch)))
 
           if(sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch))>1.0_r8)then
              write(iulog,*)'Projected Canopy Area of all FATES patches'
