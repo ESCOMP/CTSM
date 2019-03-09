@@ -3820,10 +3820,11 @@ sub setup_logic_fates {
         if ( defined($nl->get_value($var))  ) {
            if ( &value_is_true($nl->get_value($var)) ) {
               $var = "fates_inventory_ctrl_filename";
+	      my $fname = substr $nl->get_value($var), 1, -1;  # ignore first and last positions of string because those are quote characters
               if ( ! defined($nl->get_value($var))  ) {
                  $log->fatal_error("$var is required when use_fates_inventory_init is set" );
-              } elsif ( ! -f "$nl->get_value($var)" ) {
-                 $log->fatal_error("$var does NOT point to a valid filename" );
+              } elsif ( ! -f "$fname" ) {
+                 $log->fatal_error("$fname does NOT point to a valid filename" );
               }
            }
         }
