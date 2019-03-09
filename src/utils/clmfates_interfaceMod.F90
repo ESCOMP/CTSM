@@ -463,6 +463,7 @@ contains
             this%fates(nc)%sites(s)%lon = grc%londeg(g)
 
          end do
+
         
 
          ! Initialize site-level static quantities dictated by the HLM
