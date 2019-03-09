@@ -1138,23 +1138,12 @@ contains
                         this%fates(nc)%bc_in(s) )
                end do
 
-
                ! ------------------------------------------------------------------------
                ! Update diagnostics of FATES ecosystem structure used in HLM.
                ! ------------------------------------------------------------------------
                call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
                      waterstate_inst,canopystate_inst,frictionvel_inst)
-
-               ! ------------------------------------------------------------------------
-               ! Update the 3D patch level radiation absorption fractions
-               ! ------------------------------------------------------------------------
-               call this%fates_restart%update_3dpatch_radiation(nc, &
-                                                                this%fates(nc)%nsites, &
-                                                                this%fates(nc)%sites, &
-                                                                this%fates(nc)%bc_out)
-                    
                
-
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
                ! ------------------------------------------------------------------------
