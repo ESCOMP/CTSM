@@ -25,7 +25,7 @@ module SurfaceRadiationMod
   implicit none
   private
 
-  logical, parameter :: debug = .false.  ! for debugging this module
+  logical :: debug = .false.  ! for debugging this module
 
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -976,9 +976,12 @@ contains
           p = filter_urbanp(fp)
           g = patch%gridcell(p)
 
-          if(elai(p)==0.0_r8.and.fabd(p,1)>0._r8)then
-             if ( debug ) write(iulog,*) 'absorption without LAI',elai(p),tlai(p),fabd(p,1),p
-          endif
+          local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
+          local_secp1 = mod(local_secp1,isecspday)
+
+        if(elai(p)==0.0_r8.and.fabd(p,1)>0._r8)then
+           if ( debug ) write(iulog,*) 'absorption without LAI',elai(p),tlai(p),fabd(p,1),p
+        endif
           ! Solar incident 
 
           fsds_vis_d(p) = forc_solad(g,1)
