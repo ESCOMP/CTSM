@@ -25,8 +25,8 @@ _NUM_COMPILER_CHARS = 3
 # For job launchers that use 'nice', the level of niceness we should use
 _NICE_LEVEL = 19
 
-# Extra arguments for the cs.status command
-_CS_STATUS_EXTRA_ARGS = '--fails-only --count-performance-fails'
+# Extra arguments for the cs.status.fails command
+_CS_STATUS_FAILS_EXTRA_ARGS = '--fails-only --count-performance-fails'
 
 # ========================================================================
 # Public functions
@@ -424,19 +424,28 @@ def _make_cs_status_for_suite(testroot, testid_base):
     # The basic cs.status just aggregates results from all of the individual create_tests
     create_cs_status(test_root=testroot,
                      test_id=testid_pattern,
+                     extra_args=_cs_status_xfail_arg(),
                      filename='cs.status')
     # cs.status.fails additionally filters the results so that only failures are shown
     create_cs_status(test_root=testroot,
                      test_id=testid_pattern,
-                     extra_args=_CS_STATUS_EXTRA_ARGS,
+                     extra_args=(_CS_STATUS_FAILS_EXTRA_ARGS + ' ' + _cs_status_xfail_arg()),
                      filename='cs.status.fails')
 
 def _make_cs_status_non_suite(testroot, testid_base):
     """Makes a cs.status file for a single run of create_test - not a whole test suite"""
     create_cs_status(test_root=testroot,
                      test_id=testid_base,
-                     extra_args=_CS_STATUS_EXTRA_ARGS,
+                     extra_args=(_CS_STATUS_FAILS_EXTRA_ARGS + ' ' + _cs_status_xfail_arg()),
                      filename='cs.status.fails')
+
+def _cs_status_xfail_arg():
+    """Returns a string giving the argument to cs_status that will point to CTSM's
+    expected fails xml file
+    """
+    ctsm_root = path_to_ctsm_root()
+    xfail_path = os.path.join(ctsm_root, 'cime_config', 'testdefs', 'ExpectedTestFails.xml')
+    return "--expected-fails-file {}".format(xfail_path)
 
 def _run_test_suite(cime_path, suite_name, suite_compilers,
                     machine, testid_base, testroot, create_test_args,
