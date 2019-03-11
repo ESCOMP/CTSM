@@ -49,7 +49,9 @@ module dynConsBiogeophysMod
   public :: dyn_hwcontent_final         ! compute grid-level heat and water content and dynbal fluxes after land cover change
   !
   ! !PRIVATE MEMBER FUNCTIONS
-  ! FIXME(wjs, 2019-02-27) add new private routines here
+  private :: dyn_water_content_set_baselines ! set start-of-run baseline values for water content, for a single water tracer or bulk water
+  private :: dyn_heat_content_set_baselines  ! set start-of-run baseline values for heat content
+  private :: set_glacier_baselines           ! compute start-of-run baseline values for each glacier column, for some dynbal term
   private :: dyn_water_content_final      ! compute grid-level water content and dynbal fluxes after landcover change, for a single water tracer or bulk water
   private :: dyn_water_content            ! compute gridcell total liquid and ice water contents
   private :: dyn_heat_content             ! compute gridcell total heat contents
@@ -65,8 +67,23 @@ contains
        urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
     !
     ! !DESCRIPTION:
-    ! FIXME(wjs, 2019-02-27) Fill this in
+    ! Set start-of-run baseline values for heat and water content in some columns.
     !
+    ! These baseline values will be subtracted from each column's total heat and water
+    ! calculations in each time step. This can correct for things like virtual mass (e.g.,
+    ! the virtual ice column in glacier columns), or can add states that are not
+    ! explicitly represented in the model (e.g., adding typical values for soil heat and
+    ! water content in glacier columns, where the soil column is not explicitly
+    ! represented). These corrections will typically reduce the fictitious dynbal
+    ! conservation fluxes.
+    !
+    ! At a minimum, this should be called during cold start initialization, to initialize
+    ! the baseline values based on cold start states. In addition, this can be called when
+    ! starting a new run from existing initial conditions, if the user desires. This
+    ! optional resetting can further reduce the dynbal fluxes; however, it can break
+    ! conservation. (So, for example, it can be done when transitioning from an offline
+    ! spinup to a coupled run, but it should not be done when transitioning from a
+    ! coupled historical run to a future scenario.)
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -119,7 +136,8 @@ contains
        waterstate_inst)
     !
     ! !DESCRIPTION:
-    ! FIXME(wjs, 2019-02-27) fill this in
+    ! Set start-of-run baseline values for water content, for a single water tracer or
+    ! bulk water.
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -138,10 +156,9 @@ contains
     character(len=*), parameter :: subname = 'dyn_water_content_set_baselines'
     !-----------------------------------------------------------------------
 
-    ! FIXME(wjs, 2019-03-01) add documentation for these associated variables
     associate( &
-         dynbal_baseline_liq => waterstate_inst%dynbal_baseline_liq_col, &
-         dynbal_baseline_ice => waterstate_inst%dynbal_baseline_ice_col  &
+         dynbal_baseline_liq => waterstate_inst%dynbal_baseline_liq_col, & ! Output: [real(r8) (:)   ]  baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
+         dynbal_baseline_ice => waterstate_inst%dynbal_baseline_ice_col  & ! Output: [real(r8) (:)   ]  baseline ice content subtracted from each column's total ice calculation (mm H2O)
          )
 
     soil_liquid_mass_col(bounds%begc:bounds%endc) = 0._r8
@@ -178,7 +195,7 @@ contains
        temperature_inst)
     !
     ! !DESCRIPTION:
-    ! FIXME(wjs, 2019-02-27) fill this in
+    ! Set start-of-run baseline values for heat content.
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -201,9 +218,8 @@ contains
     character(len=*), parameter :: subname = 'dyn_heat_content_set_baselines'
     !-----------------------------------------------------------------------
 
-    ! FIXME(wjs, 2019-03-01) add documentation for these associated variables
     associate( &
-         dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col &
+         dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col & ! Output: [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
          )
 
     soil_heat_col(bounds%begc:bounds%endc) = 0._r8
@@ -244,7 +260,7 @@ contains
        vals_col, baselines_col)
     !
     ! !DESCRIPTION:
-    ! Set baselines for each glacier column, for some dynbal term.
+    ! Compute start-of-run baseline values for each glacier column, for some dynbal term.
     !
     ! The baselines for a given glacier column are set equal to the input value in that
     ! glacier column minus the average value for the vegetated landunit on that column's

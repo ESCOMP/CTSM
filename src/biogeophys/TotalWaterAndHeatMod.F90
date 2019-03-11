@@ -216,9 +216,8 @@ contains
          snocan_patch =>    waterstate_inst%snocan_patch   , & ! Input:  [real(r8) (:)   ]  canopy snow water (mm H2O)
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
          h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
-         ! FIXME(wjs, 2019-03-02) add documentation for the following two variables:
-         dynbal_baseline_liq    => waterstate_inst%dynbal_baseline_liq_col, &
-         dynbal_baseline_ice    => waterstate_inst%dynbal_baseline_ice_col, &
+         dynbal_baseline_liq    => waterstate_inst%dynbal_baseline_liq_col, & ! Input:  [real(r8) (:)   ]  baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
+         dynbal_baseline_ice    => waterstate_inst%dynbal_baseline_ice_col, & ! Input:  [real(r8) (:)   ]  baseline ice content subtracted from each column's total ice calculation (mm H2O)
          total_plant_stored_h2o => waterdiagnostic_inst%total_plant_stored_h2o_col, & ! Input:  [real(r8) (:,:) ] plant internal stored water (mm H2O)
          aquifer_water_baseline => waterstate_inst%aquifer_water_baseline, & ! Input: [real(r8)] baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
          wa           =>    waterstate_inst%wa_col        & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
@@ -405,9 +404,8 @@ contains
          h2osno       =>    waterstate_inst%h2osno_col     , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
          h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col,  & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
-         ! FIXME(wjs, 2019-03-02) add documentation for the following two variables:
-         dynbal_baseline_liq    => waterstate_inst%dynbal_baseline_liq_col, &
-         dynbal_baseline_ice    => waterstate_inst%dynbal_baseline_ice_col  &
+         dynbal_baseline_liq    => waterstate_inst%dynbal_baseline_liq_col, & ! Input:  [real(r8) (:)   ]  baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
+         dynbal_baseline_ice    => waterstate_inst%dynbal_baseline_ice_col  & ! Input:  [real(r8) (:)   ]  baseline ice content subtracted from each column's total ice calculation (mm H2O)
          )
 
     do fc = 1, num_lakec
@@ -508,8 +506,7 @@ contains
          nlev_improad => urbanparams_inst%nlev_improad, & ! number of impervious road layers
          t_soisno     => temperature_inst%t_soisno_col, & ! soil temperature (Kelvin)
          t_h2osfc     => temperature_inst%t_h2osfc_col, & ! surface water temperature (Kelvin)
-         ! FIXME(wjs, 2019-03-02) Document the following new variable
-         dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, &
+         dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Input:  [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
          h2osoi_liq   => waterstatebulk_inst%h2osoi_liq_col, & ! liquid water (kg/m2)
          h2osoi_ice   => waterstatebulk_inst%h2osoi_ice_col, & ! frozen water (kg/m2)
          h2osno       => waterstatebulk_inst%h2osno_col, & ! snow water (mm H2O)
@@ -842,8 +839,7 @@ contains
          watsat       => soilstate_inst%watsat_col, & ! volumetric soil water at saturation (porosity)
          csol         => soilstate_inst%csol_col, & ! heat capacity, soil solids (J/m**3/Kelvin)
          t_soisno     => temperature_inst%t_soisno_col, & ! soil temperature (Kelvin)
-         ! FIXME(wjs, 2019-03-02) Document the following new variable
-         dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, &
+         dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Input:  [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
          h2osoi_liq   => waterstatebulk_inst%h2osoi_liq_col, & ! liquid water (kg/m2)
          h2osoi_ice   => waterstatebulk_inst%h2osoi_ice_col, & ! frozen water (kg/m2)
          h2osno       => waterstatebulk_inst%h2osno_col & ! snow water (mm H2O)
