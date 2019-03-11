@@ -47,10 +47,15 @@ print "Using namelist definition file $nl_definition_file\n";
 #The root directory to cesm utils Tools
 my $cesm_tools = "$cfgdir/../../../../cime/utils/";
 
-(-f "$cesm_tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
+if ( ! -f "$cesm_tools/perl5lib/Build/NamelistDefinition.pm") {
+   $cesm_tools = "$cfgdir/../../cime/utils/";
+   if ( ! -f "$cesm_tools/perl5lib/Build/NamelistDefinition.pm") {
+      die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory 
     \"$cesm_tools/perl5lib\" **
 EOF
+   }
+}
 # Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
 my @dirs = ( $cfgdir, "$cesm_tools/perl5lib");
 unshift @INC, @dirs;
@@ -77,8 +82,14 @@ sub matchKeyword {
 
   my $match = undef;
   if ( $line =~ /$keyword/ ) {
-     if ( $line =~ /$keyword\s*=\s*['"]([^'"]+)['"]/ ) {
+     if ( $line =~ /$keyword\s*=\s*['"]([^'"]+)(['"&])/ ) {
         $match = $1;
+        if ( $2 eq "&" ) {
+           $line  = <$fh>;
+           if ( $line =~ /&([^'"]+)['"]/ ) {
+             $match .= $1;
+           }
+        }
      } elsif ( $line =~ /$keyword\s*=\s*&\s*$/ ) {
         $line  = <$fh>;
         if ( $line =~ /^\s*['"]([^'"]+)['"]/ ) {
@@ -230,8 +241,10 @@ chomp( $pwd );
 my @megcmpds  =  $definition->get_valid_values( "megan_cmpds", 'noquotes'=>1 );
 my @filenames = glob( "$pwd/*.F90" );
 push( @filenames, glob( "$pwd/../biogeochem/*.F90" ) );
+push( @filenames, glob( "$pwd/../biogeophys/*.F90" ) );
 push( @filenames, glob( "$pwd/../soilbiogeochem/*.F90" ) );
 push( @filenames, glob( "$pwd/../biogeophys/*.F90" ) );
+push( @filenames, glob( "$pwd/../fates/main/*.F90" ) );
 
 #
 # Loop over all files that have hist_addfld calls in them

@@ -439,7 +439,7 @@ contains
             ratio_k1(c,j) = max(1.7_r8, 38.4_r8 - 350._r8 * diffus(c,j))
 
             ! ratio function (figure 7c)
-            if ( soil_co2_prod(c,j) > 0 ) then
+            if ( soil_co2_prod(c,j) > 1.0e-9_r8 ) then
                ratio_no3_co2(c,j) = smin_no3_massdens_vr(c,j) / soil_co2_prod(c,j)
             else
                ! fucntion saturates at large no3/co2 ratios, so set as some nominally large number

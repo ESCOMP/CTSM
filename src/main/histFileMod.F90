@@ -23,6 +23,7 @@ module histFileMod
   use EDTypesMod     , only : nclmax
   use EDTypesMod     , only : nlevleaf
   use FatesInterfaceMod , only : nlevsclass, nlevage
+  use FatesInterfaceMod , only : nlevheight
   use EDTypesMod     , only : nfsc, ncwd
   use FatesInterfaceMod , only : numpft_ed => numpft
   use ncdio_pio 
@@ -36,7 +37,7 @@ module histFileMod
   !
   ! Constants
   !
-  integer , public, parameter :: max_tapes = 6          ! max number of history tapes
+  integer , public, parameter :: max_tapes = 10         ! max number of history tapes
   integer , public, parameter :: max_flds = 2500        ! max number of history fields
   integer , public, parameter :: max_namlen = 64        ! maximum number of characters for field name
   integer , public, parameter :: scale_type_strlen = 32 ! maximum number of characters for scale types
@@ -90,6 +91,14 @@ module histFileMod
        hist_fincl5(max_flds) = ' '       ! namelist: list of fields to add
   character(len=max_namlen+2), public :: &
        hist_fincl6(max_flds) = ' '       ! namelist: list of fields to add
+  character(len=max_namlen+2), public :: &
+       hist_fincl7(max_flds) = ' '       ! namelist: list of fields to add
+  character(len=max_namlen+2), public :: &
+       hist_fincl8(max_flds) = ' '       ! namelist: list of fields to add
+  character(len=max_namlen+2), public :: &
+       hist_fincl9(max_flds) = ' '       ! namelist: list of fields to add
+  character(len=max_namlen+2), public :: &
+       hist_fincl10(max_flds) = ' '       ! namelist: list of fields to add
 
   character(len=max_namlen+2), public :: &
        fexcl(max_flds,max_tapes)         ! namelist-equivalence list of fields to remove
@@ -106,6 +115,14 @@ module histFileMod
        hist_fexcl5(max_flds) = ' ' ! namelist: list of fields to remove
   character(len=max_namlen+2), public :: &
        hist_fexcl6(max_flds) = ' ' ! namelist: list of fields to remove
+  character(len=max_namlen+2), public :: &
+       hist_fexcl7(max_flds) = ' ' ! namelist: list of fields to remove
+  character(len=max_namlen+2), public :: &
+       hist_fexcl8(max_flds) = ' ' ! namelist: list of fields to remove
+  character(len=max_namlen+2), public :: &
+       hist_fexcl9(max_flds) = ' ' ! namelist: list of fields to remove
+  character(len=max_namlen+2), public :: &
+       hist_fexcl10(max_flds) = ' ' ! namelist: list of fields to remove
 
   logical, private :: if_disphist(max_tapes)   ! restart, true => save history file
   !
@@ -626,20 +643,28 @@ contains
        end if
     end do
 
-    fincl(:,1) = hist_fincl1(:)
-    fincl(:,2) = hist_fincl2(:)
-    fincl(:,3) = hist_fincl3(:)
-    fincl(:,4) = hist_fincl4(:)
-    fincl(:,5) = hist_fincl5(:)
-    fincl(:,6) = hist_fincl6(:)
+    fincl(:,1)  = hist_fincl1(:)
+    fincl(:,2)  = hist_fincl2(:)
+    fincl(:,3)  = hist_fincl3(:)
+    fincl(:,4)  = hist_fincl4(:)
+    fincl(:,5)  = hist_fincl5(:)
+    fincl(:,6)  = hist_fincl6(:)
+    fincl(:,7)  = hist_fincl7(:)
+    fincl(:,8)  = hist_fincl8(:)
+    fincl(:,9)  = hist_fincl9(:)
+    fincl(:,10) = hist_fincl10(:)
 
-    fexcl(:,1) = hist_fexcl1(:)
-    fexcl(:,2) = hist_fexcl2(:)
-    fexcl(:,3) = hist_fexcl3(:)
-    fexcl(:,4) = hist_fexcl4(:)
-    fexcl(:,5) = hist_fexcl5(:)
-    fexcl(:,6) = hist_fexcl6(:)
-
+    fexcl(:,1)  = hist_fexcl1(:)
+    fexcl(:,2)  = hist_fexcl2(:)
+    fexcl(:,3)  = hist_fexcl3(:)
+    fexcl(:,4)  = hist_fexcl4(:)
+    fexcl(:,5)  = hist_fexcl5(:)
+    fexcl(:,6)  = hist_fexcl6(:)
+    fexcl(:,7)  = hist_fexcl7(:)
+    fexcl(:,8)  = hist_fexcl8(:)
+    fexcl(:,9)  = hist_fexcl9(:)
+    fexcl(:,10) = hist_fexcl10(:)
+ 
 
     ! First ensure contents of fincl and fexcl are valid names
 
@@ -2031,9 +2056,12 @@ contains
     
     if(use_fates)then
        call ncd_defdim(lnfid, 'fates_levscag', nlevsclass * nlevage, dimid)
+       call ncd_defdim(lnfid, 'fates_levscagpf', nlevsclass * nlevage * numpft_ed, dimid)
+       call ncd_defdim(lnfid, 'fates_levagepft', nlevage * numpft_ed, dimid)
        call ncd_defdim(lnfid, 'fates_levscls', nlevsclass, dimid)
        call ncd_defdim(lnfid, 'fates_levpft', numpft_ed, dimid)
        call ncd_defdim(lnfid, 'fates_levage', nlevage, dimid)
+       call ncd_defdim(lnfid, 'fates_levheight', nlevheight, dimid)
        call ncd_defdim(lnfid, 'fates_levfuel', nfsc, dimid)
        call ncd_defdim(lnfid, 'fates_levcwdsc', ncwd, dimid)
        call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*numpft_ed, dimid)
@@ -2457,9 +2485,15 @@ contains
     use FatesInterfaceMod, only : fates_hdim_pfmap_levscpf
     use FatesInterfaceMod, only : fates_hdim_scmap_levscpf
     use FatesInterfaceMod, only : fates_hdim_levage
+    use FatesInterfaceMod, only : fates_hdim_levheight
     use FatesInterfaceMod, only : fates_hdim_levpft
     use FatesInterfaceMod, only : fates_hdim_scmap_levscag
     use FatesInterfaceMod, only : fates_hdim_agmap_levscag
+    use FatesInterfaceMod, only : fates_hdim_scmap_levscagpft
+    use FatesInterfaceMod, only : fates_hdim_agmap_levscagpft
+    use FatesInterfaceMod, only : fates_hdim_pftmap_levscagpft
+    use FatesInterfaceMod, only : fates_hdim_agmap_levagepft
+    use FatesInterfaceMod, only : fates_hdim_pftmap_levagepft
     use FatesInterfaceMod, only : fates_hdim_levfuel
     use FatesInterfaceMod, only : fates_hdim_levcwdsc
     use FatesInterfaceMod, only : fates_hdim_levcan
@@ -2534,6 +2568,8 @@ contains
                   long_name='FATES size index of the combined pft-size class dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_levage',xtype=tape(t)%ncprec, dim1name='fates_levage', &
                   long_name='FATES patch age (yr)', ncid=nfid(t))
+             call ncd_defvar(varname='fates_levheight',xtype=tape(t)%ncprec, dim1name='fates_levheight', &
+                  long_name='FATES height (m)', ncid=nfid(t))
              call ncd_defvar(varname='fates_levpft',xtype=ncd_int, dim1name='fates_levpft', &
                   long_name='FATES pft number', ncid=nfid(t))
              call ncd_defvar(varname='fates_levfuel',xtype=ncd_int, dim1name='fates_levfuel', &
@@ -2552,6 +2588,17 @@ contains
                   long_name='FATES leaf level of combined canopy x leaf x pft dimension', ncid=nfid(t))
              call ncd_defvar(varname='fates_pftmap_levcnlfpf',xtype=ncd_int, dim1name='fates_levcnlfpf', &
                   long_name='FATES PFT level of combined canopy x leaf x pft dimension', ncid=nfid(t))
+             call ncd_defvar(varname='fates_scmap_levscagpft', xtype=ncd_int, dim1name='fates_levscagpf', &
+                  long_name='FATES size-class map into size x patch age x pft', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_agmap_levscagpft', xtype=ncd_int, dim1name='fates_levscagpf', &
+                   long_name='FATES age-class map into size x patch age x pft', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_pftmap_levscagpft', xtype=ncd_int, dim1name='fates_levscagpf', &
+                   long_name='FATES pft map into size x patch age x pft', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_pftmap_levagepft', xtype=ncd_int, dim1name='fates_levagepft', &
+                   long_name='FATES pft map into patch age x pft', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_agmap_levagepft', xtype=ncd_int, dim1name='fates_levagepft', &
+                   long_name='FATES age-class map into patch age x pft', units='-', ncid=nfid(t))
+
           end if
 
 
@@ -2572,6 +2619,7 @@ contains
              call ncd_io(varname='fates_pftmap_levscpf',data=fates_hdim_pfmap_levscpf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_scmap_levscpf',data=fates_hdim_scmap_levscpf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levage',data=fates_hdim_levage, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_levheight',data=fates_hdim_levheight, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levpft',data=fates_hdim_levpft, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levfuel',data=fates_hdim_levfuel, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levcwdsc',data=fates_hdim_levcwdsc, ncid=nfid(t), flag='write')
@@ -2581,6 +2629,11 @@ contains
              call ncd_io(varname='fates_canmap_levcnlfpf',data=fates_hdim_canmap_levcnlfpf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_lfmap_levcnlfpf',data=fates_hdim_lfmap_levcnlfpf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_pftmap_levcnlfpf',data=fates_hdim_pftmap_levcnlfpf, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_scmap_levscagpft',data=fates_hdim_scmap_levscagpft, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_agmap_levscagpft',data=fates_hdim_agmap_levscagpft, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_pftmap_levscagpft',data=fates_hdim_pftmap_levscagpft, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_pftmap_levagepft',data=fates_hdim_pftmap_levagepft, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_agmap_levagepft',data=fates_hdim_agmap_levagepft, ncid=nfid(t), flag='write')             
           end if
 
        endif
@@ -3819,19 +3872,27 @@ contains
           call ncd_io('locfnhr', locfnhr(t), 'write', ncid, nt=t)
        end do
        
-       fincl(:,1) = hist_fincl1(:)
-       fincl(:,2) = hist_fincl2(:)
-       fincl(:,3) = hist_fincl3(:)
-       fincl(:,4) = hist_fincl4(:)
-       fincl(:,5) = hist_fincl5(:)
-       fincl(:,6) = hist_fincl6(:)
+       fincl(:,1)  = hist_fincl1(:)
+       fincl(:,2)  = hist_fincl2(:)
+       fincl(:,3)  = hist_fincl3(:)
+       fincl(:,4)  = hist_fincl4(:)
+       fincl(:,5)  = hist_fincl5(:)
+       fincl(:,6)  = hist_fincl6(:)
+       fincl(:,7)  = hist_fincl7(:)
+       fincl(:,8)  = hist_fincl8(:)
+       fincl(:,9)  = hist_fincl9(:)
+       fincl(:,10) = hist_fincl10(:)
 
-       fexcl(:,1) = hist_fexcl1(:)
-       fexcl(:,2) = hist_fexcl2(:)
-       fexcl(:,3) = hist_fexcl3(:)
-       fexcl(:,4) = hist_fexcl4(:)
-       fexcl(:,5) = hist_fexcl5(:)
-       fexcl(:,6) = hist_fexcl6(:)
+       fexcl(:,1)  = hist_fexcl1(:)
+       fexcl(:,2)  = hist_fexcl2(:)
+       fexcl(:,3)  = hist_fexcl3(:)
+       fexcl(:,4)  = hist_fexcl4(:)
+       fexcl(:,5)  = hist_fexcl5(:)
+       fexcl(:,6)  = hist_fexcl6(:)
+       fexcl(:,7)  = hist_fexcl7(:)
+       fexcl(:,8)  = hist_fexcl8(:)
+       fexcl(:,9)  = hist_fexcl9(:)
+       fexcl(:,10) = hist_fexcl10(:)
 
        max_nflds = max_nFields()
 
@@ -4097,19 +4158,27 @@ contains
 
           end do  ! end of tapes loop
 
-          hist_fincl1(:) = fincl(:,1)
-          hist_fincl2(:) = fincl(:,2)
-          hist_fincl3(:) = fincl(:,3)
-          hist_fincl4(:) = fincl(:,4)
-          hist_fincl5(:) = fincl(:,5)
-          hist_fincl6(:) = fincl(:,6)
+          hist_fincl1(:)  = fincl(:,1)
+          hist_fincl2(:)  = fincl(:,2)
+          hist_fincl3(:)  = fincl(:,3)
+          hist_fincl4(:)  = fincl(:,4)
+          hist_fincl5(:)  = fincl(:,5)
+          hist_fincl6(:)  = fincl(:,6)
+          hist_fincl7(:)  = fincl(:,7)
+          hist_fincl8(:)  = fincl(:,8)
+          hist_fincl9(:)  = fincl(:,9)
+          hist_fincl10(:) = fincl(:,10)
 
-          hist_fexcl1(:) = fexcl(:,1)
-          hist_fexcl2(:) = fexcl(:,2)
-          hist_fexcl3(:) = fexcl(:,3)
-          hist_fexcl4(:) = fexcl(:,4)
-          hist_fexcl5(:) = fexcl(:,5)
-          hist_fexcl6(:) = fexcl(:,6)
+          hist_fexcl1(:)  = fexcl(:,1)
+          hist_fexcl2(:)  = fexcl(:,2)
+          hist_fexcl3(:)  = fexcl(:,3)
+          hist_fexcl4(:)  = fexcl(:,4)
+          hist_fexcl5(:)  = fexcl(:,5)
+          hist_fexcl6(:)  = fexcl(:,6)
+          hist_fexcl7(:)  = fexcl(:,7)
+          hist_fexcl8(:)  = fexcl(:,8)
+          hist_fexcl9(:)  = fexcl(:,9)
+          hist_fexcl10(:) = fexcl(:,10)
 
        end if
        
@@ -4720,6 +4789,8 @@ contains
        num2d = numpft_ed
     case ('fates_levage')
        num2d = nlevage
+    case ('fates_levheight')
+       num2d = nlevheight
     case ('fates_levfuel')
        num2d = nfsc
     case ('fates_levcwdsc')
@@ -4728,6 +4799,10 @@ contains
        num2d = nlevsclass*numpft_ed
     case ('fates_levscag')
        num2d = nlevsclass*nlevage
+    case ('fates_levscagpf')
+       num2d = nlevsclass*nlevage*numpft_ed
+    case ('fates_levagepft')
+       num2d = nlevage*numpft_ed
     case ('fates_levcan')
        num2d = nclmax
     case ('fates_levcnlf')

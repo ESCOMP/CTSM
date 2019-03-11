@@ -1,6 +1,6 @@
 -- AUTOMATICALLY GENERATED FILE. DO NOT EDIT --
 
-[![Build Status](https://travis-ci.org/NCAR/manage_externals.svg?branch=master)](https://travis-ci.org/NCAR/manage_externals)[![Coverage Status](https://coveralls.io/repos/github/NCAR/manage_externals/badge.svg?branch=master)](https://coveralls.io/github/NCAR/manage_externals?branch=master)
+[![Build Status](https://travis-ci.org/ESMCI/manage_externals.svg?branch=master)](https://travis-ci.org/ESMCI/manage_externals)[![Coverage Status](https://coveralls.io/repos/github/ESMCI/manage_externals/badge.svg?branch=master)](https://coveralls.io/github/ESMCI/manage_externals?branch=master)
 ```
 usage: checkout_externals [-h] [-e [EXTERNALS]] [-o] [-S] [-v] [--backtrace]
                           [-d] [--no-logging]
@@ -182,14 +182,15 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
 
   * tag (string) : tag to checkout
 
-    This can also be a git SHA-1
+  * hash (string) : the git hash to checkout. Only applies to git
+    repositories.
 
   * branch (string) : branch to checkout from the specified
     repository. Specifying a branch on a remote repository means that
     checkout_externals will checkout the version of the branch in the remote,
     not the the version in the local repository (if it exists).
 
-    Note: either tag or branch must be supplied, but not both.
+    Note: one and only one of tag, branch hash must be supplied.
 
   * externals (string) : used to make manage_externals aware of
     sub-externals required by an external. This is a relative path to
@@ -202,3 +203,9 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
     'sub-externals.cfg'.
 
   * Lines begining with '#' or ';' are comments and will be ignored.
+
+# Obtaining this tool, reporting issues, etc.
+
+  The master repository for manage_externals is
+  https://github.com/ESMCI/manage_externals. Any issues with this tool
+  should be reported there.

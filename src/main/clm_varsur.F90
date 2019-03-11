@@ -20,7 +20,7 @@ module clm_instur
   logical , pointer :: urban_valid(:)
 
   ! for natural veg landunit, weight of each patch on the landunit (adds to 1.0 on the
-  ! landunit for all all grid cells, even! those without any natural pft)
+  ! landunit for all grid cells, even those without any natural pft)
   ! (second dimension goes natpft_lb:natpft_ub)
   real(r8), pointer :: wt_nat_patch(:,:)   
 
