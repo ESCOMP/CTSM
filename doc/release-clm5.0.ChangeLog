@@ -1,4 +1,98 @@
 ===============================================================
+Tag name:  release-clm5.0.20
+Originator(s):  erik (Erik Kluzek)
+Date:  Tue Mar 12 15:14:05 MDT 2019
+One-line Summary: Update all fsurdat files and bring in files for future scenarios, remove CMIP5 rcp options, bring in some bug fixes
+
+Purpose of this version:
+------------------------
+
+Update all surface datasets and add datasets needed for future scenarios. Remove CLM40-RCP options.
+
+Also bring in change for reseeding so that reseeding happens for generic crop and
+to increase the threshold from exactly zero to 1 (still very small).  Fix QSNOEVAP history field.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many changes missing)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #621, #608, #624 #653
+  #621 -- Fully remove CMIP5 rcp's (for clm40,clm45,clm50) and implement CMIP6 ssp_rcp's for clm45/clm50
+  #608 -- Odd (blocky) spatial patterns in generic crop leafc for BGC simulation when initialized from BGC-Crop
+  #624 -- QSNOEVAP history output incorrect
+  #653 -- To save disk on fsurdat files use zwt0 on finindated file
+
+Science changes since: release-clm5.0.19
+  Surface datasets no longer have wetland over Antarctica
+  QSNOEVAP output corrected
+  reseeding changes so that it happens over generic crop and also raise the threshold from identically zero
+    to 1 (which is still very small)
+
+Software changes since: release-clm5.0.19
+  Remove the option to run CMIP5 rcp scenarios
+
+Changes to User Interface since: release-clm5.0.19
+  "-rcp" option to build-namelist is removed and replaced with "-ssp_rcp"
+  New use-cases for all eight of the SSP's
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.19
+
+Changes answers relative to baseline: Yes! (for clm4_5/clm5_0)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm4_5/clm5_0
+    - what platforms/compilers: All
+    - nature of change: similar climate, new fsurdat files (Antarctica fix), and QSNOEVAP, and reseed fix
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime5.6.12
+   FATES:  fates_s1.8.1_a3.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #625 #611 #651
+(https://github.com/ESCOMP/ctsm/pull)
+  #651 -- New datasets and capability to run CMIP6 future scenarios
+  #625 -- Correct QSNOEVAP history variable
+  #611 -- Reseed generic crops and increase totvegc threshold from 0 to 1 for reseeding
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.19
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri Mar  8 13:58:16 MST 2019

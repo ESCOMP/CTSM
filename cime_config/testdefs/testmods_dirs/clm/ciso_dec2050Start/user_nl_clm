@@ -1,0 +1,3 @@
+! Initial condition file from a coupled run at 2015 that will work with this setup..
+ finidat = "$DIN_LOC_ROOT/cesm2_init/b.e21.BHIST.f09_g17.CMIP6-historical.010/2015-01-01/b.e21.BHIST.f09_g17.CMIP6-historical.010.clm2.r.2015-01-01-00000.nc"
+  use_init_interp = T
