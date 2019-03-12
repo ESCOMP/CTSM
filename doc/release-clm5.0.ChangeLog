@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.20
 Originator(s):  erik (Erik Kluzek)
-Date:  Tue Mar 12 15:14:05 MDT 2019
+Date: Tue Mar 12 16:08:55 MDT 2019
 One-line Summary: Update all fsurdat files and bring in files for future scenarios, remove CMIP5 rcp options, bring in some bug fixes
 
 Purpose of this version:
