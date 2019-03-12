@@ -206,10 +206,14 @@ contains
       endif
 
     call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-         waterstate_inst, waterdiagnostic_inst, begwb(bounds%begc:bounds%endc))
+         waterstate_inst, waterdiagnostic_inst, &
+         subtract_dynbal_baselines = .false., &
+         water_mass = begwb(bounds%begc:bounds%endc))
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-         waterstate_inst, begwb(bounds%begc:bounds%endc))
+         waterstate_inst, &
+         subtract_dynbal_baselines = .false., &
+         water_mass = begwb(bounds%begc:bounds%endc))
 
     do c = bounds%begc, bounds%endc
        h2osno_old(c) = h2osno(c)

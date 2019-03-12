@@ -578,13 +578,15 @@ contains
 
     call ComputeLiqIceMassNonLake(bounds, num_nolakec, filter_nolakec, &
          waterstate_inst, waterdiagnostic_inst, &
-         liquid_mass_col(bounds%begc:bounds%endc), &
-         ice_mass_col(bounds%begc:bounds%endc))
+         subtract_dynbal_baselines = .true., &
+         liquid_mass = liquid_mass_col(bounds%begc:bounds%endc), &
+         ice_mass = ice_mass_col(bounds%begc:bounds%endc))
 
     call ComputeLiqIceMassLake(bounds, num_lakec, filter_lakec, &
          waterstate_inst, &
-         liquid_mass_col(bounds%begc:bounds%endc), &
-         ice_mass_col(bounds%begc:bounds%endc))
+         subtract_dynbal_baselines = .true., &
+         liquid_mass = liquid_mass_col(bounds%begc:bounds%endc), &
+         ice_mass = ice_mass_col(bounds%begc:bounds%endc))
 
     call c2g(bounds, &
          carr = liquid_mass_col(bounds%begc:bounds%endc), &
