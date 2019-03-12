@@ -85,7 +85,9 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-       soilhydrology_inst, waterstate_inst, water_mass)
+       soilhydrology_inst, waterstate_inst, &
+       subtract_dynbal_baselines, &
+       water_mass)
     !
     ! !DESCRIPTION:
     ! Compute total water mass for all non-lake columns
@@ -96,6 +98,11 @@ contains
     integer                  , intent(in)    :: filter_nolakec(:)          ! column filter for non-lake points
     type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(waterstate_type)    , intent(in)    :: waterstate_inst
+
+    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When we can accept answer changes to methane,
+    ! remove this argument, always assuming it's true.
+    logical, intent(in) :: subtract_dynbal_baselines ! whether to subtract dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
+
     real(r8)                 , intent(inout) :: water_mass( bounds%begc: ) ! computed water mass (kg m-2)
     !
     ! !LOCAL VARIABLES:
@@ -114,6 +121,7 @@ contains
          filter_nolakec = filter_nolakec, &
          soilhydrology_inst = soilhydrology_inst, &
          waterstate_inst = waterstate_inst, &
+         subtract_dynbal_baselines = subtract_dynbal_baselines, &
          liquid_mass = liquid_mass(bounds%begc:bounds%endc), &
          ice_mass = ice_mass(bounds%begc:bounds%endc))
 
@@ -126,7 +134,9 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-       waterstate_inst, water_mass)
+       waterstate_inst, &
+       subtract_dynbal_baselines, &
+       water_mass)
     !
     ! !DESCRIPTION:
     ! Compute total water mass for all lake columns
@@ -136,6 +146,11 @@ contains
     integer                  , intent(in)    :: num_lakec                  ! number of column lake points in column filter
     integer                  , intent(in)    :: filter_lakec(:)            ! column filter for lake points
     type(waterstate_type)    , intent(in)    :: waterstate_inst
+
+    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When we can accept answer changes to methane,
+    ! remove this argument, always assuming it's true.
+    logical, intent(in) :: subtract_dynbal_baselines ! whether to subtract dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
+
     real(r8)                 , intent(inout) :: water_mass( bounds%begc: ) ! computed water mass (kg m-2)
     !
     ! !LOCAL VARIABLES:
@@ -153,6 +168,7 @@ contains
          num_lakec = num_lakec, &
          filter_lakec = filter_lakec, &
          waterstate_inst = waterstate_inst, &
+         subtract_dynbal_baselines = subtract_dynbal_baselines, &
          liquid_mass = liquid_mass(bounds%begc:bounds%endc), &
          ice_mass = ice_mass(bounds%begc:bounds%endc))
 
@@ -166,7 +182,9 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ComputeLiqIceMassNonLake(bounds, num_nolakec, filter_nolakec, &
-       soilhydrology_inst, waterstate_inst, liquid_mass, ice_mass)
+       soilhydrology_inst, waterstate_inst, &
+       subtract_dynbal_baselines, &
+       liquid_mass, ice_mass)
     !
     ! !DESCRIPTION:
     ! Compute total water mass for all non-lake columns, separated into liquid and ice
@@ -180,6 +198,11 @@ contains
     integer                  , intent(in)    :: filter_nolakec(:)           ! column filter for non-lake points
     type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(waterstate_type)    , intent(in)    :: waterstate_inst
+
+    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When we can accept answer changes to methane,
+    ! remove this argument, always assuming it's true.
+    logical, intent(in) :: subtract_dynbal_baselines ! whether to subtract dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
+
     real(r8)                 , intent(inout) :: liquid_mass( bounds%begc: ) ! computed liquid water mass (kg m-2)
     real(r8)                 , intent(inout) :: ice_mass( bounds%begc: )    ! computed ice mass (kg m-2)
     !
@@ -282,12 +305,14 @@ contains
          liquid_mass = liquid_mass(bounds%begc:bounds%endc), &
          ice_mass = ice_mass(bounds%begc:bounds%endc))
 
-    ! Subtract baselines set in initialization
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
-       liquid_mass(c) = liquid_mass(c) - dynbal_baseline_liq(c)
-       ice_mass(c) = ice_mass(c) - dynbal_baseline_ice(c)
-    end do
+    if (subtract_dynbal_baselines) then
+       ! Subtract baselines set in initialization
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+          liquid_mass(c) = liquid_mass(c) - dynbal_baseline_liq(c)
+          ice_mass(c) = ice_mass(c) - dynbal_baseline_ice(c)
+       end do
+    end if
 
     end associate
 
@@ -358,7 +383,9 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ComputeLiqIceMassLake(bounds, num_lakec, filter_lakec, &
-       waterstate_inst, liquid_mass, ice_mass)
+       waterstate_inst, &
+       subtract_dynbal_baselines, &
+       liquid_mass, ice_mass)
     !
     ! !DESCRIPTION:
     ! Compute total water mass for all lake columns, separated into liquid and ice
@@ -371,6 +398,11 @@ contains
     integer               , intent(in)    :: num_lakec                   ! number of column lake points in column filter
     integer               , intent(in)    :: filter_lakec(:)             ! column filter for lake points
     type(waterstate_type) , intent(in)    :: waterstate_inst
+
+    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When we can accept answer changes to methane,
+    ! remove this argument, always assuming it's true.
+    logical, intent(in) :: subtract_dynbal_baselines ! whether to subtract dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
+
     real(r8)              , intent(inout) :: liquid_mass( bounds%begc: ) ! computed liquid water mass (kg m-2)
     real(r8)              , intent(inout) :: ice_mass( bounds%begc: )    ! computed ice mass (kg m-2)
     !
@@ -424,12 +456,14 @@ contains
        end do
     end do
 
-    ! Subtract baselines set in initialization
-    do fc = 1, num_lakec
-       c = filter_lakec(fc)
-       liquid_mass(c) = liquid_mass(c) - dynbal_baseline_liq(c)
-       ice_mass(c) = ice_mass(c) - dynbal_baseline_ice(c)
-    end do
+    if (subtract_dynbal_baselines) then
+       ! Subtract baselines set in initialization
+       do fc = 1, num_lakec
+          c = filter_lakec(fc)
+          liquid_mass(c) = liquid_mass(c) - dynbal_baseline_liq(c)
+          ice_mass(c) = ice_mass(c) - dynbal_baseline_ice(c)
+       end do
+    end if
 
     end associate
 
