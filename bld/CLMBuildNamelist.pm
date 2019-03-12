@@ -2756,7 +2756,7 @@ sub setup_logic_supplemental_nitrogen {
         $log->fatal_error("There is no need to use a spinup mode when supplemental Nitrogen is on for all PFT's, as these modes spinup Nitrogen\n" .
                     "when spinup != normal you can NOT set supplemental Nitrogen (suplnitro) to ALL");
       }
-      if ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_spinup'} ne "off" ) {
+      if ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_spinup'} eq "on" ) {
         $log->warning("There is no need to use a bgc_spinup mode when supplemental Nitrogen is on for all PFT's, as these modes spinup Nitrogen" );
       }
     }
