@@ -294,7 +294,8 @@ contains
     fluxes(iflx_soilq) = cnc * perc
 
 
-    diffusivity_water = 9.8e-10_r8 * 1.03_r8 ** (tg - 273.0_r8)
+    !diffusivity_water = 9.8e-10_r8 * 1.03_r8 ** (tg - 273.0_r8)
+    diffusivity_water = eval_diffusivity_liq_mq(1.0_r8, 1.0_r8, tg)
     diffusivity_satsoil = eval_diffusivity_liq_mq(thetasat, thetasat, tg) * thetasat
     !diffusivity_satsoil = eval_diffusivity_liq_m03(thetasat, thetasat, tg, bsw) * thetasat
     
@@ -587,7 +588,8 @@ contains
     ! Pool S0
     !
     evap_slurry = get_evap_pool(tg, ratm, qbot)
-    infiltr_slurry = max(depth_slurry / poolranges(1), precip)
+    !infiltr_slurry = max(depth_slurry / poolranges(1), precip)
+    infiltr_slurry = depth_slurry / poolranges(1)
     infiltrated = depth_slurry * infiltr_slurry / (infiltr_slurry + evap_slurry)
     ! Slurry water (in addition to soil water, theta) on surface and in soil. Represents
     ! mean over pool S0.
