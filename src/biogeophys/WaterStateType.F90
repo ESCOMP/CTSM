@@ -41,8 +41,12 @@ module WaterStateType
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
 
      real(r8), pointer :: wa_col                 (:)   ! col water in the unconfined aquifer (mm)
-     real(r8), pointer :: dynbal_baseline_liq_col(:)   ! baseline liquid water content subtracted from each column's total liquid water calculation (positive values are subtracted to avoid counting liquid water content of "virtual" states; negative values are added to account for missing states in the model) (mm H2O)
-     real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (positive values are subtracted to avoid counting ice content of "virtual" states; negative values are added to account for missing states in the model) (mm H2O)
+
+     ! For the following dynbal baseline variables: positive values are subtracted to
+     ! avoid counting liquid water content of "virtual" states; negative values are added
+     ! to account for missing states in the model.
+     real(r8), pointer :: dynbal_baseline_liq_col(:)   ! baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
+     real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (mm H2O)
 
      real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
 
