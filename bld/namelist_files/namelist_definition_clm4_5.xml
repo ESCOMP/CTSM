@@ -2276,9 +2276,9 @@ If TRUE, apply harvest from flanduse_timeseries file.
 If TRUE, reset baseline values of total column water and energy in the
 first step of the run. This should typically be set when transitioning
 from an offline spinup to a coupled run with transient glaciers, and
-*possibly* when transitioning the spinup to the transient portion of a
-coupled run with transient glaciers; it should typically remain unset at
-other times.
+*possibly* when transitioning from the spinup to the transient portion
+of a coupled run with transient glaciers; it should typically remain
+unset at other times.
 
 These baseline values are computed only for particular columns
 (currently, only for glacier columns). They provide values that are
