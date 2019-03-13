@@ -1,21 +1,20 @@
 ===============================================================
 Tag name:  ctsm1.0.dev031
 Originator(s):  sacks (Bill Sacks)
-Date: Wed Mar 13 15:00:26 MDT 2019
-One-line Summary: Reduce dynbal conservation fluxes for transient glaciers
+Date: Wed Mar 13 15:03:42 MDT 2019
+One-line Summary: Subtract virtual states to reduce dynbal fluxes for transient glaciers
 
 Purpose of changes
 ------------------
 
-Subtract virtual states to reduce dynbal fluxes for transient glaciers.
-
-Up until now, when computing the dynbal correction fluxes for transient
-glacier columns, we have been (1) counting the mass and energy in the
-ice column as if that is a real state, but on the other hand (2) NOT
-accounting for the fact that glacier columns don't represent the soil
-under glacier. These two issues work in opposite directions, but (1)
-dominates, because there is much more ice (and energy, I think) in the
-roughly 50 m of glacial ice than there is in a typical 50 m soil column.
+Up until now, when computing the dynbal correction (conservation) fluxes
+for transient glacier columns, we have been (1) counting the mass and
+energy in the ice column as if that is a real state, but on the other
+hand (2) NOT accounting for the fact that glacier columns don't
+represent the soil under glacier. These two issues work in opposite
+directions, but (1) dominates, because there is much more ice (and
+energy, I think) in the roughly 50 m of glacial ice than there is in a
+typical 50 m soil column.
 
 In discussing this issue with Bill Lipscomb, we came up with the idea of
 subtracting some baseline value from each glacier column. I think that,
