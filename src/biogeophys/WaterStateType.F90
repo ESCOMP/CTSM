@@ -60,8 +60,12 @@ module WaterstateType
                                                         ! When FATES is coupled in with plant hydraulics turned on, this storage
                                                         ! term is set to non-zero. (kg/m2 H2O)
 
-     real(r8), pointer :: dynbal_baseline_liq_col(:)   ! baseline liquid water content subtracted from each column's total liquid water calculation (positive values are subtracted to avoid counting liquid water content of "virtual" states; negative values are added to account for missing states in the model) (mm H2O)
-     real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (positive values are subtracted to avoid counting ice content of "virtual" states; negative values are added to account for missing states in the model) (mm H2O)
+
+     ! For the following dynbal baseline variables: positive values are subtracted to
+     ! avoid counting liquid water content of "virtual" states; negative values are added
+     ! to account for missing states in the model.
+     real(r8), pointer :: dynbal_baseline_liq_col(:)   ! baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
+     real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (mm H2O)
 
      real(r8), pointer :: snw_rds_col            (:,:) ! col snow grain radius (col,lyr)    [m^-6, microns]
      real(r8), pointer :: snw_rds_top_col        (:)   ! col snow grain radius (top layer)  [m^-6, microns]
