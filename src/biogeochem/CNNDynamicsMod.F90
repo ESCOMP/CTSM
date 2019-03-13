@@ -765,15 +765,15 @@ contains
     integer                  , intent(in)    :: filter_soilc(:) ! filter for soil columns
 
     integer :: begg, endg, g, l, c, il, counter, col_grass, status, p
-    real(r8) :: flux_avail, flux_grazing
+    real(r8) :: flux_avail_rum, flux_avail_mg, flux_grazing
     real(r8) :: tempr_ave, windspeed_ave ! windspeed and temperature averaged over agricultural patches
     real(r8) :: tempr_barns, tempr_stores, vent_barns, flux_grass_crop, tempr_min_10day, &
          flux_grass_graze, flux_grass_spread, flux_grass_spread_tan, flux_grass_crop_tan
-    real(r8) :: cumflux, totalinput
-    real(r8) :: fluxes_nitr(4), fluxes_tan(4)
+    real(r8) :: cumflux, totalinput, total_to_store
+    real(r8) :: fluxes_nitr(4,2), fluxes_tan(4,2)
     ! The fraction of manure applied continuously on grasslands (if present in the gridcell)
     real(r8), parameter :: fract_continuous = 0.1_r8, kg_to_g = 1e3_r8, max_grazing_fract = 0.65_r8, &
-         volat_coef_barns = 0.03_r8, volat_coef_stores = 0.025_r8, &
+         volat_coef_barns_open = 0.03_r8, volat_coef_barns_closed = 0.025, volat_coef_stores = 0.025_r8, &
          tempr_min_grazing = 283.0_r8!!!!
 
     begg = bounds%begg; endg = bounds%endg
@@ -785,8 +785,6 @@ contains
     cumflux = 0.0
     
     do g = begg, endg
-       !totalinput = totalinput + ndep_mixed_grc(g)
-       
        ! First find out if there are grasslands in this cell. If yes, a fraction of
        ! manure can be diverted to them before storage.
        col_grass = ispval
@@ -832,21 +830,23 @@ contains
                 if (tempr_min_10day > tempr_min_grazing) then
                    ! fraction of animals grazing -> allocate some manure to grasslands before barns
                    flux_grazing = max_grazing_fract * ndep_sgrz_grc(g) * kg_to_g / lun%wtgcell(l)
-                   flux_avail = (ndep_ngrz_grc(g) + ndep_sgrz_grc(g)*(1.0_r8 - max_grazing_fract)) * kg_to_g / lun%wtgcell(l)
+                   !flux_avail = (ndep_ngrz_grc(g) + ndep_sgrz_grc(g)*(1.0_r8 - max_grazing_fract)) * kg_to_g / lun%wtgcell(l)
+                   flux_avail_rum = (ndep_sgrz_grc(g)*(1.0_r8 - max_grazing_fract)) * kg_to_g / lun%wtgcell(l)
                    grz_fract(c) = max_grazing_fract
                 else
                    flux_grazing = 0.0_r8
-                   flux_avail = n_manure_mixed_col(c)
+                   flux_avail_rum = ndep_sgrz_grc(g) * kg_to_g / lun%wtgcell(l)
                    grz_fract(c) = 0.0_r8
                 end if
+                flux_avail_mg = ndep_ngrz_grc(g) * kg_to_g / lun%wtgcell(l)
                 flux_grass_graze = flux_grass_graze + flux_grazing*col%wtgcell(c)
 
-                if (flux_avail > 1e12 .or. isnan(flux_avail)) then
+                if (flux_avail_rum > 1e12 .or. flux_avail_mg > 1e12 .or. isnan(flux_avail_mg) .or. isnan(flux_avail_rum)) then
                    write(iulog, *) 'bad flux_avail', ndep_ngrz_grc(g), ndep_sgrz_grc(g), lun%wtgcell(l)
                    call endrun('bad flux_avail')
                 end if
 
-                totalinput = totalinput + flux_avail
+                totalinput = totalinput + flux_avail_rum + flux_avail_mg
 
                 counter = 0
                 if (col_grass == c) call endrun('Something wrong with the indices')
@@ -857,30 +857,58 @@ contains
                 tempr_ave = temperature_inst%t_ref2m_patch(col%patchi(c))
                 windspeed_ave = frictionvel_inst%u10_patch(col%patchi(c))
 
-                man_n_barns(c) = flux_avail
+                man_n_barns(c) = flux_avail_rum + flux_avail_mg
+
                 
-                call eval_fluxes_storage(flux_avail, tempr_ave, windspeed_ave, 0.0_r8, &
-                     volat_coef_barns, volat_coef_stores, tan_fract_excr, fluxes_nitr, fluxes_tan, status)
-                if (any(fluxes_nitr > 1e12)) then
-                   write(iulog, *) 'bad fluxes', fluxes_nitr
+                ! Evaluate the NH3 losses, separate for ruminants (open barns) and others
+                ! (poultry and pigs, closed barns). Note the slicing of fluxes(:,:) and fluxes_tan(:,:).
+                man_n_transf(c) = flux_grazing
+                nh3_flux_stores(c) = 0.0
+
+                if (flux_avail_rum < 0) then 
+                   write(iulog, *) 'flux:', flux_avail_rum
+                   call endrun(msg='negat flux_avail for ruminants')
                 end if
+
+                ! Ruminants
+                call eval_fluxes_storage(flux_avail_rum, 'open', tempr_ave, windspeed_ave, 0.0_r8, &
+                     volat_coef_barns_open, volat_coef_stores, tan_fract_excr, fluxes_nitr(:,1), fluxes_tan(:,1), status)
                 if (status /=0) then 
                    write(iulog, *) 'status = ', status
-                   call endrun(msg='eval_fluxes_storage failed')
+                   call endrun(msg='eval_fluxes_storage failed for ruminants')
+                end if
+
+                ! Others
+                call eval_fluxes_storage(flux_avail_mg, 'closed', tempr_ave, windspeed_ave, 0.0_r8, &
+                     volat_coef_barns_closed, volat_coef_stores, tan_fract_excr, fluxes_nitr(:,2), fluxes_tan(:,2), status)
+                if (status /=0) then 
+                   write(iulog, *) 'status = ', status
+                   call endrun(msg='eval_fluxes_storage failed for other livestock')
                 end if
                 cumflux = cumflux + sum(fluxes_nitr)
-                
-                if (fluxes_tan(iflx_to_store) < 0) then
-                   call endrun(msg="ERROR too much manure lost")
+                if (any(isnan(fluxes_nitr))) then
+                   write(iulog, *) 'fluxes 1', fluxes_nitr(:,1)
+                   write(iulog, *) 'fluxes 2', fluxes_nitr(:,2)
+                   call endrun('Nan in fluxes_nitr')
+                end if
+                if (any(isnan(fluxes_tan))) then
+                   write(iulog, *) 'fluxes 1', fluxes_tan(:,1)
+                   write(iulog, *) 'fluxes 2', fluxes_tan(:,2)
+                   call endrun('Nan in fluxes_tan')
                 end if
 
-                flux_grass_spread = flux_grass_spread + fluxes_nitr(iflx_to_store)*col%wtgcell(c)
-                flux_grass_spread_tan = flux_grass_spread_tan + fluxes_tan(iflx_to_store)*col%wtgcell(c)
-
-                man_n_transf(c) = flux_grazing + fluxes_nitr(iflx_to_store)
+                if (fluxes_tan(iflx_to_store,1) < 0) then
+                   call endrun(msg="ERROR too much manure lost")
+                end if
+                ! Simplification as of 2019: no explicit manure storage. Flux to storage
+                ! will be spread "immediately".
+                total_to_store = sum(fluxes_nitr(iflx_to_store,:))
+                flux_grass_spread = flux_grass_spread + total_to_store*col%wtgcell(c)
+                flux_grass_spread_tan = flux_grass_spread_tan + sum(fluxes_tan(iflx_to_store,:))*col%wtgcell(c)
+                man_n_transf(c) = man_n_transf(c) + total_to_store
                 
-                nh3_flux_stores(c) = fluxes_nitr(iflx_air_stores)
-                nh3_flux_barns(c) = fluxes_nitr(iflx_air_barns)
+                nh3_flux_stores(c) = sum(fluxes_nitr(iflx_air_stores,:))
+                nh3_flux_barns(c) = sum(fluxes_nitr(iflx_air_barns,:))
                 
              end do ! column
           end if ! crop land unit
