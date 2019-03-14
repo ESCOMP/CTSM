@@ -30,7 +30,6 @@ module lilac
      private
 
      type(ESMFInfoType) :: esmf_info
-     character
 
    contains
      procedure, public  :: init  => init
