@@ -1071,6 +1071,20 @@ Toggle for mexico city specific logic.
 Max number of plant functional types in naturally vegetated landunit.
 </entry>
 
+<entry id="n_dom_pfts" type="integer" category="physics"
+       group="clm_inparm"
+       valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14" value="0">
+Number of dominant pfts, so this determines the number of active pfts. Selecting the value 0 means DO NOTHING, ie all pfts in the input data are active.
+<default>Default: 0</default>
+</entry>
+
+<entry id="n_dom_landunits" type="integer" category="physics"
+       group="clm_inparm"
+       valid_values="0,1,2,3,4,5,6,7,8,9" value="0">
+Number of dominant landunits, so this determines the number of active landunits. Selecting the value 0 means DO NOTHING, ie all landunits in the input data are active.
+<default>Default: 0</default>
+</entry>
+
 <entry id="use_dynroot" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the dynamic root model

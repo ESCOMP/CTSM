@@ -15,7 +15,7 @@ module surfrdMod
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog, scmlat, scmlon, single_column
   use clm_varctl      , only : use_cndv, use_crop
-  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types
+  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_to_dominant, collapse_crop_var
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
   use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid, ncd_inqdlen
   use pio
@@ -285,10 +285,11 @@ contains
     !    o real % abundance PFTs (as a percent of vegetated area)
     !
     ! !USES:
-    use clm_varctl  , only : create_crop_landunit
+    use clm_varctl  , only : create_crop_landunit, n_dom_landunits
     use fileutils   , only : getfil
     use domainMod   , only : domain_type, domain_init, domain_clean
     use clm_instur  , only : wt_lunit, topo_glc_mec
+    use landunit_varcon, only: max_lunit, istsoil
     !
     ! !ARGUMENTS:
     integer,          intent(in) :: begg, endg, actual_numcft      
@@ -405,6 +406,15 @@ contains
     call ncd_pio_closefile(ncid)
 
     call check_sums_equal_1(wt_lunit, begg, 'wt_lunit', subname)
+
+    ! Select N dominant landunits
+    ! ---------------------------
+    ! n_dom_landunits set by user in namelist
+    ! Call resembles the surfrd_veg_all call to the same subr that selects
+    ! n_dom_pfts (also set by the user in the namelist)
+
+    call collapse_to_dominant(wt_lunit(begg:endg,:), istsoil, max_lunit, &
+                              begg, endg, n_dom_landunits)
 
     if ( masterproc )then
        write(iulog,*) 'Successfully read surface boundary data'
@@ -760,7 +770,7 @@ contains
     ! Determine weight arrays for non-dynamic landuse mode
     !
     ! !USES:
-    use clm_varctl      , only : create_crop_landunit, use_fates
+    use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_pfts
     use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
@@ -863,14 +873,28 @@ contains
        ! Check sum of vegetation adds to 1
        call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
     end if
-    ! Call collapse_crop_types:
+    ! Call collapse_crop_types: allows need to maintain only 78-pft input data
     ! For use_crop = .false. collapsing 78->16 pfts or 16->16 or some new
     !    configuration
     ! For use_crop = .true. most likely collapsing 78 to the list of crops for
     !    which the CLM includes parameterizations
     ! The call collapse_crop_types also appears in subroutine dyncrop_interp
-    call collapse_crop_types(wt_cft(begg:endg, :), fert_cft(begg:endg, :), cft_size, begg, endg, verbose=.true.)
+    call collapse_crop_types(wt_cft(begg:endg,:), fert_cft(begg:endg,:), cft_size, begg, endg, verbose=.true.)
 
+    ! Collapse crop variables as needed
+    ! The call to collapse_crop_var also appears in subroutine dyncrop_interp
+    ! - fert_cft TODO Is this call redundant because it simply sets the crop
+    !                 variable to 0 where is_pft_known_to_model = .false.?
+    call collapse_crop_var(fert_cft(begg:endg,:), cft_size, begg, endg)
+
+    ! Call collapse_to_dominant: enhance ctsm performance with fewer active pfts
+    ! Collapsing to the top N dominant pfts (n_dom_pfts set in namelist).
+    ! - Bare ground could be up to 1 patch before collapsing.
+    ! - Pfts could be up to 14 before collapsing if create_crop_landunit = .T.
+    ! - Pfts could be up to 16 before collapsing if create_crop_landunit = .F.
+    ! The call does not appear in subroutine dynpft_interp: SHOULD IT?
+    call collapse_to_dominant(wt_nat_patch(begg:endg,:), natpft_lb, natpft_ub, &
+                              begg, endg, n_dom_pfts)
   end subroutine surfrd_veg_all
 
   !-----------------------------------------------------------------------
