@@ -160,7 +160,7 @@ contains
     call ESMF_LogWrite(subname//"esmf_info%run()", ESMF_LOGMSG_INFO)
 
     ! atmosphere run
-    ! copy the atmos state and put it into atmos export
+    ! atmos_run phase 1: copy the atmos state and put it into atmos export
     call ESMF_GridCompRun(self%atmos_comp, exportState=self%atmos_export, phase=1, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     call ESMF_LogWrite(subname//"Atmosphere Run returned", ESMF_LOGMSG_INFO)
@@ -180,6 +180,7 @@ contains
     call ESMF_LogWrite(subname//"Coupler Run returned", ESMF_LOGMSG_INFO)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
+    ! atmos run phase 2: copy the atmos state and put it into atmos export
     call ESMF_GridCompRun(self%atmos_comp, importState=self%atmos_import, phase=2, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     call ESMF_LogWrite(subname//"Atmosphere Run returned", ESMF_LOGMSG_INFO)
