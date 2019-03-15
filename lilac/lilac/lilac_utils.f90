@@ -1,5 +1,8 @@
 module lilac_utils
 
+   integer, parameter     :: fldsMax = 100
+
+
   type fld_list_type
      character(len=128) :: stdname
      real*8             :: default_value
@@ -37,9 +40,11 @@ module lilac_utils
 
   end subroutine fldlist_add
 
-  subroutine create_fldlists(fldsFrCpl_num, fldsToCpl_num)
+  subroutine create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
     type(fld_list_type)        intent(inout) :: fldsFrCpl(:)
     type(fld_list_type)        intent(inout) :: fldsToCpl(:)
+    integer, intent(out)                     :: fldsToCpl_num = 0
+    integer, intent(out)                     :: fldsFrCpl_num = 0
 
     ! import fields
     ! call fldlist_add(fldsFrCpl_num, fldsFrCpl, trim(flds_scalar_name))

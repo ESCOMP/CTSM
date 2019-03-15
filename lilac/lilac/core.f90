@@ -3,7 +3,7 @@ module lilac
   use ESMF
   use esmf_utils
 
-  use lilac_utils , only fldlist_add
+  use lilac_utils , only create_fldlists, fldsMax
 
 
   implicit none
@@ -11,6 +11,8 @@ module lilac
   character(*), parameter :: modname =  "(core)"
   integer, parameter :: LILAC_SUCCESS = ESMF_SUCCESS
 
+  ! shared module level variables
+  character(len=*)    :: atm_mesh_filepath
   type(LilacFields)   :: a2x_state
   type(LilacFields)   :: x2a_state
 
@@ -209,91 +211,26 @@ contains
     type(ESMF_Clock)     :: clock
     integer, intent(out) :: rc
 
+    type (fld_list_type)   :: fldsToCpl(fldsMax)
+    type (fld_list_type)   :: fldsFrCpl(fldsMax)
+    integer                :: fldsToCpl_num
+    integer                :: fldsFrCpl_num
+
     character(len=*), parameter :: subname=trim(modname)//':(atmos_init) '
 
     ! Initialize return code
     rc = ESMF_SUCCESS
 
     ! read in the mesh
-    ! TODO: set cvalue to filepath of atm mesh
-    cvalue = "/path/to/foo"
-
     if (masterproc) then
-       write(iulog,*)'mesh file for domain is ',trim(cvalue)
+       write(iulog,*)'mesh file for domain is ',trim(atm_mesh_filepath)
     end if
-
-    ! move to lilac dummy atmosphere init
-    EMesh = ESMF_MeshCreate(filename=trim(cvalue), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    ! move to lilac dummy atmosphere init?
+    EMesh = ESMF_MeshCreate(filename=trim(atm_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-    ! import fields
-    ! call fldlist_add(fldsFrCpl_num, fldsFrCpl, trim(flds_scalar_name))
-
-    ! land states
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_lfrin'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_t'          )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_tref'       )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_qref'       )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_avsdr'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_anidr'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_avsdf'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_anidf'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_snowh'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_u10'        )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_fv'         )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_ram1'       )
-
-    ! fluxes to atm
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_taux'     )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_tauy'     )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_lat'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_sen'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_lwup'     )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_evap'     )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_swnet'    )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_flxdst1'  )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_flxdst2'  )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_flxdst3'  )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_flxdst4'  )
-
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, trim(flds_scalar_name))
-
-    ! from atm
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_z', default_value=30.0, units='m')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_topo')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_u', default_value=0.0, units='m/s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_v', default_value=0.0, units='m/s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_ptem', default_value=280.0, 'degK')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_pbot', default_value=100100.0, units='Pa')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_tbot', default_value=280.0, units='degK')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_shum', default_value=0.0004, units='kg/kg')
-    !call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_methane'   )
-
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_lwdn', default_value=200.0, units='W/m2')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_rainc', default_value=4.0e-8, units='kg/m2s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_rainl', default_value=3.0e-8, units='kg/m2s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_snowc', default_value=1.0e-8, units='kg/m2s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_snowl', default_value=2.0e-8, units='kg/m2s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_swndr', default_value=100.0, units='W/m2')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_swvdr', default_value=90.0, units='W/m2')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_swndf', default_value=20.0, units='W/m2')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_swvdf', default_value=40.0, units='W/m2')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_bcphidry')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_bcphodry')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_bcphiwet')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_ocphidry')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_ocphodry')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_ocphiwet')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstdry1' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstdry2' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstdry3' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstdry4' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstwet1' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstwet2' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstwet3' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstwet4' )
-
-    ! more: https://github.com/mvertens/ctsm/blob/ae02ffe25dbc4a85c769c9137b5b3d50f2843e89/src/cpl/nuopc/lnd_import_export.F90#L131
+    ! create field lists
+    call create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
 
     ! Create States
     x2a_state = ESMF_StateCreate(name="x2a_state", stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)

@@ -1,16 +1,15 @@
 
 program lilac_data_driver
 
-  use seq_flds_mod , only:  &
-       seq_flds_x2l_states, seq_flds_x2l_fluxes, seq_flds_x2l_fields, &
-       seq_flds_l2x_states, seq_flds_l2x_fluxes, seq_flds_l2x_fields, &
-       seq_flds_dom_coord, seq_flds_dom_other, seq_flds_dom_fields
-  use seq_infodata_mod, only: seq_infodata_type, seq_infodata_putdata, seq_infodata_getdata
-  use shr_sys_mod  , only: shr_sys_flush, shr_sys_abort
+  use seq_infodata_mod, only: seq_infodata_putdata
+  use shr_sys_mod  , only: shr_sys_flush
   use shr_orb_mod  , only: shr_orb_params
   use shr_file_mod , only: shr_file_setlogunit, shr_file_setloglevel
   use shr_pio_mod  , only: shr_pio_init1, shr_pio_init2
   use ESMF
+
+  use lilac_utils , only create_fldlists, fldsMax
+
 
   implicit none
 
@@ -37,8 +36,8 @@ program lilac_data_driver
 
   !----- Land Coupling Data -----
   type(LilacGrid)      :: gridComp
-  type(LilacState)     :: a2x_state
-  type(LilacState)     :: x2a_state
+  type(LilacFields)    :: a2x_state
+  type(LilacFields)    :: x2a_state
 
   integer                        :: orb_iyear ! Orbitalle
   real*8                         :: orb_eccen, orb_obliq, orb_mvelp, orb_obliqr, orb_lambm0, orb_mvelpp
@@ -65,9 +64,6 @@ program lilac_data_driver
   integer :: sunit = 249               ! share log unit number
   character(len=*),parameter :: subname = 'lilac_drv'
 
-  integer, parameter     :: fldsMax = 100
-  integer                :: fldsToCpl_num = 0
-  integer                :: fldsFrCpl_num = 0
   type (fld_list_type)   :: fldsToCpl(fldsMax)
   type (fld_list_type)   :: fldsFrCpl(fldsMax)
 
@@ -161,6 +157,9 @@ program lilac_data_driver
 
   write(iunit,*) subname,' calling lilac%init'
   call shr_sys_flush(iunit)
+
+  call create_fldlists(fldsFrCpl, fldsToCpl)
+
 
   call lilac%init(EClock, x2a_state, a2x_state, rc=rc)
 
