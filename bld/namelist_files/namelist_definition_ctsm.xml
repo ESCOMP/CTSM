@@ -1088,56 +1088,56 @@ Number of dominant landunits, so this determines the number of active landunits.
 <entry id="toosmall_soil" type="integer" category="physics"
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9,10" value="0">
-Threshold above which the model keeps the soil landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
+Percentage threshold above which the model keeps the soil landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_crop" type="integer" category="physics"
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9,10" value="0">
-Threshold above which the model keeps the crop landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
+Percentage threshold above which the model keeps the crop landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_glacier" type="integer" category="physics"
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9,10" value="0">
-Threshold above which the model keeps the glacier landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
+Percentage threshold above which the model keeps the glacier landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_lake" type="integer" category="physics"
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9,10" value="0">
-Threshold above which the model keeps the lake landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
+Percentage threshold above which the model keeps the lake landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_wetland" type="integer" category="physics"
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9,10" value="0">
-Threshold above which the model keeps the wetland landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
+Percentage threshold above which the model keeps the wetland landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_urb_tbd" type="integer" category="physics"
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9,10" value="0">
-Threshold above which the model keeps the urban TBD landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
+Percentage threshold above which the model keeps the urban TBD landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_urb_hd" type="integer" category="physics"
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9,10" value="0">
-Threshold above which the model keeps the urban HD landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
+Percentage threshold above which the model keeps the urban HD landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_urb_md" type="integer" category="physics"
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9,10" value="0">
-Threshold above which the model keeps the urban MD landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
+Percentage threshold above which the model keeps the urban MD landunit. Selecting the value 0 means DO NOTHING. Valid values reach 100 but practical values are not expected above 10 at this time.
 <default>Default: 0</default>
 </entry>
 

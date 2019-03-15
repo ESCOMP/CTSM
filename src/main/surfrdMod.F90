@@ -421,6 +421,7 @@ contains
 
     ! Remove landunits using thresholds set by user in namelist
     ! ---------------------------------------------------------
+    ! Thresholds are set in the namelist parameters toosmall_* in units of %.
     ! TODO Remove corresponding thresholds from the mksurfdat tool
     !      Found 2 such cases (had expected to encounter one per landunit):
     !         mkurbanparCommonMod.F90 MIN_DENS = 0.1 and
