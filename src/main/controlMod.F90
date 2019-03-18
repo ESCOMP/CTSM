@@ -244,6 +244,10 @@ contains
 
     namelist /clm_inparm/ use_dynroot
 
+    ! Max # of iterations used in subroutine hybrid that solves for ci and
+    ! stomatal conductance
+    namelist /clm_inparm/ itmax_hybrid
+
     namelist /clm_inparm/  &
          use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
 		 
@@ -369,6 +373,11 @@ contains
        if (n_dom_landunits < 0 .or. n_dom_landunits > max_lunit) then
           call endrun(msg=' ERROR: expecting n_dom_landunits between 0 and  max_lunit where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
+       end if
+
+       if (itmax_hybrid < 1) then
+          call endrun(msg=' ERROR: expecting itmax_hybrid > 0 where 40 is the default value ' // &
+            errMsg(sourcefile, __LINE__))
        end if
 
        if (use_crop .and. .not. create_crop_landunit) then
@@ -645,6 +654,10 @@ contains
     call mpi_bcast(n_dom_pfts, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast(n_dom_landunits, 1, MPI_INTEGER, 0, mpicom, ier)
 
+    ! Max # of iterations used in subroutine hybrid that solves for ci and
+    ! stomatal conductance
+    call mpi_bcast(itmax_hybrid, 1, MPI_INTEGER, 0, mpicom, ier)
+
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
     if (use_cn) then
@@ -848,6 +861,7 @@ contains
     end if
     write(iulog,*) '   Number of ACTIVE PFTS (0 means input pft data NOT collapsed to n_dom_pfts) =', n_dom_pfts
     write(iulog,*) '   Number of ACTIVE LANDUNITS (0 means input landunit data NOT collapsed to n_dom_landunits) =', n_dom_landunits
+    write(iulog,*) '   Max number of iterations used in subr. hybrid that solves for ci and stom. conductance =', itmax_hybrid
     if (use_cn) then
        if (suplnitro /= suplnNon)then
           write(iulog,*) '   Supplemental Nitrogen mode is set to run over Patches: ', &

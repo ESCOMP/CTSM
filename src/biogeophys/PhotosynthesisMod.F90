@@ -1997,6 +1997,7 @@ contains
     !Dec 14/2012: created by Jinyun Tang
     !
     !!USES:
+    use clm_varctl, only: itmax_hybrid
     !
     !! ARGUMENTS:
     implicit none
@@ -2021,7 +2022,6 @@ contains
     real(r8) :: x, dx
     real(r8), parameter :: eps = 1.e-2_r8      !relative accuracy
     real(r8), parameter :: eps1= 1.e-4_r8
-    integer,  parameter :: itmax = 40          !maximum number of iterations
     real(r8) :: tol,minx,minf
 
     call ci_func(x0, f0, p, iv, c, gb_mol, je, cair, oair, lmr_z, par_z, rh_can, gs_mol, &
@@ -2082,7 +2082,7 @@ contains
           x0=x
           exit
        endif
-       if(iter>itmax)then
+       if (iter > itmax_hybrid) then
           !in case of failing to converge within itmax iterations
           !stop at the minimum function
           !this happens because of some other issues besides the stomatal conductance calculation
