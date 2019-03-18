@@ -377,59 +377,59 @@ contains
                errMsg(sourcefile, __LINE__))
        end if
 
-       if (toosmall_soil < 0 .or. toosmall_soil > 100) then
-          call endrun(msg=' ERROR: expecting toosmall_soil between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+       if (toosmall_soil < 0._r8 .or. toosmall_soil > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_soil between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
-       if (toosmall_crop < 0 .or. toosmall_crop > 100) then
-          call endrun(msg=' ERROR: expecting toosmall_crop between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+       if (toosmall_crop < 0._r8 .or. toosmall_crop > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_crop between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
-       if (toosmall_glacier < 0 .or. toosmall_glacier > 100) then
-          call endrun(msg=' ERROR: expecting toosmall_glacier between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+       if (toosmall_glacier < 0._r8 .or. toosmall_glacier > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_glacier between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
-       if (toosmall_lake < 0 .or. toosmall_lake > 100) then
-          call endrun(msg=' ERROR: expecting toosmall_lake between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+       if (toosmall_lake < 0._r8 .or. toosmall_lake > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_lake between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
-       if (toosmall_wetland < 0 .or. toosmall_wetland > 100) then
-          call endrun(msg=' ERROR: expecting toosmall_wetland between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+       if (toosmall_wetland < 0._r8 .or. toosmall_wetland > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_wetland between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
-       if (toosmall_urb_tbd < 0 .or. toosmall_urb_tbd > 100) then
-          call endrun(msg=' ERROR: expecting toosmall_urb_tbd between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+       if (toosmall_urb_tbd < 0._r8 .or. toosmall_urb_tbd > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_urb_tbd between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
-       if (toosmall_urb_hd < 0 .or. toosmall_urb_hd > 100) then
-          call endrun(msg=' ERROR: expecting toosmall_urb_hd between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+       if (toosmall_urb_hd < 0._r8 .or. toosmall_urb_hd > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_urb_hd between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
-       if (toosmall_urb_md < 0 .or. toosmall_urb_md > 100) then
-          call endrun(msg=' ERROR: expecting toosmall_urb_md between 0 and 100 where 0 is the default value that tells the model to do nothing ' // &
+       if (toosmall_urb_md < 0._r8 .or. toosmall_urb_md > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_urb_md between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
        if (glc_do_dynglacier) then
           if (n_dom_pfts > 0 .or. n_dom_landunits > 0 &
-              .or. toosmall_soil > 0 .or. toosmall_crop > 0 &
-              .or. toosmall_glacier > 0 .or. toosmall_lake > 0 &
-              .or. toosmall_wetland > 0 .or. toosmall_urb_tbd > 0 &
-              .or. toosmall_urb_hd > 0 .or. toosmall_urb_md > 0) then
+              .or. toosmall_soil > 0._r8 .or. toosmall_crop > 0._r8 &
+              .or. toosmall_glacier > 0._r8 .or. toosmall_lake > 0._r8 &
+              .or. toosmall_wetland > 0._r8 .or. toosmall_urb_tbd > 0._r8 &
+              .or. toosmall_urb_hd > 0._r8 .or. toosmall_urb_md > 0._r8) then
              call endrun(msg='ERROR: glc_do_dynglacier is incompatible &
                               with any of the following set to > 0: &
                               n_dom_pfts > 0, n_dom_landunits > 0, &
-                              toosmall_soil > 0, toosmall_crop > 0, &
-                              toosmall_glacier > 0, toosmall_lake > 0, &
-                              toosmall_wetland > 0, toosmall_urb_tbd > 0, &
-                              toosmall_urb_hd > 0, toosmall_urb_md > 0.' // &
+                              toosmall_soil > 0._r8, toosmall_crop > 0._r8, &
+                              toosmall_glacier > 0._r8, toosmall_lake > 0._r8, &
+                              toosmall_wetland > 0._r8, toosmall_urb_tbd > 0._r8, &
+                              toosmall_urb_hd > 0._r8, toosmall_urb_md > 0._r8.' // &
                               errMsg(sourcefile, __LINE__))
           end if
        end if
@@ -710,14 +710,14 @@ contains
 
     ! Thresholds above which the model keeps the soil, crop, glacier, lake,
     ! wetland, and urban landunits
-    call mpi_bcast(toosmall_soil, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast(toosmall_crop, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast(toosmall_glacier, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast(toosmall_lake, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast(toosmall_wetland, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast(toosmall_urb_tbd, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast(toosmall_urb_hd, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast(toosmall_urb_md, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(toosmall_soil, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_crop, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_glacier, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_lake, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_wetland, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_urb_tbd, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_urb_hd, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_urb_md, 1, MPI_REAL8, 0, mpicom, ier)
 
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)

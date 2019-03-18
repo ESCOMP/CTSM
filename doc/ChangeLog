@@ -1,7 +1,7 @@
 ===============================================================
-Tag name:  ctsm1.0.dev031
+Tag name:  ctsm1.0.dev0??
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
-Date:  Tue Mar 12 12:54:32 MST 2019
+Date:  Tue Mar ?? ??:??:?? MST 2019
 One-line Summary: Limit landunit presence with thresholds set in the namelist
 
 Purpose of changes
@@ -59,10 +59,10 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- OK
-    hobart ------ OK
+    cheyenne ---- 
+    hobart ------ 
 
-CTSM tag used for the baseline comparisons: ctsm1.0.dev030
+CTSM tag used for the baseline comparisons: ctsm1.0.dev0??
 
 
 Answer changes

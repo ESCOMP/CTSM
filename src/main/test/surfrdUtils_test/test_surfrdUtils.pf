@@ -50,11 +50,11 @@ contains
      ! to a range of values and the subroutine call returns and checks the
      ! updated wt_lunit values.
      ! Tests performed:
-     ! - toosmall_* = 0 ... DO NOTHING
-     ! - toosmall_* = 1 ... Remove landunits with <= 1% of the gridcell area
-     ! - toosmall_* = 8 ... Remove landunits with <= 8% of the gridcell area
-     ! - toosmall_* = 39 ... Remove landunits with <= 39% of the gridcell area
-     ! - toosmall_* = 100 ... Keep only the dominant landunit per gridcell
+     ! - toosmall_* = 0._r8 ... DO NOTHING
+     ! - toosmall_* = 1._r8 ... Remove landunits with <= 1% of the gridcell area
+     ! - toosmall_* = 8._r8 ... Rm landunits with <= 8% of the gridcell area
+     ! - toosmall_* = 39._r8 .. Rm landunits with <= 39% of the gridcell area
+     ! - toosmall_* = 100._r8 . Keep only the dominant landunit per gridcell
      use pftconMod, only: pftcon
      use clm_instur, only: wt_lunit
      use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
@@ -64,14 +64,14 @@ contains
      implicit none
      integer :: test  ! test number in loop of tests
      integer, parameter :: begg = 2, endg = 4, tests = 5
-     integer, parameter :: toosmall_soil(tests) = (/ 0, 1, 8, 39, 100/)
-     integer, parameter :: toosmall_crop(tests) = (/ 0, 1, 8, 39, 100/)
-     integer, parameter :: toosmall_glacier(tests) = (/ 0, 1, 8, 39, 100/)
-     integer, parameter :: toosmall_lake(tests) = (/ 0, 1, 8, 39, 100/)
-     integer, parameter :: toosmall_wetland(tests) = (/ 0, 1, 8, 39, 100/)
-     integer, parameter :: toosmall_urb_tbd(tests) = (/ 0, 1, 8, 39, 100/)
-     integer, parameter :: toosmall_urb_hd(tests) = (/ 0, 1, 8, 39, 100/)
-     integer, parameter :: toosmall_urb_md(tests) = (/ 0, 1, 8, 39, 100/)
+     real(r8), parameter :: toosmall_soil(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_crop(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_glacier(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_lake(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_wetland(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_urb_tbd(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_urb_hd(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_urb_md(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
      integer, parameter :: test_toosmall_is_0 = 1
      integer, parameter :: test_toosmall_is_1 = 2
      integer, parameter :: test_toosmall_is_8 = 3

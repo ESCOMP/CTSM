@@ -230,17 +230,17 @@ contains
 
     if (dyn_subgrid_control_inst%do_transient_pfts .or. dyn_subgrid_control_inst%do_transient_crops) then
        if (n_dom_pfts > 0 .or. n_dom_landunits > 0 &
-           .or. toosmall_soil > 0 .or. toosmall_crop > 0 &
-           .or. toosmall_glacier > 0 .or. toosmall_lake > 0 &
-           .or. toosmall_wetland > 0 .or. toosmall_urb_tbd > 0 &
-           .or. toosmall_urb_hd > 0 .or. toosmall_urb_md > 0) then
+           .or. toosmall_soil > 0._r8 .or. toosmall_crop > 0._r8 &
+           .or. toosmall_glacier > 0._r8 .or. toosmall_lake > 0._r8 &
+           .or. toosmall_wetland > 0._r8 .or. toosmall_urb_tbd > 0._r8 &
+           .or. toosmall_urb_hd > 0._r8 .or. toosmall_urb_md > 0._r8) then
           write(iulog,*) 'ERROR: do_transient_pfts and do_transient_crops are &
                        incompatible with any of the following set to > 0: &
                        n_dom_pfts > 0, n_dom_landunits > 0, &
-                       toosmall_soil > 0, toosmall_crop > 0, &
-                       toosmall_glacier > 0, toosmall_lake > 0, &
-                       toosmall_wetland > 0, toosmall_urb_tbd > 0, &
-                       toosmall_urb_hd > 0, toosmall_urb_md > 0.'
+                       toosmall_soil > 0._r8, toosmall_crop > 0._r8, &
+                       toosmall_glacier > 0._r8, toosmall_lake > 0._r8, &
+                       toosmall_wetland > 0._r8, toosmall_urb_tbd > 0._r8, &
+                       toosmall_urb_hd > 0._r8, toosmall_urb_md > 0._r8.'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end if

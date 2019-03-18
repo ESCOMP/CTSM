@@ -163,14 +163,14 @@ contains
     ! !ARGUMENTS:
     integer, intent(in) :: begg  ! Beginning grid cell index
     integer, intent(in) :: endg  ! Ending grid cell index
-    integer, intent(in) :: toosmall_soil  ! Soil landunit threshold (%)
-    integer, intent(in) :: toosmall_crop  ! Crop landunit threshold (%)
-    integer, intent(in) :: toosmall_glacier  ! Glacier landunit threshold (%)
-    integer, intent(in) :: toosmall_lake  ! Lake landunit threshold (%)
-    integer, intent(in) :: toosmall_wetland  ! Wetland landunit threshold (%)
-    integer, intent(in) :: toosmall_urb_tbd  ! Urban TBD landunit threshold (%)
-    integer, intent(in) :: toosmall_urb_hd  ! Urban HD landunit threshold (%)
-    integer, intent(in) :: toosmall_urb_md  ! Urban MD landunit threshold (%)
+    real(r8), intent(in) :: toosmall_soil  ! Soil landunit threshold (%)
+    real(r8), intent(in) :: toosmall_crop  ! Crop landunit threshold (%)
+    real(r8), intent(in) :: toosmall_glacier  ! Glacier landunit threshold (%)
+    real(r8), intent(in) :: toosmall_lake  ! Lake landunit threshold (%)
+    real(r8), intent(in) :: toosmall_wetland  ! Wetland landunit threshold (%)
+    real(r8), intent(in) :: toosmall_urb_tbd  ! Urban TBD landunit threshold (%)
+    real(r8), intent(in) :: toosmall_urb_hd  ! Urban HD landunit threshold (%)
+    real(r8), intent(in) :: toosmall_urb_md  ! Urban MD landunit threshold (%)
     ! This array modified in-place
     ! Weights of landunits per grid cell
     real(r8), intent(inout) :: wt_lunit(begg:endg, max_lunit)
@@ -179,7 +179,7 @@ contains
     integer :: g  ! grid cell indexes
     integer :: m  ! landunit indexes
     integer :: max_landunit  ! landunit with largest fraction
-    integer :: toosmall_any  ! sum of the landunit thresholds
+    real(r8) :: toosmall_any  ! sum of the landunit thresholds
     real(r8) :: toosmall(max_lunit)  ! Array of the thresholds (fraction)
     real(r8) :: residual(max_lunit)  ! Array of wt_lunit residuals (fraction)
     !-----------------------------------------------------------------------
@@ -190,7 +190,7 @@ contains
                    toosmall_lake + toosmall_wetland + toosmall_urb_tbd + &
                    toosmall_urb_hd + toosmall_urb_md
 
-    if (toosmall_any > 0) then
+    if (toosmall_any > 0._r8) then
 
        ! Copy the user-defined percent thresholds into array of fractions
        toosmall(istsoil) = toosmall_soil / 100._r8

@@ -142,14 +142,14 @@ module clm_varctl
   integer, public :: n_dom_pfts = 0  ! # of dominant pfts; determines the number of active pfts; default = 0 means "do nothing"
   integer, public :: n_dom_landunits = 0  ! # of dominant landunits; determines the number of active landunits; default = 0 means "do nothing"
 
-  integer, public :: toosmall_soil = 0  ! threshold above which the model keeps the soil landunit; default = 0 means "do nothing"
-  integer, public :: toosmall_crop = 0  ! threshold above which the model keeps the crop landunit; default = 0 means "do nothing"
-  integer, public :: toosmall_glacier = 0  ! threshold above which the model keeps the glacier landunit; default = 0 means "do nothing"
-  integer, public :: toosmall_lake = 0  ! threshold above which the model keeps the lake landunit; default = 0 means "do nothing"
-  integer, public :: toosmall_wetland = 0  ! threshold above which the model keeps the wetland landunit; default = 0 means "do nothing"
-  integer, public :: toosmall_urb_tbd = 0  ! threshold above which the model keeps the urban TBD landunit; default = 0 means "do nothing"
-  integer, public :: toosmall_urb_hd = 0  ! threshold above which the model keeps the urban HD landunit; default = 0 means "do nothing"
-  integer, public :: toosmall_urb_md = 0  ! threshold above which the model keeps the urban MD landunit; default = 0 means "do nothing"
+  real(r8), public :: toosmall_soil = 0._r8  ! threshold above which the model keeps the soil landunit; default = 0 means "do nothing"
+  real(r8), public :: toosmall_crop = 0._r8  ! threshold above which the model keeps the crop landunit; default = 0 means "do nothing"
+  real(r8), public :: toosmall_glacier = 0._r8  ! threshold above which the model keeps the glacier landunit; default = 0 means "do nothing"
+  real(r8), public :: toosmall_lake = 0._r8  ! threshold above which the model keeps the lake landunit; default = 0 means "do nothing"
+  real(r8), public :: toosmall_wetland = 0._r8  ! threshold above which the model keeps the wetland landunit; default = 0 means "do nothing"
+  real(r8), public :: toosmall_urb_tbd = 0._r8  ! threshold above which the model keeps the urban TBD landunit; default = 0 means "do nothing"
+  real(r8), public :: toosmall_urb_hd = 0._r8  ! threshold above which the model keeps the urban HD landunit; default = 0 means "do nothing"
+  real(r8), public :: toosmall_urb_md = 0._r8  ! threshold above which the model keeps the urban MD landunit; default = 0 means "do nothing"
 
   !----------------------------------------------------------
   ! BGC logic and datasets

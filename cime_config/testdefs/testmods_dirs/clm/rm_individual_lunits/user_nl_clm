@@ -1,8 +1,8 @@
-toosmall_soil = 5
-toosmall_crop = 5
-toosmall_glacier = 5
-toosmall_lake = 5
-toosmall_wetland = 5
-toosmall_urb_tbd = 5
-toosmall_urb_hd = 5
-toosmall_urb_md = 5
+toosmall_soil = 5._r8
+toosmall_crop = 5._r8
+toosmall_glacier = 5._r8
+toosmall_lake = 5._r8
+toosmall_wetland = 5._r8
+toosmall_urb_tbd = 5._r8
+toosmall_urb_hd = 5._r8
+toosmall_urb_md = 5._r8
