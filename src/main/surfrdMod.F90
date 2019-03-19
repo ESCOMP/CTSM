@@ -287,8 +287,7 @@ contains
     ! !USES:
     use clm_varctl  , only : create_crop_landunit, toosmall_soil, &
                              toosmall_crop, toosmall_glacier, toosmall_lake, &
-                             toosmall_wetland, toosmall_urb_tbd, &
-                             toosmall_urb_hd, toosmall_urb_md, n_dom_landunits
+                             toosmall_wetland, toosmall_urban, n_dom_landunits
     use fileutils   , only : getfil
     use domainMod   , only : domain_type, domain_init, domain_clean
     use clm_instur  , only : wt_lunit, topo_glc_mec
@@ -430,8 +429,7 @@ contains
     call collapse_individual_lunits(wt_lunit, begg, endg, toosmall_soil, &
                                     toosmall_crop, toosmall_glacier, & 
                                     toosmall_lake, toosmall_wetland, &
-                                    toosmall_urb_tbd, toosmall_urb_hd, &
-                                    toosmall_urb_md)
+                                    toosmall_urban)
 
     if ( masterproc )then
        write(iulog,*) 'Successfully read surface boundary data'

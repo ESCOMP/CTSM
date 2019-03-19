@@ -1115,21 +1115,9 @@ Percentage threshold above which the model keeps the wetland landunit. Selecting
 <default>Default: 0</default>
 </entry>
 
-<entry id="toosmall_urb_tbd" type="real" category="physics"
+<entry id="toosmall_urban" type="real" category="physics"
        group="clm_inparm"
-Percentage threshold above which the model keeps the urban TBD landunit. Selecting the value 0 means DO NOTHING.
-<default>Default: 0</default>
-</entry>
-
-<entry id="toosmall_urb_hd" type="real" category="physics"
-       group="clm_inparm"
-Percentage threshold above which the model keeps the urban HD landunit. Selecting the value 0 means DO NOTHING.
-<default>Default: 0</default>
-</entry>
-
-<entry id="toosmall_urb_md" type="real" category="physics"
-       group="clm_inparm"
-Percentage threshold above which the model keeps the urban MD landunit. Selecting the value 0 means DO NOTHING.
+Percentage threshold above which the model keeps the urban landunits. Selecting the value 0 means DO NOTHING. If collapse_urban = .false., the same threshold will apply to all three urban landunits if they are present. If collapse_urban = .true., this threshold will apply to the single collapsed urban landunit if presnet.
 <default>Default: 0</default>
 </entry>
 

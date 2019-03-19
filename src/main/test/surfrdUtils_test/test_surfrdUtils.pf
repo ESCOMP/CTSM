@@ -69,9 +69,7 @@ contains
      real(r8), parameter :: toosmall_glacier(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
      real(r8), parameter :: toosmall_lake(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
      real(r8), parameter :: toosmall_wetland(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
-     real(r8), parameter :: toosmall_urb_tbd(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
-     real(r8), parameter :: toosmall_urb_hd(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
-     real(r8), parameter :: toosmall_urb_md(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_urban(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
      integer, parameter :: test_toosmall_is_0 = 1
      integer, parameter :: test_toosmall_is_1 = 2
      integer, parameter :: test_toosmall_is_8 = 3
@@ -149,9 +147,7 @@ contains
                                         toosmall_glacier(test), &
                                         toosmall_lake(test), &
                                         toosmall_wetland(test), &
-                                        toosmall_urb_tbd(test), &
-                                        toosmall_urb_hd(test), &
-                                        toosmall_urb_md(test))
+                                        toosmall_urban(test))
 
         ! Now check that are correct
         call check_sums_equal_1( wt_in_out, begg, "test_check_sums_add_to_1", &

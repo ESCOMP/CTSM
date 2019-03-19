@@ -2323,9 +2323,7 @@ sub setup_logic_do_transient_pfts {
    my $toosmall_glacier = $nl->get_value( 'toosmall_glacier' );
    my $toosmall_lake = $nl->get_value( 'toosmall_lake' );
    my $toosmall_wetland = $nl->get_value( 'toosmall_wetland' );
-   my $toosmall_urb_tbd = $nl->get_value( 'toosmall_urb_tbd' );
-   my $toosmall_urb_hd = $nl->get_value( 'toosmall_urb_hd' );
-   my $toosmall_urb_md = $nl->get_value( 'toosmall_urb_md' );
+   my $toosmall_urban = $nl->get_value( 'toosmall_urban' );
 
    if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
       $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
@@ -2356,8 +2354,8 @@ sub setup_logic_do_transient_pfts {
    # if do_transient_pfts is .true. and any of these (n_dom_* or toosmall_*)
    # are > 0, then give fatal error
    if (&value_is_true($nl->get_value($var))) {
-      if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urb_tbd > 0 || $toosmall_urb_hd > 0 || $toosmall_urb_md > 0) {
-         $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soi > 0, toosmall_crop > 0, toosmall_glacier > 0, toosmall_lake > 0, toosmall_wetland > 0, toosmall_urb_tbd > 0, toosmall_urb_hd > 0, toosmall_urb_md > 0");
+      if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
+         $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soi > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
       }
    }
 }
@@ -2396,9 +2394,7 @@ sub setup_logic_do_transient_crops {
    my $toosmall_glacier = $nl->get_value( 'toosmall_glacier' );
    my $toosmall_lake = $nl->get_value( 'toosmall_lake' );
    my $toosmall_wetland = $nl->get_value( 'toosmall_wetland' );
-   my $toosmall_urb_tbd = $nl->get_value( 'toosmall_urb_tbd' );
-   my $toosmall_urb_hd = $nl->get_value( 'toosmall_urb_hd' );
-   my $toosmall_urb_md = $nl->get_value( 'toosmall_urb_md' );
+   my $toosmall_urban = $nl->get_value( 'toosmall_urban' );
 
    if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
       $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
@@ -2430,8 +2426,8 @@ sub setup_logic_do_transient_crops {
    # if do_transient_crops is .true. and any of these (n_dom_* or toosmall_*)
    # are > 0, then give fatal error
    if (&value_is_true($nl->get_value($var))) {
-      if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urb_tbd > 0 || $toosmall_urb_hd > 0 || $toosmall_urb_md > 0) {
-         $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soi > 0, toosmall_crop > 0, toosmall_glacier > 0, toosmall_lake > 0, toosmall_wetland > 0, toosmall_urb_tbd > 0, toosmall_urb_hd > 0, toosmall_urb_md > 0");
+      if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
+         $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
       }
    }
 

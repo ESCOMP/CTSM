@@ -26,7 +26,7 @@ Notes of particular relevance for users
 ---------------------------------------
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
- New namelist variables with valid integer values from 0 to 100, where
+ New namelist variables with valid real values from 0._r8 to 100._r8, where
  0 means "do nothing" and other values determine the threshold above
  which to keep the landunit in a gridcell. The new variables are:
  toosmall_soil
@@ -34,9 +34,7 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
  toosmall_glacier
  toosmall_lake
  toosmall_wetland
- toosmall_urb_tbd
- toosmall_urb_hd
- toosmall_urb_md
+ toosmall_urban
 
 ---------------------------------------------
 

@@ -263,7 +263,7 @@ contains
     ! wetland, and urban landunits
     namelist /clm_inparm/ toosmall_soil, toosmall_crop, toosmall_glacier
     namelist /clm_inparm/ toosmall_lake, toosmall_wetland
-    namelist /clm_inparm/ toosmall_urb_tbd, toosmall_urb_hd, toosmall_urb_md
+    namelist /clm_inparm/ toosmall_urban
 
     ! flag for SSRE diagnostic
     namelist /clm_inparm/ use_SSRE
@@ -402,18 +402,8 @@ contains
                errMsg(sourcefile, __LINE__))
        end if
 
-       if (toosmall_urb_tbd < 0._r8 .or. toosmall_urb_tbd > 100._r8) then
-          call endrun(msg=' ERROR: expecting toosmall_urb_tbd between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
-               errMsg(sourcefile, __LINE__))
-       end if
-
-       if (toosmall_urb_hd < 0._r8 .or. toosmall_urb_hd > 100._r8) then
-          call endrun(msg=' ERROR: expecting toosmall_urb_hd between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
-               errMsg(sourcefile, __LINE__))
-       end if
-
-       if (toosmall_urb_md < 0._r8 .or. toosmall_urb_md > 100._r8) then
-          call endrun(msg=' ERROR: expecting toosmall_urb_md between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
+       if (toosmall_urban < 0._r8 .or. toosmall_urban > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_urban between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
@@ -421,15 +411,13 @@ contains
           if (n_dom_pfts > 0 .or. n_dom_landunits > 0 &
               .or. toosmall_soil > 0._r8 .or. toosmall_crop > 0._r8 &
               .or. toosmall_glacier > 0._r8 .or. toosmall_lake > 0._r8 &
-              .or. toosmall_wetland > 0._r8 .or. toosmall_urb_tbd > 0._r8 &
-              .or. toosmall_urb_hd > 0._r8 .or. toosmall_urb_md > 0._r8) then
+              .or. toosmall_wetland > 0._r8 .or. toosmall_urban > 0._r8) then
              call endrun(msg='ERROR: glc_do_dynglacier is incompatible &
                               with any of the following set to > 0: &
                               n_dom_pfts > 0, n_dom_landunits > 0, &
                               toosmall_soil > 0._r8, toosmall_crop > 0._r8, &
                               toosmall_glacier > 0._r8, toosmall_lake > 0._r8, &
-                              toosmall_wetland > 0._r8, toosmall_urb_tbd > 0._r8, &
-                              toosmall_urb_hd > 0._r8, toosmall_urb_md > 0._r8.' // &
+                              toosmall_wetland > 0._r8, toosmall_urban > 0._r8.' // &
                               errMsg(sourcefile, __LINE__))
           end if
        end if
@@ -715,9 +703,7 @@ contains
     call mpi_bcast(toosmall_glacier, 1, MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast(toosmall_lake, 1, MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast(toosmall_wetland, 1, MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast(toosmall_urb_tbd, 1, MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast(toosmall_urb_hd, 1, MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast(toosmall_urb_md, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_urban, 1, MPI_REAL8, 0, mpicom, ier)
 
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
@@ -927,9 +913,7 @@ contains
     write(iulog,*) '   Threshold above which the model keeps the glacier landunit =', toosmall_glacier
     write(iulog,*) '   Threshold above which the model keeps the lake landunit =', toosmall_lake
     write(iulog,*) '   Threshold above which the model keeps the wetland landunit =', toosmall_wetland
-    write(iulog,*) '   Threshold above which the model keeps the urban TBD landunit =', toosmall_urb_tbd
-    write(iulog,*) '   Threshold above which the model keeps the urban MD landunit =', toosmall_urb_md
-    write(iulog,*) '   Threshold above which the model keeps the urban HD landunit =', toosmall_urb_hd
+    write(iulog,*) '   Threshold above which the model keeps the urban landunits =', toosmall_urban
     if (use_cn) then
        if (suplnitro /= suplnNon)then
           write(iulog,*) '   Supplemental Nitrogen mode is set to run over Patches: ', &

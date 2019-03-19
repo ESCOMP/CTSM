@@ -147,9 +147,7 @@ module clm_varctl
   real(r8), public :: toosmall_glacier = 0._r8  ! threshold above which the model keeps the glacier landunit; default = 0 means "do nothing"
   real(r8), public :: toosmall_lake = 0._r8  ! threshold above which the model keeps the lake landunit; default = 0 means "do nothing"
   real(r8), public :: toosmall_wetland = 0._r8  ! threshold above which the model keeps the wetland landunit; default = 0 means "do nothing"
-  real(r8), public :: toosmall_urb_tbd = 0._r8  ! threshold above which the model keeps the urban TBD landunit; default = 0 means "do nothing"
-  real(r8), public :: toosmall_urb_hd = 0._r8  ! threshold above which the model keeps the urban HD landunit; default = 0 means "do nothing"
-  real(r8), public :: toosmall_urb_md = 0._r8  ! threshold above which the model keeps the urban MD landunit; default = 0 means "do nothing"
+  real(r8), public :: toosmall_urban = 0._r8  ! threshold above which the model keeps any urban landunits that are present; default = 0 means "do nothing"
 
   !----------------------------------------------------------
   ! BGC logic and datasets

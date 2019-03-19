@@ -150,8 +150,7 @@ contains
   subroutine collapse_individual_lunits(wt_lunit, begg, endg, toosmall_soil, &
                                         toosmall_crop, toosmall_glacier, &
                                         toosmall_lake, toosmall_wetland, &
-                                        toosmall_urb_tbd, toosmall_urb_hd, &
-                                        toosmall_urb_md)
+                                        toosmall_urban)
     ! DESCRIPTION
     ! Keep landunits above the user-defined thresholds and remove the rest
     !
@@ -168,9 +167,7 @@ contains
     real(r8), intent(in) :: toosmall_glacier  ! Glacier landunit threshold (%)
     real(r8), intent(in) :: toosmall_lake  ! Lake landunit threshold (%)
     real(r8), intent(in) :: toosmall_wetland  ! Wetland landunit threshold (%)
-    real(r8), intent(in) :: toosmall_urb_tbd  ! Urban TBD landunit threshold (%)
-    real(r8), intent(in) :: toosmall_urb_hd  ! Urban HD landunit threshold (%)
-    real(r8), intent(in) :: toosmall_urb_md  ! Urban MD landunit threshold (%)
+    real(r8), intent(in) :: toosmall_urban  ! Urban landunits threshold (%)
     ! This array modified in-place
     ! Weights of landunits per grid cell
     real(r8), intent(inout) :: wt_lunit(begg:endg, max_lunit)
@@ -187,8 +184,7 @@ contains
     SHR_ASSERT_ALL((ubound(wt_lunit) == (/endg, max_lunit/)), errMsg(sourcefile, __LINE__))
 
     toosmall_any = toosmall_soil + toosmall_crop + toosmall_glacier + &
-                   toosmall_lake + toosmall_wetland + toosmall_urb_tbd + &
-                   toosmall_urb_hd + toosmall_urb_md
+                   toosmall_lake + toosmall_wetland + toosmall_urban
 
     if (toosmall_any > 0._r8) then
 
@@ -198,9 +194,9 @@ contains
        toosmall(istice_mec) = toosmall_glacier / 100._r8
        toosmall(istdlak) = toosmall_lake / 100._r8
        toosmall(istwet) = toosmall_wetland / 100._r8
-       toosmall(isturb_tbd) = toosmall_urb_tbd / 100._r8
-       toosmall(isturb_hd) = toosmall_urb_hd / 100._r8
-       toosmall(isturb_md) = toosmall_urb_md / 100._r8
+       toosmall(isturb_tbd) = toosmall_urban / 100._r8
+       toosmall(isturb_hd) = toosmall_urban / 100._r8
+       toosmall(isturb_md) = toosmall_urban / 100._r8
 
        ! Loop through gridcells and landunits
        do g = begg, endg
