@@ -246,12 +246,6 @@ module clm_varctl
   integer, public :: carbon_resp_opt = 0
 
   !----------------------------------------------------------
-  ! Photosynthesis
-  !----------------------------------------------------------
-
-  integer, public :: itmax_hybrid = 40  ! max # of iterations used in subroutine hybrid that solves for ci and stomatal conductance
-
-  !----------------------------------------------------------
   ! lai streams switch for Sat. Phenology
   !----------------------------------------------------------
 
