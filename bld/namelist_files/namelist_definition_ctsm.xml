@@ -303,6 +303,12 @@ Intercept of free living Nitrogen fixation with zero annual ET
 If TRUE use the undercanopy stability term used with CLM4.5 (Sakaguchi&amp;Zeng, 2008)
 </entry>
 
+<entry id="itmax_canopy_fluxes" type="integer" category="clm_physics"
+       group="canopyfluxes_inparm">
+Max number of iterations used in subr. CanopyFluxes. For many years, 40 was the hardwired default value.
+<default>Default: 40</default>
+</entry>
+
 <entry id="interception_fraction" type="real" category="clm_physics"
        group="clm_canopyhydrology_inparm" valid_values="" >
 Fraction of intercepted precipitation
@@ -1083,12 +1089,6 @@ Number of dominant pfts, so this determines the number of active pfts. Selecting
        valid_values="0,1,2,3,4,5,6,7,8,9" value="0">
 Number of dominant landunits, so this determines the number of active landunits. Selecting the value 0 means DO NOTHING, ie all landunits in the input data are active.
 <default>Default: 0</default>
-</entry>
-
-<entry id="itmax_canopy_fluxes" type="integer" category="physics"
-       group="clm_inparm">
-Max number of iterations used in subr. CanopyFluxes. For many years, 40 was the hardwired default value.
-<default>Default: 40</default>
 </entry>
 
 <entry id="use_dynroot" type="logical" category="physics"
