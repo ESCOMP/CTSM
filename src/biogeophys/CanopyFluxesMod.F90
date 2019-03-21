@@ -70,7 +70,7 @@ module CanopyFluxesMod
   logical, private :: snowveg_on     = .false.                ! snowveg_flag = 'ON'
   logical, private :: snowveg_onrad  = .true.                 ! snowveg_flag = 'ON_RAD'
   logical, private :: use_undercanopy_stability = .true.      ! use undercanopy stability term or not
-  integer, private :: itmax_canopy_fluxes = 40  ! max # of iterations used in subroutine CanopyFluxes
+  integer, private :: itmax_canopy_fluxes = -1  ! max # of iterations used in subroutine CanopyFluxes
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
