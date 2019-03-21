@@ -27,7 +27,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
-
+  use CNVegstateType                     , only : cnveg_state_type
   !
   implicit none
   private
@@ -42,6 +42,11 @@ module SoilBiogeochemDecompCascadeBGCMod
   logical , public :: normalize_q10_to_century_tfunc = .true.! do we normalize the century decomp. rates so that they match the CLM Q10 at a given tep?
   logical , public :: use_century_tfunc = .false.
   real(r8), public :: normalization_tref = 15._r8            ! reference temperature for normalizaion (degrees C)
+  !
+  ! !PRIVATE MEMBER FUNCTIONS: (Made public just for unit testing)
+  public :: init_cultivation                     ! Initialize cultivation
+  public :: set_cultivation_levels               ! Set the development levels for cultivation
+  public :: get_cultivation_effective_multiplier ! Get the effective multiplier for cultivation
   !
   ! !PRIVATE DATA MEMBERS 
 
@@ -93,6 +98,8 @@ module SoilBiogeochemDecompCascadeBGCMod
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
+  logical :: cultivate = .true. ! If crop is on -- should soil be cultivated? !!!!!!!!!!!!!! added for cultivation code
+  real(r8), allocatable :: developed(:) ! If grid cell is developed or not !!!!!!!!!!!!!! added for cultivation code
   !-----------------------------------------------------------------------
 
 contains
@@ -636,11 +643,81 @@ contains
     end associate
 
   end subroutine init_decompcascade_bgc
+  
+    !-----------------------------------------------------------------------
+  subroutine init_cultivation( bounds )
+    !
+    ! !DESCRIPTION:
+    !
+    ! Initialize cultivation
+    !
+    ! !USES:
+    use PatchType       , only : patch
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type), intent(in) :: bounds          
+    !
+    ! !REVISION HISTORY:
+    !
+    ! !LOCAL VARIABLES:
+
+    if ( .not. allocated(developed) ) allocate( developed(bounds%begg:bounds%endg) )
+
+  end subroutine init_cultivation
 
   !-----------------------------------------------------------------------
-  subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
-       canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+  subroutine set_cultivation_levels( bounds, num_soilp, filter_soilp, gdp )
     !
+    ! !DESCRIPTION:
+    !
+    ! Initialize cultivation
+    !
+    ! !USES:
+    use PatchType       , only : patch
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type), intent(in) :: bounds          
+    integer          , intent(in) :: num_soilp          ! number of soil pfts in filter
+    integer          , intent(in) :: filter_soilp(:)    ! filter for soil pfts
+    real(r8)         , intent(in) :: gdp(bounds%begc:bounds%endc)    ! Gross Domestic Product
+    !
+    ! !REVISION HISTORY:
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fp, p, c, g          ! Indices
+    real(r8), parameter :: thresh_gdp = 1.0_r8 ! Threshold of GDP for developed vs. non-developed countiry for cultivation
+
+    do fp = 1,num_soilp
+       p = filter_soilp(fp)
+       c = patch%column(p)
+       g = patch%gridcell(p)
+
+!if (gdp(c) > thresh_gdp )then
+!        developed(g) = 1.0_r8
+!      else
+!         developed(g) = 1.0_r8
+!      end if
+
+        developed(g) = 0.0_r8
+!      write(iulog,*) 'FOOOO',developed(g),g
+       ! -----------------------------------------------------
+       ! 2) error check
+       ! -----------------------------------------------------
+       if (developed(g) > 1._r8 .or. &
+           developed(g) < 0._r8) then
+          write(iulog,*) 'ERROR: this variable - developed - should not take on this value:'
+          write(iulog,*) developed(g), g
+          call endrun()
+       end if
+    end do
+
+  end subroutine set_cultivation_levels
+
+  !-----------------------------------------------------------------------
+  subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst,cnveg_state_inst)
+    !
+    ! MWGraham - added num_soilp, filter_soilp for cultivation!!
     ! !DESCRIPTION:
     !  calculate rate constants and decomposition pathways for the CENTURY decomposition cascade model
     !  written by C. Koven based on original CLM4 decomposition cascade
@@ -654,11 +731,14 @@ contains
     type(bounds_type)                    , intent(in)    :: bounds          
     integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                              , intent(in)    :: num_soilp       ! number of soil pfts in filter !!!!!!!!!!!!!! added for cultivation code
+    integer                              , intent(in)    :: filter_soilp(:) ! filter for soil pfts !!!!!!!!!!!!!! added for cultivation co
     type(canopystate_type)               , intent(in)    :: canopystate_inst
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
     type(temperature_type)               , intent(in)    :: temperature_inst
     type(ch4_type)                       , intent(in)    :: ch4_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
+    type(cnveg_state_type), optional     , intent(in)    :: cnveg_state_inst
     !
     ! !LOCAL VARIABLES:
     real(r8):: frw(bounds%begc:bounds%endc) ! rooting fraction weight
@@ -689,6 +769,7 @@ contains
     real(r8):: t1                           ! temperature argument
     real(r8):: normalization_factor         ! factor by which to offset the decomposition rates frm century to a q10 formulation
     real(r8):: days_per_year                ! days per year
+    real(r8):: clteff_scalar(bounds%begc:bounds%endc,ndecomp_pools)  ! plowing modifies decomp_k !!!!!!!!!!!!!! added for cultivation code
     real(r8):: depth_scalar(bounds%begc:bounds%endc,1:nlevdecomp) 
     real(r8):: mino2lim                     !minimum anaerobic decomposition rate
     real(r8):: spinup_geogterm_l1(bounds%begc:bounds%endc) ! geographically-varying spinup term for l1
@@ -1055,6 +1136,7 @@ contains
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                depth_scalar(c,j) = exp(-zsoi(j)/decomp_depth_efolding)
+               !write(iulog,*) 'fooooo3',zsoi !check zsoi depths - MWG
             end do
          end do
       end if
@@ -1078,6 +1160,28 @@ contains
                                        * spinup_geogterm_s3(c)
             end do
          end do
+         if ( cultivate )then
+             ! -----------------------------------------------------
+             ! adding effect of cultivation (e.g., plowing)
+             !        on soil C decomposition
+             ! -----------------------------------------------------
+            if (present(cnveg_state_inst)) then
+             call get_cultivation_effective_multiplier( bounds, filter_soilp, num_soilp, clteff_scalar,cnveg_state_inst) !adding cnveg_state_inst for phenology-based tillage by MW Graham
+            else
+             call get_cultivation_effective_multiplier( bounds, filter_soilp, num_soilp, clteff_scalar)
+            end if 
+             do j = 1,5 !changed from j= 1,nlevdecomp to j=1,5 so that it model only tills to the top 26-40 cm of the soil surface, rather than whole soil - MWGraham
+                do fc = 1,num_soilc
+                   c = filter_soilc(fc)
+                   decomp_k(c,j,i_litr2) = decomp_k(c,j,i_litr2) * clteff_scalar(c,i_litr2)
+                   decomp_k(c,j,i_litr3) = decomp_k(c,j,i_litr3) * clteff_scalar(c,i_litr3) 
+                   decomp_k(c,j,i_soil1) = decomp_k(c,j,i_soil1) * clteff_scalar(c,i_soil1)
+                   decomp_k(c,j,i_soil2) = decomp_k(c,j,i_soil2) * clteff_scalar(c,i_soil2)
+                   decomp_k(c,j,i_soil3) = decomp_k(c,j,i_soil3) * clteff_scalar(c,i_soil3)
+                   !write(iulog,*) 'fooooo2',decomp_k(c,j,i_soil1),j    
+                end do
+             end do
+         end if
       else
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
@@ -1116,5 +1220,167 @@ contains
     end associate
 
  end subroutine decomp_rate_constants_bgc
+
+!-----------------------------------------------------------------------
+  subroutine get_cultivation_effective_multiplier( bounds, filter_soilp, num_soilp, clteff_scalar,cnveg_state_inst)! added cnveg_state_inst by MW Graham 9/10/18
+    ! !DESCRIPTION:
+    !
+    !  Get the cultivation effective multiplier if prognostic crops are on and
+    !  cultivation is turned on. Created by Sam Levis.
+    !
+    ! !USES:
+    use clm_time_manager, only : get_curr_calday,get_days_per_year
+    use pftconMod       , only : npcropmin, ntmp_corn, nirrig_tmp_corn, ntmp_soybean, nirrig_tmp_soybean
+    use PatchType       , only : patch
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type), intent(in) :: bounds  
+    type(cnveg_state_type), optional     , intent(in) :: cnveg_state_inst
+    integer          , intent(in) :: num_soilp          ! number of soil pfts in filter
+    integer          , intent(in) :: filter_soilp(:)    ! filter for soil pfts
+    real(r8):: clteff_scalar(bounds%begc:bounds%endc,ndecomp_pools)  ! plowing modifies decomp_k
+    ! !REVISION HISTORY:
+    !
+    !
+    ! !LOCAL VARIABLES:
+    !
+    integer :: fp, p, c, g          ! Indices
+    integer :: day                  ! julian day
+    integer :: idpp                 ! days past planting MWG added
+    real(r8) dayspyr                ! days per year
+    !EOP
+    !-----------------------------------------------------------------------
+    
+    associate(idop              =>    cnveg_state_inst%idop_patch)       ! Three lines here added by MW Graham to create phenological based tillage operations using idop (date of planing)
+
+    if (.not. present(cnveg_state_inst)) then
+      call endrun(msg="cnveg_state_inst not passed into get_cultivation_effective_multiplier() as expected"//errmsg(__FILE__, __LINE__))
+    end if  
+  
+    !get info from externals
+    day = get_curr_calday()
+    dayspyr = get_days_per_year()               !Add by MWG for IDPP-based routine
+
+    do fp = 1,num_soilp
+       p = filter_soilp(fp)
+       c = patch%column(p)
+       g = patch%gridcell(p)
+ 
+       ! days past planting may determine harves/tillage (MW Graham added)
+
+         if (day >= idop(p)) then
+            idpp = day - idop(p)
+         else
+             idpp = int(dayspyr) + day - idop(p)
+
+         end if
+ 
+       ! -----------------------------------------------------
+       ! 3) assigning cultivation practices and mapping to the
+       !    effect on soil C decomposition
+       ! -----------------------------------------------------
+       ! About the next two ELSE IFs:
+       ! CLM does not know the day of planting before it happens because the
+       ! CLM calculates day of planting from indexes that respond to
+       ! environmental conditions at every time step. Hence,
+       ! I see two options:
+       ! a) start DAYCENT's farming practices on the day of planting
+       !    rather than 30 d before planting OR
+       ! b) start DAYCENT's farming practices on April 15th, which assumes
+       !    planting on May 15th. This option seems simpler for now. Later we
+       !    may test whether choice a or b makes much difference.
+       if (developed(g) > 0._r8) then ! == 1
+          ! More developed country; info from DAYCENT (Melannie Hartman CSU)
+          ! temp. cereals: I 30 d bef, D on day of planting
+          ! corn, soy    : I           D           & ROW 30 d aftr planting
+
+          if (day < 105) then
+             clteff_scalar(c,:) = 1._r8
+          else if (day >= 105 .and. day < 105) then ! April 15
+             clteff_scalar(c,:) = 1._r8
+             if (patch%itype(p) >= npcropmin) then
+                clteff_scalar(c,i_litr2) = 6.67_r8
+                clteff_scalar(c,i_litr3) = 6.67_r8
+                clteff_scalar(c,i_soil1) = 6.67_r8
+                clteff_scalar(c,i_soil2) = 6.67_r8
+             end if
+          else if (day >= 135 .and. day < 165) then ! May 15
+             clteff_scalar(c,:) = 1._r8
+             if (patch%itype(p) >= npcropmin) then
+                clteff_scalar(c,i_litr2) = 3.41_r8
+                clteff_scalar(c,i_litr3) = 3.41_r8
+                clteff_scalar(c,i_soil1) = 3.41_r8
+                clteff_scalar(c,i_soil2) = 3.41_r8
+             end if
+          else if (day >= 165 .and. day < 195) then ! June 14
+             clteff_scalar(c,:) = 1._r8
+             if (patch%itype(p) == ntmp_corn      .or. &
+                 patch%itype(p) == nirrig_tmp_corn .or. &
+                 patch%itype(p) == ntmp_soybean   .or. &
+                 patch%itype(p) == nirrig_tmp_soybean      ) then
+                clteff_scalar(c,i_litr2) = 3.41_r8
+                clteff_scalar(c,i_litr3) = 3.41_r8
+                clteff_scalar(c,i_soil1) = 3.41_r8
+                clteff_scalar(c,i_soil2) = 3.41_r8
+             end if
+          else if (day >= 195) then ! July 14
+             clteff_scalar(c,:) = 1._r8
+          end if
+
+       else if (developed(g) < 1._r8) then ! == 0
+          ! less developed country; info from DAYCENT (Melannie Hartman CSU)
+          ! temp. cereals: P 30 d bef, C 15 d bef, D on day of planting
+          ! corn, soy    : P           C           D           & HW-7 30 d aftr
+
+          if (day < idop(p)) then
+             clteff_scalar(c,:) = 1._r8
+          else if (day >= idop(p) .and. day < idop(p)+15) then ! based on Point Chisel Tandem Disk multipliers
+             clteff_scalar(c,:) = 1._r8
+             if (patch%itype(p) >= npcropmin) then
+                clteff_scalar(c,i_litr2) = 1.80_r8 !high 1.80,low 1.50
+                clteff_scalar(c,i_litr3) = 1.80_r8 !high 1.80,low 1.50
+                clteff_scalar(c,i_soil1) = 1.20_r8 !high 1.20,low 1.00
+                clteff_scalar(c,i_soil2) = 4.80_r8 !high 4.80,low 3.00
+                clteff_scalar(c,i_soil3) = 4.80_r8 !high 4.80,low 3.00
+             end if
+          else if (day >= idop(p)+15 .and. day < idop(p)+45) then ! based on Field and Row Cultivator multipliers
+             clteff_scalar(c,:) = 1._r8
+             if (patch%itype(p) >= npcropmin) then
+                clteff_scalar(c,i_litr2) = 1.50_r8 !high 1.50,low 1.50
+                clteff_scalar(c,i_litr3) = 1.50_r8 !high 1.50,low 1.50
+                clteff_scalar(c,i_soil1) = 1.00_r8 !high 1.00,low 1.00
+                clteff_scalar(c,i_soil2) = 3.50_r8 !high 3.50,low 1.60
+                clteff_scalar(c,i_soil3) = 3.50_r8 !high 3.50,low 1.60
+             end if
+          else if (day >= idop(p)+45 .and. day <idop(p)+75) then ! based on Rod Weed Row Planter
+             clteff_scalar(c,:) = 1._r8
+             if (patch%itype(p) >= npcropmin) then
+                clteff_scalar(c,i_litr2) = 1.10_r8 !high 1.10,low 1.10
+                clteff_scalar(c,i_litr3) = 1.10_r8 !high 1.10,low 1.10
+                clteff_scalar(c,i_soil1) = 1.00_r8 !high 1.00,low 1.00
+                clteff_scalar(c,i_soil2) = 2.50_r8 !high 2.50,low 1.30
+                clteff_scalar(c,i_soil3) = 2.50_r8 !high 2.50,low 1.30 
+             end if
+         else if (day >= idop(p)+75 .and. day < idop(p)+80) then ! June 14
+             clteff_scalar(c,:) = 1._r8
+             if (patch%itype(p) == ntmp_corn      .or. &
+                 patch%itype(p) == nirrig_tmp_corn .or. &
+                 patch%itype(p) == ntmp_soybean   .or. &
+                 patch%itype(p) == nirrig_tmp_soybean      ) then
+                 clteff_scalar(c,i_litr2) = 1.00_r8
+                 clteff_scalar(c,i_litr3) = 1.00_r8
+                 clteff_scalar(c,i_soil1) = 1.00_r8
+                 clteff_scalar(c,i_soil2) = 1.00_r8
+                 clteff_scalar(c,i_soil3) = 1.00_r8
+             end if
+          else if (day >= idop(p)+80) then ! July 14
+             clteff_scalar(c,:) = 1._r8
+          end if
+       end if
+    enddo
+   end associate
+  end subroutine get_cultivation_effective_multiplier
+
+  !-----------------------------------------------------------------------
 
 end module SoilBiogeochemDecompCascadeBGCMod
