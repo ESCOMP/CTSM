@@ -55,10 +55,10 @@ class SSP(SystemTestsCommon):
         logger.info("  writing restarts at end of run")
         logger.info("  short term archiving is on ")
 
-        clone.set_value("CLM_ACCELERATED_SPINUP", "on")
-        clone.set_value("MOSART_MODE", "NULL")
-        clone.set_value("STOP_N",stop_n1)
-        clone.flush()
+        with clone:
+            clone.set_value("CLM_ACCELERATED_SPINUP", "on")
+            clone.set_value("MOSART_MODE", "NULL")
+            clone.set_value("STOP_N",stop_n1)
 
         dout_sr = clone.get_value("DOUT_S_ROOT")
         # No history files expected, set suffix=None to avoid compare error
