@@ -138,7 +138,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 914;
+my $ntests = 915;
 if ( defined($opts{'compare'}) ) {
    $ntests += 579;
 }
@@ -463,6 +463,11 @@ my %failtest = (
                                    },
      "toosmall urban w trans"    =>{ options=>"-bgc sp  -envxml_dir .",
                                      namelst=>"toosmall_urban=10, dyn_transient_pfts=T",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "collapse_urban w trans"    =>{ options=>"-bgc sp  -envxml_dir .",
+                                     namelst=>"collapse_urban=T, dyn_transient_crops=T",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },

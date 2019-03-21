@@ -1085,6 +1085,12 @@ Number of dominant landunits, so this determines the number of active landunits.
 <default>Default: 0</default>
 </entry>
 
+<entry id="collapse_urban" type="logical" category="physics"
+       group="clm_inparm" value=".false.">
+If true, this directs the model to collapse the urban landunits to the dominant urban landunit. Selecting .false. means DO NOTHING, ie all urban landunits found in the input data are active.
+<default>Default: .false.</default>
+</entry>
+
 <entry id="toosmall_soil" type="real" category="physics"
        group="clm_inparm"
 Percentage threshold above which the model keeps the soil landunit. Selecting the value 0 means DO NOTHING.

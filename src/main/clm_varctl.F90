@@ -141,6 +141,7 @@ module clm_varctl
 
   integer, public :: n_dom_pfts = 0  ! # of dominant pfts; determines the number of active pfts; default = 0 means "do nothing"
   integer, public :: n_dom_landunits = 0  ! # of dominant landunits; determines the number of active landunits; default = 0 means "do nothing"
+  logical, public :: collapse_urban = .false.  ! true => collapse urban landunits to the dominant urban landunit; default = .false. means "do nothing" i.e. keep all urban landunits as found in the input data
 
   real(r8), public :: toosmall_soil = 0._r8  ! threshold above which the model keeps the soil landunit; default = 0 means "do nothing"
   real(r8), public :: toosmall_crop = 0._r8  ! threshold above which the model keeps the crop landunit; default = 0 means "do nothing"

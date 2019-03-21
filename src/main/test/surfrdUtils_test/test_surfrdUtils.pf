@@ -166,6 +166,73 @@ contains
   end subroutine test_collapse_individual_lunits
 
   @Test
+  subroutine test_collapse_urban()
+     ! Tests subroutine collapse_to_dominant when used with
+     ! collapse_urban = .true. when the user wishes to collapse all urban
+     ! landunits to the dominant urban landunit.
+     ! We test three configurations that will be collapsed.
+     ! 1) Three urban landunits sum to 100%
+     ! 2) Three urban landunits sum to < 100%
+     ! 3) Same as (2) and third urban landunit = 0%
+     use pftconMod, only: pftcon
+     use clm_instur, only: wt_lunit
+     use landunit_varcon, only: isturb_MIN, isturb_MAX, isturb_tbd, isturb_hd, isturb_md
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 4, n_dom_urban = 1
+     real(r8), allocatable :: wt_expected(:,:)
+     real(r8), allocatable :: wt_in_out(:,:)  ! used in subr. call
+     real(r8) :: expctd(9)
+     real(r8), parameter :: input_value(5) = (/40._r8, 36._r8, 24._r8, 7._r8, 0._r8/)
+
+     ! Set relevant pftcon values to defaults; override where necessary
+     call pftcon%InitForTesting()
+     allocate( wt_lunit(begg:endg,isturb_MIN:isturb_MAX) )
+     allocate( wt_expected(begg:endg,isturb_MIN:isturb_MAX) )
+     allocate( wt_in_out(begg:endg,isturb_MIN:isturb_MAX) )
+
+     ! INPUT VALUES
+     wt_lunit(begg:,:) = 0._r8  ! initialize
+     ! wt_lunit is assigned values from input_value to test various
+     ! combinations of values. The index values used with array input_value in
+     ! these assignments intentionally placed the largest input_value in
+     ! - isturb_tbd for begg
+     ! - isturb_md for begg + 1
+     ! - isturb_hd for begg + 2
+     ! Other index value choices do not affect the outcome because
+     ! n_dom_urban = 1, so we always end up with a single dominant urban
+     ! landunit
+     wt_lunit(begg:,isturb_tbd) = (/ input_value(1),  input_value(4), input_value(5)/)
+     wt_lunit(begg:,isturb_hd) = (/ input_value(2),  input_value(3), input_value(3)/)
+     wt_lunit(begg:,isturb_md) = (/ input_value(3),  input_value(2), input_value(4)/)
+     wt_lunit(:,:) = wt_lunit(:,:) / 100._r8
+
+     ! OUTPUT VALUES EXPECTED
+     expctd(1) = sum(input_value(1:3)) / 100._r8
+     expctd(2) = sum(input_value(2:4)) / 100._r8
+     expctd(3) = sum(input_value(3:5)) / 100._r8
+     wt_expected(begg:,:) = 0._r8  ! initialize
+     wt_expected(begg:,isturb_tbd) = (/ expctd(1), 0._r8, 0._r8 /)
+     wt_expected(begg:,isturb_hd) = (/ 0._r8, 0._r8, expctd(3) /)
+     wt_expected(begg:,isturb_md) = (/ 0._r8, expctd(2), 0._r8 /)
+
+     ! Collapse landunits
+     wt_in_out = wt_lunit  ! reset argument for next call
+     call collapse_to_dominant(wt_in_out(begg:endg,isturb_MIN:isturb_MAX), &
+                               isturb_MIN, isturb_MAX, begg, endg, &
+                               n_dom_urban)
+
+     @assertEqual(wt_in_out(begg:,:), wt_expected(begg:,:), tolerance=tol)
+
+     deallocate( wt_expected )
+     deallocate( wt_in_out )
+     deallocate( wt_lunit )
+
+     call pftcon%clean()
+
+  end subroutine test_collapse_urban
+
+  @Test
   subroutine test_collapse_to_dom_landunits()
      ! Tests subroutine collapse_to_dominant when used with n_dom_landunits.
      ! This test tries 5 values of n_dom_landunits:

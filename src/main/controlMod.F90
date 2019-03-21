@@ -256,8 +256,11 @@ contains
     ! Number of dominant pfts and landunits. Enhance ctsm performance by
     ! reducing the number of active pfts to n_dom_pfts and
     ! active landunits to n_dom_landunits.
+    ! Also choose to collapse the urban landunits to the dominant urban
+    ! landunit by setting collapse_urban = .true.
     namelist /clm_inparm/ n_dom_pfts
     namelist /clm_inparm/ n_dom_landunits
+    namelist /clm_inparm/ collapse_urban
 
     ! Thresholds above which the model keeps the soil, crop, glacier, lake,
     ! wetland, and urban landunits
@@ -408,6 +411,11 @@ contains
        end if
 
        if (glc_do_dynglacier) then
+          if (collapse_urban) then
+             call endrun(msg='ERROR: glc_do_dynglacier is incompatible &
+                              with collapse_urban = .true.' // &
+                              errMsg(sourcefile, __LINE__))
+          end if
           if (n_dom_pfts > 0 .or. n_dom_landunits > 0 &
               .or. toosmall_soil > 0._r8 .or. toosmall_crop > 0._r8 &
               .or. toosmall_glacier > 0._r8 .or. toosmall_lake > 0._r8 &
@@ -692,9 +700,12 @@ contains
     ! Number of dominant pfts and landunits. Enhance ctsm performance by
     ! reducing the number of active pfts to n_dom_pfts and
     ! active landunits to n_dom_landunits.
+    ! Also choose to collapse the urban landunits to the dominant urban
+    ! landunit by setting collapse_urban = .true.
     ! slevis: maxpatch_pft is MPI_LOGICAL? Doesn't matter since obsolete.
     call mpi_bcast(n_dom_pfts, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast(n_dom_landunits, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(collapse_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! Thresholds above which the model keeps the soil, crop, glacier, lake,
     ! wetland, and urban landunits
@@ -908,6 +919,7 @@ contains
     end if
     write(iulog,*) '   Number of ACTIVE PFTS (0 means input pft data NOT collapsed to n_dom_pfts) =', n_dom_pfts
     write(iulog,*) '   Number of ACTIVE LANDUNITS (0 means input landunit data NOT collapsed to n_dom_landunits) =', n_dom_landunits
+    write(iulog,*) '   Collapse urban landunits; done before collapsing all landunits to n_dom_landunits; .false. means do nothing i.e. keep all the urban landunits, though n_dom_landunits may still remove them =', collapse_urban
     write(iulog,*) '   Threshold above which the model keeps the soil landunit =', toosmall_soil
     write(iulog,*) '   Threshold above which the model keeps the crop landunit =', toosmall_crop
     write(iulog,*) '   Threshold above which the model keeps the glacier landunit =', toosmall_glacier

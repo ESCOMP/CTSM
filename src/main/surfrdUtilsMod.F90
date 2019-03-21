@@ -250,7 +250,8 @@ contains
     integer :: m  ! pft or landunit index
     integer :: n  ! index of the order of the dominant pfts or landunits
     integer, allocatable :: max_indices(:)  ! array of dominant pft or landunit index values
-    real(r8) :: wt_dom_sum
+    real(r8) :: wt_sum  ! original sum of all the weights
+    real(r8) :: wt_dom_sum  ! sum of the weights of the dominants
 
     character(len=*), parameter :: subname = 'collapse_to_dominant'
 
@@ -269,8 +270,12 @@ contains
           call find_k_max_indices(weight(g,:), lower_bound, n_dominant, &
                                   max_indices)
 
-          ! Adjust weight by normalizing the dominant weights to 1
-          ! (currently they sum to <= 1) and setting the remaining weights to 0.
+          ! Adjust weight by normalizing the dominant weights to the original
+          ! sum of weights (currently they sum to <= original sum of weights).
+          ! Typically the original sum of weights = 1, but if
+          ! collapse_urban = .true., it equals the sum of the urban landunits.
+          ! Also set the remaining weights to 0.
+          wt_sum = sum(weight(g,:))  ! original sum of all the weights
           wt_dom_sum = 0._r8  ! initialize the dominant pft or landunit sum
           do n = 1, n_dominant
              m = max_indices(n)
@@ -284,7 +289,7 @@ contains
           else
              do n = 1, n_dominant
                 m = max_indices(n)
-                weight(g,m) = weight(g,m) / wt_dom_sum
+                weight(g,m) = weight(g,m) * wt_sum / wt_dom_sum
              end do
           end if
           ! Set non-dominant weights to 0
@@ -297,7 +302,7 @@ contains
        end do
 
        ! Error checks
-       call check_sums_equal_1(weight, begg, 'weight', subname)
+       if (wt_sum == 1._r8) call check_sums_equal_1(weight, begg, 'weight', subname)
 
        deallocate(max_indices)
     end if

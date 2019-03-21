@@ -285,13 +285,14 @@ contains
     !    o real % abundance PFTs (as a percent of vegetated area)
     !
     ! !USES:
-    use clm_varctl  , only : create_crop_landunit, toosmall_soil, &
-                             toosmall_crop, toosmall_glacier, toosmall_lake, &
-                             toosmall_wetland, toosmall_urban, n_dom_landunits
+    use clm_varctl  , only : create_crop_landunit, collapse_urban, &
+                             toosmall_soil, toosmall_crop, toosmall_glacier, &
+                             toosmall_lake, toosmall_wetland, toosmall_urban, &
+                             n_dom_landunits
     use fileutils   , only : getfil
     use domainMod   , only : domain_type, domain_init, domain_clean
     use clm_instur  , only : wt_lunit, topo_glc_mec
-    use landunit_varcon, only: max_lunit, istsoil
+    use landunit_varcon, only: max_lunit, istsoil, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     integer,          intent(in) :: begg, endg, actual_numcft      
@@ -302,6 +303,7 @@ contains
     type(var_desc_t)  :: vardesc              ! pio variable descriptor
     type(domain_type) :: surfdata_domain      ! local domain associated with surface dataset
     character(len=256):: locfn                ! local file name
+    integer, parameter :: n_dom_urban = 1     ! # of dominant urban landunits
     integer           :: n                    ! loop indices
     integer           :: ni,nj,ns             ! domain sizes
     character(len=16) :: lon_var, lat_var     ! names of lat/lon on dataset
@@ -408,6 +410,13 @@ contains
     call ncd_pio_closefile(ncid)
 
     call check_sums_equal_1(wt_lunit, begg, 'wt_lunit', subname)
+
+    ! if collapse_urban = .true.
+    ! collapse urban landunits to the dominant urban landunit
+
+    if (collapse_urban) then
+       call collapse_to_dominant(wt_lunit(begg:endg,isturb_MIN:isturb_MAX), isturb_MIN, isturb_MAX, begg, endg, n_dom_urban)
+    end if
 
     ! Select N dominant landunits
     ! ---------------------------
