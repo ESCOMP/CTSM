@@ -111,10 +111,10 @@ contains
 
     ! Base rate by Nernst-Haskell equation, see Poling et al., 2000. The Properties of
     ! Gases and Liquids.
-    kaq_base = 1e-4 * (gascnst*tg / (2*faraday**2)) / (1/lp + 1/lm)
+    !kaq_base = 1e-4 * (gascnst*tg / (2*faraday**2)) / (1/lp + 1/lm)
 
     ! Van Der Molen 1990 fit of the base rate.
-    !kaq_base = 9.8e-10_r8 * 1.03_r8 ** (Tg-273.0_r8)
+    kaq_base = 9.8e-10_r8 * 1.03_r8 ** (Tg-273.0_r8)
 
     diff = kaq_base * (theta**pw) / (thetasat**2)
 
@@ -573,7 +573,7 @@ contains
     integer :: indpl
     
     real(r8), parameter :: dz_layer = 0.02 ! thickness of the volatilization layer, m
-    real(r8), parameter :: kads = 0.0_r8   ! distriution coefficient kads = [TAN (s)] / [TAN (aq)], dimensionless
+    real(r8), parameter :: kads = 1.0_r8   ! distriution coefficient kads = [TAN (s)] / [TAN (aq)], dimensionless
 
     ! H+ concentration in each pool 
     !real(r8), parameter :: Hconc(4) = (/10.0_r8**(-8.0_r8), 10.0_r8**(-8.0_r8), 10.0_r8**(-8.0_r8), 10.0_r8**(-7_r8)/)
@@ -697,7 +697,7 @@ contains
     integer :: indpl
     
     real(r8), parameter :: water_relax_t = 24*3600.0_r8
-    real(r8), parameter :: kads = 0.0_r8
+    real(r8), parameter :: kads = 1.0_r8
     logical :: fixed
 
     tanpools_old = tanpools
