@@ -18,6 +18,15 @@ SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
 
 <config_test>
 
+  <test NAME="FUNITCTSM">
+    <DESC>Run CTSM's Fortran unit tests. Grid and compset (and most case settings) are ignored.</DESC>
+    <INFO_DBUG>1</INFO_DBUG>
+    <STOP_OPTION>ndays</STOP_OPTION>
+    <STOP_N>11</STOP_N>
+    <CHECK_TIMING>FALSE</CHECK_TIMING>
+    <DOUT_S>FALSE</DOUT_S>
+  </test>
+
   <test NAME="LII">
     <DESC>CLM initial condition interpolation test (requires configuration with non-blank finidat)</DESC>
     <INFO_DBUG>1</INFO_DBUG>
@@ -57,12 +66,15 @@ SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
   </test>
 
   <test NAME="SSP">
-    <DESC>smoke CLM spinup test (only valid for CLM45 or CLM50 compsets)</DESC>
+    <DESC>smoke CLM spinup test</DESC>
     <INFO_DBUG>1</INFO_DBUG>
     <STOP_OPTION>ndays</STOP_OPTION>
     <RUN_TYPE>startup</RUN_TYPE>
     <STOP_N>4</STOP_N>
     <DOUT_S>FALSE</DOUT_S>
+    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
+    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
+    <HIST_N>$STOP_N</HIST_N>
   </test>
 
 </config_test>

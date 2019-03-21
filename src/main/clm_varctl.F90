@@ -60,7 +60,7 @@ module clm_varctl
   character(len=256), public :: username = ' '                           
 
   ! description of this source
-  character(len=256), public :: source   = "Community Land Model CLM4.0" 
+  character(len=256), public :: source   = "Community Terrestrial Systems Model"
 
   ! version of program
   character(len=256), public :: version  = " "                           
@@ -132,6 +132,9 @@ module clm_varctl
   ! do not irrigate by default
   logical, public :: irrigate = .false.            
 
+  ! set saturated excess runoff to zero for crops
+  logical, public :: crop_fsat_equals_zero = .false.
+  
   !----------------------------------------------------------
   ! Other subgrid logic
   !----------------------------------------------------------
@@ -141,6 +144,9 @@ module clm_varctl
 
   ! true => make ALL patches, cols & landunits active (even if weight is 0)
   logical, public :: all_active = .false.          
+
+  integer, public :: n_dom_pfts = 0  ! # of dominant pfts; determines the number of active pfts; default = 0 means "do nothing"
+  integer, public :: n_dom_landunits = 0  ! # of dominant landunits; determines the number of active landunits; default = 0 means "do nothing"
 
   !----------------------------------------------------------
   ! BGC logic and datasets
@@ -197,6 +203,14 @@ module clm_varctl
 
   logical, public :: use_c13 = .false.                  ! true => use C-13 model
   logical, public :: use_c14 = .false.                  ! true => use C-14 model
+
+  ! BUG(wjs, 2018-10-25, ESCOMP/ctsm#67) There is a bug that causes incorrect values for C
+  ! isotopes if running init_interp from a case without C isotopes to a case with C
+  ! isotopes (https://github.com/ESCOMP/ctsm/issues/67). Normally, an error-check prevents
+  ! you from doing this interpolation (until we have fixed that bug). However, we
+  ! sometimes want to bypass this error-check in system tests. This namelist flag bypasses
+  ! this error-check.
+  logical, public :: for_testing_allow_interp_non_ciso_to_ciso = .false.
 
   !----------------------------------------------------------
   !  FATES switches

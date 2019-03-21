@@ -1,6 +1,0 @@
-Note that this testmod directory includes cmip6_evolving_icesheet rather
-than simply cmip6: cmip6_evolving_icesheet includes cmip6 and adds to
-it. So, rather than having tests of the cmip6 usermods and separate
-tests of cmip6_evolving_icesheet, it's more efficient to just have tests
-of the cmip6_evolving_icesheet usermods directory, which then also cover
-the cmip6 usermods directory.

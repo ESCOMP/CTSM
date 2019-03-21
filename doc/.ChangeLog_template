@@ -33,8 +33,6 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm4_5
 
-[ ] clm4_0
-
 Notes of particular relevance for users
 ---------------------------------------
 
@@ -46,11 +44,11 @@ Changes made to namelist defaults (e.g., changed parameter values):
 
 Changes to the datasets (e.g., parameter, surface or initial files):
 
-Substantial timing or memory changes:
+Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
-NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
@@ -79,25 +77,18 @@ CTSM testing:
 
     cheyenne - 
 
-  unit-tests (components/clm/src):
+  tools-tests (test/tools):
 
     cheyenne - 
 
-  tools-tests (components/clm/test/tools):
-
-    cheyenne - 
-
-  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+  PTCLM testing (tools/shared/PTCLM/test):
 
      cheyenne - 
 
   regular tests (aux_clm):
 
-    cheyenne_intel ---- 
-    cheyenne_gnu ------ 
-    hobart_nag -------- 
-    hobart_pgi -------- 
-    hobart_intel ------ 
+    cheyenne ---- 
+    hobart ------ 
 
 CTSM tag used for the baseline comparisons: 
 

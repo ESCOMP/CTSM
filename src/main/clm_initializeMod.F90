@@ -14,7 +14,7 @@ module clm_initializeMod
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
   use clm_varctl      , only : nhillslope
-  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, wt_glc_mec, topo_glc_mec, nhillcol
+  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
   use ncdio_pio       , only : file_desc_t
@@ -23,13 +23,14 @@ module clm_initializeMod
   use ColumnType      , only : col           ! instance          
   use PatchType       , only : patch         ! instance            
   use reweightMod     , only : reweight_wrapup
-  use filterMod       , only : allocFilters, filter
+  use filterMod       , only : allocFilters, filter, filter_inactive_and_active
   use FatesInterfaceMod, only : set_fates_global_elements
+  use dynSubgridControlMod, only: dynSubgridControl_init, get_reset_dynbal_baselines
 
   use clm_instMod       
   ! 
   implicit none
-  public   ! By default everything is public 
+  private  ! By default everything is private 
   !
   public :: initialize1  ! Phase one initialization
   public :: initialize2  ! Phase two initialization
@@ -52,14 +53,13 @@ contains
     use pftconMod        , only: pftcon       
     use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
     use domainMod        , only: domain_check, ldomain, domain_init
-    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data 
+    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data, surfrd_get_num_patches
     use controlMod       , only: control_init, control_print, NLFilename
     use ncdio_pio        , only: ncd_pio_init
     use initGridCellsMod , only: initGridCells
     use initHillslopeMod , only: initHillslopes, HillslopeDomPft
     use ch4varcon        , only: ch4conrd
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
-    use dynSubgridControlMod, only: dynSubgridControl_init
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
@@ -71,6 +71,8 @@ contains
     type(bounds_type) :: bounds_clump
     integer           :: nclumps                 ! number of clumps on this processor
     integer           :: nc                      ! clump index
+    integer           :: actual_maxsoil_patches  ! value from surface dataset
+    integer           :: actual_numcft           ! numcft from sfc dataset
     integer ,pointer  :: amask(:)                ! global land mask
     character(len=32) :: subname = 'initialize1' ! subroutine name
     !-----------------------------------------------------------------------
@@ -90,10 +92,11 @@ contains
     endif
 
     call control_init()
-    call clm_varpar_init()
+    call ncd_pio_init()
+    call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
+    call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
     call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
-    call ncd_pio_init()
 
     if (masterproc) call control_print()
 
@@ -161,7 +164,8 @@ contains
     allocate (urban_valid  (begg:endg                      ))
     allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
     allocate (wt_cft       (begg:endg, cft_lb:cft_ub       ))
-    allocate (fert_cft       (begg:endg, cft_lb:cft_ub       ))
+    allocate (fert_cft     (begg:endg, cft_lb:cft_ub       ))
+    allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
     allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
     allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
     if(use_hillslope) then 
@@ -174,7 +178,7 @@ contains
 
     ! Read surface dataset and set up subgrid weight arrays
     
-    call surfrd_get_data(begg, endg, ldomain, fsurdat)
+    call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
 
     ! ------------------------------------------------------------------------
     ! Ask Fates to evaluate its own dimensioning needs.
@@ -289,6 +293,7 @@ contains
     use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
     use DaylengthMod          , only : InitDaylength
     use dynSubgridDriverMod   , only : dynSubgrid_init
+    use dynConsBiogeophysMod  , only : dyn_hwcontent_set_baselines
     use fileutils             , only : getfil
     use initInterpMod         , only : initInterp
     use subgridWeightsMod     , only : init_subgrid_weights_mod
@@ -461,6 +466,30 @@ contains
     call t_stopf('init_dyn_subgrid')
 
     ! ------------------------------------------------------------------------
+    ! Initialize baseline water and energy states needed for dynamic subgrid operation
+    !
+    ! This will be overwritten by the restart file, but needs to be done for a cold start
+    ! case.
+    !
+    ! BACKWARDS_COMPATIBILITY(wjs, 2019-03-05) dyn_hwcontent_set_baselines is called again
+    ! later in initialization if reset_dynbal_baselines is set. I think we could just have
+    ! a single call in that location (adding some logic to also do the call if we're doing
+    ! a cold start) once we can assume that all finidat files have the necessary restart
+    ! fields on them. But for now, having the extra call here handles the case where the
+    ! relevant restart fields are missing from an old finidat file.
+    ! ------------------------------------------------------------------------
+
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+
+       call dyn_hwcontent_set_baselines(bounds_clump, &
+            filter_inactive_and_active(nc)%num_icemecc, &
+            filter_inactive_and_active(nc)%icemecc, &
+            urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
+    end do
+
+    ! ------------------------------------------------------------------------
     ! Initialize modules (after time-manager initialization in most cases)
     ! ------------------------------------------------------------------------
 
@@ -568,6 +597,38 @@ contains
        ! (to be compatible with routines still using finidat)
        finidat = trim(finidat_interp_dest)
 
+    end if
+
+    ! ------------------------------------------------------------------------
+    ! If requested, reset dynbal baselines
+    !
+    ! This needs to happen after reading the restart file (including after reading the
+    ! interpolated restart file, if applicable).
+    ! ------------------------------------------------------------------------
+
+    if (get_reset_dynbal_baselines()) then
+       if (nsrest == nsrStartup) then
+          if (masterproc) then
+             write(iulog,*) ' '
+             write(iulog,*) 'Resetting dynbal baselines'
+             write(iulog,*) ' '
+          end if
+
+          !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+          do nc = 1,nclumps
+             call get_clump_bounds(nc, bounds_clump)
+
+             call dyn_hwcontent_set_baselines(bounds_clump, &
+                  filter_inactive_and_active(nc)%num_icemecc, &
+                  filter_inactive_and_active(nc)%icemecc, &
+                  urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
+          end do
+       else if (nsrest == nsrBranch) then
+          call endrun(msg='ERROR clm_initializeMod: '//&
+               'Cannot set reset_dynbal_baselines in a branch run')
+       end if
+       ! nsrContinue not explicitly handled: it's okay for reset_dynbal_baselines to
+       ! remain set in a continue run, but it has no effect
     end if
 
     ! ------------------------------------------------------------------------
@@ -682,7 +743,7 @@ contains
     ! initialize2 because it is used to initialize other variables; now it can be
     ! deallocated
 
-    deallocate(topo_glc_mec, fert_cft)
+    deallocate(topo_glc_mec, fert_cft, irrig_method)
 
     !------------------------------------------------------------       
     ! Write log output for end of initialization

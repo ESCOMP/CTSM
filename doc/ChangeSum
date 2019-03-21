@@ -1,5 +1,24 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev031    sacks 03/13/2019 Subtract virtual states to reduce dynbal fluxes for transient glaciers
+  ctsm1.0.dev030    sacks 03/08/2019 Update CIME; hookup expected test fails
+  ctsm1.0.dev029   slevis 02/26/2019 Collapse landunits to the N most dominant
+  ctsm1.0.dev028    sacks 02/26/2019 Interpolate out-of-the-box initial conditions and remove expensive tests
+  ctsm1.0.dev027   negins 02/19/2019 non-constant time init for soil hydrology types are moved to SoilHydrologyType.F90
+  ctsm1.0.dev026   slevis 02/05/2019 Collapse unmanaged PFTs to the N most dominant
+  ctsm1.0.dev025    sacks 01/23/2019 History fields for vertically-resolved sums of soil C and N, and minor fixes
+  ctsm1.0.dev024   slevis 01/14/2019 Remove unnecessary restart variables
+  ctsm1.0.dev023    sacks 01/10/2019 Remove CLM4.0
+  ctsm1.0.dev022    sacks 01/08/2019 Set tracer version of irrigation fluxes
+  ctsm1.0.dev021      mvr 12/26/2018 Added tracer ratio capability and included it in consistency checks
+  ctsm1.0.dev020    sacks 12/03/2018 New options for irrigation and crop fsat
+  ctsm1.0.dev019    sacks 11/30/2018 Rework cold start initialization of wa and zwt
+  ctsm1.0.dev018    sacks 11/29/2018 Water tracer updates for initial things in driver loop
+  ctsm1.0.dev017   slevis 11/28/2018 Merge the collapse2gencrop branch
+  ctsm1.0.dev016    sacks 11/01/2018 Update cime, fix FATES DEBUG token, add script to easily run system tests
+  ctsm1.0.dev015    sacks 10/28/2018 CMIP6 compset modifiers, usermods for typical output, and other output enhancements
+  ctsm1.0.dev014    sacks 10/26/2018 Miscellaneous minor, bit-for-bit bug fixes
+  ctsm1.0.dev013     erik 10/25/2018 Fix the fact that transient Bgc and SP cases had constant crop area in time
   ctsm1.0.dev012     erik 09/29/2018 Add snow-free fields for snowmip, fix several issues
   ctsm1.0.dev011    sacks 09/12/2018 Add water tracer consistency checks, and other water tracer work
   ctsm1.0.dev010    sacks 08/30/2018 Update cime to cime5.7.3

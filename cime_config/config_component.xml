@@ -14,9 +14,8 @@
 
   <!-- Descriptions of all the different valid configurations for different model versions -->
   <description modifier_mode="1">
-    <desc lnd="CLM40[%SP][%CN][%CNDV][%CN-CROP][%CNDV-CROP]"                                                        >clm4.0:</desc>
-    <desc lnd="CLM45[%SP][%SP-VIC][%CN][%CNDV][%CN-CROP][%CNDV-CROP][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]" >clm4.5:</desc>
-    <desc lnd="CLM50[%SP][%SP-VIC][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                              >clm5.0:</desc>
+    <desc lnd="CLM45[%SP][%SP-VIC][%CN][%CNDV][%CN-CROP][%CNDV-CROP][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
+    <desc lnd="CLM50[%SP][%SP-VIC][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK]">clm5.0:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
     <desc option="CN"              >CN: Carbon Nitrogen model</desc>
     <desc option="CNDV"            >CNDV: CN with Dynamic Vegetation</desc>
@@ -29,6 +28,8 @@
     <desc option="FATES"           >FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: (experimental)</desc>
     <desc option="BGCDV"           >BGC (vert. resol. CN and methane) with dynamic vegetation:</desc>
     <desc option="BGCDV-CROP"      >BGC (vert. resol. CN and methane) with dynamic vegetation and prognostic crop:</desc>
+    <desc option="BGC-CROP-CMIP6DECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 DECK experiments:</desc>
+    <desc option="BGC-CROP-CMIP6WACCMDECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 WACCM DECK experiments:</desc>
   </description>
 
   <entry id="COMP_LND">
@@ -40,15 +41,6 @@
     <desc>Name of land component</desc>
   </entry>
 
-  <entry id="CLM_CPPDEFS">
-    <type>char</type>
-    <valid_values></valid_values>
-    <default_value>UNSET</default_value>
-    <group>build_component_cam</group>
-    <file>env_build.xml</file>
-    <desc>CLM cpp definitions (if-any) (setup automatically - DO NOT EDIT)</desc>
-  </entry>
-
   <entry id="LND_TUNING_MODE">
     <type>char</type>
     <group>run_component_clm</group>
@@ -56,12 +48,8 @@
     <desc>Tuning parameters and initial conditions should be optimized for what CLM model version and what meteorlogical forcing combination?
     </desc>
     <default_value>UNSET</default_value>
-    <valid_values>clm4_0_CRUv7,clm4_0_GSWP3v1,clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0</valid_values>
+    <valid_values>clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0</valid_values>
     <values>
-      <value compset=             "CLM40" >clm4_0_CRUv7</value>
-      <value compset="DATM%CRU_CLM40"     >clm4_0_CRUv7</value>
-      <value compset="DATM%CRUv7.+_CLM40" >clm4_0_CRUv7</value>
-      <value compset="DATM%GSWP3.+_CLM40" >clm4_0_GSWP3v1</value>
       <value compset=             "CLM45" >clm4_5_CRUv7</value>
       <value compset="DATM%CRUv7.+_CLM45" >clm4_5_CRUv7</value>
       <value compset="DATM%GSWP3.+_CLM45" >clm4_5_GSWP3v1</value>
@@ -73,26 +61,23 @@
     </values>
   </entry>
 
-  <entry id="CLM_CONFIG_OPTS" >
+  <entry id="CLM_PHYSICS_VERSION" >
     <type>char</type>
-    <default_value></default_value>
-    <values modifier='additive'>
-      <value compset="_CLM40"           >-phys clm4_0</value>
-      <value compset="_CLM40%[^_]*CN"   >-bgc cn</value>
-      <value compset="_CLM40%[^_]*CNDV" >-bgc cndv</value>
-      <value compset="_CLM40%[^_]*CROP" >-crop on</value>
-      <value compset="_CLM45"           >-phys clm4_5</value>
-      <value compset="_CLM50"           >-phys clm5_0</value>
+    <valid_values>clm4_5,clm5_0</valid_values>
+    <!-- By setting the default_value to UNSET (or some other non-empty
+         string that doesn't appear in the list of valid_values), the
+         scripts will ensure that one of the below values is picked up
+         by the compset match. -->
+    <default_value>UNSET</default_value>
+    <values>
+      <value compset="_CLM45">clm4_5</value>
+      <value compset="_CLM50">clm5_0</value>
     </values>
-    <group>build_component_clm</group>
-    <file>env_build.xml</file>
-    <desc>Provides option(s) for the CLM configure utility.
-      CLM_CONFIG_OPTS are normally set as compset variables (e.g., -bgc cn)
-      and in general should not be modified for supported compsets.
-      It is recommended that if you want to modify this value for your experiment,
-      you should use your own user-defined component sets via using create_newcase
-      with a compset_file argument.
-      This is an advanced flag and should only be used by expert users.</desc>
+    <group>run_component_clm</group>
+    <file>env_run.xml</file>
+    <desc>Overall physics version to use.
+    This sets the default values for many different namelist options.
+    This is typically set by the compset.</desc>
   </entry>
 
   <entry id="CLM_NML_USE_CASE">
@@ -222,6 +207,19 @@
       A value of on forces the model to spin up from a cold-start
       (arbitrary initial conditions). Setting this value in the xml file will take
       precedence over any settings for finidat in the $CASEROOT/user_clm_clm file.</desc>
+  </entry>
+
+  <entry id="CLM_USER_MODS">
+    <type>char</type>
+    <valid_values></valid_values>
+    <default_value></default_value>
+    <values match="last">
+      <value compset="_CLM50%[^_]*CMIP6DECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
+      <value compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
+    </values>
+    <group>run_component_clm</group>
+    <file>env_case.xml</file>
+    <desc>User mods to apply to specific compset matches. </desc>
   </entry>
 
   <help>

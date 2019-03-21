@@ -13,7 +13,6 @@ module WaterStateBulkType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
-  use clm_varctl     , only : iulog
   use clm_varpar     , only : nlevgrnd, nlevsno   
   use clm_varcon     , only : spval
   use WaterStateType , only : waterstate_type
@@ -50,7 +49,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine InitBulk(this, bounds, info, vars, &
-       h2osno_input_col, watsat_col, t_soisno_col)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer)
 
     class(waterstatebulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds
@@ -59,10 +58,16 @@ contains
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    logical           , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
 
 
-    call this%Init(bounds, info, vars, &
-       h2osno_input_col, watsat_col, t_soisno_col)
+    call this%Init(bounds = bounds, &
+         info = info, &
+         tracer_vars = vars, &
+         h2osno_input_col = h2osno_input_col, &
+         watsat_col = watsat_col, &
+         t_soisno_col = t_soisno_col, &
+         use_aquifer_layer = use_aquifer_layer)
 
     call this%InitBulkAllocate(bounds) 
 
@@ -112,7 +117,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use histFileMod    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
@@ -123,8 +127,6 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
-    real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
@@ -175,9 +177,7 @@ contains
     real(r8)              , intent(in)    :: h2osno_input_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
+    integer            :: c
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(h2osno_input_col)     == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
@@ -197,13 +197,7 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : pondmx, watmin, spval, nameg
-    use landunit_varcon  , only : istcrop, istdlak, istsoil  
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step
-    use clm_varctl       , only : bound_h2osoi
-    use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
+    use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
     !
     ! !ARGUMENTS:
