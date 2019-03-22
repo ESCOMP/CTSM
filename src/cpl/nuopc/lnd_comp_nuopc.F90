@@ -237,6 +237,7 @@ contains
 
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
     use clm_instMod, only : lnd2atm_inst, lnd2glc_inst, water_inst
+
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
     type(ESMF_State)     :: importState
@@ -601,10 +602,13 @@ contains
   !===============================================================================
 
   subroutine ModelAdvance(gcomp, rc)
-    use clm_instMod, only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
+
     !------------------------
     ! Run CTSM
     !------------------------
+    
+    use clm_instMod        , only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
+    use shr_nuopc_utils_mod, only : shr_nuopc_log_clock_advance
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -872,13 +876,9 @@ contains
        call shr_nuopc_methods_State_diagnose(exportState,subname//':ES',rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
-
     if (masterproc) then
-       call ESMF_ClockPrint(clock, options="currTime", preString="------>Advancing LND from: ", rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_ClockPrint(clock, options="stopTime", preString="--------------------------------> to: ", rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    endif
+       call shr_nuopc_log_clock_advance(clock, 'CTSM', iulog)
+    end if
 
     !--------------------------------
     ! Reset shr logging to my original values
