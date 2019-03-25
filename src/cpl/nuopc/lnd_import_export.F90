@@ -204,7 +204,6 @@ contains
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Fall_fire', ungridded_lbound=1, ungridded_ubound=emis_nflds)
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_fztop')
     end if
-
     ! CARMA volumetric soil water from land
     ! TODO: is the following correct - the CARMA field exchange is very confusing in mct
     call shr_carma_readnl('drv_flds_in', carma_fields)
@@ -256,12 +255,15 @@ contains
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_swvdf'   )
 
     ! from atm - black carbon deposition fluxes (3)
+    ! (1) => bcphidry, (2) => bcphodry, (3) => bcphiwet
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_bcph',  ungridded_lbound=1, ungridded_ubound=3)
 
     ! from atm - organic carbon deposition fluxes (3)
+    ! (1) => ocphidry, (2) => ocphodry, (3) => ocphiwet
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_ocph',  ungridded_lbound=1, ungridded_ubound=3)
 
     ! from atm - wet dust deposition frluxes (4 sizes)
+    ! (1) => dstwet1, (2) => dstwet2, (3) => dstwet3, (4) => dstwet4 
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_dstwet', ungridded_lbound=1, ungridded_ubound=4)
 
     ! from - atm dry dust deposition frluxes (4 sizes)
