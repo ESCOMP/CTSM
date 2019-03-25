@@ -1838,7 +1838,7 @@
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
     </options>
   </test>
   <test name="ERS_D_Ld5" grid="f19_g16" compset="I2000Clm45BgcCrop" testmods="clm/default">
@@ -1870,7 +1870,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesHydro">
+  <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/FatesHydro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
