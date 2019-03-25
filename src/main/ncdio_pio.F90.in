@@ -1391,10 +1391,13 @@ contains
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 #if ({DIMS}==0)
        start(1) = 1  ; count(1) = 1
-       if (present(nt)) start(1) = nt
-       temp(1) = data
-!       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
-       status = pio_put_var(ncid, varid, data)
+       if (present(nt)) then
+          start(1) = nt
+          temp(1) = data
+          status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
+       else
+          status = pio_put_var(ncid, varid, data)
+       endif
 #elif ({DIMS}==1)
        start(1) = 1 ; count(1) = size(data)
        start(2) = 1 ; count(2) = 1

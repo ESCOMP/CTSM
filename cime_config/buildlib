@@ -32,7 +32,6 @@ def _main_func():
         lnd_root = case.get_value("COMP_ROOT_DIR_LND")
         gmake_j = case.get_value("GMAKE_J")
         gmake = case.get_value("GMAKE")
-        mach = case.get_value("MACH")
         driver = case.get_value("COMP_INTERFACE").lower()
 
         #-------------------------------------------------------

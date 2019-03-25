@@ -81,7 +81,7 @@ contains
     ! prescribed ahead of time.
     dyncrop_file = dyn_file_type(dyncrop_filename, YEAR_POSITION_START_OF_TIMESTEP)
     call check_dim(dyncrop_file, 'cft', cft_size)
-    
+
     ! read data PCT_CROP and PCT_CFT corresponding to correct year
     !
     ! Note: if you want to change transient crops so that they are interpolated, rather
@@ -126,8 +126,9 @@ contains
     use landunit_varcon   , only : istcrop
     use clm_varpar        , only : cft_size, cft_lb, cft_ub
     use clm_varctl        , only : use_crop
-    use surfrdUtilsMod    , only : collapse_crop_types
+    use surfrdUtilsMod    , only : collapse_crop_types, collapse_crop_var
     use subgridWeightsMod , only : set_landunit_weight
+
     implicit none
     !
     ! !ARGUMENTS:
@@ -174,6 +175,12 @@ contains
     ! The call collapse_crop_types also appears in subroutine surfrd_veg_all
     call collapse_crop_types(wtcft_cur, fertcft_cur, cft_size, bounds%begg, bounds%endg, verbose = .false.)
 
+    ! Collapse crop variables as needed:
+    ! The call to collapse_crop_var also appears in subroutine surfrd_veg_all
+    ! - fertcft_cur TODO Is this call redundant because it simply sets the crop
+    !                    variable to 0 where is_pft_known_to_model = .false.?
+    call collapse_crop_var(fertcft_cur(bounds%begg:bounds%endg,:), cft_size, bounds%begg, bounds%endg)
+
     allocate(col_set(bounds%begc:bounds%endc))
     col_set(:) = .false.
 
@@ -183,6 +190,7 @@ contains
        c = patch%column(p)
 
        if (lun%itype(l) == istcrop) then
+
           m = patch%itype(p)
 
           ! The following assumes there is a single CFT on each crop column. The

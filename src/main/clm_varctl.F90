@@ -139,6 +139,9 @@ module clm_varctl
   ! true => make ALL patches, cols & landunits active (even if weight is 0)
   logical, public :: all_active = .false.          
 
+  integer, public :: n_dom_pfts = 0  ! # of dominant pfts; determines the number of active pfts; default = 0 means "do nothing"
+  integer, public :: n_dom_landunits = 0  ! # of dominant landunits; determines the number of active landunits; default = 0 means "do nothing"
+
   !----------------------------------------------------------
   ! BGC logic and datasets
   !----------------------------------------------------------
