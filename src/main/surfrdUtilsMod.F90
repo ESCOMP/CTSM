@@ -283,14 +283,15 @@ contains
           end do
           ! Normalize dominant pft or landunit weights to 1; if non-existent,
           ! set the weights to 0.
-          if (wt_dom_sum <= 0._r8) then
+          if (wt_sum > 0._r8 .and. wt_dom_sum <= 0._r8) then
              call endrun(msg = subname//' wt_dom_sum should never be <= 0'//&
-                  ' but it is here' // errMsg(sourcefile, __LINE__))
-          else
+                  ' but it is here ' // errMsg(sourcefile, __LINE__))
+          else if (wt_dom_sum > 0._r8) then  ! wt_sum > 0 is implied by this
              do n = 1, n_dominant
                 m = max_indices(n)
                 weight(g,m) = weight(g,m) * wt_sum / wt_dom_sum
              end do
+         !else  ! DO NOTHING because wt_sum = 0
           end if
           ! Set non-dominant weights to 0
           do m = lower_bound, upper_bound
@@ -301,7 +302,11 @@ contains
 
        end do
 
-       ! Error checks
+       ! Error check: Check that weight sums to 1 only if weight summed to 1
+       ! upon entering the subroutine. If weight did not sum to 1 upon entering
+       ! the subroutine, then weight will not sum to 1 now, either. Currently
+       ! the latter occurs when collapsing the urban landunits to the dominant
+       ! urban landunit.
        if (wt_sum == 1._r8) call check_sums_equal_1(weight, begg, 'weight', subname)
 
        deallocate(max_indices)
