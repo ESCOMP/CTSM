@@ -272,6 +272,19 @@ contains
      integer  :: indexp,indexc,indexl,indexg            ! index of first found in search loop
      real(r8) :: forc_rain_col(bounds%begc:bounds%endc) ! column level rain rate [mm/s]
      real(r8) :: forc_snow_col(bounds%begc:bounds%endc) ! column level snow rate [mm/s]
+
+     real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
+     real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
+     real(r8) :: errsol_max_val                         ! Maximum value of error in solar radiation conservation error over all columns [W m-2]
+     real(r8) :: errlon_max_val                         ! Maximum value of error in longwave radiation conservation error over all columns [W m-2]
+     real(r8) :: errseb_max_val                         ! Maximum value of error in surface energy conservation error over all columns [W m-2]
+     real(r8) :: errsoi_col_max_val                     ! Maximum value of column-level soil/lake energy conservation error over all columns [W m-2]
+
+     real(r8), parameter :: h2o_warning_thresh       = 1.e-9_r8                       ! land model time step (sec)
+     real(r8), parameter :: h2o_error_thresh         = 1.e-5_r8                       ! land model time step (sec)
+     real(r8), parameter :: energy_warning_thresh    = 1.e-7_r8                       ! land model time step (sec)
+     real(r8), parameter :: energy_error_thresh      = 1.e-5_r8                       ! land model time step (sec)
+
      !-----------------------------------------------------------------------
 
      associate(                                                                   & 
