@@ -715,6 +715,7 @@ contains
        end if
        
        ! Longwave radiation energy balance check
+
        errlon_max_val = maxval(abs(errlon(bounds%begp:bounds%endp)), mask = (errlon(bounds%begp:bounds%endp) < spval))
        write(iulog,*)'errlon_max_val         = ',errlon_max_val
 
@@ -732,43 +733,40 @@ contains
 
        ! Surface energy balance check
 
-       found = .false.
-       do p = bounds%begp, bounds%endp
-          if (patch%active(p)) then
-             if (abs(errseb(p)) > 1.e-7_r8 ) then
-                found = .true.
-                indexp = p
-                indexc = patch%column(indexp)
-                indexg = patch%gridcell(indexp)
-             end if
-          end if
-       end do
-       if ( found  .and. (DAnstep > skip_steps) ) then
-          write(iulog,*)'WARNING: BalanceCheck: surface flux energy balance error (W/m2)'
-          write(iulog,*)'nstep          = ' ,nstep
-          write(iulog,*)'errseb         = ' ,errseb(indexp)
-          if (abs(errseb(indexp)) > 1.e-5_r8 ) then
-             write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
-             write(iulog,*)'sabv           = ' ,sabv(indexp)
+       errseb_max_val = maxval(abs(errseb(bounds%begp:bounds%endp)), mask = (errseb(bounds%begp:bounds%endp) < spval))
+       write(iulog,*)'errseb_max_val         = ',errseb_max_val
 
-             write(iulog,*)'sabg           = ' ,sabg(indexp), ((1._r8- frac_sno(indexc))*sabg_soil(indexp) + &
-                  frac_sno(indexc)*sabg_snow(indexp)),sabg_chk(indexp)
+       if ((errseb_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
 
-             write(iulog,*)'forc_tot      = '  ,forc_solad(indexg,1) + forc_solad(indexg,2) + &
-                  forc_solai(indexg,1) + forc_solai(indexg,2)
+           indexp = maxloc(abs(errseb(bounds%begp:bounds%endp)), 1 , mask = (errseb(bounds%begp:bounds%endp) < spval)) + bounds%begp -1
+           indexc = patch%column(indexp)
+           indexg = patch%gridcell(indexp)
 
-             write(iulog,*)'eflx_lwrad_net = ' ,eflx_lwrad_net(indexp)
-             write(iulog,*)'eflx_sh_tot    = ' ,eflx_sh_tot(indexp)
-             write(iulog,*)'eflx_lh_tot    = ' ,eflx_lh_tot(indexp)
-             write(iulog,*)'eflx_soil_grnd = ' ,eflx_soil_grnd(indexp)
-             write(iulog,*)'fsa fsr = '        ,fsa(indexp),    fsr(indexp)
-             write(iulog,*)'fabd fabi = '      ,fabd(indexp,:), fabi(indexp,:)
-             write(iulog,*)'albd albi = '      ,albd(indexp,:), albi(indexp,:)
-             write(iulog,*)'ftii ftdd ftid = ' ,ftii(indexp,:), ftdd(indexp,:),ftid(indexp,:)
-             write(iulog,*)'elai esai = '      ,elai(indexp),   esai(indexp)      
-             write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
-          end if
+           write(iulog,*)'WARNING: BalanceCheck: surface flux energy balance error (W/m2)'
+           write(iulog,*)'nstep          = ' ,nstep
+           write(iulog,*)'errseb         = ' ,errseb(indexp)
+
+           if ( errseb_max_val > energy_error_thresh ) then
+              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
+              write(iulog,*)'sabv           = ' ,sabv(indexp)
+              write(iulog,*)'sabg           = ' ,sabg(indexp), ((1._r8- frac_sno(indexc))*sabg_soil(indexp) + &
+                   frac_sno(indexc)*sabg_snow(indexp)),sabg_chk(indexp)
+              write(iulog,*)'forc_tot      = '  ,forc_solad(indexg,1) + forc_solad(indexg,2) + &
+                   forc_solai(indexg,1) + forc_solai(indexg,2)
+
+              write(iulog,*)'eflx_lwrad_net = ' ,eflx_lwrad_net(indexp)
+              write(iulog,*)'eflx_sh_tot    = ' ,eflx_sh_tot(indexp)
+              write(iulog,*)'eflx_lh_tot    = ' ,eflx_lh_tot(indexp)
+              write(iulog,*)'eflx_soil_grnd = ' ,eflx_soil_grnd(indexp)
+              write(iulog,*)'fsa fsr = '        ,fsa(indexp),    fsr(indexp)
+              write(iulog,*)'fabd fabi = '      ,fabd(indexp,:), fabi(indexp,:)
+              write(iulog,*)'albd albi = '      ,albd(indexp,:), albi(indexp,:)
+              write(iulog,*)'ftii ftdd ftid = ' ,ftii(indexp,:), ftdd(indexp,:),ftid(indexp,:)
+              write(iulog,*)'elai esai = '      ,elai(indexp),   esai(indexp)
+              write(iulog,*)'clm model is stopping'
+              call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+           end if
+
        end if
 
        ! Soil energy balance check
