@@ -44,6 +44,102 @@ contains
   end subroutine setup_test_collapse_routines
 
   @Test
+  subroutine test_collapse_all_lunit_opts_active
+     ! Tests subroutine collapse_to_dominant when called first with
+     ! collapse_urban = .true. and then with n_dom_landunits.
+     ! The same test subsequently calls collapse_individual_lunits.
+     use pftconMod, only: pftcon
+     use clm_instur, only: wt_lunit
+     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+                                istdlak, istwet, isturb_tbd, isturb_hd, &
+                                isturb_md
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 4
+     integer, parameter :: n_dom_urban = 1, n_dom_landunits = 2
+     real(r8) :: wt_lunit_sum, expctd(9)
+     real(r8), allocatable :: wt_expected(:,:)
+     real(r8), allocatable :: wt_in_out(:,:)  ! used in subr. call
+     real(r8), allocatable :: input_val_1_new(:)  ! (%)
+     real(r8), parameter :: toosmall_soil = 11._r8  ! (%)
+     real(r8), parameter :: toosmall_crop = 0._r8  ! (%)
+     real(r8), parameter :: toosmall_glacier = 0._r8  ! (%)
+     real(r8), parameter :: toosmall_lake = 0._r8  ! (%)
+     real(r8), parameter :: toosmall_wetland = 0._r8  ! (%)
+     real(r8), parameter :: toosmall_urban = 0._r8  ! (%)
+     real(r8), parameter :: input_val(9) = (/40._r8, 35._r8, 30._r8, 15._r8, 11._r8, 10._r8, 5._r8, 4._r8, 0._r8/)  ! (%)
+
+     ! Set relevant pftcon values to defaults; override where necessary
+     call pftcon%InitForTesting()
+     allocate( input_val_1_new(begg:endg) )
+     allocate( wt_lunit(begg:endg,istsoil:max_lunit) )
+     allocate( wt_expected(begg:endg,istsoil:max_lunit) )
+     allocate( wt_in_out(begg:endg,istsoil:max_lunit) )
+
+     ! INPUT VALUES
+     wt_lunit(begg:,:) = 0._r8  ! initialize
+     ! wt_lunit is assigned values from input_val to test various combinations
+     ! of values that sum to 100%. The index values used with array input_val in
+     ! these assignments have no other significance.
+     wt_lunit(begg:,istsoil) = (/ input_val(4), input_val(6), input_val(5)/)
+     wt_lunit(begg:,istcrop) = (/ input_val(7), input_val(9), input_val(9)/)
+     wt_lunit(begg:,istice_mec) = (/ input_val(6), input_val(9), input_val(6)/)
+     wt_lunit(begg:,istdlak) = (/ input_val(1), input_val(9), input_val(9)/)
+     wt_lunit(begg:,istwet) = (/ input_val(3), input_val(9),  input_val(9)/)
+     wt_lunit(begg:,isturb_tbd) = (/ input_val(9),  input_val(2), input_val(2)/)
+     wt_lunit(begg:,isturb_hd) = (/ input_val(9),  input_val(1), input_val(1)/)
+     wt_lunit(begg:,isturb_md) = (/ input_val(9),  input_val(4), input_val(8)/)
+     wt_lunit(:,:) = wt_lunit(:,:) / 100._r8
+     call check_sums_equal_1( wt_lunit, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     wt_lunit_sum = sum(wt_lunit(begg,:))
+
+     ! OUTPUT VALUES EXPECTED
+     expctd(1) = input_val(1) * wt_lunit_sum / (input_val(1) + input_val(3))
+     expctd(2) = input_val(3) * wt_lunit_sum / (input_val(1) + input_val(3))
+     ! input_val(1) changes after collapse_urban (1st subroutine call below)
+     ! for endg and endg-1
+     input_val_1_new(:) = sum(wt_lunit(:,isturb_tbd:isturb_md), DIM=2) * 100._r8
+     expctd(3) = input_val_1_new(endg-1) * wt_lunit_sum / input_val_1_new(endg-1)
+     expctd(4) = input_val_1_new(endg) * wt_lunit_sum / (input_val_1_new(endg) + input_val(5))
+     expctd(5) = input_val(5) * wt_lunit_sum / (input_val_1_new(endg) + input_val(5))
+     wt_expected(begg:,:) = 0._r8  ! initialize
+     wt_expected(begg:,istsoil) = (/ 0._r8, 0._r8, expctd(5) /)
+     wt_expected(begg:,istdlak) = (/ expctd(1), 0._r8, 0._r8 /)
+     wt_expected(begg:,istwet) = (/ expctd(2), 0._r8, 0._r8 /)
+     wt_expected(begg:,isturb_hd) = (/ 0._r8, expctd(3), expctd(4) /)
+
+     call check_sums_equal_1(wt_expected, begg, "test_check_sums_add_to_1", &
+                             "should not trigger an error")
+
+     ! First collapse urban to dominant urban landunit, then collapse landunits
+     ! to n_dom_landunits, and finally collapse individual landunits according
+     ! to the toosmall_* thresholds
+     wt_in_out = wt_lunit  ! reset argument for next call
+     call collapse_to_dominant(wt_in_out(begg:endg,isturb_tbd:isturb_md), &
+                               isturb_tbd, isturb_md, begg, endg, n_dom_urban)
+     call collapse_to_dominant(wt_in_out, &
+                               istsoil, max_lunit, begg, endg, n_dom_landunits)
+     call collapse_individual_lunits(wt_in_out, begg, endg, &
+                                     toosmall_soil, toosmall_crop, &
+                                     toosmall_glacier, toosmall_lake, &
+                                     toosmall_wetland, toosmall_urban)
+
+     ! Now check that output is as expected
+     call check_sums_equal_1( wt_in_out, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+
+     @assertEqual(wt_in_out(begg:,:), wt_expected(begg:,:), tolerance=tol)
+
+     deallocate( wt_expected )
+     deallocate( wt_in_out )
+     deallocate( wt_lunit )
+
+     call pftcon%clean()
+
+  end subroutine test_collapse_all_lunit_opts_active
+
+  @Test
   subroutine test_collapse_individual_lunits()
      ! This test sets the user-defined thresholds toosmall_*
      ! (soil, crop, glacier, lake, wetland, urb_tbd, urb_hd, urb_md)
