@@ -715,24 +715,19 @@ contains
        end if
        
        ! Longwave radiation energy balance check
+       errlon_max_val = maxval(abs(errlon(bounds%begp:bounds%endp)), mask = (errlon(bounds%begp:bounds%endp) < spval))
+       write(iulog,*)'errlon_max_val         = ',errlon_max_val
 
-       found = .false.
-       do p = bounds%begp, bounds%endp
-          if (patch%active(p)) then
-             if ( (errlon(p) /= spval) .and. (abs(errlon(p)) > 1.e-7_r8) ) then
-                found = .true.
-                indexp = p
-             end if
-          end if
-       end do
-       if ( found  .and. (DAnstep > skip_steps) ) then
-          write(iulog,*)'WARNING: BalanceCheck: longwave energy balance error (W/m2)' 
-          write(iulog,*)'nstep        = ',nstep 
-          write(iulog,*)'errlon       = ',errlon(indexp)
-          if (abs(errlon(indexp)) > 1.e-5_r8 ) then
-             write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
-             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
-          end if
+       if ((errlon_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
+            indexp = maxloc(abs(errlon(bounds%begp:bounds%endp)), 1 , mask = (errlon(bounds%begp:bounds%endp) < spval)) + bounds%begp -1
+            write(iulog,*)'indexp         = ',indexp
+            write(iulog,*)'WARNING: BalanceCheck: longwave energy balance error (W/m2)'
+            write(iulog,*)'nstep        = ',nstep
+            write(iulog,*)'errlon       = ',errlon(indexp)
+            if (errlon_max_val > energy_error_thresh ) then
+                 write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
+                 call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+            end if
        end if
 
        ! Surface energy balance check
