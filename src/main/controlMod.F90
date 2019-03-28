@@ -265,8 +265,7 @@ contains
     ! Thresholds above which the model keeps the soil, crop, glacier, lake,
     ! wetland, and urban landunits
     namelist /clm_inparm/ toosmall_soil, toosmall_crop, toosmall_glacier
-    namelist /clm_inparm/ toosmall_lake, toosmall_wetland
-    namelist /clm_inparm/ toosmall_urban
+    namelist /clm_inparm/ toosmall_lake, toosmall_wetland, toosmall_urban
 
     ! flag for SSRE diagnostic
     namelist /clm_inparm/ use_SSRE

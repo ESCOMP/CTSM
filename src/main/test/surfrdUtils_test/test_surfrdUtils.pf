@@ -617,6 +617,7 @@ contains
      real(r8) :: fert_cft(begg:endg,cftsize)
      real(r8) :: wt_cft_expected(begg:endg,cftsize)
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
 
      ! Input values
      wt_cft(begg:,:) = reshape((/ 25.0_r8, 25.0_r8, 75.0_r8, 75.0_r8 /), shape(wt_cft))
@@ -638,7 +639,8 @@ contains
      use_crop = .false.  ! ...irrigated with the unirrigated
 
      ! Collapse crop types
-     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum)
 
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
@@ -665,6 +667,7 @@ contains
      real(r8) :: fert_cft(begg:endg,cftsize)
      real(r8) :: wt_cft_expected(begg:endg,cftsize)
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
 
      ! Input values
      wt_cft(begg:,:) = reshape((/ 25.0_r8, 25.0_r8, 75.0_r8, 75.0_r8 /), shape(wt_cft))
@@ -685,7 +688,8 @@ contains
      use_crop = .false.
 
      ! Collapse crop types
-     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum)
 
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
@@ -710,6 +714,7 @@ contains
      real(r8) :: fert_cft(begg:endg,cftsize)
      real(r8) :: wt_cft_expected(begg:endg,cftsize)
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
 
      ! Input values
      wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
@@ -739,7 +744,8 @@ contains
      pftcon%mergetoclmpft(18) = nc3irrig
 
      ! Collapse crop types
-     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum)
 
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
@@ -764,6 +770,7 @@ contains
      real(r8) :: fert_cft(begg:endg,cftsize)
      real(r8) :: wt_cft_expected(begg:endg,cftsize)
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
 
      ! Input values
      wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
@@ -793,7 +800,8 @@ contains
      pftcon%mergetoclmpft(18) = nc3irrig
 
      ! Collapse crop types
-     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum)
 
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
@@ -818,6 +826,7 @@ contains
      real(r8) :: fert_cft(begg:endg,cftsize)
      real(r8) :: wt_cft_expected(begg:endg,cftsize)
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
 
      ! Input values
      wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
@@ -840,7 +849,8 @@ contains
      pftcon%mergetoclmpft(18) = 18
 
      ! Collapse crop types
-     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum )
 
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
@@ -865,6 +875,7 @@ contains
      real(r8) :: fert_cft(begg:endg,cftsize)
      real(r8) :: wt_cft_expected(begg:endg,cftsize)
      real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
 
      ! Input values
      wt_cft(begg:,:) = reshape((/ 5._r8, 5._r8, 10._r8, 10._r8, 20._r8, 20._r8, 30._r8, 30._r8, 15._r8, 15._r8, 20._r8, 20._r8 /), shape(wt_cft))
@@ -897,7 +908,8 @@ contains
      pftcon%mergetoclmpft(20) = 20
 
      ! Collapse crop types
-     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = 100._r8 )
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum )
 
      ! Now check that are correct
      call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &

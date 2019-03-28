@@ -45,23 +45,26 @@ contains
     character(len=*), intent(in) :: name         ! name of array
     character(len=*), intent(in) :: caller       ! identifier of caller, for more meaningful error messages
     integer, optional, intent(out):: ier         ! Return an error code rather than abort
-    real(r8), optional, intent(out):: sumto      ! The value the array should sum to (1.0 if not provided)
+    real(r8), optional, intent(out):: sumto(lb:)  ! The value the array should sum to (1.0 if not provided)
     !
     ! !LOCAL VARIABLES:
     logical :: found
     integer :: nl
     integer :: nindx
     real(r8), parameter :: eps = 1.e-13_r8
-    real(r8) :: TotalSum
+    real(r8), allocatable :: TotalSum(:)
+    integer :: ub  ! upper bound of the first dimension of arr
     !-----------------------------------------------------------------------
 
+    ub = ubound(arr, 1)
+    allocate(TotalSum(lb:ub))
     TotalSum = 1._r8
     if ( present(sumto) ) TotalSum = sumto
     if( present(ier) ) ier = 0
     found = .false.
 
-    do nl = lbound(arr, 1), ubound(arr, 1)
-       if (abs(sum(arr(nl,:)) - TotalSum) > eps) then
+    do nl = lbound(arr, 1), ub
+       if (abs(sum(arr(nl,:)) - TotalSum(nl)) > eps) then
           found = .true.
           nindx = nl
           exit
@@ -69,7 +72,7 @@ contains
     end do
 
     if (found) then
-       write(iulog,*) trim(caller), ' ERROR: sum of ', trim(name), ' not ', TotalSum, ' at nl=', nindx
+       write(iulog,*) trim(caller), ' ERROR: sum of ', trim(name), ' not ', TotalSum(nindx), ' at nl=', nindx
        write(iulog,*) 'sum is: ', sum(arr(nindx,:))
        if( present(ier) ) then
           ier = -10
@@ -250,7 +253,7 @@ contains
     integer :: m  ! pft or landunit index
     integer :: n  ! index of the order of the dominant pfts or landunits
     integer, allocatable :: max_indices(:)  ! array of dominant pft or landunit index values
-    real(r8) :: wt_sum  ! original sum of all the weights
+    real(r8) :: wt_sum(begg:endg)  ! original sum of all the weights
     real(r8) :: wt_dom_sum  ! sum of the weights of the dominants
 
     character(len=*), parameter :: subname = 'collapse_to_dominant'
@@ -275,7 +278,7 @@ contains
           ! Typically the original sum of weights = 1, but if
           ! collapse_urban = .true., it equals the sum of the urban landunits.
           ! Also set the remaining weights to 0.
-          wt_sum = sum(weight(g,:))  ! original sum of all the weights
+          wt_sum(g) = sum(weight(g,:))  ! original sum of all the weights
           wt_dom_sum = 0._r8  ! initialize the dominant pft or landunit sum
           do n = 1, n_dominant
              m = max_indices(n)
@@ -283,15 +286,15 @@ contains
           end do
           ! Normalize dominant pft or landunit weights to 1; if non-existent,
           ! set the weights to 0.
-          if (wt_sum > 0._r8 .and. wt_dom_sum <= 0._r8) then
+          if (wt_sum(g) > 0._r8 .and. wt_dom_sum <= 0._r8) then
              call endrun(msg = subname//' wt_dom_sum should never be <= 0'//&
                   ' but it is here ' // errMsg(sourcefile, __LINE__))
-          else if (wt_dom_sum > 0._r8) then  ! wt_sum > 0 is implied by this
+          else if (wt_dom_sum > 0._r8) then  ! wt_sum(g) > 0 is implied by this
              do n = 1, n_dominant
                 m = max_indices(n)
-                weight(g,m) = weight(g,m) * wt_sum / wt_dom_sum
+                weight(g,m) = weight(g,m) * wt_sum(g) / wt_dom_sum
              end do
-         !else  ! DO NOTHING because wt_sum = 0
+         !else  ! DO NOTHING because wt_sum(g) = 0
           end if
           ! Set non-dominant weights to 0
           do m = lower_bound, upper_bound
@@ -299,15 +302,10 @@ contains
                 weight(g,m) = 0._r8
              end if
           end do
-
        end do
 
-       ! Error check: Check that weight sums to 1 only if weight summed to 1
-       ! upon entering the subroutine. If weight did not sum to 1 upon entering
-       ! the subroutine, then weight will not sum to 1 now, either. Currently
-       ! the latter occurs when collapsing the urban landunits to the dominant
-       ! urban landunit.
-       if (wt_sum == 1._r8) call check_sums_equal_1(weight, begg, 'weight', subname)
+       ! Error check
+       call check_sums_equal_1(weight, begg, 'weight', subname, sumto=wt_sum)
 
        deallocate(max_indices)
     end if
@@ -384,7 +382,7 @@ contains
     ! This array is modified in-place
     real(r8), intent(inout) :: wt_cft(begg:, cft_lb:)
     real(r8), intent(inout) :: fert_cft(begg:, cft_lb:)
-    real(r8), intent(in), optional :: sumto                   ! What weights should sum to for one grid-cell
+    real(r8), intent(in), optional :: sumto(begg:endg)  ! What weights should sum to per grid-cell
 
     logical, intent(in) :: verbose  ! If true, print some extra information
     !
@@ -394,7 +392,7 @@ contains
     real(r8) :: wt_cft_to
     real(r8) :: wt_cft_from
     real(r8) :: wt_cft_merge
-    real(r8) :: TotalSum       ! What the total is expected to sum to
+    real(r8) :: TotalSum(begg:endg)  ! What the total is expected to sum to
 
     character(len=*), parameter :: subname = 'collapse_crop_types'
     !-----------------------------------------------------------------------
@@ -405,7 +403,7 @@ contains
        SHR_ASSERT_ALL((ubound(fert_cft) == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
 
        TotalSum = 1.0_r8
-       if ( present(sumto) ) TotalSum = sumto  ! e.g. sumto may = 100._r8
+       if ( present(sumto) ) TotalSum = sumto  ! e.g. sumto(g) may = 100._r8
 
        ! -----------------------------------------------------------------------
        ! If not using irrigation, merge irrigated CFTs into rainfed CFTs
