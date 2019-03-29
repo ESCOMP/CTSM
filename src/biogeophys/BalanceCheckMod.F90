@@ -608,7 +608,11 @@ contains
                      + eflx_wasteheat_patch(p) + eflx_heat_from_ac_patch(p) + eflx_traffic_patch(p)
              end if
              !TODO MV - move this calculation to a better place - does not belong in BalanceCheck 
-             netrad(p) = fsa(p) - eflx_lwrad_net(p) 
+             netrad(p) = fsa(p) - eflx_lwrad_net(p)
+          else
+             errsol(p) = 0._r8
+             errlon(p) = 0._r8
+             errseb(p) = 0._r8
           end if
        end do
 
@@ -699,7 +703,7 @@ contains
        errsoi_col_max_val  =  maxval( abs(errsoi_col(bounds%begc:bounds%endc)), mask = (errsoi_col(bounds%begc:bounds%endc) < spval) )
 
        if (errsoi_col_max_val > 1.0e-5_r8 ) then
-           indexc = maxloc( abs(errsoi_col(bounds%begc:bounds%endc)), 1 , mask = (errsoi_col(bounds%begc:bounds%endc) < spval) ) + bounds%begp -1
+           indexc = maxloc( abs(errsoi_col(bounds%begc:bounds%endc)), 1 , mask = (errsoi_col(bounds%begc:bounds%endc) < spval) ) + bounds%begc -1
            write(iulog,*)'WARNING: BalanceCheck: soil balance error (W/m2)'
            write(iulog,*)'nstep         = ',nstep
            write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
