@@ -420,11 +420,11 @@ contains
 
        end do
        
-       errh2o_max_val = maxval( abs(errh2o(bounds%begc:bounds%endc)), mask = (errh2o(bounds%begc:bounds%endc) < spval) )
+       errh2o_max_val = maxval( abs(errh2o(bounds%begc:bounds%endc)), mask = (errh2o(bounds%begc:bounds%endc) /= spval) )
 
        if (errh2o_max_val > h2o_warning_thresh) then
 
-           indexc = maxloc( abs(errh2o(bounds%begc:bounds%endc)), 1 , mask = (errh2o(bounds%begc:bounds%endc) < spval) ) + bounds%begc -1
+           indexc = maxloc( abs(errh2o(bounds%begc:bounds%endc)), 1 , mask = (errh2o(bounds%begc:bounds%endc) /= spval) ) + bounds%begc -1
            write(iulog,*)'WARNING:  water balance error ',&
              ' nstep= ',nstep, &
              ' local indexc= ',indexc,&
@@ -516,15 +516,16 @@ contains
                 snow_sinks(c) = 0._r8
                 errh2osno(c) = 0._r8
              end if
-
+          else
+             errh2osno(c) = 0._r8
           end if
        end do
 
 
-       errh2osno_max_val = maxval( abs(errh2osno(bounds%begc:bounds%endc)),  mask = (errh2osno(bounds%begc:bounds%endc) < spval) )
+       errh2osno_max_val = maxval( abs(errh2osno(bounds%begc:bounds%endc)),  mask = (errh2osno(bounds%begc:bounds%endc) /= spval) )
        
        if (errh2osno_max_val > h2o_warning_thresh) then
-            indexc = maxloc( abs(errh2osno(bounds%begc:bounds%endc)), 1 ,  mask = (errh2osno(bounds%begc:bounds%endc) < spval) ) + bounds%begc -1
+            indexc = maxloc( abs(errh2osno(bounds%begc:bounds%endc)), 1 ,  mask = (errh2osno(bounds%begc:bounds%endc) /= spval) ) + bounds%begc -1
             write(iulog,*)'WARNING:  snow balance error '
             write(iulog,*)'nstep= ',nstep, &
                  ' local indexc= ',indexc, &
@@ -618,11 +619,11 @@ contains
 
        ! Solar radiation energy balance check
 
-       errsol_max_val = maxval( abs(errsol(bounds%begp:bounds%endp)), mask = (errsol(bounds%begp:bounds%endp) < spval) ) 
+       errsol_max_val = maxval( abs(errsol(bounds%begp:bounds%endp)), mask = (errsol(bounds%begp:bounds%endp) /= spval) ) 
 
        if  ((errsol_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
 
-           indexp = maxloc( abs(errsol(bounds%begp:bounds%endp)), 1 , mask = (errsol(bounds%begp:bounds%endp) < spval) ) + bounds%begp -1
+           indexp = maxloc( abs(errsol(bounds%begp:bounds%endp)), 1 , mask = (errsol(bounds%begp:bounds%endp) /= spval) ) + bounds%begp -1
            indexg = patch%gridcell(indexp)
            !write(iulog,*)'indexg         = ',indexg
            write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
@@ -647,10 +648,10 @@ contains
        
        ! Longwave radiation energy balance check
 
-       errlon_max_val = maxval( abs(errlon(bounds%begp:bounds%endp)), mask = (errlon(bounds%begp:bounds%endp) < spval) )
+       errlon_max_val = maxval( abs(errlon(bounds%begp:bounds%endp)), mask = (errlon(bounds%begp:bounds%endp) /= spval) )
 
        if ((errlon_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
-            indexp = maxloc( abs(errlon(bounds%begp:bounds%endp)), 1 , mask = (errlon(bounds%begp:bounds%endp) < spval) ) + bounds%begp -1
+            indexp = maxloc( abs(errlon(bounds%begp:bounds%endp)), 1 , mask = (errlon(bounds%begp:bounds%endp) /= spval) ) + bounds%begp -1
             write(iulog,*)'indexp         = ',indexp
             write(iulog,*)'WARNING: BalanceCheck: longwave energy balance error (W/m2)'
             write(iulog,*)'nstep        = ',nstep
@@ -663,11 +664,11 @@ contains
 
        ! Surface energy balance check
 
-       errseb_max_val = maxval( abs(errseb(bounds%begp:bounds%endp)), mask = (errseb(bounds%begp:bounds%endp) < spval) )
+       errseb_max_val = maxval( abs(errseb(bounds%begp:bounds%endp)), mask = (errseb(bounds%begp:bounds%endp) /= spval) )
 
        if ((errseb_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
 
-           indexp = maxloc( abs(errseb(bounds%begp:bounds%endp)), 1 , mask = (errseb(bounds%begp:bounds%endp) < spval) ) + bounds%begp -1
+           indexp = maxloc( abs(errseb(bounds%begp:bounds%endp)), 1 , mask = (errseb(bounds%begp:bounds%endp) /= spval) ) + bounds%begp -1
            indexc = patch%column(indexp)
            indexg = patch%gridcell(indexp)
 
@@ -700,10 +701,10 @@ contains
 
        ! Soil energy balance check
 
-       errsoi_col_max_val  =  maxval( abs(errsoi_col(bounds%begc:bounds%endc)), mask = (errsoi_col(bounds%begc:bounds%endc) < spval) )
+       errsoi_col_max_val  =  maxval( abs(errsoi_col(bounds%begc:bounds%endc)), mask = (errsoi_col(bounds%begc:bounds%endc) /= spval) )
 
        if (errsoi_col_max_val > 1.0e-5_r8 ) then
-           indexc = maxloc( abs(errsoi_col(bounds%begc:bounds%endc)), 1 , mask = (errsoi_col(bounds%begc:bounds%endc) < spval) ) + bounds%begc -1
+           indexc = maxloc( abs(errsoi_col(bounds%begc:bounds%endc)), 1 , mask = (errsoi_col(bounds%begc:bounds%endc) /= spval) ) + bounds%begc -1
            write(iulog,*)'WARNING: BalanceCheck: soil balance error (W/m2)'
            write(iulog,*)'nstep         = ',nstep
            write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
