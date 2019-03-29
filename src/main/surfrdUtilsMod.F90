@@ -81,6 +81,8 @@ contains
        end if
     end if
 
+    deallocate(TotalSum)
+
   end subroutine check_sums_equal_1
 
   !-----------------------------------------------------------------------
