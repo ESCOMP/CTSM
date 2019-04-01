@@ -706,11 +706,11 @@ contains
 
        ! Soil energy balance check
 
-       errsoi_col_max_val  =  maxval( abs(errsoi_col(bounds%begc:bounds%endc)) )
+       errsoi_col_max_val  =  maxval( abs(errsoi_col(bounds%begc:bounds%endc)) , mask = (errsoi_col(bounds%begc:bounds%endc) /= spval) )
        write(iulog,*)'errsoi_col_max_val      :', errsoi_col_max_val
 
        if (errsoi_col_max_val > 1.0e-5_r8 ) then
-           indexc = maxloc( abs(errsoi_col(bounds%begc:bounds%endc)), 1 ) + bounds%begc -1
+           indexc = maxloc( abs(errsoi_col(bounds%begc:bounds%endc)), 1 , mask = (errsoi_col(bounds%begc:bounds%endc) /= spval) ) + bounds%begc -1
            write(iulog,*)'WARNING: BalanceCheck: soil balance error (W/m2)'
            write(iulog,*)'nstep         = ',nstep
            write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
