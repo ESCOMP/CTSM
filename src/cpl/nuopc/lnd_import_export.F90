@@ -1215,20 +1215,24 @@ contains
 
        ! determine output array
        if (present(ungridded_index)) then
-          fldptr2d(:,:) = 0._r8
           if (gridToFieldMap == 1) then
+             fldptr2d(:,ungridded_index) = 0._r8
              do g = bounds%begg, bounds%endg
                 n = g - bounds%begg + 1
                 fldptr2d(n,ungridded_index) = input(g)
              end do
+             if (present(minus)) then
+                fldptr2d(:,ungridded_index) = -fldptr2d(:,ungridded_index)
+             end if
           else if (gridToFieldMap == 2) then
+             fldptr2d(ungridded_index,:) = 0._r8
              do g = bounds%begg, bounds%endg
                 n = g - bounds%begg + 1
                 fldptr2d(ungridded_index,n) = input(g)
              end do
-          end if
-          if (present(minus)) then
-             fldptr2d(:,:) = - fldptr2d(:,:)
+             if (present(minus)) then
+                fldptr2d(ungridded_index,:) = -fldptr2d(ungridded_index,:)
+             end if
           end if
        else
           fldptr1d(:) = 0._r8
