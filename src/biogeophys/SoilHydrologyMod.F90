@@ -2618,7 +2618,10 @@ contains
                 ! flow between channel and lowest column
                 ! bankfull height is defined to be zero
                 dgrad = (col%hill_elev(c)-zwt(c)) &
-                     - (tdepth(g) - tdepth_bankfull(g))
+!                     - (tdepth(g) - tdepth_bankfull(g))
+                     ! ignore overbankfull storage
+                     - min((tdepth(g) - tdepth_bankfull(g)),0._r8)
+
                 dgrad = dgrad / (col%hill_distance(c))
                 ! dgrad cannot be negative when channel is empty
                 if (tdepth(g) <= 0._r8) then

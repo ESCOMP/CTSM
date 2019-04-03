@@ -3493,7 +3493,7 @@ contains
              call htape_timeconst(t, mode='define')
 
              ! Define 3D time-constant field variables on first history tapes
-             if ( do_3Dtconst) then
+             if ( do_3Dtconst .and. t == 1) then
                 call htape_timeconst3D(t, &
                      bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='define')
                 TimeConst3DVars_Filename = trim(locfnh(t))
@@ -3512,7 +3512,7 @@ contains
           call htape_timeconst(t, mode='write')
 
           ! Write 3D time constant history variables to first history tapes
-          if ( do_3Dtconst .and. tape(t)%ntimes == 1 )then
+          if ( do_3Dtconst .and. t == 1 .and. tape(t)%ntimes == 1 )then
              call htape_timeconst3D(t, &
                   bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='write')
              do_3Dtconst = .false.

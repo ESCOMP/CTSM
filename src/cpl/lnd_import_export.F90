@@ -10,6 +10,8 @@ module lnd_import_export
   use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
   use Wateratm2lndBulkType , only: wateratm2lndbulk_type
   use clm_cpl_indices
+!scs
+  use GridcellType      , only : grc
   !
   implicit none
   !===============================================================================
@@ -423,6 +425,8 @@ contains
              end if
           end do
           write(iulog,*) 'gridcell index = ', g
+!scs
+          write(iulog,*) 'lon/lat = ', grc%londeg(g), grc%latdeg(g)
           call endrun( sub//' ERROR: One or more of the output from CLM to the coupler are NaN ' )
        end if
 

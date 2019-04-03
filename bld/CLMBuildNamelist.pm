@@ -2837,9 +2837,7 @@ sub setup_logic_hillslope {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hillslope' );
-  }
 }
 
 #-------------------------------------------------------------------------------
@@ -3569,7 +3567,7 @@ sub write_output_files {
                soilhydrology_inparm luna friction_velocity mineral_nitrogen_dynamics
                soilwater_movement_inparm rooting_profile_inparm
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
-               clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
+               clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm hillslope_hydrology_inparm
                cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
                water_tracers_inparm);
 
