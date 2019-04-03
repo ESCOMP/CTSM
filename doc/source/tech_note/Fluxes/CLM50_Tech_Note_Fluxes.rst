@@ -1531,7 +1531,7 @@ where :math:`\Delta T_{v} =1{\rm \; or\; }-1`. The error
 The error :math:`\lambda \Delta _{3}`  is added to the sensible heat
 flux later.
 
-#. Sensible heat flux :math:`H_{v}`  (:eq:`` ). The three energy error
+#. Sensible heat flux :math:`H_{v}`  (:eq:`5.135` ). The three energy error
    terms, :math:`\Delta _{1}` , :math:`\Delta _{2}` , and
    :math:`\lambda \Delta _{3}`  are also added to the sensible heat
    flux.
