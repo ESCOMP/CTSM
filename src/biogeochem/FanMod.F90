@@ -114,7 +114,7 @@ contains
     !kaq_base = 1e-4 * (gascnst*tg / (2*faraday**2)) / (1/lp + 1/lm)
 
     ! Van Der Molen 1990 fit of the base rate.
-    kaq_base = 9.8e-10_r8 * 1.03_r8 ** (Tg-273.0_r8)
+    kaq_base = 9.8e-10_r8 * 1.03_r8 ** (Tg-273.14_r8)
 
     diff = kaq_base * (theta**pw) / (thetasat**2)
 
