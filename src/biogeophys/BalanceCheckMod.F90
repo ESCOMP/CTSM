@@ -420,7 +420,6 @@ contains
        end do
        
        errh2o_max_val = maxval(abs(errh2o(bounds%begc:bounds%endc)))
-       write(iulog,*)'errh2o_max_val      :', errh2o_max_val
 
        if (errh2o_max_val > h2o_warning_thresh) then
 
@@ -523,7 +522,6 @@ contains
 
 
        errh2osno_max_val = maxval( abs(errh2osno(bounds%begc:bounds%endc)))
-       write(iulog,*)'errh2osno_max_val      :', errh2osno_max_val
        
        if (errh2osno_max_val > h2o_warning_thresh) then
             indexc = maxloc( abs(errh2osno(bounds%begc:bounds%endc)), 1) + bounds%begc -1
@@ -621,7 +619,6 @@ contains
        ! Solar radiation energy balance check
 
        errsol_max_val = maxval( abs(errsol(bounds%begp:bounds%endp)), mask = (errsol(bounds%begp:bounds%endp) /= spval) ) 
-       write(iulog,*)'errsol_max_val      :', errsol_max_val
 
        if  ((errsol_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
 
@@ -650,7 +647,6 @@ contains
        ! Longwave radiation energy balance check
 
        errlon_max_val = maxval( abs(errlon(bounds%begp:bounds%endp)), mask = (errlon(bounds%begp:bounds%endp) /= spval) )
-       write(iulog,*)'errlon_max_val      :', errlon_max_val
 
        if ((errlon_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
             indexp = maxloc( abs(errlon(bounds%begp:bounds%endp)), 1 , mask = (errlon(bounds%begp:bounds%endp) /= spval) ) + bounds%begp -1
@@ -667,7 +663,6 @@ contains
        ! Surface energy balance check
 
        errseb_max_val = maxval( abs(errseb(bounds%begp:bounds%endp)))
-       write(iulog,*)'errseb_max_val      :', errseb_max_val
 
        if ((errseb_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
 
@@ -705,7 +700,6 @@ contains
        ! Soil energy balance check
 
        errsoi_col_max_val  =  maxval( abs(errsoi_col(bounds%begc:bounds%endc)) , mask = col%active(c))
-       write(iulog,*)'errsoi_col_max_val      :', errsoi_col_max_val
 
        if (errsoi_col_max_val > 1.0e-5_r8 ) then
            indexc = maxloc( abs(errsoi_col(bounds%begc:bounds%endc)), 1 , mask = col%active(c) ) + bounds%begc -1
