@@ -294,6 +294,8 @@ contains
     use NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
+    use CNVegStateType        , only : cnveg_state_type
+    use SoilBiogeochemDecompCascadeBGCMod, only: init_cultivation, set_cultivation_levels
     use BalanceCheckMod       , only : BalanceCheckInit
     !
     ! !ARGUMENTS    
@@ -319,6 +321,7 @@ contains
     real(r8)              :: eccf         ! earth orbit eccentricity factor
     type(bounds_type)     :: bounds_proc  ! processor bounds
     type(bounds_type)     :: bounds_clump ! clump bounds
+    type(cnveg_state_type):: cnveg_state_inst !ADDED FOR CULTIVATION / TILLAGE  CODE
     logical               :: lexist
     integer               :: closelatidx,closelonidx
     real(r8)              :: closelat,closelon
@@ -627,6 +630,21 @@ contains
           call ndep_interp(bounds_proc, atm2lnd_inst)
        end if
        call t_stopf('init_ndep')
+    end if
+
+    ! ------------------------------------------------------------------------
+    ! Crop and cultivation
+    ! ------------------------------------------------------------------------
+    if ( use_cn .and. use_century_decomp .and. use_crop .and. use_vertsoilc)then
+       call init_cultivation( bounds_proc )
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1, nclumps
+          call get_clump_bounds(nc, bounds_clump)
+          call set_cultivation_levels( bounds_clump, filter(nc)%num_soilp, &
+                                       filter(nc)%soilp,                   &
+                                       cnveg_state_inst%gdp_lf_col(bounds_clump%begc:bounds_clump%endc) )
+       end do
+       !$OMP END PARALLEL DO
     end if
 
     ! ------------------------------------------------------------------------
