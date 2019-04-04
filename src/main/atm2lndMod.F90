@@ -158,13 +158,15 @@ contains
          forc_q_g     => wateratm2lndbulk_inst%forc_q_not_downscaled_grc    , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
          forc_pbot_g  => atm2lnd_inst%forc_pbot_not_downscaled_grc , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)               
          forc_rho_g   => atm2lnd_inst%forc_rho_not_downscaled_grc  , & ! Input:  [real(r8) (:)]  atmospheric density (kg/m**3)           
+         forc_solad_g => atm2lnd_inst%forc_solad_grc               , & ! Input:  [real(r8) (:)]  gridcell direct incoming solar radiation
          
          ! Column-level downscaled fields:
          forc_t_c     => atm2lnd_inst%forc_t_downscaled_col        , & ! Output: [real(r8) (:)]  atmospheric temperature (Kelvin)        
          forc_th_c    => atm2lnd_inst%forc_th_downscaled_col       , & ! Output: [real(r8) (:)]  atmospheric potential temperature (Kelvin)
          forc_q_c     => wateratm2lndbulk_inst%forc_q_downscaled_col        , & ! Output: [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
          forc_pbot_c  => atm2lnd_inst%forc_pbot_downscaled_col     , & ! Output: [real(r8) (:)]  atmospheric pressure (Pa)               
-         forc_rho_c   => atm2lnd_inst%forc_rho_downscaled_col        & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
+         forc_rho_c   => atm2lnd_inst%forc_rho_downscaled_col      , & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
+         forc_solad_c => atm2lnd_inst%forc_solad_col                 & ! Output:  [real(r8) (:)]  column direct incoming solar radiation
          )
       
       ! Initialize column forcing (needs to be done for ALL active columns)
@@ -177,6 +179,7 @@ contains
             forc_q_c(c)     = forc_q_g(g)
             forc_pbot_c(c)  = forc_pbot_g(g)
             forc_rho_c(c)   = forc_rho_g(g)
+            forc_solad_c(c,1:numrad) = forc_solad_g(g,1:numrad)
          end if
       end do
 
