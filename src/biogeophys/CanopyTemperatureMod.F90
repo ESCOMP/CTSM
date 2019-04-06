@@ -400,18 +400,15 @@ contains
       ! of its dynamics call.  If and when crops are
       ! enabled simultaneously with FATES, we will 
       ! have to apply a filter here.
-!      if(use_fates) then
-!         call clm_fates%TransferZ0mDisp(bounds,frictionvel_inst,canopystate_inst)
-!      end if
+      if(use_fates) then
+         call clm_fates%TransferZ0mDisp(bounds,frictionvel_inst,canopystate_inst)
+      end if
 
       do fp = 1,num_nolakep
          p = filter_nolakep(fp)
          if( .not.(patch%is_fates(p))) then
             z0m(p)    = z0mr(patch%itype(p)) * htop(p)
             displa(p) = displar(patch%itype(p)) * htop(p)
-         else
-            z0m(p)    = 1.0_r8
-            displa(p) = 10.0_r8
          end if
       end do
 
