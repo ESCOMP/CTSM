@@ -1933,11 +1933,6 @@ contains
        frictionvel_inst%z0m_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
        canopystate_inst%displa_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
 
-       if(this%fates(ci)%sites(s)%youngest_patch%patchno<1 .or. this%fates(ci)%sites(s)%youngest_patch%patchno>14)then
-          write(iulog,*) 'weird patch numbers',this%fates(ci)%sites(s)%youngest_patch%patchno
-          call endrun(msg=errMsg(sourcefile, __LINE__))
-       end if
-
        do ifp = 1, this%fates(ci)%sites(s)%youngest_patch%patchno
           p = ifp+col%patchi(c)
           frictionvel_inst%z0m_patch(p) = this%fates(ci)%bc_out(s)%z0m_pa(ifp)
