@@ -213,6 +213,12 @@
     <lname>1850_DATM%CPLHIST_CLM50%BGC_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
+<!-- I CLM50 NWP Compsets -->
+
+  <compset>
+    <alias>I2000Nwp50SpGswpGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%NWP-SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
 
 <!-- I CLM45 Compsets -->
 

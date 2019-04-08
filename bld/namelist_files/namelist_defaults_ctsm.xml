@@ -124,8 +124,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <organic_frac_squared phys="clm4_5" >.true.</organic_frac_squared>
 <organic_frac_squared phys="clm5_0" >.false.</organic_frac_squared>
 
-<soil_layerstruct phys="clm5_0">20SL_8.5m</soil_layerstruct>
-<soil_layerstruct phys="clm4_5">10SL_3.5m</soil_layerstruct>
+<soil_layerstruct structure="fast">5SL_3m</soil_layerstruct>
+<soil_layerstruct structure="standard" phys="clm5_0">20SL_8.5m</soil_layerstruct>
+<soil_layerstruct structure="standard" phys="clm4_5">10SL_3.5m</soil_layerstruct>
 
 <use_bedrock phys="clm5_0" use_fates =".true.">.false.</use_bedrock>
 <use_bedrock phys="clm5_0" vichydro ="1"      >.false.</use_bedrock>
@@ -231,6 +232,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Canopy fluxes namelist defaults -->
 <use_undercanopy_stability phys="clm5_0">.false.</use_undercanopy_stability>
 <use_undercanopy_stability phys="clm4_5">.true.</use_undercanopy_stability>
+
+<itmax_canopy_fluxes structure="standard">40</itmax_canopy_fluxes>
+<itmax_canopy_fluxes structure="fast">3</itmax_canopy_fluxes>
 
 <!-- Canopy hydrology namelist defaults -->
 <use_clm5_fpi phys="clm5_0">.true.</use_clm5_fpi>
@@ -447,9 +451,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <nnegcrit phys="clm4_5" use_cn=".true.">-6.d+1</nnegcrit>
 
 <!-- Plant hydraulic stress -->
-<use_hydrstress phys="clm4_5"                 >.false.</use_hydrstress>
-<use_hydrstress phys="clm5_0" use_fates=".true." >.false.</use_hydrstress>
-<use_hydrstress phys="clm5_0" use_fates=".false.">.true.</use_hydrstress>
+<use_hydrstress>.false.</use_hydrstress>
+<use_hydrstress phys="clm5_0" use_fates=".false." configuration="clm">.true.</use_hydrstress>
 <!--
 
      Initial condition files to use and or interpolate from
@@ -1137,6 +1140,15 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <create_crop_landunit     use_fates=".true." >.false.</create_crop_landunit>
 
 <run_zero_weight_urban>.false.</run_zero_weight_urban>
+
+<collapse_urban structure="standard">.false.</collapse_urban>
+<collapse_urban structure="fast">.true.</collapse_urban>
+
+<n_dom_landunits structure="standard">0</n_dom_landunits>
+<n_dom_landunits structure="fast">1</n_dom_landunits>
+
+<n_dom_pfts structure="standard">0</n_dom_pfts>
+<n_dom_pfts structure="fast">1</n_dom_pfts>
 
 <!-- =========================================  -->
 <!-- Performance issues                         -->
