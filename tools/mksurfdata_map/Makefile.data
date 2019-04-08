@@ -130,7 +130,7 @@ global-present-ne120np4 : FORCE
 	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res ne120np4 $(BACKGROUND)
 
 global-present-nldas : FORCE
-	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res 224x464_nldas $(BACKGROUND)
+	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res 0.125nldas2 $(BACKGROUND)
 
 global-historical : FORCE
 	$(MKSURFDATA) -no-crop -glc_nec 10 -y 1850 -res $(STANDARD_RES) $(BACKGROUND)

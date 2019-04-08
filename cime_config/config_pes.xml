@@ -671,7 +671,7 @@
       </pes>
     </mach>
   </grid>
-  <grid name="l%224x464">
+  <grid name="l%0.125nldas2">
     <mach name="any">
       <pes pesize="any" compset="any">
         <comment>none</comment>
@@ -708,7 +708,7 @@
       </pes>
     </mach>
   </grid>
-  <grid name="l%224x464">
+  <grid name="l%0.125nldas2">
     <mach name="cheyenne">
       <pes pesize="any" compset="any">
         <comment>none</comment>
