@@ -2329,6 +2329,52 @@ If TRUE, apply harvest from flanduse_timeseries file.
 (Also, only valid for use_cn = true.)
 </entry>
 
+<entry id="reset_dynbal_baselines" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="">
+If TRUE, reset baseline values of total column water and energy in the
+first step of the run. This should typically be set when transitioning
+from an offline spinup to a coupled run with transient glaciers, and
+*possibly* when transitioning from the spinup to the transient portion
+of a coupled run with transient glaciers; it should typically remain
+unset at other times.
+
+These baseline values are computed only for particular columns
+(currently, only for glacier columns). They provide values that are
+subtracted from the current state when counting total column water and
+energy. For glacier columns, these discount the water and energy
+contents in the "virtual" glacier ice, while adding representative
+amounts of water and energy in the non-explicitly-modeled soil beneath
+the ice. Subtracting these baselines reduces the fictitious dynbal
+fluxes generated when total grid cell water and energy changes as a
+result of dynamic column/landunit areas.
+
+These baseline values are initially computed based on cold start
+states. If this flag remains unset (.false.), these baseline values will
+remain fixed at their cold start values. This will conserve mass and
+energy, but may result in larger-than-desired dynbal energy fluxes (and,
+in principle, also larger dynbal water fluxes; but currently, the mass
+of glacier ice remains fixed over time, so dynbal water fluxes are
+fairly small regardless of whether this flag is ever set). To further
+reduce these dynbal fluxes, you can set this flag to .true. when
+starting a startup or hybrid run from a partially or entirely spun-up
+state. This will reset the baseline values based on the state at the
+start of this run.
+
+Note that setting this flag can break water and energy conservation!
+Specifically, any water and energy that has previously been added to or
+removed from states that contribute to these baselines (currently, (a)
+glacier ice and (b) soil water and energy in the vegetated landunit in
+the same grid cell as glaciers) will effectively be ignored when
+computing conservation corrections due to land cover change. Instead,
+only the change in states from this point forward will be
+considered. So, for example, this flag should NOT be set when
+transitioning from a historical run to a future scenario.
+
+This setting only impacts startup and hybrid runs; it has no effect in a
+continue run; it is an error for this to be set in a branch
+run. Furthermore, this setting has no effect in a cold start run.
+</entry>
+
 <entry id="for_testing_allow_non_annual_changes" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 If TRUE, allow area changes at times other than the year boundary. This should

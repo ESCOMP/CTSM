@@ -100,7 +100,7 @@ class TestRunSysTests(unittest.TestCase):
         (1) The use of a testlist argument
 
         (2) The standard arguments to create_test (the path to create_test, the arguments
-        --test-id and --test-root, and the absence of --compare and --generate)
+        --test-id and --output-root, and the absence of --compare and --generate)
 
         (3) That a cs.status.fails file was created
         """
@@ -117,7 +117,7 @@ class TestRunSysTests(unittest.TestCase):
         six.assertRegex(self, command, r'^ *{}\s'.format(re.escape(expected_create_test)))
         six.assertRegex(self, command, r'--test-id +{}\s'.format(self._expected_testid()))
         expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
-        six.assertRegex(self, command, r'--test-root +{}\s'.format(expected_testroot_path))
+        six.assertRegex(self, command, r'--output-root +{}\s'.format(expected_testroot_path))
         six.assertRegex(self, command, r'test1 +test2(\s|$)')
         assertNotRegex(self, command, r'--compare\s')
         assertNotRegex(self, command, r'--generate\s')
@@ -156,7 +156,7 @@ class TestRunSysTests(unittest.TestCase):
         command = all_commands[0].cmd
         six.assertRegex(self, command, r'--test-id +mytestid(\s|$)')
         expected_testroot = os.path.join(testroot_base, 'tests_mytestid')
-        six.assertRegex(self, command, r'--test-root +{}(\s|$)'.format(expected_testroot))
+        six.assertRegex(self, command, r'--output-root +{}(\s|$)'.format(expected_testroot))
         six.assertRegex(self, command, r'--testfile +/path/to/testfile(\s|$)')
         six.assertRegex(self, command, r'--compare +mycompare(\s|$)')
         six.assertRegex(self, command, r'--generate +mygenerate(\s|$)')
