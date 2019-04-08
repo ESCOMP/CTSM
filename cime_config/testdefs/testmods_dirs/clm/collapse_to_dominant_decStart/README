@@ -1,5 +1,5 @@
-This test collapses unmanaged pfts to the 2 dominant ones to run the model
-faster.
+This test collapses unmanaged pfts to the 2 dominant ones and landunits
+to the two dominant ones to run the model faster.
 
 Collapsing pfts found in the surface dataset to a subset means that we need to
 set check_dynpft_consistency = .false. to avoid the inconsistency between what

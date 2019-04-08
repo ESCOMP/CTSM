@@ -21,7 +21,9 @@ module unittestWaterTypeFactory
   !
   !    - In the unit test tearDown method, before unittest_subgrid_teardown: call teardown()
 
+#include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use shr_log_mod, only : errMsg => shr_log_errMsg
   use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno
   use ColumnType, only : col
   use WaterType, only : water_type, water_params_type
@@ -39,6 +41,9 @@ module unittestWaterTypeFactory
      procedure, public :: create_water_type
      procedure, public :: teardown
   end type unittest_water_type_factory_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
 
 contains
 
@@ -85,6 +90,7 @@ contains
   end subroutine setup_after_subgrid
 
   subroutine create_water_type(this, water_inst, &
+       t_soisno_col, watsat_col, &
        enable_consistency_checks, enable_isotopes)
     ! Initialize water_inst
     !
@@ -97,14 +103,31 @@ contains
     ! false.
     class(unittest_water_type_factory_type), intent(in) :: this
     type(water_type), intent(inout) :: water_inst
+
+    ! Temperature of each soil and snow layer, for each column and layer. Second
+    ! dimension should go from -nlevsno+1..nlevgrnd. If not provided, we use arbitrary
+    ! values for this variable.
+    real(r8), intent(in), optional :: t_soisno_col( bounds%begc: , -nlevsno+1: )
+
+    ! watsat for each soil layer, for each column. Second dimension should go from
+    ! 1..nlevgrnd. If not provided, we use arbitrary values for this variable.
+    real(r8), intent(in), optional :: watsat_col( bounds%begc: , 1: )
+
     logical, intent(in), optional :: enable_consistency_checks
     logical, intent(in), optional :: enable_isotopes
 
     logical :: l_enable_consistency_checks
     logical :: l_enable_isotopes
     type(water_params_type) :: params
-    real(r8), allocatable :: watsat_col(:,:)
-    real(r8), allocatable :: t_soisno_col(:,:)
+    real(r8) :: l_watsat_col(bounds%begc:bounds%endc, nlevgrnd)
+    real(r8) :: l_t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd)
+
+    if (present(t_soisno_col)) then
+       SHR_ASSERT_ALL((ubound(t_soisno_col) == [bounds%endc, nlevgrnd]), errMsg(sourcefile, __LINE__))
+    end if
+    if (present(watsat_col)) then
+       SHR_ASSERT_ALL((ubound(watsat_col) == [bounds%endc, nlevgrnd]), errMsg(sourcefile, __LINE__))
+    end if
 
     if (present(enable_consistency_checks)) then
        l_enable_consistency_checks = enable_consistency_checks
@@ -122,16 +145,23 @@ contains
          enable_consistency_checks = l_enable_consistency_checks, &
          enable_isotopes = l_enable_isotopes)
 
-    allocate(watsat_col(bounds%begc:bounds%endc, nlevgrnd))
-    watsat_col(:,:) = 0._r8
-    allocate(t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
-    t_soisno_col(:,:) = 275._r8
+    if (present(watsat_col)) then
+       l_watsat_col(:,:) = watsat_col(:,:)
+    else
+       l_watsat_col(:,:) = 0.2_r8
+    end if
+
+    if (present(t_soisno_col)) then
+       l_t_soisno_col(:,:) = t_soisno_col(:,:)
+    else
+       l_t_soisno_col(:,:) = 275._r8
+    end if
 
     call water_inst%InitForTesting(bounds, params, &
          h2osno_col = col_array(0._r8), &
          snow_depth_col = col_array(0._r8), &
-         watsat_col = watsat_col, &
-         t_soisno_col = t_soisno_col)
+         watsat_col = l_watsat_col, &
+         t_soisno_col = l_t_soisno_col)
   end subroutine create_water_type
 
   subroutine teardown(this, water_inst)
