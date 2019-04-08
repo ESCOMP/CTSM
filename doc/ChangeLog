@@ -86,8 +86,6 @@ Pull Requests that document the changes (include PR ids): #641
 
 ===============================================================
 ===============================================================
-||||||| merged common ancestors
-=======
 Tag name:  ctsm1.0.dev032
 Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
 Date: Mon Apr  8 08:26:57 MDT 2019
@@ -428,7 +426,6 @@ Pull Requests that document the changes (include PR ids):
 
 ===============================================================
 ===============================================================
->>>>>>> ctsm1.0.dev032
 Tag name:  ctsm1.0.dev030
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Mar  8 15:08:34 MST 2019
