@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev032
 Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
-Date:  Fri Apr  5 13:49:22 MDT 2019
+Date: Mon Apr  8 08:26:57 MDT 2019
 One-line Summary: Fixing the balance check to check for possible errors over all columns/patches
 
 Purpose of changes
@@ -23,12 +23,12 @@ Below is the list of the balance checks with a similar issue:
 5. Surface energy balance check
 6. Soil energy balance check (Issue #55)
 
-For remediating this issue, we used MAXVAL and MAXLOC intrinsic functions
+For remediating this issue, we used MAXVAL and MAXLOC Fortran intrinsic functions
 to compare the largest error with the warning and error thresholds instead
 of checking the last column or looping over all columns.
 
 
-In addition, this PR also makes slight changes to ./run_sys_tests output
+In addition, this PR also makes slight changes to ./run_sys_tests outputi/case
 directory structure. Previously for each case in a test suite, there were 
 two set of directories created by run_sys_tests as follows:
  * one directory which included run/ and bld/ and named as $SCRATCH/[case-name]....
@@ -36,9 +36,9 @@ two set of directories created by run_sys_tests as follows:
      for ./case.build, ./case.submit... under $SCRATCH/tests-[testID]/[case-name]....
 
 This made debugging confusing and populated many folders in user's scratch.
-Now, for every case in a test, all directories related to that cases
-including bld/ and run/ directories are nested under the case directory.
-This is similar to ./create_test output folder structure.
+Now, for every case in a test, all directories related to that case
+including bld/ and run/ directories are nested under the case directory under $SCRATCH/tests-[testID]/[case-name]....
+This is now similar to ./create_test output folder structure.
 
 
 
@@ -80,7 +80,7 @@ NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
 Changes to tests or testing: 
- - ./run_sys_test is changed so that it nests bld/ and run/ directories under the case directory as $SCRATCH/tests-[testID/[case-name]...
+ - ./run_sys_test is changed so that it nests bld/ and run/ directories under the case directory as $SCRATCH/tests-[testID]/[case-name]...
    The output folder structure now is similar to ./create_test for each case in a test.
 
 Code reviewed by: Bill Sacks
