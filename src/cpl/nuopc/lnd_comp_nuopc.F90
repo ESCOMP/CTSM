@@ -17,14 +17,8 @@ module lnd_comp_nuopc
   use shr_sys_mod           , only : shr_sys_abort
   use shr_log_mod           , only : shr_log_Unit
   use shr_file_mod          , only : shr_file_getlogunit, shr_file_setlogunit
-  use shr_file_mod          , only : shr_file_getloglevel, shr_file_setloglevel, shr_file_getUnit
   use shr_orb_mod           , only : shr_orb_decl
   use shr_cal_mod           , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
-  use shr_nuopc_scalars_mod , only : flds_scalar_name
-  use shr_nuopc_scalars_mod , only : flds_scalar_num
-  use shr_nuopc_scalars_mod , only : flds_scalar_index_nx
-  use shr_nuopc_scalars_mod , only : flds_scalar_index_ny
-  use shr_nuopc_scalars_mod , only : flds_scalar_index_nextsw_cday
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_chkerr
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_State_SetScalar
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_State_GetScalar
@@ -66,9 +60,17 @@ module lnd_comp_nuopc
   ! Private module data
   !--------------------------------------------------------------------------
 
-  integer, parameter         :: dbug = 1
-  character(*),parameter     :: modName =  "(lnd_comp_nuopc)"
-  character(*),parameter     :: u_FILE_u = &
+  character(len=CL)      :: flds_scalar_name = ''
+  integer                :: flds_scalar_num = 0
+  integer                :: flds_scalar_index_nx = 0
+  integer                :: flds_scalar_index_ny = 0
+  integer                :: flds_scalar_index_nextsw_cday = 0._r8
+
+  logical                :: glc_present 
+  logical                :: rof_prognostic
+  integer, parameter     :: dbug = 1
+  character(*),parameter :: modName =  "(lnd_comp_nuopc)"
+  character(*),parameter :: u_FILE_u = &
        __FILE__
 
 !===============================================================================
@@ -79,11 +81,10 @@ contains
     type(ESMF_GridComp)  :: gcomp
     integer, intent(out) :: rc
 
-    integer :: dbrc
     character(len=*),parameter  :: subname=trim(modName)//':(SetServices) '
 
     rc = ESMF_SUCCESS
-    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     ! the NUOPC gcomp component will register the generic methods
     call NUOPC_CompDerive(gcomp, model_routine_SS, rc=rc)
@@ -119,7 +120,7 @@ contains
          specRoutine=ModelFinalize, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine SetServices
 
@@ -147,7 +148,6 @@ contains
 
   subroutine InitializeAdvertise(gcomp, importState, exportState, clock, rc)
 
-    ! uses
     use shr_nuopc_utils_mod, only : shr_nuopc_set_component_logging
     use shr_nuopc_utils_mod, only : shr_nuopc_get_component_instance
 
@@ -158,26 +158,22 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_VM)               :: vm
-    integer                     :: lmpicom
-    character(ESMF_MAXSTR)      :: cvalue
-    logical                     :: exists
-    integer                     :: ierr       ! error code
-    integer                     :: n,nflds
-    logical                     :: isPresent
-    character(len=512)          :: diro
-    character(len=512)          :: logfile
-    integer                     :: localpet
-    integer                     :: compid      ! component id
-    integer                     :: dbrc
-    integer                     :: shrlogunit ! original log unit
-    integer                     :: shrloglev  ! original log level
+    type(ESMF_VM)      :: vm
+    integer            :: lmpicom
+    integer            :: ierr 
+    integer            :: n
+    integer            :: localpet
+    integer            :: compid      ! component id
+    integer            :: shrlogunit  ! original log unit
+    character(len=CL)  :: cvalue
+    character(len=CL)  :: logmsg
+    logical            :: isPresent, isSet
     character(len=*), parameter :: subname=trim(modName)//':(InitializeAdvertise) '
     character(len=*), parameter :: format = "('("//trim(subname)//") :',A)"
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     !----------------------------------------------------------------------------
     ! generate local mpi comm
@@ -214,28 +210,101 @@ contains
     ! reset shr logging to my log file
     !----------------------------------------------------------------------------
 
-    call shr_nuopc_set_component_logging(gcomp, localPet==0, iulog, shrlogunit, shrloglev)
+    call shr_nuopc_set_component_logging(gcomp, localPet==0, iulog, shrlogunit)
 
     !----------------------------------------------------------------------------
     ! advertise fields
     !----------------------------------------------------------------------------
 
-    call advertise_fields(gcomp, rc)
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldName", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       flds_scalar_name = trim(cvalue)
+       call ESMF_LogWrite(trim(subname)//' flds_scalar_name = '//trim(flds_scalar_name), ESMF_LOGMSG_INFO)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       call shr_sys_abort(subname//'Need to set attribute ScalarFieldName')
+    endif
+
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldCount", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue, *) flds_scalar_num
+       write(logmsg,*) flds_scalar_num
+       call ESMF_LogWrite(trim(subname)//' flds_scalar_num = '//trim(logmsg), ESMF_LOGMSG_INFO)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       call shr_sys_abort(subname//'Need to set attribute ScalarFieldCount')
+    endif
+
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxGridNX", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) flds_scalar_index_nx
+       write(logmsg,*) flds_scalar_index_nx
+       call ESMF_LogWrite(trim(subname)//' : flds_scalar_index_nx = '//trim(logmsg), ESMF_LOGMSG_INFO)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       call shr_sys_abort(subname//'Need to set attribute ScalarFieldIdxGridNX')
+    endif
+
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxGridNY", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) flds_scalar_index_ny
+       write(logmsg,*) flds_scalar_index_ny
+       call ESMF_LogWrite(trim(subname)//' : flds_scalar_index_ny = '//trim(logmsg), ESMF_LOGMSG_INFO)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       call shr_sys_abort(subname//'Need to set attribute ScalarFieldIdxGridNY')
+    endif
+
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxNextSwCday", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       read(cvalue,*) flds_scalar_index_nextsw_cday
+       write(logmsg,*) flds_scalar_index_nextsw_cday
+       call ESMF_LogWrite(trim(subname)//' : flds_scalar_index_nextsw_cday = '//trim(logmsg), ESMF_LOGMSG_INFO)
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       call shr_sys_abort(subname//'Need to set attribute ScalarFieldIdxNextSwCday')
+    endif
+
+    call NUOPC_CompAttributeGet(gcomp, name='ROF_model', value=cvalue, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (trim(cvalue) == 'srof' .or. trim(cvalue) == 'drof') then
+       rof_prognostic = .false.
+    else
+       rof_prognostic = .true.
+    end if
+
+    call NUOPC_CompAttributeGet(gcomp, name='GLC_model', value=cvalue, rc=rc)
+    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (trim(cvalue) == 'sglc') then
+       glc_present = .false.
+    else
+       glc_present = .true.
+    end if
+
+    write(iulog,*)' rof_prognostic = ',rof_prognostic
+    write(iulog,*)' glc_present    = ',glc_present
+
+    call advertise_fields(gcomp, flds_scalar_name, glc_present, rof_prognostic, rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------------------------------------------------------------
     ! reset shr logging to original values
     !----------------------------------------------------------------------------
 
-    call shr_file_setLogLevel(shrloglev)
     call shr_file_setLogUnit (shrlogunit)
-    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine InitializeAdvertise
 
   !===============================================================================
 
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
+
     use clm_instMod, only : lnd2atm_inst, lnd2glc_inst, water_inst
 
     ! input/output variables
@@ -287,21 +356,18 @@ contains
     integer                 :: lbnum                 ! input to memory diagnostic
     type(bounds_type)       :: bounds                ! bounds
     integer                 :: shrlogunit ! original log unit
-    integer                 :: shrloglev  ! original log level
     character(ESMF_MAXSTR)  :: convCIM, purpComp
-    integer                 :: dbrc
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     !----------------------------------------------------------------------------
     ! Reset shr logging to my log file
     !----------------------------------------------------------------------------
 
     call shr_file_getLogUnit (shrlogunit)
-    call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (iulog)
 
 #if (defined _MEMTRACE)
@@ -503,7 +569,7 @@ contains
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! realize the actively coupled fields
-    call realize_fields(gcomp, Emesh, rc)
+    call realize_fields(gcomp,  Emesh, flds_scalar_name, flds_scalar_num, rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !--------------------------------
@@ -536,8 +602,8 @@ contains
     ! Create land export state
     !--------------------------------
 
-   call export_fields(gcomp, bounds, water_inst%waterlnd2atmbulk_inst, &
-        lnd2atm_inst, lnd2glc_inst, rc)
+    call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
+         water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Get calendar day of nextsw calculation
@@ -569,7 +635,6 @@ contains
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
 
-    call shr_file_setLogLevel(shrloglev)
     call shr_file_setLogUnit (shrlogunit)
 
 #ifdef USE_ESMF_METADATA
@@ -595,7 +660,7 @@ contains
     endif
 #endif
 
-    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine InitializeRealize
 
@@ -651,17 +716,13 @@ contains
     type(bounds_type)      :: bounds         ! bounds
     character(len=32)      :: rdate          ! date char string for restart file names
     integer                :: shrlogunit ! original log unit
-    integer                :: shrloglev  ! original log level
-    integer                :: dbrc
     character(len=*),parameter  :: subname=trim(modName)//':(ModelAdvance) '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     call shr_file_getLogUnit (shrlogunit)
-    call shr_file_getLogLevel(shrloglev)
-    call shr_file_setLogLevel(max(shrloglev,1))
     call shr_file_setLogUnit (iulog)
 
 #if (defined _MEMTRACE)
@@ -707,21 +768,6 @@ contains
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) mvelpp
 
-    ! Need to obtain glc_present and rof_present from config attributes - which is currently not
-    ! done  - for now set them to false
-    ! call NUOPC_CompAttributeGet(gcomp, name='glc_present', value=cvalue, rc=rc)
-    ! if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! read(cvalue,*) glc_present
-
-    ! call NUOPC_CompAttributeGet(gcomp, name='rof_present', value=cvalue, rc=rc)
-    ! if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! read(cvalue,*) rof_prognostic
-    ! TODO: is this right?? what is the right flag for this - do we
-    ! really need to know if the rof is prognostic
-
-    glc_present = .false. !***TODO***
-    rof_prognostic = .false. !***TODO***
-
     !--------------------------------
     ! Unpack import state
     !--------------------------------
@@ -729,8 +775,8 @@ contains
     call t_startf ('lc_lnd_import')
 
     call get_proc_bounds(bounds)
-    call import_fields( gcomp, bounds, glc_present, atm2lnd_inst, glc2lnd_inst, &
-         water_inst%wateratm2lndbulk_inst, rc )
+    call import_fields( gcomp, bounds, glc_present, rof_prognostic, &
+         atm2lnd_inst, glc2lnd_inst, water_inst%wateratm2lndbulk_inst, rc )
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call t_stopf ('lc_lnd_import')
@@ -830,8 +876,8 @@ contains
 
        call t_startf ('lc_lnd_export')
 
-       call export_fields(gcomp, bounds, water_inst%waterlnd2atmbulk_inst, &
-            lnd2atm_inst, lnd2glc_inst, rc)
+       call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
+            water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
        call t_stopf ('lc_lnd_export')
@@ -865,7 +911,7 @@ contains
        write(iulog,*)'ctsm ymd=',ymd     ,' ctsm tod= ',tod
        write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
        rc = ESMF_FAILURE
-       call ESMF_LogWrite(subname//" CTSM clock not in sync with Master Sync clock",ESMF_LOGMSG_ERROR, rc=dbrc)
+       call ESMF_LogWrite(subname//" CTSM clock not in sync with Master Sync clock",ESMF_LOGMSG_ERROR)
     end if
 
     !--------------------------------
@@ -884,10 +930,9 @@ contains
     ! Reset shr logging to my original values
     !--------------------------------
 
-    call shr_file_setLogLevel(shrloglev)
     call shr_file_setLogUnit (shrlogunit)
 
-    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -919,12 +964,11 @@ contains
 
     character(len=128)       :: name
     integer                  :: alarmcount
-    integer                  :: dbrc
     character(len=*),parameter :: subname=trim(modName)//':(ModelSetRunClock) '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     ! query the Component for its clocks
     call NUOPC_ModelGet(gcomp, driverClock=dclock, modelClock=mclock, rc=rc)
@@ -955,7 +999,7 @@ contains
 
        call ESMF_GridCompGet(gcomp, name=name, rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_LogWrite(subname//'setting alarms for' // trim(name), ESMF_LOGMSG_INFO, rc=dbrc)
+       call ESMF_LogWrite(subname//'setting alarms for' // trim(name), ESMF_LOGMSG_INFO)
 
        !----------------
        ! Restart alarm
@@ -996,7 +1040,7 @@ contains
     call ESMF_ClockSet(mclock, currTime=dcurrtime, timeStep=dtimestep, stopTime=mstoptime, rc=rc)
     if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine ModelSetRunClock
 
@@ -1007,7 +1051,6 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    integer                 :: dbrc
     character(*), parameter :: F00   = "('(lnd_comp_nuopc) ',8a)"
     character(*), parameter :: F91   = "('(lnd_comp_nuopc) ',73('-'))"
     character(len=*),parameter  :: subname=trim(modName)//':(ModelFinalize) '
@@ -1018,7 +1061,7 @@ contains
     !--------------------------------
 
     rc = ESMF_SUCCESS
-    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     if (masterproc) then
        write(iulog,F91)
@@ -1026,7 +1069,7 @@ contains
        write(iulog,F91)
     end if
 
-    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO, rc=dbrc)
+    call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine ModelFinalize
 
