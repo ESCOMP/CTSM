@@ -644,9 +644,7 @@ contains
     if (rof_prognostic) then
        call state_getimport(importState, 'Flrr_flood', bounds, output=wateratm2lndbulk_inst%forc_flood_grc, rc=rc )
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          wateratm2lndbulk_inst%forc_flood_grc(g) = -wateratm2lndbulk_inst%forc_flood_grc(g)
-       end do
+       wateratm2lndbulk_inst%forc_flood_grc(:) = -wateratm2lndbulk_inst%forc_flood_grc(:)
     else
        wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
     end if
@@ -654,19 +652,15 @@ contains
     if (rof_prognostic) then
        call state_getimport(importState, 'Flrr_volr', bounds, output=wateratm2lndbulk_inst%volr_grc, rc=rc )
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          wateratm2lndbulk_inst%volr_grc(g) = wateratm2lndbulk_inst%volr_grc(g) * (ldomain%area(g) * 1.e6_r8)
-       end do
+       wateratm2lndbulk_inst%volr_grc(:) = wateratm2lndbulk_inst%volr_grc(:) * (ldomain%area(:) * 1.e6_r8)
     else
-       wateratm2lndbulk_inst%volr_grc(:) = wateratm2lndbulk_inst%volr_grc(g) * (ldomain%area(g) * 1.e6_r8)
+       wateratm2lndbulk_inst%volr_grc(:) = 0._r8
     end if
 
     if (rof_prognostic) then
        call state_getimport(importState, 'Flrr_volrmch', bounds, output=wateratm2lndbulk_inst%volrmch_grc, rc=rc )
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          wateratm2lndbulk_inst%volrmch_grc(g) = wateratm2lndbulk_inst%volrmch_grc(g) * (ldomain%area(g) * 1.e6_r8)
-       end do
+       wateratm2lndbulk_inst%volrmch_grc(:) = wateratm2lndbulk_inst%volrmch_grc(:) * (ldomain%area(:) * 1.e6_r8)
     else
        wateratm2lndbulk_inst%volrmch_grc(:) = 0._r8
     end if

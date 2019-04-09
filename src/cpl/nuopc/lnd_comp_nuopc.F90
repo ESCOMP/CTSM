@@ -703,8 +703,6 @@ contains
     logical                :: nlend          ! .true. ==> last time-step
     logical                :: dosend         ! true => send data back to driver
     logical                :: doalb          ! .true. ==> do albedo calculation on this time step
-    logical                :: rof_prognostic ! .true. => running with a prognostic ROF model
-    logical                :: glc_present    ! .true. => running with a non-stub GLC model
     real(r8)               :: nextsw_cday    ! calday from clock of next radiation computation
     real(r8)               :: caldayp1       ! ctsm calday plus dtime offset
     integer                :: lbnum          ! input to memory diagnostic
