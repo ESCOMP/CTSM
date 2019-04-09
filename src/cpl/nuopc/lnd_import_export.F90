@@ -12,7 +12,6 @@ module lnd_import_export
   use shr_string_mod        , only : shr_string_listGetName, shr_string_listGetNum
   use shr_sys_mod           , only : shr_sys_abort
   use shr_nuopc_methods_mod , only : shr_nuopc_methods_chkerr
-  use shr_nuopc_scalars_mod , only : flds_scalar_name, flds_scalar_num
   use clm_varctl            , only : iulog
   use clm_time_manager      , only : get_nstep
   use decompmod             , only : bounds_type
@@ -80,13 +79,16 @@ module lnd_import_export
 contains
 !===============================================================================
 
-  subroutine advertise_fields(gcomp, rc)
+  subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, rof_prognostic, rc)
 
     use clm_varctl, only : ndep_from_cpl
 
     ! input/output variables
-    type(ESMF_GridComp)  :: gcomp
-    integer, intent(out) :: rc
+    type(ESMF_GridComp)            :: gcomp
+    character(len=*) , intent(in)  :: flds_scalar_name
+    logical          , intent(in)  :: glc_present
+    logical          , intent(in)  :: rof_prognostic
+    integer          , intent(out) :: rc
 
     ! local variables
     type(ESMF_State)       :: importState
@@ -156,11 +158,13 @@ contains
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_ram1'       )
 
     ! export fluxes to river
-    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofsur'   )
-    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofgwl'   )
-    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofsub'   )
-    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofi'     )
-    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_irrig'    )
+    if (rof_prognostic) then
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofsur'   )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofgwl'   )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofsub'   )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofi'     )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_irrig'    )
+    end if
 
     ! export fluxes to atm
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_taux'     )
@@ -211,13 +215,15 @@ contains
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_soilw') ! optional for carma
     end if
 
-    ! lnd->glc states from land all lnd->glc elevation classes (1:glc_nec) plus bare land (index 0).
-    ! The following puts all of the elevation class fields as an
-    ! undidstributed dimension in the export state field
+    if (glc_present) then
+       ! lnd->glc states from land all lnd->glc elevation classes (1:glc_nec) plus bare land (index 0).
+       ! The following puts all of the elevation class fields as an
+       ! undidstributed dimension in the export state field
 
-    call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_tsrf_elev'  , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
-    call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_topo_elev'  , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
-    call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Flgl_qice_elev', ungridded_lbound=1, ungridded_ubound=glc_nec+1)
+       call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_tsrf_elev'  , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
+       call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_topo_elev'  , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
+       call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Flgl_qice_elev', ungridded_lbound=1, ungridded_ubound=glc_nec+1)
+    end if
 
     ! Now advertise above export fields
     do n = 1,fldsFrLnd_num
@@ -283,19 +289,23 @@ contains
        call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_co2diag')
     end if
 
-    ! from river
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_flood'   )
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_volr'    )
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_volrmch' )
+    if (rof_prognostic) then
+       ! from river
+       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_flood'   )
+       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_volr'    )
+       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_volrmch' )
+    end if
 
-    ! from land-ice (glc) - no elevation classes 
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask'               )
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask_coupled_fluxes')
-
-    ! from land-ice (glc) - fields for all glc->lnd elevation classes (1:glc_nec) plus bare land (index 0)
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_ice_covered_elev', ungridded_lbound=1, ungridded_ubound=glc_nec+1)
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_topo_elev'       , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
-    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flgg_hflx_elev'     , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
+    if (glc_present) then
+       ! from land-ice (glc) - no elevation classes 
+       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask'               )
+       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask_coupled_fluxes')
+       
+       ! from land-ice (glc) - fields for all glc->lnd elevation classes (1:glc_nec) plus bare land (index 0)
+       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_ice_covered_elev', ungridded_lbound=1, ungridded_ubound=glc_nec+1)
+       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_topo_elev'       , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
+       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flgg_hflx_elev'     , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
+    end if
 
     ! Now advertise import fields
     do n = 1,fldsToLnd_num
@@ -308,12 +318,14 @@ contains
 
   !===============================================================================
 
-  subroutine realize_fields(gcomp, Emesh, rc)
+  subroutine realize_fields(gcomp, Emesh, flds_scalar_name, flds_scalar_num, rc)
 
     ! input/output variables
-    type(ESMF_GridComp)  :: gcomp
-    type(ESMF_Mesh)      :: Emesh
-    integer, intent(out) :: rc
+    type(ESMF_GridComp) , intent(inout) :: gcomp
+    type(ESMF_Mesh)     , intent(in)    :: Emesh
+    character(len=*)    , intent(in)    :: flds_scalar_name
+    integer             , intent(in)    :: flds_scalar_num 
+    integer             , intent(out)   :: rc
 
     ! local variables
     type(ESMF_State)     :: importState
@@ -350,8 +362,8 @@ contains
 
   !===============================================================================
 
-  subroutine import_fields( gcomp, bounds, glc_present, atm2lnd_inst, glc2lnd_inst, &
-       wateratm2lndbulk_inst, rc)
+  subroutine import_fields( gcomp, bounds, glc_present, rof_prognostic, &
+       atm2lnd_inst, glc2lnd_inst, wateratm2lndbulk_inst, rc)
 
     !---------------------------------------------------------------------------
     ! Convert the input data from the mediator to the land model
@@ -365,7 +377,8 @@ contains
     ! input/output variabes
     type(ESMF_GridComp)                         :: gcomp
     type(bounds_type)           , intent(in)    :: bounds       ! bounds
-    logical                     , intent(in)    :: glc_present  ! .true. => running with a non-stub GLC model
+    logical                     , intent(in)    :: glc_present    ! .true. => running with a non-stub GLC model
+    logical                     , intent(in)    :: rof_prognostic ! .true. => running with a prognostic ROF model
     type(atm2lnd_type)          , intent(inout) :: atm2lnd_inst ! clm internal input data type
     type(glc2lnd_type)          , intent(inout) :: glc2lnd_inst ! clm internal input data type
     type(Wateratm2lndbulk_type) , intent(inout) :: wateratm2lndbulk_inst
@@ -628,47 +641,61 @@ contains
     ! so water sent from rof to land is negative,
     ! change the sign to indicate addition of water to system.
 
-    call state_getimport(importState, 'Flrr_flood', bounds, output=wateratm2lndbulk_inst%forc_flood_grc, rc=rc )
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       wateratm2lndbulk_inst%forc_flood_grc(:) = -wateratm2lndbulk_inst%forc_flood_grc(:)
-    end do
+    if (rof_prognostic) then
+       call state_getimport(importState, 'Flrr_flood', bounds, output=wateratm2lndbulk_inst%forc_flood_grc, rc=rc )
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       do g = begg,endg
+          wateratm2lndbulk_inst%forc_flood_grc(g) = -wateratm2lndbulk_inst%forc_flood_grc(g)
+       end do
+    else
+       wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
+    end if
 
-    call state_getimport(importState, 'Flrr_volr', bounds, output=wateratm2lndbulk_inst%volr_grc, rc=rc )
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       wateratm2lndbulk_inst%volr_grc(g) = wateratm2lndbulk_inst%volr_grc(g) * (ldomain%area(g) * 1.e6_r8)
-    end do
+    if (rof_prognostic) then
+       call state_getimport(importState, 'Flrr_volr', bounds, output=wateratm2lndbulk_inst%volr_grc, rc=rc )
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       do g = begg,endg
+          wateratm2lndbulk_inst%volr_grc(g) = wateratm2lndbulk_inst%volr_grc(g) * (ldomain%area(g) * 1.e6_r8)
+       end do
+    else
+       wateratm2lndbulk_inst%volr_grc(:) = wateratm2lndbulk_inst%volr_grc(g) * (ldomain%area(g) * 1.e6_r8)
+    end if
 
-    call state_getimport(importState, 'Flrr_volrmch', bounds, output=wateratm2lndbulk_inst%volrmch_grc, rc=rc )
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = begg,endg
-       wateratm2lndbulk_inst%volrmch_grc(g) = wateratm2lndbulk_inst%volrmch_grc(g) * (ldomain%area(g) * 1.e6_r8)
-    end do
+    if (rof_prognostic) then
+       call state_getimport(importState, 'Flrr_volrmch', bounds, output=wateratm2lndbulk_inst%volrmch_grc, rc=rc )
+       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       do g = begg,endg
+          wateratm2lndbulk_inst%volrmch_grc(g) = wateratm2lndbulk_inst%volrmch_grc(g) * (ldomain%area(g) * 1.e6_r8)
+       end do
+    else
+       wateratm2lndbulk_inst%volrmch_grc(:) = 0._r8
+    end if
 
     !--------------------------
     ! Land-ice (glc) fields
     !--------------------------
-
-    ! We could avoid setting these fields if glc_present is .false., if that would
-    ! help with performance. (The downside would be that we wouldn't have these fields
-    ! available for diagnostic purposes or to force a later T compset with dlnd.)
-
-    do num = 0,glc_nec
-       call state_getimport(importState, 'Sg_ice_covered_elev', bounds, frac_grc(:,num), ungridded_index=num+1, rc=rc)
+       
+    if (glc_present) then
+       ! We could avoid setting these fields if glc_present is .false., if that would
+       ! help with performance. (The downside would be that we wouldn't have these fields
+       ! available for diagnostic purposes or to force a later T compset with dlnd.)
+       
+       do num = 0,glc_nec
+          call state_getimport(importState, 'Sg_ice_covered_elev', bounds, frac_grc(:,num), ungridded_index=num+1, rc=rc)
+          if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+          call state_getimport(importState, 'Sg_topo_elev'       , bounds, topo_grc(:,num), ungridded_index=num+1, rc=rc)
+          if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+          call state_getimport(importState, 'Flgg_hflx_elev'     , bounds, hflx_grc(:,num), ungridded_index=num+1, rc=rc)
+          if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
+       end do
+       call state_getimport(importState, 'Sg_icemask'               ,  bounds, icemask_grc, rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_getimport(importState, 'Sg_topo_elev'       , bounds, topo_grc(:,num), ungridded_index=num+1, rc=rc)
+       call state_getimport(importState, 'Sg_icemask_coupled_fluxes',  bounds, icemask_grc, rc=rc)
        if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_getimport(importState, 'Flgg_hflx_elev'     , bounds, hflx_grc(:,num), ungridded_index=num+1, rc=rc)
-       if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    end do
-    call state_getimport(importState, 'Sg_icemask'               ,  bounds, icemask_grc, rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport(importState, 'Sg_icemask_coupled_fluxes',  bounds, icemask_grc, rc=rc)
-    if (shr_nuopc_methods_ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call glc2lnd_inst%set_glc2lnd_fields_nuopc( bounds, glc_present, &
-         frac_grc, topo_grc, hflx_grc, icemask_grc, icemask_coupled_fluxes_grc)
+       call glc2lnd_inst%set_glc2lnd_fields_nuopc( bounds, glc_present, &
+            frac_grc, topo_grc, hflx_grc, icemask_grc, icemask_coupled_fluxes_grc)
+    end if
 
     !--------------------------
     ! Derived quantities
@@ -749,8 +776,8 @@ contains
 
   !===============================================================================
 
-  subroutine export_fields( gcomp, bounds, waterlnd2atmbulk_inst, lnd2atm_inst, &
-       lnd2glc_inst, rc)
+  subroutine export_fields( gcomp, bounds, glc_present, rof_prognostic, &
+       waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
 
     !-------------------------------
     ! Pack the export state
@@ -761,6 +788,8 @@ contains
     ! input/output variables
     type(ESMF_GridComp)                         :: gcomp
     type(bounds_type)           , intent(in)    :: bounds       ! bounds
+    logical                     , intent(in)    :: glc_present
+    logical                     , intent(in)    :: rof_prognostic
     type(waterlnd2atmbulk_type) , intent(inout) :: waterlnd2atmbulk_inst
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst ! land to atmosphere exchange data type
     type(lnd2glc_type)          , intent(inout) :: lnd2glc_inst ! land to atmosphere exchange data type
