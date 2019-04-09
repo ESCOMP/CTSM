@@ -217,12 +217,12 @@ contains
           if (sum(wt_lunit(g,:)) == 0._r8) then
              max_landunit = maxloc(residual, 1)
              wt_lunit(g,max_landunit) = residual(max_landunit)
-             write(iulog,*) 'WARNING: The values of namelist parameters '  &
-                            'toosmall_* have resulted in the removal of all '  &
-                            'landunits in grid cell g = ', g, '. The model '  &
-                            'requires at least one landunit per grid cell, '  &
-                            'so the model has put back in this grid cell '  &
-                            'the largest landunit.'
+             write(iulog,*) 'WARNING: The values of namelist parameters '
+             write(iulog,*) 'toosmall_* have resulted in the removal of all '
+             write(iulog,*) 'landunits in grid cell g = ', g, '. The model '
+             write(iulog,*) 'requires at least one landunit per grid cell, '
+             write(iulog,*) 'so the model has put back in this grid cell '
+             write(iulog,*) 'the largest landunit.'
           end if
        end do
 
