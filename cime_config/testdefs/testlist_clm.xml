@@ -1965,7 +1965,7 @@
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:60:00</option>
     </options>
   </test>
 </testlist>
