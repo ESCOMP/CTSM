@@ -2872,6 +2872,21 @@ sub setup_logic_grainproduct {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_livestemproduct {
+  #
+  # Flags to control 1-year grain product pool
+  #
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_livestemproduct',
+               'use_crop'=>$nl_flags->{'use_crop'}, 'phys'=>$physv->as_string() );
+   if ( (! &value_is_true($nl_flags->{'use_crop'})) && &value_is_true($nl->get_value('use_livestemproduct') ) ) {
+      $log->fatal_error("use_livestemproduct can NOT be on without prognostic crop\n" );
+   }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_dynamic_roots {
   #
   # dynamic root model

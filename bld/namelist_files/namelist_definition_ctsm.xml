@@ -1015,6 +1015,11 @@ Toggle to turn on the prognostic fertilizer for crop model
 Toggle to turn on the 1-year grain product pool in the crop model 
 </entry>
 
+<entry id="use_livestemproduct" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the 1-year grain product pool in the crop model !added livestem MWGraham
+</entry>
+
 <entry id="baset_mapping" type="char*20" category="physics"
        group="crop" valid_values="constant,varytropicsbylat" value="constant">
 Type of mapping to use for base temperature for prognostic crop model
