@@ -49,6 +49,8 @@ module CNProductsMod
      real(r8), pointer :: hrv_deadstem_to_prod100_grc(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
      real(r8), pointer :: grain_to_cropprod1_patch(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
      real(r8), pointer :: grain_to_cropprod1_grc(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
+     real(r8), pointer :: livestem_to_cropprod1_patch(:) ! (g[C or N]/m2/s) livestem to 1-year crop product pool !added livestem MWGraham
+     real(r8), pointer :: livestem_to_cropprod1_grc(:) ! (g[C or N]/m2/s) livestem to 1-year crop product pool   !added livestem MWGraham
 
      ! Fluxes: losses
      real(r8), pointer :: cropprod1_loss_grc(:)    ! (g[C or N]/m2/s) decomposition loss from 1-yr grain product pool
@@ -141,6 +143,9 @@ contains
 
     allocate(this%grain_to_cropprod1_patch(begp:endp)) ; this%grain_to_cropprod1_patch(:) = nan
     allocate(this%grain_to_cropprod1_grc(begg:endg)) ; this%grain_to_cropprod1_grc(:) = nan
+
+    allocate(this%livestem_to_cropprod1_patch(begp:endp)) ; this%livestem_to_cropprod1_patch(:) = nan !added livestem MWGraham
+    allocate(this%livestem_to_cropprod1_grc(begg:endg)) ; this%livestem_to_cropprod1_grc(:) = nan !added livestem MWGraham
 
     allocate(this%cropprod1_loss_grc(begg:endg)) ; this%cropprod1_loss_grc(:) = nan
     allocate(this%prod10_loss_grc(begg:endg)) ; this%prod10_loss_grc(:) = nan
@@ -299,6 +304,7 @@ contains
        this%hrv_deadstem_to_prod10_patch(p) = 0._r8
        this%hrv_deadstem_to_prod100_patch(p) = 0._r8
        this%grain_to_cropprod1_patch(p) = 0._r8
+       this%livestem_to_cropprod1_patch(p) = 0._r8 !added livestem MWGraham
     end do
 
   end subroutine InitCold
@@ -437,7 +443,8 @@ contains
        dwt_wood_product_gain_patch, &
        wood_harvest_patch, &
        dwt_crop_product_gain_patch, &
-       grain_to_cropprod_patch)
+       grain_to_cropprod_patch, &
+       livestem_to_cropprod_patch) !added livestem MWGraham
     !
     ! !DESCRIPTION:
     ! Update all loss fluxes from wood and grain product pools, and update product pool
@@ -462,6 +469,7 @@ contains
 
     ! grain to crop product pool (g/m2/s) [patch]
     real(r8), intent(in) :: grain_to_cropprod_patch( bounds%begp: )
+    real(r8), intent(in) :: livestem_to_cropprod_patch( bounds%begp: ) !added livestem MWGraham
     !
     ! !LOCAL VARIABLES:
     integer  :: g        ! indices
@@ -475,6 +483,7 @@ contains
     SHR_ASSERT_ALL((ubound(wood_harvest_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dwt_crop_product_gain_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(grain_to_cropprod_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(livestem_to_cropprod_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__)) !added livestem MWGraham
 
     call this%PartitionWoodFluxes(bounds, &
          num_soilp, filter_soilp, &
@@ -484,7 +493,8 @@ contains
     call this%PartitionGrainFluxes(bounds, &
          num_soilp, filter_soilp, &
          dwt_crop_product_gain_patch(bounds%begp:bounds%endp), &
-         grain_to_cropprod_patch(bounds%begp:bounds%endp))
+         grain_to_cropprod_patch(bounds%begp:bounds%endp), &
+         livestem_to_cropprod_patch(bounds%begp:bounds%endp)) !added livestem MWGraham
 
     ! calculate losses from product pools
     ! the following (1/s) rate constants result in ~90% loss of initial state over 1, 10 and 100 years,
@@ -511,8 +521,9 @@ contains
        this%prod10_grc(g)    = this%prod10_grc(g)    + this%dwt_prod10_gain_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   + this%dwt_prod100_gain_grc(g)*dt
 
-       ! fluxes into wood & grain product pools, from harvest
+       ! fluxes into wood & grain & residue product pools, from harvest
        this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%grain_to_cropprod1_grc(g)*dt
+       this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%livestem_to_cropprod1_grc(g)*dt !added livestem MWGraham
        this%prod10_grc(g)    = this%prod10_grc(g)    + this%hrv_deadstem_to_prod10_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   + this%hrv_deadstem_to_prod100_grc(g)*dt
 
@@ -632,7 +643,8 @@ contains
   subroutine PartitionGrainFluxes(this, bounds, &
        num_soilp, filter_soilp, &
        dwt_crop_product_gain_patch, &
-       grain_to_cropprod_patch)
+       grain_to_cropprod_patch, &
+       livestem_to_cropprod_patch)
     !
     ! !DESCRIPTION:
     ! Partition input grain fluxes into crop product pools
@@ -657,6 +669,8 @@ contains
 
     ! grain to crop product pool(s) (g/m2/s) [patch]
     real(r8)                , intent(in)    :: grain_to_cropprod_patch( bounds%begp: )
+    ! livestem to crop product pool(s) (g/m2/s) [patch]
+    real(r8)                , intent(in)    :: livestem_to_cropprod_patch( bounds%begp: ) !added livestem MWGraham
     !
     ! !LOCAL VARIABLES:
     integer :: fp
@@ -678,6 +692,23 @@ contains
     call p2g(bounds, &
          this%grain_to_cropprod1_patch(bounds%begp:bounds%endp), &
          this%grain_to_cropprod1_grc(bounds%begg:bounds%endg), &
+         p2c_scale_type = 'unity', &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+
+    ! Determine gains from residue (livestem) harvest 
+    !added calculation for livestem by MWGraham
+
+    do fp = 1, num_soilp
+       p = filter_soilp(fp)
+
+       ! For now all crop product is put in the 1-year crop product pool
+       this%livestem_to_cropprod1_patch(p) = livestem_to_cropprod_patch(p)
+    end do
+
+    call p2g(bounds, &
+         this%livestem_to_cropprod1_patch(bounds%begp:bounds%endp), &
+         this%livestem_to_cropprod1_grc(bounds%begg:bounds%endg), &
          p2c_scale_type = 'unity', &
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')

@@ -715,7 +715,7 @@ contains
          wood_harvest_patch = cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
          dwt_crop_product_gain_patch = cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
          grain_to_cropprod_patch = cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp), &
-         livestemc_to_cropprod_patch = cnveg_carbonflux_inst%livestemc_to_cropprodc_patch(begp:endp)) !added livestem C
+         livestem_to_cropprod_patch = cnveg_carbonflux_inst%livestemc_to_cropprodc_patch(begp:endp)) !added livestem C
     call t_stopf('CNWoodProducts')
 
     if (use_c13) then
