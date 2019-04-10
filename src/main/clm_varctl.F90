@@ -340,6 +340,7 @@ module clm_varctl
   logical, public :: use_cn              = .false.
   logical, public :: use_cndv            = .false.
   logical, public :: use_grainproduct    = .false.
+  logical, public :: use_livestemproduct = .false.
   logical, public :: use_fertilizer      = .false.
   logical, public :: use_ozone           = .false.
   logical, public :: use_snicar_frc      = .false.

@@ -15,6 +15,7 @@ module CNVegCarbonFluxType
   use clm_varcon                         , only : spval, dzsoi_decomp
   use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop
   use clm_varctl                         , only : use_grainproduct
+  use clm_varctl                         , only : use_livestemproduct !similar to use_grainproduct above, need to add to clm_varctl
   use clm_varctl                         , only : iulog
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use pftconMod                          , only : npcropmin
@@ -245,6 +246,8 @@ module CNVegCarbonFluxType
      real(r8), pointer :: harvest_c_to_cwdc_col                     (:,:)   ! C fluxes associated with harvest to CWD pool (gC/m3/s)
      real(r8), pointer :: grainc_to_cropprodc_patch                 (:)     ! grain C to crop product pool (gC/m2/s)
      real(r8), pointer :: grainc_to_cropprodc_col                   (:)     ! grain C to crop product pool (gC/m2/s)
+     real(r8), pointer :: livestemc_to_cropprodc_patch              (:)     ! livestem C to crop product pool (gC/m2/s)
+     real(r8), pointer :: livestemc_to_cropprodc_col                (:)     ! livestem C to crop product pool (gC/m2/s)
 
      ! fire fluxes
      real(r8), pointer :: m_decomp_cpools_to_fire_vr_col            (:,:,:) ! vertically-resolved decomposing C fire loss (gC/m3/s)
@@ -657,6 +660,12 @@ contains
 
     allocate(this%grainc_to_cropprodc_col(begc:endc))
     this%grainc_to_cropprodc_col(:) = nan
+
+    allocate(this%livestemc_to_cropprodc_patch(begp:endp)) !added livestem C prod
+    this%livestemc_to_cropprodc_patch(:) = nan
+
+    allocate(this%livestemc_to_cropprodc_col(begc:endc)) !added livestem C prod
+    this%livestemc_to_cropprodc_col(:) = nan
 
     allocate(this%m_decomp_cpools_to_fire_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                
     this%m_decomp_cpools_to_fire_vr_col(:,:,:)= nan
@@ -3812,6 +3821,7 @@ contains
 
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
        this%grainc_to_cropprodc_patch(i)                 = value_patch
+       this%livestemc_to_cropprodc_patch(i)              = value_patch !added livestem C
     end do
 
     if ( use_crop )then
@@ -3877,6 +3887,7 @@ contains
        i = filter_column(fi)
 
        this%grainc_to_cropprodc_col(i)       = value_column
+       this%livestemc_to_cropprodc_col(i)    = value_column !livestem C added
        this%cwdc_hr_col(i)                   = value_column
        this%cwdc_loss_col(i)                 = value_column
        this%litterc_loss_col(i)              = value_column
@@ -4259,7 +4270,7 @@ contains
             this%hrv_gresp_storage_to_litter_patch(p)         + &
             this%hrv_gresp_xfer_to_litter_patch(p)
 
-       if ( use_crop .and. patch%itype(p) >= npcropmin )then
+       if ( (use_crop) .and. (patch%itype(p) >= npcropmin) .and. (.not. use_livestemproduct))then !added use_livestemproduct MWgraham
           this%litfall_patch(p) =      &
                this%litfall_patch(p) + &
                this%livestemc_to_litter_patch(p)

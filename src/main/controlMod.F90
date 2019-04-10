@@ -265,7 +265,7 @@ contains
     namelist /clm_inparm/ &
          use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
          use_vichydro, use_century_decomp, use_cn, use_cndv, use_crop, use_fertilizer, use_ozone, &
-         use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
+         use_grainproduct, use_livestemproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, & !added use_livestemproduct MWGraham
          use_nguardrail
 
 
@@ -603,6 +603,7 @@ contains
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_livestemproduct, 1, MPI_LOGICAL, 0, mpicom, ier) !added use_livestemproduct MWGraham
     call mpi_bcast (use_ozone, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_snicar_frc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -828,6 +829,7 @@ contains
     write(iulog,*) '    use_crop = ', use_crop
     write(iulog,*) '    use_fertilizer = ', use_fertilizer
     write(iulog,*) '    use_grainproduct = ', use_grainproduct
+    write(iulog,*) '    use_livestemproduct = ', use_livestemproduct !added use_livestemproduct MWGraham
     write(iulog,*) '    use_ozone = ', use_ozone
     write(iulog,*) '    use_snicar_frc = ', use_snicar_frc
     write(iulog,*) '    use_vancouver = ', use_vancouver
