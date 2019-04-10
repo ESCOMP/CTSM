@@ -232,6 +232,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Canopy fluxes namelist defaults -->
 <use_undercanopy_stability phys="clm5_0">.false.</use_undercanopy_stability>
 <use_undercanopy_stability phys="clm4_5">.true.</use_undercanopy_stability>
+<itmax_canopy_fluxes>40</itmax_canopy_fluxes>
 
 <itmax_canopy_fluxes structure="standard">40</itmax_canopy_fluxes>
 <itmax_canopy_fluxes structure="fast">3</itmax_canopy_fluxes>

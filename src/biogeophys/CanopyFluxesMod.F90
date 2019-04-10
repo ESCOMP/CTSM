@@ -70,6 +70,7 @@ module CanopyFluxesMod
   logical, private :: snowveg_on     = .false.                ! snowveg_flag = 'ON'
   logical, private :: snowveg_onrad  = .true.                 ! snowveg_flag = 'ON_RAD'
   logical, private :: use_undercanopy_stability = .true.      ! use undercanopy stability term or not
+  integer, private :: itmax_canopy_fluxes = -1  ! max # of iterations used in subroutine CanopyFluxes
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -102,6 +103,7 @@ contains
     !-----------------------------------------------------------------------
 
     namelist /canopyfluxes_inparm/ use_undercanopy_stability
+    namelist /canopyfluxes_inparm/ itmax_canopy_fluxes
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -119,10 +121,17 @@ contains
        else
           call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
        end if
+
+       if (itmax_canopy_fluxes < 1) then
+          call endrun(msg=' ERROR: expecting itmax_canopy_fluxes > 0 ' // &
+            errMsg(sourcefile, __LINE__))
+       end if
+
        call relavu( unitn )
     end if
 
     call shr_mpi_bcast (use_undercanopy_stability, mpicom)
+    call shr_mpi_bcast (itmax_canopy_fluxes, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -223,7 +232,6 @@ contains
     real(r8), parameter :: delmax = 1.0_r8  ! maxchange in  leaf temperature [K]
     real(r8), parameter :: dlemin = 0.1_r8  ! max limit for energy flux convergence [w/m2]
     real(r8), parameter :: dtmin = 0.01_r8  ! max limit for temperature convergence [K]
-    integer , parameter :: itmax = 40       ! maximum number of iteration [-]
     integer , parameter :: itmin = 2        ! minimum number of iteration [-]
 
     !added by K.Sakaguchi for litter resistance
@@ -760,7 +768,7 @@ contains
       ! Begin stability iteration
 
       call t_startf('can_iter')
-      ITERATION : do while (itlef <= itmax .and. fn > 0)
+      ITERATION : do while (itlef <= itmax_canopy_fluxes .and. fn > 0)
 
          ! Determine friction velocity, and potential temperature and humidity
          ! profiles of the surface boundary layer

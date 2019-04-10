@@ -3371,6 +3371,7 @@ sub setup_logic_canopyfluxes {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_undercanopy_stability' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'itmax_canopy_fluxes' );
 }
 
 #-------------------------------------------------------------------------------
