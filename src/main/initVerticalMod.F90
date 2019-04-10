@@ -162,6 +162,8 @@ contains
     integer, parameter :: LEVGRND_CLASS_STANDARD        = 1
     integer, parameter :: LEVGRND_CLASS_DEEP_BEDROCK    = 2
     integer, parameter :: LEVGRND_CLASS_SHALLOW_BEDROCK = 3
+
+    character(len=*), parameter :: subname = 'initVertical'
     !------------------------------------------------------------------------
 
     begc = bounds%begc; endc= bounds%endc
@@ -293,6 +295,9 @@ contains
        do j = 1, nlevgrnd
           zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
        enddo
+    else
+       write(iulog,*) subname//' ERROR: Unrecognized soil layer structure: ', trim(soil_layerstruct)
+       call endrun(subname//' ERROR: Unrecognized soil layer structure')
     end if
 
     ! define a vertical grid spacing such that it is the normal dzsoi if

@@ -6,6 +6,7 @@ module clm_varpar
   !
   ! !USES:
   use shr_kind_mod , only: r8 => shr_kind_r8
+  use shr_sys_mod  , only: shr_sys_abort
   use spmdMod      , only: masterproc
   use clm_varctl   , only: use_extralakelayers, use_vertsoilc
   use clm_varctl   , only: use_century_decomp, use_c13, use_c14
@@ -157,6 +158,9 @@ contains
     else if ( soil_layerstruct == '5SL_3m' ) then
        nlevsoi     =  5
        nlevgrnd    =  5
+    else
+       write(iulog,*) subname//' ERROR: Unrecognized soil layer structure: ', trim(soil_layerstruct)
+       call shr_sys_abort(subname//' ERROR: Unrecognized soil layer structure')
     endif
     if ( masterproc ) write(iulog, *) 'soil_layerstruct varpar ',soil_layerstruct,nlevsoi,nlevgrnd
 
