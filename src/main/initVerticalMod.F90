@@ -278,11 +278,12 @@ contains
        do j = 1, nlevgrnd
           zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
        enddo
-    else if ( soil_layerstruct == '4SL_2m' ) then
-       dzsoi(1)= 0.1_r8          
-       dzsoi(2)= 0.3_r8          
-       dzsoi(3)= 0.6_r8          
-       dzsoi(4)= 1.0_r8          
+    else if ( soil_layerstruct == '5SL_3m' ) then
+       dzsoi(1)= 0.1_r8
+       dzsoi(2)= 0.3_r8
+       dzsoi(3)= 0.6_r8
+       dzsoi(4)= 1.0_r8
+       dzsoi(5)= 1.0_r8
        
        zisoi(0) = 0._r8
        do j = 1,nlevgrnd
