@@ -1,12 +1,13 @@
 ===============================================================
 Tag name:  ctsm1.0.dev033
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
-Date:  Tue Apr 08 15:09:30 MST 2019
+Date:  Tue Apr 09 22:54:55 MST 2019
 One-line Summary: Limit landunit presence with thresholds set in the namelist
 
 Purpose of changes
 ------------------
 
+ Faster simulations. Motivated by NWP applications:
  - Introduce user-defined namelist parameters to use as thresholds
  above which landunit areas are kept and
  below which landunit areas are removed.
@@ -60,16 +61,21 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- 
-    hobart ------ 
+    cheyenne ---- ok
+    hobart ------ ok
 
-CTSM tag used for the baseline comparisons: ctsm1.0.dev032
+CTSM tag used for the baseline comparisons:
+ cheyenne ctsm1.0.dev031
+ hobart   ctsm1.0.dev032
 
 
 Answer changes
 --------------
 
 Changes answers relative to baseline: No
+ Note: Comparison to baseline gives NLCOMP failures because the new namelist
+ parameters always appear in the namelist now, even when they have not been
+ changed from their default value by the user.
 
 Detailed list of changes
 ------------------------

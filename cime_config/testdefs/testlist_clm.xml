@@ -930,7 +930,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">01:20:00</option>
+      <option name="wallclock">02:00:00</option>
       <option name="comment"  >tests mid-year restart, with the restart file being written after more than 2 years, which Sam Levis says is important for testing crop restarts</option>
     </options>
   </test>
@@ -1001,7 +1001,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">01:40:00</option>
+      <option name="wallclock">02:00:00</option>
       <option name="comment"  >restart is right before increasing natural veg to &gt; 0 while also shifting PCT_CFT</option>
       <option name="tput_tolerance">0.5</option>
     </options>
