@@ -109,6 +109,7 @@ module CLMFatesInterfaceMod
 
    use ChecksBalancesMod     , only : SummarizeNetFluxes, FATES_BGC_Carbon_BalanceCheck
    use EDTypesMod            , only : ed_patch_type
+   use EDTypesMod            , only : num_elements
    use FatesInterfaceMod     , only : hlm_numlevgrnd
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
@@ -709,11 +710,14 @@ contains
          nld_si = this%fates(nc)%bc_in(s)%nlevdecomp
 
          soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nld_si) = &
-               this%fates(nc)%bc_out(s)%FATES_c_to_litr_lab_c_col(1:nld_si)
+              this%fates(nc)%bc_out(s)%litt_flux_lab_c_si(1:nld_si)
+
          soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nld_si) = &
-               this%fates(nc)%bc_out(s)%FATES_c_to_litr_cel_c_col(1:nld_si)
+              this%fates(nc)%bc_out(s)%litt_flux_cel_c_si(1:nld_si)
+
          soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si) = &
-               this%fates(nc)%bc_out(s)%FATES_c_to_litr_lig_c_col(1:nld_si)
+              this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nld_si)
+
       end do
 
 
@@ -2525,6 +2529,19 @@ contains
    
    fates%cnlfpft_begin = 1
    fates%cnlfpft_end = nlevleaf * nclmax * numpft_fates
+
+   fates%elem_begin = 1
+   fates%elem_end   = num_elements
+   
+   fates%elpft_begin = 1
+   fates%elpft_end   = num_elements * numpft_fates
+
+   fates%elcwd_begin = 1
+   fates%elcwd_end   = num_elements * ncwd
+
+   fates%elage_begin = 1
+   fates%elage_end   = num_elements * nlevage
+
    
  end subroutine hlm_bounds_to_fates_bounds
 
