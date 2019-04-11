@@ -20,7 +20,7 @@ module CNCIsoFluxMod
   use PatchType                          , only : patch                
   use clm_varctl                         , only : use_crop
   use clm_varctl                         , only : use_grainproduct
-  use clm_varctl                         , only : use_livestemproduct
+  !use clm_varctl                         , only : use_livestemproduct
   !
   implicit none
   private
@@ -467,7 +467,7 @@ contains
                iso_cnveg_cf%grain_mr_patch(p) = iso_cnveg_cf%grain_xsmr_patch(p) + iso_cnveg_cf%grain_curmr_patch(p)
             end do
          endif
-         if (use_livestemproduct) then !added livestem if statement to create livestem_mr_patch if use_livestemproduct MWGraham
+         if (use_grainproduct) then !added livestem if statement to create livestem_mr_patch if use_livestemproduct MWGraham
             do fp = 1,num_soilp
                p = filter_soilp(fp)
                iso_cnveg_cf%livestemc_to_cropprodc_patch(p) = iso_cnveg_cf%livestemc_to_litter_patch(p)

@@ -2868,7 +2868,7 @@ contains
     !
     ! !USES:
     use clm_varctl    , only : use_crop
-    use clm_varctl    , only : use_livestemproduct !need to create variable use_livestemproduct as per user_grainproduct
+    use clm_varctl    , only : use_grainproduct !need to create variable use_livestemproduct as per user_grainproduct
     use subgridAveMod , only : p2c
     !
     ! !ARGUMENTS:
@@ -2889,7 +2889,7 @@ contains
     ! Explicitly checking use_crop is probably unnecessary here (because presumably
     ! use_grainproduct is only true if use_crop is true), but we do it for safety because
     ! the grain*_to_food_patch fluxes are not set if use_crop is false.
-    if (use_crop .and. use_livestemproduct) then
+    if (use_crop .and. use_grainproduct) then
        do fp = 1, num_soilp
           p = filter_soilp(fp)
           cnveg_carbonflux_inst%livestemc_to_cropprodc_patch(p) = &
@@ -2925,7 +2925,7 @@ contains
     use clm_varpar , only : max_patch_per_col, nlevdecomp
     use pftconMod  , only : npcropmin
     use clm_varctl , only : use_grainproduct
-    use clm_varctl , only : use_livestemproduct !added use_livestemproduct MWGraham
+    !use clm_varctl , only : use_livestemproduct !added use_livestemproduct MWGraham
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
@@ -3022,7 +3022,7 @@ contains
                      ! also for simplicity I've put "food" into the litter pools
 
                      !if (ivt(p) >= npcropmin) then ! add livestemc to litter
-                     if ( (ivt(p) >= npcropmin) .and. (.not. use_livestemproduct)) then !added use_livestemproduct MWGraham
+                     if ( (ivt(p) >= npcropmin) .and. (.not. use_grainproduct)) then !added use_livestemproduct MWGraham
                         ! stem litter carbon fluxes
                         phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
                              + livestemc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)

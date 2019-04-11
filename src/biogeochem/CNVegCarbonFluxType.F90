@@ -15,7 +15,7 @@ module CNVegCarbonFluxType
   use clm_varcon                         , only : spval, dzsoi_decomp
   use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop
   use clm_varctl                         , only : use_grainproduct
-  use clm_varctl                         , only : use_livestemproduct !similar to use_grainproduct above, need to add to clm_varctl
+  !use clm_varctl                         , only : use_livestemproduct !similar to use_grainproduct above, need to add to clm_varctl
   use clm_varctl                         , only : iulog
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use pftconMod                          , only : npcropmin
@@ -4270,7 +4270,7 @@ contains
             this%hrv_gresp_storage_to_litter_patch(p)         + &
             this%hrv_gresp_xfer_to_litter_patch(p)
 
-       if ( (use_crop) .and. (patch%itype(p) >= npcropmin) .and. (.not. use_livestemproduct))then !added use_livestemproduct MWgraham
+       if ( (use_crop) .and. (patch%itype(p) >= npcropmin) .and. (.not. use_grainproduct))then !added use_livestemproduct MWgraham
           this%litfall_patch(p) =      &
                this%litfall_patch(p) + &
                this%livestemc_to_litter_patch(p)
