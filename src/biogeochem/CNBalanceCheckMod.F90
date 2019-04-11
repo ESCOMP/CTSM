@@ -177,7 +177,8 @@ contains
          ! after the dwt term has already been taken out.)
          col_coutputs = col_coutputs + &
               wood_harvestc(c) + &
-              grainc_to_cropprodc(c)
+              grainc_to_cropprodc(c) + &
+              livestemc_to_cropprodc(c)
 
          ! subtract leaching flux
          col_coutputs = col_coutputs - som_c_leached(c)
@@ -214,6 +215,7 @@ contains
          write(iulog,*)'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
+         write(iulog,*)'livestemc_to_cropprodc      = ',livestemc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
@@ -305,7 +307,8 @@ contains
          ! after the dwt term has already been taken out.)
          col_noutputs(c) = col_noutputs(c) + &
               wood_harvestn(c) + &
-              grainn_to_cropprodn(c)
+              grainn_to_cropprodn(c) + &
+              livestemn_to_cropprodn(c)
 
          if (.not. use_nitrif_denitrif) then
             col_noutputs(c) = col_noutputs(c) + sminn_leached(c)
