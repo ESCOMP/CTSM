@@ -1,4 +1,109 @@
 ===============================================================
+Tag name:  ctsm1.0.dev033
+Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
+Date: Thu Apr 11 10:51:29 MDT 2019
+One-line Summary: Limit landunit presence with thresholds set in the namelist
+
+Purpose of changes
+------------------
+
+ Faster simulations. Motivated by NWP applications:
+ - Introduce user-defined namelist parameters to use as thresholds
+ above which landunit areas are kept and
+ below which landunit areas are removed.
+ - Introduce user-defined logical namelist parameter to collapse the up to
+ three urban landunits to the dominant urban landunit.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #581
+    Fixes #581 -- Allow zeroing out special landunits if their area is below some threshold 
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ - New namelist variables with valid real values from 0._r8 to 100._r8, where
+ 0 means "do nothing" and other values determine the threshold above
+ which to keep the landunit in a gridcell. The new variables are:
+ toosmall_soil
+ toosmall_crop
+ toosmall_glacier
+ toosmall_lake
+ toosmall_wetland
+ toosmall_urban
+ - New logical namelist variable collapse_urban. If .true. then the up to
+ three urban landunits collapse to the dominant urban landunit.
+
+---------------------------------------------
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    There's a typo in the name for n_dom_landunits (missing the s) in bld/CLMBuildNamelist.pm
+    build-namelist doesn't check for toosmall_* below 0 or above 100, but the code does
+
+Changes to tests or testing: Yes
+ New unit tests subroutine test_collapse_individual_lunits and
+ test_collapse_all_lunit_opts_active in test_surfrdUtils.pf
+ Modified standard suite test
+ ERS_D_Ld10.f10_f10_musgs.IHistClm50BgcCropGs.cheyenne_intel.clm-collapse_to_dominant_decStart
+ to
+ ERS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-rm_indiv_lunits_and_collapse_to_dom
+ and introduced fatal error message when namelist parameters toosmall_* > 0 or
+ n_dom_* > 0 in transient simulations
+
+Code reviewed by: Erik Kluzek, Bill Sacks
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (384 differences because of new namelist items)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+CTSM tag used for the baseline comparisons:
+ cheyenne ctsm1.0.dev031
+ hobart   ctsm1.0.dev032
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+ Note: Comparison to baseline gives NLCOMP failures because the new namelist
+ parameters always appear in the namelist now, even when they have not been
+ changed from their default value by the user.
+
+Detailed list of changes
+------------------------
+ - Introduced call to new subroutine collapse_individual_lunits that uses
+ the user-defined namelist variables listed above to determine whether
+ a landunit gets kept or removed from a gridcell.
+ - Introduced new call to collapse_to_dominant for when collapse_urban = .true.
+ - Introduced error checks that do not allow coexistence of transient
+ simulations and the toosmall_* variables OR the n_dom_pfts/n_dom_landunits
+ variables OR the collapse_urban parameter.
+
+Pull Requests that document the changes (include PR ids): #641
+ https://github.com/ESCOMP/ctsm/pull/641
+   #641 -- Ability to remove individual landunits for faster runs
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev032
 Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
 Date: Mon Apr  8 08:26:57 MDT 2019
