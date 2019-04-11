@@ -761,13 +761,13 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50SpG" testmods="clm/glcMEC_decrease">
+  <test name="ERP_P36x2_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50SpG" testmods="clm/glcMEC_decrease">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >test transient PFTs (via HIST) in conjunction with changing glacier area</option>
+      <option name="comment"  >Test transient PFTs (via HIST) in conjunction with changing glacier area. This test also covers the reset_dynbal_baselines option. CISM is not answer preserving across processor changes, but short test length should be OK.</option>
     </options>
   </test>
   <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50Sp" testmods="clm/collapse_pfts_78_to_16_decStart_f10">
@@ -779,22 +779,13 @@
       <option name="comment"  >test transient PFTs (via HIST) with a December start, reading 78-pft data and running with 16 pfts</option>
     </options>
   </test>
-  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/collapse_to_dominant">
+  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/rm_indiv_lunits_and_collapse_to_dom">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >test n_dom_pfts = 2 and n_dom_landunits  = 2 in a 2000 case</option>
-    </options>
-  </test>
-  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/rm_individual_lunits">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >test toosmall_* (soil, crop, glacier, lake, wetland, urban) all set to 5% (ie keep the landunits in gridcells where they exceed 5%) in a 2000 case</option>
+      <option name="comment"  >test toosmall_* (soil, crop, glacier, lake, wetland, urban) all set to 5% (ie keep the landunits in gridcells where they exceed 5%) and also n_dom_pfts = 2, n_dom_landunits = 2, collapse_urbar = .true. in a 2000 case</option>
     </options>
   </test>
   <test name="ERS_D_Ld12" grid="f10_f10_musgs" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_spunup_inc_dec_bgc">
@@ -939,7 +930,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">01:20:00</option>
+      <option name="wallclock">02:00:00</option>
       <option name="comment"  >tests mid-year restart, with the restart file being written after more than 2 years, which Sam Levis says is important for testing crop restarts</option>
     </options>
   </test>
@@ -1010,7 +1001,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">01:40:00</option>
+      <option name="wallclock">02:00:00</option>
       <option name="comment"  >restart is right before increasing natural veg to &gt; 0 while also shifting PCT_CFT</option>
       <option name="tput_tolerance">0.5</option>
     </options>

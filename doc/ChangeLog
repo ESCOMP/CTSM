@@ -1,5 +1,5 @@
 ===============================================================
-Tag name:  ctsm1.0.dev031
+Tag name:  ctsm1.0.dev033
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
 Date: Thu Apr 11 10:51:29 MDT 2019
 One-line Summary: Limit landunit presence with thresholds set in the namelist
@@ -7,14 +7,18 @@ One-line Summary: Limit landunit presence with thresholds set in the namelist
 Purpose of changes
 ------------------
 
- Introduce user-defined namelist parameters to use as thresholds
+ Faster simulations. Motivated by NWP applications:
+ - Introduce user-defined namelist parameters to use as thresholds
  above which landunit areas are kept and
  below which landunit areas are removed.
+ - Introduce user-defined logical namelist parameter to collapse the up to
+ three urban landunits to the dominant urban landunit.
 
 Bugs fixed or introduced
 ------------------------
 
 Issues fixed (include CTSM Issue #): #581
+    Fixes #581 -- Allow zeroing out special landunits if their area is below some threshold 
 
 
 Significant changes to scientifically-supported configurations
@@ -26,7 +30,7 @@ Notes of particular relevance for users
 ---------------------------------------
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
- New namelist variables with valid integer values from 0 to 100, where
+ - New namelist variables with valid real values from 0._r8 to 100._r8, where
  0 means "do nothing" and other values determine the threshold above
  which to keep the landunit in a gridcell. The new variables are:
  toosmall_soil
@@ -34,35 +38,182 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
  toosmall_glacier
  toosmall_lake
  toosmall_wetland
- toosmall_urb_tbd
- toosmall_urb_hd
- toosmall_urb_md
+ toosmall_urban
+ - New logical namelist variable collapse_urban. If .true. then the up to
+ three urban landunits collapse to the dominant urban landunit.
 
 ---------------------------------------------
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    There's a typo in the name for n_dom_landunits (missing the s) in bld/CLMBuildNamelist.pm
+    build-namelist doesn't check for toosmall_* below 0 or above 100, but the code does
 
 Changes to tests or testing: Yes
- New standard suite test
- ERS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-rm_individual_lunits
- and new unit test subroutine test_collapse_individual_lunits
- in test_surfrdUtils.pf
+ New unit tests subroutine test_collapse_individual_lunits and
+ test_collapse_all_lunit_opts_active in test_surfrdUtils.pf
  Modified standard suite test
  ERS_D_Ld10.f10_f10_musgs.IHistClm50BgcCropGs.cheyenne_intel.clm-collapse_to_dominant_decStart
  to
- ERS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-collapse_to_dominant
- because introduced fatal error when namelist parameters toosmall_* > 0 or n_dom_* > 0 in transient simulations
+ ERS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-rm_indiv_lunits_and_collapse_to_dom
+ and introduced fatal error message when namelist parameters toosmall_* > 0 or
+ n_dom_* > 0 in transient simulations
 
 Code reviewed by: Erik Kluzek, Bill Sacks
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (384 differences because of new namelist items)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+CTSM tag used for the baseline comparisons:
+ cheyenne ctsm1.0.dev031
+ hobart   ctsm1.0.dev032
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+ Note: Comparison to baseline gives NLCOMP failures because the new namelist
+ parameters always appear in the namelist now, even when they have not been
+ changed from their default value by the user.
+
+Detailed list of changes
+------------------------
+ - Introduced call to new subroutine collapse_individual_lunits that uses
+ the user-defined namelist variables listed above to determine whether
+ a landunit gets kept or removed from a gridcell.
+ - Introduced new call to collapse_to_dominant for when collapse_urban = .true.
+ - Introduced error checks that do not allow coexistence of transient
+ simulations and the toosmall_* variables OR the n_dom_pfts/n_dom_landunits
+ variables OR the collapse_urban parameter.
+
+Pull Requests that document the changes (include PR ids): #641
+ https://github.com/ESCOMP/ctsm/pull/641
+   #641 -- Ability to remove individual landunits for faster runs
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev032
+Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
+Date: Mon Apr  8 08:26:57 MDT 2019
+One-line Summary: Fixing the balance check to check for possible errors over all columns/patches
+
+Purpose of changes
+------------------
+Up until now, the BalanceCheckMod code in biogeophysics did not check all
+the possible errors over all columns or patches with the error threshold for
+aborting clm and it merely compared the last column/patch found (where
+warning threshold is met) with the error threshold.
+Therefore, there was always a possibility that the abort is not triggered
+when it should have been. This issue was first mentioned in ctsm issue #55
+for soil energy balance check, but a similar issue is also present for
+other balance checks in BalanceCheckMod.F90 .
+
+Below is the list of the balance checks with a similar issue:
+1. Water balance check
+2. Snow balance check
+3. Solar radiation energy balance check
+4. Longwave radiation energy balance check
+5. Surface energy balance check
+6. Soil energy balance check (Issue #55)
+
+For remediating this issue, we used MAXVAL and MAXLOC Fortran intrinsic functions
+to compare the largest error with the warning and error thresholds instead
+of checking the last column or looping over all columns.
+
+
+In addition, this PR also makes slight changes to ./run_sys_tests outputi/case
+directory structure. Previously for each case in a test suite, there were 
+two set of directories created by run_sys_tests as follows:
+ * one directory which included run/ and bld/ and named as $SCRATCH/[case-name]....
+ * The case directory which included logs , timings, CaseDocs/, and misc. scripts
+     for ./case.build, ./case.submit... under $SCRATCH/tests-[testID]/[case-name]....
+
+This made debugging confusing and populated many folders in user's scratch.
+Now, for every case in a test, all directories related to that case
+including bld/ and run/ directories are nested under the case directory under $SCRATCH/tests-[testID]/[case-name]....
+This is now similar to ./create_test output folder structure.
+
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm issue#55
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: 
+ - ./run_sys_test is changed so that it nests bld/ and run/ directories under the case directory as $SCRATCH/tests-[testID]/[case-name]...
+   The output folder structure now is similar to ./create_test for each case in a test.
+
+Code reviewed by: Bill Sacks
+
 
 CTSM testing:
 
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
+  build-namelist tests:
+
+    cheyenne - not run 
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
   regular tests (aux_clm):
 
-    cheyenne ---- OK
-    hobart ------ OK
+    cheyenne ---- ok
+    hobart ------ ok
 
-CTSM tag used for the baseline comparisons: ctsm1.0.dev030
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev031
 
 
 Answer changes
@@ -70,17 +221,226 @@ Answer changes
 
 Changes answers relative to baseline: No
 
+
 Detailed list of changes
 ------------------------
- Introduced call to new subroutine collapse_individual_lunits that uses
- the user-defined namelist variables listed above to determine whether
- a landunit gets kept or removed from a gridcell.
 
- Introduced error checks that do not allow coexistence of transient simulations
- and the toosmall_* variables OR the n_dom_pfts/n_dom_landunits variables.
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
 
-Pull Requests that document the changes (include PR ids): #641
- https://github.com/ESCOMP/ctsm/pull/641
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/670
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev031
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Mar 13 15:03:42 MDT 2019
+One-line Summary: Subtract virtual states to reduce dynbal fluxes for transient glaciers
+
+Purpose of changes
+------------------
+
+Up until now, when computing the dynbal correction (conservation) fluxes
+for transient glacier columns, we have been (1) counting the mass and
+energy in the ice column as if that is a real state, but on the other
+hand (2) NOT accounting for the fact that glacier columns don't
+represent the soil under glacier. These two issues work in opposite
+directions, but (1) dominates, because there is much more ice (and
+energy, I think) in the roughly 50 m of glacial ice than there is in a
+typical 50 m soil column.
+
+In discussing this issue with Bill Lipscomb, we came up with the idea of
+subtracting some baseline value from each glacier column. I think that,
+as long as we subtract the same baseline value throughout an entire
+simulation for a given column, we will still conserve mass and energy
+through dynamic landunit transitions.
+
+So, here we subtract baseline values from glacier columns, accounting
+for the two issues mentioned above: (1) we subtract the water and energy
+in the glacier ice, because this is a virtual state in CTSM, and (2) we
+add the water and energy from the vegetated column(s), to account for
+the fact that we don't have an explicit representation of
+soil-under-glacier (this carries the assumption that the
+soil-under-glacier has the same state as the initial vegetated state in
+that grid cell). We set these baselines in initialization, so they begin
+equal to the cold start state. Water and ice in the glacial ice stay
+fixed over the course of a simulation, so the cold start values should
+be the same as the current values at any point in time. The heat content
+of the glacial ice does change over time, but by subtracting this
+baseline value, we can potentially reduce the dynbal sensible heat
+fluxes (however, note that it's also possible that these sensible heat
+fluxes could increase when subtracting the cold start value, if ice
+temperatures are closer to 0 deg C than to the cold start value,
+currently 250 K).
+
+In addition, this introduces a new namelist flag,
+reset_dynbal_baselines, which allows the user to reset these baselines
+at some desired point in the simulation. I think that, in general, this
+resetting would break conservation. But as long as it is done before the
+onset of transient glaciers, I think this should be okay. In this way,
+the user can minimize dynbal fluxes even further, by resetting the
+baselines after the system has spun up. If the states haven't changed
+much from this point to the point when glacier dynamics occur, then the
+dynbal fluxes should now be very small. (See the documentation of this
+flag in namelist_definition_ctsm.xml for more details.)
+
+Without this change, dynbal fluxes for a grid cell that undergoes 100%
+glaciation / deglaciation in a single year are around 50 m ice, 1 m
+liquid water, and a few tens of W m-2 (where those quantities of ice and
+water are dribbled throughout the year, so we end up with an ice flux of
+about 1.5e-6 mm/s throughout the year; and the energy flux is applied
+evenly throughout the year - i.e., tens of W m-2 every time step for a
+year). With this change, and with reset_dynbal_baselines set at an
+appropriate time, these fluxes can be reduced to close to zero.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Partially addresses ESCOMP/ctsm#274 (Dynamic landunits: improve water
+  and energy conservation)
+
+CIME Issues fixed (include issue #):
+- Fixes three issues related to inputdata checksum:
+  - ESCMI/cime#3033
+  - ESCMI/cime#3034
+  - ESCMI/cime#3036
+
+Known bugs introduced in this tag (include github issue ID):
+- ESCOMP/ctsm#659 (Subtract dynbal baselines from begwb and endwb)
+  - This can't be fixed until we're okay having this answer change on
+    master
+
+Known bugs found since the previous tag (include github issue ID):
+- ESCOMP/ctsm#658 (Methane should not depend on gridcell-level TWS)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[X] clm4_5
+
+Significant answer changes for runs with transient glaciers.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- For runs with transient glaciers, careful thought should be given to
+  when to set reset_dynbal_baselines
+- Inconsistency between begwb/endwb and liq1/liq2/ice1/ice2 (see ESCOMP/ctsm#659)
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variable: reset_dynbal_baselines
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Inconsistency between begwb/endwb and liq1/liq2/ice1/ice2 (see ESCOMP/ctsm#659)
+
+Changes to tests or testing:
+- Tweaked a test with transient glacier areas, including adding this new
+  flag to the test
+
+Code reviewed by: Bill Lipscomb reviewed the conceptual ideas, but
+nobody has reviewed the actual code
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, answers change as expected
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev030
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL, but different configurations show
+      different levels of changes, as noted below
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      - new climate (at least regionally) for some configurations;
+        roundoff for others: see below
+
+    There are three levels of changes here:
+
+    (1) For runs with transient glaciers, there are large answer changes
+        in regions with changing glacier area. These answer changes are
+        in the various dynbal fluxes - for liquid water and ice runoff,
+        and for the dynbal sensible heat flux.
+
+    (2) For runs with transient vegetation (Hist, Dv and Fates), there
+        are roundoff-level changes in the dynbal fluxes. For liquid
+        water and ice, these changes appear to only occur in grid cells
+        where there is some glacier area (because now both the before
+        and after gridcell water contents have changed by the same fixed
+        amount, which changes the difference at the roundoff level). For
+        heat, there are roundoff-level changes everywhere (because of
+        changes in the order of operations).
+
+    (3) All runs have large changes in the diagnostic variables,
+        ICE_CONTENT1, LIQUID_CONTENT1 and HEAT_CONTENT1, over grid cells
+        containing some glacier area.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: cime5.7.9 -> ctsm/ctsm1.0/cime5.7.9/n01
+  - Fixes issues related to inputdata checksum
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/650
 
 ===============================================================
 ===============================================================

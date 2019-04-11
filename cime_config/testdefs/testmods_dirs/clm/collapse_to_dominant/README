@@ -1,4 +1,0 @@
-This test collapses unmanaged pfts to the 2 dominant ones and landunits
-to the two dominant ones to run the model faster.
-
-NB: This test is testing the 10x15 resolution only.
