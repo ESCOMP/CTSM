@@ -331,6 +331,9 @@ contains
        call CNGrainToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
             cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
+       call CNLivestemToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
+            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+
        ! gather all patch-level litterfall fluxes to the column for litter C and N inputs
 
        call CNLitterToColumn(bounds, num_soilc, filter_soilc, &
