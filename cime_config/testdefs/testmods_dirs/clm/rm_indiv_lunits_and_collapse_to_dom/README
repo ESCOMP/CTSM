@@ -1,0 +1,10 @@
+This test
+1) Keeps landunits with areas exceeding the correspondng "toosmall_*" namelist
+   thresholds and removes the rest
+2) Collapses unmanaged pfts to the 2 dominant ones
+3) Collapses urban landunits to the dominant landunit
+4) Collapses all landunits to the two dominant ones
+
+All this simplifies the gridcell representation so as to run faster.
+
+NB: This test is testing the 10x15 resolution only.

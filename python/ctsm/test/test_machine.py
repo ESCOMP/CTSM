@@ -120,7 +120,10 @@ class TestCreateMachine(unittest.TestCase):
         machine = create_machine('cheyenne', defaults, account='a123')
         self.assertMachineInfo(machine=machine,
                                name='cheyenne',
-                               scratch_dir='/glade/scratch/sacks',
+                               scratch_dir=os.path.join(os.path.sep,
+                                                        'glade',
+                                                        'scratch',
+                                                        get_user()),
                                account='a123')
         self.assertQsubInfo(machine=machine,
                             queue='regular',

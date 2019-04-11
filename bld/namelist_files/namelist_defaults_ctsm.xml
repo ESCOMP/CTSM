@@ -1140,6 +1140,15 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <create_crop_landunit     use_fates=".true." >.false.</create_crop_landunit>
 
 <run_zero_weight_urban>.false.</run_zero_weight_urban>
+<collapse_urban>.false.</collapse_urban>
+<n_dom_landunits>0</n_dom_landunits>
+<n_dom_pfts>0</n_dom_pfts>
+<toosmall_soil>0.d00</toosmall_soil>
+<toosmall_crop>0.d00</toosmall_crop>
+<toosmall_glacier>0.d00</toosmall_glacier>
+<toosmall_lake>0.d00</toosmall_lake>
+<toosmall_wetland>0.d00</toosmall_wetland>
+<toosmall_urban>0.d00</toosmall_urban>
 
 <collapse_urban structure="standard">.false.</collapse_urban>
 <collapse_urban structure="fast">.true.</collapse_urban>

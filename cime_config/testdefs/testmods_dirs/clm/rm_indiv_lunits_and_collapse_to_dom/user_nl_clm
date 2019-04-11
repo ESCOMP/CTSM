@@ -1,0 +1,9 @@
+toosmall_soil = 5.0
+toosmall_crop = 5.0
+toosmall_glacier = 5.0
+toosmall_lake = 5.0
+toosmall_wetland = 5.0
+toosmall_urban = 5.0
+n_dom_pfts = 2
+n_dom_landunits = 2
+collapse_urban = .true.

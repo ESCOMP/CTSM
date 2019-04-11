@@ -1,4 +1,237 @@
 ===============================================================
+Tag name:  ctsm1.0.dev033
+Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
+Date: Thu Apr 11 10:51:29 MDT 2019
+One-line Summary: Limit landunit presence with thresholds set in the namelist
+
+Purpose of changes
+------------------
+
+ Faster simulations. Motivated by NWP applications:
+ - Introduce user-defined namelist parameters to use as thresholds
+ above which landunit areas are kept and
+ below which landunit areas are removed.
+ - Introduce user-defined logical namelist parameter to collapse the up to
+ three urban landunits to the dominant urban landunit.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #581
+    Fixes #581 -- Allow zeroing out special landunits if their area is below some threshold 
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ - New namelist variables with valid real values from 0._r8 to 100._r8, where
+ 0 means "do nothing" and other values determine the threshold above
+ which to keep the landunit in a gridcell. The new variables are:
+ toosmall_soil
+ toosmall_crop
+ toosmall_glacier
+ toosmall_lake
+ toosmall_wetland
+ toosmall_urban
+ - New logical namelist variable collapse_urban. If .true. then the up to
+ three urban landunits collapse to the dominant urban landunit.
+
+---------------------------------------------
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    There's a typo in the name for n_dom_landunits (missing the s) in bld/CLMBuildNamelist.pm
+    build-namelist doesn't check for toosmall_* below 0 or above 100, but the code does
+
+Changes to tests or testing: Yes
+ New unit tests subroutine test_collapse_individual_lunits and
+ test_collapse_all_lunit_opts_active in test_surfrdUtils.pf
+ Modified standard suite test
+ ERS_D_Ld10.f10_f10_musgs.IHistClm50BgcCropGs.cheyenne_intel.clm-collapse_to_dominant_decStart
+ to
+ ERS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-rm_indiv_lunits_and_collapse_to_dom
+ and introduced fatal error message when namelist parameters toosmall_* > 0 or
+ n_dom_* > 0 in transient simulations
+
+Code reviewed by: Erik Kluzek, Bill Sacks
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (384 differences because of new namelist items)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+CTSM tag used for the baseline comparisons:
+ cheyenne ctsm1.0.dev031
+ hobart   ctsm1.0.dev032
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+ Note: Comparison to baseline gives NLCOMP failures because the new namelist
+ parameters always appear in the namelist now, even when they have not been
+ changed from their default value by the user.
+
+Detailed list of changes
+------------------------
+ - Introduced call to new subroutine collapse_individual_lunits that uses
+ the user-defined namelist variables listed above to determine whether
+ a landunit gets kept or removed from a gridcell.
+ - Introduced new call to collapse_to_dominant for when collapse_urban = .true.
+ - Introduced error checks that do not allow coexistence of transient
+ simulations and the toosmall_* variables OR the n_dom_pfts/n_dom_landunits
+ variables OR the collapse_urban parameter.
+
+Pull Requests that document the changes (include PR ids): #641
+ https://github.com/ESCOMP/ctsm/pull/641
+   #641 -- Ability to remove individual landunits for faster runs
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev032
+Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
+Date: Mon Apr  8 08:26:57 MDT 2019
+One-line Summary: Fixing the balance check to check for possible errors over all columns/patches
+
+Purpose of changes
+------------------
+Up until now, the BalanceCheckMod code in biogeophysics did not check all
+the possible errors over all columns or patches with the error threshold for
+aborting clm and it merely compared the last column/patch found (where
+warning threshold is met) with the error threshold.
+Therefore, there was always a possibility that the abort is not triggered
+when it should have been. This issue was first mentioned in ctsm issue #55
+for soil energy balance check, but a similar issue is also present for
+other balance checks in BalanceCheckMod.F90 .
+
+Below is the list of the balance checks with a similar issue:
+1. Water balance check
+2. Snow balance check
+3. Solar radiation energy balance check
+4. Longwave radiation energy balance check
+5. Surface energy balance check
+6. Soil energy balance check (Issue #55)
+
+For remediating this issue, we used MAXVAL and MAXLOC Fortran intrinsic functions
+to compare the largest error with the warning and error thresholds instead
+of checking the last column or looping over all columns.
+
+
+In addition, this PR also makes slight changes to ./run_sys_tests outputi/case
+directory structure. Previously for each case in a test suite, there were 
+two set of directories created by run_sys_tests as follows:
+ * one directory which included run/ and bld/ and named as $SCRATCH/[case-name]....
+ * The case directory which included logs , timings, CaseDocs/, and misc. scripts
+     for ./case.build, ./case.submit... under $SCRATCH/tests-[testID]/[case-name]....
+
+This made debugging confusing and populated many folders in user's scratch.
+Now, for every case in a test, all directories related to that case
+including bld/ and run/ directories are nested under the case directory under $SCRATCH/tests-[testID]/[case-name]....
+This is now similar to ./create_test output folder structure.
+
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm issue#55
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: 
+ - ./run_sys_test is changed so that it nests bld/ and run/ directories under the case directory as $SCRATCH/tests-[testID]/[case-name]...
+   The output folder structure now is similar to ./create_test for each case in a test.
+
+Code reviewed by: Bill Sacks
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run 
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev031
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/670
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev031
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Mar 13 15:03:42 MDT 2019
