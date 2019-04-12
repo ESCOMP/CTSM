@@ -2296,6 +2296,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 >lnd/clm2/mappingdata/maps/0.125nldas2/map_3x3min_LandScan2004_to_0.125nldas2_nomask_aave_da_c190408.nc</map>
 <map frm_hgrid="10x10min"    frm_lmask="IGBPmergeICESatGIS"  to_hgrid="0.125nldas2"   to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/0.125nldas2/map_10x10min_IGBPmergeICESatGIS_to_0.125nldas2_nomask_aave_da_c190408.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="0.125nldas2"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.125nldas2/map_3x3min_MODIS_to_0.125nldas2_nomask_aave_da_c190412.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="0.125nldas2"   to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/0.125nldas2/map_3x3min_MODIS-wCsp_to_0.125nldas2_nomask_aave_da_c190408.nc</map>
 <map frm_hgrid="0.5x0.5"    frm_lmask="MODIS"  to_hgrid="0.125nldas2"   to_lmask="nomask"
