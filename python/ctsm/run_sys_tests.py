@@ -496,7 +496,7 @@ def _build_create_test_cmd(cime_path, test_args, testid, testroot, create_test_a
     """
     command = [os.path.join(cime_path, 'scripts', 'create_test'),
                '--test-id', testid,
-               '--test-root', testroot]
+               '--output-root', testroot]
     command.extend(test_args)
     command.extend(create_test_args)
     return command
