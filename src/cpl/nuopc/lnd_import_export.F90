@@ -7,7 +7,7 @@ module lnd_import_export
   use ESMF                  , only : operator(/=), operator(==)
   use NUOPC                 , only : NUOPC_CompAttributeGet, NUOPC_Advertise, NUOPC_IsConnected
   use NUOPC_Model           , only : NUOPC_ModelGet
-  use shr_kind_mod          , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx
+  use shr_kind_mod          , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_infnan_mod        , only : isnan => shr_infnan_isnan
   use shr_string_mod        , only : shr_string_listGetName, shr_string_listGetNum
   use shr_sys_mod           , only : shr_sys_abort
@@ -1132,6 +1132,7 @@ contains
     real(R8), pointer           :: fldptr1d(:)
     real(R8), pointer           :: fldptr2d(:,:)
     type(ESMF_StateItem_Flag)   :: itemFlag
+    character(len=cs)           :: cvalue
     character(len=*), parameter :: subname='(lnd_import_export:state_getimport)'
     ! ----------------------------------------------
 
@@ -1144,13 +1145,15 @@ contains
     ! if field exists then create output array - else do nothing
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
 
-       call ESMF_LogWrite(trim(subname)//": getting import for "//trim(fldname), ESMF_LOGMSG_INFO)
-
        ! get field pointer
        if (present(ungridded_index)) then
+          write(cvalue,*) ungridded_index
+          call ESMF_LogWrite(trim(subname)//": getting import for "//trim(fldname)//" index "//trim(cvalue), &
+               ESMF_LOGMSG_INFO)
           call state_getfldptr(state, trim(fldname), fldptr2d=fldptr2d, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        else
+          call ESMF_LogWrite(trim(subname)//": getting import for "//trim(fldname),ESMF_LOGMSG_INFO)
           call state_getfldptr(state, trim(fldname), fldptr1d=fldptr1d, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
@@ -1212,6 +1215,7 @@ contains
     integer                     :: g, i, n
     real(R8), pointer           :: fldptr1d(:)
     real(R8), pointer           :: fldptr2d(:,:)
+    character(len=cs)           :: cvalue
     type(ESMF_StateItem_Flag)   :: itemFlag
     character(len=*), parameter :: subname='(lnd_import_export:state_setexport)'
     ! ----------------------------------------------
@@ -1225,13 +1229,14 @@ contains
     ! if field exists then create output array - else do nothing
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
 
-       call ESMF_LogWrite(trim(subname)//": setting export for "//trim(fldname), ESMF_LOGMSG_INFO)
-
        ! get field pointer
        if (present(ungridded_index)) then
+          call ESMF_LogWrite(trim(subname)//": setting export for "//trim(fldname)//" index "//trim(cvalue), &
+               ESMF_LOGMSG_INFO)
           call state_getfldptr(state, trim(fldname), fldptr2d=fldptr2d, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        else
+          call ESMF_LogWrite(trim(subname)//": setting export for "//trim(fldname), ESMF_LOGMSG_INFO)
           call state_getfldptr(state, trim(fldname), fldptr1d=fldptr1d, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
