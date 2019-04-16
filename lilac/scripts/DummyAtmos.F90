@@ -1,27 +1,22 @@
 module DummyAtmos
   use ESMF
-  use LilacMod
+  use lilac_utils, only: fldlist_add, fld_list_type, fldsMax
+
+
   implicit none
-  
-  character(*), parameter :: modname =  "(core)"
+
 
   type(ESMF_Field), public, save :: field
   type(ESMF_Field), public, save :: field_sie, field_u
-  
-  type fld_list_type
-     character(len=128) :: stdname
-     real*8             :: default_value
-     character(len=128) :: units
-     real*8, pointer    :: datafld1d(:)  ! this will be filled in by lilac when it gets its data from the host atm
-  end type fld_list_type
 
-
-!  integer, parameter      :: fldsMax = 100
   integer                 :: flds_x2a_num = 0
   integer                 :: flds_a2x_num = 0
 
   type(fld_list_type), allocatable :: x2a_fields(:)  
   type(fld_list_type), allocatable :: a2x_fields(:)  
+
+  !private
+  character(*), parameter :: modname =  "(core)"
 
   public atmos_register
 
@@ -109,7 +104,9 @@ module DummyAtmos
 
     ! Create individual states and add to field bundle
     fldsFrCpl_num = 1
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'dummy_var_1')
+    !call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'dummy_var_1', default_value=0.0, units='m')
+    !call fldlist_add
+    call fldlist_add(fldsToCpl_num, fldsFrCpl, 'Sa_u',       default_value=0.0,units='m/s')
     do n = 1,fldsFrCpl_num
        ! create field
        !!! Here we want to pass pointers
@@ -207,28 +204,28 @@ module DummyAtmos
   end subroutine atmos_final
   !===============================================================================
 
-  subroutine fldlist_add(num, fldlist, stdname)
-    integer,                    intent(inout) :: num
-    type(fld_list_type),        intent(inout) :: fldlist(:)
-    character(len=*),           intent(in)    :: stdname
+  !subroutine fldlist_add(num, fldlist, stdname)
+  !  integer,                    intent(inout) :: num
+  !  type(fld_list_type),        intent(inout) :: fldlist(:)
+  !  character(len=*),           intent(in)    :: stdname
 
     ! local variables
-    integer :: rc
-    integer :: dbrc
-    character(len=*), parameter :: subname='(lnd_import_export:fldlist_add)'
+  !  integer :: rc
+  !  integer :: dbrc
+  !  character(len=*), parameter :: subname='(lnd_import_export:fldlist_add)'
     !-------------------------------------------------------------------------------
 
     ! Set up a list of field information
 
-    num = num + 1
-    if (num > fldsMax) then
-       call ESMF_LogWrite(trim(subname)//": ERROR num > fldsMax "//trim(stdname), &
-            ESMF_LOGMSG_ERROR, line=__LINE__, file=__FILE__, rc=dbrc)
-       return
-    endif
-    fldlist(num)%stdname = trim(stdname)
+  !  num = num + 1
+   ! if (num > fldsMax) then
+   !    call ESMF_LogWrite(trim(subname)//": ERROR num > fldsMax "//trim(stdname), &
+   !         ESMF_LOGMSG_ERROR, line=__LINE__, file=__FILE__, rc=dbrc)
+   !    return
+   ! endif
+   ! fldlist(num)%stdname = trim(stdname)
 
-  end subroutine fldlist_add
+  !end subroutine fldlist_add
 
 
 

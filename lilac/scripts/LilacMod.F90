@@ -1,7 +1,11 @@
 !Khoda
 module LilacMod
 use ESMF
+use lilac_utils
 !use DummyAtmos
+use DummyAtmos, only : x2a_fields
+use DummyAtmos, only : a2x_fields
+use DummyAtmos, only : atmos_register
 implicit none
 
    ! Clock, TimeInterval, and Times
@@ -12,15 +16,6 @@ implicit none
    type(ESMF_Alarm)           :: EAlarm_stop, EAlarm_rest
    type(ESMF_Calendar),target :: calendar
    integer                    :: yy,mm,dd,sec
-
-   integer, parameter     :: fldsMax = 100
-
-   type fld_list_type
-     character(len=128) :: stdname
-     real*8             :: default_value
-     character(len=128) :: units
-     real*8, pointer    :: datafld1d(:)  ! this will be filled in by lilac when it gets its data from the host atm
-   end type fld_list_type
 
    character(*), parameter :: modname =  "(LilacMod)"
 
@@ -173,7 +168,7 @@ implicit none
  ! end subroutine fldlist_add
 
 
-subroutine fldlist_add(num, fldlist, stdname)
+subroutine fldlist_add_dumb(num, fldlist, stdname)
     integer,                    intent(inout) :: num
     type(fld_list_type),        intent(inout) :: fldlist(:)
     character(len=*),           intent(in)    :: stdname
@@ -194,12 +189,12 @@ subroutine fldlist_add(num, fldlist, stdname)
     endif
     fldlist(num)%stdname = trim(stdname)
 
-  end subroutine fldlist_add
- subroutine create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
+  end subroutine fldlist_add_dumb
+ subroutine create_fldlists_dumb(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
     type(fld_list_type),        intent(inout) :: fldsFrCpl(:)
     type(fld_list_type),        intent(inout) :: fldsToCpl(:)
-    integer, intent(out)                     :: fldsToCpl_num = 0
-    integer, intent(out)                     :: fldsFrCpl_num = 0
+    !integer, intent(out)                     :: fldsToCpl_num = 0
+    !integer, intent(out)                     :: fldsFrCpl_num = 0
 
     ! import fields
     ! call fldlist_add(fldsFrCpl_num, fldsFrCpl, trim(flds_scalar_name))
@@ -240,7 +235,7 @@ subroutine fldlist_add(num, fldlist, stdname)
     ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_topo')
     call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_u', default_value=0.0, units='m/s')
     call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_v', default_value=0.0, units='m/s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_ptem', default_value=280.0, 'degK')
+    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_ptem', default_value=280.0, units='degK')
     call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_pbot', default_value=100100.0, units='Pa')
     call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_tbot', default_value=280.0, units='degK')
     call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_shum', default_value=0.0004, units='kg/kg')
@@ -271,7 +266,7 @@ subroutine fldlist_add(num, fldlist, stdname)
     ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstwet4' )
 
     ! more: https://github.com/mvertens/ctsm/blob/ae02ffe25dbc4a85c769c9137b5b3d50f2843e89/src/cpl/nuopc/lnd_import_export.F90#L131
-  end subroutine create_fldlists
+  end subroutine create_fldlists_dumb
 
 end module LilacMod
 
