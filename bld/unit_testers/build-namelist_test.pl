@@ -165,7 +165,7 @@ my $mode = "-phys $phys";
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
 my $real_par_file = "user_nl_clm_real_parameters";
-my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -glc_nec 10 -no-note -output_reals $real_par_file";
+my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -configuration clm -structure standard -glc_nec 10 -no-note -output_reals $real_par_file";
 if ( $opts{'test'} ) {
    $bldnml .= " -test";
 }
