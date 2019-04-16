@@ -56,6 +56,12 @@ module CanopyFluxesMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyFluxesReadNML     ! Read in namelist settings
   public :: CanopyFluxes            ! Calculate canopy fluxes
+  public :: readParams
+
+  type, private :: params_type
+     real(r8) :: csoilc  ! Drag coefficient for soil under dense canopy (-)
+  end type params_type
+  type(params_type), private ::  params_inst
   !
   ! !PUBLIC DATA MEMBERS:
   ! true => btran is based only on unfrozen soil levels
@@ -97,7 +103,7 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: subname = 'CanopyFluxeseadNML'
+    character(len=*), parameter :: subname = 'CanopyFluxesReadNML'
     character(len=*), parameter :: nmlname = 'canopyfluxes_inparm'
     !-----------------------------------------------------------------------
 
@@ -132,6 +138,25 @@ contains
     end if
 
   end subroutine CanopyFluxesReadNML
+
+  !------------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_CanopyFluxes'
+    !--------------------------------------------------------------------
+
+    call readNcdioScalar(ncid, 'csoilc', subname, params_inst%csoilc)
+
+  end subroutine readParams
 
   !------------------------------------------------------------------------------
   subroutine CanopyFluxes(bounds,  num_exposedvegp, filter_exposedvegp,                  &
@@ -174,7 +199,7 @@ contains
     use shr_const_mod      , only : SHR_CONST_RGAS
     use clm_time_manager   , only : get_step_size, get_prev_date,is_end_curr_day
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice
-    use clm_varcon         , only : denh2o, tfrz, csoilc, tlsai_crit, alpha_aero
+    use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
     use clm_varcon         , only : c14ratio
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
@@ -824,10 +849,10 @@ contains
             if (use_undercanopy_stability .and. (taf(p) - t_grnd(c) ) > 0._r8) then
                ! decrease the value of csoilc by dividing it with (1+gamma*min(S, 10.0))
                ! ria ("gmanna" in Sakaguchi&Zeng, 2008) is a constant (=0.5)
-               ricsoilc = csoilc / (1.00_r8 + ria*min( ri, 10.0_r8) )
+               ricsoilc = params_inst%csoilc / (1.00_r8 + ria*min( ri, 10.0_r8) )
                csoilcn = csoilb*w + ricsoilc*(1._r8-w)
             else
-               csoilcn = csoilb*w + csoilc*(1._r8-w)
+               csoilcn = csoilb*w + params_inst%csoilc*(1._r8-w)
             end if
 
             !! Sakaguchi changes for stability formulation ends here

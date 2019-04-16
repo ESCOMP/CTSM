@@ -40,6 +40,7 @@ contains
     use SoilBiogeochemDecompCascadeBGCMod , only : readSoilBiogeochemDecompBgcParams      => readParams
     use SoilBiogeochemDecompCascadeCNMod  , only : readSoilBiogeochemDecompCnParams       => readParams
     use ch4Mod                            , only : readCH4Params                          => readParams
+    use CanopyFluxesMod                   , only : readParams_CanopyFluxes               => readParams
     use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
     use clm_varctl,                         only : NLFilename_in
     use PhotosynthesisMod                 , only : photosyns_type
@@ -97,6 +98,7 @@ contains
     ! Biogeophysics
     !
     call photosyns_inst%ReadParams( ncid )
+    call readParams_CanopyFluxes ( ncid )
 
 
     !
