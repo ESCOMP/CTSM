@@ -287,12 +287,14 @@ $mode = "-phys $phys";
 &make_config_cache($phys);
 
 print "\n===============================================================================\n";
-print "Test irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
+print "Test configuration, structure, irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
 print "=================================================================================\n";
 
-# irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
+# configuration, structure, irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
+foreach my $options ( "-configuration nwp",
+                      "-structure fast",
+                      "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
