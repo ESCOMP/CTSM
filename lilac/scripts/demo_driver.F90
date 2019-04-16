@@ -1,5 +1,5 @@
-!Khoda
 program demo_lilac_driver
+
   ! modules
   use ESMF
   use LilacMod
