@@ -80,6 +80,8 @@ module  PhotosynthesisMod
   ! !PUBLIC VARIABLES:
 
   type :: photo_params_type
+     real(r8) :: act25  ! Rubisco activity at 25 C (umol CO2/gRubisco/s)
+     real(r8) :: fnr  ! Mass ratio of total Rubisco molecular mass to nitrogen in Rubisco (gRubisco/gN in Rubisco)
      real(r8), allocatable, public  :: krmax              (:)
      real(r8), allocatable, private :: kmax               (:,:)
      real(r8), allocatable, private :: psi50              (:,:)
@@ -627,6 +629,7 @@ contains
     !
     ! !USES:
     use ncdio_pio , only : file_desc_t,ncd_io
+    use paramUtilMod, only: readNcdioScalar
     implicit none
 
     ! !ARGUMENTS:
@@ -671,6 +674,13 @@ contains
     call ncd_io(varname=trim(tString),data=temp2d, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%ck=temp2d
+
+    ! read in the scalar parameters
+
+    ! Rubisco activity at 25 C (umol CO2/gRubisco/s)
+    call readNcdioScalar(ncid, 'act25', subname, params_inst%act25)
+    ! Mass ratio of total Rubisco molecular mass to nitrogen in Rubisco (gRubisco/gN(Rubisco))
+    call readNcdioScalar(ncid, 'fnr', subname, params_inst%fnr)
 
   end subroutine readParams
 
@@ -1059,8 +1069,6 @@ contains
     real(r8) :: aquad,bquad,cquad ! terms for quadratic equations
     real(r8) :: r1,r2             ! roots of quadratic equation
     real(r8) :: ceair             ! vapor pressure of air, constrained (Pa)
-    real(r8) :: fnr               ! (gRubisco/gN in Rubisco)
-    real(r8) :: act25             ! (umol/mgRubisco/min) Rubisco activity at 25 C
     integer  :: niter             ! iteration loop index
     real(r8) :: nscaler           ! leaf nitrogen scaling coefficient
 
@@ -1218,13 +1226,6 @@ contains
 
       dtime = get_step_size()
 
-      ! vcmax25 parameters, from CN
-
-      fnr = 7.16_r8
-      act25 = 3.6_r8   !umol/mgRubisco/min
-      ! Convert rubisco activity units from umol/mgRubisco/min -> umol/gRubisco/s
-      act25 = act25 * 1000.0_r8 / 60.0_r8
-
       ! Activation energy, from:
       ! Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
       ! Bernacchi et al (2003) Plant, Cell and Environment 26:1419-1430
@@ -1375,7 +1376,7 @@ contains
          ! Default
          if (vcmax_opt == 0) then                                                   
             ! vcmax25 at canopy top, as in CN but using lnc at top of the canopy
-            vcmax25top = lnc(p) * flnr(patch%itype(p)) * fnr * act25 * dayl_factor(p)
+            vcmax25top = lnc(p) * flnr(patch%itype(p)) * params_inst%fnr * params_inst%act25 * dayl_factor(p)
             if (.not. use_cn) then
                vcmax25top = vcmax25top * fnitr(patch%itype(p))
             else
@@ -1387,11 +1388,11 @@ contains
             nptreemax = 9  ! is this number correct? check later 
             if (patch%itype(p) >= nptreemax) then   ! if not tree 
                ! for shrubs and herbs 
-               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) + s_flnr(patch%itype(p)) * lnc(p) ) * fnr * act25 * &
+               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) + s_flnr(patch%itype(p)) * lnc(p) ) * params_inst%fnr * params_inst%act25 * &
                     dayl_factor(p)
             else
                ! if tree 
-               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) * exp(s_flnr(patch%itype(p)) * lnc(p)) ) * fnr * act25 * &
+               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) * exp(s_flnr(patch%itype(p)) * lnc(p)) ) * params_inst%fnr * params_inst%act25 * &
                     dayl_factor(p)
                ! for trees 
             end if     
@@ -2552,8 +2553,6 @@ contains
     real(r8) :: aquad,bquad,cquad ! terms for quadratic equations
     real(r8) :: r1,r2             ! roots of quadratic equation
     real(r8) :: ceair             ! vapor pressure of air, constrained (Pa)
-    real(r8) :: fnr               ! (gRubisco/gN in Rubisco)
-    real(r8) :: act25             ! (umol/mgRubisco/min) Rubisco activity at 25 C
     integer  :: iter1             ! number of iterations used, for record only
     integer  :: iter2             ! number of iterations used, for record only 
     real(r8) :: nscaler           ! leaf nitrogen scaling coefficient
@@ -2781,13 +2780,6 @@ contains
 
       dtime = get_step_size()
 
-      ! vcmax25 parameters, from CN
-
-      fnr = 7.16_r8
-      act25 = 3.6_r8   !umol/mgRubisco/min
-      ! Convert rubisco activity units from umol/mgRubisco/min -> umol/gRubisco/s
-      act25 = act25 * 1000.0_r8 / 60.0_r8
-
       ! Activation energy, from:
       ! Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
       ! Bernacchi et al (2003) Plant, Cell and Environment 26:1419-1430
@@ -2988,7 +2980,7 @@ contains
          ! Default
          if (vcmax_opt == 0) then                                                   
             ! vcmax25 at canopy top, as in CN but using lnc at top of the canopy
-            vcmax25top = lnc(p) * flnr(patch%itype(p)) * fnr * act25 * dayl_factor(p)
+            vcmax25top = lnc(p) * flnr(patch%itype(p)) * params_inst%fnr * params_inst%act25 * dayl_factor(p)
             if (.not. use_cn) then
                vcmax25top = vcmax25top * fnitr(patch%itype(p))
             else
@@ -3000,11 +2992,11 @@ contains
             nptreemax = 9  ! is this number correct? check later
             if (patch%itype(p) >= nptreemax) then   ! if not tree
                ! for shrubs and herbs
-               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) + s_flnr(patch%itype(p)) * lnc(p) ) * fnr * act25 * &
+               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) + s_flnr(patch%itype(p)) * lnc(p) ) * params_inst%fnr * params_inst%act25 * &
                     dayl_factor(p)
             else
                ! if tree
-               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) * exp(s_flnr(patch%itype(p)) * lnc(p)) ) * fnr * act25 * &
+               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) * exp(s_flnr(patch%itype(p)) * lnc(p)) ) * params_inst%fnr * params_inst%act25 * &
                     dayl_factor(p)
                ! for trees
             end if

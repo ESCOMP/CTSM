@@ -60,6 +60,9 @@ module CanopyFluxesMod
 
   type, private :: params_type
      real(r8) :: csoilc  ! Drag coefficient for soil under dense canopy (-)
+     real(r8) :: cv  ! Turbulent transfer coeff. between canopy surface and canopy air (m/s^(1/2))
+     real(r8) :: lai_dl  ! Plant litter area index (m2/m2)
+     real(r8) :: z_dl  ! Litter layer thickness (m)
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -154,7 +157,14 @@ contains
     character(len=*), parameter :: subname = 'readParams_CanopyFluxes'
     !--------------------------------------------------------------------
 
+    ! Drag coefficient for soil under dense canopy (unitless)
     call readNcdioScalar(ncid, 'csoilc', subname, params_inst%csoilc)
+    ! Turbulent transfer coeff between canopy surface and canopy air (m/s^(1/2))
+    call readNcdioScalar(ncid, 'cv', subname, params_inst%cv)
+    !added by K.Sakaguchi for litter resistance: Plant litter area index (m2/m2)
+    call readNcdioScalar(ncid, 'lai_dl', subname, params_inst%lai_dl)
+    !added by K.Sakaguchi for litter resistance: Litter layer thickness (m)
+    call readNcdioScalar(ncid, 'z_dl', subname, params_inst%z_dl)
 
   end subroutine readParams
 
@@ -250,10 +260,6 @@ contains
     real(r8), parameter :: dtmin = 0.01_r8  ! max limit for temperature convergence [K]
     integer , parameter :: itmax = 40       ! maximum number of iteration [-]
     integer , parameter :: itmin = 2        ! minimum number of iteration [-]
-
-    !added by K.Sakaguchi for litter resistance
-    real(r8), parameter :: lai_dl = 0.5_r8           ! placeholder for (dry) plant litter area index (m2/m2)
-    real(r8), parameter :: z_dl = 0.05_r8            ! placeholder for (dry) litter layer thickness (m)
 
     !added by K.Sakaguchi for stability formulation
     real(r8), parameter :: ria  = 0.5_r8             ! free parameter for stable formulation (currently = 0.5, "gamma" in Sakaguchi&Zeng,2008)
@@ -826,7 +832,7 @@ contains
                dleaf_patch(p) = dleaf(patch%itype(p))
             end if
 
-            cf  = 0.01_r8/(sqrt(uaf(p))*sqrt( dleaf_patch(p) ))
+            cf  = params_inst%cv / (sqrt(uaf(p)) * sqrt(dleaf_patch(p)))
             rb(p)  = 1._r8/(cf*uaf(p))
             rb1(p) = rb(p)
 
@@ -995,9 +1001,9 @@ contains
             wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
 
             !Litter layer resistance. Added by K.Sakaguchi
-            snow_depth_c = z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
+            snow_depth_c = params_inst%z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
             fsno_dl = snow_depth(c)/snow_depth_c    ! effective snow cover for (dry)plant litter
-            elai_dl = lai_dl*(1._r8 - min(fsno_dl,1._r8)) ! exposed (dry)litter area index
+            elai_dl = params_inst%lai_dl * (1._r8 - min(fsno_dl,1._r8)) ! exposed (dry)litter area index
             rdl = ( 1._r8 - exp(-elai_dl) ) / ( 0.004_r8*uaf(p)) ! dry litter layer resistance
 
             ! add litter resistance and Lee and Pielke 1992 beta
