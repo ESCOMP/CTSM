@@ -1,0 +1,3 @@
+! Turn off the Carbon isotope output fields (this is important for the LCISO test to compare isotopes on and off)
+hist_fexcl1='C13_AR','C13_GPP', 'C13_HR', 'C13_NBP', 'C13_SOILC_vr', 'C13_TOTECOSYSC', 'C13_TOTLITC', 'C13_TOTSOMC', 'C13_TOTVEGC',
+            'C14_AR','C14_GPP', 'C14_HR', 'C14_NBP', 'C14_SOILC_vr', 'C14_TOTECOSYSC', 'C14_TOTLITC', 'C14_TOTSOMC', 'C14_TOTVEGC'
