@@ -22,6 +22,7 @@ module surfrdUtilsMod
   public :: renormalize         ! Renormalize an array
   public :: convert_cft_to_pft  ! Conversion of crop CFT to natural veg PFT:w
   public :: collapse_crop_types ! Collapse unused crop types into types used in this run
+  public :: collapse_individual_lunits  ! Collapse landunits by user-defined thresholds
   public :: collapse_to_dominant ! Collapse to dominant pfts or landunits
   public :: collapse_crop_var  ! Collapse crop variables according to cft weights determined in previous "collapse" subroutines
 
@@ -44,23 +45,26 @@ contains
     character(len=*), intent(in) :: name         ! name of array
     character(len=*), intent(in) :: caller       ! identifier of caller, for more meaningful error messages
     integer, optional, intent(out):: ier         ! Return an error code rather than abort
-    real(r8), optional, intent(out):: sumto      ! The value the array should sum to (1.0 if not provided)
+    real(r8), optional, intent(out):: sumto(lb:)  ! The value the array should sum to (1.0 if not provided)
     !
     ! !LOCAL VARIABLES:
     logical :: found
     integer :: nl
     integer :: nindx
     real(r8), parameter :: eps = 1.e-13_r8
-    real(r8) :: TotalSum
+    real(r8), allocatable :: TotalSum(:)
+    integer :: ub  ! upper bound of the first dimension of arr
     !-----------------------------------------------------------------------
 
+    ub = ubound(arr, 1)
+    allocate(TotalSum(lb:ub))
     TotalSum = 1._r8
     if ( present(sumto) ) TotalSum = sumto
     if( present(ier) ) ier = 0
     found = .false.
 
-    do nl = lbound(arr, 1), ubound(arr, 1)
-       if (abs(sum(arr(nl,:)) - TotalSum) > eps) then
+    do nl = lbound(arr, 1), ub
+       if (abs(sum(arr(nl,:)) - TotalSum(nl)) > eps) then
           found = .true.
           nindx = nl
           exit
@@ -68,7 +72,7 @@ contains
     end do
 
     if (found) then
-       write(iulog,*) trim(caller), ' ERROR: sum of ', trim(name), ' not ', TotalSum, ' at nl=', nindx
+       write(iulog,*) trim(caller), ' ERROR: sum of ', trim(name), ' not ', TotalSum(nindx), ' at nl=', nindx
        write(iulog,*) 'sum is: ', sum(arr(nindx,:))
        if( present(ier) ) then
           ier = -10
@@ -76,6 +80,8 @@ contains
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end if
+
+    deallocate(TotalSum)
 
   end subroutine check_sums_equal_1
 
@@ -146,6 +152,88 @@ contains
   end subroutine convert_cft_to_pft
 
   !-----------------------------------------------------------------------
+  subroutine collapse_individual_lunits(wt_lunit, begg, endg, toosmall_soil, &
+                                        toosmall_crop, toosmall_glacier, &
+                                        toosmall_lake, toosmall_wetland, &
+                                        toosmall_urban)
+    ! DESCRIPTION
+    ! Keep landunits above the user-defined thresholds and remove the rest
+    !
+    ! !USES:
+    use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+                               istdlak, istwet, isturb_tbd, isturb_hd, &
+                               isturb_md
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: begg  ! Beginning grid cell index
+    integer, intent(in) :: endg  ! Ending grid cell index
+    real(r8), intent(in) :: toosmall_soil  ! Soil landunit threshold (%)
+    real(r8), intent(in) :: toosmall_crop  ! Crop landunit threshold (%)
+    real(r8), intent(in) :: toosmall_glacier  ! Glacier landunit threshold (%)
+    real(r8), intent(in) :: toosmall_lake  ! Lake landunit threshold (%)
+    real(r8), intent(in) :: toosmall_wetland  ! Wetland landunit threshold (%)
+    real(r8), intent(in) :: toosmall_urban  ! Urban landunits threshold (%)
+    ! This array modified in-place
+    ! Weights of landunits per grid cell
+    real(r8), intent(inout) :: wt_lunit(begg:endg, max_lunit)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g  ! grid cell indexes
+    integer :: m  ! landunit indexes
+    integer :: max_landunit  ! landunit with largest fraction
+    real(r8) :: toosmall_any  ! sum of the landunit thresholds
+    real(r8) :: toosmall(max_lunit)  ! Array of the thresholds (fraction)
+    real(r8) :: residual(max_lunit)  ! Array of wt_lunit residuals (fraction)
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(wt_lunit) == (/endg, max_lunit/)), errMsg(sourcefile, __LINE__))
+
+    toosmall_any = toosmall_soil + toosmall_crop + toosmall_glacier + &
+                   toosmall_lake + toosmall_wetland + toosmall_urban
+
+    if (toosmall_any > 0._r8) then
+
+       ! Copy the user-defined percent thresholds into array of fractions
+       toosmall(istsoil) = toosmall_soil / 100._r8
+       toosmall(istcrop) = toosmall_crop / 100._r8
+       toosmall(istice_mec) = toosmall_glacier / 100._r8
+       toosmall(istdlak) = toosmall_lake / 100._r8
+       toosmall(istwet) = toosmall_wetland / 100._r8
+       toosmall(isturb_tbd) = toosmall_urban / 100._r8
+       toosmall(isturb_hd) = toosmall_urban / 100._r8
+       toosmall(isturb_md) = toosmall_urban / 100._r8
+
+       ! Loop through gridcells and landunits
+       do g = begg, endg
+          residual = 0._r8  ! initialize
+          do m = 1, max_lunit
+             ! Remove landunits that are too small
+             if (wt_lunit(g,m) > 0._r8 .and. wt_lunit(g,m) <= toosmall(m)) then
+                residual(m) = wt_lunit(g,m)
+                wt_lunit(g,m) = 0._r8
+             end if
+          end do
+          ! If all landunits got removed, go back and keep the largest landunit
+          if (sum(wt_lunit(g,:)) == 0._r8) then
+             max_landunit = maxloc(residual, 1)
+             wt_lunit(g,max_landunit) = residual(max_landunit)
+             write(iulog,*) 'WARNING: The values of namelist parameters '
+             write(iulog,*) 'toosmall_* have resulted in the removal of all '
+             write(iulog,*) 'landunits in grid cell g = ', g, '. The model '
+             write(iulog,*) 'requires at least one landunit per grid cell, '
+             write(iulog,*) 'so the model has put back in this grid cell '
+             write(iulog,*) 'the largest landunit.'
+          end if
+       end do
+
+       ! Renormalize wt_lunit
+       call renormalize(wt_lunit, begg, 1._r8)
+
+    end if  ! ...else skip the work in this subroutine
+
+  end subroutine collapse_individual_lunits
+
+  !-----------------------------------------------------------------------
   subroutine collapse_to_dominant(weight, lower_bound, upper_bound, begg, endg, n_dominant)
     !
     ! DESCRIPTION
@@ -172,7 +260,8 @@ contains
     integer :: m  ! pft or landunit index
     integer :: n  ! index of the order of the dominant pfts or landunits
     integer, allocatable :: max_indices(:)  ! array of dominant pft or landunit index values
-    real(r8) :: wt_dom_sum
+    real(r8) :: wt_sum(begg:endg)  ! original sum of all the weights
+    real(r8) :: wt_dom_sum  ! sum of the weights of the dominants
 
     character(len=*), parameter :: subname = 'collapse_to_dominant'
 
@@ -191,8 +280,12 @@ contains
           call find_k_max_indices(weight(g,:), lower_bound, n_dominant, &
                                   max_indices)
 
-          ! Adjust weight by normalizing the dominant weights to 1
-          ! (currently they sum to <= 1) and setting the remaining weights to 0.
+          ! Adjust weight by normalizing the dominant weights to the original
+          ! sum of weights (currently they sum to <= original sum of weights).
+          ! Typically the original sum of weights = 1, but if
+          ! collapse_urban = .true., it equals the sum of the urban landunits.
+          ! Also set the remaining weights to 0.
+          wt_sum(g) = sum(weight(g,:))  ! original sum of all the weights
           wt_dom_sum = 0._r8  ! initialize the dominant pft or landunit sum
           do n = 1, n_dominant
              m = max_indices(n)
@@ -200,14 +293,15 @@ contains
           end do
           ! Normalize dominant pft or landunit weights to 1; if non-existent,
           ! set the weights to 0.
-          if (wt_dom_sum <= 0._r8) then
+          if (wt_sum(g) > 0._r8 .and. wt_dom_sum <= 0._r8) then
              call endrun(msg = subname//' wt_dom_sum should never be <= 0'//&
-                  ' but it is here' // errMsg(sourcefile, __LINE__))
-          else
+                  ' but it is here ' // errMsg(sourcefile, __LINE__))
+          else if (wt_dom_sum > 0._r8) then  ! wt_sum(g) > 0 is implied by this
              do n = 1, n_dominant
                 m = max_indices(n)
-                weight(g,m) = weight(g,m) / wt_dom_sum
+                weight(g,m) = weight(g,m) * wt_sum(g) / wt_dom_sum
              end do
+         !else  ! DO NOTHING because wt_sum(g) = 0
           end if
           ! Set non-dominant weights to 0
           do m = lower_bound, upper_bound
@@ -215,11 +309,10 @@ contains
                 weight(g,m) = 0._r8
              end if
           end do
-
        end do
 
-       ! Error checks
-       call check_sums_equal_1(weight, begg, 'weight', subname)
+       ! Error check
+       call check_sums_equal_1(weight, begg, 'weight', subname, sumto=wt_sum)
 
        deallocate(max_indices)
     end if
@@ -296,7 +389,7 @@ contains
     ! This array is modified in-place
     real(r8), intent(inout) :: wt_cft(begg:, cft_lb:)
     real(r8), intent(inout) :: fert_cft(begg:, cft_lb:)
-    real(r8), intent(in), optional :: sumto                   ! What weights should sum to for one grid-cell
+    real(r8), intent(in), optional :: sumto(begg:endg)  ! What weights should sum to per grid-cell
 
     logical, intent(in) :: verbose  ! If true, print some extra information
     !
@@ -306,7 +399,7 @@ contains
     real(r8) :: wt_cft_to
     real(r8) :: wt_cft_from
     real(r8) :: wt_cft_merge
-    real(r8) :: TotalSum       ! What the total is expected to sum to
+    real(r8) :: TotalSum(begg:endg)  ! What the total is expected to sum to
 
     character(len=*), parameter :: subname = 'collapse_crop_types'
     !-----------------------------------------------------------------------
@@ -317,7 +410,7 @@ contains
        SHR_ASSERT_ALL((ubound(fert_cft) == (/endg, cft_lb+cftsize-1/)), errMsg(sourcefile, __LINE__))
 
        TotalSum = 1.0_r8
-       if ( present(sumto) ) TotalSum = sumto  ! e.g. sumto may = 100._r8
+       if ( present(sumto) ) TotalSum = sumto  ! e.g. sumto(g) may = 100._r8
 
        ! -----------------------------------------------------------------------
        ! If not using irrigation, merge irrigated CFTs into rainfed CFTs
