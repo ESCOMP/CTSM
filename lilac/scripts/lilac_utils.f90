@@ -1,7 +1,7 @@
 module lilac_utils
 use ESMF
 implicit none
-!!! NS: THIS IS JH WORK
+!!! NS: THIS IS FROM JH WORK
 
     integer, parameter     :: fldsMax = 100
 
@@ -19,6 +19,7 @@ implicit none
 !===============================================================================
 
     subroutine fldlist_add(num, fldlist, stdname, default_value, units)
+    ! This adds a field to a fieldlist!
         integer,                     intent(inout) :: num
         type(fld_list_type),         intent(inout) :: fldlist(:)
         character(len=*),            intent(in)    :: stdname
@@ -52,6 +53,7 @@ implicit none
     end subroutine fldlist_add
 
     subroutine create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
+    ! add all the necessary fields one by one to the fieldlist 
         type(fld_list_type),        intent(inout)      ::  fldsFrCpl(:)
         type(fld_list_type),        intent(inout)      ::  fldsToCpl(:)
         !integer,                    intent(out)        ::  fldsToCpl_num = 0
