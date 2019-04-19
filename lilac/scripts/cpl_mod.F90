@@ -24,9 +24,7 @@ module cpl_mod
       !if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
 
 
-    end subroutine
-    
-
+    end subroutine cpl_atm2lnd_register
 
 
     subroutine cpl_atm2lnd_init(cplcomp, importState, exportState, clock, rc)
@@ -36,7 +34,7 @@ module cpl_mod
       type(ESMF_Clock)     :: clock
       integer, intent(inout) :: rc
 
-    end subroutine
+    end subroutine cpl_atm2lnd_init
 
 
 
