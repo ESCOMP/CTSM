@@ -19,7 +19,7 @@ program demo_lilac_driver
   print *, "dum_var1 = ", dum_var1
   print *, "dum_var2 = ", dum_var2
   call lilac_init(dum_var1, dum_var2)
-  call lilac_run(dum_var1, dum_var2)
+  !call lilac_run(dum_var1, dum_var2)
   call ESMF_Finalize()
 
 

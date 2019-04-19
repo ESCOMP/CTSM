@@ -91,6 +91,7 @@ implicit none
     call ESMF_GridCompInitialize(dummy_atmos_comp, &
         importState=importState, exportState=exportState, &
         clock=clock, rc=rc)
+    !, dum_var1= dum_var1, dum_var2= dum_var2)
     !call ESMF_GridCompInitialize(self%land_comp, importState=self%land_import, exportState=self%land_export, rc=rc) 
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
@@ -120,7 +121,7 @@ implicit none
 
     !search through fldlist array to find the right fldist object to do the copy - say its index N
 
-    x2a_fields(n)%datafld1d(:) = dum_var_input(:)
+    !x2a_fields(n)%datafld1d(:) = dum_var_input(:)
 
     !call ESMF_CplCompRun(cpl_atm2lnd, rc=rc)
 

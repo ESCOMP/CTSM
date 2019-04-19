@@ -12,6 +12,7 @@ module DummyAtmos
   integer                 :: flds_x2a_num = 0
   integer                 :: flds_a2x_num = 0
 
+
   type(fld_list_type), allocatable :: x2a_fields(:)  
   type(fld_list_type), allocatable :: a2x_fields(:)  
 
@@ -19,6 +20,15 @@ module DummyAtmos
   character(*), parameter :: modname =  "(core)"
 
   public atmos_register
+  !public  :: add_fields
+  !public  :: import_fields
+  !public  :: export_fields
+
+
+
+
+  !!! Adding import export states stuff here....
+
 
   contains
 
@@ -45,7 +55,9 @@ module DummyAtmos
 
   end subroutine atmos_register
 
-  subroutine atmos_init(comp, importState, exportState, clock, rc)
+  subroutine atmos_init(comp, importState, exportState, clock, rc) 
+      !, dum_var1, dum_var2)
+
     type (ESMF_GridComp)     :: comp
     type (ESMF_State)        :: importState, exportState
     type (ESMF_Clock)        :: clock
@@ -66,7 +78,14 @@ module DummyAtmos
     
     type(ESMF_Mesh)      :: Emesh
     character(len=ESMF_MAXSTR)            :: atmos_mesh_filepath
-    
+
+    real, pointer :: dum_var1_ptr (:)
+    real, pointer :: dum_var2_ptr (:)
+    real, dimension(10) :: dum_var1
+    real, dimension(10) :: dum_var2
+
+
+
     ! Initialize return code
 
     rc = ESMF_SUCCESS
@@ -77,6 +96,15 @@ module DummyAtmos
 
     ! For now this is our dummy mesh: 
     atmos_mesh_filepath='/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'
+    
+    EMesh = ESMF_MeshCreate(filename=trim(atmos_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"Mesh for atmosphere is created!", ESMF_LOGMSG_INFO)
+    print *, "!Mesh for atmosphere is created!"
+
+    !-------------------------------------------------------------------------
+    ! Create States -- x2a_state (import) -- a2x_state (export)
+    !-------------------------------------------------------------------------
     
     EMesh = ESMF_MeshCreate(filename=trim(atmos_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
@@ -103,17 +131,18 @@ module DummyAtmos
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
     ! Create individual states and add to field bundle
-    fldsFrCpl_num = 1
+    fldsFrCpl_num = 0
     !call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'dummy_var_1', default_value=0.0, units='m')
     !call fldlist_add
-    call fldlist_add(fldsToCpl_num, fldsFrCpl, 'Sa_u',       default_value=0.0,units='m/s')
+    !`call fldlist_add(fldsToCpl_num, fldsFrCpl, 'Sa_u',       default_value=0.0,units='m/s')
     do n = 1,fldsFrCpl_num
        ! create field
        !!! Here we want to pass pointers
-       !!!
+       !!! Create With pointer ? or fieldcreate and then fieldget
+       field = ESMF_FieldCreate(Emesh,farrayPtr=dum_var1_ptr,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(fldsFrCpl(n)%stdname), rc=rc)
        !field = ESMF_FieldCreate(lmesh,farrayPtr=x2a_fields%fields(:, n),  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(fldsFrCpl(n)%stdname), rc=rc)
        print *, trim(fldsFrCpl(n)%stdname)
-       field = ESMF_FieldCreate(EMesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(fldsFrCpl(n)%stdname), rc=rc)
+       !field = ESMF_FieldCreate(EMesh, farrayPtr ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(fldsFrCpl(n)%stdname), rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
        ! add field to field bundle
        call ESMF_FieldBundleAdd(FBout, (/field/), rc=rc)
@@ -131,7 +160,7 @@ module DummyAtmos
 
     ! Create individual states and add to field bundle
     fldsToCpl_num = 1
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'dummy_var2'      )
+    call fldlist_add(fldsToCpl_num, fldsToCpl, 'dum_var2'      )
     do n = 1,fldsToCpl_num
        ! create field
        !field = ESMF_FieldCreate(lmesh, farrayPtr=a2x_field%fields(:,n) , meshloc=ESMF_MESHLOC_ELEMENT, name=trim(fldsToCpl(n)%stdname), rc=rc)
@@ -140,15 +169,7 @@ module DummyAtmos
        ! initialize with default value
        !call ESMF_FieldGet(field, farrayPtr=fldptr, rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-       !fldptr = fldsToCpl(n)%default_value
-
-       ! add field to field bundle
-       call ESMF_FieldBundleAdd(FBout, (/field/), rc=rc)
-       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     enddo
-    print *, "!Fields to  Coupler (fldstoCpl) Field Bundle Created!"
-
-    ! Add FB to state
     call ESMF_StateAdd(a2x_state, (/FBout/), rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     print *, "!a2x_state is filld with dummy_var field bundle!"
