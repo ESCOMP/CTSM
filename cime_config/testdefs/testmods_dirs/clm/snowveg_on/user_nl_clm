@@ -1,0 +1,2 @@
+! The default for snowveg_flag is 'ON_RAD'. This test covers the case where this is simply 'ON'.
+snowveg_flag = 'ON'
