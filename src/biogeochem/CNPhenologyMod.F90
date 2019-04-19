@@ -96,7 +96,6 @@ module CNPhenologyMod
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
-
   !-----------------------------------------------------------------------
 
 contains
