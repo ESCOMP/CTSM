@@ -71,6 +71,12 @@ Changes to tests or testing:
   paths triggered by this setting were previously covered by clm45
   cases. Now that both clm45 and clm50 use snowveg_flag = 'ON_RAD',
   there was some uncovered code. This new test covers this code.)
+- Changed long single-point tests to use Qian forcing: With the default
+  GSWP3 forcing, the vast majority of the runtime was being spent in
+  datm. In addition, I was getting repeated failures of
+  ERS_Lm54_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropGs.cheyenne_intel.clm-cropMonthOutput,
+  I think due to memory issues; I'm hopeful that changing the datm
+  forcing will help with that.
 
 Code reviewed by: self
 
