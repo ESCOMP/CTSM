@@ -64,6 +64,7 @@ module DummyAtmos
     integer, intent(out)    :: rc
     
     !!! TODO: Maybe it is better to call these fldsToAtm and fldsFrAtm
+
     type (fld_list_type)    :: fldsToCpl(fldsMax)
     type (fld_list_type)    :: fldsFrCpl(fldsMax)
     integer                 :: fldsToCpl_num
@@ -122,6 +123,20 @@ module DummyAtmos
     print *, "!empty a2x_state (export) is created!"
 
     !-------------------------------------------------------------------------
+    ! Create Field lists -- Basically create a list of fields and add a default
+    ! value to them.
+    !-------------------------------------------------------------------------
+
+    !!! FOR NOW LET'S JUST ADD TWO THINGS....
+    !!! WE WILL PUT THIS UNDER CREATE_FLDLIST LATER
+    fldsFrCpl_num = 1
+    fldsToCpl_num = 2
+
+    call fldlist_add(fldsToCpl_num, fldsToCpl, 'dum_var1', default_value=30.0, units='m')
+    call fldlist_add(fldsToCpl_num, fldsToCpl, 'dum_var2', default_value=30.0, units='m')
+
+
+    !-------------------------------------------------------------------------
     ! Coupler (land) to Atmosphere Fields --  x2a
     ! I- Create Field Bundle -- FBout for now-- TODO: negin want to rename to x2a_fieldbundle
     ! II- Create  Fields and add them to field bundle 
@@ -130,11 +145,14 @@ module DummyAtmos
     FBout = ESMF_FieldBundleCreate(name="x2a_fields", rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
+
+
+
+    !!! THIS IS INIT! We don't Have anything from coupler
+
     ! Create individual states and add to field bundle
     fldsFrCpl_num = 0
     !call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'dummy_var_1', default_value=0.0, units='m')
-    !call fldlist_add
-    !`call fldlist_add(fldsToCpl_num, fldsFrCpl, 'Sa_u',       default_value=0.0,units='m/s')
     do n = 1,fldsFrCpl_num
        ! create field
        !!! Here we want to pass pointers
@@ -225,6 +243,7 @@ module DummyAtmos
   end subroutine atmos_final
   !===============================================================================
 
+  ! Let's put this in a lilac_utils
   !subroutine fldlist_add(num, fldlist, stdname)
   !  integer,                    intent(inout) :: num
   !  type(fld_list_type),        intent(inout) :: fldlist(:)

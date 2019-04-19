@@ -6,6 +6,11 @@ use lilac_utils
 use DummyAtmos, only : x2a_fields
 use DummyAtmos, only : a2x_fields
 use DummyAtmos, only : atmos_register
+
+use cpl_mod
+
+
+
 implicit none
 
    ! Clock, TimeInterval, and Times
@@ -21,7 +26,8 @@ implicit none
 
   !===============================================================================
 
-  !public :: lilac_init
+  public :: lilac_init
+  public :: lilac_run
   contains
 
   subroutine lilac_init( dum_var1, dum_var2)
@@ -32,16 +38,22 @@ implicit none
     real, dimension(10) :: dum_var2
 
     ! Component, and State
-    type(ESMF_GridComp) :: dummy_atmos_comp  ! the coupled flow Component
-    type(ESMF_State)    :: coupledFlowState ! the coupled flow State
-    type(ESMF_Mesh)      :: Emesh
+    type(ESMF_GridComp)      :: dummy_atmos_comp
+    type(ESMF_GridComp)      :: dummy_land_comp
+    type(ESMF_CplComp)      :: cpl_atm2lnd_comp
+    type(ESMF_CplComp)      :: cpl_lnd2atm_comp
+
+
+    type(ESMF_State)         :: coupledFlowState ! the coupled flow State
+    type(ESMF_Mesh)          :: Emesh
     character(len=*), parameter :: subname=trim(modname)//':(lilac_init) '
-    type(ESMF_State)     :: importState, exportState
-    !character(len=*)    :: atm_mesh_filepath
+    type(ESMF_State)         :: importState, exportState
+    !character(len=*)        :: atm_mesh_filepath
     
     ! local variables
-    integer :: rc, urc
-    character(len=ESMF_MAXSTR)            :: cname1, cname2, cplname
+    integer                               :: rc, urc
+    character(len=ESMF_MAXSTR)            :: cname1, cname2, cname3, cname4
+    !integer, parameter     :: fldsMax = 100
 
     !-------------------------------------------------------------------------
     ! Initialize ESMF, set the default calendar and log type.
@@ -53,23 +65,75 @@ implicit none
     print *, "lilac Demo Application Start"
 
     !-------------------------------------------------------------------------
-    ! Create Gridded Component!
+    ! Create Gridded Component!     --- dummy atmosphere 
     !-------------------------------------------------------------------------
     cname1 = "Dummy Atmosphere"
-    
-    ! Create dummy atmosphere gridded component.
+
     dummy_atmos_comp = ESMF_GridCompCreate(name=cname1, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     call ESMF_LogWrite(subname//"Created "//trim(cname1)//" component", ESMF_LOGMSG_INFO)
     print *, "Dummy Atmosphere Gridded Component Created!"
 
     !-------------------------------------------------------------------------
-    ! Register section -- set services
+    ! Create Gridded Component!   --- Coupler  from atmosphere  to land
+    !-------------------------------------------------------------------------
+    cname2 = "Coupler from atmosphere to land"
+    cpl_atm2lnd_comp = ESMF_CplCompCreate(name=cname2, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"Created "//trim(cname2)//" component", ESMF_LOGMSG_INFO)
+    print *, "1st Coupler Gridded Component (atmosphere to land ) Created!"
+
+    !-------------------------------------------------------------------------
+    ! Create Gridded Component!   --- dummy land (land cap)
+    !-------------------------------------------------------------------------
+    cname3 = "Dummy Land"
+
+    dummy_land_comp = ESMF_GridCompCreate(name=cname3, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"Created "//trim(cname3)//" component", ESMF_LOGMSG_INFO)
+    print *, "Dummy Land  Gridded Component Created!"
+
+    !-------------------------------------------------------------------------
+    ! Create Gridded Component!  -- Coupler from land to atmos
+    !-------------------------------------------------------------------------
+    cname4 = "Coupler from land to atmosphere"
+    cpl_lnd2atm_comp = ESMF_CplCompCreate(name=cname4, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"Created "//trim(cname4)//" component", ESMF_LOGMSG_INFO)
+    print *, "2nd Coupler Gridded Component (land to atmosphere) Created!"
+
+
+    ! ========================================================================
+    !-------------------------------------------------------------------------
+    ! Register section -- set services -- dummy atmosphere
     !-------------------------------------------------------------------------
     call ESMF_GridCompSetServices(dummy_atmos_comp, userRoutine=atmos_register, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     call ESMF_LogWrite(subname//"dummy atmos SetServices finished!", ESMF_LOGMSG_INFO)
     print *, "Dummy Atmosphere Gridded Component SetServices finished!"
+    !-------------------------------------------------------------------------
+    ! Register section -- set services  -- coupler atmosphere to land 
+    !-------------------------------------------------------------------------
+    call ESMF_CplCompSetServices(cpl_atm2lnd_comp, userRoutine=atmos_register, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"Coupler from atmosphere to land  SetServices finished!", ESMF_LOGMSG_INFO)
+    print *, "Coupler from atmosphere to land SetServices finished!"
+    !-------------------------------------------------------------------------
+    ! Register section -- set services -- dummy land
+    !-------------------------------------------------------------------------
+    call ESMF_GridCompSetServices(dummy_land_comp, userRoutine=atmos_register, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"dummy land SetServices finished!", ESMF_LOGMSG_INFO)
+    print *, "Dummy Land  Gridded Component SetServices finished!"
+    !-------------------------------------------------------------------------
+    ! Register section -- set services -- coupler land to atmosphere
+    !-------------------------------------------------------------------------
+    call ESMF_CplCompSetServices(cpl_lnd2atm_comp, userRoutine=atmos_register, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"Coupler from land to atmosphere SetServices finished!", ESMF_LOGMSG_INFO)
+    print *, "Coupler from land to atmosphere SetServices finished!"
+
+    ! ========================================================================
 
     !-------------------------------------------------------------------------
     !  Create and initialize a clock!
@@ -99,17 +163,17 @@ implicit none
 
   end subroutine lilac_init
 
-  subroutine lilac_run(dum_var_input, dum_var_output)
+  subroutine lilac_run(dum_var1, dum_var2)
 
     use DummyAtmos, only : x2a_fields
     use DummyAtmos, only : a2x_fields
 
-    real, dimension(:) :: dum_var_input ! from host atm
-    real, dimension(:) :: dum_var_output ! to host atm
+    real, dimension(:) :: dum_var1  ! from host atm
+    real, dimension(:) :: dum_var2 ! to host atm
 
     integer                :: n, num
 
-    integer, parameter     :: fldsMax = 100
+    !integer, parameter     :: fldsMax = 100
     integer                :: fldsToLnd_num = 0
     integer                :: fldsFrLnd_num = 0
 
@@ -129,145 +193,9 @@ implicit none
 
     !call ESMF_CplCompRun(cpl_lnd2atm, rc=rc)
 
-    dum_var_output(:) = a2x_fields(N)%datafld1d(:)
+    !dum_var_output(:) = a2x_fields(N)%datafld1d(:)
 
   end subroutine lilac_run
-
-
-
-
-
-  !subroutine fldlist_add(num, fldlist, stdname, default_value, units)
-  !  integer,                     intent(inout) :: num
-  !  type(fld_list_type),         intent(inout) :: fldlist(:)
-  !  character(len=*),            intent(in)    :: stdname
-  !  real, optional,              intent(in)    :: default_value
-  !  character(len=*),  optional, intent(in)    :: units
-
-    ! local variables
-  !  integer :: rc
-  !  character(len=*), parameter :: subname='(fldlist_add)'
-    !-------------------------------------------------------------------------------
-
-    ! Set up a list of field information
- !   num = num + 1
- !   if (num > fldsMax) then
- !      call ESMF_LogWrite(trim(subname)//": ERROR num > fldsMax "//trim(stdname), ESMF_LOGMSG_ERROR, line=__LINE__, file=__FILE__, rc=rc) return
- !   endif
- !   fldlist(num)%stdname = trim(stdname)
- !   if(present(default_value)) then
- !      fldlist(num)%default_value = default_value
- !   else
- !      fldlist(num)%default_value = 0.
- !   end if
- !   if(present(units)) then
- !      fldlist(num)%units = trim(units)
- !   else
- !      fldlist(num)%units = ""
- !   end if
-
- ! end subroutine fldlist_add
-
-
-subroutine fldlist_add_dumb(num, fldlist, stdname)
-    integer,                    intent(inout) :: num
-    type(fld_list_type),        intent(inout) :: fldlist(:)
-    character(len=*),           intent(in)    :: stdname
-
-    ! local variables
-    integer :: rc
-    integer :: dbrc
-    character(len=*), parameter :: subname='(lnd_import_export:fldlist_add)'
-    !-------------------------------------------------------------------------------
-
-    ! Set up a list of field information
-
-    num = num + 1
-    if (num > fldsMax) then
-       call ESMF_LogWrite(trim(subname)//": ERROR num > fldsMax "//trim(stdname), &
-            ESMF_LOGMSG_ERROR, line=__LINE__, file=__FILE__, rc=dbrc)
-       return
-    endif
-    fldlist(num)%stdname = trim(stdname)
-
-  end subroutine fldlist_add_dumb
- subroutine create_fldlists_dumb(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
-    type(fld_list_type),        intent(inout) :: fldsFrCpl(:)
-    type(fld_list_type),        intent(inout) :: fldsToCpl(:)
-    !integer, intent(out)                     :: fldsToCpl_num = 0
-    !integer, intent(out)                     :: fldsFrCpl_num = 0
-
-    ! import fields
-    ! call fldlist_add(fldsFrCpl_num, fldsFrCpl, trim(flds_scalar_name))
-
-    integer :: fldsFrCpl_num, fldsToCpl_num
-
-    ! land states
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_lfrin'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_t'          )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_tref'       )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_qref'       )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_avsdr'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_anidr'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_avsdf'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_anidf'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_snowh'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_u10'        )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_fv'         )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Sl_ram1'       )
-
-    ! fluxes to atm
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_taux'     )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_tauy'     )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_lat'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_sen'      )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_lwup'     )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_evap'     )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_swnet'    )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_flxdst1'  )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_flxdst2'  )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_flxdst3'  )
-    call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'Fall_flxdst4'  )
-
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, trim(flds_scalar_name))
-
-    ! from atm
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_z', default_value=30.0, units='m')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_topo')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_u', default_value=0.0, units='m/s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_v', default_value=0.0, units='m/s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_ptem', default_value=280.0, units='degK')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_pbot', default_value=100100.0, units='Pa')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_tbot', default_value=280.0, units='degK')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_shum', default_value=0.0004, units='kg/kg')
-    !call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_methane'   )
-
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_lwdn', default_value=200.0, units='W/m2')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_rainc', default_value=4.0e-8, units='kg/m2s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_rainl', default_value=3.0e-8, units='kg/m2s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_snowc', default_value=1.0e-8, units='kg/m2s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_snowl', default_value=2.0e-8, units='kg/m2s')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_swndr', default_value=100.0, units='W/m2')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_swvdr', default_value=90.0, units='W/m2')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_swndf', default_value=20.0, units='W/m2')
-    call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_swvdf', default_value=40.0, units='W/m2')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_bcphidry')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_bcphodry')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_bcphiwet')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_ocphidry')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_ocphodry')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_ocphiwet')
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstdry1' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstdry2' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstdry3' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstdry4' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstwet1' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstwet2' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstwet3' )
-    ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Faxa_dstwet4' )
-
-    ! more: https://github.com/mvertens/ctsm/blob/ae02ffe25dbc4a85c769c9137b5b3d50f2843e89/src/cpl/nuopc/lnd_import_export.F90#L131
-  end subroutine create_fldlists_dumb
 
 end module LilacMod
 
