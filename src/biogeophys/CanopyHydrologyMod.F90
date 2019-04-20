@@ -726,25 +726,13 @@ contains
              h2ocan_new = snocan(p) + liqcan(p)
 
              ! FIXME(wjs, 2019-04-19) Remove the following block of code
-             if (h2ocan(p) > 0._r8 .and. h2ocan_new <= 0._r8) then
-                write(iulog,*) 'FracWet: h2ocan > 0 but not h2ocan_new:'
+             if (abs(h2ocan(p) - h2ocan_new) > 1.e-13_r8) then
+                write(iulog,*) 'FracWet: difference too big:'
                 write(iulog,*) p, h2ocan(p), h2ocan_new, snocan(p), liqcan(p)
-                call endrun(msg='FracWet: h2ocan > 0 but not h2ocan_new')
-             end if
-             if (h2ocan_new > 0._r8 .and. h2ocan(p) <= 0._r8) then
-                write(iulog,*) 'FracWet: h2ocan_new > 0 but not h2ocan:'
-                write(iulog,*) p, h2ocan(p), h2ocan_new, snocan(p), liqcan(p)
-                call endrun(msg='FracWet: h2ocan_new > 0 but not h2ocan')
+                call endrun(msg='FracWet: difference too big')
              end if
 
              if (h2ocan_new > 0._r8) then
-                ! FIXME(wjs, 2019-04-19) Remove the following block of code
-                if (abs(h2ocan(p) - h2ocan_new) > 1.e-13_r8) then
-                   write(iulog,*) 'FracWet: difference too big:'
-                   write(iulog,*) p, h2ocan(p), h2ocan_new, snocan(p), liqcan(p)
-                   call endrun(msg='FracWet: difference too big')
-                end if
-
                 vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
                 dewmxi  = 1.0_r8/dewmx(p)
                 fwet(p) = ((dewmxi/vegt)*h2ocan_new)**0.666666666666_r8
