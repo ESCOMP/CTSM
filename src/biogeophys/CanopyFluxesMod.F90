@@ -357,7 +357,9 @@ contains
     integer  :: jtop(bounds%begc:bounds%endc)            ! lbning
     integer  :: filterc_tmp(bounds%endp-bounds%begp+1)   ! temporary variable
     integer  :: ft                                       ! plant functional type index
-    real(r8) :: temprootr                 
+    ! FIXME(wjs, 2019-04-19) rename this to simply h2ocan
+    real(r8) :: h2ocan_new                               ! total canopy water (mm H2O)
+    real(r8) :: temprootr
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
     integer  :: iv
     logical  :: is_end_day                               ! is end of current day
@@ -927,6 +929,13 @@ contains
             end if
 
             efpot = forc_rho(c)*wtl*(qsatl(p)-qaf(p))
+            h2ocan_new = liqcan(p) + snocan(p)
+            ! FIXME(wjs, 2019-04-20) Remove the following block of code
+            if (abs(h2ocan(p) - h2ocan_new) > 1.e-13_r8) then
+               write(iulog,*) 'CanopyFluxes: difference too big:'
+               write(iulog,*) p, h2ocan(p), h2ocan_new, snocan(p), liqcan(p)
+               call endrun(msg='CanopyFluxes: difference too big')
+            end if
 
             ! When the hydraulic stress parameterization is active calculate rpp
             ! but not transpiration
@@ -938,7 +947,7 @@ contains
                    rpp = fwet(p)
                  end if
                  !Check total evapotranspiration from leaves
-                 rpp = min(rpp, (qflx_tran_veg(p)+h2ocan(p)/dtime)/efpot)
+                 rpp = min(rpp, (qflx_tran_veg(p)+h2ocan_new/dtime)/efpot)
               else
                  rpp = 1._r8
               end if
@@ -953,7 +962,7 @@ contains
                     qflx_tran_veg(p) = 0._r8
                  end if
                  !Check total evapotranspiration from leaves
-                 rpp = min(rpp, (qflx_tran_veg(p)+h2ocan(p)/dtime)/efpot)
+                 rpp = min(rpp, (qflx_tran_veg(p)+h2ocan_new/dtime)/efpot)
               else
                  !No transpiration if potential evaporation less than zero
                  rpp = 1._r8
@@ -1053,8 +1062,8 @@ contains
             ! thereby causing a water balance error. However, because this adjustment occurs
             ! within the leaf temperature iteration, this ends up being a small inconsistency.
             if ( use_hydrstress ) then
-               ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan(p)/dtime)
-               qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan(p)/dtime)
+               ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan_new/dtime)
+               qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan_new/dtime)
             else
                ecidif = 0._r8
                if (efpot > 0._r8 .and. btran(p) > btran0) then
@@ -1062,8 +1071,8 @@ contains
                else
                   qflx_tran_veg(p) = 0._r8
                end if
-               ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan(p)/dtime)
-               qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan(p)/dtime)
+               ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan_new/dtime)
+               qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan_new/dtime)
             end if
 
             ! The energy loss due to above two limits is added to

@@ -696,6 +696,8 @@ contains
      !
      ! !LOCAL VARIABLES:
      integer  :: fp,p             ! indices
+     ! FIXME(wjs, 2019-04-19) rename this to simply h2ocan
+     real(r8) :: h2ocan_new       ! total canopy water (mm H2O)
      real(r8) :: vegt             ! lsai
      real(r8) :: dewmxi           ! inverse of maximum allowed dew [1/mm]
      !-----------------------------------------------------------------------
@@ -707,8 +709,8 @@ contains
           esai           => canopystate_inst%esai_patch           , & ! Input:  [real(r8) (:) ]  one-sided stem area index with burying by snow
 
           h2ocan         => waterstatebulk_inst%h2ocan_patch          , & ! Input:  [real(r8) (:) ]  total canopy water (mm H2O)             
-          snocan         => waterstatebulk_inst%snocan_patch          , & ! Output: [real(r8) (:)   ]  canopy snow (mm H2O)             
-          liqcan         => waterstatebulk_inst%liqcan_patch          , & ! Output: [real(r8) (:)   ]  canopy liquid (mm H2O)
+          snocan         => waterstatebulk_inst%snocan_patch          , & ! Input:  [real(r8) (:)   ]  canopy snow (mm H2O)             
+          liqcan         => waterstatebulk_inst%liqcan_patch          , & ! Input:  [real(r8) (:)   ]  canopy liquid (mm H2O)
 
           fwet           => waterdiagnosticbulk_inst%fwet_patch            , & ! Output: [real(r8) (:) ]  fraction of canopy that is wet (0 to 1) 
           fcansno        => waterdiagnosticbulk_inst%fcansno_patch         , & ! Output: [real(r8) (:) ]  fraction of canopy that is snow covered (0 to 1) 
@@ -721,10 +723,31 @@ contains
        do fp = 1,numf
           p = filter(fp)
           if (frac_veg_nosno(p) == 1) then
-             if (h2ocan(p) > 0._r8) then
+             h2ocan_new = snocan(p) + liqcan(p)
+
+             ! FIXME(wjs, 2019-04-19) Remove the following block of code
+             if (h2ocan(p) > 0._r8 .and. h2ocan_new <= 0._r8) then
+                write(iulog,*) 'FracWet: h2ocan > 0 but not h2ocan_new:'
+                write(iulog,*) p, h2ocan(p), h2ocan_new, snocan(p), liqcan(p)
+                call endrun(msg='FracWet: h2ocan > 0 but not h2ocan_new')
+             end if
+             if (h2ocan_new > 0._r8 .and. h2ocan(p) <= 0._r8) then
+                write(iulog,*) 'FracWet: h2ocan_new > 0 but not h2ocan:'
+                write(iulog,*) p, h2ocan(p), h2ocan_new, snocan(p), liqcan(p)
+                call endrun(msg='FracWet: h2ocan_new > 0 but not h2ocan')
+             end if
+
+             if (h2ocan_new > 0._r8) then
+                ! FIXME(wjs, 2019-04-19) Remove the following block of code
+                if (abs(h2ocan(p) - h2ocan_new) > 1.e-13_r8) then
+                   write(iulog,*) 'FracWet: difference too big:'
+                   write(iulog,*) p, h2ocan(p), h2ocan_new, snocan(p), liqcan(p)
+                   call endrun(msg='FracWet: difference too big')
+                end if
+
                 vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
                 dewmxi  = 1.0_r8/dewmx(p)
-                fwet(p) = ((dewmxi/vegt)*h2ocan(p))**0.666666666666_r8
+                fwet(p) = ((dewmxi/vegt)*h2ocan_new)**0.666666666666_r8
                 fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
                 if (snowveg_onrad) then
                    if (snocan(p) > 0._r8) then
