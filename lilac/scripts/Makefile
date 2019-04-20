@@ -43,17 +43,15 @@ include $(ESMFMKFILE)
 
 
 # -----------------------------------------------------------------------------
-demo_driver: demo_driver.o atmos_cap.o lilac_mod.o lilac_utils.o cpl_mod.o
+demo_driver: demo_driver.o atmos_cap.o lilac_mod.o lilac_utils.o cpl_mod.o lnd_cap.o
 	$(ESMF_F90LINKER) $(ESMF_F90LINKOPTS) $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) -o $@ $^ $(ESMF_F90ESMFLINKLIBS)
 	mv demo_driver demo_driver.exe
 	rm *.o *.mod
 
 # module dependencies:
 demo_driver.o: lilac_mod.o atmos_cap.o lilac_utils.o cpl_mod.o
-lilac_mod.o: atmos_cap.o lilac_utils.o cpl_mod.o
+lilac_mod.o: atmos_cap.o lilac_utils.o cpl_mod.o lnd_cap.o
 atmos_cap.o: lilac_utils.o
-lilac_utils.o:
-cpl_mod.o:
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 .PHONY: dust clean distclean berzerk

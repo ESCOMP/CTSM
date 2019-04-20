@@ -2,7 +2,7 @@ program demo_lilac_driver
 
   ! modules
   use ESMF
-  use LilacMod
+  use Lilac_mod
 
   implicit none
 

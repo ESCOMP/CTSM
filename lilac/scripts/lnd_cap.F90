@@ -4,7 +4,7 @@ module lnd_cap
 
   implicit none
 
-  character(*), parameter :: modname =  "(core)"
+  character(*), parameter :: modname =  "(land)"
 
   !!integer, parameter      :: fldsMax = 100
 
@@ -42,7 +42,7 @@ module lnd_cap
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, userRoutine=lnd_final, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-  end subroutine atmos_register
+  end subroutine lnd_register
 
   subroutine lnd_init(comp, importState, exportState, clock, rc)
     type (ESMF_GridComp)     :: comp

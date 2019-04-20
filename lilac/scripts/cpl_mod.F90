@@ -4,6 +4,7 @@ module cpl_mod
     implicit none
 
     public cpl_atm2lnd_register
+    public cpl_lnd2atm_register
 
 contains
 
@@ -25,6 +26,17 @@ contains
       !if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
     end subroutine cpl_atm2lnd_register
 
+    subroutine cpl_lnd2atm_register(cplcomp, rc)
+     type(ESMF_CplComp)   :: cplcomp
+     integer, intent(out) :: rc
+     rc = ESMF_FAILURE
+      call ESMF_CplCompSetEntryPoint(cplcomp, ESMF_METHOD_INITIALIZE, cpl_lnd2atm_init, rc=rc)
+      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
+
+
+    end subroutine cpl_lnd2atm_register
+
+
     subroutine my_init(cplcomp, importState, exportState, clock, rc)
       type(ESMF_CplComp) :: cplcomp
       type(ESMF_State) :: importState
@@ -35,6 +47,19 @@ contains
       print *, "CPLR initialize routine called"
       rc = ESMF_SUCCESS
     end subroutine my_init
+
+
+    subroutine cpl_lnd2atm_init(cplcomp, importState, exportState, clock, rc)
+      type(ESMF_CplComp) :: cplcomp
+      type(ESMF_State) :: importState
+      type(ESMF_State) :: exportState
+      type(ESMF_Clock) :: clock
+      integer, intent(out) :: rc
+
+      print *, "Coupler for land to atmosphere initialize routine called"
+      rc = ESMF_SUCCESS
+    end subroutine cpl_lnd2atm_init
+
 
 
     subroutine cpl_atm2lnd_init(cplcomp, importState, exportState, clock, rc)

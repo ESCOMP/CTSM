@@ -104,12 +104,10 @@ module atmos_cap
     ! value to them.
     !-------------------------------------------------------------------------
 
-    call create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
-
-    !!! FOR NOW LET'S JUST ADD TWO THINGS....
-    !!! WE WILL PUT THIS UNDER CREATE_FLDLIST LATER
     fldsFrCpl_num = 1
     fldsToCpl_num = 1
+    call create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
+
 
     !call fldlist_add(fldsToCpl_num, fldsToCpl, 'lnd2atmos_var', default_value=30.0, units='m')
     !call fldlist_add(fldsToCpl_num, fldsToCpl, 'atmos2lnd_var', default_value=10.0, units='m')
