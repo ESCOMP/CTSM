@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev034
 Originator(s):  sacks (Bill Sacks)
-Date: Fri Apr 19 10:53:17 MDT 2019
+Date: Sat Apr 20 06:11:23 MDT 2019
 One-line Summary: Change clm4_5: Use Justin Perket snow on vegetation
 
 Purpose of changes
@@ -13,6 +13,9 @@ originally introduced in clm4_5_1_r112. At the time it was only used for
 clm5_0 cases. This tag uses that parameterization for clm4_5 cases, too,
 so that (like clm5_0) they use snowveg_flag = 'ON_RAD' (i.e., vegetation
 snow canopy on with albedo influence).
+
+This changes climate for clm4_5, mainly through albedo changes,
+particularly in the shoulder seasons.
 
 The reason for this change is to allow an upcoming cleanup of the
 relationship between h2ocan, snocan and liqcan. (See
@@ -121,8 +124,8 @@ Changes answers relative to baseline: YES
     - what platforms/compilers: all
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
 
-      New climate (as in clm4_5_1_r112 for clm5_0), although the impact
-      is not expected to be large globally.
+      New climate (as in clm4_5_1_r112 for clm5_0); the main impact is
+      through albedo changes, particularly in the shoulder seasons.
 
       Changes in clm4_5 cases are due to:
 
