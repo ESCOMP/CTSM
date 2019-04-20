@@ -41,6 +41,7 @@ contains
     use SoilBiogeochemDecompCascadeCNMod  , only : readSoilBiogeochemDecompCnParams       => readParams
     use ch4Mod                            , only : readCH4Params                          => readParams
     use CanopyFluxesMod                   , only : readParams_CanopyFluxes                => readParams
+    use SoilHydrologyMod                  , only : readParams_SoilHydrology               => readParams
     use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
     use clm_varctl,                         only : NLFilename_in
     use PhotosynthesisMod                 , only : photosyns_type
@@ -99,7 +100,7 @@ contains
     !
     call photosyns_inst%ReadParams( ncid )
     call readParams_CanopyFluxes ( ncid )
-
+    call readParams_SoilHydrology ( ncid )
 
     !
     call ncd_pio_closefile(ncid)

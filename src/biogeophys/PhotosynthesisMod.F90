@@ -82,6 +82,7 @@ module  PhotosynthesisMod
   type :: photo_params_type
      real(r8) :: act25  ! Rubisco activity at 25 C (umol CO2/gRubisco/s)
      real(r8) :: fnr  ! Mass ratio of total Rubisco molecular mass to nitrogen in Rubisco (gRubisco/gN in Rubisco)
+     real(r8) :: cp25_yr2000  ! CO2 compensation point at 25°C at present day O2 (mol/mol)
      real(r8), allocatable, public  :: krmax              (:)
      real(r8), allocatable, private :: kmax               (:,:)
      real(r8), allocatable, private :: psi50              (:,:)
@@ -677,6 +678,8 @@ contains
 
     ! read in the scalar parameters
 
+    ! CO2 compensation point at 25°C at present day O2 levels
+    call readNcdioScalar(ncid, 'cp25_yr2000', subname, params_inst%cp25_yr2000)
     ! Rubisco activity at 25 C (umol CO2/gRubisco/s)
     call readNcdioScalar(ncid, 'act25', subname, params_inst%act25)
     ! Mass ratio of total Rubisco molecular mass to nitrogen in Rubisco (gRubisco/gN(Rubisco))
@@ -1287,9 +1290,9 @@ contains
 
          ! kc, ko, cp, from: Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
          !
-         !       kc25 = 404.9 umol/mol
-         !       ko25 = 278.4 mmol/mol
-         !       cp25 = 42.75 umol/mol
+         !       kc25_coef = 404.9e-6 mol/mol
+         !       ko25_coef = 278.4e-3 mol/mol
+         !       cp25_yr2000 = 42.75e-6 mol/mol
          !
          ! Derive sco from cp and O2 using present-day O2 (0.209 mol/mol) and re-calculate
          ! cp to account for variation in O2 using cp = 0.5 O2 / sco
@@ -1297,7 +1300,7 @@ contains
 
          kc25 = (404.9_r8 / 1.e06_r8) * forc_pbot(c)
          ko25 = (278.4_r8 / 1.e03_r8) * forc_pbot(c)
-         sco  = 0.5_r8 * 0.209_r8 / (42.75_r8 / 1.e06_r8)
+         sco  = 0.5_r8 * 0.209_r8 / params_inst%cp25_yr2000
          cp25 = 0.5_r8 * oair(p) / sco
 
          kc(p) = kc25 * ft(t_veg(p), kcha)
@@ -2895,9 +2898,9 @@ contains
          end if
          ! kc, ko, cp, from: Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
          !
-         !       kc25 = 404.9 umol/mol
-         !       ko25 = 278.4 mmol/mol
-         !       cp25 = 42.75 umol/mol
+         !       kc25_coef = 404.9e-6 mol/mol
+         !       ko25_coef = 278.4e-3 mol/mol
+         !       cp25_yr2000 = 42.75e-6 mol/mol
          !
          ! Derive sco from cp and O2 using present-day O2 (0.209 mol/mol) and re-calculate
          ! cp to account for variation in O2 using cp = 0.5 O2 / sco
@@ -2905,7 +2908,7 @@ contains
 
          kc25 = (404.9_r8 / 1.e06_r8) * forc_pbot(c)
          ko25 = (278.4_r8 / 1.e03_r8) * forc_pbot(c)
-         sco  = 0.5_r8 * 0.209_r8 / (42.75_r8 / 1.e06_r8)
+         sco  = 0.5_r8 * 0.209_r8 / params_inst%cp25_yr2000
          cp25 = 0.5_r8 * oair(p) / sco
 
          kc(p) = kc25 * ft(t_veg(p), kcha)

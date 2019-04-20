@@ -54,6 +54,12 @@ module SoilHydrologyMod
   public :: RenewCondensation    ! Misc. corrections
   public :: CalcIrrigWithdrawals ! Calculate irrigation withdrawals from groundwater by layer
   public :: WithdrawGroundwaterIrrigation   ! Remove groundwater irrigation from unconfined and confined aquifers
+  public :: readParams
+
+  type, private :: params_type
+     real(r8) :: aq_sp_yield_min  ! Minimum aquifer specific yield (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
   
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: QflxH2osfcSurf      ! Compute qflx_h2osfc_surf
@@ -66,6 +72,26 @@ module SoilHydrologyMod
        __FILE__
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_SoilHydrology'
+    !--------------------------------------------------------------------
+
+    ! Minimum aquifer specific yield (unitless)
+    call readNcdioScalar(ncid, 'aq_sp_yield_min', subname, params_inst%aq_sp_yield_min)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine soilHydReadNML( NLFilename )
@@ -857,7 +883,7 @@ contains
           ! use analytical expression for aquifer specific yield
           rous = watsat(c,nlevsoi) &
                * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,nlevsoi))**(-1./bsw(c,nlevsoi)))
-          rous=max(rous,0.02_r8)
+          rous=max(rous, params_inst%aq_sp_yield_min)
 
           !--  water table is below the soil column  --------------------------------------
           if(jwt(c) == nlevsoi) then             
@@ -872,7 +898,7 @@ contains
                    ! use analytical expression for specific yield
                    s_y = watsat(c,j) &
                         * ( 1. -  (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                   s_y=max(s_y,0.02_r8)
+                   s_y=max(s_y, params_inst%aq_sp_yield_min)
 
                    qcharge_layer=min(qcharge_tot,(s_y*(zwt(c) - zi(c,j-1))*1.e3))
                    qcharge_layer=max(qcharge_layer,0._r8)
@@ -887,7 +913,7 @@ contains
                    ! use analytical expression for specific yield
                    s_y = watsat(c,j) &
                         * ( 1. -  (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                   s_y=max(s_y,0.02_r8)
+                   s_y=max(s_y, params_inst%aq_sp_yield_min)
 
                    qcharge_layer=max(qcharge_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
                    qcharge_layer=min(qcharge_layer,0._r8)
@@ -1397,7 +1423,7 @@ contains
              ! use analytical expression for aquifer specific yield
              rous = watsat(c,nlevsoi) &
                   * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,nlevsoi))**(-1./bsw(c,nlevsoi)))
-             rous=max(rous,0.02_r8)
+             rous=max(rous, params_inst%aq_sp_yield_min)
 
              !--  water table is below the soil column  --------------------------------------
              if(jwt(c) == nlevsoi) then             
@@ -1433,7 +1459,7 @@ contains
                          ! use analytical expression for specific yield
                          s_y = watsat(c,j) &
                               * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                         s_y=max(s_y,0.02_r8)
+                         s_y=max(s_y, params_inst%aq_sp_yield_min)
 
                          rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
                          rsub_top_layer=min(rsub_top_layer,0._r8)
@@ -1962,7 +1988,7 @@ contains
                    
                    s_y = watsat(c,k) &
                         * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,k))**(-1./bsw(c,k)))
-                   s_y=max(s_y,0.02_r8)
+                   s_y=max(s_y, params_inst%aq_sp_yield_min)
                    if (drainage_tot >= 0.) then 
                       zwt_perched(c) = zwt_perched(c) - drainage_layer/s_y/1000._r8
                       exit
@@ -2269,7 +2295,7 @@ contains
                 ! use analytical expression for specific yield
                 s_y = watsat(c,j) &
                      * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                s_y=max(s_y,0.02_r8)
+                s_y=max(s_y, params_inst%aq_sp_yield_min)
                 rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
                 rsub_top_layer=min(rsub_top_layer,0._r8)
                 h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
@@ -2580,7 +2606,7 @@ contains
                 ! use analytical expression for specific yield
                 s_y = watsat(c,j) &
                      * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                s_y=max(s_y,0.02_r8)
+                s_y=max(s_y, params_inst%aq_sp_yield_min)
 
                 if (j==jwt(c)+1) then
                    available_water_layer=max(0._r8,(s_y*(zi(c,j) - zwt(c))*1.e3))
