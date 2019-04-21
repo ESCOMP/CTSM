@@ -179,7 +179,6 @@ contains
      real(r8) :: bifall(bounds%begc:bounds%endc)              ! bulk density of newly fallen dry snow [kg/m3]
      real(r8) :: fracsnow(bounds%begp:bounds%endp)            ! frac of precipitation that is snow
      real(r8) :: fracrain(bounds%begp:bounds%endp)            ! frac of precipitation that is rain
-     real(r8) :: qflx_candrip(bounds%begp:bounds%endp)        ! rate of canopy runoff and snow falling off canopy [mm/s]
      real(r8) :: qflx_through_rain(bounds%begp:bounds%endp)   ! direct rain throughfall [mm/s]
      real(r8) :: qflx_through_snow(bounds%begp:bounds%endp)   ! direct snow throughfall [mm/s]
      real(r8) :: qflx_prec_grnd_snow(bounds%begp:bounds%endp) ! snow precipitation incident on ground [mm/s]
@@ -266,7 +265,6 @@ contains
           if (lun%itype(l)==istsoil .or. lun%itype(l)==istwet .or. lun%urbpoi(l) .or. &
                lun%itype(l)==istcrop) then
 
-             qflx_candrip(p) = 0._r8      ! rate of canopy runoff
              qflx_snocanfall(p) = 0._r8      ! rate of just snow canopy fall
              qflx_liqcanfall(p) = 0._r8
              qflx_snowindunload(p) = 0._r8
@@ -311,7 +309,6 @@ contains
                    liqcan(p) = max(0._r8, liqcan(p) + dtime*qflx_liq_above_canopy(p)*fpi)
                    
                    ! Initialize rate of canopy runoff and snow falling off canopy
-                   qflx_candrip(p) = 0._r8
                    qflx_snocanfall(p) = 0._r8
                    qflx_liqcanfall(p) = 0._r8
                    qflx_snowindunload(p) = 0._r8
@@ -331,13 +328,11 @@ contains
                          snocan(p) = snocanmx
                       end if
                    end if
-                   qflx_candrip(p) = qflx_snocanfall(p) + qflx_liqcanfall(p)
                 end if
              end if
 
           else if (lun%itype(l)==istice_mec) then
 
-             qflx_candrip(p)      = 0._r8
              qflx_through_snow(p) = 0._r8
              qflx_through_rain(p) = 0._r8
              qflx_prec_intr(p)    = 0._r8
