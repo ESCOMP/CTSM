@@ -39,7 +39,6 @@ module CanopyFluxesMod
   use WaterStateBulkType        , only : waterstatebulk_type
   use WaterDiagnosticBulkType        , only : waterdiagnosticbulk_type
   use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
-  use CanopyHydrologyMod    , only : IsSnowvegFlagOn, IsSnowvegFlagOnRad
   use HumanIndexMod         , only : humanindex_type
   use ch4Mod                , only : ch4_type
   use PhotosynthesisMod     , only : photosyns_type
@@ -66,9 +65,6 @@ module CanopyFluxesMod
   logical,  public :: perchroot_alt = .false.  
   !
   ! !PRIVATE DATA MEMBERS:
-  ! Snow in vegetation canopy namelist options.
-  logical, private :: snowveg_on     = .false.                ! snowveg_flag = 'ON'
-  logical, private :: snowveg_onrad  = .true.                 ! snowveg_flag = 'ON_RAD'
   logical, private :: use_undercanopy_stability = .true.      ! use undercanopy stability term or not
 
   character(len=*), parameter, private :: sourcefile = &
@@ -357,8 +353,7 @@ contains
     integer  :: jtop(bounds%begc:bounds%endc)            ! lbning
     integer  :: filterc_tmp(bounds%endp-bounds%begp+1)   ! temporary variable
     integer  :: ft                                       ! plant functional type index
-    ! FIXME(wjs, 2019-04-19) rename this to simply h2ocan
-    real(r8) :: h2ocan_new                               ! total canopy water (mm H2O)
+    real(r8) :: h2ocan                                   ! total canopy water (mm H2O)
     real(r8) :: temprootr
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
     integer  :: iv
@@ -477,7 +472,6 @@ contains
          h2osoi_vol             => waterstatebulk_inst%h2osoi_vol_col               , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] by F. Li and S. Levis
          h2osoi_liq             => waterstatebulk_inst%h2osoi_liq_col               , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                                                
          h2osoi_liqvol          => waterdiagnosticbulk_inst%h2osoi_liqvol_col            , & ! Output: [real(r8) (:,:) ]  volumetric liquid water (v/v) 
-         h2ocan                 => waterstatebulk_inst%h2ocan_patch                 , & ! Output: [real(r8) (:)   ]  canopy water (mm H2O)                                                 
          snocan                 => waterstatebulk_inst%snocan_patch                 , & ! Output: [real(r8) (:)   ]  canopy snow (mm H2O)                                                 
          liqcan                 => waterstatebulk_inst%liqcan_patch                 , & ! Output: [real(r8) (:)   ]  canopy liquid (mm H2O)                                                 
          snounload              => waterdiagnosticbulk_inst%snounload_patch              , & ! Output: [real(r8) (:)   ]  canopy snow unloading mass (mm H2O)
@@ -929,13 +923,7 @@ contains
             end if
 
             efpot = forc_rho(c)*wtl*(qsatl(p)-qaf(p))
-            h2ocan_new = liqcan(p) + snocan(p)
-            ! FIXME(wjs, 2019-04-20) Remove the following block of code
-            if (abs(h2ocan(p) - h2ocan_new) > 1.e-13_r8) then
-               write(iulog,*) 'CanopyFluxes: difference too big:'
-               write(iulog,*) p, h2ocan(p), h2ocan_new, snocan(p), liqcan(p)
-               call endrun(msg='CanopyFluxes: difference too big')
-            end if
+            h2ocan = liqcan(p) + snocan(p)
 
             ! When the hydraulic stress parameterization is active calculate rpp
             ! but not transpiration
@@ -947,7 +935,7 @@ contains
                    rpp = fwet(p)
                  end if
                  !Check total evapotranspiration from leaves
-                 rpp = min(rpp, (qflx_tran_veg(p)+h2ocan_new/dtime)/efpot)
+                 rpp = min(rpp, (qflx_tran_veg(p)+h2ocan/dtime)/efpot)
               else
                  rpp = 1._r8
               end if
@@ -962,7 +950,7 @@ contains
                     qflx_tran_veg(p) = 0._r8
                  end if
                  !Check total evapotranspiration from leaves
-                 rpp = min(rpp, (qflx_tran_veg(p)+h2ocan_new/dtime)/efpot)
+                 rpp = min(rpp, (qflx_tran_veg(p)+h2ocan/dtime)/efpot)
               else
                  !No transpiration if potential evaporation less than zero
                  rpp = 1._r8
@@ -1062,8 +1050,8 @@ contains
             ! thereby causing a water balance error. However, because this adjustment occurs
             ! within the leaf temperature iteration, this ends up being a small inconsistency.
             if ( use_hydrstress ) then
-               ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan_new/dtime)
-               qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan_new/dtime)
+               ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan/dtime)
+               qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan/dtime)
             else
                ecidif = 0._r8
                if (efpot > 0._r8 .and. btran(p) > btran0) then
@@ -1071,8 +1059,8 @@ contains
                else
                   qflx_tran_veg(p) = 0._r8
                end if
-               ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan_new/dtime)
-               qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan_new/dtime)
+               ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan/dtime)
+               qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan/dtime)
             end if
 
             ! The energy loss due to above two limits is added to
@@ -1147,10 +1135,6 @@ contains
 
       fn = fnorig
       filterp(1:fn) = fporig(1:fn)
-
-      ! Set status of snowveg_flag
-      snowveg_on    = IsSnowvegFlagOn()
-      snowveg_onrad = IsSnowvegFlagOnRad()
 
       do f = 1, fn
          p = filterp(f)
@@ -1270,23 +1254,19 @@ contains
          cgrnd(p)  = cgrnds(p) + cgrndl(p)*htvp(c)
 
          ! Update dew accumulation (kg/m2)
-         h2ocan(p) = max(0._r8,h2ocan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
-
-         if (snowveg_on .or. snowveg_onrad) then
-            if (t_veg(p) > tfrz ) then ! above freezing, update accumulation in liqcan
-               if ((qflx_evap_veg(p)-qflx_tran_veg(p))*dtime > liqcan(p)) then ! all liq evap
-                  ! In this case, all liqcan will evap. Take remainder from snocan
-                  snocan(p)=snocan(p)+liqcan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime	 
-               end if
-               liqcan(p) = max(0._r8,liqcan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
-
-            else if (t_veg(p) <= tfrz) then ! below freezing, update accumulation in snocan
-               if ((qflx_evap_veg(p)-qflx_tran_veg(p))*dtime > snocan(p)) then ! all sno evap
-                  ! In this case, all snocan will evap. Take remainder from liqcan
-                  liqcan(p)=liqcan(p)+snocan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime
-               end if
-               snocan(p) = max(0._r8,snocan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
+         if (t_veg(p) > tfrz ) then ! above freezing, update accumulation in liqcan
+            if ((qflx_evap_veg(p)-qflx_tran_veg(p))*dtime > liqcan(p)) then ! all liq evap
+               ! In this case, all liqcan will evap. Take remainder from snocan
+               snocan(p)=snocan(p)+liqcan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime	 
             end if
+            liqcan(p) = max(0._r8,liqcan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
+
+         else if (t_veg(p) <= tfrz) then ! below freezing, update accumulation in snocan
+            if ((qflx_evap_veg(p)-qflx_tran_veg(p))*dtime > snocan(p)) then ! all sno evap
+               ! In this case, all snocan will evap. Take remainder from liqcan
+               liqcan(p)=liqcan(p)+snocan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime
+            end if
+            snocan(p) = max(0._r8,snocan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
          end if
 
       end do

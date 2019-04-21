@@ -28,7 +28,7 @@ module SurfaceAlbedoMod
   use ColumnType        , only : col                
   use PatchType         , only : patch                
   
-  use CanopyHydrologyMod, only : IsSnowvegFlagOn, IsSnowvegFlagOnRad
+  use CanopyHydrologyMod, only : IsSnowvegFlagOnRad
   !
   implicit none
   !

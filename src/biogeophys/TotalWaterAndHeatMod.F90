@@ -11,9 +11,6 @@ module TotalWaterAndHeatMod
   use decompMod          , only : bounds_type
   use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus
   use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb
-  ! FIXME(wjs, 2019-04-20) Remove the following two use statements
-  use clm_varctl         , only : iulog
-  use abortutils         , only : endrun
   use ColumnType         , only : col
   use LandunitType       , only : lun
   use subgridAveMod      , only : p2c
@@ -223,10 +220,8 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: c, j, fc                  ! indices
-    real(r8) :: h2ocan_col(bounds%begc:bounds%endc)  ! canopy water (mm H2O)
     real(r8) :: liqcan_col(bounds%begc:bounds%endc)  ! canopy liquid water (mm H2O)
     real(r8) :: snocan_col(bounds%begc:bounds%endc)  ! canopy snow water (mm H2O)
-    real(r8) :: liqcan                               ! canopy liquid water (mm H2O)
 
     character(len=*), parameter :: subname = 'ComputeLiqIceMassNonLake'
     !-----------------------------------------------------------------------
@@ -239,7 +234,6 @@ contains
          
          h2osfc       =>    waterstate_inst%h2osfc_col     , & ! Input:  [real(r8) (:)   ]  surface water (mm)
          h2osno       =>    waterstate_inst%h2osno_col     , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)
-         h2ocan_patch =>    waterstate_inst%h2ocan_patch   , & ! Input:  [real(r8) (:)   ]  canopy water (mm H2O)
          liqcan_patch =>    waterstate_inst%liqcan_patch   , & ! Input:  [real(r8) (:)   ]  canopy liquid water (mm H2O)
          snocan_patch =>    waterstate_inst%snocan_patch   , & ! Input:  [real(r8) (:)   ]  canopy snow water (mm H2O)
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
@@ -258,10 +252,6 @@ contains
     end do
 
     call p2c(bounds, num_nolakec, filter_nolakec, &
-         h2ocan_patch(bounds%begp:bounds%endp), &
-         h2ocan_col(bounds%begc:bounds%endc))
-
-    call p2c(bounds, num_nolakec, filter_nolakec, &
          liqcan_patch(bounds%begp:bounds%endp), &
          liqcan_col(bounds%begc:bounds%endc))
 
@@ -272,23 +262,12 @@ contains
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
 
-       ! waterstate_inst%snocan_patch and waterstate_inst%liqcan_patch are only set if
-       ! we're using snow-on-veg; otherwise they are 0. However, we can rely on
-       ! h2ocan_patch being set in all cases, so we can always determine the liquid mass
-       ! as (h2ocan - snocan).
        ! Note the difference between liqcan and total_plant_stored_h2o.  The prior
        ! is that which exists on the vegetation canopy surface, the latter is
        ! that which exists within the plant xylems and tissues.  In cases
        ! where FATES hydraulics is not turned on, this total_plant_stored_h2o is
        ! non-changing, and is set to 0 for a trivial solution.
 
-       liqcan = h2ocan_col(c) - snocan_col(c)
-       ! FIXME(wjs, 2019-04-19) Remove the following block of code
-       if (abs(liqcan - liqcan_col(c)) > 1.e-13_r8) then
-          write(iulog,*) 'ComputeLiqIceMassNonLake: difference too big:'
-          write(iulog,*) c, liqcan, liqcan_col(c), h2ocan_col(c), snocan_col(c)
-          call endrun(msg='ComputeLiqIceMassNonLake: difference too big')
-       end if
        liquid_mass(c) = liquid_mass(c) + liqcan_col(c) + total_plant_stored_h2o(c)
        ice_mass(c) = ice_mass(c) + snocan_col(c)
 
@@ -534,12 +513,9 @@ contains
     integer :: fc
     integer :: c, j
 
-    real(r8) :: h2ocan_col(bounds%begc:bounds%endc)  ! canopy water (mm H2O)
     real(r8) :: liqcan_col(bounds%begc:bounds%endc)  ! canopy liquid water (mm H2O)
     real(r8) :: snocan_col(bounds%begc:bounds%endc)  ! canopy snow water (mm H2O)
-    ! FIXME(wjs, 2019-04-20) Probably rename liqcan to liqveg
-    real(r8) :: liqcan        ! canopy liquid water (mm H2O)
-    real(r8) :: liqcan_new        ! canopy liquid water (mm H2O)
+    real(r8) :: liqveg                               ! liquid water in/on vegetation (mm H2O)
 
     real(r8) :: heat_dry_mass(bounds%begc:bounds%endc) ! sum of heat content: dry mass [J/m^2]
     real(r8) :: heat_ice(bounds%begc:bounds%endc)      ! sum of heat content: ice [J/m^2]
@@ -563,7 +539,6 @@ contains
          h2osoi_ice   => waterstatebulk_inst%h2osoi_ice_col, & ! frozen water (kg/m2)
          h2osno       => waterstatebulk_inst%h2osno_col, & ! snow water (mm H2O)
          h2osfc       => waterstatebulk_inst%h2osfc_col, & ! surface water (mm H2O)
-         h2ocan_patch => waterstatebulk_inst%h2ocan_patch, & ! canopy water (mm H2O)
          liqcan_patch => waterstatebulk_inst%liqcan_patch, & ! canopy liquid water (mm H2O)
          snocan_patch => waterstatebulk_inst%snocan_patch, & ! canopy snow water (mm H2O)
          total_plant_stored_h2o_col => waterdiagnosticbulk_inst%total_plant_stored_h2o_col, & ! Input: [real(r8) (:)   ]  water mass in plant tissues (kg m-2)
@@ -580,11 +555,6 @@ contains
        heat_ice(c) = 0._r8
        latent_heat_liquid(c) = 0._r8
     end do
-
-    call p2c(bounds, &
-         parr = h2ocan_patch(bounds%begp:bounds%endp), &
-         carr = h2ocan_col(bounds%begc:bounds%endc), &
-         p2c_scale_type = 'unity')
 
     call p2c(bounds, &
          parr = liqcan_patch(bounds%begp:bounds%endp), &
@@ -613,10 +583,6 @@ contains
        ! conservation code. (But I went back and forth on whether to do this, so could
        ! be convinced otherwise.)
 
-       ! snocan and liqcan are only set if we're using snow-on-veg; otherwise they are 0.
-       ! However, we can rely on h2ocan being set in all cases, so we can always
-       ! determine the liquid mass as (h2ocan - snocan).
-       
        ! Note (rgk 04-2017): added total_plant_stored_h2o_col(c), which is the
        ! water inside the plant, which is zero for all non-dynamic models. FATES hydraulics
        ! is the only one with dynamic storage atm.
@@ -626,19 +592,11 @@ contains
        ! pools.  The energy in the plant water should "bring with it" the internal
        ! energy of the soil-to-root water flux.
 
-       ! FIXME(wjs, 2019-04-20) Remove the first, rename the second
-       liqcan = h2ocan_col(c) - snocan_col(c) + total_plant_stored_h2o_col(c)
-       liqcan_new = liqcan_col(c) + total_plant_stored_h2o_col(c)
-       ! FIXME(wjs, 2019-04-20) Remove the following block of code
-       if (abs(liqcan - liqcan_new) > 1.e-13_r8) then
-          write(iulog,*) 'ComputeHeatNonLake: difference too big:'
-          write(iulog,*) c, liqcan, liqcan_new, h2ocan_col(c), snocan_col(c), total_plant_stored_h2o_col(c)
-          call endrun(msg='ComputeHeatNonLake: difference too big')
-       end if
+       liqveg = liqcan_col(c) + total_plant_stored_h2o_col(c)
 
        call AccumulateLiquidWaterHeat( &
             temp = heat_base_temp, &
-            h2o = liqcan_new, &
+            h2o = liqveg, &
             cv_liquid = cv_liquid(c), &
             heat_liquid = heat_liquid(c), &
             latent_heat_liquid = latent_heat_liquid(c))
