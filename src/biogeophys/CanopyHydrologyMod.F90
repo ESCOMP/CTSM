@@ -35,9 +35,6 @@ module CanopyHydrologyMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyHydrology_readnl ! Read namelist
   public :: CanopyHydrology        ! Run
-  public :: IsSnowvegFlagOff       ! Returns true if snowveg_flag is OFF
-  public :: IsSnowvegFlagOn        ! Returns true if snowveg_flag is ON
-  public :: IsSnowvegFlagOnRad     ! Returns true if snowveg_flag is ON_RAD
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: FracWet    ! Determine fraction of vegetated surface that is wet
@@ -48,12 +45,6 @@ module CanopyHydrologyMod
   real(r8) :: interception_fraction ! Fraction of intercepted precipitation
   real(r8) :: maximum_leaf_wetted_fraction ! Maximum fraction of leaf that may be wet
   logical, private :: use_clm5_fpi    = .false. ! use clm5 fpi equation
-  ! Snow in vegetation canopy namelist options.
-  logical, private :: snowveg_off    = .false.  ! snowveg_flag = 'OFF'
-  logical, private :: snowveg_on     = .false.  ! snowveg_flag = 'ON'
-  logical, private :: snowveg_onrad  = .true.   ! snowveg_flag = 'ON_RAD'
-  ! for now, all mods on by default:
-  character(len= 10), public           :: snowveg_flag = 'ON_RAD'
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -86,8 +77,7 @@ contains
          oldfflag, &
          interception_fraction, &
          maximum_leaf_wetted_fraction, &
-         use_clm5_fpi, &
-         snowveg_flag
+         use_clm5_fpi
 
     ! ----------------------------------------------------------------------
     ! Read namelist from standard input. 
@@ -108,25 +98,13 @@ contains
           call endrun(msg="ERROR finding clm_canopyhydrology_inparm namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
-
-       snowveg_off   = IsSnowvegFlagOff()
-       snowveg_on    = IsSnowvegFlagOn()
-       snowveg_onrad = IsSnowvegFlagOnRad()
-       write(iulog,*) 'snowveg_off = ',snowveg_off
-       write(iulog,*) 'snowveg_on = ',snowveg_on
-       write(iulog,*) 'snowveg_onrad = ',snowveg_onrad
-       if (snowveg_off .or. snowveg_on .or. snowveg_onrad) then
-          write(iulog,*) 'snowveg_flag = ',snowveg_flag
-       else
-          call endrun(msg="snowveg_flag is set incorrectly (not ON, ON_RAD, or OFF)"//errmsg(sourcefile, __LINE__))
-       end if
     end if
+
     ! Broadcast namelist variables read in
     call shr_mpi_bcast(oldfflag, mpicom)
     call shr_mpi_bcast(interception_fraction, mpicom)
     call shr_mpi_bcast(maximum_leaf_wetted_fraction, mpicom)
     call shr_mpi_bcast(use_clm5_fpi, mpicom)
-    call shr_mpi_bcast(snowveg_flag, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -667,9 +645,6 @@ contains
           fdry           => waterdiagnosticbulk_inst%fdry_patch              & ! Output: [real(r8) (:) ]  fraction of foliage that is green and dry [-] (new)
           )
 
-       ! Set status of snowveg_flag
-       snowveg_onrad = IsSnowvegFlagOnRad()
-
        do fp = 1,numf
           p = filter(fp)
           if (frac_veg_nosno(p) == 1) then
@@ -680,14 +655,10 @@ contains
                 dewmxi  = 1.0_r8/dewmx(p)
                 fwet(p) = ((dewmxi/vegt)*h2ocan)**0.666666666666_r8
                 fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
-                if (snowveg_onrad) then
-                   if (snocan(p) > 0._r8) then
-                      dewmxi  = 1.0_r8/dewmx(p)
-                      fcansno(p) = ((dewmxi/(vegt*6.0_r8*10.0_r8))*snocan(p))**0.15_r8 ! must match snocanmx 
-                      fcansno(p) = min (fcansno(p),1.0_r8)
-                   else
-                      fcansno(p) = 0._r8
-                   end if
+                if (snocan(p) > 0._r8) then
+                   dewmxi  = 1.0_r8/dewmx(p)
+                   fcansno(p) = ((dewmxi/(vegt*6.0_r8*10.0_r8))*snocan(p))**0.15_r8 ! must match snocanmx 
+                   fcansno(p) = min (fcansno(p),1.0_r8)
                 else
                    fcansno(p) = 0._r8
                 end if
@@ -813,72 +784,5 @@ contains
      end associate
 
    end subroutine FracH2OSfc
-
-   !-----------------------------------------------------------------------
-   !BOP
-   !
-   ! !IROUTINE: IsSnowvegFlagOff
-   !
-   ! !INTERFACE:
-   !
-   logical function IsSnowvegFlagOff( )
-     !
-     ! !DESCRIPTION:
-     !
-     ! Return true if snowveg_flag is OFF
-     !
-     ! !USES:
-     implicit none
-     !EOP
-     !-----------------------------------------------------------------------
-
-     IsSnowvegFlagOff = (trim(snowveg_flag) == 'OFF')
-
-   end function IsSnowvegFlagOff
-
-   !-----------------------------------------------------------------------
-   !BOP
-   !
-   ! !IROUTINE: IsSnowvegFlagOn
-   !
-   ! !INTERFACE:
-   !
-   logical function IsSnowvegFlagOn( )
-     !
-     ! !DESCRIPTION:
-     !
-     ! Return true if snowveg_flag is ON
-     !
-     ! !USES:
-     implicit none
-     !EOP
-     !-----------------------------------------------------------------------
-
-     IsSnowvegFlagOn = (trim(snowveg_flag) == 'ON')
-
-   end function IsSnowvegFlagOn
-
-   !-----------------------------------------------------------------------
-   !BOP
-   !
-   ! !IROUTINE: IsSnowvegFlagOnRad
-   !
-   ! !INTERFACE:
-   !
-   logical function IsSnowvegFlagOnRad( )
-     !
-     ! !DESCRIPTION:
-     !
-     ! Return true if snowveg_flag is ON_RAD
-     !
-     ! !USES:
-     implicit none
-     !EOP
-     !-----------------------------------------------------------------------
-
-     IsSnowvegFlagOnRad = (trim(snowveg_flag) == 'ON_RAD')
-
-   end function IsSnowvegFlagOnRad
-
 
 end module CanopyHydrologyMod

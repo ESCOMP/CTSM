@@ -280,7 +280,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <irrig_method_default>drip</irrig_method_default>
 
 <!-- Snow veg treatment -->
-<snowveg_flag>ON_RAD</snowveg_flag>
+<snowveg_affects_radiation>.true.</snowveg_affects_radiation>
 
 <!-- Snow pack settings-->
 <nlevsno phys="clm5_0" >12</nlevsno>
