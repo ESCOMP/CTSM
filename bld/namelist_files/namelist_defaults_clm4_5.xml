@@ -1102,6 +1102,12 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <!-- Currently duplicate SSP1.2.6 ndep for SSP1-1.9 -->
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-1.9"
 >lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-2.6-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
+
+<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
+>lnd/clm2/ndepdata/fndep_clm_SSP245_b.e21.BWSSP245cmip6.f09_g17.CMIP6-SSP2-4.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+
 <ndep_taxmode            phys="clm5_0" use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_0" use_cn=".true.">NDEP_month</ndep_varlist>
 
