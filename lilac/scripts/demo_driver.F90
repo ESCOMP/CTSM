@@ -6,8 +6,8 @@ program demo_lilac_driver
 
   implicit none
 
-  real, dimension(10) :: dum_var1
-  real, dimension(10) :: dum_var2
+  real, dimension(100,100) :: dum_var1
+  real, dimension(100,100) :: dum_var2
 
   !real, dimension(10) :: t_phy   ! temperature (K)
   !real, dimension(10) :: th_phy  ! potential temperature (K)
@@ -19,9 +19,9 @@ program demo_lilac_driver
   !call random_number(t_phy)
   !call random_number(th_phy)
 
-  print *, "dum_var1 = ", dum_var1
-  print *, "dum_var2 = ", dum_var2
- 
+  !print *, "dum_var1 = ", dum_var1
+  !print *, "dum_var2 = ", dum_var2
+
   call lilac_init(dum_var1, dum_var2)
   call lilac_run(dum_var1, dum_var2)
 

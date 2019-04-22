@@ -6,7 +6,7 @@ module atmos_cap
 
   implicit none
 
-  character(*), parameter :: modname =  "(core)"
+  character(*), parameter :: modname =  "(atmos_cap)"
 
   !!integer, parameter      :: fldsMax = 100
 
@@ -59,13 +59,12 @@ module atmos_cap
 
     type (fld_list_type)    :: fldsToCpl(fldsMax)
     type (fld_list_type)    :: fldsFrCpl(fldsMax)
-    ! TODO Probably we can have these at the top
     integer                 :: fldsToCpl_num
     integer                 :: fldsFrCpl_num
 
     character(len=*), parameter :: subname=trim(modname)//':(atmos_init) '
 
-    type (ESMF_State)       :: x2a_state 
+    type (ESMF_State)       :: x2a_state
     type (ESMF_State)       :: a2x_state
     type (ESMF_FieldBundle) :: FBout
     integer                 :: n
@@ -73,22 +72,49 @@ module atmos_cap
     type(ESMF_Mesh)         :: atmos_mesh
     character(len=ESMF_MAXSTR)            :: atmos_mesh_filepath
 
-    ! Initialize return code
 
+        integer :: petCount, localrc, urc
+    integer :: mid, by2, quart, by4
+
+    type(ESMF_Grid) :: atmos_grid, Grid1
+
+    type(ESMF_DistGrid) :: distgridIN, distgridFS
+    logical mesh_switch
+    !integer                    :: regDecomp(:,:)
+    ! Initialize return code
     rc = ESMF_SUCCESS
 
     !-------------------------------------------------------------------------
     !    Generate -- Read in  the mesh
     !-------------------------------------------------------------------------
 
-    ! For now this is our dummy mesh: 
-    atmos_mesh_filepath='/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'
- 
-    atmos_mesh = ESMF_MeshCreate(filename=trim(atmos_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    call ESMF_LogWrite(subname//"Mesh for atmosphere is created!", ESMF_LOGMSG_INFO)
-    print *, "!Mesh for atmosphere is created!"
+    mesh_switch = .false.
+    if(mesh_switch) then
+        ! For now this is our dummy mesh: 
+        atmos_mesh_filepath='/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'
 
+        atmos_mesh = ESMF_MeshCreate(filename=trim(atmos_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        call ESMF_LogWrite(subname//"Mesh for atmosphere is created!", ESMF_LOGMSG_INFO)
+        print *, "!Mesh for atmosphere is created!"
+
+    else
+    call ESMF_GridCompGet(comp, petcount=petcount, rc=rc)
+        !Grid1= ESMF_GridCreateNoPeriDimUfrmR( maxIndex=(/180,360 /), &
+        !      minCornerCoord=(/0._ESMF_KIND_R8, 0._ESMF_KIND_R8/), &
+        !      maxCornerCoord=(/180._ESMF_KIND_R8, 360._ESMF_KIND_R8/), &
+        !      regDecomp=(/petcount,1/), rc=rc)
+
+        atmos_grid = ESMF_GridCreateNoPeriDimUfrm( minIndex= (/1,1/), maxIndex=(/180,360 /), &
+              maxCornerCoord=(/180._ESMF_KIND_R8, 360._ESMF_KIND_R8/), &
+              minCornerCoord=(/0._ESMF_KIND_R8, 0._ESMF_KIND_R8/), &
+              coordSys=ESMF_COORDSYS_CART,&
+              regDecomp=(/1,petcount/),&
+                                rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        call ESMF_LogWrite(subname//"Grid for atmosphere is created!", ESMF_LOGMSG_INFO)
+        print *, "Grid for atmosphere is created!"
+    endif
     !-------------------------------------------------------------------------
     ! Create States -- x2a_state (import) -- a2x_state (export)
     !-------------------------------------------------------------------------
@@ -117,7 +143,7 @@ module atmos_cap
     ! Coupler (land) to Atmosphere Fields --  x2a
     ! I- Create Field Bundle -- FBout for now-- TODO: negin want to rename to x2a_fieldbundle
     ! II- Create  Fields and add them to field bundle 
-    ! III - Add FBout to state (x2a_state) 
+    ! III - Add FBout to state (x2a_state)
     !-------------------------------------------------------------------------
     FBout = ESMF_FieldBundleCreate(name="x2a_fields", rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out

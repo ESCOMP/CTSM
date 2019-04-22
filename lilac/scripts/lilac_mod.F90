@@ -35,8 +35,8 @@ implicit none
     ! modules
     implicit none
 
-    real, dimension(10) :: dum_var1
-    real, dimension(10) :: dum_var2
+    real, dimension(:,:) :: dum_var1
+    real, dimension(:,:) :: dum_var2
 
     ! Component, and State
     type(ESMF_GridComp)      :: dummy_atmos_comp
@@ -193,8 +193,8 @@ implicit none
     use atmos_cap, only : x2a_fields
     use atmos_cap, only : a2x_fields
 
-    real, dimension(:) :: dum_var1  ! from host atm
-    real, dimension(:) :: dum_var2 ! to host atm
+    real, dimension(:,:) :: dum_var1  ! from host atm
+    real, dimension(:,:) :: dum_var2 ! to host atm
 
     integer                :: n, num
 
