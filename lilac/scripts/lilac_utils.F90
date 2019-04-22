@@ -11,7 +11,8 @@ implicit none
         character(len=128) :: stdname
         real*8             :: default_value
         character(len=128) :: units
-        real*8, pointer    :: datafld1d(:)  ! this will be filled in by lilac when it gets its data from the host atm
+        real*8, pointer    :: farrayptr1d(:)  ! this will be filled in by lilac when it gets its data from the host atm
+        real*8, pointer    :: farrayptr2d(:,:)  ! this will be filled in by lilac when it gets its data from the host atm
     end type fld_list_type
 
 !===============================================================================
@@ -34,7 +35,7 @@ implicit none
         ! Set up a list of field information
         num = num + 1
         if (num > fldsMax) then
-            call ESMF_LogWrite(subname//"Mesh for atmosphere is created!", ESMF_LOGMSG_INFO)
+            call ESMF_LogWrite(subname//"?!", ESMF_LOGMSG_INFO)
         endif
 
         fldlist(num)%stdname = trim(stdname)
@@ -58,21 +59,21 @@ implicit none
         type(fld_list_type),        intent(inout)      ::  fldsToCpl(:)
         !integer,                    intent(out)        ::  fldsToCpl_num = 0
         !integer,                    intent(out)        ::  fldsFrCpl_num = 0
-
-        ! import fields
-        ! call fldlist_add(fldsFrCpl_num, fldsFrCpl, trim(flds_scalar_name))
-
         integer :: fldsFrCpl_num, fldsToCpl_num
+
+        ! from atm
+        call fldlist_add(fldsToCpl_num, fldsToCpl, 'atmos2lnd_var', default_value=0.0, units='m')
+        ! from lnd
+        call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'lnd2atmos_var', default_value=0.0, units='m')
+
 
 
         !!! First from atmosphere to land fields
+        ! import fields
+        ! call fldlist_add(fldsFrCpl_num, fldsFrCpl, trim(flds_scalar_name))
 
         !call fldlist_add(fldsToLnd_num, fldsToLnd, trim(flds_scalar_name))
 
-         ! from atm
-        call fldlist_add(fldsToCpl_num, fldsToCpl, 'atmos2lnd_var', default_value=0.0, units='m')
-         ! from lnd
-        call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'lnd2atmos_var', default_value=0.0, units='m')
         ! call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_topo')
         !call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_u',       default_value=0.0,       units='m/s')
         !call fldlist_add(fldsToCpl_num, fldsToCpl, 'Sa_v',       default_value=0.0,       units='m/s')

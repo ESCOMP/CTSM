@@ -84,13 +84,13 @@ module lnd_cap
         call ESMF_LogWrite(subname//"Mesh for land is created!", ESMF_LOGMSG_INFO)
         print *, "!Mesh for land is created!"
     else
-    call ESMF_GridCompGet(comp, petcount=petcount, rc=rc)
         lnd_grid = ESMF_GridCreateNoPeriDimUfrm( minIndex= (/1,1/), maxIndex=(/180,360 /), &
               maxCornerCoord=(/180._ESMF_KIND_R8, 360._ESMF_KIND_R8/), &
               minCornerCoord=(/0._ESMF_KIND_R8, 0._ESMF_KIND_R8/), &
               coordSys=ESMF_COORDSYS_CART,&
               regDecomp=(/petcount,1/),&
                                 rc=rc)
+        call ESMF_GridCompGet(comp, grid= lnd_grid , petcount=petcount, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"Grid for land is created!", ESMF_LOGMSG_INFO)
         print *, "Grid for land is created!"

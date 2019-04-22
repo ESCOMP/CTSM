@@ -54,35 +54,31 @@ module atmos_cap
     type (ESMF_State)        :: importState, exportState
     type (ESMF_Clock)        :: clock
     integer, intent(out)     :: rc
- 
+
+    ! local variables
     !!! TODO: Maybe it is better to call these fldsToAtm and fldsFrAtm
-
-    type (fld_list_type)    :: fldsToCpl(fldsMax)
-    type (fld_list_type)    :: fldsFrCpl(fldsMax)
-    integer                 :: fldsToCpl_num
-    integer                 :: fldsFrCpl_num
-
+    type (fld_list_type)       :: fldsToCpl(fldsMax)
+    type (fld_list_type)       :: fldsFrCpl(fldsMax)
+    integer                    :: fldsToCpl_num
+    integer                    :: fldsFrCpl_num
+    type (ESMF_FieldBundle)    :: FBout
+    integer                    :: n
+    type(ESMF_Mesh)            :: atmos_mesh
+    character(len=ESMF_MAXSTR) :: atmos_mesh_filepath
+    integer                    :: petCount, localrc, urc
+    integer                    :: mid, by2, quart, by4
+    type(ESMF_Grid)            :: atmos_grid
+    type(ESMF_DistGrid)        :: distgridIN, distgridFS
+    logical                    :: mesh_switch
     character(len=*), parameter :: subname=trim(modname)//':(atmos_init) '
+    !----------------------
 
-    type (ESMF_State)       :: x2a_state
-    type (ESMF_State)       :: a2x_state
-    type (ESMF_FieldBundle) :: FBout
-    integer                 :: n
-
-    type(ESMF_Mesh)         :: atmos_mesh
-    character(len=ESMF_MAXSTR)            :: atmos_mesh_filepath
-
-
-        integer :: petCount, localrc, urc
-    integer :: mid, by2, quart, by4
-
-    type(ESMF_Grid) :: atmos_grid, Grid1
-
-    type(ESMF_DistGrid) :: distgridIN, distgridFS
-    logical mesh_switch
     !integer                    :: regDecomp(:,:)
     ! Initialize return code
     rc = ESMF_SUCCESS
+
+    call ESMF_GridCompGet(comp, petcount=petcount, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     !-------------------------------------------------------------------------
     !    Generate -- Read in  the mesh
@@ -99,7 +95,6 @@ module atmos_cap
         print *, "!Mesh for atmosphere is created!"
 
     else
-    call ESMF_GridCompGet(comp, petcount=petcount, rc=rc)
         !Grid1= ESMF_GridCreateNoPeriDimUfrmR( maxIndex=(/180,360 /), &
         !      minCornerCoord=(/0._ESMF_KIND_R8, 0._ESMF_KIND_R8/), &
         !      maxCornerCoord=(/180._ESMF_KIND_R8, 360._ESMF_KIND_R8/), &
@@ -111,33 +106,10 @@ module atmos_cap
               coordSys=ESMF_COORDSYS_CART,&
               regDecomp=(/1,petcount/),&
                                 rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
         call ESMF_LogWrite(subname//"Grid for atmosphere is created!", ESMF_LOGMSG_INFO)
         print *, "Grid for atmosphere is created!"
     endif
-    !-------------------------------------------------------------------------
-    ! Create States -- x2a_state (import) -- a2x_state (export)
-    !-------------------------------------------------------------------------
-    x2a_state = ESMF_StateCreate(name="x2a_state", stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    a2x_state = ESMF_StateCreate(name="a2x_state",  stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    print *, "!empty x2a_state (import) is created!"
-    print *, "!empty a2x_state (export) is created!"
-
-    !-------------------------------------------------------------------------
-    ! Create Field lists -- Basically create a list of fields and add a default
-    ! value to them.
-    !-------------------------------------------------------------------------
-
-    fldsFrCpl_num = 1
-    fldsToCpl_num = 1
-    call create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
-
-
-    !call fldlist_add(fldsToCpl_num, fldsToCpl, 'lnd2atmos_var', default_value=30.0, units='m')
-    !call fldlist_add(fldsToCpl_num, fldsToCpl, 'atmos2lnd_var', default_value=10.0, units='m')
-
 
     !-------------------------------------------------------------------------
     ! Coupler (land) to Atmosphere Fields --  x2a
@@ -148,18 +120,20 @@ module atmos_cap
     FBout = ESMF_FieldBundleCreate(name="x2a_fields", rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-
-
-    ! Create individual states and add to field bundle
+    ! Create individual fields and add to field bundle
     do n = 1,fldsFrCpl_num
        ! create field
        !!! Here we want to pass pointers
        !field = ESMF_FieldCreate(Emesh,farrayPtr=dum_var1_ptr,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(fldsFrCpl(n)%stdname), rc=rc)
        !field = ESMF_FieldCreate(lmesh,farrayPtr=x2a_fields%fields(:, n),  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(fldsFrCpl(n)%stdname), rc=rc)
        print *, trim(fldsFrCpl(n)%stdname)
-       field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,meshloc=ESMF_MESHLOC_ELEMENT , name=trim(fldsFrCpl(n)%stdname), rc=rc)
-       !field = ESMF_FieldCreate(atmos_mesh, farrayPtr ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(fldsFrCpl(n)%stdname), rc=rc)
-       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+       if (mesh_switch) then
+          field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(fldsFrCpl(n)%stdname), farraPtr=fldsFrCpl(n)%arrayptr1d, rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+       else
+          field = ESMF_FieldCreate(atmos_grid, name=trim(fldsFrCpl(n)%stdname), name=trim(fldsFrCpl(n)%stdname), farraPtr=fldsFrCpl(n)%arrayptr2d, rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+       end if
        ! add field to field bundle
        call ESMF_FieldBundleAdd(FBout, (/field/), rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
@@ -167,7 +141,7 @@ module atmos_cap
     print *, "!Fields For Coupler (fldsFrCpl) Field Bundle Created!"
 
     ! Add FB to state
-    call ESMF_StateAdd(x2a_state, (/FBout/), rc=rc)
+    call ESMF_StateAdd(exportState, (/FBout/), rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
     ! Atmosphere to Coupler Fields
@@ -202,7 +176,7 @@ module atmos_cap
     print *, "!Fields to  Coupler (fldstoCpl) Field Bundle Created!"
 
     ! Add FB to state
-    call ESMF_StateAdd(a2x_state, (/FBout/), rc=rc)
+    call ESMF_StateAdd(importState, (/FBout/), rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     print *, "!a2x_state is filld with dummy_var field bundle!"
 
