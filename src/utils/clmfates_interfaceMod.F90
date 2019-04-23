@@ -107,7 +107,6 @@ module CLMFatesInterfaceMod
    use FatesHistoryInterfaceMod, only : fates_history_interface_type
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
-   use ChecksBalancesMod     , only : SummarizeNetFluxes, FATES_BGC_Carbon_BalanceCheck
    use EDTypesMod            , only : ed_patch_type
    use EDTypesMod            , only : num_elements
    use FatesInterfaceMod     , only : hlm_numlevgrnd
@@ -1884,29 +1883,6 @@ contains
          this%fates(nc)%bc_in(s)%tot_somc     = totsomc(c)
          this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
       end do
-
-      is_beg_day = is_beg_curr_day()
-      dtime = get_step_size()
-      nstep = get_nstep()
-
-      call SummarizeNetFluxes(this%fates(nc)%nsites,  &
-                             this%fates(nc)%sites,    &
-                             this%fates(nc)%bc_in,    &
-                             is_beg_day)
-      
-
-      call FATES_BGC_Carbon_Balancecheck(this%fates(nc)%nsites,  &
-                                         this%fates(nc)%sites, &
-                                         this%fates(nc)%bc_in,  &
-                                         is_beg_day,            &
-                                         dtime, nstep)
-      
-
-      ! Update history variables that track these variables
-      call this%fates_hist%update_history_cbal(nc, &
-                               this%fates(nc)%nsites,  &
-                               this%fates(nc)%sites)
-
       
     end associate
  end subroutine wrap_bgc_summary
