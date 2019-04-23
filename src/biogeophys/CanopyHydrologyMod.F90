@@ -38,6 +38,14 @@ module CanopyHydrologyMod
   public :: IsSnowvegFlagOff       ! Returns true if snowveg_flag is OFF
   public :: IsSnowvegFlagOn        ! Returns true if snowveg_flag is ON
   public :: IsSnowvegFlagOnRad     ! Returns true if snowveg_flag is ON_RAD
+  public :: readParams
+
+  type, private :: params_type
+     real(r8) :: dewmx  ! Canopy maximum storage of liquid water (kg/m2)
+     real(r8) :: sno_stor_max  ! Canopy maximum storage of snow (kg/m2)
+     real(r8) :: accum_factor  ! Accumulation constant for fractional snow covered area (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: FracWet    ! Determine fraction of vegetated surface that is wet
@@ -139,6 +147,31 @@ contains
    end subroutine CanopyHydrology_readnl
 
    !-----------------------------------------------------------------------
+   subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_CanopyHydrology'
+    !--------------------------------------------------------------------
+
+    ! Canopy maximum storage of liquid water (kg/m2)
+    call readNcdioScalar(ncid, 'dewmx', subname, params_inst%dewmx)
+    ! Canopy maximum storage of snow (kg/m2)
+    call readNcdioScalar(ncid, 'sno_stor_max', subname, params_inst%sno_stor_max)
+    ! Accumulation constant for fractional snow covered area (unitless)
+    call readNcdioScalar(ncid, 'accum_factor', subname, params_inst%accum_factor)
+    params_inst%accum_factor = 0.1  ! TEMP FOR BFB RESULTS (rm BEFORE MERGE)
+
+   end subroutine readParams
+
+   !-----------------------------------------------------------------------
    subroutine CanopyHydrology(bounds, &
         num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
         atm2lnd_inst, canopystate_inst, temperature_inst, &
@@ -216,7 +249,6 @@ contains
      real(r8) :: smr
      real(r8) :: delf_melt
      real(r8) :: fsno_new
-     real(r8) :: accum_factor
      real(r8) :: int_snow_limited ! integrated snowfall, limited to be no greater than int_snow_max [mm]
      real(r8) :: newsnow(bounds%begc:bounds%endc)
      real(r8) :: snowmelt(bounds%begc:bounds%endc)
@@ -235,7 +267,6 @@ contains
           forc_t               => atm2lnd_inst%forc_t_downscaled_col      , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)        
           qflx_floodg          => wateratm2lndbulk_inst%forc_flood_grc             , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM   
           forc_wind            => atm2lnd_inst%forc_wind_grc              , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed (m/s)
-          dewmx                => canopystate_inst%dewmx_patch            , & ! Input:  [real(r8) (:)   ]  Maximum allowed dew [mm]                
           frac_veg_nosno       => canopystate_inst%frac_veg_nosno_patch   , & ! Input:  [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
           elai                 => canopystate_inst%elai_patch             , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow
           esai                 => canopystate_inst%esai_patch             , & ! Input:  [real(r8) (:)   ]  one-sided stem area index with burying by snow
@@ -323,7 +354,7 @@ contains
                    ! significance for the water budget because of lower evap. rate at
                    ! lower temperature.  Hence, it is reasonable to assume that
                    ! vegetation storage of solid water is the same as liquid water.
-                   h2ocanmx = dewmx(p) * (elai(p) + esai(p))
+                   h2ocanmx = params_inst%dewmx * (elai(p) + esai(p))
                    ! Coefficient of interception
                    if(use_clm5_fpi) then 
                       fpi = interception_fraction * tanh(elai(p) + esai(p))
@@ -332,7 +363,7 @@ contains
                    endif
 
                    if (snowveg_on .or. snowveg_onrad) then
-                      snocanmx = 60._r8*dewmx(p) * (elai(p) + esai(p))  ! 6*(LAI+SAI)
+                      snocanmx = params_inst%sno_stor_max * (elai(p) + esai(p))  ! 6*(LAI+SAI)
                       liqcanmx = h2ocanmx
 
                       fpisnow = (1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))  ! max interception of 1 
@@ -520,9 +551,6 @@ contains
           ! snowmelt from previous time step * dtime
           snowmelt(c) = qflx_snow_drain(c) * dtime
 
-          ! set shape factor for accumulation of snow
-          accum_factor=0.1
-
           if (h2osno(c) > 0.0) then
 
              !======================  FSCA PARAMETERIZATIONS  ======================
@@ -539,7 +567,7 @@ contains
 
              ! update fsca by new snow event, add to previous fsca
              if (newsnow(c) > 0._r8) then
-                fsno_new = 1._r8 - (1._r8 - tanh(accum_factor*newsnow(c)))*(1._r8 - frac_sno(c))
+                fsno_new = 1._r8 - (1._r8 - tanh(params_inst%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
                 frac_sno(c) = fsno_new
 
                 ! reset int_snow after accumulation events
@@ -579,7 +607,7 @@ contains
              if (newsnow(c) > 0._r8) then 
                 z_avg = newsnow(c)/bifall(c)
                 fmelt=newsnow(c)
-                frac_sno(c) = tanh(accum_factor*newsnow(c))
+                frac_sno(c) = tanh(params_inst%accum_factor * newsnow(c))
 
                 ! make int_snow consistent w/ new fsno, h2osno
                 int_snow(c) = 0. !reset prior to adding newsnow below
@@ -702,7 +730,6 @@ contains
 
      associate(                                              & 
           frac_veg_nosno => canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer (:)]  fraction of veg not covered by snow (0/1 now) [-]
-          dewmx          => canopystate_inst%dewmx_patch          , & ! Input:  [real(r8) (:) ]  Maximum allowed dew [mm]                
           elai           => canopystate_inst%elai_patch           , & ! Input:  [real(r8) (:) ]  one-sided leaf area index with burying by snow
           esai           => canopystate_inst%esai_patch           , & ! Input:  [real(r8) (:) ]  one-sided stem area index with burying by snow
 
@@ -723,13 +750,13 @@ contains
           if (frac_veg_nosno(p) == 1) then
              if (h2ocan(p) > 0._r8) then
                 vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
-                dewmxi  = 1.0_r8/dewmx(p)
+                dewmxi  = 1.0_r8/params_inst%dewmx  ! UNNECESSARY; rm bef merge
                 fwet(p) = ((dewmxi/vegt)*h2ocan(p))**0.666666666666_r8
                 fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
                 if (snowveg_onrad) then
                    if (snocan(p) > 0._r8) then
-                      dewmxi  = 1.0_r8/dewmx(p)
-                      fcansno(p) = ((dewmxi/(vegt*6.0_r8*10.0_r8))*snocan(p))**0.15_r8 ! must match snocanmx 
+                      dewmxi  = 1.0_r8/params_inst%dewmx  ! UNNEC; rm bef merge
+                      fcansno(p) = ((dewmxi / (vegt * params_inst%sno_stor_max * 10.0_r8)) * snocan(p))**0.15_r8 ! must match snocanmx 
                       fcansno(p) = min (fcansno(p),1.0_r8)
                    else
                       fcansno(p) = 0._r8

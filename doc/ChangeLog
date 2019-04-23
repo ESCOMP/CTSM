@@ -1,4 +1,131 @@
 ===============================================================
+Tag name:  ctsm1.0.dev0??
+Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
+Date:  Mon Apr 22 11:28:39 MDT 2019
+One-line Summary: Move some hard-coded parameters from code to params.nc file
+
+Purpose of changes
+------------------
+
+ Reduce the number of parameters that get hardwired directly in the code by placing in the params.nc file where they become visible and easier to modify.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #680
+CIME Issues fixed (include issue #): [If none, remove this line]
+
+Known bugs introduced in this tag (include github issue ID): [If none, remove this line]
+
+Known bugs found since the previous tag (include github issue ID): [If none, remove this line]
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+ None
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users:
+
+Changes to CTSM's user interface:
+ Parameters that were hardwired in the code can now be seen and changed in the params.nc file
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ None
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Various parameters have moved out of the code and into the params.nc file
+
+Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+Code reviewed by:
+ Erik K
+ Bill S
+
+CTSM testing:
+
+[... Remove before making master tag.  Available test levels:
+
+    a) regular (must be run before handing off a tag to SEs and must be run
+     before committing a tag)
+    b) build_namelist (if namelists and/or build_system changed))
+    c) tools (only if tools are modified and no CTSM source is modified)
+    d) short (for use during development and in rare cases where only a small
+          change with known behavior is added ... eg. a minor bug fix)
+    e) doc (no source testing required)
+
+... ]
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- 
+    hobart ------ 
+
+CTSM tag used for the baseline comparisons: 
+ ctsm1.0.dev0??
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: 
+
+   URL for LMWG diagnostics output used to validate new climate:
+	
+
+Detailed list of changes
+------------------------
+
+ - Update the clm5 and clm4.5 params.nc files to contain the previously hard-coded parameters that Katie Dagon recommended moving out of the code (listed here: https://docs.google.com/spreadsheets/d/1cRmcB0xz7CjVP6ljUoCehJx49Usxsore5ma4mWcvQwM/edit#gid=0)
+ - Read the parameters in the modules where they are used
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids): #684
+(https://github.com/ESCOMP/ctsm/pull/684)
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev033
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
 Date: Thu Apr 11 10:51:29 MDT 2019

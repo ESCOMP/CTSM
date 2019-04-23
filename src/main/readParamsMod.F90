@@ -42,6 +42,9 @@ contains
     use ch4Mod                            , only : readCH4Params                          => readParams
     use CanopyFluxesMod                   , only : readParams_CanopyFluxes                => readParams
     use SoilHydrologyMod                  , only : readParams_SoilHydrology               => readParams
+    use SaturatedExcessRunoffMod          , only : readParams_SaturatedExcessRunoff       => readParams
+    use SurfaceResistanceMod              , only : readParams_SurfaceResistance           => readParams
+    use CanopyHydrologyMod                , only : readParams_CanopyHydrology             => readParams
     use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
     use clm_varctl,                         only : NLFilename_in
     use PhotosynthesisMod                 , only : photosyns_type
@@ -101,6 +104,9 @@ contains
     call photosyns_inst%ReadParams( ncid )
     call readParams_CanopyFluxes ( ncid )
     call readParams_SoilHydrology ( ncid )
+    call readParams_SaturatedExcessRunoff ( ncid )
+    call readParams_SurfaceResistance ( ncid )
+    call readParams_CanopyHydrology ( ncid )
 
     !
     call ncd_pio_closefile(ncid)

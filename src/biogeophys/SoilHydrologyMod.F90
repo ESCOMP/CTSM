@@ -2142,7 +2142,6 @@ contains
      integer  :: jwt(bounds%begc:bounds%endc)            ! index of the soil layer right above the water table (-)
      real(r8) :: rsub_bot(bounds%begc:bounds%endc)       ! subsurface runoff - bottom drainage (mm/s)
      real(r8) :: rsub_top(bounds%begc:bounds%endc)       ! subsurface runoff - topographic control (mm/s)
-     real(r8) :: fff(bounds%begc:bounds%endc)            ! decay factor (m-1)
      real(r8) :: xsi(bounds%begc:bounds%endc)            ! excess soil water above saturation at layer i (mm)
      real(r8) :: xsia(bounds%begc:bounds%endc)           ! available pore space at layer i (mm)
      real(r8) :: xs1(bounds%begc:bounds%endc)            ! excess soil water above saturation at layer 1 (mm)
@@ -2263,8 +2262,6 @@ contains
        !-- Topographic runoff  -------------------------
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
-
-          fff(c)         = 1._r8/ hkdepth(c)
 
           dzsum = 0._r8
           icefracsum = 0._r8
