@@ -10,6 +10,7 @@ module SurfaceAlbedoMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
+  use abortutils        , only : endrun
   use landunit_varcon   , only : istsoil, istcrop, istdlak
   use clm_varcon        , only : grlnd, namep
   use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
@@ -27,12 +28,11 @@ module SurfaceAlbedoMod
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use PatchType         , only : patch                
-  
-  use CanopyHydrologyMod, only : IsSnowvegFlagOn, IsSnowvegFlagOnRad
   !
   implicit none
   !
   ! !PUBLIC MEMBER FUNCTIONS:
+  public :: SurfaceAlbedo_readnl
   public :: SurfaceAlbedoInitTimeConst
   public :: SurfaceAlbedo  ! Surface albedo and two-stream fluxes
   !
@@ -67,8 +67,7 @@ module SurfaceAlbedoMod
 
   !
   ! !PRIVATE DATA MEMBERS:
-  ! Snow in vegetation canopy namelist options.
-  logical, private :: snowveg_onrad  = .true.   ! snowveg_flag = 'ON_RAD'
+  logical, private :: snowveg_affects_radiation = .true. ! Whether snow on the vegetation canopy affects the radiation/albedo calculations
 
   !
   ! !PRIVATE DATA FUNCTIONS:
@@ -81,6 +80,59 @@ module SurfaceAlbedoMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine SurfaceAlbedo_readnl( NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for SurfaceAlbedo
+    !
+    ! !USES:
+    use spmdMod       , only : masterproc, mpicom
+    use fileutils     , only : getavu, relavu, opnfil
+    use shr_nl_mod    , only : shr_nl_find_group_name
+    use shr_mpi_mod   , only : shr_mpi_bcast
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+    character(len=*), parameter :: nmlname = "surfacealbedo_inparm"
+
+    character(len=*), parameter :: subname = 'SurfaceAlbedo_readnl'
+    !-----------------------------------------------------------------------
+
+    namelist /surfacealbedo_inparm/ snowveg_affects_radiation
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=surfacealbedo_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast(snowveg_affects_radiation, mpicom)
+
+    if (masterproc) then
+       write(iulog,*)
+       write(iulog,*) nmlname, ' settings'
+       write(iulog,nml=surfacealbedo_inparm)
+       write(iulog,*)
+    end if
+
+  end subroutine SurfaceAlbedo_readnl
+
 
   !-----------------------------------------------------------------------
   subroutine SurfaceAlbedoInitTimeConst(bounds)
@@ -1298,9 +1350,6 @@ contains
    ! fabi_sun_z - absorbed sunlit leaf diffuse PAR (per unit sunlit lai+sai) for each canopy layer
    ! fabi_sha_z - absorbed shaded leaf diffuse PAR (per unit shaded lai+sai) for each canopy layer
 
-   ! Set status of snowveg_flag
-   snowveg_onrad = IsSnowvegFlagOnRad()
-
     do ib = 1, numrad
        do fp = 1,num_vegsol
           p = filter_vegsol(fp)
@@ -1319,7 +1368,7 @@ contains
           betail = 0.5_r8 * ((rho(p,ib)+tau(p,ib)) + (rho(p,ib)-tau(p,ib)) &
                  * ((1._r8+chil(p))/2._r8)**2) / omegal
 
-          if ( lSFonly .or. ( (.not. snowveg_onrad) .and. (t_veg(p) > tfrz) ) ) then
+          if ( lSFonly .or. ( (.not. snowveg_affects_radiation) .and. (t_veg(p) > tfrz) ) ) then
              ! Keep omega, betad, and betai as they are (for Snow free case or
              ! when there is no snow
              tmp0 = omegal
@@ -1327,7 +1376,7 @@ contains
              tmp2 = betail
           else
              ! Adjust omega, betad, and betai for intercepted snow
-             if (snowveg_onrad) then
+             if (snowveg_affects_radiation) then
                 tmp0 =   (1._r8-fcansno(p))*omegal        + fcansno(p)*omegas(ib)
                 tmp1 = ( (1._r8-fcansno(p))*omegal*betadl + fcansno(p)*omegas(ib)*betads ) / tmp0
                 tmp2 = ( (1._r8-fcansno(p))*omegal*betail + fcansno(p)*omegas(ib)*betais ) / tmp0
