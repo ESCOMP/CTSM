@@ -98,7 +98,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
-  logical :: cultivate = .true. ! If crop is on -- should soil be cultivated? !!!!!!!!!!!!!! added for cultivation code
+  logical :: cultivate = .false. ! If crop is on -- should soil be cultivated? !!!!!!!!!!!!!! added for cultivation code
   real(r8), allocatable :: developed(:) ! If grid cell is developed or not !!!!!!!!!!!!!! added for cultivation code
   !-----------------------------------------------------------------------
 
