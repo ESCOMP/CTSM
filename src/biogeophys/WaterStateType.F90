@@ -35,7 +35,6 @@ module WaterStateType
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
-     real(r8), pointer :: h2ocan_patch           (:)   ! patch canopy water (mm H2O)
      real(r8), pointer :: h2osfc_col             (:)   ! col surface water (mm H2O)
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
@@ -125,9 +124,6 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
          dim2beg = -nlevsno+1, dim2end = nlevgrnd)
-    call AllocateVar1d(var = this%h2ocan_patch, name = 'h2ocan_patch', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
     call AllocateVar1d(var = this%snocan_patch, name = 'snocan_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
@@ -223,14 +219,6 @@ contains
          avgflag='A', &
          long_name=this%info%lname('soil ice (vegetated landunits only)'), &
          ptr_col=data2dptr, l2g_scale_type='veg')
-
-    this%h2ocan_patch(begp:endp) = spval 
-    call hist_addfld1d ( &
-         fname=this%info%fname('H2OCAN'), &
-         units='mm',  &
-         avgflag='A', &
-         long_name=this%info%lname('intercepted water'), &
-         ptr_patch=this%h2ocan_patch, set_lake=0._r8)
 
     this%snocan_patch(begp:endp) = spval 
     call hist_addfld1d ( &
@@ -333,7 +321,6 @@ contains
     associate(snl => col%snl) 
 
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
-      this%h2ocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%snocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%liqcan_patch(bounds%begp:bounds%endp) = 0._r8
 
@@ -524,7 +511,7 @@ contains
     use landunit_varcon  , only : istcrop, istdlak, istsoil  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_time_manager , only : is_first_step
-    use clm_varctl       , only : bound_h2osoi, nsrest, nsrStartup
+    use clm_varctl       , only : bound_h2osoi
     use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
     !
@@ -581,14 +568,6 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_ice_col)
          
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('H2OCAN'), &
-         xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name=this%info%lname('canopy water'), &
-         units='kg/m2', &
-         interpinic_flag='interp', readvar=readvar, data=this%h2ocan_patch)
-
-    call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('SNOCAN'), &
          xtype=ncd_double,  &
          dim1name='pft', &
@@ -606,20 +585,6 @@ contains
          long_name=this%info%lname('canopy liquid water'), &
          units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%liqcan_patch)
-
-    ! BACKWARDS_COMPATIBILITY(wjs, 2019-04-19) Need this to avoid balance check errors
-    ! with cases using restart files that were generated with snowveg_flag off. Only doing
-    ! this adjustment if diffs start out greater than roundoff to avoid changing answers
-    ! for restart files that were generated with snowveg_flag on/onrad (for which we
-    ! expect roundoff-level diffs between h2ocan and (liqcan+snocan)).
-    if (flag == 'read' .and. nsrest == nsrStartup) then
-       do p = bounds%begp, bounds%endp
-          if (abs(this%h2ocan_patch(p) - (this%liqcan_patch(p) + this%snocan_patch(p))) > &
-               1.e-13_r8) then
-             this%h2ocan_patch(p) = this%liqcan_patch(p) + this%snocan_patch(p)
-          end if
-       end do
-    end if
 
     call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('WA'), xtype=ncd_double,  &
          dim1name='column', &

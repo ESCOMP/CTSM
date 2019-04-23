@@ -167,6 +167,7 @@ module WaterType
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
      procedure, public :: DoConsistencyCheck ! Whether TracerConsistencyCheck should be called in this run
      procedure, public :: TracerConsistencyCheck
+     procedure, public :: Summary            ! Calculate end-of-timestep summaries of water diagnostic terms
 
      ! Private routines
      procedure, private :: DoInit
@@ -915,5 +916,36 @@ contains
      end do
 
   end subroutine TracerConsistencyCheck
+
+  !-----------------------------------------------------------------------
+  subroutine Summary(this, bounds, num_soilp, filter_soilp)
+    !
+    ! !DESCRIPTION:
+    ! Compute end-of-timestep summaries of water diagnostic terms
+    !
+    ! !ARGUMENTS:
+    class(water_type) , intent(inout) :: this
+    type(bounds_type) , intent(in)    :: bounds
+    integer           , intent(in)    :: num_soilp       ! number of patches in soilp filter
+    integer           , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'Summary'
+    !-----------------------------------------------------------------------
+
+    do i = this%bulk_and_tracers_beg, this%bulk_and_tracers_end
+       associate(bulk_or_tracer => this%bulk_and_tracers(i))
+       call bulk_or_tracer%waterdiagnostic_inst%Summary( &
+            bounds = bounds, &
+            num_soilp = num_soilp, &
+            filter_soilp = filter_soilp, &
+            waterstate_inst = bulk_or_tracer%waterstate_inst)
+       end associate
+    end do
+
+  end subroutine Summary
+
 
 end module WaterType

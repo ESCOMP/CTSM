@@ -1,4 +1,165 @@
 ===============================================================
+Tag name:  ctsm1.0.dev035
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Apr 22 20:17:40 MDT 2019
+One-line Summary: Change h2ocan to a purely diagnostic variable
+
+Purpose of changes
+------------------
+
+Previously, h2ocan_patch was maintained through the driver loop as the
+sum of liqcan_patch and snocan_patch. However, there were places where
+it was updated separately (though consistently) - i.e., it was not
+simply a matter of 'h2ocan = liqcan + snocan'. This made the code
+more complex, especially for the upcoming addition of water tracers.
+
+This tag changes h2ocan_patch to be a purely diagnostic variable, set
+once at the end of the driver loop. Prognostic equations that used to
+use h2ocan now use liqcan and snocan, either directly or indirectly via
+a temporary variable set equal to the current value of liqcan+snocan.
+
+This tag also completely removes support for snowveg_flag = 'OFF' in
+order to clean up the code.
+
+In addition, this tag renames the namelist variable snowveg_flag to
+snowveg_affects_radiation (now a logical).
+
+Finally, this tag includes a minor change to always compute fcansno,
+even if snowveg_affects_radiation is false, in order to simplify the
+code.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#199
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- snowveg_flag renamed to snowveg_affects_radiation, and changed to a
+  logical flag
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by:
+- Answer-changing portion of these changes reviewed by Keith Oleson and
+  (at least to some extent) Sean Swenson
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, answers change as expected
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev034
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     I split these changes into two pieces: (1) an answer-changing piece
+     where I made minimal changes to replace uses of h2ocan_patch with
+     liqcan+snocan (via temporary h2ocan variables holding this sum),
+     and (2) non-answer-changing code cleanup. (1) consisted of the
+     first two commits on this branch (461cafea and f195c105). With the
+     changes in (1), I added checks near each change to ensure that the
+     new expression differed by no more than roundoff from the old
+     (using an absolute cutoff of 1e-13). I ran the full test suite with
+     these checks in place, and generated new baselines. I then compared
+     the changes in (2) with the baselines from (1); this cleanup step
+     was bit-for-bit except for roundoff-level changes in the
+     now-diagnostic-only field H2OCAN.
+
+     As noted in ESCOMP/ctsm#689, the changes in (1) were larger than I
+     expected, presumably because initially roundoff-level differences
+     can lead to divergent code behavior. The most obvious example of
+     this is in the check of h2ocan > 0 in subroutine FracWet. I have
+     found that, due to roundoff errors, it is possible for h2ocan_patch
+     > 0 by roundoff, while (liqcan_patch + snocan_patch) <= 0 by
+     roundoff. (Presumably the reverse could also be true, though I
+     haven't seen that – but I haven't spent much time looking for it.)
+
+     Soon, we plan to do a more rigorous test to double check that this
+     change is not climate-changing.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+- First part of changes in https://github.com/ESCOMP/ctsm/pull/689
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev034
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Apr 20 06:11:23 MDT 2019
