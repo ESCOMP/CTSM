@@ -128,10 +128,11 @@ module atmos_cap
        !field = ESMF_FieldCreate(lmesh,farrayPtr=x2a_fields%fields(:, n),  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(fldsFrCpl(n)%stdname), rc=rc)
        print *, trim(fldsFrCpl(n)%stdname)
        if (mesh_switch) then
-          field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(fldsFrCpl(n)%stdname), farraPtr=fldsFrCpl(n)%arrayptr1d, rc=rc)
+          field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(fldsFrCpl(n)%stdname), farrayPtr=fldsFrCpl(n)%farrayptr1d, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-       else
-          field = ESMF_FieldCreate(atmos_grid, name=trim(fldsFrCpl(n)%stdname), name=trim(fldsFrCpl(n)%stdname), farraPtr=fldsFrCpl(n)%arrayptr2d, rc=rc)
+      else
+          field = ESMF_FieldCreate(atmos_grid, name=trim(fldsFrCpl(n)%stdname), farrayPtr=fldsFrCpl(n)%farrayptr2d, rc=rc)
+          !field = ESMF_FieldCreate(atmos_mesh, name=trim(fldsFrCpl(n)%stdname), farrayPtr=fldsFrCpl(n)%farrayptr1d, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
        end if
        ! add field to field bundle

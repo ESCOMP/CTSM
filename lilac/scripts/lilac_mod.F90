@@ -21,70 +21,53 @@ implicit none
 
    character(*), parameter :: modname =  "(LilacMod)"
 
-    type atm2lnd_data1d_type
-       real(r8), pointer :: uwind(:)
-       real(r8), pointer :: vwind(:)
-       real(r8), pointer :: tbot(:)
-    end type atm2lnd_data1d_type
 
-    type atm2lnd_data2d_type
-       real(r8), pointer :: uwind(:,:)
-       real(r8), pointer :: vwind(:,:)
-       real(r8), pointer :: tbot(:,:)
-    end type atm2lnd_data2d_type
-
-    type lnd2atm_data1d_type
-       real(r8), pointer :: lwup(:)
-       real(r8), pointer :: taux(:)
-       real(r8), pointer :: tauy(:)
-    end type lnd2atm_data1d_type
-
-    type lnd2atm_data2d_type
-       real(r8), pointer :: lwup(:,:)
-       real(r8), pointer :: taux(:,:)
-       real(r8), pointer :: tauy(:,:)
-    end type lnd2atm_data2d_type
-
-  !===============================================================================
+  !------------------------------------------------------------------------
 
   public :: lilac_init
   public :: lilac_run
+
+  !------------------------------------------------------------------------
+
   contains
 
   subroutine lilac_init( atm2lnd1d, atm2lnd2d, lnd2atm1d, lnd2atm2d)
-
-    use atmos_cap, only : a2l_fields !****
-    use atmos_cap, only : l2a_fields !****
-
-    ! modules
-    implicit none
 
     type(atm2lnd_data1d_type), intent(in), optional :: atm2lnd1d
     type(atm2lnd_data2d_type), intent(in), optional :: atm2lnd2d
     type(lnd2atm_data1d_type), intent(in), optional :: lnd2atm1d
     type(lnd2atm_data2d_type), intent(in), optional :: lnd2atm2d
 
-    ! Component, and State
-    type(ESMF_GridComp)      :: dummy_atmos_comp
-    type(ESMF_GridComp)      :: dummy_land_comp
-    type(ESMF_CplComp)       :: cpl_atm2lnd_comp
-    type(ESMF_CplComp)       :: cpl_lnd2atm_comp
+
+    type(fld_list_type)                              :: a2l_fields, l2a_fields
+    !  ! Gridded Components and Coupling Components 
+    type(ESMF_GridComp)                              :: dummy_atmos_comp
+    type(ESMF_GridComp)                              :: dummy_land_comp
+
+    type(ESMF_CplComp)                               :: cpl_atm2lnd_comp
+    type(ESMF_CplComp)                               :: cpl_lnd2atm_comp
 
 
-    type(ESMF_State)         :: coupledFlowState ! the coupled flow State
-    type(ESMF_Mesh)          :: Emesh
+    type(ESMF_State)            :: coupledFlowState ! the coupled flow State
+    type(ESMF_Mesh)             :: Emesh
     character(len=*), parameter :: subname=trim(modname)//':(lilac_init) '
-    type(ESMF_State)         :: importState, exportState
-    type(ESMF_State)         :: atm2lnd_l_state , atm2lnd_a_state
-    type(ESMF_State)         :: lnd2atm_a_state, lnd2atm_l_state
+    type(ESMF_State)            :: importState, exportState
+    type(ESMF_State)            :: atm2lnd_l_state , atm2lnd_a_state
+    type(ESMF_State)            :: lnd2atm_a_state, lnd2atm_l_state
 
     !character(len=*)        :: atm_mesh_filepath   !!! For now this is hard
     !coded in the atmos init
 
     ! local variables
-    integer                               :: rc, urc
-    character(len=ESMF_MAXSTR)            :: cname1, cname2, cname3, cname4
-    !integer, parameter                   :: fldsMax = 100
+    integer                                          :: rc, urc
+    character(len=ESMF_MAXSTR)                       :: cname1, cname2, cname3, cname4
+    !integer, parameter                              :: fldsMax = 100
+    integer                                          :: fldsFrCpl_num, fldsToCpl_num
+    logical                                          :: mesh_switch
+
+    !------------------------------------------------------------------------
+
+    mesh_switch = .True.
 
     !-------------------------------------------------------------------------
     ! Initialize ESMF, set the default calendar and log type.
@@ -92,8 +75,8 @@ implicit none
     call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-    print *, "----------------------------"
-    print *, "lilac Demo Application Start"
+    print *,  "---------------------------------------"
+    print *,  "    Lilac Demo Application Start       "
 
     !-------------------------------------------------------------------------
     ! Create Field lists -- Basically create a list of fields and add a default
@@ -102,14 +85,14 @@ implicit none
     fldsFrCpl_num = 1
     fldsToCpl_num = 1
 
-    if (present(var1_a2l_1d)) then
-       a2l_fields%name = 'uwind'
-       a2l_fields%arrptr1d => atm2lnd_data1d%uwind
-       call create_fldlists(flds_a2l, fldsfldsToCpl, fldsToCpl_num, fldsFrCpl_num, 'mesh')
+    if (.True.) then
+       l2a_fields%stdname = 'uwind'
+       l2a_fields%farrayptr1d => atm2lnd1d%uwind
+       !call create_fldlists(flds_a2l, fldsfldsToCpl, fldsToCpl_num, fldsFrCpl_num)
     else
-       a2l_fields%name = 'name'
-       a2l_fields%arrptr2d => var1_a2l_2d
-       call create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num, 'grid')
+       a2l_fields%stdname = 'name'
+       a2l_fields%farrayptr2d => atm2lnd2d%uwind
+       !call create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
     end if
 
     !-------------------------------------------------------------------------
