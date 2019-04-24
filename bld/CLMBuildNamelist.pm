@@ -1636,6 +1636,11 @@ sub process_namelist_inline_logic {
   setup_logic_irrigation_parameters($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ########################################
+  # namelist group: surfacealbedo_inparm #
+  ########################################
+  setup_logic_surfacealbedo($opts, $nl_flags, $definition, $defaults, $nl);
+
+  ########################################
   # namelist group: water_tracers_inparm #
   ########################################
   setup_logic_water_tracers($opts, $nl_flags, $definition, $defaults, $nl);
@@ -1851,7 +1856,6 @@ sub setup_logic_decomp_performance {
 sub setup_logic_snow {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snowveg_flag', 'phys'=>$nl_flags->{'phys'} );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowoptics' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowaging' );
 }
@@ -2631,6 +2635,14 @@ sub setup_logic_irrigation_parameters {
         $log->fatal_error("$var can only be set if limit_irrigation_if_rof_enabled is true");
      }
   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_surfacealbedo {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snowveg_affects_radiation' );
 }
 
 #-------------------------------------------------------------------------------
@@ -3592,7 +3604,7 @@ sub write_output_files {
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
                cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
-               water_tracers_inparm);
+               surfacealbedo_inparm water_tracers_inparm);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
   #             finidat_consistency_checks dynpft_consistency_checks);

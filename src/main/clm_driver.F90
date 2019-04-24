@@ -994,10 +994,16 @@ contains
                 clm_fates, nc)
        end if
 
+       
+       ! ============================================================================
+       ! Create summaries of water diagnostic terms
+       ! ============================================================================
 
+       call water_inst%Summary(bounds_clump, &
+            filter(nc)%num_soilp, filter(nc)%soilp)
 
        ! ============================================================================
-       ! Check the energy and water balance and also carbon and nitrogen balance
+       ! Check the energy and water balance
        ! ============================================================================
 
        call t_startf('balchk')
