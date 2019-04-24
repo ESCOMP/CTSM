@@ -1,9 +1,9 @@
 module lilac_mod
 use ESMF
 use lilac_utils
-!use DummyAtmos
-use atmos_cap, only : atmos_register
-use lnd_cap,   only : lnd_register
+
+use atmos_cap ,  only :         atmos_register
+use lnd_cap   ,  only :         lnd_register
 use cpl_mod
 
 
@@ -19,8 +19,7 @@ implicit none
    type(ESMF_Calendar),target :: calendar
    integer                    :: yy,mm,dd,sec
 
-   character(*), parameter :: modname =  "(LilacMod)"
-
+   character(*), parameter    :: modname =  "lilac_mod"
 
   !------------------------------------------------------------------------
 
@@ -33,10 +32,10 @@ implicit none
 
   subroutine lilac_init( atm2lnd1d, atm2lnd2d, lnd2atm1d, lnd2atm2d)
 
-    type(atm2lnd_data1d_type), intent(in), optional :: atm2lnd1d
-    type(atm2lnd_data2d_type), intent(in), optional :: atm2lnd2d
-    type(lnd2atm_data1d_type), intent(in), optional :: lnd2atm1d
-    type(lnd2atm_data2d_type), intent(in), optional :: lnd2atm2d
+    type(atm2lnd_data1d_type), intent(in), optional  :: atm2lnd1d
+    type(atm2lnd_data2d_type), intent(in), optional  :: atm2lnd2d
+    type(lnd2atm_data1d_type), intent(in), optional  :: lnd2atm1d
+    type(lnd2atm_data2d_type), intent(in), optional  :: lnd2atm2d
 
 
     type(fld_list_type)                              :: a2l_fields, l2a_fields
@@ -50,7 +49,7 @@ implicit none
 
     type(ESMF_State)            :: coupledFlowState ! the coupled flow State
     type(ESMF_Mesh)             :: Emesh
-    character(len=*), parameter :: subname=trim(modname)//':(lilac_init) '
+    character(len=*), parameter :: subname=trim(modname)//':[lilac_init]'
     type(ESMF_State)            :: importState, exportState
     type(ESMF_State)            :: atm2lnd_l_state , atm2lnd_a_state
     type(ESMF_State)            :: lnd2atm_a_state, lnd2atm_l_state
@@ -60,7 +59,8 @@ implicit none
 
     ! local variables
     integer                                          :: rc, urc
-    character(len=ESMF_MAXSTR)                       :: cname1, cname2, cname3, cname4
+    character(len=ESMF_MAXSTR)                       :: gcname1, gcname2   !    Gridded components names
+    character(len=ESMF_MAXSTR)                       :: ccname1, ccname2   !    Coupling components names
     !integer, parameter                              :: fldsMax = 100
     integer                                          :: fldsFrCpl_num, fldsToCpl_num
     logical                                          :: mesh_switch
@@ -85,9 +85,15 @@ implicit none
     fldsFrCpl_num = 1
     fldsToCpl_num = 1
 
+    print *, "field lists: !"
     if (.True.) then
-       l2a_fields%stdname = 'uwind'
-       l2a_fields%farrayptr1d => atm2lnd1d%uwind
+        a2l_fields  % stdname      =  'uwind'
+        a2l_fields  % farrayptr1d  => atm2lnd1d%uwind
+        print *,      a2l_fields%farrayptr1d
+        a2l_fields  % stdname      =  'vwind'
+        a2l_fields  % farrayptr1d  => atm2lnd1d%vwind
+        print *,      a2l_fields%farrayptr1d
+
        !call create_fldlists(flds_a2l, fldsfldsToCpl, fldsToCpl_num, fldsFrCpl_num)
     else
        a2l_fields%stdname = 'name'
@@ -98,39 +104,39 @@ implicit none
     !-------------------------------------------------------------------------
     ! Create Gridded Component!     --- dummy atmosphere 
     !-------------------------------------------------------------------------
-    cname1 = "Dummy Atmosphere or Atmosphere Cap"
+    gcname1 = "Dummy Atmosphere or Atmosphere Cap"
 
-    dummy_atmos_comp = ESMF_GridCompCreate(name=cname1, rc=rc)
+    dummy_atmos_comp = ESMF_GridCompCreate(name=gcname1, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    call ESMF_LogWrite(subname//"Created "//trim(cname1)//" component", ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(subname//"Created "//trim(gcname1)//" component", ESMF_LOGMSG_INFO)
     print *, "Dummy Atmosphere Gridded Component Created!"
 
     !-------------------------------------------------------------------------
     ! Create Gridded Component!   --- dummy land (land cap)
     !-------------------------------------------------------------------------
-    cname2 = "Dummy Land or Land Cap"
+    gcname2 = "Dummy Land or Land Cap"
 
-    dummy_land_comp = ESMF_GridCompCreate(name=cname2, rc=rc)
+    dummy_land_comp = ESMF_GridCompCreate(name=gcname2, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    call ESMF_LogWrite(subname//"Created "//trim(cname2)//" component", ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(subname//"Created "//trim(gcname2)//" component", ESMF_LOGMSG_INFO)
     print *, "Dummy Land  Gridded Component Created!"
 
     !-------------------------------------------------------------------------
-    ! Create Gridded Component!   --- Coupler  from atmos  to land
+    ! Create Coupling Component!   --- Coupler  from atmos  to land
     !-------------------------------------------------------------------------
-    cname3 = "Coupler from atmosphere to land"
-    cpl_atm2lnd_comp = ESMF_CplCompCreate(name=cname3, rc=rc)
+    ccname1 = "Coupler from atmosphere to land"
+    cpl_atm2lnd_comp = ESMF_CplCompCreate(name=ccname1, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    call ESMF_LogWrite(subname//"Created "//trim(cname3)//" component", ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(subname//"Created "//trim(ccname1)//" component", ESMF_LOGMSG_INFO)
     print *, "1st Coupler Gridded Component (atmosphere to land ) Created!"
 
     !-------------------------------------------------------------------------
-    ! Create Gridded Component!  -- Coupler from land to atmos
+    ! Create Coupling  Component!  -- Coupler from land to atmos
     !-------------------------------------------------------------------------
-    cname4 = "Coupler from land to atmosphere"
-    cpl_lnd2atm_comp = ESMF_CplCompCreate(name=cname4, rc=rc)
+    ccname2 = "Coupler from land to atmosphere"
+    cpl_lnd2atm_comp = ESMF_CplCompCreate(name=ccname2, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    call ESMF_LogWrite(subname//"Created "//trim(cname4)//" component", ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(subname//"Created "//trim(ccname2)//" component", ESMF_LOGMSG_INFO)
     print *, "2nd Coupler Gridded Component (land to atmosphere) Created!"
 
     ! ========================================================================
@@ -175,11 +181,8 @@ implicit none
     call ESMF_TimeSet(StopTime , yy=2000, mm=1, dd=10, s=0, calendar=Calendar, rc=rc)
     call ESMF_TimeIntervalSet(TimeStep, s=3600, rc=rc)
     clock = ESMF_ClockCreate(name='lilac_drv_EClock', TimeStep=TimeStep, startTime=StartTime, RefTime=StartTime, stopTime=stopTime, rc=rc)
-
-    !print *, 
     !clock = ESMF_ClockCreate(timeStep=timeStep, startTime=startTime, stopTime=stopTime, rc=rc)
     !EClock = ESMF_ClockCreate(name='lilac_drv_EClock', TimeStep=TimeStep, startTime=StartTime, RefTime=StartTime, stopTime=stopTime, rc=rc)
-
 
     !-------------------------------------------------------------------------
     ! Create the necessary import and export states used to pass data
@@ -188,16 +191,16 @@ implicit none
 
     ! following 4 states are lilac module variables
 
-    atm2lnd_a_state = ESMF_StateCreate(name=cname1, stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
+    atm2lnd_a_state = ESMF_StateCreate(name=gcname1, stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-    atm2lnd_l_state = ESMF_StateCreate(name=cname1, stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
+    atm2lnd_l_state = ESMF_StateCreate(name=gcname1, stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-    lnd2atm_a_state = ESMF_StateCreate(name=cname2, stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
+    lnd2atm_a_state = ESMF_StateCreate(name=gcname2, stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-    lnd2atm_l_state = ESMF_StateCreate(name=cname2, stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
+    lnd2atm_l_state = ESMF_StateCreate(name=gcname2, stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
 
@@ -205,7 +208,6 @@ implicit none
     call ESMF_LogWrite(subname//"Empty import and export states are created!!", ESMF_LOGMSG_INFO)
     print *, "Empty import and export states are created!!"
 
-    !, dum_var1= dum_var1, dum_var2= dum_var2)
     ! returns a valid state_to_lnd_atm and an empty state_from_land_atmgrid
     ! ========================================================================
     !-------------------------------------------------------------------------
@@ -218,12 +220,10 @@ implicit none
     call ESMF_LogWrite(subname//"atmos_cap or dummy_atmos_comp initialized", ESMF_LOGMSG_INFO)
     print *, "atmos_cap initialize finished, rc =", rc
 
-
     call ESMF_GridCompInitialize(dummy_land_comp       , importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     call ESMF_LogWrite(subname//"lnd_cap or dummy_land_comp initialized", ESMF_LOGMSG_INFO)
     print *, "lnd_cap initialize finished, rc =", rc
-
 
     ! All 4 states that are module variables are no longer empty - have been initialized
 

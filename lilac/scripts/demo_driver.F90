@@ -40,6 +40,7 @@ program demo_lilac_driver
     print *,  " ............. DONE ..................."
 
 
+    call ESMF_Finalize()
 
 end program demo_lilac_driver
 

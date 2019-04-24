@@ -68,6 +68,8 @@ module lnd_cap
 
     print *, "  Empty land is created !!!!"
     rc = ESMF_SUCCESS
+    call ESMF_GridCompGet(comp, petcount=petcount, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
 
     print *, "in land routine routine"

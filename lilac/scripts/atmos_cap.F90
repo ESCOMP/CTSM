@@ -121,6 +121,7 @@ module atmos_cap
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
     ! Create individual fields and add to field bundle
+    fldsFrCpl_num = 2
     do n = 1,fldsFrCpl_num
        ! create field
        !!! Here we want to pass pointers
