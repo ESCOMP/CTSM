@@ -32,13 +32,15 @@ implicit none
 
   subroutine lilac_init( atm2lnd1d, atm2lnd2d, lnd2atm1d, lnd2atm2d)
 
+    use atmos_cap, only : a2l_fields, l2a_fields
+
+    ! input/output variables
     type(atm2lnd_data1d_type), intent(in), optional  :: atm2lnd1d
     type(atm2lnd_data2d_type), intent(in), optional  :: atm2lnd2d
     type(lnd2atm_data1d_type), intent(in), optional  :: lnd2atm1d
     type(lnd2atm_data2d_type), intent(in), optional  :: lnd2atm2d
 
-
-    type(fld_list_type)                              :: a2l_fields, l2a_fields
+    ! local variables
     !  ! Gridded Components and Coupling Components 
     type(ESMF_GridComp)                              :: dummy_atmos_comp
     type(ESMF_GridComp)                              :: dummy_land_comp
@@ -88,7 +90,7 @@ implicit none
     print *, "field lists: !"
     if (.True.) then
         a2l_fields  % stdname      =  'uwind'
-        a2l_fields  % farrayptr1d  => atm2lnd1d%uwind
+        a2l_fields  % farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
         print *,      a2l_fields%farrayptr1d
         a2l_fields  % stdname      =  'vwind'
         a2l_fields  % farrayptr1d  => atm2lnd1d%vwind
