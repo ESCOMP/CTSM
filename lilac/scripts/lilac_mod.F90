@@ -242,8 +242,8 @@ implicit none
 
   subroutine lilac_run(dum_var1, dum_var2)
 
-    use atmos_cap, only : x2a_fields
-    use atmos_cap, only : a2x_fields
+    use atmos_cap, only : l2a_fields
+    use atmos_cap, only : a2l_fields
 
     real, dimension(:,:) :: dum_var1  ! from host atm
     real, dimension(:,:) :: dum_var2 ! to host atm

@@ -22,9 +22,10 @@ program demo_lilac_driver
 
     call random_number(dum_var2)
 
-    allocate( atm2lnd%uwind           (begc:endc) )  ; atm2lnd%uwind   (:)      =  dum_var2 
+    allocate( atm2lnd%uwind           (begc:endc) )  ; atm2lnd%uwind   (:)      =  dum_var2
     allocate( atm2lnd%vwind           (begc:endc) )  ; atm2lnd%vwind   (:)      =  dum_var2
     allocate( atm2lnd%tbot            (begc:endc) )  ; atm2lnd%tbot    (:)      =  dum_var2
+
     allocate( lnd2atm%lwup            (begc:endc) )  ; lnd2atm%lwup    (:)      =  dum_var2
     allocate( lnd2atm%taux            (begc:endc) )  ; lnd2atm%taux    (:)      =  dum_var2
     allocate( lnd2atm%tauy            (begc:endc) )  ; lnd2atm%tauy    (:)      =  dum_var2
