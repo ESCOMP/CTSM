@@ -3307,8 +3307,9 @@ sub setup_logic_megan {
   my $var   = "megan";
 
   if ( $opts->{$var} eq "default" ) {
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-'megan', clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
+     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan',
+                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'},
+                 'configuration'=>$nl_flags->{'configuration'} );
     $nl_flags->{$var} = $nl->get_value($var);
   } else {
     $nl_flags->{$var} = $opts->{$var};
