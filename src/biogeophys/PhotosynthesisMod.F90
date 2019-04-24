@@ -83,6 +83,8 @@ module  PhotosynthesisMod
      real(r8) :: act25  ! Rubisco activity at 25 C (umol CO2/gRubisco/s)
      real(r8) :: fnr  ! Mass ratio of total Rubisco molecular mass to nitrogen in Rubisco (gRubisco/gN in Rubisco)
      real(r8) :: cp25_yr2000  ! CO2 compensation point at 25°C at present day O2 (mol/mol)
+     real(r8) :: kc25_coef  ! Michaelis-Menten const. at 25°C for CO2 (unitless)
+     real(r8) :: ko25_coef  ! Michaelis-Menten const. at 25°C for O2 (unitless)
      real(r8), allocatable, public  :: krmax              (:)
      real(r8), allocatable, private :: kmax               (:,:)
      real(r8), allocatable, private :: psi50              (:,:)
@@ -678,6 +680,10 @@ contains
 
     ! read in the scalar parameters
 
+    ! Michaelis-Menten constant at 25°C for O2 (unitless)
+    call readNcdioScalar(ncid, 'ko25_coef', subname, params_inst%ko25_coef)
+    ! Michaelis-Menten constant at 25°C for CO2 (unitless)
+    call readNcdioScalar(ncid, 'kc25_coef', subname, params_inst%kc25_coef)
     ! CO2 compensation point at 25°C at present day O2 levels
     call readNcdioScalar(ncid, 'cp25_yr2000', subname, params_inst%cp25_yr2000)
     ! Rubisco activity at 25 C (umol CO2/gRubisco/s)
@@ -1298,8 +1304,8 @@ contains
          ! cp to account for variation in O2 using cp = 0.5 O2 / sco
          !
 
-         kc25 = (404.9_r8 / 1.e06_r8) * forc_pbot(c)
-         ko25 = (278.4_r8 / 1.e03_r8) * forc_pbot(c)
+         kc25 = params_inst%kc25_coef * forc_pbot(c)
+         ko25 = params_inst%ko25_coef * forc_pbot(c)
          sco  = 0.5_r8 * 0.209_r8 / params_inst%cp25_yr2000
          cp25 = 0.5_r8 * oair(p) / sco
 
@@ -2906,8 +2912,8 @@ contains
          ! cp to account for variation in O2 using cp = 0.5 O2 / sco
          !
 
-         kc25 = (404.9_r8 / 1.e06_r8) * forc_pbot(c)
-         ko25 = (278.4_r8 / 1.e03_r8) * forc_pbot(c)
+         kc25 = params_inst%kc25_coef * forc_pbot(c)
+         ko25 = params_inst%ko25_coef * forc_pbot(c)
          sco  = 0.5_r8 * 0.209_r8 / params_inst%cp25_yr2000
          cp25 = 0.5_r8 * oair(p) / sco
 

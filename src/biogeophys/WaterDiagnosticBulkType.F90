@@ -81,6 +81,14 @@ module WaterDiagnosticBulkType
 
   end type waterdiagnosticbulk_type
 
+   ! PUBLIC MEMBER FUNCTIONS
+  public :: readParams
+
+  type, private :: params_type
+      real(r8) :: zlnd  ! Momentum roughness length for soil, glacier, wetland (m)
+  end type params_type
+  type(params_type), private ::  params_inst
+
   ! minimum allowed snow effective radius (also "fresh snow" value) [microns]
   real(r8), public, parameter :: snw_rds_min = 54.526_r8    
 
@@ -89,6 +97,25 @@ module WaterDiagnosticBulkType
  !------------------------------------------------------------------------
 
 contains
+
+ subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_WaterDiagnosticBulk'
+    !--------------------------------------------------------------------
+
+    ! Momentum roughness length for soil, glacier, wetland (m)
+    call readNcdioScalar(ncid, 'zlnd', subname, params_inst%zlnd)
+
+  end subroutine readParams
 
   !------------------------------------------------------------------------
   subroutine InitBulk(this, bounds, info, vars, &
@@ -462,7 +489,6 @@ contains
     ! Initialize time constant variables and cold start conditions 
     !
     ! !USES:
-    use clm_varcon      , only : zlnd
     !
     ! !ARGUMENTS:
     class(waterdiagnosticbulk_type), intent(in) :: this
@@ -519,7 +545,7 @@ contains
                fmelt    = (snowbd/100.)**1.
                ! 100 is the assumed fresh snow density; 1 is a melting factor that could be
                ! reconsidered, optimal value of 1.5 in Niu et al., 2007
-               this%frac_sno_col(c) = tanh( this%snow_depth_col(c) /(2.5 * zlnd * fmelt) )
+               this%frac_sno_col(c) = tanh( this%snow_depth_col(c) / (2.5 * params_inst%zlnd * fmelt) )
             endif
          end if
       end do

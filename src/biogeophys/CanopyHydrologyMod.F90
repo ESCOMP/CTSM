@@ -41,6 +41,7 @@ module CanopyHydrologyMod
   public :: readParams
 
   type, private :: params_type
+     real(r8) :: zlnd  ! Roughness length for soil (m)
      real(r8) :: dewmx  ! Canopy maximum storage of liquid water (kg/m2)
      real(r8) :: sno_stor_max  ! Canopy maximum storage of snow (kg/m2)
      real(r8) :: accum_factor  ! Accumulation constant for fractional snow covered area (unitless)
@@ -161,6 +162,8 @@ contains
     character(len=*), parameter :: subname = 'readParams_CanopyHydrology'
     !--------------------------------------------------------------------
 
+    ! Roughness length for soil (m)
+    call readNcdioScalar(ncid, 'zlnd', subname, params_inst%zlnd)
     ! Canopy maximum storage of liquid water (kg/m2)
     call readNcdioScalar(ncid, 'dewmx', subname, params_inst%dewmx)
     ! Canopy maximum storage of snow (kg/m2)
@@ -189,7 +192,7 @@ contains
      ! temperature in the subroutine clm\_leaftem.f90, not in this subroutine.
      !
      ! !USES:
-     use clm_varcon         , only : hfus, denice, zlnd, rpi, spval, tfrz, int_snow_max
+     use clm_varcon         , only : hfus, denice, rpi, spval, tfrz, int_snow_max
      use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
      use landunit_varcon    , only : istcrop, istwet, istsoil, istice_mec 
      use clm_varctl         , only : subgridflag
@@ -594,7 +597,7 @@ contains
              if (oldfflag == 1) then 
                 ! snow cover fraction in Niu et al. 2007
                 if(snow_depth(c) > 0.0_r8)  then
-                   frac_sno(c) = tanh(snow_depth(c)/(2.5_r8*zlnd* &
+                   frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * params_inst%zlnd * &
                         (min(800._r8,(h2osno(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
                 endif
                 if(h2osno(c) < 1.0_r8)  then
@@ -625,7 +628,7 @@ contains
                 if (oldfflag == 1) then 
                    ! snow cover fraction in Niu et al. 2007
                    if(snow_depth(c) > 0.0_r8)  then
-                      frac_sno(c) = tanh(snow_depth(c)/(2.5_r8*zlnd* &
+                      frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * params_inst%zlnd * &
                            (min(800._r8,newsnow(c)/snow_depth(c))/100._r8)**1._r8) )
                    endif
                 endif

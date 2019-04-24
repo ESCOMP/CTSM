@@ -59,10 +59,12 @@ module CanopyFluxesMod
   public :: readParams
 
   type, private :: params_type
-     real(r8) :: csoilc  ! Drag coefficient for soil under dense canopy (-)
-     real(r8) :: cv  ! Turbulent transfer coeff. between canopy surface and canopy air (m/s^(1/2))
      real(r8) :: lai_dl  ! Plant litter area index (m2/m2)
      real(r8) :: z_dl  ! Litter layer thickness (m)
+     real(r8) :: a_coef  ! Drag coefficient under less dense canopy (unitless)
+     real(r8) :: a_exp  ! Drag exponent under less dense canopy (unitless)
+     real(r8) :: csoilc  ! Soil drag coefficient under dense canopy (unitless)
+     real(r8) :: cv  ! Turbulent transfer coeff. between canopy surface and canopy air (m/s^(1/2))
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -157,14 +159,18 @@ contains
     character(len=*), parameter :: subname = 'readParams_CanopyFluxes'
     !--------------------------------------------------------------------
 
-    ! Drag coefficient for soil under dense canopy (unitless)
-    call readNcdioScalar(ncid, 'csoilc', subname, params_inst%csoilc)
-    ! Turbulent transfer coeff between canopy surface and canopy air (m/s^(1/2))
-    call readNcdioScalar(ncid, 'cv', subname, params_inst%cv)
     !added by K.Sakaguchi for litter resistance: Plant litter area index (m2/m2)
     call readNcdioScalar(ncid, 'lai_dl', subname, params_inst%lai_dl)
     !added by K.Sakaguchi for litter resistance: Litter layer thickness (m)
     call readNcdioScalar(ncid, 'z_dl', subname, params_inst%z_dl)
+    ! Drag coefficient under less dense canopy (unitless)
+    call readNcdioScalar(ncid, 'a_coef', subname, params_inst%a_coef)
+    ! Drag exponent under less dense canopy (unitless)
+    call readNcdioScalar(ncid, 'a_exp', subname, params_inst%a_exp)
+    ! Drag coefficient for soil under dense canopy (unitless)
+    call readNcdioScalar(ncid, 'csoilc', subname, params_inst%csoilc)
+    ! Turbulent transfer coeff between canopy surface and canopy air (m/s^(1/2))
+    call readNcdioScalar(ncid, 'cv', subname, params_inst%cv)
 
   end subroutine readParams
 
@@ -844,7 +850,7 @@ contains
             ! changed by K.Sakaguchi from here
             ! transfer coefficient over bare soil is changed to a local variable
             ! just for readability of the code (from line 680)
-            csoilb = (vkc/(0.13_r8*(z0mg(c)*uaf(p)/1.5e-5_r8)**0.45_r8))
+            csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / 1.5e-5_r8)**params_inst%a_exp)
 
             !compute the stability parameter for ricsoilc  ("S" in Sakaguchi&Zeng,2008)
 
