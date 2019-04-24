@@ -15,6 +15,62 @@ implicit none
         real*8, pointer    :: farrayptr2d(:,:)  ! this will be filled in by lilac when it gets its data from the host atm
     end type fld_list_type
 
+!!! 1d for when we have mesh and 2d for when we have grids....
+
+    type                :: atm2lnd_data1d_type
+        real*8, pointer :: uwind (:)
+        real*8, pointer :: vwind (:)
+        real*8, pointer :: tbot  (:)
+    end type atm2lnd_data1d_type
+
+    type                :: lnd2atm_data1d_type
+        real*8, pointer :: lwup  (:)
+        real*8, pointer :: taux  (:)
+        real*8, pointer :: tauy  (:)
+     end type lnd2atm_data1d_type
+
+    type                :: atm2lnd_data2d_type
+        real*8, pointer :: uwind (:,:)
+        real*8, pointer :: vwind (:,:)
+        real*8, pointer :: tbot  (:,:)
+    end type               atm2lnd_data1d_type
+
+    type                :: lnd2atm_data2d_type
+        real*8, pointer :: lwup  (:,:)
+        real*8, pointer :: taux  (:,:)
+        real*8, pointer :: tauy  (:,:)
+     end type              lnd2atm_data2d_type
+
+
+
+
+
+
+
+
+    type atm2lnd_data1d_type
+       real*8, pointer :: uwind(:)
+       real*8, pointer :: vwind(:)
+       real*8, pointer :: tbot(:)
+   end type atm2lnd_data1d_type
+
+    type atm2lnd_data2d_type
+       real*8, pointer :: uwind(:,:)
+       real*8, pointer :: vwind(:,:)
+       real*8, pointer :: tbot(:,:)
+    end type atm2lnd_data2d_type
+
+    type lnd2atm_data1d_type
+       real*8, pointer :: lwup(:)
+       real*8, pointer :: taux(:)
+       real*8, pointer :: tauy(:)
+   end type lnd2atm_data1d_type
+
+    type lnd2atm_data2d_type
+       real*8, pointer :: lwup(:,:)
+       real*8, pointer :: taux(:,:)
+       real*8, pointer :: tauy(:,:)
+    end type lnd2atm_data2d_type
 !===============================================================================
     contains
 !===============================================================================
