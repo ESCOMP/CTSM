@@ -177,8 +177,6 @@ contains
      real(r8) :: fpisnow                                      ! coefficient of interception for snowfall
      real(r8) :: dz_snowf                                     ! layer thickness rate change due to precipitation [mm/s]
      real(r8) :: bifall(bounds%begc:bounds%endc)              ! bulk density of newly fallen dry snow [kg/m3]
-     real(r8) :: fracsnow(bounds%begp:bounds%endp)            ! frac of precipitation that is snow
-     real(r8) :: fracrain(bounds%begp:bounds%endp)            ! frac of precipitation that is rain
      real(r8) :: qflx_through_rain(bounds%begp:bounds%endp)   ! direct rain throughfall [mm/s]
      real(r8) :: qflx_through_snow(bounds%begp:bounds%endp)   ! direct snow throughfall [mm/s]
      real(r8) :: qflx_prec_grnd_snow(bounds%begp:bounds%endp) ! snow precipitation incident on ground [mm/s]
@@ -273,8 +271,6 @@ contains
              qflx_through_snow(p) = 0._r8 ! rain precipitation direct through canopy
              qflx_through_rain(p) = 0._r8 ! snow precipitation direct through canopy
              qflx_prec_intr(p) = 0._r8    ! total intercepted precipitation
-             fracsnow(p) = 0._r8          ! fraction of input precip that is snow
-             fracrain(p) = 0._r8          ! fraction of input precip that is rain
 
 
              if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall) then
@@ -283,10 +279,6 @@ contains
                    ! total liquid water inputs above canopy
                    qflx_liq_above_canopy(p) = forc_rain(c)+ qflx_irrig_sprinkler(p)
                    
-                   ! determine fraction of input precipitation that is snow and rain
-                   fracsnow(p) = forc_snow(c)/(forc_snow(c) + qflx_liq_above_canopy(p))
-                   fracrain(p) = qflx_liq_above_canopy(p)/(forc_snow(c) + qflx_liq_above_canopy(p))
-
                    ! Coefficient of interception
                    if(use_clm5_fpi) then 
                       fpi = interception_fraction * tanh(elai(p) + esai(p))
@@ -336,8 +328,6 @@ contains
              qflx_through_snow(p) = 0._r8
              qflx_through_rain(p) = 0._r8
              qflx_prec_intr(p)    = 0._r8
-             fracsnow(p)          = 0._r8
-             fracrain(p)          = 0._r8
              snocan(p)            = 0._r8
              liqcan(p)            = 0._r8
              qflx_snocanfall(p)    = 0._r8
