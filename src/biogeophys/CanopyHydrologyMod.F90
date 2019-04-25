@@ -354,7 +354,6 @@ contains
                    snounload(p) = (qflx_snowindunload(p)+qflx_snotempunload(p))*dtime ! total canopy unloading in timestep
                    if ( snounload(p) > snocan(p) ) then ! Limit unloading to snow in canopy
                       snounload(p) = snocan(p)
-                      write(iulog,"(A,I2.2,A,ES13.4E2)") "snocan",p,": ",snocan(p)
                    end if
                    snocan(p) = snocan(p) - snounload(p)
                 endif
