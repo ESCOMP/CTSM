@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev036
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Thu Apr 25 15:13:36 MDT 2019
+Date: Fri Apr 26 01:20:57 MDT 2019
 One-line Summary: Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
 
 Purpose of changes
@@ -68,6 +68,14 @@ CTSM testing: regular
 
     cheyenne - PASS
 
+  tools-tests (test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - PASS (compare tests fail, because of namelist updates)
+
   regular tests (aux_clm):
 
     cheyenne ---- OK
@@ -98,6 +106,7 @@ Detailed list of changes
 
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime
   cime from -- ctsm/ctsm1.0/cime5.7.9/n01 to ctsm/ctsm1.0/cime5.7.9/n03
+    cime update allows the new test to work and starts adding NLDAS grid in
 
 Pull Requests that document the changes (include PR ids): #696 #694
 (https://github.com/ESCOMP/ctsm/pull)
