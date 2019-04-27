@@ -143,6 +143,7 @@ contains
          wood_harvestc           =>    cnveg_carbonflux_inst%wood_harvestc_col          , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
          grainc_to_cropprodc     =>    cnveg_carbonflux_inst%grainc_to_cropprodc_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) grain C to 1-year crop product pool
          livestemc_to_cropprodc  =>    cnveg_carbonflux_inst%livestemc_to_cropprodc_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) livestem C to 1-year crop product pool !MWGraham added
+         leafc_to_cropprodc      =>    cnveg_carbonflux_inst%leafc_to_cropprodc_col     , & ! Input:  [real(r8) (:) ]  (gC/m2/s) leaf C to 1-year crop product pool !MWGraham added  
          gpp                     =>    cnveg_carbonflux_inst%gpp_col                    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) gross primary production
          er                      =>    cnveg_carbonflux_inst%er_col                     , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
          col_fire_closs          =>    cnveg_carbonflux_inst%fire_closs_col             , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total column-level fire C loss
@@ -178,7 +179,8 @@ contains
          col_coutputs = col_coutputs + &
               wood_harvestc(c) + &
               grainc_to_cropprodc(c) + &
-              livestemc_to_cropprodc(c)
+              livestemc_to_cropprodc(c) + &
+              leafc_to_cropprodc(c)
 
          ! subtract leaching flux
          col_coutputs = col_coutputs - som_c_leached(c)
@@ -216,6 +218,7 @@ contains
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'livestemc_to_cropprodc      = ',livestemc_to_cropprodc(c)*dt
+         write(iulog,*)'leafc_to_cropprodc      = ',leafc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
@@ -273,6 +276,7 @@ contains
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
          grainn_to_cropprodn => cnveg_nitrogenflux_inst%grainn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) grain N to 1-year crop product pool
          livestemn_to_cropprodn => cnveg_nitrogenflux_inst%livestemn_to_cropprodn_col    , & ! Input:  [real(r8) (:) ]  (gN/m2/s) livestem N to 1-year crop product pool !MWGraham added
+         leafn_to_cropprodn => cnveg_nitrogenflux_inst%leafn_to_cropprodn_col    , & ! Input:  [real(r8) (:) ]  (gN/m2/s) leaf N to 1-year crop product pool !MWGraham added
          totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
          )
 
@@ -308,7 +312,8 @@ contains
          col_noutputs(c) = col_noutputs(c) + &
               wood_harvestn(c) + &
               grainn_to_cropprodn(c) + &
-              livestemn_to_cropprodn(c)
+              livestemn_to_cropprodn(c) + &
+              leafn_to_cropprodn
 
          if (.not. use_nitrif_denitrif) then
             col_noutputs(c) = col_noutputs(c) + sminn_leached(c)

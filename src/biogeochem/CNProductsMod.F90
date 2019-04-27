@@ -51,6 +51,8 @@ module CNProductsMod
      real(r8), pointer :: grain_to_cropprod1_grc(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
      real(r8), pointer :: livestem_to_cropprod1_patch(:) ! (g[C or N]/m2/s) livestem to 1-year crop product pool !added livestem MWGraham
      real(r8), pointer :: livestem_to_cropprod1_grc(:) ! (g[C or N]/m2/s) livestem to 1-year crop product pool   !added livestem MWGraham
+     real(r8), pointer :: leaf_to_cropprod1_patch(:) ! (g[C or N]/m2/s) leaf to 1-year crop product pool !added leaf MWGraham
+     real(r8), pointer :: leaf_to_cropprod1_grc(:) ! (g[C or N]/m2/s) leaf to 1-year crop product pool   !added leaf MWGraham
 
      ! Fluxes: losses
      real(r8), pointer :: cropprod1_loss_grc(:)    ! (g[C or N]/m2/s) decomposition loss from 1-yr grain product pool
@@ -146,6 +148,9 @@ contains
 
     allocate(this%livestem_to_cropprod1_patch(begp:endp)) ; this%livestem_to_cropprod1_patch(:) = nan !added livestem MWGraham
     allocate(this%livestem_to_cropprod1_grc(begg:endg)) ; this%livestem_to_cropprod1_grc(:) = nan !added livestem MWGraham
+
+    allocate(this%leaf_to_cropprod1_patch(begp:endp)) ; this%leaf_to_cropprod1_patch(:) = nan !added leaf MWGraham
+    allocate(this%leaf_to_cropprod1_grc(begg:endg)) ; this%leaf_to_cropprod1_grc(:) = nan !added leaf MWGraham
 
     allocate(this%cropprod1_loss_grc(begg:endg)) ; this%cropprod1_loss_grc(:) = nan
     allocate(this%prod10_loss_grc(begg:endg)) ; this%prod10_loss_grc(:) = nan
@@ -305,6 +310,7 @@ contains
        this%hrv_deadstem_to_prod100_patch(p) = 0._r8
        this%grain_to_cropprod1_patch(p) = 0._r8
        this%livestem_to_cropprod1_patch(p) = 0._r8 !added livestem MWGraham
+       this%leaf_to_cropprod1_patch(p) = 0._r8 !added leaf MWGraham 
     end do
 
   end subroutine InitCold
@@ -444,7 +450,8 @@ contains
        wood_harvest_patch, &
        dwt_crop_product_gain_patch, &
        grain_to_cropprod_patch, &
-       livestem_to_cropprod_patch) !added livestem MWGraham
+       livestem_to_cropprod_patch, &
+       leaf_to_cropprod_patch) !added livestem and leaf MWGraham
     !
     ! !DESCRIPTION:
     ! Update all loss fluxes from wood and grain product pools, and update product pool
@@ -470,6 +477,7 @@ contains
     ! grain to crop product pool (g/m2/s) [patch]
     real(r8), intent(in) :: grain_to_cropprod_patch( bounds%begp: )
     real(r8), intent(in) :: livestem_to_cropprod_patch( bounds%begp: ) !added livestem MWGraham
+    real(r8), intent(in) :: leaf_to_cropprod_patch( bounds%begp: ) !added leaf MWGraham
     !
     ! !LOCAL VARIABLES:
     integer  :: g        ! indices
@@ -484,6 +492,7 @@ contains
     SHR_ASSERT_ALL((ubound(dwt_crop_product_gain_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(grain_to_cropprod_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(livestem_to_cropprod_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__)) !added livestem MWGraham
+    SHR_ASSERT_ALL((ubound(leaf_to_cropprod_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__)) !added leaf MWGraham
 
     call this%PartitionWoodFluxes(bounds, &
          num_soilp, filter_soilp, &
@@ -494,7 +503,8 @@ contains
          num_soilp, filter_soilp, &
          dwt_crop_product_gain_patch(bounds%begp:bounds%endp), &
          grain_to_cropprod_patch(bounds%begp:bounds%endp), &
-         livestem_to_cropprod_patch(bounds%begp:bounds%endp)) !added livestem MWGraham
+         livestem_to_cropprod_patch(bounds%begp:bounds%endp, & !added livestem MWGraham
+         leaf_to_cropprod_patch(bounds%begp:bounds%endp)) !added leaf MWGraham
 
     ! calculate losses from product pools
     ! the following (1/s) rate constants result in ~90% loss of initial state over 1, 10 and 100 years,
@@ -524,6 +534,7 @@ contains
        ! fluxes into wood & grain & residue product pools, from harvest
        this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%grain_to_cropprod1_grc(g)*dt
        this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%livestem_to_cropprod1_grc(g)*dt !added livestem MWGraham
+       this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%leaf_to_cropprod1_grc(g)*dt !added leaf MWGraham
        this%prod10_grc(g)    = this%prod10_grc(g)    + this%hrv_deadstem_to_prod10_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   + this%hrv_deadstem_to_prod100_grc(g)*dt
 
@@ -644,7 +655,8 @@ contains
        num_soilp, filter_soilp, &
        dwt_crop_product_gain_patch, &
        grain_to_cropprod_patch, &
-       livestem_to_cropprod_patch)
+       livestem_to_cropprod_patch, &
+       leaf_to_cropprod_patch) !MWGraham added leaf and livestem
     !
     ! !DESCRIPTION:
     ! Partition input grain fluxes into crop product pools
@@ -671,6 +683,8 @@ contains
     real(r8)                , intent(in)    :: grain_to_cropprod_patch( bounds%begp: )
     ! livestem to crop product pool(s) (g/m2/s) [patch]
     real(r8)                , intent(in)    :: livestem_to_cropprod_patch( bounds%begp: ) !added livestem MWGraham
+    ! leaf to crop product pool(s) (g/m2/s) [patch]
+    real(r8)                , intent(in)    :: leaf_to_cropprod_patch( bounds%begp: ) !added leaf MWGraham
     !
     ! !LOCAL VARIABLES:
     integer :: fp
@@ -709,6 +723,23 @@ contains
     call p2g(bounds, &
          this%livestem_to_cropprod1_patch(bounds%begp:bounds%endp), &
          this%livestem_to_cropprod1_grc(bounds%begg:bounds%endg), &
+         p2c_scale_type = 'unity', &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+
+    ! Determine gains from residue (leaf) harvest 
+    !added calculation for leaf by MWGraham
+
+    do fp = 1, num_soilp
+       p = filter_soilp(fp)
+
+       ! For now all crop product is put in the 1-year crop product pool
+       this%leaf_to_cropprod1_patch(p) = leaf_to_cropprod_patch(p)
+    end do
+
+    call p2g(bounds, &
+         this%leaf_to_cropprod1_patch(bounds%begp:bounds%endp), &
+         this%leaf_to_cropprod1_grc(bounds%begg:bounds%endg), &
          p2c_scale_type = 'unity', &
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')

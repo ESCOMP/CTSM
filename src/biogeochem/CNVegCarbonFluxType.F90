@@ -248,6 +248,8 @@ module CNVegCarbonFluxType
      real(r8), pointer :: grainc_to_cropprodc_col                   (:)     ! grain C to crop product pool (gC/m2/s)
      real(r8), pointer :: livestemc_to_cropprodc_patch              (:)     ! livestem C to crop product pool (gC/m2/s)
      real(r8), pointer :: livestemc_to_cropprodc_col                (:)     ! livestem C to crop product pool (gC/m2/s)
+     real(r8), pointer :: leafc_to_cropprodc_patch                  (:)     ! leaf C to crop product pool (gC/m2/s)
+     real(r8), pointer :: leafc_to_cropprodc_col                    (:)     ! leaf C to crop product pool (gC/m2/s)
 
      ! fire fluxes
      real(r8), pointer :: m_decomp_cpools_to_fire_vr_col            (:,:,:) ! vertically-resolved decomposing C fire loss (gC/m3/s)
@@ -666,6 +668,12 @@ contains
 
     allocate(this%livestemc_to_cropprodc_col(begc:endc)) !added livestem C prod
     this%livestemc_to_cropprodc_col(:) = nan
+
+    allocate(this%leafc_to_cropprodc_patch(begp:endp)) !added leaf C prod
+    this%leafc_to_cropprodc_patch(:) = nan
+
+    allocate(this%leafc_to_cropprodc_col(begc:endc)) !added leaf C prod
+    this%leafc_to_cropprodc_col(:) = nan
 
     allocate(this%m_decomp_cpools_to_fire_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                
     this%m_decomp_cpools_to_fire_vr_col(:,:,:)= nan
@@ -3822,6 +3830,7 @@ contains
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
        this%grainc_to_cropprodc_patch(i)                 = value_patch
        this%livestemc_to_cropprodc_patch(i)              = value_patch !added livestem C
+       this%leafc_to_cropprodc_patch(i)              = value_patch !added leaf C
     end do
 
     if ( use_crop )then
@@ -3888,6 +3897,7 @@ contains
 
        this%grainc_to_cropprodc_col(i)       = value_column
        this%livestemc_to_cropprodc_col(i)    = value_column !livestem C added
+       this%leafc_to_cropprodc_col(i)    = value_column !leaf C added
        this%cwdc_hr_col(i)                   = value_column
        this%cwdc_loss_col(i)                 = value_column
        this%litterc_loss_col(i)              = value_column

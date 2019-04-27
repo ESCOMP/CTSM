@@ -715,7 +715,8 @@ contains
          wood_harvest_patch = cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
          dwt_crop_product_gain_patch = cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
          grain_to_cropprod_patch = cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp), &
-         livestem_to_cropprod_patch = cnveg_carbonflux_inst%livestemc_to_cropprodc_patch(begp:endp)) !added livestem C
+         livestem_to_cropprod_patch = cnveg_carbonflux_inst%livestemc_to_cropprodc_patch(begp:endp) !added livestem C
+         leaf_to_cropprod_patch = cnveg_carbonflux_inst%leafc_to_cropprodc_patch(begp:endp)) !added leaf C  
     call t_stopf('CNWoodProducts')
 
     if (use_c13) then
@@ -725,7 +726,8 @@ contains
             wood_harvest_patch = c13_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             dwt_crop_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
             grain_to_cropprod_patch = c13_cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp), &
-            livestem_to_cropprod_patch = c13_cnveg_carbonflux_inst%livestemc_to_cropprodc_patch(begp:endp)) !added livestem C
+            livestem_to_cropprod_patch = c13_cnveg_carbonflux_inst%livestemc_to_cropprodc_patch(begp:endp) !added livestem C
+            leaf_to_cropprod_patch = c13_cnveg_carbonflux_inst%leafc_to_cropprodc_patch(begp:endp)) !added leaf C
     end if
 
     if (use_c14) then
@@ -735,7 +737,8 @@ contains
             wood_harvest_patch = c14_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             dwt_crop_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(begp:endp), &
             grain_to_cropprod_patch = c14_cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp), &
-            livestem_to_cropprod_patch = cnveg_carbonflux_inst%livestemc_to_cropprodc_patch(begp:endp)) !added livestem C
+            livestem_to_cropprod_patch = cnveg_carbonflux_inst%livestemc_to_cropprodc_patch(begp:endp) !added livestem C
+            leaf_to_cropprod_patch = cnveg_carbonflux_inst%leafc_to_cropprodc_patch(begp:endp)) !added leaf C
     end if
 
     call n_products_inst%UpdateProducts(bounds, &
@@ -744,7 +747,8 @@ contains
          wood_harvest_patch = cnveg_nitrogenflux_inst%wood_harvestn_patch(begp:endp), &
          dwt_crop_product_gain_patch = cnveg_nitrogenflux_inst%dwt_crop_productn_gain_patch(begp:endp), &
          grain_to_cropprod_patch = cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(begp:endp), &
-         livestem_to_cropprod_patch = cnveg_nitrogenflux_inst%livestemn_to_cropprodn_patch(begp:endp)) !added livestem N
+         livestem_to_cropprod_patch = cnveg_nitrogenflux_inst%livestemn_to_cropprodn_patch(begp:endp) !added livestem N
+         leaf_to_cropprod_patch = cnveg_nitrogenflux_inst%leafn_to_cropprodn_patch(begp:endp)) !added leaf N 
 
     !--------------------------------------------
     ! Calculate fire area and fluxes
