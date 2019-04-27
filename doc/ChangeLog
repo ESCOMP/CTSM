@@ -1,7 +1,7 @@
 ===============================================================
-Tag name:  ctsm1.0.dev037
+Tag name:  ctsm1.0.dev0??
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
-Date:  Wed Apr 24 15:43:08 MDT 2019
+Date:  Fri Apr 26 21:40:48 MDT 2019
 One-line Summary: Move some hard-coded parameters from code to params.nc file
 
 Purpose of changes
@@ -84,7 +84,7 @@ CTSM testing:
     hobart ------ 
 
 CTSM tag used for the baseline comparisons: 
- ctsm1.0.dev036
+ ctsm1.0.dev0??
 
 Answer changes
 --------------
@@ -442,7 +442,6 @@ Pull Requests that document the changes (include PR ids): none
 
 ===============================================================
 ===============================================================
->>>>>>> ctsm1.0.dev035
 Tag name:  ctsm1.0.dev033
 Originator(s):  slevis (Samuel Levis, SLevis Consulting LLC, 303-665-1310)
 Date: Thu Apr 11 10:51:29 MDT 2019
