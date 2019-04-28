@@ -787,7 +787,7 @@ sub setup_cmdl_configuration_and_structure {
 
    my $var = "configuration";
    $val = $opts->{$var};
-   if ($val eq "clm" || $val eq "nwp") {
+   if (defined($val) && ($val eq "clm" || $val eq "nwp")) {
       $nl_flags->{$var} = $val;
    } else {
       $log->fatal_error("$var has a value (".$val.") that is NOT valid. Valid values are: clm, nwp.");
@@ -795,7 +795,7 @@ sub setup_cmdl_configuration_and_structure {
 
    $var = "structure";
    $val = $opts->{$var};
-   if ($val eq "standard" || $val eq "fast") {
+   if (defined($val) && ($val eq "standard" || $val eq "fast")) {
       $nl_flags->{$var} = $val;
    } else {
       $log->fatal_error("$var has a value (".$val.") that is NOT valid. Valid values are: standard, fast.");

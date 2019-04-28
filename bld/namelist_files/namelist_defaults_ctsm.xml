@@ -125,7 +125,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <organic_frac_squared phys="clm4_5" >.true.</organic_frac_squared>
 <organic_frac_squared phys="clm5_0" >.false.</organic_frac_squared>
 
-<soil_layerstruct structure="fast">5SL_3m</soil_layerstruct>
+<soil_layerstruct structure="fast"                  >5SL_3m</soil_layerstruct>
 <soil_layerstruct structure="standard" phys="clm5_0">20SL_8.5m</soil_layerstruct>
 <soil_layerstruct structure="standard" phys="clm4_5">10SL_3.5m</soil_layerstruct>
 
@@ -235,7 +235,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_undercanopy_stability phys="clm4_5">.true.</use_undercanopy_stability>
 
 <itmax_canopy_fluxes structure="standard">40</itmax_canopy_fluxes>
-<itmax_canopy_fluxes structure="fast">3</itmax_canopy_fluxes>
+<itmax_canopy_fluxes structure="fast"    >3</itmax_canopy_fluxes>
 
 <!-- Canopy hydrology namelist defaults -->
 <use_clm5_fpi phys="clm5_0">.true.</use_clm5_fpi>
@@ -290,14 +290,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Snow pack settings-->
 <nlevsno phys="clm5_0" structure="standard">12</nlevsno>
-<nlevsno phys="clm5_0" structure="fast">5</nlevsno>
-<nlevsno phys="clm4_5" >5</nlevsno>
+<nlevsno phys="clm5_0" structure="fast"    >5</nlevsno>
+<nlevsno phys="clm4_5"                     >5</nlevsno>
 <!-- h2osno_max is more 'configuration' than 'structure'. But since it's
      tied to nlevsno, we're controlling it via 'structure', like
      nlevsno, so that defaults for the two remain consistent. -->
 <h2osno_max phys="clm5_0" structure="standard">10000.0</h2osno_max>
-<h2osno_max phys="clm5_0" structure="fast">5000.0</h2osno_max>
-<h2osno_max phys="clm4_5" >1000.0</h2osno_max>
+<h2osno_max phys="clm5_0" structure="fast"    >5000.0</h2osno_max>
+<h2osno_max phys="clm4_5"                     >1000.0</h2osno_max>
 
 <int_snow_max phys="clm5_0">2000.</int_snow_max>
 <!-- For clm4_5, make this effectively unlimited -->
@@ -457,7 +457,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <nnegcrit phys="clm4_5" use_cn=".true.">-6.d+1</nnegcrit>
 
 <!-- Plant hydraulic stress -->
-<use_hydrstress>.false.</use_hydrstress>
+<use_hydrstress                                                      >.false.</use_hydrstress>
 <use_hydrstress phys="clm5_0" use_fates=".false." configuration="clm">.true.</use_hydrstress>
 <!--
 
@@ -1147,14 +1147,14 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 
 <run_zero_weight_urban>.false.</run_zero_weight_urban>
 
-<collapse_urban structure="standard">.false.</collapse_urban>
-<collapse_urban structure="fast">.true.</collapse_urban>
+<collapse_urban structure="standard" >.false.</collapse_urban>
+<collapse_urban structure="fast"     >.true.</collapse_urban>
 
-<n_dom_landunits structure="standard">0</n_dom_landunits>
-<n_dom_landunits structure="fast">1</n_dom_landunits>
+<n_dom_landunits structure="standard" >0</n_dom_landunits>
+<n_dom_landunits structure="fast"     >1</n_dom_landunits>
 
-<n_dom_pfts structure="standard">0</n_dom_pfts>
-<n_dom_pfts structure="fast">1</n_dom_pfts>
+<n_dom_pfts structure="standard" >0</n_dom_pfts>
+<n_dom_pfts structure="fast"     >1</n_dom_pfts>
 
 <toosmall_soil>0.d00</toosmall_soil>
 <toosmall_crop>0.d00</toosmall_crop>
