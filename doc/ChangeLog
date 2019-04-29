@@ -1,4 +1,128 @@
 ===============================================================
+Tag name:  ctsm1.0.dev037
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Apr 29 16:11:47 MDT 2019
+One-line Summary: Change year alignment for present-day I compsets
+
+Purpose of changes
+------------------
+
+Change year alignment for present-day I compsets (typically, these
+compsets have aliases beginning with "I2000"), in order to work better
+for cases that are meant to replicate particular years.
+
+(1) Start the model in year 2000 rather than year 1
+
+(2) Change datm's year alignment so that model year 2000 uses
+observations from year 2000, model year 2001 uses observations from year
+2001, etc.
+
+(This change was requested by Sean Swenson and supported by Dave
+Lawrence.)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Year-2000 compsets now start in model year 2000 rather than 1
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: cime changes reviewed by Erik Kluzek and others
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, year-2000 cases change answers as expected
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev036
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Present-day compsets (I2000, I1Pt; also I2010 once those compsets are added)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff/same climate
+
+      This changes the year alignment of datm. Climatological averages
+      should be the same as before, but the alignment of model year to
+      datm year changes.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: ctsm/ctsm1.0/cime5.7.9/n03 -> ctsm/ctsm1.0/cime5.7.9/n04
+
+Pull Requests that document the changes (include PR ids):
+- cime changes documented in https://github.com/ESMCI/cime/pull/3093
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev036
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri Apr 26 01:20:57 MDT 2019
