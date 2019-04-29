@@ -313,7 +313,7 @@ contains
               wood_harvestn(c) + &
               grainn_to_cropprodn(c) + &
               livestemn_to_cropprodn(c) + &
-              leafn_to_cropprodn
+              leafn_to_cropprodn(c)
 
          if (.not. use_nitrif_denitrif) then
             col_noutputs(c) = col_noutputs(c) + sminn_leached(c)

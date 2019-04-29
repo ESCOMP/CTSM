@@ -503,7 +503,7 @@ contains
          num_soilp, filter_soilp, &
          dwt_crop_product_gain_patch(bounds%begp:bounds%endp), &
          grain_to_cropprod_patch(bounds%begp:bounds%endp), &
-         livestem_to_cropprod_patch(bounds%begp:bounds%endp, & !added livestem MWGraham
+         livestem_to_cropprod_patch(bounds%begp:bounds%endp), & !added livestem MWGraham
          leaf_to_cropprod_patch(bounds%begp:bounds%endp)) !added leaf MWGraham
 
     ! calculate losses from product pools
