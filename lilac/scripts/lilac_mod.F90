@@ -20,6 +20,7 @@ implicit none
    integer                    :: yy,mm,dd,sec
 
    character(*), parameter    :: modname =  "lilac_mod"
+   !type(fld_list_type), public                      :: a2l_fields, l2a_fields
 
   !------------------------------------------------------------------------
 
@@ -33,7 +34,7 @@ implicit none
   subroutine lilac_init( atm2lnd1d, atm2lnd2d, lnd2atm1d, lnd2atm2d)
 
     use atmos_cap, only : a2l_fields, l2a_fields
-
+    ! type(fld_list_type) :: a2l_fields , l2a_fields
     ! input/output variables
     type(atm2lnd_data1d_type), intent(in), optional  :: atm2lnd1d
     type(atm2lnd_data2d_type), intent(in), optional  :: atm2lnd2d
@@ -64,7 +65,7 @@ implicit none
     character(len=ESMF_MAXSTR)                       :: gcname1, gcname2   !    Gridded components names
     character(len=ESMF_MAXSTR)                       :: ccname1, ccname2   !    Coupling components names
     !integer, parameter                              :: fldsMax = 100
-    integer                                          :: fldsFrCpl_num, fldsToCpl_num
+    integer                                          :: a2l_fldnum, l2a_fldnum
     logical                                          :: mesh_switch
 
     !------------------------------------------------------------------------
@@ -84,22 +85,31 @@ implicit none
     ! Create Field lists -- Basically create a list of fields and add a default
     ! value to them.
     !-------------------------------------------------------------------------
-    fldsFrCpl_num = 1
-    fldsToCpl_num = 1
+    a2l_fldnum = 3
+    l2a_fldnum = 3
+
+    allocate (a2l_fields(a2l_fldnum))
+    allocate (l2a_fields(l2a_fldnum))
 
     print *, "field lists: !"
+!    call create_fldlists(l2a_fields, a2l_fields, a2l_fldnum, l2a_fldnum)
+
+
     if (.True.) then
-        a2l_fields  % stdname      =  'uwind'
-        a2l_fields  % farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
-        print *,      a2l_fields%farrayptr1d
-        a2l_fields  % stdname      =  'vwind'
-        a2l_fields  % farrayptr1d  => atm2lnd1d%vwind
-        print *,      a2l_fields%farrayptr1d
+        a2l_fields(1)%stdname      =  'uwind'
+        a2l_fields(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
+        a2l_fields(2)%stdname      =  'vwind'
+        a2l_fields(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
+        print *,      a2l_fields(1)%stdname
+        print *,      a2l_fields(1)%farrayptr1d(:)
+!        a2l_fields(3)%stdname      =  'vwind'
+!        a2l_fields(3)%farrayptr1d  => atm2lnd1d%vwind
+!        print *,      a2l_fields(3)%farrayptr1d
 
        !call create_fldlists(flds_a2l, fldsfldsToCpl, fldsToCpl_num, fldsFrCpl_num)
     else
-       a2l_fields%stdname = 'name'
-       a2l_fields%farrayptr2d => atm2lnd2d%uwind
+       a2l_fields(1)%stdname = 'name'
+       a2l_fields(1)%farrayptr2d => atm2lnd2d%uwind
        !call create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
     end if
 

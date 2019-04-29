@@ -2,6 +2,7 @@ module atmos_cap
 
     use ESMF
     use lilac_utils
+    !use lilac_mod,   only :    a2l_fields
 
 
     implicit none
@@ -13,6 +14,10 @@ module atmos_cap
     type(ESMF_Field), public, save   ::  field
     type(ESMF_Field), public, save   ::  field_sie, field_u
 
+    !type(fld_list_type), public, allocatable ::  l2a_fields(:)
+    !type(fld_list_type), public, allocatable ::  a2l_fields(:)
+    !type(fld_list_type), public, save ::  l2a_fields(:)
+    !type(fld_list_type), public, save ::  a2l_fields(:)
     type(fld_list_type), allocatable ::  l2a_fields(:)
     type(fld_list_type), allocatable ::  a2l_fields(:)
 
