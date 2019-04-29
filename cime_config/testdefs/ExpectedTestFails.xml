@@ -30,18 +30,6 @@
 
   <!-- aux_clm test suite failures -->
 
-  <test name="ERP_D_Ld10_P36x2.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_decStart">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#404</issue>
-    </phase>
-    <phase name="COMPARE_base_rest">
-      <status>PEND</status>
-      <issue>#404</issue>
-      <comment>Because of the RUN failure, this phase is listed as PEND</comment>
-    </phase>
-  </test>
-
   <test name="ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.cheyenne_gnu.clm-monthly">
     <phase name="RUN">
       <status>FAIL</status>
