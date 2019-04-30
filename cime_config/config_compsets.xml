@@ -233,9 +233,24 @@
 
 <!-- I CLM50 NWP Compsets -->
 
+  <!-- GSWP datm forcing, for global runs or regional runs outside the CONUS -->
   <compset>
     <alias>I2000Ctsm50NwpSpGswpGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%NWP-SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <!-- NLDAS datm forcing, for regional runs over the CONUS, e.g., using
+       the nldas grid -->
+  <compset>
+    <alias>I2000Ctsm50NwpSpNldasGs</alias>
+    <lname>2000_DATM%NLDAS2_CLM50%NWP-SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <!-- NLDAS datm forcing, for regional runs over the CONUS, e.g., using
+       the nldas grid; stub ROF to improve performance -->
+  <compset>
+    <alias>I2000Ctsm50NwpSpNldasRsGs</alias>
+    <lname>2000_DATM%NLDAS2_CLM50%NWP-SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
 <!-- I CLM45 Compsets -->
