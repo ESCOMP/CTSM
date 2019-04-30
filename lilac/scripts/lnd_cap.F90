@@ -4,15 +4,15 @@ module lnd_cap
 
   implicit none
 
-  character(*), parameter :: modname =  "(land)"
+  character(*), parameter :: modname =  "  lnd_cap"
 
   !!integer, parameter      :: fldsMax = 100
 
   type(ESMF_Field), public, save :: field
   type(ESMF_Field), public, save :: field_sie, field_u
 
-  type(fld_list_type), allocatable :: x2a_fields(:)  
-  type(fld_list_type), allocatable :: a2x_fields(:)  
+  type(fld_list_type), public, allocatable ::  c2l_fldlist(:)
+  type(fld_list_type), public, allocatable ::  l2c_fldlist(:)
 
   !private
 
@@ -30,7 +30,7 @@ module lnd_cap
 
     type(ESMF_GridComp)   :: comp   ! must not be optional
     integer, intent(out) :: rc
-    character(len=*), parameter :: subname=trim(modname)//':(lnd_register) '
+    character(len=*), parameter :: subname=trim(modname)//':[lnd_register] '
 
     print *, "in lnd register routine"
 
@@ -53,13 +53,12 @@ module lnd_cap
 
   subroutine lnd_init(comp, atm2lnd_l_state, lnd2atm_l_state, clock, rc)
 
-    use atmos_cap, only : a2l_fields, l2a_fields
     type (ESMF_GridComp)             :: comp
     type (ESMF_State)                :: atm2lnd_l_state, lnd2atm_l_state
     type (ESMF_Clock)                :: clock
     integer, intent(out)             :: rc
 
-    type (ESMF_FieldBundle)      ::  l2a_fb , a2l_fb
+    type (ESMF_FieldBundle)      ::  l2c_fb , c2l_fb
     integer                      ::  n
 
 
@@ -68,12 +67,12 @@ module lnd_cap
     type(ESMF_Mesh)                  :: lnd_mesh
     character(len=ESMF_MAXSTR)       :: lnd_mesh_filepath
 
-    character(len=*), parameter :: subname=trim(modname)//':(lnd_register) '
+    character(len=*), parameter :: subname=trim(modname)//':[lnd_init] '
 
     type(ESMF_Grid)                  :: lnd_grid
 
-    integer                          ::  a2l_fields_num
-    integer                          ::  l2a_fields_num
+    integer                          ::  c2l_fldlist_num
+    integer                          ::  l2c_fldlist_num
 
 
 
@@ -115,91 +114,91 @@ module lnd_cap
 
         !-------------------------------------------------------------------------
         ! Coupler (land) to Atmosphere Fields --  l2a
-        ! I- Create Field Bundle -- l2a_fb for now
+        ! I- Create Field Bundle -- l2c_fb for now
         ! II- Create  Fields and add them to field bundle
-        ! III - Add l2a_fb to state (l2a_state)
+        ! III - Add l2c_fb to state (lnd2atm_l_state)
         !-------------------------------------------------------------------------
 
-        l2a_fb = ESMF_FieldBundleCreate (name="l2a_fields", rc=rc)
+        l2c_fb = ESMF_FieldBundleCreate (name="l2c_fb", rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-
+        print *, 'l2c_fb is created'
         ! Create individual fields and add to field bundle -- l2a
-        l2a_fields_num = 3
+        l2c_fldlist_num = 3
 
-        do n = 1,l2a_fields_num
+        do n = 1,l2c_fldlist_num
 
            ! create field
            !!! Here we want to pass pointers
            if (mesh_switch) then
-           field = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(l2a_fields(n)%stdname), rc=rc)
-              !field = ESMF_FieldCreate(lnd_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(l2a_fields(n)%stdname), farrayPtr=l2a_fields(n)%farrayptr1d, rc=
+           field = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(l2c_fldlist(n)%stdname), rc=rc)
+              !field = ESMF_FieldCreate(lnd_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(l2c_fldlist(n)%stdname), farrayPtr=l2c_fldlist(n)%farrayptr1d, rc=
               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
            else
-              field = ESMF_FieldCreate(lnd_grid, name=trim(l2a_fields(n)%stdname), farrayPtr=l2a_fields(n)%farrayptr2d, rc=rc)
+              field = ESMF_FieldCreate(lnd_grid, name=trim(l2c_fldlist(n)%stdname), farrayPtr=l2c_fldlist(n)%farrayptr2d, rc=rc)
               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
            end if
            ! add field to field bundle
-           call ESMF_FieldBundleAdd(l2a_fb, (/field/), rc=rc)
+           call ESMF_FieldBundleAdd(l2c_fb, (/field/), rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
            print *, "**********************************************************"
            print *, "creating field for l2a:"
-           print *, trim(l2a_fields(n)%stdname)
-           print *, l2a_fields(n)%farrayptr1d
+           print *, trim(l2c_fldlist(n)%stdname)
+           print *, l2c_fldlist(n)%farrayptr1d
 
         enddo
 
-        print *, "!Fields For Coupler (l2a_fields) Field Bundle Created!"
+        print *, "!Fields For Coupler (l2c_fldlist) Field Bundle Created!"
 
         ! Add field bundle to state
-        call ESMF_StateAdd(lnd2atm_l_state, (/l2a_fb/), rc=rc)
+        call ESMF_StateAdd(lnd2atm_l_state, (/l2c_fb/), rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        print *, "!l2a_state is filld with dummy_var field bundle!"
+        print *, "!lnd2atm_l_state is filld with dummy_var field bundle!"
 
 
         !-------------------------------------------------------------------------
         ! Atmosphere to Coupler (land) Fields --  a2l
-        ! I- Create empty field bundle -- a2l_fb
+        ! I- Create empty field bundle -- c2l_fb
         ! II- Create  Fields and add them to field bundle
-        ! III - Add a2l_fb to state (a2l_state)
+        ! III - Add c2l_fb to state (atm2lnd_l_state)
         !-------------------------------------------------------------------------
 
-        a2l_fb = ESMF_FieldBundleCreate(name="a2l_fields", rc=rc)
+        c2l_fb = ESMF_FieldBundleCreate(name="c2l_fb", rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
         ! Create individual fields and add to field bundle -- a2l
 
-        !call fldlist_add(a2l_fields_num, a2l_fields, 'dum_var2'      )
-        a2l_fields_num = 3
+        !call fldlist_add(c2l_fldlist_num, c2l_fldlist, 'dum_var2'      )
+        c2l_fldlist_num = 3
 
-        do n = 1,a2l_fields_num
+        do n = 1,c2l_fldlist_num
 
            ! create field
            !!! Here we want to pass pointers
-           field = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(a2l_fields(n)%stdname), rc=rc)
-           !field = ESMF_FieldCreate(lnd_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(a2l_fields(n)%stdname), farrayPtr=a2l_fields(n)%farrayptr1d, rc=rc)
+           field = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(c2l_fldlist(n)%stdname), rc=rc)
+           !field = ESMF_FieldCreate(lnd_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(c2l_fldlist(n)%stdname), farrayPtr=c2l_fldlist(n)%farrayptr1d, rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
            !call ESMF_FieldGet(field, farrayPtr=fldptr, rc=rc)
-           !fldptr = a2l_fields(n)%default_value
+           !fldptr = c2l_fldlist(n)%default_value
 
            ! add field to field bundle
-           call ESMF_FieldBundleAdd(a2l_fb, (/field/), rc=rc)
+           call ESMF_FieldBundleAdd(c2l_fb, (/field/), rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
 
            print *, "**********************************************************"
            print *, "creating field for a2l:"
-           print *, trim(a2l_fields(n)%stdname)
-           print *, a2l_fields(n)%farrayptr1d
+           print *, trim(c2l_fldlist(n)%stdname)
+           print *, c2l_fldlist(n)%farrayptr1d
 
         enddo
 
-        print *, "!Fields to  Coupler (atmos to  land ) (a2l_fb) Field Bundle Created!"
+        print *, "!Fields to  Coupler (atmos to  land ) (c2l_fb) Field Bundle Created!"
 
         ! Add field bundle to state
-        call ESMF_StateAdd(atm2lnd_l_state, (/a2l_fb/), rc=rc)
+        call ESMF_StateAdd(atm2lnd_l_state, (/c2l_fb/), rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        print *, "!a2l_state is filld with dummy_var field bundle!"
+        print *, "!atm2lnd_l_state is filld with dummy_var field bundle!"
 
 
 

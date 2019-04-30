@@ -20,7 +20,7 @@ implicit none
    integer                    :: yy,mm,dd,sec
 
    character(*), parameter    :: modname =  "lilac_mod"
-   !type(fld_list_type), public                      :: a2l_fields, l2a_fields
+   !type(fld_list_type), public                      :: a2c_fldlist, c2a_fldlist
 
   !------------------------------------------------------------------------
 
@@ -33,8 +33,9 @@ implicit none
 
   subroutine lilac_init( atm2lnd1d, atm2lnd2d, lnd2atm1d, lnd2atm2d)
 
-    use atmos_cap, only : a2l_fields, l2a_fields
-    ! type(fld_list_type) :: a2l_fields , l2a_fields
+    use atmos_cap, only : a2c_fldlist, c2a_fldlist
+    use lnd_cap,   only : l2c_fldlist, c2l_fldlist
+    ! type(fld_list_type) :: a2c_fldlist , c2a_fldlist
     ! input/output variables
     type(atm2lnd_data1d_type), intent(in), optional  :: atm2lnd1d
     type(atm2lnd_data2d_type), intent(in), optional  :: atm2lnd2d
@@ -88,33 +89,59 @@ implicit none
     a2l_fldnum = 3
     l2a_fldnum = 3
 
-    allocate (a2l_fields(a2l_fldnum))
-    allocate (l2a_fields(l2a_fldnum))
+    allocate (a2c_fldlist(a2l_fldnum))
+    allocate (c2a_fldlist(l2a_fldnum))
 
-    print *, "field lists: !"
-!    call create_fldlists(l2a_fields, a2l_fields, a2l_fldnum, l2a_fldnum)
+    allocate (l2c_fldlist(l2a_fldnum))
+    allocate (c2l_fldlist(a2l_fldnum))
+
+    print *, "creatibg field lists: a2c_fldlist !"
+!    call create_fldlists(c2a_fldlist, a2c_fldlist, a2l_fldnum, l2a_fldnum)
 
 
     if (.True.) then
-        a2l_fields(1)%stdname      =  'uwind'
-        a2l_fields(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
-        print *,      a2l_fields(1)%stdname
-        print *,      a2l_fields(1)%farrayptr1d(:)
-        a2l_fields(2)%stdname      =  'vwind'
-        a2l_fields(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
-        print *,      a2l_fields(2)%stdname
-        print *,      a2l_fields(2)%farrayptr1d(:)
-        a2l_fields(3)%stdname      =  'tbot'
-        a2l_fields(3)%farrayptr1d  => atm2lnd1d%vwind
-        print *,      a2l_fields(3)%stdname
-        print *,      a2l_fields(3)%farrayptr1d
+        a2c_fldlist(1)%stdname      =  'uwind'
+        a2c_fldlist(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
+        print *,      a2c_fldlist(1)%stdname
+        print *,      a2c_fldlist(1)%farrayptr1d(:)
+        a2c_fldlist(2)%stdname      =  'vwind'
+        a2c_fldlist(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
+        print *,      a2c_fldlist(2)%stdname
+        print *,      a2c_fldlist(2)%farrayptr1d(:)
+        a2c_fldlist(3)%stdname      =  'tbot'
+        a2c_fldlist(3)%farrayptr1d  => atm2lnd1d%vwind
+        print *,      a2c_fldlist(3)%stdname
+        print *,      a2c_fldlist(3)%farrayptr1d
 
        !call create_fldlists(flds_a2l, fldsfldsToCpl, fldsToCpl_num, fldsFrCpl_num)
     else
-       a2l_fields(1)%stdname = 'name'
-       a2l_fields(1)%farrayptr2d => atm2lnd2d%uwind
+       a2c_fldlist(1)%stdname = 'name'
+       a2c_fldlist(1)%farrayptr2d => atm2lnd2d%uwind
        !call create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
-    end if
+   end if
+
+    print *, "creatibg field lists: l2c_fldlist !"
+    l2c_fldlist(1)%stdname      =  'lwup'
+    print *,      l2c_fldlist(1)%stdname
+
+    l2c_fldlist(2)%stdname      =  'taux'
+    print *,      l2c_fldlist(2)%stdname
+
+    l2c_fldlist(2)%stdname      =  'tauy'
+    print *,      l2c_fldlist(3)%stdname
+
+    c2l_fldlist(1)%stdname      =  'uwind'
+    print *,      c2l_fldlist(1)%stdname
+
+    c2l_fldlist(2)%stdname      =  'vwind'
+    print *,      c2l_fldlist(2)%stdname
+
+    c2l_fldlist(2)%stdname      =  'tbot'
+    print *,      c2l_fldlist(3)%stdname
+
+
+
+
 
     !-------------------------------------------------------------------------
     ! Create Gridded Component!     --- dummy atmosphere 
@@ -255,8 +282,8 @@ implicit none
 
   subroutine lilac_run(dum_var1, dum_var2)
 
-    use atmos_cap, only : l2a_fields
-    use atmos_cap, only : a2l_fields
+    use atmos_cap, only : c2a_fldlist
+    use atmos_cap, only : a2c_fldlist
 
     real, dimension(:,:) :: dum_var1  ! from host atm
     real, dimension(:,:) :: dum_var2 ! to host atm
