@@ -42,7 +42,7 @@ implicit none
     type(lnd2atm_data2d_type), intent(in), optional  :: lnd2atm2d
 
     ! local variables
-    !  ! Gridded Components and Coupling Components 
+    !  ! Gridded Components and Coupling Components
     type(ESMF_GridComp)                              :: dummy_atmos_comp
     type(ESMF_GridComp)                              :: dummy_land_comp
 
@@ -50,14 +50,14 @@ implicit none
     type(ESMF_CplComp)                               :: cpl_lnd2atm_comp
 
 
-    type(ESMF_State)            :: coupledFlowState ! the coupled flow State
-    type(ESMF_Mesh)             :: Emesh
-    character(len=*), parameter :: subname=trim(modname)//':[lilac_init]'
-    type(ESMF_State)            :: importState, exportState
-    type(ESMF_State)            :: atm2lnd_l_state , atm2lnd_a_state
-    type(ESMF_State)            :: lnd2atm_a_state, lnd2atm_l_state
+    type(ESMF_State)                                 :: coupledFlowState ! the coupled flow State
+    type(ESMF_Mesh)                                  :: Emesh
+    character(len=*), parameter                      :: subname=trim(modname)//':[lilac_init]'
+    type(ESMF_State)                                 :: importState, exportState
+    type(ESMF_State)                                 :: atm2lnd_l_state , atm2lnd_a_state
+    type(ESMF_State)                                 :: lnd2atm_a_state, lnd2atm_l_state
 
-    !character(len=*)        :: atm_mesh_filepath   !!! For now this is hard
+    !character(len=*)                                :: atm_mesh_filepath   !!! For now this is hard
     !coded in the atmos init
 
     ! local variables
@@ -98,13 +98,16 @@ implicit none
     if (.True.) then
         a2l_fields(1)%stdname      =  'uwind'
         a2l_fields(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
-        a2l_fields(2)%stdname      =  'vwind'
-        a2l_fields(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
         print *,      a2l_fields(1)%stdname
         print *,      a2l_fields(1)%farrayptr1d(:)
-!        a2l_fields(3)%stdname      =  'vwind'
-!        a2l_fields(3)%farrayptr1d  => atm2lnd1d%vwind
-!        print *,      a2l_fields(3)%farrayptr1d
+        a2l_fields(2)%stdname      =  'vwind'
+        a2l_fields(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
+        print *,      a2l_fields(2)%stdname
+        print *,      a2l_fields(2)%farrayptr1d(:)
+        a2l_fields(3)%stdname      =  'tbot'
+        a2l_fields(3)%farrayptr1d  => atm2lnd1d%vwind
+        print *,      a2l_fields(3)%stdname
+        print *,      a2l_fields(3)%farrayptr1d
 
        !call create_fldlists(flds_a2l, fldsfldsToCpl, fldsToCpl_num, fldsFrCpl_num)
     else
@@ -214,8 +217,6 @@ implicit none
 
     lnd2atm_l_state = ESMF_StateCreate(name=gcname2, stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-
-
 
     call ESMF_LogWrite(subname//"Empty import and export states are created!!", ESMF_LOGMSG_INFO)
     print *, "Empty import and export states are created!!"
