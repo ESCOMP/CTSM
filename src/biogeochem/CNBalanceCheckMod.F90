@@ -218,7 +218,7 @@ contains
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'livestemc_to_cropprodc      = ',livestemc_to_cropprodc(c)*dt
-         write(iulog,*)'leafc_to_cropprodc      = ',leafc_to_cropprodc(c)*dt
+         !write(iulog,*)'leafc_to_cropprodc      = ',leafc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
