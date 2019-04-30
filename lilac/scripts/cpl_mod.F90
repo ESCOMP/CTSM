@@ -60,6 +60,13 @@ module cpl_mod
         print *, "CPLR initialize routine called"
         print *, "Coupler for land to atmosphere initialize routine called"
         rc = ESMF_SUCCESS
+
+        call ESMF_StateGet(importState, itemname=importStateName, item=import_fieldbundle, rc=rc)
+        if (chkerr(rc,__LINE__,u_FILE_u)) return
+        call ESMF_StateGet(exportState, itemname=exportStateName, item=export_fieldbundle, rc=rc)
+        if (chkerr(rc,__LINE__,u_FILE_u)) return
+        call ESMF_FieldRedistStore(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
+        if (chkerr(rc,__LINE__,u_FILE_u)) return
         call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
     end subroutine cpl_lnd2atm_init
 
@@ -78,7 +85,21 @@ module cpl_mod
         call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
     end subroutine cpl_atm2lnd_init
 
+    subroutine cpl_lnd2atm_run(cplcomp, importState, exportState, clock, rc)
+        type(ESMF_CplComp) :: cplcomp
+        type(ESMF_State) :: importState
+        type(ESMF_State) :: exportState
+        type(ESMF_Clock) :: clock
+        integer, intent(out) :: rc
 
+        call ESMF_StateGet(importState, itemname=importStateName, item=srcFieldBundle, rc=rc)
+        if (chkerr(rc,__LINE__,u_FILE_u)) return
+        call ESMF_StateGet(exportState, itemname=exportStateName, item=dstFieldBundle, rc=rc)
+        if (chkerr(rc,__LINE__,u_FILE_u)) return
+        call ESMF_FieldBundleRegrid(srcFieldBundle, dstFieldBundle, rh_lnd2atm, rc=rc)
+        if (chkerr(rc,__LINE__,u_FILE_u)) return
+        !routehandle, zeroregion, termorderflag, checkflag, rc)
+     end subroutine cpl_lnd2atm_run
 
 end module cpl_mod
 
