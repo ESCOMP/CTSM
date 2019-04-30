@@ -12,7 +12,6 @@ module atmos_cap
     !!integer, parameter              :: fldsMax = 100
 
     type(ESMF_Field), public, save   ::  field
-    type(ESMF_Field), public, save   ::  field_sie, field_u
 
     type(fld_list_type), public, allocatable ::  l2a_fields(:)
     type(fld_list_type), public, allocatable ::  a2l_fields(:)
@@ -31,7 +30,7 @@ module atmos_cap
     !public  :: add_fields
     !public  :: import_fields
     !public  :: export_fields
-
+    real(kind=ESMF_KIND_R4), dimension(:), public, pointer, save :: fldptr
 
     !------------------------------------------------------------------------
 
@@ -142,8 +141,8 @@ module atmos_cap
            field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(a2l_fields(n)%stdname), rc=rc)
            !field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(a2l_fields(n)%stdname), farrayPtr=a2l_fields(n)%farrayptr1d, rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-           !call ESMF_FieldGet(field, farrayPtr=fldptr, rc=rc)
-           !fldptr = a2l_fields(n)%default_value
+           call ESMF_FieldGet(field, farrayPtr=fldptr, rc=rc)
+           fldptr = a2l_fields(n)%farrayptr1d
 
            ! add field to field bundle
            call ESMF_FieldBundleAdd(a2l_fb, (/field/), rc=rc)
