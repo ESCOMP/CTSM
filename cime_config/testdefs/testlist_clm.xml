@@ -116,6 +116,14 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="ERP_D_P36x2_Ld3" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/snowveg_norad">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
   <test name="ERI_Ld9" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/drydepnomegan">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -913,10 +921,10 @@
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
-      <option name="comment"  >tests mid-year restart, with the restart file being written in the middle of the first year; 12-15-2017: now that we generally use init_interp, this test needs to be changed to point to a blank finidat file to truly test mid-year restart in the first year</option>
+      <option name="comment"  >tests mid-year restart, with the restart file being written in the middle of the first year; 12-15-2017: now that we generally use init_interp, this test needs to be changed to point to a blank finidat file to truly test mid-year restart in the first year; 4-19-2019: should change this to use Qian forcing to speed it up (but I'm waiting to make this change until this test starts passing again)</option>
     </options>
   </test>
-  <test name="ERS_Lm40_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropGs" testmods="clm/monthly">
+  <test name="ERS_Lm40_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianGs" testmods="clm/monthly">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -925,7 +933,7 @@
       <option name="comment"  >tests mid-year restart, with the restart file being written in the middle of the second year</option>
     </options>
   </test>
-  <test name="ERS_Lm54_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropGs" testmods="clm/cropMonthOutput">
+  <test name="ERS_Lm54_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianGs" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -952,7 +960,7 @@
       <option name="comment"  >Include a long ERS test of the cmip6 configuration, though at coarse resolution. This gives a year+ test covering the output_crop usermod, which is something we want: if this is removed, we should add a test of at least a year duration covering the output_crop usermod. This test needs to use init_interp to work, because of adding virtual Antarctica columns (currently the default out-of-the-box setting uses init_interp for this).</option>
     </options>
   </test>
-  <test name="ERS_Ly3_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropGs" testmods="clm/cropMonthOutput">
+  <test name="ERS_Ly3_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianGs" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -970,7 +978,7 @@
       <option name="comment"  >Multi-year global test of transient crops together with transient glaciers. Use glacier evolution with ERS test</option>
     </options>
   </test>
-  <test name="ERS_Ly5_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropGs" testmods="clm/monthly">
+  <test name="ERS_Ly5_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianGs" testmods="clm/monthly">
     <machines>
       <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
@@ -996,7 +1004,7 @@
       <option name="comment"  >include a long Clm45 test, and include a production intel test of Clm45</option>
     </options>
   </test>
-  <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropGs" testmods="clm/cropMonthOutput">
+  <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianGs" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1031,6 +1039,15 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Include one LVG debug test (exact configuration is not very important). Note that the LVG test will fail if there is any 1-d output, or output separated by glacier elevation classes (e.g., the various *_FORC fields), so this includes a testmod that turns off any 1-d output.</option>
+    </options>
+  </test>
+  <test name="LCISO_Lm13" grid="f10_f10_musgs" compset="IHistClm50BgcCrop" testmods="clm/ciso_monthly">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment"  >Make sure Carbon isotopes on and off with land-use change, does NOT change answers. To verify for landuse change must go beyond a year boundary, because of #404 we can't use a December start, so need to run for beyond the year boundary.</option>
     </options>
   </test>
   <test name="NCK_Ld1" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/default">
@@ -1404,7 +1421,7 @@
       <option name="comment"  >Long enough test for SMB to be generated in bare land areas; add a month beyond the 3rd year to allow time for CLM to respond to CISM forcing from the 3rd year. (Note: if we had spun-up initial conditions for an IG compset, we could test this with much shorter test, if it also used the glc override options - much of the need for this long test is to allow the snow pack to spin up.)</option>
     </options>
   </test>
-  <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropGs" testmods="clm/clm50dynroots">
+  <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianGs" testmods="clm/clm50dynroots">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
