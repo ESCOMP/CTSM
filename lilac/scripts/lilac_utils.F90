@@ -7,13 +7,13 @@ implicit none
 
     public fldlist_add , create_fldlists
 
-    type                   :: fld_list_type
-        character(len=128) :: stdname
-        real*8             :: default_value
-        character(len=128) :: units
-        real*8, pointer    :: farrayptr1d(:)  ! this will be filled in by lilac when it gets its data from the host atm
-        real*8, pointer    :: farrayptr2d(:,:)  ! this will be filled in by lilac when it gets its data from the host atm
-    end type                  fld_list_type
+    type                            :: fld_list_type
+        character(len=128)          :: stdname
+        real*8                      :: default_value
+        character(len=128)          :: units
+        real(ESMF_KIND_R8), pointer :: farrayptr1d(:)  ! this will be filled in by lilac when it gets its data from the host atm
+        real(ESMF_KIND_R8), pointer :: farrayptr2d(:,:)  ! this will be filled in by lilac when it gets its data from the host atm
+    end type                           fld_list_type
 
 !!! 1d for when we have mesh and 2d for when we have grids....
 
