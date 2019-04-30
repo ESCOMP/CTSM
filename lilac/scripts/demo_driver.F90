@@ -18,7 +18,7 @@ program demo_lilac_driver
 
 
     begc = 1
-    endc = 100
+    endc = 4608
 
     call random_number(dum_var2)
 

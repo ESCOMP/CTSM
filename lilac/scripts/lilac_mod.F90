@@ -4,7 +4,7 @@ use lilac_utils
 
 use atmos_cap ,  only :         atmos_register
 use lnd_cap   ,  only :         lnd_register
-use cpl_mod
+use cpl_mod   ,  only :         cpl_atm2lnd_register , cpl_lnd2atm_register
 
 
 
@@ -127,7 +127,7 @@ implicit none
     l2c_fldlist(2)%stdname      =  'taux'
     print *,      l2c_fldlist(2)%stdname
 
-    l2c_fldlist(2)%stdname      =  'tauy'
+    l2c_fldlist(3)%stdname      =  'tauy'
     print *,      l2c_fldlist(3)%stdname
 
     c2l_fldlist(1)%stdname      =  'uwind'
@@ -136,7 +136,7 @@ implicit none
     c2l_fldlist(2)%stdname      =  'vwind'
     print *,      c2l_fldlist(2)%stdname
 
-    c2l_fldlist(2)%stdname      =  'tbot'
+    c2l_fldlist(3)%stdname      =  'tbot'
     print *,      c2l_fldlist(3)%stdname
 
 
