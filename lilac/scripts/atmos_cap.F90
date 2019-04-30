@@ -63,10 +63,10 @@ module atmos_cap
 
 
 
-    subroutine atmos_init (comp, importState, exportState, clock, rc)
-
+    !subroutine atmos_init (comp, importState, exportState, clock, rc)
+    subroutine atmos_init (comp, lnd2atm_a_state, atm2lnd_a_state, clock, rc)
         type (ESMF_GridComp)         ::  comp
-        type (ESMF_State)            ::  importState, exportState
+        type (ESMF_State)            ::  lnd2atm_a_state, atm2lnd_a_state
         type (ESMF_Clock)            ::  clock
         integer, intent(out)         ::  rc
 
@@ -91,7 +91,7 @@ module atmos_cap
         if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
         !-------------------------------------------------------------------------
-        !    Generate -- Read in  the mesh
+        !    Read in  the mesh ----or----- Generate the grid
         !-------------------------------------------------------------------------
         mesh_switch = .True.
 
@@ -157,10 +157,10 @@ module atmos_cap
  
         enddo
 
-        print *, "!Fields to  Coupler (atmo to  land ) (a2l_fb) Field Bundle Created!"
+        print *, "!Fields to  Coupler (atmos to  land ) (a2l_fb) Field Bundle Created!"
 
         ! Add field bundle to state
-        call ESMF_StateAdd(exportState, (/a2l_fb/), rc=rc)
+        call ESMF_StateAdd(atm2lnd_a_state, (/a2l_fb/), rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         print *, "!a2l_state is filld with dummy_var field bundle!"
 
@@ -203,7 +203,7 @@ module atmos_cap
         print *, "!Fields For Coupler (l2a_fields) Field Bundle Created!"
 
         ! Add field bundle to state
-        call ESMF_StateAdd(importState, (/l2a_fb/), rc=rc)
+        call ESMF_StateAdd(lnd2atm_a_state, (/l2a_fb/), rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         print *, "!l2a_state is filld with dummy_var field bundle!"
 
