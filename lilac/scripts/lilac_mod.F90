@@ -313,6 +313,8 @@ implicit none
     logical                                          :: mesh_switch
 
     !------------------------------------------------------------------------
+    ! Initialize return code
+    rc = ESMF_SUCCESS
 
     mesh_switch = .True.
 

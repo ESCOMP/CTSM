@@ -223,7 +223,7 @@ module atmos_cap
         rc = ESMF_SUCCESS
         ! get a list of fields of variables we need from atmos....
         !
-        !call ESMF_LogWrite(subname//"atmos_copy_atm_to_lilac has not been implemented yet", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"atmos_copy_atm_to_lilac has not been implemented yet", ESMF_LOGMSG_INFO)
 
         ! loop over fields, copying pointer from import to export state
     end subroutine atmos_copy_atm_to_lilac
