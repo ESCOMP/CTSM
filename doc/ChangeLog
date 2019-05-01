@@ -1,4 +1,177 @@
 ===============================================================
+Tag name:  ctsm1.0.dev038
+Originator(s):  sacks (Bill Sacks)
+Date: Wed May  1 10:53:02 MDT 2019
+One-line Summary: Support for NWP configuration, NLDAS grid and NLDAS datm forcing
+
+Purpose of changes
+------------------
+
+This tag includes a set of changes that, together, provide support for
+running an initial Numerical Weather Prediction version of CTSM over the
+Continental U.S.
+
+(1) NWP configuration: The changes in this configuration relative to the
+    climate (CLM5) configuration mainly target decreasing runtime by
+    removing features that are expensive and not as important for NWP
+    time scales (days to months rather than many years) and space scales
+    (high resolution):
+
+    - Single dominant landunit; if vegetated, single dominant PFT
+
+    - Only 5 soil layers, down to 3 m
+
+    - Only 5 snow layers
+
+    - Plant hydraulic stress off
+
+    - Ball-Berry rather than Medlyn stomatal conductance method (this is
+      a side-effect of turning plant hydraulic stress off, and is not
+      itself a critical aspect of the NWP configuration)
+
+    - Maximum of 3 iterations to compute canopy fluxes
+
+    - MEGAN is off
+
+    Note that the NWP compset triggers changes in two new xml variables:
+    CLM_CONFIGURATION ('clm' vs. 'nwp'; this controls things of a more
+    scientific nature, like whether plant hydraulic stress is on or
+    off), and CLM_STRUCTURE ('standard' vs. 'fast'; this controls
+    structural things like the maximum number of landunits per grid cell
+    and the soil layer structure). Thus, you can create a case that is a
+    hybrid between the CLM and NWP configurations by changing these two
+    xml variables independently.
+
+(2) NLDAS2 regional grid: 0.125 deg grid over the Continental U.S.
+
+(3) Updated version of MOSART with support for the same NLDAS2 regional
+    grid
+
+(4) NLDAS2 data atmosphere forcing: over the same regional grid; forcing
+    data are available from 1980 - 2018. (We have excluded 1979 because
+    a small amount of data were missing for that year, and we didn't
+    have a good way to handle those missing data.)
+
+These changes can be used independently or all together. However, note
+that you will get garbage if you try to use the new NLDAS2 datm forcing
+for a run that extends beyond the boundaries of the NLDAS2 domain.
+
+There are three new NWP compsets:
+- I2000Ctsm50NwpSpGswpGs: GSWP3 datm forcing; meant for global runs or
+  regional runs outside the NLDAS domain
+- I2000Ctsm50NwpSpNldasGs: NLDAS2 datm forcing; meant for regional runs
+  over the NLDAS domain or some portion of it
+- I2000Ctsm50NwpSpNldasRsGs: Same as above, but with a stub runoff model
+  in place of MOSART, for runs that aren't interested in having a runoff
+  model and for which you want improved throughput
+
+The alias for the new grid is: nldas2_rnldas2_mnldas2 (indicating that
+we're using the nldas2 grid for land/atmosphere, runoff ('r') and the
+ocean mask ('m').
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#451 (Add NWP physics option)
+- Resolves ESCOMP/ctsm#452 (Add an NWP compset)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- The NWP configuration is still a work in progress
+- The NLDAS surface data set is still a work in progress (will soon
+  update this to use high-res PFTs)
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New xml variables:
+  - CLM_CONFIGURATION (will eventually be renamed to CTSM_CONFIGURATION)
+  - CLM_STRUCTURE (will eventually be renamed to CTSM_STRUCTURE)
+- New namelist variable:
+  - itmax_canopy_fluxes
+
+Changes made to namelist defaults (e.g., changed parameter values):
+No changes for existing CLM compsets; new defaults for NWP compsets
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+No changes for existing grids; new surface dataset for nldas2 grid
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- New tests covering NWP compsets, nldas grid and nldas datm forcing
+
+Code reviewed by: Mike Barlage, Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok
+
+    tests pass; namelists change as expected
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    hobart ------ pass
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev037
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- MOSART: release-cesm2.0.00 -> nldas-grid.n01_mosart1_0_31
+- CIME: ctsm/ctsm1.0/cime5.7.9/n04 -> ctsm/ctsm1.0/cime5.7.9/n05
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/682
+- https://github.com/ESCOMP/ctsm/pull/685
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev037
 Originator(s):  sacks (Bill Sacks)
 Date: Mon Apr 29 16:11:47 MDT 2019
