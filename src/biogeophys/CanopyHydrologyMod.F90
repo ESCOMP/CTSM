@@ -349,18 +349,16 @@ contains
                    qflx_snotempunload(p) = 0._r8
                    snounload(p)=0._r8
 
-                   if (forc_t(c) > tfrz) then ! Above freezing (Use t_veg?)
-                      xliqrun = (liqcan(p) - liqcanmx)/dtime
-                      if (xliqrun > 0._r8) then
-                         qflx_liqcanfall(p) = xliqrun
-                         liqcan(p) = liqcanmx
-                      end if
-                   else ! Below freezing
-                      xsnorun = (snocan(p) - snocanmx)/dtime
-                      if (xsnorun > 0._r8) then ! exceeds snow capacity
-                         qflx_snocanfall(p) = xsnorun
-                         snocan(p) = snocanmx
-                      end if
+                   ! Remove excess liquid / snow exceeding canopy capacity
+                   xliqrun = (liqcan(p) - liqcanmx)/dtime
+                   if (xliqrun > 0._r8) then
+                      qflx_liqcanfall(p) = xliqrun
+                      liqcan(p) = liqcanmx
+                   end if
+                   xsnorun = (snocan(p) - snocanmx)/dtime
+                   if (xsnorun > 0._r8) then ! exceeds snow capacity
+                      qflx_snocanfall(p) = xsnorun
+                      snocan(p) = snocanmx
                    end if
                 end if
              end if
