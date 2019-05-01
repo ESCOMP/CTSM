@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev038    sacks 05/01/2019 Support for NWP configuration, NLDAS grid and NLDAS datm forcing
   ctsm1.0.dev037    sacks 04/29/2019 Change year alignment for present-day I compsets
   ctsm1.0.dev036     erik 04/26/2019 Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
   ctsm1.0.dev035    sacks 04/22/2019 Change h2ocan to a purely diagnostic variable

@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 915;
+my $ntests = 927;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 579;
+   $ntests += 588;
 }
 plan( tests=>$ntests );
 
@@ -165,7 +165,7 @@ my $mode = "-phys $phys";
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
 my $real_par_file = "user_nl_clm_real_parameters";
-my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -glc_nec 10 -no-note -output_reals $real_par_file";
+my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -configuration clm -structure standard -glc_nec 10 -no-note -output_reals $real_par_file";
 if ( $opts{'test'} ) {
    $bldnml .= " -test";
 }
@@ -287,12 +287,14 @@ $mode = "-phys $phys";
 &make_config_cache($phys);
 
 print "\n===============================================================================\n";
-print "Test irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
+print "Test configuration, structure, irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
 print "=================================================================================\n";
 
-# irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
+# configuration, structure, irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
+foreach my $options ( "-configuration nwp",
+                      "-structure fast",
+                      "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 

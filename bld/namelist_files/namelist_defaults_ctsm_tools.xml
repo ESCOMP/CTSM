@@ -107,6 +107,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata_meshname hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">landmesh</scripgriddata_meshname>
 
 <!-- Single-point / Regional grids -->
+<scripgriddata hgrid="0.125nldas2"         lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.125nldas2_nomask_c190328.nc</scripgriddata>
 <scripgriddata hgrid="1x1_asphaltjungleNJ" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_camdenNJ_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_brazil"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_brazil_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_camdenNJ"        lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_camdenNJ_nomask_c110308.nc</scripgriddata>
