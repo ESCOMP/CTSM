@@ -342,7 +342,7 @@ case $hostname in
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=36
   fi
-  esmfvers=7.0.0
+  esmfvers=7.1.0r
   intelvers=17.0.1
   module load esmf_libs/$esmfvers
   module load intel/$intelvers
@@ -371,7 +371,7 @@ case $hostname in
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=8
   fi
-  esmfvers=7.0.0
+  esmfvers=7.1.0r
   intelvers=15.0.0
   #intelvers=12.1.5
   module purge
