@@ -29,6 +29,14 @@ implicit none
 
   !------------------------------------------------------------------------
 
+  !  ! Gridded Components and Coupling Components
+  type(ESMF_GridComp)                              :: dummy_atmos_comp
+  type(ESMF_GridComp)                              :: dummy_land_comp
+  type(ESMF_CplComp)                               :: cpl_atm2lnd_comp
+  type(ESMF_CplComp)                               :: cpl_lnd2atm_comp
+  type(ESMF_State)                                 :: atm2lnd_l_state , atm2lnd_a_state
+  type(ESMF_State)                                 :: lnd2atm_a_state, lnd2atm_l_state
+
   contains
 
   subroutine lilac_init( atm2lnd1d, atm2lnd2d, lnd2atm1d, lnd2atm2d)
@@ -43,20 +51,13 @@ implicit none
     type(lnd2atm_data2d_type), intent(in), optional  :: lnd2atm2d
 
     ! local variables
-    !  ! Gridded Components and Coupling Components
-    type(ESMF_GridComp)                              :: dummy_atmos_comp
-    type(ESMF_GridComp)                              :: dummy_land_comp
 
-    type(ESMF_CplComp)                               :: cpl_atm2lnd_comp
-    type(ESMF_CplComp)                               :: cpl_lnd2atm_comp
 
 
     type(ESMF_State)                                 :: coupledFlowState ! the coupled flow State
     type(ESMF_Mesh)                                  :: Emesh
     character(len=*), parameter                      :: subname=trim(modname)//':[lilac_init]'
     type(ESMF_State)                                 :: importState, exportState
-    type(ESMF_State)                                 :: atm2lnd_l_state , atm2lnd_a_state
-    type(ESMF_State)                                 :: lnd2atm_a_state, lnd2atm_l_state
 
     !character(len=*)                                :: atm_mesh_filepath   !!! For now this is hard
     !coded in the atmos init
@@ -277,28 +278,70 @@ implicit none
     call ESMF_LogWrite(subname//"coupler :: cpl_lnd2atm_comp initialized", ESMF_LOGMSG_INFO)
     print *, "coupler :: cpl_lnd2atm_comp initialize finished, rc =", rc
 
-
   end subroutine lilac_init
 
-  subroutine lilac_run(dum_var1, dum_var2)
+  subroutine lilac_run( )
 
-    use atmos_cap, only : c2a_fldlist
-    use atmos_cap, only : a2c_fldlist
+    use atmos_cap, only : a2c_fldlist, c2a_fldlist
+    use lnd_cap,   only : l2c_fldlist, c2l_fldlist
+    ! type(fld_list_type) :: a2c_fldlist , c2a_fldlist
+    ! input/output variables
+    !type(atm2lnd_data1d_type), intent(in), optional  :: atm2lnd1d
+    !type(atm2lnd_data2d_type), intent(in), optional  :: atm2lnd2d
+    !type(lnd2atm_data1d_type), intent(in), optional  :: lnd2atm1d
+    !type(lnd2atm_data2d_type), intent(in), optional  :: lnd2atm2d
 
-    real, dimension(:,:) :: dum_var1  ! from host atm
-    real, dimension(:,:) :: dum_var2 ! to host atm
-
-    integer                :: n, num
+    ! local variables
+    !  ! Gridded Components and Coupling Components
+    !type(ESMF_GridComp)                              :: dummy_atmos_comp
+    !type(ESMF_GridComp)                              :: dummy_land_comp
 
     !integer, parameter     :: fldsMax = 100
-    integer                :: fldsToLnd_num = 0
-    integer                :: fldsFrLnd_num = 0
+    !integer                :: fldsToLnd_num = 0
+    !integer                :: fldsFrLnd_num = 0
 
-    type (fld_list_type)   :: fldsToLnd(fldsMax)
-    type (fld_list_type)   :: fldsFrLnd(fldsMax)
-    !-----------------------------------------
-    !-----------------------------------------
-    type(ESMF_State)     :: importState, exportState
+
+    character(len=*), parameter                      :: subname=trim(modname)//':[lilac_run]'
+    type(ESMF_State)                                 :: importState, exportState
+
+    ! local variables
+    integer                                          :: rc, urc
+    character(len=ESMF_MAXSTR)                       :: gcname1, gcname2   !    Gridded components names
+    character(len=ESMF_MAXSTR)                       :: ccname1, ccname2   !    Coupling components names
+    !integer, parameter                              :: fldsMax = 100
+    integer                                          :: a2l_fldnum, l2a_fldnum
+    logical                                          :: mesh_switch
+
+    !------------------------------------------------------------------------
+
+    mesh_switch = .True.
+
+    !-------------------------------------------------------------------------
+    ! Initialize ESMF, set the default calendar and log type.
+    !-------------------------------------------------------------------------
+    call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+    print *,  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    print *,  "               Lilac Run               "
+    print *,  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+
+    !-------------------------------------------------------------------------
+    ! Gridded Component Run!     ---            dummy atmosphere 
+    !-------------------------------------------------------------------------
+    call ESMF_GridCompRun(dummy_atmos_comp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"atmos_cap or dummy_atmos_comp is running", ESMF_LOGMSG_INFO)
+    print *, "Running atmos_cap gridded component , rc =", rc
+
+    call ESMF_GridCompRun(dummy_land_comp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"lnd_cap or dummy_land_comp is running", ESMF_LOGMSG_INFO)
+    print *, "Running lnd_cap gridded component , rc =", rc
+
+
+    !call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=clock, rc=rc)
 
     !search through fldlist array to find the right fldist object to do the copy - say its index N
 

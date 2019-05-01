@@ -12,7 +12,7 @@ program demo_lilac_driver
     type (lnd2atm_data1d_type)                            :: lnd2atm
     integer                                               :: begc,endc
     real, dimension(100,100), target                      :: dum_var1
-    real, dimension(100)                                  :: dum_var2
+    real, dimension(4608)                                  :: dum_var2
 
     !------------------------------------------------------------------------
 
@@ -36,6 +36,7 @@ program demo_lilac_driver
 
 
     call lilac_init ( atm2lnd1d = atm2lnd   ,   lnd2atm1d =  lnd2atm )
+    call lilac_run  ( )
 
     print *,  "======================================="
     print *,  " ............. DONE ..................."

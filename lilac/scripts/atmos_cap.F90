@@ -127,7 +127,7 @@ module atmos_cap
         ! III - Add a2c_fb to state (atm2lnd_a_state)
         !-------------------------------------------------------------------------
 
-        a2c_fb = ESMF_FieldBundleCreate(name="a2c_fldlist", rc=rc)
+        a2c_fb = ESMF_FieldBundleCreate(name="a2c_fb", rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
         ! Create individual fields and add to field bundle -- a2l
@@ -172,7 +172,7 @@ module atmos_cap
         ! III - Add c2a_fb to state (lnd2atm_a_state)
         !-------------------------------------------------------------------------
 
-        c2a_fb = ESMF_FieldBundleCreate (name="c2a_fldlist", rc=rc)
+        c2a_fb = ESMF_FieldBundleCreate (name="c2a_fb", rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
         ! Create individual fields and add to field bundle -- l2a

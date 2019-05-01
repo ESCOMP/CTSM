@@ -75,14 +75,16 @@ module lnd_cap
     integer                          ::  l2c_fldlist_num
 
 
-
-
-    print *, "  Empty land is created !!!!"
+    !integer                    :: regDecomp(:,:)
+    ! Initialize return code
     rc = ESMF_SUCCESS
+    call ESMF_LogWrite(subname//"------------------------!", ESMF_LOGMSG_INFO)
+
     call ESMF_GridCompGet(comp, petcount=petcount, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
 
+    print *, "  Empty land is created !!!!"
     print *, "in land routine routine"
     !-------------------------------------------------------------------------
     !    Read in  the mesh ----or----- Generate the grid

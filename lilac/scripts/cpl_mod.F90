@@ -3,6 +3,11 @@ module cpl_mod
     use ESMF
     implicit none
 
+    private
+
+    type(ESMF_RouteHandle), save :: rh_atm2lnd, rh_lnd2atm
+
+
     public cpl_atm2lnd_register
     public cpl_lnd2atm_register
 
@@ -22,10 +27,10 @@ module cpl_mod
         ! Register the callback routines.
         ! Set the entry points for coupler ESMF Component methods
         !call ESMF_CplCompSetEntryPoint(cplcomp, ESMF_METHOD_INITIALIZE, userRoutine=cpl_atm2lnd_init, rc=rc)
-        call ESMF_CplCompSetEntryPoint(cplcomp, ESMF_METHOD_INITIALIZE, cpl_atm2lnd_init, rc=rc)
+        call ESMF_CplCompSetEntryPoint(cplcomp, ESMF_METHOD_INITIALIZE, userRoutine= cpl_atm2lnd_init, rc=rc)
         if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
-        !call ESMF_CplCompSetEntryPoint(cplcomp, ESMF_METHOD_RUN, userRoutine=coupler_run, rc=rc)
-        !if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
+        call ESMF_CplCompSetEntryPoint(cplcomp, ESMF_METHOD_RUN       , userRoutine=cpl_atm2lnd_run  , rc=rc)
+        if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
         !call ESMF_CplCompSetEntryPoint(cplcomp, ESMF_METHOD_FINALIZE, userRoutine=coupler_final, rc=rc)
         !if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
 
@@ -45,8 +50,13 @@ module cpl_mod
         !call ESMF_CplCompSetEntryPoint(cplcomp, ESMF_METHOD_INITIALIZE, userRoutine=cpl_lnd2atm_init, rc=rc)
         call ESMF_CplCompSetEntryPoint(cplcomp, ESMF_METHOD_INITIALIZE, cpl_lnd2atm_init, rc=rc)
         if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
+        call ESMF_CplCompSetEntryPoint(cplcomp, ESMF_METHOD_RUN       , userRoutine=cpl_lnd2atm_run  , rc=rc)
+        if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
 
     end subroutine cpl_lnd2atm_register
+
+    !--------------------------------------------------------------------------
+    !--------------------------------------------------------------------------
 
     subroutine cpl_lnd2atm_init(cplcomp, importState, exportState, clock, rc)
         type(ESMF_CplComp) :: cplcomp
@@ -54,20 +64,26 @@ module cpl_mod
         type(ESMF_State) :: exportState
         type(ESMF_Clock) :: clock
         integer, intent(out) :: rc
+        type (ESMF_FieldBundle)      ::  import_fieldbundle, export_fieldbundle
 
         character(len=*), parameter :: subname=trim(modname)//':[cpl_lnd2atm_init] '
 
-        print *, "CPLR initialize routine called"
-        print *, "Coupler for land to atmosphere initialize routine called"
         rc = ESMF_SUCCESS
-
-        call ESMF_StateGet(importState, itemname=importStateName, item=import_fieldbundle, rc=rc)
-        if (chkerr(rc,__LINE__,u_FILE_u)) return
-        call ESMF_StateGet(exportState, itemname=exportStateName, item=export_fieldbundle, rc=rc)
-        if (chkerr(rc,__LINE__,u_FILE_u)) return
-        call ESMF_FieldRedistStore(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
-        if (chkerr(rc,__LINE__,u_FILE_u)) return
+        print *, "Coupler for land to atmosphere initialize routine called"
         call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
+
+        call ESMF_StateGet(importState, "l2c_fb", import_fieldbundle, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+        call ESMF_StateGet(exportState, "c2a_fb", export_fieldbundle, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+        !call ESMF_StateGet(importState, itemname="a2c_fb", item=import_fieldbundle, rc=rc)
+        !if (chkerr(rc,__LINE__,u_FILE_u)) return
+        !call ESMF_StateGet(exportState, itemname="c2a_fb", item=export_fieldbundle, rc=rc)
+        !if (chkerr(rc,__LINE__,u_FILE_u)) return
+        !call ESMF_FieldRedistStore(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
+        !if (chkerr(rc,__LINE__,u_FILE_u)) return
     end subroutine cpl_lnd2atm_init
 
     subroutine cpl_atm2lnd_init(cplcomp, importState, exportState, clock, rc)
@@ -76,14 +92,23 @@ module cpl_mod
         type(ESMF_State) :: exportState
         type(ESMF_Clock) :: clock
         integer, intent(out) :: rc
+        type (ESMF_FieldBundle)      ::  import_fieldbundle, export_fieldbundle
 
-        character(len=*), parameter :: subname=trim(modname)//':[cpl_lnd2atm_init] '
+        character(len=*), parameter :: subname=trim(modname)//':[cpl_atm2lnd_init] '
 
-        print *, "CPLR initialize routine called"
-        print *, "Coupler for atmosphere to land initialize routine called"
         rc = ESMF_SUCCESS
+        print *, "Coupler for atmosphere to land initialize routine called"
         call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
+
+        call ESMF_StateGet(importState, "a2c_fb", import_fieldbundle, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+        call ESMF_StateGet(exportState, "c2l_fb", export_fieldbundle, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     end subroutine cpl_atm2lnd_init
+
+    !--------------------------------------------------------------------------
+    !--------------------------------------------------------------------------
 
     subroutine cpl_lnd2atm_run(cplcomp, importState, exportState, clock, rc)
         type(ESMF_CplComp) :: cplcomp
@@ -91,16 +116,54 @@ module cpl_mod
         type(ESMF_State) :: exportState
         type(ESMF_Clock) :: clock
         integer, intent(out) :: rc
+        type (ESMF_FieldBundle)      ::  import_fieldbundle, export_fieldbundle
+        rc = ESMF_SUCCESS
 
-        call ESMF_StateGet(importState, itemname=importStateName, item=srcFieldBundle, rc=rc)
-        if (chkerr(rc,__LINE__,u_FILE_u)) return
-        call ESMF_StateGet(exportState, itemname=exportStateName, item=dstFieldBundle, rc=rc)
-        if (chkerr(rc,__LINE__,u_FILE_u)) return
-        call ESMF_FieldBundleRegrid(srcFieldBundle, dstFieldBundle, rh_lnd2atm, rc=rc)
-        if (chkerr(rc,__LINE__,u_FILE_u)) return
+        print *, "Running cpl_lnd2atm_run"
+        call ESMF_StateGet(importState, "l2c_fb", import_fieldbundle, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+        call ESMF_StateGet(exportState, "c2a_fb", export_fieldbundle, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+        !call ESMF_StateGet(importState, itemname=importStateName, item=srcFieldBundle, rc=rc)
+        !if (chkerr(rc,__LINE__,u_FILE_u)) return
+        !call ESMF_StateGet(exportState, itemname=exportStateName, item=dstFieldBundle, rc=rc)
+        !if (chkerr(rc,__LINE__,u_FILE_u)) return
+        !call ESMF_FieldBundleRegrid(srcFieldBundle, dstFieldBundle, rh_lnd2atm, rc=rc)
+        call ESMF_FieldBundleRegrid(import_fieldbundle, export_fieldbundle, rh_lnd2atm, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        !if (chkerr(rc,__LINE__,u_FILE_u)) return
         !routehandle, zeroregion, termorderflag, checkflag, rc)
      end subroutine cpl_lnd2atm_run
 
-end module cpl_mod
+    subroutine cpl_atm2lnd_run(cplcomp, importState, exportState, clock, rc)
+        type(ESMF_CplComp) :: cplcomp
+        type(ESMF_State) :: importState
+        type(ESMF_State) :: exportState
+        type(ESMF_Clock) :: clock
+        integer, intent(out) :: rc
+        type (ESMF_FieldBundle)      ::  import_fieldbundle, export_fieldbundle
+        rc = ESMF_SUCCESS
 
+        print *, "Running cpl_atm2lnd_run"
+
+        call ESMF_StateGet(importState, "a2c_fb", import_fieldbundle, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+        call ESMF_StateGet(exportState, "c2l_fb", export_fieldbundle, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+        !call ESMF_StateGet(importState, itemname=importStateName, item=srcFieldBundle, rc=rc)
+        !if (chkerr(rc,__LINE__,u_FILE_u)) return
+        !call ESMF_StateGet(exportState, itemname=exportStateName, item=dstFieldBundle, rc=rc)
+        !if (chkerr(rc,__LINE__,u_FILE_u)) return
+        !call ESMF_FieldBundleRegrid(srcFieldBundle, dstFieldBundle, rh_lnd2atm, rc=rc)
+        call ESMF_FieldBundleRegrid(import_fieldbundle, export_fieldbundle, rh_lnd2atm, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        !if (chkerr(rc,__LINE__,u_FILE_u)) return
+        !routehandle, zeroregion, termorderflag, checkflag, rc)
+     end subroutine cpl_atm2lnd_run
+
+end module cpl_mod
 
