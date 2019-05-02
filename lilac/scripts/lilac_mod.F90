@@ -128,7 +128,7 @@ implicit none
 
 
 
-
+    !!! Where should these point to? pointer to an empty array which will be filled in the land....
 
     print *, "creatibg field lists: l2c_fldlist !"
     l2c_fldlist(1)%stdname      =  'lwup'
