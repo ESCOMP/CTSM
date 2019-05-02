@@ -2954,7 +2954,8 @@ contains
        do fp = 1, num_soilp
           p = filter_soilp(fp)
           cnveg_carbonflux_inst%leafc_to_cropprodc_patch(p) = &
-               cnveg_carbonflux_inst%leafc_to_litter_patch(p) !changing from grainc_to_food_patch to leafc_to_litter_patch as equivalent, but could also do livestemc_to_deadstemc_patch
+               cnveg_carbonflux_inst%leafc_to_litter_patch(p) !changing from grainc_to_food_patch to leafc_to_litter_patch as equivalent
+
           cnveg_nitrogenflux_inst%leafn_to_cropprodn_patch(p) = &
                cnveg_nitrogenflux_inst%leafn_to_litter_patch(p)
        end do
