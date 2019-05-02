@@ -1055,13 +1055,13 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <fsnowaging  >lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
 
 <!-- Nitrogen deposition streams namelist defaults -->
-<stream_year_first_ndep phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >1850</stream_year_first_ndep>
+<stream_year_first_ndep phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2100</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >1850</model_year_align_ndep>
+<model_year_align_ndep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
 
-<stream_year_first_ndep phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >1850</stream_year_first_ndep>
+<stream_year_first_ndep phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2100</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >1850</model_year_align_ndep>
+<model_year_align_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
 
 <stream_year_first_ndep use_cn=".true."   sim_year="2010" >2010</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   sim_year="2010" >2010</stream_year_last_ndep>
@@ -1080,15 +1080,6 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 
 <stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_ndep>
-
-<stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >1850</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2015</stream_year_last_ndep>
-
-<stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >1850</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2100</stream_year_last_ndep>
-
-<stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2000</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2100</stream_year_last_ndep>
 
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
 
@@ -1119,6 +1110,7 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 
 <ndep_taxmode            phys="clm5_0" use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_0" use_cn=".true.">NDEP_month</ndep_varlist>
+<ndep_taxmode            phys="clm5_0" use_cn=".true.">limit</ndep_taxmode>
 
 <!-- Use CMIP5 ndep forcing for CLM4.5 cases -->
 <ndep_taxmode            phys="clm4_5" use_cn=".true.">extend</ndep_taxmode>
@@ -1203,13 +1195,13 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <lightngmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</lightngmapalgo>
 
 <!-- Population density streams namelist defaults -->
-<stream_year_first_popdens phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >1850</stream_year_first_popdens>
+<stream_year_first_popdens phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >2015</stream_year_first_popdens>
 <stream_year_last_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
-<model_year_align_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >1850</model_year_align_popdens>
+<model_year_align_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >2015</model_year_align_popdens>
 
-<stream_year_first_popdens phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >1850</stream_year_first_popdens>
+<stream_year_first_popdens phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >2015</stream_year_first_popdens>
 <stream_year_last_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
-<model_year_align_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >1850</model_year_align_popdens>
+<model_year_align_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >2015</model_year_align_popdens>
 
 <stream_year_first_popdens use_cn=".true."   sim_year="2010" >2010</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="2010" >2010</stream_year_last_popdens>
@@ -1228,15 +1220,6 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 
 <stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_popdens>
-
-<stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >1850</stream_year_first_popdens>
-<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2016</stream_year_last_popdens>
-
-<stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >1850</stream_year_first_popdens>
-<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2016</stream_year_last_popdens>
-
-<stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >1850</stream_year_first_popdens>
-<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2016</stream_year_last_popdens>
 
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
@@ -1267,9 +1250,9 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <popdensmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</popdensmapalgo>
 
 <!-- Urban time varying streams namelist defaults -->
-<stream_year_first_urbantv phys="clm5_0" sim_year_range="1850-2100" >1850</stream_year_first_urbantv>
+<stream_year_first_urbantv phys="clm5_0" sim_year_range="1850-2100" >2015</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm5_0" sim_year_range="1850-2100" >1850</model_year_align_urbantv>
+<model_year_align_urbantv  phys="clm5_0" sim_year_range="1850-2100" >2015</model_year_align_urbantv>
 
 <stream_year_first_urbantv phys="clm4_5"  >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm4_5"  >2000</stream_year_last_urbantv>
@@ -1288,15 +1271,6 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 
 <stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1850-2000" >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1850-2000" >2106</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1850-2100" >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="2000-2100" >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="2000-2100" >2106</stream_year_last_urbantv>
 
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 
