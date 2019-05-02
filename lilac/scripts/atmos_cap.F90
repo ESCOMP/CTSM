@@ -153,7 +153,7 @@ module atmos_cap
            print *, "**********************************************************"
            print *, "creating field for a2l:"
            print *, trim(a2c_fldlist(n)%stdname)
-           print *, a2c_fldlist(n)%farrayptr1d
+           !print *, a2c_fldlist(n)%farrayptr1d
  
         enddo
 
@@ -183,7 +183,8 @@ module atmos_cap
            ! create field
            !!! Here we want to pass pointers
            if (mesh_switch) then
-           field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(c2a_fldlist(n)%stdname), rc=rc)
+              !field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(c2a_fldlist(n)%stdname), rc=rc)
+              field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(a2c_fldlist(n)%stdname), farrayPtr=a2c_fldlist(n)%farrayptr1d, rc=rc)
               !field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(c2a_fldlist(n)%stdname), farrayPtr=c2a_fldlist(n)%farrayptr1d, rc=rc)
               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
            else
@@ -195,9 +196,9 @@ module atmos_cap
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
            print *, "**********************************************************"
-           print *, "creating field for l2a:"
-           print *, trim(c2a_fldlist(n)%stdname)
-           print *, c2a_fldlist(n)%farrayptr1d
+           print *, "creating field for c2a:"
+           !print *, trim(c2a_fldlist(n)%stdname)
+           !print *, c2a_fldlist(n)%farrayptr1d
 
         enddo
 

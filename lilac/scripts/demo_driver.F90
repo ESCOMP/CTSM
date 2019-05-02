@@ -35,14 +35,15 @@ program demo_lilac_driver
 
 
 
-    call lilac_init ( atm2lnd1d = atm2lnd   ,   lnd2atm1d =  lnd2atm )
-    call lilac_run  ( )
+    call lilac_init     ( atm2lnd1d = atm2lnd   ,   lnd2atm1d =  lnd2atm )
+    call lilac_run      ( )
 
     print *,  "======================================="
     print *,  " ............. DONE ..................."
 
 
-    call ESMF_Finalize()
+    call lilac_final    ( )
+    call ESMF_Finalize  ( )
 
 end program demo_lilac_driver
 

@@ -121,6 +121,21 @@ implicit none
        !call create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
    end if
 
+   ! Similary we need c2a_fldlist
+
+
+
+        c2a_fldlist(1)%stdname      =  'uwind'
+        c2a_fldlist(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
+        c2a_fldlist(2)%stdname      =  'vwind'
+        c2a_fldlist(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
+        c2a_fldlist(3)%stdname      =  'tbot'
+        c2a_fldlist(3)%farrayptr1d  => atm2lnd1d%vwind
+
+
+
+
+
     print *, "creatibg field lists: l2c_fldlist !"
     l2c_fldlist(1)%stdname      =  'lwup'
     print *,      l2c_fldlist(1)%stdname
@@ -337,13 +352,20 @@ implicit none
     call ESMF_LogWrite(subname//"atmos_cap or dummy_atmos_comp is running", ESMF_LOGMSG_INFO)
     print *, "Running atmos_cap gridded component , rc =", rc
 
+    call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
+    print *, "Running coupler component..... cpl_atm2lnd_comp , rc =", rc
+
     call ESMF_GridCompRun(dummy_land_comp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     call ESMF_LogWrite(subname//"lnd_cap or dummy_land_comp is running", ESMF_LOGMSG_INFO)
     print *, "Running lnd_cap gridded component , rc =", rc
 
-
-    !call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=clock, rc=rc)
+    call ESMF_CplCompRun(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"running cpl_lnd2atm_comp ", ESMF_LOGMSG_INFO)
+    print *, "Running coupler component..... cpl_lnd2atm_comp , rc =", rc
 
     !search through fldlist array to find the right fldist object to do the copy - say its index N
 
@@ -358,6 +380,112 @@ implicit none
     !dum_var_output(:) = a2x_fields(N)%datafld1d(:)
 
   end subroutine lilac_run
+
+
+  subroutine lilac_final( )
+
+    use atmos_cap, only : a2c_fldlist, c2a_fldlist
+    use lnd_cap,   only : l2c_fldlist, c2l_fldlist
+    ! type(fld_list_type) :: a2c_fldlist , c2a_fldlist
+    ! input/output variables
+    !type(atm2lnd_data1d_type), intent(in), optional  :: atm2lnd1d
+    !type(atm2lnd_data2d_type), intent(in), optional  :: atm2lnd2d
+    !type(lnd2atm_data1d_type), intent(in), optional  :: lnd2atm1d
+    !type(lnd2atm_data2d_type), intent(in), optional  :: lnd2atm2d
+
+    ! local variables
+    !  ! Gridded Components and Coupling Components
+    !type(ESMF_GridComp)                              :: dummy_atmos_comp
+    !type(ESMF_GridComp)                              :: dummy_land_comp
+
+    !integer, parameter     :: fldsMax = 100
+    !integer                :: fldsToLnd_num = 0
+    !integer                :: fldsFrLnd_num = 0
+
+
+    character(len=*), parameter                      :: subname=trim(modname)//':[lilac_final]'
+    type(ESMF_State)                                 :: importState, exportState
+
+    ! local variables
+    integer                                          :: rc, urc
+    character(len=ESMF_MAXSTR)                       :: gcname1, gcname2   !    Gridded components names
+    character(len=ESMF_MAXSTR)                       :: ccname1, ccname2   !    Coupling components names
+    !integer, parameter                              :: fldsMax = 100
+    integer                                          :: a2l_fldnum, l2a_fldnum
+    logical                                          :: mesh_switch
+
+    !------------------------------------------------------------------------
+    !------------------------------------------------------------------------
+    ! Initialize return code
+    rc = ESMF_SUCCESS
+    mesh_switch = .True.
+
+    print *,  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    print *,  "        Lilac Finalizing               "
+    print *,  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    !-------------------------------------------------------------------------
+    ! Gridded Component Finalizing!     ---     dummy atmosphere 
+    !-------------------------------------------------------------------------
+    call ESMF_GridCompFinalize(dummy_atmos_comp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"atmos_cap or dummy_atmos_comp is running", ESMF_LOGMSG_INFO)
+    print *, "Finalizing atmos_cap gridded component , rc =", rc
+
+    !-------------------------------------------------------------------------
+    ! Coupler component Finalizing     ---    coupler atmos to land
+    !-------------------------------------------------------------------------
+    call ESMF_CplCompFinalize(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
+    print *, "Finalizing coupler component..... cpl_atm2lnd_comp , rc =", rc
+
+    !-------------------------------------------------------------------------
+    ! Gridded Component Finalizing!     ---     dummy land 
+    !-------------------------------------------------------------------------
+    call ESMF_GridCompFinalize(dummy_land_comp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"lnd_cap or dummy_land_comp is running", ESMF_LOGMSG_INFO)
+    print *, "Finalizing lnd_cap gridded component , rc =", rc
+
+    !-------------------------------------------------------------------------
+    ! Coupler component Finalizing     ---    coupler land to atmos
+    !-------------------------------------------------------------------------
+    call ESMF_CplCompFinalize(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    call ESMF_LogWrite(subname//"running cpl_lnd2atm_comp ", ESMF_LOGMSG_INFO)
+    print *, "Finalizing coupler component..... cpl_lnd2atm_comp , rc =", rc
+
+
+    ! Then clean them up
+    call ESMF_LogWrite(subname//".........................", ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(subname//"destroying all states    ", ESMF_LOGMSG_INFO)
+
+    print *, "ready to destroy all states"
+    call ESMF_StateDestroy(atm2lnd_a_state , rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
+    call ESMF_StateDestroy(atm2lnd_l_state, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
+    call ESMF_StateDestroy(lnd2atm_a_state, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
+    call ESMF_StateDestroy(lnd2atm_l_state, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
+
+    call ESMF_LogWrite(subname//"destroying all components    ", ESMF_LOGMSG_INFO)
+    print *, "ready to destroy all components"
+
+    call ESMF_GridCompDestroy(dummy_atmos_comp, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
+    call ESMF_GridCompDestroy(dummy_land_comp, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
+    call ESMF_CplCompDestroy(cpl_atm2lnd_comp, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
+    call ESMF_CplCompDestroy(cpl_lnd2atm_comp, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
+
+    call ESMF_LogWrite(subname//".........................", ESMF_LOGMSG_INFO)
+    print *, "end of CoupledFlowMod Finalization routine"
+
+  end subroutine lilac_final
 
 
 
