@@ -30,7 +30,7 @@ module lnd_cap
 
     type(ESMF_GridComp)   :: comp   ! must not be optional
     integer, intent(out) :: rc
-    character(len=*), parameter :: subname=trim(modname)//':[lnd_register] '
+    character(len=*), parameter :: subname=trim(modname)//': [lnd_register] '
 
     print *, "in lnd register routine"
 
@@ -67,7 +67,7 @@ module lnd_cap
     type(ESMF_Mesh)                  :: lnd_mesh
     character(len=ESMF_MAXSTR)       :: lnd_mesh_filepath
 
-    character(len=*), parameter :: subname=trim(modname)//':[lnd_init] '
+    character(len=*), parameter :: subname=trim(modname)//': [lnd_init] '
 
     type(ESMF_Grid)                  :: lnd_grid
 
@@ -93,6 +93,7 @@ module lnd_cap
     if(mesh_switch) then
         print *, "creating mesh for land"
         ! For now this is our dummy mesh:
+        !lnd_mesh_filepath    =      '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T62_040121_ESMFmesh.nc'
         lnd_mesh_filepath    =      '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'
 
         lnd_mesh             =        ESMF_MeshCreate(filename=trim(lnd_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
@@ -215,7 +216,7 @@ module lnd_cap
     type(ESMF_Clock)     :: clock
     integer, intent(out) :: rc
 
-    character(len=*), parameter :: subname=trim(modname)//':(lnd_run) '
+    character(len=*), parameter :: subname=trim(modname)//': [lnd_run] '
 
     ! Initialize return code
     rc = ESMF_SUCCESS
@@ -233,7 +234,7 @@ module lnd_cap
     type(ESMF_Clock)     :: clock
     integer, intent(out) :: rc
 
-    character(len=*), parameter :: subname=trim(modname)//':(lnd_final) '
+    character(len=*), parameter :: subname=trim(modname)//': [lnd_final] '
 
     ! Initialize return code
     rc = ESMF_SUCCESS

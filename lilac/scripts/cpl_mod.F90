@@ -39,7 +39,7 @@ module cpl_mod
     subroutine cpl_lnd2atm_register(cplcomp, rc)
         type(ESMF_CplComp)   :: cplcomp
         integer, intent(out) :: rc
-        character(len=*), parameter :: subname=trim(modname)//':[cpl_lnd2atm_register] '
+        character(len=*), parameter :: subname=trim(modname)//' : [cpl_lnd2atm_register] '
 
 
         rc = ESMF_SUCCESS
@@ -68,7 +68,7 @@ module cpl_mod
         integer, intent(out) :: rc
         type (ESMF_FieldBundle)      ::  import_fieldbundle, export_fieldbundle
 
-        character(len=*), parameter :: subname=trim(modname)//':[cpl_lnd2atm_init] '
+        character(len=*), parameter :: subname=trim(modname)//': [cpl_lnd2atm_init] '
 
         rc = ESMF_SUCCESS
         print *, "Coupler for land to atmosphere initialize routine called"
@@ -76,6 +76,7 @@ module cpl_mod
 
         call ESMF_StateGet(importState, "l2c_fb", import_fieldbundle, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
 
         call ESMF_StateGet(exportState, "c2a_fb", export_fieldbundle, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
@@ -103,7 +104,7 @@ module cpl_mod
         integer, intent(out) :: rc
         type (ESMF_FieldBundle)      ::  import_fieldbundle, export_fieldbundle
 
-        character(len=*), parameter :: subname=trim(modname)//':[cpl_atm2lnd_init] '
+        character(len=*), parameter :: subname=trim(modname)//': [cpl_atm2lnd_init] '
 
         rc = ESMF_SUCCESS
         print *, "Coupler for atmosphere to land initialize routine called"
@@ -134,7 +135,7 @@ module cpl_mod
         integer, intent(out) :: rc
         type (ESMF_FieldBundle)      ::  import_fieldbundle, export_fieldbundle
 
-        character(len=*), parameter :: subname=trim(modname)//':[cpl_lnd2atm_run] '
+        character(len=*), parameter :: subname=trim(modname)//': [cpl_lnd2atm_run] '
 
         rc = ESMF_SUCCESS
 
@@ -166,7 +167,7 @@ module cpl_mod
         integer, intent(out) :: rc
         type (ESMF_FieldBundle)      ::  import_fieldbundle, export_fieldbundle
 
-        character(len=*), parameter :: subname=trim(modname)//':[cpl_atm2lnd_run] '
+        character(len=*), parameter :: subname=trim(modname)//': [cpl_atm2lnd_run] '
 
         rc = ESMF_SUCCESS
 
@@ -206,12 +207,15 @@ module cpl_mod
         integer, intent(out) :: rc
         type (ESMF_FieldBundle)      ::  import_fieldbundle, export_fieldbundle
 
-        character(len=*), parameter :: subname=trim(modname)//':[cpl_lnd2atm_final] '
+        character(len=*), parameter :: subname=trim(modname)//': [cpl_lnd2atm_final] '
 
         rc = ESMF_SUCCESS
 
-        call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
-        call ESMF_LogWrite(subname//" has not been implemented yet", ESMF_LOGMSG_INFO)
+        ! Only thing to do here is release redist (or regrid) and route handles
+        call ESMF_FieldBundleRegridRelease (routehandle=rh_lnd2atm , rc=rc)
+
+        call ESMF_LogWrite(subname//"---------------------------------!", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//" rh_lnd2atm route handle released!", ESMF_LOGMSG_INFO)
     end subroutine cpl_lnd2atm_final
 
 
@@ -223,12 +227,15 @@ module cpl_mod
         integer, intent(out) :: rc
         type (ESMF_FieldBundle)      ::  import_fieldbundle, export_fieldbundle
 
-        character(len=*), parameter :: subname=trim(modname)//':[cpl_lnd2atm_final] '
+        character(len=*), parameter :: subname=trim(modname)//': [cpl_atm2lnd_final] '
 
         rc = ESMF_SUCCESS
 
-        call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
-        call ESMF_LogWrite(subname//" has not been implemented yet", ESMF_LOGMSG_INFO)
+        ! Only thing to do here is release redist (or regrid) and route handles
+        call ESMF_FieldBundleRegridRelease (routehandle=rh_atm2lnd, rc=rc)
+
+        call ESMF_LogWrite(subname//"---------------------------------!", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//" rh_atm2lnd route handle released!", ESMF_LOGMSG_INFO)
     end subroutine cpl_atm2lnd_final
 
 

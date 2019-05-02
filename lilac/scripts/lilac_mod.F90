@@ -56,7 +56,7 @@ implicit none
 
     type(ESMF_State)                                 :: coupledFlowState ! the coupled flow State
     type(ESMF_Mesh)                                  :: Emesh
-    character(len=*), parameter                      :: subname=trim(modname)//':[lilac_init]'
+    character(len=*), parameter                      :: subname=trim(modname)//': [lilac_init]'
     type(ESMF_State)                                 :: importState, exportState
 
     !character(len=*)                                :: atm_mesh_filepath   !!! For now this is hard
@@ -100,37 +100,31 @@ implicit none
 !    call create_fldlists(c2a_fldlist, a2c_fldlist, a2l_fldnum, l2a_fldnum)
 
 
-    if (.True.) then
-        a2c_fldlist(1)%stdname      =  'uwind'
-        a2c_fldlist(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
-        print *,      a2c_fldlist(1)%stdname
-        print *,      a2c_fldlist(1)%farrayptr1d(:)
-        a2c_fldlist(2)%stdname      =  'vwind'
-        a2c_fldlist(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
-        print *,      a2c_fldlist(2)%stdname
-        print *,      a2c_fldlist(2)%farrayptr1d(:)
-        a2c_fldlist(3)%stdname      =  'tbot'
-        a2c_fldlist(3)%farrayptr1d  => atm2lnd1d%vwind
-        print *,      a2c_fldlist(3)%stdname
-        print *,      a2c_fldlist(3)%farrayptr1d
+    a2c_fldlist(1)%stdname      =  'uwind'
+    a2c_fldlist(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
+    print *,      a2c_fldlist(1)%stdname
+    !print *,      a2c_fldlist(1)%farrayptr1d(:)
+    a2c_fldlist(2)%stdname      =  'vwind'
+    a2c_fldlist(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
+    print *,      a2c_fldlist(2)%stdname
+    !print *,      a2c_fldlist(2)%farrayptr1d(:)
+    a2c_fldlist(3)%stdname      =  'tbot'
+    a2c_fldlist(3)%farrayptr1d  => atm2lnd1d%vwind
+    print *,      a2c_fldlist(3)%stdname
+    !print *,      a2c_fldlist(3)%farrayptr1d
 
-       !call create_fldlists(flds_a2l, fldsfldsToCpl, fldsToCpl_num, fldsFrCpl_num)
-    else
-       a2c_fldlist(1)%stdname = 'name'
-       a2c_fldlist(1)%farrayptr2d => atm2lnd2d%uwind
-       !call create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
-   end if
+    !call create_fldlists(flds_a2l, fldsfldsToCpl, fldsToCpl_num, fldsFrCpl_num)
 
-   ! Similary we need c2a_fldlist
+    ! Similary we need c2a_fldlist
 
 
 
-        c2a_fldlist(1)%stdname      =  'uwind'
-        c2a_fldlist(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
-        c2a_fldlist(2)%stdname      =  'vwind'
-        c2a_fldlist(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
-        c2a_fldlist(3)%stdname      =  'tbot'
-        c2a_fldlist(3)%farrayptr1d  => atm2lnd1d%vwind
+    c2a_fldlist(1)%stdname      =  'uwind'
+    c2a_fldlist(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
+    c2a_fldlist(2)%stdname      =  'vwind'
+    c2a_fldlist(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
+    c2a_fldlist(3)%stdname      =  'tbot'
+    c2a_fldlist(3)%farrayptr1d  => atm2lnd1d%vwind
 
 
 
@@ -316,7 +310,7 @@ implicit none
     !integer                :: fldsFrLnd_num = 0
 
 
-    character(len=*), parameter                      :: subname=trim(modname)//':[lilac_run]'
+    character(len=*), parameter                      :: subname=trim(modname)//': [lilac_run]'
     type(ESMF_State)                                 :: importState, exportState
 
     ! local variables
@@ -403,7 +397,7 @@ implicit none
     !integer                :: fldsFrLnd_num = 0
 
 
-    character(len=*), parameter                      :: subname=trim(modname)//':[lilac_final]'
+    character(len=*), parameter                      :: subname=trim(modname)//': [lilac_final]'
     type(ESMF_State)                                 :: importState, exportState
 
     ! local variables

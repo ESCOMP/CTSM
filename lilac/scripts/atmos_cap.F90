@@ -62,7 +62,6 @@ module atmos_cap
 
 
 
-    !subroutine atmos_init (comp, importState, exportState, clock, rc)
     subroutine atmos_init (comp, lnd2atm_a_state, atm2lnd_a_state, clock, rc)
         type (ESMF_GridComp)         ::  comp
         type (ESMF_State)            ::  lnd2atm_a_state, atm2lnd_a_state
@@ -79,7 +78,7 @@ module atmos_cap
         type(ESMF_Grid)              ::  atmos_grid
         type(ESMF_DistGrid)          ::  distgridIN, distgridFS
         logical                      ::  mesh_switch
-        character(len=*), parameter  :: subname=trim(modname)//':[atmos_init] '
+        character(len=*), parameter  :: subname=trim(modname)//': [atmos_init] '
         !----------------------
 
         !integer                    :: regDecomp(:,:)
@@ -137,24 +136,24 @@ module atmos_cap
 
         do n = 1,a2c_fldlist_num
 
+           print *, "**********************************************************"
+           print *, "creating field for a2l:"
+           print *, trim(a2c_fldlist(n)%stdname)
+
            ! create field
            !!! Here we want to pass pointers
            !field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(a2c_fldlist(n)%stdname), rc=rc)
            field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(a2c_fldlist(n)%stdname), farrayPtr=a2c_fldlist(n)%farrayptr1d, rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-           !call ESMF_FieldGet(field, farrayPtr=fldptr, rc=rc)
-           !fldptr = a2c_fldlist(n)%farrayptr1d
 
            ! add field to field bundle
            call ESMF_FieldBundleAdd(a2c_fb, (/field/), rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
 
-           print *, "**********************************************************"
-           print *, "creating field for a2l:"
-           print *, trim(a2c_fldlist(n)%stdname)
-           !print *, a2c_fldlist(n)%farrayptr1d
- 
+           print *, a2c_fldlist(n)%farrayptr1d
+           print *, "this field is created"
+
         enddo
 
         print *, "!Fields to  Coupler (atmos to  land ) (a2c_fb) Field Bundle Created!"
@@ -184,20 +183,21 @@ module atmos_cap
            !!! Here we want to pass pointers
            if (mesh_switch) then
               !field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(c2a_fldlist(n)%stdname), rc=rc)
-              field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(a2c_fldlist(n)%stdname), farrayPtr=a2c_fldlist(n)%farrayptr1d, rc=rc)
               !field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(c2a_fldlist(n)%stdname), farrayPtr=c2a_fldlist(n)%farrayptr1d, rc=rc)
+              field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(a2c_fldlist(n)%stdname), farrayPtr=a2c_fldlist(n)%farrayptr1d, rc=rc)
               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-           else
+          else
               field = ESMF_FieldCreate(atmos_grid, name=trim(c2a_fldlist(n)%stdname), farrayPtr=c2a_fldlist(n)%farrayptr2d, rc=rc)
               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
            end if
+
            ! add field to field bundle
            call ESMF_FieldBundleAdd(c2a_fb, (/field/), rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
            print *, "**********************************************************"
            print *, "creating field for c2a:"
-           !print *, trim(c2a_fldlist(n)%stdname)
+           print *, trim(c2a_fldlist(n)%stdname)
            !print *, c2a_fldlist(n)%farrayptr1d
 
         enddo
@@ -249,10 +249,21 @@ module atmos_cap
         type(ESMF_Clock)     :: clock
         integer, intent(out) :: rc
 
-        character(len=*), parameter :: subname=trim(modname)//':(atmos_final) '
+        character(len=*), parameter :: subname=trim(modname)//': [atmos_final] '
+        type (ESMF_FieldBundle)     ::  import_fieldbundle, export_fieldbundle
 
         ! Initialize return code
         rc = ESMF_SUCCESS
+
+        call ESMF_StateGet(importState, "c2a_fb", import_fieldbundle, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+        call ESMF_StateGet(exportState, "a2c_fb", export_fieldbundle, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail ou
+
+
+        call ESMF_FieldBundleDestroy(import_fieldbundle, rc=rc)
+        call ESMF_FieldBundleDestroy(export_fieldbundle, rc=rc)
 
         call ESMF_LogWrite(subname//"atmos_final has not been implemented yet", ESMF_LOGMSG_INFO)
 
