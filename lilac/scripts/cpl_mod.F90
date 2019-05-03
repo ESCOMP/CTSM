@@ -116,11 +116,15 @@ module cpl_mod
 
         call ESMF_StateGet(exportState, "c2l_fb", export_fieldbundle, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"redisting !", ESMF_LOGMSG_INFO)
 
         ! For Redisting
         !call ESMF_FieldBundleRedistStore(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
         !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         ! For ReGridding
+        call ESMF_FieldBundleRedistStore(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
+        call ESMF_LogWrite(subname//"regridding !", ESMF_LOGMSG_INFO)
         call ESMF_FieldBundleRegridStore(import_fieldbundle, export_fieldbundle, routehandle=rh_atm2lnd, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
