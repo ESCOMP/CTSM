@@ -136,13 +136,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lmask type="wet"              >AVHRR</lmask>
 <lmask type="voc"              >AVHRR</lmask>
 <lmask type="lai"              >MODIS</lmask>
-<lmask type="lai" hirespft="on">MODIS</lmask>
+<lmask type="lai" hirespft="on">MODISv2</lmask>
 <lmask type="veg"              >MODIS</lmask>
-<lmask type="veg" hirespft="on">MODIS</lmask>
+<lmask type="veg" hirespft="on">MODISv2</lmask>
 <lmask type="hrv"              >MODIS</lmask>
 <lmask type="urb"              >LandScan2004</lmask>
 <lmask type="col"              >MODIS</lmask>
-<lmask type="col" hirespft="on">MODIS</lmask>
+<lmask type="col" hirespft="on">MODISv2</lmask>
 <lmask type="org"              >ISRIC-WISE</lmask>
 <lmask type="glc"              >GLOBE-Gardner</lmask>
 <lmask type="glc" mergeGIS="on">GLOBE-Gardner-mergeGIS</lmask>
@@ -214,8 +214,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- mksrf_lai -->
 
-<mksrf_flai hgrid="3x3min" lmask="MODIS"
->lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190119/mksrf_lai_histclm52deg005_earthstatmirca_2005.c190420.nc
+<mksrf_flai hgrid="3x3min" lmask="MODISv2"
+>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190119/mksrf_lai_histclm52deg005_earthstatmirca_2005.c190119.nc
 </mksrf_flai>
 
 <mksrf_flai hgrid="0.25x0.25" lmask="MODIS"
@@ -229,8 +229,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_fsoitex  hgrid="5x5min"   lmask="IGBP-GSDP"
 >lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc</mksrf_fsoitex>
 
-<mksrf_fsoicol  hgrid="3x3min"  lmask="MODIS"
->lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190119/mksrf_soilcolor_histclm52deg005_earthstatmirca_2005.c190420.nc
+<mksrf_fsoicol  hgrid="3x3min"  lmask="MODISv2"
+>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190119/mksrf_soilcolor_histclm52deg005_earthstatmirca_2005.c190116.nc
 </mksrf_fsoicol>
 
 <mksrf_fsoicol  hgrid="0.25x0.25"  lmask="MODIS"
@@ -312,7 +312,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190119/mksrf_landuse_clm52deg005_histLUH2_1850.c190119.nc
 </mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="3x3min" ssp_rcp="hist" sim_year="2005" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190119/mksrf_landuse_clm52deg005_histLUH2_2005.c190420.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190119/mksrf_landuse_clm52deg005_histLUH2_2005.c190119.nc
 </mksrf_fvegtyp>
 
 
