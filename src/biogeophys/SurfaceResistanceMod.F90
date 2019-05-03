@@ -185,7 +185,6 @@ contains
      call readNcdioScalar(ncid, 'd_max', subname, params_inst%d_max)
      ! Fraction of saturated soil for moisture value at which DSL initiates (unitless)
      call readNcdioScalar(ncid, 'frac_sat_soil_dsl_init', subname, params_inst%frac_sat_soil_dsl_init)
-     params_inst%frac_sat_soil_dsl_init = 0.8  ! TEMP FOR BFB; rm before merge
 
    end subroutine readParams
 

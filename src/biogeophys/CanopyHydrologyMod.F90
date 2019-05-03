@@ -148,7 +148,6 @@ contains
     call readNcdioScalar(ncid, 'sno_stor_max', subname, params_inst%sno_stor_max)
     ! Accumulation constant for fractional snow covered area (unitless)
     call readNcdioScalar(ncid, 'accum_factor', subname, params_inst%accum_factor)
-    params_inst%accum_factor = 0.1  ! TEMP FOR BFB RESULTS (rm BEFORE MERGE)
 
    end subroutine readParams
 
@@ -675,11 +674,11 @@ contains
 
              if (h2ocan > 0._r8) then
                 vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
-                dewmxi  = 1.0_r8/params_inst%dewmx  ! TEMP for BFB; rm bef merge
+                dewmxi  = 1.0_r8/params_inst%dewmx  ! wasteful division
                 fwet(p) = ((dewmxi/vegt)*h2ocan)**0.666666666666_r8
                 fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
                 if (snocan(p) > 0._r8) then
-                   dewmxi  = 1.0_r8/params_inst%dewmx  ! TEMP for BFB; rm bef merge
+                   dewmxi  = 1.0_r8/params_inst%dewmx  ! wasteful division
                    fcansno(p) = ((dewmxi / (vegt * params_inst%sno_stor_max * 10.0_r8)) * snocan(p))**0.15_r8 ! must match snocanmx 
                    fcansno(p) = min (fcansno(p),1.0_r8)
                 else

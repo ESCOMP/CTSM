@@ -171,11 +171,9 @@ module LunaMod
     ! Michaelis-Menten constant at 25°C for O2 (unitless)
     call readNcdioScalar(ncid, 'ko25_coef', subname, params_inst%ko25_coef)
     params_inst%ko25_coef = params_inst%ko25_coef * 1.e5_r8  ! from mol/mol to Luna units
-    params_inst%ko25_coef = 27840_r8  ! TEMP for BFB; rm before merge
     ! Michaelis-Menten constant at 25°C for CO2 (unitless)
     call readNcdioScalar(ncid, 'kc25_coef', subname, params_inst%kc25_coef)
     params_inst%kc25_coef = params_inst%kc25_coef * 1.e5_r8  ! from mol/mol to Luna units
-    params_inst%kc25_coef = 40.49_r8  ! TEMP for BFB; rm before merge
 
    end subroutine readParams
 
