@@ -263,24 +263,24 @@ fi
 
 if [ "$phys" = "clm4_5" ]; then
     grids=(                    \
-           #"0.5x0.5_AVHRR"     \
-           #"0.25x0.25_MODIS"   \
-           #"0.5x0.5_MODIS"     \
-           #"3x3min_LandScan2004" \
-           "3x3min_MODIS-2005"      \
-           #"3x3min_MODIS-wCsp" \
-           #"3x3min_USGS"       \
-           #"5x5min_nomask"     \
-           #"5x5min_IGBP-GSDP"  \
-           #"5x5min_ISRIC-WISE" \
-           #"5x5min_ORNL-Soil" \
-           #"10x10min_nomask"   \
-           #"10x10min_IGBPmergeICESatGIS" \
-           #"3x3min_GLOBE-Gardner" \
-           #"3x3min_GLOBE-Gardner-mergeGIS" \
-           #"0.9x1.25_GRDC" \
-           #"360x720cru_cruncep" \
-           #"1km-merge-10min_HYDRO1K-merge-nomask" \
+           "0.5x0.5_AVHRR"     \
+           "0.25x0.25_MODIS"   \
+           "0.5x0.5_MODIS"     \
+           "3x3min_LandScan2004" \
+           "3x3min_MODISv2"    \
+           "3x3min_MODIS-wCsp" \
+           "3x3min_USGS"       \
+           "5x5min_nomask"     \
+           "5x5min_IGBP-GSDP"  \
+           "5x5min_ISRIC-WISE" \
+           "5x5min_ORNL-Soil" \
+           "10x10min_nomask"   \
+           "10x10min_IGBPmergeICESatGIS" \
+           "3x3min_GLOBE-Gardner" \
+           "3x3min_GLOBE-Gardner-mergeGIS" \
+           "0.9x1.25_GRDC" \
+           "360x720cru_cruncep" \
+           "1km-merge-10min_HYDRO1K-merge-nomask" \
           )
 
 else
