@@ -8,6 +8,7 @@
     <entry issue="#384"            >FAIL ERP_D_Ld5.f09_g17.I2000Clm50Vic.cheyenne_intel.clm-vrtlay RUN</entry>
     <entry issue="#442"            >FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
     <entry issue="#442"            >FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
+    <entry issue="#675"            >FAIL LCISO_Lm13.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_monthly COMPARE_base_cisoallon</entry>
   </category>
   <category name="fates">
     <entry issue="667"              >FAIL ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesHydro COMPARE_base_rest</entry>

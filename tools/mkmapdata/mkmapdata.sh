@@ -267,6 +267,7 @@ if [ "$phys" = "clm4_5" ]; then
            "0.25x0.25_MODIS"   \
            "0.5x0.5_MODIS"     \
            "3x3min_LandScan2004" \
+           "3x3min_MODISv2"    \
            "3x3min_MODIS-wCsp" \
            "3x3min_USGS"       \
            "5x5min_nomask"     \
