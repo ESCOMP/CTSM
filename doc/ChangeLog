@@ -82,11 +82,11 @@ CTSM tag used for the baseline comparisons:
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: YES
   Summarize any changes to answers, i.e.,
     - what code configurations: ALL
     - what platforms/compilers: ALL
-    - nature of change: roundoff
+    - nature of change: single-precision roundoff
     Changes are due to four parameters:
  accum_factor 
  ko25_coef 
@@ -94,9 +94,9 @@ Changes answers relative to baseline:
  frac_sat_soil_dsl_init 
     that were not declared "_r8" when hardwired in the code,
     while now they are declared "double" in the params.nc files. I
-    showed that the change was no greater than roundoff by writing
-    the new and old values to the lnd and cesm log files and confirming
-    differences smaller than 1.e-6.
+    showed that the change was no greater than single-precision roundoff
+    by writing the new and old values to the lnd and cesm log files and
+    confirming differences smaller than 1.e-6.
 
 Detailed list of changes
 ------------------------
