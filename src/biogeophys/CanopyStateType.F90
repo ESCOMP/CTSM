@@ -50,7 +50,6 @@ module CanopyStateType
      integer  , pointer :: altmax_indx_col          (:)   ! col maximum annual depth of thaw 
      integer  , pointer :: altmax_lastyear_indx_col (:)   ! col prior year maximum annual depth of thaw 
 
-     real(r8) , pointer :: dewmx_patch              (:)   ! patch maximum allowed dew [mm] 
      real(r8) , pointer :: dleaf_patch              (:)   ! patch characteristic leaf width (diameter) [m]
                                                           ! for non-ED/FATES this is the same as pftcon%dleaf()
      real(r8) , pointer :: rscanopy_patch           (:)   ! patch canopy stomatal resistance (s/m) (ED specific)
@@ -141,7 +140,6 @@ contains
     allocate(this%altmax_indx_col          (begc:endc))           ; this%altmax_indx_col          (:)   = huge(1)
     allocate(this%altmax_lastyear_indx_col (begc:endc))           ; this%altmax_lastyear_indx_col (:)   = huge(1)
 
-    allocate(this%dewmx_patch              (begp:endp))           ; this%dewmx_patch              (:)   = nan
     allocate(this%dleaf_patch              (begp:endp))           ; this%dleaf_patch              (:)   = nan
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
 !    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8     
@@ -203,11 +201,6 @@ contains
        call hist_addfld1d (fname='FSUN', units='proportion', &
             avgflag='A', long_name='sunlit fraction of canopy', &
             ptr_patch=this%fsun_patch, default='inactive')
-
-       this%dewmx_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DEWMX', units='mm', &
-            avgflag='A', long_name='Maximum allowed dew', &
-            ptr_patch=this%dewmx_patch, default='inactive')
 
        this%htop_patch(begp:endp) = spval
        call hist_addfld1d (fname='HTOP', units='m', &
@@ -515,7 +508,6 @@ contains
        this%esai_patch(p)       = 0._r8
        this%htop_patch(p)       = 0._r8
        this%hbot_patch(p)       = 0._r8
-       this%dewmx_patch(p)      = 0.1_r8
        this%vegwp_patch(p,:)    = -2.5e4_r8
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then

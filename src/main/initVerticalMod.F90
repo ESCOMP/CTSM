@@ -38,6 +38,13 @@ module initVerticalMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: initVertical
+  public :: readParams
+
+  type, private :: params_type
+      real(r8) :: n_melt_coef
+  end type params_type
+  type(params_type), private ::  params_inst
+
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ReadNL
   private :: hasBedrock  ! true if the given column type includes bedrock layers
@@ -104,6 +111,26 @@ contains
     call shr_mpi_bcast(use_bedrock, mpicom)
 
   end subroutine ReadNL
+
+  !------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_initVertical'
+    !--------------------------------------------------------------------
+
+    ! n_melt parameter (unitless)
+    call readNcdioScalar(ncid, 'n_melt_coef', subname, params_inst%n_melt_coef)
+
+   end subroutine readParams
 
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
@@ -738,7 +765,7 @@ contains
           ! value of n_melt.
           col%n_melt(c) = n_melt_glcmec
        else
-          col%n_melt(c) = 200.0/max(10.0_r8, col%topo_std(c))
+          col%n_melt(c) = params_inst%n_melt_coef / max(10._r8, col%topo_std(c))
        end if
 
        ! microtopographic parameter, units are meters (try smooth function of slope)

@@ -1,4 +1,126 @@
 ===============================================================
+Tag name:  ctsm1.0.dev040
+Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
+Date:  Fri May 03 10:34:46 MDT 2019
+One-line Summary: Move some hard-coded parameters from code to params.nc file
+
+Purpose of changes
+------------------
+
+ Reduce the number of parameters that get hardwired directly in the code
+ by placing in the params.nc file where they become visible and easier
+ to modify.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #680
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users:
+ None
+
+Changes to CTSM's user interface:
+ Parameters that were hardwired in the code can now be seen and changed
+ in the params.nc file.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ None
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Various parameters have moved out of the code and into the params.nc file.
+
+Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+
+Notes of particular relevance for developers:
+ None
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ None
+
+Changes to tests or testing:
+ None
+
+Code reviewed by:
+ @ekluzek
+ @billsacks
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+ Answers change as expected.
+
+CTSM tag used for the baseline comparisons: 
+ ctsm1.0.dev039
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change: single-precision roundoff
+    Changes are due to four parameters:
+ accum_factor 
+ ko25_coef 
+ kc25_coef 
+ frac_sat_soil_dsl_init 
+    that were not declared "_r8" when hardwired in the code,
+    while now they are declared "double" in the params.nc files. I
+    showed that the change was no greater than single-precision roundoff
+    by writing the new and old values to the lnd and cesm log files and
+    confirming differences smaller than 1.e-6.
+
+Detailed list of changes
+------------------------
+
+ - Updated the clm5 and clm4.5 params.nc files to contain the previously
+ hard-coded parameters that Katie Dagon recommended moving out of the
+ code (listed here: https://docs.google.com/spreadsheets/d/1cRmcB0xz7CjVP6ljUoCehJx49Usxsore5ma4mWcvQwM/edit#gid=0)
+ - Now read the parameters in the modules that use them
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/684
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev039
 Originator(s):  sacks (Bill Sacks)
 Date: Wed May  1 11:12:34 MDT 2019
