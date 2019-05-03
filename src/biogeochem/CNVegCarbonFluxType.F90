@@ -4284,6 +4284,7 @@ contains
           this%litfall_patch(p) =      &
                this%litfall_patch(p) + &
                this%livestemc_to_litter_patch(p)
+               !this%leafc_to_litter_patch(p)  !MWGraham added leafc to patch to see if that does anything?
 
           if (.not. use_grainproduct) then
              this%litfall_patch(p) = &
