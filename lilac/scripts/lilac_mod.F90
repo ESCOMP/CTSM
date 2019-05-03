@@ -119,12 +119,12 @@ implicit none
 
 
 
-    c2a_fldlist(1)%stdname      =  'uwind'
-    c2a_fldlist(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
-    c2a_fldlist(2)%stdname      =  'vwind'
-    c2a_fldlist(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
-    c2a_fldlist(3)%stdname      =  'tbot'
-    c2a_fldlist(3)%farrayptr1d  => atm2lnd1d%vwind
+    c2l_fldlist(1)%stdname      =  'uwind'
+    c2l_fldlist(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
+    c2l_fldlist(2)%stdname      =  'vwind'
+    c2l_fldlist(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
+    c2l_fldlist(3)%stdname      =  'tbot'
+    c2l_fldlist(3)%farrayptr1d  => atm2lnd1d%vwind
 
 
 
@@ -132,22 +132,25 @@ implicit none
 
     print *, "creatibg field lists: l2c_fldlist !"
     l2c_fldlist(1)%stdname      =  'lwup'
+    l2c_fldlist(1)%farrayptr1d  => lnd2atm1d%lwup
     print *,      l2c_fldlist(1)%stdname
 
     l2c_fldlist(2)%stdname      =  'taux'
     print *,      l2c_fldlist(2)%stdname
+    l2c_fldlist(2)%farrayptr1d  => lnd2atm1d%taux
 
     l2c_fldlist(3)%stdname      =  'tauy'
     print *,      l2c_fldlist(3)%stdname
+    l2c_fldlist(3)%farrayptr1d  => lnd2atm1d%taux
 
-    c2l_fldlist(1)%stdname      =  'uwind'
-    print *,      c2l_fldlist(1)%stdname
+    c2a_fldlist(1)%stdname      =  'uwind'
+    print *,      c2a_fldlist(1)%stdname
 
-    c2l_fldlist(2)%stdname      =  'vwind'
-    print *,      c2l_fldlist(2)%stdname
+    c2a_fldlist(2)%stdname      =  'vwind'
+    print *,      c2a_fldlist(2)%stdname
 
-    c2l_fldlist(3)%stdname      =  'tbot'
-    print *,      c2l_fldlist(3)%stdname
+    c2a_fldlist(3)%stdname      =  'tbot'
+    print *,      c2a_fldlist(3)%stdname
 
 
 

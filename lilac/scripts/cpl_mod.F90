@@ -112,6 +112,7 @@ module cpl_mod
 
         call ESMF_StateGet(importState, "a2c_fb", import_fieldbundle, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
 
         call ESMF_StateGet(exportState, "c2l_fb", export_fieldbundle, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
@@ -122,6 +123,7 @@ module cpl_mod
         ! For ReGridding
         call ESMF_FieldBundleRegridStore(import_fieldbundle, export_fieldbundle, routehandle=rh_atm2lnd, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
     end subroutine cpl_atm2lnd_init
 
     !--------------------------------------------------------------------------

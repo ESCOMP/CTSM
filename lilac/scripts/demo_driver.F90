@@ -1,6 +1,30 @@
 program demo_lilac_driver
 
+    !***  All the components are in the hierarchy seen here:
+    !
+    !           main driver* (WRF)
+    !               |
+    !               |
+    !          lilac (not a gridded component!)
+    !               |     |________________________.
+    !               |                              |
+    !           atmos cap                      land cap ____________.     ......... gridded components
+    !               |                              |                |
+    !               |                              |             river cap
+    !           oceaan (MOM, POM)?                 |                |
+    !                                              |            Mizzouroute...
+    !                                            CTSM
+    !
+    !
+    !
+    !
+    !
+    !
+    !  * aka real atmos
+    !----------------------------------------------------------------------------
+
     ! modules
+
     use ESMF
     use lilac_mod
 
