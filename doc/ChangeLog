@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev040
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
-Date:  Wed May 01 14:45:55 MDT 2019
+Date:  Fri May 03 10:34:46 MDT 2019
 One-line Summary: Move some hard-coded parameters from code to params.nc file
 
 Purpose of changes
@@ -25,44 +25,36 @@ Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users:
+ None
 
 Changes to CTSM's user interface:
  Parameters that were hardwired in the code can now be seen and changed
- in the params.nc file
+ in the params.nc file.
 
 Changes made to namelist defaults (e.g., changed parameter values):
  None
 
 Changes to the datasets (e.g., parameter, surface or initial files):
- Various parameters have moved out of the code and into the params.nc file
+ Various parameters have moved out of the code and into the params.nc file.
 
 Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
 
-Notes of particular relevance for developers: (including Code reviews and testing)
+Notes of particular relevance for developers:
+ None
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ None
 
 Changes to tests or testing:
+ None
 
 Code reviewed by:
- Erik K
- Bill S
+ @ekluzek
+ @billsacks
 
 CTSM testing:
-
-[... Remove before making master tag.  Available test levels:
-
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CTSM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
-
-... ]
 
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
@@ -80,8 +72,9 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- 
-    hobart ------ 
+    cheyenne ---- OK
+    hobart ------ OK
+ Answers change as expected.
 
 CTSM tag used for the baseline comparisons: 
  ctsm1.0.dev039
@@ -94,13 +87,13 @@ Changes answers relative to baseline:
     - what code configurations: ALL
     - what platforms/compilers: ALL
     - nature of change: roundoff
-    This change occurs because the parameter values for
+    Changes are due to four parameters:
  accum_factor 
  ko25_coef 
  kc25_coef 
  frac_sat_soil_dsl_init 
-    were not explicitly specified as _r8 when hardwired in the code,
-    while they are now declared "double" in the params.nc files. I
+    that were not declared "_r8" when hardwired in the code,
+    while now they are declared "double" in the params.nc files. I
     showed that the change was no greater than roundoff by writing
     the new and old values to the lnd and cesm log files and confirming
     differences smaller than 1.e-6.
@@ -108,10 +101,10 @@ Changes answers relative to baseline:
 Detailed list of changes
 ------------------------
 
- - Update the clm5 and clm4.5 params.nc files to contain the previously
+ - Updated the clm5 and clm4.5 params.nc files to contain the previously
  hard-coded parameters that Katie Dagon recommended moving out of the
  code (listed here: https://docs.google.com/spreadsheets/d/1cRmcB0xz7CjVP6ljUoCehJx49Usxsore5ma4mWcvQwM/edit#gid=0)
- - Read the parameters in the modules where they are used
+ - Now read the parameters in the modules that use them
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/684

@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-  ctsm1.0.dev040   slevis 05/01/2019 Move some hard-coded parameters from code to params.nc file
+  ctsm1.0.dev040   slevis 05/03/2019 Move some hard-coded parameters from code to params.nc file
   ctsm1.0.dev039    sacks 05/01/2019 Remove excess canopy liquid/snow regardless of temperature
   ctsm1.0.dev038    sacks 05/01/2019 Support for NWP configuration, NLDAS grid and NLDAS datm forcing
   ctsm1.0.dev037    sacks 04/29/2019 Change year alignment for present-day I compsets
