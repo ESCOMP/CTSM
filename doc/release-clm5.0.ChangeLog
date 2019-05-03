@@ -1,4 +1,133 @@
 ===============================================================
+Tag name:  release-clm5.0.21
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri May  3 16:10:35 MDT 2019
+One-line Summary: New ndep files, update fates, fix some issues
+
+Purpose of this version:
+------------------------
+
+New nitrogen deposition files for future scenarios: SSP245 and SSP370. And now points
+to the closest reasonable new CMIP6 SSP ndep file that we have (for clm50, clm45 points
+to the old RCP files).
+
+Update FATES to s1.21.0.a7.0.0. Which brings in a list of improvements and bug fixes. New
+options include fates-hydro and fates-parteh
+
+Point to all of the available CO2 files, so we can convert them for use by datm.
+
+Bring in new high resolution PFT land-mask SCRIP grid file (MODISv2), as a start to get the -hirespft
+option to work in mksrfdata.pl. Mapping files still need to be created.
+
+Add a test that turning on Carbon isotopes does NOT change answers (currently triggered because of #667)
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #706, #700, #678, #664, #642, #672, and #262
+   Fix #706 -- Add cmip6_nociso_deck user-mods directory and point to it for f19 CMIP6DECK compsets
+   Fix #700 -- Stream start/align incorrect for SSP's
+   Fix #678 -- Wrong mask name for clm40
+   Fix #664 -- Typo in SSP5-3.4 c13 isotope file
+   Fix #642 -- Update ESMF libarary for maps to ESMF7.1.0r
+   Fix #672 -- mksurfdata.pl aborts with error
+   Fix #262 -- hirespft option to mksurfdata.pl doesn't work (partial now needs maps)
+
+Science changes since: release-clm5.0.20
+   Updated domain files for f19 resolution causes a small change in answers
+
+   FATES updated from version 1.8.1 to 1.21.0. List of improvements include:
+      Some new options that came in various versions: fates-hydro, variable SLA Profile and Wood CN Ratio, parteh, 
+           optional maintenance respiration throttling, optional trimming logic to roots
+      Changes to Norman Canopy radiation
+      A bug to some pointers that spread outside where they should have.
+      Some bug fixes in allometry
+      The Plant Allocation Reactive Transport Extensible Hypotheses (PARTEH) v1 software infrastructure has been added.
+      Key changes that enable simulation of a coastal salt mars
+      Remove Lasslop wind effects on fire Rate of Spread
+      Fixes to fire mortality diagnostics, patch disturbance area checks and trimming
+
+Software changes since: release-clm5.0.20
+
+   hirespft dataset now uses the MODISv2 mask
+
+Changes to User Interface since: release-clm5.0.20
+   New ndep files for SSP245 and SSP370. For Clm50 point to one of the new ndep files for every SSP
+   even if the exact one isn't yet available (for Clm45 it points to the CMIP5 RCP scenarios)
+
+   New fates namelist option: fates_parteh_mode (switches nutrient model in FATES)
+
+   Remove fates finidat file
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - OK (67 tests different because of new fates parameter file, and first/align changes for SSP's)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - OK
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES and f19 resolution
+    - what platforms/compilers: All
+    - nature of change:
+        f19 is a small change due to updated domain files
+        FATES science changed from version 1.8.1 to 1.21.0
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime5.6.14
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+
+CTSM Tag versions pulled over from master development branch: Pull LCISO test from ctsm1.0.dev036
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #695 -- Add more ndep files, fix some bugs, point to new SSP CO2 files
+   #687 -- Update fates version on release branch
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.20
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Mar 12 16:08:55 MDT 2019
