@@ -19,7 +19,17 @@ Issues fixed (include CTSM Issue #): #680
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
- None
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
 
 Notes of particular relevance for users
 ---------------------------------------
