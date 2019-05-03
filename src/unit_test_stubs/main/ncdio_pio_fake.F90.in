@@ -45,6 +45,7 @@ module ncdio_pio
   !
   ! !PUBLIC MEMBER FUNCTIONS:
 
+  public :: check_var             ! determine if variable is on netcdf file
   public :: ncd_io                ! do fake i/o (currently only set up to read)
   public :: ncd_inqvid            ! inquire on a variable id
   public :: ncd_set_var           ! set data on "file" for one variable
@@ -54,7 +55,9 @@ module ncdio_pio
   public :: ncd_pio_openfile      ! stub: open file
   public :: ncd_pio_closefile     ! stub: close file
   public :: ncd_inqdid            ! stub: inquire dimension id
+  public :: ncd_inqvdims          ! stub: inquire variable dimensions
   public :: ncd_inqvdlen          ! stub: inquire size of a dimension
+  public :: ncd_inqvdname         ! stub: inquire name of a dimension
   public :: ncd_inqdlen           ! stub: inquire size of a dimension
   public :: ncd_defvar            ! define variables
   public :: ncd_inqfdims          ! stub: inquire file dimensions
@@ -262,6 +265,29 @@ contains
        end if
     end if
   end subroutine ncd_inqvid
+
+  !-----------------------------------------------------------------------
+  subroutine check_var(ncid, varname, vardesc, readvar, print_err)
+    !
+    ! !DESCRIPTION:
+    ! Fake to check if variable is on netcdf file
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout)  :: ncid      ! PIO file descriptor
+    character(len=*)   , intent(in)     :: varname   ! Varible name to check
+    type(Var_desc_t)   , intent(out)    :: vardesc   ! Output variable descriptor (not set in this implementation)
+    logical            , intent(out)    :: readvar   ! If variable exists or not
+    logical, optional  , intent(in)     :: print_err ! If should print about error (ignored in this implementation)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: varid
+
+    character(len=*), parameter :: subname = 'check_var'
+    !-----------------------------------------------------------------------
+
+    call ncd_inqvid(ncid, varname, varid, vardesc, readvar)
+
+  end subroutine check_var
 
   !-----------------------------------------------------------------------
   subroutine ncd_inqdid(ncid, name, dimid, dimexist)
@@ -560,6 +586,27 @@ contains
   end subroutine ncd_io_{DIMS}d_{TYPE}_glob
 
   !-----------------------------------------------------------------------
+  subroutine ncd_inqvdims(ncid,ndims,vardesc)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement for ncd_inqvdims. This does nothing, but just satisfies the
+    ! interface for ncd_inqvdims.
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t), intent(in)   :: ncid      ! netcdf file id
+    integer           , intent(out)  :: ndims     ! variable ndims
+    type(Var_desc_t)  , intent(inout):: vardesc   ! variable descriptor
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'ncd_inqvdims'
+    !-----------------------------------------------------------------------
+
+    ndims = -1
+
+  end subroutine ncd_inqvdims
+  
+  !-----------------------------------------------------------------------
   subroutine ncd_inqvdlen(ncid,varname,dimnum,dlen,err_code)
     !
     ! !DESCRIPTION:
@@ -578,6 +625,31 @@ contains
     err_code = 0
 
   end subroutine ncd_inqvdlen
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_inqvdname(ncid,varname,dimnum,dname,err_code)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement for ncd_inqvdname_byName (note that we currently do not support
+    ! ncd_inqvdlen_byDesc). This does nothing, but just satisfies the interface for
+    ! ncd_inqvdname.
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    character(len=*)  ,intent(in)    :: varname   ! variable name
+    integer           ,intent(in)    :: dimnum    ! dimension number to query
+    character(len=*)  ,intent(out)   :: dname     ! name of the dimension
+    integer           ,intent(out)   :: err_code  ! error code (0 means no error)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'ncd_inqvdname'
+    !-----------------------------------------------------------------------
+
+    dname = ' '
+    err_code = 0
+
+  end subroutine ncd_inqvdname
 
   !-----------------------------------------------------------------------
   subroutine ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
