@@ -19,7 +19,6 @@ list(APPEND clm_sources
   quadraticMod.F90
   fileutils.F90
   NumericsMod.F90
-  spmdMod.F90
   )
 
 sourcelist_to_parent(clm_sources)
