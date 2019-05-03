@@ -267,6 +267,7 @@ if [ "$phys" = "clm4_5" ]; then
            "0.25x0.25_MODIS"   \
            "0.5x0.5_MODIS"     \
            "3x3min_LandScan2004" \
+           "3x3min_MODISv2"    \
            "3x3min_MODIS-wCsp" \
            "3x3min_USGS"       \
            "5x5min_nomask"     \
@@ -342,7 +343,7 @@ case $hostname in
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=36
   fi
-  esmfvers=7.0.0
+  esmfvers=7.1.0r
   intelvers=17.0.1
   module load esmf_libs/$esmfvers
   module load intel/$intelvers
@@ -371,7 +372,7 @@ case $hostname in
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=8
   fi
-  esmfvers=7.0.0
+  esmfvers=7.1.0r
   intelvers=15.0.0
   #intelvers=12.1.5
   module purge

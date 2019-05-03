@@ -613,6 +613,11 @@ Toggle to turn on the FATES model
 (use_fates= '.true.' is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
+<entry id="fates_parteh_mode" type="integer" category="physics"
+        group="clm_inparm" valid_values="1">
+Switch deciding which nutrient model to use in FATES.
+</entry>
+
 <entry id="use_fates_spitfire" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on spitfire module for modeling fire (only relevant if FATES is being used).
@@ -1724,7 +1729,7 @@ Mapping file to go from one resolution/land-mask to another resolution/land-mask
 
 <entry id="lmask" type="char*10" category="mksurfdata"
        group="default_settings"  
-       valid_values="nomask,navy,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE,LandScan2004,GLOBE-Gardner,GLOBE-Gardner-mergeGIS,GRDC,HYDRO1K-merge-nomask,ORNL-Soil">
+       valid_values="nomask,navy,AVHRR,MODIS,MODISv2,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE,LandScan2004,GLOBE-Gardner,GLOBE-Gardner-mergeGIS,GRDC,HYDRO1K-merge-nomask,ORNL-Soil">
 Land mask description for mksurfdata input files
 </entry> 
 

@@ -94,7 +94,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP1-2.6" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP126_1850-2100_yearly_c181209.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP2-4.5" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP245_1850-2100_yearly_c181209.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP3-7.0" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP3B_1850-2100_yearly_c181209.nc</atm_c13_filename>
-<atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP5-3.4" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP34os_1850-2100_yearly_c181209.nc</atm_c13_filename>
+<atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP5-3.4" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP534os_1850-2100_yearly_c181209.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP5-8.5" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP5B_1850-2100_yearly_c181209.nc</atm_c13_filename>
 
 <atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="hist"     >lnd/clm2/isotopes/atm_delta_C14_CMIP6_3x1_global_1850-2015_yearly_v2.0_c171012.nc</atm_c14_filename>
@@ -378,7 +378,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_2troppftclones.c171018.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_default_2trop.c190114.nc</fates_paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -707,10 +707,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 
 <!-- FATES on for 2000 (MUST be an exact match - can't interpolate files for FATES -->
+<!-- Temporarily removing finidat file until fates api 4.0.0 -->
 <finidat hgrid="4x5"  maxpft="17"  mask="gx3v7" use_cn=".false." use_fates=".true."
          ic_ymd="20000101"  use_nitrif_denitrif=".false." use_vertsoilc=".true." sim_year="2000"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
->lnd/clm2/initdata_map/clmi.I2000Clm45Fates.0021-01-01.4x5_mgx3v7_simyr2000_c180306.nc
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true.">
 </finidat>
 
 
@@ -1055,13 +1055,13 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <fsnowaging  >lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
 
 <!-- Nitrogen deposition streams namelist defaults -->
-<stream_year_first_ndep phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >1850</stream_year_first_ndep>
+<stream_year_first_ndep phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2100</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >1850</model_year_align_ndep>
+<model_year_align_ndep  phys="clm4_5" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
 
-<stream_year_first_ndep phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >1850</stream_year_first_ndep>
+<stream_year_first_ndep phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2100</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >1850</model_year_align_ndep>
+<model_year_align_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
 
 <stream_year_first_ndep use_cn=".true."   sim_year="2010" >2010</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   sim_year="2010" >2010</stream_year_last_ndep>
@@ -1081,15 +1081,6 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_ndep>
 
-<stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >1850</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2015</stream_year_last_ndep>
-
-<stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >1850</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2100</stream_year_last_ndep>
-
-<stream_year_first_ndep use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2000</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2100</stream_year_last_ndep>
-
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
 
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
@@ -1102,26 +1093,24 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <!-- Currently duplicate SSP1.2.6 ndep for SSP1-1.9 -->
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-1.9"
 >lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-2.6-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
+>lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-2.6-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
+
+<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
+>lnd/clm2/ndepdata/fndep_clm_SSP245_b.e21.BWSSP245cmip6.f09_g17.CMIP6-SSP2-4.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+<!-- Currently duplicate SSP3-7.0 ndep for SSP4-6.0 -->
+<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP4-6.0"
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+<!-- Currently duplicate SSP5-3.4 ndep for SSP4-3.4 -->
+<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP4-3.4"
+>lnd/clm2/ndepdata/fndep_clm_SSP585_b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190211.nc</stream_fldfilename_ndep>
+
+
 <ndep_taxmode            phys="clm5_0" use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_0" use_cn=".true.">NDEP_month</ndep_varlist>
-
-<!-- Use old CMIP5 rcp for other cases -->
-<ndep_taxmode            phys="clm5_0" use_cn=".true." ssp_rcp="SSP3-7.0" >cycle</ndep_taxmode>
-<ndep_varlist            phys="clm5_0" use_cn=".true." ssp_rcp="SSP3-7.0" >NDEP_month</ndep_varlist>
-<ndep_taxmode            phys="clm5_0" use_cn=".true." ssp_rcp="SSP4-6.0" >cycle</ndep_taxmode>
-<ndep_varlist            phys="clm5_0" use_cn=".true." ssp_rcp="SSP4-6.0" >NDEP_month</ndep_varlist>
-<ndep_taxmode            phys="clm5_0" use_cn=".true." ssp_rcp="SSP2-4.5" >cycle</ndep_taxmode>
-<ndep_varlist            phys="clm5_0" use_cn=".true." ssp_rcp="SSP2-4.5" >NDEP_month</ndep_varlist>
-<ndep_taxmode            phys="clm5_0" use_cn=".true." ssp_rcp="SSP4-3.4" >cycle</ndep_taxmode>
-<ndep_varlist            phys="clm5_0" use_cn=".true." ssp_rcp="SSP4-3.4" >NDEP_month</ndep_varlist>
-<stream_fldfilename_ndep phys="clm5_0" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_rcp8.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP4-6.0"
->lnd/clm2/ndepdata/fndep_clm_rcp6.0_simyr1849-2106_1.9x2.5_c100810.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP4-3.4"
->lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
+<ndep_taxmode            phys="clm5_0" use_cn=".true.">limit</ndep_taxmode>
 
 <!-- Use CMIP5 ndep forcing for CLM4.5 cases -->
 <ndep_taxmode            phys="clm4_5" use_cn=".true.">extend</ndep_taxmode>
@@ -1136,12 +1125,12 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP3-7.0"
 >lnd/clm2/ndepdata/fndep_clm_rcp6.0_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP4-6.0"
->lnd/clm2/ndepdata/fndep_clm_rcp6.0_simyr1849-2106_1.9x2.5_c100810.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP2-4.5"
 >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP4-3.4"
->lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP4-6.0"
+>lnd/clm2/ndepdata/fndep_clm_rcp6.0_simyr1849-2106_1.9x2.5_c100810.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP5-3.4"
 >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP5-8.5"
@@ -1206,13 +1195,13 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <lightngmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</lightngmapalgo>
 
 <!-- Population density streams namelist defaults -->
-<stream_year_first_popdens phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >1850</stream_year_first_popdens>
+<stream_year_first_popdens phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >2015</stream_year_first_popdens>
 <stream_year_last_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
-<model_year_align_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >1850</model_year_align_popdens>
+<model_year_align_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="1850-2100"  >2015</model_year_align_popdens>
 
-<stream_year_first_popdens phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >1850</stream_year_first_popdens>
+<stream_year_first_popdens phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >2015</stream_year_first_popdens>
 <stream_year_last_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
-<model_year_align_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >1850</model_year_align_popdens>
+<model_year_align_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >2015</model_year_align_popdens>
 
 <stream_year_first_popdens use_cn=".true."   sim_year="2010" >2010</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="2010" >2010</stream_year_last_popdens>
@@ -1231,15 +1220,6 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 
 <stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_popdens>
-
-<stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >1850</stream_year_first_popdens>
-<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1850-2000" >2016</stream_year_last_popdens>
-
-<stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >1850</stream_year_first_popdens>
-<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1850-2100" >2016</stream_year_last_popdens>
-
-<stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >1850</stream_year_first_popdens>
-<stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="2000-2100" >2016</stream_year_last_popdens>
 
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
@@ -1270,9 +1250,9 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <popdensmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</popdensmapalgo>
 
 <!-- Urban time varying streams namelist defaults -->
-<stream_year_first_urbantv phys="clm5_0" sim_year_range="1850-2100" >1850</stream_year_first_urbantv>
+<stream_year_first_urbantv phys="clm5_0" sim_year_range="1850-2100" >2015</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm5_0" sim_year_range="1850-2100" >1850</model_year_align_urbantv>
+<model_year_align_urbantv  phys="clm5_0" sim_year_range="1850-2100" >2015</model_year_align_urbantv>
 
 <stream_year_first_urbantv phys="clm4_5"  >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm4_5"  >2000</stream_year_last_urbantv>
@@ -1291,15 +1271,6 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 
 <stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1850-2000" >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1850-2000" >2106</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1850-2100" >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="2000-2100" >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="2000-2100" >2106</stream_year_last_urbantv>
 
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 
@@ -2666,6 +2637,7 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <use_fates_ed_prescribed_phys  use_fates=".true.">.false.</use_fates_ed_prescribed_phys>
 <use_fates_logging             use_fates=".true.">.false.</use_fates_logging>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
+<fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
 
 <!-- =========================================  -->
 <!-- Defaults for init_interp                   -->

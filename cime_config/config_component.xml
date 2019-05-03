@@ -242,8 +242,9 @@
     <valid_values></valid_values>
     <default_value></default_value>
     <values match="last">
-      <value compset="_CLM50%[^_]*CMIP6DECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
-      <value compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
+      <value                  compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
+      <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_nociso_deck</value>
+      <value                  compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
     </values>
     <group>run_component_clm</group>
     <file>env_case.xml</file>

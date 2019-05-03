@@ -1,2 +1,3 @@
 ./xmlchange CLM_BLDNML_OPTS="-no-megan" --append
 ./xmlchange BFBFLAG="TRUE"
+./xmlchange CLM_FORCE_COLDSTART="on"
