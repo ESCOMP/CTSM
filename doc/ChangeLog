@@ -1,4 +1,664 @@
 ===============================================================
+Tag name:  ctsm1.0.dev040
+Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
+Date:  Fri May 03 10:34:46 MDT 2019
+One-line Summary: Move some hard-coded parameters from code to params.nc file
+
+Purpose of changes
+------------------
+
+ Reduce the number of parameters that get hardwired directly in the code
+ by placing in the params.nc file where they become visible and easier
+ to modify.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #680
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users:
+ None
+
+Changes to CTSM's user interface:
+ Parameters that were hardwired in the code can now be seen and changed
+ in the params.nc file.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ None
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Various parameters have moved out of the code and into the params.nc file.
+
+Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+
+Notes of particular relevance for developers:
+ None
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ None
+
+Changes to tests or testing:
+ None
+
+Code reviewed by:
+ @ekluzek
+ @billsacks
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+ Answers change as expected.
+
+CTSM tag used for the baseline comparisons: 
+ ctsm1.0.dev039
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change: single-precision roundoff
+    Changes are due to four parameters:
+ accum_factor 
+ ko25_coef 
+ kc25_coef 
+ frac_sat_soil_dsl_init 
+    that were not declared "_r8" when hardwired in the code,
+    while now they are declared "double" in the params.nc files. I
+    showed that the change was no greater than single-precision roundoff
+    by writing the new and old values to the lnd and cesm log files and
+    confirming differences smaller than 1.e-6.
+
+Detailed list of changes
+------------------------
+
+ - Updated the clm5 and clm4.5 params.nc files to contain the previously
+ hard-coded parameters that Katie Dagon recommended moving out of the
+ code (listed here: https://docs.google.com/spreadsheets/d/1cRmcB0xz7CjVP6ljUoCehJx49Usxsore5ma4mWcvQwM/edit#gid=0)
+ - Now read the parameters in the modules that use them
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/684
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev039
+Originator(s):  sacks (Bill Sacks)
+Date: Wed May  1 11:12:34 MDT 2019
+One-line Summary: Remove excess canopy liquid/snow regardless of temperature
+
+Purpose of changes
+------------------
+
+Previously: if it was above freezing, snow was allowed to accumulate on
+the canopy beyond the specified capacity, and if it was below freezing,
+liquid was allowed to accumulate beyond the specified capacity. Sean
+Swenson, Keith Oleson and Dave Lawrence agreed that this seems wrong.
+
+This tag changes the behavior so that both liquid and snow canopy
+capacities are enforced regardless of temperature.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#699 (Canopy liquid and snow capacities not
+  enforced consistently?)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Keith Oleson
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, answers change as expected
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev038
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff; likely same climate, but this still requires
+      investigation
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A (Keith Oleson will run this soon)
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+   (Keith Oleson will run this soon)
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/703
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev038
+Originator(s):  sacks (Bill Sacks)
+Date: Wed May  1 10:53:02 MDT 2019
+One-line Summary: Support for NWP configuration, NLDAS grid and NLDAS datm forcing
+
+Purpose of changes
+------------------
+
+This tag includes a set of changes that, together, provide support for
+running an initial Numerical Weather Prediction version of CTSM over the
+Continental U.S.
+
+(1) NWP configuration: The changes in this configuration relative to the
+    climate (CLM5) configuration mainly target decreasing runtime by
+    removing features that are expensive and not as important for NWP
+    time scales (days to months rather than many years) and space scales
+    (high resolution):
+
+    - Single dominant landunit; if vegetated, single dominant PFT
+
+    - Only 5 soil layers, down to 3 m
+
+    - Only 5 snow layers
+
+    - Plant hydraulic stress off
+
+    - Ball-Berry rather than Medlyn stomatal conductance method (this is
+      a side-effect of turning plant hydraulic stress off, and is not
+      itself a critical aspect of the NWP configuration)
+
+    - Maximum of 3 iterations to compute canopy fluxes
+
+    - MEGAN is off
+
+    Note that the NWP compset triggers changes in two new xml variables:
+    CLM_CONFIGURATION ('clm' vs. 'nwp'; this controls things of a more
+    scientific nature, like whether plant hydraulic stress is on or
+    off), and CLM_STRUCTURE ('standard' vs. 'fast'; this controls
+    structural things like the maximum number of landunits per grid cell
+    and the soil layer structure). Thus, you can create a case that is a
+    hybrid between the CLM and NWP configurations by changing these two
+    xml variables independently.
+
+(2) NLDAS2 regional grid: 0.125 deg grid over the Continental U.S.
+
+(3) Updated version of MOSART with support for the same NLDAS2 regional
+    grid
+
+(4) NLDAS2 data atmosphere forcing: over the same regional grid; forcing
+    data are available from 1980 - 2018. (We have excluded 1979 because
+    a small amount of data were missing for that year, and we didn't
+    have a good way to handle those missing data.)
+
+These changes can be used independently or all together. However, note
+that you will get garbage if you try to use the new NLDAS2 datm forcing
+for a run that extends beyond the boundaries of the NLDAS2 domain.
+
+There are three new NWP compsets:
+- I2000Ctsm50NwpSpGswpGs: GSWP3 datm forcing; meant for global runs or
+  regional runs outside the NLDAS domain
+- I2000Ctsm50NwpSpNldasGs: NLDAS2 datm forcing; meant for regional runs
+  over the NLDAS domain or some portion of it
+- I2000Ctsm50NwpSpNldasRsGs: Same as above, but with a stub runoff model
+  in place of MOSART, for runs that aren't interested in having a runoff
+  model and for which you want improved throughput
+
+The alias for the new grid is: nldas2_rnldas2_mnldas2 (indicating that
+we're using the nldas2 grid for land/atmosphere, runoff ('r') and the
+ocean mask ('m').
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#451 (Add NWP physics option)
+- Resolves ESCOMP/ctsm#452 (Add an NWP compset)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- The NWP configuration is still a work in progress
+- The NLDAS surface data set is still a work in progress (will soon
+  update this to use high-res PFTs)
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New xml variables:
+  - CLM_CONFIGURATION (will eventually be renamed to CTSM_CONFIGURATION)
+  - CLM_STRUCTURE (will eventually be renamed to CTSM_STRUCTURE)
+- New namelist variable:
+  - itmax_canopy_fluxes
+
+Changes made to namelist defaults (e.g., changed parameter values):
+No changes for existing CLM compsets; new defaults for NWP compsets
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+No changes for existing grids; new surface dataset for nldas2 grid
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- New tests covering NWP compsets, nldas grid and nldas datm forcing
+
+Code reviewed by: Mike Barlage, Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok
+
+    tests pass; namelists change as expected
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    hobart ------ pass
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev037
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- MOSART: release-cesm2.0.00 -> nldas-grid.n01_mosart1_0_31
+- CIME: ctsm/ctsm1.0/cime5.7.9/n04 -> ctsm/ctsm1.0/cime5.7.9/n05
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/682
+- https://github.com/ESCOMP/ctsm/pull/685
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev037
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Apr 29 16:11:47 MDT 2019
+One-line Summary: Change year alignment for present-day I compsets
+
+Purpose of changes
+------------------
+
+Change year alignment for present-day I compsets (typically, these
+compsets have aliases beginning with "I2000"), in order to work better
+for cases that are meant to replicate particular years.
+
+(1) Start the model in year 2000 rather than year 1
+
+(2) Change datm's year alignment so that model year 2000 uses
+observations from year 2000, model year 2001 uses observations from year
+2001, etc.
+
+(This change was requested by Sean Swenson and supported by Dave
+Lawrence.)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Year-2000 compsets now start in model year 2000 rather than 1
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: cime changes reviewed by Erik Kluzek and others
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, year-2000 cases change answers as expected
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev036
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Present-day compsets (I2000, I1Pt; also I2010 once those compsets are added)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff/same climate
+
+      This changes the year alignment of datm. Climatological averages
+      should be the same as before, but the alignment of model year to
+      datm year changes.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: ctsm/ctsm1.0/cime5.7.9/n03 -> ctsm/ctsm1.0/cime5.7.9/n04
+
+Pull Requests that document the changes (include PR ids):
+- cime changes documented in https://github.com/ESMCI/cime/pull/3093
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev036
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri Apr 26 01:20:57 MDT 2019
+One-line Summary: Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
+
+Purpose of changes
+------------------
+
+We currently have a bug so that for transient land-use change cases answers are different starting in soil
+carbon when Carbon isotopes (use_c13, or use_c14) are on versus off. Answers are identical if there is no
+land-use change. The bug does cause bulk Carbon (C12) to be slightly different, but qualitatively the same.
+There is a significant impact to the Carbon isotope simulation however. The bug was causing changes in isotopic
+pools to be directed to the bulk Carbon. Because, isotopes are so much smaller than bulk Carbon, this doesn't 
+cause a marked difference in the bulk Carbon simulation. But, the lack of the change in the isotopic pool
+does have a meaningful impact on the simulation of the Carbon isotopic fields.
+
+Also added a general test for this and specific one to catch this case. And did some updates on documentation
+files, and a small bug fix for run_sys_tests.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #692 #675 #686
+ #675 -- Answers differ when carbon isotopes are on under transient cases
+ #686 -- Add a system test to make sure turning on carbon isotopes doesn't change answers
+ #692 -- run_sys_test issue
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[X] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: Added LCISO test type and a 13 month Hist test to make sure carbon isotopes
+                             don't cause a change to answers
+
+Code reviewed by: dlawren, billsacks, klindsey, bishtgautum
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  tools-tests (test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - PASS (compare tests fail, because of namelist updates)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev035
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Only for Carbon isotopes on under transient land-use change!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Bgc with use_c13 or use_c14 T and with a transient land-use change after each year boundary
+    - what platforms/compilers: All
+    - nature of change: same climate for bulk Carbon, isotopic Carbon is quite different for regions with land-use change
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: 
+
+   URL for LMWG diagnostics output used to validate new climate:
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime
+  cime from -- ctsm/ctsm1.0/cime5.7.9/n01 to ctsm/ctsm1.0/cime5.7.9/n03
+    cime update allows the new test to work and starts adding NLDAS grid in
+
+Pull Requests that document the changes (include PR ids): #696 #694
+(https://github.com/ESCOMP/ctsm/pull)
+  #696 -- run_sys_test small fix
+  #694 -- Carbon isotope fix
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev035
 Originator(s):  sacks (Bill Sacks)
 Date: Mon Apr 22 20:17:40 MDT 2019

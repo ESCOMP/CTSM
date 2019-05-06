@@ -55,6 +55,17 @@ module CanopyFluxesMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyFluxesReadNML     ! Read in namelist settings
   public :: CanopyFluxes            ! Calculate canopy fluxes
+  public :: readParams
+
+  type, private :: params_type
+     real(r8) :: lai_dl  ! Plant litter area index (m2/m2)
+     real(r8) :: z_dl  ! Litter layer thickness (m)
+     real(r8) :: a_coef  ! Drag coefficient under less dense canopy (unitless)
+     real(r8) :: a_exp  ! Drag exponent under less dense canopy (unitless)
+     real(r8) :: csoilc  ! Soil drag coefficient under dense canopy (unitless)
+     real(r8) :: cv  ! Turbulent transfer coeff. between canopy surface and canopy air (m/s^(1/2))
+  end type params_type
+  type(params_type), private ::  params_inst
   !
   ! !PUBLIC DATA MEMBERS:
   ! true => btran is based only on unfrozen soil levels
@@ -66,6 +77,7 @@ module CanopyFluxesMod
   !
   ! !PRIVATE DATA MEMBERS:
   logical, private :: use_undercanopy_stability = .true.      ! use undercanopy stability term or not
+  integer, private :: itmax_canopy_fluxes = -1  ! max # of iterations used in subroutine CanopyFluxes
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -93,11 +105,12 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: subname = 'CanopyFluxeseadNML'
+    character(len=*), parameter :: subname = 'CanopyFluxesReadNML'
     character(len=*), parameter :: nmlname = 'canopyfluxes_inparm'
     !-----------------------------------------------------------------------
 
     namelist /canopyfluxes_inparm/ use_undercanopy_stability
+    namelist /canopyfluxes_inparm/ itmax_canopy_fluxes
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -115,10 +128,17 @@ contains
        else
           call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
        end if
+
+       if (itmax_canopy_fluxes < 1) then
+          call endrun(msg=' ERROR: expecting itmax_canopy_fluxes > 0 ' // &
+            errMsg(sourcefile, __LINE__))
+       end if
+
        call relavu( unitn )
     end if
 
     call shr_mpi_bcast (use_undercanopy_stability, mpicom)
+    call shr_mpi_bcast (itmax_canopy_fluxes, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -128,6 +148,36 @@ contains
     end if
 
   end subroutine CanopyFluxesReadNML
+
+  !------------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_CanopyFluxes'
+    !--------------------------------------------------------------------
+
+    !added by K.Sakaguchi for litter resistance: Plant litter area index (m2/m2)
+    call readNcdioScalar(ncid, 'lai_dl', subname, params_inst%lai_dl)
+    !added by K.Sakaguchi for litter resistance: Litter layer thickness (m)
+    call readNcdioScalar(ncid, 'z_dl', subname, params_inst%z_dl)
+    ! Drag coefficient under less dense canopy (unitless)
+    call readNcdioScalar(ncid, 'a_coef', subname, params_inst%a_coef)
+    ! Drag exponent under less dense canopy (unitless)
+    call readNcdioScalar(ncid, 'a_exp', subname, params_inst%a_exp)
+    ! Drag coefficient for soil under dense canopy (unitless)
+    call readNcdioScalar(ncid, 'csoilc', subname, params_inst%csoilc)
+    ! Turbulent transfer coeff between canopy surface and canopy air (m/s^(1/2))
+    call readNcdioScalar(ncid, 'cv', subname, params_inst%cv)
+
+  end subroutine readParams
 
   !------------------------------------------------------------------------------
   subroutine CanopyFluxes(bounds,  num_exposedvegp, filter_exposedvegp,                  &
@@ -170,7 +220,7 @@ contains
     use shr_const_mod      , only : SHR_CONST_RGAS
     use clm_time_manager   , only : get_step_size, get_prev_date,is_end_curr_day
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice
-    use clm_varcon         , only : denh2o, tfrz, csoilc, tlsai_crit, alpha_aero
+    use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
     use clm_varcon         , only : c14ratio
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
@@ -219,12 +269,7 @@ contains
     real(r8), parameter :: delmax = 1.0_r8  ! maxchange in  leaf temperature [K]
     real(r8), parameter :: dlemin = 0.1_r8  ! max limit for energy flux convergence [w/m2]
     real(r8), parameter :: dtmin = 0.01_r8  ! max limit for temperature convergence [K]
-    integer , parameter :: itmax = 40       ! maximum number of iteration [-]
     integer , parameter :: itmin = 2        ! minimum number of iteration [-]
-
-    !added by K.Sakaguchi for litter resistance
-    real(r8), parameter :: lai_dl = 0.5_r8           ! placeholder for (dry) plant litter area index (m2/m2)
-    real(r8), parameter :: z_dl = 0.05_r8            ! placeholder for (dry) litter layer thickness (m)
 
     !added by K.Sakaguchi for stability formulation
     real(r8), parameter :: ria  = 0.5_r8             ! free parameter for stable formulation (currently = 0.5, "gamma" in Sakaguchi&Zeng,2008)
@@ -755,7 +800,7 @@ contains
       ! Begin stability iteration
 
       call t_startf('can_iter')
-      ITERATION : do while (itlef <= itmax .and. fn > 0)
+      ITERATION : do while (itlef <= itmax_canopy_fluxes .and. fn > 0)
 
          ! Determine friction velocity, and potential temperature and humidity
          ! profiles of the surface boundary layer
@@ -796,7 +841,7 @@ contains
                dleaf_patch(p) = dleaf(patch%itype(p))
             end if
 
-            cf  = 0.01_r8/(sqrt(uaf(p))*sqrt( dleaf_patch(p) ))
+            cf  = params_inst%cv / (sqrt(uaf(p)) * sqrt(dleaf_patch(p)))
             rb(p)  = 1._r8/(cf*uaf(p))
             rb1(p) = rb(p)
 
@@ -808,7 +853,7 @@ contains
             ! changed by K.Sakaguchi from here
             ! transfer coefficient over bare soil is changed to a local variable
             ! just for readability of the code (from line 680)
-            csoilb = (vkc/(0.13_r8*(z0mg(c)*uaf(p)/1.5e-5_r8)**0.45_r8))
+            csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / 1.5e-5_r8)**params_inst%a_exp)
 
             !compute the stability parameter for ricsoilc  ("S" in Sakaguchi&Zeng,2008)
 
@@ -819,10 +864,10 @@ contains
             if (use_undercanopy_stability .and. (taf(p) - t_grnd(c) ) > 0._r8) then
                ! decrease the value of csoilc by dividing it with (1+gamma*min(S, 10.0))
                ! ria ("gmanna" in Sakaguchi&Zeng, 2008) is a constant (=0.5)
-               ricsoilc = csoilc / (1.00_r8 + ria*min( ri, 10.0_r8) )
+               ricsoilc = params_inst%csoilc / (1.00_r8 + ria*min( ri, 10.0_r8) )
                csoilcn = csoilb*w + ricsoilc*(1._r8-w)
             else
-               csoilcn = csoilb*w + csoilc*(1._r8-w)
+               csoilcn = csoilb*w + params_inst%csoilc*(1._r8-w)
             end if
 
             !! Sakaguchi changes for stability formulation ends here
@@ -966,9 +1011,9 @@ contains
             wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
 
             !Litter layer resistance. Added by K.Sakaguchi
-            snow_depth_c = z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
+            snow_depth_c = params_inst%z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
             fsno_dl = snow_depth(c)/snow_depth_c    ! effective snow cover for (dry)plant litter
-            elai_dl = lai_dl*(1._r8 - min(fsno_dl,1._r8)) ! exposed (dry)litter area index
+            elai_dl = params_inst%lai_dl * (1._r8 - min(fsno_dl,1._r8)) ! exposed (dry)litter area index
             rdl = ( 1._r8 - exp(-elai_dl) ) / ( 0.004_r8*uaf(p)) ! dry litter layer resistance
 
             ! add litter resistance and Lee and Pielke 1992 beta
