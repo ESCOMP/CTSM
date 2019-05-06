@@ -1,3 +1,21 @@
+! RUN: R12
+
+! EXPERIMENTS INCLUDED
+
+! X0
+! Type: all
+! Parameter: nan
+! Value: nan
+! Comment: Control run with GSWP3
+! Files: nan
+
+! X12
+! Type: manure
+! Parameter: slurry layer
+! Value: debugged
+! Comment: nan
+! Files: FanMod
+
 module FanMod
 #ifdef _PYMOD_
   use qsatmod
@@ -280,13 +298,13 @@ contains
 
     real(r8) :: water_tot, cnc, air, depth_soilsat, diffusivity_water, diffusivity_satsoil, halfwater, insoil, r1, dz2, inwater
     real(r8) :: r2, volat_rate, kno3, knh3, depth_lower, fract_nh4, r2a, r2b, g3, gdown, rsld, rkl, rkg
+    real(r8) :: rsl, rssup, rssdn
 
 
-    water_tot = water(1) + water(2)
-
-    air = thetasat - theta
+    air = max(thetasat - theta, 0.001)
     ! depth of the saturated soil layer below the surface pool
-    depth_soilsat = water(2) / air 
+    depth_soilsat = water(2) / air
+    water_tot = water(1) + thetasat*depth_soilsat
 
     cnc = mtan / water_tot
 
@@ -316,6 +334,10 @@ contains
 
     r1 = inwater / diffusivity_water + insoil /diffusivity_satsoil
 
+    rsl = min(halfwater, water(1)) / diffusivity_water
+    rssup = max(halfwater - water(1), 0.0_r8) / (thetasat * diffusivity_satsoil)
+    r1 = rsl + rssup
+
     depth_lower = max(soildepth_reservoir, depth_soilsat*1.5)
 
     call partition_tan(tg, Hconc, 1.0_r8, 0.0_r8, 0.0_r8, knh3, fract_nh4=fract_nh4)
@@ -327,13 +349,15 @@ contains
         
     ! lower soil resistance consists of liquid diffusion slurry, in saturated layer, and
     ! parallel liquid/gas diffusion below the saturated layer. 
-    r2a = (water(1)-inwater) / diffusivity_water
-    r2b = (depth_soilsat-insoil) / diffusivity_satsoil
+
+    r2a = 0.0
+    rssdn = halfwater / (thetasat * diffusivity_satsoil)
+
     dz2 = depth_lower-depth_soilsat
 
     Rkl = dz2 / (eval_diffusivity_liq_mq(theta, thetasat, tg)*theta)
     Rkg = dz2 / (eval_diffusivity_gas_mq(theta, thetasat, tg)*(thetasat-theta))
-    Rsld = r2a + r2b
+    Rsld = r2a + rssdn
 
     gdown = -(Rkg + Rkl*knh3)/((Rkg*(Rkl + Rsld) + Rkl*Rsld*knh3)*(kads*(theta - 1) - thetasat))
 
@@ -347,7 +371,7 @@ contains
     
     ! nitrification
     kno3 = eval_no3prod_v2(thetasat, thetasat, tg)
-    fluxes(iflx_no3) = kno3 * mtan * fract_nh4
+    fluxes(iflx_no3) = kno3 * mtan! * fract_nh4
 
     !fluxes(3:) = 0
     
