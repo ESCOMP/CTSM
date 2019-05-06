@@ -1,12 +1,19 @@
 module lilac_utils
-use ESMF
-implicit none
-!!! NS: THIS IS FROM JH WORK
 
-    integer, parameter     :: fldsMax = 100
+    !-----------------------------------------------------------------------
+    ! !DESCRIPTION:
+    !
+    !!! NS: THIS IS FROM JH WORK
+
+    use ESMF
+
+    implicit none
 
     public fldlist_add , create_fldlists
 
+    integer, parameter              :: fldsMax = 100
+
+    ! !PUBLIC TYPES:
     type                            :: fld_list_type
         character(len=128)          :: stdname
         real*8                      :: default_value
@@ -15,7 +22,7 @@ implicit none
         real(ESMF_KIND_R8), pointer :: farrayptr2d(:,:)  ! this will be filled in by lilac when it gets its data from the host atm
     end type                           fld_list_type
 
-!!! 1d for when we have mesh and 2d for when we have grids....
+    !!! 1d for when we have mesh and 2d for when we have grids....
 
     type                   :: atm2lnd_data1d_type
         real*8, pointer    :: uwind (:)
@@ -41,9 +48,9 @@ implicit none
         real*8, pointer    :: tauy  (:,:)
      end type                 lnd2atm_data2d_type
 
-!===============================================================================
+    !===============================================================================
     contains
-!===============================================================================
+    !===============================================================================
 
     subroutine fldlist_add(num, fldlist, stdname, default_value, units)
     ! This adds a field to a fieldlist!
@@ -55,7 +62,7 @@ implicit none
 
         ! local variables
         integer :: rc
-        character(len=*), parameter :: subname='(fldlist_add)'
+        character(len=*), parameter                :: subname='(fldlist_add)'
         !-------------------------------------------------------------------------------
 
         ! Set up a list of field information
@@ -79,21 +86,22 @@ implicit none
 
     end subroutine fldlist_add
 
-    subroutine create_fldlists(fldsFrCpl, fldsToCpl, fldsToCpl_num, fldsFrCpl_num)
-    ! add all the necessary fields one by one to the fieldlist 
-        type(fld_list_type),        intent(inout)      ::  fldsFrCpl(:)
-        type(fld_list_type),        intent(inout)      ::  fldsToCpl(:)
-        !integer,                    intent(out)        ::  fldsToCpl_num = 0
-        !integer,                    intent(out)        ::  fldsFrCpl_num = 0
+    subroutine create_fldlists(a2c_fldlist, c2l_fldlist, l2c_fldlist, c2a_fldlist )
+        ! add all the necessary fields one by one to the fieldlist 
+        type(fld_list_type),        intent(inout)      ::  a2c_fldlist
+        type(fld_list_type),        intent(inout)      ::  c2a_fldlist
+        type(fld_list_type),        intent(inout)      ::  l2c_fldlist
+        type(fld_list_type),        intent(inout)      ::  c2l_fldlist
+
         integer :: fldsFrCpl_num, fldsToCpl_num
 
         ! from atm
-        call fldlist_add(fldsToCpl_num, fldsToCpl, 'atmos2lnd_var', default_value=0.0, units='m')
+        !call fldlist_add(fldsToCpl_num, fldsToCpl, 'atmos2lnd_var', default_value=0.0, units='m')
         ! from lnd
-        call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'lnd2atmos_var', default_value=0.0, units='m')
+        !call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'lnd2atmos_var', default_value=0.0, units='m')
 
 
-
+        !  sets the module variable memory in atmos_cap.F9 print *,      a2c_fldlist(1)%stdname
         !!! First from atmosphere to land fields
         ! import fields
         ! call fldlist_add(fldsFrCpl_num, fldsFrCpl, trim(flds_scalar_name))

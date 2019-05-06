@@ -47,7 +47,7 @@ program demo_lilac_driver
 
     ! real atmosphere:
     begc       = 1
-    endc       = 4608
+    endc       = 13824
 
     start_time = 1
     end_time   = 10

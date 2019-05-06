@@ -94,8 +94,8 @@ module lnd_cap
         print *, "creating mesh for land"
         ! For now this is our dummy mesh:
         !lnd_mesh_filepath    =      '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T62_040121_ESMFmesh.nc'
-        lnd_mesh_filepath    =      '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'
-
+        !lnd_mesh_filepath    =      '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'
+        lnd_mesh_filepath    =      '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
         lnd_mesh             =        ESMF_MeshCreate(filename=trim(lnd_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"Mesh for land is created!", ESMF_LOGMSG_INFO)

@@ -96,7 +96,8 @@ module atmos_cap
 
         if(mesh_switch) then
             ! For now this is our dummy mesh: 
-            atmos_mesh_filepath  =   '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'
+            !atmos_mesh_filepath  =   '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'
+            atmos_mesh_filepath  =   '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc'
 
             atmos_mesh           = ESMF_MeshCreate(filename=trim(atmos_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
@@ -128,6 +129,7 @@ module atmos_cap
 
         a2c_fb = ESMF_FieldBundleCreate(name="a2c_fb", rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+       call ESMF_LogWrite(subname//"field bundle", ESMF_LOGMSG_INFO)
 
         ! Create individual fields and add to field bundle -- a2l
 
@@ -144,6 +146,8 @@ module atmos_cap
            !!! Here we want to pass pointers
            !field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(a2c_fldlist(n)%stdname), rc=rc)
            field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(a2c_fldlist(n)%stdname), farrayPtr=a2c_fldlist(n)%farrayptr1d, rc=rc)
+           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+           call ESMF_FieldFill(field, dataFillScheme = "sincos" , rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
            ! add field to field bundle

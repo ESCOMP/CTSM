@@ -355,22 +355,6 @@ module lilac_mod
         use atmos_cap, only : a2c_fldlist, c2a_fldlist
         use lnd_cap,   only : l2c_fldlist, c2l_fldlist
 
-        ! type(fld_list_type) :: a2c_fldlist , c2a_fldlist
-        ! input/output variables
-        !type(atm2lnd_data1d_type), intent(in), optional  :: atm2lnd1d
-        !type(atm2lnd_data2d_type), intent(in), optional  :: atm2lnd2d
-        !type(lnd2atm_data1d_type), intent(in), optional  :: lnd2atm1d
-        !type(lnd2atm_data2d_type), intent(in), optional  :: lnd2atm2d
-
-        ! local variables
-        !  ! Gridded Components and Coupling Components
-        !type(ESMF_GridComp)                              :: dummy_atmos_comp
-        !type(ESMF_GridComp)                              :: dummy_land_comp
-
-        !integer, parameter     :: fldsMax = 100
-        !integer                :: fldsToLnd_num = 0
-        !integer                :: fldsFrLnd_num = 0
-
 
         character(len=*), parameter                      :: subname=trim(modname)//': [lilac_final]'
         type(ESMF_State)                                 :: importState, exportState
