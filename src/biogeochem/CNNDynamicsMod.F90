@@ -790,9 +790,10 @@ contains
        col_grass = ispval
        do il = 1, max_lunit
           l = grc%landunit_indices(il, g)
+          if (l == ispval) cycle
           if (lun%itype(l) == istsoil) then
              do p = lun%patchi(l), lun%patchf(l)
-                if (patch%itype(p) == nc4_grass .or. patch%itype(p) == nc3_nonarctic_grass) then
+                if ((patch%itype(p) == nc4_grass .or. patch%itype(p) == nc3_nonarctic_grass) .and. col%wtgcell(patch%column(p)) > 1e-6) then
                    col_grass = patch%column(p)
                    exit
                 end if
@@ -800,7 +801,7 @@ contains
           end if
           if (col_grass /= ispval) exit
        end do
-       if (col%wtgcell(col_grass) < 1e-6) col_grass = ispval
+       !if (col%wtgcell(col_grass) < 1e-6) col_grass = ispval
        ! Transfer of manure from all crop columns to the natural vegetation column:
        flux_grass_graze = 0_r8
        flux_grass_spread = 0_r8
@@ -869,6 +870,7 @@ contains
                    write(iulog, *) 'flux:', flux_avail_rum
                    call endrun(msg='negat flux_avail for ruminants')
                 end if
+                windspeed_ave = max(windspeed_ave, 1e-2)
 
                 ! Ruminants
                 call eval_fluxes_storage(flux_avail_rum, 'open', tempr_ave, windspeed_ave, 0.0_r8, &
