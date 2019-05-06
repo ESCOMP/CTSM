@@ -1884,6 +1884,12 @@ contains
          this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
       end do
       
+      ! Update history variables that track these variables
+      call this%fates_hist%update_history_cbal(nc, &
+            this%fates(nc)%nsites,  &
+            this%fates(nc)%sites,   &
+            this%fates(nc)%bc_in)
+
     end associate
  end subroutine wrap_bgc_summary
 
@@ -1936,7 +1942,8 @@ contains
    use FatesIOVariableKindMod, only : site_fuel_r8, site_cwdsc_r8, site_scag_r8
    use FatesIOVariableKindMod, only : site_scagpft_r8, site_agepft_r8
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
-   use FatesIOVariableKindMod, only : site_height_r8
+   use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
+   use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -2057,151 +2064,29 @@ contains
                               default=trim(vdefault),                       &
                               set_lake=0._r8,set_urb=0._r8)
 
-        case(patch_ground_r8)
+        case(patch_ground_r8, patch_size_pft_r8)
+
            d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
            dim2name = this%fates_hist%dim_bounds(d_index)%name
            call hist_addfld2d(fname=trim(vname),units=trim(vunits),         & ! <--- addfld2d
                               type2d=trim(dim2name),                        & ! <--- type2d
                               avgflag=trim(vavgflag),long_name=trim(vlong), &
                               ptr_patch=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
+                              default=trim(vdefault))
            
-        case(patch_size_pft_r8)
+        case(site_ground_r8, site_size_pft_r8, site_size_r8, site_pft_r8, &
+             site_age_r8, site_height_r8, site_fuel_r8, site_cwdsc_r8, &
+             site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, & 
+             site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
+             site_elcwd_r8, site_elage_r8)
+
            d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
            dim2name = this%fates_hist%dim_bounds(d_index)%name
            call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
                               type2d=trim(dim2name),                        &
                               avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_patch=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_ground_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,      & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_size_pft_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,      & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_size_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_pft_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_age_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_height_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_fuel_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_cwdsc_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_can_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_cnlf_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_cnlfpft_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_scag_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_scagpft_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_agepft_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)           
+                              ptr_col=this%fates_hist%hvars(ivar)%r82d,     & 
+                              default=trim(vdefault))
 
         case default
            write(iulog,*) 'A FATES iotype was created that was not registerred'
@@ -2245,7 +2130,7 @@ contains
              this%fates(nc)%bc_in(s)%decomp_id(j) = j
              ! Check to make sure that dz = dz_decomp_sisl when vertical soil dynamics
              ! are active
-             if(abs(this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)-this%fates(nc)%bc_in(s)%dz_sisl(j))<1.e-10_r8)then
+             if(abs(this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)-this%fates(nc)%bc_in(s)%dz_sisl(j))>1.e-10_r8)then
                 write(iulog,*) 'when vertical soil decomp dynamics are on'
                 write(iulog,*) 'fates assumes that the decomposition depths equal the soil depths'
                 write(iulog,*) 'layer: ',j
