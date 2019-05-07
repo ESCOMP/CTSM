@@ -2626,7 +2626,7 @@ contains
                    long_name='FATES cwd map into element x cwd', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_elmap_levelage', xtype=ncd_int, dim1name='fates_levelage', &
                    long_name='FATES element map into age x pft', units='-', ncid=nfid(t))
-             call ncd_defvar(varname='fates_agemap_levelage', xtype=ncd_int, dim1name='fates_levage', &
+             call ncd_defvar(varname='fates_agemap_levelage', xtype=ncd_int, dim1name='fates_levelage', &
                    long_name='FATES element map into age x pft', units='-', ncid=nfid(t))
 
           end if
