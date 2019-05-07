@@ -1,4 +1,112 @@
 ===============================================================
+Tag name:  release-clm5.0.22
+Originator(s):  erik (Erik Kluzek)
+Date: Tue May  7 15:50:50 MDT 2019
+One-line Summary: Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
+
+Purpose of this version:
+------------------------
+
+We currently have a bug so that for transient land-use change cases answers are different starting in soil
+carbon when Carbon isotopes (use_c13, or use_c14) are on versus off. Answers are identical if there is no
+land-use change. The bug does cause bulk Carbon (C12) to be slightly different, but qualitatively the same.
+There is a significant impact to the Carbon isotope simulation however. The bug was causing changes in isotopic
+pools to be directed to the bulk Carbon. Because, isotopes are so much smaller than bulk Carbon, this doesn't 
+cause a marked difference in the bulk Carbon simulation. But, the lack of the change in the isotopic pool
+does have a meaningful impact on the simulation of the Carbon isotopic fields.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #262 #675
+   #675 -- Carbon isotopes under transient land-use change
+   #262 -- hirespft option to mksurfdata.pl
+
+Science changes since: release-clm5.0.21
+    Fix Carbon isotope issue under transient land-use change
+
+Software changes since: release-clm5.0.21
+    Bring in mapping files for 3x3min MODISv2 grid for most resolutions
+
+Changes to User Interface since: release-clm5.0.21
+    None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart ---PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - 
+    hobart ---
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - 
+     hobart ---
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.21
+
+Changes answers relative to baseline: Yes, but only when Carbon isotopes on under transient land-use change!
+
+  Summarize any changes to answers:
+    - what code configurations: Bgc with use_c13 or use_c14 T and with a transient land-use change after each year boundary
+    - what platforms/compilers: All
+    - nature of change: same climate for bulk Carbon, isotopic Carbon is quite different for regions with land-use change
+
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+      /oleson/clm50_release-clm5.0.20_1deg_GSWP3V1_isofix2_hist
+
+  URL for LMWG diagnostics output for new climate:
+http://webext.cgd.ucar.edu/I20TR/clm50_release-clm5.0.20_1deg_GSWP3V1_isofix2_hist/lnd/clm50_release-clm5.0.20_1deg_GSWP3V1_isofix2_hist.1995_2014-clm50_release-clm5.0.20_1deg_GSWP3V1_isofix_hist.1995_2014/setsIndex.html  
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cime5.6.14
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: ctsm1.0.dev036
+
+Pull Requests that document the changes (include PR ids): #698
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #698 -- Bring the carbon isotope fix to the release branch
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.21
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri May  3 16:10:35 MDT 2019
