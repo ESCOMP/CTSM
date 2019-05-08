@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.22
 Originator(s):  erik (Erik Kluzek)
-Date: Tue May  7 15:50:50 MDT 2019
+Date: Wed May  8 11:13:14 MDT 2019
 One-line Summary: Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
 
 Purpose of this version:
