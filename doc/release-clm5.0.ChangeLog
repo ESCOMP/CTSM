@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.22
 Originator(s):  erik (Erik Kluzek)
-Date: Wed May  8 11:13:14 MDT 2019
+Date: Wed May  8 13:32:51 MDT 2019
 One-line Summary: Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
 
 Purpose of this version:
@@ -22,8 +22,11 @@ Summary of changes:
 -------------------
 
 Issues fixed (include CTSM Issue #): #262 #675
-   #675 -- Carbon isotopes under transient land-use change
-   #262 -- hirespft option to mksurfdata.pl
+   Fixes #675 -- Carbon isotopes under transient land-use change
+   Fixes #262 -- hirespft option to mksurfdata.pl
+
+Issues found: #707
+   #707 -- missing hirespft mapping files
 
 Science changes since: release-clm5.0.21
     Fix Carbon isotope issue under transient land-use change
@@ -47,16 +50,6 @@ Testing:
 
     cheyenne - PASS
     hobart ---PASS
-
-  tools-tests (components/clm/test/tools):
-
-    cheyenne - 
-    hobart ---
-
-  PTCLM testing (components/clm/tools/shared/PTCLM/test):
-
-     cheyenne - 
-     hobart ---
 
   regular tests (aux_clm):
 
