@@ -40,7 +40,7 @@ module clm_driver
   !
   use HydrologyNoDrainageMod , only : CalcAndWithdrawIrrigationFluxes, HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
-  use CanopyHydrologyMod     , only : CanopyHydrology     ! (formerly Hydrology1Mod)
+  use CanopyHydrologyMod     , only : CanopyInterceptionAndThroughfall, CanopyHydrology     ! (formerly Hydrology1Mod)
   use LakeHydrologyMod       , only : LakeHydrology
   use SoilWaterMovementMod   , only : use_aquifer_layer
   !
@@ -476,14 +476,30 @@ contains
        ! ============================================================================
 
        call t_startf('canhydro')
+
+       call CanopyInterceptionAndThroughfall(bounds_clump, &
+            filter(nc)%num_soilp, filter(nc)%soilp, &
+            filter(nc)%num_nolakep, filter(nc)%nolakep, &
+            patch, canopystate_inst, atm2lnd_inst, water_inst)
+
+       ! FIXME(wjs, 2019-05-07) Remove this temporary check
+       if (water_inst%DoConsistencyCheck()) then
+          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
+          ! every time step
+          if (get_nstep() == 0) then
+             call t_startf("tracer_consistency_check")
+             call water_inst%TracerConsistencyCheck(bounds_clump, 'after CanopyInterceptionAndThroughfall')
+             call t_stopf("tracer_consistency_check")
+          end if
+       end if
+
        call CanopyHydrology(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
-            filter(nc)%num_nolakep, filter(nc)%nolakep, &
-            atm2lnd_inst, canopystate_inst, temperature_inst, &
+            atm2lnd_inst, temperature_inst, &
             aerosol_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterfluxbulk_inst, &
-            water_inst%wateratm2lndbulk_inst)
+            water_inst%waterfluxbulk_inst)
+
        call t_stopf('canhydro')
 
        if (water_inst%DoConsistencyCheck()) then
@@ -769,6 +785,7 @@ contains
             filter(nc)%num_nosnowc, filter(nc)%nosnowc,                      &
             clm_fates,                                                         &
             atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst,   &
+            water_inst%wateratm2lndbulk_inst, &
             water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, soilhydrology_inst, &
             saturated_excess_runoff_inst, &
@@ -1010,7 +1027,8 @@ contains
        ! ============================================================================
 
        call water_inst%Summary(bounds_clump, &
-            filter(nc)%num_soilp, filter(nc)%soilp)
+            filter(nc)%num_soilp, filter(nc)%soilp, &
+            filter(nc)%num_allc, filter(nc)%allc)
 
        ! ============================================================================
        ! Check the energy and water balance
@@ -1434,14 +1452,6 @@ contains
          waterfluxbulk_inst%qflx_evap_tot_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_rain_grnd_col(bounds%begc:bounds%endc))
-    
-    call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_snow_grnd_col(bounds%begc:bounds%endc))
-    
-    call p2c (bounds, num_nolakec, filter_nolakec, &
          waterfluxbulk_inst%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
          waterfluxbulk_inst%qflx_tran_veg_col(bounds%begc:bounds%endc))
 
@@ -1452,10 +1462,6 @@ contains
     call p2c (bounds, num_allc, filter_allc, &
          waterfluxbulk_inst%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
          waterfluxbulk_inst%qflx_evap_soi_col(bounds%begc:bounds%endc))
-
-    call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_prec_grnd_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
          waterfluxbulk_inst%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &

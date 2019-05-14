@@ -10,30 +10,37 @@ module CanopyHydrologyMod
   ! (4) snow layer initialization if the snow accumulation exceeds 10 mm.
   !
   ! !USES:
+#include "shr_assert.h"
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use shr_sys_mod     , only : shr_sys_flush
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
+  use clm_time_manager, only : get_step_size
   use clm_varctl      , only : iulog
+  use subgridAveMod   , only : p2c
   use LandunitType    , only : lun                
   use atm2lndType     , only : atm2lnd_type
   use AerosolMod      , only : aerosol_type
   use CanopyStateType , only : canopystate_type
   use TemperatureType , only : temperature_type
+  use WaterType       , only : water_type
   use WaterFluxBulkType       , only : waterfluxbulk_type
   use Wateratm2lndBulkType    , only : wateratm2lndbulk_type
   use WaterStateBulkType      , only : waterstatebulk_type
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
+  use WaterTracerUtils        , only : CalcTracerFromBulk
   use ColumnType      , only : col                
-  use PatchType       , only : patch                
+  use PatchType       , only : patch, patch_type
   !
   ! !PUBLIC TYPES:
   implicit none
+  private
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyHydrology_readnl ! Read namelist
+  public :: CanopyInterceptionAndThroughfall
   public :: CanopyHydrology        ! Run
   public :: readParams
 
@@ -46,7 +53,9 @@ module CanopyHydrologyMod
   type(params_type), private ::  params_inst
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: FracWet    ! Determine fraction of vegetated surface that is wet
+  private :: SumFlux_TopOfCanopyInputs
+  private :: BulkFlux_CanopyInterceptionAndThroughfall
+  private :: BulkDiag_FracWet    ! Determine fraction of vegetated surface that is wet
   private :: FracH2oSfc ! Determine fraction of land surfaces which are submerged  
   !
   ! !PRIVATE DATA MEMBERS:
@@ -152,19 +161,926 @@ contains
    end subroutine readParams
 
    !-----------------------------------------------------------------------
-   subroutine CanopyHydrology(bounds, &
-        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
-        atm2lnd_inst, canopystate_inst, temperature_inst, &
-        aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-        waterfluxbulk_inst, wateratm2lndbulk_inst)
+   subroutine CanopyInterceptionAndThroughfall(bounds, &
+        num_soilp, filter_soilp, &
+        num_nolakep, filter_nolakep, &
+        patch, canopystate_inst, atm2lnd_inst, water_inst)
      !
      ! !DESCRIPTION:
-     ! Calculation of
+     ! Coordinate work related to the calculation of canopy interception and throughfall,
+     ! as well as removal of excess water from the canopy and snow unloading. This
+     ! includes:
      ! (1) water storage of intercepted precipitation
      ! (2) direct throughfall and canopy drainage of precipitation
      ! (3) the fraction of foliage covered by water and the fraction
      !     of foliage that is dry and transpiring.
-     ! (4) snow layer initialization if the snow accumulation exceeds 10 mm.
+     !
+     ! !ARGUMENTS:
+     type(bounds_type)      , intent(in)    :: bounds
+     integer                , intent(in)    :: num_soilp         ! number of patches in filter_soilp
+     integer                , intent(in)    :: filter_soilp(:)   ! patch filter for soil points
+     integer                , intent(in)    :: num_nolakep       ! number of patches in filter_nolakep
+     integer                , intent(in)    :: filter_nolakep(:) ! patch filter for non-lake points
+     type(patch_type)       , intent(in)    :: patch
+     type(canopystate_type) , intent(in)    :: canopystate_inst
+     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
+     type(water_type)       , intent(inout) :: water_inst
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: i     ! index of water tracer or bulk
+     real(r8) :: dtime ! land model time step (sec)
+
+     real(r8) :: qflx_liq_above_canopy_patch(bounds%begp:bounds%endp)        ! liquid water input above canopy (rain plus irrigation) [mm/s]
+     real(r8) :: tracer_qflx_liq_above_canopy_patch(bounds%begp:bounds%endp) ! For one tracer: liquid water input above canopy (rain plus irrigation) [mm/s]
+     real(r8) :: forc_snow_patch(bounds%begp:bounds%endp)                    ! atm snow, patch-level [mm/s]
+     real(r8) :: tracer_forc_snow_patch(bounds%begp:bounds%endp)             ! For one tracer: atm snow, patch-level [mm/s]
+
+     logical  :: check_point_for_interception_and_excess(bounds%begp:bounds%endp)
+
+     character(len=*), parameter :: subname = 'CanopyInterceptionAndThroughfall'
+     !-----------------------------------------------------------------------
+
+     associate( &
+          begp => bounds%begp, &
+          endp => bounds%endp, &
+          begc => bounds%begc, &
+          endc => bounds%endc, &
+          begg => bounds%begg, &
+          endg => bounds%endg, &
+          b_wateratm2lnd_inst    => water_inst%wateratm2lndbulk_inst, &
+          b_waterflux_inst       => water_inst%waterfluxbulk_inst, &
+          b_waterstate_inst      => water_inst%waterstatebulk_inst, &
+          b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
+          )
+
+     dtime = get_step_size()
+
+     ! Note about filters in this routine: Most of the work here just needs to be done
+     ! for patches that have some canopy, so we use the soil filter. However, the final
+     ! fluxes of water onto the ground (qflx_snow_grnd_col and qflx_liq_grnd_col) are
+     ! needed for all non-lake points. So a few routines use the nolake filter to ensure
+     ! that these fluxes are set correctly for all patches.
+
+
+     ! Compute canopy interception and throughfall for bulk water
+     !
+     ! Note use of nolake filter: We need qflx_through_snow and qflx_through_liq for all
+     ! nolake points because these are inputs into qflx_snow_grnd_col and
+     ! qflx_liq_grnd_col, which are needed for all nolake points.
+     call SumFlux_TopOfCanopyInputs(bounds, num_nolakep, filter_nolakep, &
+          ! Inputs
+          patch                 = patch, &
+          forc_rain             = b_wateratm2lnd_inst%forc_rain_downscaled_col(begc:endc), &
+          qflx_irrig_sprinkler  = b_waterflux_inst%qflx_irrig_sprinkler_patch(begp:endp), &
+          forc_snow_col         = b_wateratm2lnd_inst%forc_snow_downscaled_col(begc:endc), &
+          ! Outputs
+          qflx_liq_above_canopy = qflx_liq_above_canopy_patch(begp:endp), &
+          forc_snow_patch       = forc_snow_patch(begp:endp))
+
+     call BulkFlux_CanopyInterceptionAndThroughfall(bounds, num_nolakep, filter_nolakep, &
+          ! Inputs
+          frac_veg_nosno        = canopystate_inst%frac_veg_nosno_patch(begp:endp), &
+          elai                  = canopystate_inst%elai_patch(begp:endp), &
+          esai                  = canopystate_inst%esai_patch(begp:endp), &
+          forc_snow             = forc_snow_patch(begp:endp), &
+          qflx_liq_above_canopy = qflx_liq_above_canopy_patch(begp:endp), &
+          ! Outputs
+          qflx_through_snow     = b_waterflux_inst%qflx_through_snow_patch(begp:endp), &
+          qflx_through_liq      = b_waterflux_inst%qflx_through_liq_patch(begp:endp), &
+          qflx_intercepted_snow = b_waterflux_inst%qflx_intercepted_snow_patch(begp:endp), &
+          qflx_intercepted_liq  = b_waterflux_inst%qflx_intercepted_liq_patch(begp:endp), &
+          check_point_for_interception_and_excess = check_point_for_interception_and_excess(begp:endp))
+
+     ! Calculate canopy interception and throughfall for each tracer
+     !
+     ! Note use of nolake filter: We need qflx_through_snow and qflx_through_liq for all
+     ! nolake points because these are inputs into qflx_snow_grnd_col and
+     ! qflx_liq_grnd_col, which are needed for all nolake points.
+     do i = water_inst%tracers_beg, water_inst%tracers_end
+        associate(w => water_inst%bulk_and_tracers(i))
+        call SumFlux_TopOfCanopyInputs(bounds, num_nolakep, filter_nolakep, &
+             ! Inputs
+             patch                 = patch, &
+             forc_rain             = w%wateratm2lnd_inst%forc_rain_downscaled_col(begc:endc), &
+             qflx_irrig_sprinkler  = w%waterflux_inst%qflx_irrig_sprinkler_patch(begp:endp), &
+             forc_snow_col         = w%wateratm2lnd_inst%forc_snow_downscaled_col(begc:endc), &
+             ! Outputs
+             qflx_liq_above_canopy = tracer_qflx_liq_above_canopy_patch(begp:endp), &
+             forc_snow_patch       = tracer_forc_snow_patch(begp:endp))
+
+        call TracerFlux_CanopyInterceptionAndThroughfall(bounds, num_nolakep, filter_nolakep, &
+             ! Inputs
+             bulk_forc_snow             = forc_snow_patch(begp:endp), &
+             bulk_qflx_liq_above_canopy = qflx_liq_above_canopy_patch(begp:endp), &
+             bulk_qflx_through_snow     = b_waterflux_inst%qflx_through_snow_patch(begp:endp), &
+             bulk_qflx_intercepted_snow = b_waterflux_inst%qflx_intercepted_snow_patch(begp:endp), &
+             bulk_qflx_through_liq      = b_waterflux_inst%qflx_through_liq_patch(begp:endp), &
+             bulk_qflx_intercepted_liq  = b_waterflux_inst%qflx_intercepted_liq_patch(begp:endp), &
+             trac_forc_snow             = tracer_forc_snow_patch(begp:endp), &
+             trac_qflx_liq_above_canopy = tracer_qflx_liq_above_canopy_patch(begp:endp), &
+             ! Outputs
+             trac_qflx_through_snow     = w%waterflux_inst%qflx_through_snow_patch(begp:endp), &
+             trac_qflx_intercepted_snow = w%waterflux_inst%qflx_intercepted_snow_patch(begp:endp), &
+             trac_qflx_through_liq      = w%waterflux_inst%qflx_through_liq_patch(begp:endp), &
+             trac_qflx_intercepted_liq  = w%waterflux_inst%qflx_intercepted_liq_patch(begp:endp))
+        end associate
+     end do
+
+     ! Update snocan and liqcan based on interception, for bulk water and each tracer
+     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+        associate(w => water_inst%bulk_and_tracers(i))
+        call UpdateState_AddInterceptionToCanopy(bounds, num_soilp, filter_soilp, &
+             ! Inputs
+             dtime                 = dtime, &
+             qflx_intercepted_snow = w%waterflux_inst%qflx_intercepted_snow_patch(begp:endp), &
+             qflx_intercepted_liq  = w%waterflux_inst%qflx_intercepted_liq_patch(begp:endp), &
+             ! Outputs
+             snocan                = w%waterstate_inst%snocan_patch(begp:endp), &
+             liqcan                = w%waterstate_inst%liqcan_patch(begp:endp))
+        end associate
+     end do
+
+     ! Compute runoff from canopy due to exceeding maximum storage, for bulk
+     call BulkFlux_CanopyExcess(bounds, num_soilp, filter_soilp, &
+          ! Inputs
+          dtime = dtime, &
+          elai = canopystate_inst%elai_patch(begp:endp), &
+          esai = canopystate_inst%esai_patch(begp:endp), &
+          snocan = b_waterstate_inst%snocan_patch(begp:endp), &
+          liqcan = b_waterstate_inst%liqcan_patch(begp:endp), &
+          check_point_for_interception_and_excess = check_point_for_interception_and_excess(begp:endp), &
+          ! Outputs
+          qflx_snocanfall = b_waterflux_inst%qflx_snocanfall_patch(begp:endp), &
+          qflx_liqcanfall = b_waterflux_inst%qflx_liqcanfall_patch(begp:endp))
+
+     ! Calculate runoff from canopy due to exceeding maximum storage, for each tracer
+     do i = water_inst%tracers_beg, water_inst%tracers_end
+        associate(w => water_inst%bulk_and_tracers(i))
+        call TracerFlux_CanopyExcess(bounds, num_soilp, filter_soilp, &
+             ! Inputs
+             bulk_liqcan          = b_waterstate_inst%liqcan_patch(begp:endp), &
+             bulk_snocan          = b_waterstate_inst%snocan_patch(begp:endp), &
+             bulk_qflx_liqcanfall = b_waterflux_inst%qflx_liqcanfall_patch(begp:endp), &
+             bulk_qflx_snocanfall = b_waterflux_inst%qflx_snocanfall_patch(begp:endp), &
+             trac_liqcan          = w%waterstate_inst%liqcan_patch(begp:endp), &
+             trac_snocan          = w%waterstate_inst%snocan_patch(begp:endp), &
+             ! Outputs
+             trac_qflx_liqcanfall = w%waterflux_inst%qflx_liqcanfall_patch(begp:endp), &
+             trac_qflx_snocanfall = w%waterflux_inst%qflx_snocanfall_patch(begp:endp))
+        end associate
+     end do
+
+     ! Update snocan and liqcan based on canfall, for bulk water and each tracer
+     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+        associate(w => water_inst%bulk_and_tracers(i))
+        call UpdateState_RemoveCanfallFromCanopy(bounds, num_soilp, filter_soilp, &
+             ! Inputs
+             dtime           = dtime, &
+             qflx_liqcanfall = w%waterflux_inst%qflx_liqcanfall_patch(begp:endp), &
+             qflx_snocanfall = w%waterflux_inst%qflx_snocanfall_patch(begp:endp), &
+             ! Outputs
+             liqcan          = w%waterstate_inst%liqcan_patch(begp:endp), &
+             snocan          = w%waterstate_inst%snocan_patch(begp:endp))
+        end associate
+     end do
+
+     ! Compute snow unloading for bulk
+     call BulkFlux_SnowUnloading(bounds, num_soilp, filter_soilp, &
+          ! Inputs
+          dtime              = dtime, &
+          patch              = patch, &
+          frac_veg_nosno     = canopystate_inst%frac_veg_nosno_patch(begp:endp), &
+          forc_t             = atm2lnd_inst%forc_t_downscaled_col(begc:endc), &
+          forc_wind          = atm2lnd_inst%forc_wind_grc(begg:endg), &
+          snocan             = b_waterstate_inst%snocan_patch(begp:endp), &
+          ! Outputs
+          qflx_snotempunload = b_waterflux_inst%qflx_snotempunload_patch(begp:endp), &
+          qflx_snowindunload = b_waterflux_inst%qflx_snowindunload_patch(begp:endp), &
+          qflx_snow_unload   = b_waterflux_inst%qflx_snow_unload_patch(begp:endp))
+
+     ! Compute snow unloading for each tracer
+     do i = water_inst%tracers_beg, water_inst%tracers_end
+        associate(w => water_inst%bulk_and_tracers(i))
+        call TracerFlux_SnowUnloading(bounds, num_soilp, filter_soilp, &
+             ! Inputs
+             bulk_snocan           = b_waterstate_inst%snocan_patch(begp:endp), &
+             bulk_qflx_snow_unload = b_waterflux_inst%qflx_snow_unload_patch(begp:endp), &
+             trac_snocan           = w%waterstate_inst%snocan_patch(begp:endp), &
+             ! Outputs
+             trac_qflx_snow_unload = w%waterflux_inst%qflx_snow_unload_patch(begp:endp))
+        end associate
+     end do
+
+     ! Update snocan based on snow unloading, for bulk water and each tracer
+     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+        associate(w => water_inst%bulk_and_tracers(i))
+        call UpdateState_RemoveSnowUnloading(bounds, num_soilp, filter_soilp, &
+             ! Inputs
+             dtime            = dtime, &
+             qflx_snow_unload = w%waterflux_inst%qflx_snow_unload_patch(begp:endp), &
+             ! Outputs
+             snocan           = w%waterstate_inst%snocan_patch(begp:endp))
+        end associate
+     end do
+
+     ! Compute summed fluxes onto ground, for bulk water and each tracer
+     !
+     ! Note use of nolake filter: We need qflx_snow_grnd_col and qflx_liq_grnd_col for
+     ! all non-lake points.
+     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+        associate(w => water_inst%bulk_and_tracers(i))
+        call SumFlux_FluxesOntoGround(bounds, num_nolakep, filter_nolakep, &
+             ! Inputs
+             qflx_through_snow  = w%waterflux_inst%qflx_through_snow_patch(begp:endp), &
+             qflx_snocanfall    = w%waterflux_inst%qflx_snocanfall_patch(begp:endp), &
+             qflx_snow_unload   = w%waterflux_inst%qflx_snow_unload_patch(begp:endp), &
+             qflx_through_liq   = w%waterflux_inst%qflx_through_liq_patch(begp:endp), &
+             qflx_liqcanfall    = w%waterflux_inst%qflx_liqcanfall_patch(begp:endp), &
+             qflx_irrig_drip    = w%waterflux_inst%qflx_irrig_drip_patch(begp:endp), &
+             ! Outputs
+             qflx_snow_grnd_col = w%waterflux_inst%qflx_snow_grnd_col(begc:endc), &
+             qflx_liq_grnd_col  = w%waterflux_inst%qflx_liq_grnd_col(begc:endc))
+        end associate
+     end do
+
+     ! Determine the fraction of foliage covered by water and the fraction of foliage that
+     ! is dry and transpiring.
+     call BulkDiag_FracWet(bounds, num_soilp, filter_soilp, &
+          ! Inputs
+          frac_veg_nosno = canopystate_inst%frac_veg_nosno_patch(begp:endp), &
+          elai           = canopystate_inst%elai_patch(begp:endp), &
+          esai           = canopystate_inst%esai_patch(begp:endp), &
+          snocan         = b_waterstate_inst%snocan_patch(begp:endp), &
+          liqcan         = b_waterstate_inst%liqcan_patch(begp:endp), &
+          ! Outputs
+          fwet           = b_waterdiagnostic_inst%fwet_patch(begp:endp), &
+          fdry           = b_waterdiagnostic_inst%fdry_patch(begp:endp), &
+          fcansno        = b_waterdiagnostic_inst%fcansno_patch(begp:endp))
+
+     end associate
+
+   end subroutine CanopyInterceptionAndThroughfall
+
+   !-----------------------------------------------------------------------
+   subroutine SumFlux_TopOfCanopyInputs(bounds, num_nolakep, filter_nolakep, &
+        patch, forc_rain, qflx_irrig_sprinkler, forc_snow_col, &
+        qflx_liq_above_canopy, forc_snow_patch)
+     !
+     ! !DESCRIPTION:
+     ! Compute patch-level precipitation inputs for bulk water or one tracer
+     !
+     ! !ARGUMENTS:
+     type(bounds_type) , intent(in)    :: bounds
+     integer           , intent(in)    :: num_nolakep
+     integer           , intent(in)    :: filter_nolakep(:)
+     type(patch_type)  , intent(in)    :: patch
+     real(r8)          , intent(in)    :: forc_rain( bounds%begc: )             ! atm rain rate [mm/s]
+     real(r8)          , intent(in)    :: qflx_irrig_sprinkler( bounds%begp: )  ! sprinkler irrigation [mm/s]
+     real(r8)          , intent(in)    :: forc_snow_col( bounds%begc: )         ! atm snow rate [mm/s]
+     real(r8)          , intent(inout) :: qflx_liq_above_canopy( bounds%begp: ) ! total incoming liquid water above canopy [mm/s]
+     real(r8)          , intent(inout) :: forc_snow_patch( bounds%begp: )       ! atm snow rate, patch-level [mm/s]
+     !
+     ! !LOCAL VARIABLES:
+     integer :: fp, p, c
+
+     character(len=*), parameter :: subname = 'SumFlux_TopOfCanopyInputs'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(forc_rain, 1) == bounds%endc), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_irrig_sprinkler, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(forc_snow_col, 1) == bounds%endc), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_liq_above_canopy, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(forc_snow_patch, 1) == bounds%endp), sourcefile, __LINE__)
+
+     do fp = 1, num_nolakep
+        p = filter_nolakep(fp)
+        c = patch%column(p)
+
+        qflx_liq_above_canopy(p) = forc_rain(c) + qflx_irrig_sprinkler(p)
+        forc_snow_patch(p) = forc_snow_col(c)
+     end do
+
+   end subroutine SumFlux_TopOfCanopyInputs
+
+   !-----------------------------------------------------------------------
+   subroutine BulkFlux_CanopyInterceptionAndThroughfall(bounds, num_nolakep, filter_nolakep, &
+        frac_veg_nosno, elai, esai, forc_snow, qflx_liq_above_canopy, &
+        qflx_through_snow, qflx_through_liq, &
+        qflx_intercepted_snow, qflx_intercepted_liq, &
+        check_point_for_interception_and_excess)
+     !
+     ! !DESCRIPTION:
+     ! Compute canopy interception and throughfall for bulk water
+     !
+     ! !ARGUMENTS:
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_nolakep
+     integer, intent(in) :: filter_nolakep(:)
+
+     integer  , intent(in)    :: frac_veg_nosno( bounds%begp: )                          ! fraction of vegetation not covered by snow (0 OR 1)
+     real(r8) , intent(in)    :: elai( bounds%begp: )                                    ! canopy one-sided leaf area index with burying by snow
+     real(r8) , intent(in)    :: esai( bounds%begp: )                                    ! canopy one-sided stem area index with burying by snow
+     real(r8) , intent(in)    :: forc_snow( bounds%begp: )                               ! atm snow (mm H2O/s)
+     real(r8) , intent(in)    :: qflx_liq_above_canopy( bounds%begp: )                   ! liquid water input above canopy (rain plus irrigation) (mm H2O/s)
+
+     real(r8) , intent(inout) :: qflx_through_snow( bounds%begp: )                       ! canopy throughfall of snow (mm H2O/s)
+     real(r8) , intent(inout) :: qflx_through_liq( bounds%begp: )                        ! canopy throughfall of liquid (mm H2O/s)
+     real(r8) , intent(inout) :: qflx_intercepted_snow( bounds%begp: )                   ! canopy interception of snow (mm H2O/s)
+     real(r8) , intent(inout) :: qflx_intercepted_liq( bounds%begp: )                    ! canopy interception of liquid (mm H2O/s)
+     logical  , intent(inout) :: check_point_for_interception_and_excess( bounds%begp: ) ! whether each patch in the filter needs to have the interception calculations (here) and snow/liquid excess calculations (elsewhere) computed
+     !
+     ! !LOCAL VARIABLES:
+     integer :: fp, p
+     real(r8) :: fpiliq  ! coefficient of interception for liquid
+     real(r8) :: fpisnow ! coefficient of interception for snow
+
+     character(len=*), parameter :: subname = 'BulkFlux_CanopyInterceptionAndThroughfall'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(frac_veg_nosno, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(elai, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(esai, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(forc_snow, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_liq_above_canopy, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_through_snow, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_through_liq, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_intercepted_snow, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_intercepted_liq, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(check_point_for_interception_and_excess, 1) == bounds%endp), sourcefile, __LINE__)
+
+     do fp = 1, num_nolakep
+        p = filter_nolakep(fp)
+        check_point_for_interception_and_excess(p) = &
+             (frac_veg_nosno(p) == 1 .and. (forc_snow(p) + qflx_liq_above_canopy(p)) > 0._r8)
+        if (check_point_for_interception_and_excess(p)) then
+           ! Coefficient of interception
+           if (use_clm5_fpi) then
+              fpiliq = interception_fraction * tanh(elai(p) + esai(p))
+           else
+              fpiliq = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
+           end if
+
+           fpisnow = (1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))  ! max interception of 1
+
+           ! Direct throughfall
+           qflx_through_snow(p) = forc_snow(p) * (1._r8-fpisnow)
+           qflx_through_liq(p)  = qflx_liq_above_canopy(p) * (1._r8-fpiliq)
+
+           ! Canopy interception
+           qflx_intercepted_snow(p) = forc_snow(p) * fpisnow
+           qflx_intercepted_liq(p) = qflx_liq_above_canopy(p) * fpiliq
+
+        else
+           ! Note that special landunits will be handled here, in addition to soil points
+           ! with frac_veg_nosno == 0.
+           qflx_through_snow(p) = forc_snow(p)
+           qflx_through_liq(p)  = qflx_liq_above_canopy(p)
+           qflx_intercepted_snow(p) = 0._r8
+           qflx_intercepted_liq(p) = 0._r8
+        end if
+     end do
+
+   end subroutine BulkFlux_CanopyInterceptionAndThroughfall
+
+   !-----------------------------------------------------------------------
+   subroutine TracerFlux_CanopyInterceptionAndThroughfall(bounds, num_nolakep, filter_nolakep, &
+        bulk_forc_snow, bulk_qflx_liq_above_canopy, &
+        bulk_qflx_through_snow, bulk_qflx_intercepted_snow, &
+        bulk_qflx_through_liq, bulk_qflx_intercepted_liq, &
+        trac_forc_snow, trac_qflx_liq_above_canopy, &
+        trac_qflx_through_snow, trac_qflx_intercepted_snow, &
+        trac_qflx_through_liq, trac_qflx_intercepted_liq)
+     !
+     ! !DESCRIPTION:
+     ! Calculate canopy interception and throughfall for one tracer
+     !
+     ! !ARGUMENTS:
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_nolakep
+     integer, intent(in) :: filter_nolakep(:)
+
+     ! For description of arguments, see comments in
+     ! BulkFlux_CanopyInterceptionAndThroughfall. Here, bulk_* variables refer to bulk
+     ! water and trac_* variables to the given water tracer.
+     real(r8), intent(in) :: bulk_forc_snow( bounds%begp: )
+     real(r8), intent(in) :: bulk_qflx_liq_above_canopy( bounds%begp: )
+     real(r8), intent(in) :: bulk_qflx_through_snow( bounds%begp: )
+     real(r8), intent(in) :: bulk_qflx_intercepted_snow( bounds%begp: )
+     real(r8), intent(in) :: bulk_qflx_through_liq( bounds%begp: )
+     real(r8), intent(in) :: bulk_qflx_intercepted_liq( bounds%begp: )
+     real(r8), intent(in) :: trac_forc_snow( bounds%begp: )
+     real(r8), intent(in) :: trac_qflx_liq_above_canopy( bounds%begp: )
+
+     real(r8), intent(inout) :: trac_qflx_through_snow( bounds%begp: )
+     real(r8), intent(inout) :: trac_qflx_intercepted_snow( bounds%begp: )
+     real(r8), intent(inout) :: trac_qflx_through_liq( bounds%begp: )
+     real(r8), intent(inout) :: trac_qflx_intercepted_liq( bounds%begp: )
+     !
+     ! !LOCAL VARIABLES:
+
+     character(len=*), parameter :: subname = 'TracerFlux_CanopyInterceptionAndThroughfall'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(bulk_forc_snow, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(bulk_qflx_liq_above_canopy, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(bulk_qflx_through_snow, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(bulk_qflx_intercepted_snow, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(bulk_qflx_through_liq, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(bulk_qflx_intercepted_liq, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_forc_snow, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_qflx_liq_above_canopy, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_qflx_through_snow, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_qflx_intercepted_snow, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_qflx_through_liq, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_qflx_intercepted_liq, 1) == bounds%endp), sourcefile, __LINE__)
+
+     associate( &
+          begp => bounds%begp, &
+          endp => bounds%endp  &
+          )
+
+     call CalcTracerFromBulk( &
+          lb            = begp, &
+          num_pts       = num_nolakep, &
+          filter_pts    = filter_nolakep, &
+          bulk_source   = bulk_forc_snow(begp:endp), &
+          bulk_val      = bulk_qflx_through_snow(begp:endp), &
+          tracer_source = trac_forc_snow(begp:endp), &
+          tracer_val    = trac_qflx_through_snow(begp:endp))
+
+     call CalcTracerFromBulk( &
+          lb            = begp, &
+          num_pts       = num_nolakep, &
+          filter_pts    = filter_nolakep, &
+          bulk_source   = bulk_forc_snow(begp:endp), &
+          bulk_val      = bulk_qflx_intercepted_snow(begp:endp), &
+          tracer_source = trac_forc_snow(begp:endp), &
+          tracer_val    = trac_qflx_intercepted_snow(begp:endp))
+
+     call CalcTracerFromBulk( &
+          lb            = begp, &
+          num_pts       = num_nolakep, &
+          filter_pts    = filter_nolakep, &
+          bulk_source   = bulk_qflx_liq_above_canopy(begp:endp), &
+          bulk_val      = bulk_qflx_through_liq(begp:endp), &
+          tracer_source = trac_qflx_liq_above_canopy(begp:endp), &
+          tracer_val    = trac_qflx_through_liq(begp:endp))
+
+     call CalcTracerFromBulk( &
+          lb            = begp, &
+          num_pts       = num_nolakep, &
+          filter_pts    = filter_nolakep, &
+          bulk_source   = bulk_qflx_liq_above_canopy(begp:endp), &
+          bulk_val      = bulk_qflx_intercepted_liq(begp:endp), &
+          tracer_source = trac_qflx_liq_above_canopy(begp:endp), &
+          tracer_val    = trac_qflx_intercepted_liq(begp:endp))
+
+     end associate
+
+   end subroutine TracerFlux_CanopyInterceptionAndThroughfall
+
+   !-----------------------------------------------------------------------
+   subroutine UpdateState_AddInterceptionToCanopy(bounds, num_soilp, filter_soilp, dtime, &
+        qflx_intercepted_snow, qflx_intercepted_liq, snocan, liqcan)
+     !
+     ! !DESCRIPTION:
+     ! Update snocan and liqcan based on interception, for bulk or one tracer
+     !
+     ! !ARGUMENTS:
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_soilp
+     integer, intent(in) :: filter_soilp(:)
+     real(r8), intent(in) :: dtime  ! land model time step (sec)
+
+     real(r8) , intent(in)    :: qflx_intercepted_snow( bounds%begp: ) ! canopy interception of snow (mm H2O/s)
+     real(r8) , intent(in)    :: qflx_intercepted_liq( bounds%begp: )  ! canopy interception of liquid (mm H2O/s)
+
+     real(r8) , intent(inout) :: snocan( bounds%begp: )                ! canopy snow water (mm H2O)
+     real(r8) , intent(inout) :: liqcan( bounds%begp: )                ! canopy liquid water (mm H2O)
+     !
+     ! !LOCAL VARIABLES:
+     integer :: fp, p
+
+     character(len=*), parameter :: subname = 'UpdateState_AddInterceptionToCanopy'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(qflx_intercepted_snow, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_intercepted_liq, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(snocan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(liqcan, 1) == bounds%endp), sourcefile, __LINE__)
+
+     do fp = 1, num_soilp
+        p = filter_soilp(fp)
+
+        snocan(p) = max(0._r8, snocan(p) + dtime * qflx_intercepted_snow(p))
+        liqcan(p) = max(0._r8, liqcan(p) + dtime * qflx_intercepted_liq(p))
+     end do
+
+   end subroutine UpdateState_AddInterceptionToCanopy
+
+   !-----------------------------------------------------------------------
+   subroutine BulkFlux_CanopyExcess(bounds, num_soilp, filter_soilp, &
+        dtime, elai, esai, snocan, liqcan, &
+        check_point_for_interception_and_excess, &
+        qflx_snocanfall, qflx_liqcanfall)
+     !
+     ! !DESCRIPTION:
+     ! Compute runoff from canopy due to exceeding maximum storage, for bulk
+     !
+     ! !ARGUMENTS:
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_soilp
+     integer, intent(in) :: filter_soilp(:)
+
+     real(r8) , intent(in)    :: dtime                                                   ! land model time step (sec)
+     real(r8) , intent(in)    :: elai( bounds%begp: )                                    ! canopy one-sided leaf area index with burying by snow
+     real(r8) , intent(in)    :: esai( bounds%begp: )                                    ! canopy one-sided stem area index with burying by snow
+     real(r8) , intent(in)    :: snocan( bounds%begp: )                                  ! canopy snow water (mm H2O)
+     real(r8) , intent(in)    :: liqcan( bounds%begp: )                                  ! canopy liquid water (mm H2O)
+
+     logical  , intent(in)    :: check_point_for_interception_and_excess( bounds%begp: ) ! whether each patch in the filter needs to have the interception calculations (elsewhere) and snow/liquid excess calculations (here) computed
+
+     real(r8) , intent(inout) :: qflx_snocanfall( bounds%begp: )                         ! rate of excess canopy snow falling off canopy (mm H2O/s)
+     real(r8) , intent(inout) :: qflx_liqcanfall( bounds%begp: )                         ! rate of excess canopy liquid falling off canopy (mm H2O/s)
+     !
+     ! !LOCAL VARIABLES:
+     integer :: fp, p
+     real(r8) :: snocanmx ! maximum allowed snow on canopy (mm H2O)
+     real(r8) :: liqcanmx ! maximum allowed liquid water on canopy (mm H2O)
+
+     character(len=*), parameter :: subname = 'BulkFlux_CanopyExcess'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(elai, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(esai, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(snocan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(liqcan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(check_point_for_interception_and_excess, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_snocanfall, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_liqcanfall, 1) == bounds%endp), sourcefile, __LINE__)
+
+     do fp = 1, num_soilp
+        p = filter_soilp(fp)
+        qflx_liqcanfall(p) = 0._r8
+        qflx_snocanfall(p) = 0._r8
+
+        if (check_point_for_interception_and_excess(p)) then
+           liqcanmx = params_inst%dewmx * (elai(p) + esai(p))
+           qflx_liqcanfall(p) = max((liqcan(p) - liqcanmx)/dtime, 0._r8)
+           snocanmx = params_inst%sno_stor_max * (elai(p) + esai(p))
+           qflx_snocanfall(p) = max((snocan(p) - snocanmx)/dtime, 0._r8)
+        end if
+     end do
+
+   end subroutine BulkFlux_CanopyExcess
+
+   !-----------------------------------------------------------------------
+   subroutine TracerFlux_CanopyExcess(bounds, num_soilp, filter_soilp, &
+        bulk_liqcan, bulk_snocan, &
+        bulk_qflx_liqcanfall, bulk_qflx_snocanfall, &
+        trac_liqcan, trac_snocan, &
+        trac_qflx_liqcanfall, trac_qflx_snocanfall)
+     !
+     ! !DESCRIPTION:
+     ! Calculate runoff from canopy due to exceeding maximum storage, for one tracer
+     !
+     ! !ARGUMENTS:
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_soilp
+     integer, intent(in) :: filter_soilp(:)
+
+     ! For description of arguments, see comments in BulkFlux_CanopyExcess. Here, bulk_*
+     ! variables refer to bulk water and trac_* variables to the given water tracer.
+     real(r8), intent(in) :: bulk_liqcan( bounds%begp: )
+     real(r8), intent(in) :: bulk_snocan( bounds%begp: )
+     real(r8), intent(in) :: bulk_qflx_liqcanfall( bounds%begp: )
+     real(r8), intent(in) :: bulk_qflx_snocanfall( bounds%begp: )
+     real(r8), intent(in) :: trac_liqcan( bounds%begp: )
+     real(r8), intent(in) :: trac_snocan( bounds%begp: )
+
+     real(r8), intent(inout) :: trac_qflx_liqcanfall( bounds%begp: )
+     real(r8), intent(inout) :: trac_qflx_snocanfall( bounds%begp: )
+     !
+     ! !LOCAL VARIABLES:
+
+     character(len=*), parameter :: subname = 'TracerFlux_CanopyExcess'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(bulk_liqcan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(bulk_snocan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(bulk_qflx_liqcanfall, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(bulk_qflx_snocanfall, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_liqcan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_snocan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_qflx_liqcanfall, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_qflx_snocanfall, 1) == bounds%endp), sourcefile, __LINE__)
+
+     associate( &
+          begp => bounds%begp, &
+          endp => bounds%endp  &
+          )
+
+     call CalcTracerFromBulk( &
+          lb            = begp, &
+          num_pts       = num_soilp, &
+          filter_pts    = filter_soilp, &
+          bulk_source   = bulk_liqcan(begp:endp), &
+          bulk_val      = bulk_qflx_liqcanfall(begp:endp), &
+          tracer_source = trac_liqcan(begp:endp), &
+          tracer_val    = trac_qflx_liqcanfall(begp:endp))
+
+     call CalcTracerFromBulk( &
+          lb            = begp, &
+          num_pts       = num_soilp, &
+          filter_pts    = filter_soilp, &
+          bulk_source   = bulk_snocan(begp:endp), &
+          bulk_val      = bulk_qflx_snocanfall(begp:endp), &
+          tracer_source = trac_snocan(begp:endp), &
+          tracer_val    = trac_qflx_snocanfall(begp:endp))
+
+     end associate
+
+   end subroutine TracerFlux_CanopyExcess
+
+   !-----------------------------------------------------------------------
+   subroutine UpdateState_RemoveCanfallFromCanopy(bounds, num_soilp, filter_soilp, dtime, &
+        qflx_liqcanfall, qflx_snocanfall, liqcan, snocan)
+     !
+     ! !DESCRIPTION:
+     ! Update snocan and liqcan based on canfall, for bulk or one tracer
+     !
+     ! !ARGUMENTS:
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_soilp
+     integer, intent(in) :: filter_soilp(:)
+     real(r8), intent(in) :: dtime  ! land model time step (sec)
+
+     real(r8) , intent(in)    :: qflx_liqcanfall( bounds%begp: ) ! rate of excess canopy liquid falling off canopy (mm H2O/s)
+     real(r8) , intent(in)    :: qflx_snocanfall( bounds%begp: ) ! rate of excess canopy snow falling off canopy (mm H2O/s)
+     real(r8) , intent(inout) :: liqcan( bounds%begp: )          ! canopy liquid water (mm H2O)
+     real(r8) , intent(inout) :: snocan( bounds%begp: )          ! canopy snow water (mm H2O)
+     !
+     ! !LOCAL VARIABLES:
+     integer :: fp, p
+
+     character(len=*), parameter :: subname = 'UpdateState_RemoveCanfallFromCanopy'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(qflx_liqcanfall, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_snocanfall, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(liqcan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(snocan, 1) == bounds%endp), sourcefile, __LINE__)
+
+     do fp = 1, num_soilp
+        p = filter_soilp(fp)
+
+        ! FIXME(wjs, 2019-05-09) Put in place adjustments to get bit-for-bit
+        liqcan(p) = liqcan(p) - dtime * qflx_liqcanfall(p)
+        snocan(p) = snocan(p) - dtime * qflx_snocanfall(p)
+     end do
+
+   end subroutine UpdateState_RemoveCanfallFromCanopy
+
+   !-----------------------------------------------------------------------
+   subroutine BulkFlux_SnowUnloading(bounds, num_soilp, filter_soilp, dtime, patch, &
+        frac_veg_nosno, forc_t, forc_wind, snocan, &
+        qflx_snotempunload, qflx_snowindunload, qflx_snow_unload)
+     !
+     ! !DESCRIPTION:
+     ! Compute snow unloading for bulk
+     !
+     ! !ARGUMENTS:
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_soilp
+     integer, intent(in) :: filter_soilp(:)
+     real(r8), intent(in) :: dtime  ! land model time step (sec)
+     type(patch_type), intent(in) :: patch
+
+     integer  , intent(in)    :: frac_veg_nosno( bounds%begp: )     ! fraction of vegetation not covered by snow (0 OR 1)
+     real(r8) , intent(in)    :: forc_t( bounds%begc: )             ! atmospheric temperature (Kelvin)
+     real(r8) , intent(in)    :: forc_wind( bounds%begg: )          ! atmospheric wind speed (m/s)
+     real(r8) , intent(in)    :: snocan( bounds%begp: )             ! canopy snow water (mm H2O)
+
+     real(r8) , intent(inout) :: qflx_snotempunload( bounds%begp: ) ! canopy snow unloading from temperature (mm H2O/s)
+     real(r8) , intent(inout) :: qflx_snowindunload( bounds%begp: ) ! canopy snow unloading from wind (mm H2O/s)
+     real(r8) , intent(inout) :: qflx_snow_unload( bounds%begp: )   ! total canopy snow unloading (mm H2O/s)
+     !
+     ! !LOCAL VARIABLES:
+     integer :: fp, p, c, g
+
+     character(len=*), parameter :: subname = 'BulkFlux_SnowUnloading'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(frac_veg_nosno, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(forc_t, 1) == bounds%endc), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(forc_wind, 1) == bounds%endg), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(snocan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_snotempunload, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_snowindunload, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_snow_unload, 1) == bounds%endp), sourcefile, __LINE__)
+
+     do fp = 1, num_soilp
+        p = filter_soilp(fp)
+
+        if (frac_veg_nosno(p) == 1 .and. snocan(p) > 0._r8) then
+           c = patch%column(p)
+           g = patch%gridcell(p)
+
+           qflx_snotempunload(p) = max(0._r8,snocan(p)*(forc_t(c)-270.15_r8)/1.87e5_r8)
+           qflx_snowindunload(p) = 0.5_r8*snocan(p)*forc_wind(g)/1.56e5_r8
+           qflx_snow_unload(p) = min(qflx_snotempunload(p) + qflx_snowindunload(p), snocan(p)/dtime)
+        else
+           qflx_snotempunload(p) = 0._r8
+           qflx_snowindunload(p) = 0._r8
+           qflx_snow_unload(p) = 0._r8
+        end if
+     end do
+
+   end subroutine BulkFlux_SnowUnloading
+
+   !-----------------------------------------------------------------------
+   subroutine TracerFlux_SnowUnloading(bounds, num_soilp, filter_soilp, &
+        bulk_snocan, bulk_qflx_snow_unload, trac_snocan, trac_qflx_snow_unload)
+     !
+     ! !DESCRIPTION:
+     ! Compute snow unloading for one tracer
+     !
+     ! !ARGUMENTS:
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_soilp
+     integer, intent(in) :: filter_soilp(:)
+
+     ! For description of arguments, see comments in BulkFlux_SnowUnloading. Here, bulk_*
+     ! variables refer to bulk water and trac_* variables to the given water tracer.
+     real(r8), intent(in) :: bulk_snocan( bounds%begp: )
+     real(r8), intent(in) :: bulk_qflx_snow_unload( bounds%begp: )
+     real(r8), intent(in) :: trac_snocan( bounds%begp: )
+     real(r8), intent(inout) :: trac_qflx_snow_unload( bounds%begp: )
+     !
+     ! !LOCAL VARIABLES:
+
+     character(len=*), parameter :: subname = 'TracerFlux_SnowUnloading'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(bulk_snocan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(bulk_qflx_snow_unload, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_snocan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(trac_qflx_snow_unload, 1) == bounds%endp), sourcefile, __LINE__)
+
+     associate( &
+          begp => bounds%begp, &
+          endp => bounds%endp  &
+          )
+
+     call CalcTracerFromBulk( &
+          lb            = begp, &
+          num_pts       = num_soilp, &
+          filter_pts    = filter_soilp, &
+          bulk_source   = bulk_snocan(begp:endp), &
+          bulk_val      = bulk_qflx_snow_unload(begp:endp), &
+          tracer_source = trac_snocan(begp:endp), &
+          tracer_val    = trac_qflx_snow_unload(begp:endp))
+
+     end associate
+
+   end subroutine TracerFlux_SnowUnloading
+
+   !-----------------------------------------------------------------------
+   subroutine UpdateState_RemoveSnowUnloading(bounds, num_soilp, filter_soilp, dtime, &
+        qflx_snow_unload, snocan)
+     !
+     ! !DESCRIPTION:
+     ! Update snocan based on snow unloading, for bulk or one tracer
+     !
+     ! !ARGUMENTS:
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_soilp
+     integer, intent(in) :: filter_soilp(:)
+     real(r8), intent(in) :: dtime  ! land model time step (sec)
+
+     real(r8) , intent(in)    :: qflx_snow_unload( bounds%begp: ) ! total canopy snow unloading (mm H2O/s)
+     real(r8) , intent(inout) :: snocan( bounds%begp: )           ! canopy snow water (mm H2O)
+     !
+     ! !LOCAL VARIABLES:
+     integer :: fp, p
+
+     character(len=*), parameter :: subname = 'UpdateState_RemoveSnowUnloading'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(qflx_snow_unload, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(snocan, 1) == bounds%endp), sourcefile, __LINE__)
+
+     do fp = 1, num_soilp
+        p = filter_soilp(fp)
+
+        ! NOTE(wjs, 2019-05-09) The following check sets snocan to exactly 0 if it would
+        ! be set to close to 0 (but possibly not exactly 0, because (snocan/dtime)*dtime
+        ! is not always exactly equal to snocan). The use of exact equality of these
+        ! floating point values in the conditional is probably not desirable long-term. It
+        ! currently works for bulk water (because qflx_snow_unload is set to exactly
+        ! snocan/dtime if it would exceed this value), but does not necessarily work for
+        ! tracers. However, I'm using this exact equality check for now in order to get
+        ! bit-for-bit answers during the big refactor of CanopyHydrology.
+        if (qflx_snow_unload(p) == snocan(p)/dtime) then
+           snocan(p) = 0._r8
+        else
+           snocan(p) = snocan(p) - qflx_snow_unload(p) * dtime
+        end if
+     end do
+
+   end subroutine UpdateState_RemoveSnowUnloading
+
+   !-----------------------------------------------------------------------
+   subroutine SumFlux_FluxesOntoGround(bounds, num_nolakep, filter_nolakep, &
+        qflx_through_snow, qflx_snocanfall, qflx_snow_unload, &
+        qflx_through_liq, qflx_liqcanfall, qflx_irrig_drip, &
+        qflx_snow_grnd_col, qflx_liq_grnd_col)
+     !
+     ! !DESCRIPTION:
+     ! Compute summed fluxes onto ground, for bulk or one tracer
+     !
+     ! !ARGUMENTS:
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_nolakep
+     integer, intent(in) :: filter_nolakep(:)
+
+     real(r8) , intent(in)    :: qflx_through_snow( bounds%begp: ) ! canopy throughfall of snow (mm H2O/s)
+     real(r8) , intent(in)    :: qflx_snocanfall( bounds%begp: )   ! rate of excess canopy snow falling off canopy (mm H2O/s)
+     real(r8) , intent(in)    :: qflx_snow_unload( bounds%begp: )  ! total canopy snow unloading (mm H2O/s)
+     real(r8) , intent(in)    :: qflx_through_liq( bounds%begp: )  ! canopy throughfall of liquid (mm H2O/s)
+     real(r8) , intent(in)    :: qflx_liqcanfall( bounds%begp: )   ! rate of excess canopy liquid falling off canopy (mm H2O/s)
+     real(r8) , intent(in)    :: qflx_irrig_drip( bounds%begp: )   ! drip irrigation amount (mm H2O/s)
+
+     real(r8) , intent(inout) :: qflx_snow_grnd_col( bounds%begc: )    ! snow on ground after interception (mm H2O/s)
+     real(r8) , intent(inout) :: qflx_liq_grnd_col( bounds%begc: )     ! liquid on ground after interception (mm H2O/s)
+     !
+     ! !LOCAL VARIABLES:
+     integer :: fp, p
+     real(r8) :: qflx_snow_grnd_patch(bounds%begp:bounds%endp)  ! snow on ground after interception, patch-level (mm H2O/s)
+     real(r8) :: qflx_liq_grnd_patch(bounds%begp:bounds%endp)   ! liquid on ground after interception, patch-level (mm H2O/s)
+
+     character(len=*), parameter :: subname = 'SumFlux_FluxesOntoGround'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(qflx_through_snow, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_snocanfall, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_snow_unload, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_through_liq, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_liqcanfall, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_irrig_drip, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_snow_grnd_col, 1) == bounds%endc), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_liq_grnd_col, 1) == bounds%endc), sourcefile, __LINE__)
+
+     associate( &
+          begp => bounds%begp, &
+          endp => bounds%endp, &
+          begc => bounds%begc, &
+          endc => bounds%endc &
+          )
+
+     do fp = 1, num_nolakep
+        p = filter_nolakep(fp)
+
+        ! FIXME(wjs, 2019-05-10) To get bit-for-bit, probably need to replace
+        ! qflx_snow_unload with (qflx_snow_unload*dtime)/dtime. Probably no need to check
+        ! that that is only a roundoff-level change (i.e., no need to confirm that
+        ! (qflx_snow_unload*dtime)/dtime equals qflx_snow_unload within roundoff.
+        qflx_snow_grnd_patch(p) = &
+             qflx_through_snow(p) + &
+             qflx_snocanfall(p) + &
+             qflx_snow_unload(p)
+
+        ! FIXME(wjs, 2019-05-14) Parenthesize the addition of the first two terms to get
+        ! bit-for-bit. (Then remove this set of parentheses when I can tolerate
+        ! roundoff-level changes.)
+        qflx_liq_grnd_patch(p) = &
+             qflx_through_liq(p) + &
+             qflx_liqcanfall(p) + &
+             qflx_irrig_drip(p)
+     end do
+
+     call p2c(bounds, num_nolakep, filter_nolakep, &
+          qflx_snow_grnd_patch(begp:endp), &
+          qflx_snow_grnd_col(begc:endc))
+
+     call p2c(bounds, num_nolakep, filter_nolakep, &
+          qflx_liq_grnd_patch(begp:endp), &
+          qflx_liq_grnd_col(begc:endc))
+
+     end associate
+
+   end subroutine SumFlux_FluxesOntoGround
+
+
+   !-----------------------------------------------------------------------
+   subroutine CanopyHydrology(bounds, &
+        num_nolakec, filter_nolakec, &
+        atm2lnd_inst, temperature_inst, &
+        aerosol_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+        waterfluxbulk_inst)
+     !
+     ! !DESCRIPTION:
+     ! Calculation of snow layer initialization if the snow accumulation exceeds 10 mm.
      ! Note:  The evaporation loss is taken off after the calculation of leaf
      ! temperature in the subroutine clm\_leaftem.f90, not in this subroutine.
      !
@@ -174,49 +1090,28 @@ contains
      use landunit_varcon    , only : istcrop, istwet, istsoil, istice_mec 
      use clm_varctl         , only : subgridflag
      use clm_varpar         , only : nlevsoi,nlevsno
-     use clm_time_manager   , only : get_step_size
-     use subgridAveMod      , only : p2c
      use SnowHydrologyMod   , only : NewSnowBulkDensity
      !
      ! !ARGUMENTS:
      type(bounds_type)      , intent(in)    :: bounds     
      integer                , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
      integer                , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
-     integer                , intent(in)    :: num_nolakep          ! number of pft non-lake points in pft filter
-     integer                , intent(in)    :: filter_nolakep(:)    ! patch filter for non-lake points
      type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
-     type(canopystate_type) , intent(in)    :: canopystate_inst
      type(temperature_type) , intent(inout) :: temperature_inst
      type(aerosol_type)     , intent(inout) :: aerosol_inst
      type(waterstatebulk_type)      , intent(inout) :: waterstatebulk_inst
      type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
      type(waterfluxbulk_type)       , intent(inout) :: waterfluxbulk_inst
-     type(wateratm2lndbulk_type)    , intent(inout) :: wateratm2lndbulk_inst
      !
      ! !LOCAL VARIABLES:
      integer  :: f                                            ! filter index
-     integer  :: pi                                           ! patch index
-     integer  :: p                                            ! patch index
      integer  :: c                                            ! column index
      integer  :: l                                            ! landunit index
      integer  :: g                                            ! gridcell index
      integer  :: newnode                                      ! flag when new snow node is set, (1=yes, 0=no)
      real(r8) :: dtime                                        ! land model time step (sec)
-     real(r8) :: snocanmx                                     ! maximum allowed snow on canopy [mm equiv. water]
-     real(r8) :: liqcanmx                                     ! maximum allowed snowliquid water on canopy [mm equiv. water]
-     real(r8) :: xsnorun                                      ! excess snow that exceeds the leaf capacity [mm/s]
-     real(r8) :: xliqrun                                      ! excess liquid water 
-     real(r8) :: qflx_snocanfall(bounds%begp:bounds%endp)     ! rate of excess canopy snow falling off canopy
-     real(r8) :: qflx_liqcanfall(bounds%begp:bounds%endp)     ! rate of excess canopy liquid falling off canopy
-     real(r8) :: fpi                                          ! coefficient of interception
-     real(r8) :: fpisnow                                      ! coefficient of interception for snowfall
      real(r8) :: dz_snowf                                     ! layer thickness rate change due to precipitation [mm/s]
      real(r8) :: bifall(bounds%begc:bounds%endc)              ! bulk density of newly fallen dry snow [kg/m3]
-     real(r8) :: qflx_through_rain(bounds%begp:bounds%endp)   ! direct rain throughfall [mm/s]
-     real(r8) :: qflx_through_snow(bounds%begp:bounds%endp)   ! direct snow throughfall [mm/s]
-     real(r8) :: qflx_prec_grnd_snow(bounds%begp:bounds%endp) ! snow precipitation incident on ground [mm/s]
-     real(r8) :: qflx_prec_grnd_rain(bounds%begp:bounds%endp) ! rain precipitation incident on ground [mm/s]
-     real(r8) :: qflx_liq_above_canopy(bounds%begp:bounds%endp) ! liquid water input above canopy (rain plus irrigation) [mm/s]
      real(r8) :: z_avg                                        ! grid cell average snow depth
      real(r8) :: rho_avg                                      ! avg density of snow column
      real(r8) :: temp_snow_depth,temp_intsnow                 ! temporary variables
@@ -237,199 +1132,28 @@ contains
           dz                   => col%dz                                  , & ! Output: [real(r8) (:,:) ]  layer depth (m)                       
           z                    => col%z                                   , & ! Output: [real(r8) (:,:) ]  layer thickness (m)                   
 
-          forc_rain            => wateratm2lndbulk_inst%forc_rain_downscaled_col   , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                        
-          forc_snow            => wateratm2lndbulk_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                        
           forc_t               => atm2lnd_inst%forc_t_downscaled_col      , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)        
-          qflx_floodg          => wateratm2lndbulk_inst%forc_flood_grc             , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM   
-          forc_wind            => atm2lnd_inst%forc_wind_grc              , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed (m/s)
-          frac_veg_nosno       => canopystate_inst%frac_veg_nosno_patch   , & ! Input:  [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
-          elai                 => canopystate_inst%elai_patch             , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow
-          esai                 => canopystate_inst%esai_patch             , & ! Input:  [real(r8) (:)   ]  one-sided stem area index with burying by snow
 
           t_grnd               => temperature_inst%t_grnd_col             , & ! Input:  [real(r8) (:)   ]  ground temperature (Kelvin)             
           t_soisno             => temperature_inst%t_soisno_col           , & ! Output: [real(r8) (:,:) ]  soil temperature (Kelvin)  
 
-          snocan               => waterstatebulk_inst%snocan_patch            , & ! Output: [real(r8) (:)   ]  canopy snow (mm H2O)             
-          liqcan               => waterstatebulk_inst%liqcan_patch            , & ! Output: [real(r8) (:)   ]  canopy liquid (mm H2O)   
-          snounload            => waterdiagnosticbulk_inst%snounload_patch         , & ! Output: [real(r8) (:)   ]  canopy snow unloading (mm H2O)
-          h2osfc               => waterstatebulk_inst%h2osfc_col              , & ! Output: [real(r8) (:)   ]  surface water (mm)                      
           h2osno               => waterstatebulk_inst%h2osno_col              , & ! Output: [real(r8) (:)   ]  snow water (mm H2O)                     
           snow_depth           => waterdiagnosticbulk_inst%snow_depth_col          , & ! Output: [real(r8) (:)   ]  snow height (m)                         
           int_snow             => waterstatebulk_inst%int_snow_col            , & ! Output: [real(r8) (:)   ]  integrated snowfall [mm]                
           frac_sno_eff         => waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Output: [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
           frac_sno             => waterdiagnosticbulk_inst%frac_sno_col            , & ! Output: [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
-          frac_h2osfc          => waterdiagnosticbulk_inst%frac_h2osfc_col         , & ! Output: [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
           frac_iceold          => waterdiagnosticbulk_inst%frac_iceold_col         , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
           h2osoi_ice           => waterstatebulk_inst%h2osoi_ice_col          , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
           h2osoi_liq           => waterstatebulk_inst%h2osoi_liq_col          , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
           swe_old              => waterdiagnosticbulk_inst%swe_old_col             , & ! Output: [real(r8) (:,:) ]  snow water before update              
 
-          qflx_floodc          => waterfluxbulk_inst%qflx_floodc_col          , & ! Output: [real(r8) (:)   ]  column flux of flood water from RTM     
           qflx_snow_drain       => waterfluxbulk_inst%qflx_snow_drain_col     , & ! Input: [real(r8) (:)   ]  drainage from snow pack from previous time step       
           qflx_snow_h2osfc     => waterfluxbulk_inst%qflx_snow_h2osfc_col     , & ! Output: [real(r8) (:)   ]  snow falling on surface water (mm/s)     
-          qflx_snow_grnd_col   => waterfluxbulk_inst%qflx_snow_grnd_col       , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
-          qflx_snow_grnd_patch => waterfluxbulk_inst%qflx_snow_grnd_patch     , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
-          qflx_prec_intr       => waterfluxbulk_inst%qflx_prec_intr_patch     , & ! Output: [real(r8) (:)   ]  interception of precipitation [mm/s]    
-          qflx_prec_grnd       => waterfluxbulk_inst%qflx_prec_grnd_patch     , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
-          qflx_rain_grnd       => waterfluxbulk_inst%qflx_rain_grnd_patch     , & ! Output: [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
-          qflx_irrig_drip      => waterfluxbulk_inst%qflx_irrig_drip_patch      , & ! Input: [real(r8) (:)    ]  drip irrigation amount (mm/s)           
-          qflx_irrig_sprinkler => waterfluxbulk_inst%qflx_irrig_sprinkler_patch , & ! Input: [real(r8) (:)    ]  sprinkler irrigation amount (mm/s)
-
-          qflx_snowindunload   => waterfluxbulk_inst%qflx_snowindunload_patch , & ! Output: [real(r8) (:)   ]  canopy snow unloading from wind [mm/s]    
-          qflx_snotempunload   => waterfluxbulk_inst%qflx_snotempunload_patch   & ! Output: [real(r8) (:)   ]  canopy snow unloading from temp. [mm/s]    
+          qflx_snow_grnd_col   => waterfluxbulk_inst%qflx_snow_grnd_col         & ! Input:  [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
           )
 
        ! Compute time step
        dtime = get_step_size()
-
-       ! Start patch loop
-
-       do f = 1, num_nolakep
-          p = filter_nolakep(f)
-          g = patch%gridcell(p)
-          l = patch%landunit(p)
-          c = patch%column(p)
-          
-          ! Canopy interception and precipitation onto ground surface
-          ! Add precipitation to leaf water
-
-          if (lun%itype(l)==istsoil .or. lun%itype(l)==istwet .or. lun%urbpoi(l) .or. &
-               lun%itype(l)==istcrop) then
-
-             qflx_snocanfall(p) = 0._r8      ! rate of just snow canopy fall
-             qflx_liqcanfall(p) = 0._r8
-             qflx_snowindunload(p) = 0._r8
-             qflx_snotempunload(p) = 0._r8
-             snounload(p)=0._r8
-             qflx_through_snow(p) = 0._r8 ! rain precipitation direct through canopy
-             qflx_through_rain(p) = 0._r8 ! snow precipitation direct through canopy
-             qflx_prec_intr(p) = 0._r8    ! total intercepted precipitation
-
-
-             if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall) then
-                if (frac_veg_nosno(p) == 1 .and. (forc_rain(c) + forc_snow(c) + qflx_irrig_sprinkler(p)) > 0._r8) then
-
-                   ! total liquid water inputs above canopy
-                   qflx_liq_above_canopy(p) = forc_rain(c)+ qflx_irrig_sprinkler(p)
-                   
-                   ! Coefficient of interception
-                   if(use_clm5_fpi) then 
-                      fpi = interception_fraction * tanh(elai(p) + esai(p))
-                   else
-                      fpi = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
-                   endif
-
-                   snocanmx = params_inst%sno_stor_max * (elai(p) + esai(p))  ! 6*(LAI+SAI)
-                   liqcanmx = params_inst%dewmx * (elai(p) + esai(p))
-
-                   fpisnow = (1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))  ! max interception of 1
-                   ! Direct throughfall
-                   qflx_through_snow(p) = forc_snow(c) * (1._r8-fpisnow)
-                   qflx_through_rain(p) = qflx_liq_above_canopy(p) * (1._r8-fpi)
-
-                   ! Intercepted precipitation [mm/s]
-                   qflx_prec_intr(p) = forc_snow(c)*fpisnow + qflx_liq_above_canopy(p)*fpi
-                   ! storage of intercepted snowfall, rain, and dew
-                   snocan(p) = max(0._r8, snocan(p) + dtime*forc_snow(c)*fpisnow)
-                   liqcan(p) = max(0._r8, liqcan(p) + dtime*qflx_liq_above_canopy(p)*fpi)
-                   
-                   ! Initialize rate of canopy runoff and snow falling off canopy
-                   qflx_snocanfall(p) = 0._r8
-                   qflx_liqcanfall(p) = 0._r8
-                   qflx_snowindunload(p) = 0._r8
-                   qflx_snotempunload(p) = 0._r8
-                   snounload(p)=0._r8
-
-                   ! Remove excess liquid / snow exceeding canopy capacity
-                   xliqrun = (liqcan(p) - liqcanmx)/dtime
-                   if (xliqrun > 0._r8) then
-                      qflx_liqcanfall(p) = xliqrun
-                      liqcan(p) = liqcanmx
-                   end if
-                   xsnorun = (snocan(p) - snocanmx)/dtime
-                   if (xsnorun > 0._r8) then ! exceeds snow capacity
-                      qflx_snocanfall(p) = xsnorun
-                      snocan(p) = snocanmx
-                   end if
-                end if
-             end if
-
-          else if (lun%itype(l)==istice_mec) then
-
-             qflx_through_snow(p) = 0._r8
-             qflx_through_rain(p) = 0._r8
-             qflx_prec_intr(p)    = 0._r8
-             snocan(p)            = 0._r8
-             liqcan(p)            = 0._r8
-             qflx_snocanfall(p)    = 0._r8
-             qflx_liqcanfall(p)    = 0._r8
-             qflx_snowindunload(p) = 0._r8 
-             qflx_snotempunload(p) = 0._r8 
-             snounload(p)=0._r8
-
-          end if
-
-          ! Precipitation onto ground (kg/(m2 s))
-
-          if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall) then
-             if (frac_veg_nosno(p) == 0) then
-                qflx_prec_grnd_snow(p) = forc_snow(c)
-                qflx_prec_grnd_rain(p) = forc_rain(c) + qflx_irrig_sprinkler(p)
-             else
-                qflx_snowindunload(p)=0._r8 
-                qflx_snotempunload(p)=0._r8 
-                snounload(p)=0._r8
-                if (snocan(p) > 0._r8) then
-                   qflx_snotempunload(p) = max(0._r8,snocan(p)*(forc_t(c)-270.15_r8)/1.87e5_r8) 
-                   qflx_snowindunload(p) = 0.5_r8*snocan(p)*forc_wind(g)/1.56e5_r8 
-                   snounload(p) = (qflx_snowindunload(p)+qflx_snotempunload(p))*dtime ! total canopy unloading in timestep
-                   if ( snounload(p) > snocan(p) ) then ! Limit unloading to snow in canopy
-                      snounload(p) = snocan(p)
-                   end if
-                   snocan(p) = snocan(p) - snounload(p)
-                endif
-                qflx_prec_grnd_snow(p) = qflx_through_snow(p) + qflx_snocanfall(p)  + snounload(p)/dtime
-                qflx_prec_grnd_rain(p) = qflx_through_rain(p) + qflx_liqcanfall(p) 
-             end if
-             ! Urban sunwall and shadewall have no intercepted precipitation
-          else
-             qflx_prec_grnd_snow(p) = 0.
-             qflx_prec_grnd_rain(p) = 0.
-          end if
-
-          ! Add irrigation water directly onto ground (bypassing canopy interception)
-          ! Note that it's still possible that (some of) this irrigation water will runoff (as runoff is computed later)
-          qflx_prec_grnd_rain(p) = qflx_prec_grnd_rain(p) + qflx_irrig_drip(p)
-             
-          qflx_prec_grnd(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
-
-          qflx_snow_grnd_patch(p) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
-          qflx_rain_grnd(p)       = qflx_prec_grnd_rain(p)           ! liquid water onto ground (mm/s)
-
-       end do ! (end patch loop)
-
-       ! Determine the fraction of foliage covered by water and the
-       ! fraction of foliage that is dry and transpiring.
-
-       call FracWet(num_nolakep, filter_nolakep, &
-            canopystate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst)
-
-       ! Update column level state variables for snow.
-
-       call p2c(bounds, num_nolakec, filter_nolakec, &
-            qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
-            qflx_snow_grnd_col(bounds%begc:bounds%endc))
-
-       ! apply gridcell flood water flux to non-lake columns
-       do f = 1, num_nolakec
-          c = filter_nolakec(f)
-          g = col%gridcell(c)
-          if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall) then      
-             qflx_floodc(c) = qflx_floodg(g)
-          else
-             qflx_floodc(c) = 0._r8
-          endif
-       enddo
 
        ! Determine snow height and snow water
 
@@ -617,7 +1341,9 @@ contains
    end subroutine CanopyHydrology
 
    !-----------------------------------------------------------------------
-   subroutine FracWet(numf, filter, canopystate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst)
+   subroutine BulkDiag_FracWet(bounds, num_soilp, filter_soilp, &
+        frac_veg_nosno, elai, esai, snocan, liqcan, &
+        fwet, fdry, fcansno)
      !
      ! !DESCRIPTION:
      ! Determine fraction of vegetated surfaces which are wet and
@@ -630,11 +1356,18 @@ contains
      ! ! USES:
      use clm_varcon         , only : tfrz
      ! !ARGUMENTS:
-     integer                , intent(in)    :: numf                  ! number of filter non-lake points
-     integer                , intent(in)    :: filter(numf)          ! patch filter for non-lake points
-     type(canopystate_type) , intent(in)    :: canopystate_inst
-     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
-     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_soilp
+     integer, intent(in) :: filter_soilp(:)
+
+     integer  , intent(in)    :: frac_veg_nosno( bounds%begp: ) ! fraction of vegetation not covered by snow (0 OR 1)
+     real(r8) , intent(in)    :: elai( bounds%begp: )           ! canopy one-sided leaf area index with burying by snow
+     real(r8) , intent(in)    :: esai( bounds%begp: )           ! canopy one-sided stem area index with burying by snow
+     real(r8) , intent(in)    :: snocan( bounds%begp: )         ! canopy snow water (mm H2O)
+     real(r8) , intent(in)    :: liqcan( bounds%begp: )         ! canopy liquid water (mm H2O)
+     real(r8) , intent(inout) :: fwet( bounds%begp: )           ! fraction of canopy that is wet (0 to 1)
+     real(r8) , intent(inout) :: fdry( bounds%begp: )           ! fraction of foliage that is green and dry [-]
+     real(r8) , intent(inout) :: fcansno( bounds%begp: )        ! fraction of canopy that is snow covered (0 to 1)
      !
      ! !LOCAL VARIABLES:
      integer  :: fp,p             ! indices
@@ -643,49 +1376,44 @@ contains
      real(r8) :: dewmxi           ! inverse of maximum allowed dew [1/mm]
      !-----------------------------------------------------------------------
 
-     associate(                                              & 
-          frac_veg_nosno => canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer (:)]  fraction of veg not covered by snow (0/1 now) [-]
-          elai           => canopystate_inst%elai_patch           , & ! Input:  [real(r8) (:) ]  one-sided leaf area index with burying by snow
-          esai           => canopystate_inst%esai_patch           , & ! Input:  [real(r8) (:) ]  one-sided stem area index with burying by snow
+     SHR_ASSERT_FL((ubound(frac_veg_nosno, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(elai, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(esai, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(snocan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(liqcan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(fwet, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(fdry, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(fcansno, 1) == bounds%endp), sourcefile, __LINE__)
 
-          snocan         => waterstatebulk_inst%snocan_patch          , & ! Input:  [real(r8) (:)   ]  canopy snow (mm H2O)             
-          liqcan         => waterstatebulk_inst%liqcan_patch          , & ! Input:  [real(r8) (:)   ]  canopy liquid (mm H2O)
+     do fp = 1, num_soilp
+        p = filter_soilp(fp)
+        if (frac_veg_nosno(p) == 1) then
+           h2ocan = snocan(p) + liqcan(p)
 
-          fwet           => waterdiagnosticbulk_inst%fwet_patch            , & ! Output: [real(r8) (:) ]  fraction of canopy that is wet (0 to 1) 
-          fcansno        => waterdiagnosticbulk_inst%fcansno_patch         , & ! Output: [real(r8) (:) ]  fraction of canopy that is snow covered (0 to 1) 
-          fdry           => waterdiagnosticbulk_inst%fdry_patch              & ! Output: [real(r8) (:) ]  fraction of foliage that is green and dry [-] (new)
-          )
+           if (h2ocan > 0._r8) then
+              vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
+              dewmxi  = 1.0_r8/params_inst%dewmx  ! wasteful division
+              fwet(p) = ((dewmxi/vegt)*h2ocan)**0.666666666666_r8
+              fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
+              if (snocan(p) > 0._r8) then
+                 dewmxi  = 1.0_r8/params_inst%dewmx  ! wasteful division
+                 fcansno(p) = ((dewmxi / (vegt * params_inst%sno_stor_max * 10.0_r8)) * snocan(p))**0.15_r8 ! must match snocanmx 
+                 fcansno(p) = min (fcansno(p),1.0_r8)
+              else
+                 fcansno(p) = 0._r8
+              end if
+           else
+              fwet(p) = 0._r8
+              fcansno(p) = 0._r8
+           end if
+           fdry(p) = (1._r8-fwet(p))*elai(p)/(elai(p)+esai(p))
+        else
+           fwet(p) = 0._r8
+           fdry(p) = 0._r8
+        end if
+     end do
 
-       do fp = 1,numf
-          p = filter(fp)
-          if (frac_veg_nosno(p) == 1) then
-             h2ocan = snocan(p) + liqcan(p)
-
-             if (h2ocan > 0._r8) then
-                vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
-                dewmxi  = 1.0_r8/params_inst%dewmx  ! wasteful division
-                fwet(p) = ((dewmxi/vegt)*h2ocan)**0.666666666666_r8
-                fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
-                if (snocan(p) > 0._r8) then
-                   dewmxi  = 1.0_r8/params_inst%dewmx  ! wasteful division
-                   fcansno(p) = ((dewmxi / (vegt * params_inst%sno_stor_max * 10.0_r8)) * snocan(p))**0.15_r8 ! must match snocanmx 
-                   fcansno(p) = min (fcansno(p),1.0_r8)
-                else
-                   fcansno(p) = 0._r8
-                end if
-             else
-                fwet(p) = 0._r8
-                fcansno(p) = 0._r8
-             end if
-             fdry(p) = (1._r8-fwet(p))*elai(p)/(elai(p)+esai(p))
-          else
-             fwet(p) = 0._r8
-             fdry(p) = 0._r8
-          end if
-       end do
-
-     end associate
-   end subroutine FracWet
+   end subroutine BulkDiag_FracWet
 
    !-----------------------------------------------------------------------
    subroutine FracH2OSfc(bounds, num_h2osfc, filter_h2osfc, &

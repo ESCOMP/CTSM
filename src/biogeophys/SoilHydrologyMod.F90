@@ -22,6 +22,7 @@ module SoilHydrologyMod
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use SoilHydrologyType , only : soilhydrology_type  
   use SoilStateType     , only : soilstate_type
+  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
   use WaterFluxType     , only : waterflux_type
   use WaterFluxBulkType , only : waterfluxbulk_type
   use WaterStateType    , only : waterstate_type
@@ -29,7 +30,7 @@ module SoilHydrologyMod
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
   use TemperatureType   , only : temperature_type
   use LandunitType      , only : lun                
-  use ColumnType        , only : col                
+  use ColumnType        , only : column_type, col
   use PatchType         , only : patch                
   !
   ! !PUBLIC TYPES:
@@ -39,6 +40,7 @@ module SoilHydrologyMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SoilHydReadNML       ! Read in the Soil hydrology namelist
   public :: SetSoilWaterFractions ! Set diagnostic variables related to the fraction of water and ice in each layer
+  public :: SetFloodc            ! Apply gridcell flood water flux to non-lake columns
   public :: SetQflxInputs        ! Set the flux of water into the soil from the top
   public :: UpdateH2osfc         ! Calculate fluxes out of h2osfc and update the h2osfc state
   public :: Infiltration         ! Calculate total infiltration
@@ -215,6 +217,45 @@ contains
     end associate
 
   end subroutine SetSoilWaterFractions
+
+  !-----------------------------------------------------------------------
+  subroutine SetFloodc(num_nolakec, filter_nolakec, col, &
+       wateratm2lndbulk_inst, waterfluxbulk_inst)
+    !
+    ! !DESCRIPTION:
+    ! Apply gridcell flood water flux to non-lake columns
+    !
+    ! !ARGUMENTS:
+     integer                     , intent(in)    :: num_nolakec       ! number of column non-lake points in column filter
+     integer                     , intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
+     type(column_type)           , intent(in)    :: col
+     type(wateratm2lndbulk_type) , intent(in)    :: wateratm2lndbulk_inst
+     type(waterfluxbulk_type)    , intent(inout) :: waterfluxbulk_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c, g
+
+    character(len=*), parameter :: subname = 'SetFloodc'
+    !-----------------------------------------------------------------------
+
+    associate( &
+          qflx_floodg => wateratm2lndbulk_inst%forc_flood_grc , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM
+          qflx_floodc => waterfluxbulk_inst%qflx_floodc_col     & ! Output: [real(r8) (:)   ]  column flux of flood water from RTM
+          )
+
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+       g = col%gridcell(c)
+       if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall) then
+          qflx_floodc(c) = qflx_floodg(g)
+       else
+          qflx_floodc(c) = 0._r8
+       end if
+    end do
+
+    end associate
+
+  end subroutine SetFloodc
 
    !-----------------------------------------------------------------------
    subroutine SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &

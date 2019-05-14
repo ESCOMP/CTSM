@@ -303,7 +303,7 @@ contains
          h2osoi_liq     => waterstatebulk_inst%h2osoi_liq_col    , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
 
          qflx_snomelt   => waterfluxbulk_inst%qflx_snomelt_col   , & ! Input:  [real(r8) (:)   ] snow melt (mm H2O /s)
-         qflx_rain_grnd => waterfluxbulk_inst%qflx_rain_grnd_col , & ! Input:  [real(r8) (:)   ] rain on ground after interception (mm H2O/s) [+]
+         qflx_liq_grnd  => waterfluxbulk_inst%qflx_liq_grnd_col  , & ! Input:  [real(r8) (:)   ] liquid on ground after interception (mm H2O/s) [+]
          qflx_sub_snow  => waterfluxbulk_inst%qflx_sub_snow_col  , & ! Input:  [real(r8) (:)   ] sublimation rate from snow pack (mm H2O /s) [+]
          qflx_dew_snow  => waterfluxbulk_inst%qflx_dew_snow_col  , & ! Input:  [real(r8) (:)   ] surface dew added to snow pack (mm H2O /s) [+]
          qflx_evap_grnd => waterfluxbulk_inst%qflx_evap_grnd_col , & ! Input:  [real(r8) (:)   ] ground surface evaporation rate (mm H2O/s) [+]
@@ -344,7 +344,7 @@ contains
           h2osoi_liq(c,snl(c)+1) = h2osoi_liq(c,snl(c)+1) + wgdif
        end if
        h2osoi_liq(c,snl(c)+1) = h2osoi_liq(c,snl(c)+1) +  &
-            frac_sno_eff(c) * (qflx_rain_grnd(c) + qflx_dew_grnd(c) &
+            frac_sno_eff(c) * (qflx_liq_grnd(c) + qflx_dew_grnd(c) &
             - qflx_evap_grnd(c)) * dtime
 
        ! if negative, reduce deeper layer's liquid water content sequentially
@@ -549,16 +549,16 @@ contains
        qflx_snow_drain(c) = qflx_snow_drain(c) + (qout(c) / dtime)
 
        qflx_rain_plus_snomelt(c) = (qout(c) / dtime) &
-            + (1.0_r8 - frac_sno_eff(c)) * qflx_rain_grnd(c)
+            + (1.0_r8 - frac_sno_eff(c)) * qflx_liq_grnd(c)
        int_snow(c) = int_snow(c) + frac_sno_eff(c) &
-                     * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_rain_grnd(c)) * dtime
+                     * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_liq_grnd(c)) * dtime
     end do
 
     do fc = 1, num_nosnowc
        c = filter_nosnowc(fc)
        qflx_snow_drain(c) = qflx_snomelt(c)
 
-       qflx_rain_plus_snomelt(c) = qflx_rain_grnd(c) + qflx_snomelt(c)
+       qflx_rain_plus_snomelt(c) = qflx_liq_grnd(c) + qflx_snomelt(c)
        ! reset accumulated snow when no snow present
        if (h2osno(c) <= 0._r8) then
           int_snow(c) = 0._r8
