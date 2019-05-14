@@ -1742,7 +1742,7 @@ contains
                   end if
                   if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
                       ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
-                      ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
+                      ivt(p) == nrice   .or. Ivt(p) == nirrig_rice) then
                      gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
                   end if
 
@@ -2930,6 +2930,7 @@ contains
     ! !USES:
     use clm_varctl    , only : use_crop
     use clm_varctl    , only : use_grainproduct !need to create variable use_livestemproduct as per user_grainproduct
+    use pftconMod     , only : npcropmin
     use subgridAveMod , only : p2c
     !
     ! !ARGUMENTS:
@@ -2946,32 +2947,34 @@ contains
 
     character(len=*), parameter :: subname = 'CNLeafToProductPools'
     !-----------------------------------------------------------------------
-
+    associate(                                                                           &
+         ivt                   =>    patch%itype                                         & ! Input:  [integer  (:) ]  patch vegetation type
+             )
     ! Explicitly checking use_crop is probably unnecessary here (because presumably
     ! use_grainproduct is only true if use_crop is true), but we do it for safety because
     ! the grain*_to_food_patch fluxes are not set if use_crop is false.
-    if (use_crop .and. use_grainproduct) then
-       do fp = 1, num_soilp
+      if ((ivt(p) >= npcropmin) .and. use_crop .and. use_grainproduct) then
+        do fp = 1, num_soilp
           p = filter_soilp(fp)
-          cnveg_carbonflux_inst%leafc_to_cropprodc_patch(p) = &
+           cnveg_carbonflux_inst%leafc_to_cropprodc_patch(p) = &
                cnveg_carbonflux_inst%leafc_to_litter_patch(p) !changing from grainc_to_food_patch to leafc_to_litter_patch as equivalent
 
-          cnveg_nitrogenflux_inst%leafn_to_cropprodn_patch(p) = &
+           cnveg_nitrogenflux_inst%leafn_to_cropprodn_patch(p) = &
                cnveg_nitrogenflux_inst%leafn_to_litter_patch(p)
-       end do
+        end do
 
-       call p2c (bounds, num_soilc, filter_soilc, &
+        call p2c (bounds, num_soilc, filter_soilc, &
             cnveg_carbonflux_inst%leafc_to_cropprodc_patch(bounds%begp:bounds%endp), &
             cnveg_carbonflux_inst%leafc_to_cropprodc_col(bounds%begc:bounds%endc))
 
-       call p2c (bounds, num_soilc, filter_soilc, &
+        call p2c (bounds, num_soilc, filter_soilc, &
             cnveg_nitrogenflux_inst%leafn_to_cropprodn_patch(bounds%begp:bounds%endp), &
             cnveg_nitrogenflux_inst%leafn_to_cropprodn_col(bounds%begc:bounds%endc))
-    end if
+      end if
 
     ! No else clause: if use_grainproduct is false, then the grain*_to_cropprod fluxes
     ! will remain at their initial value (0).
-
+    end associate
   end subroutine CNLeafToProductPools
 
   !-----------------------------------------------------------------------
