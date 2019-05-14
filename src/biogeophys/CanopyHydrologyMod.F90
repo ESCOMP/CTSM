@@ -651,7 +651,6 @@ contains
      integer  :: fp,p             ! indices
      real(r8) :: h2ocan           ! total canopy water (mm H2O)
      real(r8) :: vegt             ! lsai
-     real(r8) :: dewmxi           ! inverse of dew parameter [1/mm]
      !-----------------------------------------------------------------------
 
      associate(                                              & 
@@ -674,11 +673,9 @@ contains
 
              if (h2ocan > 0._r8) then
                 vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
-                dewmxi  = 1.0_r8/params_inst%liq_canopy_storage_scalar  ! wasteful division
-                fwet(p) = ((dewmxi/vegt)*h2ocan)**0.666666666666_r8
+                fwet(p) = (h2ocan / (vegt * params_inst%liq_canopy_storage_scalar))**0.666666666666_r8
                 fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
                 if (snocan(p) > 0._r8) then
-                   dewmxi  = 1.0_r8/params_inst%liq_canopy_storage_scalar  ! wasteful division
                    fcansno(p) = (snocan(p) / (vegt * params_inst%snow_canopy_storage_scalar))**0.15_r8 ! must match snocanmx 
                    fcansno(p) = min (fcansno(p),1.0_r8)
                 else
