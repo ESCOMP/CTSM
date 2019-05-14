@@ -90,8 +90,13 @@ module lilac_mod
         allocate (l2c_fldlist(l2a_fldnum))
         allocate (c2l_fldlist(a2l_fldnum))
         print *, "creating empty field lists !"
-        !    call create_fldlists(c2a_fldlist, a2c_fldlist, a2l_fldnum, l2a_fldnum)
-        !call create_fldlists(flds_a2l, fldsfldsToCpl, fldsToCpl_num, fldsFrCpl_num)
+
+        ! ======================================================================= ! maybe move to create_fldlist?
+        !    call create_fldlists(c2a_fldlist, a2c_fldlist, )
+
+        !-------------------------------------------------------------------------
+        !            !---- from atm ----! a2c_fldlist & c2l_fldlist
+        !-------------------------------------------------------------------------
 
         a2c_fldlist(1)%stdname      =  'uwind'
         a2c_fldlist(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
@@ -107,20 +112,20 @@ module lilac_mod
         !print *,      a2c_fldlist(3)%farrayptr1d
 
 
+        !!! Where should these point to? pointer to an empty array which will be filled in the land....
+
         ! Similary we need c2a_fldlist
         c2l_fldlist(1)%stdname      =  'uwind'
-        !c2l_fldlist(1)%farrayptr1d  => lnd2atm1d%lwup !*** this now sets the module variable memory in atmos_cap.F90
         print *,      c2l_fldlist(1)%stdname
         c2l_fldlist(2)%stdname      =  'vwind'
-        !c2l_fldlist(2)%farrayptr1d  => lnd2atm1d%taux !*** this now sets the module variable memory in atmos_cap.F90
         print *,      c2l_fldlist(1)%stdname
         c2l_fldlist(3)%stdname      =  'tbot'
-        !c2l_fldlist(3)%farrayptr1d  => lnd2atm1d%tauy
         print *,      c2l_fldlist(1)%stdname
 
+        !-------------------------------------------------------------------------
+        !            !---- from land ----! l2c_fldlist & c2a_fldlist
+        !-------------------------------------------------------------------------
 
-
-        !!! Where should these point to? pointer to an empty array which will be filled in the land....
 
         l2c_fldlist(1)%stdname      =  'lwup'
         l2c_fldlist(1)%farrayptr1d  => lnd2atm1d%lwup
@@ -143,6 +148,8 @@ module lilac_mod
 
         c2a_fldlist(3)%stdname      =  'tauy'
         print *,      c2a_fldlist(3)%stdname
+
+        ! ======================================================================= ! create_fldlist
 
         !-------------------------------------------------------------------------
         ! Create Gridded Component!  --- dummy atmosphere ( atmos_cap)
