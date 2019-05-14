@@ -679,7 +679,7 @@ contains
                 fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
                 if (snocan(p) > 0._r8) then
                    dewmxi  = 1.0_r8/params_inst%liq_canopy_storage_scalar  ! wasteful division
-                   fcansno(p) = ((dewmxi / (vegt * params_inst%snow_canopy_storage_scalar * 10.0_r8)) * snocan(p))**0.15_r8 ! must match snocanmx
+                   fcansno(p) = (snocan(p) / (vegt * params_inst%snow_canopy_storage_scalar))**0.15_r8 ! must match snocanmx 
                    fcansno(p) = min (fcansno(p),1.0_r8)
                 else
                    fcansno(p) = 0._r8
