@@ -39,8 +39,8 @@ module CanopyHydrologyMod
 
   type, private :: params_type
      real(r8) :: zlnd  ! Roughness length for soil (m)
-     real(r8) :: dewmx  ! Canopy maximum storage of liquid water (kg/m2)
-     real(r8) :: sno_stor_max  ! Canopy maximum storage of snow (kg/m2)
+     real(r8) :: liq_canopy_storage_scalar  ! Canopy-storage-of-liquid-water parameter (kg/m2)
+     real(r8) :: snow_canopy_storage_scalar  ! Canopy-storage-of-snow parameter (kg/m2)
      real(r8) :: accum_factor  ! Accumulation constant for fractional snow covered area (unitless)
   end type params_type
   type(params_type), private ::  params_inst
@@ -142,10 +142,10 @@ contains
 
     ! Roughness length for soil (m)
     call readNcdioScalar(ncid, 'zlnd', subname, params_inst%zlnd)
-    ! Canopy maximum storage of liquid water (kg/m2)
-    call readNcdioScalar(ncid, 'dewmx', subname, params_inst%dewmx)
-    ! Canopy maximum storage of snow (kg/m2)
-    call readNcdioScalar(ncid, 'sno_stor_max', subname, params_inst%sno_stor_max)
+    ! Canopy-storage-of-liquid-water parameter (kg/m2)
+    call readNcdioScalar(ncid, 'dewmx', subname, params_inst%liq_canopy_storage_scalar)
+    ! Canopy-storage-of-snow parameter (kg/m2)
+    call readNcdioScalar(ncid, 'sno_stor_max', subname, params_inst%snow_canopy_storage_scalar)
     ! Accumulation constant for fractional snow covered area (unitless)
     call readNcdioScalar(ncid, 'accum_factor', subname, params_inst%accum_factor)
 
@@ -327,8 +327,8 @@ contains
                       fpi = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
                    endif
 
-                   snocanmx = params_inst%sno_stor_max * (elai(p) + esai(p))  ! 6*(LAI+SAI)
-                   liqcanmx = params_inst%dewmx * (elai(p) + esai(p))
+                   snocanmx = params_inst%snow_canopy_storage_scalar * (elai(p) + esai(p))  ! 6*(LAI+SAI)
+                   liqcanmx = params_inst%liq_canopy_storage_scalar * (elai(p) + esai(p))
 
                    fpisnow = (1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))  ! max interception of 1
                    ! Direct throughfall
@@ -651,7 +651,7 @@ contains
      integer  :: fp,p             ! indices
      real(r8) :: h2ocan           ! total canopy water (mm H2O)
      real(r8) :: vegt             ! lsai
-     real(r8) :: dewmxi           ! inverse of maximum allowed dew [1/mm]
+     real(r8) :: dewmxi           ! inverse of dew parameter [1/mm]
      !-----------------------------------------------------------------------
 
      associate(                                              & 
@@ -674,12 +674,12 @@ contains
 
              if (h2ocan > 0._r8) then
                 vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
-                dewmxi  = 1.0_r8/params_inst%dewmx  ! wasteful division
+                dewmxi  = 1.0_r8/params_inst%liq_canopy_storage_scalar  ! wasteful division
                 fwet(p) = ((dewmxi/vegt)*h2ocan)**0.666666666666_r8
                 fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
                 if (snocan(p) > 0._r8) then
-                   dewmxi  = 1.0_r8/params_inst%dewmx  ! wasteful division
-                   fcansno(p) = ((dewmxi / (vegt * params_inst%sno_stor_max * 10.0_r8)) * snocan(p))**0.15_r8 ! must match snocanmx 
+                   dewmxi  = 1.0_r8/params_inst%liq_canopy_storage_scalar  ! wasteful division
+                   fcansno(p) = ((dewmxi / (vegt * params_inst%snow_canopy_storage_scalar * 10.0_r8)) * snocan(p))**0.15_r8 ! must match snocanmx
                    fcansno(p) = min (fcansno(p),1.0_r8)
                 else
                    fcansno(p) = 0._r8
