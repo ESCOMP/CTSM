@@ -1,9 +1,11 @@
 module atmos_cap
 
+    !-----------------------------------------------------------------------
+    ! !DESCRIPTION:
+
+    ! !USES
     use ESMF
     use lilac_utils
-    !use lilac_mod,   only :    a2c_fldlist
-
 
     implicit none
 
@@ -15,26 +17,21 @@ module atmos_cap
 
     type(fld_list_type), public, allocatable ::  c2a_fldlist(:)
     type(fld_list_type), public, allocatable ::  a2c_fldlist(:)
-    !type(fld_list_type), allocatable ::  c2a_fldlist(:)
-    !type(fld_list_type), allocatable ::  a2c_fldlist(:)
-
 
     !type (fld_list_type)            ::  a2c_fldlist(fldsMax)
     !type (fld_list_type)            ::  c2a_fldlist(fldsMax)
+
     integer                          ::  a2c_fldlist_num
     integer                          ::  c2a_fldlist_num
 
     !private
 
     public  :: atmos_register
-    !public  :: add_fields
-    !public  :: import_fields
-    !public  :: export_fields
-    real(kind=ESMF_KIND_R4), dimension(:), public, pointer, save :: fldptr
+    !real(kind=ESMF_KIND_R8), dimension(:), public, pointer, save :: fldptr
 
-    !------------------------------------------------------------------------
-
+    !========================================================================
     contains
+    !========================================================================
 
     subroutine atmos_register (comp, rc)
 
@@ -79,9 +76,8 @@ module atmos_cap
         type(ESMF_DistGrid)          ::  distgridIN, distgridFS
         logical                      ::  mesh_switch
         character(len=*), parameter  :: subname=trim(modname)//': [atmos_init] '
-        !----------------------
-
-        !integer                    :: regDecomp(:,:)
+        !integer                     :: regDecomp(:,:)
+        !-------------------------------------------------------------------------
         ! Initialize return code
         rc = ESMF_SUCCESS
         call ESMF_LogWrite(subname//"------------------------!", ESMF_LOGMSG_INFO)
@@ -96,7 +92,7 @@ module atmos_cap
 
         if(mesh_switch) then
             ! For now this is our dummy mesh: 
-            !atmos_mesh_filepath  =   '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'
+            !atmos_mesh_filepath  =   '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'  !! Negin: This did not work.... 
             atmos_mesh_filepath  =   '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc'
 
             atmos_mesh           = ESMF_MeshCreate(filename=trim(atmos_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
@@ -105,7 +101,7 @@ module atmos_cap
             print *, "!Mesh for atmosphere is created!"
 
         else
-            !Grid1= ESMF_GridCreateNoPeriDimUfrmR( maxIndex=(/180,360 /), &
+            !atmos_grid= ESMF_GridCreateNoPeriDimUfrmR( maxIndex=(/180,360 /), &
             !      minCornerCoord=(/0._ESMF_KIND_R8, 0._ESMF_KIND_R8/), &
             !      maxCornerCoord=(/180._ESMF_KIND_R8, 360._ESMF_KIND_R8/), &
             !      regDecomp=(/petcount,1/), rc=rc)
@@ -129,7 +125,7 @@ module atmos_cap
 
         a2c_fb = ESMF_FieldBundleCreate(name="a2c_fb", rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-       call ESMF_LogWrite(subname//"field bundle", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"field bundle", ESMF_LOGMSG_INFO)
 
         ! Create individual fields and add to field bundle -- a2l
 

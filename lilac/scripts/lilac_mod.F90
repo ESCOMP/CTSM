@@ -18,7 +18,7 @@ module lilac_mod
     public :: lilac_run
 
     character(*) , parameter                          :: modname     = "lilac_mod"
-    !type(fld_list_type), public                      :: a2c_fldlist, c2a_fldlist
+    !type(fld_list_type), public                      :: a2c_fldlist, c2a_fldlist  !defined in atmosphere and land caps....
 
     !------------------------------------------------------------------------
     ! !Clock, TimeInterval, and Times
@@ -36,9 +36,10 @@ module lilac_mod
     type(ESMF_CplComp)                                :: cpl_lnd2atm_comp
     type(ESMF_State)                                  :: atm2lnd_l_state , atm2lnd_a_state
     type(ESMF_State)                                  :: lnd2atm_a_state, lnd2atm_l_state
-    !------------------------------------------------------------------------
 
+    !========================================================================
     contains
+    !========================================================================
 
     subroutine lilac_init( atm2lnd1d, atm2lnd2d, lnd2atm1d, lnd2atm2d)
 
@@ -65,6 +66,8 @@ module lilac_mod
         integer                                          :: a2l_fldnum , l2a_fldnum
 
         !------------------------------------------------------------------------
+        ! Initialize return code
+        rc = ESMF_SUCCESS
 
         a2l_fldnum  = 3
         l2a_fldnum  = 3
@@ -74,6 +77,8 @@ module lilac_mod
         !-------------------------------------------------------------------------
         call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        call ESMF_LogWrite(subname//".........................", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"initializing ESMF        ", ESMF_LOGMSG_INFO)
 
         print *,  "---------------------------------------"
         print *,  "    Lilac Demo Application Start       "
@@ -237,7 +242,8 @@ module lilac_mod
         !  between components.
         !-------------------------------------------------------------------------
 
-        ! following 4 states are lilac module variables
+        ! following 4 states are lilac module variables:
+        ! 1- atm2lnd_a_state  2- atm2lnd_l_state 3- lnd2atm_a_state 4-lnd2atm_l_state
 
         atm2lnd_a_state = ESMF_StateCreate(name=gcname1, stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
@@ -300,19 +306,11 @@ module lilac_mod
         !integer, parameter                              :: fldsMax = 100
         integer                                          :: a2l_fldnum, l2a_fldnum
 
-        ! type(fld_list_type) :: a2c_fldlist , c2a_fldlist
         ! input/output variables
         !type(atm2lnd_data1d_type), intent(in), optional  :: atm2lnd1d
         !type(atm2lnd_data2d_type), intent(in), optional  :: atm2lnd2d
         !type(lnd2atm_data1d_type), intent(in), optional  :: lnd2atm1d
         !type(lnd2atm_data2d_type), intent(in), optional  :: lnd2atm2d
-
-        ! local variables
-        !  ! Gridded Components and Coupling Components
-        !type(ESMF_GridComp)                              :: dummy_atmos_comp
-        !type(ESMF_GridComp)                              :: dummy_land_comp
-
-
 
         !------------------------------------------------------------------------
         ! Initialize return code

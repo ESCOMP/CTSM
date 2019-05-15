@@ -57,24 +57,22 @@ program demo_lilac_driver
     n          = endc - begc + 1
 
 
-
     ! making 2 random arrays with a seed.
-    call random_seed   (size = n)
-    allocate           (seed(n))                     ; seed            (:)      =  seed_val
-    call random_seed   (put = seed)
-    allocate           (rand1(begc:endc))            ; call random_number (rand1)
-    allocate           (rand2(begc:endc))            ; call random_number (rand2)
+    call random_seed   (size = n    )
+    allocate ( seed                    (n        ) ) ; seed            (:)      =  seed_val
+    call random_seed   (put  = seed )
+
+    allocate ( rand1                   (begc:endc) ) ; call random_number (rand1)
+    allocate ( rand2                   (begc:endc) ) ; call random_number (rand2)
 
 
-    allocate( atm2lnd%uwind           (begc:endc) )  ; atm2lnd%uwind   (:)      =  rand1
-    allocate( atm2lnd%vwind           (begc:endc) )  ; atm2lnd%vwind   (:)      =  rand1
-    allocate( atm2lnd%tbot            (begc:endc) )  ; atm2lnd%tbot    (:)      =  rand1
-
+    allocate ( atm2lnd%uwind           (begc:endc) ) ; atm2lnd%uwind   (:)      =  rand1
+    allocate ( atm2lnd%vwind           (begc:endc) ) ; atm2lnd%vwind   (:)      =  rand1
+    allocate ( atm2lnd%tbot            (begc:endc) ) ; atm2lnd%tbot    (:)      =  rand1
     !endc       = 18048 ? should this be the size of the land or atmosphere???
-
-    allocate( lnd2atm%lwup            (begc:endc) )  ; lnd2atm%lwup    (:)      =  rand2
-    allocate( lnd2atm%taux            (begc:endc) )  ; lnd2atm%taux    (:)      =  rand2
-    allocate( lnd2atm%tauy            (begc:endc) )  ; lnd2atm%tauy    (:)      =  rand2
+    allocate ( lnd2atm%lwup            (begc:endc) ) ; lnd2atm%lwup    (:)      =  rand2
+    allocate ( lnd2atm%taux            (begc:endc) ) ; lnd2atm%taux    (:)      =  rand2
+    allocate ( lnd2atm%tauy            (begc:endc) ) ; lnd2atm%tauy    (:)      =  rand2
 
 
     print *,  "======================================="
