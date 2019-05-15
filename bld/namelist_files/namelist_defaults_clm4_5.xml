@@ -1085,56 +1085,34 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
 >lnd/clm2/ndepdata/fndep_clm_SSP585_b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190211.nc</stream_fldfilename_ndep>
-<!-- Currently duplicate SSP5-8.5 ndep for SSP5-3.4 -->
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-3.4"
->lnd/clm2/ndepdata/fndep_clm_SSP585_b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190211.nc</stream_fldfilename_ndep>
+<!-- We currently only have the Tier I Nitogen deposition files available -->
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
 >lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-2.6-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
-<!-- Currently duplicate SSP1.2.6 ndep for SSP1-1.9 -->
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-1.9"
->lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-2.6-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
->lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-2.6-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
-
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
 >lnd/clm2/ndepdata/fndep_clm_SSP245_b.e21.BWSSP245cmip6.f09_g17.CMIP6-SSP2-4.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
 >lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
-<!-- Currently duplicate SSP3-7.0 ndep for SSP4-6.0 -->
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP4-6.0"
->lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
-<!-- Currently duplicate SSP5-3.4 ndep for SSP4-3.4 -->
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP4-3.4"
->lnd/clm2/ndepdata/fndep_clm_SSP585_b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190211.nc</stream_fldfilename_ndep>
 
+<stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
+
+<!-- We currently only have the Tier I Nitogen deposition files available -->
+<stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
+>lnd/clm2/ndepdata/fndep_clm_SSP585_b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190211.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
+>lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-2.6-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
+>lnd/clm2/ndepdata/fndep_clm_SSP245_b.e21.BWSSP245cmip6.f09_g17.CMIP6-SSP2-4.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
 
 <ndep_taxmode            phys="clm5_0" use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_0" use_cn=".true.">NDEP_month</ndep_varlist>
 <ndep_taxmode            phys="clm5_0" use_cn=".true.">limit</ndep_taxmode>
 
-<!-- Use CMIP5 ndep forcing for CLM4.5 cases -->
 <ndep_taxmode            phys="clm4_5" use_cn=".true.">extend</ndep_taxmode>
 <ndep_varlist            phys="clm4_5" use_cn=".true.">NDEP_year</ndep_varlist>
 <stream_fldfilename_ndep phys="clm4_5" use_cn=".true." ssp_rcp="hist"
 >lnd/clm2/ndepdata/fndep_clm_hist_simyr1849-2006_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-
-<!-- And old CMIP5 for clm4_5 cases -->
-<stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP1-1.9"
->lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP1-2.6"
->lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_rcp6.0_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP4-3.4"
->lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP4-6.0"
->lnd/clm2/ndepdata/fndep_clm_rcp6.0_simyr1849-2106_1.9x2.5_c100810.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP5-3.4"
->lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm4_5" hgrid="1.9x2.5"   use_cn=".true."   ssp_rcp="SSP5-8.5"
->lnd/clm2/ndepdata/fndep_clm_rcp8.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 
 <ndepmapalgo                use_cn=".true." >bilinear</ndepmapalgo>
 
