@@ -123,6 +123,8 @@ Changes answers relative to baseline:
 
    URL for LMWG diagnostics output used to validate new climate:
 	
+   Will new REFCASES need to be made for cesm and/or CAM?: No
+   (This will likely be true if the LII tests failed)
 
 Detailed list of changes
 ------------------------

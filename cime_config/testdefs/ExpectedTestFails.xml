@@ -11,6 +11,11 @@
   <category name="fates">
     <entry issue="667"              >FAIL ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesHydro COMPARE_base_rest</entry>
     <entry issue="667"              >FAIL ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruGs.hobart_nag.clm-FatesHydro RUN</entry>
+    <entry issue="714"              >PEND ERS_Lm40_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropGs.cheyenne_gnu.clm-monthly RUN</entry>
+    <entry issue="714"              >PEND ERS_Lm54_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropGs.cheyenne_gnu.clm-cropMonthOutput RUN</entry>
+    <entry issue="714"              >PEND ERS_Ly3_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropGs.cheyenne_gnu.clm-cropMonthOutput RUN</entry>
+    <entry issue="714"              >PEND ERS_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropGs.cheyenne_gnu.clm-cropMonthOutput RUN</entry>
+    <entry issue="714"              >PEND ERS_Ly20_Mmpi-serial.1x1_numaIA.I2000Clm50BgcDvCropQianGs.cheyenne_gnu.clm-cropMonthOutput RUN</entry>
     <entry issue="NGEET/fates/#510" >FAIL SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruGs.hobart_nag.clm-FatesHydro MEMLEAK</entry>
   </category>
 </expectedFails> 
