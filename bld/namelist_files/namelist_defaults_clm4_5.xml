@@ -1109,10 +1109,9 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <ndep_varlist            phys="clm5_0" use_cn=".true.">NDEP_month</ndep_varlist>
 <ndep_taxmode            phys="clm5_0" use_cn=".true.">limit</ndep_taxmode>
 
-<ndep_taxmode            phys="clm4_5" use_cn=".true.">extend</ndep_taxmode>
-<ndep_varlist            phys="clm4_5" use_cn=".true.">NDEP_year</ndep_varlist>
-<stream_fldfilename_ndep phys="clm4_5" use_cn=".true." ssp_rcp="hist"
->lnd/clm2/ndepdata/fndep_clm_hist_simyr1849-2006_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
+<ndep_taxmode            phys="clm4_5" use_cn=".true.">cycle</ndep_taxmode>
+<ndep_varlist            phys="clm4_5" use_cn=".true.">NDEP_month</ndep_varlist>
+<ndep_taxmode            phys="clm4_5" use_cn=".true.">limit</ndep_taxmode>
 
 <ndepmapalgo                use_cn=".true." >bilinear</ndepmapalgo>
 
