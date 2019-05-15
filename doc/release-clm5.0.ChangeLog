@@ -1,4 +1,114 @@
 ===============================================================
+Tag name:  release-clm5.0.23
+Originator(s):  erik (Erik Kluzek)
+Date: Wed May 15 15:31:15 MDT 2019
+One-line Summary: Update cime to bring in CO2 transient files for the CMIP6 SSP's as well as presaero for three of them
+
+Purpose of this version:
+------------------------
+
+With updated cime with transient CO2 for all CMIP6 SSP scenarios and prescribed aerosol files for three of
+the CMIP6 SSP scenarios (SSP3-7.0, SSP2-4.5, SSP5-8.5). Previously all SSP scenaros would run, and use the
+closest SSP nitrogen deposition file, now only the ones that are available work (Tier I). Also CLM4.5 used
+the old CMIP5 ndep files, and now they use the CMIP6 ones available.
+
+Fix some small issues with some of the tools
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #707 #708 #711 #712
+  Fixes #707 -- Missing mapping files for hirespft
+  Fixes #708 -- time_bnds not set by tools/ncl_scripts/getco2_historical.ncl
+  Fixes #711 -- Model assumes the closest SSP scenario for ndep 
+  Fixes #712 -- Missing CO2 files for SSP1-1.9 and SSP4-3.4
+
+New issues found: #714 -- Fails with cheyenne_gnu for some longer single point tests
+
+Science changes since: release-clm5.0.22
+    Forcing period is different for present day compsets (I2000, I2003, and I2010)
+    SSP scenarios now have CMIP6 transient CO2 and presaero (for SP3-7.0, SSP2-4.5, SSP5-8.5)
+    clm4.5 will use CMIP6 SSP ndep datasets rather than CMIP5
+
+Software changes since: release-clm5.0.22
+    None
+
+Changes to User Interface since: release-clm5.0.22
+    Now SSP cases that don't have needed datasets will fail
+
+Testing: regular
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - OK (36 tests are different as expected)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  regular tests (fates):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+    hobart_nag ----- OK
+
+Summary of Answer changes:
+-------------------------
+
+Baseline version for comparison: release-clm5.0.22
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Present day compsets, SSP compsets, and Clm45 compsets
+    - what platforms/compilers: All
+    - nature of change: New datasets, new forcing period for present day
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+  (This will likely be true if the LII tests failed)
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   branch_tags/cime5.6.15_a01 (same as cim5.6.16)
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #713
+(https://github.com/ESCOMP/ctsm/pull)
+   #713 -- Fix a few issues, and update cime to a version with CO2 SSP files as well as three presaero SSP files
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.22
 Originator(s):  erik (Erik Kluzek)
 Date: Wed May  8 13:32:51 MDT 2019
