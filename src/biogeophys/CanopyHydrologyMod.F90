@@ -40,8 +40,8 @@ module CanopyHydrologyMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyHydrology_readnl ! Read namelist
-  public :: CanopyInterceptionAndThroughfall
   public :: readParams
+  public :: CanopyInterceptionAndThroughfall
 
   type, private :: params_type
      real(r8) :: dewmx  ! Canopy maximum storage of liquid water (kg/m2)
@@ -50,9 +50,18 @@ module CanopyHydrologyMod
   type(params_type), private ::  params_inst
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: SumFlux_TopOfCanopyInputs
-  private :: BulkFlux_CanopyInterceptionAndThroughfall
-  private :: BulkDiag_FracWet    ! Determine fraction of vegetated surface that is wet
+  private :: SumFlux_TopOfCanopyInputs                   ! Compute patch-level precipitation inputs for bulk water or one tracer
+  private :: BulkFlux_CanopyInterceptionAndThroughfall   ! Compute canopy interception and throughfall for bulk water
+  private :: TracerFlux_CanopyInterceptionAndThroughfall ! Calculate canopy interception and throughfall for one tracer
+  private :: UpdateState_AddInterceptionToCanopy         ! Update snocan and liqcan based on interception, for bulk or one tracer
+  private :: BulkFlux_CanopyExcess                       ! Compute runoff from canopy due to exceeding maximum storage, for bulk
+  private :: TracerFlux_CanopyExcess                     ! Calculate runoff from canopy due to exceeding maximum storage, for one tracer
+  private :: UpdateState_RemoveCanfallFromCanopy         ! Update snocan and liqcan based on canfall, for bulk or one tracer
+  private :: BulkFlux_SnowUnloading                      ! Compute snow unloading for bulk
+  private :: TracerFlux_SnowUnloading                    ! Compute snow unloading for one tracer
+  private :: UpdateState_RemoveSnowUnloading             ! Update snocan based on snow unloading, for bulk or one tracer
+  private :: SumFlux_FluxesOntoGround                    ! Compute summed fluxes onto ground, for bulk or one tracer
+  private :: BulkDiag_FracWet                            ! Determine fraction of vegetated surface that is wet
   !
   ! !PRIVATE DATA MEMBERS:
   real(r8) :: interception_fraction ! Fraction of intercepted precipitation
