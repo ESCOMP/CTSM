@@ -117,7 +117,7 @@ contains
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
     use SoilHydrologyMod     , only : CLMVICMap, SetSoilWaterFractions, SetFloodc
-    use SoilHydrologyMod     , only : SetQflxInputs, RouteInfiltrationExcess, UpdateH2osfc
+    use SoilHydrologyMod     , only : SetQflxInputs, RouteInfiltrationExcess
     use SoilHydrologyMod     , only : Infiltration, TotalSurfaceRunoff
     use SoilHydrologyMod     , only : UpdateUrbanPonding
     use SoilHydrologyMod     , only : WaterTable, PerchedWaterTable
@@ -126,6 +126,7 @@ contains
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use SoilWaterMovementMod , only : use_aquifer_layer
     use SoilWaterPlantSinkMod , only : Compute_EffecRootFrac_And_VertTranSink
+    use SurfaceWaterMod      , only : UpdateH2osfc
 
     !
     ! !ARGUMENTS:
