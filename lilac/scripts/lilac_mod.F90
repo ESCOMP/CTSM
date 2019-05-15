@@ -46,7 +46,7 @@ module lilac_mod
         use atmos_cap ,  only :          a2c_fldlist, c2a_fldlist
         use lnd_cap   ,  only :          l2c_fldlist, c2l_fldlist
 
-        character(len=*), parameter                      :: subname=trim(modname)//': [lilac_init]'
+        character(len=*), parameter                      :: subname=trim(modname)//': [lilac_init] '
 
         ! input/output variables
         type(atm2lnd_data1d_type), intent(in), optional  :: atm2lnd1d
@@ -78,7 +78,7 @@ module lilac_mod
         call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//".........................", ESMF_LOGMSG_INFO)
-        call ESMF_LogWrite(subname//"initializing ESMF        ", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"Initializing ESMF        ", ESMF_LOGMSG_INFO)
 
         print *,  "---------------------------------------"
         print *,  "    Lilac Demo Application Start       "
@@ -291,12 +291,14 @@ module lilac_mod
 
     end subroutine lilac_init
 
+    !========================================================================
+
     subroutine lilac_run( )
 
         use atmos_cap, only : a2c_fldlist, c2a_fldlist
         use lnd_cap,   only : l2c_fldlist, c2l_fldlist
 
-        character(len=*), parameter                      :: subname=trim(modname)//': [lilac_run]'
+        character(len=*), parameter                      :: subname=trim(modname)//': [lilac_run] '
         type(ESMF_State)                                 :: importState, exportState
 
         ! local variables
@@ -361,7 +363,7 @@ module lilac_mod
         use lnd_cap,   only : l2c_fldlist, c2l_fldlist
 
 
-        character(len=*), parameter                      :: subname=trim(modname)//': [lilac_final]'
+        character(len=*), parameter                      :: subname=trim(modname)//': [lilac_final] '
         type(ESMF_State)                                 :: importState, exportState
 
         ! local variables

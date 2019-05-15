@@ -46,10 +46,7 @@ module atmos_cap
         call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, userRoutine=atmos_init, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-        call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, userRoutine=atmos_copy_atm_to_lilac, phase=1, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-
-        call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, userRoutine=atmos_copy_lilac_to_atm, phase=2, rc=rc)
+        call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, userRoutine=atmos_run, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
         call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, userRoutine=atmos_final, rc=rc)
@@ -212,36 +209,19 @@ module atmos_cap
 
     end subroutine atmos_init
 
-    subroutine atmos_copy_atm_to_lilac(comp, importState, exportState, clock, rc)
+    subroutine atmos_run(comp, importState, exportState, clock, rc)
         type(ESMF_GridComp)  :: comp
         type(ESMF_State)     :: importState, exportState
         type(ESMF_Clock)     :: clock
         integer, intent(out) :: rc
 
-        character(len=*), parameter :: subname=trim(modname)//':(atmos_copy_atm_to_lilac) '
-
-        ! Initialize return code
-        rc = ESMF_SUCCESS
-        ! get a list of fields of variables we need from atmos....
-        !
-        call ESMF_LogWrite(subname//"atmos_copy_atm_to_lilac has not been implemented yet", ESMF_LOGMSG_INFO)
-
-        ! loop over fields, copying pointer from import to export state
-    end subroutine atmos_copy_atm_to_lilac
-
-    subroutine atmos_copy_lilac_to_atm(comp, importState, exportState, clock, rc)
-        type(ESMF_GridComp)  :: comp
-        type(ESMF_State)     :: importState, exportState
-        type(ESMF_Clock)     :: clock
-        integer, intent(out) :: rc
-
-        character(len=*), parameter :: subname=trim(modname)//':(atmos_copy_lilac_to_atm) '
+        character(len=*), parameter :: subname=trim(modname)//': [atmos_run] '
 
         ! Initialize return code
         rc = ESMF_SUCCESS
 
-        call ESMF_LogWrite(subname//"atmos_copy_lilac_to_atm has not been implemented yet", ESMF_LOGMSG_INFO)
-    end subroutine atmos_copy_lilac_to_atm
+        call ESMF_LogWrite(subname//"atmos run has not been implemented yet", ESMF_LOGMSG_INFO)
+    end subroutine atmos_run
 
     subroutine atmos_final(comp, importState, exportState, clock, rc)
         type(ESMF_GridComp)  :: comp

@@ -6,27 +6,27 @@ module cpl_mod
     ! 1- coupler 1 : atm ---> lnd (cpl_atm2lnd)
     ! 2- coupler 2 : lnd ---> atm (cpl_lnd2atm)
     !-----------------------------------------------------------------------
-
+    ! !USES
     use ESMF
     implicit none
 
     private
 
-    public cpl_atm2lnd_register
-    public cpl_lnd2atm_register
 
+    public                       :: cpl_atm2lnd_register
+    public                       :: cpl_lnd2atm_register
 
-    character(*), parameter :: modname =  "  cpl_mod"
+    character(*), parameter      :: modname =  "  cpl_mod"
     type(ESMF_RouteHandle), save :: rh_atm2lnd, rh_lnd2atm
 
-    !-----------------------------------------------------------------------
+    !======================================================================
      contains
-    !-----------------------------------------------------------------------
+    !======================================================================
 
     subroutine cpl_atm2lnd_register(cplcomp, rc)
         type(ESMF_CplComp   )             :: cplcomp
         integer, intent(out )             :: rc
-        character(len=*     ) , parameter :: subname=trim(modname ) //':[cpl_atm2lnd_register] '
+        character(len=*     ) , parameter :: subname=trim(modname ) //' : [cpl_atm2lnd_register] '
 
         rc = ESMF_SUCCESS
         print *, "in cpl_atm2lnd_register routine"
