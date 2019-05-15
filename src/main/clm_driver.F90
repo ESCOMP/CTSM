@@ -41,6 +41,7 @@ module clm_driver
   use HydrologyNoDrainageMod , only : CalcAndWithdrawIrrigationFluxes, HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
   use CanopyHydrologyMod     , only : CanopyInterceptionAndThroughfall, CanopyHydrology     ! (formerly Hydrology1Mod)
+  use SurfaceWaterMod        , only : FracH2oSfc
   use LakeHydrologyMod       , only : LakeHydrology
   use SoilWaterMovementMod   , only : use_aquifer_layer
   !
@@ -468,7 +469,7 @@ contains
        end if
 
        ! ============================================================================
-       ! Canopy Hydrology
+       ! First Stage of Hydrology
        ! (1) water storage of intercepted precipitation
        ! (2) direct throughfall and canopy drainage of precipitation
        ! (3) fraction of foliage covered by water and the fraction is dry and transpiring
@@ -499,6 +500,11 @@ contains
             aerosol_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterfluxbulk_inst)
+
+       ! update surface water fraction (this may modify frac_sno)
+       call FracH2oSfc(bounds_clump, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst)
 
        call t_stopf('canhydro')
 
