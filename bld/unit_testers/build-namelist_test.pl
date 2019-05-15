@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 872;
+my $ntests = 828;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 540;
+   $ntests += 504;
 }
 plan( tests=>$ntests );
 
@@ -313,7 +313,7 @@ system( "../configure -s $mode" );
 foreach my $options ( 
                       "-bgc bgc -use_case 1850-2100_SSP1-2.6_transient -namelist '&a start_ymd=20100101/'",
                       "-bgc sp  -use_case 1850-2100_SSP2-4.5_transient -namelist '&a start_ymd=18501223/'",
-                      "-bgc bgc -use_case 1850-2100_SSP4-6.0_transient -namelist '&a start_ymd=20701029/'",
+                      "-bgc bgc -use_case 1850-2100_SSP3-7.0_transient -namelist '&a start_ymd=20701029/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
                       "-bgc cn  -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19201023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
@@ -1238,8 +1238,8 @@ $mode = "-phys clm4_5";
 system( "../configure -s $mode" );
 my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" );
 my @use_cases = ( "1850-2100_SSP1-2.6_transient",
-                  "1850-2100_SSP3-4.5_transient",
-                  "1850-2100_SSP4-6.0_transient",
+                  "1850-2100_SSP2-4.5_transient",
+                  "1850-2100_SSP3-7.0_transient",
                   "1850-2100_SSP5-8.5_transient",
                   "1850_control",
                   "2000_control",
@@ -1287,13 +1287,12 @@ foreach my $res ( @tran_res ) {
    }
    &cleanup();
 }
-# Transient ssp_rcp scenarios
+# Transient ssp_rcp scenarios that work
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 my @tran_res = ( "0.9x1.25", "1.9x2.5", "10x15" );
 foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient",
-                      "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transient", "1850-2100_SSP2-4.5_transient", "1850-2100_SSP1-1.9_transient",
-                      "1850-2100_SSP4-6.0_transient" ) {
+                      "1850-2100_SSP2-4.5_transient" ) {
    foreach my $res ( @tran_res ) {
       $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
       &make_env_run();
@@ -1311,6 +1310,16 @@ foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100
       }
       &cleanup();
    }
+}
+# The SSP's that fail...
+my $res = "0.9x1.25";
+foreach my $usecase ( "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transient", "1850-2100_SSP1-1.9_transient",
+                      "1850-2100_SSP4-6.0_transient" ) {
+      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
+      &make_env_run();
+      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+      isnt( $?, 0, $usecase );
+      system( "cat $tempfile" );
 }
 
 print "\n==================================================\n";
