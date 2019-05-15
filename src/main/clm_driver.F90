@@ -40,7 +40,8 @@ module clm_driver
   !
   use HydrologyNoDrainageMod , only : CalcAndWithdrawIrrigationFluxes, HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
-  use CanopyHydrologyMod     , only : CanopyInterceptionAndThroughfall, CanopyHydrology     ! (formerly Hydrology1Mod)
+  use CanopyHydrologyMod     , only : CanopyInterceptionAndThroughfall
+  use SnowHydrologyMod       , only : HandleNewSnow
   use SurfaceWaterMod        , only : FracH2oSfc
   use LakeHydrologyMod       , only : LakeHydrology
   use SoilWaterMovementMod   , only : use_aquifer_layer
@@ -476,7 +477,7 @@ contains
        ! (4) snow layer initialization if the snow accumulation exceeds 10 mm.
        ! ============================================================================
 
-       call t_startf('canhydro')
+       call t_startf('hydro1')
 
        call CanopyInterceptionAndThroughfall(bounds_clump, &
             filter(nc)%num_soilp, filter(nc)%soilp, &
@@ -494,7 +495,7 @@ contains
           end if
        end if
 
-       call CanopyHydrology(bounds_clump, &
+       call HandleNewSnow(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             atm2lnd_inst, temperature_inst, &
             aerosol_inst, water_inst%waterstatebulk_inst, &
@@ -506,7 +507,7 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst)
 
-       call t_stopf('canhydro')
+       call t_stopf('hydro1')
 
        if (water_inst%DoConsistencyCheck()) then
           ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
