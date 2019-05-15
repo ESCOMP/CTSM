@@ -27,8 +27,8 @@ module SurfaceWaterMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine FracH2oSfc(bounds, num_h2osfc, filter_h2osfc, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, no_update)
+  subroutine FracH2oSfc(bounds, num_nolakec, filter_nolakec, &
+       waterstatebulk_inst, waterdiagnosticbulk_inst)
     !
     ! !DESCRIPTION:
     ! Determine fraction of land surfaces which are submerged  
@@ -36,11 +36,10 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)           :: bounds           
-    integer               , intent(in)           :: num_h2osfc       ! number of column points in column filter
-    integer               , intent(in)           :: filter_h2osfc(:) ! column filter 
+    integer               , intent(in)           :: num_nolakec       ! number of points in nolakec filter
+    integer               , intent(in)           :: filter_nolakec(:) ! column filter for non-lake points 
     type(waterstatebulk_type) , intent(inout)        :: waterstatebulk_inst
     type(waterdiagnosticbulk_type) , intent(inout)        :: waterdiagnosticbulk_inst
-    integer               , intent(in), optional :: no_update        ! flag to make calculation w/o updating variables
     !
     ! !LOCAL VARIABLES:
     integer :: c,f,l          ! indices
@@ -65,8 +64,8 @@ contains
     ! arbitrary lower limit on h2osfc for safer numerics...
     min_h2osfc=1.e-8_r8
 
-    do f = 1, num_h2osfc
-       c = filter_h2osfc(f)
+    do f = 1, num_nolakec
+       c = filter_nolakec(f)
        l = col%landunit(c)
 
        ! h2osfc only calculated for soil vegetated land units
@@ -100,23 +99,18 @@ contains
 
           frac_h2osfc_nosnow(c) = frac_h2osfc(c)
 
+          ! adjust fh2o, fsno when sum is greater than zero
+          if (frac_sno(c) > (1._r8 - frac_h2osfc(c)) .and. h2osno(c) > 0) then
 
-          if (.not. present(no_update)) then
-
-             ! adjust fh2o, fsno when sum is greater than zero
-             if (frac_sno(c) > (1._r8 - frac_h2osfc(c)) .and. h2osno(c) > 0) then
-
-                if (frac_h2osfc(c) > 0.01_r8) then             
-                   frac_h2osfc(c) = max(1.0_r8 - frac_sno(c),0.01_r8)
-                   frac_sno(c) = 1.0_r8 - frac_h2osfc(c)
-                else
-                   frac_sno(c) = 1.0_r8 - frac_h2osfc(c)
-                endif
-                frac_sno_eff(c)=frac_sno(c)
-
+             if (frac_h2osfc(c) > 0.01_r8) then             
+                frac_h2osfc(c) = max(1.0_r8 - frac_sno(c),0.01_r8)
+                frac_sno(c) = 1.0_r8 - frac_h2osfc(c)
+             else
+                frac_sno(c) = 1.0_r8 - frac_h2osfc(c)
              endif
+             frac_sno_eff(c)=frac_sno(c)
 
-          endif ! end of no_update construct
+          endif
 
        else !if landunit not istsoil/istcrop, set frac_h2osfc to zero
 
