@@ -304,7 +304,9 @@ contains
              qflx_intercepted_liq  = w%waterflux_inst%qflx_intercepted_liq_patch(begp:endp), &
              ! Outputs
              snocan                = w%waterstate_inst%snocan_patch(begp:endp), &
-             liqcan                = w%waterstate_inst%liqcan_patch(begp:endp))
+             liqcan                = w%waterstate_inst%liqcan_patch(begp:endp), &
+             ! Temporary inputs
+             check_point_for_interception_and_excess = check_point_for_interception_and_excess(begp:endp))
         end associate
      end do
 
@@ -670,7 +672,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine UpdateState_AddInterceptionToCanopy(bounds, num_soilp, filter_soilp, dtime, &
-        qflx_intercepted_snow, qflx_intercepted_liq, snocan, liqcan)
+        qflx_intercepted_snow, qflx_intercepted_liq, snocan, liqcan, check_point_for_interception_and_excess)
      !
      ! !DESCRIPTION:
      ! Update snocan and liqcan based on interception, for bulk or one tracer
@@ -686,9 +688,12 @@ contains
 
      real(r8) , intent(inout) :: snocan( bounds%begp: )                ! canopy snow water (mm H2O)
      real(r8) , intent(inout) :: liqcan( bounds%begp: )                ! canopy liquid water (mm H2O)
+
+     logical, intent(in) :: check_point_for_interception_and_excess( bounds%begp: )
      !
      ! !LOCAL VARIABLES:
      integer :: fp, p
+     real(r8) :: snocan_old, liqcan_old
 
      character(len=*), parameter :: subname = 'UpdateState_AddInterceptionToCanopy'
      !-----------------------------------------------------------------------
@@ -697,12 +702,35 @@ contains
      SHR_ASSERT_FL((ubound(qflx_intercepted_liq, 1) == bounds%endp), sourcefile, __LINE__)
      SHR_ASSERT_FL((ubound(snocan, 1) == bounds%endp), sourcefile, __LINE__)
      SHR_ASSERT_FL((ubound(liqcan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(check_point_for_interception_and_excess, 1) == bounds%endp), sourcefile, __LINE__)
 
      do fp = 1, num_soilp
         p = filter_soilp(fp)
 
+        ! FIXME(wjs, 2019-05-16) Remove temporary code to get bfb
+        snocan_old = snocan(p)
+        liqcan_old = liqcan(p)
+
         snocan(p) = max(0._r8, snocan(p) + dtime * qflx_intercepted_snow(p))
         liqcan(p) = max(0._r8, liqcan(p) + dtime * qflx_intercepted_liq(p))
+
+        ! FIXME(wjs, 2019-05-16) Remove temporary code to get bfb
+        if (.not. check_point_for_interception_and_excess(p)) then
+           if (snocan_old < 0._r8) then
+              if (abs(snocan_old) > 1.e-13_r8) then
+                 write(iulog,*) 'WJS: p, snocan_old = ', p, snocan_old
+                 call endrun(msg='snocan_old too negative')
+              end if
+              snocan(p) = snocan_old
+           end if
+           if (liqcan_old < 0._r8) then
+              if (abs(liqcan_old) > 1.e-13_r8) then
+                 write(iulog,*) 'WJS: p, liqcan_old = ', p, liqcan_old
+                 call endrun(msg='liqcan_old too negative')
+              end if
+              liqcan(p) = liqcan_old
+           end if
+        end if
      end do
 
    end subroutine UpdateState_AddInterceptionToCanopy
