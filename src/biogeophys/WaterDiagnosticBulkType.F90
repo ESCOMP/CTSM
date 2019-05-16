@@ -529,6 +529,9 @@ contains
       this%fwet_patch(bounds%begp:bounds%endp) = 0._r8
       this%fdry_patch(bounds%begp:bounds%endp) = 0._r8
       this%fcansno_patch(bounds%begp:bounds%endp) = 0._r8
+
+      this%qflx_prec_intr_patch(bounds%begp:bounds%endp) = 0._r8
+
       !--------------------------------------------
       ! Set snow water
       !--------------------------------------------

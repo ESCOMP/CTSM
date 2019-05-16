@@ -246,6 +246,9 @@ contains
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
 
+    this%qflx_snowindunload_patch(bounds%begp:bounds%endp) = 0.0_r8
+    this%qflx_snotempunload_patch(bounds%begp:bounds%endp) = 0.0_r8
+
     this%qflx_phs_neg_col(bounds%begc:bounds%endc)   = 0.0_r8
 
     this%qflx_h2osfc_surf_col(bounds%begc:bounds%endc) = 0._r8
