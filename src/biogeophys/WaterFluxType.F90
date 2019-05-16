@@ -388,6 +388,38 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
+    this%qflx_through_liq_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDIRECT_THROUGHFALL'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('direct throughfall of liquid (rain + above-canopy irrigation)'), &
+         ptr_patch=this%qflx_through_liq_patch, c2l_scale_type='urbanf', default='inactive')
+
+    this%qflx_through_snow_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDIRECT_THROUGHFALL_SNOW'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('direct throughfall of snow'), &
+         ptr_patch=this%qflx_through_snow_patch, c2l_scale_type='urbanf', default='inactive')
+
+    this%qflx_liqcanfall_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDRIP'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('rate of excess canopy liquid falling off canopy'), &
+         ptr_patch=this%qflx_liqcanfall_patch, c2l_scale_type='urbanf', default='inactive')
+
+    this%qflx_snocanfall_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDRIP_SNOW'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('rate of excess canopy snow falling off canopy'), &
+         ptr_patch=this%qflx_snocanfall_patch, c2l_scale_type='urbanf', default='inactive')
+
     this%qflx_snow_unload_patch(begp:endp) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QSNOUNLOAD'), &

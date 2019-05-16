@@ -486,14 +486,6 @@ contains
          long_name=this%info%lname('interception'), &
          ptr_patch=this%qflx_prec_intr_patch, set_lake=0._r8)
 
-    this%qflx_prec_grnd_col(begc:endc) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('QDRIP'), &
-         units='mm/s',  &
-         avgflag='A', &
-         long_name=this%info%lname('throughfall'), &
-         ptr_col=this%qflx_prec_grnd_col, c2l_scale_type='urbanf')
-
   end subroutine InitBulkHistory
 
   !-----------------------------------------------------------------------
