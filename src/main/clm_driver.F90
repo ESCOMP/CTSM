@@ -485,7 +485,8 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             patch, col, canopystate_inst, atm2lnd_inst, water_inst)
 
-       ! FIXME(wjs, 2019-05-07) Remove this temporary check
+       ! TODO(wjs, 2019-05-16) Remove this temporary check. We'll instead have one after
+       ! FracH2oSfc.
        if (water_inst%DoConsistencyCheck()) then
           ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
           ! every time step
@@ -509,16 +510,6 @@ contains
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst)
 
        call t_stopf('hydro1')
-
-       if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after CanopyHydrology')
-             call t_stopf("tracer_consistency_check")
-          end if
-       end if
 
        ! ============================================================================
        ! Surface Radiation
