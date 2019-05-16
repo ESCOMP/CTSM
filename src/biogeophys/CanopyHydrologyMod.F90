@@ -162,6 +162,7 @@ contains
    subroutine CanopyInterceptionAndThroughfall(bounds, &
         num_soilp, filter_soilp, &
         num_nolakep, filter_nolakep, &
+        num_nolakec, filter_nolakec, &
         patch, canopystate_inst, atm2lnd_inst, water_inst)
      !
      ! !DESCRIPTION:
@@ -179,6 +180,8 @@ contains
      integer                , intent(in)    :: filter_soilp(:)   ! patch filter for soil points
      integer                , intent(in)    :: num_nolakep       ! number of patches in filter_nolakep
      integer                , intent(in)    :: filter_nolakep(:) ! patch filter for non-lake points
+     integer                , intent(in)    :: num_nolakec       ! number of columns in filter_nolakec
+     integer                , intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
      type(patch_type)       , intent(in)    :: patch
      type(canopystate_type) , intent(in)    :: canopystate_inst
      type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
@@ -397,7 +400,9 @@ contains
      ! all non-lake points.
      do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
         associate(w => water_inst%bulk_and_tracers(i))
-        call SumFlux_FluxesOntoGround(bounds, num_nolakep, filter_nolakep, &
+        call SumFlux_FluxesOntoGround(bounds, &
+             num_nolakep, filter_nolakep, &
+             num_nolakec, filter_nolakec, &
              ! Inputs
              dtime                 = dtime, &
              qflx_through_snow  = w%waterflux_inst%qflx_through_snow_patch(begp:endp), &
@@ -1036,7 +1041,9 @@ contains
    end subroutine UpdateState_RemoveSnowUnloading
 
    !-----------------------------------------------------------------------
-   subroutine SumFlux_FluxesOntoGround(bounds, num_nolakep, filter_nolakep, &
+   subroutine SumFlux_FluxesOntoGround(bounds, &
+        num_nolakep, filter_nolakep, &
+        num_nolakec, filter_nolakec, &
         dtime, &
         qflx_through_snow, qflx_snocanfall, qflx_snow_unload, &
         qflx_through_liq, qflx_liqcanfall, qflx_irrig_drip, &
@@ -1049,6 +1056,8 @@ contains
      type(bounds_type), intent(in) :: bounds
      integer, intent(in) :: num_nolakep
      integer, intent(in) :: filter_nolakep(:)
+     integer, intent(in) :: num_nolakec
+     integer, intent(in) :: filter_nolakec(:)
      real(r8), intent(in) :: dtime  ! land model time step (sec)
 
      real(r8) , intent(in)    :: qflx_through_snow( bounds%begp: ) ! canopy throughfall of snow (mm H2O/s)
@@ -1103,11 +1112,11 @@ contains
              qflx_irrig_drip(p)
      end do
 
-     call p2c(bounds, num_nolakep, filter_nolakep, &
+     call p2c(bounds, num_nolakec, filter_nolakec, &
           qflx_snow_grnd_patch(begp:endp), &
           qflx_snow_grnd_col(begc:endc))
 
-     call p2c(bounds, num_nolakep, filter_nolakep, &
+     call p2c(bounds, num_nolakec, filter_nolakec, &
           qflx_liq_grnd_patch(begp:endp), &
           qflx_liq_grnd_col(begc:endc))
 
