@@ -18,6 +18,7 @@ module CanopyHydrologyMod
   use abortutils      , only : endrun
   use clm_time_manager, only : get_step_size
   use clm_varctl      , only : iulog
+  use column_varcon   , only : icol_sunwall, icol_shadewall
   use subgridAveMod   , only : p2c
   use LandunitType    , only : lun                
   use atm2lndType     , only : atm2lnd_type
@@ -30,7 +31,7 @@ module CanopyHydrologyMod
   use WaterStateBulkType      , only : waterstatebulk_type
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
   use WaterTracerUtils        , only : CalcTracerFromBulk
-  use ColumnType      , only : col                
+  use ColumnType      , only : col, column_type
   use PatchType       , only : patch, patch_type
   !
   ! !PUBLIC TYPES:
@@ -163,7 +164,8 @@ contains
         num_soilp, filter_soilp, &
         num_nolakep, filter_nolakep, &
         num_nolakec, filter_nolakec, &
-        patch, canopystate_inst, atm2lnd_inst, water_inst)
+        patch, col, &
+        canopystate_inst, atm2lnd_inst, water_inst)
      !
      ! !DESCRIPTION:
      ! Coordinate work related to the calculation of canopy interception and throughfall,
@@ -183,6 +185,7 @@ contains
      integer                , intent(in)    :: num_nolakec       ! number of columns in filter_nolakec
      integer                , intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
      type(patch_type)       , intent(in)    :: patch
+     type(column_type)      , intent(in)    :: col
      type(canopystate_type) , intent(in)    :: canopystate_inst
      type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
      type(water_type)       , intent(inout) :: water_inst
@@ -242,6 +245,8 @@ contains
 
      call BulkFlux_CanopyInterceptionAndThroughfall(bounds, num_nolakep, filter_nolakep, &
           ! Inputs
+          patch                 = patch, &
+          col                   = col, &
           frac_veg_nosno        = canopystate_inst%frac_veg_nosno_patch(begp:endp), &
           elai                  = canopystate_inst%elai_patch(begp:endp), &
           esai                  = canopystate_inst%esai_patch(begp:endp), &
@@ -478,6 +483,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine BulkFlux_CanopyInterceptionAndThroughfall(bounds, num_nolakep, filter_nolakep, &
+        patch, col, &
         frac_veg_nosno, elai, esai, forc_snow, qflx_liq_above_canopy, &
         qflx_through_snow, qflx_through_liq, &
         qflx_intercepted_snow, qflx_intercepted_liq, &
@@ -490,6 +496,8 @@ contains
      type(bounds_type), intent(in) :: bounds
      integer, intent(in) :: num_nolakep
      integer, intent(in) :: filter_nolakep(:)
+     type(patch_type), intent(in) :: patch
+     type(column_type), intent(in) :: col
 
      integer  , intent(in)    :: frac_veg_nosno( bounds%begp: )                          ! fraction of vegetation not covered by snow (0 OR 1)
      real(r8) , intent(in)    :: elai( bounds%begp: )                                    ! canopy one-sided leaf area index with burying by snow
@@ -504,7 +512,7 @@ contains
      logical  , intent(inout) :: check_point_for_interception_and_excess( bounds%begp: ) ! whether each patch in the filter needs to have the interception calculations (here) and snow/liquid excess calculations (elsewhere) computed
      !
      ! !LOCAL VARIABLES:
-     integer :: fp, p
+     integer :: fp, p, c
      real(r8) :: fpiliq  ! coefficient of interception for liquid
      real(r8) :: fpisnow ! coefficient of interception for snow
 
@@ -524,6 +532,8 @@ contains
 
      do fp = 1, num_nolakep
         p = filter_nolakep(fp)
+        c = patch%column(p)
+
         check_point_for_interception_and_excess(p) = &
              (frac_veg_nosno(p) == 1 .and. (forc_snow(p) + qflx_liq_above_canopy(p)) > 0._r8)
         if (check_point_for_interception_and_excess(p)) then
@@ -547,10 +557,15 @@ contains
         else
            ! Note that special landunits will be handled here, in addition to soil points
            ! with frac_veg_nosno == 0.
-           qflx_through_snow(p) = forc_snow(p)
-           qflx_through_liq(p)  = qflx_liq_above_canopy(p)
            qflx_intercepted_snow(p) = 0._r8
            qflx_intercepted_liq(p) = 0._r8
+           if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
+              qflx_through_snow(p) = 0._r8
+              qflx_through_liq(p)  = 0._r8
+           else
+              qflx_through_snow(p) = forc_snow(p)
+              qflx_through_liq(p)  = qflx_liq_above_canopy(p)
+           end if
         end if
      end do
 

@@ -483,7 +483,7 @@ contains
             filter(nc)%num_soilp, filter(nc)%soilp, &
             filter(nc)%num_nolakep, filter(nc)%nolakep, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
-            patch, canopystate_inst, atm2lnd_inst, water_inst)
+            patch, col, canopystate_inst, atm2lnd_inst, water_inst)
 
        ! FIXME(wjs, 2019-05-07) Remove this temporary check
        if (water_inst%DoConsistencyCheck()) then
