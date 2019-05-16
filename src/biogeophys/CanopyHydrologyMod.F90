@@ -192,6 +192,8 @@ contains
      real(r8) :: tracer_qflx_liq_above_canopy_patch(bounds%begp:bounds%endp) ! For one tracer: liquid water input above canopy (rain plus irrigation) [mm/s]
      real(r8) :: forc_snow_patch(bounds%begp:bounds%endp)                    ! atm snow, patch-level [mm/s]
      real(r8) :: tracer_forc_snow_patch(bounds%begp:bounds%endp)             ! For one tracer: atm snow, patch-level [mm/s]
+     real(r8) :: snocanmx_save(bounds%begp:bounds%endp)
+     real(r8) :: liqcanmx_save(bounds%begp:bounds%endp)
 
      logical  :: check_point_for_interception_and_excess(bounds%begp:bounds%endp)
 
@@ -309,7 +311,10 @@ contains
           check_point_for_interception_and_excess = check_point_for_interception_and_excess(begp:endp), &
           ! Outputs
           qflx_snocanfall = b_waterflux_inst%qflx_snocanfall_patch(begp:endp), &
-          qflx_liqcanfall = b_waterflux_inst%qflx_liqcanfall_patch(begp:endp))
+          qflx_liqcanfall = b_waterflux_inst%qflx_liqcanfall_patch(begp:endp), &
+          ! Temporary outputs
+          snocanmx_save = snocanmx_save(begp:endp), &
+          liqcanmx_save = liqcanmx_save(begp:endp))
 
      ! Calculate runoff from canopy due to exceeding maximum storage, for each tracer
      do i = water_inst%tracers_beg, water_inst%tracers_end
@@ -338,7 +343,12 @@ contains
              qflx_snocanfall = w%waterflux_inst%qflx_snocanfall_patch(begp:endp), &
              ! Outputs
              liqcan          = w%waterstate_inst%liqcan_patch(begp:endp), &
-             snocan          = w%waterstate_inst%snocan_patch(begp:endp))
+             snocan          = w%waterstate_inst%snocan_patch(begp:endp), &
+             ! Temporary inputs
+             is_bulk = (i == water_inst%i_bulk), &
+             snocanmx_save = snocanmx_save(begp:endp), &
+             liqcanmx_save = liqcanmx_save(begp:endp))
+
         end associate
      end do
 
@@ -389,6 +399,7 @@ contains
         associate(w => water_inst%bulk_and_tracers(i))
         call SumFlux_FluxesOntoGround(bounds, num_nolakep, filter_nolakep, &
              ! Inputs
+             dtime                 = dtime, &
              qflx_through_snow  = w%waterflux_inst%qflx_through_snow_patch(begp:endp), &
              qflx_snocanfall    = w%waterflux_inst%qflx_snocanfall_patch(begp:endp), &
              qflx_snow_unload   = w%waterflux_inst%qflx_snow_unload_patch(begp:endp), &
@@ -680,7 +691,8 @@ contains
    subroutine BulkFlux_CanopyExcess(bounds, num_soilp, filter_soilp, &
         dtime, elai, esai, snocan, liqcan, &
         check_point_for_interception_and_excess, &
-        qflx_snocanfall, qflx_liqcanfall)
+        qflx_snocanfall, qflx_liqcanfall, &
+        snocanmx_save, liqcanmx_save)
      !
      ! !DESCRIPTION:
      ! Compute runoff from canopy due to exceeding maximum storage, for bulk
@@ -700,6 +712,9 @@ contains
 
      real(r8) , intent(inout) :: qflx_snocanfall( bounds%begp: )                         ! rate of excess canopy snow falling off canopy (mm H2O/s)
      real(r8) , intent(inout) :: qflx_liqcanfall( bounds%begp: )                         ! rate of excess canopy liquid falling off canopy (mm H2O/s)
+     real(r8), intent(inout) :: snocanmx_save( bounds%begp: )
+     real(r8), intent(inout) :: liqcanmx_save( bounds%begp: )
+
      !
      ! !LOCAL VARIABLES:
      integer :: fp, p
@@ -716,6 +731,8 @@ contains
      SHR_ASSERT_FL((ubound(check_point_for_interception_and_excess, 1) == bounds%endp), sourcefile, __LINE__)
      SHR_ASSERT_FL((ubound(qflx_snocanfall, 1) == bounds%endp), sourcefile, __LINE__)
      SHR_ASSERT_FL((ubound(qflx_liqcanfall, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(snocanmx_save, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(liqcanmx_save, 1) == bounds%endp), sourcefile, __LINE__)
 
      do fp = 1, num_soilp
         p = filter_soilp(fp)
@@ -724,8 +741,10 @@ contains
 
         if (check_point_for_interception_and_excess(p)) then
            liqcanmx = params_inst%dewmx * (elai(p) + esai(p))
+           liqcanmx_save(p) = liqcanmx
            qflx_liqcanfall(p) = max((liqcan(p) - liqcanmx)/dtime, 0._r8)
            snocanmx = params_inst%sno_stor_max * (elai(p) + esai(p))
+           snocanmx_save(p) = snocanmx
            qflx_snocanfall(p) = max((snocan(p) - snocanmx)/dtime, 0._r8)
         end if
      end do
@@ -802,7 +821,8 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine UpdateState_RemoveCanfallFromCanopy(bounds, num_soilp, filter_soilp, dtime, &
-        qflx_liqcanfall, qflx_snocanfall, liqcan, snocan)
+        qflx_liqcanfall, qflx_snocanfall, liqcan, snocan, &
+        is_bulk, snocanmx_save, liqcanmx_save)
      !
      ! !DESCRIPTION:
      ! Update snocan and liqcan based on canfall, for bulk or one tracer
@@ -817,6 +837,11 @@ contains
      real(r8) , intent(in)    :: qflx_snocanfall( bounds%begp: ) ! rate of excess canopy snow falling off canopy (mm H2O/s)
      real(r8) , intent(inout) :: liqcan( bounds%begp: )          ! canopy liquid water (mm H2O)
      real(r8) , intent(inout) :: snocan( bounds%begp: )          ! canopy snow water (mm H2O)
+     
+     logical, intent(in) :: is_bulk
+     real(r8), intent(in) :: snocanmx_save( bounds%begp: )
+     real(r8), intent(in) :: liqcanmx_save( bounds%begp: )
+
      !
      ! !LOCAL VARIABLES:
      integer :: fp, p
@@ -828,13 +853,35 @@ contains
      SHR_ASSERT_FL((ubound(qflx_snocanfall, 1) == bounds%endp), sourcefile, __LINE__)
      SHR_ASSERT_FL((ubound(liqcan, 1) == bounds%endp), sourcefile, __LINE__)
      SHR_ASSERT_FL((ubound(snocan, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(snocanmx_save, 1) == bounds%endp), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(liqcanmx_save, 1) == bounds%endp), sourcefile, __LINE__)
 
      do fp = 1, num_soilp
         p = filter_soilp(fp)
 
-        ! FIXME(wjs, 2019-05-09) Put in place adjustments to get bit-for-bit
+        ! FIXME(wjs, 2019-05-15) Remove this temporary code that is just here to get
+        ! bit-for-bit.
         liqcan(p) = liqcan(p) - dtime * qflx_liqcanfall(p)
+        if (is_bulk) then
+           if (qflx_liqcanfall(p) > 0._r8) then
+              if (abs(liqcan(p) - liqcanmx_save(p)) > 1.e-13_r8) then
+                 write(iulog,*) 'WJS: p, liqcan, liqcanmx_save = ', p, liqcan(p), liqcanmx_save(p)
+                 call endrun(msg='liqcan differs too much from liqcanmx_save')
+              end if
+              liqcan(p) = liqcanmx_save(p)
+           end if
+        end if
+
         snocan(p) = snocan(p) - dtime * qflx_snocanfall(p)
+        if (is_bulk) then
+           if (qflx_snocanfall(p) > 0._r8) then
+              if (abs(snocan(p) - snocanmx_save(p)) > 1.e-13_r8) then
+                 write(iulog,*) 'WJS: p, snocan, snocanmx_save = ', p, snocan(p), snocanmx_save(p)
+                 call endrun(msg='snocan differs too much from snocanmx_save')
+              end if
+              snocan(p) = snocanmx_save(p)
+           end if
+        end if
      end do
 
    end subroutine UpdateState_RemoveCanfallFromCanopy
@@ -990,6 +1037,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine SumFlux_FluxesOntoGround(bounds, num_nolakep, filter_nolakep, &
+        dtime, &
         qflx_through_snow, qflx_snocanfall, qflx_snow_unload, &
         qflx_through_liq, qflx_liqcanfall, qflx_irrig_drip, &
         qflx_snow_grnd_col, qflx_liq_grnd_col)
@@ -1001,6 +1049,7 @@ contains
      type(bounds_type), intent(in) :: bounds
      integer, intent(in) :: num_nolakep
      integer, intent(in) :: filter_nolakep(:)
+     real(r8), intent(in) :: dtime  ! land model time step (sec)
 
      real(r8) , intent(in)    :: qflx_through_snow( bounds%begp: ) ! canopy throughfall of snow (mm H2O/s)
      real(r8) , intent(in)    :: qflx_snocanfall( bounds%begp: )   ! rate of excess canopy snow falling off canopy (mm H2O/s)
@@ -1039,21 +1088,18 @@ contains
      do fp = 1, num_nolakep
         p = filter_nolakep(fp)
 
-        ! FIXME(wjs, 2019-05-10) To get bit-for-bit, probably need to replace
-        ! qflx_snow_unload with (qflx_snow_unload*dtime)/dtime. Probably no need to check
-        ! that that is only a roundoff-level change (i.e., no need to confirm that
-        ! (qflx_snow_unload*dtime)/dtime equals qflx_snow_unload within roundoff.
+        ! FIXME(wjs, 2019-05-15) Change (qflx_snow_unload(p)*dtime)/dtime back to simply
+        ! qflx_snow_unload(p) once I can tolerate roundoff-level changes.
         qflx_snow_grnd_patch(p) = &
              qflx_through_snow(p) + &
              qflx_snocanfall(p) + &
-             qflx_snow_unload(p)
+             (qflx_snow_unload(p)*dtime)/dtime
 
-        ! FIXME(wjs, 2019-05-14) Parenthesize the addition of the first two terms to get
-        ! bit-for-bit. (Then remove this set of parentheses when I can tolerate
-        ! roundoff-level changes.)
+        ! FIXME(wjs, 2019-05-15) Remove parentheses around partial sum once I can
+        ! tolerate roundoff-level changes.
         qflx_liq_grnd_patch(p) = &
-             qflx_through_liq(p) + &
-             qflx_liqcanfall(p) + &
+             (qflx_through_liq(p) + &
+             qflx_liqcanfall(p)) + &
              qflx_irrig_drip(p)
      end do
 
