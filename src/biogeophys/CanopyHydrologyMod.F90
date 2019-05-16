@@ -852,7 +852,6 @@ contains
      do fp = 1, num_soilp
         p = filter_soilp(fp)
 
-        ! FIXME(wjs, 2019-05-09) Put in place adjustments to get bit-for-bit
         liqcan(p) = liqcan(p) - dtime * qflx_liqcanfall(p)
         snocan(p) = snocan(p) - dtime * qflx_snocanfall(p)
      end do
@@ -1063,18 +1062,11 @@ contains
      do fp = 1, num_nolakep
         p = filter_nolakep(fp)
 
-        ! FIXME(wjs, 2019-05-10) To get bit-for-bit, probably need to replace
-        ! qflx_snow_unload with (qflx_snow_unload*dtime)/dtime. Probably no need to check
-        ! that that is only a roundoff-level change (i.e., no need to confirm that
-        ! (qflx_snow_unload*dtime)/dtime equals qflx_snow_unload within roundoff.
         qflx_snow_grnd_patch(p) = &
              qflx_through_snow(p) + &
              qflx_snocanfall(p) + &
              qflx_snow_unload(p)
 
-        ! FIXME(wjs, 2019-05-14) Parenthesize the addition of the first two terms to get
-        ! bit-for-bit. (Then remove this set of parentheses when I can tolerate
-        ! roundoff-level changes.)
         qflx_liq_grnd_patch(p) = &
              qflx_through_liq(p) + &
              qflx_liqcanfall(p) + &
