@@ -168,10 +168,7 @@ contains
          h2osoi_vol           =>  waterstatebulk_inst%h2osoi_vol_col        , & ! Output: [real(r8) (:,:) ]  volumetric soil water [m3/m3]         
 
          qflx_floodc          =>  waterfluxbulk_inst%qflx_floodc_col        , & ! Output: [real(r8) (:)   ]  column flux of flood water from RTM     
-         qflx_prec_grnd       =>  waterfluxbulk_inst%qflx_prec_grnd_patch   , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
-         qflx_snow_grnd_patch =>  waterfluxbulk_inst%qflx_snow_grnd_patch   , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
-         qflx_rain_grnd       =>  waterfluxbulk_inst%qflx_rain_grnd_patch   , & ! Output: [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
-         qflx_rain_grnd_col   =>  waterfluxbulk_inst%qflx_rain_grnd_col     , & ! Output: [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
+         qflx_liq_grnd        =>  waterfluxbulk_inst%qflx_liq_grnd_col      , & ! Output: [real(r8) (:)   ]  liquid on ground after interception (mm H2O/s) [+]
          qflx_evap_tot        =>  waterfluxbulk_inst%qflx_evap_tot_patch    , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
          qflx_evap_soi        =>  waterfluxbulk_inst%qflx_evap_soi_patch    , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
          qflx_sub_snow        =>  waterfluxbulk_inst%qflx_sub_snow_patch    , & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
@@ -180,12 +177,11 @@ contains
          qflx_dew_grnd        =>  waterfluxbulk_inst%qflx_dew_grnd_patch    , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
          qflx_snomelt         =>  waterfluxbulk_inst%qflx_snomelt_col       , & ! Output: [real(r8) (:)   ]  snow melt (mm H2O /s)
          qflx_snomelt_lyr     =>  waterfluxbulk_inst%qflx_snomelt_lyr_col   , & ! Output: [real(r8) (:)   ]  snow melt in each layer (mm H2O /s)
-         qflx_prec_grnd_col   =>  waterfluxbulk_inst%qflx_prec_grnd_col     , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
          qflx_evap_grnd_col   =>  waterfluxbulk_inst%qflx_evap_grnd_col     , & ! Output: [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
          qflx_dew_grnd_col    =>  waterfluxbulk_inst%qflx_dew_grnd_col      , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
          qflx_dew_snow_col    =>  waterfluxbulk_inst%qflx_dew_snow_col      , & ! Output: [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
          qflx_sub_snow_col    =>  waterfluxbulk_inst%qflx_sub_snow_col      , & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
-         qflx_snow_grnd_col   =>  waterfluxbulk_inst%qflx_snow_grnd_col     , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
+         qflx_snow_grnd       =>  waterfluxbulk_inst%qflx_snow_grnd_col     , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
          qflx_evap_tot_col    =>  waterfluxbulk_inst%qflx_evap_tot_col      , & ! Output: [real(r8) (:)   ]  pft quantity averaged to the column (assuming one pft)
          qflx_snwcp_ice       =>  waterfluxbulk_inst%qflx_snwcp_ice_col     , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
          qflx_snwcp_discarded_ice => waterfluxbulk_inst%qflx_snwcp_discarded_ice_col, & ! Input: [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
@@ -227,14 +223,10 @@ contains
 
          qflx_prec_grnd_snow(p) = forc_snow(c)
          qflx_prec_grnd_rain(p) = forc_rain(c)
-         qflx_prec_grnd(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
 
-         qflx_snow_grnd_patch(p) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
-         qflx_rain_grnd(p)     = qflx_prec_grnd_rain(p)           ! liquid water onto ground (mm/s)
-
-         ! Assuming one PFT; needed for below
-         qflx_snow_grnd_col(c) = qflx_snow_grnd_patch(p)
-         qflx_rain_grnd_col(c) = qflx_rain_grnd(p)
+         ! Assuming one patch per col
+         qflx_snow_grnd(c) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
+         qflx_liq_grnd(c)  = qflx_prec_grnd_rain(p)           ! liquid water onto ground (mm/s)
 
       end do ! (end pft loop)
 
@@ -250,16 +242,16 @@ contains
          ! U.S.Department of Agriculture Forest Service, Project F,
          ! Progress Rep. 1, Alta Avalanche Study Center:Snow Layer Densification.
 
-         dz_snowf = qflx_snow_grnd_col(c)/bifall(c)
+         dz_snowf = qflx_snow_grnd(c)/bifall(c)
          snow_depth(c) = snow_depth(c) + dz_snowf*dtime
-         h2osno(c) = h2osno(c) + qflx_snow_grnd_col(c)*dtime  ! snow water equivalent (mm)
+         h2osno(c) = h2osno(c) + qflx_snow_grnd(c)*dtime  ! snow water equivalent (mm)
 
          ! When the snow accumulation exceeds 40 mm, initialize snow layer
          ! Currently, the water temperature for the precipitation is simply set
          ! as the surface air temperature
 
          newnode = 0    ! flag for when snow node will be initialized
-         if (snl(c) == 0 .and. qflx_snow_grnd_col(c) > 0.0_r8 .and. snow_depth(c) >= 0.01_r8 + lsadz) then
+         if (snl(c) == 0 .and. qflx_snow_grnd(c) > 0.0_r8 .and. snow_depth(c) >= 0.01_r8 + lsadz) then
             newnode = 1
             snl(c) = -1
             dz(c,0) = snow_depth(c)                       ! meter
@@ -281,7 +273,7 @@ contains
          ! later.
 
          if (snl(c) < 0 .and. newnode == 0) then
-            h2osoi_ice(c,snl(c)+1) = h2osoi_ice(c,snl(c)+1)+dtime*qflx_snow_grnd_col(c)
+            h2osoi_ice(c,snl(c)+1) = h2osoi_ice(c,snl(c)+1)+dtime*qflx_snow_grnd(c)
             dz(c,snl(c)+1) = dz(c,snl(c)+1)+dz_snowf*dtime
          end if
 
@@ -366,7 +358,6 @@ contains
          c = pcolumn(p)
 
          qflx_evap_tot_col(c)  = qflx_evap_tot(p)
-         qflx_prec_grnd_col(c) = qflx_prec_grnd(p)
          qflx_evap_grnd_col(c) = qflx_evap_grnd(p)
          qflx_dew_grnd_col(c)  = qflx_dew_grnd(p)
          qflx_dew_snow_col(c)  = qflx_dew_snow(p)

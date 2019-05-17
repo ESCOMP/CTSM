@@ -918,7 +918,9 @@ contains
   end subroutine TracerConsistencyCheck
 
   !-----------------------------------------------------------------------
-  subroutine Summary(this, bounds, num_soilp, filter_soilp)
+  subroutine Summary(this, bounds, &
+       num_soilp, filter_soilp, &
+       num_allc, filter_allc)
     !
     ! !DESCRIPTION:
     ! Compute end-of-timestep summaries of water diagnostic terms
@@ -928,6 +930,8 @@ contains
     type(bounds_type) , intent(in)    :: bounds
     integer           , intent(in)    :: num_soilp       ! number of patches in soilp filter
     integer           , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    integer           , intent(in)    :: num_allc        ! number of columns in allc filter
+    integer           , intent(in)    :: filter_allc(:)  ! filter for all columns
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -941,7 +945,10 @@ contains
             bounds = bounds, &
             num_soilp = num_soilp, &
             filter_soilp = filter_soilp, &
-            waterstate_inst = bulk_or_tracer%waterstate_inst)
+            num_allc = num_allc, &
+            filter_allc = filter_allc, &
+            waterstate_inst = bulk_or_tracer%waterstate_inst, &
+            waterflux_inst = bulk_or_tracer%waterflux_inst)
        end associate
     end do
 

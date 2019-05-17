@@ -1,4 +1,208 @@
 ===============================================================
+Tag name:  ctsm1.0.dev041
+Originator(s):  sacks (Bill Sacks)
+Date:  Fri May 17 06:02:38 MDT 2019
+One-line Summary: Add water tracers to CanopyHydrologyMod
+
+Purpose of changes
+------------------
+
+Major overhaul of CanopyHydrologyMod in order to support water tracers.
+
+The part of CanopyHydrology that was actually dealing with canopy
+hydrology has now been broken out into a number of small routines in
+order to separate flux calculations from state updates. This is needed
+in order to calculate tracer versions of the relevant variables, which
+is now done here.
+
+The parts of CanopyHydrology that were NOT dealing with canopy hydrology
+have been moved to more appropriate homes. They have not yet been
+tracerized, but will be soon.
+
+This also makes some minor changes to diagnostic fields related to
+canopy hydrology. Of particular note: QDRIP now has a different meaning:
+it now corresponds to the excess liquid water that runs off from the
+canopy (and is inactive by default).
+
+The design of this broken-out code was developed in consultation with
+Mike Barlage, Erik Kluzek, Negin Sobhani, Sean Swenson and Mariana
+Vertenstein. We plan to apply this design moving forward to other parts
+of the code that need tracerization. See also
+<https://github.com/billsacks/prototypes-ctsm-canopyhydrology_tracers>.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#360 - Implement water isotopes for
+  CanopyHydrology
+- Resolves ESCOMP/ctsm#709 - QDRIP diagnostic field misleadingly named
+- Partially addresses ESCOMP/ctsm#503 - Clean up CanopyHydrology
+  (We still need to clean up / tracerize the parts that have now been
+  moved elsewhere.)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Changed meaning of QDRIP diagnostic field: it now corresponds to
+  qflx_liqcanfall rather than qflx_prec_grnd_patch, and is default
+  inactive. (There is no longer a diagnostic field corresponding to
+  qflx_prec_grnd_patch, but there are separate diagnostic fields for the
+  rain and snow portions of this, both default inactive.)
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+- checked timing of hydro1 timer vs. previous canhydro timer from my
+  dev039 testing: differences are negligible
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by:
+- Design reviewed by Mike Barlage, Erik Kluzek, Negin Sobhani, Sean
+  Swenson and Mariana Vertenstein
+- Final code reviewed only by self
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, baseline comparisons fail as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     Ensured no-greater-than-roundoff-level by:
+
+     First, generated baselines using code with these diffs (note extra
+     parentheses in multiplication):
+
+       diff --git a/src/biogeophys/CanopyHydrologyMod.F90 b/src/biogeophys/CanopyHydrologyMod.F90
+       index f848f520..31c8c550 100644
+       --- a/src/biogeophys/CanopyHydrologyMod.F90
+       +++ b/src/biogeophys/CanopyHydrologyMod.F90
+       @@ -338,8 +338,8 @@ subroutine CanopyHydrology(bounds, &
+                           ! Intercepted precipitation [mm/s]
+                           qflx_prec_intr(p) = forc_snow(c)*fpisnow + qflx_liq_above_canopy(p)*fpi
+                           ! storage of intercepted snowfall, rain, and dew
+       -                   snocan(p) = max(0._r8, snocan(p) + dtime*forc_snow(c)*fpisnow)
+       -                   liqcan(p) = max(0._r8, liqcan(p) + dtime*qflx_liq_above_canopy(p)*fpi)
+       +                   snocan(p) = max(0._r8, snocan(p) + dtime*(forc_snow(c)*fpisnow))
+       +                   liqcan(p) = max(0._r8, liqcan(p) + dtime*(qflx_liq_above_canopy(p)*fpi))
+
+                           ! Initialize rate of canopy runoff and snow falling off canopy
+                           qflx_snocanfall(p) = 0._r8
+
+
+     Then ran test suite on 1cc9d38a. This is very close to the final
+     branch, but had a few small tweaks in place to get bit-for-bit:
+
+     1. Under some conditions, the final branch code resets slightly
+        negative snocan and liqcan to 0, where master did not. This
+        commit puts in place temporary code to maintain the slightly
+        negative values under these conditions, along with a check to
+        ensure that the values are really always only slightly negative
+        in this situation.
+
+     2. When snocan > snocanmx, master reset snocan to exactly snocanmx,
+        whereas the final branch code can result in snocan being
+        roundoff-level different from snocanmx, and similar for
+        liqcan. This commit puts in place temporary code to set snocan
+        to snocanmx under appropriate circumstances, and liqcan to
+        liqcanmx, along with a check to ensure that this is only leading
+        to roundoff-level changes in these state variables.
+
+     3. Multiplies then divides a flux by dtime in one place
+
+     4. Has parentheses around a partial sum to ensure same order of
+        operations as before
+
+     This was bfb with the baselines generated with the diff noted
+     above, except for roundoff-level changes in SNOCAN in one grid cell
+     in just one test
+     (SMS_D_Ld1.f19_g17.I1850Clm45Cn.hobart_gnu.clm-default; old:
+     -8.15e-322, new: -2e-323).
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+None. But see
+https://github.com/billsacks/prototypes-ctsm-canopyhydrology_tracers,
+which was the source of our design discussions and contains notes from
+these discussions.
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev040
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
 Date:  Fri May 03 10:34:46 MDT 2019
