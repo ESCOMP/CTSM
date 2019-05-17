@@ -1,6 +1,2 @@
 This testmods directory is like the standard glcMEC testmods directory, except
 it forces a quick decrease in glacier area, along with rearranging the columns.
-
-In the collapse2gencrop branch this test needs
-do_transient_crops = .false.
-to get bfb answers with baseline.

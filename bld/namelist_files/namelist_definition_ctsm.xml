@@ -115,11 +115,12 @@ Otherwise use the fraction straight up              (the default for CLM5.0)
 </entry>
 
 <entry id="soil_layerstruct" type="char*16" category="clm_physics"
-       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m" >
+       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m,5SL_3m" >
 10SL_3.5m    = standard CLM4 and CLM4.5 version
 23SL_3.5m    = more vertical layers for permafrost simulations 
 49SL_10m     = 49 layer soil column, 10m of soil, 5 bedrock layers
 20SL_8.5m    = 20 layer soil column, 8m of soil, 5 bedrock layers
+5SL_3m       = 5 layer soil column, 3m of soil, 0 bedrock layers
 </entry>
 
 <entry id="use_bedrock" type="logical" category="clm_physics"
@@ -301,6 +302,12 @@ Intercept of free living Nitrogen fixation with zero annual ET
 <entry id="use_undercanopy_stability" type="logical" category="clm_physics"
        group="canopyfluxes_inparm" valid_values="" >
 If TRUE use the undercanopy stability term used with CLM4.5 (Sakaguchi&amp;Zeng, 2008)
+</entry>
+
+<entry id="itmax_canopy_fluxes" type="integer" category="clm_physics"
+       group="canopyfluxes_inparm">
+Max number of iterations used in subr. CanopyFluxes. For many years, 40 was the hardwired default value.
+<default>Default: 40</default>
 </entry>
 
 <entry id="interception_fraction" type="real" category="clm_physics"
@@ -908,9 +915,9 @@ If TRUE, write diagnostic of global radiative temperature written to CLM log fil
 Subgrid fluxes for snow
 </entry>
 
-<entry id="snowveg_flag" type="char*10" category="clm_physics"
-       group="clm_canopyhydrology_inparm" valid_values="OFF,ON,ON_RAD" >
-Turn vegetation snow canopy ON, OFF, or ON with albedo influence (ON_RAD)
+<entry id="snowveg_affects_radiation" type="logical" category="clm_physics"
+       group="surfacealbedo_inparm" >
+Whether snow on the vegetation canopy affects the radiation/albedo calculations
 </entry>
 
 <!-- ========================================================================================  -->
@@ -1082,6 +1089,48 @@ Number of dominant pfts, so this determines the number of active pfts. Selecting
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9" value="0">
 Number of dominant landunits, so this determines the number of active landunits. Selecting the value 0 means DO NOTHING, ie all landunits in the input data are active.
+<default>Default: 0</default>
+</entry>
+
+<entry id="collapse_urban" type="logical" category="physics"
+       group="clm_inparm" value=".false.">
+If true, this directs the model to collapse the urban landunits to the dominant urban landunit. Selecting .false. means DO NOTHING, ie all urban landunits found in the input data are active.
+<default>Default: .false.</default>
+</entry>
+
+<entry id="toosmall_soil" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the soil landunit. Selecting the value 0 means DO NOTHING.
+<default>Default: 0</default>
+</entry>
+
+<entry id="toosmall_crop" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the crop landunit. Selecting the value 0 means DO NOTHING.
+<default>Default: 0</default>
+</entry>
+
+<entry id="toosmall_glacier" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the glacier landunit. Selecting the value 0 means DO NOTHING.
+<default>Default: 0</default>
+</entry>
+
+<entry id="toosmall_lake" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the lake landunit. Selecting the value 0 means DO NOTHING.
+<default>Default: 0</default>
+</entry>
+
+<entry id="toosmall_wetland" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the wetland landunit. Selecting the value 0 means DO NOTHING.
+<default>Default: 0</default>
+</entry>
+
+<entry id="toosmall_urban" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the urban landunits. Selecting the value 0 means DO NOTHING. If collapse_urban = .false., the same threshold will apply to all three urban landunits if they are present. If collapse_urban = .true., this threshold will apply to the single collapsed urban landunit if presnet.
 <default>Default: 0</default>
 </entry>
 
@@ -1794,7 +1843,7 @@ CLM run type.
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,1km-merge-10min">
+"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,0.125nldas2,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,1km-merge-10min">
 Horizontal resolutions
 Note: 0.1x0.1, 0.25x0.25, 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 
@@ -1816,7 +1865,7 @@ hist means do NOT use a future scenario, just use historical data.
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v7,gx1v6,gx1v7,navy,test,tx0.1v2,tx1v1,T62,cruncep">
+       valid_values="USGS,gx3v7,gx1v6,gx1v7,navy,test,tx0.1v2,tx1v1,T62,cruncep,nldas2">
 Land mask description
 </entry> 
 
@@ -2285,6 +2334,52 @@ If TRUE, apply transient crops from flanduse_timeseries file.
 If TRUE, apply harvest from flanduse_timeseries file.
 (Only valid for transient runs, where there is a flanduse_timeseries file.)
 (Also, only valid for use_cn = true.)
+</entry>
+
+<entry id="reset_dynbal_baselines" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="">
+If TRUE, reset baseline values of total column water and energy in the
+first step of the run. This should typically be set when transitioning
+from an offline spinup to a coupled run with transient glaciers, and
+*possibly* when transitioning from the spinup to the transient portion
+of a coupled run with transient glaciers; it should typically remain
+unset at other times.
+
+These baseline values are computed only for particular columns
+(currently, only for glacier columns). They provide values that are
+subtracted from the current state when counting total column water and
+energy. For glacier columns, these discount the water and energy
+contents in the "virtual" glacier ice, while adding representative
+amounts of water and energy in the non-explicitly-modeled soil beneath
+the ice. Subtracting these baselines reduces the fictitious dynbal
+fluxes generated when total grid cell water and energy changes as a
+result of dynamic column/landunit areas.
+
+These baseline values are initially computed based on cold start
+states. If this flag remains unset (.false.), these baseline values will
+remain fixed at their cold start values. This will conserve mass and
+energy, but may result in larger-than-desired dynbal energy fluxes (and,
+in principle, also larger dynbal water fluxes; but currently, the mass
+of glacier ice remains fixed over time, so dynbal water fluxes are
+fairly small regardless of whether this flag is ever set). To further
+reduce these dynbal fluxes, you can set this flag to .true. when
+starting a startup or hybrid run from a partially or entirely spun-up
+state. This will reset the baseline values based on the state at the
+start of this run.
+
+Note that setting this flag can break water and energy conservation!
+Specifically, any water and energy that has previously been added to or
+removed from states that contribute to these baselines (currently, (a)
+glacier ice and (b) soil water and energy in the vegetated landunit in
+the same grid cell as glaciers) will effectively be ignored when
+computing conservation corrections due to land cover change. Instead,
+only the change in states from this point forward will be
+considered. So, for example, this flag should NOT be set when
+transitioning from a historical run to a future scenario.
+
+This setting only impacts startup and hybrid runs; it has no effect in a
+continue run; it is an error for this to be set in a branch
+run. Furthermore, this setting has no effect in a cold start run.
 </entry>
 
 <entry id="for_testing_allow_non_annual_changes" type="logical" category="physics"

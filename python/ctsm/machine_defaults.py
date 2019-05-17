@@ -55,7 +55,7 @@ MACHINE_DEFAULTS = {
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
                 queue='medium',
-                walltime='02:00:00',
+                walltime='04:00:00',
                 extra_args='',
                 required_args='-l nodes=1:ppn=48 -r n')
         })

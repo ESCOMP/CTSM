@@ -206,10 +206,14 @@ contains
       endif
 
     call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-         waterstate_inst, waterdiagnostic_inst, begwb(bounds%begc:bounds%endc))
+         waterstate_inst, waterdiagnostic_inst, &
+         subtract_dynbal_baselines = .false., &
+         water_mass = begwb(bounds%begc:bounds%endc))
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-         waterstate_inst, begwb(bounds%begc:bounds%endc))
+         waterstate_inst, &
+         subtract_dynbal_baselines = .false., &
+         water_mass = begwb(bounds%begc:bounds%endc))
 
     do c = bounds%begc, bounds%endc
        h2osno_old(c) = h2osno(c)
@@ -264,10 +268,21 @@ contains
      real(r8) :: dtime                                  ! land model time step (sec)
      integer  :: nstep                                  ! time step number
      integer  :: DAnstep                                ! time step number since last Data Assimilation (DA)
-     logical  :: found                                  ! flag in search loop
      integer  :: indexp,indexc,indexl,indexg            ! index of first found in search loop
      real(r8) :: forc_rain_col(bounds%begc:bounds%endc) ! column level rain rate [mm/s]
      real(r8) :: forc_snow_col(bounds%begc:bounds%endc) ! column level snow rate [mm/s]
+
+     real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
+     real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
+     real(r8) :: errsol_max_val                         ! Maximum value of error in solar radiation conservation error over all columns [W m-2]
+     real(r8) :: errlon_max_val                         ! Maximum value of error in longwave radiation conservation error over all columns [W m-2]
+     real(r8) :: errseb_max_val                         ! Maximum value of error in surface energy conservation error over all columns [W m-2]
+     real(r8) :: errsoi_col_max_val                     ! Maximum value of column-level soil/lake energy conservation error over all columns [W m-2]
+
+     real(r8), parameter :: h2o_warning_thresh       = 1.e-9_r8                       ! Warning threshhold for error in errh2o and errh2osnow 
+     real(r8), parameter :: energy_warning_thresh    = 1.e-7_r8                       ! Warning threshhold for error in errsol, errsol, errseb, errlonv
+     real(r8), parameter :: error_thresh             = 1.e-5_r8                       ! Error threshhold for conservation error
+
      !-----------------------------------------------------------------------
 
      associate(                                                                   & 
@@ -403,78 +418,55 @@ contains
           end if
 
        end do
+       
+       errh2o_max_val = maxval(abs(errh2o(bounds%begc:bounds%endc)))
 
-       found = .false.
-       do c = bounds%begc, bounds%endc
-          if (abs(errh2o(c)) > 1.e-9_r8) then
-             found = .true.
-             indexc = c
-          end if
-       end do
+       if (errh2o_max_val > h2o_warning_thresh) then
 
-       if ( found ) then
+           indexc = maxloc( abs(errh2o(bounds%begc:bounds%endc)), 1 ) + bounds%begc -1
+           write(iulog,*)'WARNING:  water balance error ',&
+             ' nstep= ',nstep, &
+             ' local indexc= ',indexc,&
+           ! ' global indexc= ',GetGlobalIndex(decomp_index=indexc, clmlevel=namec), &
+             ' errh2o= ',errh2o(indexc)
+         if ((errh2o_max_val > error_thresh) .and. (DAnstep > skip_steps)) then
+              
+              write(iulog,*)'clm urban model is stopping - error is greater than 1e-5 (mm)'
+              write(iulog,*)'nstep                     = ',nstep
+              write(iulog,*)'errh2o                    = ',errh2o(indexc)
+              write(iulog,*)'forc_rain                 = ',forc_rain_col(indexc)*dtime
+              write(iulog,*)'forc_snow                 = ',forc_snow_col(indexc)*dtime
+              write(iulog,*)'endwb                     = ',endwb(indexc)
+              write(iulog,*)'begwb                     = ',begwb(indexc)
 
-          write(iulog,*)'WARNING:  water balance error ',&
-               ' nstep= ',nstep, &
-               ' local indexc= ',indexc,&
-               ! ' global indexc= ',GetGlobalIndex(decomp_index=indexc, clmlevel=namec), &
-               ' errh2o= ',errh2o(indexc)
+              write(iulog,*)'qflx_evap_tot             = ',qflx_evap_tot(indexc)*dtime
+              write(iulog,*)'qflx_sfc_irrig            = ',qflx_sfc_irrig(indexc)*dtime
+              write(iulog,*)'qflx_surf                 = ',qflx_surf(indexc)*dtime
+              write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl(indexc)*dtime
+              write(iulog,*)'qflx_drain                = ',qflx_drain(indexc)*dtime
 
-          if ((col%itype(indexc) == icol_roof .or. &
-               col%itype(indexc) == icol_road_imperv .or. &
-               col%itype(indexc) == icol_road_perv) .and. &
-               abs(errh2o(indexc)) > 1.e-5_r8 .and. (DAnstep > skip_steps) ) then
+              write(iulog,*)'qflx_ice_runoff_snwcp     = ',qflx_ice_runoff_snwcp(indexc)*dtime
+              write(iulog,*)'qflx_ice_runoff_xs        = ',qflx_ice_runoff_xs(indexc)*dtime
 
-             write(iulog,*)'clm urban model is stopping - error is greater than 1e-5 (mm)'
-             write(iulog,*)'nstep                 = ',nstep
-             write(iulog,*)'errh2o                = ',errh2o(indexc)
-             write(iulog,*)'forc_rain             = ',forc_rain_col(indexc)*dtime
-             write(iulog,*)'forc_snow             = ',forc_snow_col(indexc)*dtime
-             write(iulog,*)'endwb                 = ',endwb(indexc)
-             write(iulog,*)'begwb                 = ',begwb(indexc)
-             write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
-             write(iulog,*)'qflx_sfc_irrig        = ',qflx_sfc_irrig(indexc)*dtime
-             write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
-             write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
-             write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime
-             write(iulog,*)'qflx_ice_runoff_snwcp = ',qflx_ice_runoff_snwcp(indexc)*dtime
-             write(iulog,*)'qflx_ice_runoff_xs    = ',qflx_ice_runoff_xs(indexc)*dtime
-             write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime
-             write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq(indexc)*dtime
-             write(iulog,*)'deltawb          = ',endwb(indexc)-begwb(indexc)
-             write(iulog,*)'deltawb/dtime    = ',(endwb(indexc)-begwb(indexc))/dtime
-             write(iulog,*)'deltaflux        = ',forc_rain_col(indexc)+forc_snow_col(indexc) - (qflx_evap_tot(indexc) + &
-                  qflx_surf(indexc)+qflx_drain(indexc))
+              write(iulog,*)'qflx_snwcp_discarded_ice  = ',qflx_snwcp_discarded_ice(indexc)*dtime
+              write(iulog,*)'qflx_snwcp_discarded_liq  = ',qflx_snwcp_discarded_liq(indexc)*dtime
+              write(iulog,*)'deltawb                   = ',endwb(indexc)-begwb(indexc)
+              write(iulog,*)'deltawb/dtime             = ',(endwb(indexc)-begwb(indexc))/dtime
 
-             write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
-
-          else if (abs(errh2o(indexc)) > 1.e-5_r8 .and. (DAnstep > skip_steps) ) then
-
-             write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
-             write(iulog,*)'nstep                 = ',nstep
-             write(iulog,*)'errh2o                = ',errh2o(indexc)
-             write(iulog,*)'forc_rain             = ',forc_rain_col(indexc)*dtime
-             write(iulog,*)'forc_snow             = ',forc_snow_col(indexc)*dtime
-             write(iulog,*)'endwb                 = ',endwb(indexc)
-             write(iulog,*)'begwb                 = ',begwb(indexc)
-             
-             write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
-             write(iulog,*)'qflx_sfc_irrig        = ',qflx_sfc_irrig(indexc)*dtime
-             write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
-             write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
-             write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime
-             write(iulog,*)'qflx_drain_perched    = ',qflx_drain_perched(indexc)*dtime
-             write(iulog,*)'qflx_flood            = ',qflx_floodc(indexc)*dtime
-             write(iulog,*)'qflx_ice_runoff_snwcp = ',qflx_ice_runoff_snwcp(indexc)*dtime
-             write(iulog,*)'qflx_ice_runoff_xs    = ',qflx_ice_runoff_xs(indexc)*dtime
-             write(iulog,*)'qflx_glcice_dyn_water_flux = ', qflx_glcice_dyn_water_flux(indexc)*dtime
-             write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime
-             write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq(indexc)*dtime
-             write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
-          end if
+              if (.not.(col%itype(indexc) == icol_roof .or. &
+                   col%itype(indexc) == icol_road_imperv .or. &
+                   col%itype(indexc) == icol_road_perv)) then
+                   write(iulog,*)'qflx_drain_perched         = ',qflx_drain_perched(indexc)*dtime
+                   write(iulog,*)'qflx_flood                 = ',qflx_floodc(indexc)*dtime
+                   write(iulog,*)'qflx_glcice_dyn_water_flux = ', qflx_glcice_dyn_water_flux(indexc)*dtime
+              end if
+              
+              write(iulog,*)'clm model is stopping'
+              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+         end if
+       
        end if
+       
 
        ! Snow balance check
 
@@ -523,56 +515,52 @@ contains
                 snow_sinks(c) = 0._r8
                 errh2osno(c) = 0._r8
              end if
-
+          else
+             errh2osno(c) = 0._r8
           end if
        end do
 
-       found = .false.
-       do c = bounds%begc,bounds%endc
-          if (col%active(c)) then
-             if (abs(errh2osno(c)) > 1.0e-9_r8) then
-                found = .true.
-                indexc = c
-             end if
-          end if
-       end do
-       if ( found ) then
-          write(iulog,*)'WARNING:  snow balance error '
-          write(iulog,*)'nstep= ',nstep, &
-               ' local indexc= ',indexc, &
-               ! ' global indexc= ',GetGlobalIndex(decomp_index=indexc, clmlevel=namec), &
-               ' col%itype= ',col%itype(indexc), &
-               ' lun%itype= ',lun%itype(col%landunit(indexc)), &
-               ' errh2osno= ',errh2osno(indexc)
 
-          if (abs(errh2osno(indexc)) > 1.e-5_r8 .and. (DAnstep > skip_steps) ) then
-             write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
-             write(iulog,*)'nstep              = ',nstep
-             write(iulog,*)'errh2osno          = ',errh2osno(indexc)
-             write(iulog,*)'snl                = ',col%snl(indexc)
-             write(iulog,*)'snow_depth         = ',snow_depth(indexc)
-             write(iulog,*)'frac_sno_eff       = ',frac_sno_eff(indexc)
-             write(iulog,*)'h2osno             = ',h2osno(indexc)
-             write(iulog,*)'h2osno_old         = ',h2osno_old(indexc)
-             write(iulog,*)'snow_sources       = ',snow_sources(indexc)*dtime
-             write(iulog,*)'snow_sinks         = ',snow_sinks(indexc)*dtime
-             write(iulog,*)'qflx_prec_grnd     = ',qflx_prec_grnd(indexc)*dtime
-             write(iulog,*)'qflx_snow_grnd_col = ',qflx_snow_grnd_col(indexc)*dtime
-             write(iulog,*)'qflx_rain_grnd_col = ',qflx_rain_grnd_col(indexc)*dtime
-             write(iulog,*)'qflx_sub_snow      = ',qflx_sub_snow(indexc)*dtime
-             write(iulog,*)'qflx_snow_drain    = ',qflx_snow_drain(indexc)*dtime
-             write(iulog,*)'qflx_evap_grnd     = ',qflx_evap_grnd(indexc)*dtime
-             write(iulog,*)'qflx_dew_snow      = ',qflx_dew_snow(indexc)*dtime
-             write(iulog,*)'qflx_dew_grnd      = ',qflx_dew_grnd(indexc)*dtime
-             write(iulog,*)'qflx_snwcp_ice     = ',qflx_snwcp_ice(indexc)*dtime
-             write(iulog,*)'qflx_snwcp_liq     = ',qflx_snwcp_liq(indexc)*dtime
-             write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime
-             write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq(indexc)*dtime
-             write(iulog,*)'qflx_sl_top_soil   = ',qflx_sl_top_soil(indexc)*dtime
-             write(iulog,*)'clm model is stopping'
+       errh2osno_max_val = maxval( abs(errh2osno(bounds%begc:bounds%endc)))
+       
+       if (errh2osno_max_val > h2o_warning_thresh) then
+            indexc = maxloc( abs(errh2osno(bounds%begc:bounds%endc)), 1) + bounds%begc -1
+            write(iulog,*)'WARNING:  snow balance error '
+            write(iulog,*)'nstep= ',nstep, &
+                 ' local indexc= ',indexc, &
+                 ! ' global indexc= ',GetGlobalIndex(decomp_index=indexc, clmlevel=namec), &
+                 ' col%itype= ',col%itype(indexc), &
+                 ' lun%itype= ',lun%itype(col%landunit(indexc)), &
+                 ' errh2osno= ',errh2osno(indexc)
 
-             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
-          end if
+            if ((errh2osno_max_val > error_thresh) .and. (DAnstep > skip_steps) ) then
+                 write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
+                 write(iulog,*)'nstep              = ',nstep
+                 write(iulog,*)'errh2osno          = ',errh2osno(indexc)
+                 write(iulog,*)'snl                = ',col%snl(indexc)
+                 write(iulog,*)'snow_depth         = ',snow_depth(indexc)
+                 write(iulog,*)'frac_sno_eff       = ',frac_sno_eff(indexc)
+                 write(iulog,*)'h2osno             = ',h2osno(indexc)
+                 write(iulog,*)'h2osno_old         = ',h2osno_old(indexc)
+                 write(iulog,*)'snow_sources       = ',snow_sources(indexc)*dtime
+                 write(iulog,*)'snow_sinks         = ',snow_sinks(indexc)*dtime
+                 write(iulog,*)'qflx_prec_grnd     = ',qflx_prec_grnd(indexc)*dtime
+                 write(iulog,*)'qflx_snow_grnd_col = ',qflx_snow_grnd_col(indexc)*dtime
+                 write(iulog,*)'qflx_rain_grnd_col = ',qflx_rain_grnd_col(indexc)*dtime
+                 write(iulog,*)'qflx_sub_snow      = ',qflx_sub_snow(indexc)*dtime
+                 write(iulog,*)'qflx_snow_drain    = ',qflx_snow_drain(indexc)*dtime
+                 write(iulog,*)'qflx_evap_grnd     = ',qflx_evap_grnd(indexc)*dtime
+                 write(iulog,*)'qflx_dew_snow      = ',qflx_dew_snow(indexc)*dtime
+                 write(iulog,*)'qflx_dew_grnd      = ',qflx_dew_grnd(indexc)*dtime
+                 write(iulog,*)'qflx_snwcp_ice     = ',qflx_snwcp_ice(indexc)*dtime
+                 write(iulog,*)'qflx_snwcp_liq     = ',qflx_snwcp_liq(indexc)*dtime
+                 write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime
+                 write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq(indexc)*dtime
+                 write(iulog,*)'qflx_sl_top_soil   = ',qflx_sl_top_soil(indexc)*dtime
+                 write(iulog,*)'clm model is stopping'
+                 call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+            end if
+
        end if
 
        ! Energy balance checks
@@ -620,124 +608,111 @@ contains
                      + eflx_wasteheat_patch(p) + eflx_heat_from_ac_patch(p) + eflx_traffic_patch(p)
              end if
              !TODO MV - move this calculation to a better place - does not belong in BalanceCheck 
-             netrad(p) = fsa(p) - eflx_lwrad_net(p) 
+             netrad(p) = fsa(p) - eflx_lwrad_net(p)
+          else
+             errsol(p) = 0._r8
+             errlon(p) = 0._r8
+             errseb(p) = 0._r8
           end if
        end do
 
        ! Solar radiation energy balance check
 
-       found = .false.
-       do p = bounds%begp, bounds%endp
-          if (patch%active(p)) then
-             if ( (errsol(p) /= spval) .and. (abs(errsol(p)) > 1.e-7_r8) ) then
-                found = .true.
-                indexp = p
-                indexg = patch%gridcell(indexp)
-             end if
-          end if
-       end do
-       if ( found  .and. (DAnstep > skip_steps) ) then
-          write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
-          write(iulog,*)'nstep         = ',nstep
-          write(iulog,*)'errsol        = ',errsol(indexp)
-          if (abs(errsol(indexp)) > 1.e-5_r8 ) then
-             write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
-             write(iulog,*)'fsa           = ',fsa(indexp)
-             write(iulog,*)'fsr           = ',fsr(indexp)
-             write(iulog,*)'forc_solad(1) = ',forc_solad(indexg,1)
-             write(iulog,*)'forc_solad(2) = ',forc_solad(indexg,2)
-             write(iulog,*)'forc_solai(1) = ',forc_solai(indexg,1)
-             write(iulog,*)'forc_solai(2) = ',forc_solai(indexg,2)
-             write(iulog,*)'forc_tot      = ',forc_solad(indexg,1)+forc_solad(indexg,2) &
-               +forc_solai(indexg,1)+forc_solai(indexg,2)
-             write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
-          end if
-       end if
+       errsol_max_val = maxval( abs(errsol(bounds%begp:bounds%endp)), mask = (errsol(bounds%begp:bounds%endp) /= spval) ) 
 
+       if  ((errsol_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
+
+           indexp = maxloc( abs(errsol(bounds%begp:bounds%endp)), 1 , mask = (errsol(bounds%begp:bounds%endp) /= spval) ) + bounds%begp -1
+           indexg = patch%gridcell(indexp)
+           write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
+           write(iulog,*)'nstep         = ',nstep
+           write(iulog,*)'errsol        = ',errsol(indexp)
+           
+           if (errsol_max_val > error_thresh) then
+               write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
+               write(iulog,*)'fsa           = ',fsa(indexp)
+               write(iulog,*)'fsr           = ',fsr(indexp)
+               write(iulog,*)'forc_solad(1) = ',forc_solad(indexg,1)
+               write(iulog,*)'forc_solad(2) = ',forc_solad(indexg,2)
+               write(iulog,*)'forc_solai(1) = ',forc_solai(indexg,1)
+               write(iulog,*)'forc_solai(2) = ',forc_solai(indexg,2)
+               write(iulog,*)'forc_tot      = ',forc_solad(indexg,1)+forc_solad(indexg,2) &
+                  +forc_solai(indexg,1)+forc_solai(indexg,2)
+               write(iulog,*)'clm model is stopping'
+               call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+           end if
+
+       end if
+       
        ! Longwave radiation energy balance check
 
-       found = .false.
-       do p = bounds%begp, bounds%endp
-          if (patch%active(p)) then
-             if ( (errlon(p) /= spval) .and. (abs(errlon(p)) > 1.e-7_r8) ) then
-                found = .true.
-                indexp = p
-             end if
-          end if
-       end do
-       if ( found  .and. (DAnstep > skip_steps) ) then
-          write(iulog,*)'WARNING: BalanceCheck: longwave energy balance error (W/m2)' 
-          write(iulog,*)'nstep        = ',nstep 
-          write(iulog,*)'errlon       = ',errlon(indexp)
-          if (abs(errlon(indexp)) > 1.e-5_r8 ) then
-             write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
-             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
-          end if
+       errlon_max_val = maxval( abs(errlon(bounds%begp:bounds%endp)), mask = (errlon(bounds%begp:bounds%endp) /= spval) )
+
+       if ((errlon_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
+            indexp = maxloc( abs(errlon(bounds%begp:bounds%endp)), 1 , mask = (errlon(bounds%begp:bounds%endp) /= spval) ) + bounds%begp -1
+            write(iulog,*)'indexp         = ',indexp
+            write(iulog,*)'WARNING: BalanceCheck: longwave energy balance error (W/m2)'
+            write(iulog,*)'nstep        = ',nstep
+            write(iulog,*)'errlon       = ',errlon(indexp)
+            if (errlon_max_val > error_thresh ) then
+                 write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
+                 call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+            end if
        end if
 
        ! Surface energy balance check
 
-       found = .false.
-       do p = bounds%begp, bounds%endp
-          if (patch%active(p)) then
-             if (abs(errseb(p)) > 1.e-7_r8 ) then
-                found = .true.
-                indexp = p
-                indexc = patch%column(indexp)
-                indexg = patch%gridcell(indexp)
-             end if
-          end if
-       end do
-       if ( found  .and. (DAnstep > skip_steps) ) then
-          write(iulog,*)'WARNING: BalanceCheck: surface flux energy balance error (W/m2)'
-          write(iulog,*)'nstep          = ' ,nstep
-          write(iulog,*)'errseb         = ' ,errseb(indexp)
-          if (abs(errseb(indexp)) > 1.e-5_r8 ) then
-             write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
-             write(iulog,*)'sabv           = ' ,sabv(indexp)
+       errseb_max_val = maxval( abs(errseb(bounds%begp:bounds%endp)))
 
-             write(iulog,*)'sabg           = ' ,sabg(indexp), ((1._r8- frac_sno(indexc))*sabg_soil(indexp) + &
-                  frac_sno(indexc)*sabg_snow(indexp)),sabg_chk(indexp)
+       if ((errseb_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
 
-             write(iulog,*)'forc_tot      = '  ,forc_solad(indexg,1) + forc_solad(indexg,2) + &
-                  forc_solai(indexg,1) + forc_solai(indexg,2)
+           indexp = maxloc( abs(errseb(bounds%begp:bounds%endp)), 1 ) + bounds%begp -1
+           indexc = patch%column(indexp)
+           indexg = patch%gridcell(indexp)
 
-             write(iulog,*)'eflx_lwrad_net = ' ,eflx_lwrad_net(indexp)
-             write(iulog,*)'eflx_sh_tot    = ' ,eflx_sh_tot(indexp)
-             write(iulog,*)'eflx_lh_tot    = ' ,eflx_lh_tot(indexp)
-             write(iulog,*)'eflx_soil_grnd = ' ,eflx_soil_grnd(indexp)
-             write(iulog,*)'fsa fsr = '        ,fsa(indexp),    fsr(indexp)
-             write(iulog,*)'fabd fabi = '      ,fabd(indexp,:), fabi(indexp,:)
-             write(iulog,*)'albd albi = '      ,albd(indexp,:), albi(indexp,:)
-             write(iulog,*)'ftii ftdd ftid = ' ,ftii(indexp,:), ftdd(indexp,:),ftid(indexp,:)
-             write(iulog,*)'elai esai = '      ,elai(indexp),   esai(indexp)      
-             write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
-          end if
+           write(iulog,*)'WARNING: BalanceCheck: surface flux energy balance error (W/m2)'
+           write(iulog,*)'nstep          = ' ,nstep
+           write(iulog,*)'errseb         = ' ,errseb(indexp)
+
+           if ( errseb_max_val > error_thresh ) then
+              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
+              write(iulog,*)'sabv           = ' ,sabv(indexp)
+              write(iulog,*)'sabg           = ' ,sabg(indexp), ((1._r8- frac_sno(indexc))*sabg_soil(indexp) + &
+                   frac_sno(indexc)*sabg_snow(indexp)),sabg_chk(indexp)
+              write(iulog,*)'forc_tot      = '  ,forc_solad(indexg,1) + forc_solad(indexg,2) + &
+                   forc_solai(indexg,1) + forc_solai(indexg,2)
+
+              write(iulog,*)'eflx_lwrad_net = ' ,eflx_lwrad_net(indexp)
+              write(iulog,*)'eflx_sh_tot    = ' ,eflx_sh_tot(indexp)
+              write(iulog,*)'eflx_lh_tot    = ' ,eflx_lh_tot(indexp)
+              write(iulog,*)'eflx_soil_grnd = ' ,eflx_soil_grnd(indexp)
+              write(iulog,*)'fsa fsr = '        ,fsa(indexp),    fsr(indexp)
+              write(iulog,*)'fabd fabi = '      ,fabd(indexp,:), fabi(indexp,:)
+              write(iulog,*)'albd albi = '      ,albd(indexp,:), albi(indexp,:)
+              write(iulog,*)'ftii ftdd ftid = ' ,ftii(indexp,:), ftdd(indexp,:),ftid(indexp,:)
+              write(iulog,*)'elai esai = '      ,elai(indexp),   esai(indexp)
+              write(iulog,*)'clm model is stopping'
+              call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+           end if
+
        end if
 
        ! Soil energy balance check
 
-       found = .false.
-       do c = bounds%begc,bounds%endc
-          if (col%active(c)) then
-             if (abs(errsoi_col(c)) > 1.0e-5_r8 ) then
-                found = .true.
-                indexc = c
-             end if
-          end if
-       end do
-       if ( found ) then
-          write(iulog,*)'WARNING: BalanceCheck: soil balance error (W/m2)'
-          write(iulog,*)'nstep         = ',nstep
-          write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
-          if (abs(errsoi_col(indexc)) > 1.e-4_r8 .and. (DAnstep > skip_steps) ) then
-             write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
-          end if
-       end if
+       errsoi_col_max_val  =  maxval( abs(errsoi_col(bounds%begc:bounds%endc)) , mask = col%active(bounds%begc:bounds%endc))
 
+       if (errsoi_col_max_val > 1.0e-5_r8 ) then
+           indexc = maxloc( abs(errsoi_col(bounds%begc:bounds%endc)), 1 , mask = col%active(bounds%begc:bounds%endc) ) + bounds%begc -1
+           write(iulog,*)'WARNING: BalanceCheck: soil balance error (W/m2)'
+           write(iulog,*)'nstep         = ',nstep
+           write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
+
+           if ((errsoi_col_max_val > 1.e-4_r8) .and. (DAnstep > skip_steps)) then
+              write(iulog,*)'clm model is stopping'
+              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+           end if
+       end if 
+       
      end associate
 
    end subroutine BalanceCheck

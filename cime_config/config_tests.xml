@@ -65,6 +65,16 @@ SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
     <HIST_OPTION>never</HIST_OPTION>
   </test>
 
+  <test NAME="LCISO">
+    <DESC>CTSM Land model test to ensure Carbon isotopes on or off does NOT change answers</DESC>
+    <INFO_DBUG>1</INFO_DBUG>
+    <DOUT_S>FALSE</DOUT_S>
+    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
+    <REST_OPTION>never</REST_OPTION>
+    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
+    <HIST_N>$STOP_N</HIST_N>
+  </test>
+
   <test NAME="SSP">
     <DESC>smoke CLM spinup test</DESC>
     <INFO_DBUG>1</INFO_DBUG>

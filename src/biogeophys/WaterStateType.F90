@@ -35,12 +35,17 @@ module WaterStateType
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
-     real(r8), pointer :: h2ocan_patch           (:)   ! patch canopy water (mm H2O)
      real(r8), pointer :: h2osfc_col             (:)   ! col surface water (mm H2O)
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
 
-     real(r8), pointer :: wa_col                 (:)     ! col water in the unconfined aquifer (mm) 
+     real(r8), pointer :: wa_col                 (:)   ! col water in the unconfined aquifer (mm)
+
+     ! For the following dynbal baseline variables: positive values are subtracted to
+     ! avoid counting liquid water content of "virtual" states; negative values are added
+     ! to account for missing states in the model.
+     real(r8), pointer :: dynbal_baseline_liq_col(:)   ! baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
+     real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (mm H2O)
 
      real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
 
@@ -119,9 +124,6 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
          dim2beg = -nlevsno+1, dim2end = nlevgrnd)
-    call AllocateVar1d(var = this%h2ocan_patch, name = 'h2ocan_patch', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
     call AllocateVar1d(var = this%snocan_patch, name = 'snocan_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
@@ -132,6 +134,12 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%wa_col, name = 'wa_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%dynbal_baseline_liq_col, name = 'dynbal_baseline_liq_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%dynbal_baseline_ice_col, name = 'dynbal_baseline_ice_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
@@ -211,14 +219,6 @@ contains
          avgflag='A', &
          long_name=this%info%lname('soil ice (vegetated landunits only)'), &
          ptr_col=data2dptr, l2g_scale_type='veg')
-
-    this%h2ocan_patch(begp:endp) = spval 
-    call hist_addfld1d ( &
-         fname=this%info%fname('H2OCAN'), &
-         units='mm',  &
-         avgflag='A', &
-         long_name=this%info%lname('intercepted water'), &
-         ptr_patch=this%h2ocan_patch, set_lake=0._r8)
 
     this%snocan_patch(begp:endp) = spval 
     call hist_addfld1d ( &
@@ -321,7 +321,6 @@ contains
     associate(snl => col%snl) 
 
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
-      this%h2ocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%snocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%liqcan_patch(bounds%begp:bounds%endp) = 0._r8
 
@@ -490,6 +489,12 @@ contains
          end do
       end if
 
+      ! Initialize dynbal_baseline_liq_col and dynbal_baseline_ice_col: for some columns,
+      ! these are set elsewhere in initialization, but we need them to be 0 for columns
+      ! for which they are not explicitly set.
+      this%dynbal_baseline_liq_col(bounds%begc:bounds%endc) = 0._r8
+      this%dynbal_baseline_ice_col(bounds%begc:bounds%endc) = 0._r8
+
     end associate
 
   end subroutine InitCold
@@ -518,7 +523,7 @@ contains
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,l,j,nlevs
+    integer  :: p,c,l,j,nlevs
     logical  :: readvar
     real(r8) :: maxwatsat    ! maximum porosity    
     real(r8) :: excess       ! excess volumetric soil water
@@ -563,14 +568,6 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_ice_col)
          
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('H2OCAN'), &
-         xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name=this%info%lname('canopy water'), &
-         units='kg/m2', &
-         interpinic_flag='interp', readvar=readvar, data=this%h2ocan_patch)
-
-    call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('SNOCAN'), &
          xtype=ncd_double,  &
          dim1name='pft', &
@@ -594,6 +591,21 @@ contains
          long_name=this%info%lname('water in the unconfined aquifer'), units='mm', &
          interpinic_flag='interp', readvar=readvar, data=this%wa_col)
 
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('DYNBAL_BASELINE_LIQ'), &
+         xtype=ncd_double, &
+         dim1name='column', &
+         long_name=this%info%lname("baseline liquid water mass subtracted from each column's total water calculation"), &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_liq_col)
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('DYNBAL_BASELINE_ICE'), &
+         xtype=ncd_double, &
+         dim1name='column', &
+         long_name=this%info%lname("baseline ice mass subtracted from each column's total ice calculation"), &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
 
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then
