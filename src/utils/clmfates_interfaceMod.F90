@@ -1234,8 +1234,7 @@ contains
            end do
            
            call set_site_properties(this%fates(nc)%nsites, &
-                                    this%fates(nc)%sites,  &
-                                    this%fates(nc)%bc_in)
+                                    this%fates(nc)%sites)
 
            ! ----------------------------------------------------------------------------
            ! Initialize Hydraulics Code if turned on
