@@ -8,12 +8,12 @@ module CNCStateUpdate3Mod
   use shr_kind_mod                   , only : r8 => shr_kind_r8
   use shr_log_mod                    , only : errMsg => shr_log_errMsg
   use abortutils                     , only : endrun
-  use clm_time_manager               , only : get_step_size,is_end_curr_year
+  use clm_time_manager               , only : get_step_size
   use clm_varpar                     , only : nlevdecomp, ndecomp_pools, i_cwd, i_met_lit, i_cel_lit, i_lig_lit
-  use CNVegCarbonStateType          , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType           , only : cnveg_carbonflux_type
-  use SoilBiogeochemCarbonStateType , only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemCarbonFluxType , only : soilbiogeochem_carbonflux_type
+  use CNVegCarbonStateType           , only : cnveg_carbonstate_type
+  use CNVegCarbonFluxType            , only : cnveg_carbonflux_type
+  use SoilBiogeochemCarbonStateType  , only : soilbiogeochem_carbonstate_type
+  use SoilBiogeochemCarbonFluxType   , only : soilbiogeochem_carbonflux_type
   use clm_varctl                     , only : use_matrixcn,use_soil_matrixcn
   !
   implicit none
@@ -99,10 +99,8 @@ contains
             do j = 1, nlevdecomp
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
-!               if (.not. use_soil_matrixcn)then
                   cs_soil%decomp_cpools_vr_col(c,j,l) = cs_soil%decomp_cpools_vr_col(c,j,l) - &
                     cf_veg%m_decomp_cpools_to_fire_vr_col(c,j,l) * dt
-!               end if
                end do
             end do
          end do
@@ -111,6 +109,14 @@ contains
       ! patch-level carbon fluxes from fire
        do fp = 1,num_soilp
           p = filter_soilp(fp)
+          cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p) -           &
+               cf_veg%m_gresp_storage_to_fire_patch(p) * dt
+          cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p) -           &
+               cf_veg%m_gresp_storage_to_litter_fire_patch(p) * dt
+          cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) -                 &
+               cf_veg%m_gresp_xfer_to_fire_patch(p) * dt
+          cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) -                 &
+               cf_veg%m_gresp_xfer_to_litter_fire_patch(p) * dt  
           if(.not. use_matrixcn)then 
           ! displayed pools
             cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) -                           &
@@ -167,10 +173,6 @@ contains
               cf_veg%m_deadcrootc_storage_to_fire_patch(p) * dt
          cs_veg%deadcrootc_storage_patch(p) = cs_veg%deadcrootc_storage_patch(p) - &
               cf_veg%m_deadcrootc_storage_to_litter_fire_patch(p)* dt
-         cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p) -           &
-              cf_veg%m_gresp_storage_to_fire_patch(p) * dt
-         cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p) -           &
-              cf_veg%m_gresp_storage_to_litter_fire_patch(p) * dt
 
          ! transfer pools
          cs_veg%leafc_xfer_patch(p) = cs_veg%leafc_xfer_patch(p) -                 &
@@ -197,28 +199,7 @@ contains
               cf_veg%m_deadcrootc_xfer_to_fire_patch(p) * dt
          cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p) -       &
               cf_veg%m_deadcrootc_xfer_to_litter_fire_patch(p)* dt
-         cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) -                 &
-              cf_veg%m_gresp_xfer_to_fire_patch(p) * dt
-         cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) -                 &
-              cf_veg%m_gresp_xfer_to_litter_fire_patch(p) * dt
-        else
-         cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p) -           &
-              cf_veg%m_gresp_storage_to_fire_patch(p) * dt
-         cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p) -           &
-              cf_veg%m_gresp_storage_to_litter_fire_patch(p) * dt
-         cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) -                 &
-              cf_veg%m_gresp_xfer_to_fire_patch(p) * dt
-         cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) -                 &
-              cf_veg%m_gresp_xfer_to_litter_fire_patch(p) * dt  
-        end if !end use_matrixcn
-!         if (is_end_curr_year())then
-!            write(begp+1104000000,"(I,18E17.9)"),p,cs_veg%leafc_patch(p),cs_veg%leafc_storage_patch(p),cs_veg%leafc_xfer_patch(p),&
-!                                                cs_veg%frootc_patch(p),cs_veg%frootc_storage_patch(p),cs_veg%frootc_xfer_patch(p),&
-!                                       cs_veg%livestemc_patch(p),cs_veg%livestemc_storage_patch(p),cs_veg%livestemc_xfer_patch(p),&
-!                                       cs_veg%deadstemc_patch(p),cs_veg%deadstemc_storage_patch(p),cs_veg%deadstemc_xfer_patch(p),&
-!                                    cs_veg%livecrootc_patch(p),cs_veg%livecrootc_storage_patch(p),cs_veg%livecrootc_xfer_patch(p),&
-!                                    cs_veg%deadcrootc_patch(p),cs_veg%deadcrootc_storage_patch(p),cs_veg%deadcrootc_xfer_patch(p)
-!         end if
+        end if !not use_matrixcn
        end do ! end of patch loop
 
 

@@ -364,8 +364,6 @@ contains
     ! When nutrient competition is required to be done at cohort level both plant_nutrient_demand and 
     ! do_nutrient_competition should be modified, but that modification should not significantly change 
     ! the current interface.
-!     if(begp .le. 8428 .and. endp .ge. 8428)then
-!     end if
      !RF: moved ths call to before nutrient_demand, so that croplive didn't change half way through crop N cycle. 
      if ( use_fun ) then
        call t_startf('CNPhenology_phase1')
@@ -853,8 +851,8 @@ contains
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, &
        c13_cnveg_carbonstate_inst,c14_cnveg_carbonstate_inst, &
        c13_cnveg_carbonflux_inst,c14_cnveg_carbonflux_inst, &
-       c13_soilbiogeochem_carbonstate_inst,c13_soilbiogeochem_carbonflux_inst,&
-       c14_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonflux_inst)
+       c13_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonstate_inst,&
+       c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
     ! Update the nitrogen leaching rate as a function of soluble mineral N and total soil water outflow.
@@ -862,10 +860,10 @@ contains
     !
     ! !USES:
     use SoilBiogeochemNLeachingMod, only: SoilBiogeochemNLeaching
-    use CNNStateUpdate3Mod   , only: NStateUpdate3
-    use CNVegMatrixMod                    , only: CNVegMatrix
-    use CNSoilMatrixMod                   , only: CNSoilMatrix
-    use clm_time_manager               , only : is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
+    use CNNStateUpdate3Mod        , only: NStateUpdate3
+    use CNVegMatrixMod            , only: CNVegMatrix
+    use CNSoilMatrixMod           , only: CNSoilMatrix
+    use clm_time_manager          , only : is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  

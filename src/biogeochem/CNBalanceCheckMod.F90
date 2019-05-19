@@ -327,21 +327,8 @@ contains
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
         
-!        if(c .eq. 1411 .or. c .eq. 2677)then
-!           write(*,*)'column nbalance error    = ',col_errnb(c), c
-!           write(*,*)'Latdeg,Londeg            = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-!           write(*,*)'begnb                    = ',col_begnb(c)
-!           write(*,*)'endnb                    = ',col_endnb(c)
-!           write(*,*)'delta store              = ',col_endnb(c)-col_begnb(c)
-!           write(*,*)'input mass               = ',col_ninputs(c)*dt
-!           write(*,*)'output mass              = ',col_noutputs(c)*dt
-!           write(*,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
-!           write(*,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-!           write(*,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
-!        end if
-         
         if(use_matrixcn .or. use_soil_matrixcn)then 
-           if (abs(col_errnb(c)) > 1.e-1_r8) then   !1e-3_r8
+           if (abs(col_errnb(c)) > 1.e-1_r8) then   
               err_found = .true.
               err_index = c
            end if
@@ -350,7 +337,7 @@ contains
               write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
            end if
         else
-           if (abs(col_errnb(c)) > 1.e-3_r8) then   !1e-3_r8
+           if (abs(col_errnb(c)) > 1.e-3_r8) then 
               err_found = .true.
               err_index = c
            end if
@@ -377,7 +364,7 @@ contains
       
          
          
-         call endrun(msg=errMsg(sourcefile, __LINE__))  !zgdu
+         call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate

@@ -960,8 +960,8 @@ contains
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,&
          this%c13_cnveg_carbonstate_inst,this%c14_cnveg_carbonstate_inst, &
          this%c13_cnveg_carbonflux_inst,this%c14_cnveg_carbonflux_inst, &
-         c13_soilbiogeochem_carbonstate_inst,c13_soilbiogeochem_carbonflux_inst,&
-         c14_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonflux_inst)
+         c13_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonstate_inst,&
+         c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst)
     ! Set controls on very low values in critical state variables 
 
     call t_startf('CNPrecisionControl')
