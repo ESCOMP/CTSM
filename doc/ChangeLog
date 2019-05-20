@@ -1,4 +1,131 @@
 ===============================================================
+Tag name:  ctsm1.0.dev042
+Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
+Date:  Mon May 20 14:43:44 MDT 2019
+One-line Summary: Rename, correct, and simplify parameters dewmx and sno_stor_max
+
+Purpose of changes
+------------------
+
+ To rename
+ dewmx to liq_canopy_storage_scalar
+ sno_stor_max to sno_canopy_storage_scalar
+ in the code and in the clm45 and clm50 param files.
+
+ To change snocanmx, liqcanmx, and fcansno to...
+ snocanmx = params_inst%snow_canopy_storage_scalar(p) * (elai(p) + esai(p))
+ liqcanmx = params_inst%liq_canopy_storage_scalar(p) * (elai(p) + esai(p))
+ fcansno(p) = (snocan(p) / (vegt * params_inst%sno_stor_max))**0.15_r8
+
+ Rewrote fwet(p) to follow the same format as fcansno(p).
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #710
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Pointing to new clm45 and clm50 param files containing the two renamed
+ parameters listed above.
+
+Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+Code reviewed by:
+ @billsacks
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+     cheyenne - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+ Roundoff changes were expected.
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change: roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+   The code modifications causing the change were of the order-of-calculations
+   type in two lines of code.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: 
+
+   URL for LMWG diagnostics output used to validate new climate:
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/719
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev041
 Originator(s):  sacks (Bill Sacks)
 Date:  Fri May 17 06:02:38 MDT 2019
