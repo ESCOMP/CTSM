@@ -203,6 +203,9 @@ contains
                write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
             end if
          end if
+
+
+
       end do ! end of columns loop
 
       if (err_found) then
@@ -221,7 +224,7 @@ contains
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))   !zgdu
+         call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate
@@ -332,9 +335,11 @@ contains
               err_found = .true.
               err_index = c
            end if
+
            if (abs(col_errnb(c)) > 1e-2_r8) then
               write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
               write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+              write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
            end if
         else
            if (abs(col_errnb(c)) > 1.e-3_r8) then 
@@ -343,12 +348,13 @@ contains
            end if
            if (abs(col_errnb(c)) > 1e-7_r8) then
               write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
-              write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+              write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt  
+              write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
            end if
         end if
 
       end do ! end of columns loop
-      
+
       if (err_found) then
          c = err_index
          write(iulog,*)'column nbalance error    = ',col_errnb(c), c
@@ -361,7 +367,7 @@ contains
          write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
          write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
          write(iulog,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
-      
+        
          
          
          call endrun(msg=errMsg(sourcefile, __LINE__))

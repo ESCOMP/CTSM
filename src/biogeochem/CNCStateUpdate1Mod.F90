@@ -19,9 +19,8 @@ module CNCStateUpdate1Mod
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use PatchType                          , only : patch
-  use GridcellType                       , only : grc
-  use clm_varctl                         , only : use_fates, use_cn, iulog,use_matrixcn
-  use clm_varctl                         , only : use_soil_matrixcn
+  use clm_varctl                         , only : use_fates, use_cn, iulog
+  use clm_varctl                         , only : use_matrixcn, use_soil_matrixcn
   !
   implicit none
   private
@@ -36,8 +35,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
-       cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
-       soilbiogeochem_carbonflux_inst)
+       cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Update carbon states based on fluxes from dyn_cnbal_patch
@@ -49,7 +47,6 @@ contains
     type(cnveg_carbonflux_type)           , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     type(soilbiogeochem_carbonstate_type) , intent(inout) :: soilbiogeochem_carbonstate_inst
-    type(soilbiogeochem_carbonflux_type)  , intent(inout) :: soilbiogeochem_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: c   ! column index
@@ -64,7 +61,6 @@ contains
     associate( &
          cf_veg => cnveg_carbonflux_inst  , &
          cs_veg => cnveg_carbonstate_inst , &
-         cf_soil => soilbiogeochem_carbonflux_inst, &
          cs_soil => soilbiogeochem_carbonstate_inst &
          )
 
@@ -73,13 +69,13 @@ contains
        do j = 1,nlevdecomp
           do fc = 1, num_soilc_with_inactive
              c = filter_soilc_with_inactive(fc)
-                cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + &
+             cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + &
                   cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt
-                cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) + &
+             cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) + &
                   cf_veg%dwt_frootc_to_litr_cel_c_col(c,j) * dt
-                cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) + &
+             cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) + &
                   cf_veg%dwt_frootc_to_litr_lig_c_col(c,j) * dt
-                cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
+             cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
                   ( cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) * dt
           end do
        end do
@@ -244,7 +240,7 @@ contains
                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
                     - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) *dt
                end if !not use_soil_matrixcn 
-           end do
+            end do
          end do
       end do
       do k = 1, ndecomp_cascade_transitions
@@ -253,7 +249,7 @@ contains
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
                   if (.not. use_soil_matrixcn) then
-                    cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
+                     cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) = &
                        cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_receiver_pool(k)) &
                        + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)*dt
                   end if !not use_soil_matrixcn
@@ -266,9 +262,9 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)      
+
          ! phenology: transfer growth fluxes
         if(.not. use_matrixcn)then
-           
            cs_veg%leafc_patch(p)           = cs_veg%leafc_patch(p)       + cf_veg%leafc_xfer_to_leafc_patch(p)*dt
            cs_veg%leafc_xfer_patch(p)      = cs_veg%leafc_xfer_patch(p)  - cf_veg%leafc_xfer_to_leafc_patch(p)*dt
            cs_veg%frootc_patch(p)          = cs_veg%frootc_patch(p)      + cf_veg%frootc_xfer_to_frootc_patch(p)*dt
@@ -296,6 +292,8 @@ contains
            cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) - cf_veg%frootc_to_litter_patch(p)*dt
          
 
+
+
          ! livewood turnover fluxes
            if (woody(ivt(p)) == 1._r8) then
               cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_deadstemc_patch(p)*dt
@@ -318,6 +316,7 @@ contains
                    + cf_veg%grainc_to_seed_patch(p) * dt
            end if
         end if !not use_matrixcn
+
          check_cpool = cs_veg%cpool_patch(p)- cf_veg%psnsun_to_cpool_patch(p)*dt-cf_veg%psnshade_to_cpool_patch(p)*dt
          cpool_delta  =  cs_veg%cpool_patch(p) 
          
@@ -374,8 +373,8 @@ contains
                cf_veg%cpool_to_livecrootc_patch(p) = cf_veg%cpool_to_livecrootc_patch(p) - cf_veg%cpool_to_livecrootc_resp_patch(p)
                cf_veg%cpool_to_livecrootc_storage_patch(p) = cf_veg%cpool_to_livecrootc_storage_patch(p) - &
                     cf_veg%cpool_to_livecrootc_storage_resp_patch(p)
-               cf_veg%cpool_to_livestemc_patch(p) = cf_veg%cpool_to_livestemc_patch(p) - cf_veg%cpool_to_livestemc_resp_patch(p)
-               cf_veg%cpool_to_livestemc_storage_patch(p) = cf_veg%cpool_to_livestemc_storage_patch(p) - &
+    	       cf_veg%cpool_to_livestemc_patch(p) = cf_veg%cpool_to_livestemc_patch(p) - cf_veg%cpool_to_livestemc_resp_patch(p)
+    	       cf_veg%cpool_to_livestemc_storage_patch(p) = cf_veg%cpool_to_livestemc_storage_patch(p) - &
                  cf_veg%cpool_to_livestemc_storage_resp_patch(p)
             end if
             cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt &
@@ -401,7 +400,7 @@ contains
             if (carbon_resp_opt == 1) then
                cf_veg%cpool_to_livestemc_patch(p) = cf_veg%cpool_to_livestemc_patch(p) - cf_veg%cpool_to_livestemc_resp_patch(p)
     	       cf_veg%cpool_to_livestemc_storage_patch(p) = cf_veg%cpool_to_livestemc_storage_patch(p) 	- &
-                 cf_veg%cpool_to_livestemc_storage_resp_patch(p)   
+                 cf_veg%cpool_to_livestemc_storage_resp_patch(p)
             end if
             cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt &
                                                                                     - cf_veg%cpool_to_livestemc_storage_patch(p)*dt &
@@ -510,6 +509,7 @@ contains
                ! isolate, caused C12/C13 ratios to occasionally go out of
                ! bounds. Zeroing out these small pools and putting them into the flux to the
                ! atmosphere solved many of the crop isotope problems
+
                cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
                cs_veg%xsmrpool_patch(p)        = 0._r8
                cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
