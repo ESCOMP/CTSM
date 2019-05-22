@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.24
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed May 22 12:57:45 MDT 2019
+Date: Wed May 22 13:33:48 MDT 2019
 One-line Summary: Correct ndep end year for SSPs, 2-degree CMIP6WACCMDECK with C-isotopes off, fixes mksurfdata for high resolution
 
 Purpose of this version:
@@ -50,7 +50,7 @@ Testinw:
 
   build-namelist tests:
 
-    cheyenne - PASS
+    cheyenne - PASS (15 SSP tests are different as expected)
 
   unit-tests (components/clm/src):
 
@@ -60,6 +60,7 @@ Testinw:
   tools-tests (components/clm/test/tools):
 
     cheyenne - PASS
+    hobart --- PASS
 
   regular tests (aux_clm):
 
