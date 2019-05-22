@@ -727,15 +727,10 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_4x5_hist_16pfts_Irrig_CMIP6_sim
 <fsurdat hgrid="10x15"     sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_10x15_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
 
-<fsurdat hgrid="ne120np4"    sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne120np4_hist_16pfts_Irrig_CMIP6_simyr2000_c190304.nc</fsurdat>
 <fsurdat hgrid="ne30np4"     sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne30np4_hist_16pfts_Irrig_CMIP6_simyr2000_c190303.nc</fsurdat>
 <fsurdat hgrid="ne16np4"     sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne16np4_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
-
-<fsurdat hgrid="conus_30_x8"    sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_conus_30_x8_hist_16pfts_Irrig_CMIP6_simyr2000_c190128.nc</fsurdat>
 
 <fsurdat hgrid="5x5_amazon"    sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_5x5_amazon_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
@@ -760,15 +755,10 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_numaIA_hist_78pfts_CMIP6_si
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
 
-<fsurdat hgrid="ne120np4"    sim_year="2000" use_crop=".true.">
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne120np4_hist_78pfts_CMIP6_simyr2000_c190304.nc</fsurdat>
 <fsurdat hgrid="ne30np4"     sim_year="2000" use_crop=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne30np4_hist_78pfts_CMIP6_simyr2000_c190303.nc</fsurdat>
 <fsurdat hgrid="ne16np4"     sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne16np4_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
-
-<fsurdat hgrid="conus_30_x8"     sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr2000_c190128.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" use_crop=".false." irrigate=".true.">
@@ -797,13 +787,8 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_4x5_hist_16pfts_Irrig_CMIP6_sim
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_brazil_hist_16pfts_Irrig_CMIP6_simyr1850_c190214.nc</fsurdat>
 
 
-<fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne120np4_hist_16pfts_Irrig_CMIP6_simyr1850_c190304.nc</fsurdat>
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne30np4_hist_16pfts_Irrig_CMIP6_simyr1850_c190303.nc</fsurdat>
-
-<fsurdat hgrid="conus_30_x8"    sim_year="1850" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_16pfts_Irrig_CMIP6_simyr1850_c190128.nc</fsurdat>
 
 <!-- pre-industrial with crop -->
 <fsurdat hgrid="48x96"        sim_year="1850" use_crop=".true." >
@@ -825,13 +810,8 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_numaIA_hist_78pfts_CMIP6_si
 <fsurdat hgrid="1x1_brazil"    sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_brazil_hist_78pfts_CMIP6_simyr1850_c190214.nc</fsurdat>
 
-<fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne120np4_hist_78pfts_CMIP6_simyr1850_c190304.nc</fsurdat>
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</fsurdat>
-
-<fsurdat hgrid="conus_30_x8"    sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.nc</fsurdat>
 
 <!-- Potential vegetation land use dataset, crop is off, and zeroed, all areas are natural vegetation without human disturbance -->
 <fsurdat hgrid="0.9x1.25"     sim_year="PtVg" use_crop=".false." irrigate=".false."
@@ -853,13 +833,8 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2000" irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
-<flanduse_timeseries hgrid="ne120np4"      sim_year_range="1850-2000"  irrigate=".true."
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c1908304.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4"       sim_year_range="1850-2000"  irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
-
-<flanduse_timeseries hgrid="conus_30_x8"   sim_year_range="1850-2000"  irrigate=".true."
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_conus_30_x8_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c181003.nc</flanduse_timeseries>
 
 <!-- Dynamic PFT surface datasets for crop -->
 
@@ -879,13 +854,8 @@ lnd/clm2/surfdata_map/surfdata_conus_30_x8_hist_78pfts_CMIP6_simyr1850_c190128.n
 <flanduse_timeseries hgrid="1x1_numaIA"    sim_year_range="1850-2000"
  use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1x1_numaIA_hist_78pfts_CMIP6_simyr1850-2015_c170917.nc</flanduse_timeseries>
 
-<flanduse_timeseries hgrid="ne120np4"      sim_year_range="1850-2000" 
- use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_hist_78pfts_CMIP6_simyr1850-2015_c190304.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4"       sim_year_range="1850-2000" 
  use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_78pfts_CMIP6_simyr1850-2015_c179824.nc</flanduse_timeseries>
-
-<flanduse_timeseries hgrid="conus_30_x8"   sim_year_range="1850-2000" 
- use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_conus_30_x8_hist_78pfts_CMIP6_simyr1850-2015_c181004.nc</flanduse_timeseries>
 
 <!-- Note that this transient file only goes up to year 1855.
      This is sufficient for testing purposes, but could cause problems if you try to run beyond 1855. -->
