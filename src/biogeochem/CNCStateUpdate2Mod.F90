@@ -89,7 +89,7 @@ contains
                  cf_soil%matrix_Cinput%V(c,j+(i_cwd-1)*nlevdecomp)     + cf_veg%gap_mortality_c_to_cwdc_col(c,j) * dt
             end if !soil_matrix
          end do
-      end do 
+      end do
 
       ! patch loop
       do fp = 1,num_soilp
