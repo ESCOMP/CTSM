@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 828;
+my $ntests = 820;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 504;
+   $ntests += 498;
 }
 plan( tests=>$ntests );
 
@@ -1086,6 +1086,10 @@ foreach my $res ( @resolutions ) {
              $res eq "128x256"     ||
              $res eq "360x720cru"  ||
              $res eq "512x1024" ) {
+      next;
+   # Resolutions not supported on release branch
+   } elsif ( $res eq "ne120np4"    ||
+             $res eq "conus_30_x8" ) {
       next;
    }
 

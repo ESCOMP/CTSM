@@ -705,7 +705,7 @@ program mksurfdat
               pctwet(n)    = 100._r8 - pctlak(n)
               pctgla(n)    = 0._r8
           else
-              pctwet(n)    = 100._r8 - pctgla(n) - pctlak(n)
+              pctwet(n)    = max(100._r8 - pctgla(n) - pctlak(n), 0.0_r8)
           end if
           pcturb(n)        = 0._r8
           call pctnatpft(n)%set_pct_l2g(0._r8)
@@ -1319,6 +1319,26 @@ subroutine normalizencheck_landuse(ldomain)
     do n = 1,ns_o
 
        ! Check preconditions
+       if ( pctlak(n) < 0.0_r8 )then
+          write(6,*) subname, ' ERROR: pctlak is negative!'
+          write(6,*) 'n, pctlak = ', n, pctlak(n)
+          call abort()
+       end if
+       if ( pctwet(n) < 0.0_r8 )then
+          write(6,*) subname, ' ERROR: pctwet is negative!'
+          write(6,*) 'n, pctwet = ', n, pctwet(n)
+          call abort()
+       end if
+       if ( pcturb(n) < 0.0_r8 )then
+          write(6,*) subname, ' ERROR: pcturb is negative!'
+          write(6,*) 'n, pcturb = ', n, pcturb(n)
+          call abort()
+       end if
+       if ( pctgla(n) < 0.0_r8 )then
+          write(6,*) subname, ' ERROR: pctgla is negative!'
+          write(6,*) 'n, pctgla = ', n, pctgla(n)
+          call abort()
+       end if
 
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
        if (suma > (100._r8 + tol_loose)) then

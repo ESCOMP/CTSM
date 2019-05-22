@@ -1,4 +1,103 @@
 ===============================================================
+Tag name:  release-clm5.0.24
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed May 22 13:33:48 MDT 2019
+One-line Summary: Correct ndep end year for SSPs, 2-degree CMIP6WACCMDECK with C-isotopes off, fixes mksurfdata for high resolution
+
+Purpose of this version:
+------------------------
+
+Fix a couple small issues. Correct end year for ndep for SSP's so can run to the end of 2100. Some fixes to mksurfdata_map for high
+resolution surface datasets. Have 2-degree WACCM-CMIP6DECK match a user-mod directory without carbon isotopes on. Remove the
+ne120np4 and conus_30_x8 surface dataset files, as they can't be used (see #673).
+
+Remove 8x16, 32x64 resolutions as they are no longer needed and there are problems with them. Add in the mapping files needed for
+94x192. Check that special landunit percent area's is not less than 0.0, and don't let PCT_WET be less than zero for areas with
+ocean (see #673).
+
+Change some of the longer single point tests to use Qian forcing (as faster, less memory, less problems). Add compsets for this.
+This change was also done on master.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #673, #714, #716, #717, #726
+
+  Fixes #726 -- Some resolutions fail in mksurfdata_map
+  Fixes #717 -- Change end year for ndep to 2101 for SSP's
+  Fixes #716 -- 2 degree CMIP6WACCMDECK needs Carbon isotopes off
+  Fixes #714 -- Fails on cheyenne for some longer single point simulations
+  Fixes #673 -- Ice shelf wetland fix in mksurfdata_map can lead to glacier+lake > 100% on surface datasets
+
+Science changes since: release-clm5.0.23
+   Turn Carbon isotopes off for 2-degree CMIP6WACCMDECK
+
+Software changes since: release-clm5.0.23
+   End year for ndep is now 2101, so will run to end of 2100
+   Fixes to mksurfdata_map for high resolutions
+
+Changes to User Interface since: release-clm5.0.23
+   Remove ne120np, conus_30_x8 surface datasets
+   Remove 8x16, and 32x64 resolutions
+   Add 94x192 mapping files, so can work in mksurfdata_map
+
+Testinw:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (15 SSP tests are different as expected)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart ---PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No
+
+Detailed list of changes:
+------------------------
+
+Externals being used: (cime goes from branch to full tag)
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.16
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #720
+(https://github.com/ESCOMP/ctsm/pull)
+
+ #720 -- Fix a couple small issues, 2-degree no-ciso for WACCMDECK and ndep end year 2101
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.23
 Originator(s):  erik (Erik Kluzek)
 Date: Wed May 15 15:31:15 MDT 2019
