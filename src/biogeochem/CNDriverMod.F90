@@ -780,8 +780,10 @@ contains
          decomp_cpools_vr_col=soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools), &
          t_soi17cm_col=temperature_inst%t_soi17cm_col(begc:endc))
 
-    call cnfire_method%CNFireFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, num_actfirec, filter_actfirec,       &
-         num_actfirep, filter_actfirep, dgvs_inst, soilbiogeochem_carbonflux_inst, cnveg_state_inst,                               &
+    call cnfire_method%CNFireFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                      &
+         num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,                                                             &
+         dgvs_inst, cnveg_state_inst,                                                                                              &
+         soilbiogeochem_carbonflux_inst,                                                                                           &
          cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                         &
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),                                  &
          froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &

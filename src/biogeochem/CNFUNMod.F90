@@ -215,7 +215,6 @@ module CNFUNMod
    use clm_varcon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
    use clm_varctl      , only : use_nitrif_denitrif
    use PatchType       , only : patch
-   use GridcellType    , only : grc
    use subgridAveMod   , only : p2c
    use pftconMod       , only : npcropmin
 !
@@ -1522,6 +1521,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       npp_growth(p)             = (Nuptake(p)- free_retransn_to_npool(p))*plantCN(p)+(excess_carbon_acc/dt) !does not include gresp, since this is calculated from growth
 
      
+
       !-----------------------Diagnostic Fluxes------------------------------!
       if(availc(p).gt.0.0_r8)then !what happens in the night? 
         nuptake_npp_fraction_patch(p) = npp_Nuptake(p)/availc(p)

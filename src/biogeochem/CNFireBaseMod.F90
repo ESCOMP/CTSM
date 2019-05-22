@@ -298,9 +298,11 @@ contains
   end subroutine CNFireArea
 
   !-----------------------------------------------------------------------
-  subroutine CNFireFluxes (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, num_actfirec, filter_actfirec, &
-      num_actfirep, filter_actfirep, dgvs_inst, soilbiogeochem_carbonflux_inst, cnveg_state_inst,        &
+  subroutine CNFireFluxes (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+      num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,                        &
+      dgvs_inst, cnveg_state_inst,                                                                      &
       cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+      soilbiogeochem_carbonflux_inst,                                       &
       leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch, &
       totsomc_col, decomp_cpools_vr_col, decomp_npools_vr_col, somc_fire_col)
    !
@@ -329,31 +331,31 @@ contains
                                     ideadcroot,ideadcroot_st,ideadcroot_xf,iretransn,ioutc,ioutn
    !
    ! !ARGUMENTS:
-   class(cnfire_base_type)                        :: this
-   type(bounds_type)              , intent(in)    :: bounds  
-   integer                        , intent(in)    :: num_soilc       ! number of soil columns in filter
-   integer                        , intent(in)    :: filter_soilc(:) ! filter for soil columns
-   integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
-   integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
-   integer                        , intent(out)   :: num_actfirep    ! number of active patches on fire in filter
-   integer                        , intent(out)   :: filter_actfirep(:) ! filter for soil patches
-   integer                        , intent(out)   :: num_actfirec    ! number of active columns on fire in filter
-   integer                        , intent(out)   :: filter_actfirec(:) ! filter for soil columns
-   type(dgvs_type)                , intent(inout) :: dgvs_inst
-   type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
-   type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
-   type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
-   type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
-   type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
-   type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
-   real(r8)                       , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
-   real(r8)                       , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
-   real(r8)                       , intent(in)    :: croot_prof_patch(bounds%begp:,1:)
-   real(r8)                       , intent(in)    :: stem_prof_patch(bounds%begp:,1:)
-   real(r8)                       , intent(in)    :: totsomc_col(bounds%begc:)                ! (gC/m2) total soil organic matter C
-   real(r8)                       , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:) ! (gC/m3)  VR decomp. (litter, cwd, soil)
-   real(r8)                       , intent(in)    :: decomp_npools_vr_col(bounds%begc:,1:,1:) ! (gC/m3)  VR decomp. (litter, cwd, soil)
-   real(r8)                       , intent(out)   :: somc_fire_col(bounds%begc:)              ! (gC/m2/s) fire C emissions due to peat burning
+   class(cnfire_base_type)                             :: this
+   type(bounds_type)                   , intent(in)    :: bounds  
+   integer                             , intent(in)    :: num_soilc       ! number of soil columns in filter
+   integer                             , intent(in)    :: filter_soilc(:) ! filter for soil columns
+   integer                             , intent(in)    :: num_soilp       ! number of soil patches in filter
+   integer                             , intent(in)    :: filter_soilp(:) ! filter for soil patches
+   integer                             , intent(out)   :: num_actfirep    ! number of active patches on fire in filter
+   integer                             , intent(out)   :: filter_actfirep(:) ! filter for soil patches
+   integer                             , intent(out)   :: num_actfirec    ! number of active columns on fire in filter
+   integer                             , intent(out)   :: filter_actfirec(:) ! filter for soil columns
+   type(dgvs_type)                     , intent(inout) :: dgvs_inst
+   type(cnveg_state_type)              , intent(inout) :: cnveg_state_inst
+   type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst ! only for matrix_decomp_fire_k: (gC/m3/step) VR deomp. C fire loss in matrix representation
+   type(cnveg_carbonstate_type)        , intent(inout) :: cnveg_carbonstate_inst
+   type(cnveg_carbonflux_type)         , intent(inout) :: cnveg_carbonflux_inst
+   type(cnveg_nitrogenstate_type)      , intent(in)    :: cnveg_nitrogenstate_inst
+   type(cnveg_nitrogenflux_type)       , intent(inout) :: cnveg_nitrogenflux_inst
+   real(r8)                            , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
+   real(r8)                            , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
+   real(r8)                            , intent(in)    :: croot_prof_patch(bounds%begp:,1:)
+   real(r8)                            , intent(in)    :: stem_prof_patch(bounds%begp:,1:)
+   real(r8)                            , intent(in)    :: totsomc_col(bounds%begc:)                ! (gC/m2) total soil organic matter C
+   real(r8)                            , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:) ! (gC/m3)  VR decomp. (litter, cwd, soil)
+   real(r8)                            , intent(in)    :: decomp_npools_vr_col(bounds%begc:,1:,1:) ! (gC/m3)  VR decomp. (litter, cwd, soil)
+   real(r8)                            , intent(out)   :: somc_fire_col(bounds%begc:)              ! (gC/m2/s) fire C emissions due to peat burning
    !
    ! !LOCAL VARIABLES:
    integer :: g,c,p,j,l,pi,kyr, kmo, kda, mcsec   ! indices
@@ -522,7 +524,7 @@ contains
          m_c_to_litr_met_fire                => cnveg_carbonflux_inst%m_c_to_litr_met_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          m_c_to_litr_cel_fire                => cnveg_carbonflux_inst%m_c_to_litr_cel_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          m_c_to_litr_lig_fire                => cnveg_carbonflux_inst%m_c_to_litr_lig_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
-         matrix_decomp_fire_k                => soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col           , & ! Output: [real(r8) (:,:)   ]                                                  
+         matrix_decomp_fire_k                => soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col           , & ! Output: [real(r8) (:,:)   ]  (gC/m3/step) VR deomp. C fire loss in matrix representation
          
          fire_mortality_n_to_cwdn            => cnveg_nitrogenflux_inst%fire_mortality_n_to_cwdn_col              , & ! Input:  [real(r8) (:,:)   ]  N flux fire mortality to CWD (gN/m3/s)
          m_leafn_to_fire                     => cnveg_nitrogenflux_inst%m_leafn_to_fire_patch                     , & ! Input:  [real(r8) (:)     ]  (gN/m2/s) N emis. leafn		  
@@ -1074,7 +1076,7 @@ contains
 
         f = farea_burned(c) 
 
-        if(f .ne. 0 .or. f .ne. baf_crop(c))then
+        if(f /= 0 .or. f /= baf_crop(c))then
            num_actfirec = num_actfirec + 1
            filter_actfirec(num_actfirec) = c
         end if
