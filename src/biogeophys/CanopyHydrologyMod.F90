@@ -45,8 +45,8 @@ module CanopyHydrologyMod
   public :: CanopyInterceptionAndThroughfall
 
   type, private :: params_type
-     real(r8) :: dewmx  ! Canopy maximum storage of liquid water (kg/m2)
-     real(r8) :: sno_stor_max  ! Canopy maximum storage of snow (kg/m2)
+     real(r8) :: liq_canopy_storage_scalar  ! Canopy-storage-of-liquid-water parameter (kg/m2)
+     real(r8) :: snow_canopy_storage_scalar  ! Canopy-storage-of-snow parameter (kg/m2)
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -152,10 +152,10 @@ contains
     character(len=*), parameter :: subname = 'readParams_CanopyHydrology'
     !--------------------------------------------------------------------
 
-    ! Canopy maximum storage of liquid water (kg/m2)
-    call readNcdioScalar(ncid, 'dewmx', subname, params_inst%dewmx)
-    ! Canopy maximum storage of snow (kg/m2)
-    call readNcdioScalar(ncid, 'sno_stor_max', subname, params_inst%sno_stor_max)
+    ! Canopy-storage-of-liquid-water parameter (kg/m2)
+    call readNcdioScalar(ncid, 'liq_canopy_storage_scalar', subname, params_inst%liq_canopy_storage_scalar)
+    ! Canopy-storage-of-snow parameter (kg/m2)
+    call readNcdioScalar(ncid, 'snow_canopy_storage_scalar', subname, params_inst%snow_canopy_storage_scalar)
 
    end subroutine readParams
 
@@ -743,9 +743,9 @@ contains
         qflx_snocanfall(p) = 0._r8
 
         if (check_point_for_interception_and_excess(p)) then
-           liqcanmx = params_inst%dewmx * (elai(p) + esai(p))
+           liqcanmx = params_inst%liq_canopy_storage_scalar * (elai(p) + esai(p))
            qflx_liqcanfall(p) = max((liqcan(p) - liqcanmx)/dtime, 0._r8)
-           snocanmx = params_inst%sno_stor_max * (elai(p) + esai(p))
+           snocanmx = params_inst%snow_canopy_storage_scalar * (elai(p) + esai(p))
            qflx_snocanfall(p) = max((snocan(p) - snocanmx)/dtime, 0._r8)
         end if
      end do
@@ -1119,7 +1119,6 @@ contains
      integer  :: fp,p             ! indices
      real(r8) :: h2ocan           ! total canopy water (mm H2O)
      real(r8) :: vegt             ! lsai
-     real(r8) :: dewmxi           ! inverse of maximum allowed dew [1/mm]
      !-----------------------------------------------------------------------
 
      SHR_ASSERT_FL((ubound(frac_veg_nosno, 1) == bounds%endp), sourcefile, __LINE__)
@@ -1138,12 +1137,10 @@ contains
 
            if (h2ocan > 0._r8) then
               vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
-              dewmxi  = 1.0_r8/params_inst%dewmx  ! wasteful division
-              fwet(p) = ((dewmxi/vegt)*h2ocan)**0.666666666666_r8
+              fwet(p) = (h2ocan / (vegt * params_inst%liq_canopy_storage_scalar))**0.666666666666_r8
               fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
               if (snocan(p) > 0._r8) then
-                 dewmxi  = 1.0_r8/params_inst%dewmx  ! wasteful division
-                 fcansno(p) = ((dewmxi / (vegt * params_inst%sno_stor_max * 10.0_r8)) * snocan(p))**0.15_r8 ! must match snocanmx 
+                 fcansno(p) = (snocan(p) / (vegt * params_inst%snow_canopy_storage_scalar))**0.15_r8 ! must match snocanmx 
                  fcansno(p) = min (fcansno(p),1.0_r8)
               else
                  fcansno(p) = 0._r8
