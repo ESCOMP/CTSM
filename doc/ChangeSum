@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-  ctsm1.0.dev042   slevis 05/20/2019 Rename, correct, and simplify parameters dewmx and sno_stor_max
+  ctsm1.0.dev042   slevis 05/21/2019 Rename, correct, and simplify parameters dewmx and sno_stor_max
   ctsm1.0.dev041    sacks 05/17/2019 Add water tracers to CanopyHydrologyMod
   ctsm1.0.dev040   slevis 05/03/2019 Move some hard-coded parameters from code to params.nc file
   ctsm1.0.dev039    sacks 05/01/2019 Remove excess canopy liquid/snow regardless of temperature

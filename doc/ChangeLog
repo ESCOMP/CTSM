@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev042
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
-Date:  Mon May 20 14:43:44 MDT 2019
+Date: Tue May 21 23:29:31 MDT 2019
 One-line Summary: Rename, correct, and simplify parameters dewmx and sno_stor_max
 
 Purpose of changes
@@ -24,6 +24,7 @@ Bugs fixed or introduced
 ------------------------
 
 Issues fixed (include CTSM Issue #): #710
+   Fixes #710 -- rename dewmx
 
 
 Significant changes to scientifically-supported configurations
@@ -43,25 +44,25 @@ Does this tag change answers significantly for any of the following physics conf
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions):
+Caveats for users (e.g., need to interpolate initial conditions): None
 
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
 
-Changes made to namelist defaults (e.g., changed parameter values):
+Changes made to namelist defaults (e.g., changed parameter values): New default parameter file
 
 Changes to the datasets (e.g., parameter, surface or initial files):
  Pointing to new clm45 and clm50 param files containing the two renamed
  parameters listed above.
 
-Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+Substantial timing or memory changes: None
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
 
-Changes to tests or testing:
+Changes to tests or testing: None
 
 Code reviewed by:
  @billsacks
@@ -72,15 +73,7 @@ CTSM testing:
 
   build-namelist tests:
 
-    cheyenne - 
-
-  tools-tests (test/tools):
-
-    cheyenne - 
-
-  PTCLM testing (tools/shared/PTCLM/test):
-
-     cheyenne - 
+    cheyenne - PASS (196 different because of new param file)
 
   regular tests (aux_clm):
 
@@ -109,17 +102,10 @@ Changes answers relative to baseline:
    The code modifications causing the change were of the order-of-calculations
    type in two lines of code.
 
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: 
-
-   URL for LMWG diagnostics output used to validate new climate:
-	
-
 Detailed list of changes
 ------------------------
 
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/719
