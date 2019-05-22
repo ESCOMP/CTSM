@@ -407,7 +407,7 @@ contains
 
      ! resolve plant/heterotroph competition for mineral N 
  
-
+   
      call t_startf('soilbiogeochemcompetition')
      call SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstatebulk_inst, &
                                      waterfluxbulk_inst,temperature_inst,soilstate_inst,cnveg_state_inst,          &
