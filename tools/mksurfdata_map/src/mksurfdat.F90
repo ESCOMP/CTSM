@@ -705,7 +705,7 @@ program mksurfdat
               pctwet(n)    = 100._r8 - pctlak(n)
               pctgla(n)    = 0._r8
           else
-              pctwet(n)    = 100._r8 - pctgla(n) - pctlak(n)
+              pctwet(n)    = max(100._r8 - pctgla(n) - pctlak(n), 0.0_r8)
           end if
           pcturb(n)        = 0._r8
           call pctnatpft(n)%set_pct_l2g(0._r8)
