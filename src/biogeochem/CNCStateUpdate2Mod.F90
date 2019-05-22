@@ -56,7 +56,7 @@ contains
          cs_veg => cnveg_carbonstate_inst         , &
 
          cf_soil => soilbiogeochem_carbonflux_inst, &
-         cs_soil => soilbiogeochem_carbonstate_inst &
+         cs_soil => soilbiogeochem_carbonstate_inst  &
          )
 
       ! set time steps
