@@ -202,7 +202,6 @@ contains
          end if !not use_matrixcn
       end do ! end of patch loop
 
-
     end associate
 
   end subroutine CStateUpdate3
