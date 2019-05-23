@@ -65,6 +65,20 @@ module lilac_mod
         character(len=ESMF_MAXSTR)                       :: ccname1    , ccname2   !    Coupling components names
         integer                                          :: a2l_fldnum , l2a_fldnum
 
+
+        ! Namelist and related variables
+        integer            ::  fileunit
+        integer            ::  i_max, j_max
+        real(ESMF_KIND_R8) ::  x_min, x_max, y_min, y_max
+        integer            ::  s_month, s_day, s_hour, s_min
+        integer            ::  e_month, e_day, e_hour, e_min
+        namelist /input/ i_max, j_max, x_min, x_max, y_min, y_max, &
+                                     s_month, s_day, s_hour, s_min, &
+                                     e_month, e_day, e_hour, e_min
+
+
+
+
         !------------------------------------------------------------------------
         ! Initialize return code
         rc = ESMF_SUCCESS
@@ -83,6 +97,22 @@ module lilac_mod
         print *,  "---------------------------------------"
         print *,  "    Lilac Demo Application Start       "
         print *,  "---------------------------------------"
+        !-------------------------------------------------------------------------
+        ! Read in configuration data -- namelist.input from host atmosphere(wrf)
+        !-------------------------------------------------------------------------
+        ! Read in namelist file ...
+        call ESMF_UtilIOUnitGet(unit=fileunit, rc=rc)     ! get an available Fortran unit number
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        open(fileunit, status="old", file="./namelist",  action="read", iostat=rc)
+
+        if (rc .ne. 0) then
+            call ESMF_LogSetError(rcToCheck=ESMF_RC_FILE_OPEN, msg="Failed to open namelist file 'namelist'",  line=__LINE__, file=__FILE__)
+            call ESMF_Finalize(endflag=ESMF_END_ABORT)
+        endif
+        read(fileunit, input)
+        continue
+        close(fileunit)
+
 
         !-------------------------------------------------------------------------
         ! Create Field lists -- Basically create a list of fields and add a default
