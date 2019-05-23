@@ -2953,14 +2953,16 @@ contains
     ! Explicitly checking use_crop is probably unnecessary here (because presumably
     ! use_grainproduct is only true if use_crop is true), but we do it for safety because
     ! the grain*_to_food_patch fluxes are not set if use_crop is false.
-      if ((ivt(p) >= npcropmin) .and. use_crop .and. use_grainproduct) then
+      if (use_crop .and. use_grainproduct) then
         do fp = 1, num_soilp
           p = filter_soilp(fp)
+            if(ivt(p) >= npcropmin) then
            cnveg_carbonflux_inst%leafc_to_cropprodc_patch(p) = &
                cnveg_carbonflux_inst%leafc_to_litter_patch(p) !changing from grainc_to_food_patch to leafc_to_litter_patch as equivalent
 
            cnveg_nitrogenflux_inst%leafn_to_cropprodn_patch(p) = &
                cnveg_nitrogenflux_inst%leafn_to_litter_patch(p)
+            end if
         end do
 
         call p2c (bounds, num_soilc, filter_soilc, &
@@ -3049,7 +3051,7 @@ contains
                if ( pi <=  col%npatches(c) ) then
                   p = col%patchi(c) + pi - 1
                   if (patch%active(p)) then
-
+                    if((ivt(p)<npcropmin) .or. (.not. use_grainproduct)) then
                      ! leaf litter carbon fluxes
                      phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
                           + leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
@@ -3065,7 +3067,7 @@ contains
                           + leafn_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                      phenology_n_to_litr_lig_n(c,j) = phenology_n_to_litr_lig_n(c,j) &
                           + leafn_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-
+                    end if
                      ! fine root litter carbon fluxes
                      phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
                           + frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
