@@ -143,8 +143,8 @@ contains
             ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
             ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
             ! time step, but to be safe, I'm explicitly setting it to zero here.
-
             nf_soil%decomp_npools_sourcesink_col(c,j,i_cwd) = 0._r8
+
          end do
       end do
 
