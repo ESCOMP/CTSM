@@ -40,7 +40,9 @@ module clm_driver
   !
   use HydrologyNoDrainageMod , only : CalcAndWithdrawIrrigationFluxes, HydrologyNoDrainage ! (formerly Hydrology2Mod)
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
-  use CanopyHydrologyMod     , only : CanopyHydrology     ! (formerly Hydrology1Mod)
+  use CanopyHydrologyMod     , only : CanopyInterceptionAndThroughfall
+  use SnowHydrologyMod       , only : HandleNewSnow
+  use SurfaceWaterMod        , only : FracH2oSfc
   use LakeHydrologyMod       , only : LakeHydrology
   use SoilWaterMovementMod   , only : use_aquifer_layer
   !
@@ -468,23 +470,46 @@ contains
        end if
 
        ! ============================================================================
-       ! Canopy Hydrology
+       ! First Stage of Hydrology
        ! (1) water storage of intercepted precipitation
        ! (2) direct throughfall and canopy drainage of precipitation
        ! (3) fraction of foliage covered by water and the fraction is dry and transpiring
        ! (4) snow layer initialization if the snow accumulation exceeds 10 mm.
        ! ============================================================================
 
-       call t_startf('canhydro')
-       call CanopyHydrology(bounds_clump, &
-            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+       call t_startf('hydro1')
+
+       call CanopyInterceptionAndThroughfall(bounds_clump, &
+            filter(nc)%num_soilp, filter(nc)%soilp, &
             filter(nc)%num_nolakep, filter(nc)%nolakep, &
-            atm2lnd_inst, canopystate_inst, temperature_inst, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            patch, col, canopystate_inst, atm2lnd_inst, water_inst)
+
+       ! TODO(wjs, 2019-05-16) Remove this temporary check. We'll instead have one after
+       ! FracH2oSfc.
+       if (water_inst%DoConsistencyCheck()) then
+          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
+          ! every time step
+          if (get_nstep() == 0) then
+             call t_startf("tracer_consistency_check")
+             call water_inst%TracerConsistencyCheck(bounds_clump, 'after CanopyInterceptionAndThroughfall')
+             call t_stopf("tracer_consistency_check")
+          end if
+       end if
+
+       call HandleNewSnow(bounds_clump, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            atm2lnd_inst, temperature_inst, &
             aerosol_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterfluxbulk_inst, &
-            water_inst%wateratm2lndbulk_inst)
-       call t_stopf('canhydro')
+            water_inst%waterfluxbulk_inst)
+
+       ! update surface water fraction (this may modify frac_sno)
+       call FracH2oSfc(bounds_clump, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst)
+
+       call t_stopf('hydro1')
 
        ! ============================================================================
        ! Surface Radiation
@@ -759,6 +784,7 @@ contains
             filter(nc)%num_nosnowc, filter(nc)%nosnowc,                      &
             clm_fates,                                                         &
             atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst,   &
+            water_inst%wateratm2lndbulk_inst, &
             water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, soilhydrology_inst, &
             saturated_excess_runoff_inst, &
@@ -994,10 +1020,17 @@ contains
                 clm_fates, nc)
        end if
 
+       
+       ! ============================================================================
+       ! Create summaries of water diagnostic terms
+       ! ============================================================================
 
+       call water_inst%Summary(bounds_clump, &
+            filter(nc)%num_soilp, filter(nc)%soilp, &
+            filter(nc)%num_allc, filter(nc)%allc)
 
        ! ============================================================================
-       ! Check the energy and water balance and also carbon and nitrogen balance
+       ! Check the energy and water balance
        ! ============================================================================
 
        call t_startf('balchk')
@@ -1418,14 +1451,6 @@ contains
          waterfluxbulk_inst%qflx_evap_tot_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_rain_grnd_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_rain_grnd_col(bounds%begc:bounds%endc))
-    
-    call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_snow_grnd_col(bounds%begc:bounds%endc))
-    
-    call p2c (bounds, num_nolakec, filter_nolakec, &
          waterfluxbulk_inst%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
          waterfluxbulk_inst%qflx_tran_veg_col(bounds%begc:bounds%endc))
 
@@ -1436,10 +1461,6 @@ contains
     call p2c (bounds, num_allc, filter_allc, &
          waterfluxbulk_inst%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
          waterfluxbulk_inst%qflx_evap_soi_col(bounds%begc:bounds%endc))
-
-    call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_prec_grnd_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_prec_grnd_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
          waterfluxbulk_inst%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &

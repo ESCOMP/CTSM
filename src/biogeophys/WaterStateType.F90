@@ -35,7 +35,6 @@ module WaterStateType
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
-     real(r8), pointer :: h2ocan_patch           (:)   ! patch canopy water (mm H2O)
      real(r8), pointer :: h2osfc_col             (:)   ! col surface water (mm H2O)
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
@@ -125,9 +124,6 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
          dim2beg = -nlevsno+1, dim2end = nlevgrnd)
-    call AllocateVar1d(var = this%h2ocan_patch, name = 'h2ocan_patch', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
     call AllocateVar1d(var = this%snocan_patch, name = 'snocan_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
@@ -223,14 +219,6 @@ contains
          avgflag='A', &
          long_name=this%info%lname('soil ice (vegetated landunits only)'), &
          ptr_col=data2dptr, l2g_scale_type='veg')
-
-    this%h2ocan_patch(begp:endp) = spval 
-    call hist_addfld1d ( &
-         fname=this%info%fname('H2OCAN'), &
-         units='mm',  &
-         avgflag='A', &
-         long_name=this%info%lname('intercepted water'), &
-         ptr_patch=this%h2ocan_patch, set_lake=0._r8)
 
     this%snocan_patch(begp:endp) = spval 
     call hist_addfld1d ( &
@@ -333,7 +321,6 @@ contains
     associate(snl => col%snl) 
 
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
-      this%h2ocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%snocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%liqcan_patch(bounds%begp:bounds%endp) = 0._r8
 
@@ -536,7 +523,7 @@ contains
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,l,j,nlevs
+    integer  :: p,c,l,j,nlevs
     logical  :: readvar
     real(r8) :: maxwatsat    ! maximum porosity    
     real(r8) :: excess       ! excess volumetric soil water
@@ -580,14 +567,6 @@ contains
          units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_ice_col)
          
-    call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('H2OCAN'), &
-         xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name=this%info%lname('canopy water'), &
-         units='kg/m2', &
-         interpinic_flag='interp', readvar=readvar, data=this%h2ocan_patch)
-
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('SNOCAN'), &
          xtype=ncd_double,  &

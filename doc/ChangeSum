@@ -1,5 +1,15 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev042   slevis 05/21/2019 Rename, correct, and simplify parameters dewmx and sno_stor_max
+  ctsm1.0.dev041    sacks 05/17/2019 Add water tracers to CanopyHydrologyMod
+  ctsm1.0.dev040   slevis 05/03/2019 Move some hard-coded parameters from code to params.nc file
+  ctsm1.0.dev039    sacks 05/01/2019 Remove excess canopy liquid/snow regardless of temperature
+  ctsm1.0.dev038    sacks 05/01/2019 Support for NWP configuration, NLDAS grid and NLDAS datm forcing
+  ctsm1.0.dev037    sacks 04/29/2019 Change year alignment for present-day I compsets
+  ctsm1.0.dev036     erik 04/26/2019 Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
+  ctsm1.0.dev035    sacks 04/22/2019 Change h2ocan to a purely diagnostic variable
+  ctsm1.0.dev034    sacks 04/20/2019 Change clm4_5: Use Justin Perket snow on vegetation
+  ctsm1.0.dev033   slevis 04/11/2019 Limit landunit presence with thresholds set in the namelist
   ctsm1.0.dev032   negins 04/08/2019 Fixing the balance check to check for possible errors over all columns/patches
   ctsm1.0.dev031    sacks 03/13/2019 Subtract virtual states to reduce dynbal fluxes for transient glaciers
   ctsm1.0.dev030    sacks 03/08/2019 Update CIME; hookup expected test fails
