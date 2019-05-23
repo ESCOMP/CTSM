@@ -14,8 +14,6 @@ module CNNStateUpdate2Mod
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use ColumnType                      , only : col                
-  use GridcellType                   , only : grc
   !
   implicit none
   private
@@ -65,6 +63,7 @@ contains
       dt = real( get_step_size(), r8 )
 
       ! column-level nitrogen fluxes from gap-phase mortality
+
       do j = 1, nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -87,7 +86,7 @@ contains
                  nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + nf_veg%gap_mortality_n_to_litr_lig_n_col(c,j) * dt
                nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     = &
                  nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     + nf_veg%gap_mortality_n_to_cwdn_col(c,j)       * dt
-            end if !soil_matrix
+            end if !not use_soil_matrix
          end do
       end do
 
@@ -95,51 +94,53 @@ contains
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
-        if(.not.  use_matrixcn)then
+
+         if(.not.  use_matrixcn)then
          ! displayed pools
-         ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p)                           &
+            ns_veg%leafn_patch(p) =  ns_veg%leafn_patch(p)                           &
               - nf_veg%m_leafn_to_litter_patch(p) * dt
-         ns_veg%frootn_patch(p) =  ns_veg%frootn_patch(p)                         &
+            ns_veg%frootn_patch(p) =  ns_veg%frootn_patch(p)                         &
               - nf_veg%m_frootn_to_litter_patch(p) * dt
-         ns_veg%livestemn_patch(p) =  ns_veg%livestemn_patch(p)                   &
+            ns_veg%livestemn_patch(p) =  ns_veg%livestemn_patch(p)                   &
               - nf_veg%m_livestemn_to_litter_patch(p) * dt
-         ns_veg%deadstemn_patch(p) =  ns_veg%deadstemn_patch(p)                   &
+            ns_veg%deadstemn_patch(p) =  ns_veg%deadstemn_patch(p)                   &
               - nf_veg%m_deadstemn_to_litter_patch(p) * dt
-         ns_veg%livecrootn_patch(p) =  ns_veg%livecrootn_patch(p)                 &
+            ns_veg%livecrootn_patch(p) =  ns_veg%livecrootn_patch(p)                 &
               - nf_veg%m_livecrootn_to_litter_patch(p) * dt
-         ns_veg%deadcrootn_patch(p) =  ns_veg%deadcrootn_patch(p)                 &
+            ns_veg%deadcrootn_patch(p) =  ns_veg%deadcrootn_patch(p)                 &
               - nf_veg%m_deadcrootn_to_litter_patch(p) * dt
+            ns_veg%retransn_patch(p) =  ns_veg%retransn_patch(p)                     &
+              - nf_veg%m_retransn_to_litter_patch(p) * dt
 
          ! storage pools
-         ns_veg%leafn_storage_patch(p) =  ns_veg%leafn_storage_patch(p)           &
+            ns_veg%leafn_storage_patch(p) =  ns_veg%leafn_storage_patch(p)           &
               - nf_veg%m_leafn_storage_to_litter_patch(p) * dt
-         ns_veg%frootn_storage_patch(p) =  ns_veg%frootn_storage_patch(p)         &
+            ns_veg%frootn_storage_patch(p) =  ns_veg%frootn_storage_patch(p)         &
               - nf_veg%m_frootn_storage_to_litter_patch(p) * dt
-         ns_veg%livestemn_storage_patch(p) =  ns_veg%livestemn_storage_patch(p)   &
+            ns_veg%livestemn_storage_patch(p) =  ns_veg%livestemn_storage_patch(p)   &
               - nf_veg%m_livestemn_storage_to_litter_patch(p) * dt
-         ns_veg%deadstemn_storage_patch(p) =  ns_veg%deadstemn_storage_patch(p)   &
+            ns_veg%deadstemn_storage_patch(p) =  ns_veg%deadstemn_storage_patch(p)   &
               - nf_veg%m_deadstemn_storage_to_litter_patch(p) * dt
-         ns_veg%livecrootn_storage_patch(p) =  ns_veg%livecrootn_storage_patch(p) &
+            ns_veg%livecrootn_storage_patch(p) =  ns_veg%livecrootn_storage_patch(p) &
               - nf_veg%m_livecrootn_storage_to_litter_patch(p) * dt
-         ns_veg%deadcrootn_storage_patch(p) =  ns_veg%deadcrootn_storage_patch(p) &
+            ns_veg%deadcrootn_storage_patch(p) =  ns_veg%deadcrootn_storage_patch(p) &
               - nf_veg%m_deadcrootn_storage_to_litter_patch(p) * dt
 
          ! transfer pools
-         ns_veg%leafn_xfer_patch(p) =  ns_veg%leafn_xfer_patch(p)                 &
+            ns_veg%leafn_xfer_patch(p) =  ns_veg%leafn_xfer_patch(p)                 &
               - nf_veg%m_leafn_xfer_to_litter_patch(p) * dt
-         ns_veg%frootn_xfer_patch(p) =  ns_veg%frootn_xfer_patch(p)               &
+            ns_veg%frootn_xfer_patch(p) =  ns_veg%frootn_xfer_patch(p)               &
               - nf_veg%m_frootn_xfer_to_litter_patch(p) * dt
-         ns_veg%livestemn_xfer_patch(p) =  ns_veg%livestemn_xfer_patch(p)         &
+            ns_veg%livestemn_xfer_patch(p) =  ns_veg%livestemn_xfer_patch(p)         &
               - nf_veg%m_livestemn_xfer_to_litter_patch(p) * dt
-         ns_veg%deadstemn_xfer_patch(p) =  ns_veg%deadstemn_xfer_patch(p)         &
+            ns_veg%deadstemn_xfer_patch(p) =  ns_veg%deadstemn_xfer_patch(p)         &
               - nf_veg%m_deadstemn_xfer_to_litter_patch(p) * dt
-         ns_veg%livecrootn_xfer_patch(p) =  ns_veg%livecrootn_xfer_patch(p)       &
+            ns_veg%livecrootn_xfer_patch(p) =  ns_veg%livecrootn_xfer_patch(p)       &
               - nf_veg%m_livecrootn_xfer_to_litter_patch(p) * dt
-         ns_veg%deadcrootn_xfer_patch(p) =  ns_veg%deadcrootn_xfer_patch(p)       &
+            ns_veg%deadcrootn_xfer_patch(p) =  ns_veg%deadcrootn_xfer_patch(p)       &
               - nf_veg%m_deadcrootn_xfer_to_litter_patch(p) * dt
-         ns_veg%retransn_patch(p) =  ns_veg%retransn_patch(p)                     &
-              - nf_veg%m_retransn_to_litter_patch(p) * dt
-        end if !use_matrixcn
+
+         end if !not use_matrixcn
       end do
 
     end associate
@@ -176,14 +177,15 @@ contains
     associate(                                 & 
          nf_veg  => cnveg_nitrogenflux_inst  , &
          ns_veg  => cnveg_nitrogenstate_inst , &
-         ns_soil => soilbiogeochem_nitrogenstate_inst,   &
-         nf_soil => soilbiogeochem_nitrogenflux_inst   &
+         nf_soil => soilbiogeochem_nitrogenflux_inst ,  &
+         ns_soil => soilbiogeochem_nitrogenstate_inst   &
          )
 
       ! set time steps
       dt = real( get_step_size(), r8 )
 
       ! column-level nitrogen fluxes from harvest mortality
+
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -205,9 +207,10 @@ contains
                  nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + nf_veg%harvest_n_to_litr_lig_n_col(c,j) * dt
                nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     = &
                  nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     + nf_veg%harvest_n_to_cwdn_col(c,j)       * dt
-            end if   
+            end if !not use_soil_matrixcn
          end do
       end do
+
       ! patch-level nitrogen fluxes from harvest mortality
 
       do fp = 1,num_soilp
@@ -257,8 +260,7 @@ contains
               - nf_veg%hrv_livecrootn_xfer_to_litter_patch(p) *dt
             ns_veg%deadcrootn_xfer_patch(p) = ns_veg%deadcrootn_xfer_patch(p)       &
               - nf_veg%hrv_deadcrootn_xfer_to_litter_patch(p) *dt
-         end if
-      
+         end if !not use_matrixcn
 
       end do
 

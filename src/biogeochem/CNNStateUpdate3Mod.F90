@@ -15,8 +15,6 @@ module CNNStateUpdate3Mod
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use ColumnType                      , only : col                
-  use GridcellType                   , only : grc
   !
   implicit none
   private
@@ -104,7 +102,7 @@ contains
                  nf_veg%m_n_to_litr_cel_fire_col(c,j)* dt
                nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + &
                  nf_veg%m_n_to_litr_lig_fire_col(c,j)* dt
-            end if ! soil_matrix
+            end if ! not use_soil_matrix
          end do ! end of column loop
       end do
 
@@ -120,7 +118,7 @@ contains
                end do
             end do
          end do
-      end if
+      end if ! not use_soil_matrixcn
 
       ! patch-level nitrogen fluxes 
 
@@ -220,7 +218,6 @@ contains
             ns_veg%retransn_patch(p) =  ns_veg%retransn_patch(p) -                     &
                  nf_veg%m_retransn_to_litter_fire_patch(p) * dt
          end if !.not. use_matrixcn
-
       end do
 
     end associate 
