@@ -935,7 +935,7 @@ contains
             end if
 
             ! update offset_counter and test for the end of the offset period
-            if (offset_flag(p) == 1.0_r8) then      
+            if (offset_flag(p) == 1.0_r8) then
                ! decrement counter for offset period
                offset_counter(p) = offset_counter(p) - dt
 
@@ -1013,7 +1013,7 @@ contains
 
                if (onset_gddflag(p) == 0._r8 .and. ws_flag == 1._r8) then
                   onset_gddflag(p) = 1._r8
-                  onset_gdd(p) = 0._r8 
+                  onset_gdd(p) = 0._r8
                end if
 
                ! Test to turn off growing degree-day sum, if on.
@@ -1049,32 +1049,32 @@ contains
                   ! inlined during vectorization
 
                   ! set carbon fluxes for shifting storage pools to transfer pools
-                 if(use_matrixcn)then
-                    matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
-                    matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt
+                  if(use_matrixcn)then
+                     matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
+                     matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt
 
-                    matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + fstor2tran/dt
-                    matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + fstor2tran/dt
-                    if (woody(ivt(p)) == 1.0_r8) then
-                         matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + fstor2tran/dt
-                         matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
-                         matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + fstor2tran/dt
-                         matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + fstor2tran/dt
-                         matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + fstor2tran/dt
-                         matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + fstor2tran/dt
-                         matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
-                         matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt
-                    end if
+                     matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + fstor2tran/dt
+                     matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + fstor2tran/dt
+                     if (woody(ivt(p)) == 1.0_r8) then
+                          matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + fstor2tran/dt
+                          matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
+                          matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + fstor2tran/dt
+                          matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + fstor2tran/dt
+                          matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + fstor2tran/dt
+                          matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + fstor2tran/dt
+                          matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
+                          matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt
+                     end if
                   end if 
-                    leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
-                    frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
-                    if (woody(ivt(p)) == 1.0_r8) then
-                      livestemc_storage_to_xfer(p)  = fstor2tran * livestemc_storage(p)/dt
-                      deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
-                      livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
-                      deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
-                      gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
-                    end if
+                  leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
+                  frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
+                  if (woody(ivt(p)) == 1.0_r8) then
+                     livestemc_storage_to_xfer(p)  = fstor2tran * livestemc_storage(p)/dt
+                     deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
+                     livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
+                     deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
+                     gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
+                  end if
                   ! set nitrogen fluxes for shifting storage pools to transfer pools
                   leafn_storage_to_xfer(p)  = fstor2tran * leafn_storage(p)/dt
                   frootn_storage_to_xfer(p) = fstor2tran * frootn_storage(p)/dt
@@ -1085,6 +1085,7 @@ contains
                      deadcrootn_storage_to_xfer(p) = fstor2tran * deadcrootn_storage(p)/dt
                   end if
                end if 
+
                ! test for switching from growth period to offset period
             else if (offset_flag(p) == 0.0_r8) then
                if (use_cndv) then
@@ -1094,7 +1095,7 @@ contains
                   ! gridcells where dayl never drops below crit_dayl.
                   ! This results in TLAI>1e4 in a few gridcells.
                   days_active(p) = days_active(p) + fracday
-                  if (days_active(p) > 355._r8) pftmayexist(p) = .false.           
+                  if (days_active(p) > 355._r8) pftmayexist(p) = .false.
                end if
 
                ! only begin to test for offset daylength once past the summer sol
