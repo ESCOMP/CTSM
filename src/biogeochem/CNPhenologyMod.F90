@@ -1075,6 +1075,7 @@ contains
                      deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
                      gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
                   end if
+
                   ! set nitrogen fluxes for shifting storage pools to transfer pools
                   leafn_storage_to_xfer(p)  = fstor2tran * leafn_storage(p)/dt
                   frootn_storage_to_xfer(p) = fstor2tran * frootn_storage(p)/dt
@@ -1084,7 +1085,7 @@ contains
                      livecrootn_storage_to_xfer(p) = fstor2tran * livecrootn_storage(p)/dt
                      deadcrootn_storage_to_xfer(p) = fstor2tran * deadcrootn_storage(p)/dt
                   end if
-               end if 
+               end if
 
                ! test for switching from growth period to offset period
             else if (offset_flag(p) == 0.0_r8) then
@@ -1165,7 +1166,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                                                   & 
-         ivt                                 =>    patch%itype                                                 , & ! Input:  [integer   (:)   ]  patch vegetation type                                
+         ivt                                 =>    patch%itype                                                   , & ! Input:  [integer   (:)   ]  patch vegetation type                                
          dayl                                =>    grc%dayl                                                    , & ! Input:  [real(r8)  (:)   ]  daylength (s)
          
          prec10                              => wateratm2lndbulk_inst%prec10_patch                                     , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
@@ -1294,7 +1295,7 @@ contains
          igrain_to_iout_phn   =>  cnveg_nitrogenflux_inst%igrain_to_iout_ph &
          )
 
-       !set time steps
+      ! set time steps
       dayspyr = get_days_per_year()
 
       ! specify rain threshold for leaf onset
@@ -1424,6 +1425,7 @@ contains
                ! then test for soil temperature criteria
 
                ! Adding in Kyla's rainfall trigger when fun on. RF. prec10 (mm/s) needs to be higher than 8mm over 10 days. 
+
                if (onset_swi(p) > crit_onset_swi.and. additional_onset_condition)  then
                   onset_flag(p) = 1._r8
               
@@ -1458,14 +1460,12 @@ contains
                   ! inlined during vectorization
 
                   ! set carbon fluxes for shifting storage pools to transfer pools
-
                   if (use_matrixcn) then 
                      matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
                      matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt  
                      matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + fstor2tran/dt
                      matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + fstor2tran/dt
                      if (woody(ivt(p)) == 1.0_r8) then
-!                         gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
                         matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + fstor2tran/dt
                         matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
                         matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + fstor2tran/dt
@@ -1484,9 +1484,9 @@ contains
                      deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
                      livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
                      deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
-                     gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt  
+                     gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
                   end if
- 
+
                   ! set nitrogen fluxes for shifting storage pools to transfer pools
                   leafn_storage_to_xfer(p)  = fstor2tran * leafn_storage(p)/dt
                   frootn_storage_to_xfer(p) = fstor2tran * frootn_storage(p)/dt
@@ -1496,7 +1496,7 @@ contains
                      livecrootn_storage_to_xfer(p) = fstor2tran * livecrootn_storage(p)/dt
                      deadcrootn_storage_to_xfer(p) = fstor2tran * deadcrootn_storage(p)/dt
                   end if
-               end if 
+               end if
 
                ! test for switching from growth period to offset period
             else if (offset_flag(p) == 0._r8) then
@@ -1613,13 +1613,13 @@ contains
                  end if
               end if
                if (woody(ivt(p)) == 1.0_r8) then
-   
                   livestemc_storage_to_xfer(p)  = livestemc_storage(p) * bgtr(p)
                   deadstemc_storage_to_xfer(p)  = deadstemc_storage(p) * bgtr(p)
                   livecrootc_storage_to_xfer(p) = livecrootc_storage(p) * bgtr(p)
                   deadcrootc_storage_to_xfer(p) = deadcrootc_storage(p) * bgtr(p)
                   gresp_storage_to_xfer(p)      = gresp_storage(p) * bgtr(p)
                end if
+
                ! set nitrogen fluxes for shifting storage pools to transfer pools
                leafn_storage_to_xfer(p)  = leafn_storage(p) * bgtr(p)
                frootn_storage_to_xfer(p) = frootn_storage(p) * bgtr(p)
@@ -1634,15 +1634,14 @@ contains
                      matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + bgtr(p) 
                      matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + bgtr(p)
                   end if
-               end if 
-
+               end if !use_matrixcn
                if (woody(ivt(p)) == 1.0_r8) then
                   livestemn_storage_to_xfer(p)  = livestemn_storage(p) * bgtr(p)
                   deadstemn_storage_to_xfer(p)  = deadstemn_storage(p) * bgtr(p)
                   livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * bgtr(p)
                   deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * bgtr(p)
                end if
-            end if !end of onset_flag(p) == 1._r8
+            end if
 
          end if ! end if stress deciduous
 
