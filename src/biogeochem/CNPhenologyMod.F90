@@ -1699,10 +1699,10 @@ contains
     integer g         ! gridcell indices
     integer h         ! hemisphere indices
     integer idpp      ! number of days past planting
+    real(r8) :: dtrad ! radiation time step delta t (seconds)
     real(r8) dayspyr  ! days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
-    real(r8) :: dtrad ! radiation time step delta t (seconds)
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -1733,9 +1733,8 @@ contains
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
          cropplant         =>    crop_inst%cropplant_patch                     , & ! Output: [logical  (:) ]  Flag, true if crop may be planted                  
-         vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor 
+         vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
          peaklai           =>    cnveg_state_inst%peaklai_patch                , & ! Output: [integer  (:) ]  1: max allowed lai; 0: not at max
-         
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
          idop              =>    cnveg_state_inst%idop_patch                   , & ! Output: [integer  (:) ]  date of planting                                   
@@ -1760,14 +1759,14 @@ contains
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch     , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer                           
          crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch, & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
          cphase            =>    crop_inst%cphase_patch                        , & ! Output: [real(r8) (:)]   phenology phase
-         fert              =>    cnveg_nitrogenflux_inst%fert_patch              & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 		 
+         fert              =>    cnveg_nitrogenflux_inst%fert_patch              & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 
          )
 
       ! get time info
       dayspyr = get_days_per_year()
       jday    = get_curr_calday()
-      dtrad  = real(get_rad_step_size(), r8)
       call get_curr_date(kyr, kmo, kda, mcsec)
+      dtrad   = real(get_rad_step_size(), r8)
 
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
@@ -2164,9 +2163,10 @@ contains
 
             ! enter phase 2 onset for one time step:
             ! transfer seed carbon to leaf emergence
-            if (peaklai(p)>= 1) then
-               hui(p) = max(hui(p), huigrain(p))
-            end if   
+
+            if (peaklai(p) >= 1) then
+               hui(p) = max(hui(p),huigrain(p))
+            endif   
 
             if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
                cphase(p) = 2._r8
@@ -2609,8 +2609,7 @@ contains
                   matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + t1
                   matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + t1
                end if
-            end if
-!           else
+            end if !use_matrixcn
             leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)
             frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)
             leafn_xfer_to_leafn(p)   = t1 * leafn_xfer(p)
@@ -2625,7 +2624,7 @@ contains
                livecrootn_xfer_to_livecrootn(p) = t1 * livecrootn_xfer(p)
                deadcrootn_xfer_to_deadcrootn(p) = t1 * deadcrootn_xfer(p)
             end if
-!            end if ! use_matrixcn
+
          end if ! end if onset period
 
          ! calculate the background rate of transfer growth (used for stress
@@ -2666,8 +2665,8 @@ contains
                livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p) / dt
                deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p) / dt
             end if
-!          end if !use_matrixcn
          end if ! end if bgtr
+
       end do ! end patch loop
 
     end associate
@@ -2845,6 +2844,7 @@ contains
                t1 = dt * 2.0_r8 / (offset_counter(p) * offset_counter(p))
                leafc_to_litter(p)  = prev_leafc_to_litter(p)  + t1*(leafc(p)  - prev_leafc_to_litter(p)*offset_counter(p))
                frootc_to_litter(p) = prev_frootc_to_litter(p) + t1*(frootc(p) - prev_frootc_to_litter(p)*offset_counter(p))
+
                if (use_matrixcn) then
                   if(leafc(p) .gt. 0)then
                      matrix_phtransfer(p,ileaf_to_iout_phc)  = leafc_to_litter(p) / leafc(p)
@@ -2857,23 +2857,24 @@ contains
             
             if ( use_fun ) then
                if(leafc_to_litter(p)*dt.gt.leafc(p))then
-                  leafc_to_litter(p) = leafc(p)/dt + cpool_to_leafc(p)
+                   leafc_to_litter(p) = leafc(p)/dt + cpool_to_leafc(p)
                   if (use_matrixcn) then
                      if(leafc(p) .gt. 0)then
                         matrix_phtransfer(p,ileaf_to_iout_phc) = leafc_to_litter(p) / leafc(p)
                      end if
-                  end if 
+                  end if !use_matrixcn 
                endif
                if(frootc_to_litter(p)*dt.gt.frootc(p))then
-                  frootc_to_litter(p) = frootc(p)/dt + cpool_to_frootc(p)
+                   frootc_to_litter(p) = frootc(p)/dt + cpool_to_frootc(p)
                   if (use_matrixcn) then
                      if(frootc(p) .gt. 0)then
                         matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
                      end if
-                  end if
-               end if
+                  end if !use_matrixcn
+               endif
             end if 
                         
+
             if ( use_fun ) then
                leafc_to_litter_fun(p)      =  leafc_to_litter(p)
                leafn_to_retransn(p)        =  paid_retransn_to_npool(p) + free_retransn_to_npool(p)
@@ -2893,7 +2894,7 @@ contains
                       matrix_nphtransfer(p,ileaf_to_iout_phn)       = (leafn_to_litter(p)) / leafn(p)
                       matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p)) / leafn(p)
                   end if
-               end if 
+               end if !use_matrixcn
                
                denom = ( leafn_to_retransn(p) + leafn_to_litter(p) )
                if ( denom /= 0.0_r8 ) then
@@ -2911,12 +2912,13 @@ contains
                ! calculate the leaf N litterfall and retranslocation
                leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
                leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
+
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
                       matrix_nphtransfer(p,ileaf_to_iout_phn)       = (leafn_to_litter(p))/ leafn(p)
                       matrix_nphtransfer(p,ileaf_to_iretransn_phn)   = (leafn_to_retransn(p))/ leafn(p)
                   end if
-               end if
+               end if !use_matrixcn
             end if    
 
             ! calculate fine root N litterfall (no retranslocation of fine root N)
@@ -2925,7 +2927,7 @@ contains
                if(frootn(p) .gt. 0)then
                   matrix_nphtransfer(p,ifroot_to_iout_phn)  = frootn_to_litter(p) / frootn(p)
                end if
-            end if
+            end if !use_matrixcn
             
             if (CNratio_floating .eqv. .true.) then    
                if (leafc(p) == 0.0_r8) then    
@@ -2941,26 +2943,26 @@ contains
                       matrix_nphtransfer(p,ileaf_to_iout_phn)  = (leafn_to_litter(p))/ leafn(p)
                       matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
-               end if
+               end if !use_matrixcn
                if (frootc(p) == 0.0_r8) then    
-                  frootn_to_litter(p) = 0.0_r8    
-               else    
-                  frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))   
-               end if   
+                   frootn_to_litter(p) = 0.0_r8    
+                else    
+                   frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))   
+                end if   
                if (use_matrixcn) then   
                   if(frootn(p) .gt. 0)then
                      matrix_nphtransfer(p,ifroot_to_iout_phn)  = frootn_to_litter(p) / frootn(p)
                   end if
-               end if
+               end if !use_matrixcn
             end if  
             
             if ( use_fun ) then
                if(frootn_to_litter(p)*dt.gt.frootn(p))then
-                  frootn_to_litter(p) = frootn(p)/dt
+                   frootn_to_litter(p) = frootn(p)/dt
                   if (use_matrixcn) then   
                      matrix_nphtransfer(p,ifroot_to_iout_phn) = 1.0_r8 / dt
                   end if
-               end if    
+               endif    
             end if
 
             if (ivt(p) >= npcropmin) then
@@ -2978,6 +2980,7 @@ contains
             prev_frootc_to_litter(p) = frootc_to_litter(p)
 
          end if ! end if offset period
+
       end do ! end patch loop
       !matrix for leafn_to_retran will be added in allocation subroutine
 
@@ -3108,7 +3111,7 @@ contains
                   leafcn_offset(p)        = leafcn(ivt(p))
                end if
                leafn_to_litter(p)         = leafc_to_litter(p)/leafcn_offset(p) - leafn_to_retransn(p)
-               leafn_to_litter(p)         = max(leafn_to_litter(p),0._r8)  
+               leafn_to_litter(p)         = max(leafn_to_litter(p),0._r8)
                if(use_matrixcn)then
                   if(leafn(p) .ne. 0._r8)then
                      matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p))/ leafn(p)
@@ -3133,12 +3136,13 @@ contains
                ! calculate the leaf N litterfall and retranslocation
                leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
                leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
+
                if (use_matrixcn) then   
                   if(leafn(p) .ne. 0)then
                      matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p)) / leafn(p)
                      matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
-               end if
+               end if !use_matrixcn
             end if    
 
             ! calculate fine root N litterfall (no retranslocation of fine root N)
@@ -3158,31 +3162,31 @@ contains
                      matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p))/ leafn(p)
                      matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
-               end if
+               end if !use_matrixcn
                if (frootc(p) == 0.0_r8) then    
-                  frootn_to_litter(p) = 0.0_r8    
-               else    
-                  frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))
-               end if   
+                   frootn_to_litter(p) = 0.0_r8    
+                else    
+                   frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))
+                end if   
             end if    
 
             if ( use_fun ) then
                if(frootn_to_litter(p)*dt.gt.frootn(p))then
-                  frootn_to_litter(p) = frootn(p)/dt  
-               end if
+                    frootn_to_litter(p) = frootn(p)/dt  
+               endif
             end if
 
             if (use_matrixcn) then   
                if(frootn(p) .ne. 0)then
                   matrix_nphtransfer(p,ifroot_to_iout_phn) = frootn_to_litter(p) / frootn(p)
                end if
-            end if
+            end if !use_matrixcn
          end if
 
       end do
 !matrix for leafn_to_retransn will be added in allocation subroutine
     end associate 
-   
+
   end subroutine CNBackgroundLitterfall
 
   !-----------------------------------------------------------------------
@@ -3279,6 +3283,7 @@ contains
       ! patch loop
       do fp = 1,num_soilp
          p = filter_soilp(fp)
+
          ! only calculate these fluxes for woody types
          if (woody(ivt(p)) > 0._r8) then
 
@@ -3288,18 +3293,19 @@ contains
             ntovr = ctovr / livewdcn(ivt(p))
             livestemc_to_deadstemc(p) = ctovr
             livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p))  
+
             if(use_matrixcn)then
                matrix_phtransfer(p,ilivestem_to_ideadstem_phc)  = lwtop
                matrix_nphtransfer(p,ilivestem_to_ideadstem_phn) = lwtop / deadwdcn(ivt(p))
             end if
-        
             if (CNratio_floating .eqv. .true.) then    
                if (livestemc(p) == 0.0_r8) then    
-                  ntovr = 0.0_r8    
-               else    
-                  ntovr = ctovr * (livestemn(p) / livestemc(p))  				   
-               end if   
-               livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn
+                   ntovr = 0.0_r8    
+                else    
+                   ntovr = ctovr * (livestemn(p) / livestemc(p))  				   
+                end if   
+
+                livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn
                if (use_matrixcn)then 
                   if (livestemn(p) .gt. 0.0_r8) then
 !                    matrix_nphtransfer(p,ideadstem,ilivestem) = matrix_nphtransfer(p,ideadstem,ilivestem) + lwtop!ntovr/livestemn(p)
@@ -3310,17 +3316,11 @@ contains
             
             livestemn_to_retransn(p)  = ntovr - livestemn_to_deadstemn(p)
             !matrix for livestemn_to_retransn will be added in allocation subroutine
-!            if (use_matrixcn)then !move to the end
-!               if(livestemn(p) .gt. 0.0_r8) then
-!                  livestem_to_ideadstem_phnmatrix_nphtransfer(p,ilivestem_to_iretransn_phn) = livestemn_to_retransn(p) / livestemn(p)
-!               end if
-!            end if
 
             ! live coarse root to dead coarse root turnover
 
             ctovr = livecrootc(p) * lwtop
             ntovr = ctovr / livewdcn(ivt(p))
-!            if(.not. use_matrixcn)then
             livecrootc_to_deadcrootc(p) = ctovr
             livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p))
             if(use_matrixcn)then
@@ -3329,7 +3329,7 @@ contains
             end if !use_matrixcn
             
             if (CNratio_floating .eqv. .true.) then    
-               if (livecrootc(p) == 0.0_r8) then    
+              if (livecrootc(p) == 0.0_r8) then    
                   ntovr = 0.0_r8    
                else    
                   ntovr = ctovr * (livecrootn(p) / livecrootc(p))   
@@ -3358,7 +3358,6 @@ contains
                   matrix_nphtransfer(p,ilivestem_to_iretransn_phn)  = livestemn_to_retransn(p) / livestemn(p)
                end if
             end if
-               
 
          end if
 
@@ -3578,23 +3577,5 @@ contains
     end associate 
 
   end subroutine CNLitterToColumn
-!  subroutine vegc_phtransfer(p,ito,ifrom,default_transfer,matrix_transfer,vegcpool,tran_rate)
-  
-    ! !ARGUMENTS:
-!    integer :: ifrom
-!    integer :: ito
-	
-!    integer :: p
-!    real(r8),allocatable,dimension(:) :: default_transfer(:),vegcpool(:)
-!    real(r8),allocatable,dimension(:,:,:) :: matrix_transfer(:,:,:)
-!    real(r8) :: tran_rate
-!    logical :: use_matrixcn 
-	
-!    if(use_matrixcn)then
-!        matrix_transfer(p,ito,ifrom) = matrix_transfer(p,ito,ifrom) + tran_rate
-!     else
- !       default_transfer(p) = tran_rate * vegcpool(p)
- !    end if
- ! end subroutine vegc_phtransfer  
 
 end module CNPhenologyMod
