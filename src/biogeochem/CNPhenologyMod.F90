@@ -665,7 +665,6 @@ contains
    
          tranr=0.0002_r8   
          ! set carbon fluxes for shifting storage pools to transfer pools    
-
          if (use_matrixcn) then    
             matrix_phtransfer(p,ileafst_to_ileafxf_phc)   =  matrix_phtransfer(p,ileafst_to_ileafxf_phc) + tranr/dt
             matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) =  matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + tranr/dt 
@@ -1066,7 +1065,7 @@ contains
                           matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
                           matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt
                      end if
-                  end if 
+                  end if  ! use_matrixcn
                   leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
                   frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
                   if (woody(ivt(p)) == 1.0_r8) then
@@ -1612,7 +1611,7 @@ contains
                     matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + bgtr(p) 
                     matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + bgtr(p)
                  end if
-              end if
+              end if !use_matrixcn
                if (woody(ivt(p)) == 1.0_r8) then
                   livestemc_storage_to_xfer(p)  = livestemc_storage(p) * bgtr(p)
                   deadstemc_storage_to_xfer(p)  = deadstemc_storage(p) * bgtr(p)
@@ -2650,7 +2649,7 @@ contains
                   matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + 1.0_r8 / dt
                   matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + 1.0_r8 / dt
                end if
-            end if
+            end if !use_matrixcn
             leafc_xfer_to_leafc(p)   = leafc_xfer(p) / dt
             frootc_xfer_to_frootc(p) = frootc_xfer(p) / dt
             leafn_xfer_to_leafn(p)   = leafn_xfer(p) / dt
@@ -2873,7 +2872,7 @@ contains
                   end if !use_matrixcn
                endif
             end if
-
+            
             
             if ( use_fun ) then
                leafc_to_litter_fun(p)      =  leafc_to_litter(p)
@@ -3307,7 +3306,6 @@ contains
                 livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
                if (use_matrixcn)then 
                   if (livestemn(p) .gt. 0.0_r8) then
-!                    matrix_nphtransfer(p,ideadstem,ilivestem) = matrix_nphtransfer(p,ideadstem,ilivestem) + lwtop!ntovr/livestemn(p)
                      matrix_nphtransfer(p,ilivestem_to_ideadstem_phn) = livestemn_to_deadstemn(p) / livestemn(p)
                   end if
                end if
