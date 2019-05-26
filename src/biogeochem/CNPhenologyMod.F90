@@ -1766,7 +1766,7 @@ contains
       dayspyr = get_days_per_year()
       jday    = get_curr_calday()
       call get_curr_date(kyr, kmo, kda, mcsec)
-      dtrad   = real(get_rad_step_size(), r8)
+      dtrad   = real( get_rad_step_size(), r8 )
 
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
@@ -2166,7 +2166,7 @@ contains
 
             if (peaklai(p) >= 1) then
                hui(p) = max(hui(p),huigrain(p))
-            endif   
+            endif
 
             if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
                cphase(p) = 2._r8
@@ -2750,7 +2750,6 @@ contains
          leafc_to_litter_fun   =>    cnveg_carbonflux_inst%leafc_to_litter_fun_patch   , & ! Output:  [real(r8) (:) ]  leaf C litterfall used by FUN (gC/m2/s)
          leafcn_offset         =>    cnveg_state_inst%leafcn_offset_patch              , & ! Output:  [real(r8) (:) ]  Leaf C:N used by FUN
          matrix_nphtransfer    =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch    , & ! Input: N:N ratio for vegetation parts
-!         matrix_n2phtransfer   =>    cnveg_nitrogenflux_inst%matrix_n2phtransfer_patch   , & !
          matrix_phtransfer     =>    cnveg_carbonflux_inst%matrix_phtransfer_patch,      &
          ileafst_to_ileafxf_phc  => cnveg_carbonflux_inst%ileafst_to_ileafxf_ph,              &
          ileafxf_to_ileaf_phc    => cnveg_carbonflux_inst%ileafxf_to_ileaf_ph,              &
@@ -2838,7 +2837,7 @@ contains
                      if(livestemc(p) .gt. 0)then
                         matrix_phtransfer(p,ilivestem_to_iout_phc) = livestemc_to_litter(p) / livestemc(p)
                      end if
-                  end if
+                  end if ! use_matrixcn
                end if
             else
                t1 = dt * 2.0_r8 / (offset_counter(p) * offset_counter(p))
@@ -2872,9 +2871,9 @@ contains
                      end if
                   end if !use_matrixcn
                endif
-            end if 
-                        
+            end if
 
+            
             if ( use_fun ) then
                leafc_to_litter_fun(p)      =  leafc_to_litter(p)
                leafn_to_retransn(p)        =  paid_retransn_to_npool(p) + free_retransn_to_npool(p)
@@ -3166,13 +3165,13 @@ contains
                if (frootc(p) == 0.0_r8) then    
                    frootn_to_litter(p) = 0.0_r8    
                 else    
-                   frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))
+                   frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))   
                 end if   
             end if    
 
             if ( use_fun ) then
                if(frootn_to_litter(p)*dt.gt.frootn(p))then
-                    frootn_to_litter(p) = frootn(p)/dt  
+                    frootn_to_litter(p) = frootn(p)/dt
                endif
             end if
 
@@ -3235,7 +3234,6 @@ contains
          livecrootn_to_deadcrootn =>    cnveg_nitrogenflux_inst%livecrootn_to_deadcrootn_patch , & ! Output: [real(r8) (:) ]                                                    
          livecrootn_to_retransn   =>    cnveg_nitrogenflux_inst%livecrootn_to_retransn_patch   , & ! Output: [real(r8) (:) ] 
          matrix_nphtransfer        =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch        , & !
-!         matrix_n2phtransfer       =>    cnveg_nitrogenflux_inst%matrix_n2phtransfer_patch   , & !
          matrix_phtransfer        =>    cnveg_carbonflux_inst%matrix_phtransfer_patch,  & 
          ileafst_to_ileafxf_phc  => cnveg_carbonflux_inst%ileafst_to_ileafxf_ph,         &
          ileafxf_to_ileaf_phc    => cnveg_carbonflux_inst%ileafxf_to_ileaf_ph,         &
@@ -3292,7 +3290,7 @@ contains
             ctovr = livestemc(p) * lwtop
             ntovr = ctovr / livewdcn(ivt(p))
             livestemc_to_deadstemc(p) = ctovr
-            livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p))  
+            livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p))
 
             if(use_matrixcn)then
                matrix_phtransfer(p,ilivestem_to_ideadstem_phc)  = lwtop
@@ -3302,7 +3300,7 @@ contains
                if (livestemc(p) == 0.0_r8) then    
                    ntovr = 0.0_r8    
                 else    
-                   ntovr = ctovr * (livestemn(p) / livestemc(p))  				   
+                   ntovr = ctovr * (livestemn(p) / livestemc(p))   
                 end if   
 
                 livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn
@@ -3338,10 +3336,9 @@ contains
                livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
                if (use_matrixcn)then 
                   if (livecrootn(p) .ne.0.0_r8 )then
-!                     matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) + lwtop!ntovr/livecrootn(p)
                      matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = livecrootn_to_deadcrootn(p) / livecrootn(p)
                   end if
-               end if
+               end if !use_matrixcn
             end if    
             
             livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
@@ -3357,7 +3354,7 @@ contains
                if(livestemn(p) .gt. 0.0_r8) then
                   matrix_nphtransfer(p,ilivestem_to_iretransn_phn)  = livestemn_to_retransn(p) / livestemn(p)
                end if
-            end if
+            end if !use_matrixcn
 
          end if
 
