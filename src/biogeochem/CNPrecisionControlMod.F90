@@ -22,9 +22,9 @@ module CNPrecisionControlMod
 
   ! !PUBLIC DATA:
   real(r8), public :: ccrit    =  1.e-8_r8              ! critical carbon state value for truncation (gC/m2)
-  real(r8), public :: cnegcrit = -6.e+6_r8      ! -6.e+2_r8        ! critical negative carbon state value for abort (gC/m2)
+  real(r8), public :: cnegcrit = -6.e+6_r8      ! -6.e+1_r8        ! critical negative carbon state value for abort (gC/m2)
   real(r8), public :: ncrit    =  1.e-8_r8              ! critical nitrogen state value for truncation (gN/m2)
-  real(r8), public :: nnegcrit = -6.e+5_r8              ! critical negative nitrogen state value for abort (gN/m2)
+  real(r8), public :: nnegcrit = -6.e+5_r8      ! -6.e+0_r8        ! critical negative nitrogen state value for abort (gN/m2)
   real(r8), public, parameter :: n_min = 0.000000001_r8 ! Minimum Nitrogen value to use when calculating CN ratio (gN/m2)
 
   ! !PRIVATE DATA:
@@ -177,6 +177,7 @@ contains
     ! cnveg_nitrogenstate_inst%npool_patch                   Output:  [real(r8) (:)     ]  (gN/m2) temporary plant N pool                    
     ! cnveg_nitrogenstate_inst%ntrunc_patch                  Output:  [real(r8) (:)     ]  (gN/m2) patch-level sink for N truncation           
     ! cnveg_nitrogenstate_inst%retransn_patch                Output:  [real(r8) (:)     ]  (gN/m2) plant pool of retranslocated N            
+
 
     associate(                                           &
          cs     => cnveg_carbonstate_inst              , &
@@ -461,11 +462,12 @@ contains
     end if
     do fp = 1,num_soilp
        p = filter_soilp(fp)
+
        if ( .not. lcroponly .or. (patch%itype(p) >= nc3crop) ) then
           if ( .not. lallowneg .and. ((carbon_patch(p) < cnegcrit) .or. (nitrogen_patch(p) < nnegcrit)) ) then
-             write(iulog,*) 'ERROR: Carbon or Nitrogen patch negative = ',p, carbon_patch(p), nitrogen_patch(p)
+             write(iulog,*) 'ERROR: Carbon or Nitrogen patch negative = ', carbon_patch(p), nitrogen_patch(p)
              write(iulog,*) 'ERROR: limits = ', cnegcrit, nnegcrit
-             call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))  !zgdu
+             call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))
           else 
              if (use_matrixcn)then
                 if ( (carbon_patch(p) < ccrit .and. carbon_patch(p) > -ccrit * 1.e+6) .or. (use_nguardrail .and. nitrogen_patch(p) < ncrit .and. nitrogen_patch(p) > -ncrit*1.e+6) ) then
@@ -575,7 +577,7 @@ contains
           if ( .not. lallowneg .and. (carbon_patch(p) < cnegcrit) ) then
              write(iulog,*) 'ERROR: Carbon patch negative = ', carbon_patch(p)
              write(iulog,*) 'ERROR: limit = ', cnegcrit
-!             call endrun(msg='ERROR: carbon state critically negative '//errMsg(sourcefile, lineno))
+             call endrun(msg='ERROR: carbon state critically negative '//errMsg(sourcefile, lineno))
           else if ( abs(carbon_patch(p)) < ccrit) then
              pc(p) = pc(p) + carbon_patch(p)
              carbon_patch(p) = 0._r8
