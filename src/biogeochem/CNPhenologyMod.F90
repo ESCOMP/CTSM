@@ -663,7 +663,7 @@ contains
       if (evergreen(ivt(p)) == 1._r8) then    
    
          tranr=0.0002_r8   
-         ! set carbon fluxes for shifting storage pools to transfer pools     
+         ! set carbon fluxes for shifting storage pools to transfer pools    
 
          if (use_matrixcn) then    
             matrix_phtransfer(p,ileafst_to_ileafxf_phc)   =  matrix_phtransfer(p,ileafst_to_ileafxf_phc) + tranr/dt
@@ -677,7 +677,7 @@ contains
          end if !use_matrixcn
          leafc_storage_to_xfer(p)  = tranr * leafc_storage(p)/dt    
          frootc_storage_to_xfer(p) = tranr * frootc_storage(p)/dt    
-         if (woody(ivt(p)) == 1.0_r8) then
+         if (woody(ivt(p)) == 1.0_r8) then    
             livestemc_storage_to_xfer(p)  = tranr * livestemc_storage(p)/dt    
             deadstemc_storage_to_xfer(p)  = tranr * deadstemc_storage(p)/dt    
             livecrootc_storage_to_xfer(p) = tranr * livecrootc_storage(p)/dt   
@@ -741,7 +741,7 @@ contains
             livecrootn_xfer_to_livecrootn(p) = t1 * livecrootn_xfer(p)  
             deadcrootn_xfer_to_deadcrootn(p) = t1 * deadcrootn_xfer(p)  
         end if
-
+                
       end if ! end of if (evergreen(ivt(p)) == 1._r8) then    
      
    end do ! end of pft loop 
