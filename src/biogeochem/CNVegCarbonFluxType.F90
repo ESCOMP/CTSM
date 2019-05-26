@@ -10,9 +10,9 @@ module CNVegCarbonFluxType
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use clm_varpar                         , only : ndecomp_cascade_transitions,ndecomp_pools,nvegcpool,&
-                                                  ncphtrans,ncgmtrans,ncfitrans,ncphouttrans,&
-                                                  ncgmouttrans,ncfiouttrans
+  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools&
+                                                  nvegcpool,ncphtrans,ncgmtrans,ncfitrans,&
+                                                  ncphouttrans,ncgmouttrans,ncfiouttrans
   use clm_varpar                         , only : nlevdecomp_full, nlevgrnd,nlevdecomp
   use clm_varpar                         , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
                                                   ilivestem,ilivestem_st,ilivestem_xf,&
@@ -29,7 +29,6 @@ module CNVegCarbonFluxType
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
-  use GridcellType                       , only : grc                
   use AnnualFluxDribbler                 , only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use dynSubgridControlMod               , only : get_for_testing_allow_non_annual_changes
   use abortutils                         , only : endrun
@@ -486,7 +485,6 @@ module CNVegCarbonFluxType
      ! that are dribbled throughout the year
      type(annual_flux_dribbler_type) :: dwt_conv_cflux_dribbler
      type(annual_flux_dribbler_type) :: hrv_xsmrpool_to_atm_dribbler
-
    contains
 
      procedure , public  :: Init   
@@ -757,7 +755,6 @@ contains
     this%matrix_fitransfer_receiver_patch(this%ideadcrootxf_to_iout_fi) = ioutc
     
   end subroutine InitTransfer 
-
     
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds, carbon_type)
@@ -1142,7 +1139,6 @@ contains
           call this%Xveg14c%InitV(nvegcpool,begp,endp)
        end if
     end if
-
 
     ! Construct restart field names consistently to what is done in SpeciesNonIsotope &
     ! SpeciesIsotope, to aid future migration to that infrastructure
@@ -4239,7 +4235,6 @@ contains
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
        this%grainc_to_cropprodc_patch(i)                 = value_patch
 !   Matrix
-
        if(use_matrixcn)then
           this%matrix_Cinput_patch(i)                       = value_patch
           this%matrix_C13input_patch(i)                       = value_patch
@@ -4247,7 +4242,6 @@ contains
        end if
     end do
 
-    
     if(use_matrixcn)then
        do j = 1, nvegcpool         
           do fi = 1,num_patch
@@ -4883,7 +4877,7 @@ contains
     call p2c(bounds, num_soilc, filter_soilc, &
          this%ar_patch(bounds%begp:bounds%endp), &
          this%ar_col(bounds%begc:bounds%endc))
-    
+
     call p2c(bounds, num_soilc, filter_soilc, &
          this%gpp_patch(bounds%begp:bounds%endp), &
          this%gpp_col(bounds%begc:bounds%endc))
@@ -4920,7 +4914,7 @@ contains
              end do
           end do
        end do
-    end if
+    end if !not use_soil_matrixcn
 
     do fc = 1,num_soilc
        c = filter_soilc(fc)
@@ -4964,6 +4958,7 @@ contains
        this%nep_col(c) = &
             this%gpp_col(c) - &
             this%er_col(c)
+
     end do
 
     call c2g( bounds = bounds, &
