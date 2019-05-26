@@ -9,7 +9,7 @@ module CNVegCarbonStateType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use pftconMod      , only : noveg, npcropmin, pftcon 
+  use pftconMod      , only : noveg, npcropmin, pftcon
   use clm_varpar     , only : nvegcpool
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
   use clm_varctl     , only : iulog, use_cndv, use_crop, use_matrixcn
@@ -419,7 +419,7 @@ contains
        allocate(this%matrix_cap_grainc_storage_patch     (begp:endp)) ; this%matrix_cap_grainc_storage_patch     (:) = nan
        allocate(this%matrix_cap_grainc_xfer_patch        (begp:endp)) ; this%matrix_cap_grainc_xfer_patch        (:) = nan
     end if
-    allocate(this%woodc_patch              (begp:endp)) ; this%woodc_patch              (:) = nan    
+    allocate(this%woodc_patch              (begp:endp)) ; this%woodc_patch              (:) = nan     
 !initial pool size of year for matrix
     if(use_matrixcn)then
        allocate(this%leafc0_patch              (begp:endp)) ; this%leafc0_patch              (:) = nan
@@ -554,7 +554,6 @@ contains
        allocate(this%matrix_cturnover_grainst_acc_patch           (begp:endp)) ; this%matrix_cturnover_grainst_acc_patch        (:) = nan
        allocate(this%matrix_cturnover_grainxf_acc_patch           (begp:endp)) ; this%matrix_cturnover_grainxf_acc_patch        (:) = nan
     end if
-!!!!!!!	
 
     allocate(this%cropseedc_deficit_patch  (begp:endp)) ; this%cropseedc_deficit_patch  (:) = nan
     allocate(this%seedc_grc                (begg:endg)) ; this%seedc_grc                (:) = nan
@@ -570,7 +569,6 @@ contains
     allocate(this%totc_p2c_col             (begc:endc)) ; this%totc_p2c_col             (:) = nan
     allocate(this%totc_col                 (begc:endc)) ; this%totc_col                 (:) = nan
     allocate(this%totecosysc_col           (begc:endc)) ; this%totecosysc_col           (:) = nan
-!acc spinup
 
   end subroutine InitAllocate
 
@@ -900,98 +898,6 @@ contains
        call hist_addfld1d (fname='TOTECOSYSC', units='gC/m^2', &
             avgflag='A', long_name='total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
-!!!!!matrix initial pool of the year for matrix spinup
-!       if(use_matrixcn)then
-!       this%leafc0_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='LEAFC0', units='gC/m^2', &
-!            avgflag='I', long_name='leaf C', &
-!            ptr_patch=this%leafc0_patch)
-
-!       this%leafc0_storage_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='LEAFC0_STORAGE', units='gC/m^2', &
-!            avgflag='I', long_name='leaf C storage', &
-!            ptr_patch=this%leafc0_storage_patch)!, default='inactive')    
-
-!       this%leafc0_xfer_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='LEAFC0_XFER', units='gC/m^2', &
-!            avgflag='I', long_name='leaf C transfer', &
-!            ptr_patch=this%leafc0_xfer_patch)!, default='inactive')    
-
-!       this%frootc0_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='FROOTC0', units='gC/m^2', &
-!            avgflag='I', long_name='fine root C', &
-!            ptr_patch=this%frootc0_patch)
-
-!       this%frootc0_storage_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='FROOTC0_STORAGE', units='gC/m^2', &
-!            avgflag='I', long_name='fine root C storage', &
-!            ptr_patch=this%frootc0_storage_patch)!, default='inactive')   
-
-!       this%frootc0_xfer_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='FROOTC0_XFER', units='gC/m^2', &
-!            avgflag='I', long_name='fine root C transfer', &
-!            ptr_patch=this%frootc0_xfer_patch)!, default='inactive')    
-
-!       this%livestemc0_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='LIVESTEMC0', units='gC/m^2', &
-!            avgflag='I', long_name='live stem C', &
-!            ptr_patch=this%livestemc0_patch)
-
-!       this%livestemc0_storage_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='LIVESTEMC0_STORAGE', units='gC/m^2', &
-!            avgflag='I', long_name='live stem C storage', &
-!            ptr_patch=this%livestemc0_storage_patch)!, default='inactive')    
-
-!       this%livestemc0_xfer_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='LIVESTEMC0_XFER', units='gC/m^2', &
-!            avgflag='I', long_name='live stem C transfer', &
-!            ptr_patch=this%livestemc0_xfer_patch)!, default='inactive')     
-
-!       this%deadstemc0_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='DEADSTEMC0', units='gC/m^2', &
-!            avgflag='I', long_name='dead stem C', &
-!            ptr_patch=this%deadstemc0_patch)
-
-!       this%deadstemc0_storage_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='DEADSTEMC0_STORAGE', units='gC/m^2', &
-!            avgflag='I', long_name='dead stem C storage', &
-!            ptr_patch=this%deadstemc0_storage_patch)!, default='inactive')    
-
-!       this%deadstemc0_xfer_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='DEADSTEMC0_XFER', units='gC/m^2', &
-!            avgflag='I', long_name='dead stem C transfer', &
-!            ptr_patch=this%deadstemc0_xfer_patch)!, default='inactive')    
-
-!       this%livecrootc0_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='LIVECROOTC0', units='gC/m^2', &
-!            avgflag='I', long_name='live coarse root C', &
-!            ptr_patch=this%livecrootc0_patch)
-
-!       this%livecrootc0_storage_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='LIVECROOTC0_STORAGE', units='gC/m^2', &
-!            avgflag='I', long_name='live coarse root C storage', &
-!            ptr_patch=this%livecrootc0_storage_patch)!, default='inactive')     
-
-!       this%livecrootc0_xfer_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='LIVECROOTC0_XFER', units='gC/m^2', &
-!            avgflag='I', long_name='live coarse root C transfer', &
-!            ptr_patch=this%livecrootc0_xfer_patch)!, default='inactive')    
-
-!       this%deadcrootc0_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='DEADCROOTC0', units='gC/m^2', &
-!            avgflag='I', long_name='dead coarse root C', &
-!            ptr_patch=this%deadcrootc0_patch)
-
-!       this%deadcrootc0_storage_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='DEADCROOTC0_STORAGE', units='gC/m^2', &
-!            avgflag='I', long_name='dead coarse root C storage', &
-!            ptr_patch=this%deadcrootc0_storage_patch)!, default='inactive')   
-
-!       this%deadcrootc0_xfer_patch(begp:endp) = spval
-!       call hist_addfld1d (fname='DEADCROOTC0_XFER', units='gC/m^2', &
-!            avgflag='I', long_name='dead coarse root C transfer', &
-!            ptr_patch=this%deadcrootc0_xfer_patch)!, default='inactive')   
-!        end if
 
     end if
 
@@ -1536,7 +1442,7 @@ contains
           this%dispvegc_patch(p)           = 0._r8 
           this%storvegc_patch(p)           = 0._r8 
           this%woodc_patch(p)              = 0._r8
-          this%totc_patch(p)               = 0._r8
+          this%totc_patch(p)               = 0._r8 
 !!!!initial pool size for matrix
           if(use_matrixcn)then
              this%leafc0_patch(p)          = 1.e-30_r8
