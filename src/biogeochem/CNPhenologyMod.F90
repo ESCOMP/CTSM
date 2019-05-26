@@ -869,45 +869,45 @@ contains
          deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]   
          matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & !
          matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch               , & 
-         ileafst_to_ileafxf_phc  => cnveg_carbonflux_inst%ileafst_to_ileafxf_ph, &
-         ileafxf_to_ileaf_phc    => cnveg_carbonflux_inst%ileafxf_to_ileaf_ph, &
-         ifrootst_to_ifrootxf_phc  => cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph, &
-         ifrootxf_to_ifroot_phc    => cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph, &
-         ilivestemst_to_ilivestemxf_phc  => cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph, &
-         ilivestemxf_to_ilivestem_phc    => cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph, &
-         ideadstemst_to_ideadstemxf_phc  => cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph, &
-         ideadstemxf_to_ideadstem_phc    => cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph, &
-         ilivecrootst_to_ilivecrootxf_phc  => cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph, &
-         ilivecrootxf_to_ilivecroot_phc    => cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph, &
-         ideadcrootst_to_ideadcrootxf_phc  => cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph, &
-         ideadcrootxf_to_ideadcroot_phc    => cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph, &
-         ilivestem_to_ideadstem_phc  => cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph, &
-         ilivecroot_to_ideadcroot_phc  => cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph, &
-         ileaf_to_iout_phc  => cnveg_carbonflux_inst%ileaf_to_iout_ph, &
-         ifroot_to_iout_phc  => cnveg_carbonflux_inst%ifroot_to_iout_ph, &
-         ilivestem_to_iout_phc  => cnveg_carbonflux_inst%ilivestem_to_iout_ph, &
-         igrain_to_iout_phc   =>  cnveg_carbonflux_inst%igrain_to_iout_ph, &
-         ileafst_to_ileafxf_phn  => cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph, &
-         ileafxf_to_ileaf_phn    => cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph, &
-         ifrootst_to_ifrootxf_phn  => cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph, &
-         ifrootxf_to_ifroot_phn    => cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph, &
-         ilivestemst_to_ilivestemxf_phn  => cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph, &
-         ilivestemxf_to_ilivestem_phn    => cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph, &
-         ideadstemst_to_ideadstemxf_phn  => cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph, &
-         ideadstemxf_to_ideadstem_phn    => cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph, &
-         ilivecrootst_to_ilivecrootxf_phn  => cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph, &
-         ilivecrootxf_to_ilivecroot_phn    => cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph, &
-         ideadcrootst_to_ideadcrootxf_phn  => cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph, &
-         ideadcrootxf_to_ideadcroot_phn    => cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph, &
-         ilivestem_to_ideadstem_phn  => cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph, &
-         ilivecroot_to_ideadcroot_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph, &
-         ileaf_to_iout_phn  => cnveg_nitrogenflux_inst%ileaf_to_iout_ph, &
-         ifroot_to_iout_phn  => cnveg_nitrogenflux_inst%ifroot_to_iout_ph, &
-         ilivestem_to_iout_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iout_ph, &
-         ileaf_to_iretransn_phn  => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph, &
-         ilivestem_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph, &
-         ilivecroot_to_iretransn_phn  => cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph, &
-         igrain_to_iout_phn   =>  cnveg_nitrogenflux_inst%igrain_to_iout_ph &
+         ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , &
+         ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , &
+         ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , &
+         ifrootxf_to_ifroot_phc              =>    cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph                 , &
+         ilivestemst_to_ilivestemxf_phc      =>    cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph         , &
+         ilivestemxf_to_ilivestem_phc        =>    cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph           , &
+         ideadstemst_to_ideadstemxf_phc      =>    cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph         , &
+         ideadstemxf_to_ideadstem_phc        =>    cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph           , &
+         ilivecrootst_to_ilivecrootxf_phc    =>    cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph       , &
+         ilivecrootxf_to_ilivecroot_phc      =>    cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph         , &
+         ideadcrootst_to_ideadcrootxf_phc    =>    cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph       , &
+         ideadcrootxf_to_ideadcroot_phc      =>    cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph         , &
+         ilivestem_to_ideadstem_phc          =>    cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph             , &
+         ilivecroot_to_ideadcroot_phc        =>    cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph           , &
+         ileaf_to_iout_phc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_ph                      , &
+         ifroot_to_iout_phc                  =>    cnveg_carbonflux_inst%ifroot_to_iout_ph                     , &
+         ilivestem_to_iout_phc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_ph                  , &
+         igrain_to_iout_phc                  =>    cnveg_carbonflux_inst%igrain_to_iout_ph                     , &
+         ileafst_to_ileafxf_phn              =>    cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph               , &
+         ileafxf_to_ileaf_phn                =>    cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph                 , &
+         ifrootst_to_ifrootxf_phn            =>    cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph             , &
+         ifrootxf_to_ifroot_phn              =>    cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph               , &
+         ilivestemst_to_ilivestemxf_phn      =>    cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph       , &
+         ilivestemxf_to_ilivestem_phn        =>    cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph         , &
+         ideadstemst_to_ideadstemxf_phn      =>    cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph       , &
+         ideadstemxf_to_ideadstem_phn        =>    cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph         , &
+         ilivecrootst_to_ilivecrootxf_phn    =>    cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph     , &
+         ilivecrootxf_to_ilivecroot_phn      =>    cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph       , &
+         ideadcrootst_to_ideadcrootxf_phn    =>    cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph     , &
+         ideadcrootxf_to_ideadcroot_phn      =>    cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph       , &
+         ilivestem_to_ideadstem_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph           , &
+         ilivecroot_to_ideadcroot_phn        =>    cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph         , &
+         ileaf_to_iout_phn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_ph                    , &
+         ifroot_to_iout_phn                  =>    cnveg_nitrogenflux_inst%ifroot_to_iout_ph                   , &
+         ilivestem_to_iout_phn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_ph                , &
+         ileaf_to_iretransn_phn              =>    cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph               , &
+         ilivestem_to_iretransn_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           , &
+         ilivecroot_to_iretransn_phn         =>    cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph          , &
+         igrain_to_iout_phn                  =>    cnveg_nitrogenflux_inst%igrain_to_iout_ph                     &
          )
 
       ! start patch loop
@@ -916,7 +916,7 @@ contains
          c = patch%column(p)
          g = patch%gridcell(p)
 
-         if (season_decid(ivt(p)) == 1._r8) then   !a
+         if (season_decid(ivt(p)) == 1._r8) then
 
             ! set background litterfall rate, background transfer rate, and
             ! long growing season factor to 0 for seasonal deciduous types
@@ -928,20 +928,20 @@ contains
             crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
 
             ! set flag for solstice period (winter->summer = 1, summer->winter = 0)
-            if (dayl(g) >= prev_dayl(g)) then     !b
+            if (dayl(g) >= prev_dayl(g)) then
                ws_flag = 1._r8
             else
                ws_flag = 0._r8
-            end if                                !bb
+            end if
 
             ! update offset_counter and test for the end of the offset period
-            if (offset_flag(p) == 1.0_r8) then                !c
+            if (offset_flag(p) == 1.0_r8) then      
                ! decrement counter for offset period
                offset_counter(p) = offset_counter(p) - dt
 
                ! if this is the end of the offset_period, reset phenology
                ! flags and indices
-               if (offset_counter(p) == 0.0_r8) then         !d
+               if (offset_counter(p) == 0.0_r8) then
                   ! this code block was originally handled by call cn_offset_cleanup(p)
                   ! inlined during vectorization
 
@@ -949,24 +949,24 @@ contains
                   offset_counter(p) = 0._r8
                   dormant_flag(p) = 1._r8
                   days_active(p) = 0._r8
-                  if (use_cndv) then                         !e
+                  if (use_cndv) then
                      pftmayexist(p) = .true.
-                  end if                                     !ee
+                  end if
 
                   ! reset the previous timestep litterfall flux memory
                   prev_leafc_to_litter(p) = 0._r8
                   prev_frootc_to_litter(p) = 0._r8
-               end if                                        !dd
-            end if                                           !cc
+               end if
+            end if
 
             ! update onset_counter and test for the end of the onset period
-            if (onset_flag(p) == 1.0_r8) then                !f
+            if (onset_flag(p) == 1.0_r8) then
                ! decrement counter for onset period
                onset_counter(p) = onset_counter(p) - dt
 
                ! if this is the end of the onset period, reset phenology
                ! flags and indices
-               if (onset_counter(p) == 0.0_r8) then          !g
+               if (onset_counter(p) == 0.0_r8) then
                   ! this code block was originally handled by call cn_onset_cleanup(p)
                   ! inlined during vectorization
 
@@ -977,7 +977,7 @@ contains
                   frootc_xfer_to_frootc(p) = 0.0_r8
                   leafn_xfer_to_leafn(p)   = 0.0_r8
                   frootn_xfer_to_frootn(p) = 0.0_r8
-                  if (woody(ivt(p)) == 1.0_r8) then          !h
+                  if (woody(ivt(p)) == 1.0_r8) then
                      livestemc_xfer_to_livestemc(p)   = 0.0_r8
                      deadstemc_xfer_to_deadstemc(p)   = 0.0_r8
                      livecrootc_xfer_to_livecrootc(p) = 0.0_r8
@@ -986,13 +986,13 @@ contains
                      deadstemn_xfer_to_deadstemn(p)   = 0.0_r8
                      livecrootn_xfer_to_livecrootn(p) = 0.0_r8
                      deadcrootn_xfer_to_deadcrootn(p) = 0.0_r8
-                  end if                                      !hh
+                  end if
                   ! set transfer pools to 0.0
                   leafc_xfer(p) = 0.0_r8
                   leafn_xfer(p) = 0.0_r8
                   frootc_xfer(p) = 0.0_r8
                   frootn_xfer(p) = 0.0_r8
-                  if (woody(ivt(p)) == 1.0_r8) then          !i
+                  if (woody(ivt(p)) == 1.0_r8) then
                      livestemc_xfer(p) = 0.0_r8
                      livestemn_xfer(p) = 0.0_r8
                      deadstemc_xfer(p) = 0.0_r8
@@ -1001,20 +1001,20 @@ contains
                      livecrootn_xfer(p) = 0.0_r8
                      deadcrootc_xfer(p) = 0.0_r8
                      deadcrootn_xfer(p) = 0.0_r8
-                  end if                                    !ii
-               end if                                       !gg
-            end if                                          !ff
+                  end if
+               end if
+            end if
 
             ! test for switching from dormant period to growth period
-            if (dormant_flag(p) == 1.0_r8) then             !j
+            if (dormant_flag(p) == 1.0_r8) then
 
                ! Test to turn on growing degree-day sum, if off.
                ! switch on the growing degree day sum on the winter solstice
 
-               if (onset_gddflag(p) == 0._r8 .and. ws_flag == 1._r8) then    !k
+               if (onset_gddflag(p) == 0._r8 .and. ws_flag == 1._r8) then
                   onset_gddflag(p) = 1._r8
                   onset_gdd(p) = 0._r8 
-               end if                                                        !kk
+               end if
 
                ! Test to turn off growing degree-day sum, if on.
                ! This test resets the growing degree day sum if it gets past
@@ -1022,21 +1022,21 @@ contains
                ! In that case, it will take until the next winter solstice
                ! before the growing degree-day summation starts again.
 
-               if (onset_gddflag(p) == 1._r8 .and. ws_flag == 0._r8) then    !l
+               if (onset_gddflag(p) == 1._r8 .and. ws_flag == 0._r8) then
                   onset_gddflag(p) = 0._r8
                   onset_gdd(p) = 0._r8
-               end if                                                        !ll
+               end if
 
                ! if the gdd flag is set, and if the soil is above freezing
                ! then accumulate growing degree days for onset trigger
 
                soilt = t_soisno(c,3)
-               if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then  !m
+               if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
                   onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
-               end if                                                              !mm
+               end if
 
                ! set onset_flag if critical growing degree-day sum is exceeded
-               if (onset_gdd(p) > crit_onset_gdd) then                             !n
+               if (onset_gdd(p) > crit_onset_gdd) then
                   onset_flag(p) = 1.0_r8
                   dormant_flag(p) = 0.0_r8
                   onset_gddflag(p) = 0.0_r8
@@ -1049,49 +1049,45 @@ contains
                   ! inlined during vectorization
 
                   ! set carbon fluxes for shifting storage pools to transfer pools
-                 if(use_matrixcn)then                                 !o
+                 if(use_matrixcn)then
                     matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
                     matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt
 
                     matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + fstor2tran/dt
                     matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + fstor2tran/dt
-                    if (woody(ivt(p)) == 1.0_r8) then                               !p
+                    if (woody(ivt(p)) == 1.0_r8) then
                          matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + fstor2tran/dt
                          matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
                          matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + fstor2tran/dt
                          matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + fstor2tran/dt
-!                         gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
                          matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + fstor2tran/dt
                          matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + fstor2tran/dt
                          matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
                          matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt
                     end if
                   end if 
-!                  else
-                                                               !o
                     leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
                     frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
-                    if (woody(ivt(p)) == 1.0_r8) then                                !q
+                    if (woody(ivt(p)) == 1.0_r8) then
                       livestemc_storage_to_xfer(p)  = fstor2tran * livestemc_storage(p)/dt
                       deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
                       livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
                       deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
                       gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
-                    end if                                                           !qq
+                    end if
                   ! set nitrogen fluxes for shifting storage pools to transfer pools
                   leafn_storage_to_xfer(p)  = fstor2tran * leafn_storage(p)/dt
                   frootn_storage_to_xfer(p) = fstor2tran * frootn_storage(p)/dt
-                  if (woody(ivt(p)) == 1.0_r8) then                                  !r
+                  if (woody(ivt(p)) == 1.0_r8) then
                      livestemn_storage_to_xfer(p)  = fstor2tran * livestemn_storage(p)/dt
                      deadstemn_storage_to_xfer(p)  = fstor2tran * deadstemn_storage(p)/dt
                      livecrootn_storage_to_xfer(p) = fstor2tran * livecrootn_storage(p)/dt
                      deadcrootn_storage_to_xfer(p) = fstor2tran * deadcrootn_storage(p)/dt
-                  end if                                                             !rr
-!                 end if ! use_matrixcn		   !oo
+                  end if
                end if 
                ! test for switching from growth period to offset period
-            else if (offset_flag(p) == 0.0_r8) then                                  !j
-               if (use_cndv) then                                                    !t
+            else if (offset_flag(p) == 0.0_r8) then
+               if (use_cndv) then
                   ! If days_active > 355, then remove patch in
                   ! CNDVEstablishment at the end of the year.
                   ! days_active > 355 is a symptom of seasonal decid. patches occurring in
@@ -1099,18 +1095,18 @@ contains
                   ! This results in TLAI>1e4 in a few gridcells.
                   days_active(p) = days_active(p) + fracday
                   if (days_active(p) > 355._r8) pftmayexist(p) = .false.           
-               end if                                                              !tt
+               end if
 
                ! only begin to test for offset daylength once past the summer sol
-               if (ws_flag == 0._r8 .and. dayl(g) < crit_dayl) then                !u
+               if (ws_flag == 0._r8 .and. dayl(g) < crit_dayl) then
                   offset_flag(p) = 1._r8
                   offset_counter(p) = ndays_off * secspday
                   prev_leafc_to_litter(p) = 0._r8
                   prev_frootc_to_litter(p) = 0._r8
-               end if                                                              !uu
-            end if                                                                  !jj
+               end if
+            end if
 
-         end if ! end if seasonal deciduous                                        !aa
+         end if ! end if seasonal deciduous
 
       end do ! end of patch loop
 
@@ -1473,14 +1469,13 @@ contains
                         matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
                         matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + fstor2tran/dt
                         matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + fstor2tran/dt 
-!N
+
                         matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + fstor2tran/dt
                         matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + fstor2tran/dt
                         matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
                         matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt 
                      end if
                   end if
-!                 else
                   leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
                   frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
                   if (woody(ivt(p)) == 1.0_r8) then
@@ -1500,8 +1495,7 @@ contains
                      livecrootn_storage_to_xfer(p) = fstor2tran * livecrootn_storage(p)/dt
                      deadcrootn_storage_to_xfer(p) = fstor2tran * deadcrootn_storage(p)/dt
                   end if
-!                 end if !end use_matrixcn
-               end if !
+               end if 
 
                ! test for switching from growth period to offset period
             else if (offset_flag(p) == 0._r8) then
@@ -1611,14 +1605,12 @@ contains
                                                             + frootc_storage_to_xfer(p) / frootc_storage(p)
                   end if
                 if (woody(ivt(p)) == 1.0_r8) then
-!                    gresp_storage_to_xfer(p)      = gresp_storage(p) * bgtr(p)
                     matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + bgtr(p) 
                     matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + bgtr(p) 
                     matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + bgtr(p) 
                     matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + bgtr(p)
                  end if
               end if
-!            else
                if (woody(ivt(p)) == 1.0_r8) then
    
                   livestemc_storage_to_xfer(p)  = livestemc_storage(p) * bgtr(p)
@@ -1649,7 +1641,6 @@ contains
                   livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * bgtr(p)
                   deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * bgtr(p)
                end if
-!             end if  !end use_matrixcn 
             end if !end of onset_flag(p) == 1._r8
 
          end if ! end if stress deciduous
