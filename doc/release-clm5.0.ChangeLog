@@ -1,4 +1,93 @@
 ===============================================================
+Tag name:  release-clm5.0.25
+Originator(s):  erik (Erik Kluzek)
+Date: Wed May 29 11:16:13 MDT 2019
+One-line Summary: Change two files from NetCDF-4 format to NetCDF-3 (because some machines have trouble with NetCDF-4 in pnetcdf)
+
+Purpose of this version:
+------------------------
+
+There are two files in NetCDF-4 format that the model uses. Copy these files to NetCDF-3 classic format and point
+to the new version in the CLM XML database (use nccopy -k classic). There are some machines that have trouble with
+reading NetCDF-4 files in pnetcdf.
+
+There are still some NetCDF-4 files for mksurfdata_map, but some of these are required to be in NetCDF-4 format. And we only
+support mksurfdata_map and mkmapdata on cheyenne.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #734
+  Fixes #734 -- Isotope historical files are in NetCDF-4 format need them in NetCDF-3 or NetCDF-5
+
+Science changes since: release-clm5.0.24
+    None
+
+Software changes since: release-clm5.0.24
+    None
+
+Changes to User Interface since: release-clm5.0.24
+    None
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (6 tests compare different to baseline)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+  regular tests (prealpha):
+
+    cheyenne_intel - OK
+    cheyenne_gnu --- OK
+    hobart_nag ----- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No! bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used: No updates
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.16
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #737
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #737 -- Convert the file from NetCDF-4 classic format to NetCDF-3 classic format
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.24
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed May 22 13:33:48 MDT 2019
