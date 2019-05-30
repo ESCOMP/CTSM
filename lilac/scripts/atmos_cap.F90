@@ -226,7 +226,7 @@ module atmos_cap
         ! Initialize return code
         rc = ESMF_SUCCESS
 
-        call ESMF_LogWrite(subname//"atmos run has not been implemented yet", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"SHOULD ATMOS_RUN DO ANYTHING REALLY?? ", ESMF_LOGMSG_INFO)
     end subroutine atmos_run
 
     subroutine atmos_final(comp, importState, exportState, clock, rc)
@@ -251,7 +251,7 @@ module atmos_cap
         call ESMF_FieldBundleDestroy(import_fieldbundle, rc=rc)
         call ESMF_FieldBundleDestroy(export_fieldbundle, rc=rc)
 
-        call ESMF_LogWrite(subname//"atmos_final has not been implemented yet", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"?? Are there any other thing for destroying in atmos_final??", ESMF_LOGMSG_INFO)
 
     end subroutine atmos_final
 

@@ -103,16 +103,17 @@ module lilac_mod
         ! Read in namelist file ...
         call ESMF_UtilIOUnitGet(unit=fileunit, rc=rc)     ! get an available Fortran unit number
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        print *,  "---------------------------------------"
+
         open(fileunit, status="old", file="./namelist",  action="read", iostat=rc)
 
-        if (rc .ne. 0) then
+        if (rc == 0) then
             call ESMF_LogSetError(rcToCheck=ESMF_RC_FILE_OPEN, msg="Failed to open namelist file 'namelist'",  line=__LINE__, file=__FILE__)
             call ESMF_Finalize(endflag=ESMF_END_ABORT)
         endif
         read(fileunit, input)
         continue
         close(fileunit)
-
 
         !-------------------------------------------------------------------------
         ! Create Field lists -- Basically create a list of fields and add a default
@@ -257,15 +258,29 @@ module lilac_mod
 
         !-------------------------------------------------------------------------
         !  Create and initialize a clock!
-        ! ????? Should I create a clock here or in driver?
+        !  Clock is initialized here from namelist.input from WRF..... still we
+        !  are looping over time from host atmosphere
         !-------------------------------------------------------------------------
         calendar = ESMF_CalendarCreate(name='lilac_drv_NOLEAP', calkindflag=ESMF_CALKIND_NOLEAP, rc=rc )
-        call ESMF_TimeSet(StartTime, yy=2000, mm=1, dd=1, s=0, calendar=Calendar, rc=rc)
+        call ESMF_TimeIntervalSet(TimeStep, s=2, rc=rc) ! time step every 2second
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+        !call ESMF_TimeSet(startTime, yy=2003, mm=s_month, dd=s_day, h=s_hour, m=s_min, s=0, rc=rc)
+        !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        !call ESMF_TimeSet(stopTime,  yy=2003, mm=e_month, dd=e_day, h=e_hour, m=e_min, s=0, rc=rc)
+        !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        !clock = ESMF_ClockCreate(timeStep=timeStep, startTime=startTime, stopTime=stopTime, rc=rc) 
+        !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        call ESMF_TimeSet(StartTime, yy=2000, mm=1, dd=1 , s=0, calendar=Calendar, rc=rc)
         call ESMF_TimeSet(StopTime , yy=2000, mm=1, dd=10, s=0, calendar=Calendar, rc=rc)
         call ESMF_TimeIntervalSet(TimeStep, s=3600, rc=rc)
         clock = ESMF_ClockCreate(name='lilac_drv_EClock', TimeStep=TimeStep, startTime=StartTime, RefTime=StartTime, stopTime=stopTime, rc=rc)
-        !clock = ESMF_ClockCreate(timeStep=timeStep, startTime=startTime, stopTime=stopTime, rc=rc)
-        !EClock = ESMF_ClockCreate(name='lilac_drv_EClock', TimeStep=TimeStep, startTime=StartTime, RefTime=StartTime, stopTime=stopTime, rc=rc)
+
+        print *,  "---------------------------------------"
+        call ESMF_ClockPrint (clock, rc=rc)
+        print *,  "======================================="
+        call ESMF_CalendarPrint ( calendar , rc=rc)
+        print *,  "---------------------------------------"
 
         !-------------------------------------------------------------------------
         ! Create the necessary import and export states used to pass data
@@ -344,45 +359,62 @@ module lilac_mod
         !type(lnd2atm_data1d_type), intent(in), optional  :: lnd2atm1d
         !type(lnd2atm_data2d_type), intent(in), optional  :: lnd2atm2d
 
+        type (ESMF_Clock)                                 :: local_clock
+
         !------------------------------------------------------------------------
         ! Initialize return code
         rc = ESMF_SUCCESS
-
-
-        !-------------------------------------------------------------------------
-        ! Initialize ESMF, set the default calendar and log type.
-        !-------------------------------------------------------------------------
-        call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
         print *,  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
         print *,  "               Lilac Run               "
         print *,  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
         !-------------------------------------------------------------------------
+        ! Create a local clock from the general clock!
+        !-------------------------------------------------------------------------
+
+        local_clock = ESMF_ClockCreate(clock, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+        print *, "Run Loop Start time"
+        call ESMF_ClockPrint(local_clock, options="currtime string", rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+        !-------------------------------------------------------------------------
         ! We are running components in this order:
         ! 1- atmos_cap   2- cpl_atm2lnd
         ! 3-   lnd_cap   4- cpl_lnd2atm
         !-------------------------------------------------------------------------
-        call ESMF_GridCompRun(dummy_atmos_comp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=clock, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        call ESMF_LogWrite(subname//"atmos_cap or dummy_atmos_comp is running", ESMF_LOGMSG_INFO)
-        print *, "Running atmos_cap gridded component , rc =", rc
+        ! lilac run the RunComponent phase in a time loop
+        do while (.NOT. ESMF_ClockIsStopTime(local_clock, rc=rc))
 
-        call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=clock, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
-        print *, "Running coupler component..... cpl_atm2lnd_comp , rc =", rc
+            call ESMF_GridCompRun(dummy_atmos_comp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=local_clock, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+            call ESMF_LogWrite(subname//"atmos_cap or dummy_atmos_comp is running", ESMF_LOGMSG_INFO)
+            print *, "Running atmos_cap gridded component , rc =", rc
 
-        call ESMF_GridCompRun(dummy_land_comp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        call ESMF_LogWrite(subname//"lnd_cap or dummy_land_comp is running", ESMF_LOGMSG_INFO)
-        print *, "Running lnd_cap gridded component , rc =", rc
+            call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=local_clock, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+            call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
+            print *, "Running coupler component..... cpl_atm2lnd_comp , rc =", rc
 
-        call ESMF_CplCompRun(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=clock, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        call ESMF_LogWrite(subname//"running cpl_lnd2atm_comp ", ESMF_LOGMSG_INFO)
-        print *, "Running coupler component..... cpl_lnd2atm_comp , rc =", rc
+            call ESMF_GridCompRun(dummy_land_comp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=local_clock, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+            call ESMF_LogWrite(subname//"lnd_cap or dummy_land_comp is running", ESMF_LOGMSG_INFO)
+            print *, "Running lnd_cap gridded component , rc =", rc
+
+            call ESMF_CplCompRun(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=local_clock, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+            call ESMF_LogWrite(subname//"running cpl_lnd2atm_comp ", ESMF_LOGMSG_INFO)
+            print *, "Running coupler component..... cpl_lnd2atm_comp , rc =", rc
+
+            ! Advance the time
+            call ESMF_ClockAdvance(local_clock, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+            call ESMF_LogWrite(subname//"time is icremented now... (ClockAdvance)", ESMF_LOGMSG_INFO)
+            print *, "time is icremented now... (ClockAdvance) , rc =", rc
+
+        end do 
 
     end subroutine lilac_run
 
