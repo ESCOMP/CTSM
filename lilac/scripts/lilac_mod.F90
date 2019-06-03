@@ -14,8 +14,8 @@ module lilac_mod
     implicit none
 
 
-    public :: lilac_init
-    public :: lilac_run
+    public                                            :: lilac_init
+    public                                            :: lilac_run
 
     character(*) , parameter                          :: modname     = "lilac_mod"
     !type(fld_list_type), public                      :: a2c_fldlist, c2a_fldlist  !defined in atmosphere and land caps....
