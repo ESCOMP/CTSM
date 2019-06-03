@@ -386,8 +386,9 @@ module lilac_mod
         ! 3-   lnd_cap   4- cpl_lnd2atm
         !-------------------------------------------------------------------------
         ! lilac run the RunComponent phase in a time loop
-        do while (.NOT. ESMF_ClockIsStopTime(local_clock, rc=rc))
 
+        !!! if we want to loop through clock in atmos cap. 
+        !do while (.NOT. ESMF_ClockIsStopTime(local_clock, rc=rc))
             call ESMF_GridCompRun(dummy_atmos_comp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=local_clock, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
             call ESMF_LogWrite(subname//"atmos_cap or dummy_atmos_comp is running", ESMF_LOGMSG_INFO)
@@ -414,7 +415,7 @@ module lilac_mod
             call ESMF_LogWrite(subname//"time is icremented now... (ClockAdvance)", ESMF_LOGMSG_INFO)
             print *, "time is icremented now... (ClockAdvance) , rc =", rc
 
-        end do 
+        !end do 
 
     end subroutine lilac_run
 

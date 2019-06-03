@@ -22,7 +22,7 @@ program demo_lilac_driver
     ! modules
     use ESMF
     use lilac_mod
-    use lilac_utils, only   : atm2lnd_data1d_type , lnd2atm_data1d_type, atm2lnd_data2d_type, atm2lnd_data2d_type
+    use lilac_utils, only   : atm2lnd_data1d_type , lnd2atm_data1d_type, atm2lnd_data2d_type, atm2lnd_data2d_type , this_clock
 
     implicit none
 
@@ -30,6 +30,8 @@ program demo_lilac_driver
     ! data types for 1d arrays for meshes
     type (atm2lnd_data1d_type)                            :: atm2lnd
     type (lnd2atm_data1d_type)                            :: lnd2atm
+
+    type (this_clock)                                     :: this_time
 
     real    , allocatable                                 :: rand1(:)
     real    , allocatable                                 :: rand2(:)

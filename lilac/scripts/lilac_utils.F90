@@ -48,6 +48,14 @@ module lilac_utils
         real*8, pointer    :: tauy  (:,:)
      end type                 lnd2atm_data2d_type
 
+    type                   :: this_clock
+        integer, pointer   :: yy
+        integer, pointer   :: mm
+        integer, pointer   :: dd
+        integer, pointer   :: hh
+        integer, pointer   :: mn
+        integer, pointer   :: ss
+     end type                 this_clock
     !===============================================================================
     contains
     !===============================================================================
