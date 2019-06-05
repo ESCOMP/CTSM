@@ -186,7 +186,7 @@ Changes to tests or testing: None
 Code reviewed by:
  @billsacks
 
-CTSM testing:
+CTSM testing: regular
 
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
@@ -206,10 +206,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
+Changes answers relative to baseline: Yes!
 
   Summarize any changes to answers, i.e.,
     - what code configurations: ALL
