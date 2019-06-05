@@ -10,10 +10,12 @@ from ctsm.machine_utils import get_user
 
 MachineDefaults = namedtuple('MachineDefaults', ['job_launcher_type',
                                                  'scratch_dir',
+                                                 'baseline_dir',
                                                  'account_required',
                                                  'job_launcher_defaults'])
 # job_launcher_type: one of the JOB_LAUNCHERs defined in job_launcher_factory
 # scratch_dir: str
+# baseline_dir: str: The standard location for CTSM baselines on this machine
 # job_launcher_defaults: dict: keys are the JOB_LAUNCHERs defined in job_launcher_factory,
 #     values are types defined here (like _QsubDefaults). A given machine's defaults can
 #     have 0, 1 or multiple job_launcher_defaults. (It can be useful to have defaults even
@@ -36,6 +38,7 @@ MACHINE_DEFAULTS = {
     'cheyenne': MachineDefaults(
         job_launcher_type=JOB_LAUNCHER_QSUB,
         scratch_dir=os.path.join(os.path.sep, 'glade', 'scratch', get_user()),
+        baseline_dir=os.path.join(os.path.sep, 'glade', 'p', 'cgd', 'tss', 'ctsm_baselines'),
         account_required=True,
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
@@ -51,6 +54,7 @@ MACHINE_DEFAULTS = {
     'hobart': MachineDefaults(
         job_launcher_type=JOB_LAUNCHER_QSUB,
         scratch_dir=os.path.join(os.path.sep, 'scratch', 'cluster', get_user()),
+        baseline_dir=os.path.join(os.path.sep, 'fs', 'cgd', 'csm', 'ccsm_baselines'),
         account_required=False,
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
