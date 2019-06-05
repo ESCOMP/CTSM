@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-  ctsm1.0.dev043     erik 06/04/2019 Fix FUN bug (frac_ideal_C_use was backwards in regard to delta_CN), 
+  ctsm1.0.dev043     erik 06/05/2019 Fix FUN bug (frac_ideal_C_use was backwards in regard to delta_CN), 
                                      and replace Ball-Berry mbbopt with the CLM4.5 version
   ctsm1.0.dev042   slevis 05/21/2019 Rename, correct, and simplify parameters dewmx and sno_stor_max
   ctsm1.0.dev041    sacks 05/17/2019 Add water tracers to CanopyHydrologyMod

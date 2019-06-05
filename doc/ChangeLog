@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev043
 Originator(s):  erik (Erik Kluzek)
-Date: Tue Jun  4 12:13:49 MDT 2019
+Date: Wed Jun  5 10:17:06 MDT 2019
 One-line Summary: Fix FUN bug (frac_ideal_C_use was backwards in regard to delta_CN), and replace Ball-Berry mbbopt with the CLM4.5 version
 
 Purpose of changes
