@@ -1895,6 +1895,8 @@ contains
     real(r8)   :: frac_adjust                      ! fraction of mass remaining after capping
     real(r8)   :: rho                              ! partial density of ice (not scaled with frac_sno) [kg/m3]
     integer    :: fc, c                            ! counters
+    integer    :: j
+    real(r8)   :: h2osno_recalculated(bounds%begc:bounds%endc)
     real(r8)   :: h2osno_excess(bounds%begc:bounds%endc) ! excess snow that needs to be capped [mm H2O]
     logical    :: apply_runoff(bounds%begc:bounds%endc)  ! for columns with capping, whether the capping flux should be sent to runoff
     ! Always keep at least this fraction of the bottom snow layer when doing snow capping
@@ -1934,8 +1936,22 @@ contains
        qflx_snwcp_discarded_liq(c) = 0.0_r8
     end do
 
+    do fc = 1, num_snowc
+       c = filter_snowc(fc)
+       h2osno_recalculated(c) = 0._r8
+    end do
+
+    do j = -nlevsno+1,0
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          if (j >= col%snl(c)+1) then
+             h2osno_recalculated(c) = h2osno_recalculated(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
+          end if
+       end do
+    end do
+
     call SnowCappingExcess(bounds, num_snowc, filter_snowc, &
-         h2osno = h2osno(bounds%begc:bounds%endc), &
+         h2osno = h2osno_recalculated(bounds%begc:bounds%endc), &
          topo = topo(bounds%begc:bounds%endc), &
          h2osno_excess = h2osno_excess(bounds%begc:bounds%endc), &
          apply_runoff = apply_runoff(bounds%begc:bounds%endc))
