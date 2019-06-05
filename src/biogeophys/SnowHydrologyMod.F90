@@ -482,8 +482,16 @@ contains
        endif
 
        if (lun%itype(l)==istwet .and. t_grnd(c)>tfrz) then
-          h2osno(c)=0._r8
-          snow_depth(c)=0._r8
+          ! BUG(wjs, 2019-06-05, ESCOMP/ctsm#735) It seems like the intended behavior here
+          ! is to zero out the entire snow pack. Currently, however, this only zeros out a
+          ! very thin (zero-layer) snow pack. For now, I'm adding an snl==0 conditional to
+          ! make this behavior explicit; long-term, we'd like to change this to actually
+          ! zero out the whole snow pack. (At that time, this code block should probably
+          ! be moved to a more appropriate home, as noted in comments in issue #735.)
+          if (snl(c) == 0) then
+             h2osno(c)=0._r8
+             snow_depth(c)=0._r8
+          end if
        end if
 
        ! When the snow accumulation exceeds 10 mm, initialize snow layer
