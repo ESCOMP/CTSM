@@ -1,4 +1,127 @@
 ===============================================================
+Tag name:  ctsm1.0.dev044
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Jun  6 12:14:39 MDT 2019
+One-line Summary: Make wetland snow resetting behavior more explicit
+
+Purpose of changes
+------------------
+
+There is some code that zeroes out h2osno over thawed wetlands. It seems
+like the intended behavior here is to zero out the entire snow
+pack. Currently, however, this only zeros out a very thin (zero-layer)
+snow pack. For now, I'm adding an snl==0 conditional to make this
+behavior explicit; long-term, we'd like to change this to actually zero
+out the whole snow pack. (At that time, this code block should probably
+be moved to a more appropriate home, as noted in comments in issue
+ESCOMP/ctsm#735.)
+
+Also, unrelated change in run_sys_tests: support machine-specific
+baseline directory, in order to support new default location for CTSM
+baselines on cheyenne.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Partially addresses, but does NOT fix, ESCOMP/ctsm#735
+
+Known bugs introduced in this tag (include github issue ID):
+- Partially addresses, but does NOT fix, ESCOMP/ctsm#735
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Sean Swenson and Keith Oleson approved this change,
+though didn't actually review the final code.
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - pass on cgdm-bishorn
+    make python=python2 test
+    make pyhton=python3 test
+    make lint
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    hobart ------ pass
+
+    Also ran SMS_Ly1.f09_g17.I2000Clm50SpGs.cheyenne_intel.clm-monthly
+    with comparison against baselines: passed and bit-for-bit.
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO (but see notes below)
+
+   It seems theoretically possible for this to change answers, but no
+   answer changes were observed in the aux_clm test suite or
+   SMS_Ly1.f09_g17.I2000Clm50SpGs.cheyenne_intel.clm-monthly.
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev043
 Originator(s):  erik (Erik Kluzek)
 Date: Wed Jun  5 10:17:06 MDT 2019
