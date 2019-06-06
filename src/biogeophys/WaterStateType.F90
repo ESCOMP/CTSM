@@ -519,7 +519,7 @@ contains
     use clm_varcon       , only : denice, denh2o, pondmx, watmin
     use landunit_varcon  , only : istcrop, istdlak, istsoil  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step
+    use clm_time_manager , only : is_first_step, is_restart
     use clm_varctl       , only : bound_h2osoi
     use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
@@ -561,18 +561,19 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%h2osno_col)
 
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('H2OSNO_NO_LAYERS'), &
+         varname=this%info%fname('H2OSNO_NO_LAYERS:H2OSNO'), &
          xtype=ncd_double,  &
          dim1name='column', &
          long_name=this%info%lname('snow that is not resolved into layers'), &
          units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%h2osno_no_layers_col)
-    ! FIXME(wjs, 2019-06-06) This probably isn't what we want in the end for backwards
-    ! compatibility.
-    if (flag == 'read' .and. .not. readvar) then
+    ! BACKWARDS_COMPATIBILITY(wjs, 2019-06-06) If h2osno_no_layers is read from the old
+    ! h2osno, then it will be non-zero for an explicit-layered snow pack. We fix that
+    ! here.
+    if (flag == 'read' .and. .not. is_restart()) then
        do c = bounds%begc, bounds%endc
-          if (col%snl(c) == 0) then
-             this%h2osno_no_layers_col(bounds%begc:bounds%endc) = this%h2osno_col(bounds%begc:bounds%endc)
+          if (col%snl(c) < 0) then
+             this%h2osno_no_layers_col(bounds%begc:bounds%endc) = 0._r8
           end if
        end do
     end if
