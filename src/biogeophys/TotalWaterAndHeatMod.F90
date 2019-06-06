@@ -8,9 +8,11 @@ module TotalWaterAndHeatMod
 #include "shr_assert.h"
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
+  use abortutils         , only : endrun
   use decompMod          , only : bounds_type
-  use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus
+  use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus, namec
   use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb
+  use clm_varctl         , only : iulog
   use ColumnType         , only : col
   use LandunitType       , only : lun
   use subgridAveMod      , only : p2c
@@ -233,7 +235,7 @@ contains
          snl          =>    col%snl                        , & ! Input:  [integer  (:)   ]  negative number of snow layers
          
          h2osfc       =>    waterstate_inst%h2osfc_col     , & ! Input:  [real(r8) (:)   ]  surface water (mm)
-         h2osno       =>    waterstate_inst%h2osno_col     , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)
+         h2osno_no_layers => waterstate_inst%h2osno_no_layers_col , & ! Input:  [real(r8) (:)   ]  snow water that is not resolved into layers (mm H2O)
          liqcan_patch =>    waterstate_inst%liqcan_patch   , & ! Input:  [real(r8) (:)   ]  canopy liquid water (mm H2O)
          snocan_patch =>    waterstate_inst%snocan_patch   , & ! Input:  [real(r8) (:)   ]  canopy snow water (mm H2O)
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
@@ -271,17 +273,18 @@ contains
        liquid_mass(c) = liquid_mass(c) + liqcan_col(c) + total_plant_stored_h2o(c)
        ice_mass(c) = ice_mass(c) + snocan_col(c)
 
-       if (snl(c) < 0) then
-          ! Loop over snow layers
-          do j = snl(c)+1,0
-             liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
-             ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
-          end do
-       else if (h2osno(c) /= 0._r8) then
-          ! No explicit snow layers, but there may still be some ice in h2osno (there is
-          ! no liquid water in this case)
-          ice_mass(c) = ice_mass(c) + h2osno(c)
+       ! FIXME(wjs, 2019-06-06) Remove this temporary error check
+       if (snl(c) < 0 .and. h2osno_no_layers(c) /= 0._r8) then
+          write(iulog,*) 'NonLake: h2osno_no_layers non-zero for snl < 0:'
+          write(iulog,*) 'c, snl, h2osno_no_layers = ', c, snl(c), h2osno_no_layers(c)
+          call endrun(c, namec, msg='NonLake: h2osno_no_layers non-zero for snl < 0:')
        end if
+
+       ice_mass(c) = ice_mass(c) + h2osno_no_layers(c)
+       do j = snl(c)+1,0
+          liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
+          ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
+       end do
 
        if (col%hydrologically_active(c)) then
           ! It's important to exclude non-hydrologically-active points, because some of
@@ -427,7 +430,7 @@ contains
     associate( &
          snl          =>    col%snl                        , & ! Input:  [integer  (:)   ]  negative number of snow layers
          
-         h2osno       =>    waterstate_inst%h2osno_col     , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)
+         h2osno_no_layers => waterstate_inst%h2osno_no_layers_col , & ! Input:  [real(r8) (:)   ]  snow water that is not resolved into layers (mm H2O)
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
          h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col,  & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
          dynbal_baseline_liq    => waterstate_inst%dynbal_baseline_liq_col, & ! Input:  [real(r8) (:)   ]  baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
@@ -443,17 +446,19 @@ contains
     ! Snow water content
     do fc = 1, num_lakec
        c = filter_lakec(fc)
-       if (snl(c) < 0) then
-          ! Loop over snow layers
-          do j = snl(c)+1,0
-             liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
-             ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
-          end do
-       else if (h2osno(c) /= 0._r8) then
-          ! No explicit snow layers, but there may still be some ice in h2osno (there is
-          ! no liquid water in this case)
-          ice_mass(c) = ice_mass(c) + h2osno(c)
+
+       ! FIXME(wjs, 2019-06-06) Remove this temporary error check
+       if (snl(c) < 0 .and. h2osno_no_layers(c) /= 0._r8) then
+          write(iulog,*) 'NonLake: h2osno_no_layers non-zero for snl < 0:'
+          write(iulog,*) 'c, snl, h2osno_no_layers = ', c, snl(c), h2osno_no_layers(c)
+          call endrun(c, namec, msg='NonLake: h2osno_no_layers non-zero for snl < 0:')
        end if
+
+       ice_mass(c) = ice_mass(c) + h2osno_no_layers(c)
+       do j = snl(c)+1,0
+          liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
+          ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
+       end do
     end do
 
     ! Soil water content of the soil under the lake
@@ -537,7 +542,7 @@ contains
          dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Input:  [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
          h2osoi_liq   => waterstatebulk_inst%h2osoi_liq_col, & ! liquid water (kg/m2)
          h2osoi_ice   => waterstatebulk_inst%h2osoi_ice_col, & ! frozen water (kg/m2)
-         h2osno       => waterstatebulk_inst%h2osno_col, & ! snow water (mm H2O)
+         h2osno_no_layers => waterstatebulk_inst%h2osno_no_layers_col, & ! snow water that is not resolved into layers (mm H2O)
          h2osfc       => waterstatebulk_inst%h2osfc_col, & ! surface water (mm H2O)
          liqcan_patch => waterstatebulk_inst%liqcan_patch, & ! canopy liquid water (mm H2O)
          snocan_patch => waterstatebulk_inst%snocan_patch, & ! canopy snow water (mm H2O)
@@ -602,25 +607,19 @@ contains
             latent_heat_liquid = latent_heat_liquid(c))
 
        !--- snow ---
-       if ( snl(c) < 0 ) then
-          ! Loop over snow layers
-          do j = snl(c)+1,0
-             call AccumulateLiquidWaterHeat( &
-                  temp = t_soisno(c,j), &
-                  h2o = h2osoi_liq(c,j), &
-                  cv_liquid = cv_liquid(c), &
-                  heat_liquid = heat_liquid(c), &
-                  latent_heat_liquid = latent_heat_liquid(c))
-             heat_ice(c) = heat_ice(c) + &
-                  TempToHeat(temp = t_soisno(c,j), cv = (h2osoi_ice(c,j)*cpice))
-          end do
-       else if (h2osno(c) /= 0._r8) then
-          ! No explicit snow layers, but there may still be some ice in h2osno (there is
-          ! no liquid water in this case)
-          j = 1
+       j = 1
+       heat_ice(c) = heat_ice(c) + &
+            TempToHeat(temp = t_soisno(c,j), cv = (h2osno_no_layers(c)*cpice))
+       do j = snl(c)+1,0
+          call AccumulateLiquidWaterHeat( &
+               temp = t_soisno(c,j), &
+               h2o = h2osoi_liq(c,j), &
+               cv_liquid = cv_liquid(c), &
+               heat_liquid = heat_liquid(c), &
+               latent_heat_liquid = latent_heat_liquid(c))
           heat_ice(c) = heat_ice(c) + &
-               TempToHeat(temp = t_soisno(c,j), cv = (h2osno(c)*cpice))
-       end if
+               TempToHeat(temp = t_soisno(c,j), cv = (h2osoi_ice(c,j)*cpice))
+       end do
 
        if (col%hydrologically_active(c)) then
           ! NOTE(wjs, 2017-03-23) Water in the unconfined aquifer currently doesn't have
@@ -866,8 +865,7 @@ contains
          t_soisno     => temperature_inst%t_soisno_col, & ! soil temperature (Kelvin)
          dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Input:  [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
          h2osoi_liq   => waterstatebulk_inst%h2osoi_liq_col, & ! liquid water (kg/m2)
-         h2osoi_ice   => waterstatebulk_inst%h2osoi_ice_col, & ! frozen water (kg/m2)
-         h2osno       => waterstatebulk_inst%h2osno_col & ! snow water (mm H2O)
+         h2osoi_ice   => waterstatebulk_inst%h2osoi_ice_col  & ! frozen water (kg/m2)
          )
 
     do fc = 1, num_lakec
@@ -883,24 +881,21 @@ contains
     ! Snow heat content
     do fc = 1, num_lakec
        c = filter_lakec(fc)
-       if ( snl(c) < 0 ) then
-          ! Loop over snow layers
-          do j = snl(c)+1,0
-             call AccumulateLiquidWaterHeat( &
-                  temp = t_soisno(c,j), &
-                  h2o = h2osoi_liq(c,j), &
-                  cv_liquid = cv_liquid(c), &
-                  heat_liquid = heat_liquid(c), &
-                  latent_heat_liquid = latent_heat_liquid(c))
-             heat_ice(c) = heat_ice(c) + &
-                  TempToHeat(temp = t_soisno(c,j), cv = (h2osoi_ice(c,j)*cpice))
-          end do
-       else if (h2osno(c) /= 0._r8) then
-          ! TODO(wjs, 2017-03-16) (Copying this note from old code... I'm not positive
-          ! it's still true.) The heat capacity (not latent heat) of snow without snow
-          ! layers is currently ignored in LakeTemperature, so it should be ignored here.
-          ! Eventually we should consider this.
-       end if
+
+       ! TODO(wjs, 2017-03-16) (Copying this note from old code... I'm not positive it's
+       ! still true.) The heat capacity (not latent heat) of snow without snow layers
+       ! (i.e., h2osno_no_layers) is currently ignored in LakeTemperature, so it should
+       ! be ignored here.  Eventually we should consider this.
+       do j = snl(c)+1,0
+          call AccumulateLiquidWaterHeat( &
+               temp = t_soisno(c,j), &
+               h2o = h2osoi_liq(c,j), &
+               cv_liquid = cv_liquid(c), &
+               heat_liquid = heat_liquid(c), &
+               latent_heat_liquid = latent_heat_liquid(c))
+          heat_ice(c) = heat_ice(c) + &
+               TempToHeat(temp = t_soisno(c,j), cv = (h2osoi_ice(c,j)*cpice))
+       end do
     end do
 
     ! Soil water content of the soil under the lake
