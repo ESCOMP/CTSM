@@ -31,9 +31,40 @@ module LakeFluxesMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: LakeFluxes
+  public :: readParams
+
+  type, private :: params_type
+      real(r8) :: a_coef  ! Drag coefficient under less dense canopy (unitless)
+      real(r8) :: a_exp  ! Drag exponent under less dense canopy (unitless)
+      real(r8) :: zsno  ! Momentum roughness length for snow (m)
+  end type params_type
+  type(params_type), private ::  params_inst
   !-----------------------------------------------------------------------
 
 contains
+
+ subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_LakeFluxes'
+    !--------------------------------------------------------------------
+
+    ! Drag coefficient under less dense canopy (unitless)
+    call readNcdioScalar(ncid, 'a_coef', subname, params_inst%a_coef)
+    ! Drag exponent under less dense canopy (unitless)
+    call readNcdioScalar(ncid, 'a_exp', subname, params_inst%a_exp)
+    ! Momentum roughness length for snow (m)
+    call readNcdioScalar(ncid, 'zsno', subname, params_inst%zsno)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine LakeFluxes(bounds, num_lakec, filter_lakec, num_lakep, filter_lakep, &
@@ -51,7 +82,7 @@ contains
     ! !USES:
     use clm_varpar          , only : nlevlak
     use clm_varcon          , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, tkair
-    use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval, zsno
+    use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval
     use clm_varctl          , only : use_lch4
     use LakeCon             , only : betavis, z0frzlake, tdmax, emg_lake
     use LakeCon             , only : lake_use_old_fcrit_minz0
@@ -222,7 +253,6 @@ contains
 
          qflx_evap_soi    =>    waterfluxbulk_inst%qflx_evap_soi_patch     , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)          
          qflx_evap_tot    =>    waterfluxbulk_inst%qflx_evap_tot_patch     , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
-         qflx_prec_grnd   =>    waterfluxbulk_inst%qflx_prec_grnd_patch    , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
 
          t_veg            =>    temperature_inst%t_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation temperature (Kelvin)                   
          t_ref2m          =>    temperature_inst%t_ref2m_patch         , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (Kelvin)       
@@ -293,11 +323,11 @@ contains
             z0hg(p) = max(z0hg(p), minz0lake)
          else if (snl(c) == 0) then    ! frozen lake with ice
             z0mg(p) = z0frzlake
-            z0hg(p) = z0mg(p)/exp(0.13_r8 * (ust_lake(c)*z0mg(p)/1.5e-5_r8)**0.45_r8) ! Consistent with BareGroundFluxes
+            z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
             z0qg(p) = z0hg(p)
          else                          ! use roughness over snow as in Biogeophysics1
-            z0mg(p) = zsno
-            z0hg(p) = z0mg(p)/exp(0.13_r8 * (ust_lake(c)*z0mg(p)/1.5e-5_r8)**0.45_r8) ! Consistent with BareGroundFluxes
+            z0mg(p) = params_inst%zsno
+            z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp)  ! Consistent with BareGroundFluxes
             z0qg(p) = z0hg(p)
          end if
 
@@ -512,11 +542,11 @@ contains
             else if (snl(c) == 0) then
                ! in case it was above freezing and now below freezing
                z0mg(p) = z0frzlake
-               z0hg(p) = z0mg(p)/exp(0.13_r8 * (ustar(p)*z0mg(p)/1.5e-5_r8)**0.45_r8) ! Consistent with BareGroundFluxes
+               z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
                z0qg(p) = z0hg(p)
             else ! Snow layers
                ! z0mg won't have changed
-               z0hg(p) = z0mg(p)/exp(0.13_r8 * (ustar(p)*z0mg(p)/1.5e-5_r8)**0.45_r8) ! Consistent with BareGroundFluxes
+               z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
                z0qg(p) = z0hg(p)
             end if
 
@@ -665,7 +695,6 @@ contains
          c = patch%column(p)
          t_veg(p) = forc_t(c)
          eflx_lwrad_net(p)  = eflx_lwrad_out(p) - forc_lwrad(c)
-         qflx_prec_grnd(p) = forc_rain(c) + forc_snow(c)
          t_skin_patch(p) = t_veg(p)         
       end do
 

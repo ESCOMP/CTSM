@@ -1,1 +1,7 @@
 for_testing_allow_non_annual_changes = .true.
+
+! Also test the reset_dynbal_baselines flag. We want at least one restart test that uses
+! this flag; for this test to have power, it should have some change in glacier area
+! after the restart. (So, in this decrease test, the glacier decrease should be slow
+! enough that there is some decrease after the restart.)
+reset_dynbal_baselines = .true.

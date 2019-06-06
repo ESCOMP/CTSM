@@ -18,6 +18,9 @@ Module HydrologyNoDrainageMod
   use SoilStateType     , only : soilstate_type
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
+  use IrrigationMod, only : irrigation_type
+  use WaterType , only : water_type
+  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
   use WaterFluxBulkType     , only : waterfluxbulk_type
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
@@ -31,10 +34,59 @@ Module HydrologyNoDrainageMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public  :: HydrologyNoDrainage ! Calculates soil/snow hydrology without drainage
+  public  :: CalcAndWithdrawIrrigationFluxes  ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
+  public  :: HydrologyNoDrainage    ! Calculates soil/snow hydrology without drainage
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine CalcAndWithdrawIrrigationFluxes(bounds, &
+       num_soilc, filter_soilc, &
+       num_soilp, filter_soilp, &
+       soilhydrology_inst, soilstate_inst, &
+       irrigation_inst, &
+       water_inst)
+    !
+    ! !DESCRIPTION:
+    ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
+    !
+    ! !USES:
+    use SoilHydrologyMod       , only : WithdrawGroundwaterIrrigation
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)              , intent(in)    :: bounds
+    integer                        , intent(in)    :: num_soilc            ! number of points in filter_soilc
+    integer                        , intent(in)    :: filter_soilc(:)      ! column filter for soil points
+    integer                        , intent(in)    :: num_soilp            ! number of points in filter_soilp
+    integer                        , intent(in)    :: filter_soilp(:)      ! patch filter for soil points
+    type(soilhydrology_type)       , intent(in)    :: soilhydrology_inst
+    type(soilstate_type)           , intent(in)    :: soilstate_inst
+    type(irrigation_type)          , intent(inout) :: irrigation_inst
+    type(water_type)               , intent(inout) :: water_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i  ! tracer index
+
+    character(len=*), parameter :: subname = 'CalcAndWithdrawIrrigationFluxes'
+    !-----------------------------------------------------------------------
+
+    ! Calculate irrigation flux
+    call irrigation_inst%CalcIrrigationFluxes(bounds, num_soilc, &
+         filter_soilc, num_soilp, filter_soilp, &
+         soilhydrology_inst, soilstate_inst, &
+         water_inst)
+
+    ! Remove groundwater irrigation
+    if (irrigation_inst%UseGroundwaterIrrigation()) then
+       do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+          call WithdrawGroundwaterIrrigation(bounds, num_soilc, filter_soilc, &
+               water_inst%bulk_and_tracers(i)%waterflux_inst, &
+               water_inst%bulk_and_tracers(i)%waterstate_inst)
+       end do
+    end if
+
+  end subroutine CalcAndWithdrawIrrigationFluxes
 
   !-----------------------------------------------------------------------
   subroutine HydrologyNoDrainage(bounds, &
@@ -45,6 +97,7 @@ contains
        num_nosnowc, filter_nosnowc, &
        clm_fates, &
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
+       wateratm2lndbulk_inst, &
        waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
        soilhydrology_inst, saturated_excess_runoff_inst, infiltration_excess_runoff_inst, &
        aerosol_inst, canopystate_inst, soil_water_retention_curve, topo_inst)
@@ -63,8 +116,8 @@ contains
     use clm_time_manager     , only : get_step_size, get_nstep
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
-    use SoilHydrologyMod     , only : CLMVICMap, SetSoilWaterFractions
-    use SoilHydrologyMod     , only : SetQflxInputs, RouteInfiltrationExcess, UpdateH2osfc
+    use SoilHydrologyMod     , only : CLMVICMap, SetSoilWaterFractions, SetFloodc
+    use SoilHydrologyMod     , only : SetQflxInputs, RouteInfiltrationExcess
     use SoilHydrologyMod     , only : Infiltration, TotalSurfaceRunoff
     use SoilHydrologyMod     , only : UpdateUrbanPonding
     use SoilHydrologyMod     , only : WaterTable, PerchedWaterTable
@@ -73,6 +126,7 @@ contains
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use SoilWaterMovementMod , only : use_aquifer_layer
     use SoilWaterPlantSinkMod , only : Compute_EffecRootFrac_And_VertTranSink
+    use SurfaceWaterMod      , only : UpdateH2osfc
 
     !
     ! !ARGUMENTS:
@@ -92,6 +146,7 @@ contains
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(energyflux_type)    , intent(in)    :: energyflux_inst
     type(temperature_type)   , intent(inout) :: temperature_inst
+    type(wateratm2lndbulk_type), intent(in) :: wateratm2lndbulk_inst
     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
@@ -189,8 +244,11 @@ contains
       call SetSoilWaterFractions(bounds, num_hydrologyc, filter_hydrologyc, &
            soilhydrology_inst, soilstate_inst, waterstatebulk_inst)
 
+      call SetFloodc(num_nolakec, filter_nolakec, col, &
+           wateratm2lndbulk_inst, waterfluxbulk_inst)
+
       call saturated_excess_runoff_inst%SaturatedExcessRunoff(&
-           bounds, num_hydrologyc, filter_hydrologyc, col, &
+           bounds, num_hydrologyc, filter_hydrologyc, lun, col, &
            soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
 
       call SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &

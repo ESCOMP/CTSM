@@ -19,6 +19,7 @@ class JobLauncherNoBatch(JobLauncherBase):
         nice_level: Level used for the nice command (larger = lower priority, up to 19)
         """
         JobLauncherBase.__init__(self)
+        self._process = None
         if nice_level is None:
             # We have a default value of None rather than 0 in the argument list because
             # objects of this class may be created via a few layers, and we want to allow
@@ -46,10 +47,10 @@ class JobLauncherNoBatch(JobLauncherBase):
             # Note that preexec_fn is POSIX-only; also, it may be unsafe in the presence
             # of threads (hence the need for disabling the pylint warning)
             # pylint: disable=subprocess-popen-preexec-fn
-            subprocess.Popen(command,
-                             stdout=outfile,
-                             stderr=errfile,
-                             preexec_fn=self._preexec)
+            self._process = subprocess.Popen(command,
+                                             stdout=outfile,
+                                             stderr=errfile,
+                                             preexec_fn=self._preexec)
 
     def run_command_logger_message(self, command, stdout_path, stderr_path):
         message = 'Running: <{command_str}> ' \
@@ -58,3 +59,8 @@ class JobLauncherNoBatch(JobLauncherBase):
                                                   outfile=stdout_path,
                                                   errfile=stderr_path)
         return message
+
+    def wait_for_last_process_to_complete(self):
+        """Waits for the last process started by run_command_impl (if any) to complete"""
+        if self._process is not None:
+            self._process.wait()

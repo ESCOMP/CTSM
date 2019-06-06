@@ -10,9 +10,10 @@ module WaterStateType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN
-  use clm_varctl     , only : iulog, use_bedrock
+  use clm_varctl     , only : use_bedrock, iulog
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -34,20 +35,27 @@ module WaterStateType
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
-     real(r8), pointer :: h2ocan_patch           (:)   ! patch canopy water (mm H2O)
      real(r8), pointer :: h2osfc_col             (:)   ! col surface water (mm H2O)
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
 
-     real(r8), pointer :: wa_col            (:)     ! col water in the unconfined aquifer (mm) 
+     real(r8), pointer :: wa_col                 (:)   ! col water in the unconfined aquifer (mm)
+
+     ! For the following dynbal baseline variables: positive values are subtracted to
+     ! avoid counting liquid water content of "virtual" states; negative values are added
+     ! to account for missing states in the model.
+     real(r8), pointer :: dynbal_baseline_liq_col(:)   ! baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
+     real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (mm H2O)
+
+     real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
 
    contains
 
-     procedure          :: Init         
-     procedure          :: Restart      
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure, public  :: Init
+     procedure, public  :: Restart
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
 
   end type waterstate_type
 
@@ -60,7 +68,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, info, tracer_vars, &
-       h2osno_input_col, watsat_col, t_soisno_col)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer)
 
     class(waterstate_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds  
@@ -69,6 +77,7 @@ contains
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    logical           , intent(in)    :: use_aquifer_layer ! whether an aquifer layer is used in this run
 
     this%info => info
 
@@ -76,8 +85,11 @@ contains
 
     call this%InitHistory(bounds)
 
-    call this%InitCold(bounds, &
-       h2osno_input_col, watsat_col, t_soisno_col)
+    call this%InitCold(bounds = bounds, &
+         h2osno_input_col = h2osno_input_col, &
+         watsat_col = watsat_col, &
+         t_soisno_col = t_soisno_col, &
+         use_aquifer_layer = use_aquifer_layer)
 
   end subroutine Init
 
@@ -88,7 +100,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(inout) :: this
@@ -113,9 +124,6 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
          dim2beg = -nlevsno+1, dim2end = nlevgrnd)
-    call AllocateVar1d(var = this%h2ocan_patch, name = 'h2ocan_patch', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
     call AllocateVar1d(var = this%snocan_patch, name = 'snocan_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
@@ -128,6 +136,12 @@ contains
     call AllocateVar1d(var = this%wa_col, name = 'wa_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%dynbal_baseline_liq_col, name = 'dynbal_baseline_liq_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%dynbal_baseline_ice_col, name = 'dynbal_baseline_ice_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
   end subroutine InitAllocate
 
@@ -138,11 +152,7 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl     , only : use_lch4
-    use clm_varctl     , only : hist_wrtch4diag
-    use clm_varpar     , only : nlevsno, nlevsoi
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
+    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this
@@ -152,7 +162,6 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
@@ -210,14 +219,6 @@ contains
          avgflag='A', &
          long_name=this%info%lname('soil ice (vegetated landunits only)'), &
          ptr_col=data2dptr, l2g_scale_type='veg')
-
-    this%h2ocan_patch(begp:endp) = spval 
-    call hist_addfld1d ( &
-         fname=this%info%fname('H2OCAN'), &
-         units='mm',  &
-         avgflag='A', &
-         long_name=this%info%lname('intercepted water'), &
-         ptr_patch=this%h2ocan_patch, set_lake=0._r8)
 
     this%snocan_patch(begp:endp) = spval 
     call hist_addfld1d ( &
@@ -279,7 +280,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds, &
-       h2osno_input_col, watsat_col, t_soisno_col)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Initialize time constant variables and cold start conditions 
@@ -290,28 +291,29 @@ contains
     use column_varcon   , only : icol_road_perv, icol_road_imperv
     use clm_varcon      , only : denice, denh2o, bdsno 
     use clm_varcon      , only : tfrz, aquifer_water_baseline
-    use ncdio_pio       , only : file_desc_t
     !
     ! !ARGUMENTS:
-    class(waterstate_type), intent(in)    :: this
+    class(waterstate_type), intent(inout) :: this
     type(bounds_type)     , intent(in)    :: bounds
     real(r8)              , intent(in)    :: h2osno_input_col(bounds%begc:)
     real(r8)              , intent(in)    :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)              , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    logical               , intent(in)    :: use_aquifer_layer ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev,nlevs 
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
+    integer            :: c,j,l,nlevs 
     integer            :: nbedrock
+    real(r8)           :: ratio
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(h2osno_input_col)     == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(watsat_col)           == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_soisno_col)         == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
 
+    ratio = this%info%get_ratio()
+
     do c = bounds%begc,bounds%endc
-       this%h2osno_col(c)             = h2osno_input_col(c) 
+       this%h2osno_col(c)             = h2osno_input_col(c) * ratio
     end do
 
 
@@ -319,7 +321,6 @@ contains
     associate(snl => col%snl) 
 
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
-      this%h2ocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%snocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%liqcan_patch(bounds%begp:bounds%endp) = 0._r8
 
@@ -351,7 +352,7 @@ contains
                   if (j > nbedrock) then
                      this%h2osoi_vol_col(c,j) = 0.0_r8
                   else
-                     this%h2osoi_vol_col(c,j) = 0.15_r8
+                     this%h2osoi_vol_col(c,j) = 0.15_r8 * ratio
                   endif
                end do
             else if (lun%urbpoi(l)) then
@@ -359,7 +360,7 @@ contains
                   nlevs = nlevgrnd
                   do j = 1, nlevs
                      if (j <= nlevsoi) then
-                        this%h2osoi_vol_col(c,j) = 0.3_r8
+                        this%h2osoi_vol_col(c,j) = 0.3_r8 * ratio
                      else
                         this%h2osoi_vol_col(c,j) = 0.0_r8
                      end if
@@ -381,28 +382,32 @@ contains
                   if (j > nlevsoi) then
                      this%h2osoi_vol_col(c,j) = 0.0_r8
                   else
-                     this%h2osoi_vol_col(c,j) = 1.0_r8
+                     this%h2osoi_vol_col(c,j) = 1.0_r8 * ratio
                   endif
                end do
             else if (lun%itype(l) == istice_mec) then
                nlevs = nlevgrnd 
                do j = 1, nlevs
-                  this%h2osoi_vol_col(c,j) = 1.0_r8
+                  this%h2osoi_vol_col(c,j) = 1.0_r8 * ratio
                end do
+            else
+               write(iulog,*) 'water_state_type InitCold: unhandled landunit type ', lun%itype(l)
+               call endrun(msg = 'unhandled landunit type', &
+                    additional_msg = errMsg(sourcefile, __LINE__))
             endif
             do j = 1, nlevs
-               this%h2osoi_vol_col(c,j) = min(this%h2osoi_vol_col(c,j), watsat_col(c,j))
+               this%h2osoi_vol_col(c,j) = min(this%h2osoi_vol_col(c,j), watsat_col(c,j)*ratio)
                if (t_soisno_col(c,j) <= SHR_CONST_TKFRZ) then
-                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*denice*this%h2osoi_vol_col(c,j)
+                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*denice*this%h2osoi_vol_col(c,j) ! ratio already applied
                   this%h2osoi_liq_col(c,j) = 0._r8
                else
                   this%h2osoi_ice_col(c,j) = 0._r8
-                  this%h2osoi_liq_col(c,j) = col%dz(c,j)*denh2o*this%h2osoi_vol_col(c,j)
+                  this%h2osoi_liq_col(c,j) = col%dz(c,j)*denh2o*this%h2osoi_vol_col(c,j) ! ratio already applied
                endif
             end do
             do j = -nlevsno+1, 0
                if (j > snl(c)) then
-                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*250._r8
+                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*250._r8 * ratio
                   this%h2osoi_liq_col(c,j) = 0._r8
                end if
             end do
@@ -420,13 +425,13 @@ contains
          if (lun%lakpoi(l)) then
             do j = -nlevsno+1, 0
                if (j > snl(c)) then
-                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*bdsno
+                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*bdsno * ratio
                   this%h2osoi_liq_col(c,j) = 0._r8
                end if
             end do
             do j = 1,nlevgrnd
                if (j <= nlevsoi) then ! soil
-                  this%h2osoi_vol_col(c,j) = watsat_col(c,j)
+                  this%h2osoi_vol_col(c,j) = watsat_col(c,j) * ratio
                   this%h2osoi_liq_col(c,j) = spval
                   this%h2osoi_ice_col(c,j) = spval
                else                  ! bedrock
@@ -444,36 +449,51 @@ contains
          do j = 1,nlevgrnd
             if (this%h2osoi_vol_col(c,j) /= spval) then
                if (t_soisno_col(c,j) <= tfrz) then
-                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*denice*this%h2osoi_vol_col(c,j)
+                  this%h2osoi_ice_col(c,j) = col%dz(c,j)*denice*this%h2osoi_vol_col(c,j) ! ratio already applied
                   this%h2osoi_liq_col(c,j) = 0._r8
                else
                   this%h2osoi_ice_col(c,j) = 0._r8
-                  this%h2osoi_liq_col(c,j) = col%dz(c,j)*denh2o*this%h2osoi_vol_col(c,j)
+                  this%h2osoi_liq_col(c,j) = col%dz(c,j)*denh2o*this%h2osoi_vol_col(c,j) ! ratio already applied
                endif
             end if
          end do
       end do
 
 
-      this%wa_col(bounds%begc:bounds%endc)  = aquifer_water_baseline
-      do c = bounds%begc,bounds%endc
-         l = col%landunit(c)
-         if (.not. lun%lakpoi(l)) then  !not lake
-            if (lun%urbpoi(l)) then
-               if (col%itype(c) == icol_road_perv) then
-                  ! Note that the following hard-coded constant (on the next line)
-                  ! seems implicitly related to aquifer_water_baseline 
-                  this%wa_col(c)  = 4800._r8
+      this%aquifer_water_baseline = aquifer_water_baseline * ratio
+      this%wa_col(bounds%begc:bounds%endc)  = this%aquifer_water_baseline
+      if (use_aquifer_layer) then
+         ! NOTE(wjs, 2018-11-27) There is no fundamental reason why wa_col should be
+         ! initialized differently based on use_aquifer_layer, but we (Bill Sacks and Sean
+         ! Swenson) want to change the cold start initialization of wa_col to be
+         ! aquifer_water_baseline everywhere for use_aquifer_layer .false., and we aren't
+         ! sure of the implications of this change for use_aquifer_layer .true., so are
+         ! maintaining the old cold start initialization in the latter case.
+         do c = bounds%begc,bounds%endc
+            l = col%landunit(c)
+            if (.not. lun%lakpoi(l)) then  !not lake
+               if (lun%urbpoi(l)) then
+                  if (col%itype(c) == icol_road_perv) then
+                     ! Note that the following hard-coded constant (on the next line)
+                     ! seems implicitly related to aquifer_water_baseline 
+                     this%wa_col(c)  = 4800._r8 * ratio
+                  else
+                     this%wa_col(c)  = spval
+                  end if
                else
-                  this%wa_col(c)  = spval
+                  ! Note that the following hard-coded constant (on the next line) seems
+                  ! implicitly related to aquifer_water_baseline
+                  this%wa_col(c)  = 4000._r8 * ratio
                end if
-            else
-               ! Note that the following hard-coded constant (on the next line) seems
-               ! implicitly related to aquifer_water_baseline
-               this%wa_col(c)  = 4000._r8
             end if
-         end if
-      end do
+         end do
+      end if
+
+      ! Initialize dynbal_baseline_liq_col and dynbal_baseline_ice_col: for some columns,
+      ! these are set elsewhere in initialization, but we need them to be 0 for columns
+      ! for which they are not explicitly set.
+      this%dynbal_baseline_liq_col(bounds%begc:bounds%endc) = 0._r8
+      this%dynbal_baseline_ice_col(bounds%begc:bounds%endc) = 0._r8
 
     end associate
 
@@ -487,13 +507,12 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : denice, denh2o, pondmx, watmin, spval, nameg
+    use clm_varcon       , only : denice, denh2o, pondmx, watmin
     use landunit_varcon  , only : istcrop, istdlak, istsoil  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_time_manager , only : is_first_step
     use clm_varctl       , only : bound_h2osoi
-    use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
+    use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
     !
     ! !ARGUMENTS:
@@ -504,7 +523,7 @@ contains
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,l,j,nlevs
+    integer  :: p,c,l,j,nlevs
     logical  :: readvar
     real(r8) :: maxwatsat    ! maximum porosity    
     real(r8) :: excess       ! excess volumetric soil water
@@ -549,14 +568,6 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_ice_col)
          
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('H2OCAN'), &
-         xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name=this%info%lname('canopy water'), &
-         units='kg/m2', &
-         interpinic_flag='interp', readvar=readvar, data=this%h2ocan_patch)
-
-    call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('SNOCAN'), &
          xtype=ncd_double,  &
          dim1name='pft', &
@@ -580,6 +591,21 @@ contains
          long_name=this%info%lname('water in the unconfined aquifer'), units='mm', &
          interpinic_flag='interp', readvar=readvar, data=this%wa_col)
 
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('DYNBAL_BASELINE_LIQ'), &
+         xtype=ncd_double, &
+         dim1name='column', &
+         long_name=this%info%lname("baseline liquid water mass subtracted from each column's total water calculation"), &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_liq_col)
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('DYNBAL_BASELINE_ICE'), &
+         xtype=ncd_double, &
+         dim1name='column', &
+         long_name=this%info%lname("baseline ice mass subtracted from each column's total ice calculation"), &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
 
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then
