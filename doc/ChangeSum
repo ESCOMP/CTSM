@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev045    sacks 06/06/2019 Recalculate h2osno for the sake of SnowCapping
   ctsm1.0.dev044    sacks 06/06/2019 Make wetland snow resetting behavior more explicit
   ctsm1.0.dev043     erik 06/05/2019 Fix FUN bug (frac_ideal_C_use was backwards in regard to delta_CN), 
                                      and replace Ball-Berry mbbopt with the CLM4.5 version
