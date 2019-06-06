@@ -1017,7 +1017,12 @@ contains
                          int_snow_limited = min(int_snow(c), int_snow_max)
                          fsno_melt = 1. - (acos(2.*min(1._r8,wsum/int_snow_limited) - 1._r8)/rpi)**(n_melt(c))
                          
-                         ! ensure sum of snow and surface water fractions are <= 1 after update
+                         ! Ensure sum of snow and surface water fractions are <= 1 after update
+                         !
+                         ! Note that there is a similar adjustment in subroutine
+                         ! FracH2oSfc (related to frac_sno); these two should be kept in
+                         ! sync (e.g., if a 3rd fraction is ever added in one place, it
+                         ! needs to be added in the other place, too).
                          if ((fsno_melt + frac_h2osfc(c)) > 1._r8) then
                             fsno_melt = 1._r8 - frac_h2osfc(c)
                          end if

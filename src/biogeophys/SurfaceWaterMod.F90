@@ -115,7 +115,11 @@ contains
 
           frac_h2osfc_nosnow(c) = frac_h2osfc(c)
 
-          ! adjust fh2o, fsno when sum is greater than zero
+          ! Adjust fh2o, fsno when sum is greater than zero
+          !
+          ! Note that there is a similar adjustment in subroutine SnowCompaction (related
+          ! to fsno_melt); these two should be kept in sync (e.g., if a 3rd fraction is
+          ! ever added in one place, it needs to be added in the other place, too).
           if (frac_sno(c) > (1._r8 - frac_h2osfc(c)) .and. h2osno(c) > 0) then
 
              if (frac_h2osfc(c) > 0.01_r8) then             
