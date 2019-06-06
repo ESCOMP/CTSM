@@ -107,7 +107,6 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: p,fp,g,l,c,j,fc,jtop                            ! indices
     real(r8) :: dtime                                           ! land model time step (sec)
-    integer  :: newnode                                         ! flag when new snow node is set, (1=yes, 0=no)
     real(r8) :: dz_snowf                                        ! layer thickness rate change due to precipitation [mm/s]
     real(r8) :: bifall(bounds%begc:bounds%endc)                 ! bulk density of newly fallen dry snow [kg/m3]
     real(r8) :: fracsnow(bounds%begp:bounds%endp)               ! frac of precipitation that is snow
@@ -161,6 +160,7 @@ contains
          frac_iceold          =>  waterdiagnosticbulk_inst%frac_iceold_col       , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
          snow_depth           =>  waterdiagnosticbulk_inst%snow_depth_col        , & ! Output: [real(r8) (:)   ]  snow height (m)                         
          h2osno               =>  waterstatebulk_inst%h2osno_col            , & ! Output: [real(r8) (:)   ]  snow water (mm H2O)                     
+         h2osno_no_layers     => waterstatebulk_inst%h2osno_no_layers_col        , & ! Output: [real(r8) (:)   ]  snow that is not resolved into layers (kg/m2)
          snowice              =>  waterdiagnosticbulk_inst%snowice_col           , & ! Output: [real(r8) (:)   ]  average snow ice lens                   
          snowliq              =>  waterdiagnosticbulk_inst%snowliq_col           , & ! Output: [real(r8) (:)   ]  average snow liquid water               
          h2osoi_ice           =>  waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
@@ -245,14 +245,21 @@ contains
          dz_snowf = qflx_snow_grnd(c)/bifall(c)
          snow_depth(c) = snow_depth(c) + dz_snowf*dtime
          h2osno(c) = h2osno(c) + qflx_snow_grnd(c)*dtime  ! snow water equivalent (mm)
+         if (snl(c) == 0) then
+            h2osno_no_layers(c) = h2osno_no_layers(c) + qflx_snow_grnd(c)*dtime  ! snow water equivalent (mm)
+         else
+            ! The change of ice partial density of surface node due to precipitation.
+            ! Only ice part of snowfall is added here, the liquid part will be added
+            ! later.
+            h2osoi_ice(c,snl(c)+1) = h2osoi_ice(c,snl(c)+1)+dtime*qflx_snow_grnd(c)
+            dz(c,snl(c)+1) = dz(c,snl(c)+1)+dz_snowf*dtime
+         end if
 
          ! When the snow accumulation exceeds 40 mm, initialize snow layer
          ! Currently, the water temperature for the precipitation is simply set
          ! as the surface air temperature
 
-         newnode = 0    ! flag for when snow node will be initialized
          if (snl(c) == 0 .and. qflx_snow_grnd(c) > 0.0_r8 .and. snow_depth(c) >= 0.01_r8 + lsadz) then
-            newnode = 1
             snl(c) = -1
             dz(c,0) = snow_depth(c)                       ! meter
             z(c,0) = -0.5_r8*dz(c,0)
@@ -260,21 +267,13 @@ contains
             t_soisno(c,0) = min(tfrz, forc_t(c))      ! K
             h2osoi_ice(c,0) = h2osno(c)               ! kg/m2
             h2osoi_liq(c,0) = 0._r8                   ! kg/m2
+            h2osno_no_layers(c) = 0._r8
             frac_iceold(c,0) = 1._r8
 
              ! intitialize SNICAR variables for fresh snow:
              call aerosol_inst%Reset(column=c)
              call waterdiagnosticbulk_inst%ResetBulk(column=c)
 
-         end if
-
-         ! The change of ice partial density of surface node due to precipitation.
-         ! Only ice part of snowfall is added here, the liquid part will be added
-         ! later.
-
-         if (snl(c) < 0 .and. newnode == 0) then
-            h2osoi_ice(c,snl(c)+1) = h2osoi_ice(c,snl(c)+1)+dtime*qflx_snow_grnd(c)
-            dz(c,snl(c)+1) = dz(c,snl(c)+1)+dz_snowf*dtime
          end if
 
       end do
@@ -339,6 +338,7 @@ contains
 
             h2osno_temp = h2osno(c)
             h2osno(c) = h2osno(c) + (-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
+            h2osno_no_layers(c) = h2osno_no_layers(c) + (-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
             if (h2osno_temp > 0._r8) then
                snow_depth(c) = snow_depth(c) * h2osno(c) / h2osno_temp
             else
@@ -346,6 +346,7 @@ contains
             end if
 
             h2osno(c) = max(h2osno(c), 0._r8)
+            h2osno_no_layers(c) = max(h2osno_no_layers(c), 0._r8)
          end if
       end do
 
@@ -481,6 +482,7 @@ contains
                qflx_snow_drain(c)  = qflx_snow_drain(c) + h2osno(c)/dtime
                snl(c)              = 0
                h2osno(c)           = 0._r8
+               h2osno_no_layers(c) = 0._r8
                snow_depth(c)       = 0._r8
                ! Rest of snow layer book-keeping will be done below.
             else
@@ -548,6 +550,7 @@ contains
                qflx_snow_drain(c) = qflx_snow_drain(c) + h2osno(c)/dtime
 
                h2osno(c) = 0._r8
+               h2osno_no_layers(c) = 0._r8
                snow_depth(c) = 0._r8
                snl(c) = 0
                ! The rest of the bookkeeping for the removed snow will be done below.

@@ -1299,6 +1299,7 @@ contains
 
           snow_depth      => waterdiagnosticbulk_inst%snow_depth_col     , & ! Output: [real(r8)  (:)   ] snow height (m)                         
           h2osno          => waterstatebulk_inst%h2osno_col         , & ! Output: [real(r8)  (:)   ] snow water (mm H2O)                     
+          h2osno_no_layers => waterstatebulk_inst%h2osno_no_layers_col , & ! Output: [real(r8)  (:)   ] snow water that is not resolved into layers (mm H2O)
           h2osoi_liq      => waterstatebulk_inst%h2osoi_liq_col     , & ! Output: [real(r8)  (:,:) ] liquid water (kg/m2)                  
           h2osoi_ice      => waterstatebulk_inst%h2osoi_ice_col     , & ! Output: [real(r8)  (:,:) ] ice lens (kg/m2)                      
 
@@ -1357,12 +1358,14 @@ contains
              t_lake(c,1) = tfrz + heatrem/(cv_lake(c,1))
              snow_depth(c) = snow_depth(c)*(1._r8 - melt/h2osno(c))
              h2osno(c) = h2osno(c) - melt
+             h2osno_no_layers(c) = h2osno_no_layers(c) - melt
              lhabs(c) = lhabs(c) + melt*hfus
              qflx_snomelt(c)   = qflx_snomelt(c)   + melt/dtime
              ! no snow layers, so qflx_snomelt_lyr is not set
              qflx_snow_drain(c) = qflx_snow_drain(c) + melt/dtime
              ! Prevent tiny residuals
              if (h2osno(c) < smallnumber) h2osno(c) = 0._r8
+             if (h2osno_no_layers(c) < smallnumber) h2osno_no_layers(c) = 0._r8
              if (snow_depth(c) < smallnumber) snow_depth(c) = 0._r8
           end if
        end do

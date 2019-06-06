@@ -868,6 +868,7 @@ contains
          frac_sno                  =>    waterdiagnosticbulk_inst%frac_sno_eff_col      , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
          frac_h2osfc               =>    waterdiagnosticbulk_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
          h2osno                    =>    waterstatebulk_inst%h2osno_col            , & ! Input:  [real(r8) (:)   ] snow water (mm H2O)                     
+         h2osno_no_layers          =>    waterstatebulk_inst%h2osno_no_layers_col  , & ! Output: [real(r8) (:)   ] snow that is not resolved into layers (mm H2O)
          h2osoi_ice                =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Input:  [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
          h2osfc                    =>    waterstatebulk_inst%h2osfc_col            , & ! Output: [real(r8) (:)   ] surface water (mm)                      
          int_snow                  =>    waterstatebulk_inst%int_snow_col          , & ! Output: [real(r8) (:)   ] integrated snowfall [mm]               
@@ -926,8 +927,11 @@ contains
                ! add ice to snow column
                h2osno(c) = h2osno(c) - xm(c)
                int_snow(c) = int_snow(c) - xm(c)
-               if(snl(c) < 0) h2osoi_ice(c,0) = h2osoi_ice(c,0) - xm(c)
-
+               if (snl(c) == 0) then
+                  h2osno_no_layers(c) = h2osno_no_layers(c) - xm(c)
+               else
+                  h2osoi_ice(c,0) = h2osoi_ice(c,0) - xm(c)
+               end if
 
                ! remove ice from h2osfc
                h2osfc(c) = h2osfc(c) + xm(c)
@@ -971,12 +975,16 @@ contains
                rho_avg=(h2osno(c)*rho_avg + h2osfc(c)*denice)/(h2osno(c) + h2osfc(c))
                h2osno(c) = h2osno(c) + h2osfc(c)
                int_snow(c) = int_snow(c) + h2osfc(c)
+               if (snl(c) == 0) then
+                  h2osno_no_layers(c) = h2osno_no_layers(c) + h2osfc(c)
+               else
+                  h2osoi_ice(c,0) = h2osoi_ice(c,0) + h2osfc(c)
+               end if
 
                qflx_h2osfc_to_ice(c) = h2osfc(c)/dtime
 
                ! excess energy is used to cool ice layer
-               if(snl(c) < 0) h2osoi_ice(c,0) = h2osoi_ice(c,0) + h2osfc(c)
-
+               !
                ! NOTE: should compute and then use the heat capacity of frozen h2osfc layer
                !       rather than using heat capacity of the liquid layer. But this causes 
                !       balance check errors as it doesn't know about it.
@@ -1103,6 +1111,7 @@ contains
          frac_h2osfc      =>    waterdiagnosticbulk_inst%frac_h2osfc_col     , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
          snow_depth       =>    waterdiagnosticbulk_inst%snow_depth_col      , & ! Input:  [real(r8) (:)   ] snow height (m)                         
          h2osno           =>    waterstatebulk_inst%h2osno_col          , & ! Output: [real(r8) (:)   ] snow water (mm H2O)                     
+         h2osno_no_layers =>    waterstatebulk_inst%h2osno_no_layers_col     , & ! Output: [real(r8) (:)   ] snow not resolved into layers (mm H2O)
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2) (new)             
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
          
@@ -1301,6 +1310,7 @@ contains
                         if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8 .AND. xm(c,j) > 0._r8) then
                            temp1 = h2osno(c)                           ! kg/m2
                            h2osno(c) = max(0._r8,temp1-xm(c,j))
+                           h2osno_no_layers(c) = max(0._r8,temp1-xm(c,j))
                            propor = h2osno(c)/temp1
                            snow_depth(c) = propor * snow_depth(c)
                            heatr = hm(c,j) - hfus*(temp1-h2osno(c))/dtime   ! W/m2

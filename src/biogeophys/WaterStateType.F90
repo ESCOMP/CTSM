@@ -15,7 +15,7 @@ module WaterStateType
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN
   use clm_varctl     , only : use_bedrock, iulog
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
-  use clm_varcon     , only : spval
+  use clm_varcon     , only : spval, namec
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use WaterInfoBaseType, only : water_info_base_type
@@ -32,6 +32,7 @@ module WaterStateType
      class(water_info_base_type), pointer :: info
 
      real(r8), pointer :: h2osno_col             (:)   ! col snow water (mm H2O)
+     real(r8), pointer :: h2osno_no_layers_col   (:)   ! col snow that is not resolved into layers; this is non-zero only if there is too little snow for there to be explicit snow layers (mm H2O)
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
@@ -53,9 +54,11 @@ module WaterStateType
 
      procedure, public  :: Init
      procedure, public  :: Restart
+     procedure, public  :: CalculateTotalH2osno
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
+     procedure, private :: CheckSnowConsistency
 
   end type waterstate_type
 
@@ -110,6 +113,9 @@ contains
     !------------------------------------------------------------------------
 
     call AllocateVar1d(var = this%h2osno_col, name = 'h2osno_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%h2osno_no_layers_col, name = 'h2osno_no_layers_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar2d(var = this%h2osoi_vol_col, name = 'h2osoi_vol_col', &
@@ -168,9 +174,6 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
-
-    ! h2osno also includes snow that is part of the soil column (an 
-    ! initial snow layer is only created if h2osno > 10mm). 
 
     data2dptr => this%h2osoi_liq_col(:,-nlevsno+1:0)
     call hist_addfld2d ( &
@@ -405,6 +408,9 @@ contains
                   this%h2osoi_liq_col(c,j) = col%dz(c,j)*denh2o*this%h2osoi_vol_col(c,j) ! ratio already applied
                endif
             end do
+            if (snl(c) == 0) then
+               this%h2osno_no_layers_col(c) = h2osno_input_col(c) * ratio
+            end if
             do j = -nlevsno+1, 0
                if (j > snl(c)) then
                   this%h2osoi_ice_col(c,j) = col%dz(c,j)*250._r8 * ratio
@@ -423,6 +429,9 @@ contains
          l = col%landunit(c)
 
          if (lun%lakpoi(l)) then
+            if (snl(c) == 0) then
+               this%h2osno_no_layers_col(c) = h2osno_input_col(c) * ratio
+            end if
             do j = -nlevsno+1, 0
                if (j > snl(c)) then
                   this%h2osoi_ice_col(c,j) = col%dz(c,j)*bdsno * ratio
@@ -552,6 +561,23 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%h2osno_col)
 
     call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('H2OSNO_NO_LAYERS'), &
+         xtype=ncd_double,  &
+         dim1name='column', &
+         long_name=this%info%lname('snow that is not resolved into layers'), &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%h2osno_no_layers_col)
+    ! FIXME(wjs, 2019-06-06) This probably isn't what we want in the end for backwards
+    ! compatibility.
+    if (flag == 'read' .and. .not. readvar) then
+       do c = bounds%begc, bounds%endc
+          if (col%snl(c) == 0) then
+             this%h2osno_no_layers_col(bounds%begc:bounds%endc) = this%h2osno_col(bounds%begc:bounds%endc)
+          end if
+       end do
+    end if
+
+    call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('H2OSOI_LIQ'), &
          xtype=ncd_double,  &
          dim1name='column', dim2name='levtot', switchdim=.true., &
@@ -670,5 +696,95 @@ contains
     endif   ! end if if-read flag
 
   end subroutine Restart
+
+  !-----------------------------------------------------------------------
+  subroutine CalculateTotalH2osno(this, &
+       bounds, num_c, filter_c, &
+       h2osno_total)
+    !
+    ! !DESCRIPTION:
+    ! Calculate h2osno_total over the given column filter
+    !
+    ! If running in debug mode, also assert that we don't have any unresolved snow if snl
+    ! < 0, and that we don't have any resolved snow if snl == 0.
+    !
+    ! !ARGUMENTS:
+    class(waterstate_type) , intent(in)    :: this
+    type(bounds_type)      , intent(in)    :: bounds
+    integer                , intent(in)    :: num_c                        ! number of columns in filter
+    integer                , intent(in)    :: filter_c(:)                  ! filter for columns to operate over
+    real(r8)               , intent(inout) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: j
+
+    character(len=*), parameter :: subname = 'CalculateTotalH2osno'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(h2osno_total, 1) == bounds%endc), errMsg(sourcefile, __LINE__))
+
+#ifndef NDEBUG
+    call this%CheckSnowConsistency(num_c, filter_c)
+#endif
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+       h2osno_total(c) = this%h2osno_no_layers_col(c)
+
+       do j = col%snl(c)+1, 0
+          h2osno_total(c) = &
+               h2osno_total(c) + &
+               this%h2osoi_ice_col(c,j) + &
+               this%h2osoi_liq_col(c,j)
+       end do
+    end do
+
+  end subroutine CalculateTotalH2osno
+
+  !-----------------------------------------------------------------------
+  subroutine CheckSnowConsistency(this, num_c, filter_c)
+    !
+    ! !DESCRIPTION:
+    ! Make sure we only have unresolved snow where we should, and that we only have
+    ! resolved snow where we should.
+    !
+    ! !ARGUMENTS:
+    class(waterstate_type) , intent(in) :: this
+    integer                , intent(in) :: num_c       ! number of columns in filter
+    integer                , intent(in) :: filter_c(:) ! filter for columns to operate over
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: j
+
+    character(len=*), parameter :: subname = 'CheckSnowConsistency'
+    !-----------------------------------------------------------------------
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+       if (col%snl(c) < 0) then
+          if (this%h2osno_no_layers_col(c) /= 0._r8) then
+             write(iulog,*) subname//' ERROR: col has snow layers but non-zero h2osno_no_layers'
+             write(iulog,*) 'c, snl, h2osno_no_layers = ', c, col%snl(c), &
+                  this%h2osno_no_layers_col(c)
+             call endrun(decomp_index=c, clmlevel=namec, &
+                  msg = subname//' ERROR: col has snow layers but non-zero h2osno_no_layers')
+          end if
+       end if
+
+       ! FIXME(wjs, 2019-06-06) Uncomment this
+       ! do j = -nlevsno+1, col%snl(c)
+       !    if (this%h2osoi_ice_col(c,j) /= 0._r8 .or. this%h2osoi_liq_col(c,j) /= 0._r8) then
+       !       write(iulog,*) subname//' ERROR: col has non-zero h2osoi_ice or h2osoi_liq outside resolved snow layers'
+       !       write(iulog,*) 'c, j, snl, h2osoi_ice, h2osoi_liq = ', c, j, col%snl(c), &
+       !            this%h2osoi_ice_col(c,j), this%h2osoi_liq_col(c,j)
+       !       call endrun(decomp_index=c, clmlevel=namec, &
+       !            msg = subname//' ERROR: col has non-zero h2osoi_ice or h2osoi_liq outside resolved snow layers')
+       !    end if
+       ! end do
+    end do
+
+  end subroutine CheckSnowConsistency
 
 end module WaterStateType
