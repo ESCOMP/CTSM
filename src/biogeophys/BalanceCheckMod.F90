@@ -303,7 +303,7 @@ contains
           endwb                   =>    waterbalance_inst%endwb_col               , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
           snow_sources            =>    waterbalance_inst%snow_sources_col         , & ! Output: [real(r8) (:)   ]  snow sources (mm H2O /s)
           snow_sinks              =>    waterbalance_inst%snow_sinks_col           , & ! Output: [real(r8) (:)   ]  snow sinks (mm H2O /s)
-          qflx_rain_grnd_col      =>    waterflux_inst%qflx_rain_grnd_col       , & ! Input:  [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
+          qflx_liq_grnd_col       =>    waterflux_inst%qflx_liq_grnd_col        , & ! Input:  [real(r8) (:)   ]  liquid on ground after interception (mm H2O/s) [+]
           qflx_snow_grnd_col      =>    waterflux_inst%qflx_snow_grnd_col       , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
           qflx_snwcp_liq          =>    waterflux_inst%qflx_snwcp_liq_col       , & ! Input:  [real(r8) (:)   ]  excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
           qflx_snwcp_ice          =>    waterflux_inst%qflx_snwcp_ice_col       , & ! Input:  [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
@@ -314,7 +314,7 @@ contains
           qflx_sub_snow           =>    waterflux_inst%qflx_sub_snow_col        , & ! Input:  [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
           qflx_evap_grnd          =>    waterflux_inst%qflx_evap_grnd_col       , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
           qflx_dew_grnd           =>    waterflux_inst%qflx_dew_grnd_col        , & ! Input:  [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
-          qflx_prec_grnd          =>    waterflux_inst%qflx_prec_grnd_col       , & ! Input:  [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
+          qflx_prec_grnd          =>    waterdiagnosticbulk_inst%qflx_prec_grnd_col, & ! Input:  [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
           qflx_snow_h2osfc        =>    waterflux_inst%qflx_snow_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  snow falling on surface water (mm/s)
           qflx_h2osfc_to_ice      =>    waterflux_inst%qflx_h2osfc_to_ice_col   , & ! Input:  [real(r8) (:)   ]  conversion of h2osfc to ice             
           qflx_drain_perched      =>    waterflux_inst%qflx_drain_perched_col   , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
@@ -489,7 +489,7 @@ contains
 
                 if (lun%itype(l) == istdlak) then 
                    snow_sources(c) = qflx_snow_grnd_col(c) &
-                        + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
+                        + frac_sno_eff(c) * (qflx_liq_grnd_col(c) &
                         +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) 
                    snow_sinks(c)   = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c) ) &
                         + qflx_snwcp_ice(c) + qflx_snwcp_liq(c)  &
@@ -501,7 +501,7 @@ contains
                       lun%itype(l) == istcrop .or. lun%itype(l) == istwet .or. &
                       lun%itype(l) == istice_mec) then
                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
-                          + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
+                          + frac_sno_eff(c) * (qflx_liq_grnd_col(c) &
                           +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) + qflx_h2osfc_to_ice(c)
                    snow_sinks(c) = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c)) &
                           + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
@@ -546,7 +546,7 @@ contains
                  write(iulog,*)'snow_sinks         = ',snow_sinks(indexc)*dtime
                  write(iulog,*)'qflx_prec_grnd     = ',qflx_prec_grnd(indexc)*dtime
                  write(iulog,*)'qflx_snow_grnd_col = ',qflx_snow_grnd_col(indexc)*dtime
-                 write(iulog,*)'qflx_rain_grnd_col = ',qflx_rain_grnd_col(indexc)*dtime
+                 write(iulog,*)'qflx_liq_grnd_col  = ',qflx_liq_grnd_col(indexc)*dtime
                  write(iulog,*)'qflx_sub_snow      = ',qflx_sub_snow(indexc)*dtime
                  write(iulog,*)'qflx_snow_drain    = ',qflx_snow_drain(indexc)*dtime
                  write(iulog,*)'qflx_evap_grnd     = ',qflx_evap_grnd(indexc)*dtime
