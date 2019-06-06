@@ -724,11 +724,11 @@ contains
                          int_snow_limited = min(int_snow(c), int_snow_max)
                          fsno_melt = 1. - (acos(2.*min(1._r8,wsum/int_snow_limited) - 1._r8)/rpi)**(n_melt(c))
                          
-! ensure sum of snow and surface water fractions are <= 1 after update
-                         if((fsno_melt + frac_h2osfc(c)) > 1._r8) then
+                         ! ensure sum of snow and surface water fractions are <= 1 after update
+                         if ((fsno_melt + frac_h2osfc(c)) > 1._r8) then
                             fsno_melt = 1._r8 - frac_h2osfc(c)
-                         endif
-                         
+                         end if
+
                          ddz3 = ddz3 - max(0._r8,(fsno_melt - frac_sno(c))/frac_sno(c))
                       endif
                       ddz3 = -1._r8/dtime * ddz3
