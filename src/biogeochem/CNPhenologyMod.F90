@@ -2897,7 +2897,7 @@ contains
     ! Explicitly checking use_crop is probably unnecessary here (because presumably
     ! use_grainproduct is only true if use_crop is true), but we do it for safety because
     ! the grain*_to_food_patch fluxes are not set if use_crop is false.
-    if (use_crop .and. use_grainproduct) then
+    if (use_crop .and. harvest_residue) then !use_grainproduct removed
        do fp = 1, num_soilp
           p = filter_soilp(fp)
           cnveg_carbonflux_inst%livestemc_to_cropprodc_patch(p) = &
@@ -2955,7 +2955,7 @@ contains
     ! Explicitly checking use_crop is probably unnecessary here (because presumably
     ! use_grainproduct is only true if use_crop is true), but we do it for safety because
     ! the grain*_to_food_patch fluxes are not set if use_crop is false.
-      if (use_crop .and. use_grainproduct) then
+      if (use_crop .and. harvest_residue) then !use_grainproduct
         do fp = 1, num_soilp
           p = filter_soilp(fp)
             if(ivt(p) >= npcropmin) then
@@ -3053,7 +3053,7 @@ contains
                if ( pi <=  col%npatches(c) ) then
                   p = col%patchi(c) + pi - 1
                   if (patch%active(p)) then
-                    if((ivt(p)<npcropmin) .or. (.not. harvest_residue)) then
+                    if((ivt(p)<npcropmin) .or. (.not. harvest_residue)) then ! .not use_grainproduct
                      ! leaf litter carbon fluxes
                      phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
                           + leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
@@ -3092,22 +3092,24 @@ contains
                      ! also for simplicity I've put "food" into the litter pools
 
                      !if (ivt(p) >= npcropmin) then ! add livestemc to litter
-                     if ( (ivt(p) >= npcropmin) .and. (.not. harvest_residue)) then !added use_livestemproduct MWGraham
-                        ! stem litter carbon fluxes
-                        phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                             + livestemc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                             + livestemc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                             + livestemc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                     if (ivt(p) >= npcropmin) then ! .and. (.not. harvest_residue)) then !previously use_grainproduct !added use_livestemproduct MWGraham
+                        if (.not. harvest_residue) then
+                         ! stem litter carbon fluxes
+                         phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
+                              + livestemc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                         phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
+                              + livestemc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                         phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
+                              + livestemc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
 
-                        ! stem litter nitrogen fluxes
-                        phenology_n_to_litr_met_n(c,j) = phenology_n_to_litr_met_n(c,j) &
-                             + livestemn_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_n_to_litr_cel_n(c,j) = phenology_n_to_litr_cel_n(c,j) &
-                             + livestemn_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_n_to_litr_lig_n(c,j) = phenology_n_to_litr_lig_n(c,j) &
-                             + livestemn_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                         ! stem litter nitrogen fluxes
+                         phenology_n_to_litr_met_n(c,j) = phenology_n_to_litr_met_n(c,j) &
+                              + livestemn_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                         phenology_n_to_litr_cel_n(c,j) = phenology_n_to_litr_cel_n(c,j) &
+                              + livestemn_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                         phenology_n_to_litr_lig_n(c,j) = phenology_n_to_litr_lig_n(c,j) &
+                              + livestemn_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                        end if
 
                         if (.not. use_grainproduct) then
                          ! grain litter carbon fluxes
