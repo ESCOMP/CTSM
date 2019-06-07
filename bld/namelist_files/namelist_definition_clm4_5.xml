@@ -912,9 +912,8 @@ Turn on extra output for the matrix solution
 
 <entry id="isspinup" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
-Turn on semi-analytic spinup soluiton for the CN/Soil matrix
+Turn on semi-analytic spinup solution for the CN/Soil matrix
 </entry>
-
 
 <!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
