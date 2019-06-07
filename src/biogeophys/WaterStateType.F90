@@ -574,7 +574,7 @@ contains
     if (flag == 'read' .and. .not. is_restart()) then
        do c = bounds%begc, bounds%endc
           if (col%snl(c) < 0) then
-             this%h2osno_no_layers_col(bounds%begc:bounds%endc) = 0._r8
+             this%h2osno_no_layers_col(c) = 0._r8
           end if
        end do
     end if
