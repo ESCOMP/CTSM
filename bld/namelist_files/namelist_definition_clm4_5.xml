@@ -910,6 +910,11 @@ Turn on the Matrix solution for soil biogeochemistry
 Turn on extra output for the matrix solution
 </entry>
 
+<entry id="isspinup" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Turn on semi-analytic spinup soluiton for the CN/Soil matrix
+</entry>
+
 
 <!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
