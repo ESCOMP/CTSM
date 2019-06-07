@@ -370,116 +370,113 @@ module CNVegCarbonFluxType
      real(r8), pointer :: leafc_change_patch                        (:)     ! Total used C from leaves        (gC/m2/s)
      real(r8), pointer :: soilc_change_patch                        (:)     ! Total used C from soil          (gC/m2/s)
      ! Matrix for C flux index
-     real(r8), pointer :: matrix_Cinput_patch          (:)      ! U-matrix for carbon input
-     real(r8), pointer :: matrix_C13input_patch        (:)      ! U-matrix for carbon input
-     real(r8), pointer :: matrix_C14input_patch        (:)      ! U-matrix for carbon input
-     real(r8), pointer :: matrix_alloc_patch          (:,:)     ! B-matrix for carbon
+     real(r8), pointer :: matrix_Cinput_patch                  (:)      ! U-matrix for carbon input
+     real(r8), pointer :: matrix_C13input_patch                (:)      ! U-matrix for C13 input
+     real(r8), pointer :: matrix_C14input_patch                (:)      ! U-matrix for C14 input
+     real(r8), pointer :: matrix_alloc_patch                   (:,:)    ! B-matrix for carbon
  
-     real(r8), pointer :: matrix_phtransfer_patch              (:,:)   ! A-matrix_phenology
-     real(r8), pointer :: matrix_phturnover_patch              (:,:)   ! C-matrix_phenology
-     integer,  pointer :: matrix_phtransfer_doner_patch        (:)   ! A-matrix_phenology
-     integer,  pointer :: matrix_phtransfer_receiver_patch     (:)   ! A-matrix_phenology
-     integer,  pointer :: actpatch_fire                        (:)   ! A-matrix_phenology
-     integer           :: num_actpatch_fire                           ! A-matrix_phenology
+     real(r8), pointer :: matrix_phtransfer_patch              (:,:)    ! A-matrix_phenology
+     real(r8), pointer :: matrix_phturnover_patch              (:,:)    ! C-matrix_phenology
+     integer,  pointer :: matrix_phtransfer_doner_patch        (:)      ! A-matrix_phenology
+     integer,  pointer :: matrix_phtransfer_receiver_patch     (:)      ! A-matrix_phenology
+     integer,  pointer :: actpatch_fire                        (:)      ! A-matrix_phenology
+     integer           :: num_actpatch_fire                             ! A-matrix_phenology
   
-     real(r8), pointer :: matrix_gmtransfer_patch     (:,:)   ! A-matrix_gap mortality
-     real(r8), pointer :: matrix_gmturnover_patch     (:,:)   ! C-matrix_gap mortality
-     integer,  pointer :: matrix_gmtransfer_doner_patch        (:)   ! A-matrix_gap mortality
-     integer,  pointer :: matrix_gmtransfer_receiver_patch     (:)   ! A-matrix_gap mortality
+     real(r8), pointer :: matrix_gmtransfer_patch              (:,:)    ! A-matrix_gap mortality
+     real(r8), pointer :: matrix_gmturnover_patch              (:,:)    ! C-matrix_gap mortality
+     integer,  pointer :: matrix_gmtransfer_doner_patch        (:)      ! A-matrix_gap mortality
+     integer,  pointer :: matrix_gmtransfer_receiver_patch     (:)      ! A-matrix_gap mortality
   
-     real(r8), pointer :: matrix_fitransfer_patch     (:,:)   ! A-matrix_fire
-     real(r8), pointer :: matrix_fiturnover_patch     (:,:)   ! C-matrix_fire	 
-     integer,  pointer :: matrix_fitransfer_doner_patch        (:)   ! A-matrix_fire
-     integer,  pointer :: matrix_fitransfer_receiver_patch     (:)   ! A-matrix_fire
+     real(r8), pointer :: matrix_fitransfer_patch              (:,:)    ! A-matrix_fire
+     real(r8), pointer :: matrix_fiturnover_patch              (:,:)    ! C-matrix_fire	 
+     integer,  pointer :: matrix_fitransfer_doner_patch        (:)      ! A-matrix_fire
+     integer,  pointer :: matrix_fitransfer_receiver_patch     (:)      ! A-matrix_fire
  
 !     real(r8), pointer :: soilc_change_col                          (:)     ! Total used C from soil          (gC/m2/s)
 !   matrix variables 
-     integer ileafst_to_ileafxf_ph
-     integer ileafxf_to_ileaf_ph  
-     integer ifrootst_to_ifrootxf_ph
-     integer ifrootxf_to_ifroot_ph  
-     integer ilivestemst_to_ilivestemxf_ph
-     integer ilivestemxf_to_ilivestem_ph  
-     integer ideadstemst_to_ideadstemxf_ph
-     integer ideadstemxf_to_ideadstem_ph  
-     integer ilivecrootst_to_ilivecrootxf_ph
-     integer ilivecrootxf_to_ilivecroot_ph  
-     integer ideadcrootst_to_ideadcrootxf_ph
-     integer ideadcrootxf_to_ideadcroot_ph  
-     integer ilivestem_to_ideadstem_ph  
-     integer ilivecroot_to_ideadcroot_ph  
-     integer ileaf_to_iout_ph  
-     integer ifroot_to_iout_ph  
-     integer ilivestem_to_iout_ph  
-     integer igrain_to_iout_ph  
-     integer ileaf_to_iout_gm
-     integer ileafst_to_iout_gm
-     integer ileafxf_to_iout_gm
-     integer ifroot_to_iout_gm
-     integer ifrootst_to_iout_gm
-     integer ifrootxf_to_iout_gm
-     integer ilivestem_to_iout_gm
-     integer ilivestemst_to_iout_gm
-     integer ilivestemxf_to_iout_gm
-     integer ideadstem_to_iout_gm
-     integer ideadstemst_to_iout_gm
-     integer ideadstemxf_to_iout_gm
-     integer ilivecroot_to_iout_gm
-     integer ilivecrootst_to_iout_gm
-     integer ilivecrootxf_to_iout_gm
-     integer ideadcroot_to_iout_gm
-     integer ideadcrootst_to_iout_gm
-     integer ideadcrootxf_to_iout_gm
-     integer ileaf_to_iout_fi
-     integer ileafst_to_iout_fi
-     integer ileafxf_to_iout_fi
-     integer ifroot_to_iout_fi
-     integer ifrootst_to_iout_fi
-     integer ifrootxf_to_iout_fi
-     integer ilivestem_to_iout_fi
-     integer ilivestemst_to_iout_fi
-     integer ilivestemxf_to_iout_fi
-     integer ideadstem_to_iout_fi
-     integer ideadstemst_to_iout_fi
-     integer ideadstemxf_to_iout_fi
-     integer ilivecroot_to_iout_fi
-     integer ilivecrootst_to_iout_fi
-     integer ilivecrootxf_to_iout_fi
-     integer ideadcroot_to_iout_fi
-     integer ideadcrootst_to_iout_fi
-     integer ideadcrootxf_to_iout_fi
-     integer ilivestem_to_ideadstem_fi
-     integer ilivecroot_to_ideadcroot_fi
+     integer ileafst_to_ileafxf_ph                    ! Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+     integer ileafxf_to_ileaf_ph                      ! Index of phenology related C transfer from leaf transfer pool to leaf pool
+     integer ifrootst_to_ifrootxf_ph                  ! Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+     integer ifrootxf_to_ifroot_ph                    ! Index of phenology related C transfer from fine root transfer pool to fine root pool
+     integer ilivestemst_to_ilivestemxf_ph            ! Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+     integer ilivestemxf_to_ilivestem_ph              ! Index of phenology related C transfer from live stem transfer pool to live stem pool
+     integer ideadstemst_to_ideadstemxf_ph            ! Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+     integer ideadstemxf_to_ideadstem_ph              ! Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+     integer ilivecrootst_to_ilivecrootxf_ph          ! Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+     integer ilivecrootxf_to_ilivecroot_ph            ! Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+     integer ideadcrootst_to_ideadcrootxf_ph          ! Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+     integer ideadcrootxf_to_ideadcroot_ph            ! Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+     integer ilivestem_to_ideadstem_ph                ! Index of phenology related C transfer from live stem pool to dead stem pool
+     integer ilivecroot_to_ideadcroot_ph              ! Index of phenology related C transfer from live coarse root pool to dead coarse root pool
+     integer ileaf_to_iout_ph                         ! Index of phenology related C transfer from leaf pool to outside of vegetation pools
+     integer ifroot_to_iout_ph                        ! Index of phenology related C transfer from fine root pool to outside of vegetation pools
+     integer ilivestem_to_iout_ph                     ! Index of phenology related C transfer from live stem pool to outside of vegetation pools 
+     integer igrain_to_iout_ph                        ! Index of phenology related C transfer from grain pool to outside of vegetation pools
+     integer ileaf_to_iout_gm                         ! Index of gap mortality related C transfer from leaf pool to outside of vegetation pools
+     integer ileafst_to_iout_gm                       ! Index of gap mortality related C transfer from leaf storage pool to outside of vegetation pools               
+     integer ileafxf_to_iout_gm                       ! Index of gap mortality related C transfer from leaf transfer pool to outside of vegetation pools
+     integer ifroot_to_iout_gm                        ! Index of gap mortality related C transfer from fine root pool to outside of vegetation pools
+     integer ifrootst_to_iout_gm                      ! Index of gap mortality related C transfer from fine root storage pool to outside of vegetation pools
+     integer ifrootxf_to_iout_gm                      ! Index of gap mortality related C transfer from fine root transfer pool to outside of vegetation pools
+     integer ilivestem_to_iout_gm                     ! Index of gap mortality related C transfer from live stem pool to outside of vegetation pools
+     integer ilivestemst_to_iout_gm                   ! Index of gap mortality related C transfer from live stem storage pool to outside of vegetation pools
+     integer ilivestemxf_to_iout_gm                   ! Index of gap mortality related C transfer from live stem transfer pool to outside of vegetation pools
+     integer ideadstem_to_iout_gm                     ! Index of gap mortality related C transfer from dead stem pool to outside of vegetation pools
+     integer ideadstemst_to_iout_gm                   ! Index of gap mortality related C transfer from dead stem storage pool to outside of vegetation pools
+     integer ideadstemxf_to_iout_gm                   ! Index of gap mortality related C transfer from dead stem transfer pool to outside of vegetation pools
+     integer ilivecroot_to_iout_gm                    ! Index of gap mortality related C transfer from live coarse root pool to outside of vegetation pools
+     integer ilivecrootst_to_iout_gm                  ! Index of gap mortality related C transfer from live coarse root storage pool to outside of vegetation pools
+     integer ilivecrootxf_to_iout_gm                  ! Index of gap mortality related C transfer from live coarse root transfer pool to outside of vegetation pools
+     integer ideadcroot_to_iout_gm                    ! Index of gap mortality related C transfer from dead coarse root pool to outside of vegetation pools
+     integer ideadcrootst_to_iout_gm                  ! Index of gap mortality related C transfer from dead coarse root storage pool to outside of vegetation pools
+     integer ideadcrootxf_to_iout_gm                  ! Index of gap mortality related C transfer from dead coarse root transfer pool to outside of vegetation pools
+     integer ileaf_to_iout_fi                         ! Index of fire related C transfer from leaf pool to outside of vegetation pools
+     integer ileafst_to_iout_fi                       ! Index of fire related C transfer from leaf storage pool to outside of vegetation pools
+     integer ileafxf_to_iout_fi                       ! Index of fire related C transfer from leaf transfer pool to outside of vegetation pools
+     integer ifroot_to_iout_fi                        ! Index of fire related C transfer from fine root pool to outside of vegetation pools
+     integer ifrootst_to_iout_fi                      ! Index of fire related C transfer from fine root storage pool to outside of vegetation pools
+     integer ifrootxf_to_iout_fi                      ! Index of fire related C transfer from fine root transfer pool to outside of vegetation pools
+     integer ilivestem_to_iout_fi                     ! Index of fire related C transfer from live stem pool to outside of vegetation pools
+     integer ilivestemst_to_iout_fi                   ! Index of fire related C transfer from live stem storage pool to outside of vegetation pools
+     integer ilivestemxf_to_iout_fi                   ! Index of fire related C transfer from live stem transfer pool to outside of vegetation pools
+     integer ideadstem_to_iout_fi                     ! Index of fire related C transfer from dead stem pool to outside of vegetation pools
+     integer ideadstemst_to_iout_fi                   ! Index of fire related C transfer from dead stem storage pool to outside of vegetation pools
+     integer ideadstemxf_to_iout_fi                   ! Index of fire related C transfer from dead stem transfer pool to outside of vegetation pools
+     integer ilivecroot_to_iout_fi                    ! Index of fire related C transfer from live coarse root pool to outside of vegetation pools
+     integer ilivecrootst_to_iout_fi                  ! Index of fire related C transfer from live coarse root storage pool to outside of vegetation pools
+     integer ilivecrootxf_to_iout_fi                  ! Index of fire related C transfer from live coarse root transfer pool to outside of vegetation pools
+     integer ideadcroot_to_iout_fi                    ! Index of fire related C transfer from dead coarse root pool to outside of vegetation pools
+     integer ideadcrootst_to_iout_fi                  ! Index of fire related C transfer from dead coarse root storage pool to outside of vegetation pools
+     integer ideadcrootxf_to_iout_fi                  ! Index of fire related C transfer from dead coarse root transfer pool to outside of vegetation pools
+     integer ilivestem_to_ideadstem_fi                ! Index of fire related C transfer from live stem pool to dead stem pools
+     integer ilivecroot_to_ideadcroot_fi              ! Index of fire related C transfer from live coarse root pool to dead coarse root pools
 
-     integer,pointer :: list_phc_phgmc     (:)
-     integer,pointer :: list_gmc_phgmc     (:)
-     integer,pointer :: list_phc_phgmfic   (:)
-     integer,pointer :: list_gmc_phgmfic   (:)
-     integer,pointer :: list_fic_phgmfic   (:)
-     integer,pointer :: list_aphc(:)
-     integer,pointer :: list_agmc(:)
-     integer,pointer :: list_afic(:)
+     integer,pointer :: list_phc_phgmc     (:)        ! Index mapping for sparse matrix addition (save to reduce computational cost): from AKphc to AKphc+AKgmc
+     integer,pointer :: list_gmc_phgmc     (:)        ! Index mapping for sparse matrix addition (save to reduce computational cost): from AKgmc to AKphc+AKgmc
+     integer,pointer :: list_phc_phgmfic   (:)        ! Index mapping for sparse matrix addition (save to reduce computational cost): from AKphc to AKphc+AKgmc+AKfic
+     integer,pointer :: list_gmc_phgmfic   (:)        ! Index mapping for sparse matrix addition (save to reduce computational cost): from AKgmc to AKphc+AKgmc+AKfic
+     integer,pointer :: list_fic_phgmfic   (:)        ! Index mapping for sparse matrix addition (save to reduce computational cost): from AKfic to AKphc+AKgmc+AKfic
+     integer,pointer :: list_aphc          (:)        ! Indices of non-diagnoal entries in full sparse matrix Aph for C cycle
+     integer,pointer :: list_agmc          (:)        ! Indices of non-diagnoal entries in full sparse matrix Agm for C cycle
+     integer,pointer :: list_afic          (:)        ! Indices of non-diagnoal entries in full sparse matrix Afi for C cycle
 
-     type(sparse_matrix_type) :: AKphvegc
-     type(sparse_matrix_type) :: AKgmvegc
-     type(sparse_matrix_type) :: AKfivegc
-     type(sparse_matrix_type) :: AKallvegc
-     integer                  :: NE_AKallvegc
-     integer,pointer,dimension(:)  :: RI_AKallvegc
-     integer,pointer,dimension(:)  :: CI_AKallvegc
-     integer                  :: NE_AKphgmc
-     integer,pointer,dimension(:)  :: RI_AKphgmc
-     integer,pointer,dimension(:)  :: CI_AKphgmc
-     integer,pointer,dimension(:)  :: RI_phc
-     integer,pointer,dimension(:)  :: CI_phc
-     integer,pointer,dimension(:)  :: RI_gmc
-     integer,pointer,dimension(:)  :: CI_gmc
-     integer,pointer,dimension(:)  :: RI_fic
-     integer,pointer,dimension(:)  :: CI_fic
-     type(diag_matrix_type)   :: Kvegc
-     type(vector_type)        :: Xvegc
-     type(vector_type)        :: Xveg13c
-     type(vector_type)        :: Xveg14c
+     type(sparse_matrix_type)      :: AKphvegc        ! Aph*Kph for C cycle in sparse matrix format
+     type(sparse_matrix_type)      :: AKgmvegc        ! Agm*Kgm for C cycle in sparse matrix format
+     type(sparse_matrix_type)      :: AKfivegc        ! Afi*Kfi for C cycle in sparse matrix format
+     type(sparse_matrix_type)      :: AKallvegc       ! Aph*Kph + Agm*Kgm + Afi*Kfi for C cycle in sparse matrix format
+     integer                       :: NE_AKallvegc    ! Number of entries in AKallvegc
+     integer,pointer,dimension(:)  :: RI_AKallvegc    ! Row indices in Akallvegc
+     integer,pointer,dimension(:)  :: CI_AKallvegc    ! Column indices in AKallvegc
+     integer,pointer,dimension(:)  :: RI_phc          ! Row indices of non-diagonal entires in Aph for C cycle
+     integer,pointer,dimension(:)  :: CI_phc          ! Column indices of non-diagonal entries in Aph for C cycle
+     integer,pointer,dimension(:)  :: RI_gmc          ! Row indices of non-diagonal entires in Agm for C cycle
+     integer,pointer,dimension(:)  :: CI_gmc          ! Column indices of non-diagonal entries in Agm for C cycle
+     integer,pointer,dimension(:)  :: RI_fic          ! Row indices of non-diagonal entires in Afi for C cycle
+     integer,pointer,dimension(:)  :: CI_fic          ! Column indices of non-diagonal entries in Afi for C cycle
+     type(diag_matrix_type)        :: Kvegc           ! Temporary variable of Kph, Kgm or Kfi for C cycle in diagonal matrix format
+     type(vector_type)             :: Xvegc           ! Vegetation C of each compartment in a vector format
+     type(vector_type)             :: Xveg13c         ! Vegetation C13 of each compartment in a vector format
+     type(vector_type)             :: Xveg14c         ! Vegetation C14 of each compartment in a vector format
 
      ! Objects that help convert once-per-year dynamic land cover changes into fluxes
      ! that are dribbled throughout the year
@@ -1121,9 +1118,6 @@ contains
        this%NE_AKallvegc = ncphtrans-ncphouttrans+ncfitrans-ncfiouttrans+nvegcpool
        allocate(this%RI_AKallvegc(1:this%NE_AKallvegc));this%RI_AKallvegc(:) = -9999
        allocate(this%CI_AKallvegc(1:this%NE_AKallvegc));this%CI_AKallvegc(:) = -9999
-       this%NE_AKphgmc = ncphtrans-ncphouttrans+nvegcpool
-       allocate(this%RI_AKphgmc(1:this%NE_AKphgmc));this%RI_AKphgmc(:) = -9999
-       allocate(this%CI_AKphgmc(1:this%NE_AKphgmc));this%CI_AKphgmc(:) = -9999
        allocate(this%RI_phc(1:ncphtrans-ncphouttrans+nvegcpool));this%RI_phc(:) = -9999
        allocate(this%CI_phc(1:ncphtrans-ncphouttrans+nvegcpool));this%CI_phc(:) = -9999
        allocate(this%RI_gmc(1:ncgmtrans-ncgmouttrans+nvegcpool));this%RI_gmc(:) = -9999

@@ -178,7 +178,7 @@ contains
     ! cnveg_nitrogenstate_inst%ntrunc_patch                  Output:  [real(r8) (:)     ]  (gN/m2) patch-level sink for N truncation           
     ! cnveg_nitrogenstate_inst%retransn_patch                Output:  [real(r8) (:)     ]  (gN/m2) plant pool of retranslocated N            
 
-
+    
     associate(                                           &
          cs     => cnveg_carbonstate_inst              , &
          ns     => cnveg_nitrogenstate_inst            , &
