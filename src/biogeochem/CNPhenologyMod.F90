@@ -96,6 +96,8 @@ module CNPhenologyMod
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
+
+  logical :: harvest_residue  = .true. !should leaf and stem residue be harvested?
   !-----------------------------------------------------------------------
 
 contains
@@ -3051,7 +3053,7 @@ contains
                if ( pi <=  col%npatches(c) ) then
                   p = col%patchi(c) + pi - 1
                   if (patch%active(p)) then
-                    if((ivt(p)<npcropmin) .or. (.not. use_grainproduct)) then
+                    if((ivt(p)<npcropmin) .or. (.not. harvest_residue)) then
                      ! leaf litter carbon fluxes
                      phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
                           + leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
@@ -3090,7 +3092,7 @@ contains
                      ! also for simplicity I've put "food" into the litter pools
 
                      !if (ivt(p) >= npcropmin) then ! add livestemc to litter
-                     if ( (ivt(p) >= npcropmin) .and. (.not. use_grainproduct)) then !added use_livestemproduct MWGraham
+                     if ( (ivt(p) >= npcropmin) .and. (.not. harvest_residue)) then !added use_livestemproduct MWGraham
                         ! stem litter carbon fluxes
                         phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
                              + livestemc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
