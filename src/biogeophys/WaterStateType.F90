@@ -569,7 +569,8 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%h2osno_no_layers_col)
     ! BACKWARDS_COMPATIBILITY(wjs, 2019-06-06) If h2osno_no_layers is read from the old
     ! h2osno, then it will be non-zero for an explicit-layered snow pack. We fix that
-    ! here.
+    ! here. We can (and should) remove this backwards compatibility code at the same time
+    ! as we remove ":H2OSNO" from the restart variable name above.
     if (flag == 'read' .and. .not. is_restart()) then
        do c = bounds%begc, bounds%endc
           if (col%snl(c) < 0) then
