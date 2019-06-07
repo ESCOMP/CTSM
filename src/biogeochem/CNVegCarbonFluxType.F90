@@ -10,7 +10,7 @@ module CNVegCarbonFluxType
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools&
+  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools,&
                                                   nvegcpool,ncphtrans,ncgmtrans,ncfitrans,&
                                                   ncphouttrans,ncgmouttrans,ncfiouttrans
   use clm_varpar                         , only : nlevdecomp_full, nlevgrnd,nlevdecomp
