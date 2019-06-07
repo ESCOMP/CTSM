@@ -893,6 +893,25 @@ Turn vegetation snow canopy ON, OFF, or ON with albedo influence (ON_RAD)
 </entry>
 
 <!-- ========================================================================================  -->
+<!-- CN Matrix solution                                                                        -->
+<!-- ========================================================================================  -->
+<entry id="use_matrixcn" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Turn on the Matrix solution for above ground biogeochemistry
+</entry>
+
+<entry id="use_soil_matrixcn" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Turn on the Matrix solution for soil biogeochemistry
+</entry>
+
+<entry id="is_outmatrix" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Turn on extra output for the matrix solution
+</entry>
+
+
+<!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
 <!-- ========================================================================================  -->
 <entry id="use_lch4" type="logical" category="bgc"

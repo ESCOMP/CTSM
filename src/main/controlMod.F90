@@ -188,6 +188,11 @@ contains
 
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
+
+    ! CN Matrix solution
+    namelist /clm_inparm / &
+         use_matrixcn, use_soil_matrixcn, is_outmatrix
+
     ! lake_melt_icealb is of dimension numrad
 
     ! Glacier_mec info
