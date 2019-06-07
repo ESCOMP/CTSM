@@ -273,13 +273,6 @@ contains
        liquid_mass(c) = liquid_mass(c) + liqcan_col(c) + total_plant_stored_h2o(c)
        ice_mass(c) = ice_mass(c) + snocan_col(c)
 
-       ! FIXME(wjs, 2019-06-06) Remove this temporary error check
-       if (snl(c) < 0 .and. h2osno_no_layers(c) /= 0._r8) then
-          write(iulog,*) 'NonLake: h2osno_no_layers non-zero for snl < 0:'
-          write(iulog,*) 'c, snl, h2osno_no_layers = ', c, snl(c), h2osno_no_layers(c)
-          call endrun(c, namec, msg='NonLake: h2osno_no_layers non-zero for snl < 0:')
-       end if
-
        ice_mass(c) = ice_mass(c) + h2osno_no_layers(c)
        do j = snl(c)+1,0
           liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
@@ -446,13 +439,6 @@ contains
     ! Snow water content
     do fc = 1, num_lakec
        c = filter_lakec(fc)
-
-       ! FIXME(wjs, 2019-06-06) Remove this temporary error check
-       if (snl(c) < 0 .and. h2osno_no_layers(c) /= 0._r8) then
-          write(iulog,*) 'NonLake: h2osno_no_layers non-zero for snl < 0:'
-          write(iulog,*) 'c, snl, h2osno_no_layers = ', c, snl(c), h2osno_no_layers(c)
-          call endrun(c, namec, msg='NonLake: h2osno_no_layers non-zero for snl < 0:')
-       end if
 
        ice_mass(c) = ice_mass(c) + h2osno_no_layers(c)
        do j = snl(c)+1,0
