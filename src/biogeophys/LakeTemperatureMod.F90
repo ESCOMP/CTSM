@@ -1350,13 +1350,13 @@ contains
        do fc = 1,num_lakec
           c = filter_lakec(fc)
 
-          if (snl(c) == 0 .and. h2osno(c) > 0._r8 .and. t_lake(c,1) > tfrz) then
+          if (h2osno_no_layers(c) > 0._r8 .and. t_lake(c,1) > tfrz) then
              heatavail = (t_lake(c,1) - tfrz) * cv_lake(c,1)
-             melt = min(h2osno(c), heatavail/hfus)
+             melt = min(h2osno_no_layers(c), heatavail/hfus)
              heatrem = max(heatavail - melt*hfus, 0._r8)
              !catch small negative value to keep t at tfrz
              t_lake(c,1) = tfrz + heatrem/(cv_lake(c,1))
-             snow_depth(c) = snow_depth(c)*(1._r8 - melt/h2osno(c))
+             snow_depth(c) = snow_depth(c)*(1._r8 - melt/h2osno_no_layers(c))
              h2osno(c) = h2osno(c) - melt
              h2osno_no_layers(c) = h2osno_no_layers(c) - melt
              lhabs(c) = lhabs(c) + melt*hfus
