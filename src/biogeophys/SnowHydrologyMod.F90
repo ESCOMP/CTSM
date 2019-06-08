@@ -513,7 +513,7 @@ contains
           z(c,0) = -0.5_r8*dz(c,0)
           zi(c,-1) = -dz(c,0)
           t_soisno(c,0) = min(tfrz, forc_t(c))      ! K
-          h2osoi_ice(c,0) = h2osno(c)               ! kg/m2
+          h2osoi_ice(c,0) = h2osno_no_layers(c)     ! kg/m2
           h2osoi_liq(c,0) = 0._r8                   ! kg/m2
           h2osno_no_layers(c) = 0._r8
           frac_iceold(c,0) = 1._r8
@@ -597,7 +597,7 @@ contains
 
          frac_sno_eff   => waterdiagnosticbulk_inst%frac_sno_eff_col  , & ! Input:  [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)
          frac_sno       => waterdiagnosticbulk_inst%frac_sno_col      , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
-         h2osno         => waterstatebulk_inst%h2osno_col        , & ! Input:  [real(r8) (:)   ] snow water (mm H2O)
+         h2osno_no_layers => waterstatebulk_inst%h2osno_no_layers_col , & ! Output: [real(r8) (:)   ]  snow that is not resolved into layers (kg/m2)
          int_snow       => waterstatebulk_inst%int_snow_col      , & ! Output: [real(r8) (:)   ] integrated snowfall [mm]
          h2osoi_ice     => waterstatebulk_inst%h2osoi_ice_col    , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)
          h2osoi_liq     => waterstatebulk_inst%h2osoi_liq_col    , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
@@ -860,7 +860,7 @@ contains
 
        qflx_rain_plus_snomelt(c) = qflx_liq_grnd(c) + qflx_snomelt(c)
        ! reset accumulated snow when no snow present
-       if (h2osno(c) <= 0._r8) then
+       if (h2osno_no_layers(c) <= 0._r8) then
           int_snow(c) = 0._r8
           frac_sno(c) = 0._r8
           snow_depth(c) = 0._r8
@@ -1298,7 +1298,7 @@ contains
              mss_dst3(c,:)  = 0._r8
              mss_dst4(c,:)  = 0._r8
 
-             if (h2osno(c) <= 0._r8) snow_depth(c) = 0._r8
+             if (h2osno_no_layers(c) <= 0._r8) snow_depth(c) = 0._r8
              ! this is where water is transfered from layer 0 (snow) to layer 1 (soil)
              if (ltype(l) == istsoil .or. urbpoi(l) .or. ltype(l) == istcrop) then
                 h2osoi_liq(c,0) = 0.0_r8
