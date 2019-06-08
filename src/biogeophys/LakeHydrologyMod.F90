@@ -265,7 +265,7 @@ contains
             z(c,0) = -0.5_r8*dz(c,0)
             zi(c,-1) = -dz(c,0)
             t_soisno(c,0) = min(tfrz, forc_t(c))      ! K
-            h2osoi_ice(c,0) = h2osno(c)               ! kg/m2
+            h2osoi_ice(c,0) = h2osno_no_layers(c)     ! kg/m2
             h2osoi_liq(c,0) = 0._r8                   ! kg/m2
             h2osno_no_layers(c) = 0._r8
             frac_iceold(c,0) = 1._r8
@@ -324,7 +324,7 @@ contains
             if (qflx_evap_soi(p) >= 0._r8) then
                ! Sublimation: do not allow for more sublimation than there is snow
                ! after melt.  Remaining surface evaporation used for infiltration.
-               qflx_sub_snow(p) = min(qflx_evap_soi(p), h2osno(c)/dtime)
+               qflx_sub_snow(p) = min(qflx_evap_soi(p), h2osno_no_layers(c)/dtime)
                qflx_evap_grnd(p) = qflx_evap_soi(p) - qflx_sub_snow(p)
             else
                if (t_grnd(c) < tfrz-0.1_r8) then
@@ -336,13 +336,13 @@ contains
 
             ! Update snow pack for dew & sub.
 
-            h2osno_temp = h2osno(c)
+            h2osno_temp = h2osno_no_layers(c)
             h2osno(c) = h2osno(c) + (-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
             h2osno_no_layers(c) = h2osno_no_layers(c) + (-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
             if (h2osno_temp > 0._r8) then
-               snow_depth(c) = snow_depth(c) * h2osno(c) / h2osno_temp
+               snow_depth(c) = snow_depth(c) * h2osno_no_layers(c) / h2osno_temp
             else
-               snow_depth(c) = h2osno(c)/snow_bd !Assume a constant snow bulk density = 250.
+               snow_depth(c) = h2osno_no_layers(c)/snow_bd !Assume a constant snow bulk density = 250.
             end if
 
             h2osno(c) = max(h2osno(c), 0._r8)
