@@ -1082,7 +1082,7 @@ contains
          qflx_snofrz_lyr    => waterfluxbulk_inst%qflx_snofrz_lyr_col , & ! Input:  [real(r8) (:,:) ]  snow freezing rate (col,lyr) [kg m-2 s-1]
 
          frac_sno           => waterdiagnosticbulk_inst%frac_sno_eff_col   , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
-         h2osno             => waterstatebulk_inst%h2osno_col         , & ! Input:  [real(r8) (:)   ]  snow water (col) [mm H2O]               
+         h2osno_no_layers   => waterstatebulk_inst%h2osno_no_layers_col    , & ! Input:  [real(r8) (:)   ]  snow that is not resolved into layers (col) [mm H2O]
          h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water content (col,lyr) [kg m-2]
          h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice content (col,lyr) [kg m-2]        
          snw_rds            => waterdiagnosticbulk_inst%snw_rds_col        , & ! Output: [real(r8) (:,:) ]  effective grain radius (col,lyr) [microns, m-6]
@@ -1267,7 +1267,7 @@ contains
       !   set snw_rds to fresh snow grain size:
       do fc = 1, num_nosnowc
          c_idx = filter_nosnowc(fc)
-         if (h2osno(c_idx) > 0._r8) then
+         if (h2osno_no_layers(c_idx) > 0._r8) then
             snw_rds(c_idx,0) = snw_rds_min
          endif
       enddo
