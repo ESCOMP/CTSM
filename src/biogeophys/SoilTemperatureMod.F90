@@ -651,7 +651,7 @@ contains
          
          frac_sno     =>    waterdiagnosticbulk_inst%frac_sno_eff_col , & ! Input:  [real(r8) (:)   ]  fractional snow covered area            
          h2osfc       =>    waterstatebulk_inst%h2osfc_col	     , & ! Input:  [real(r8) (:)   ]  surface (mm H2O)                        
-         h2osno       =>    waterstatebulk_inst%h2osno_col	     , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
+         h2osno_no_layers => waterstatebulk_inst%h2osno_no_layers_col , & ! Input:  [real(r8) (:)   ]  snow not resolved into layers (mm H2O)
          h2osoi_liq   =>    waterstatebulk_inst%h2osoi_liq_col   , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
          h2osoi_ice   =>    waterstatebulk_inst%h2osoi_ice_col   , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                      
          bw           =>    waterdiagnosticbulk_inst%bw_col	     , & ! Output: [real(r8) (:,:) ]  partial density of water in the snow pack (ice + liquid) [kg/m3] 
@@ -789,8 +789,8 @@ contains
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
             endif
             if (j == 1) then
-               if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8) then
-                  cv(c,j) = cv(c,j) + cpice*h2osno(c)
+               if (h2osno_no_layers(c) > 0._r8) then
+                  cv(c,j) = cv(c,j) + cpice*h2osno_no_layers(c)
                end if
             end if
          enddo
@@ -1234,7 +1234,7 @@ contains
                endif
 
                ! If snow exists, but its thickness is less than the critical value (0.01 m)
-               if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8 .AND. j == 1) then
+               if (h2osno_no_layers(c) > 0._r8 .AND. j == 1) then
                   if (t_soisno(c,j) > tfrz) then
                      imelt(c,j) = 1
                      !                tincc,j) = t_soisno(c,j) - tfrz
@@ -1307,13 +1307,13 @@ contains
                      ! (1 cm). Note: more work is needed to determine how to tune the
                      ! snow depth for this case
                      if (j == 1) then
-                        if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8 .AND. xm(c,j) > 0._r8) then
-                           temp1 = h2osno(c)                           ! kg/m2
+                        if (h2osno_no_layers(c) > 0._r8 .AND. xm(c,j) > 0._r8) then
+                           temp1 = h2osno_no_layers(c)                     ! kg/m2
                            h2osno(c) = max(0._r8,temp1-xm(c,j))
                            h2osno_no_layers(c) = max(0._r8,temp1-xm(c,j))
-                           propor = h2osno(c)/temp1
+                           propor = h2osno_no_layers(c)/temp1
                            snow_depth(c) = propor * snow_depth(c)
-                           heatr = hm(c,j) - hfus*(temp1-h2osno(c))/dtime   ! W/m2
+                           heatr = hm(c,j) - hfus*(temp1-h2osno_no_layers(c))/dtime   ! W/m2
                            if (heatr > 0._r8) then
                               xm(c,j) = heatr*dtime/hfus                    ! kg/m2
                               hm(c,j) = heatr                               ! W/m2
@@ -1321,7 +1321,7 @@ contains
                               xm(c,j) = 0._r8
                               hm(c,j) = 0._r8
                            endif
-                           qflx_snomelt(c) = max(0._r8,(temp1-h2osno(c)))/dtime   ! kg/(m2 s)
+                           qflx_snomelt(c) = max(0._r8,(temp1-h2osno_no_layers(c)))/dtime   ! kg/(m2 s)
                            ! no snow layers, so qflx_snomelt_lyr is not set
                            xmf(c) = hfus*qflx_snomelt(c)
                            qflx_snow_drain(c) = qflx_snomelt(c) 
