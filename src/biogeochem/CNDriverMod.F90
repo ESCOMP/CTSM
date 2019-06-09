@@ -783,8 +783,8 @@ contains
     call cnfire_method%CNFireFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                      &
          num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,                                                             &
          dgvs_inst, cnveg_state_inst,                                                                                              &
-         soilbiogeochem_carbonflux_inst,                                                                                           &
          cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                         &
+         soilbiogeochem_carbonflux_inst,                                                                                           &
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),                                  &
          froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &
          croot_prof_patch=soilbiogeochem_state_inst%croot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &

@@ -701,21 +701,18 @@ contains
     ! since those column states are still important in the following dyn_cnbal_col.
     call t_startf('CNUpdateDynPatch')
     call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
-         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_carbonflux_inst)
+         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst )
     if (use_c13) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
-            this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
-            soilbiogeochem_carbonflux_inst)
+            this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst )
     end if
     if (use_c14) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
-            this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
-            soilbiogeochem_carbonflux_inst)
+            this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst )
     end if
     call NStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
-         soilbiogeochem_nitrogenflux_inst)
+         soilbiogeochem_nitrogenflux_inst )
     call t_stopf('CNUpdateDynPatch')
 
     call t_startf('dyn_cnbal_col')

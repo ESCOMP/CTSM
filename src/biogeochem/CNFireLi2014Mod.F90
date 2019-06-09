@@ -631,8 +631,8 @@ contains
  subroutine CNFireFluxes (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
       num_actfirec, filter_actfirec, num_actfirep, filter_actfirep, &
       dgvs_inst, cnveg_state_inst,                                                                      &
-      soilbiogeochem_carbonflux_inst, &
       cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+      soilbiogeochem_carbonflux_inst, &
       leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch, &
       totsomc_col, decomp_cpools_vr_col, decomp_npools_vr_col, somc_fire_col)
    !
