@@ -366,31 +366,31 @@ module CNVegCarbonFluxType
      real(r8), pointer :: npp_Nfix_patch                            (:)     ! C used by Symbiotic BNF         (gC/m2/s)
      real(r8), pointer :: npp_Nretrans_patch                        (:)     ! C used by retranslocation       (gC/m2/s)
      real(r8), pointer :: npp_Nuptake_patch                         (:)     ! Total C used by N uptake in FUN (gC/m2/s)
-     real(r8), pointer :: npp_growth_patch                         (:)     ! Total C u for growth in FUN      (gC/m2/s)   
+     real(r8), pointer :: npp_growth_patch                          (:)     ! Total C u for growth in FUN      (gC/m2/s)   
      real(r8), pointer :: leafc_change_patch                        (:)     ! Total used C from leaves        (gC/m2/s)
      real(r8), pointer :: soilc_change_patch                        (:)     ! Total used C from soil          (gC/m2/s)
      ! Matrix for C flux index
-     real(r8), pointer :: matrix_Cinput_patch                  (:)      ! U-matrix for carbon input
-     real(r8), pointer :: matrix_C13input_patch                (:)      ! U-matrix for C13 input
-     real(r8), pointer :: matrix_C14input_patch                (:)      ! U-matrix for C14 input
-     real(r8), pointer :: matrix_alloc_patch                   (:,:)    ! B-matrix for carbon
+     real(r8), pointer :: matrix_Cinput_patch                       (:)      ! I-matrix for carbon input
+     real(r8), pointer :: matrix_C13input_patch                     (:)      ! I-matrix for C13 input
+     real(r8), pointer :: matrix_C14input_patch                     (:)      ! I-matrix for C14 input
+     real(r8), pointer :: matrix_alloc_patch                        (:,:)    ! B-matrix for carbon allocation
  
-     real(r8), pointer :: matrix_phtransfer_patch              (:,:)    ! A-matrix_phenology
-     real(r8), pointer :: matrix_phturnover_patch              (:,:)    ! C-matrix_phenology
-     integer,  pointer :: matrix_phtransfer_doner_patch        (:)      ! A-matrix_phenology
-     integer,  pointer :: matrix_phtransfer_receiver_patch     (:)      ! A-matrix_phenology
-     integer,  pointer :: actpatch_fire                        (:)      ! A-matrix_phenology
-     integer           :: num_actpatch_fire                             ! A-matrix_phenology
+     real(r8), pointer :: matrix_phtransfer_patch                   (:,:)    ! A-matrix_phenology
+     real(r8), pointer :: matrix_phturnover_patch                   (:,:)    ! K-matrix_phenology
+     integer,  pointer :: matrix_phtransfer_doner_patch             (:)      ! A-matrix_phenology non-zero indices (column indices)
+     integer,  pointer :: matrix_phtransfer_receiver_patch          (:)      ! A-matrix_phenology non-zero indices (row indices)
+     integer,  pointer :: actpatch_fire                             (:)      ! Patch indices with fire in current time step
+     integer           :: num_actpatch_fire                                  ! Number of patches with fire in current time step
   
-     real(r8), pointer :: matrix_gmtransfer_patch              (:,:)    ! A-matrix_gap mortality
-     real(r8), pointer :: matrix_gmturnover_patch              (:,:)    ! C-matrix_gap mortality
-     integer,  pointer :: matrix_gmtransfer_doner_patch        (:)      ! A-matrix_gap mortality
-     integer,  pointer :: matrix_gmtransfer_receiver_patch     (:)      ! A-matrix_gap mortality
+     real(r8), pointer :: matrix_gmtransfer_patch                   (:,:)    ! A-matrix_gap mortality
+     real(r8), pointer :: matrix_gmturnover_patch                   (:,:)    ! K-matrix_gap mortality
+     integer,  pointer :: matrix_gmtransfer_doner_patch             (:)      ! A-matrix_gap mortality non-zero indices (column indices)
+     integer,  pointer :: matrix_gmtransfer_receiver_patch          (:)      ! A-matrix_gap mortality non-zero indices (row indices)
   
-     real(r8), pointer :: matrix_fitransfer_patch              (:,:)    ! A-matrix_fire
-     real(r8), pointer :: matrix_fiturnover_patch              (:,:)    ! C-matrix_fire	 
-     integer,  pointer :: matrix_fitransfer_doner_patch        (:)      ! A-matrix_fire
-     integer,  pointer :: matrix_fitransfer_receiver_patch     (:)      ! A-matrix_fire
+     real(r8), pointer :: matrix_fitransfer_patch                   (:,:)    ! A-matrix_fire
+     real(r8), pointer :: matrix_fiturnover_patch                   (:,:)    ! K-matrix_fire	 
+     integer,  pointer :: matrix_fitransfer_doner_patch             (:)      ! A-matrix_fire non-zero indices (column indices)
+     integer,  pointer :: matrix_fitransfer_receiver_patch          (:)      ! A-matrix_fire non-zero indices (row indices)
  
 !     real(r8), pointer :: soilc_change_col                          (:)     ! Total used C from soil          (gC/m2/s)
 !   matrix variables 
@@ -525,231 +525,231 @@ contains
     ! !AGRUMENTS:
     class (cnveg_carbonflux_type) :: this
     
-    this%ileafst_to_ileafxf_ph = 1
-    this%matrix_phtransfer_doner_patch(this%ileafst_to_ileafxf_ph) = ileaf_st
-    this%matrix_phtransfer_receiver_patch(this%ileafst_to_ileafxf_ph) = ileaf_xf
+    this%ileafst_to_ileafxf_ph           = 1
+    this%matrix_phtransfer_doner_patch(this%ileafst_to_ileafxf_ph)              = ileaf_st
+    this%matrix_phtransfer_receiver_patch(this%ileafst_to_ileafxf_ph)           = ileaf_xf
 
-    this%ileafxf_to_ileaf_ph   = 2
-    this%matrix_phtransfer_doner_patch(this%ileafxf_to_ileaf_ph) = ileaf_xf
-    this%matrix_phtransfer_receiver_patch(this%ileafxf_to_ileaf_ph) = ileaf
+    this%ileafxf_to_ileaf_ph             = 2
+    this%matrix_phtransfer_doner_patch(this%ileafxf_to_ileaf_ph)                = ileaf_xf
+    this%matrix_phtransfer_receiver_patch(this%ileafxf_to_ileaf_ph)             = ileaf
 
-    this%ifrootst_to_ifrootxf_ph = 3
-    this%matrix_phtransfer_doner_patch(this%ifrootst_to_ifrootxf_ph) = ifroot_st
-    this%matrix_phtransfer_receiver_patch(this%ifrootst_to_ifrootxf_ph) = ifroot_xf
+    this%ifrootst_to_ifrootxf_ph         = 3
+    this%matrix_phtransfer_doner_patch(this%ifrootst_to_ifrootxf_ph)            = ifroot_st
+    this%matrix_phtransfer_receiver_patch(this%ifrootst_to_ifrootxf_ph)         = ifroot_xf
 
-    this%ifrootxf_to_ifroot_ph   = 4
-    this%matrix_phtransfer_doner_patch(this%ifrootxf_to_ifroot_ph) = ifroot_xf
-    this%matrix_phtransfer_receiver_patch(this%ifrootxf_to_ifroot_ph) = ifroot
+    this%ifrootxf_to_ifroot_ph           = 4
+    this%matrix_phtransfer_doner_patch(this%ifrootxf_to_ifroot_ph)              = ifroot_xf
+    this%matrix_phtransfer_receiver_patch(this%ifrootxf_to_ifroot_ph)           = ifroot
 
-    this%ilivestem_to_ideadstem_ph = 5
-    this%matrix_phtransfer_doner_patch(this%ilivestem_to_ideadstem_ph) = ilivestem
-    this%matrix_phtransfer_receiver_patch(this%ilivestem_to_ideadstem_ph) = ideadstem
+    this%ilivestem_to_ideadstem_ph       = 5
+    this%matrix_phtransfer_doner_patch(this%ilivestem_to_ideadstem_ph)          = ilivestem
+    this%matrix_phtransfer_receiver_patch(this%ilivestem_to_ideadstem_ph)       = ideadstem
     
-    this%ilivestemst_to_ilivestemxf_ph = 6
-    this%matrix_phtransfer_doner_patch(this%ilivestemst_to_ilivestemxf_ph) = ilivestem_st
-    this%matrix_phtransfer_receiver_patch(this%ilivestemst_to_ilivestemxf_ph) = ilivestem_xf
+    this%ilivestemst_to_ilivestemxf_ph   = 6
+    this%matrix_phtransfer_doner_patch(this%ilivestemst_to_ilivestemxf_ph)      = ilivestem_st
+    this%matrix_phtransfer_receiver_patch(this%ilivestemst_to_ilivestemxf_ph)   = ilivestem_xf
 
-    this%ilivestemxf_to_ilivestem_ph   = 7
-    this%matrix_phtransfer_doner_patch(this%ilivestemxf_to_ilivestem_ph) = ilivestem_xf
-    this%matrix_phtransfer_receiver_patch(this%ilivestemxf_to_ilivestem_ph) = ilivestem
+    this%ilivestemxf_to_ilivestem_ph     = 7
+    this%matrix_phtransfer_doner_patch(this%ilivestemxf_to_ilivestem_ph)        = ilivestem_xf
+    this%matrix_phtransfer_receiver_patch(this%ilivestemxf_to_ilivestem_ph)     = ilivestem
 
-    this%ideadstemst_to_ideadstemxf_ph = 8
-    this%matrix_phtransfer_doner_patch(this%ideadstemst_to_ideadstemxf_ph) = ideadstem_st
-    this%matrix_phtransfer_receiver_patch(this%ideadstemst_to_ideadstemxf_ph) = ideadstem_xf
+    this%ideadstemst_to_ideadstemxf_ph   = 8
+    this%matrix_phtransfer_doner_patch(this%ideadstemst_to_ideadstemxf_ph)      = ideadstem_st
+    this%matrix_phtransfer_receiver_patch(this%ideadstemst_to_ideadstemxf_ph)   = ideadstem_xf
 
-    this%ideadstemxf_to_ideadstem_ph   = 9
-    this%matrix_phtransfer_doner_patch(this%ideadstemxf_to_ideadstem_ph) = ideadstem_xf
-    this%matrix_phtransfer_receiver_patch(this%ideadstemxf_to_ideadstem_ph) = ideadstem
+    this%ideadstemxf_to_ideadstem_ph     = 9
+    this%matrix_phtransfer_doner_patch(this%ideadstemxf_to_ideadstem_ph)        = ideadstem_xf
+    this%matrix_phtransfer_receiver_patch(this%ideadstemxf_to_ideadstem_ph)     = ideadstem
 
-    this%ilivecroot_to_ideadcroot_ph = 10
-    this%matrix_phtransfer_doner_patch(this%ilivecroot_to_ideadcroot_ph) = ilivecroot
-    this%matrix_phtransfer_receiver_patch(this%ilivecroot_to_ideadcroot_ph) = ideadcroot
+    this%ilivecroot_to_ideadcroot_ph     = 10
+    this%matrix_phtransfer_doner_patch(this%ilivecroot_to_ideadcroot_ph)        = ilivecroot
+    this%matrix_phtransfer_receiver_patch(this%ilivecroot_to_ideadcroot_ph)     = ideadcroot
     
     this%ilivecrootst_to_ilivecrootxf_ph = 11
-    this%matrix_phtransfer_doner_patch(this%ilivecrootst_to_ilivecrootxf_ph) = ilivecroot_st
+    this%matrix_phtransfer_doner_patch(this%ilivecrootst_to_ilivecrootxf_ph)    = ilivecroot_st
     this%matrix_phtransfer_receiver_patch(this%ilivecrootst_to_ilivecrootxf_ph) = ilivecroot_xf
 
     this%ilivecrootxf_to_ilivecroot_ph   = 12
-    this%matrix_phtransfer_doner_patch(this%ilivecrootxf_to_ilivecroot_ph) = ilivecroot_xf
-    this%matrix_phtransfer_receiver_patch(this%ilivecrootxf_to_ilivecroot_ph) = ilivecroot
+    this%matrix_phtransfer_doner_patch(this%ilivecrootxf_to_ilivecroot_ph)      = ilivecroot_xf
+    this%matrix_phtransfer_receiver_patch(this%ilivecrootxf_to_ilivecroot_ph)   = ilivecroot
 
     this%ideadcrootst_to_ideadcrootxf_ph = 13
-    this%matrix_phtransfer_doner_patch(this%ideadcrootst_to_ideadcrootxf_ph) = ideadcroot_st
+    this%matrix_phtransfer_doner_patch(this%ideadcrootst_to_ideadcrootxf_ph)    = ideadcroot_st
     this%matrix_phtransfer_receiver_patch(this%ideadcrootst_to_ideadcrootxf_ph) = ideadcroot_xf
 
     this%ideadcrootxf_to_ideadcroot_ph   = 14
-    this%matrix_phtransfer_doner_patch(this%ideadcrootxf_to_ideadcroot_ph) = ideadcroot_xf
-    this%matrix_phtransfer_receiver_patch(this%ideadcrootxf_to_ideadcroot_ph) = ideadcroot
+    this%matrix_phtransfer_doner_patch(this%ideadcrootxf_to_ideadcroot_ph)      = ideadcroot_xf
+    this%matrix_phtransfer_receiver_patch(this%ideadcrootxf_to_ideadcroot_ph)   = ideadcroot
 
-    this%ileaf_to_iout_ph = 15
-    this%matrix_phtransfer_doner_patch(this%ileaf_to_iout_ph)    = ileaf
-    this%matrix_phtransfer_receiver_patch(this%ileaf_to_iout_ph) = ioutc
+    this%ileaf_to_iout_ph                = 15
+    this%matrix_phtransfer_doner_patch(this%ileaf_to_iout_ph)                   = ileaf
+    this%matrix_phtransfer_receiver_patch(this%ileaf_to_iout_ph)                = ioutc
     
-    this%ifroot_to_iout_ph = 16
-    this%matrix_phtransfer_doner_patch(this%ifroot_to_iout_ph)    = ifroot
-    this%matrix_phtransfer_receiver_patch(this%ifroot_to_iout_ph) = ioutc
+    this%ifroot_to_iout_ph               = 16
+    this%matrix_phtransfer_doner_patch(this%ifroot_to_iout_ph)                  = ifroot
+    this%matrix_phtransfer_receiver_patch(this%ifroot_to_iout_ph)               = ioutc
     
-    this%ilivestem_to_iout_ph = 17
-    this%matrix_phtransfer_doner_patch(this%ilivestem_to_iout_ph)    = ilivestem
-    this%matrix_phtransfer_receiver_patch(this%ilivestem_to_iout_ph) = ioutc
+    this%ilivestem_to_iout_ph            = 17
+    this%matrix_phtransfer_doner_patch(this%ilivestem_to_iout_ph)               = ilivestem
+    this%matrix_phtransfer_receiver_patch(this%ilivestem_to_iout_ph)            = ioutc
 
     if(use_crop)then
-       this%igrain_to_iout_ph = 18
-       this%matrix_phtransfer_doner_patch(this%igrain_to_iout_ph)    = igrain
-       this%matrix_phtransfer_receiver_patch(this%igrain_to_iout_ph) = ioutc
+       this%igrain_to_iout_ph            = 18
+       this%matrix_phtransfer_doner_patch(this%igrain_to_iout_ph)               = igrain
+       this%matrix_phtransfer_receiver_patch(this%igrain_to_iout_ph)            = ioutc
     end if
 
-    this%ileaf_to_iout_gm = 1
-    this%matrix_gmtransfer_doner_patch(this%ileaf_to_iout_gm) = ileaf 
-    this%matrix_gmtransfer_receiver_patch(this%ileaf_to_iout_gm) = ioutc
+    this%ileaf_to_iout_gm                = 1
+    this%matrix_gmtransfer_doner_patch(this%ileaf_to_iout_gm)                   = ileaf 
+    this%matrix_gmtransfer_receiver_patch(this%ileaf_to_iout_gm)                = ioutc
     
-    this%ileafst_to_iout_gm = 2
-    this%matrix_gmtransfer_doner_patch(this%ileafst_to_iout_gm) = ileaf_st
-    this%matrix_gmtransfer_receiver_patch(this%ileafst_to_iout_gm) = ioutc
+    this%ileafst_to_iout_gm              = 2
+    this%matrix_gmtransfer_doner_patch(this%ileafst_to_iout_gm)                 = ileaf_st
+    this%matrix_gmtransfer_receiver_patch(this%ileafst_to_iout_gm)              = ioutc
     
-    this%ileafxf_to_iout_gm = 3
-    this%matrix_gmtransfer_doner_patch(this%ileafxf_to_iout_gm) = ileaf_xf
-    this%matrix_gmtransfer_receiver_patch(this%ileafxf_to_iout_gm) = ioutc
+    this%ileafxf_to_iout_gm              = 3
+    this%matrix_gmtransfer_doner_patch(this%ileafxf_to_iout_gm)                 = ileaf_xf
+    this%matrix_gmtransfer_receiver_patch(this%ileafxf_to_iout_gm)              = ioutc
     
-    this%ifroot_to_iout_gm = 4
-    this%matrix_gmtransfer_doner_patch(this%ifroot_to_iout_gm) = ifroot 
-    this%matrix_gmtransfer_receiver_patch(this%ifroot_to_iout_gm) = ioutc
+    this%ifroot_to_iout_gm               = 4
+    this%matrix_gmtransfer_doner_patch(this%ifroot_to_iout_gm)                  = ifroot 
+    this%matrix_gmtransfer_receiver_patch(this%ifroot_to_iout_gm)               = ioutc
     
-    this%ifrootst_to_iout_gm = 5
-    this%matrix_gmtransfer_doner_patch(this%ifrootst_to_iout_gm) = ifroot_st
-    this%matrix_gmtransfer_receiver_patch(this%ifrootst_to_iout_gm) = ioutc
+    this%ifrootst_to_iout_gm             = 5
+    this%matrix_gmtransfer_doner_patch(this%ifrootst_to_iout_gm)                = ifroot_st
+    this%matrix_gmtransfer_receiver_patch(this%ifrootst_to_iout_gm)             = ioutc
     
-    this%ifrootxf_to_iout_gm = 6
-    this%matrix_gmtransfer_doner_patch(this%ifrootxf_to_iout_gm) = ifroot_xf
-    this%matrix_gmtransfer_receiver_patch(this%ifrootxf_to_iout_gm) = ioutc
+    this%ifrootxf_to_iout_gm             = 6
+    this%matrix_gmtransfer_doner_patch(this%ifrootxf_to_iout_gm)                = ifroot_xf
+    this%matrix_gmtransfer_receiver_patch(this%ifrootxf_to_iout_gm)             = ioutc
     
-    this%ilivestem_to_iout_gm = 7
-    this%matrix_gmtransfer_doner_patch(this%ilivestem_to_iout_gm) = ilivestem 
-    this%matrix_gmtransfer_receiver_patch(this%ilivestem_to_iout_gm) = ioutc
+    this%ilivestem_to_iout_gm            = 7
+    this%matrix_gmtransfer_doner_patch(this%ilivestem_to_iout_gm)               = ilivestem 
+    this%matrix_gmtransfer_receiver_patch(this%ilivestem_to_iout_gm)            = ioutc
     
-    this%ilivestemst_to_iout_gm = 8
-    this%matrix_gmtransfer_doner_patch(this%ilivestemst_to_iout_gm) = ilivestem_st
-    this%matrix_gmtransfer_receiver_patch(this%ilivestemst_to_iout_gm) = ioutc
+    this%ilivestemst_to_iout_gm          = 8
+    this%matrix_gmtransfer_doner_patch(this%ilivestemst_to_iout_gm)             = ilivestem_st
+    this%matrix_gmtransfer_receiver_patch(this%ilivestemst_to_iout_gm)          = ioutc
     
-    this%ilivestemxf_to_iout_gm = 9
-    this%matrix_gmtransfer_doner_patch(this%ilivestemxf_to_iout_gm) = ilivestem_xf
-    this%matrix_gmtransfer_receiver_patch(this%ilivestemxf_to_iout_gm) = ioutc
+    this%ilivestemxf_to_iout_gm          = 9
+    this%matrix_gmtransfer_doner_patch(this%ilivestemxf_to_iout_gm)             = ilivestem_xf
+    this%matrix_gmtransfer_receiver_patch(this%ilivestemxf_to_iout_gm)          = ioutc
     
-    this%ideadstem_to_iout_gm = 10
-    this%matrix_gmtransfer_doner_patch(this%ideadstem_to_iout_gm) = ideadstem 
-    this%matrix_gmtransfer_receiver_patch(this%ideadstem_to_iout_gm) = ioutc
+    this%ideadstem_to_iout_gm            = 10
+    this%matrix_gmtransfer_doner_patch(this%ideadstem_to_iout_gm)               = ideadstem 
+    this%matrix_gmtransfer_receiver_patch(this%ideadstem_to_iout_gm)            = ioutc
     
-    this%ideadstemst_to_iout_gm = 11
-    this%matrix_gmtransfer_doner_patch(this%ideadstemst_to_iout_gm) = ideadstem_st
-    this%matrix_gmtransfer_receiver_patch(this%ideadstemst_to_iout_gm) = ioutc
+    this%ideadstemst_to_iout_gm          = 11
+    this%matrix_gmtransfer_doner_patch(this%ideadstemst_to_iout_gm)             = ideadstem_st
+    this%matrix_gmtransfer_receiver_patch(this%ideadstemst_to_iout_gm)          = ioutc
     
-    this%ideadstemxf_to_iout_gm = 12
-    this%matrix_gmtransfer_doner_patch(this%ideadstemxf_to_iout_gm) = ideadstem_xf
-    this%matrix_gmtransfer_receiver_patch(this%ideadstemxf_to_iout_gm) = ioutc
+    this%ideadstemxf_to_iout_gm          = 12
+    this%matrix_gmtransfer_doner_patch(this%ideadstemxf_to_iout_gm)             = ideadstem_xf
+    this%matrix_gmtransfer_receiver_patch(this%ideadstemxf_to_iout_gm)          = ioutc
     
-    this%ilivecroot_to_iout_gm = 13
-    this%matrix_gmtransfer_doner_patch(this%ilivecroot_to_iout_gm) = ilivecroot 
-    this%matrix_gmtransfer_receiver_patch(this%ilivecroot_to_iout_gm) = ioutc
+    this%ilivecroot_to_iout_gm           = 13
+    this%matrix_gmtransfer_doner_patch(this%ilivecroot_to_iout_gm)              = ilivecroot 
+    this%matrix_gmtransfer_receiver_patch(this%ilivecroot_to_iout_gm)           = ioutc
     
-    this%ilivecrootst_to_iout_gm = 14
-    this%matrix_gmtransfer_doner_patch(this%ilivecrootst_to_iout_gm) = ilivecroot_st
-    this%matrix_gmtransfer_receiver_patch(this%ilivecrootst_to_iout_gm) = ioutc
+    this%ilivecrootst_to_iout_gm         = 14
+    this%matrix_gmtransfer_doner_patch(this%ilivecrootst_to_iout_gm)            = ilivecroot_st
+    this%matrix_gmtransfer_receiver_patch(this%ilivecrootst_to_iout_gm)         = ioutc
     
-    this%ilivecrootxf_to_iout_gm = 15
-    this%matrix_gmtransfer_doner_patch(this%ilivecrootxf_to_iout_gm) = ilivecroot_xf
-    this%matrix_gmtransfer_receiver_patch(this%ilivecrootxf_to_iout_gm) = ioutc
+    this%ilivecrootxf_to_iout_gm         = 15
+    this%matrix_gmtransfer_doner_patch(this%ilivecrootxf_to_iout_gm)            = ilivecroot_xf
+    this%matrix_gmtransfer_receiver_patch(this%ilivecrootxf_to_iout_gm)         = ioutc
     
-    this%ideadcroot_to_iout_gm = 16
-    this%matrix_gmtransfer_doner_patch(this%ideadcroot_to_iout_gm) = ideadcroot 
-    this%matrix_gmtransfer_receiver_patch(this%ideadcroot_to_iout_gm) = ioutc
+    this%ideadcroot_to_iout_gm           = 16
+    this%matrix_gmtransfer_doner_patch(this%ideadcroot_to_iout_gm)              = ideadcroot 
+    this%matrix_gmtransfer_receiver_patch(this%ideadcroot_to_iout_gm)           = ioutc
     
-    this%ideadcrootst_to_iout_gm = 17
-    this%matrix_gmtransfer_doner_patch(this%ideadcrootst_to_iout_gm) = ideadcroot_st
-    this%matrix_gmtransfer_receiver_patch(this%ideadcrootst_to_iout_gm) = ioutc
+    this%ideadcrootst_to_iout_gm         = 17
+    this%matrix_gmtransfer_doner_patch(this%ideadcrootst_to_iout_gm)            = ideadcroot_st
+    this%matrix_gmtransfer_receiver_patch(this%ideadcrootst_to_iout_gm)         = ioutc
     
-    this%ideadcrootxf_to_iout_gm = 18
-    this%matrix_gmtransfer_doner_patch(this%ideadcrootxf_to_iout_gm) = ideadcroot_xf
-    this%matrix_gmtransfer_receiver_patch(this%ideadcrootxf_to_iout_gm) = ioutc
+    this%ideadcrootxf_to_iout_gm         = 18
+    this%matrix_gmtransfer_doner_patch(this%ideadcrootxf_to_iout_gm)            = ideadcroot_xf
+    this%matrix_gmtransfer_receiver_patch(this%ideadcrootxf_to_iout_gm)         = ioutc
     
-    this%ilivestem_to_ideadstem_fi = 1
-    this%matrix_fitransfer_doner_patch(this%ilivestem_to_ideadstem_fi) = ilivestem 
-    this%matrix_fitransfer_receiver_patch(this%ilivestem_to_ideadstem_fi) = ideadstem
+    this%ilivestem_to_ideadstem_fi       = 1
+    this%matrix_fitransfer_doner_patch(this%ilivestem_to_ideadstem_fi)          = ilivestem 
+    this%matrix_fitransfer_receiver_patch(this%ilivestem_to_ideadstem_fi)       = ideadstem
     
-    this%ilivecroot_to_ideadcroot_fi = 2
-    this%matrix_fitransfer_doner_patch(this%ilivecroot_to_ideadcroot_fi) = ilivecroot 
-    this%matrix_fitransfer_receiver_patch(this%ilivecroot_to_ideadcroot_fi) = ideadcroot
+    this%ilivecroot_to_ideadcroot_fi     = 2
+    this%matrix_fitransfer_doner_patch(this%ilivecroot_to_ideadcroot_fi)        = ilivecroot 
+    this%matrix_fitransfer_receiver_patch(this%ilivecroot_to_ideadcroot_fi)     = ideadcroot
 
-    this%ileaf_to_iout_fi = 3
-    this%matrix_fitransfer_doner_patch(this%ileaf_to_iout_fi) = ileaf 
-    this%matrix_fitransfer_receiver_patch(this%ileaf_to_iout_fi) = ioutc
+    this%ileaf_to_iout_fi                = 3
+    this%matrix_fitransfer_doner_patch(this%ileaf_to_iout_fi)                   = ileaf 
+    this%matrix_fitransfer_receiver_patch(this%ileaf_to_iout_fi)                = ioutc
     
-    this%ileafst_to_iout_fi = 4
-    this%matrix_fitransfer_doner_patch(this%ileafst_to_iout_fi) = ileaf_st
-    this%matrix_fitransfer_receiver_patch(this%ileafst_to_iout_fi) = ioutc
+    this%ileafst_to_iout_fi              = 4
+    this%matrix_fitransfer_doner_patch(this%ileafst_to_iout_fi)                 = ileaf_st
+    this%matrix_fitransfer_receiver_patch(this%ileafst_to_iout_fi)              = ioutc
     
-    this%ileafxf_to_iout_fi = 5
-    this%matrix_fitransfer_doner_patch(this%ileafxf_to_iout_fi) = ileaf_xf
-    this%matrix_fitransfer_receiver_patch(this%ileafxf_to_iout_fi) = ioutc
+    this%ileafxf_to_iout_fi              = 5
+    this%matrix_fitransfer_doner_patch(this%ileafxf_to_iout_fi)                 = ileaf_xf
+    this%matrix_fitransfer_receiver_patch(this%ileafxf_to_iout_fi)              = ioutc
     
-    this%ifroot_to_iout_fi = 6
-    this%matrix_fitransfer_doner_patch(this%ifroot_to_iout_fi) = ifroot 
-    this%matrix_fitransfer_receiver_patch(this%ifroot_to_iout_fi) = ioutc
+    this%ifroot_to_iout_fi               = 6
+    this%matrix_fitransfer_doner_patch(this%ifroot_to_iout_fi)                  = ifroot 
+    this%matrix_fitransfer_receiver_patch(this%ifroot_to_iout_fi)               = ioutc
     
-    this%ifrootst_to_iout_fi = 7
-    this%matrix_fitransfer_doner_patch(this%ifrootst_to_iout_fi) = ifroot_st
-    this%matrix_fitransfer_receiver_patch(this%ifrootst_to_iout_fi) = ioutc
+    this%ifrootst_to_iout_fi             = 7
+    this%matrix_fitransfer_doner_patch(this%ifrootst_to_iout_fi)                = ifroot_st
+    this%matrix_fitransfer_receiver_patch(this%ifrootst_to_iout_fi)             = ioutc
     
-    this%ifrootxf_to_iout_fi = 8
-    this%matrix_fitransfer_doner_patch(this%ifrootxf_to_iout_fi) = ifroot_xf
-    this%matrix_fitransfer_receiver_patch(this%ifrootxf_to_iout_fi) = ioutc
+    this%ifrootxf_to_iout_fi             = 8
+    this%matrix_fitransfer_doner_patch(this%ifrootxf_to_iout_fi)                = ifroot_xf
+    this%matrix_fitransfer_receiver_patch(this%ifrootxf_to_iout_fi)             = ioutc
     
-    this%ilivestem_to_iout_fi = 9
-    this%matrix_fitransfer_doner_patch(this%ilivestem_to_iout_fi) = ilivestem 
-    this%matrix_fitransfer_receiver_patch(this%ilivestem_to_iout_fi) = ioutc
+    this%ilivestem_to_iout_fi            = 9
+    this%matrix_fitransfer_doner_patch(this%ilivestem_to_iout_fi)               = ilivestem 
+    this%matrix_fitransfer_receiver_patch(this%ilivestem_to_iout_fi)            = ioutc
     
-    this%ilivestemst_to_iout_fi = 10
-    this%matrix_fitransfer_doner_patch(this%ilivestemst_to_iout_fi) = ilivestem_st
-    this%matrix_fitransfer_receiver_patch(this%ilivestemst_to_iout_fi) = ioutc
+    this%ilivestemst_to_iout_fi          = 10
+    this%matrix_fitransfer_doner_patch(this%ilivestemst_to_iout_fi)             = ilivestem_st
+    this%matrix_fitransfer_receiver_patch(this%ilivestemst_to_iout_fi)          = ioutc
     
-    this%ilivestemxf_to_iout_fi = 11
-    this%matrix_fitransfer_doner_patch(this%ilivestemxf_to_iout_fi) = ilivestem_xf
-    this%matrix_fitransfer_receiver_patch(this%ilivestemxf_to_iout_fi) = ioutc
+    this%ilivestemxf_to_iout_fi          = 11
+    this%matrix_fitransfer_doner_patch(this%ilivestemxf_to_iout_fi)             = ilivestem_xf
+    this%matrix_fitransfer_receiver_patch(this%ilivestemxf_to_iout_fi)          = ioutc
     
-    this%ideadstem_to_iout_fi = 12
-    this%matrix_fitransfer_doner_patch(this%ideadstem_to_iout_fi) = ideadstem 
-    this%matrix_fitransfer_receiver_patch(this%ideadstem_to_iout_fi) = ioutc
+    this%ideadstem_to_iout_fi            = 12
+    this%matrix_fitransfer_doner_patch(this%ideadstem_to_iout_fi)               = ideadstem 
+    this%matrix_fitransfer_receiver_patch(this%ideadstem_to_iout_fi)            = ioutc
     
-    this%ideadstemst_to_iout_fi = 13
-    this%matrix_fitransfer_doner_patch(this%ideadstemst_to_iout_fi) = ideadstem_st
-    this%matrix_fitransfer_receiver_patch(this%ideadstemst_to_iout_fi) = ioutc
+    this%ideadstemst_to_iout_fi          = 13
+    this%matrix_fitransfer_doner_patch(this%ideadstemst_to_iout_fi)             = ideadstem_st
+    this%matrix_fitransfer_receiver_patch(this%ideadstemst_to_iout_fi)          = ioutc
     
-    this%ideadstemxf_to_iout_fi = 14
-    this%matrix_fitransfer_doner_patch(this%ideadstemxf_to_iout_fi) = ideadstem_xf
-    this%matrix_fitransfer_receiver_patch(this%ideadstemxf_to_iout_fi) = ioutc
+    this%ideadstemxf_to_iout_fi          = 14
+    this%matrix_fitransfer_doner_patch(this%ideadstemxf_to_iout_fi)             = ideadstem_xf
+    this%matrix_fitransfer_receiver_patch(this%ideadstemxf_to_iout_fi)          = ioutc
     
-    this%ilivecroot_to_iout_fi = 15
-    this%matrix_fitransfer_doner_patch(this%ilivecroot_to_iout_fi) = ilivecroot 
-    this%matrix_fitransfer_receiver_patch(this%ilivecroot_to_iout_fi) = ioutc
+    this%ilivecroot_to_iout_fi           = 15
+    this%matrix_fitransfer_doner_patch(this%ilivecroot_to_iout_fi)              = ilivecroot 
+    this%matrix_fitransfer_receiver_patch(this%ilivecroot_to_iout_fi)           = ioutc
     
-    this%ilivecrootst_to_iout_fi = 16
-    this%matrix_fitransfer_doner_patch(this%ilivecrootst_to_iout_fi) = ilivecroot_st
-    this%matrix_fitransfer_receiver_patch(this%ilivecrootst_to_iout_fi) = ioutc
+    this%ilivecrootst_to_iout_fi         = 16
+    this%matrix_fitransfer_doner_patch(this%ilivecrootst_to_iout_fi)            = ilivecroot_st
+    this%matrix_fitransfer_receiver_patch(this%ilivecrootst_to_iout_fi)         = ioutc
     
-    this%ilivecrootxf_to_iout_fi = 17
-    this%matrix_fitransfer_doner_patch(this%ilivecrootxf_to_iout_fi) = ilivecroot_xf
-    this%matrix_fitransfer_receiver_patch(this%ilivecrootxf_to_iout_fi) = ioutc
+    this%ilivecrootxf_to_iout_fi         = 17
+    this%matrix_fitransfer_doner_patch(this%ilivecrootxf_to_iout_fi)            = ilivecroot_xf
+    this%matrix_fitransfer_receiver_patch(this%ilivecrootxf_to_iout_fi)         = ioutc
     
-    this%ideadcroot_to_iout_fi = 18
-    this%matrix_fitransfer_doner_patch(this%ideadcroot_to_iout_fi) = ideadcroot 
-    this%matrix_fitransfer_receiver_patch(this%ideadcroot_to_iout_fi) = ioutc
+    this%ideadcroot_to_iout_fi           = 18
+    this%matrix_fitransfer_doner_patch(this%ideadcroot_to_iout_fi)              = ideadcroot 
+    this%matrix_fitransfer_receiver_patch(this%ideadcroot_to_iout_fi)           = ioutc
     
-    this%ideadcrootst_to_iout_fi = 19
-    this%matrix_fitransfer_doner_patch(this%ideadcrootst_to_iout_fi) = ideadcroot_st
-    this%matrix_fitransfer_receiver_patch(this%ideadcrootst_to_iout_fi) = ioutc
+    this%ideadcrootst_to_iout_fi         = 19
+    this%matrix_fitransfer_doner_patch(this%ideadcrootst_to_iout_fi)            = ideadcroot_st
+    this%matrix_fitransfer_receiver_patch(this%ideadcrootst_to_iout_fi)         = ioutc
     
-    this%ideadcrootxf_to_iout_fi = 20
-    this%matrix_fitransfer_doner_patch(this%ideadcrootxf_to_iout_fi) = ideadcroot_xf
-    this%matrix_fitransfer_receiver_patch(this%ideadcrootxf_to_iout_fi) = ioutc
+    this%ideadcrootxf_to_iout_fi         = 20
+    this%matrix_fitransfer_doner_patch(this%ideadcrootxf_to_iout_fi)            = ideadcroot_xf
+    this%matrix_fitransfer_receiver_patch(this%ideadcrootxf_to_iout_fi)         = ioutc
     
   end subroutine InitTransfer 
     
@@ -1173,7 +1173,7 @@ contains
          bounds = bounds, &
          name = 'hrv_xsmrpool_to_atm_' // carbon_type_suffix, &
          units = 'gC/m^2', &
-         allows_non_annual_delta = .true.)!zgdu false->true
+         allows_non_annual_delta = .false.) !zgdu false->true. Set to True now but is not tested.
 
   end subroutine InitAllocate
 

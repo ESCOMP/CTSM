@@ -2214,7 +2214,7 @@ contains
                   call t_startf('CN veg matrix-finalize spinup')
                   
                   if(isspinup .and. .not. is_first_step_of_this_run_segment())then
-  ! if spin up is true, set C storage to capacity
+  ! if spin up is true, set C storage to capacity. Not tested yet
                      leafc(p)                  = vegmatrixc_rt(ileaf)
                      leafc_storage(p)          = vegmatrixc_rt(ileaf_st)
       !               leafc_xfer(p)             = vegmatrixc_rt(ileaf_xf)
