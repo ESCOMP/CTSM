@@ -210,6 +210,7 @@ contains
     integer  :: jconvectbot(bounds%begc:bounds%endc)                       ! Hightest level where bottom-originating convection occurs
     logical  :: bottomconvect(bounds%begc:bounds%endc)                     ! Convection originating in bottom layer of lake triggers special convection loop
     real(r8) :: fangkm                                                     ! (m^2/s) extra diffusivity based on Fang & Stefan 1996, citing Ellis, 1991
+    real(r8) :: h2osno_total(bounds%begc:bounds%endc)                      ! total snow water (mm H2O)
 
     ! They think that mixing energy will generally get into lake to make
     ! diffusivity exceed molecular; the energy is damped out according to the Brunt-Vaisala
@@ -240,7 +241,6 @@ contains
          ws              =>   lakestate_inst%ws_col                , & ! Input:  [real(r8) (:)   ]  surface friction velocity (m/s)                   
          lake_raw       =>    lakestate_inst%lake_raw_col          , & ! Input:  [real(r8) (:)   ]  aerodynamic resistance for moisture (s/m)   
          
-         h2osno          =>   waterstatebulk_inst%h2osno_col           , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
          h2osoi_liq      =>   waterstatebulk_inst%h2osoi_liq_col       , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) [for snow & soil layers]
          h2osoi_ice      =>   waterstatebulk_inst%h2osoi_ice_col       , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) [for snow & soil layers]
          frac_iceold     =>   waterdiagnosticbulk_inst%frac_iceold_col      , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
@@ -509,6 +509,8 @@ contains
     end do
 
     ! Now do for soil / snow layers
+    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
     do j = -nlevsno + 1, nlevgrnd
        do fc = 1, num_lakec
           c = filter_lakec(fc)
@@ -516,8 +518,8 @@ contains
           if (j >= jtop(c)) then
              ocvts(c) = ocvts(c) + cv(c,j)*(t_soisno(c,j)-tfrz) &
                       + hfus*h2osoi_liq(c,j)
-             if (j == 1 .and. h2osno(c) > 0._r8 .and. j == jtop(c)) then
-                ocvts(c) = ocvts(c) - h2osno(c)*hfus
+             if (j == 1 .and. h2osno_total(c) > 0._r8 .and. j == jtop(c)) then
+                ocvts(c) = ocvts(c) - h2osno_total(c)*hfus
              end if
              t_soisno_bef(c,j) = t_soisno(c,j)
           end if
@@ -1000,6 +1002,8 @@ contains
        end do
     end do
 
+    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
     do j = -nlevsno + 1, nlevgrnd
        do fc = 1, num_lakec
           c = filter_lakec(fc)
@@ -1008,8 +1012,8 @@ contains
              ncvts(c) = ncvts(c) + cv(c,j)*(t_soisno(c,j)-tfrz) &
                       + hfus*h2osoi_liq(c,j) 
              if (j < 1) fin(c) = fin(c) + phix(c,j) !For SNICAR
-             if (j == 1 .and. h2osno(c) > 0._r8 .and. j == jtop(c)) then
-                ncvts(c) = ncvts(c) - h2osno(c)*hfus
+             if (j == 1 .and. h2osno_total(c) > 0._r8 .and. j == jtop(c)) then
+                ncvts(c) = ncvts(c) - h2osno_total(c)*hfus
              end if
           end if
           if (j == 1) fin(c) = fin(c) + phi_soil(c)
@@ -1207,9 +1211,13 @@ contains
              c = filter_lakec(fc)
              cv(c,j) = csol(c,j)*(1-watsat(c,j))*dz(c,j) +   &
                   (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
+             ! NOTE(wjs, 2019-06-10) In order to uncomment-out the following code, we
+             ! would need to either pass in h2osno_total or recompute it locally in this
+             ! subroutine.
+             !
              !   if (j == 1) then
-             !      if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8) then
-             !         cv(c,j) = cv(c,j) + cpice*h2osno(c)
+             !      if (snl(c)+1 == 1 .AND. h2osno_total(c) > 0._r8) then
+             !         cv(c,j) = cv(c,j) + cpice*h2osno_total(c)
              !      end if
              !   end if
              ! Won't worry about heat capacity for thin snow on lake with no snow layers.
