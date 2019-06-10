@@ -410,6 +410,8 @@ contains
             end do
             if (snl(c) == 0) then
                this%h2osno_no_layers_col(c) = h2osno_input_col(c) * ratio
+            else
+               this%h2osno_no_layers_col(c) = 0._r8
             end if
             do j = -nlevsno+1, 0
                if (j > snl(c)) then
@@ -431,6 +433,8 @@ contains
          if (lun%lakpoi(l)) then
             if (snl(c) == 0) then
                this%h2osno_no_layers_col(c) = h2osno_input_col(c) * ratio
+            else
+               this%h2osno_no_layers_col(c) = 0._r8
             end if
             do j = -nlevsno+1, 0
                if (j > snl(c)) then
@@ -776,6 +780,7 @@ contains
        end if
 
        ! FIXME(wjs, 2019-06-06) Uncomment this
+       ! (2019-06-10) (I might also need to allow spval.)
        ! do j = -nlevsno+1, col%snl(c)
        !    if (this%h2osoi_ice_col(c,j) /= 0._r8 .or. this%h2osoi_liq_col(c,j) /= 0._r8) then
        !       write(iulog,*) subname//' ERROR: col has non-zero h2osoi_ice or h2osoi_liq outside resolved snow layers'
