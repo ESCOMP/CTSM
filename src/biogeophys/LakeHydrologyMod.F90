@@ -115,6 +115,7 @@ contains
     real(r8) :: qflx_prec_grnd_rain(bounds%begp:bounds%endp)    ! rain precipitation incident on ground [mm/s]
     real(r8) :: qflx_evap_soi_lim                               ! temporary evap_soi limited by top snow layer content [mm/s]
     real(r8) :: h2osno_temp                                     ! temporary h2osno [kg/m^2]
+    real(r8) :: h2osno_total(bounds%begc:bounds%endc)           ! total snow water (mm H2O)
     real(r8) :: sumsnowice(bounds%begc:bounds%endc)             ! sum of snow ice if snow layers found above unfrozen lake [kg/m&2]
     logical  :: unfrozen(bounds%begc:bounds%endc)               ! true if top lake layer is unfrozen with snow layers above
     real(r8) :: heatrem                                         ! used in case above [J/m^2]
@@ -373,9 +374,11 @@ contains
            num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc)
 
       ! specify snow fraction
+      call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+           h2osno_total = h2osno_total(bounds%begc:bounds%endc))
       do fc = 1, num_lakec
          c = filter_lakec(fc)
-         if (h2osno(c) > 0.0_r8) then
+         if (h2osno_total(c) > 0.0_r8) then
             frac_sno_eff(c)     = 1._r8 
          else
             frac_sno_eff(c)     = 0._r8 
@@ -446,6 +449,10 @@ contains
       call DivideSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
            aerosol_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, is_lake=.true.)
 
+      ! Recompute h2osno_total for possible updates in the above snow routines
+      call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+           h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+
       ! Check for single completely unfrozen snow layer over lake.  Modeling this ponding is unnecessary and
       ! can cause instability after the timestep when melt is completed, as the temperature after melt can be
       ! excessive because the fluxes were calculated with a fixed ground temperature of freezing, but the 
@@ -479,10 +486,11 @@ contains
                eflx_soil_grnd(p)   = eflx_soil_grnd(p) - heatrem/dtime
                eflx_gnet(p)        = eflx_gnet(p) - heatrem/dtime
                eflx_grnd_lake(p)   = eflx_grnd_lake(p) - heatrem/dtime
-               qflx_snow_drain(c)  = qflx_snow_drain(c) + h2osno(c)/dtime
+               qflx_snow_drain(c)  = qflx_snow_drain(c) + h2osno_total(c)/dtime
                snl(c)              = 0
                h2osno(c)           = 0._r8
                h2osno_no_layers(c) = 0._r8
+               h2osno_total(c)     = 0._r8
                snow_depth(c)       = 0._r8
                ! Rest of snow layer book-keeping will be done below.
             else
@@ -547,7 +555,7 @@ contains
                end do
 
                ! update incidental drainage from snow pack for this case
-               qflx_snow_drain(c) = qflx_snow_drain(c) + h2osno(c)/dtime
+               qflx_snow_drain(c) = qflx_snow_drain(c) + h2osno_total(c)/dtime
 
                h2osno(c) = 0._r8
                h2osno_no_layers(c) = 0._r8
