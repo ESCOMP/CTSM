@@ -62,12 +62,11 @@ contains
     real(r8):: d,fd,dfdd      ! temporary variable for frac_h2o iteration
     real(r8):: sigma          ! microtopography pdf sigma in mm
     real(r8):: min_h2osfc
+    real(r8):: h2osno_total(bounds%begc:bounds%endc)  ! total snow water (mm H2O)
     !-----------------------------------------------------------------------
 
     associate(                                              & 
          micro_sigma  => col%micro_sigma                  , & ! Input:  [real(r8) (:)   ] microtopography pdf sigma (m)                     
-         
-         h2osno       => waterstatebulk_inst%h2osno_col       , & ! Input:  [real(r8) (:)   ] snow water (mm H2O)                               
          
          h2osoi_liq   => waterstatebulk_inst%h2osoi_liq_col   , & ! Output: [real(r8) (:,:) ] liquid water (col,lyr) [kg/m2]                  
          h2osfc       => waterstatebulk_inst%h2osfc_col       , & ! Output: [real(r8) (:)   ] surface water (mm)                                
@@ -79,6 +78,9 @@ contains
 
     ! arbitrary lower limit on h2osfc for safer numerics...
     min_h2osfc=1.e-8_r8
+
+    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     do f = 1, num_nolakec
        c = filter_nolakec(f)
@@ -116,7 +118,7 @@ contains
           frac_h2osfc_nosnow(c) = frac_h2osfc(c)
 
           ! adjust fh2o, fsno when sum is greater than zero
-          if (frac_sno(c) > (1._r8 - frac_h2osfc(c)) .and. h2osno(c) > 0) then
+          if (frac_sno(c) > (1._r8 - frac_h2osfc(c)) .and. h2osno_total(c) > 0) then
 
              if (frac_h2osfc(c) > 0.01_r8) then             
                 frac_h2osfc(c) = max(1.0_r8 - frac_sno(c),0.01_r8)
