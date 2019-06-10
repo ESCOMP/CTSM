@@ -457,6 +457,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: fc,c,l              ! indices
+    real(r8) :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water (mm H2O)
     !
     ! These values are derived from Marshall (1989) assuming soot content of 1.5e-5 
     ! (three times what LSM uses globally). Note that snow age effects are ignored here.
@@ -474,14 +475,13 @@ contains
     SHR_ASSERT_ALL((ubound(albsn_improad) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(albsn_perroad) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
 
-    associate(                            & 
-         h2osno =>  waterstatebulk_inst%h2osno_col & ! Input:  [real(r8) (:) ]  snow water (mm H2O)                               
-         )
+      call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_urbanc, filter_urbanc, &
+           h2osno_total = h2osno_total(bounds%begc:bounds%endc))
       
       do fc = 1,num_urbanc
          c = filter_urbanc(fc)
          l = col%landunit(c)
-         if (coszen(l) > 0._r8 .and. h2osno(c) > 0._r8) then
+         if (coszen(l) > 0._r8 .and. h2osno_total(c) > 0._r8) then
             if (col%itype(c) == icol_roof) then
                albsn_roof(l,1) = snal0
                albsn_roof(l,2) = snal1
@@ -505,8 +505,6 @@ contains
             end if
          end if
       end do
-
-    end associate
 
   end subroutine SnowAlbedo
 
