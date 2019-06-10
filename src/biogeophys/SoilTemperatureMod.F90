@@ -845,6 +845,7 @@ contains
     integer  :: fc                          !lake filtered column indices
     real(r8) :: dtime                       !land model time step (sec)
     real(r8) :: temp1                       !temporary variables [kg/m2                    ]
+    real(r8) :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water (mm H2O)
     real(r8) :: hm(bounds%begc:bounds%endc) !energy residual [W/m2                         ]
     real(r8) :: xm(bounds%begc:bounds%endc) !melting or freezing within a time step [kg/m2 ]
     real(r8) :: tinc                        !t(n+1)-t(n) (K)
@@ -867,7 +868,7 @@ contains
          
          frac_sno                  =>    waterdiagnosticbulk_inst%frac_sno_eff_col      , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
          frac_h2osfc               =>    waterdiagnosticbulk_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
-         h2osno                    =>    waterstatebulk_inst%h2osno_col            , & ! Input:  [real(r8) (:)   ] snow water (mm H2O)                     
+         h2osno                    =>    waterstatebulk_inst%h2osno_col            , & ! Input:  [real(r8) (:)   ] snow water (mm H2O)
          h2osno_no_layers          =>    waterstatebulk_inst%h2osno_no_layers_col  , & ! Output: [real(r8) (:)   ] snow that is not resolved into layers (mm H2O)
          h2osoi_ice                =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Input:  [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
          h2osfc                    =>    waterstatebulk_inst%h2osfc_col            , & ! Output: [real(r8) (:)   ] surface water (mm)                      
@@ -898,6 +899,9 @@ contains
          eflx_h2osfc_to_snow_col(c) = 0._r8
       end do
 
+    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+
       ! Freezing identification
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
@@ -916,7 +920,7 @@ contains
 
             z_avg=frac_sno(c)*snow_depth(c)
             if (z_avg > 0._r8) then 
-               rho_avg=min(800._r8,h2osno(c)/z_avg)
+               rho_avg=min(800._r8,h2osno_total(c)/z_avg)
             else
                rho_avg=200._r8
             endif
@@ -932,6 +936,7 @@ contains
                else
                   h2osoi_ice(c,0) = h2osoi_ice(c,0) - xm(c)
                end if
+               h2osno_total(c) = h2osno_total(c) - xm(c)
 
                ! remove ice from h2osfc
                h2osfc(c) = h2osfc(c) + xm(c)
@@ -942,9 +947,9 @@ contains
 
                ! update snow depth
                if (frac_sno(c) > 0 .and. snl(c) < 0) then 
-                  snow_depth(c)=h2osno(c)/(rho_avg*frac_sno(c))
+                  snow_depth(c)=h2osno_total(c)/(rho_avg*frac_sno(c))
                else
-                  snow_depth(c)=h2osno(c)/denice
+                  snow_depth(c)=h2osno_total(c)/denice
                endif
 
                ! adjust temperature of lowest snow layer to account for addition of ice
@@ -972,7 +977,7 @@ contains
                !=========================  xm > h2osfc  =============================
             else !all h2osfc converted to ice
 
-               rho_avg=(h2osno(c)*rho_avg + h2osfc(c)*denice)/(h2osno(c) + h2osfc(c))
+               rho_avg=(h2osno_total(c)*rho_avg + h2osfc(c)*denice)/(h2osno_total(c) + h2osfc(c))
                h2osno(c) = h2osno(c) + h2osfc(c)
                int_snow(c) = int_snow(c) + h2osfc(c)
                if (snl(c) == 0) then
@@ -980,6 +985,7 @@ contains
                else
                   h2osoi_ice(c,0) = h2osoi_ice(c,0) + h2osfc(c)
                end if
+               h2osno_total(c) = h2osno_total(c) + h2osfc(c)
 
                qflx_h2osfc_to_ice(c) = h2osfc(c)/dtime
 
@@ -1027,9 +1033,9 @@ contains
 
                ! update snow depth
                if (frac_sno(c) > 0 .and. snl(c) < 0) then 
-                  snow_depth(c)=h2osno(c)/(rho_avg*frac_sno(c))
+                  snow_depth(c)=h2osno_total(c)/(rho_avg*frac_sno(c))
                else
-                  snow_depth(c)=h2osno(c)/denice
+                  snow_depth(c)=h2osno_total(c)/denice
                endif
 
             endif
