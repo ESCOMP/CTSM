@@ -296,6 +296,7 @@ contains
     integer  :: g                                            ! gridcell index
     real(r8) :: dtime                                        ! land model time step (sec)
     real(r8) :: dz_snowf                                     ! layer thickness rate change due to precipitation [mm/s]
+    real(r8) :: h2osno_total(bounds%begc:bounds%endc)        ! total snow water (mm H2O)
     real(r8) :: bifall(bounds%begc:bounds%endc)              ! bulk density of newly fallen dry snow [kg/m3]
     real(r8) :: z_avg                                        ! grid cell average snow depth
     real(r8) :: rho_avg                                      ! avg density of snow column
@@ -346,6 +347,15 @@ contains
     call NewSnowBulkDensity(bounds, num_nolakec, filter_nolakec, &
          atm2lnd_inst, bifall(bounds%begc:bounds%endc))
 
+    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+
+    ! FIXME(wjs, 2019-06-11) Remove this call
+    call CheckAndResetH2osnoTotal(bounds, num_nolakec, filter_nolakec, &
+         msg = 'Start of HandleNewSnow', &
+         h2osno = h2osno(bounds%begc:bounds%endc), &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+
     do f = 1, num_nolakec
        c = filter_nolakec(f)
        l = col%landunit(c)
@@ -370,12 +380,12 @@ contains
        newsnow(c) = qflx_snow_grnd_col(c) * dtime
 
        ! update int_snow
-       int_snow(c) = max(int_snow(c),h2osno(c)) !h2osno could be larger due to frost
+       int_snow(c) = max(int_snow(c),h2osno_total(c)) !h2osno_total could be larger due to frost
 
        ! snowmelt from previous time step * dtime
        snowmelt(c) = qflx_snow_drain(c) * dtime
 
-       if (h2osno(c) > 0.0) then
+       if (h2osno_total(c) > 0.0) then
 
           !======================  FSCA PARAMETERIZATIONS  ======================
           ! fsca parameterization based on *changes* in swe
@@ -383,7 +393,7 @@ contains
           if(snowmelt(c) > 0._r8) then
 
              int_snow_limited = min(int_snow(c), int_snow_max)
-             smr=min(1._r8,h2osno(c)/int_snow_limited)
+             smr=min(1._r8,h2osno_total(c)/int_snow_limited)
 
              frac_sno(c) = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(n_melt(c))
 
@@ -395,7 +405,7 @@ contains
              frac_sno(c) = fsno_new
 
              ! reset int_snow after accumulation events
-             temp_intsnow= (h2osno(c) + newsnow(c)) &
+             temp_intsnow= (h2osno_total(c) + newsnow(c)) &
                   / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
              int_snow(c) = min(1.e8_r8,temp_intsnow)
           endif
@@ -419,27 +429,27 @@ contains
              ! snow cover fraction in Niu et al. 2007
              if(snow_depth(c) > 0.0_r8)  then
                 frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * zlnd * &
-                     (min(800._r8,(h2osno(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
+                     (min(800._r8,(h2osno_total(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
              endif
-             if(h2osno(c) < 1.0_r8)  then
-                frac_sno(c)=min(frac_sno(c),h2osno(c))
+             if(h2osno_total(c) < 1.0_r8)  then
+                frac_sno(c)=min(frac_sno(c),h2osno_total(c))
              endif
           endif
 
-       else !h2osno == 0
+       else !h2osno_total == 0
           ! initialize frac_sno and snow_depth when no snow present initially
           if (newsnow(c) > 0._r8) then 
              z_avg = newsnow(c)/bifall(c)
              fmelt=newsnow(c)
              frac_sno(c) = tanh(accum_factor * newsnow(c))
 
-             ! make int_snow consistent w/ new fsno, h2osno
+             ! make int_snow consistent w/ new fsno, h2osno_total
              int_snow(c) = 0. !reset prior to adding newsnow below
-             temp_intsnow= (h2osno(c) + newsnow(c)) &
+             temp_intsnow= (h2osno_total(c) + newsnow(c)) &
                   / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
              int_snow(c) = min(1.e8_r8,temp_intsnow)
 
-             ! update snow_depth and h2osno to be consistent with frac_sno, z_avg
+             ! update snow_depth to be consistent with frac_sno, z_avg
              if (subgridflag ==1 .and. .not. lun%urbpoi(l)) then
                 snow_depth(c)=z_avg/frac_sno(c)
              else
@@ -458,7 +468,7 @@ contains
              snow_depth(c) = 0._r8
              frac_sno(c) = 0._r8
           endif
-       endif ! end of h2osno > 0
+       endif ! end of h2osno_total > 0
 
        ! no snow on surface water
        qflx_snow_h2osfc(c) = 0._r8
@@ -2462,5 +2472,33 @@ contains
     end if
 
   end subroutine SnowHydrologySetControlForTesting
+
+  ! FIXME(wjs, 2019-06-11) Remove this
+  subroutine CheckAndResetH2osnoTotal(bounds, num_c, filter_c, &
+       msg, h2osno, h2osno_total)
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_c
+    integer, intent(in) :: filter_c(:)
+    character(len=*), intent(in) :: msg
+    real(r8), intent(in) :: h2osno( bounds%begc: )
+    real(r8), intent(inout) :: h2osno_total( bounds%begc: )
+
+    integer :: fc, c
+    real(r8), parameter :: tol = 1.e-11_r8
+
+    SHR_ASSERT_ALL((ubound(h2osno, 1) == bounds%endc), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(h2osno_total, 1) == bounds%endc), errMsg(sourcefile, __LINE__))
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+       if (abs(h2osno(c) - h2osno_total(c)) > tol) then
+          write(iulog,*) 'CheckAndResetH2osnoTotal: ', trim(msg)
+          write(iulog,*) 'c, h2osno, h2osno_total, diff = ', c, h2osno(c), &
+               h2osno_total(c), h2osno(c) - h2osno_total(c)
+          call endrun('CheckAndResetH2osnoTotal: ' // trim(msg))
+       end if
+       h2osno_total(c) = h2osno(c)
+    end do
+  end subroutine CheckAndResetH2osnoTotal
 
 end module SnowHydrologyMod
