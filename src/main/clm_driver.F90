@@ -1035,6 +1035,7 @@ contains
 
        call t_startf('balchk')
        call BalanceCheck(bounds_clump, &
+            filter(nc)%num_allc, filter(nc)%allc, &
             atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterbalancebulk_inst, water_inst%wateratm2lndbulk_inst, &
