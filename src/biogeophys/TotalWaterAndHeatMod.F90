@@ -8,11 +8,9 @@ module TotalWaterAndHeatMod
 #include "shr_assert.h"
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
-  use abortutils         , only : endrun
   use decompMod          , only : bounds_type
-  use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus, namec
+  use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus
   use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb
-  use clm_varctl         , only : iulog
   use ColumnType         , only : col
   use LandunitType       , only : lun
   use subgridAveMod      , only : p2c
