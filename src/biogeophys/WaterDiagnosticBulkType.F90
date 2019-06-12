@@ -35,6 +35,7 @@ module WaterDiagnosticBulkType
   ! !PUBLIC TYPES:
   type, extends(waterdiagnostic_type), public :: waterdiagnosticbulk_type
 
+     real(r8), pointer :: h2osno_total_col       (:)   ! col total snow water (mm H2O)
      real(r8), pointer :: snow_depth_col         (:)   ! col snow height of snow covered area (m)
      real(r8), pointer :: snowdp_col             (:)   ! col area-averaged snow height (m)
      real(r8), pointer :: snow_layer_unity_col   (:,:) ! value 1 for each snow layer, used for history diagnostics
@@ -170,6 +171,7 @@ contains
     begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
+    allocate(this%h2osno_total_col       (begc:endc))                     ; this%h2osno_total_col       (:)   = nan
     allocate(this%snow_depth_col         (begc:endc))                     ; this%snow_depth_col         (:)   = nan
     allocate(this%snowdp_col             (begc:endc))                     ; this%snowdp_col             (:)   = nan
     allocate(this%snow_layer_unity_col   (begc:endc,-nlevsno+1:0))        ; this%snow_layer_unity_col   (:,:) = nan
@@ -231,6 +233,21 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
+
+    this%h2osno_total_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('H2OSNO'),  &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow depth (liquid water)'), &
+         ptr_col=this%h2osno_total_col, c2l_scale_type='urbanf')
+    call hist_addfld1d ( &
+         fname=this%info%fname('H2OSNO_ICE'), &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow depth (liquid water, ice landunits only)'), &
+         ptr_col=this%h2osno_total_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
 
     this%h2osoi_liq_tot_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -740,6 +757,9 @@ contains
          num_soilp, filter_soilp, &
          num_allc, filter_allc, &
          waterstate_inst, waterflux_inst)
+
+    call waterstate_inst%CalculateTotalH2osno(bounds, num_allc, filter_allc, &
+         h2osno_total = this%h2osno_total_col(bounds%begc:bounds%endc))
 
     do fp = 1, num_soilp
        p = filter_soilp(fp)
