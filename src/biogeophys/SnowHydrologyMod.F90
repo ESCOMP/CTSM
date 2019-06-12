@@ -1113,6 +1113,7 @@ contains
     integer :: msn_old(bounds%begc:bounds%endc) ! number of top snow layer
     integer :: mssi(bounds%begc:bounds%endc)    ! node index
     integer :: neibor                           ! adjacent node selected for combination
+    real(r8):: h2osno_total(bounds%begc:bounds%endc) ! total snow water (mm H2O)
     real(r8):: zwice(bounds%begc:bounds%endc)   ! total ice mass in snow
     real(r8):: zwliq (bounds%begc:bounds%endc)  ! total liquid water in snow
     real(r8):: dzminloc(size(dzmin))            ! minimum of top snow layer (local)
@@ -1284,6 +1285,9 @@ contains
        end do
     end do
 
+    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_snowc, filter_snowc, &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+
     ! Check the snow depth - all snow gone
     ! The liquid water assumes ponding on soil surface.
 
@@ -1293,11 +1297,12 @@ contains
        if (snow_depth(c) > 0._r8) then
           if ((ltype(l) == istdlak .and. snow_depth(c) < 0.01_r8 + lsadz ) .or. &
                ((ltype(l) /= istdlak) .and. ((frac_sno_eff(c)*snow_depth(c) < 0.01_r8)  &
-               .or. (h2osno(c)/(frac_sno_eff(c)*snow_depth(c)) < 50._r8)))) then
+               .or. (h2osno_total(c)/(frac_sno_eff(c)*snow_depth(c)) < 50._r8)))) then
 
              snl(c) = 0
              h2osno(c) = zwice(c)
              h2osno_no_layers(c) = zwice(c)
+             h2osno_total(c) = h2osno_no_layers(c)
 
              mss_bcphi(c,:) = 0._r8
              mss_bcpho(c,:) = 0._r8
@@ -1322,7 +1327,7 @@ contains
              endif
           endif
        end if
-       if (h2osno(c) <= 0._r8) then
+       if (h2osno_total(c) <= 0._r8) then
           snow_depth(c) = 0._r8
           frac_sno(c) = 0._r8
           frac_sno_eff(c) = 0._r8
