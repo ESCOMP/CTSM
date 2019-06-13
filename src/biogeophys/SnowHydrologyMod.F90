@@ -31,7 +31,7 @@ module SnowHydrologyMod
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
   use LandunitType    , only : lun
   use TopoMod, only : topo_type
-  use ColumnType      , only : col
+  use ColumnType      , only : column_type, col
   use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
   use clm_time_manager, only : get_step_size, get_nstep
   !
@@ -48,6 +48,7 @@ module SnowHydrologyMod
   public :: SnowCompaction             ! Change in snow layer thickness due to compaction
   public :: CombineSnowLayers          ! Combine snow layers less than a min thickness
   public :: DivideSnowLayers           ! Subdivide snow layers if they exceed maximum thickness
+  public :: ZeroEmptySnowLayers        ! Set empty snow layers to zero
   public :: InitSnowLayers             ! Initialize cold-start snow layer thickness
   public :: BuildSnowFilter            ! Construct snow/no-snow filters
   public :: SnowCapping                ! Remove snow mass for capped columns
@@ -348,6 +349,7 @@ contains
          atm2lnd_inst, bifall(bounds%begc:bounds%endc))
 
     call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
+         caller = 'HandleNewSnow', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     ! FIXME(wjs, 2019-06-11) Remove this call
@@ -1271,6 +1273,9 @@ contains
        snow_depth(c) = 0._r8
        zwice(c)  = 0._r8
        zwliq(c)  = 0._r8
+       ! See note in the following loop regarding why we are setting h2osno_total inline
+       ! rather than relying on CalculateTotalH2osno.
+       h2osno_total(c) = 0._r8
     end do
 
     do j = -nlevsno+1,0
@@ -1281,12 +1286,17 @@ contains
              snow_depth(c) = snow_depth(c) + dz(c,j)
              zwice(c)  = zwice(c) + h2osoi_ice(c,j)
              zwliq(c)  = zwliq(c) + h2osoi_liq(c,j)
+             ! We generally compute h2osno_total with CalculateTotalH2osno. Here we
+             ! calculate it inline for two reasons: (1) we're calculating other related
+             ! variables here anyway; and (2) the consistency checks invoked by
+             ! CalculateTotalH2osno in debug mode will sometimes fail here because we
+             ! haven't yet zeroed out layers that just disappeared. Because of (2), if we
+             ! wanted to use that routine to calculate h2osno_total here, we would need
+             ! to first call ZeroEmptySnowLayers.
+             h2osno_total(c) = h2osno_total(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
           end if
        end do
     end do
-
-    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_snowc, filter_snowc, &
-         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     ! Check the snow depth - all snow gone
     ! The liquid water assumes ponding on soil surface.
@@ -1774,6 +1784,56 @@ contains
   end subroutine DivideSnowLayers
 
   !-----------------------------------------------------------------------
+  subroutine ZeroEmptySnowLayers(bounds, num_snowc, filter_snowc, &
+       col, waterstatebulk_inst, temperature_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set empty snow layers to zero
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)         , intent(in)    :: bounds
+    integer                   , intent(in)    :: num_snowc       ! number of column snow points in column filter
+    integer                   , intent(in)    :: filter_snowc(:) ! column filter for snow points
+    type(column_type)         , intent(inout) :: col
+    type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
+    type(temperature_type)    , intent(inout) :: temperature_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: j
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'ZeroEmptySnowLayers'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         snl                => col%snl                                , & ! Input:  [integer  (:)   ]  number of snow layers
+         z                  => col%z                                  , & ! Output: [real(r8) (:,:) ]  layer depth  (m)
+         dz                 => col%dz                                 , & ! Output: [real(r8) (:,:) ]  layer thickness depth (m)
+         zi                 => col%zi                                 , & ! Output: [real(r8) (:,:) ]  interface depth (m)
+         h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col     , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)
+         h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col     , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)
+         t_soisno           => temperature_inst%t_soisno_col            & ! Output: [real(r8) (:,:) ]  soil temperature (Kelvin)
+         )
+
+    do j = -nlevsno+1,0
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          if (j <= snl(c) .and. snl(c) > -nlevsno) then
+             h2osoi_ice(c,j) = 0._r8
+             h2osoi_liq(c,j) = 0._r8
+             t_soisno(c,j)  = 0._r8
+             dz(c,j)    = 0._r8
+             z(c,j)     = 0._r8
+             zi(c,j-1)  = 0._r8
+          end if
+       end do
+    end do
+
+    end associate
+
+  end subroutine ZeroEmptySnowLayers
+
+  !-----------------------------------------------------------------------
   subroutine InitSnowLayers (bounds, snow_depth)
     !
     ! !DESCRIPTION:
@@ -1952,6 +2012,7 @@ contains
     end do
 
     call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_snowc, filter_snowc, &
+         caller = 'SnowCapping', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     call SnowCappingExcess(bounds, num_snowc, filter_snowc, &

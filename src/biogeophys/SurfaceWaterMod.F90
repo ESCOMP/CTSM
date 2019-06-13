@@ -80,6 +80,7 @@ contains
     min_h2osfc=1.e-8_r8
 
     call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
+         caller = 'FracH2oSfc', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     do f = 1, num_nolakec

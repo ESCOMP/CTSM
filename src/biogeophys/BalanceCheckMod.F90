@@ -215,9 +215,11 @@ contains
          water_mass = begwb(bounds%begc:bounds%endc))
 
     call waterstate_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
-         h2osno_old(bounds%begc:bounds%endc))
+         caller = 'BeginWaterBalanceSingle-nolake', &
+         h2osno_total = h2osno_old(bounds%begc:bounds%endc))
     call waterstate_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
-         h2osno_old(bounds%begc:bounds%endc))
+         caller = 'BeginWaterBalanceSingle-lake', &
+         h2osno_total = h2osno_old(bounds%begc:bounds%endc))
 
     end associate 
 
@@ -474,7 +476,8 @@ contains
        ! Snow balance check
 
        call waterstate_inst%CalculateTotalH2osno(bounds, num_allc, filter_allc, &
-            h2osno_total(bounds%begc:bounds%endc))
+            caller = 'BalanceCheck', &
+            h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
        do c = bounds%begc,bounds%endc
           if (col%active(c)) then

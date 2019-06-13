@@ -759,6 +759,7 @@ contains
          waterstate_inst, waterflux_inst)
 
     call waterstate_inst%CalculateTotalH2osno(bounds, num_allc, filter_allc, &
+         caller = 'WaterDiagnosticBulkType:Summary', &
          h2osno_total = this%h2osno_total_col(bounds%begc:bounds%endc))
 
     do fp = 1, num_soilp

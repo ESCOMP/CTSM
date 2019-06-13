@@ -76,7 +76,8 @@ contains
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevsoi
     use clm_varctl      , only : iulog
     use clm_time_manager, only : get_step_size
-    use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater, BuildSnowFilter, SnowCapping
+    use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater
+    use SnowHydrologyMod, only : ZeroEmptySnowLayers, BuildSnowFilter, SnowCapping
     use SnowHydrologyMod, only : DivideSnowLayers, NewSnowBulkDensity
     use LakeCon         , only : lsadz
     use TopoMod, only : topo_type
@@ -375,6 +376,7 @@ contains
 
       ! specify snow fraction
       call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+           caller = 'LakeHydrology-1', &
            h2osno_total = h2osno_total(bounds%begc:bounds%endc))
       do fc = 1, num_lakec
          c = filter_lakec(fc)
@@ -449,8 +451,13 @@ contains
       call DivideSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
            aerosol_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, is_lake=.true.)
 
+      ! Set empty snow layers to zero
+      call ZeroEmptySnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
+           col, waterstatebulk_inst, temperature_inst)
+
       ! Recompute h2osno_total for possible updates in the above snow routines
       call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+           caller = 'LakeHydrology-2', &
            h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
       ! Check for single completely unfrozen snow layer over lake.  Modeling this ponding is unnecessary and
@@ -573,20 +580,8 @@ contains
       end do
 
       ! Set empty snow layers to zero
-
-      do j = -nlevsno+1,0
-         do fc = 1, num_shlakesnowc
-            c = filter_shlakesnowc(fc)
-            if (j <= snl(c) .and. snl(c) > -nlevsno) then
-               h2osoi_ice(c,j) = 0._r8
-               h2osoi_liq(c,j) = 0._r8
-               t_soisno(c,j) = 0._r8
-               dz(c,j) = 0._r8
-               z(c,j) = 0._r8
-               zi(c,j-1) = 0._r8
-            end if
-         end do
-      end do
+      call ZeroEmptySnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
+           col, waterstatebulk_inst, temperature_inst)
 
       ! Build new snow filter
 

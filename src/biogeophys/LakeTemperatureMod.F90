@@ -510,6 +510,7 @@ contains
 
     ! Now do for soil / snow layers
     call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+         caller = 'LakeTemperature-1', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
     do j = -nlevsno + 1, nlevgrnd
        do fc = 1, num_lakec
@@ -1003,6 +1004,7 @@ contains
     end do
 
     call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+         caller = 'LakeTemperature-2', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
     do j = -nlevsno + 1, nlevgrnd
        do fc = 1, num_lakec

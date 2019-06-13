@@ -533,6 +533,7 @@ contains
     endif
 
     call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_nourbanc, filter_nourbanc, &
+         caller = 'SurfaceAlbedo', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     ! If radiative forcing is being calculated, first estimate clean-snow albedo

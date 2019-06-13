@@ -689,7 +689,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CalculateTotalH2osno(this, &
-       bounds, num_c, filter_c, &
+       bounds, num_c, filter_c, caller, &
        h2osno_total)
     !
     ! !DESCRIPTION:
@@ -703,6 +703,7 @@ contains
     type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: num_c                        ! number of columns in filter
     integer                , intent(in)    :: filter_c(:)                  ! filter for columns to operate over
+    character(len=*)       , intent(in)    :: caller                       ! name of caller (used in error messages)
     real(r8)               , intent(inout) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
     !
     ! !LOCAL VARIABLES:
@@ -715,7 +716,7 @@ contains
     SHR_ASSERT_ALL((ubound(h2osno_total, 1) == bounds%endc), errMsg(sourcefile, __LINE__))
 
 #ifndef NDEBUG
-    call this%CheckSnowConsistency(num_c, filter_c)
+    call this%CheckSnowConsistency(num_c, filter_c, caller)
 #endif
 
     do fc = 1, num_c
@@ -733,7 +734,7 @@ contains
   end subroutine CalculateTotalH2osno
 
   !-----------------------------------------------------------------------
-  subroutine CheckSnowConsistency(this, num_c, filter_c)
+  subroutine CheckSnowConsistency(this, num_c, filter_c, caller)
     !
     ! !DESCRIPTION:
     ! Make sure we only have unresolved snow where we should, and that we only have
@@ -743,10 +744,13 @@ contains
     class(waterstate_type) , intent(in) :: this
     integer                , intent(in) :: num_c       ! number of columns in filter
     integer                , intent(in) :: filter_c(:) ! filter for columns to operate over
+    character(len=*)       , intent(in) :: caller      ! name of caller (used in error messages)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
     integer :: j
+    logical :: ice_bad
+    logical :: liq_bad
 
     character(len=*), parameter :: subname = 'CheckSnowConsistency'
     !-----------------------------------------------------------------------
@@ -756,6 +760,7 @@ contains
        if (col%snl(c) < 0) then
           if (this%h2osno_no_layers_col(c) /= 0._r8) then
              write(iulog,*) subname//' ERROR: col has snow layers but non-zero h2osno_no_layers'
+             write(iulog,*) '(Called from: ', trim(caller), ')'
              write(iulog,*) 'c, snl, h2osno_no_layers = ', c, col%snl(c), &
                   this%h2osno_no_layers_col(c)
              call endrun(decomp_index=c, clmlevel=namec, &
@@ -763,17 +768,18 @@ contains
           end if
        end if
 
-       ! FIXME(wjs, 2019-06-06) Uncomment this
-       ! (2019-06-10) (I might also need to allow spval.)
-       ! do j = -nlevsno+1, col%snl(c)
-       !    if (this%h2osoi_ice_col(c,j) /= 0._r8 .or. this%h2osoi_liq_col(c,j) /= 0._r8) then
-       !       write(iulog,*) subname//' ERROR: col has non-zero h2osoi_ice or h2osoi_liq outside resolved snow layers'
-       !       write(iulog,*) 'c, j, snl, h2osoi_ice, h2osoi_liq = ', c, j, col%snl(c), &
-       !            this%h2osoi_ice_col(c,j), this%h2osoi_liq_col(c,j)
-       !       call endrun(decomp_index=c, clmlevel=namec, &
-       !            msg = subname//' ERROR: col has non-zero h2osoi_ice or h2osoi_liq outside resolved snow layers')
-       !    end if
-       ! end do
+       do j = -nlevsno+1, col%snl(c)
+          ice_bad = (this%h2osoi_ice_col(c,j) /= 0._r8 .and. this%h2osoi_ice_col(c,j) /= spval)
+          liq_bad = (this%h2osoi_liq_col(c,j) /= 0._r8 .and. this%h2osoi_liq_col(c,j) /= spval)
+          if (ice_bad .or. liq_bad) then
+             write(iulog,*) subname//' ERROR: col has non-zero h2osoi_ice or h2osoi_liq outside resolved snow layers'
+             write(iulog,*) '(Called from: ', trim(caller), ')'
+             write(iulog,*) 'c, j, snl, h2osoi_ice, h2osoi_liq = ', c, j, col%snl(c), &
+                  this%h2osoi_ice_col(c,j), this%h2osoi_liq_col(c,j)
+             call endrun(decomp_index=c, clmlevel=namec, &
+                  msg = subname//' ERROR: col has non-zero h2osoi_ice or h2osoi_liq outside resolved snow layers')
+          end if
+       end do
     end do
 
   end subroutine CheckSnowConsistency

@@ -899,8 +899,9 @@ contains
          eflx_h2osfc_to_snow_col(c) = 0._r8
       end do
 
-    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
-         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+      call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
+           caller = 'PhaseChangeH2osfc', &
+           h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
       ! Freezing identification
       do fc = 1,num_nolakec

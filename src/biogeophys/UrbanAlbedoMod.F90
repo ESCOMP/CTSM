@@ -476,6 +476,7 @@ contains
     SHR_ASSERT_ALL((ubound(albsn_perroad) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
 
     call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_urbanc, filter_urbanc, &
+         caller = 'UrbanAlbedoMod:SnowAlbedo', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     do fc = 1,num_urbanc
