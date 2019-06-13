@@ -33,7 +33,7 @@ module SnowHydrologyMod
   use TopoMod, only : topo_type
   use ColumnType      , only : column_type, col
   use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
-  use clm_time_manager, only : get_step_size, get_nstep
+  use clm_time_manager, only : get_step_size, get_nstep, is_first_step
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -354,6 +354,7 @@ contains
 
     ! FIXME(wjs, 2019-06-11) Remove this call
     call CheckAndResetH2osnoTotal(bounds, num_nolakec, filter_nolakec, &
+         skip_check = is_first_step(), &
          msg = 'Start of HandleNewSnow', &
          h2osno = h2osno(bounds%begc:bounds%endc), &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
@@ -2529,10 +2530,11 @@ contains
 
   ! FIXME(wjs, 2019-06-11) Remove this
   subroutine CheckAndResetH2osnoTotal(bounds, num_c, filter_c, &
-       msg, h2osno, h2osno_total)
+       skip_check, msg, h2osno, h2osno_total)
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num_c
     integer, intent(in) :: filter_c(:)
+    logical, intent(in) :: skip_check
     character(len=*), intent(in) :: msg
     real(r8), intent(in) :: h2osno( bounds%begc: )
     real(r8), intent(inout) :: h2osno_total( bounds%begc: )
@@ -2549,7 +2551,11 @@ contains
           write(iulog,*) 'CheckAndResetH2osnoTotal: ', trim(msg)
           write(iulog,*) 'c, h2osno, h2osno_total, diff = ', c, h2osno(c), &
                h2osno_total(c), h2osno(c) - h2osno_total(c)
-          call endrun('CheckAndResetH2osnoTotal: ' // trim(msg))
+          if (skip_check) then
+             write(iulog,*) 'SKIPPING ABORT, nstep = ', get_nstep()
+          else
+             call endrun('CheckAndResetH2osnoTotal: ' // trim(msg))
+          end if
        end if
        h2osno_total(c) = h2osno(c)
     end do
