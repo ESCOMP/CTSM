@@ -324,7 +324,6 @@ contains
          t_grnd               => temperature_inst%t_grnd_col             , & ! Input:  [real(r8) (:)   ]  ground temperature (Kelvin)             
          t_soisno             => temperature_inst%t_soisno_col           , & ! Output: [real(r8) (:,:) ]  soil temperature (Kelvin)  
          
-         h2osno               => waterstatebulk_inst%h2osno_col              , & ! Output: [real(r8) (:)   ]  snow water (mm H2O)                     
          snow_depth           => waterdiagnosticbulk_inst%snow_depth_col          , & ! Output: [real(r8) (:)   ]  snow height (m)                         
          int_snow             => waterstatebulk_inst%int_snow_col            , & ! Output: [real(r8) (:)   ]  integrated snowfall [mm]                
          frac_sno_eff         => waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Output: [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
@@ -473,7 +472,6 @@ contains
        dz_snowf = (snow_depth(c) - temp_snow_depth) / dtime
 
        ! update h2osno for new snow
-       h2osno(c) = h2osno(c) + newsnow(c) 
        int_snow(c) = int_snow(c) + newsnow(c)
        if (snl(c) == 0) then
           h2osno_no_layers(c) = h2osno_no_layers(c) + newsnow(c)
@@ -503,7 +501,6 @@ contains
           ! zero out the whole snow pack. (At that time, this code block should probably
           ! be moved to a more appropriate home, as noted in comments in issue #735.)
           if (snl(c) == 0) then
-             h2osno(c)=0._r8
              h2osno_no_layers(c) = 0._r8
              snow_depth(c)=0._r8
           end if
@@ -1137,7 +1134,6 @@ contains
          snow_depth       => waterdiagnosticbulk_inst%snow_depth_col      , & ! Output: [real(r8) (:)   ] snow height (m)
          int_snow         => waterstatebulk_inst%int_snow_col        , & ! Output:  [real(r8) (:)   ] integrated snowfall [mm]
          h2osno_no_layers => waterstatebulk_inst%h2osno_no_layers_col, & ! Output: [real(r8) (:)   ]  snow that is not resolved into layers (kg/m2)
-         h2osno           => waterstatebulk_inst%h2osno_col          , & ! Output: [real(r8) (:)   ] snow water (mm H2O)
          h2osoi_ice       => waterstatebulk_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)
          h2osoi_liq       => waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
          snw_rds          => waterdiagnosticbulk_inst%snw_rds_col         , & ! Output: [real(r8) (:,:) ] effective snow grain radius (col,lyr) [microns, m^-6]
@@ -1263,7 +1259,6 @@ contains
 
     do fc = 1, num_snowc
        c = filter_snowc(fc)
-       h2osno(c) = 0._r8
        snow_depth(c) = 0._r8
        zwice(c)  = 0._r8
        zwliq(c)  = 0._r8
@@ -1276,7 +1271,6 @@ contains
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
-             h2osno(c) = h2osno(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
              snow_depth(c) = snow_depth(c) + dz(c,j)
              zwice(c)  = zwice(c) + h2osoi_ice(c,j)
              zwliq(c)  = zwliq(c) + h2osoi_liq(c,j)
@@ -1304,7 +1298,6 @@ contains
                .or. (h2osno_total(c)/(frac_sno_eff(c)*snow_depth(c)) < 50._r8)))) then
 
              snl(c) = 0
-             h2osno(c) = zwice(c)
              h2osno_no_layers(c) = zwice(c)
              h2osno_total(c) = h2osno_no_layers(c)
 
@@ -1980,7 +1973,6 @@ contains
         qflx_snwcp_discarded_liq => waterfluxbulk_inst%qflx_snwcp_discarded_liq_col, & ! Output: [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
         h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col      , & ! In/Out: [real(r8) (:,:) ] ice lens (kg/m2)                       
         h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col      , & ! In/Out: [real(r8) (:,:) ] liquid water (kg/m2)                   
-        h2osno             => waterstatebulk_inst%h2osno_col          , & ! Input:  [real(r8) (:)   ] snow water (mm H2O)
         mss_bcphi          => aerosol_inst%mss_bcphi_col          , & ! In/Out: [real(r8) (:,:) ] hydrophilic BC mass in snow (col,lyr) [kg]
         mss_bcpho          => aerosol_inst%mss_bcpho_col          , & ! In/Out: [real(r8) (:,:) ] hydrophobic BC mass in snow (col,lyr) [kg]
         mss_ocphi          => aerosol_inst%mss_ocphi_col          , & ! In/Out: [real(r8) (:,:) ] hydrophilic OC mass in snow (col,lyr) [kg]

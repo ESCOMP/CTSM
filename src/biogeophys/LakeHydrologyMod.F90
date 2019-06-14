@@ -161,7 +161,6 @@ contains
          frac_sno_eff         =>  waterdiagnosticbulk_inst%frac_sno_eff_col      , & ! Output: [real(r8) (:)   ]  needed for snicar code                  
          frac_iceold          =>  waterdiagnosticbulk_inst%frac_iceold_col       , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
          snow_depth           =>  waterdiagnosticbulk_inst%snow_depth_col        , & ! Output: [real(r8) (:)   ]  snow height (m)                         
-         h2osno               =>  waterstatebulk_inst%h2osno_col            , & ! Output: [real(r8) (:)   ]  snow water (mm H2O)                     
          h2osno_no_layers     => waterstatebulk_inst%h2osno_no_layers_col        , & ! Output: [real(r8) (:)   ]  snow that is not resolved into layers (kg/m2)
          snowice              =>  waterdiagnosticbulk_inst%snowice_col           , & ! Output: [real(r8) (:)   ]  average snow ice lens                   
          snowliq              =>  waterdiagnosticbulk_inst%snowliq_col           , & ! Output: [real(r8) (:)   ]  average snow liquid water               
@@ -246,7 +245,6 @@ contains
 
          dz_snowf = qflx_snow_grnd(c)/bifall(c)
          snow_depth(c) = snow_depth(c) + dz_snowf*dtime
-         h2osno(c) = h2osno(c) + qflx_snow_grnd(c)*dtime  ! snow water equivalent (mm)
          if (snl(c) == 0) then
             h2osno_no_layers(c) = h2osno_no_layers(c) + qflx_snow_grnd(c)*dtime  ! snow water equivalent (mm)
          else
@@ -339,7 +337,6 @@ contains
             ! Update snow pack for dew & sub.
 
             h2osno_temp = h2osno_no_layers(c)
-            h2osno(c) = h2osno(c) + (-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
             h2osno_no_layers(c) = h2osno_no_layers(c) + (-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
             if (h2osno_temp > 0._r8) then
                snow_depth(c) = snow_depth(c) * h2osno_no_layers(c) / h2osno_temp
@@ -347,7 +344,6 @@ contains
                snow_depth(c) = h2osno_no_layers(c)/snow_bd !Assume a constant snow bulk density = 250.
             end if
 
-            h2osno(c) = max(h2osno(c), 0._r8)
             h2osno_no_layers(c) = max(h2osno_no_layers(c), 0._r8)
          end if
       end do
@@ -495,7 +491,6 @@ contains
                eflx_grnd_lake(p)   = eflx_grnd_lake(p) - heatrem/dtime
                qflx_snow_drain(c)  = qflx_snow_drain(c) + h2osno_total(c)/dtime
                snl(c)              = 0
-               h2osno(c)           = 0._r8
                h2osno_no_layers(c) = 0._r8
                h2osno_total(c)     = 0._r8
                snow_depth(c)       = 0._r8
@@ -564,7 +559,6 @@ contains
                ! update incidental drainage from snow pack for this case
                qflx_snow_drain(c) = qflx_snow_drain(c) + h2osno_total(c)/dtime
 
-               h2osno(c) = 0._r8
                h2osno_no_layers(c) = 0._r8
                snow_depth(c) = 0._r8
                snl(c) = 0

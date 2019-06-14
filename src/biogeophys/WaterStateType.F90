@@ -31,7 +31,6 @@ module WaterStateType
 
      class(water_info_base_type), pointer :: info
 
-     real(r8), pointer :: h2osno_col             (:)   ! col snow water (mm H2O)
      real(r8), pointer :: h2osno_no_layers_col   (:)   ! col snow that is not resolved into layers; this is non-zero only if there is too little snow for there to be explicit snow layers (mm H2O)
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
@@ -112,9 +111,6 @@ contains
     ! !LOCAL VARIABLES:
     !------------------------------------------------------------------------
 
-    call AllocateVar1d(var = this%h2osno_col, name = 'h2osno_col', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%h2osno_no_layers_col, name = 'h2osno_no_layers_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
@@ -298,12 +294,6 @@ contains
     SHR_ASSERT_ALL((ubound(t_soisno_col)         == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
 
     ratio = this%info%get_ratio()
-
-    do c = bounds%begc,bounds%endc
-       this%h2osno_col(c)             = h2osno_input_col(c) * ratio
-    end do
-
-
 
     associate(snl => col%snl) 
 
@@ -539,14 +529,6 @@ contains
     if (flag=='read' .and. .not. readvar) then
        this%h2osfc_col(bounds%begc:bounds%endc) = 0.0_r8
     end if
-
-    call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('H2OSNO'), &
-         xtype=ncd_double,  &
-         dim1name='column', &
-         long_name=this%info%lname('snow water'), &
-         units='kg/m2', &
-         interpinic_flag='interp', readvar=readvar, data=this%h2osno_col)
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('H2OSNO_NO_LAYERS:H2OSNO'), &
