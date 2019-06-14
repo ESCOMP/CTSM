@@ -207,7 +207,7 @@ contains
     integer :: dummy_to_make_pgi_happy
     !----------------------------------------------------------------------
 
-    ! Note: h2osno_col and snow_depth_col are initialized as local variable 
+    ! Note: h2osno_col and snow_depth_col are initialized as local variables
     ! since they are needed to initialize vertical data structures  
 
     begp = bounds%begp; endp = bounds%endp 

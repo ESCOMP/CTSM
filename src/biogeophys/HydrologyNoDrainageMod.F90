@@ -115,7 +115,7 @@ contains
     use clm_varpar           , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
     use clm_time_manager     , only : get_step_size, get_nstep
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
-    use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
+    use SnowHydrologyMod     , only : SnowWater, ZeroEmptySnowLayers, BuildSnowFilter 
     use SoilHydrologyMod     , only : CLMVICMap, SetSoilWaterFractions, SetFloodc
     use SoilHydrologyMod     , only : SetQflxInputs, RouteInfiltrationExcess
     use SoilHydrologyMod     , only : Infiltration, TotalSurfaceRunoff
@@ -333,19 +333,8 @@ contains
            aerosol_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, is_lake=.false.)
 
       ! Set empty snow layers to zero
-      do j = -nlevsno+1,0
-         do fc = 1, num_snowc
-            c = filter_snowc(fc)
-            if (j <= snl(c) .and. snl(c) > -nlevsno) then
-               h2osoi_ice(c,j) = 0._r8
-               h2osoi_liq(c,j) = 0._r8
-               t_soisno(c,j)  = 0._r8
-               dz(c,j)    = 0._r8
-               z(c,j)     = 0._r8
-               zi(c,j-1)  = 0._r8
-            end if
-         end do
-      end do
+      call ZeroEmptySnowLayers(bounds, num_snowc, filter_snowc, &
+           col, waterstatebulk_inst, temperature_inst)
        
       ! Build new snow filter
 
