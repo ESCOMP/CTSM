@@ -352,12 +352,6 @@ contains
          caller = 'HandleNewSnow', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
-    ! FIXME(wjs, 2019-06-11) Remove this call
-    call CheckAndResetH2osnoTotal(bounds, num_nolakec, filter_nolakec, &
-         msg = 'Start of HandleNewSnow', &
-         h2osno = h2osno(bounds%begc:bounds%endc), &
-         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
-
     do f = 1, num_nolakec
        c = filter_nolakec(f)
        l = col%landunit(c)
@@ -2526,33 +2520,5 @@ contains
     end if
 
   end subroutine SnowHydrologySetControlForTesting
-
-  ! FIXME(wjs, 2019-06-11) Remove this
-  subroutine CheckAndResetH2osnoTotal(bounds, num_c, filter_c, &
-       msg, h2osno, h2osno_total)
-    type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_c
-    integer, intent(in) :: filter_c(:)
-    character(len=*), intent(in) :: msg
-    real(r8), intent(in) :: h2osno( bounds%begc: )
-    real(r8), intent(inout) :: h2osno_total( bounds%begc: )
-
-    integer :: fc, c
-    real(r8), parameter :: tol = 1.e-11_r8
-
-    SHR_ASSERT_ALL((ubound(h2osno, 1) == bounds%endc), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osno_total, 1) == bounds%endc), errMsg(sourcefile, __LINE__))
-
-    do fc = 1, num_c
-       c = filter_c(fc)
-       if (abs(h2osno(c) - h2osno_total(c)) > tol) then
-          write(iulog,*) 'CheckAndResetH2osnoTotal: ', trim(msg)
-          write(iulog,*) 'c, h2osno, h2osno_total, diff = ', c, h2osno(c), &
-               h2osno_total(c), h2osno(c) - h2osno_total(c)
-          call endrun('CheckAndResetH2osnoTotal: ' // trim(msg))
-       end if
-       h2osno_total(c) = h2osno(c)
-    end do
-  end subroutine CheckAndResetH2osnoTotal
 
 end module SnowHydrologyMod
