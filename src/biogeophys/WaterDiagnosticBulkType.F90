@@ -21,7 +21,6 @@ module WaterDiagnosticBulkType
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
-  use WaterStateBulkType, only : waterstatebulk_type
   use WaterDiagnosticType, only : waterdiagnostic_type
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
@@ -125,14 +124,14 @@ contains
 
   !------------------------------------------------------------------------
   subroutine InitBulk(this, bounds, info, vars, &
-       snow_depth_input_col, waterstatebulk_inst)
+       snow_depth_input_col, h2osno_input_col)
 
     class(waterdiagnosticbulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds  
     class(water_info_base_type), intent(in), target :: info
     type(water_tracer_container_type), intent(inout) :: vars
     real(r8)          , intent(in) :: snow_depth_input_col(bounds%begc:)
-    class(waterstatebulk_type), intent(in) :: waterstatebulk_inst
+    real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)  ! Initial total snow water (mm H2O)
 
 
     call this%Init(bounds, info, vars)
@@ -142,7 +141,7 @@ contains
     call this%InitBulkHistory(bounds)
 
     call this%InitBulkCold(bounds, &
-       snow_depth_input_col, waterstatebulk_inst)
+       snow_depth_input_col, h2osno_input_col)
 
   end subroutine InitBulk
 
@@ -507,7 +506,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitBulkCold(this, bounds, &
-       snow_depth_input_col, waterstatebulk_inst)
+       snow_depth_input_col, h2osno_input_col)
     !
     ! !DESCRIPTION:
     ! Initialize time constant variables and cold start conditions 
@@ -518,7 +517,7 @@ contains
     class(waterdiagnosticbulk_type), intent(in) :: this
     type(bounds_type)     , intent(in)    :: bounds
     real(r8)              , intent(in)    :: snow_depth_input_col(bounds%begc:)
-    class(waterstatebulk_type), intent(in)                :: waterstatebulk_inst
+    real(r8)              , intent(in)    :: h2osno_input_col(bounds%begc:)  ! Initial total snow water (mm H2O)
     !
     ! !LOCAL VARIABLES:
     integer            :: c,l
@@ -526,7 +525,8 @@ contains
     real(r8)           :: fmelt       ! snowbd/100
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(snow_depth_input_col) == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(snow_depth_input_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(h2osno_input_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     do c = bounds%begc,bounds%endc
        this%snow_depth_col(c)         = snow_depth_input_col(c)
@@ -567,7 +567,7 @@ contains
             this%frac_sno_col(c) = 0._r8
             ! snow cover fraction as in Niu and Yang 2007
             if(this%snow_depth_col(c) > 0.0)  then
-               snowbd   = min(400._r8, waterstatebulk_inst%h2osno_col(c)/this%snow_depth_col(c)) !bulk density of snow (kg/m3)
+               snowbd   = min(400._r8, h2osno_input_col(c)/this%snow_depth_col(c)) !bulk density of snow (kg/m3)
                fmelt    = (snowbd/100.)**1.
                ! 100 is the assumed fresh snow density; 1 is a melting factor that could be
                ! reconsidered, optimal value of 1.5 in Niu et al., 2007
@@ -581,7 +581,7 @@ contains
             this%snw_rds_col(c,snl(c)+1:0)        = snw_rds_min
             this%snw_rds_col(c,-nlevsno+1:snl(c)) = 0._r8
             this%snw_rds_top_col(c)               = snw_rds_min
-         elseif (waterstatebulk_inst%h2osno_col(c) > 0._r8) then
+         elseif (h2osno_input_col(c) > 0._r8) then
             this%snw_rds_col(c,0)                 = snw_rds_min
             this%snw_rds_col(c,-nlevsno+1:-1)     = 0._r8
             this%snw_rds_top_col(c)               = spval
