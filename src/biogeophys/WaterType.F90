@@ -337,7 +337,7 @@ contains
          bulk_info, &
          bulk_vars, &
          snow_depth_input_col = snow_depth_col(begc:endc),    &
-         waterstatebulk_inst = this%waterstatebulk_inst )
+         h2osno_input_col = h2osno_col(begc:endc))
 
     call this%waterbalancebulk_inst%Init(bounds, &
          bulk_info, &
