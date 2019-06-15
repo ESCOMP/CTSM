@@ -1,4 +1,201 @@
 ===============================================================
+Tag name:  ctsm1.0.dev046
+Originator(s):  sacks (Bill Sacks)
+Date:  Sat Jun 15 15:54:44 MDT 2019
+One-line Summary: Separate the two uses of h2osno
+
+Purpose of changes
+------------------
+
+Until now, h2osno has been used in two ways:
+
+1. When there are explicit snow layers, h2osno is the sum of snow
+   (liquid + ice) in all layers
+
+2. When there is a little bit of snow, but not enough to create a snow
+   layer, h2osno gives the amount of this very thin snow pack (assumed
+   to be all ice)
+
+This is confusing and complicates the addition of water tracers to the
+code. This tag separates h2osno into two different variables:
+
+1. h2osno_no_layers is a fundamental state variable that gives the
+   amount of snow in the case where we don't have explicit snow layers
+
+2. h2osno_total is purely a diagnostic variable that is the sum of snow
+   in all explicit layers, plus h2osno_unresolved. This exists in
+   waterdiagnosticbulk_type, but the version there is just set once at
+   the end of the time step, so that version is only meant for
+   diagnostic (history) output. Code that needs the current sum of
+   h2osno at a given point now computes it locally, via a new method on
+   waterstate_type: CalculateTotalH2osno. If running in debug mode, that
+   routine also performs some consistency checks.
+
+Also, an unrelated change to prevent user from trying to interpolate a
+file onto itself.
+
+Also, add a compset for testing, which is good for use on my mac.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#733 (Make h2osno purely a diagnostic variable)
+- Resolves ESCOMP/ctsm#749 (h2osno inconsistent when interpolating from
+  initial conditions with different snow layers)
+- Resolves ESCOMP/ctsm#750 (Prevent user from trying to use the same
+  filename for init_interp source and destination files)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none (possibly a small improvement
+in timing based on PFS run time)
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass; baseline comparisons fail as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Mostly roundoff; greater than roundoff/same climate for cases for
+      which number of snow layers is less in the case than in its
+      initial conditions file, due to fixing #749
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   There was one point where h2osno_total differed from the old h2osno
+   by roundoff, as verified by a run of the test suite (where I verified
+   that (a) it only differed by 1e-11 or less, and (b) if I reset it,
+   there were just roundoff-level changes in a few diagnostic
+   fields). That one place with roundoff-level diffs can lead to
+   propagation of diffs, causing differences in many fields in the final
+   run of the test suite. In particular: I ran the test suite on
+   69823de4 (which had this temporary check and reset of h2osno_total
+   vs. old h2osno). For nearly all tests, there were only roundoff-level
+   changes in a few diagnostic fields. I then removed the temporary
+   check and reset and ran the test suite on the result
+   (4353cc90). Finally, I ran the test suite on the final, cleaned-up
+   code, with comparison against 4353cc90 and verified bfb.
+
+   In my testing on 69823de4: There were a few tests with greater than
+   roundoff-level changes due just to differences in the initial value
+   of h2osno_total (which was incorrect in the old due to #749). I
+   verified that these only had roundoff-level changes in a few
+   diagnostic fields if I used the following diffs in both the baseline
+   and my branch, indicating that the diffs just arose due to the fix of
+   #749:
+
+        diff --git a/src/main/clm_initializeMod.F90 b/src/main/clm_initializeMod.F90
+        index 793b36ac..f10ee5e1 100644
+        --- a/src/main/clm_initializeMod.F90
+        +++ b/src/main/clm_initializeMod.F90
+        @@ -762,6 +762,18 @@ subroutine initialize2( )
+                !$OMP END PARALLEL DO
+             end if
+        +    do c = bounds_proc%begc, bounds_proc%endc
+        +       if (col%snl(c) < 0) then
+        +          water_inst%waterstatebulk_inst%h2osno_col(c) = 0._r8
+        +          do j = col%snl(c)+1, 0
+        +             water_inst%waterstatebulk_inst%h2osno_col(c) = &
+        +                  water_inst%waterstatebulk_inst%h2osno_col(c) + &
+        +                  water_inst%waterstatebulk_inst%h2osoi_ice_col(c,j) + &
+        +                  water_inst%waterstatebulk_inst%h2osoi_liq_col(c,j)
+        +          end do
+        +       end if
+        +    end do
+        +
+           end subroutine initialize2
+         end module clm_initializeMod
+
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: n/a
+
+   URL for LMWG diagnostics output used to validate new climate: n/a
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev045
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Jun  6 12:26:57 MDT 2019
