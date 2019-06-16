@@ -938,6 +938,7 @@ contains
          imelt        => temperature_inst%imelt_col       , & ! Input:  [integer (:,:)  ] flag for melting (=1), freezing (=2), Not=0
 
          frac_sno     => waterdiagnosticbulk_inst%frac_sno_eff_col , & ! Input:  [real(r8) (:)   ] snow covered fraction
+         frac_h2osfc  => waterdiagnosticbulk_inst%frac_h2osfc_col  , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
          swe_old      => waterdiagnosticbulk_inst%swe_old_col      , & ! Input:  [real(r8) (:,:) ] initial swe values
          int_snow     => waterstatebulk_inst%int_snow_col     , & ! Input:  [real(r8) (:)   ] integrated snowfall [mm]
          frac_iceold  => waterdiagnosticbulk_inst%frac_iceold_col  , & ! Input:  [real(r8) (:,:) ] fraction of ice relative to the tot water
@@ -1027,6 +1028,16 @@ contains
                          int_snow_limited = min(int_snow(c), int_snow_max)
                          fsno_melt = 1. - (acos(2.*min(1._r8,wsum/int_snow_limited) - 1._r8)/rpi)**(n_melt(c))
                          
+                         ! Ensure sum of snow and surface water fractions are <= 1 after update
+                         !
+                         ! Note that there is a similar adjustment in subroutine
+                         ! FracH2oSfc (related to frac_sno); these two should be kept in
+                         ! sync (e.g., if a 3rd fraction is ever added in one place, it
+                         ! needs to be added in the other place, too).
+                         if ((fsno_melt + frac_h2osfc(c)) > 1._r8) then
+                            fsno_melt = 1._r8 - frac_h2osfc(c)
+                         end if
+
                          ddz3 = ddz3 - max(0._r8,(fsno_melt - frac_sno(c))/frac_sno(c))
                       endif
                       ddz3 = -1._r8/dtime * ddz3

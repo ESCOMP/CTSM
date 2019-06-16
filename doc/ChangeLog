@@ -1,4 +1,168 @@
 ===============================================================
+Tag name:  ctsm1.0.dev047
+Originator(s):  sacks (Bill Sacks)
+Date:  Sun Jun 16 13:04:38 MDT 2019
+One-line Summary: Fix negative snow compaction during snow melt
+
+Purpose of changes
+------------------
+
+Fix an issue reported by @kjetilaas: In the presence of surface water,
+the old and new snow cover fractions are inconsistently calculated in
+subroutine "SnowCompaction". This can result in significant negative
+compaction (snow depth increase) during snow melt.
+
+More details from @kjetilaas (copied from
+https://github.com/escomp/ctsm/issues/573):
+
+There is an inconsistency in the calculation of snow cover fraction
+(FSNO) in the SnowCompaction subroutine when there is surface water
+present. The actual snow cover is limited to 0.99 when surface water is
+present (and the surface water fraction is set to 0.01). However,
+SnowCompaction recalculates the old FSNO without accounting for this
+limitation. This results in an apparent decrease in FSNO, and
+corresponding negative snow compaction from snow melt (ddz3).
+
+This can result in substantial, artificial increase in snow depth during
+summer (can be more than 0.5 m during a single season).
+
+The problem might be masked in monthly output, but could be significant
+whenever snow cover is close to 1 and surface water present. Snow mass
+is indirectly affected by this as radiation and temperature fluxes in
+the snow pack will be affected by artificially thick snow layers.
+
+This tag fixes this issue. The fix was implemented and tested by
+@swensosc (Sean Swenson).
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#573 (Snow depth increase due to inconsistent snow
+  cover fraction calculation)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Sean Swenson, @kjetilaas, Bill Sacks
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, answers change as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Larger than roundoff/same climate
+
+      Sean Swenson ran the LMWG diagnostics package and looked at the
+      results with Keith Oleson. Their main findings were:
+
+      - Snow depth is a bit smaller over Greenland and polar regions on
+        average, as expected (up to 5-10% decrease in average snow depth
+        averaged over the Canadian Arctic)
+
+      - There is a small increase in h2osno over Greenland: about 30 mm
+        averaged over Greenland; it looks like the main changes are
+        around the coasts (which makes sense given that this bug only
+        affects vegetated landunits)
+
+      - There are small changes in runoff over Greenland
+
+      - Changes in snow cover fraction are tiny
+
+      - Overall, this doesn't look climate changing, but could
+        potentially have a significant impact on select grid cells, and
+        on some variables in polar regions
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev046
 Originator(s):  sacks (Bill Sacks)
 Date:  Sat Jun 15 15:54:44 MDT 2019
