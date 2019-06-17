@@ -24,7 +24,8 @@
  map_fch4         = '/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/maps/10x15/map_360x720_cruncep_to_10x15_nomask_aave_da_c130326.nc'
  mksrf_fsoitex    = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc'
  mksrf_forganic   = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc'
- mksrf_flakwat    = '/glade/u/home/ivanderk/clm5.0/own_inputfile/mksurf_LakePnDepth_3x3min_simyr2009_csplk_c190603.nc'
+ mksrf_flakwat    = '/glade/u/home/ivanderk/clm5.0/own_inputfile/mksurf_LakePnDepth_3x3min_simyr2009_csplk_c190603.nc
+'
  mksrf_fwetlnd    = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_lanwat.050425.nc'
  mksrf_fmax       = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_fmax_3x3min_USGS_c120911.nc'
  mksrf_fglacier   = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.c120926.nc'

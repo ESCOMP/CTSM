@@ -1118,7 +1118,7 @@ program mksurfdat
        call check_ret(nf_put_var_int(ncid, varid, pftdata_mask), subname)
 
        call check_ret(nf_inq_varid(ncid, 'LANDFRAC_PFT', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, landfrac_pft), subname)
+       call check_ret(nf_put_var_double(ncid, varid, landfrac_pft), subname)      
 
        ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 
@@ -1165,10 +1165,10 @@ program mksurfdat
           
           call mkpft(ldomain, mapfname=map_fpft, fpft=fname, &
                ndiag=ndiag, pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft )
-
+               
           ! Create harvesting data at model resolution
 
-          call mkharvest( ldomain, mapfname=map_fharvest, datfname=fhrvname, &
+          call mkharvest(ldomain, mapfname=map_fharvest, datfname=fhrvname, &
                ndiag=ndiag, harvdata=harvdata )
 
           ! Consistency check on input land fraction
@@ -1187,6 +1187,10 @@ program mksurfdat
              end if
           end do
 
+          ! IV: Create pctlak data at model resolution
+          call mklakwat (ldomain, mapfname=map_fpft, datfname=fname, &
+               ndiag=ndiag, zero_out=all_urban.or.all_veg, lake_o=pctlak)                    
+          
           call change_landuse(ldomain, dynpft=.true.)
 
           call normalizencheck_landuse(ldomain)
@@ -1207,6 +1211,10 @@ program mksurfdat
              call ncd_put_time_slice(ncid, varid, ntim, get_pct_p2l_array(pctcft))
           end if
 
+          ! IV add ncd_put_time_slice for pct lake
+          call check_ret(nf_inq_varid(ncid, 'PCT_LAKE', varid), subname)
+          call ncd_put_time_slice(ncid, varid, ntim, pctlak)
+          
           call harvdata%getFieldsIdx( harvind1D, harvind2D )
           do k = 1, harvdata%num1Dfields()
              call check_ret(nf_inq_varid(ncid, trim(mkharvest_fieldname(harvind1D(k),constant=.false.)), varid), subname)
