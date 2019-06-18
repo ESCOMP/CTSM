@@ -2329,10 +2329,11 @@ contains
    use FatesIODimensionsMod, only : fates_bounds_type
    use FatesInterfaceMod, only : nlevsclass, nlevage
    use FatesInterfaceMod, only : nlevheight
-   use EDtypesMod, only : nfsc, ncwd
-   use EDtypesMod, only : nlevleaf, nclmax
+   use EDtypesMod,        only : nfsc
+   use FatesLitterMod,    only : ncwd
+   use EDtypesMod,        only : nlevleaf, nclmax
    use FatesInterfaceMod, only : numpft_fates => numpft
-   use clm_varpar, only : nlevgrnd
+   use clm_varpar,        only : nlevgrnd
 
    implicit none
 
