@@ -20,6 +20,7 @@ module controlMod
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max, int_snow_max, n_melt_glcmec
   use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
+  use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
@@ -31,6 +32,7 @@ module controlMod
   use LakeCon                          , only: deepmixing_depthcrit, deepmixing_mixfact
   use CanopyfluxesMod                  , only: perchroot, perchroot_alt
   use CanopyHydrologyMod               , only: CanopyHydrology_readnl
+  use SurfaceAlbedoMod                 , only: SurfaceAlbedo_readnl
   use SurfaceResistanceMod             , only: soil_resistance_readNL
   use SnowHydrologyMod                 , only: SnowHydrology_readnl
   use SurfaceAlbedoMod                 , only: albice, lake_melt_icealb
@@ -114,7 +116,6 @@ contains
     !
     ! !USES:
     use clm_time_manager                 , only : set_timemgr_init
-    use fileutils                        , only : getavu, relavu
     use CNMRespMod                       , only : CNMRespReadNML
     use LunaMod                          , only : LunaReadNML
     use FrictionVelocityMod              , only : FrictionVelReadNML
@@ -343,7 +344,7 @@ contains
        call set_timemgr_init( dtime_in=dtime )
 
        if (use_init_interp) then
-          call apply_use_init_interp(finidat, finidat_interp_source)
+          call apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
        end if
 
        ! History and restart files
@@ -535,6 +536,7 @@ contains
     call soil_resistance_readnl ( NLFilename )
     call CanopyFluxesReadNML    ( NLFilename )
     call CanopyHydrology_readnl ( NLFilename )
+    call SurfaceAlbedo_readnl   ( NLFilename )
     call SnowHydrology_readnl   ( NLFilename )
     call UrbanReadNML           ( NLFilename )
     call HumanIndexReadNML      ( NLFilename )
@@ -1092,7 +1094,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine apply_use_init_interp(finidat, finidat_interp_source)
+  subroutine apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
     !
     ! !DESCRIPTION:
     ! Applies the use_init_interp option, setting finidat_interp_source to finidat
@@ -1105,6 +1107,7 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
+    character(len=*), intent(in)    :: finidat_interp_dest
     character(len=*), intent(inout) :: finidat
     character(len=*), intent(inout) :: finidat_interp_source
     !
@@ -1120,6 +1123,18 @@ contains
     if (finidat_interp_source /= ' ') then
        call endrun(msg=' ERROR: Cannot set use_init_interp if finidat_interp_source is &
             &already set')
+    end if
+
+    if (get_filename(finidat) == &
+         get_filename(finidat_interp_dest)) then
+       write(iulog,*) 'ERROR: With use_init_interp, cannot use the same filename for source and dest'
+       write(iulog,*) '(because this will lead to the source being overwritten before it is read).'
+       write(iulog,*) 'finidat             = ', trim(get_filename(finidat))
+       write(iulog,*) 'finidat_interp_dest = ', trim(get_filename(finidat_interp_dest))
+       write(iulog,*) '(Even if the two files are in different directories, you cannot use the same filename'
+       write(iulog,*) 'due to problems related to <https://github.com/ESCOMP/ctsm/issues/329>.)'
+       write(iulog,*) 'As a workaround, copy or move the finidat file to a different name.'
+       call endrun(msg=' ERROR: With use_init_interp, cannot use the same filename for source and dest')
     end if
 
     finidat_interp_source = finidat

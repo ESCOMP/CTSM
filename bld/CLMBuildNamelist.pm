@@ -62,6 +62,9 @@ REQUIRED OPTIONS
      -cimeroot "directory"    Path to cime directory
      -config "filepath"       Read the given CLM configuration cache file.
                               Default: "config_cache.xml".
+     -configuration "cfg"     The overall configuration being used [ clm | nwp ]
+                                clm = Climate configuration
+                                nwp = Numerical Weather Prediction configuration
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
      -envxml_dir "directory"  Directory name of env_*.xml case files to read in.
@@ -78,6 +81,7 @@ REQUIRED OPTIONS
                               (i.e. 1850, 2000, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
                               (default 2000)
+     -structure "structure"   The overall structure being used [ standard | fast ]
 OPTIONS
      -bgc "value"             Build CLM with BGC package [ sp | cn | bgc | fates ]
                               (default is sp).
@@ -240,6 +244,7 @@ sub process_commandline {
 
   my %opts = ( cimeroot              => undef,
                config                => "config_cache.xml",
+               configuration         => undef,
                csmdata               => undef,
                clm_usr_name          => undef,
                co2_type              => undef,
@@ -254,6 +259,7 @@ sub process_commandline {
                dir                   => "$cwd",
                rcp                   => "default",
                sim_year              => "default",
+               structure             => undef,
                clm_accelerated_spinup=> "default",
                chk_res               => undef,
                note                  => undef,
@@ -280,6 +286,7 @@ sub process_commandline {
              "co2_ppmv=f"                => \$opts{'co2_ppmv'},
              "co2_type=s"                => \$opts{'co2_type'},
              "config=s"                  => \$opts{'config'},
+             "configuration=s"           => \$opts{'configuration'},
              "csmdata=s"                 => \$opts{'csmdata'},
              "clm_usr_name=s"            => \$opts{'clm_usr_name'},
              "envxml_dir=s"              => \$opts{'envxml_dir'},
@@ -306,6 +313,7 @@ sub process_commandline {
              "rcp=s"                     => \$opts{'rcp'},
              "s|silent"                  => \$opts{'silent'},
              "sim_year=s"                => \$opts{'sim_year'},
+             "structure=s"               => \$opts{'structure'},
              "output_reals=s"            => \$opts{'output_reals_filename'},
              "clm_accelerated_spinup=s"  => \$opts{'clm_accelerated_spinup'},
              "clm_start_type=s"          => \$opts{'clm_start_type'},
@@ -621,6 +629,7 @@ sub process_namelist_commandline_options {
   setup_cmdl_chk_res($opts, $defaults);
   setup_cmdl_resolution($opts, $nl_flags, $definition, $defaults);
   setup_cmdl_mask($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_cmdl_configuration_and_structure($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_bgc($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_fire_light_res($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_spinup($opts, $nl_flags, $definition, $defaults, $nl);
@@ -766,6 +775,31 @@ sub setup_cmdl_fates_mode {
        }
     }
   }
+}
+
+#-------------------------------------------------------------------------------
+sub setup_cmdl_configuration_and_structure {
+   # Error-check and set the 'configuration' and 'structure' namelist flags
+
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   my $val;
+
+   my $var = "configuration";
+   $val = $opts->{$var};
+   if (defined($val) && ($val eq "clm" || $val eq "nwp")) {
+      $nl_flags->{$var} = $val;
+   } else {
+      $log->fatal_error("$var has a value (".$val.") that is NOT valid. Valid values are: clm, nwp.");
+   }
+
+   $var = "structure";
+   $val = $opts->{$var};
+   if (defined($val) && ($val eq "standard" || $val eq "fast")) {
+      $nl_flags->{$var} = $val;
+   } else {
+      $log->fatal_error("$var has a value (".$val.") that is NOT valid. Valid values are: standard, fast.");
+   }
 }
 
 #-------------------------------------------------------------------------------
@@ -1636,6 +1670,11 @@ sub process_namelist_inline_logic {
   setup_logic_irrigation_parameters($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ########################################
+  # namelist group: surfacealbedo_inparm #
+  ########################################
+  setup_logic_surfacealbedo($opts, $nl_flags, $definition, $defaults, $nl);
+
+  ########################################
   # namelist group: water_tracers_inparm #
   ########################################
   setup_logic_water_tracers($opts, $nl_flags, $definition, $defaults, $nl);
@@ -1851,7 +1890,6 @@ sub setup_logic_decomp_performance {
 sub setup_logic_snow {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snowveg_flag', 'phys'=>$nl_flags->{'phys'} );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowoptics' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowaging' );
 }
@@ -1932,9 +1970,12 @@ sub setup_logic_subgrid {
 
    my $var = 'run_zero_weight_urban';
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
-   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'collapse_urban');
-   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_dom_landunits');
-   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_dom_pfts');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'collapse_urban',
+               'structure'=>$nl_flags->{'structure'});
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_dom_landunits',
+               'structure'=>$nl_flags->{'structure'});
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_dom_pfts',
+               'structure'=>$nl_flags->{'structure'});
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_soil');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_crop');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_glacier');
@@ -2048,7 +2089,8 @@ sub setup_logic_soilstate {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct',
+              'structure'=>$nl_flags->{'structure'});
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
               'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
 }
@@ -2635,6 +2677,14 @@ sub setup_logic_irrigation_parameters {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_surfacealbedo {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snowveg_affects_radiation' );
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_water_tracers {
    my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -2881,7 +2931,7 @@ sub setup_logic_hydrstress {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hydrstress',
-              'use_fates'=>$nl_flags->{'use_fates'} );
+              'configuration'=>$nl_flags->{'configuration'}, 'use_fates'=>$nl_flags->{'use_fates'} );
   $nl_flags->{'use_hydrstress'} = $nl->get_value('use_hydrstress');
   if ( &value_is_true( $nl_flags->{'use_fates'} ) && &value_is_true( $nl_flags->{'use_hydrstress'} ) ) {
      $log->fatal_error("Cannot turn use_hydrstress on when use_fates is on" );
@@ -3269,8 +3319,9 @@ sub setup_logic_megan {
   my $var   = "megan";
 
   if ( $opts->{$var} eq "default" ) {
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-'megan', clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
+     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan',
+                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'},
+                 'configuration'=>$nl_flags->{'configuration'} );
     $nl_flags->{$var} = $nl->get_value($var);
   } else {
     $nl_flags->{$var} = $opts->{$var};
@@ -3420,6 +3471,8 @@ sub setup_logic_canopyfluxes {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_undercanopy_stability' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'itmax_canopy_fluxes',
+              'structure'=>$nl_flags->{'structure'});
 }
 
 #-------------------------------------------------------------------------------
@@ -3441,8 +3494,10 @@ sub setup_logic_snowpack {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nlevsno');
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'h2osno_max');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nlevsno',
+              'structure'=>$nl_flags->{'structure'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'h2osno_max',
+              'structure'=>$nl_flags->{'structure'});
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'int_snow_max');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_melt_glcmec');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'wind_dependent_snow_density');
@@ -3592,7 +3647,7 @@ sub write_output_files {
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
                cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
-               water_tracers_inparm);
+               surfacealbedo_inparm water_tracers_inparm);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
   #             finidat_consistency_checks dynpft_consistency_checks);

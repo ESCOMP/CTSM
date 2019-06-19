@@ -9,7 +9,7 @@ from datetime import datetime
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.machine_utils import get_machine_name, make_link
-from ctsm.machine import create_machine
+from ctsm.machine import create_machine, get_possibly_overridden_baseline_dir
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_NOBATCH
@@ -106,7 +106,8 @@ def run_sys_tests(machine, cime_path,
     compare_name (str): if not None, baseline name to compare against
     generate_name (str): if not None, baseline name to generate
     baseline_root (str): path in which baselines should be compared and generated (if not
-        provided, the test suite will determine it automatically)
+        provided, this will be obtained from the default value in the machine object; if
+        that is None, then the test suite will determine it automatically)
     walltime (str): walltime to use for each test (if not provided, the test suite will
         determine it automatically)
     queue (str): queue to use for each test (if not provided, the test suite will
@@ -132,9 +133,11 @@ def run_sys_tests(machine, cime_path,
     if not skip_git_status:
         _record_git_status(testroot, dry_run)
 
+    baseline_root_final = get_possibly_overridden_baseline_dir(machine,
+                                                               baseline_dir=baseline_root)
     create_test_args = _get_create_test_args(compare_name=compare_name,
                                              generate_name=generate_name,
-                                             baseline_root=baseline_root,
+                                             baseline_root=baseline_root_final,
                                              account=machine.account,
                                              walltime=walltime,
                                              queue=queue,
@@ -255,9 +258,14 @@ or tests listed individually on the command line (via the -t/--testname argument
                         'for non-supported machines, it must be provided.\n'
                         'Default for this machine: {}'.format(default_machine.scratch_dir))
 
+    if default_machine.baseline_dir:
+        baseline_root_default_msg = 'Default for this machine: {}'.format(
+            default_machine.baseline_dir)
+    else:
+        baseline_root_default_msg = "Default for this machine: use cime's default"
     parser.add_argument('--baseline-root',
-                        help='Path in which baselines should be compared and generated.\n'
-                        'Default is to use the default for this machine.')
+                        help='Path in which baselines should be compared and generated.\n' +
+                        baseline_root_default_msg)
 
     parser.add_argument('--walltime',
                         help='Walltime for each test.\n'
