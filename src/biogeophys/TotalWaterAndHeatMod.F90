@@ -859,6 +859,7 @@ contains
          t_lake       => temperature_inst%t_lake_col,  & ! lake temperature (K)
          t_soisno     => temperature_inst%t_soisno_col, & ! soil temperature (Kelvin)
          dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Input:  [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
+         lake_heat    => temperature_inst%lake_heat, & ! total heat of lake water (J/m²)
          h2osoi_liq   => waterstatebulk_inst%h2osoi_liq_col, & ! liquid water (kg/m2)
          h2osoi_ice   => waterstatebulk_inst%h2osoi_ice_col  & ! frozen water (kg/m2)
          )
@@ -926,7 +927,7 @@ contains
                latent_heat_liquid = latent_heat_liquid_lake(c))
     end do
 
-     write(iulog,*) 'lake heat (J/m^2)', heat_lake(c)
+     write(iulog,*) 'lake heat (J/m^2)', heat_lake(c)+latent_heat_liquid(c)
 
 ! Add lake heat here if wanted to incorporate
     do fc = 1, num_lakec
@@ -1148,7 +1149,10 @@ contains
     do j = 1,nlevlak
         heat_liquid = heat_liquid + TempToHeat(temp = temp(j), cv = cv)
     end do
-    latent_heat_liquid = latent_heat_liquid + h2o*hfus
+    
+    ! this would assume the whole lake unfrozen? 
+    latent_heat_liquid = latent_heat_liquid + h2o*hfus 
+    
 
   end subroutine AccumulateLiquidWaterHeatLake
 
