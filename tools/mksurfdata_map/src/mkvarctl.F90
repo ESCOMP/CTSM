@@ -46,6 +46,7 @@ module mkvarctl
   character(len=256), public :: mksrf_fmax       = ' '  ! fmax data file name
   character(len=256), public :: mksrf_flai       = ' '  ! lai data filename
   character(len=256), public :: mksrf_fdynuse    = ' '  ! ascii file containing names of dynamic land use files
+  character(len=256), public :: mksrf_fdynlak    = ' '  ! ascii file containing names of dynamic lake files
   character(len=256), public :: mksrf_fvocef     = ' '  ! VOC Emission Factor data file name
   character(len=256), public :: mksrf_ftopostats = ' '  ! topography statistics data file name
   character(len=256), public :: mksrf_fvic       = ' '  ! VIC parameters data file name

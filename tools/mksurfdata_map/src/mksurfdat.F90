@@ -64,13 +64,13 @@ program mksurfdat
     integer  :: k,m,n                       ! indices
     integer  :: ni,nj,ns_o                  ! indices
     integer  :: ier                         ! error status
-    integer  :: ndiag,nfdyn                 ! unit numbers
+    integer  :: ndiag,nfdyn,nfdynlak        ! unit numbers
     integer  :: ncid                        ! netCDF id
     integer  :: omode                       ! netCDF output mode
     integer  :: varid                       ! netCDF variable id
     integer  :: ret                         ! netCDF return status
     integer  :: ntim                        ! time sample for dynamic land use
-    integer  :: year                        ! year for dynamic land use
+    integer  :: year,yearlak                ! year for dynamic land use
     integer  :: year2                       ! year for dynamic land use for harvest file
     logical  :: all_veg                     ! if gridcell will be 100% vegetated land-cover
     real(r8) :: suma                        ! sum for error check
@@ -80,7 +80,8 @@ program mksurfdat
     character(len=256) :: fdyndat           ! dynamic landuse data file name
     character(len=256) :: fname             ! generic filename
     character(len=256) :: fhrvname          ! generic harvest filename
-    character(len=256) :: string            ! string read in
+    character(len=256) :: flakname          ! generic lake filename
+    character(len=256) :: string, stringlak ! string read in
     integer  :: t1                          ! timer
     real(r8),parameter :: p5  = 0.5_r8      ! constant
     real(r8),parameter :: p25 = 0.25_r8     ! constant
@@ -150,11 +151,11 @@ program mksurfdat
     type(harvestDataType) :: harvdata
 
     namelist /clmexp/              &
-	 mksrf_fgrid,              &	
-	 mksrf_gridtype,           &	
+         mksrf_fgrid,              &
+         mksrf_gridtype,           &
          mksrf_fvegtyp,            &
          mksrf_fhrvtyp,            &
-	 mksrf_fsoitex,            &
+         mksrf_fsoitex,            &
          mksrf_forganic,           &
          mksrf_fsoicol,            &
          mksrf_fvocef,             &
@@ -167,6 +168,7 @@ program mksurfdat
          mksrf_furban,             &
          mksrf_flai,               &
          mksrf_fdynuse,            &
+         mksrf_fdynlak,            &
          mksrf_fgdp,               &
          mksrf_fpeat,              &
          mksrf_fsoildepth,         &
@@ -278,6 +280,7 @@ program mksurfdat
     ! Optionally specify setting for:
     ! ======================================
     !    mksrf_fdynuse ----- ASCII text file that lists each year of pft files to use
+    !    mksrf_fdynlak ----- ASCII text file that list each year of dynlake files to use
     !    mksrf_gridtype ---- Type of grid (default is 'global')
     !    outnc_double ------ If output should be in double precision
     !    outnc_large_files - If output should be in NetCDF large file format
@@ -1127,6 +1130,9 @@ program mksurfdat
        ! Read in each dynamic pft landuse dataset
 
        nfdyn = getavu(); call opnfil (mksrf_fdynuse, nfdyn, 'f')
+       
+       ! IV read in dynamic lake dataset
+       nfdynlak = getavu(); call opnfil (mksrf_fdynlak, nfdynlak, 'f')
 
        pctnatpft_max = pctnatpft
        pctcft_max = pctcft
@@ -1159,6 +1165,16 @@ program mksurfdat
                 call abort()
              end if
           end if
+          
+          
+          ! IV Read input lake pct data
+          read(nfdynlak, '(A195,1x,I4)', iostat=ier) string, year
+          if (ier /= 0) exit
+        
+          flakname = string
+          write(6,*)'input lake dynamic dataset for year ', year, ' is : ', trim(flakname)
+
+          
           ntim = ntim + 1
 
           ! Create pctpft data at model resolution
@@ -1186,12 +1202,12 @@ program mksurfdat
                 call abort()
              end if
           end do
+          
 
-          ! IV: Create pctlak data at model resolution
-          call mklakwat (ldomain, mapfname=map_fpft, datfname=fname, &
+          ! IV: Create pctlak data at model resolution (use original mapping file from lake data)
+          call mklakwat (ldomain, mapfname=map_flakwat, datfname=flakname, &
                ndiag=ndiag, zero_out=all_urban.or.all_veg, lake_o=pctlak)                    
           
-          call change_landuse(ldomain, dynpft=.true.)
 
           call normalizencheck_landuse(ldomain)
 	  
@@ -1407,13 +1423,28 @@ subroutine normalizencheck_landuse(ldomain)
           call abort()
        end if
 
+       ! IV: adjust preconditions:
+       ! If pctwet + pcturb + pctgla + pctlak > 100: pct lak is adjusted so that total is 100
+       ! pctwet + pcturb + pctgla cannot be >100
+       ! TO DO: adjust in subroutine description if added. 
+       
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-       if (suma > (100._r8 + tol_loose)) then
-          write(6,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla must be'
-          write(6,*) '<= 100% before calling this subroutine'
-          write(6,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
-               n, pctlak(n), pctwet(n), pcturb(n), pctgla(n)
-          call abort()
+       if ( suma > (100._r8 + tol_loose) ) then
+          
+          ! calc pct lake as to fill cell
+          pctlak(n) = 100._r8 - (pctwet(n) + pcturb(n) + pctgla(n))
+          
+          ! recalculate sum
+          suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
+          
+          if  (suma > (100._r8 + tol_loose)) then
+            write(6,*) subname, ' ERROR: pctwet + pcturb + pctgla must be'
+            write(6,*) '<= 100% before calling this subroutine'
+            write(6,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
+                n, pctwet(n), pcturb(n), pctgla(n)
+            call abort()
+          end if
+          
        end if
 
        ! First normalize vegetated (natural veg + crop) cover so that the total of
@@ -1424,7 +1455,7 @@ subroutine normalizencheck_landuse(ldomain)
        ! will work properly regardless of the initial area of natural veg + crop (even if
        ! that initial area is 0%).
        
-       suma = pctlak(n)+pctwet(n)+pctgla(n)
+       suma = pctlak(n) + pctwet(n)+ pctgla(n)
        new_total_veg_pct = 100._r8 - suma
        ! correct for rounding error:
        new_total_veg_pct = max(new_total_veg_pct, 0._r8)
