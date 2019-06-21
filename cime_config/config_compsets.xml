@@ -135,6 +135,15 @@
     <lname>2000_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
+  <!-- Primarily for testing - when we want builds and runs to be as
+       fast as possible, but still with full-featured CTSM: uses Qian
+       atm forcing to speed up datm, SROF and SGLC to speed up build and
+       run -->
+  <compset>
+    <alias>I2000Clm50BgcCropQianRsGs</alias>
+    <lname>2000_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
   <compset>
     <alias>I2000Clm50BgcCruGs</alias>
     <lname>2000_DATM%CRUv7_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
