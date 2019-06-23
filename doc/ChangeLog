@@ -1,4 +1,113 @@
 ===============================================================
+Tag name:  ctsm1.0.dev048
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Sun Jun 23 15:16:01 MDT 2019
+One-line Summary: Updates for buildlib changes and cime and externals updates
+
+Purpose of changes
+------------------
+
+Update of most externals: cime, mosart, rtm, cism. The cime update also includes a required CESM-wide
+change in buildlib. Uses a function to get the Macros filename "get_standard_makefile_args".
+The cime update brought in some answer chagnes, with an update of the intel compiler (but we backed those
+out by using a cime branch). There is also a roundoff change by going to the trunk version of RTM.
+
+Bugs fixed or introduced None
+------------------------
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: @jedwards, self
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  tools-tests (test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - PASS
+
+  python testing (see instructions in python/README.md; document testing done):
+
+     cheyenne - PASS (for python3)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for a few cases (compsets with RTM)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: With RTM
+    - what platforms/compilers: All
+    - nature of change: roundoff
+       fieldlist is different for CISM in some cases
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, mosart, rtm, cism
+    cime   to branch_tags/cime5.8.3_chint17-02
+    cism   to cism2_0_68
+    rtm    to rtm1_0_68
+    mosart to nldas-grid.n02_mosart1_0_31
+
+Pull Requests that document the changes (include PR ids): #752
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #752 -- buildlib, cime and externals update
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev047
 Originator(s):  sacks (Bill Sacks)
 Date:  Sun Jun 16 13:04:38 MDT 2019

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev048     erik 06/23/2019 Updates for buildlib changes and cime and externals updates
   ctsm1.0.dev047    sacks 06/16/2019 Fix negative snow compaction during snow melt
   ctsm1.0.dev046    sacks 06/15/2019 Separate the two uses of h2osno
   ctsm1.0.dev045    sacks 06/06/2019 Recalculate h2osno for the sake of SnowCapping
