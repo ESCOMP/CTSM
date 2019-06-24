@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev049
 Originator(s):  erik (Erik Kluzek)
-Date:  Sun Jun 23 17:59:49 MDT 2019
+Date: Sun Jun 23 20:56:55 MDT 2019
 One-line Summary: Update mosart and intel to intel-19 on cheyenne
 
 Purpose of changes
@@ -9,7 +9,6 @@ Purpose of changes
 
 Update mosart to trunk tag (that has a roundoff change to history file
 output). And update intel compiler on cheyenne to intel-19.
-
 
 Bugs fixed or introduced None
 ------------------------
