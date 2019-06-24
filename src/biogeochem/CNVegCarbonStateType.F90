@@ -540,12 +540,6 @@ contains
           call hist_addfld1d (fname='CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch)
-          if(use_matrixcn)then
-             this%matrix_cap_grainc_patch(begp:endp) = spval
-             call hist_addfld1d (fname='GRAINC_CAP', units='gC/m^2', &
-                  avgflag='I', long_name='grain C capacity', &
-                  ptr_patch=this%matrix_cap_grainc_patch)
-          end if
        end if
        
        this%woodc_patch(begp:endp) = spval
@@ -2217,22 +2211,22 @@ contains
                       end if
 
                       if (patch%itype(i) == noveg) then
-                         this%leafc_patch(i)          = 0._r8
-                         this%leafc_storage_patch(i)  = 0._r8
-                         this%frootc_patch(i)         = 0._r8            
-                         this%frootc_storage_patch(i) = 0._r8    
+                         this%leafc_patch(i)                           = 0._r8
+                         this%leafc_storage_patch(i)                   = 0._r8
+                         this%frootc_patch(i)                          = 0._r8            
+                         this%frootc_storage_patch(i)                  = 0._r8    
                          if(use_matrixcn)then
-                            this%matrix_cap_leafc_patch(i)          = 0._r8
-                            this%matrix_cap_leafc_storage_patch(i)  = 0._r8
-                            this%matrix_cap_frootc_patch(i)         = 0._r8            
-                            this%matrix_cap_frootc_storage_patch(i) = 0._r8    
+                            this%matrix_cap_leafc_patch(i)             = 0._r8
+                            this%matrix_cap_leafc_storage_patch(i)     = 0._r8
+                            this%matrix_cap_frootc_patch(i)            = 0._r8            
+                            this%matrix_cap_frootc_storage_patch(i)    = 0._r8    
                          end if
                       else
                          if (pftcon%evergreen(patch%itype(i)) == 1._r8) then
-                            this%leafc_patch(i)          = cnvegcstate_const%initial_vegC * ratio     
-                            this%leafc_storage_patch(i)  = 0._r8
-                            this%frootc_patch(i)         = cnvegcstate_const%initial_vegC * ratio           
-                            this%frootc_storage_patch(i) = 0._r8    
+                            this%leafc_patch(i)                        = cnvegcstate_const%initial_vegC * ratio     
+                            this%leafc_storage_patch(i)                = 0._r8
+                            this%frootc_patch(i)                       = cnvegcstate_const%initial_vegC * ratio           
+                            this%frootc_storage_patch(i)               = 0._r8    
                             if(use_matrixcn)then
                                this%matrix_cap_leafc_patch(i)          = cnvegcstate_const%initial_vegC * ratio     
                                this%matrix_cap_leafc_storage_patch(i)  = 0._r8
@@ -2240,10 +2234,10 @@ contains
                                this%matrix_cap_frootc_storage_patch(i) = 0._r8    
                             end if
                          else
-                            this%leafc_patch(i)          = 0._r8
-                            this%leafc_storage_patch(i)  = cnvegcstate_const%initial_vegC * ratio   
-                            this%frootc_patch(i)         = 0._r8            
-                            this%frootc_storage_patch(i) = cnvegcstate_const%initial_vegC * ratio   
+                            this%leafc_patch(i)                        = 0._r8
+                            this%leafc_storage_patch(i)                = cnvegcstate_const%initial_vegC * ratio   
+                            this%frootc_patch(i)                       = 0._r8            
+                            this%frootc_storage_patch(i)               = cnvegcstate_const%initial_vegC * ratio   
                             if(use_matrixcn)then
                                this%matrix_cap_leafc_patch(i)          = 0._r8
                                this%matrix_cap_leafc_storage_patch(i)  = cnvegcstate_const%initial_vegC * ratio   
@@ -2252,93 +2246,93 @@ contains
                             end if
                          end if
                       end if
-                      this%leafc_xfer_patch(i) = 0._r8
+                      this%leafc_xfer_patch(i)                         = 0._r8
                       if(use_matrixcn)then
-                         this%matrix_cap_leafc_xfer_patch(i) = 0._r8
+                         this%matrix_cap_leafc_xfer_patch(i)           = 0._r8
                       end if
-                      this%leafc_storage_xfer_acc_patch(i)  = 0._r8
-                      this%storage_cdemand_patch(i)         = 0._r8
+                      this%leafc_storage_xfer_acc_patch(i)             = 0._r8
+                      this%storage_cdemand_patch(i)                    = 0._r8
 
                       if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
-                         this%frootc_patch(i)            = 0._r8 
-                         this%frootc_storage_patch(i)    = 0._r8 
+                         this%frootc_patch(i)                          = 0._r8 
+                         this%frootc_storage_patch(i)                  = 0._r8 
                          if(use_matrixcn)then
                             this%matrix_cap_frootc_patch(i)            = 0._r8 
                             this%matrix_cap_frootc_storage_patch(i)    = 0._r8 
                          end if
                       end if     
-                      this%frootc_xfer_patch(i)       = 0._r8 
+                      this%frootc_xfer_patch(i)                        = 0._r8 
 
-                      this%livestemc_patch(i)         = 0._r8 
-                      this%livestemc_storage_patch(i) = 0._r8 
-                      this%livestemc_xfer_patch(i)    = 0._r8 
+                      this%livestemc_patch(i)                          = 0._r8 
+                      this%livestemc_storage_patch(i)                  = 0._r8 
+                      this%livestemc_xfer_patch(i)                     = 0._r8 
                       if(use_matrixcn)then
-                         this%matrix_cap_frootc_xfer_patch(i)       = 0._r8 
-                         this%matrix_cap_livestemc_patch(i)         = 0._r8 
-                         this%matrix_cap_livestemc_storage_patch(i) = 0._r8 
-                         this%matrix_cap_livestemc_xfer_patch(i)    = 0._r8 
+                         this%matrix_cap_frootc_xfer_patch(i)          = 0._r8 
+                         this%matrix_cap_livestemc_patch(i)            = 0._r8 
+                         this%matrix_cap_livestemc_storage_patch(i)    = 0._r8 
+                         this%matrix_cap_livestemc_xfer_patch(i)       = 0._r8 
                       end if
 
                       if (pftcon%woody(patch%itype(i)) == 1._r8) then
-                         this%deadstemc_patch(i) = 0.1_r8 * ratio
+                         this%deadstemc_patch(i)                       = 0.1_r8 * ratio
                          if(use_matrixcn)then
-                            this%matrix_cap_deadstemc_patch(i) = 0.1_r8 * ratio
+                            this%matrix_cap_deadstemc_patch(i)         = 0.1_r8 * ratio
                          end if
                       else
-                         this%deadstemc_patch(i) = 0._r8 
+                         this%deadstemc_patch(i)                       = 0._r8 
                          if(use_matrixcn)then
-                            this%matrix_cap_deadstemc_patch(i) = 0._r8 
+                            this%matrix_cap_deadstemc_patch(i)         = 0._r8 
                          end if
                       end if
-                      this%deadstemc_storage_patch(i)  = 0._r8 
-                      this%deadstemc_xfer_patch(i)     = 0._r8 
+                      this%deadstemc_storage_patch(i)                  = 0._r8 
+                      this%deadstemc_xfer_patch(i)                     = 0._r8 
                       if(use_matrixcn)then
-                         this%matrix_cap_deadstemc_storage_patch(i)  = 0._r8 
-                         this%matrix_cap_deadstemc_xfer_patch(i)     = 0._r8 
+                         this%matrix_cap_deadstemc_storage_patch(i)    = 0._r8 
+                         this%matrix_cap_deadstemc_xfer_patch(i)       = 0._r8 
                       end if
 
-                      this%livecrootc_patch(i)         = 0._r8 
-                      this%livecrootc_storage_patch(i) = 0._r8 
-                      this%livecrootc_xfer_patch(i)    = 0._r8 
+                      this%livecrootc_patch(i)                         = 0._r8 
+                      this%livecrootc_storage_patch(i)                 = 0._r8 
+                      this%livecrootc_xfer_patch(i)                    = 0._r8 
 
-                      this%deadcrootc_patch(i)         = 0._r8 
-                      this%deadcrootc_storage_patch(i) = 0._r8 
-                      this%deadcrootc_xfer_patch(i)    = 0._r8 
+                      this%deadcrootc_patch(i)                         = 0._r8 
+                      this%deadcrootc_storage_patch(i)                 = 0._r8 
+                      this%deadcrootc_xfer_patch(i)                    = 0._r8 
 
                       if(use_matrixcn)then
-                         this%matrix_cap_livecrootc_patch(i)         = 0._r8 
-                         this%matrix_cap_livecrootc_storage_patch(i) = 0._r8 
-                         this%matrix_cap_livecrootc_xfer_patch(i)    = 0._r8 
+                         this%matrix_cap_livecrootc_patch(i)           = 0._r8 
+                         this%matrix_cap_livecrootc_storage_patch(i)   = 0._r8 
+                         this%matrix_cap_livecrootc_xfer_patch(i)      = 0._r8 
  
-                         this%matrix_cap_deadcrootc_patch(i)         = 0._r8 
-                         this%matrix_cap_deadcrootc_storage_patch(i) = 0._r8 
-                         this%matrix_cap_deadcrootc_xfer_patch(i)    = 0._r8 
+                         this%matrix_cap_deadcrootc_patch(i)           = 0._r8 
+                         this%matrix_cap_deadcrootc_storage_patch(i)   = 0._r8 
+                         this%matrix_cap_deadcrootc_xfer_patch(i)      = 0._r8 
                       end if
 
-                      this%gresp_storage_patch(i)      = 0._r8 
-                      this%gresp_xfer_patch(i)         = 0._r8 
+                      this%gresp_storage_patch(i)                      = 0._r8 
+                      this%gresp_xfer_patch(i)                         = 0._r8 
 
-                      this%cpool_patch(i)              = 0._r8 
-                      this%xsmrpool_patch(i)           = 0._r8 
-                      this%ctrunc_patch(i)             = 0._r8 
-                      this%dispvegc_patch(i)           = 0._r8 
-                      this%storvegc_patch(i)           = 0._r8 
-                      this%woodc_patch(i)              = 0._r8
-                      this%totc_patch(i)               = 0._r8 
+                      this%cpool_patch(i)                              = 0._r8 
+                      this%xsmrpool_patch(i)                           = 0._r8 
+                      this%ctrunc_patch(i)                             = 0._r8 
+                      this%dispvegc_patch(i)                           = 0._r8 
+                      this%storvegc_patch(i)                           = 0._r8 
+                      this%woodc_patch(i)                              = 0._r8
+                      this%totc_patch(i)                               = 0._r8 
 
                       if ( use_crop )then
-                         this%grainc_patch(i)         = 0._r8 
-                         this%grainc_storage_patch(i) = 0._r8 
-                         this%grainc_xfer_patch(i)    = 0._r8 
+                         this%grainc_patch(i)                          = 0._r8 
+                         this%grainc_storage_patch(i)                  = 0._r8 
+                         this%grainc_xfer_patch(i)                     = 0._r8 
                          if(use_matrixcn)then
-                            this%grainc0_patch(i)         = 0._r8 
-                            this%grainc0_storage_patch(i) = 0._r8 
-                            this%grainc0_xfer_patch(i)    = 0._r8 
-                            this%matrix_cap_grainc_patch(i)       = 0._r8 
-                            this%matrix_cap_grainc_storage_patch(i)       = 0._r8 
+                            this%grainc0_patch(i)                      = 0._r8 
+                            this%grainc0_storage_patch(i)              = 0._r8 
+                            this%grainc0_xfer_patch(i)                 = 0._r8 
+                            this%matrix_cap_grainc_patch(i)            = 0._r8 
+                            this%matrix_cap_grainc_storage_patch(i)    = 0._r8 
                             this%matrix_cap_grainc_xfer_patch(i)       = 0._r8 
                          end if
-                         this%cropseedc_deficit_patch(i)  = 0._r8
+                         this%cropseedc_deficit_patch(i)               = 0._r8
                       end if
 
                       ! calculate totvegc explicitly so that it is available for the isotope 

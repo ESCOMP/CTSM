@@ -227,6 +227,7 @@ contains
                hbot(p) = max(0._r8, min(3._r8, htop(p)-1._r8))
 
             else if (ivt(p) >= npcropmin) then ! prognostic crops
+
                if (tlai(p) >= laimx(ivt(p))) peaklai(p) = 1 ! used in CNAllocation
 
                if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &

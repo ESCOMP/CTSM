@@ -6,7 +6,7 @@ module CNVegNitrogenStateType
   use shr_infnan_mod                     , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full,nlevdecomp,nvegnpool
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nvegnpool
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi
   use landunit_varcon                    , only : istcrop, istsoil 
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
@@ -34,163 +34,163 @@ module CNVegNitrogenStateType
   !
   type, public :: cnveg_nitrogenstate_type
 
-     real(r8), pointer :: grainn_patch             (:) ! (gN/m2) grain N (crop)
-     real(r8), pointer :: grainn_storage_patch     (:) ! (gN/m2) grain N storage (crop)
-     real(r8), pointer :: grainn_xfer_patch        (:) ! (gN/m2) grain N transfer (crop)
-     real(r8), pointer :: matrix_cap_grainn_patch             (:) ! (gN/m2) grain N
-     real(r8), pointer :: matrix_cap_grainn_storage_patch     (:) ! (gN/m2) grain N storage
-     real(r8), pointer :: matrix_cap_grainn_xfer_patch        (:) ! (gN/m2) grain N transfer
-     real(r8), pointer :: leafn_patch              (:) ! (gN/m2) leaf N 
-     real(r8), pointer :: leafn_storage_patch      (:) ! (gN/m2) leaf N storage
-     real(r8), pointer :: leafn_xfer_patch         (:) ! (gN/m2) leaf N transfer
-     real(r8), pointer :: matrix_cap_leafn_patch              (:) ! (gN/m2) leaf N 
-     real(r8), pointer :: matrix_cap_leafn_storage_patch      (:) ! (gN/m2) leaf N storage
-     real(r8), pointer :: matrix_cap_leafn_xfer_patch         (:) ! (gN/m2) leaf N transfer
-     real(r8), pointer :: leafn_storage_xfer_acc_patch (:) ! (gN/m2) Accmulated leaf N transfer
-     real(r8), pointer :: storage_ndemand_patch        (:) ! (gN/m2) N demand during the offset period 
-     real(r8), pointer :: frootn_patch             (:) ! (gN/m2) fine root N
-     real(r8), pointer :: frootn_storage_patch     (:) ! (gN/m2) fine root N storage
-     real(r8), pointer :: frootn_xfer_patch        (:) ! (gN/m2) fine root N transfer
-     real(r8), pointer :: matrix_cap_frootn_patch             (:) ! (gN/m2) fine root N
-     real(r8), pointer :: matrix_cap_frootn_storage_patch     (:) ! (gN/m2) fine root N storage
-     real(r8), pointer :: matrix_cap_frootn_xfer_patch        (:) ! (gN/m2) fine root N transfer
-     real(r8), pointer :: livestemn_patch          (:) ! (gN/m2) live stem N
-     real(r8), pointer :: livestemn_storage_patch  (:) ! (gN/m2) live stem N storage
-     real(r8), pointer :: livestemn_xfer_patch     (:) ! (gN/m2) live stem N transfer
-     real(r8), pointer :: deadstemn_patch          (:) ! (gN/m2) dead stem N
-     real(r8), pointer :: deadstemn_storage_patch  (:) ! (gN/m2) dead stem N storage
-     real(r8), pointer :: deadstemn_xfer_patch     (:) ! (gN/m2) dead stem N transfer
-     real(r8), pointer :: livecrootn_patch         (:) ! (gN/m2) live coarse root N
-     real(r8), pointer :: livecrootn_storage_patch (:) ! (gN/m2) live coarse root N storage
-     real(r8), pointer :: livecrootn_xfer_patch    (:) ! (gN/m2) live coarse root N transfer
-     real(r8), pointer :: deadcrootn_patch         (:) ! (gN/m2) dead coarse root N
-     real(r8), pointer :: deadcrootn_storage_patch (:) ! (gN/m2) dead coarse root N storage
-     real(r8), pointer :: deadcrootn_xfer_patch    (:) ! (gN/m2) dead coarse root N transfer
-     real(r8), pointer :: matrix_cap_livestemn_patch          (:) ! (gN/m2) live stem N
-     real(r8), pointer :: matrix_cap_livestemn_storage_patch  (:) ! (gN/m2) live stem N storage
-     real(r8), pointer :: matrix_cap_livestemn_xfer_patch     (:) ! (gN/m2) live stem N transfer
-     real(r8), pointer :: matrix_cap_deadstemn_patch          (:) ! (gN/m2) dead stem N
-     real(r8), pointer :: matrix_cap_deadstemn_storage_patch  (:) ! (gN/m2) dead stem N storage
-     real(r8), pointer :: matrix_cap_deadstemn_xfer_patch     (:) ! (gN/m2) dead stem N transfer
-     real(r8), pointer :: matrix_cap_livecrootn_patch         (:) ! (gN/m2) live coarse root N
-     real(r8), pointer :: matrix_cap_livecrootn_storage_patch (:) ! (gN/m2) live coarse root N storage
-     real(r8), pointer :: matrix_cap_livecrootn_xfer_patch    (:) ! (gN/m2) live coarse root N transfer
-     real(r8), pointer :: matrix_cap_deadcrootn_patch         (:) ! (gN/m2) dead coarse root N
-     real(r8), pointer :: matrix_cap_deadcrootn_storage_patch (:) ! (gN/m2) dead coarse root N storage
-     real(r8), pointer :: matrix_cap_deadcrootn_xfer_patch    (:) ! (gN/m2) dead coarse root N transfer
-     real(r8), pointer :: retransn_patch           (:) ! (gN/m2) plant pool of retranslocated N
-     real(r8), pointer :: npool_patch              (:) ! (gN/m2) temporary plant N pool
-     real(r8), pointer :: ntrunc_patch             (:) ! (gN/m2) patch-level sink for N truncation
-     real(r8), pointer :: cropseedn_deficit_patch  (:) ! (gN/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
-     real(r8), pointer :: seedn_grc                (:) ! (gN/m2) gridcell-level pool for seeding new pFTs via dynamic landcover
+     real(r8), pointer :: grainn_patch                        (:) ! (gN/m2) grain N (crop)
+     real(r8), pointer :: grainn_storage_patch                (:) ! (gN/m2) grain N storage (crop)
+     real(r8), pointer :: grainn_xfer_patch                   (:) ! (gN/m2) grain N transfer (crop)
+     real(r8), pointer :: matrix_cap_grainn_patch             (:) ! (gN/m2) Capacity of grain N
+     real(r8), pointer :: matrix_cap_grainn_storage_patch     (:) ! (gN/m2) Capacity of grain N storage
+     real(r8), pointer :: matrix_cap_grainn_xfer_patch        (:) ! (gN/m2) Capacity of grain N transfer
+     real(r8), pointer :: leafn_patch                         (:) ! (gN/m2) leaf N 
+     real(r8), pointer :: leafn_storage_patch                 (:) ! (gN/m2) leaf N storage
+     real(r8), pointer :: leafn_xfer_patch                    (:) ! (gN/m2) leaf N transfer
+     real(r8), pointer :: matrix_cap_leafn_patch              (:) ! (gN/m2) Capacity of leaf N 
+     real(r8), pointer :: matrix_cap_leafn_storage_patch      (:) ! (gN/m2) Capacity of leaf N storage
+     real(r8), pointer :: matrix_cap_leafn_xfer_patch         (:) ! (gN/m2) Capacity of leaf N transfer
+     real(r8), pointer :: leafn_storage_xfer_acc_patch        (:) ! (gN/m2) Accmulated leaf N transfer
+     real(r8), pointer :: storage_ndemand_patch               (:) ! (gN/m2) N demand during the offset period 
+     real(r8), pointer :: frootn_patch                        (:) ! (gN/m2) fine root N
+     real(r8), pointer :: frootn_storage_patch                (:) ! (gN/m2) fine root N storage
+     real(r8), pointer :: frootn_xfer_patch                   (:) ! (gN/m2) fine root N transfer
+     real(r8), pointer :: matrix_cap_frootn_patch             (:) ! (gN/m2) Capacity of fine root N
+     real(r8), pointer :: matrix_cap_frootn_storage_patch     (:) ! (gN/m2) Capacity of fine root N storage
+     real(r8), pointer :: matrix_cap_frootn_xfer_patch        (:) ! (gN/m2) Capacity of fine root N transfer
+     real(r8), pointer :: livestemn_patch                     (:) ! (gN/m2) live stem N
+     real(r8), pointer :: livestemn_storage_patch             (:) ! (gN/m2) live stem N storage
+     real(r8), pointer :: livestemn_xfer_patch                (:) ! (gN/m2) live stem N transfer
+     real(r8), pointer :: deadstemn_patch                     (:) ! (gN/m2) dead stem N
+     real(r8), pointer :: deadstemn_storage_patch             (:) ! (gN/m2) dead stem N storage
+     real(r8), pointer :: deadstemn_xfer_patch                (:) ! (gN/m2) dead stem N transfer
+     real(r8), pointer :: livecrootn_patch                    (:) ! (gN/m2) live coarse root N
+     real(r8), pointer :: livecrootn_storage_patch            (:) ! (gN/m2) live coarse root N storage
+     real(r8), pointer :: livecrootn_xfer_patch               (:) ! (gN/m2) live coarse root N transfer
+     real(r8), pointer :: deadcrootn_patch                    (:) ! (gN/m2) dead coarse root N
+     real(r8), pointer :: deadcrootn_storage_patch            (:) ! (gN/m2) dead coarse root N storage
+     real(r8), pointer :: deadcrootn_xfer_patch               (:) ! (gN/m2) dead coarse root N transfer
+     real(r8), pointer :: matrix_cap_livestemn_patch          (:) ! (gN/m2) Capacity of live stem N
+     real(r8), pointer :: matrix_cap_livestemn_storage_patch  (:) ! (gN/m2) Capacity of live stem N storage
+     real(r8), pointer :: matrix_cap_livestemn_xfer_patch     (:) ! (gN/m2) Capacity of live stem N transfer
+     real(r8), pointer :: matrix_cap_deadstemn_patch          (:) ! (gN/m2) Capacity of dead stem N
+     real(r8), pointer :: matrix_cap_deadstemn_storage_patch  (:) ! (gN/m2) Capacity of dead stem N storage
+     real(r8), pointer :: matrix_cap_deadstemn_xfer_patch     (:) ! (gN/m2) Capacity of dead stem N transfer
+     real(r8), pointer :: matrix_cap_livecrootn_patch         (:) ! (gN/m2) Capacity of live coarse root N
+     real(r8), pointer :: matrix_cap_livecrootn_storage_patch (:) ! (gN/m2) Capacity of live coarse root N storage
+     real(r8), pointer :: matrix_cap_livecrootn_xfer_patch    (:) ! (gN/m2) Capacity of live coarse root N transfer
+     real(r8), pointer :: matrix_cap_deadcrootn_patch         (:) ! (gN/m2) Capacity of dead coarse root N
+     real(r8), pointer :: matrix_cap_deadcrootn_storage_patch (:) ! (gN/m2) Capacity of dead coarse root N storage
+     real(r8), pointer :: matrix_cap_deadcrootn_xfer_patch    (:) ! (gN/m2) Capacity of dead coarse root N transfer
+     real(r8), pointer :: retransn_patch                      (:) ! (gN/m2) plant pool of retranslocated N
+     real(r8), pointer :: npool_patch                         (:) ! (gN/m2) temporary plant N pool
+     real(r8), pointer :: ntrunc_patch                        (:) ! (gN/m2) patch-level sink for N truncation
+     real(r8), pointer :: cropseedn_deficit_patch             (:) ! (gN/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
+     real(r8), pointer :: seedn_grc                           (:) ! (gN/m2) gridcell-level pool for seeding new pFTs via dynamic landcover
 ! Pool for initial step of year for matrix
-     real(r8), pointer :: leafn0_patch              (:) ! (gN/m2) leaf N 
-     real(r8), pointer :: leafn0_storage_patch      (:) ! (gN/m2) leaf N storage
-     real(r8), pointer :: leafn0_xfer_patch         (:) ! (gN/m2) leaf N transfer
-     real(r8), pointer :: frootn0_patch             (:) ! (gN/m2) fine root N
-     real(r8), pointer :: frootn0_storage_patch     (:) ! (gN/m2) fine root N storage
-     real(r8), pointer :: frootn0_xfer_patch        (:) ! (gN/m2) fine root N transfer
-     real(r8), pointer :: livestemn0_patch          (:) ! (gN/m2) live stem N
-     real(r8), pointer :: livestemn0_storage_patch  (:) ! (gN/m2) live stem N storage
-     real(r8), pointer :: livestemn0_xfer_patch     (:) ! (gN/m2) live stem N transfer
-     real(r8), pointer :: deadstemn0_patch          (:) ! (gN/m2) dead stem N
-     real(r8), pointer :: deadstemn0_storage_patch  (:) ! (gN/m2) dead stem N storage
-     real(r8), pointer :: deadstemn0_xfer_patch     (:) ! (gN/m2) dead stem N transfer
-     real(r8), pointer :: livecrootn0_patch         (:) ! (gN/m2) live coarse root N
-     real(r8), pointer :: livecrootn0_storage_patch (:) ! (gN/m2) live coarse root N storage
-     real(r8), pointer :: livecrootn0_xfer_patch    (:) ! (gN/m2) live coarse root N transfer
-     real(r8), pointer :: deadcrootn0_patch         (:) ! (gN/m2) dead coarse root N
-     real(r8), pointer :: deadcrootn0_storage_patch (:) ! (gN/m2) dead coarse root N storage
-     real(r8), pointer :: deadcrootn0_xfer_patch    (:) ! (gN/m2) dead coarse root N transfer
-     real(r8), pointer :: retransn0_patch           (:) ! (gN/m2) dead coarse root N transfer
-     real(r8), pointer :: grainn0_patch             (:) ! (gN/m2) grain N
-     real(r8), pointer :: grainn0_storage_patch     (:) ! (gN/m2) grain N storage
-     real(r8), pointer :: grainn0_xfer_patch        (:) ! (gN/m2) grain N transfer
+     real(r8), pointer :: leafn0_patch                        (:) ! (gN/m2) Initial value of leaf N for SASU
+     real(r8), pointer :: leafn0_storage_patch                (:) ! (gN/m2) Initial value of leaf N storage for SASU
+     real(r8), pointer :: leafn0_xfer_patch                   (:) ! (gN/m2) Initial value of leaf N transfer for SASU
+     real(r8), pointer :: frootn0_patch                       (:) ! (gN/m2) Initial value of fine root N for SASU
+     real(r8), pointer :: frootn0_storage_patch               (:) ! (gN/m2) Initial value of fine root N storage for SASU
+     real(r8), pointer :: frootn0_xfer_patch                  (:) ! (gN/m2) Initial value of fine root N transfer for SASU
+     real(r8), pointer :: livestemn0_patch                    (:) ! (gN/m2) Initial value of live stem N for SASU
+     real(r8), pointer :: livestemn0_storage_patch            (:) ! (gN/m2) Initial value of live stem N storage for SASU
+     real(r8), pointer :: livestemn0_xfer_patch               (:) ! (gN/m2) Initial value of live stem N transfer for SASU
+     real(r8), pointer :: deadstemn0_patch                    (:) ! (gN/m2) Initial value of dead stem N for SASU
+     real(r8), pointer :: deadstemn0_storage_patch            (:) ! (gN/m2) Initial value of dead stem N storage for SASU
+     real(r8), pointer :: deadstemn0_xfer_patch               (:) ! (gN/m2) Initial value of dead stem N transfer for SASU
+     real(r8), pointer :: livecrootn0_patch                   (:) ! (gN/m2) Initial value of live coarse root N for SASU
+     real(r8), pointer :: livecrootn0_storage_patch           (:) ! (gN/m2) Initial value of live coarse root N storage for SASU
+     real(r8), pointer :: livecrootn0_xfer_patch              (:) ! (gN/m2) Initial value of live coarse root N transfer for SASU
+     real(r8), pointer :: deadcrootn0_patch                   (:) ! (gN/m2) Initial value of dead coarse root N for SASU
+     real(r8), pointer :: deadcrootn0_storage_patch           (:) ! (gN/m2) Initial value of dead coarse root N storage for SASU
+     real(r8), pointer :: deadcrootn0_xfer_patch              (:) ! (gN/m2) Initial value of dead coarse root N transfer for SASU
+     real(r8), pointer :: retransn0_patch                     (:) ! (gN/m2) Initial value of dead coarse root N transfer for SASU
+     real(r8), pointer :: grainn0_patch                       (:) ! (gN/m2) Initial value of grain N for SASU
+     real(r8), pointer :: grainn0_storage_patch               (:) ! (gN/m2) Initial value of grain N storage for SASU
+     real(r8), pointer :: grainn0_xfer_patch                  (:) ! (gN/m2) Initial value of grain N transfer for SASU
 
      ! summary (diagnostic) state variables, not involved in mass balance
-     real(r8), pointer :: dispvegn_patch           (:) ! (gN/m2) displayed veg nitrogen, excluding storage
-     real(r8), pointer :: storvegn_patch           (:) ! (gN/m2) stored vegetation nitrogen
-     real(r8), pointer :: totvegn_patch            (:) ! (gN/m2) total vegetation nitrogen
-     real(r8), pointer :: totvegn_col              (:) ! (gN/m2) total vegetation nitrogen (p2c)
-     real(r8), pointer :: totn_patch               (:) ! (gN/m2) total patch-level nitrogen
-     real(r8), pointer :: totn_p2c_col             (:) ! (gN/m2) totn_patch averaged to col
-     real(r8), pointer :: totn_col                 (:) ! (gN/m2) total column nitrogen, incl veg
-     real(r8), pointer :: totecosysn_col           (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
+     real(r8), pointer :: dispvegn_patch                      (:) ! (gN/m2) displayed veg nitrogen, excluding storage
+     real(r8), pointer :: storvegn_patch                      (:) ! (gN/m2) stored vegetation nitrogen
+     real(r8), pointer :: totvegn_patch                       (:) ! (gN/m2) total vegetation nitrogen
+     real(r8), pointer :: totvegn_col                         (:) ! (gN/m2) total vegetation nitrogen (p2c)
+     real(r8), pointer :: totn_patch                          (:) ! (gN/m2) total patch-level nitrogen
+     real(r8), pointer :: totn_p2c_col                        (:) ! (gN/m2) totn_patch averaged to col
+     real(r8), pointer :: totn_col                            (:) ! (gN/m2) total column nitrogen, incl veg
+     real(r8), pointer :: totecosysn_col                      (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
 ! acc spinup
-     real(r8), pointer :: matrix_nalloc_leaf_acc_patch          (:)  
-     real(r8), pointer :: matrix_nalloc_leafst_acc_patch  (:) 
-     real(r8), pointer :: matrix_nalloc_froot_acc_patch             (:)
-     real(r8), pointer :: matrix_nalloc_frootst_acc_patch     (:)
-     real(r8), pointer :: matrix_nalloc_livestem_acc_patch          (:)
-     real(r8), pointer :: matrix_nalloc_livestemst_acc_patch  (:)
-     real(r8), pointer :: matrix_nalloc_deadstem_acc_patch          (:)  
-     real(r8), pointer :: matrix_nalloc_deadstemst_acc_patch  (:)  
-     real(r8), pointer :: matrix_nalloc_livecroot_acc_patch         (:)  
-     real(r8), pointer :: matrix_nalloc_livecrootst_acc_patch (:)  
-     real(r8), pointer :: matrix_nalloc_deadcroot_acc_patch         (:)  
-     real(r8), pointer :: matrix_nalloc_deadcrootst_acc_patch (:)  
-     real(r8), pointer :: matrix_nalloc_grain_acc_patch             (:)  
-     real(r8), pointer :: matrix_nalloc_grainst_acc_patch     (:) 
+     real(r8), pointer :: matrix_nalloc_leaf_acc_patch        (:) ! (gN/m2/year) Input N allocated to leaf during this year 
+     real(r8), pointer :: matrix_nalloc_leafst_acc_patch      (:) ! (gN/m2/year) Input N allocated to leaf storage during this year
+     real(r8), pointer :: matrix_nalloc_froot_acc_patch       (:) ! (gN/m2/year) Input N allocated to fine root during this year
+     real(r8), pointer :: matrix_nalloc_frootst_acc_patch     (:) ! (gN/m2/year) Input N allocated to fine root storage during this year
+     real(r8), pointer :: matrix_nalloc_livestem_acc_patch    (:) ! (gN/m2/year) Input N allocated to live stem during this year
+     real(r8), pointer :: matrix_nalloc_livestemst_acc_patch  (:) ! (gN/m2/year) Input N allocated to live stem storage during this year
+     real(r8), pointer :: matrix_nalloc_deadstem_acc_patch    (:) ! (gN/m2/year) Input N allocated to dead stem during this year 
+     real(r8), pointer :: matrix_nalloc_deadstemst_acc_patch  (:) ! (gN/m2/year) Input N allocated to dead stem storage during this year 
+     real(r8), pointer :: matrix_nalloc_livecroot_acc_patch   (:) ! (gN/m2/year) Input N allocated to live coarse root during this year 
+     real(r8), pointer :: matrix_nalloc_livecrootst_acc_patch (:) ! (gN/m2/year) Input N allocated to live coarse root storage during this year 
+     real(r8), pointer :: matrix_nalloc_deadcroot_acc_patch   (:) ! (gN/m2/year) Input N allocated to dead coarse root during this year 
+     real(r8), pointer :: matrix_nalloc_deadcrootst_acc_patch (:) ! (gN/m2/year) Input N allocated to dead coarse root storage during this year 
+     real(r8), pointer :: matrix_nalloc_grain_acc_patch       (:) ! (gN/m2/year) Input N allocated to grain during this year 
+     real(r8), pointer :: matrix_nalloc_grainst_acc_patch     (:) ! (gN/m2/year) Input N allocated to grain storage during this year 
 
-     real(r8), pointer :: matrix_ntransfer_leafst_to_leafxf_acc_patch           (:) 
-     real(r8), pointer :: matrix_ntransfer_leafxf_to_leaf_acc_patch             (:) 
-     real(r8), pointer :: matrix_ntransfer_frootst_to_frootxf_acc_patch         (:) 
-     real(r8), pointer :: matrix_ntransfer_frootxf_to_froot_acc_patch           (:) 
-     real(r8), pointer :: matrix_ntransfer_livestemst_to_livestemxf_acc_patch   (:) 
-     real(r8), pointer :: matrix_ntransfer_livestemxf_to_livestem_acc_patch     (:) 
-     real(r8), pointer :: matrix_ntransfer_deadstemst_to_deadstemxf_acc_patch   (:) 
-     real(r8), pointer :: matrix_ntransfer_deadstemxf_to_deadstem_acc_patch     (:) 
-     real(r8), pointer :: matrix_ntransfer_livecrootst_to_livecrootxf_acc_patch (:) 
-     real(r8), pointer :: matrix_ntransfer_livecrootxf_to_livecroot_acc_patch   (:) 
-     real(r8), pointer :: matrix_ntransfer_deadcrootst_to_deadcrootxf_acc_patch (:) 
-     real(r8), pointer :: matrix_ntransfer_deadcrootxf_to_deadcroot_acc_patch   (:) 
-     real(r8), pointer :: matrix_ntransfer_grainst_to_grainxf_acc_patch         (:) 
-     real(r8), pointer :: matrix_ntransfer_grainxf_to_grain_acc_patch           (:) 
-     real(r8), pointer :: matrix_ntransfer_livestem_to_deadstem_acc_patch       (:) 
-     real(r8), pointer :: matrix_ntransfer_livecroot_to_deadcroot_acc_patch     (:) 
+     real(r8), pointer :: matrix_ntransfer_leafst_to_leafxf_acc_patch           (:) ! (gN/m2/year) N transfer from leaf storage to leaf transfer pool during this year
+     real(r8), pointer :: matrix_ntransfer_leafxf_to_leaf_acc_patch             (:) ! (gN/m2/year) N transfer from leaf transfer to leaf pool during this year
+     real(r8), pointer :: matrix_ntransfer_frootst_to_frootxf_acc_patch         (:) ! (gN/m2/year) N transfer from fine root storage to fine root transfer pool during this year
+     real(r8), pointer :: matrix_ntransfer_frootxf_to_froot_acc_patch           (:) ! (gN/m2/year) N transfer from fine root transfer to fine root pool during this year
+     real(r8), pointer :: matrix_ntransfer_livestemst_to_livestemxf_acc_patch   (:) ! (gN/m2/year) N transfer from live stem storage to live stem transfer pool during this year
+     real(r8), pointer :: matrix_ntransfer_livestemxf_to_livestem_acc_patch     (:) ! (gN/m2/year) N transfer from live stem transfer to live stem pool during this year
+     real(r8), pointer :: matrix_ntransfer_deadstemst_to_deadstemxf_acc_patch   (:) ! (gN/m2/year) N transfer from dead stem storage to dead stem transfer pool during this year
+     real(r8), pointer :: matrix_ntransfer_deadstemxf_to_deadstem_acc_patch     (:) ! (gN/m2/year) N transfer from dead stem transfer to dead stem pool during this year
+     real(r8), pointer :: matrix_ntransfer_livecrootst_to_livecrootxf_acc_patch (:) ! (gN/m2/year) N transfer from live coarse root storage to live coarse root transfer pool during this year
+     real(r8), pointer :: matrix_ntransfer_livecrootxf_to_livecroot_acc_patch   (:) ! (gN/m2/year) N transfer from live coarse root transfer to live coarse root pool during this year
+     real(r8), pointer :: matrix_ntransfer_deadcrootst_to_deadcrootxf_acc_patch (:) ! (gN/m2/year) N transfer from dead coarse root storage to dead coarse root transfer pool during this year
+     real(r8), pointer :: matrix_ntransfer_deadcrootxf_to_deadcroot_acc_patch   (:) ! (gN/m2/year) N transfer from dead coarse root transfer to dead coarse root pool during this year
+     real(r8), pointer :: matrix_ntransfer_grainst_to_grainxf_acc_patch         (:) ! (gN/m2/year) N transfer from grain storage to grain transfer pool during this year
+     real(r8), pointer :: matrix_ntransfer_grainxf_to_grain_acc_patch           (:) ! (gN/m2/year) N transfer from grain transfer to grain pool during this year
+     real(r8), pointer :: matrix_ntransfer_livestem_to_deadstem_acc_patch       (:) ! (gN/m2/year) N transfer from live stem to dead stem pool during this year
+     real(r8), pointer :: matrix_ntransfer_livecroot_to_deadcroot_acc_patch     (:) ! (gN/m2/year) N transfer from live coarse root to dead coarse root pool during this year
 
-     real(r8), pointer :: matrix_ntransfer_retransn_to_leaf_acc_patch              (:)  
-     real(r8), pointer :: matrix_ntransfer_retransn_to_leafst_acc_patch      (:) 
-     real(r8), pointer :: matrix_ntransfer_retransn_to_froot_acc_patch             (:)
-     real(r8), pointer :: matrix_ntransfer_retransn_to_frootst_acc_patch     (:)
-     real(r8), pointer :: matrix_ntransfer_retransn_to_livestem_acc_patch          (:)
-     real(r8), pointer :: matrix_ntransfer_retransn_to_livestemst_acc_patch  (:)
-     real(r8), pointer :: matrix_ntransfer_retransn_to_deadstem_acc_patch          (:)  
-     real(r8), pointer :: matrix_ntransfer_retransn_to_deadstemst_acc_patch  (:)  
-     real(r8), pointer :: matrix_ntransfer_retransn_to_livecroot_acc_patch         (:)  
-     real(r8), pointer :: matrix_ntransfer_retransn_to_livecrootst_acc_patch (:)  
-     real(r8), pointer :: matrix_ntransfer_retransn_to_deadcroot_acc_patch         (:)  
-     real(r8), pointer :: matrix_ntransfer_retransn_to_deadcrootst_acc_patch (:)  
-     real(r8), pointer :: matrix_ntransfer_retransn_to_grain_acc_patch             (:)  
-     real(r8), pointer :: matrix_ntransfer_retransn_to_grainst_acc_patch     (:) 
+     real(r8), pointer :: matrix_ntransfer_retransn_to_leaf_acc_patch           (:) ! (gN/m2/year) N transfer from retranslocation to leaf pool during this year 
+     real(r8), pointer :: matrix_ntransfer_retransn_to_leafst_acc_patch         (:) ! (gN/m2/year) N transfer from retranslocation to leaf storage pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_froot_acc_patch          (:) ! (gN/m2/year) N transfer from retranslocation to fine root  pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_frootst_acc_patch        (:) ! (gN/m2/year) N transfer from retranslocation to fine root storage pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_livestem_acc_patch       (:) ! (gN/m2/year) N transfer from retranslocation to live stem pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_livestemst_acc_patch     (:) ! (gN/m2/year) N transfer from retranslocation to live stem storage pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_deadstem_acc_patch       (:) ! (gN/m2/year) N transfer from retranslocation to dead stem pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_deadstemst_acc_patch     (:) ! (gN/m2/year) N transfer from retranslocation to dead stem storage pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_livecroot_acc_patch      (:) ! (gN/m2/year) N transfer from retranslocation to live coarse root pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_livecrootst_acc_patch    (:) ! (gN/m2/year) N transfer from retranslocation to live coarse root storage pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_deadcroot_acc_patch      (:) ! (gN/m2/year) N transfer from retranslocation to dead coarse root pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_deadcrootst_acc_patch    (:) ! (gN/m2/year) N transfer from retranslocation to dead coarse root storage pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_grain_acc_patch          (:) ! (gN/m2/year) N transfer from retranslocation to grain pool during this year
+     real(r8), pointer :: matrix_ntransfer_retransn_to_grainst_acc_patch        (:) ! (gN/m2/year) N transfer from retranslocation to grain storage pool during this year 
 
-     real(r8), pointer :: matrix_ntransfer_leaf_to_retransn_acc_patch              (:)  
-     real(r8), pointer :: matrix_ntransfer_froot_to_retransn_acc_patch             (:)
-     real(r8), pointer :: matrix_ntransfer_livestem_to_retransn_acc_patch          (:)
-     real(r8), pointer :: matrix_ntransfer_livecroot_to_retransn_acc_patch         (:)  
+     real(r8), pointer :: matrix_ntransfer_leaf_to_retransn_acc_patch           (:) ! (gN/m2/year) N transfer from leaf to retranslocation pool during this year 
+     real(r8), pointer :: matrix_ntransfer_froot_to_retransn_acc_patch          (:) ! (gN/m2/year) N transfer from fine root to retranslocation pool during this year
+     real(r8), pointer :: matrix_ntransfer_livestem_to_retransn_acc_patch       (:) ! (gN/m2/year) N transfer from live stem to retranslocation pool during this year
+     real(r8), pointer :: matrix_ntransfer_livecroot_to_retransn_acc_patch      (:) ! (gN/m2/year) N transfer from live coarse root to retranslocation pool during this year  
 
-     real(r8), pointer :: matrix_nturnover_leaf_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_leafst_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_leafxf_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_froot_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_frootst_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_frootxf_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_livestem_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_livestemst_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_livestemxf_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_deadstem_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_deadstemst_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_deadstemxf_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_livecroot_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_livecrootst_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_livecrootxf_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_deadcroot_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_deadcrootst_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_deadcrootxf_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_grain_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_grainst_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_grainxf_acc_patch          (:)  
-     real(r8), pointer :: matrix_nturnover_retransn_acc_patch          (:)  
+     real(r8), pointer :: matrix_nturnover_leaf_acc_patch                       (:) ! (gN/m2/year) N turnover from leaf 
+     real(r8), pointer :: matrix_nturnover_leafst_acc_patch                     (:) ! (gN/m2/year) N turnover from leaf storage
+     real(r8), pointer :: matrix_nturnover_leafxf_acc_patch                     (:) ! (gN/m2/year) N turnover from leaf transfer 
+     real(r8), pointer :: matrix_nturnover_froot_acc_patch                      (:) ! (gN/m2/year) N turnover from root 
+     real(r8), pointer :: matrix_nturnover_frootst_acc_patch                    (:) ! (gN/m2/year) N turnover from root storage
+     real(r8), pointer :: matrix_nturnover_frootxf_acc_patch                    (:) ! (gN/m2/year) N turnover from root transfer
+     real(r8), pointer :: matrix_nturnover_livestem_acc_patch                   (:) ! (gN/m2/year) N turnover from live stem
+     real(r8), pointer :: matrix_nturnover_livestemst_acc_patch                 (:) ! (gN/m2/year) N turnover from live stem storage
+     real(r8), pointer :: matrix_nturnover_livestemxf_acc_patch                 (:) ! (gN/m2/year) N turnover from live stem transfer
+     real(r8), pointer :: matrix_nturnover_deadstem_acc_patch                   (:) ! (gN/m2/year) N turnover from dead stem
+     real(r8), pointer :: matrix_nturnover_deadstemst_acc_patch                 (:) ! (gN/m2/year) N turnover from dead stem storage
+     real(r8), pointer :: matrix_nturnover_deadstemxf_acc_patch                 (:) ! (gN/m2/year) N turnover from dead stem transfer
+     real(r8), pointer :: matrix_nturnover_livecroot_acc_patch                  (:) ! (gN/m2/year) N turnover from live coarse root
+     real(r8), pointer :: matrix_nturnover_livecrootst_acc_patch                (:) ! (gN/m2/year) N turnover from live coarse root storage
+     real(r8), pointer :: matrix_nturnover_livecrootxf_acc_patch                (:) ! (gN/m2/year) N turnover from live coarse root transfer
+     real(r8), pointer :: matrix_nturnover_deadcroot_acc_patch                  (:) ! (gN/m2/year) N turnover from dead coarse root
+     real(r8), pointer :: matrix_nturnover_deadcrootst_acc_patch                (:) ! (gN/m2/year) N turnover from dead coarse root storage
+     real(r8), pointer :: matrix_nturnover_deadcrootxf_acc_patch                (:) ! (gN/m2/year) N turnover from dead coarse root transfer
+     real(r8), pointer :: matrix_nturnover_grain_acc_patch                      (:) ! (gN/m2/year) N turnover from grain 
+     real(r8), pointer :: matrix_nturnover_grainst_acc_patch                    (:) ! (gN/m2/year) N turnover from grain storage 
+     real(r8), pointer :: matrix_nturnover_grainxf_acc_patch                    (:) ! (gN/m2/year) N turnover from grain transfer 
+     real(r8), pointer :: matrix_nturnover_retransn_acc_patch                   (:) ! (gN/m2/year) N turnover from retranslocation transfer
 
    contains
 
@@ -250,44 +250,44 @@ contains
     begc = bounds%begc; endc = bounds%endc
     begg = bounds%begg; endg = bounds%endg
 
-    allocate(this%grainn_patch             (begp:endp)) ; this%grainn_patch             (:) = nan     
-    allocate(this%grainn_storage_patch     (begp:endp)) ; this%grainn_storage_patch     (:) = nan
-    allocate(this%grainn_xfer_patch        (begp:endp)) ; this%grainn_xfer_patch        (:) = nan     
+    allocate(this%grainn_patch                           (begp:endp)) ; this%grainn_patch                        (:) = nan     
+    allocate(this%grainn_storage_patch                   (begp:endp)) ; this%grainn_storage_patch                (:) = nan
+    allocate(this%grainn_xfer_patch                      (begp:endp)) ; this%grainn_xfer_patch                   (:) = nan     
     if(use_matrixcn)then
        allocate(this%matrix_cap_grainn_patch             (begp:endp)) ; this%matrix_cap_grainn_patch             (:) = nan
        allocate(this%matrix_cap_grainn_storage_patch     (begp:endp)) ; this%matrix_cap_grainn_storage_patch     (:) = nan     
        allocate(this%matrix_cap_grainn_xfer_patch        (begp:endp)) ; this%matrix_cap_grainn_xfer_patch        (:) = nan     
     end if
-    allocate(this%leafn_patch              (begp:endp)) ; this%leafn_patch              (:) = nan
-    allocate(this%leafn_storage_patch      (begp:endp)) ; this%leafn_storage_patch      (:) = nan     
-    allocate(this%leafn_xfer_patch         (begp:endp)) ; this%leafn_xfer_patch         (:) = nan     
+    allocate(this%leafn_patch                            (begp:endp)) ; this%leafn_patch                         (:) = nan
+    allocate(this%leafn_storage_patch                    (begp:endp)) ; this%leafn_storage_patch                 (:) = nan     
+    allocate(this%leafn_xfer_patch                       (begp:endp)) ; this%leafn_xfer_patch                    (:) = nan     
     if(use_matrixcn)then
        allocate(this%matrix_cap_leafn_patch              (begp:endp)) ; this%matrix_cap_leafn_patch              (:) = nan
        allocate(this%matrix_cap_leafn_storage_patch      (begp:endp)) ; this%matrix_cap_leafn_storage_patch      (:) = nan     
        allocate(this%matrix_cap_leafn_xfer_patch         (begp:endp)) ; this%matrix_cap_leafn_xfer_patch         (:) = nan     
     end if
-    allocate(this%leafn_storage_xfer_acc_patch  (begp:endp)) ; this%leafn_storage_xfer_acc_patch         (:) = nan
-    allocate(this%storage_ndemand_patch    (begp:endp)) ; this%storage_ndemand_patch    (:) = nan
-    allocate(this%frootn_patch             (begp:endp)) ; this%frootn_patch             (:) = nan
-    allocate(this%frootn_storage_patch     (begp:endp)) ; this%frootn_storage_patch     (:) = nan     
-    allocate(this%frootn_xfer_patch        (begp:endp)) ; this%frootn_xfer_patch        (:) = nan     
+    allocate(this%leafn_storage_xfer_acc_patch           (begp:endp)) ; this%leafn_storage_xfer_acc_patch        (:) = nan
+    allocate(this%storage_ndemand_patch                  (begp:endp)) ; this%storage_ndemand_patch               (:) = nan
+    allocate(this%frootn_patch                           (begp:endp)) ; this%frootn_patch                        (:) = nan
+    allocate(this%frootn_storage_patch                   (begp:endp)) ; this%frootn_storage_patch                (:) = nan     
+    allocate(this%frootn_xfer_patch                      (begp:endp)) ; this%frootn_xfer_patch                   (:) = nan     
     if(use_matrixcn)then
        allocate(this%matrix_cap_frootn_patch             (begp:endp)) ; this%matrix_cap_frootn_patch             (:) = nan
        allocate(this%matrix_cap_frootn_storage_patch     (begp:endp)) ; this%matrix_cap_frootn_storage_patch     (:) = nan     
        allocate(this%matrix_cap_frootn_xfer_patch        (begp:endp)) ; this%matrix_cap_frootn_xfer_patch        (:) = nan     
     end if
-    allocate(this%livestemn_patch          (begp:endp)) ; this%livestemn_patch          (:) = nan
-    allocate(this%livestemn_storage_patch  (begp:endp)) ; this%livestemn_storage_patch  (:) = nan
-    allocate(this%livestemn_xfer_patch     (begp:endp)) ; this%livestemn_xfer_patch     (:) = nan
-    allocate(this%deadstemn_patch          (begp:endp)) ; this%deadstemn_patch          (:) = nan
-    allocate(this%deadstemn_storage_patch  (begp:endp)) ; this%deadstemn_storage_patch  (:) = nan
-    allocate(this%deadstemn_xfer_patch     (begp:endp)) ; this%deadstemn_xfer_patch     (:) = nan
-    allocate(this%livecrootn_patch         (begp:endp)) ; this%livecrootn_patch         (:) = nan
-    allocate(this%livecrootn_storage_patch (begp:endp)) ; this%livecrootn_storage_patch (:) = nan
-    allocate(this%livecrootn_xfer_patch    (begp:endp)) ; this%livecrootn_xfer_patch    (:) = nan
-    allocate(this%deadcrootn_patch         (begp:endp)) ; this%deadcrootn_patch         (:) = nan
-    allocate(this%deadcrootn_storage_patch (begp:endp)) ; this%deadcrootn_storage_patch (:) = nan
-    allocate(this%deadcrootn_xfer_patch    (begp:endp)) ; this%deadcrootn_xfer_patch    (:) = nan
+    allocate(this%livestemn_patch                        (begp:endp)) ; this%livestemn_patch                     (:) = nan
+    allocate(this%livestemn_storage_patch                (begp:endp)) ; this%livestemn_storage_patch             (:) = nan
+    allocate(this%livestemn_xfer_patch                   (begp:endp)) ; this%livestemn_xfer_patch                (:) = nan
+    allocate(this%deadstemn_patch                        (begp:endp)) ; this%deadstemn_patch                     (:) = nan
+    allocate(this%deadstemn_storage_patch                (begp:endp)) ; this%deadstemn_storage_patch             (:) = nan
+    allocate(this%deadstemn_xfer_patch                   (begp:endp)) ; this%deadstemn_xfer_patch                (:) = nan
+    allocate(this%livecrootn_patch                       (begp:endp)) ; this%livecrootn_patch                    (:) = nan
+    allocate(this%livecrootn_storage_patch               (begp:endp)) ; this%livecrootn_storage_patch            (:) = nan
+    allocate(this%livecrootn_xfer_patch                  (begp:endp)) ; this%livecrootn_xfer_patch               (:) = nan
+    allocate(this%deadcrootn_patch                       (begp:endp)) ; this%deadcrootn_patch                    (:) = nan
+    allocate(this%deadcrootn_storage_patch               (begp:endp)) ; this%deadcrootn_storage_patch            (:) = nan
+    allocate(this%deadcrootn_xfer_patch                  (begp:endp)) ; this%deadcrootn_xfer_patch               (:) = nan
     if(use_matrixcn)then
        allocate(this%matrix_cap_livestemn_patch          (begp:endp)) ; this%matrix_cap_livestemn_patch          (:) = nan
        allocate(this%matrix_cap_livestemn_storage_patch  (begp:endp)) ; this%matrix_cap_livestemn_storage_patch  (:) = nan
@@ -302,59 +302,59 @@ contains
        allocate(this%matrix_cap_deadcrootn_storage_patch (begp:endp)) ; this%matrix_cap_deadcrootn_storage_patch (:) = nan
        allocate(this%matrix_cap_deadcrootn_xfer_patch    (begp:endp)) ; this%matrix_cap_deadcrootn_xfer_patch    (:) = nan
     end if
-    allocate(this%retransn_patch           (begp:endp)) ; this%retransn_patch           (:) = nan
-    allocate(this%npool_patch              (begp:endp)) ; this%npool_patch              (:) = nan
-    allocate(this%ntrunc_patch             (begp:endp)) ; this%ntrunc_patch             (:) = nan
-    allocate(this%dispvegn_patch           (begp:endp)) ; this%dispvegn_patch           (:) = nan
-    allocate(this%storvegn_patch           (begp:endp)) ; this%storvegn_patch           (:) = nan
-    allocate(this%totvegn_patch            (begp:endp)) ; this%totvegn_patch            (:) = nan
-    allocate(this%totn_patch               (begp:endp)) ; this%totn_patch               (:) = nan
+    allocate(this%retransn_patch                         (begp:endp)) ; this%retransn_patch                      (:) = nan
+    allocate(this%npool_patch                            (begp:endp)) ; this%npool_patch                         (:) = nan
+    allocate(this%ntrunc_patch                           (begp:endp)) ; this%ntrunc_patch                        (:) = nan
+    allocate(this%dispvegn_patch                         (begp:endp)) ; this%dispvegn_patch                      (:) = nan
+    allocate(this%storvegn_patch                         (begp:endp)) ; this%storvegn_patch                      (:) = nan
+    allocate(this%totvegn_patch                          (begp:endp)) ; this%totvegn_patch                       (:) = nan
+    allocate(this%totn_patch                             (begp:endp)) ; this%totn_patch                          (:) = nan
 
-    allocate(this%cropseedn_deficit_patch  (begp:endp)) ; this%cropseedn_deficit_patch  (:) = nan
-    allocate(this%seedn_grc                (begg:endg)) ; this%seedn_grc                (:) = nan
-    allocate(this%totvegn_col              (begc:endc)) ; this%totvegn_col              (:) = nan
-    allocate(this%totn_p2c_col             (begc:endc)) ; this%totn_p2c_col             (:) = nan
-    allocate(this%totn_col                 (begc:endc)) ; this%totn_col                 (:) = nan
-    allocate(this%totecosysn_col           (begc:endc)) ; this%totecosysn_col           (:) = nan
+    allocate(this%cropseedn_deficit_patch                (begp:endp)) ; this%cropseedn_deficit_patch             (:) = nan
+    allocate(this%seedn_grc                              (begg:endg)) ; this%seedn_grc                           (:) = nan
+    allocate(this%totvegn_col                            (begc:endc)) ; this%totvegn_col                         (:) = nan
+    allocate(this%totn_p2c_col                           (begc:endc)) ; this%totn_p2c_col                        (:) = nan
+    allocate(this%totn_col                               (begc:endc)) ; this%totn_col                            (:) = nan
+    allocate(this%totecosysn_col                         (begc:endc)) ; this%totecosysn_col                      (:) = nan
 
     if(use_matrixcn)then
-       allocate(this%leafn0_patch              (begp:endp)) ; this%leafn0_patch              (:) = nan
-       allocate(this%leafn0_storage_patch      (begp:endp)) ; this%leafn0_storage_patch      (:) = nan     
-       allocate(this%leafn0_xfer_patch         (begp:endp)) ; this%leafn0_xfer_patch         (:) = nan     
-       allocate(this%frootn0_patch             (begp:endp)) ; this%frootn0_patch             (:) = nan
-       allocate(this%frootn0_storage_patch     (begp:endp)) ; this%frootn0_storage_patch     (:) = nan     
-       allocate(this%frootn0_xfer_patch        (begp:endp)) ; this%frootn0_xfer_patch        (:) = nan     
-       allocate(this%livestemn0_patch          (begp:endp)) ; this%livestemn0_patch          (:) = nan
-       allocate(this%livestemn0_storage_patch  (begp:endp)) ; this%livestemn0_storage_patch  (:) = nan
-       allocate(this%livestemn0_xfer_patch     (begp:endp)) ; this%livestemn0_xfer_patch     (:) = nan
-       allocate(this%deadstemn0_patch          (begp:endp)) ; this%deadstemn0_patch          (:) = nan
-       allocate(this%deadstemn0_storage_patch  (begp:endp)) ; this%deadstemn0_storage_patch  (:) = nan
-       allocate(this%deadstemn0_xfer_patch     (begp:endp)) ; this%deadstemn0_xfer_patch     (:) = nan
-       allocate(this%livecrootn0_patch         (begp:endp)) ; this%livecrootn0_patch         (:) = nan
-       allocate(this%livecrootn0_storage_patch (begp:endp)) ; this%livecrootn0_storage_patch (:) = nan
-       allocate(this%livecrootn0_xfer_patch    (begp:endp)) ; this%livecrootn0_xfer_patch    (:) = nan
-       allocate(this%deadcrootn0_patch         (begp:endp)) ; this%deadcrootn0_patch         (:) = nan
-       allocate(this%deadcrootn0_storage_patch (begp:endp)) ; this%deadcrootn0_storage_patch (:) = nan
-       allocate(this%deadcrootn0_xfer_patch    (begp:endp)) ; this%deadcrootn0_xfer_patch    (:) = nan
-       allocate(this%grainn0_patch             (begp:endp)) ; this%grainn0_patch             (:) = nan
-       allocate(this%grainn0_storage_patch     (begp:endp)) ; this%grainn0_storage_patch     (:) = nan     
-       allocate(this%grainn0_xfer_patch        (begp:endp)) ; this%grainn0_xfer_patch        (:) = nan     
-       allocate(this%retransn0_patch           (begp:endp)) ; this%retransn0_patch           (:) = nan
+       allocate(this%leafn0_patch                        (begp:endp)) ; this%leafn0_patch                        (:) = nan
+       allocate(this%leafn0_storage_patch                (begp:endp)) ; this%leafn0_storage_patch                (:) = nan     
+       allocate(this%leafn0_xfer_patch                   (begp:endp)) ; this%leafn0_xfer_patch                   (:) = nan     
+       allocate(this%frootn0_patch                       (begp:endp)) ; this%frootn0_patch                       (:) = nan
+       allocate(this%frootn0_storage_patch               (begp:endp)) ; this%frootn0_storage_patch               (:) = nan     
+       allocate(this%frootn0_xfer_patch                  (begp:endp)) ; this%frootn0_xfer_patch                  (:) = nan     
+       allocate(this%livestemn0_patch                    (begp:endp)) ; this%livestemn0_patch                    (:) = nan
+       allocate(this%livestemn0_storage_patch            (begp:endp)) ; this%livestemn0_storage_patch            (:) = nan
+       allocate(this%livestemn0_xfer_patch               (begp:endp)) ; this%livestemn0_xfer_patch               (:) = nan
+       allocate(this%deadstemn0_patch                    (begp:endp)) ; this%deadstemn0_patch                    (:) = nan
+       allocate(this%deadstemn0_storage_patch            (begp:endp)) ; this%deadstemn0_storage_patch            (:) = nan
+       allocate(this%deadstemn0_xfer_patch               (begp:endp)) ; this%deadstemn0_xfer_patch               (:) = nan
+       allocate(this%livecrootn0_patch                   (begp:endp)) ; this%livecrootn0_patch                   (:) = nan
+       allocate(this%livecrootn0_storage_patch           (begp:endp)) ; this%livecrootn0_storage_patch           (:) = nan
+       allocate(this%livecrootn0_xfer_patch              (begp:endp)) ; this%livecrootn0_xfer_patch              (:) = nan
+       allocate(this%deadcrootn0_patch                   (begp:endp)) ; this%deadcrootn0_patch                   (:) = nan
+       allocate(this%deadcrootn0_storage_patch           (begp:endp)) ; this%deadcrootn0_storage_patch           (:) = nan
+       allocate(this%deadcrootn0_xfer_patch              (begp:endp)) ; this%deadcrootn0_xfer_patch              (:) = nan
+       allocate(this%grainn0_patch                       (begp:endp)) ; this%grainn0_patch                       (:) = nan
+       allocate(this%grainn0_storage_patch               (begp:endp)) ; this%grainn0_storage_patch               (:) = nan     
+       allocate(this%grainn0_xfer_patch                  (begp:endp)) ; this%grainn0_xfer_patch                  (:) = nan     
+       allocate(this%retransn0_patch                     (begp:endp)) ; this%retransn0_patch                     (:) = nan
 
-       allocate(this%matrix_nalloc_leaf_acc_patch        (begp:endp)) ; this%matrix_nalloc_leaf_acc_patch             (:) = nan 
-       allocate(this%matrix_nalloc_leafst_acc_patch      (begp:endp)) ; this%matrix_nalloc_leafst_acc_patch     (:) = nan
-       allocate(this%matrix_nalloc_froot_acc_patch       (begp:endp)) ; this%matrix_nalloc_froot_acc_patch            (:) = nan
-       allocate(this%matrix_nalloc_frootst_acc_patch     (begp:endp)) ; this%matrix_nalloc_frootst_acc_patch    (:) = nan
-       allocate(this%matrix_nalloc_livestem_acc_patch    (begp:endp)) ; this%matrix_nalloc_livestem_acc_patch         (:) = nan
-       allocate(this%matrix_nalloc_livestemst_acc_patch  (begp:endp)) ; this%matrix_nalloc_livestemst_acc_patch (:) = nan
-       allocate(this%matrix_nalloc_deadstem_acc_patch    (begp:endp)) ; this%matrix_nalloc_deadstem_acc_patch         (:) = nan
-       allocate(this%matrix_nalloc_deadstemst_acc_patch  (begp:endp)) ; this%matrix_nalloc_deadstemst_acc_patch (:) = nan
-       allocate(this%matrix_nalloc_livecroot_acc_patch   (begp:endp)) ; this%matrix_nalloc_livecroot_acc_patch        (:) = nan
-       allocate(this%matrix_nalloc_livecrootst_acc_patch (begp:endp)) ; this%matrix_nalloc_livecrootst_acc_patch(:) = nan
-       allocate(this%matrix_nalloc_deadcroot_acc_patch   (begp:endp)) ; this%matrix_nalloc_deadcroot_acc_patch        (:) = nan
-       allocate(this%matrix_nalloc_deadcrootst_acc_patch (begp:endp)) ; this%matrix_nalloc_deadcrootst_acc_patch        (:) = nan
-       allocate(this%matrix_nalloc_grain_acc_patch       (begp:endp)) ; this%matrix_nalloc_grain_acc_patch            (:) = nan
-       allocate(this%matrix_nalloc_grainst_acc_patch     (begp:endp)) ; this%matrix_nalloc_grainst_acc_patch    (:) = nan
+       allocate(this%matrix_nalloc_leaf_acc_patch        (begp:endp)) ; this%matrix_nalloc_leaf_acc_patch        (:) = nan 
+       allocate(this%matrix_nalloc_leafst_acc_patch      (begp:endp)) ; this%matrix_nalloc_leafst_acc_patch      (:) = nan
+       allocate(this%matrix_nalloc_froot_acc_patch       (begp:endp)) ; this%matrix_nalloc_froot_acc_patch       (:) = nan
+       allocate(this%matrix_nalloc_frootst_acc_patch     (begp:endp)) ; this%matrix_nalloc_frootst_acc_patch     (:) = nan
+       allocate(this%matrix_nalloc_livestem_acc_patch    (begp:endp)) ; this%matrix_nalloc_livestem_acc_patch    (:) = nan
+       allocate(this%matrix_nalloc_livestemst_acc_patch  (begp:endp)) ; this%matrix_nalloc_livestemst_acc_patch  (:) = nan
+       allocate(this%matrix_nalloc_deadstem_acc_patch    (begp:endp)) ; this%matrix_nalloc_deadstem_acc_patch    (:) = nan
+       allocate(this%matrix_nalloc_deadstemst_acc_patch  (begp:endp)) ; this%matrix_nalloc_deadstemst_acc_patch  (:) = nan
+       allocate(this%matrix_nalloc_livecroot_acc_patch   (begp:endp)) ; this%matrix_nalloc_livecroot_acc_patch   (:) = nan
+       allocate(this%matrix_nalloc_livecrootst_acc_patch (begp:endp)) ; this%matrix_nalloc_livecrootst_acc_patch (:) = nan
+       allocate(this%matrix_nalloc_deadcroot_acc_patch   (begp:endp)) ; this%matrix_nalloc_deadcroot_acc_patch   (:) = nan
+       allocate(this%matrix_nalloc_deadcrootst_acc_patch (begp:endp)) ; this%matrix_nalloc_deadcrootst_acc_patch (:) = nan
+       allocate(this%matrix_nalloc_grain_acc_patch       (begp:endp)) ; this%matrix_nalloc_grain_acc_patch       (:) = nan
+       allocate(this%matrix_nalloc_grainst_acc_patch     (begp:endp)) ; this%matrix_nalloc_grainst_acc_patch     (:) = nan
 
        allocate(this%matrix_ntransfer_leafst_to_leafxf_acc_patch           (begp:endp)) ; this%matrix_ntransfer_leafst_to_leafxf_acc_patch           (:) = nan 
        allocate(this%matrix_ntransfer_leafxf_to_leaf_acc_patch             (begp:endp)) ; this%matrix_ntransfer_leafxf_to_leaf_acc_patch             (:) = nan 
@@ -373,48 +373,48 @@ contains
        allocate(this%matrix_ntransfer_livestem_to_deadstem_acc_patch       (begp:endp)) ; this%matrix_ntransfer_livestem_to_deadstem_acc_patch       (:) = nan 
        allocate(this%matrix_ntransfer_livecroot_to_deadcroot_acc_patch     (begp:endp)) ; this%matrix_ntransfer_livecroot_to_deadcroot_acc_patch     (:) = nan 
 
-       allocate(this%matrix_ntransfer_retransn_to_leaf_acc_patch              (begp:endp)) ; this%matrix_ntransfer_retransn_to_leaf_acc_patch              (:) = nan 
-       allocate(this%matrix_ntransfer_retransn_to_leafst_acc_patch      (begp:endp)) ; this%matrix_ntransfer_retransn_to_leafst_acc_patch      (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_froot_acc_patch             (begp:endp)) ; this%matrix_ntransfer_retransn_to_froot_acc_patch             (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_frootst_acc_patch     (begp:endp)) ; this%matrix_ntransfer_retransn_to_frootst_acc_patch     (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_livestem_acc_patch          (begp:endp)) ; this%matrix_ntransfer_retransn_to_livestem_acc_patch          (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_livestemst_acc_patch  (begp:endp)) ; this%matrix_ntransfer_retransn_to_livestemst_acc_patch  (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_deadstem_acc_patch          (begp:endp)) ; this%matrix_ntransfer_retransn_to_deadstem_acc_patch          (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_deadstemst_acc_patch  (begp:endp)) ; this%matrix_ntransfer_retransn_to_deadstemst_acc_patch  (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_livecroot_acc_patch         (begp:endp)) ; this%matrix_ntransfer_retransn_to_livecroot_acc_patch         (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_livecrootst_acc_patch (begp:endp)) ; this%matrix_ntransfer_retransn_to_livecrootst_acc_patch (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_deadcroot_acc_patch         (begp:endp)) ; this%matrix_ntransfer_retransn_to_deadcroot_acc_patch         (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_deadcrootst_acc_patch (begp:endp)) ; this%matrix_ntransfer_retransn_to_deadcrootst_acc_patch (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_grain_acc_patch             (begp:endp)) ; this%matrix_ntransfer_retransn_to_grain_acc_patch             (:) = nan
-       allocate(this%matrix_ntransfer_retransn_to_grainst_acc_patch     (begp:endp)) ; this%matrix_ntransfer_retransn_to_grainst_acc_patch     (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_leaf_acc_patch           (begp:endp)) ; this%matrix_ntransfer_retransn_to_leaf_acc_patch           (:) = nan 
+       allocate(this%matrix_ntransfer_retransn_to_leafst_acc_patch         (begp:endp)) ; this%matrix_ntransfer_retransn_to_leafst_acc_patch         (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_froot_acc_patch          (begp:endp)) ; this%matrix_ntransfer_retransn_to_froot_acc_patch          (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_frootst_acc_patch        (begp:endp)) ; this%matrix_ntransfer_retransn_to_frootst_acc_patch        (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_livestem_acc_patch       (begp:endp)) ; this%matrix_ntransfer_retransn_to_livestem_acc_patch       (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_livestemst_acc_patch     (begp:endp)) ; this%matrix_ntransfer_retransn_to_livestemst_acc_patch     (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_deadstem_acc_patch       (begp:endp)) ; this%matrix_ntransfer_retransn_to_deadstem_acc_patch       (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_deadstemst_acc_patch     (begp:endp)) ; this%matrix_ntransfer_retransn_to_deadstemst_acc_patch     (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_livecroot_acc_patch      (begp:endp)) ; this%matrix_ntransfer_retransn_to_livecroot_acc_patch      (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_livecrootst_acc_patch    (begp:endp)) ; this%matrix_ntransfer_retransn_to_livecrootst_acc_patch    (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_deadcroot_acc_patch      (begp:endp)) ; this%matrix_ntransfer_retransn_to_deadcroot_acc_patch      (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_deadcrootst_acc_patch    (begp:endp)) ; this%matrix_ntransfer_retransn_to_deadcrootst_acc_patch    (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_grain_acc_patch          (begp:endp)) ; this%matrix_ntransfer_retransn_to_grain_acc_patch          (:) = nan
+       allocate(this%matrix_ntransfer_retransn_to_grainst_acc_patch        (begp:endp)) ; this%matrix_ntransfer_retransn_to_grainst_acc_patch        (:) = nan
 
-       allocate(this%matrix_ntransfer_leaf_to_retransn_acc_patch              (begp:endp)) ; this%matrix_ntransfer_leaf_to_retransn_acc_patch        (:) = nan
-       allocate(this%matrix_ntransfer_froot_to_retransn_acc_patch             (begp:endp)) ; this%matrix_ntransfer_froot_to_retransn_acc_patch       (:) = nan
-       allocate(this%matrix_ntransfer_livestem_to_retransn_acc_patch          (begp:endp)) ; this%matrix_ntransfer_livestem_to_retransn_acc_patch    (:) = nan
-       allocate(this%matrix_ntransfer_livecroot_to_retransn_acc_patch         (begp:endp)) ; this%matrix_ntransfer_livecroot_to_retransn_acc_patch  (:) = nan  
+       allocate(this%matrix_ntransfer_leaf_to_retransn_acc_patch           (begp:endp)) ; this%matrix_ntransfer_leaf_to_retransn_acc_patch           (:) = nan
+       allocate(this%matrix_ntransfer_froot_to_retransn_acc_patch          (begp:endp)) ; this%matrix_ntransfer_froot_to_retransn_acc_patch          (:) = nan
+       allocate(this%matrix_ntransfer_livestem_to_retransn_acc_patch       (begp:endp)) ; this%matrix_ntransfer_livestem_to_retransn_acc_patch       (:) = nan
+       allocate(this%matrix_ntransfer_livecroot_to_retransn_acc_patch      (begp:endp)) ; this%matrix_ntransfer_livecroot_to_retransn_acc_patch      (:) = nan  
 
-       allocate(this%matrix_nturnover_leaf_acc_patch              (begp:endp)) ; this%matrix_nturnover_leaf_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_leafst_acc_patch              (begp:endp)) ; this%matrix_nturnover_leafst_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_leafxf_acc_patch              (begp:endp)) ; this%matrix_nturnover_leafxf_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_froot_acc_patch              (begp:endp)) ; this%matrix_nturnover_froot_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_frootst_acc_patch              (begp:endp)) ; this%matrix_nturnover_frootst_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_frootxf_acc_patch              (begp:endp)) ; this%matrix_nturnover_frootxf_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_livestem_acc_patch              (begp:endp)) ; this%matrix_nturnover_livestem_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_livestemst_acc_patch              (begp:endp)) ; this%matrix_nturnover_livestemst_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_livestemxf_acc_patch              (begp:endp)) ; this%matrix_nturnover_livestemxf_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_deadstem_acc_patch              (begp:endp)) ; this%matrix_nturnover_deadstem_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_deadstemst_acc_patch              (begp:endp)) ; this%matrix_nturnover_deadstemst_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_deadstemxf_acc_patch              (begp:endp)) ; this%matrix_nturnover_deadstemxf_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_livecroot_acc_patch              (begp:endp)) ; this%matrix_nturnover_livecroot_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_livecrootst_acc_patch              (begp:endp)) ; this%matrix_nturnover_livecrootst_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_livecrootxf_acc_patch              (begp:endp)) ; this%matrix_nturnover_livecrootxf_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_deadcroot_acc_patch              (begp:endp)) ; this%matrix_nturnover_deadcroot_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_deadcrootst_acc_patch              (begp:endp)) ; this%matrix_nturnover_deadcrootst_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_deadcrootxf_acc_patch              (begp:endp)) ; this%matrix_nturnover_deadcrootxf_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_grain_acc_patch              (begp:endp)) ; this%matrix_nturnover_grain_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_grainst_acc_patch              (begp:endp)) ; this%matrix_nturnover_grainst_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_grainxf_acc_patch              (begp:endp)) ; this%matrix_nturnover_grainxf_acc_patch             (:) = nan 
-       allocate(this%matrix_nturnover_retransn_acc_patch              (begp:endp)) ; this%matrix_nturnover_retransn_acc_patch             (:) = nan 
+       allocate(this%matrix_nturnover_leaf_acc_patch                       (begp:endp)) ; this%matrix_nturnover_leaf_acc_patch                       (:) = nan 
+       allocate(this%matrix_nturnover_leafst_acc_patch                     (begp:endp)) ; this%matrix_nturnover_leafst_acc_patch                     (:) = nan 
+       allocate(this%matrix_nturnover_leafxf_acc_patch                     (begp:endp)) ; this%matrix_nturnover_leafxf_acc_patch                     (:) = nan 
+       allocate(this%matrix_nturnover_froot_acc_patch                      (begp:endp)) ; this%matrix_nturnover_froot_acc_patch                      (:) = nan 
+       allocate(this%matrix_nturnover_frootst_acc_patch                    (begp:endp)) ; this%matrix_nturnover_frootst_acc_patch                    (:) = nan 
+       allocate(this%matrix_nturnover_frootxf_acc_patch                    (begp:endp)) ; this%matrix_nturnover_frootxf_acc_patch                    (:) = nan 
+       allocate(this%matrix_nturnover_livestem_acc_patch                   (begp:endp)) ; this%matrix_nturnover_livestem_acc_patch                   (:) = nan 
+       allocate(this%matrix_nturnover_livestemst_acc_patch                 (begp:endp)) ; this%matrix_nturnover_livestemst_acc_patch                 (:) = nan 
+       allocate(this%matrix_nturnover_livestemxf_acc_patch                 (begp:endp)) ; this%matrix_nturnover_livestemxf_acc_patch                 (:) = nan 
+       allocate(this%matrix_nturnover_deadstem_acc_patch                   (begp:endp)) ; this%matrix_nturnover_deadstem_acc_patch                   (:) = nan 
+       allocate(this%matrix_nturnover_deadstemst_acc_patch                 (begp:endp)) ; this%matrix_nturnover_deadstemst_acc_patch                 (:) = nan 
+       allocate(this%matrix_nturnover_deadstemxf_acc_patch                 (begp:endp)) ; this%matrix_nturnover_deadstemxf_acc_patch                 (:) = nan 
+       allocate(this%matrix_nturnover_livecroot_acc_patch                  (begp:endp)) ; this%matrix_nturnover_livecroot_acc_patch                  (:) = nan 
+       allocate(this%matrix_nturnover_livecrootst_acc_patch                (begp:endp)) ; this%matrix_nturnover_livecrootst_acc_patch                (:) = nan 
+       allocate(this%matrix_nturnover_livecrootxf_acc_patch                (begp:endp)) ; this%matrix_nturnover_livecrootxf_acc_patch                (:) = nan 
+       allocate(this%matrix_nturnover_deadcroot_acc_patch                  (begp:endp)) ; this%matrix_nturnover_deadcroot_acc_patch                  (:) = nan 
+       allocate(this%matrix_nturnover_deadcrootst_acc_patch                (begp:endp)) ; this%matrix_nturnover_deadcrootst_acc_patch                (:) = nan 
+       allocate(this%matrix_nturnover_deadcrootxf_acc_patch                (begp:endp)) ; this%matrix_nturnover_deadcrootxf_acc_patch                (:) = nan 
+       allocate(this%matrix_nturnover_grain_acc_patch                      (begp:endp)) ; this%matrix_nturnover_grain_acc_patch                      (:) = nan 
+       allocate(this%matrix_nturnover_grainst_acc_patch                    (begp:endp)) ; this%matrix_nturnover_grainst_acc_patch                    (:) = nan 
+       allocate(this%matrix_nturnover_grainxf_acc_patch                    (begp:endp)) ; this%matrix_nturnover_grainxf_acc_patch                    (:) = nan 
+       allocate(this%matrix_nturnover_retransn_acc_patch                   (begp:endp)) ; this%matrix_nturnover_retransn_acc_patch                   (:) = nan 
     end if
   end subroutine InitAllocate
 
@@ -454,12 +454,6 @@ contains
        call hist_addfld1d (fname='GRAINN', units='gN/m^2', &
             avgflag='A', long_name='grain N', &
             ptr_patch=this%grainn_patch)
-       if(use_matrixcn)then
-!          this%matrix_cap_grainn_patch(begp:endp) = spval
-!          call hist_addfld1d (fname='GRAINN_CAP', units='gN/m^2', &
-!               avgflag='I', long_name='grain N capacity', &
-!               ptr_patch=this%matrix_cap_grainn_patch)
-       end if
        call hist_addfld1d (fname='CROPSEEDN_DEFICIT', units='gN/m^2', &
             avgflag='A', long_name='N used for crop seed that needs to be repaid', &
             ptr_patch=this%cropseedn_deficit_patch, default='inactive')
@@ -473,12 +467,12 @@ contains
     this%leafn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='leaf N storage', &
-         ptr_patch=this%leafn_storage_patch)!, default='inactive')     
+         ptr_patch=this%leafn_storage_patch, default='inactive')     
 
     this%leafn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_XFER', units='gN/m^2', &
          avgflag='A', long_name='leaf N transfer', &
-         ptr_patch=this%leafn_xfer_patch)!, default='inactive')     
+         ptr_patch=this%leafn_xfer_patch, default='inactive')     
 
     if(use_matrixcn)then
        this%matrix_cap_leafn_patch(begp:endp) = spval
@@ -489,12 +483,12 @@ contains
        this%matrix_cap_leafn_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAFN_STORAGE_CAP', units='gN/m^2', &
             avgflag='I', long_name='leaf N storage capacity', &
-            ptr_patch=this%matrix_cap_leafn_storage_patch)!, default='inactive')     
+            ptr_patch=this%matrix_cap_leafn_storage_patch, default='inactive')     
 
        this%matrix_cap_leafn_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAFN_XFER_CAP', units='gN/m^2', &
             avgflag='I', long_name='leaf N transfer capacity', &
-            ptr_patch=this%matrix_cap_leafn_xfer_patch)!, default='inactive')     
+            ptr_patch=this%matrix_cap_leafn_xfer_patch, default='inactive')     
 
     end if
 
@@ -518,12 +512,12 @@ contains
     this%frootn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='fine root N storage', &
-         ptr_patch=this%frootn_storage_patch)!, default='inactive')     
+         ptr_patch=this%frootn_storage_patch, default='inactive')     
 
     this%frootn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN_XFER', units='gN/m^2', &
          avgflag='A', long_name='fine root N transfer', &
-         ptr_patch=this%frootn_xfer_patch)!, default='inactive')     
+         ptr_patch=this%frootn_xfer_patch, default='inactive')     
 
     if(use_matrixcn)then
        this%matrix_cap_frootn_patch(begp:endp) = spval
@@ -534,12 +528,12 @@ contains
        this%matrix_cap_frootn_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='FROOTN_STORAGE_CAP', units='gN/m^2', &
             avgflag='I', long_name='fine root N storage capacity', &
-            ptr_patch=this%matrix_cap_frootn_storage_patch)!, default='inactive')     
+            ptr_patch=this%matrix_cap_frootn_storage_patch, default='inactive')     
 
        this%matrix_cap_frootn_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='FROOTN_XFER_CAP', units='gN/m^2', &
             avgflag='I', long_name='fine root N transfer capacity', &
-            ptr_patch=this%matrix_cap_frootn_xfer_patch)!, default='inactive')     
+            ptr_patch=this%matrix_cap_frootn_xfer_patch, default='inactive')     
 
     end if
 
@@ -551,12 +545,12 @@ contains
     this%livestemn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='live stem N storage', &
-         ptr_patch=this%livestemn_storage_patch)!, default='inactive')    
+         ptr_patch=this%livestemn_storage_patch, default='inactive')    
 
     this%livestemn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN_XFER', units='gN/m^2', &
          avgflag='A', long_name='live stem N transfer', &
-         ptr_patch=this%livestemn_xfer_patch)!, default='inactive')     
+         ptr_patch=this%livestemn_xfer_patch, default='inactive')     
 
     if(use_matrixcn)then
        this%matrix_cap_livestemn_patch(begp:endp) = spval
@@ -567,12 +561,12 @@ contains
        this%matrix_cap_livestemn_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMN_STORAGE_CAP', units='gN/m^2', &
             avgflag='I', long_name='live stem N storage capacity', &
-            ptr_patch=this%matrix_cap_livestemn_storage_patch)!, default='inactive')    
+            ptr_patch=this%matrix_cap_livestemn_storage_patch, default='inactive')    
 
        this%matrix_cap_livestemn_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMN_XFER_CAP', units='gN/m^2', &
             avgflag='I', long_name='live stem N transfer capacity', &
-            ptr_patch=this%matrix_cap_livestemn_xfer_patch)!, default='inactive')     
+            ptr_patch=this%matrix_cap_livestemn_xfer_patch, default='inactive')     
 
     end if
 
@@ -584,12 +578,12 @@ contains
     this%deadstemn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADSTEMN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='dead stem N storage', &
-         ptr_patch=this%deadstemn_storage_patch)!, default='inactive')    
+         ptr_patch=this%deadstemn_storage_patch, default='inactive')    
 
     this%deadstemn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADSTEMN_XFER', units='gN/m^2', &
          avgflag='A', long_name='dead stem N transfer', &
-         ptr_patch=this%deadstemn_xfer_patch)!, default='inactive')    
+         ptr_patch=this%deadstemn_xfer_patch, default='inactive')    
 
     if(use_matrixcn)then
        this%matrix_cap_deadstemn_patch(begp:endp) = spval
@@ -600,12 +594,12 @@ contains
        this%matrix_cap_deadstemn_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADSTEMN_STORAGE_CAP', units='gN/m^2', &
             avgflag='I', long_name='dead stem N storage capacity', &
-            ptr_patch=this%matrix_cap_deadstemn_storage_patch)!, default='inactive')    
+            ptr_patch=this%matrix_cap_deadstemn_storage_patch, default='inactive')    
 
        this%matrix_cap_deadstemn_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADSTEMN_XFER_CAP', units='gN/m^2', &
             avgflag='I', long_name='dead stem N transfer capacity', &
-            ptr_patch=this%matrix_cap_deadstemn_xfer_patch)!, default='inactive')    
+            ptr_patch=this%matrix_cap_deadstemn_xfer_patch, default='inactive')    
 
     end if
 
@@ -617,12 +611,12 @@ contains
     this%livecrootn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVECROOTN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='live coarse root N storage', &
-         ptr_patch=this%livecrootn_storage_patch)!, default='inactive')    
+         ptr_patch=this%livecrootn_storage_patch, default='inactive')    
 
     this%livecrootn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVECROOTN_XFER', units='gN/m^2', &
          avgflag='A', long_name='live coarse root N transfer', &
-         ptr_patch=this%livecrootn_xfer_patch)!, default='inactive')    
+         ptr_patch=this%livecrootn_xfer_patch, default='inactive')    
 
     if(use_matrixcn)then
        this%matrix_cap_livecrootn_patch(begp:endp) = spval
@@ -633,12 +627,12 @@ contains
        this%matrix_cap_livecrootn_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTN_STORAGE_CAP', units='gN/m^2', &
             avgflag='I', long_name='live coarse root N storage capacity', &
-            ptr_patch=this%matrix_cap_livecrootn_storage_patch)!, default='inactive')    
+            ptr_patch=this%matrix_cap_livecrootn_storage_patch, default='inactive')    
 
        this%matrix_cap_livecrootn_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTN_XFER_CAP', units='gN/m^2', &
             avgflag='I', long_name='live coarse root N transfer capacity', &
-            ptr_patch=this%matrix_cap_livecrootn_xfer_patch)!, default='inactive')    
+            ptr_patch=this%matrix_cap_livecrootn_xfer_patch, default='inactive')    
 
     end if
 
@@ -650,12 +644,12 @@ contains
     this%deadcrootn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADCROOTN_STORAGE', units='gN/m^2', &
          avgflag='A', long_name='dead coarse root N storage', &
-         ptr_patch=this%deadcrootn_storage_patch)!, default='inactive')    
+         ptr_patch=this%deadcrootn_storage_patch, default='inactive')    
 
     this%deadcrootn_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADCROOTN_XFER', units='gN/m^2', &
          avgflag='A', long_name='dead coarse root N transfer', &
-         ptr_patch=this%deadcrootn_xfer_patch)!, default='inactive')    
+         ptr_patch=this%deadcrootn_xfer_patch, default='inactive')    
 
     if(use_matrixcn)then
        this%matrix_cap_deadcrootn_patch(begp:endp) = spval
@@ -666,12 +660,12 @@ contains
        this%matrix_cap_deadcrootn_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADCROOTN_STORAGE_CAP', units='gN/m^2', &
             avgflag='I', long_name='dead coarse root N storage capacity', &
-            ptr_patch=this%matrix_cap_deadcrootn_storage_patch)!, default='inactive')    
+            ptr_patch=this%matrix_cap_deadcrootn_storage_patch, default='inactive')    
 
        this%matrix_cap_deadcrootn_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADCROOTN_XFER_CAP', units='gN/m^2', &
             avgflag='I', long_name='dead coarse root N transfer capacity', &
-            ptr_patch=this%matrix_cap_deadcrootn_xfer_patch)!, default='inactive')    
+            ptr_patch=this%matrix_cap_deadcrootn_xfer_patch, default='inactive')    
 
     end if
 
@@ -795,118 +789,118 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
           if (patch%itype(p) == noveg) then
-             this%leafn_patch(p) = 0._r8
-             this%leafn_storage_patch(p) = 0._r8
+             this%leafn_patch(p)                           = 0._r8
+             this%leafn_storage_patch(p)                   = 0._r8
              if(use_matrixcn)then
-                this%matrix_cap_leafn_patch(p) = 0._r8
-                this%matrix_cap_leafn_storage_patch(p) = 0._r8
+                this%matrix_cap_leafn_patch(p)             = 0._r8
+                this%matrix_cap_leafn_storage_patch(p)     = 0._r8
              end if
              if (MM_Nuptake_opt .eqv. .true.) then   
-                this%frootn_patch(p) = 0._r8            
-                this%frootn_storage_patch(p) = 0._r8    
+                this%frootn_patch(p)                       = 0._r8            
+                this%frootn_storage_patch(p)               = 0._r8    
                 if(use_matrixcn)then
-                   this%matrix_cap_frootn_patch(p) = 0._r8            
+                   this%matrix_cap_frootn_patch(p)         = 0._r8            
                    this%matrix_cap_frootn_storage_patch(p) = 0._r8    
                 end if
              end if 
           else
-             this%leafn_patch(p)         = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-             this%leafn_storage_patch(p) = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+             this%leafn_patch(p)                           = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
+             this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
              if(use_matrixcn)then
-                this%matrix_cap_leafn_patch(p)         = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-                this%matrix_cap_leafn_storage_patch(p) = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+                this%matrix_cap_leafn_patch(p)             = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
+                this%matrix_cap_leafn_storage_patch(p)     = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
              end if
              if (MM_Nuptake_opt .eqv. .true.) then  
-                this%frootn_patch(p) = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
-                this%frootn_storage_patch(p) = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
+                this%frootn_patch(p)                       = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
+                this%frootn_storage_patch(p)               = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
                 if(use_matrixcn)then
-                   this%matrix_cap_frootn_patch(p) = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
+                   this%matrix_cap_frootn_patch(p)         = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
                    this%matrix_cap_frootn_storage_patch(p) = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
                 end if
              end if 
           end if
 
-          this%leafn_xfer_patch(p)        = 0._r8
+          this%leafn_xfer_patch(p)                         = 0._r8
           if(use_matrixcn)then
-             this%matrix_cap_leafn_xfer_patch(p)        = 0._r8
+             this%matrix_cap_leafn_xfer_patch(p)           = 0._r8
           end if
 
-          this%leafn_storage_xfer_acc_patch(p)        = 0._r8
-          this%storage_ndemand_patch(p)   = 0._r8
+          this%leafn_storage_xfer_acc_patch(p)             = 0._r8
+          this%storage_ndemand_patch(p)                    = 0._r8
 
           if ( use_crop )then
-             this%grainn_patch(p)         = 0._r8
-             this%grainn_storage_patch(p) = 0._r8
-             this%grainn_xfer_patch(p)    = 0._r8
+             this%grainn_patch(p)                          = 0._r8
+             this%grainn_storage_patch(p)                  = 0._r8
+             this%grainn_xfer_patch(p)                     = 0._r8
              if(use_matrixcn)then
-                this%matrix_cap_grainn_patch(p) = 0._r8
-                this%matrix_cap_grainn_storage_patch(p) = 0._r8
-                this%matrix_cap_grainn_xfer_patch(p) = 0._r8
+                this%matrix_cap_grainn_patch(p)            = 0._r8
+                this%matrix_cap_grainn_storage_patch(p)    = 0._r8
+                this%matrix_cap_grainn_xfer_patch(p)       = 0._r8
              end if
-             this%cropseedn_deficit_patch(p)  = 0._r8
+             this%cropseedn_deficit_patch(p)               = 0._r8
           end if
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
-             this%frootn_patch(p)            = 0._r8
-             this%frootn_storage_patch(p)    = 0._r8
+             this%frootn_patch(p)                          = 0._r8
+             this%frootn_storage_patch(p)                  = 0._r8
              if(use_matrixcn)then
-                this%matrix_cap_frootn_patch(p) = 0._r8            
-                this%matrix_cap_frootn_storage_patch(p) = 0._r8    
+                this%matrix_cap_frootn_patch(p)            = 0._r8            
+                this%matrix_cap_frootn_storage_patch(p)    = 0._r8    
              end if
           end if 
-          this%frootn_xfer_patch(p)       = 0._r8
-          this%livestemn_patch(p)         = 0._r8
-          this%livestemn_storage_patch(p) = 0._r8
-          this%livestemn_xfer_patch(p)    = 0._r8
+          this%frootn_xfer_patch(p)                        = 0._r8
+          this%livestemn_patch(p)                          = 0._r8
+          this%livestemn_storage_patch(p)                  = 0._r8
+          this%livestemn_xfer_patch(p)                     = 0._r8
           if(use_matrixcn)then
-             this%matrix_cap_frootn_xfer_patch(p)       = 0._r8
-             this%matrix_cap_livestemn_patch(p)         = 0._r8
-             this%matrix_cap_livestemn_storage_patch(p) = 0._r8
-             this%matrix_cap_livestemn_xfer_patch(p)    = 0._r8
+             this%matrix_cap_frootn_xfer_patch(p)          = 0._r8
+             this%matrix_cap_livestemn_patch(p)            = 0._r8
+             this%matrix_cap_livestemn_storage_patch(p)    = 0._r8
+             this%matrix_cap_livestemn_xfer_patch(p)       = 0._r8
           end if
 
           ! tree types need to be initialized with some stem mass so that
           ! roughness length is not zero in canopy flux calculation
 
           if (pftcon%woody(patch%itype(p)) == 1._r8) then
-             this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+             this%deadstemn_patch(p)                       = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
              if(use_matrixcn)then
-                this%matrix_cap_deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+                this%matrix_cap_deadstemn_patch(p)         = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
              end if
           else
-             this%deadstemn_patch(p) = 0._r8
+             this%deadstemn_patch(p)                       = 0._r8
              if(use_matrixcn)then
-                this%matrix_cap_deadstemn_patch(p) = 0._r8
+                this%matrix_cap_deadstemn_patch(p)         = 0._r8
              end if
           end if
 
-          this%deadstemn_storage_patch(p)  = 0._r8
-          this%deadstemn_xfer_patch(p)     = 0._r8
+          this%deadstemn_storage_patch(p)                  = 0._r8
+          this%deadstemn_xfer_patch(p)                     = 0._r8
           if(use_matrixcn)then
-             this%matrix_cap_deadstemn_storage_patch(p)  = 0._r8
-             this%matrix_cap_deadstemn_xfer_patch(p)     = 0._r8
+             this%matrix_cap_deadstemn_storage_patch(p)    = 0._r8
+             this%matrix_cap_deadstemn_xfer_patch(p)       = 0._r8
           end if
 
-          this%livecrootn_patch(p)         = 0._r8
-          this%livecrootn_storage_patch(p) = 0._r8
-          this%livecrootn_xfer_patch(p)    = 0._r8
-          this%deadcrootn_patch(p)         = 0._r8
-          this%deadcrootn_storage_patch(p) = 0._r8
-          this%deadcrootn_xfer_patch(p)    = 0._r8
+          this%livecrootn_patch(p)                         = 0._r8
+          this%livecrootn_storage_patch(p)                 = 0._r8
+          this%livecrootn_xfer_patch(p)                    = 0._r8
+          this%deadcrootn_patch(p)                         = 0._r8
+          this%deadcrootn_storage_patch(p)                 = 0._r8
+          this%deadcrootn_xfer_patch(p)                    = 0._r8
           if(use_matrixcn)then
-             this%matrix_cap_livecrootn_patch(p)         = 0._r8
-             this%matrix_cap_livecrootn_storage_patch(p) = 0._r8
-             this%matrix_cap_livecrootn_xfer_patch(p)    = 0._r8
-             this%matrix_cap_deadcrootn_patch(p)         = 0._r8
-             this%matrix_cap_deadcrootn_storage_patch(p) = 0._r8
-             this%matrix_cap_deadcrootn_xfer_patch(p)    = 0._r8
+             this%matrix_cap_livecrootn_patch(p)           = 0._r8
+             this%matrix_cap_livecrootn_storage_patch(p)   = 0._r8
+             this%matrix_cap_livecrootn_xfer_patch(p)      = 0._r8
+             this%matrix_cap_deadcrootn_patch(p)           = 0._r8
+             this%matrix_cap_deadcrootn_storage_patch(p)   = 0._r8
+             this%matrix_cap_deadcrootn_xfer_patch(p)      = 0._r8
           end if
-          this%retransn_patch(p)           = 0._r8
-          this%npool_patch(p)              = 0._r8
-          this%ntrunc_patch(p)             = 0._r8
-          this%dispvegn_patch(p)           = 0._r8
-          this%storvegn_patch(p)           = 0._r8
-          this%totvegn_patch(p)            = 0._r8
-          this%totn_patch(p)               = 0._r8
+          this%retransn_patch(p)                           = 0._r8
+          this%npool_patch(p)                              = 0._r8
+          this%ntrunc_patch(p)                             = 0._r8
+          this%dispvegn_patch(p)                           = 0._r8
+          this%storvegn_patch(p)                           = 0._r8
+          this%totvegn_patch(p)                            = 0._r8
+          this%totn_patch(p)                               = 0._r8
 
           if(use_matrixcn)then
           ! for matrix spin up and capacity calculation
@@ -933,20 +927,20 @@ contains
              this%grainn0_xfer_patch(p)        = 1.e-30_r8
              this%retransn0_patch(p)           = 1.e-30_r8
 
-             this%matrix_nalloc_leaf_acc_patch              (p) = 0._r8 
-             this%matrix_nalloc_leafst_acc_patch            (p) = 0._r8
-             this%matrix_nalloc_froot_acc_patch             (p) = 0._r8
-             this%matrix_nalloc_frootst_acc_patch           (p) = 0._r8
-             this%matrix_nalloc_livestem_acc_patch          (p) = 0._r8
-             this%matrix_nalloc_livestemst_acc_patch        (p) = 0._r8
-             this%matrix_nalloc_deadstem_acc_patch          (p) = 0._r8
-             this%matrix_nalloc_deadstemst_acc_patch        (p) = 0._r8
-             this%matrix_nalloc_livecroot_acc_patch         (p) = 0._r8
-             this%matrix_nalloc_livecrootst_acc_patch       (p) = 0._r8
-             this%matrix_nalloc_deadcroot_acc_patch         (p) = 0._r8
-             this%matrix_nalloc_deadcrootst_acc_patch       (p) = 0._r8
-             this%matrix_nalloc_grain_acc_patch             (p) = 0._r8
-             this%matrix_nalloc_grainst_acc_patch           (p) = 0._r8
+             this%matrix_nalloc_leaf_acc_patch                          (p) = 0._r8 
+             this%matrix_nalloc_leafst_acc_patch                        (p) = 0._r8
+             this%matrix_nalloc_froot_acc_patch                         (p) = 0._r8
+             this%matrix_nalloc_frootst_acc_patch                       (p) = 0._r8
+             this%matrix_nalloc_livestem_acc_patch                      (p) = 0._r8
+             this%matrix_nalloc_livestemst_acc_patch                    (p) = 0._r8
+             this%matrix_nalloc_deadstem_acc_patch                      (p) = 0._r8
+             this%matrix_nalloc_deadstemst_acc_patch                    (p) = 0._r8
+             this%matrix_nalloc_livecroot_acc_patch                     (p) = 0._r8
+             this%matrix_nalloc_livecrootst_acc_patch                   (p) = 0._r8
+             this%matrix_nalloc_deadcroot_acc_patch                     (p) = 0._r8
+             this%matrix_nalloc_deadcrootst_acc_patch                   (p) = 0._r8
+             this%matrix_nalloc_grain_acc_patch                         (p) = 0._r8
+             this%matrix_nalloc_grainst_acc_patch                       (p) = 0._r8
 
              this%matrix_ntransfer_leafst_to_leafxf_acc_patch           (p) = 0._r8
              this%matrix_ntransfer_leafxf_to_leaf_acc_patch             (p) = 0._r8
@@ -980,34 +974,33 @@ contains
              this%matrix_ntransfer_retransn_to_grain_acc_patch          (p) = 0._r8
              this%matrix_ntransfer_retransn_to_grainst_acc_patch        (p) = 0._r8
 
-             this%matrix_ntransfer_leaf_to_retransn_acc_patch              (p) = 0._r8
-             this%matrix_ntransfer_froot_to_retransn_acc_patch             (p) = 0._r8
-             this%matrix_ntransfer_livestem_to_retransn_acc_patch          (p) = 0._r8
-             this%matrix_ntransfer_livecroot_to_retransn_acc_patch         (p) = 0._r8
+             this%matrix_ntransfer_leaf_to_retransn_acc_patch           (p) = 0._r8
+             this%matrix_ntransfer_froot_to_retransn_acc_patch          (p) = 0._r8
+             this%matrix_ntransfer_livestem_to_retransn_acc_patch       (p) = 0._r8
+             this%matrix_ntransfer_livecroot_to_retransn_acc_patch      (p) = 0._r8
 
-             this%matrix_nturnover_leaf_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_leafst_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_leafxf_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_froot_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_frootst_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_frootxf_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_livestem_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_livestemst_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_livestemxf_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_deadstem_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_deadstemst_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_deadstemxf_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_livecroot_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_livecrootst_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_livecrootxf_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_deadcroot_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_deadcrootst_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_deadcrootxf_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_grain_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_grainst_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_grainxf_acc_patch              (p) = 0._r8 
-             this%matrix_nturnover_retransn_acc_patch              (p) = 0._r8 
-
+             this%matrix_nturnover_leaf_acc_patch                       (p) = 0._r8 
+             this%matrix_nturnover_leafst_acc_patch                     (p) = 0._r8 
+             this%matrix_nturnover_leafxf_acc_patch                     (p) = 0._r8 
+             this%matrix_nturnover_froot_acc_patch                      (p) = 0._r8 
+             this%matrix_nturnover_frootst_acc_patch                    (p) = 0._r8 
+             this%matrix_nturnover_frootxf_acc_patch                    (p) = 0._r8 
+             this%matrix_nturnover_livestem_acc_patch                   (p) = 0._r8 
+             this%matrix_nturnover_livestemst_acc_patch                 (p) = 0._r8 
+             this%matrix_nturnover_livestemxf_acc_patch                 (p) = 0._r8 
+             this%matrix_nturnover_deadstem_acc_patch                   (p) = 0._r8 
+             this%matrix_nturnover_deadstemst_acc_patch                 (p) = 0._r8 
+             this%matrix_nturnover_deadstemxf_acc_patch                 (p) = 0._r8 
+             this%matrix_nturnover_livecroot_acc_patch                  (p) = 0._r8 
+             this%matrix_nturnover_livecrootst_acc_patch                (p) = 0._r8 
+             this%matrix_nturnover_livecrootxf_acc_patch                (p) = 0._r8 
+             this%matrix_nturnover_deadcroot_acc_patch                  (p) = 0._r8 
+             this%matrix_nturnover_deadcrootst_acc_patch                (p) = 0._r8 
+             this%matrix_nturnover_deadcrootxf_acc_patch                (p) = 0._r8 
+             this%matrix_nturnover_grain_acc_patch                      (p) = 0._r8 
+             this%matrix_nturnover_grainst_acc_patch                    (p) = 0._r8 
+             this%matrix_nturnover_grainxf_acc_patch                    (p) = 0._r8 
+             this%matrix_nturnover_retransn_acc_patch                   (p) = 0._r8 
           end if !use_matrixcn
        end if
     end do
@@ -1166,7 +1159,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%matrix_nturnover_leafxf_acc_patch) 
      end if
-!!!
+
      if ( use_fun ) then
         call restartvar(ncid=ncid, flag=flag, varname='leafn_storage_xfer_acc', xtype=ncd_double,  &
              dim1name='pft', long_name='', units='', &
@@ -1580,7 +1573,7 @@ contains
 
     call restartvar(ncid=ncid, flag=flag, varname='pft_ntrunc', xtype=ncd_double,  &
          dim1name='pft', long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%ntrunc_patch)
+         interpinic_flag='interp', readvar=readvar, data=this%ntrunc_patch) 
 
     if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='grainn', xtype=ncd_double,  &
@@ -1665,6 +1658,7 @@ contains
     !--------------------------------
     ! gridcell nitrogen state variables
     !--------------------------------
+
     ! BACKWARDS_COMPATIBILITY(wjs, 2017-01-12) Naming this with a _g suffix in order to
     ! distinguish it from the old column-level seedn restart variable
     call restartvar(ncid=ncid, flag=flag, varname='seedn_g', xtype=ncd_double,  &
@@ -1719,118 +1713,118 @@ contains
           l = patch%landunit(p)
 
              if (patch%itype(p) == noveg) then
-                this%leafn_patch(p) = 0._r8
-                this%leafn_storage_patch(p) = 0._r8
+                this%leafn_patch(p)                           = 0._r8
+                this%leafn_storage_patch(p)                   = 0._r8
                 if(use_matrixcn)then
-                   this%matrix_cap_leafn_patch(p) = 0._r8
-                   this%matrix_cap_leafn_storage_patch(p) = 0._r8
+                   this%matrix_cap_leafn_patch(p)             = 0._r8
+                   this%matrix_cap_leafn_storage_patch(p)     = 0._r8
                 end if
                 if (MM_Nuptake_opt .eqv. .true.) then   
-                   this%frootn_patch(p) = 0._r8            
-                   this%frootn_storage_patch(p) = 0._r8    
+                   this%frootn_patch(p)                       = 0._r8            
+                   this%frootn_storage_patch(p)               = 0._r8    
                    if(use_matrixcn)then
-                      this%matrix_cap_frootn_patch(p) = 0._r8            
+                      this%matrix_cap_frootn_patch(p)         = 0._r8            
                       this%matrix_cap_frootn_storage_patch(p) = 0._r8    
                    end if
                 end if 
              else
-                this%leafn_patch(p)         = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-                this%leafn_storage_patch(p) = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+                this%leafn_patch(p)                           = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
+                this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
                 if(use_matrixcn)then
-                   this%matrix_cap_leafn_patch(p)         = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-                   this%matrix_cap_leafn_storage_patch(p) = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+                   this%matrix_cap_leafn_patch(p)             = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
+                   this%matrix_cap_leafn_storage_patch(p)     = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
                 end if
                 if (MM_Nuptake_opt .eqv. .true.) then  
-                   this%frootn_patch(p) = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
-                   this%frootn_storage_patch(p) = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
+                   this%frootn_patch(p)                       = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
+                   this%frootn_storage_patch(p)               = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
                    if(use_matrixcn)then
-                      this%matrix_cap_frootn_patch(p) = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
+                      this%matrix_cap_frootn_patch(p)         = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
                       this%matrix_cap_frootn_storage_patch(p) = frootc_storage_patch(p) / pftcon%frootcn(patch%itype(p))   
                    end if
                 end if 
              end if
    
-             this%leafn_xfer_patch(p)        = 0._r8
+             this%leafn_xfer_patch(p)                         = 0._r8
              if(use_matrixcn)then
-                this%matrix_cap_leafn_xfer_patch(p)        = 0._r8
+                this%matrix_cap_leafn_xfer_patch(p)           = 0._r8
              end if
 
-             this%leafn_storage_xfer_acc_patch(p)        = 0._r8
-             this%storage_ndemand_patch(p)   = 0._r8
+             this%leafn_storage_xfer_acc_patch(p)             = 0._r8
+             this%storage_ndemand_patch(p)                    = 0._r8
    
              if ( use_crop )then
-                this%grainn_patch(p)         = 0._r8
-                this%grainn_storage_patch(p) = 0._r8
-                this%grainn_xfer_patch(p)    = 0._r8
+                this%grainn_patch(p)                          = 0._r8
+                this%grainn_storage_patch(p)                  = 0._r8
+                this%grainn_xfer_patch(p)                     = 0._r8
                 if(use_matrixcn)then
                    this%matrix_cap_grainn_patch(p)            = 0._r8
                    this%matrix_cap_grainn_storage_patch(p)    = 0._r8
                    this%matrix_cap_grainn_xfer_patch(p)       = 0._r8
                 end if
-                this%cropseedn_deficit_patch(p)  = 0._r8
+                this%cropseedn_deficit_patch(p)               = 0._r8
              end if
              if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
-                this%frootn_patch(p)            = 0._r8
-                this%frootn_storage_patch(p)    = 0._r8
+                this%frootn_patch(p)                          = 0._r8
+                this%frootn_storage_patch(p)                  = 0._r8
                 if(use_matrixcn)then
                    this%matrix_cap_frootn_patch(p)            = 0._r8
                    this%matrix_cap_frootn_storage_patch(p)    = 0._r8
                 end if
              end if 
-             this%frootn_xfer_patch(p)       = 0._r8
-             this%livestemn_patch(p)         = 0._r8
-             this%livestemn_storage_patch(p) = 0._r8
-             this%livestemn_xfer_patch(p)    = 0._r8
+             this%frootn_xfer_patch(p)                        = 0._r8
+             this%livestemn_patch(p)                          = 0._r8
+             this%livestemn_storage_patch(p)                  = 0._r8
+             this%livestemn_xfer_patch(p)                     = 0._r8
              if(use_matrixcn)then
-                this%matrix_cap_frootn_xfer_patch(p)       = 0._r8
-                this%matrix_cap_livestemn_patch(p)         = 0._r8
-                this%matrix_cap_livestemn_storage_patch(p) = 0._r8
-                this%matrix_cap_livestemn_xfer_patch(p)    = 0._r8
+                this%matrix_cap_frootn_xfer_patch(p)          = 0._r8
+                this%matrix_cap_livestemn_patch(p)            = 0._r8
+                this%matrix_cap_livestemn_storage_patch(p)    = 0._r8
+                this%matrix_cap_livestemn_xfer_patch(p)       = 0._r8
              end if
    
              ! tree types need to be initialized with some stem mass so that
              ! roughness length is not zero in canopy flux calculation
    
              if (pftcon%woody(patch%itype(p)) == 1._r8) then
-                this%deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+                this%deadstemn_patch(p)                       = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
                 if(use_matrixcn)then
-                   this%matrix_cap_deadstemn_patch(p) = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
+                   this%matrix_cap_deadstemn_patch(p)         = deadstemc_patch(p) / pftcon%deadwdcn(patch%itype(p))
                 end if
              else
-                this%deadstemn_patch(p) = 0._r8
+                this%deadstemn_patch(p)                       = 0._r8
                 if(use_matrixcn)then
-                   this%matrix_cap_deadstemn_patch(p) = 0._r8
+                   this%matrix_cap_deadstemn_patch(p)         = 0._r8
                 end if
              end if
 
-             this%deadstemn_storage_patch(p)  = 0._r8
-             this%deadstemn_xfer_patch(p)     = 0._r8
+             this%deadstemn_storage_patch(p)                  = 0._r8
+             this%deadstemn_xfer_patch(p)                     = 0._r8
              if(use_matrixcn)then
-                this%matrix_cap_deadstemn_storage_patch(p)  = 0._r8
-                this%matrix_cap_deadstemn_xfer_patch(p)     = 0._r8
+                this%matrix_cap_deadstemn_storage_patch(p)    = 0._r8
+                this%matrix_cap_deadstemn_xfer_patch(p)       = 0._r8
              end if
 
-             this%livecrootn_patch(p)         = 0._r8
-             this%livecrootn_storage_patch(p) = 0._r8
-             this%livecrootn_xfer_patch(p)    = 0._r8
-             this%deadcrootn_patch(p)         = 0._r8
-             this%deadcrootn_storage_patch(p) = 0._r8
-             this%deadcrootn_xfer_patch(p)    = 0._r8
+             this%livecrootn_patch(p)                         = 0._r8
+             this%livecrootn_storage_patch(p)                 = 0._r8
+             this%livecrootn_xfer_patch(p)                    = 0._r8
+             this%deadcrootn_patch(p)                         = 0._r8
+             this%deadcrootn_storage_patch(p)                 = 0._r8
+             this%deadcrootn_xfer_patch(p)                    = 0._r8
              if(use_matrixcn)then
-                this%matrix_cap_livecrootn_patch(p)         = 0._r8
-                this%matrix_cap_livecrootn_storage_patch(p) = 0._r8
-                this%matrix_cap_livecrootn_xfer_patch(p)    = 0._r8
-                this%matrix_cap_deadcrootn_patch(p)         = 0._r8
-                this%matrix_cap_deadcrootn_storage_patch(p) = 0._r8
-                this%matrix_cap_deadcrootn_xfer_patch(p)    = 0._r8
+                this%matrix_cap_livecrootn_patch(p)          = 0._r8
+                this%matrix_cap_livecrootn_storage_patch(p)  = 0._r8
+                this%matrix_cap_livecrootn_xfer_patch(p)     = 0._r8
+                this%matrix_cap_deadcrootn_patch(p)          = 0._r8
+                this%matrix_cap_deadcrootn_storage_patch(p)  = 0._r8
+                this%matrix_cap_deadcrootn_xfer_patch(p)     = 0._r8
              end if
-             this%retransn_patch(p)           = 0._r8
-             this%npool_patch(p)              = 0._r8
-             this%ntrunc_patch(p)             = 0._r8
-             this%dispvegn_patch(p)           = 0._r8
-             this%storvegn_patch(p)           = 0._r8
-             this%totvegn_patch(p)            = 0._r8
-             this%totn_patch(p)               = 0._r8
+             this%retransn_patch(p)                          = 0._r8
+             this%npool_patch(p)                             = 0._r8
+             this%ntrunc_patch(p)                            = 0._r8
+             this%dispvegn_patch(p)                          = 0._r8
+             this%storvegn_patch(p)                          = 0._r8
+             this%totvegn_patch(p)                           = 0._r8
+             this%totn_patch(p)                              = 0._r8
 
              ! calculate totvegc explicitly so that it is available for the isotope 
              ! code on the first time step.
@@ -1865,6 +1859,7 @@ contains
              end if
        end do
      end if
+
   end subroutine Restart
 
   !-----------------------------------------------------------------------
@@ -1893,25 +1888,25 @@ contains
     do fi = 1,num_patch
        i = filter_patch(fi)
 
-       this%leafn_patch(i)              = value_patch
-       this%leafn_storage_patch(i)      = value_patch
-       this%leafn_xfer_patch(i)         = value_patch
-       this%leafn_storage_xfer_acc_patch(i) = value_patch
-       this%frootn_patch(i)             = value_patch
-       this%frootn_storage_patch(i)     = value_patch
-       this%frootn_xfer_patch(i)        = value_patch
-       this%livestemn_patch(i)          = value_patch
-       this%livestemn_storage_patch(i)  = value_patch
-       this%livestemn_xfer_patch(i)     = value_patch
-       this%deadstemn_patch(i)          = value_patch
-       this%deadstemn_storage_patch(i)  = value_patch
-       this%deadstemn_xfer_patch(i)     = value_patch
-       this%livecrootn_patch(i)         = value_patch
-       this%livecrootn_storage_patch(i) = value_patch
-       this%livecrootn_xfer_patch(i)    = value_patch
-       this%deadcrootn_patch(i)         = value_patch
-       this%deadcrootn_storage_patch(i) = value_patch
-       this%deadcrootn_xfer_patch(i)    = value_patch
+       this%leafn_patch(i)                            = value_patch
+       this%leafn_storage_patch(i)                    = value_patch
+       this%leafn_xfer_patch(i)                       = value_patch
+       this%leafn_storage_xfer_acc_patch(i)           = value_patch
+       this%frootn_patch(i)                           = value_patch
+       this%frootn_storage_patch(i)                   = value_patch
+       this%frootn_xfer_patch(i)                      = value_patch
+       this%livestemn_patch(i)                        = value_patch
+       this%livestemn_storage_patch(i)                = value_patch
+       this%livestemn_xfer_patch(i)                   = value_patch
+       this%deadstemn_patch(i)                        = value_patch
+       this%deadstemn_storage_patch(i)                = value_patch
+       this%deadstemn_xfer_patch(i)                   = value_patch
+       this%livecrootn_patch(i)                       = value_patch
+       this%livecrootn_storage_patch(i)               = value_patch
+       this%livecrootn_xfer_patch(i)                  = value_patch
+       this%deadcrootn_patch(i)                       = value_patch
+       this%deadcrootn_storage_patch(i)               = value_patch
+       this%deadcrootn_xfer_patch(i)                  = value_patch
        if(use_matrixcn)then
           this%matrix_cap_leafn_patch(i)              = value_patch
           this%matrix_cap_leafn_storage_patch(i)      = value_patch
@@ -1932,137 +1927,137 @@ contains
           this%matrix_cap_deadcrootn_storage_patch(i) = value_patch
           this%matrix_cap_deadcrootn_xfer_patch(i)    = value_patch
 
-          this%leafn0_patch(i)              = value_patch
-          this%leafn0_storage_patch(i)      = value_patch
-          this%leafn0_xfer_patch(i)         = value_patch
-          this%frootn0_patch(i)             = value_patch
-          this%frootn0_storage_patch(i)     = value_patch
-          this%frootn0_xfer_patch(i)        = value_patch
-          this%livestemn0_patch(i)          = value_patch
-          this%livestemn0_storage_patch(i)  = value_patch
-          this%livestemn0_xfer_patch(i)     = value_patch
-          this%deadstemn0_patch(i)          = value_patch
-          this%deadstemn0_storage_patch(i)  = value_patch
-          this%deadstemn0_xfer_patch(i)     = value_patch
-          this%livecrootn0_patch(i)         = value_patch
-          this%livecrootn0_storage_patch(i) = value_patch
-          this%livecrootn0_xfer_patch(i)    = value_patch
-          this%deadcrootn0_patch(i)         = value_patch
-          this%deadcrootn0_storage_patch(i) = value_patch
-          this%deadcrootn0_xfer_patch(i)    = value_patch
+          this%leafn0_patch(i)                        = value_patch
+          this%leafn0_storage_patch(i)                = value_patch
+          this%leafn0_xfer_patch(i)                   = value_patch
+          this%frootn0_patch(i)                       = value_patch
+          this%frootn0_storage_patch(i)               = value_patch
+          this%frootn0_xfer_patch(i)                  = value_patch
+          this%livestemn0_patch(i)                    = value_patch
+          this%livestemn0_storage_patch(i)            = value_patch
+          this%livestemn0_xfer_patch(i)               = value_patch
+          this%deadstemn0_patch(i)                    = value_patch
+          this%deadstemn0_storage_patch(i)            = value_patch
+          this%deadstemn0_xfer_patch(i)               = value_patch
+          this%livecrootn0_patch(i)                   = value_patch
+          this%livecrootn0_storage_patch(i)           = value_patch
+          this%livecrootn0_xfer_patch(i)              = value_patch
+          this%deadcrootn0_patch(i)                   = value_patch
+          this%deadcrootn0_storage_patch(i)           = value_patch
+          this%deadcrootn0_xfer_patch(i)              = value_patch
           if ( use_crop )then
-             this%grainn0_patch(i)             = value_patch
-             this%grainn0_storage_patch(i)     = value_patch
-             this%grainn0_xfer_patch(i)        = value_patch
+             this%grainn0_patch(i)                    = value_patch
+             this%grainn0_storage_patch(i)            = value_patch
+             this%grainn0_xfer_patch(i)               = value_patch
           end if
-          this%retransn0_patch(i)           = value_patch
+          this%retransn0_patch(i)                     = value_patch
 
-          this%matrix_nalloc_leaf_acc_patch              (i) = value_patch 
-          this%matrix_nalloc_leafst_acc_patch      (i) = value_patch
-          this%matrix_nalloc_froot_acc_patch             (i) = value_patch
-          this%matrix_nalloc_frootst_acc_patch     (i) = value_patch
-          this%matrix_nalloc_livestem_acc_patch          (i) = value_patch
-          this%matrix_nalloc_livestemst_acc_patch  (i) = value_patch
-          this%matrix_nalloc_deadstem_acc_patch          (i) = value_patch
-          this%matrix_nalloc_deadstemst_acc_patch  (i) = value_patch
-          this%matrix_nalloc_livecroot_acc_patch         (i) = value_patch
-          this%matrix_nalloc_livecrootst_acc_patch (i) = value_patch
-          this%matrix_nalloc_deadcroot_acc_patch         (i) = value_patch
-          this%matrix_nalloc_deadcrootst_acc_patch (i) = value_patch
-          this%matrix_nalloc_grain_acc_patch             (i) = value_patch
-          this%matrix_nalloc_grainst_acc_patch     (i) = value_patch
+          this%matrix_nalloc_leaf_acc_patch(i)        = value_patch 
+          this%matrix_nalloc_leafst_acc_patch(i)      = value_patch
+          this%matrix_nalloc_froot_acc_patch(i)       = value_patch
+          this%matrix_nalloc_frootst_acc_patch(i)     = value_patch
+          this%matrix_nalloc_livestem_acc_patch(i)    = value_patch
+          this%matrix_nalloc_livestemst_acc_patch(i)  = value_patch
+          this%matrix_nalloc_deadstem_acc_patch(i)    = value_patch
+          this%matrix_nalloc_deadstemst_acc_patch(i)  = value_patch
+          this%matrix_nalloc_livecroot_acc_patch(i)   = value_patch
+          this%matrix_nalloc_livecrootst_acc_patch(i) = value_patch
+          this%matrix_nalloc_deadcroot_acc_patch(i)   = value_patch
+          this%matrix_nalloc_deadcrootst_acc_patch(i) = value_patch
+          this%matrix_nalloc_grain_acc_patch(i)       = value_patch
+          this%matrix_nalloc_grainst_acc_patch(i)     = value_patch
 
-          this%matrix_ntransfer_leafst_to_leafxf_acc_patch           (i) = value_patch
-          this%matrix_ntransfer_leafxf_to_leaf_acc_patch             (i) = value_patch
-          this%matrix_ntransfer_frootst_to_frootxf_acc_patch         (i) = value_patch
-          this%matrix_ntransfer_frootxf_to_froot_acc_patch           (i) = value_patch
-          this%matrix_ntransfer_livestemst_to_livestemxf_acc_patch   (i) = value_patch
-          this%matrix_ntransfer_livestemxf_to_livestem_acc_patch     (i) = value_patch
-          this%matrix_ntransfer_deadstemst_to_deadstemxf_acc_patch   (i) = value_patch
-          this%matrix_ntransfer_deadstemxf_to_deadstem_acc_patch     (i) = value_patch
-          this%matrix_ntransfer_livecrootst_to_livecrootxf_acc_patch (i) = value_patch
-          this%matrix_ntransfer_livecrootxf_to_livecroot_acc_patch   (i) = value_patch
-          this%matrix_ntransfer_deadcrootst_to_deadcrootxf_acc_patch (i) = value_patch
-          this%matrix_ntransfer_deadcrootxf_to_deadcroot_acc_patch   (i) = value_patch
+          this%matrix_ntransfer_leafst_to_leafxf_acc_patch(i)            = value_patch
+          this%matrix_ntransfer_leafxf_to_leaf_acc_patch(i)              = value_patch
+          this%matrix_ntransfer_frootst_to_frootxf_acc_patch(i)          = value_patch
+          this%matrix_ntransfer_frootxf_to_froot_acc_patch(i)            = value_patch
+          this%matrix_ntransfer_livestemst_to_livestemxf_acc_patch(i)    = value_patch
+          this%matrix_ntransfer_livestemxf_to_livestem_acc_patch(i)      = value_patch
+          this%matrix_ntransfer_deadstemst_to_deadstemxf_acc_patch(i)    = value_patch
+          this%matrix_ntransfer_deadstemxf_to_deadstem_acc_patch(i)      = value_patch
+          this%matrix_ntransfer_livecrootst_to_livecrootxf_acc_patch(i)  = value_patch
+          this%matrix_ntransfer_livecrootxf_to_livecroot_acc_patch(i)    = value_patch
+          this%matrix_ntransfer_deadcrootst_to_deadcrootxf_acc_patch(i)  = value_patch
+          this%matrix_ntransfer_deadcrootxf_to_deadcroot_acc_patch(i)    = value_patch
           if ( use_crop )then
-             this%matrix_ntransfer_grainst_to_grainxf_acc_patch         (i) = value_patch
-             this%matrix_ntransfer_grainxf_to_grain_acc_patch           (i) = value_patch
+             this%matrix_ntransfer_grainst_to_grainxf_acc_patch(i)       = value_patch
+             this%matrix_ntransfer_grainxf_to_grain_acc_patch(i)         = value_patch
           end if
-          this%matrix_ntransfer_livestem_to_deadstem_acc_patch       (i) = value_patch
-          this%matrix_ntransfer_livecroot_to_deadcroot_acc_patch     (i) = value_patch
+          this%matrix_ntransfer_livestem_to_deadstem_acc_patch(i)        = value_patch
+          this%matrix_ntransfer_livecroot_to_deadcroot_acc_patch(i)      = value_patch
 
-          this%matrix_ntransfer_retransn_to_leaf_acc_patch              (i) = value_patch
-          this%matrix_ntransfer_retransn_to_leafst_acc_patch      (i) = value_patch
-          this%matrix_ntransfer_retransn_to_froot_acc_patch             (i) = value_patch
-          this%matrix_ntransfer_retransn_to_frootst_acc_patch     (i) = value_patch
-          this%matrix_ntransfer_retransn_to_livestem_acc_patch          (i) = value_patch
-          this%matrix_ntransfer_retransn_to_livestemst_acc_patch  (i) = value_patch
-          this%matrix_ntransfer_retransn_to_deadstem_acc_patch          (i) = value_patch
-          this%matrix_ntransfer_retransn_to_deadstemst_acc_patch  (i) = value_patch
-          this%matrix_ntransfer_retransn_to_livecroot_acc_patch         (i) = value_patch
-          this%matrix_ntransfer_retransn_to_livecrootst_acc_patch (i) = value_patch
-          this%matrix_ntransfer_retransn_to_deadcroot_acc_patch         (i) = value_patch
-          this%matrix_ntransfer_retransn_to_deadcrootst_acc_patch (i) = value_patch
-          this%matrix_ntransfer_retransn_to_grain_acc_patch             (i) = value_patch
-          this%matrix_ntransfer_retransn_to_grainst_acc_patch     (i) = value_patch
+          this%matrix_ntransfer_retransn_to_leaf_acc_patch(i)            = value_patch
+          this%matrix_ntransfer_retransn_to_leafst_acc_patch(i)          = value_patch
+          this%matrix_ntransfer_retransn_to_froot_acc_patch(i)           = value_patch
+          this%matrix_ntransfer_retransn_to_frootst_acc_patch(i)         = value_patch
+          this%matrix_ntransfer_retransn_to_livestem_acc_patch(i)        = value_patch
+          this%matrix_ntransfer_retransn_to_livestemst_acc_patch(i)      = value_patch
+          this%matrix_ntransfer_retransn_to_deadstem_acc_patch(i)        = value_patch
+          this%matrix_ntransfer_retransn_to_deadstemst_acc_patch(i)      = value_patch
+          this%matrix_ntransfer_retransn_to_livecroot_acc_patch(i)       = value_patch
+          this%matrix_ntransfer_retransn_to_livecrootst_acc_patch(i)     = value_patch
+          this%matrix_ntransfer_retransn_to_deadcroot_acc_patch(i)       = value_patch
+          this%matrix_ntransfer_retransn_to_deadcrootst_acc_patch(i)     = value_patch
+          this%matrix_ntransfer_retransn_to_grain_acc_patch(i)           = value_patch
+          this%matrix_ntransfer_retransn_to_grainst_acc_patch(i)         = value_patch
 
-          this%matrix_ntransfer_leaf_to_retransn_acc_patch              (i) = value_patch
-          this%matrix_ntransfer_froot_to_retransn_acc_patch             (i) = value_patch
-          this%matrix_ntransfer_livestem_to_retransn_acc_patch          (i) = value_patch
-          this%matrix_ntransfer_livecroot_to_retransn_acc_patch         (i) = value_patch
+          this%matrix_ntransfer_leaf_to_retransn_acc_patch(i)            = value_patch
+          this%matrix_ntransfer_froot_to_retransn_acc_patch(i)           = value_patch
+          this%matrix_ntransfer_livestem_to_retransn_acc_patch(i)        = value_patch
+          this%matrix_ntransfer_livecroot_to_retransn_acc_patch(i)       = value_patch
 
-          this%matrix_nturnover_leaf_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_leafst_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_leafxf_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_froot_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_frootst_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_frootxf_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_livestem_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_livestemst_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_livestemxf_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_deadstem_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_deadstemst_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_deadstemxf_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_livecroot_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_livecrootst_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_livecrootxf_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_deadcroot_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_deadcrootst_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_deadcrootxf_acc_patch              (i) = value_patch 
-          this%matrix_nturnover_retransn_acc_patch              (i) = value_patch 
+          this%matrix_nturnover_leaf_acc_patch(i)                        = value_patch 
+          this%matrix_nturnover_leafst_acc_patch(i)                      = value_patch 
+          this%matrix_nturnover_leafxf_acc_patch(i)                      = value_patch 
+          this%matrix_nturnover_froot_acc_patch(i)                       = value_patch 
+          this%matrix_nturnover_frootst_acc_patch(i)                     = value_patch 
+          this%matrix_nturnover_frootxf_acc_patch(i)                     = value_patch 
+          this%matrix_nturnover_livestem_acc_patch(i)                    = value_patch 
+          this%matrix_nturnover_livestemst_acc_patch(i)                  = value_patch 
+          this%matrix_nturnover_livestemxf_acc_patch(i)                  = value_patch 
+          this%matrix_nturnover_deadstem_acc_patch(i)                    = value_patch 
+          this%matrix_nturnover_deadstemst_acc_patch(i)                  = value_patch 
+          this%matrix_nturnover_deadstemxf_acc_patch(i)                  = value_patch 
+          this%matrix_nturnover_livecroot_acc_patch(i)                   = value_patch 
+          this%matrix_nturnover_livecrootst_acc_patch(i)                 = value_patch 
+          this%matrix_nturnover_livecrootxf_acc_patch(i)                 = value_patch 
+          this%matrix_nturnover_deadcroot_acc_patch(i)                   = value_patch 
+          this%matrix_nturnover_deadcrootst_acc_patch(i)                 = value_patch 
+          this%matrix_nturnover_deadcrootxf_acc_patch(i)                 = value_patch 
+          this%matrix_nturnover_retransn_acc_patch(i)                    = value_patch 
           if ( use_crop )then
-             this%matrix_nturnover_grain_acc_patch              (i) = value_patch 
-             this%matrix_nturnover_grainst_acc_patch              (i) = value_patch 
-             this%matrix_nturnover_grainxf_acc_patch              (i) = value_patch 
+             this%matrix_nturnover_grain_acc_patch(i)                    = value_patch 
+             this%matrix_nturnover_grainst_acc_patch(i)                  = value_patch 
+             this%matrix_nturnover_grainxf_acc_patch(i)                  = value_patch 
           end if
 
        end if
-       this%retransn_patch(i)           = value_patch
-       this%npool_patch(i)              = value_patch
-       this%ntrunc_patch(i)             = value_patch
-       this%dispvegn_patch(i)           = value_patch
-       this%storvegn_patch(i)           = value_patch
-       this%totvegn_patch(i)            = value_patch
-       this%totn_patch(i)               = value_patch
+       this%retransn_patch(i)                                            = value_patch
+       this%npool_patch(i)                                               = value_patch
+       this%ntrunc_patch(i)                                              = value_patch
+       this%dispvegn_patch(i)                                            = value_patch
+       this%storvegn_patch(i)                                            = value_patch
+       this%totvegn_patch(i)                                             = value_patch
+       this%totn_patch(i)                                                = value_patch
     end do
 
     if ( use_crop )then
        do fi = 1,num_patch
           i = filter_patch(fi)
-          this%grainn_patch(i)          = value_patch
-          this%grainn_storage_patch(i)  = value_patch
-          this%grainn_xfer_patch(i)     = value_patch   
-          this%cropseedn_deficit_patch(i)  = value_patch
+          this%grainn_patch(i)                                           = value_patch
+          this%grainn_storage_patch(i)                                   = value_patch
+          this%grainn_xfer_patch(i)                                      = value_patch   
+          this%cropseedn_deficit_patch(i)                                = value_patch
        end do
     end if
 
     do fi = 1,num_column
        i = filter_column(fi)
 
-       this%totecosysn_col(i) = value_column
-       this%totvegn_col(i)    = value_column
-       this%totn_p2c_col(i)   = value_column
-       this%totn_col(i)       = value_column
+       this%totecosysn_col(i)                                            = value_column
+       this%totvegn_col(i)                                               = value_column
+       this%totn_p2c_col(i)                                              = value_column
+       this%totn_col(i)                                                  = value_column
     end do
 
   end subroutine SetValues
@@ -2198,6 +2193,7 @@ contains
             this%totvegn_col(c)                              
 
        ! total column nitrogen, including patch (TOTCOLN)
+
        this%totn_col(c) = this%totn_p2c_col(c)               + &
             soilbiogeochem_nitrogenstate_inst%cwdn_col(c)    + &
             soilbiogeochem_nitrogenstate_inst%totlitn_col(c) + &
