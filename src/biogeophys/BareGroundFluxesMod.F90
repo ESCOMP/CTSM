@@ -309,9 +309,9 @@ contains
                um(p) = sqrt(ur(p)*ur(p) + wc*wc)
             end if
             obu(p) = zldis(p)/zeta
-         end do
 
-         num_iter(p) = iter
+            num_iter(p) = iter
+         end do
 
       end do ! end stability iteration
 
