@@ -15,7 +15,7 @@ module mksoilMod
   use shr_kind_mod, only : r8 => shr_kind_r8, r4=>shr_kind_r4
   use shr_sys_mod , only : shr_sys_flush
   use mkdomainMod , only : domain_checksame
-  use mksoilUtilsMod, only : mkrank
+  use mksoilUtilsMod, only : mkrank, dominant_soil_color
   implicit none
 
   SAVE
