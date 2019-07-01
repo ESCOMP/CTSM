@@ -119,4 +119,22 @@ contains
     @assertEqual(1, soil_color_o(1))
   end subroutine noColorInFirstPoints
 
+  @Test
+  subroutine noColorInLastPoints(this)
+    ! No color in the last points, but a color in the first point
+    class(tdsc), intent(inout) :: this
+    integer :: mask_i(4)
+    integer :: soil_color_i(4)
+    integer :: soil_color_o(1)
+
+    call this%createGridmap1dst([0.25_r8, 0.25_r8, 0.25_r8, 0.25_r8])
+    ! Some points are inside the mask with color = 0, other points are outside the mask
+    mask_i(:) = 1
+    soil_color_i(:) = [1, 0, 0, 0]
+
+    call dominant_soil_color(this%gridmap, mask_i, soil_color_i, 20, soil_color_o)
+
+    @assertEqual(1, soil_color_o(1))
+  end subroutine noColorInLastPoints
+
 end module test_dominant_soil_color

@@ -55,7 +55,7 @@ contains
     integer  :: k, n, ni, no, ns_i, ns_o
     real(r8) :: wt                            ! map overlap weight
     real(r8), allocatable :: wst(:,:)         ! overlap weights, by surface type
-    integer , allocatable :: color(:)         ! 0: none; 1: some
+    logical :: has_color                      ! whether this grid cell has non-zero color
     integer, parameter :: miss = 99999        ! missing data indicator
 
     character(len=*), parameter :: subname = 'dominant_soil_color'
@@ -74,8 +74,6 @@ contains
     ns_o = size(soil_color_o)
     allocate(wst(0:nsoicol,ns_o))
     wst(0:nsoicol,:) = 0
-    allocate(color(ns_o))
-    color(:) = 0
 
     ! TODO: need to do a loop to determine
     ! the maximum number of over lap cells throughout the grid 
@@ -89,19 +87,24 @@ contains
        wt = tgridmap%wovr(n)
        k  = soil_color_i(ni) * mask_i(ni)
        wst(k,no) = wst(k,no) + wt
-       if (k>0 .and. wst(k,no)>0.) then
-          color(no) = 1
-          wst(0,no) = 0.0
-       end if
     enddo
 
     soil_color_o(:) = 0
     do no = 1,ns_o
 
+       ! If the output cell has any non-zero-colored inputs, then set the weight of
+       ! zero-colored inputs to 0, to ensure that the zero-color is NOT dominant.
+       if (any(wst(1:nsoicol,no) > 0.)) then
+          has_color = .true.
+          wst(0,no) = 0.0
+       else
+          has_color = .false.
+       end if
+
        ! Rank non-zero weights by color type. wsti(1) is the most extensive
        ! color type. 
 
-       if (color(no) == 1) then
+       if (has_color) then
           call mkrank (nsoicol, wst(0:nsoicol,no), miss, wsti, num)
           soil_color_o(no) = wsti(1)
        end if
@@ -133,7 +136,6 @@ contains
     end do
 
     deallocate (wst)
-    deallocate (color)
 
   end subroutine dominant_soil_color
 
