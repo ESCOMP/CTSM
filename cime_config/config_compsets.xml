@@ -191,6 +191,13 @@
   </compset>
 
   <compset>
+    <alias>IHistClm50SpCru</alias>
+    <lname>HIST_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <science_support grid="f09_g17"/>
+    <science_support grid="f19_g17"/>
+  </compset>
+
+  <compset>
     <alias>IHistClm50Bgc</alias>
     <lname>HIST_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
@@ -352,6 +359,13 @@
     <science_support grid="f19_g17"/>
   </compset>
 
+  <compset>
+    <alias>IHistClm45SpGs</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <science_support grid="f09_g17"/>
+    <science_support grid="f19_g17"/>
+  </compset>
+
   <!-- Primarily for testing -->
   <compset>
     <alias>I2000Clm50Vic</alias>
@@ -377,6 +391,13 @@
   <compset>
     <alias>I1850Clm50BgcCropG</alias>
     <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%EVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>IHistClm40SpGswGs</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <science_support grid="f09_g17"/>
+    <science_support grid="f19_g17"/>
   </compset>
 
   <compset>
