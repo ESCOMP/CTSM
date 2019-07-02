@@ -485,6 +485,13 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             patch, col, canopystate_inst, atm2lnd_inst, water_inst)
 
+       call HandleNewSnow(bounds_clump, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            atm2lnd_inst, temperature_inst, &
+            aerosol_inst, water_inst%waterstatebulk_inst, &
+            water_inst%waterdiagnosticbulk_inst, &
+            water_inst%waterfluxbulk_inst)
+
        ! TODO(wjs, 2019-05-16) Remove this temporary check. We'll instead have one after
        ! FracH2oSfc.
        if (water_inst%DoConsistencyCheck()) then
@@ -492,17 +499,10 @@ contains
           ! every time step
           if (get_nstep() == 0) then
              call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after CanopyInterceptionAndThroughfall')
+             call water_inst%TracerConsistencyCheck(bounds_clump, 'after HandleNewSnow')
              call t_stopf("tracer_consistency_check")
           end if
        end if
-
-       call HandleNewSnow(bounds_clump, &
-            filter(nc)%num_nolakec, filter(nc)%nolakec, &
-            atm2lnd_inst, temperature_inst, &
-            aerosol_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterfluxbulk_inst)
 
        ! update surface water fraction (this may modify frac_sno)
        call FracH2oSfc(bounds_clump, &
