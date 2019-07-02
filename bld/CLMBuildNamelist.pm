@@ -78,7 +78,7 @@ REQUIRED OPTIONS
                               "-res list" to list valid resolutions.
                               (default: 0.9x1.25)
      -sim_year "year"         Year to simulate for input datasets
-                              (i.e. 1850, 2000, 1850-2000, 1850-2100)
+                              (i.e. PtVg, 1850, 2000, 2010, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
                               (default 2000)
      -structure "structure"   The overall structure being used [ standard | fast ]
@@ -1165,19 +1165,19 @@ sub setup_cmdl_simulation_year {
   }
 
   $nl_flags->{'sim_year_range'} = $defaults->get_value("sim_year_range");
-  $nl_flags->{'sim_year'}       = $val;
+  $nl_flags->{'sim_year'}       = &remove_leading_and_trailing_quotes($val);
   if ( $val =~ /([0-9]+)-([0-9]+)/ ) {
     $nl_flags->{'sim_year'}       = $1;
     $nl_flags->{'sim_year_range'} = $val;
   }
   $val = $nl_flags->{'sim_year'};
   my $group = $definition->get_group_name($var);
-  $nl->set_variable_value($group, $var, $val );
+  $nl->set_variable_value($group, $var, "'$val'" );
   if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
     my @valid_values   = $definition->get_valid_values( $var );
     $log->fatal_error("$var of $val is NOT valid. Valid values are: @valid_values");
   }
-  $nl->set_variable_value($group, $var, $val );
+  $nl->set_variable_value($group, $var, "'$val'" );
   $log->verbose_message("CLM sim_year is $nl_flags->{'sim_year'}");
 
   $var = "sim_year_range";
@@ -1634,6 +1634,10 @@ sub process_namelist_inline_logic {
   ################################################
   setup_logic_century_soilbgcdecompcascade($opts,  $nl_flags, $definition, $defaults, $nl);
 
+  #############################
+  # namelist group: cngeneral #
+  #############################
+  setup_logic_cngeneral($opts,  $nl_flags, $definition, $defaults, $nl);
   ####################################
   # namelist group: cnvegcarbonstate #
   ####################################
@@ -2277,8 +2281,16 @@ sub setup_logic_initial_conditions {
           #}
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_sim_years" );
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_how_close" );
+          my $close = $nl->get_value("init_interp_how_close");
           foreach my $sim_yr ( split( /,/, $nl->get_value("init_interp_sim_years") )) {
-             if ( abs($st_year - $sim_yr) < $nl->get_value("init_interp_how_close") ) {
+             my $how_close = undef;
+             if ( $nl_flags->{'sim_year'} eq "PtVg" ) {
+                $how_close = abs(1850 - $sim_yr);
+             } else {
+                $how_close = abs($st_year - $sim_yr);
+             }
+             if ( ($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close) ) {
+                $close = $how_close;
                 $settings{'sim_year'} = $sim_yr;
              }
           } 
@@ -3348,29 +3360,33 @@ sub setup_logic_megan {
 sub setup_logic_lai_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl_flags->{'use_lai_streams'}) ) {
-     $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
+
+  if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_lai_streams'))  ) {
+    $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
   }
   if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
 
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
-                 'hgrid'=>$nl_flags->{'res'} );
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lai',
-                 'sim_year'=>$nl_flags->{'sim_year'},
-                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lai',
-                 'sim_year'=>$nl_flags->{'sim_year'},
-                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
-     # Set align year, if first and last years are different
-     if ( $nl->get_value('stream_year_first_lai') !=
-          $nl->get_value('stream_year_last_lai') ) {
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                    'model_year_align_lai', 'sim_year'=>$nl_flags->{'sim_year'},
-                    'sim_year_range'=>$nl_flags->{'sim_year_range'});
+     if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
+                   'hgrid'=>$nl_flags->{'res'} );
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lai',
+                   'sim_year'=>$nl_flags->{'sim_year'},
+                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lai',
+                   'sim_year'=>$nl_flags->{'sim_year'},
+                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
+       # Set align year, if first and last years are different
+       if ( $nl->get_value('stream_year_first_lai') !=
+            $nl->get_value('stream_year_last_lai') ) {
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                      'model_year_align_lai', 'sim_year'=>$nl_flags->{'sim_year'},
+                      'sim_year_range'=>$nl_flags->{'sim_year_range'});
+       }
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai',
+                   'hgrid'=>"360x720cru" );
      }
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai',
-                 'hgrid'=>"360x720cru" );
   } else {
      # If bgc is CN/CNDV then make sure none of the LAI settings are set
      if ( defined($nl->get_value('stream_year_first_lai')) ||
@@ -3434,6 +3450,32 @@ sub setup_logic_cnvegcarbonstate {
     if ( ! defined($mmnuptake) ) { $mmnuptake = ".false."; }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_vegC', 
                 'use_cn' => $nl->get_value('use_cn'), 'mm_nuptake_opt' => $mmnuptake );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cngeneral {
+  # Must be set after setup_logic_co2_type
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  if ( &value_is_true($nl->get_value('use_cn')) ) {
+    if ( &value_is_true($nl->get_value('use_crop')) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dribble_crophrv_xsmrpool_2atm', 
+                   'co2_type' => remove_leading_and_trailing_quotes($nl->get_value('co2_type')), 
+                   'use_crop' => $nl->get_value('use_crop')  );
+    } else {
+      if ( defined($nl->get_value('dribble_crophrv_xsmrpool_2atm')) ) {
+        $log->fatal_error("When CROP is NOT on dribble_crophrv_xsmrpool_2atm can NOT be set\n" );
+      }
+    }
+  } else {
+    if ( defined($nl->get_value('reseed_dead_plants')) ||
+         defined($nl->get_value('dribble_crophrv_xsmrpool_2atm'))   ) {
+             $log->fatal_error("When CN is not on none of the following can be set: ,\n" .
+                  "dribble_crophrv_xsmrpool_2atm nor reseed_dead_plantsr\n" .
+                  "(eg. don't use these options with SP mode).");
+    }
   }
 }
 

@@ -1,1 +1,1 @@
--l CSMDATA -r 10x15 -no-crop -y 1850 -exedir EXEDIR
+-l CSMDATA -vic -r 10x15 -no-crop -y 1850 -exedir EXEDIR

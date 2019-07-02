@@ -126,7 +126,8 @@ module CNVegetationFacade
      type(dgvs_type)                :: dgvs_inst
 
      ! Control variables
-     logical, private :: reseed_dead_plants    ! Flag to indicate if should reseed dead plants when starting up the model
+     logical, private :: reseed_dead_plants              ! Flag to indicate if should reseed dead plants when starting up the model
+     logical, private :: dribble_crophrv_xsmrpool_2atm = .False. ! Flag to indicate if should harvest xsmrpool to the atmosphere
 
      ! TODO(wjs, 2016-02-19) Evaluate whether some other variables should be moved in
      ! here. Whether they should be moved in depends on how tightly they are tied in with
@@ -226,21 +227,24 @@ contains
        ! Read in the general CN namelist
        call this%CNReadNML( NLFilename )    ! MUST be called first as passes down control information to others
 
-       call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8, NLFilename=NLFilename)
+       call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8, &
+                                             NLFilename=NLFilename,  dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm )
        if (use_c13) then
           call this%c13_cnveg_carbonstate_inst%Init(bounds, carbon_type='c13', ratio=c13ratio, &
-               NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
+               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        if (use_c14) then
           call this%c14_cnveg_carbonstate_inst%Init(bounds, carbon_type='c14', ratio=c14ratio, &
-               NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
+               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
-       call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12')
+       call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12', dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm )
        if (use_c13) then
-          call this%c13_cnveg_carbonflux_inst%Init(bounds, carbon_type='c13')
+          call this%c13_cnveg_carbonflux_inst%Init(bounds, carbon_type='c13', dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm)
        end if
        if (use_c14) then
-          call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14')
+          call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14', dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm)
        end if
        call this%cnveg_nitrogenstate_inst%Init(bounds,                   &
             this%cnveg_carbonstate_inst%leafc_patch(begp:endp),          &
@@ -297,9 +301,11 @@ contains
     character(len=*), parameter :: nmlname = 'cn_general'   ! MUST match what is in namelist below
     !-----------------------------------------------------------------------
     logical :: reseed_dead_plants
-    namelist /cn_general/ reseed_dead_plants
+    logical :: dribble_crophrv_xsmrpool_2atm
+    namelist /cn_general/ reseed_dead_plants, dribble_crophrv_xsmrpool_2atm
 
-    reseed_dead_plants = this%reseed_dead_plants
+    reseed_dead_plants    = this%reseed_dead_plants
+    dribble_crophrv_xsmrpool_2atm = this%dribble_crophrv_xsmrpool_2atm
 
     if (masterproc) then
        unitn = getavu()
@@ -317,9 +323,11 @@ contains
        call relavu( unitn )
     end if
 
-    call shr_mpi_bcast (reseed_dead_plants      , mpicom)
+    call shr_mpi_bcast (reseed_dead_plants     , mpicom)
+    call shr_mpi_bcast (dribble_crophrv_xsmrpool_2atm  , mpicom)
 
     this%reseed_dead_plants = reseed_dead_plants
+    this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -864,7 +872,7 @@ contains
          atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
          wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
          this%dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
-         nutrient_competition_method, this%cnfire_method)
+         nutrient_competition_method, this%cnfire_method, this%dribble_crophrv_xsmrpool_2atm)
 
     ! fire carbon emissions 
     call CNFireEmisUpdate(bounds, num_soilp, filter_soilp, &

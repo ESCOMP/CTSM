@@ -26,6 +26,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <co2_ppmv sim_year="1000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="2000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="1850"      >284.7</co2_ppmv>
+<co2_ppmv sim_year="PtVg"      >284.7</co2_ppmv>
 
 <!-- CO2 type -->
 <co2_type>constant</co2_type>
@@ -458,6 +459,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Plant hydraulic stress -->
 <use_hydrstress                                                      >.false.</use_hydrstress>
 <use_hydrstress phys="clm5_0" use_fates=".false." configuration="clm">.true.</use_hydrstress>
+
+<!-- General CN options -->
+<dribble_crophrv_xsmrpool_2atm co2_type="prognostic" use_crop=".true.">.true.</dribble_crophrv_xsmrpool_2atm>
+<dribble_crophrv_xsmrpool_2atm                       use_crop=".true.">.false.</dribble_crophrv_xsmrpool_2atm>
+ 
 <!--
 
      Initial condition files to use and or interpolate from
@@ -632,6 +638,9 @@ lnd/clm2/surfdata_map/surfdata_ne16np4_16pfts_Irrig_CMIP6_simyr2000_c170824.nc</
 <fsurdat hgrid="0.125nldas2" sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_0.125nldas2_hist_16pfts_Irrig_CMIP6_simyr2005_c190412.nc</fsurdat>
 
+<fsurdat 81003="conus_30_x8"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/surfdata_conus_30_x8_16pfts_Irrig_CMIP6_simyr2000_c181003.nc</fsurdat>
+
 <fsurdat hgrid="5x5_amazon"    sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="2000" use_crop=".false." irrigate=".true.">
@@ -665,6 +674,9 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr2000_c170824.nc</fsurd
 lnd/clm2/surfdata_map/surfdata_ne30np4_78pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
 <fsurdat hgrid="ne16np4"     sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_ne16np4_78pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
+
+<fsurdat hgrid="conus_30_x8"     sim_year="2000" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_conus_30_x8_78pfts_CMIP6_simyr2000_c181003.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" use_crop=".false." irrigate=".true.">
@@ -704,6 +716,9 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_16pfts_Irrig_CMIP6_simyr1850_c170824.nc<
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/surfdata_ne30np4_16pfts_Irrig_CMIP6_simyr1850_c170824.nc</fsurdat>
 
+<fsurdat hgrid="conus_30_x8"    sim_year="1850" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/surfdata_conus_30_x8_16pfts_Irrig_CMIP6_simyr1850_c181003.nc</fsurdat>
+
 <!-- pre-industrial with crop -->
 <fsurdat hgrid="360x720cru"   sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_360x720cru_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
@@ -732,6 +747,13 @@ lnd/clm2/surfdata_map/surfdata_1x1_brazil_78pfts_CMIP6_simyr1850_c171214.nc</fsu
 lnd/clm2/surfdata_map/surfdata_ne30np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurdat>
+
+<fsurdat hgrid="conus_30_x8"    sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_conus_30_x8_78pfts_CMIP6_simyr1850_c181003.nc</fsurdat>
+
+<!-- Potential vegetation land use dataset, crop is off, and zeroed, all areas are natural vegetation without human disturbance -->
+<fsurdat hgrid="0.9x1.25"     sim_year="PtVg" use_crop=".false." irrigate=".false."
+>lnd/clm2/surfdata_map/surfdata_0.9x1.25_hist_16pfts_nourb_CMIP6_simyrPtVg_c181114.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 
@@ -762,6 +784,9 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <flanduse_timeseries hgrid="ne30np4"       sim_year_range="1850-2000"  irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
+<flanduse_timeseries hgrid="conus_30_x8"   sim_year_range="1850-2000"  irrigate=".true."
+ use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_conus_30_x8_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c181003.nc</flanduse_timeseries>
+
 <!-- Dynamic PFT surface datasets for crop -->
 
 <flanduse_timeseries hgrid="0.47x0.63"      sim_year_range="1850-2000"
@@ -788,6 +813,9 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
  use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4"       sim_year_range="1850-2000" 
  use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
+
+<flanduse_timeseries hgrid="conus_30_x8"   sim_year_range="1850-2000" 
+ use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_conus_30_x8_hist_78pfts_CMIP6_simyr1850-2015_c181004.nc</flanduse_timeseries>
 
 <!-- Note that this transient file only goes up to year 1855.
      This is sufficient for testing purposes, but could cause problems if you try to run beyond 1855. -->
@@ -2456,6 +2484,46 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 >lnd/clm2/mappingdata/maps/0.125x0.125/map_5x5min_nomask_to_0.125x0.125_nomask_aave_da_c140702.nc</map>
 
 <!-- mapping files for 0.125x0.125 END -->
+
+<!-- mapping files for conus_30_x8 START added on Mon Jan 14 21:41:02 2019-->
+<!-- Created by lnd/clm/bld/namelist_files/createMapEntry.pl--> 
+
+<map frm_hgrid="5x5min"    frm_lmask="nomask"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_5x5min_nomask_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="GLOBE-Gardner"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_3x3min_GLOBE-Gardner_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="LandScan2004"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_3x3min_LandScan2004_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="10x10min"    frm_lmask="nomask"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_10x10min_nomask_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="0.5x0.5"    frm_lmask="MODIS"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_0.5x0.5_MODIS_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="5x5min"    frm_lmask="ORNL-Soil"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_5x5min_ORNL-Soil_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="0.5x0.5"    frm_lmask="AVHRR"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_0.5x0.5_AVHRR_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_3x3min_MODIS-wCsp_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="1km-merge-10min"    frm_lmask="HYDRO1K-merge-nomask"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_1km-merge-10min_HYDRO1K-merge-nomask_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="360x720cru"    frm_lmask="cruncep"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_360x720cru_cruncep_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="10x10min"    frm_lmask="IGBPmergeICESatGIS"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_10x10min_IGBPmergeICESatGIS_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="GLOBE-Gardner-mergeGIS"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_3x3min_GLOBE-Gardner-mergeGIS_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="0.9x1.25"    frm_lmask="GRDC"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_0.9x1.25_GRDC_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="5x5min"    frm_lmask="ISRIC-WISE"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_5x5min_ISRIC-WISE_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="USGS"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_3x3min_USGS_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="0.25x0.25"    frm_lmask="MODIS"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_0.25x0.25_MODIS_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+<map frm_hgrid="5x5min"    frm_lmask="IGBP-GSDP"  to_hgrid="conus_30_x8"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/conus_30_x8/map_5x5min_IGBP-GSDP_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
+
+<!-- mapping files for conus_30_x8 END -->
 
 <!-- =========================================  -->
 <!-- Defaults for modelio namelist              -->
