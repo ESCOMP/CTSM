@@ -335,7 +335,6 @@ contains
          swe_old              => waterdiagnosticbulk_inst%swe_old_col             , & ! Output: [real(r8) (:,:) ]  snow water before update              
          
          qflx_snow_drain       => waterfluxbulk_inst%qflx_snow_drain_col     , & ! Input: [real(r8) (:)   ]  drainage from snow pack from previous time step       
-         qflx_snow_h2osfc     => waterfluxbulk_inst%qflx_snow_h2osfc_col     , & ! Output: [real(r8) (:)   ]  snow falling on surface water (mm/s)     
          qflx_snow_grnd_col   => waterfluxbulk_inst%qflx_snow_grnd_col         & ! Input:  [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
          )
 
@@ -360,7 +359,6 @@ contains
        ! U.S.Department of Agriculture Forest Service, Project F,
        ! Progress Rep. 1, Alta Avalanche Study Center:Snow Layer Densification.
 
-       qflx_snow_h2osfc(c) = 0._r8
        ! set temporary variables prior to updating
        temp_snow_depth=snow_depth(c)
        ! save initial snow content
@@ -464,9 +462,6 @@ contains
              frac_sno(c) = 0._r8
           endif
        endif ! end of h2osno_total > 0
-
-       ! no snow on surface water
-       qflx_snow_h2osfc(c) = 0._r8
 
        ! update change in snow depth
        dz_snowf = (snow_depth(c) - temp_snow_depth) / dtime

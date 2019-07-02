@@ -407,7 +407,8 @@ contains
              qflx_irrig_drip    = w%waterflux_inst%qflx_irrig_drip_patch(begp:endp), &
              ! Outputs
              qflx_snow_grnd_col = w%waterflux_inst%qflx_snow_grnd_col(begc:endc), &
-             qflx_liq_grnd_col  = w%waterflux_inst%qflx_liq_grnd_col(begc:endc))
+             qflx_liq_grnd_col  = w%waterflux_inst%qflx_liq_grnd_col(begc:endc), &
+             qflx_snow_h2osfc   = w%waterflux_inst%qflx_snow_h2osfc_col(begc:endc))
         end associate
      end do
 
@@ -1013,7 +1014,7 @@ contains
         num_nolakec, filter_nolakec, &
         qflx_through_snow, qflx_snocanfall, qflx_snow_unload, &
         qflx_through_liq, qflx_liqcanfall, qflx_irrig_drip, &
-        qflx_snow_grnd_col, qflx_liq_grnd_col)
+        qflx_snow_grnd_col, qflx_liq_grnd_col, qflx_snow_h2osfc)
      !
      ! !DESCRIPTION:
      ! Compute summed fluxes onto ground, for bulk or one tracer
@@ -1034,9 +1035,11 @@ contains
 
      real(r8) , intent(inout) :: qflx_snow_grnd_col( bounds%begc: )    ! snow on ground after interception (mm H2O/s)
      real(r8) , intent(inout) :: qflx_liq_grnd_col( bounds%begc: )     ! liquid on ground after interception (mm H2O/s)
+     real(r8), intent(inout)  :: qflx_snow_h2osfc( bounds%begc: )      ! snow falling on surface water (mm H2O/s)
      !
      ! !LOCAL VARIABLES:
-     integer :: fp, p
+     integer  :: fp, p
+     integer  :: fc, c
      real(r8) :: qflx_snow_grnd_patch(bounds%begp:bounds%endp)  ! snow on ground after interception, patch-level (mm H2O/s)
      real(r8) :: qflx_liq_grnd_patch(bounds%begp:bounds%endp)   ! liquid on ground after interception, patch-level (mm H2O/s)
 
@@ -1051,6 +1054,7 @@ contains
      SHR_ASSERT_FL((ubound(qflx_irrig_drip, 1) == bounds%endp), sourcefile, __LINE__)
      SHR_ASSERT_FL((ubound(qflx_snow_grnd_col, 1) == bounds%endc), sourcefile, __LINE__)
      SHR_ASSERT_FL((ubound(qflx_liq_grnd_col, 1) == bounds%endc), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_snow_h2osfc, 1) == bounds%endc), sourcefile, __LINE__)
 
      associate( &
           begp => bounds%begp, &
@@ -1080,6 +1084,18 @@ contains
      call p2c(bounds, num_nolakec, filter_nolakec, &
           qflx_liq_grnd_patch(begp:endp), &
           qflx_liq_grnd_col(begc:endc))
+
+     do fc = 1, num_nolakec
+        c = filter_nolakec(fc)
+        ! For now, no snow on surface water
+        !
+        ! NOTE(wjs, 2019-07-02) This is here for symmetry with qflx_snow_grnd_patch.
+        ! However, if this were changed to be non-zero, we'd probably want this SumFlux
+        ! routine to compute the total snow coming off the canopy, then have the
+        ! partitioning into snow falling on ground vs. h2osfc done in a separate routine
+        ! for bulk, then compute the tracer versions of those fluxes.
+        qflx_snow_h2osfc(c) = 0._r8
+     end do
 
      end associate
 
