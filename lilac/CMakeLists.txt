@@ -43,7 +43,7 @@ message(STATUS "==============================================================")
 
 #add_executable("lilac.exe" ../lilac/*.F90)
 
-add_executable(${PROJECT_NAME} ../lilac/demo_driver.F90
+add_executable(${PROJECT_NAME}.exe ../lilac/demo_driver.F90
                 ../lilac/lilac_mod.F90 ../lilac/atmos_cap.F90  ../lilac/lilac_utils.F90 
                 ../lilac/lnd_cap.F90 ../lilac/cpl_mod.F90)
 
