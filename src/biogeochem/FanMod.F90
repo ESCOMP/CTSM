@@ -138,7 +138,7 @@ contains
     !kaq_base = 1e-4 * (gascnst*tg / (2*faraday**2)) / (1/lp + 1/lm)
 
     ! Van Der Molen 1990 fit of the base rate.
-    kaq_base = 9.8e-10_r8 * 1.03_r8 ** (Tg-273.14_r8)
+    kaq_base = 9.8e-10_r8 * 1.03_r8 ** (Tg-SHR_CONST_TKFRZ)
 
     diff = kaq_base * (theta**pw) / (thetasat**2)
 
@@ -341,10 +341,8 @@ contains
        !r1 = halfwater / diffusivity_water
     end if
 
-    r1 = inwater / diffusivity_water + insoil /diffusivity_satsoil
-
-    rsl = min(halfwater, water(1)) / diffusivity_water
-    rssup = max(halfwater - water(1), 0.0_r8) / (thetasat * diffusivity_satsoil)
+    rsl = min(halfwater, water_surf) / diffusivity_water
+    rssup = max(halfwater - water_surf, 0.0_r8) / (thetasat * diffusivity_satsoil)
     r1 = rsl + rssup
 
     depth_lower = max(soildepth_reservoir, depth_soilsat*1.5)
@@ -644,7 +642,7 @@ contains
     
     call update_pools(tanpools(1:1), fluxes(1:5,1:1), dt, 1, 5)
 
-    if (any(tanpools < -1e-15)) then
+    if (debug_fan .and. any(tanpools < -1e-15)) then
        status = err_negative_tan
        return
     end if
@@ -676,7 +674,7 @@ contains
     
     call update_pools(tanpools(2:4), fluxes(1:5,2:4), dt, 3, 5)
     
-    if (any(tanpools < -1e-15)) then
+    if (debug_fan .and. any(tanpools < -1e-15)) then
        !if (any(tanpools < -1e-3)) then
        status = err_negative_tan * 10
        return
@@ -789,10 +787,12 @@ contains
        end if
     end if
 
-    imbalance = abs((sum(tanpools) - sum(tanpools_old)) - ((tandep_remaining)*dt+garbage))
-    if (imbalance > max(1e-14, 0.001*sum(tanpools_old))) then
-       status = err_balance_tan*10
-       return
+    if (debug_fan) then
+       imbalance = abs((sum(tanpools) - sum(tanpools_old)) - ((tandep_remaining)*dt+garbage))
+       if (imbalance > max(1e-14, 0.001*sum(tanpools_old))) then
+          status = err_balance_tan*10
+          return
+       end if
     end if
     
     age_prev = 0 ! for water evaluations, consider beginning of S1 as the starting point
@@ -819,12 +819,12 @@ contains
        return
     end if
     
-    if (any(tanpools < -1e-15)) then
-       status = err_negative_tan + 1000
-       return
-    end if
-
     if (debug_fan) then
+       if (any(tanpools < -1e-15)) then
+          status = err_negative_tan + 1000
+          return
+       end if
+
        if (any(isnan(fluxes))) then
           status = err_nan + 1000
        end if
