@@ -99,11 +99,10 @@ CTSM testing:
     hobart_pgi -------- 
     hobart_intel ------ 
 
-CTSM tag used for the baseline comparisons: 
-
-
 Answer changes
 --------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
 
 Changes answers relative to baseline:
 
@@ -124,6 +123,8 @@ Changes answers relative to baseline:
 
    URL for LMWG diagnostics output used to validate new climate:
 	
+   Will new REFCASES need to be made for cesm and/or CAM?: No
+   (This will likely be true if the LII tests failed)
 
 Detailed list of changes
 ------------------------

@@ -16,7 +16,7 @@
   <description modifier_mode="1">
     <desc lnd="CLM40[%SP][%CN][%CNDV][%CN-CROP][%CNDV-CROP]"                                                                         >clm4.0:</desc>
     <desc lnd="CLM45[%SP][%SP-VIC][%CN][%CNDV][%CN-CROP][%CNDV-CROP][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
-    <desc lnd="CLM50[%SP][%SP-VIC][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK]">clm5.0:</desc>
+    <desc lnd="CLM50[%SP][%SP-VIC][%SP-NOANTHRO][%BGC-NOANTHRO][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK]">clm5.0:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
     <desc option="CN"              >CN: Carbon Nitrogen model</desc>
     <desc option="CNDV"            >CNDV: CN with Dynamic Vegetation</desc>
@@ -24,8 +24,10 @@
     <desc option="CNDV-CROP"       >CNDV with prognostic crop:</desc>
 
     <desc option="SP-VIC"          >Satellite phenology with VIC hydrology:</desc>
+    <desc option="SP-NOANTHRO"     >Satellite phenology without anthropomorphic influences</desc>
     <desc option="BGC"             >BGC (vert. resol. CN and methane):</desc>
     <desc option="BGC-CROP"        >BGC (vert. resol. CN and methane) with prognostic crop:</desc>
+    <desc option="BGC-NOANTHRO"    >BGC (vert. resol. CN and methane) without anthropomorphic influences:</desc>
     <desc option="FATES"           >FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: (experimental)</desc>
     <desc option="BGCDV"           >BGC (vert. resol. CN and methane) with dynamic vegetation:</desc>
     <desc option="BGCDV-CROP"      >BGC (vert. resol. CN and methane) with dynamic vegetation and prognostic crop:</desc>
@@ -101,17 +103,23 @@
     <type>char</type>
     <default_value>UNSET</default_value>
     <values>
-      <!-- Use rcp4.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
-      <value compset="^2010_"		>2010_control</value>
-      <value compset="^2000_"		>2000_control</value>
-      <value compset="^1850_"		>1850_control</value>
-      <value compset="^HIST_"		>20thC_transient</value>
-      <value compset="^RCP6_"		>1850-2100_rcp6_transient</value>
-      <value compset="^RCP4_"		>1850-2100_rcp4.5_transient</value>
-      <value compset="^RCP2_"		>1850-2100_rcp2.6_transient</value>
-      <value compset="^RCP8_"		>1850-2100_rcp8.5_transient</value>
-      <value compset="^AMIP_"		>20thC_transient</value>
-      <value compset="^PIPD_"           >1850-2100_rcp4.5_transient</value>
+      <!-- Use SSP5-8.5 for PI to PDAY so will have data up to the current year available (for WACCM compsets that use PDAY) -->
+      <value compset="^2010_"		            >2010_control</value>
+      <value compset="^2000_"		            >2000_control</value>
+      <value compset="^1850_"		            >1850_control</value>
+      <value compset="^1850_.*_CLM50%[^_]*NOANTHRO" >1850_noanthro_control</value>
+      <value compset="^HIST_"		            >20thC_transient</value>
+      <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
+      <value compset="^SSP126_"	                    >1850-2100_SSP1-2.6_transient</value>
+      <value compset="^SSP370_"	                    >1850-2100_SSP3-7.0_transient</value>
+      <value compset="^SSP534_"	                    >1850-2100_SSP5-3.4_transient</value>
+      <value compset="^SSP245_"	                    >1850-2100_SSP2-4.5_transient</value>
+      <value compset="^SSP119_"	                    >1850-2100_SSP1-1.9_transient</value>
+      <value compset="^SSP434_"	                    >1850-2100_SSP4-3.4_transient</value>
+      <value compset="^SSP460_"	                    >1850-2100_SSP4-6.0_transient</value>
+      <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
+      <value compset="^AMIP_"	                    >20thC_transient</value>
+      <value compset="^PIPD_"                       >1850-2100_SSP5-8.5_transient</value>
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>
@@ -161,11 +169,14 @@
     <valid_values>constant,diagnostic,prognostic</valid_values>
     <default_value>constant</default_value>
     <values>
-      <value compset="_CAM"     >diagnostic</value>
+      <value compset="_CAM"        >diagnostic</value>
       <value compset="_BGC%BDRD"   >diagnostic</value>
       <value compset="_BGC%BPRP"   >prognostic</value>
       <value compset="HIST.*_DATM" >diagnostic</value>
-      <value compset="RCP.*_DATM"  >diagnostic</value>
+      <value compset="SSP.*_DATM"  >diagnostic</value>
+      <!-- This requires a coordination with a cime tag 
+      <value compset="SSP.*_DATM"  >diagnostic</value>
+      -->
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>
@@ -232,8 +243,10 @@
     <valid_values></valid_values>
     <default_value></default_value>
     <values match="last">
-      <value compset="_CLM50%[^_]*CMIP6DECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
-      <value compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
+      <value                  compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
+      <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_nociso_deck</value>
+      <value                  compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
+      <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_nociso_deck</value>
     </values>
     <group>run_component_clm</group>
     <file>env_case.xml</file>
