@@ -153,11 +153,6 @@ contains
     if (fract_spread_grass > 1 .or. fract_spread_grass < 0) then
        call endrun(msg="ERROR invalid fract_spread_grass")
     end if
-
-    
-    !call mpi_bcast(fan_to_bgc_crop, 1, MPI_LOGICAL, 0, mpicom, ierr)
-    !call mpi_bcast(fan_to_bgc_veg, 1, MPI_LOGICAL, 0, mpicom, ierr)
-    !call mpi_bcast(use_fan, 1, MPI_LOGICAL, 0, mpicom, ierr)
     
   end subroutine fan_readnml
 
@@ -937,6 +932,7 @@ contains
   !************************************************************************************
   
   subroutine update_summary(ns, nf, filter_soilc, num_soilc)
+    ! Collect FAN fluxes and pools into aggregates used by the NitrogenBalanceCheck.
     use ColumnType, only : col
     use LandunitType   , only: lun
     use landunit_varcon, only : istcrop
@@ -962,23 +958,18 @@ contains
        if (lun%itype(col%landunit(c)) == istcrop) then
           ! no grazing, man_n_appl is from the same column and not counted as input
           fluxin = nf%man_n_mix_col(c) + nf%fert_n_appl_col(c)
-          print *, 'crop', fc, fluxin
        else
           ! no barns or fertilization. man_n_appl is transferred from crop columns and not
           ! included in the other inputs.
           fluxin = nf%man_n_grz_col(c) + nf%man_n_appl_col(c)
-          print *, 'veg', fc, fluxin
        end if
 
        flux_loss = nf%nh3_man_app_col(c) + nf%nh3_grz_col(c) + nf%manure_runoff_col(c) &
             + nf%nh3_stores_col(c) + nf%nh3_barns_col(c) &
             + nf%nh3_fert_col(c) + nf%fert_runoff_col(c)
-       print *, 'flux_loss', flux_loss
        fluxout = nf%fert_no3_prod_col(c) + nf%fert_nh4_to_soil_col(c) &
             + nf%manure_no3_prod_col(c) + nf%manure_nh4_to_soil_col(c) &
             + nf%man_n_transf_col(c) + flux_loss
-       print *, 'flux_out', fluxout
-       print *, 'transf', nf%man_n_transf_col(c)
        
        nf%fan_totnin_col(c) = fluxin
        nf%fan_totnout_col(c) = fluxout
@@ -999,19 +990,19 @@ contains
     type(soilbiogeochem_nitrogenflux_type), intent(inout) :: sbgc_nf
 
     integer :: c, fc
-    real(r8) :: fan_nitr
+    real(r8) :: fan_nflux
 
     if (.not. (fan_to_bgc_veg .or. fan_to_bgc_crop)) return
     
     do fc = 1, num_soilc
        c = filter_soilc(fc)
-       fan_nitr &
+       fan_nflux &
             = sbgc_nf%fert_no3_prod_col(c) + sbgc_nf%fert_nh4_to_soil_col(c) &
             + sbgc_nf%manure_no3_prod_col(c) + sbgc_nf%manure_nh4_to_soil_col(c)
        if (lun%itype(col%landunit(c)) == istcrop .and. fan_to_bgc_crop) then
-          sbgc_nf%fert_to_sminn_col(c) = fan_nitr
+          sbgc_nf%fert_to_sminn_col(c) = fan_nflux
        else if (lun%itype(col%landunit(c)) == istsoil .and. fan_to_bgc_veg) then
-          sbgc_nf%fert_to_sminn_col(c) = fan_nitr
+          sbgc_nf%fert_to_sminn_col(c) = fan_nflux
        end if
     end do
     
