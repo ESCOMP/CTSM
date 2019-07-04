@@ -191,7 +191,7 @@ contains
     end if
     
   end subroutine CNNDeposition
-  
+
   !-----------------------------------------------------------------------
   subroutine CNFreeLivingFixation(num_soilc, filter_soilc, &
        waterfluxbulk_inst, soilbiogeochem_nitrogenflux_inst)

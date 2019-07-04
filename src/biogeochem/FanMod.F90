@@ -135,10 +135,10 @@ contains
 
     ! Base rate by Nernst-Haskell equation, see Poling et al., 2000, The Properties of
     ! Gases and Liquids.
-    kaq_base = 1e-4 * (gascnst*tg / (2*faraday**2)) / (1/lp + 1/lm)
+    !kaq_base = 1e-4 * (gascnst*tg / (2*faraday**2)) / (1/lp + 1/lm)
 
     ! Van Der Molen 1990 fit of the base rate.
-    !kaq_base = 9.8e-10_r8 * 1.03_r8 ** (Tg-273.0_r8)
+    kaq_base = 9.8e-10_r8 * 1.03_r8 ** (Tg-273.14_r8)
 
     diff = kaq_base * (theta**pw) / (thetasat**2)
 
@@ -291,8 +291,8 @@ contains
     ! The state of infiltration is detemined from the amounts water on surface and in soil.
     ! Positive flux means loss of TAN.
     implicit none
-    real(r8), intent(in) :: water_surf    ! water in (surface , subsurface), m
-    real(r8), intent(in) :: water_subsurf ! water in (surface , subsurface), m
+    real(r8), intent(in) :: water_surf    ! water (slurry) on surface, m
+    real(r8), intent(in) :: water_subsurf ! water (slurry) below surface in addition to water already in soil, m
     real(r8), intent(in) :: mtan   ! TAN, mass units / m2, surface + subsurface
     real(r8), intent(out) :: fluxes(fluxes_size) ! TAN fluxes, see top of the module
     real(r8), intent(in) :: Hconc    ! H+ concentration, -log10(pH)
@@ -309,19 +309,20 @@ contains
 
     real(r8) :: water_tot, cnc, air, depth_soilsat, diffusivity_water, diffusivity_satsoil, halfwater, insoil, r1, dz2, inwater
     real(r8) :: r2, volat_rate, kno3, knh3, depth_lower, fract_nh4, r2a, r2b, g3, gdown, rsld, rkl, rkg
+    real(r8) :: rsl, rssup, rssdn
 
-    water_tot = water_surf + water_subsurf
-
-    air = thetasat - theta
+    air = max(thetasat - theta, 0.001)
     ! depth of the saturated soil layer below the surface pool
-    depth_soilsat = water_subsurf / air 
+    depth_soilsat = water_subsurf / air
+    water_tot = water_surf + thetasat*depth_soilsat
 
     cnc = mtan / water_tot
 
     fluxes(iflx_roff) = cnc * runoff
     fluxes(iflx_soilq) = cnc * perc
 
-    diffusivity_water = 9.8e-10_r8 * 1.03_r8 ** (tg - SHR_CONST_TKFRZ)
+    diffusivity_water = eval_diffusivity_liq_mq(1.0_r8, 1.0_r8, tg)
+
     diffusivity_satsoil = eval_diffusivity_liq_mq(thetasat, thetasat, tg) * thetasat
     !diffusivity_satsoil = eval_diffusivity_liq_m03(thetasat, thetasat, tg, bsw) * thetasat
     
@@ -342,6 +343,10 @@ contains
 
     r1 = inwater / diffusivity_water + insoil /diffusivity_satsoil
 
+    rsl = min(halfwater, water(1)) / diffusivity_water
+    rssup = max(halfwater - water(1), 0.0_r8) / (thetasat * diffusivity_satsoil)
+    r1 = rsl + rssup
+
     depth_lower = max(soildepth_reservoir, depth_soilsat*1.5)
 
     call partition_tan(tg, Hconc, 1.0_r8, 0.0_r8, 0.0_r8, knh3, fract_nh4=fract_nh4)
@@ -353,21 +358,20 @@ contains
         
     ! lower soil resistance consists of liquid diffusion slurry, in saturated layer, and
     ! parallel liquid/gas diffusion below the saturated layer. 
-    r2a = (water_surf-inwater) / diffusivity_water
-    r2b = (depth_soilsat-insoil) / diffusivity_satsoil
+    r2a = 0.0
+    rssdn = halfwater / (thetasat * diffusivity_satsoil)
     dz2 = depth_lower-depth_soilsat
 
     Rkl = dz2 / (eval_diffusivity_liq_mq(theta, thetasat, tg)*theta)
     Rkg = dz2 / (eval_diffusivity_gas_mq(theta, thetasat, tg)*(thetasat-theta))
-    Rsld = r2a + r2b
+    Rsld = r2a + rssdn
 
     gdown = -(Rkg + Rkl*knh3)/((Rkg*(Rkl + Rsld) + Rkl*Rsld*knh3)*(kads*(theta - 1) - thetasat))
-
     fluxes(iflx_soild) = cnc * gdown
     
     ! nitrification
     kno3 = eval_no3prod_v2(thetasat, thetasat, tg)
-    fluxes(iflx_no3) = kno3 * mtan * fract_nh4
+    fluxes(iflx_no3) = kno3 * mtan
     
   end subroutine eval_fluxes_slurry
 
@@ -600,7 +604,7 @@ contains
     integer :: indpl
     
     real(r8), parameter :: dz_layer = 0.02 ! thickness of the volatilization layer, m
-    real(r8), parameter :: kads = 0.0_r8   ! distriution coefficient kads = [TAN (s)] / [TAN (aq)], dimensionless
+    real(r8), parameter :: kads = 1.0_r8   ! distriution coefficient kads = [TAN (s)] / [TAN (aq)], dimensionless
 
     if (pools_size < 4 .or. fluxes_size < 5) then
        status = err_bad_arg
@@ -617,7 +621,8 @@ contains
     ! Pool S0
     !
     evap_slurry = get_evap_pool(tg, ratm, qbot)
-    infiltr_slurry = max(depth_slurry / poolranges(1), precip)
+    !infiltr_slurry = max(depth_slurry / poolranges(1), precip)
+    infiltr_slurry = depth_slurry / poolranges(1)
     infiltrated = depth_slurry * infiltr_slurry / (infiltr_slurry + evap_slurry)
     ! Slurry water (in addition to soil water, theta) on surface and in soil. Represents
     ! mean over pool S0.
@@ -732,7 +737,7 @@ contains
     integer :: indpl
     
     real(r8), parameter :: water_relax_t = 24*3600.0_r8
-    real(r8), parameter :: kads = 0.0_r8
+    real(r8), parameter :: kads = 1.0_r8
     logical :: fixed
 
     if (size_fluxes < 5) then
@@ -945,7 +950,7 @@ contains
   end function eval_perc
 
   !************************************************************************************
-  
+
   subroutine eval_fluxes_storage(nitr_input, barntype, tempr_outside, windspeed, fract_direct, &
        volat_coef_barns, volat_coef_stores, &
        tan_fract_excr, fluxes_nitr, fluxes_tan, fluxes_size, status)
@@ -1031,7 +1036,8 @@ contains
     end if
     
     flux_barn = flux_avail_tan * volat_coef_barns * tempr_barns**pA * vent_barns**pB
-    flux_barn = min(flux_avail_tan, flux_barn)
+    flux_barn = min(flux_avail_tan, flux_barn) ! hopefully uncommon
+
     fluxes_tan(iflx_air_barns) = flux_barn
     fluxes_nitr(iflx_air_barns) = flux_barn
     
@@ -1074,7 +1080,6 @@ contains
           status = err_balance_nitr
           return
        end if
-
        if (abs(sum(fluxes_tan) - nitr_input*tan_fract_excr) > 1e-5*nitr_input) then
           status = err_balance_tan
           return
