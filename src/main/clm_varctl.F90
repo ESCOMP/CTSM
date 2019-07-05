@@ -264,7 +264,7 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical,           public :: use_bedrock = .false. ! true => use spatially variable soil depth
-  character(len=16), public :: soil_layerstruct = '10SL_3.5m'
+  character(len=256), public :: soil_layerstruct = '10SL_3.5m'
 
   !----------------------------------------------------------
   ! plant hydraulic stress switch

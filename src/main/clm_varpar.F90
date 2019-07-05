@@ -158,6 +158,9 @@ contains
     else if ( soil_layerstruct == '5SL_3m' ) then
        nlevsoi     =  5
        nlevgrnd    =  5
+    else if (soil_layerstruct(1:5) == 'user:') then
+       read(soil_layerstruct(6:7),*) nlevsoi
+       nlevgrnd = nlevsoi
     else
        write(iulog,*) subname//' ERROR: Unrecognized soil layer structure: ', trim(soil_layerstruct)
        call shr_sys_abort(subname//' ERROR: Unrecognized soil layer structure')
