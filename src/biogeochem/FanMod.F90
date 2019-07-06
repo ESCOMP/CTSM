@@ -15,6 +15,7 @@ module FanMod
   !
 
 #ifdef _PYMOD_
+  ! This cpp flag is inteded for compiling FAN into a python module with f2py. 
   use qsatmod
 #else
   use shr_const_mod
@@ -22,14 +23,11 @@ module FanMod
   use QSatMod                         , only : QSat
 #endif
   implicit none
-
-#ifdef _REALPR_
-  integer, parameter :: r8 = 8
-#endif
   
 #ifdef _PYMOD_
   public
   ! Define physical constants here to avoid dependency on CESM.
+  integer, parameter :: r8 = 8
   real(r8), parameter :: SHR_CONST_BOLTZ   = 1.38065e-23
   real(r8), parameter :: SHR_CONST_AVOGAD  = 6.02214e26 ! molecules per kmole
   real(r8), parameter :: SHR_CONST_RGAS    = SHR_CONST_AVOGAD*SHR_CONST_BOLTZ ! universal gas constant in J kmole-1 K-1
@@ -38,7 +36,6 @@ module FanMod
   real(r8), parameter :: SHR_CONST_PSTD    = 101325.0_R8     ! standard pressure ~ pascals
   real(r8), parameter :: SHR_CONST_TKFRZ   = 273.15_R8       ! freezing T of fresh water          ~ K
   real(r8), parameter :: SHR_CONST_MWDAIR  = 28.966_R8       ! molecular weight dry air ~ kg/kmole
-
 #else
   private
   public update_org_n
@@ -73,7 +70,7 @@ module FanMod
   
   real(r8), parameter, public :: water_relax_t = 24*3600.0_r8
 
-  logical, parameter, public :: debug_fan = .true.
+  logical, parameter, public :: debug_fan = .false.
   
 contains
 
@@ -243,9 +240,6 @@ contains
 
     fract_aq = theta / (air*KNH3 + theta + kads*(1.0_r8-theta-air))
     if (present(fract_nh4)) fract_nh4 = fract_aq * Hconc / (KNH4 + Hconc)
-    
-    !if (present(fract_nh3g)) fract_nh3g = air  * KNH3 / (air*KNH3 + theta)
-    !if (present(fract_nh3aq)) fract_nh3aq = fract_aq * (1.0_r8 - Hconc / (KNH4 + Hconc))
 
   end subroutine partition_tan
 
@@ -257,7 +251,6 @@ contains
 
     real(r8) :: stf, wmr, smrf, mNH4, soil_dens
 
-    !real(r8), parameter :: soil_dens = 1400.0_r8 ! Soil density, kg/m3
     real(r8), parameter :: water_dens = SHR_CONST_RHOFW
     real(r8), parameter :: rmax = 1.16e-6_r8   ! Maximum rate of nitrification, s-1
     real(r8), parameter :: tmax = 313.0       ! Maximm temperature of microbial activity, K
@@ -351,7 +344,6 @@ contains
     volat_rate = &
          knh3/(-ratm*kads*theta + ratm*kads + ratm*thetasat - r1*kads*knh3*theta + r1*kads*knh3 + r1*knh3*thetasat)
     
-    !volat_rate = 1.0_r8 / (r1 + ratm / knh3) ! conductance from aqueous TAN in slurry to NH3 in atmosphere
     fluxes(iflx_air) = volat_rate*cnc
         
     ! lower soil resistance consists of liquid diffusion slurry, in saturated layer, and
@@ -402,7 +394,8 @@ contains
     real(r8) :: cnc_srfg, cnc_srfaq, cnc_soilaq, cnc_soilg, dz, rsl, rsg
     real(r8) :: fract_gas, fract_nh3aq, fract_nh4, fract_aq, volatility
 
-    real(r8) :: kads ! distribution coefficient, unitless ((g NH4 adsorbed / m3 soil solid) / (g NH4 dissolved / m3 soil water))
+    ! distribution coefficient, unitless ((g NH4 adsorbed / m3 soil solid) / (g NH4 dissolved / m3 soil water))
+    real(r8) :: kads 
 
     water_tot = water_manure + theta*soildepth
     if (water_tot < 1e-9) then
@@ -675,10 +668,8 @@ contains
     call update_pools(tanpools(2:4), fluxes(1:5,2:4), dt, 3, 5)
     
     if (debug_fan .and. any(tanpools < -1e-15)) then
-       !if (any(tanpools < -1e-3)) then
        status = err_negative_tan * 10
        return
-       !end if
     end if
 
     if (debug_fan) then
@@ -688,7 +679,7 @@ contains
        end if
 
        if (abs(sum(tanpools - tanpools_old) - (-sum(fluxes) + tandep + tanprod)*dt + garbage) &
-          > max(sum(tanpools_old)*1e-2, 1e-4)) then
+            > max(sum(tanpools_old)*1e-2, 1e-4)) then
           status = err_balance_tan
           return
        end if

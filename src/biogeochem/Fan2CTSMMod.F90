@@ -247,9 +247,6 @@ contains
          cnv_nf%fert_patch(bounds%begp:bounds%endp), &
          nf%fert_n_appl_col(bounds%begc:bounds%endc))
 
-    !call p2c(bounds, num_soilc, filter_soilc, &
-    !     cnv_nf%manu_patch(bounds%begp:bounds%endp), &
-    !     nf%man_n_appl_col(bounds%begc:bounds%endc))
     nf%man_n_appl_col(bounds%begc:bounds%endc) = 0.0_r8
     
     if (do_balance_checks) then
@@ -350,6 +347,7 @@ contains
                 exit
              end do
              if (p == col%patchf(c) + 1) then
+                call endrun(msg='Could not find any useful pft for ram1')
                 ! Nothing found. We shouldn't be here.
                 ratm = 150.0_r8
              end if
@@ -494,7 +492,6 @@ contains
 
        ! Fertilizer
        !
-
        fert_total = nf%fert_n_appl_col(c)
        
        fract_urea = atm2lnd_inst%forc_ndep_urea_grc(g)
@@ -601,14 +598,7 @@ contains
        write(iulog, *) 'SoilPH check:', soilph_min, soilph_max, def_ph_count
     end if
 
-    !old = ns%fan_totn_col(filter_soilc(1:num_soilc))
     call update_summary(ns, nf, filter_soilc, num_soilc)
-
-    !call debug_balance(ns, nf, old, filter_soilc(1:num_soilc))
-    
-    !do fc = 1, num_soilc
-    !   call debug_balance(ns, nf, old, (/fc/))
-    !end do
     
     end associate
 
