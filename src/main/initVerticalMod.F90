@@ -291,8 +291,8 @@ contains
           dzsoi(5) = 1.0_r8
        else if (soil_layerstruct(1:5) == 'user:') then
           do j = 1, nlevgrnd
-             ! read string indices 8 to 9, 11 to 12, 14 to 15, and so on
-             read(soil_layerstruct(3*(j+2)-1:3*(j+2)),*) dzsoi(j)
+             ! read string indices 8 to 11, 13 to 16, 18 to 21, and so on
+             read(soil_layerstruct(5*j+3:5*j+6),*) dzsoi(j)
           end do
        end if  ! soil_layerstruct options
        
