@@ -158,6 +158,11 @@ OPTIONS
      -dynamic_vegetation      Toggle for dynamic vegetation model. (default is off)
                               (can ONLY be turned on when BGC type is 'cn' or 'bgc')
                               This turns on the namelist variable: use_cndv
+     -fan "mode"              Set how and if FAN is run: atm|soil|full|on|off
+                              If "on", FAN is enabled but not connected to atmosphere or
+                              soil biogeochemistry. If "full", both connections are
+                              active. The soil and atmosphere coupling can be enabled
+                              selectively with the "soil" and "atm" modes.
      -fire_emis               Produce a fire_emis_nl namelist that will go into the
                               "drv_flds_in" file for the driver to pass fire emissions to the atm.
                               (Note: buildnml copies the file for use by the driver)
@@ -2869,17 +2874,15 @@ sub setup_logic_fan {
   #
    my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
    my $fan_mode = $opts->{'fan'};
-   print "FAN MODE: $fan_mode\n";
+
    if ($fan_mode eq 'default') { $fan_mode = 'off'; }
 
    if (!($fan_mode =~ /atm|soil|full|on|off/)) {
        $log->fatal_error("fan_mode not one of atm, soil, full, on, off\n" );
    }
-   #print "USE_FAN 1:", $nl->get_value('use_fan');
 
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fan',
 	       'fan_mode'=>$fan_mode );
-   print "USE_FAN 2:", $nl->get_value('use_fan');
 
    $nl_flags->{'use_fan'} = $nl->get_value('use_fan');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_nh3_to_atm',
@@ -2887,29 +2890,23 @@ sub setup_logic_fan {
    $nl_flags->{'fan_nh3_to_atm'} = $nl->get_value('fan_nh3_to_atm');
 
    if ( !($fan_mode eq 'off') ) {
-    
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_mapalgo');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_fan', 
 		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_fan', 
 		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
-
-    # Set align year, if first and last years are different
+       # Set align year, if first and last years are different
        if ( $nl->get_value('stream_year_first_fan') != $nl->get_value('stream_year_last_fan') ) {
 	   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_fan', 
 		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
        }
-
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_fan');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_crop',
 		   'fan_mode'=>$fan_mode);
-       #$nl_flags->{'fan_to_bgc_crop'} = $nl->get_value('fan_to_bgc_crop');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_veg',
 		   'fan_mode'=>$fan_mode);
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fract_spread_grass',
 		   'fan_mode'=>$fan_mode);
-
-
    }
    
    if ( &value_is_true( $nl_flags->{'use_ed'} ) && &value_is_true( $nl_flags->{'use_fan'} ) ) {
