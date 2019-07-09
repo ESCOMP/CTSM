@@ -68,7 +68,7 @@ module FanMod
 
   integer, parameter, public :: subst_tan = 1, subst_urea = 2
   
-  real(r8), parameter, public :: water_relax_t = 24*3600.0_r8
+  !real(r8), parameter, public :: water_relax_t = 24*3600.0_r8
 
   logical, parameter, public :: debug_fan = .false.
   
@@ -287,7 +287,6 @@ contains
     real(r8), intent(in) :: water_surf    ! water (slurry) on surface, m
     real(r8), intent(in) :: water_subsurf ! water (slurry) below surface in addition to water already in soil, m
     real(r8), intent(in) :: mtan   ! TAN, mass units / m2, surface + subsurface
-    real(r8), intent(out) :: fluxes(fluxes_size) ! TAN fluxes, see top of the module
     real(r8), intent(in) :: Hconc    ! H+ concentration, -log10(pH)
     real(r8), intent(in) :: tg       ! soil temperature, K
     real(r8), intent(in) :: ratm     ! atmospheric resistance, s/m
@@ -298,6 +297,8 @@ contains
     real(r8), intent(in) :: bsw
     real(r8), intent(in) :: kads     ! dimensionless distribution coefficient, kads = [TAN (s)] / [TAN (aq)]
     integer, intent(in) :: fluxes_size
+    real(r8), intent(out) :: fluxes(fluxes_size) ! TAN fluxes, see top of the module
+
     !real(r8), intent(in) :: dt       ! timestep
 
     real(r8) :: water_tot, cnc, air, depth_soilsat, diffusivity_water, diffusivity_satsoil, halfwater, insoil, r1, dz2, inwater
@@ -358,7 +359,7 @@ contains
     fluxes(iflx_soild) = cnc * gdown
     
     ! nitrification
-    kno3 = eval_no3prod_v2(thetasat, thetasat, tg)
+    kno3 = eval_no3prod(thetasat, thetasat, tg)
     fluxes(iflx_no3) = kno3 * mtan
     
   end subroutine eval_fluxes_slurry
@@ -373,7 +374,6 @@ contains
     implicit none
     real(r8), intent(in) :: mtan ! TAN (=NH4 (aq) + NH3 (g) + NH3 (aq)), mass units / m2
     real(r8), intent(in) :: water_manure ! water in the soil pool *in addition to* background soil water
-    real(r8), intent(out) :: fluxes(fluxes_size)   ! nitrogen fluxes, mass units / m2 / s, see top of module
     real(r8), intent(in) :: Hconc        ! Hydrogen ion concentration, mol/l
     real(r8), intent(in) :: tg           ! soil temperature, K
     real(r8), intent(in) :: ratm         ! atmospheric resistance, s/m
@@ -384,8 +384,9 @@ contains
     real(r8), intent(in) :: bsw          ! b in the soilwater retention curve; needed if the Moldrup 2003 diffusivities are used.
     real(r8), intent(in) :: kads_nh4     ! distribution coefficient kads = [TAN (s)] / [TAN (aq)]. Unit m3(water) / m3(soil).
     real(r8), intent(in) :: soildepth    ! thickness of the volatlization layer
-    integer, intent(in) :: substance     ! subst_tan or subst_urea.
     integer, intent(in) :: fluxes_size
+    real(r8), intent(out) :: fluxes(fluxes_size)   ! nitrogen fluxes, mass units / m2 / s, see top of module
+    integer, intent(in) :: substance     ! subst_tan or subst_urea.
     integer, intent(out) :: status       ! error flag
     
     real(r8) :: water_tot, cnc, air, henry_eff, dsl, dsg, dstot, dz2, no3_rate, volat_rate, theta_tot, beta
@@ -575,21 +576,21 @@ contains
     real(r8), intent(in) :: runoff    ! surface runoff flux, m/s
     real(r8), intent(in) :: tandep    ! TAN input flux, gN/m2/s
     real(r8), intent(in) :: tanprod   ! TAN produced in the column, added to aged TAN pool
-    real(r8), intent(in) :: depth_slurry ! Initial slurry depth, m
     real(r8), intent(in) :: bsw
+    real(r8), intent(in) :: depth_slurry ! Initial slurry depth, m
     ! age ranges of TAN pools S0, S1, S2, S3 sec. Slurry infiltration time is inferred from S0. 
+    integer, intent(in) :: pools_size ! size of the tanpools array. >= 4
     real(r8), intent(in) :: poolranges(pools_size)
     real(r8), intent(inout) :: tanpools(pools_size) ! TAN pools gN/m2
+    integer, intent(in) :: fluxes_size  ! size of the fluxes array. >= 5
     real(r8), intent(out) :: fluxes(fluxes_size, pools_size) ! TAN fluxes, gN/m2/s (type of flux, pool)
     real(r8), intent(in) :: Hconc(pools_size) ! H+ concentration
     real(r8), intent(out) :: garbage     ! over-aged TAN occurring during the step, gN/m.
     real(r8), intent(in) :: dt ! timestep, sec, >0
-    integer, intent(in) :: pools_size ! size of the tanpools array. >= 4
-    integer, intent(in) :: fluxes_size  ! size of the fluxes array. >= 5
     integer, intent(out) :: status ! return status, 0 = good
 
     real(r8) :: infiltr_slurry, infiltrated, percolated, evap_slurry, water_slurry(2), perc_slurry_mean, waterloss
-    real(r8) :: percolation, water_soil, age_prev, water_in_layer, tanpools_old(4)
+    real(r8) :: percolation, water_soil, age_prev, water_in_layer, tanpools_old(4), water_relax_t
     integer :: indpl
     
     real(r8), parameter :: dz_layer = 0.02 ! thickness of the volatilization layer, m
@@ -648,13 +649,14 @@ contains
     !
     age_prev = 0 ! for water evaluations, consider beginning of S1 as the starting point
     water_in_layer = infiltrated - percolated ! water in layer just after slurry has infiltrated
+    water_relax_t = poolranges(2) ! relax time is for soil moisture after infiltration ie. the first "normal" N pool.
     do indpl = 2, 4
        ! water content lost during the aging
-       waterloss = water_in_layer * (waterfunction(age_prev) - waterfunction(age_prev+poolranges(indpl)))
+       waterloss = water_in_layer * (waterfunction(age_prev, water_relax_t) - waterfunction(age_prev+poolranges(indpl), water_relax_t))
        percolation = eval_perc(waterloss, evap, precip, watertend, poolranges(indpl))
 
        ! water content at the mean age of the pool
-       water_soil = water_in_layer * waterfunction(age_prev + 0.5*poolranges(indpl))
+       water_soil = water_in_layer * waterfunction(age_prev + 0.5*poolranges(indpl), water_relax_t)
        call eval_fluxes_soil(tanpools(indpl), water_soil, Hconc(indpl), tg, &
             & ratm, theta, thetasat, percolation, runoff, bsw, kads, &
             & dz_layer, fluxes(1:5,indpl), subst_tan, 5, status)
@@ -711,19 +713,18 @@ contains
     real(r8), intent(in) :: Hconc(numpools)       ! H+ concentration, mol/l (npools)
     real(r8), intent(in) :: dz_layer ! thickness of the volatilization layer, m
     real(r8), intent(inout) :: tanpools(numpools) ! TAN pools gN/m2 (npools)
+    integer, intent(in) :: numpools
+    integer, intent(in) :: size_fluxes
     real(r8), intent(out) :: fluxes(size_fluxes,numpools) ! TAN fluxes, gN/m2/s (type of flux, pool)
     real(r8), intent(out) :: garbage     ! "over-aged" TAN produced during the step, gN/m.
     real(r8), intent(in) :: dt ! timestep, sec, >0
-    integer, intent(in) :: numpools
-    integer, intent(in) :: size_fluxes
     integer, intent(out) :: status ! 0 == OK
     
     real(r8) :: fraction_layer, fraction_reservoir, fraction_runoff, waterloss, direct_runoff
     real(r8) :: percolation, water_soil, age_prev, tandep_remaining, direct_percolation, water_into_layer
-    real(r8) :: tanpools_old(size(tanpools)), imbalance
+    real(r8) :: tanpools_old(size(tanpools)), imbalance, water_relax_t
     integer :: indpl
     
-    real(r8), parameter :: water_relax_t = 24*3600.0_r8
     real(r8), parameter :: kads = 1.0_r8
     logical :: fixed
 
@@ -783,14 +784,14 @@ contains
           return
        end if
     end if
-    
+    water_relax_t = poolranges(1)
     age_prev = 0 ! for water evaluations, consider beginning of S1 as the starting point
     do indpl = 1, size(tanpools)
        ! water content lost during the aging
-       waterloss = water_into_layer * (waterfunction(age_prev) - waterfunction(age_prev+poolranges(indpl)))
+       waterloss = water_into_layer * (waterfunction(age_prev, water_relax_t) - waterfunction(age_prev+poolranges(indpl), water_relax_t))
        percolation = eval_perc(waterloss, evap, precip, watertend, poolranges(indpl))
        ! water content at the middle of the age range
-       water_soil = water_into_layer * waterfunction(age_prev + 0.5*poolranges(indpl))
+       water_soil = water_into_layer * waterfunction(age_prev + 0.5*poolranges(indpl), water_relax_t)
        call eval_fluxes_soil(tanpools(indpl), water_soil, Hconc(indpl), tg, &
             & ratm, theta, thetasat, percolation, runoff, bsw, kads, &
             & dz_layer, fluxes(1:5,indpl), subst_tan, 5, status)
@@ -898,17 +899,17 @@ contains
   ! Waterfunction gives the relaxation of the moisture perturbation normalized between 0
   ! and 1. Either exponential or linear.
   
-  function waterfunction_exp(pool_age) result(water)
+  function waterfunction_exp(pool_age, water_relax_t) result(water)
     implicit none
-    real(r8), intent(in) :: pool_age ! sec
+    real(r8), intent(in) :: pool_age, water_relax_t ! sec
     real(r8) :: water
 
     water = exp(-pool_age / water_relax_t)
   end function waterfunction_exp
 
-  function waterfunction(pool_age) result(water)
+  function waterfunction(pool_age, water_relax_t) result(water)
     implicit none
-    real(r8), intent(in) :: pool_age ! sec
+    real(r8), intent(in) :: pool_age, water_relax_t ! sec
     real(r8) :: water
 
     if (pool_age > water_relax_t) then
@@ -957,10 +958,10 @@ contains
     real(r8), intent(in) :: fract_direct ! fraction of manure N applied before storage
     real(r8), intent(in) :: volat_coef_barns, volat_coef_stores ! normalization coefficients, unitless
     real(r8), intent(in) :: tan_fract_excr ! fraction of NH4 nitrogen in excreted N
+    integer, intent(in) :: fluxes_size
     real(r8), intent(out), dimension(fluxes_size) :: fluxes_nitr, fluxes_tan ! nitrogen and TAN fluxes, gN/s
                                                            ! (/m2). See top of module for
                                                            ! indices.
-    integer, intent(in) :: fluxes_size
     integer, intent(out) :: status ! see top of the module.
 
     ! parameters for the Gyldenkaerne et al. parameterization
@@ -1092,6 +1093,7 @@ contains
     ! unavailable N fractions, and update the organic N pools. In addition, evaluate the
     ! flux of organic N into the soil pools according to a fixed time constant set below.
     implicit none
+    integer, intent(in) :: size_pools
     real(r8), intent(in) :: flux_input(size_pools) ! organic N entering the pools. gN/m2/s. For
                                           ! indices see at top of the module.
     real(r8), intent(in) :: tg          ! ground temperature, K
@@ -1100,7 +1102,6 @@ contains
     real(r8), intent(in) :: dt       ! timestep, sec
     real(r8), intent(out) :: tanprod(size_pools) ! Flux of TAN formed, both pools
     real(r8), intent(out) :: soilflux  ! Flux of organic nitrogen to soil
-    integer, intent(in) :: size_pools
     integer, intent(out) :: status
     
     real(r8) :: rate_res, rate_avail, TR, rmoist, psi
@@ -1153,13 +1154,13 @@ contains
     real(r8), intent(in) :: runoff    ! surface runoff flux, m/s
     real(r8), intent(in) :: ndep ! nitrogen input, mass unit / s
     real(r8), intent(in) :: bsw  ! b in the soil water retention curve
+    integer, intent(in) :: numpools 
+    integer, intent(in) :: fluxes_size 
     real(r8), intent(inout) :: pools(numpools) ! nitrogen pools mass / m2
     real(r8), intent(out) :: fluxes(fluxes_size, numpools) ! needs one extra for the to_tan flux
     real(r8), intent(in) :: ranges(numpools) ! pool age extents, s
     real(r8), intent(out) :: garbage ! nitrogen in patches aged beyond the oldest pool. mass / m2 
     real(r8), intent(in) :: dt ! time step, s
-    integer, intent(in) :: numpools 
-    integer, intent(in) :: fluxes_size 
     integer, intent(out) :: status ! see top of module
 
     real(r8), parameter :: rate = 4.83e-6 ! urea decomposition, 1/s
