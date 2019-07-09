@@ -36,6 +36,7 @@ module SnowHydrologyMod
   use ColumnType      , only : column_type, col
   use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
   use clm_time_manager, only : get_step_size, get_nstep
+  use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -63,10 +64,12 @@ module SnowHydrologyMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: BulkDiag_NewSnowDiagnostics ! Update various snow-related diagnostic quantities to account for new snow
   private :: UpdateState_AddNewSnow ! Update h2osno_no_layers or h2osoi_ice based on new snow
-  private :: Bulk_RemoveSnowFromThawedWetlands ! Remove snow from thawed wetlands, for bulk-only quantities
+  private :: BuildFilter_ThawedWetlandThinSnowpack ! Build a column-level filter of thawed wetland columns with a thin snowpack
   private :: UpdateState_RemoveSnowFromThawedWetlands ! For bulk or one tracer: remove snow from thawed wetlands, for state variables
-  private :: Bulk_InitializeSnowPack ! Initialize an explicit snow pack in columns where this is warranted based on snow depth, for bulk-only quantities
+  private :: Bulk_RemoveSnowFromThawedWetlands ! Remove snow from thawed wetlands, for bulk-only quantities
+  private :: BuildFilter_SnowpackInitialized ! Build a column-level filter of columns where an explicit snow pack needs to be initialized
   private :: UpdateState_InitializeSnowPack ! For bulk or one tracer: initialize water state variables for columns in which an explicit snow pack is being newly initialized
+  private :: Bulk_InitializeSnowPack ! Initialize an explicit snow pack in columns where this is warranted based on snow depth, for bulk-only quantities
   private :: Combo                  ! Returns the combined variables: dz, t, wliq, wice.
   private :: MassWeightedSnowRadius ! Mass weighted snow grain size
   !
@@ -290,9 +293,9 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: i     ! index of water tracer or bulk
-    logical  :: wetland_thin_snowpack_removed(bounds%begc:bounds%endc) ! true for wetland columns where we remove the thin (no-layer) snow pack
-    logical  :: snowpack_initialized(bounds%begc:bounds%endc)          ! true for columns where an explicit snow pack is initialized
-    real(r8) :: dtime                                        ! land model time step (sec)
+    real(r8) :: dtime ! land model time step (sec)
+    type(filter_col_type) :: thawed_wetland_thin_snowpack_filterc ! column filter: thawed wetland columns with a thin (no-layer) snow pack
+    type(filter_col_type) :: snowpack_initialized_filterc         ! column filter: columns where an explicit snow pack is initialized
     !-----------------------------------------------------------------------
 
     associate( &
@@ -341,53 +344,66 @@ contains
 
     ! ------------------------------------------------------------------------
     ! Remove snow from thawed wetlands
+    !
+    ! BUG(wjs, 2019-06-05, ESCOMP/ctsm#735) It seems like the intended behavior here is to
+    ! zero out the entire snow pack. Currently, however, this only zeros out a very thin
+    ! (zero-layer) snow pack. For now, I'm adding an snl==0 conditional to make this
+    ! behavior explicit; long-term, we'd like to change this to actually zero out the
+    ! whole snow pack. (At that time, this code block should probably be moved to a more
+    ! appropriate home, as noted in comments in issue #735.)
     ! ------------------------------------------------------------------------
 
-    call Bulk_RemoveSnowFromThawedWetlands(bounds, num_nolakec, filter_nolakec, &
+    call BuildFilter_ThawedWetlandThinSnowpack(bounds, num_nolakec, filter_nolakec, &
          ! Inputs
-         lun                           = lun, &
-         t_grnd                        = temperature_inst%t_grnd_col(begc:endc), &
-         snl                           = col%snl(begc:endc), &
+         t_grnd        = temperature_inst%t_grnd_col(begc:endc), &
+         lun_itype_col = col%lun_itype(begc:endc), &
+         snl           = col%snl(begc:endc), &
          ! Outputs
-         wetland_thin_snowpack_removed = wetland_thin_snowpack_removed(begc:endc), &
-         snow_depth                    = b_waterdiagnostic_inst%snow_depth_col(begc:endc))
+         thawed_wetland_thin_snowpack_filterc = thawed_wetland_thin_snowpack_filterc)
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
        associate(w => water_inst%bulk_and_tracers(i))
-       call UpdateState_RemoveSnowFromThawedWetlands(bounds, num_nolakec, filter_nolakec, &
-            ! Inputs
-            wetland_thin_snowpack_removed = wetland_thin_snowpack_removed(begc:endc), &
+       call UpdateState_RemoveSnowFromThawedWetlands(bounds, thawed_wetland_thin_snowpack_filterc, &
             ! Outputs
-            h2osno_no_layers              = w%waterstate_inst%h2osno_no_layers_col(begc:endc))
+            h2osno_no_layers = w%waterstate_inst%h2osno_no_layers_col(begc:endc))
        end associate
     end do
+
+    call Bulk_RemoveSnowFromThawedWetlands(bounds, thawed_wetland_thin_snowpack_filterc, &
+         ! Outputs
+         snow_depth = b_waterdiagnostic_inst%snow_depth_col(begc:endc))
 
     ! ------------------------------------------------------------------------
     ! Initialize an explicit snow pack in columns where this is warranted based on snow
     ! depth
     ! ------------------------------------------------------------------------
 
-    call Bulk_InitializeSnowPack(bounds, num_nolakec, filter_nolakec, &
+    call BuildFilter_SnowpackInitialized(bounds, num_nolakec, filter_nolakec, &
          ! Inputs
-         forc_t                   = atm2lnd_inst%forc_t_downscaled_col(begc:endc), &
+         snl        = col%snl(begc:endc), &
+         frac_sno   = b_waterdiagnostic_inst%frac_sno_col(begc:endc), &
+         snow_depth = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
          ! Outputs
-         col                      = col, &
-         aerosol_inst             = aerosol_inst, &
-         waterdiagnosticbulk_inst = b_waterdiagnostic_inst, &
-         snowpack_initialized     = snowpack_initialized(begc:endc), &
-         t_soisno                 = temperature_inst%t_soisno_col(begc:endc,:))
+         snowpack_initialized_filterc = snowpack_initialized_filterc)
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
        associate(w => water_inst%bulk_and_tracers(i))
-       call UpdateState_InitializeSnowPack(bounds, num_nolakec, filter_nolakec, &
-            ! Inputs
-            snowpack_initialized = snowpack_initialized(begc:endc), &
+       call UpdateState_InitializeSnowPack(bounds, snowpack_initialized_filterc, &
             ! Outputs
             h2osno_no_layers     = w%waterstate_inst%h2osno_no_layers_col(begc:endc), &
             h2osoi_ice           = w%waterstate_inst%h2osoi_ice_col(begc:endc,:), &
             h2osoi_liq           = w%waterstate_inst%h2osoi_liq_col(begc:endc,:))
        end associate
     end do
+
+    call Bulk_InitializeSnowPack(bounds, snowpack_initialized_filterc, &
+         ! Inputs
+         forc_t                   = atm2lnd_inst%forc_t_downscaled_col(begc:endc), &
+         ! Outputs
+         col                      = col, &
+         aerosol_inst             = aerosol_inst, &
+         waterdiagnosticbulk_inst = b_waterdiagnostic_inst, &
+         t_soisno                 = temperature_inst%t_soisno_col(begc:endc,:))
 
     end associate
 
@@ -653,8 +669,86 @@ contains
   end subroutine UpdateState_AddNewSnow
 
   !-----------------------------------------------------------------------
-  subroutine Bulk_RemoveSnowFromThawedWetlands(bounds, num_nolakec, filter_nolakec, &
-       lun, t_grnd, snl, wetland_thin_snowpack_removed, snow_depth)
+  subroutine BuildFilter_ThawedWetlandThinSnowpack(bounds, num_nolakec, filter_nolakec, &
+       t_grnd, lun_itype_col, snl, thawed_wetland_thin_snowpack_filterc)
+    !
+    ! !DESCRIPTION:
+    ! Build a column-level filter of thawed wetland columns with a thin snowpack (which
+    ! we will subsequently remove)
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_nolakec
+    integer, intent(in) :: filter_nolakec(:)
+
+    real(r8)              , intent(in)  :: t_grnd( bounds%begc: )               ! ground temperature (Kelvin)
+    integer               , intent(in)  :: lun_itype_col( bounds%begc: )        ! landunit type for each column
+    integer               , intent(in)  :: snl( bounds%begc: )                  ! negative number of snow layers
+    type(filter_col_type) , intent(out) :: thawed_wetland_thin_snowpack_filterc ! column filter: thawed wetland columns with a thin (no-layer) snow pack
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    logical :: thawed_wetland_thin_snowpack(bounds%begc:bounds%endc)
+
+    character(len=*), parameter :: subname = 'BuildFilter_ThawedWetlandThinSnowpack'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(t_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(lun_itype_col, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+       thawed_wetland_thin_snowpack(c) = .false.
+       if (lun_itype_col(c) == istwet .and. t_grnd(c) > tfrz .and. snl(c) == 0) then
+          thawed_wetland_thin_snowpack(c) = .true.
+       end if
+    end do
+
+    thawed_wetland_thin_snowpack_filterc = col_filter_from_filter_and_logical_array( &
+         bounds = bounds, &
+         num_orig = num_nolakec, &
+         filter_orig = filter_nolakec, &
+         logical_col = thawed_wetland_thin_snowpack(bounds%begc:bounds%endc))
+
+  end subroutine BuildFilter_ThawedWetlandThinSnowpack
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateState_RemoveSnowFromThawedWetlands(bounds, &
+       thawed_wetland_thin_snowpack_filterc, &
+       h2osno_no_layers)
+    !
+    ! !DESCRIPTION:
+    ! For bulk or one tracer: remove snow from thawed wetlands
+    !
+    ! This routine applies to state variables that apply to both bulk and tracers
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    type(filter_col_type), intent(in) :: thawed_wetland_thin_snowpack_filterc ! column filter: thawed wetland columns with a thin (no-layer) snow pack
+
+    real(r8) , intent(inout) :: h2osno_no_layers( bounds%begc: ) ! snow that is not resolved into layers (kg/m2)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'UpdateState_RemoveSnowFromThawedWetlands'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(h2osno_no_layers, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do fc = 1, thawed_wetland_thin_snowpack_filterc%num
+       c = thawed_wetland_thin_snowpack_filterc%indices(fc)
+
+       h2osno_no_layers(c) = 0._r8
+    end do
+
+  end subroutine UpdateState_RemoveSnowFromThawedWetlands
+
+  !-----------------------------------------------------------------------
+  subroutine Bulk_RemoveSnowFromThawedWetlands(bounds, &
+       thawed_wetland_thin_snowpack_filterc, &
+       snow_depth)
     !
     ! !DESCRIPTION:
     ! Remove snow from thawed wetlands
@@ -664,85 +758,112 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_nolakec
-    integer, intent(in) :: filter_nolakec(:)
+    type(filter_col_type), intent(in) :: thawed_wetland_thin_snowpack_filterc ! column filter: thawed wetland columns with a thin (no-layer) snow pack
 
-    type(landunit_type) , intent(in)    :: lun
-    real(r8)            , intent(in)    :: t_grnd( bounds%begc: )                        ! ground temperature (Kelvin)
-    integer             , intent(in)    :: snl( bounds%begc: )                           ! negative number of snow layers
-    logical             , intent(inout) :: wetland_thin_snowpack_removed( bounds%begc: ) ! set to true for wetland columns where we remove the snow pack
-    real(r8)            , intent(inout) :: snow_depth( bounds%begc: )                    ! snow height (m)
+    real(r8)            , intent(inout) :: snow_depth( bounds%begc: ) ! snow height (m)
     !
     ! !LOCAL VARIABLES:
-    integer :: fc, c, l
+    integer :: fc, c
 
     character(len=*), parameter :: subname = 'Bulk_RemoveSnowFromThawedWetlands'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL((ubound(t_grnd, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(wetland_thin_snowpack_removed, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
-       l = col%landunit(c)
+    do fc = 1, thawed_wetland_thin_snowpack_filterc%num
+       c = thawed_wetland_thin_snowpack_filterc%indices(fc)
 
-       wetland_thin_snowpack_removed(c) = .false.
-       if (lun%itype(l)==istwet .and. t_grnd(c)>tfrz) then
-          ! BUG(wjs, 2019-06-05, ESCOMP/ctsm#735) It seems like the intended behavior here
-          ! is to zero out the entire snow pack. Currently, however, this only zeros out a
-          ! very thin (zero-layer) snow pack. For now, I'm adding an snl==0 conditional to
-          ! make this behavior explicit; long-term, we'd like to change this to actually
-          ! zero out the whole snow pack. (At that time, this code block should probably
-          ! be moved to a more appropriate home, as noted in comments in issue #735.)
-          if (snl(c) == 0) then
-             wetland_thin_snowpack_removed(c) = .true.
-             snow_depth(c) = 0._r8
-          end if
-       end if
+       snow_depth(c) = 0._r8
     end do
 
   end subroutine Bulk_RemoveSnowFromThawedWetlands
 
   !-----------------------------------------------------------------------
-  subroutine UpdateState_RemoveSnowFromThawedWetlands(bounds, num_nolakec, filter_nolakec, &
-       wetland_thin_snowpack_removed, h2osno_no_layers)
+  subroutine BuildFilter_SnowpackInitialized(bounds, num_nolakec, filter_nolakec, &
+       snl, frac_sno, snow_depth, snowpack_initialized_filterc)
     !
     ! !DESCRIPTION:
-    ! For bulk or one tracer: remove snow from thawed wetlands
-    !
-    ! This routine applies to state variables that apply to both bulk and tracers
+    ! Build a column-level filter of columns where an explicit snow pack needs to be initialized
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num_nolakec
     integer, intent(in) :: filter_nolakec(:)
 
-    logical  , intent(in)    :: wetland_thin_snowpack_removed( bounds%begc: ) ! true for wetland columns where we remove the snow pack
-    real(r8) , intent(inout) :: h2osno_no_layers( bounds%begc: )              ! snow that is not resolved into layers (kg/m2)
+    integer               , intent(in)  :: snl( bounds%begc: )          ! negative number of snow layers
+    real(r8)              , intent(in)  :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+    real(r8)              , intent(in)  :: snow_depth( bounds%begc: )   ! snow height (m)
+    type(filter_col_type) , intent(out) :: snowpack_initialized_filterc ! column filter: columns where an explicit snow pack is initialized
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    logical :: snowpack_initialized(bounds%begc:bounds%endc)
+
+    character(len=*), parameter :: subname = 'BuildFilter_SnowpackInitialized'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+
+       ! When the snow accumulation exceeds 10 mm, initialize snow layer
+       if (snl(c) == 0 .and. frac_sno(c)*snow_depth(c) >= 0.01_r8) then
+          snowpack_initialized(c) = .true.
+       else
+          snowpack_initialized(c) = .false.
+       end if
+    end do
+
+    snowpack_initialized_filterc = col_filter_from_filter_and_logical_array( &
+         bounds = bounds, &
+         num_orig = num_nolakec, &
+         filter_orig = filter_nolakec, &
+         logical_col = snowpack_initialized(bounds%begc:bounds%endc))
+
+  end subroutine BuildFilter_SnowpackInitialized
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateState_InitializeSnowPack(bounds, snowpack_initialized_filterc, &
+       h2osno_no_layers, h2osoi_ice, h2osoi_liq)
+    !
+    ! !DESCRIPTION:
+    ! For bulk or one tracer: initialize water state variables for columns in which an
+    ! explicit snow pack is being newly initialized.
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    type(filter_col_type), intent(in) :: snowpack_initialized_filterc ! column filter: columns where an explicit snow pack is initialized
+
+    real(r8) , intent(inout) :: h2osno_no_layers( bounds%begc: )         ! snow that is not resolved into layers (kg/m2)
+    real(r8) , intent(inout) :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
+    real(r8) , intent(inout) :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
 
-    character(len=*), parameter :: subname = 'UpdateState_RemoveSnowFromThawedWetlands'
+    character(len=*), parameter :: subname = 'UpdateState_InitializeSnowPack'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL((ubound(wetland_thin_snowpack_removed, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osno_no_layers, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
-       if (wetland_thin_snowpack_removed(c)) then
-          h2osno_no_layers(c) = 0._r8
-       end if
+    do fc = 1, snowpack_initialized_filterc%num
+       c = snowpack_initialized_filterc%indices(fc)
+
+       h2osoi_ice(c,0) = h2osno_no_layers(c)
+       h2osoi_liq(c,0) = 0._r8
+       h2osno_no_layers(c) = 0._r8
     end do
 
-  end subroutine UpdateState_RemoveSnowFromThawedWetlands
+  end subroutine UpdateState_InitializeSnowPack
 
   !-----------------------------------------------------------------------
-  subroutine Bulk_InitializeSnowPack(bounds, num_nolakec, filter_nolakec, &
-       forc_t, col, aerosol_inst, waterdiagnosticbulk_inst, snowpack_initialized, t_soisno)
+  subroutine Bulk_InitializeSnowPack(bounds, snowpack_initialized_filterc, &
+       forc_t, col, aerosol_inst, waterdiagnosticbulk_inst, t_soisno)
     !
     ! !DESCRIPTION:
     ! Initialize an explicit snow pack in columns where this is warranted based on snow depth
@@ -757,14 +878,12 @@ contains
     ! (via the array argument and via an instance).
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_nolakec
-    integer, intent(in) :: filter_nolakec(:)
+    type(filter_col_type), intent(in) :: snowpack_initialized_filterc ! column filter: columns where an explicit snow pack is initialized
 
     real(r8)                       , intent(in)    :: forc_t( bounds%begc: )                 ! atmospheric temperature (Kelvin)
     type(column_type)              , intent(inout) :: col
     type(aerosol_type)             , intent(inout) :: aerosol_inst
     type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
-    logical                        , intent(inout) :: snowpack_initialized( bounds%begc: )   ! set to true for columns where an explicit snow pack is initialized
     real(r8)                       , intent(inout) :: t_soisno( bounds%begc: , -nlevsno+1: ) ! soil temperature (Kelvin)
     !
     ! !LOCAL VARIABLES:
@@ -774,7 +893,6 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(forc_t, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(snowpack_initialized, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(t_soisno, 1) == bounds%endc), sourcefile, __LINE__)
 
     associate( &
@@ -783,83 +901,33 @@ contains
          dz          => col%dz                                   , & ! Output: [real(r8) (:,:) ]  layer depth (m)                       
          z           => col%z                                    , & ! Output: [real(r8) (:,:) ]  layer thickness (m)                   
 
-         frac_sno    => waterdiagnosticbulk_inst%frac_sno_col    , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
          snow_depth  => waterdiagnosticbulk_inst%snow_depth_col  , & ! Input:  [real(r8) (:)   ]  snow height (m)
          frac_iceold => waterdiagnosticbulk_inst%frac_iceold_col   & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
          )
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
+    do fc = 1, snowpack_initialized_filterc%num
+       c = snowpack_initialized_filterc%indices(fc)
 
-       ! When the snow accumulation exceeds 10 mm, initialize snow layer
+       snl(c) = -1
+       dz(c,0) = snow_depth(c)
+       z(c,0) = -0.5_r8*dz(c,0)
+       zi(c,-1) = -dz(c,0)
        ! Currently, the water temperature for the precipitation is simply set
        ! as the surface air temperature
+       t_soisno(c,0) = min(tfrz, forc_t(c))
 
-       if (snl(c) == 0 .and. frac_sno(c)*snow_depth(c) >= 0.01_r8) then
-          snowpack_initialized(c) = .true.
-          snl(c) = -1
-          dz(c,0) = snow_depth(c)
-          z(c,0) = -0.5_r8*dz(c,0)
-          zi(c,-1) = -dz(c,0)
-          t_soisno(c,0) = min(tfrz, forc_t(c))
+       ! This value of frac_iceold makes sense together with the state initialization:
+       ! h2osoi_ice is non-zero, while h2osoi_liq is zero.
+       frac_iceold(c,0) = 1._r8
 
-          ! This value of frac_iceold makes sense together with the state initialization:
-          ! h2osoi_ice is non-zero, while h2osoi_liq is zero.
-          frac_iceold(c,0) = 1._r8
-
-          ! intitialize SNICAR variables for fresh snow:
-          call aerosol_inst%Reset(column=c)
-          call waterdiagnosticbulk_inst%ResetBulk(column=c)
-       else
-          snowpack_initialized(c) = .false.
-       end if
-
+       ! intitialize SNICAR variables for fresh snow:
+       call aerosol_inst%Reset(column=c)
+       call waterdiagnosticbulk_inst%ResetBulk(column=c)
     end do
 
     end associate
 
   end subroutine Bulk_InitializeSnowPack
-
-  !-----------------------------------------------------------------------
-  subroutine UpdateState_InitializeSnowPack(bounds, num_nolakec, filter_nolakec, &
-       snowpack_initialized, h2osno_no_layers, h2osoi_ice, h2osoi_liq)
-    !
-    ! !DESCRIPTION:
-    ! For bulk or one tracer: initialize water state variables for columns in which an
-    ! explicit snow pack is being newly initialized.
-    !
-    ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_nolakec
-    integer, intent(in) :: filter_nolakec(:)
-
-    logical  , intent(in)    :: snowpack_initialized( bounds%begc: )     ! true for columns where an explicit snow pack is initialized
-    real(r8) , intent(inout) :: h2osno_no_layers( bounds%begc: )         ! snow that is not resolved into layers (kg/m2)
-    real(r8) , intent(inout) :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
-    real(r8) , intent(inout) :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
-    !
-    ! !LOCAL VARIABLES:
-    integer :: fc, c
-
-    character(len=*), parameter :: subname = 'UpdateState_InitializeSnowPack'
-    !-----------------------------------------------------------------------
-
-    SHR_ASSERT_FL((ubound(snowpack_initialized, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(h2osno_no_layers, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(h2osoi_ice, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
-
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
-
-       if (snowpack_initialized(c)) then
-          h2osoi_ice(c,0) = h2osno_no_layers(c)
-          h2osoi_liq(c,0) = 0._r8
-          h2osno_no_layers(c) = 0._r8
-       end if
-    end do
-
-  end subroutine UpdateState_InitializeSnowPack
 
   !-----------------------------------------------------------------------
   subroutine SnowWater(bounds, &
