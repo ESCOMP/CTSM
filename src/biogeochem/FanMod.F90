@@ -67,8 +67,6 @@ module FanMod
        err_balance_tan = 4, err_balance_nitr = 5, err_nan = 6, err_bad_subst = 7, err_bad_type = 8, err_bad_arg = 9
 
   integer, parameter, public :: subst_tan = 1, subst_urea = 2
-  
-  !real(r8), parameter, public :: water_relax_t = 24*3600.0_r8
 
   logical, parameter, public :: debug_fan = .false.
   
