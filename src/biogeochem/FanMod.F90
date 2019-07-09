@@ -4,13 +4,13 @@ module FanMod
   ! !DESCRIPTION:
   !
   ! This module implements the physical parameterizations of the FANv2 (Flow of
-  ! Agricultureal Nitrogen version 2) process model, and includes the numericals routines
+  ! Agricultureal Nitrogen version 2) process model, and includes the numerical routines
   ! for handling age-seggregated N pools. The model evaluates nitrogen losses due to
   ! volatilization and leaching from livestock manure and mineral fertilizers.
   ! 
   ! The public subroutines are designed to be callable from python code using f2py. In
   ! this case the _PYMOD_ flag needs to be set. While the non-public subroutines are
-  ! exported to the python module, they may not work correctly due to the assumed-shape
+  ! exported to the python module, they might not work correctly due to the assumed-shape
   ! arrays.
   !
 
@@ -74,7 +74,7 @@ module FanMod
   
 contains
 
-  ! accessor functions are only needed for the python interface... 
+  ! Accessor functions for module constants. Only needed for the python interface.
   !
   integer function ind_soild() result(ind)
     ind = iflx_soild
@@ -243,7 +243,7 @@ contains
 
   end subroutine partition_tan
 
-  real(r8) function eval_no3prod_v2(theta, theta_sat, Tg) result(kNO3)
+  real(r8) function eval_no3prod(theta, theta_sat, Tg) result(kNO3)
     ! Evaluate nitrification rate as in the Riddick et al. (2016) paper but for NH4.
     ! Partitioning between TAN forms is not included.
     real(r8), intent(in) :: theta, theta_sat ! volumetric soil water m/m
@@ -273,7 +273,7 @@ contains
     smrf = 1.0_r8 - exp(-(wmr/wmr_crit)**smrf_b)
     kNO3 = 2.0_r8 * rmax * mNH4 / (1.0_r8/stf + 1.0_r8/smrf)
     
-  end function eval_no3prod_v2
+  end function eval_no3prod
 
   !************************************************************************************
   ! Nitrogen fluxes for single patch / single N pool
@@ -314,10 +314,8 @@ contains
     fluxes(iflx_roff) = cnc * runoff
     fluxes(iflx_soilq) = cnc * perc
 
-    diffusivity_water = eval_diffusivity_liq_mq(1.0_r8, 1.0_r8, tg)
-
+    diffusivity_water = eval_diffusivity_liq_mq(1.0_r8, 1.0_r8, tg) ! use tortuosity = 1
     diffusivity_satsoil = eval_diffusivity_liq_mq(thetasat, thetasat, tg) * thetasat
-    !diffusivity_satsoil = eval_diffusivity_liq_m03(thetasat, thetasat, tg, bsw) * thetasat
     
     halfwater = 0.5_r8 * water_tot
 
@@ -365,7 +363,7 @@ contains
     
   end subroutine eval_fluxes_slurry
 
-  subroutine eval_fluxes_soilroff_ads(mtan, water_manure, Hconc, tg, ratm, theta, thetasat, perc, &
+  subroutine eval_fluxes_soil(mtan, water_manure, Hconc, tg, ratm, theta, thetasat, perc, &
        & runoff, bsw, kads_nh4, soildepth, fluxes, substance, fluxes_size, status)
     !
     ! Evaluate nitrogen fluxes from a soil layer. Use for all cases except the partly
@@ -422,7 +420,7 @@ contains
     if (substance == subst_tan) then
        kads = kads_nh4 
        call partition_tan(tg, Hconc, theta_tot, air, kads, volatility, fract_nh4=fract_nh4)
-       no3_rate = eval_no3prod_v2(theta_tot, thetasat, tg)
+       no3_rate = eval_no3prod(theta_tot, thetasat, tg)
     else if (substance == subst_urea) then
        volatility = 0.0
        no3_rate = 0.0_r8
@@ -476,7 +474,7 @@ contains
 
     end subroutine get_srf_cnc
 
-  end subroutine eval_fluxes_soilroff_ads
+  end subroutine eval_fluxes_soil
 
   !************************************************************************************
   ! Pool aging  
@@ -657,7 +655,7 @@ contains
 
        ! water content at the mean age of the pool
        water_soil = water_in_layer * waterfunction(age_prev + 0.5*poolranges(indpl))
-       call eval_fluxes_soilroff_ads(tanpools(indpl), water_soil, Hconc(indpl), tg, &
+       call eval_fluxes_soil(tanpools(indpl), water_soil, Hconc(indpl), tg, &
             & ratm, theta, thetasat, percolation, runoff, bsw, kads, &
             & dz_layer, fluxes(1:5,indpl), subst_tan, 5, status)
 
@@ -793,7 +791,7 @@ contains
        percolation = eval_perc(waterloss, evap, precip, watertend, poolranges(indpl))
        ! water content at the middle of the age range
        water_soil = water_into_layer * waterfunction(age_prev + 0.5*poolranges(indpl))
-       call eval_fluxes_soilroff_ads(tanpools(indpl), water_soil, Hconc(indpl), tg, &
+       call eval_fluxes_soil(tanpools(indpl), water_soil, Hconc(indpl), tg, &
             & ratm, theta, thetasat, percolation, runoff, bsw, kads, &
             & dz_layer, fluxes(1:5,indpl), subst_tan, 5, status)
        if (status /= 0) then
@@ -1184,7 +1182,7 @@ contains
     do indpl = 1, numpools
        percolation = eval_perc(0.0_r8, evap, precip, watertend, ranges(indpl))
        ! Hconc and Ratm are missing since they do not affect urea.
-       call eval_fluxes_soilroff_ads(pools(indpl), 0.0_r8, missing, tg, &
+       call eval_fluxes_soil(pools(indpl), 0.0_r8, missing, tg, &
             missing, theta, thetasat, percolation, runoff, bsw, 0.0_r8, &
             dz_layer, fluxes(1:5, indpl), subst_urea, 5, status)
        if (status /= 0) then
