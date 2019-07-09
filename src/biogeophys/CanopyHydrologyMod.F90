@@ -1093,7 +1093,10 @@ contains
         ! However, if this were changed to be non-zero, we'd probably want this SumFlux
         ! routine to compute the total snow coming off the canopy, then have the
         ! partitioning into snow falling on ground vs. h2osfc done in a separate routine
-        ! for bulk, then compute the tracer versions of those fluxes.
+        ! for bulk, then compute the tracer versions of those fluxes. Also note that some
+        ! other code may assume that this is always 0: e.g., there is code in
+        ! SnowHydrologyMod with the comment, "all snow falls on ground, no snow on
+        ! h2osfc".
         qflx_snow_h2osfc(c) = 0._r8
      end do
 

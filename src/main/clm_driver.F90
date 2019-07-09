@@ -488,9 +488,7 @@ contains
        call HandleNewSnow(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             atm2lnd_inst, temperature_inst, &
-            aerosol_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterfluxbulk_inst)
+            aerosol_inst, water_inst)
 
        ! TODO(wjs, 2019-05-16) Remove this temporary check. We'll instead have one after
        ! FracH2oSfc.
