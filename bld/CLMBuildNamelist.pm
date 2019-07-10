@@ -1682,7 +1682,7 @@ sub process_namelist_inline_logic {
   #######################################################################
   # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
   #######################################################################
-  setup_logic_hydrology_switches($nl);
+  setup_logic_hydrology_switches($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: clm_initinterp_inparm #
@@ -2720,20 +2720,21 @@ sub setup_logic_hydrology_switches {
   #
   # Check on Switches for hydrology
   #
-  my ($nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  my $subgrid    = $nl->get_value('subgridflag' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_subgrid_fluxes');
+  my $subgrid    = $nl->get_value('use_subgrid_fluxes' );
   my $origflag   = $nl->get_value('origflag'    );
   my $h2osfcflag = $nl->get_value('h2osfcflag'  );
   my $oldfflag   = $nl->get_value('oldfflag'    );
   if ( $origflag == 1 && $subgrid == 1 ) {
-    $log->fatal_error("if origflag is ON, subgridflag can NOT also be on!");
+    $log->fatal_error("if origflag is ON, use_subgrid_fluxes can NOT also be on!");
   }
   if ( $h2osfcflag == 1 && $subgrid != 1 ) {
-    $log->fatal_error("if h2osfcflag is ON, subgridflag can NOT be off!");
+    $log->fatal_error("if h2osfcflag is ON, use_subgrid_fluxes can NOT be off!");
   }
   if ( $oldfflag == 1 && $subgrid == 1 ) {
-    $log->fatal_error("if oldfflag is ON, subgridflag can NOT also be on!");
+    $log->fatal_error("if oldfflag is ON, use_subgrid_fluxes can NOT also be on!");
   }
   # Test bad configurations
   my $lower   = $nl->get_value( 'lower_boundary_condition'  );

@@ -436,6 +436,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <constrain_stress_deciduous_onset phys="clm4_5">.false.</constrain_stress_deciduous_onset>
 <constrain_stress_deciduous_onset phys="clm5_0">.true.</constrain_stress_deciduous_onset>
 
+<!-- Whether to use subgrid fluxes for snow -->
+<use_subgrid_fluxes>.true.</use_subgrid_fluxes>
+
 <!-- dynamic roots -->
 <use_dynroot phys="clm4_5">.false.</use_dynroot>
 <use_dynroot phys="clm5_0" bgc_mode="sp">.false.</use_dynroot>

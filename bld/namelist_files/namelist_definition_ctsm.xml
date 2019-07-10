@@ -910,9 +910,9 @@ Human heat stress indices:
 If TRUE, write diagnostic of global radiative temperature written to CLM log file.
 </entry>
 
-<entry id="subgridflag" type="integer" category="clm_physics"
-       group="clm_inparm" valid_values="0,1" >
-Subgrid fluxes for snow
+<entry id="use_subgrid_fluxes" type="logical" category="clm_physics"
+       group="clm_inparm" >
+Whether to use subgrid fluxes for snow
 </entry>
 
 <entry id="snowveg_affects_radiation" type="logical" category="clm_physics"

@@ -2,4 +2,4 @@
  oldfflag    = 1
  h2osfcflag  = 0
  origflag    = 1
- subgridflag = 0
+ use_subgrid_fluxes = .false.

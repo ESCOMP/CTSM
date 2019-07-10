@@ -22,7 +22,7 @@ module SnowHydrologyMod
   use abortutils      , only : endrun
   use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
   use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd
-  use clm_varctl      , only : iulog, subgridflag
+  use clm_varctl      , only : iulog, use_subgrid_fluxes
   use clm_varcon      , only : namec, h2osno_max, hfus, denice, rpi, spval, tfrz, int_snow_max
   use atm2lndType     , only : atm2lnd_type
   use AerosolMod      , only : aerosol_type
@@ -230,8 +230,8 @@ contains
     end if
 
     if (masterproc) then
-       if (oldfflag == 1 .and. subgridflag == 1) then
-          call endrun(msg="if oldfflag is ON, subgridflag can NOT also be on!")
+       if (oldfflag == 1 .and. use_subgrid_fluxes) then
+          call endrun(msg="if oldfflag is ON, use_subgrid_fluxes can NOT also be on!")
        end if
     end if
 
@@ -564,7 +564,7 @@ contains
           !====================================================================
 
           ! for subgrid fluxes
-          if (subgridflag ==1 .and. .not. urbpoi(c)) then
+          if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
              if (frac_sno(c) > 0._r8)then
                 snow_depth(c)=snow_depth(c) + newsnow/(bifall(c) * frac_sno(c))
              else
@@ -601,7 +601,7 @@ contains
              int_snow(c) = min(1.e8_r8,temp_intsnow)
 
              ! update snow_depth to be consistent with frac_sno, z_avg
-             if (subgridflag ==1 .and. .not. urbpoi(c)) then
+             if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
                 snow_depth(c)=z_avg/frac_sno(c)
              else
                 snow_depth(c)=newsnow/bifall(c)
@@ -633,7 +633,7 @@ contains
 
        ! set frac_sno_eff variable
        if (.not. urbpoi(c)) then
-          if (subgridflag ==1) then 
+          if (use_subgrid_fluxes) then 
              frac_sno_eff(c) = frac_sno(c)
           else
              frac_sno_eff(c) = 1._r8
@@ -1300,7 +1300,6 @@ contains
     !
     ! !USES:
     use clm_varcon      , only : denice, denh2o, tfrz, rpi, int_snow_max
-    use clm_varctl      , only : subgridflag
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in) :: bounds
@@ -1426,11 +1425,11 @@ contains
 
                 if (imelt(c,j) == 1) then
                    l = col%landunit(c)
-                   ! For consistency with other uses of subgridflag==1 (e.g., in
-                   ! CanopyHydrologyMod), we apply this code over all landunits other
-                   ! than lake and urban. (In CanopyHydrologyMod, the uses of subgridflag
-                   ! are in a nolake filter, and check .not. urbpoi.)
-                   if(subgridflag==1 .and. (.not. lakpoi(l) .and. .not. urbpoi(l))) then
+                   ! For consistency with other uses of use_subgrid_fluxes (e.g., in
+                   ! CanopyHydrologyMod), we apply this code over all landunits other than
+                   ! lake and urban. (In CanopyHydrologyMod, the uses of
+                   ! use_subgrid_fluxes are in a nolake filter, and check .not. urbpoi.)
+                   if(use_subgrid_fluxes .and. (.not. lakpoi(l) .and. .not. urbpoi(l))) then
                       ! first term is delta mass over mass
                       ddz3 = max(0._r8,min(1._r8,(swe_old(c,j) - wx)/wx))
 
