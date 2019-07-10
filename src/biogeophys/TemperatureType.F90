@@ -7,10 +7,7 @@ module TemperatureType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-!KO  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop
-!KO
-  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_fan
-!KO
+  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop
   use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevlak, nlevurb
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
@@ -580,19 +577,11 @@ contains
             ptr_patch=this%gdd0_patch, default='inactive')
     end if
 
-!KO
-    if (use_crop .or. use_fan) then
+    if (use_crop) then
        this%gdd8_patch(begp:endp) = spval
        call hist_addfld1d (fname='GDD8', units='ddays', &
             avgflag='A', long_name='Growing degree days base  8C from planting', &
             ptr_patch=this%gdd8_patch, default='inactive')
-    end if
-
-    if (use_crop) then
-!KO       this%gdd8_patch(begp:endp) = spval
-!KO       call hist_addfld1d (fname='GDD8', units='ddays', &
-!KO            avgflag='A', long_name='Growing degree days base  8C from planting', &
-!KO            ptr_patch=this%gdd8_patch, default='inactive')
 
        this%gdd10_patch(begp:endp) = spval
        call hist_addfld1d (fname='GDD10', units='ddays', &
@@ -1157,31 +1146,15 @@ contains
          desc='10-day running mean of 2-m temperature', accum_type='runmean', accum_period=-10, &
          subgrid_type='pft', numlev=1,init_value=SHR_CONST_TKFRZ+20._r8)
 
-!KO
-    if ( use_crop .or. use_fan ) then
+    if ( use_crop )then
        call init_accum_field (name='TDM10', units='K', &
             desc='10-day running mean of min 2-m temperature', accum_type='runmean', accum_period=-10, &
             subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
-    end if
-!KO
-
-    if ( use_crop )then
-!KO       call init_accum_field (name='TDM10', units='K', &
-!KO            desc='10-day running mean of min 2-m temperature', accum_type='runmean', accum_period=-10, &
-!KO            subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
 
        call init_accum_field (name='TDM5', units='K', &
             desc='5-day running mean of min 2-m temperature', accum_type='runmean', accum_period=-5, &
             subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
     end if
-
-!KO
-    if ( use_crop .or. use_fan ) then
-       call init_accum_field (name='GDD8', units='K', &
-            desc='growing degree-days base 8C from planting', accum_type='runaccum', accum_period=not_used, &
-            subgrid_type='pft', numlev=1, init_value=0._r8)
-    end if
-!KO
 
     if ( use_crop )then
 
@@ -1190,9 +1163,9 @@ contains
             desc='growing degree-days base 0C from planting', accum_type='runaccum', accum_period=not_used, &
             subgrid_type='pft', numlev=1, init_value=0._r8)
 
-!KO       call init_accum_field (name='GDD8', units='K', &
-!KO            desc='growing degree-days base 8C from planting', accum_type='runaccum', accum_period=not_used, &
-!KO            subgrid_type='pft', numlev=1, init_value=0._r8)
+       call init_accum_field (name='GDD8', units='K', &
+            desc='growing degree-days base 8C from planting', accum_type='runaccum', accum_period=not_used, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
 
        call init_accum_field (name='GDD10', units='K', &
             desc='growing degree-days base 10C from planting', accum_type='runaccum', accum_period=not_used,  &
@@ -1261,6 +1234,7 @@ contains
     if (use_crop) then
        call extract_accum_field ('TDM10', rbufslp, nstep)
        this%t_a10min_patch(begp:endp)= rbufslp(begp:endp)
+
        call extract_accum_field ('TDM5', rbufslp, nstep)
        this%t_a5min_patch(begp:endp) = rbufslp(begp:endp)
     end if
@@ -1441,8 +1415,7 @@ contains
     call update_accum_field  ('T10', this%t_ref2m_patch, nstep)
     call extract_accum_field ('T10', this%t_a10_patch, nstep)
 
-!KO
-    if ( use_crop .or. use_fan ) then
+    if ( use_crop )then
        ! Accumulate and extract TDM10
 
        do p = begp,endp
@@ -1451,35 +1424,6 @@ contains
        end do                                                     !'min_inst' not initialized?
        call update_accum_field  ('TDM10', rbufslp, nstep)
        call extract_accum_field ('TDM10', this%t_a10min_patch, nstep)
-
-       ! Accumulate and extract GDD8
-
-       do p = begp,endp
-          g = patch%gridcell(p)
-          if (month==1 .and. day==1 .and. secs==dtime) then
-             rbufslp(p) = accumResetVal ! reset gdd
-          else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
-                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
-             rbufslp(p) = max(0._r8, min(30._r8, &
-                  this%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + 8._r8))) * dtime/SHR_CONST_CDAY
-          else
-             rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
-          end if
-       end do
-       call update_accum_field  ('GDD8', rbufslp, nstep)
-       call extract_accum_field ('GDD8', this%gdd8_patch, nstep)
-    end if
-!KO
-
-    if ( use_crop )then
-!KO       ! Accumulate and extract TDM10
-
-!KO       do p = begp,endp
-!KO          rbufslp(p) = min(this%t_ref2m_min_patch(p),this%t_ref2m_min_inst_patch(p)) !slevis: ok choice?
-!KO          if (rbufslp(p) > 1.e30_r8) rbufslp(p) = SHR_CONST_TKFRZ !and were 'min'&
-!KO       end do                                                     !'min_inst' not initialized?
-!KO       call update_accum_field  ('TDM10', rbufslp, nstep)
-!KO       call extract_accum_field ('TDM10', this%t_a10min_patch, nstep)
 
        ! Accumulate and extract TDM5
 
