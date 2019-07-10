@@ -229,6 +229,12 @@ contains
        write(iulog,*) ' '
     end if
 
+    if (masterproc) then
+       if (oldfflag == 1 .and. subgridflag == 1) then
+          call endrun(msg="if oldfflag is ON, subgridflag can NOT also be on!")
+       end if
+    end if
+
     if (      trim(lotmp_snowdensity_method) == 'Slater2017' ) then
        new_snow_density = LoTmpDnsSlater2017
     else if ( trim(lotmp_snowdensity_method) == 'TruncatedAnderson1976' ) then

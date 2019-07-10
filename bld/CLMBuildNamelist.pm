@@ -2725,11 +2725,15 @@ sub setup_logic_hydrology_switches {
   my $subgrid    = $nl->get_value('subgridflag' );
   my $origflag   = $nl->get_value('origflag'    );
   my $h2osfcflag = $nl->get_value('h2osfcflag'  );
+  my $oldfflag   = $nl->get_value('oldfflag'    );
   if ( $origflag == 1 && $subgrid == 1 ) {
     $log->fatal_error("if origflag is ON, subgridflag can NOT also be on!");
   }
   if ( $h2osfcflag == 1 && $subgrid != 1 ) {
     $log->fatal_error("if h2osfcflag is ON, subgridflag can NOT be off!");
+  }
+  if ( $oldfflag == 1 && $subgrid == 1 ) {
+    $log->fatal_error("if oldfflag is ON, subgridflag can NOT also be on!");
   }
   # Test bad configurations
   my $lower   = $nl->get_value( 'lower_boundary_condition'  );
