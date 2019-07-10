@@ -1121,16 +1121,17 @@ sub setup_cmdl_spinup {
                 use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'} );
     if ( $nl->get_value("spinup_state") ne 0 ) {
        $nl_flags->{'bgc_spinup'} = "on";
-       if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
-          $log->fatal_error("spinup_state is accelerated (=1 or 2) which is for a BGC mode of CN or BGC," .
-                            " but the BGC mode is Satellite Phenology, change one or the other");
-       }
        if ( $nl_flags->{'clm_accelerated_spinup'} eq "off" ) {
           $log->fatal_error("spinup_state is accelerated, but clm_accelerated_spinup is off, change one or the other");
        }
     } else {
        $nl_flags->{'bgc_spinup'} = "off";
        $val = $defaults->get_value($var);
+    }
+  } else {
+    if ( defined($nl->get_value("spinup_state")) ) {
+       $log->fatal_error("spinup_state is accelerated (=1 or 2) which is for a BGC mode of CN or BGC," .
+                         " but the BGC mode is Satellite Phenology, change one or the other");
     }
   }
   $nl_flags->{$var} = $val;
@@ -2633,7 +2634,7 @@ sub setup_logic_supplemental_nitrogen {
     }
 
     if ( $suplnitro =~ /ALL/i ) {
-      if ( $nl_flags->{'bgc_spinup'} ne "on" ) {
+      if ( $nl_flags->{'bgc_spinup'} eq "on" ) {
         $log->warning("There is no need to use a bgc_spinup mode when supplemental Nitrogen is on for all PFT's, as these modes spinup Nitrogen" );
       }
     }
