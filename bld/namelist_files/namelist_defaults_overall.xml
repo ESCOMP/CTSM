@@ -50,8 +50,8 @@ determine default values for namelists.
 <note mode="clm_stndln" >1</note>
 <note mode="ext_cesm"   >0</note>
 
-<!-- Default representative concentration pathway for future scenarios -->
-<rcp>-999.9</rcp>
+<!-- Default Shared Socioeconomic Pathway and representative concentration pathway for future scenarios -->
+<ssp_rcp>hist</ssp_rcp>
 
 <!-- Default land/ocean mask type -->
 <mask hgrid="0.23x0.31"           >gx1v6</mask>
