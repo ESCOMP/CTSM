@@ -1606,13 +1606,43 @@ Mapping method from Nitrogen deposition input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
-<!-- finundatied stream -->
+<!-- finundated stream -->
 <!-- ========================================================================================  -->
 
 <entry id="stream_fldfilename_ch4finundated" type="char*256" category="datasets"
        input_pathname="abs" group="ch4finundated" valid_values="" >
 Filename of input stream data for finundated inversion of observed (from Prigent dataset) 
 to hydrologic variables (either TWS or ZWT)
+</entry>
+
+<!-- Prescribed soil moisture -->
+<entry id="use_soil_moisture_streams" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on use of soil moisture streams (EXPERIMENTAL and NOT tested)
+</entry>
+
+<entry id="stream_year_first_soilm" type="integer" category="datasets"
+       group="soil_moisture_streams" valid_values="" >
+First year to loop over for USTAR data
+</entry>
+
+<entry id="stream_year_last_soilm" type="integer" category="datasets"
+       group="soil_moisture_streams" valid_values="" >
+Last year to loop over for USTAR data
+</entry>
+
+<entry id="model_year_align_soilm" type="integer" category="datasets"
+       group="soil_moisture_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_soilm value
+</entry>
+
+<entry id="stream_fldfilename_soilm" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="soil_moisture_streams" valid_values="" >
+Filename of input stream data for USTAR
+</entry>
+
+<entry id="soilm_mapalgo" type="char*256" category="datasets"
+       group="soil_moisture_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
 </entry>
 
 <!-- ========================================================================================  -->

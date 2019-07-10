@@ -1609,6 +1609,11 @@ sub process_namelist_inline_logic {
   ##################################
   setup_logic_lai_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
+  ##########################################
+  # namelist group: soil_moisture_streams  #
+  ##########################################
+  setup_logic_soilm_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+
   ##################################
   # namelist group: bgc_shared
   ##################################
@@ -3345,6 +3350,32 @@ sub setup_logic_megan {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_soilm_streams {
+  # prescribed soil moisture streams require clm4_5/clm5_0
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_soil_moisture_streams');
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_mapalgo',
+                  'hgrid'=>$nl_flags->{'res'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_soilm', 'phys'=>$nl_flags->{'phys'},
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_soilm', 'phys'=>$nl_flags->{'phys'},
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      # Set align year, if first and last years are different
+      if ( $nl->get_value('stream_year_first_soilm') !=
+           $nl->get_value('stream_year_last_soilm') ) {
+           add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                       'model_year_align_soilm', 'sim_year'=>$nl_flags->{'sim_year'},
+                       'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      }
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_soilm', 'phys'=>$nl_flags->{'phys'},
+                  'hgrid'=>"0.9x1.25" );
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_lai_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -3638,7 +3669,7 @@ sub write_output_files {
   # CLM component
   my @groups;
   @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
-               lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
+               soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
                clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                finidat_consistency_checks dynpft_consistency_checks 
                clm_initinterp_inparm century_soilbgcdecompcascade

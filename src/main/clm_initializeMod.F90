@@ -13,6 +13,7 @@ module clm_initializeMod
   use clm_varctl      , only : is_cold_start, is_interpolated_start
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
+  use clm_varctl      , only : use_soil_moisture_streams
   use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
@@ -26,7 +27,8 @@ module clm_initializeMod
   use FatesInterfaceMod, only : set_fates_global_elements
   use dynSubgridControlMod, only: dynSubgridControl_init, get_reset_dynbal_baselines
 
-  use clm_instMod       
+  use clm_instMod
+  use SoilMoistureStreamMod, only : PrescribedSoilMoistureInit
   ! 
   implicit none
   private  ! By default everything is private 
@@ -501,6 +503,9 @@ contains
        call SatellitePhenologyInit(bounds_proc)
     end if
 
+    if(use_soil_moisture_streams) then 
+       call PrescribedSoilMoistureInit(bounds_proc)
+    endif
 
     
 

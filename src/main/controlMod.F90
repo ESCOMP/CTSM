@@ -237,6 +237,8 @@ contains
          CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, CN_residual_opt, &
          CN_partition_opt, CN_evergreen_phenology_opt, carbon_resp_opt  
 
+    namelist /clm_inparm/ use_soil_moisture_streams
+
     namelist /clm_inparm/ use_lai_streams
 
     namelist /clm_inparm/ use_bedrock
