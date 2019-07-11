@@ -205,7 +205,7 @@ contains
     type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: c, g, j, ism, ig
+    integer :: c, g, j, ism, ig, n
     integer :: year    ! year (0, ...) for nstep+1
     integer :: mon     ! month (1, ..., 12) for nstep+1
     integer :: day     ! day of month (1, ..., 31) for nstep+1
@@ -270,7 +270,8 @@ contains
             moisture_increment = h2osoi_vol(c,j)
             
             ! update volumetric soil moisture
-            !fix          h2osoi_vol(c,j) = sdat_soilm%avs(1)%rAttr(ism,ig,:)  !wrong!!!!!
+            n = ig + (j-1)*ldomain%ni*ldomain%nj
+            h2osoi_vol(c,j) = sdat_soilm%avs(1)%rAttr(ism,n)
             h2osoi_vol(c,j) = min(h2osoi_vol(c,j), watsat(c, j))
             
             ! calculate liq/ice mass fractions
