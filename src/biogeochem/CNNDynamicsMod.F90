@@ -332,9 +332,9 @@ contains
            fert_to_sminn(bounds%begc:bounds%endc))
       call p2c(bounds, num_soilc, filter_soilc, &
            manure(bounds%begp:bounds%endp), &
-           manure_col)
+           manure_col(bounds%begc:bounds%endc))
       ! Add the manure N processed above:
-      do fc = 1, fc
+      do fc = 1, num_soilc
          c = filter_soilc(fc)
          fert_to_sminn(c) = fert_to_sminn(c) + manure_col(c)
       end do
