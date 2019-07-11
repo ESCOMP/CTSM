@@ -1479,7 +1479,6 @@ contains
     real(r8) dayspyr  ! days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
-    real(r8) manure_avail ! manure nitrogen available in the beginning of fertilization
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
