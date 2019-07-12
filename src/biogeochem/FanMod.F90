@@ -632,7 +632,7 @@ contains
     
     call update_pools(tanpools(1:1), fluxes(1:5,1:1), dt, 1, 5)
 
-    if (debug_fan .and. any(tanpools < -1e-15)) then
+    if (debug_fan .and. any(tanpools < -1e-14)) then
        status = err_negative_tan
        return
     end if
@@ -802,12 +802,13 @@ contains
     call update_pools(tanpools, fluxes(1:5,:), dt, numpools, 5, fixed)
 
     tanpools = tanpools + tanprod*dt
-    if(any(isnan(tanpools))) then
-       status = err_nan+100
-       return
-    end if
     
     if (debug_fan) then
+       if(any(isnan(tanpools))) then
+          status = err_nan+100
+          return
+       end if
+       
        if (any(tanpools < -1e-15)) then
           status = err_negative_tan + 1000
           return
@@ -1046,8 +1047,9 @@ contains
     fluxes_nitr(iflx_appl) = flux_direct
 
     tempr_stores = max(Tfloor_stores, tempr_C)
+    ! with some data, in some rare places, we can have windspeed < 0 (!?)
     flux_store = flux_avail_tan &
-         & * volat_coef_stores * tempr_stores**pA * windspeed**pB
+         & * volat_coef_stores * tempr_stores**pA * max(windspeed, 0.0_r8)**pB
     flux_store = min(flux_avail_tan, flux_store)
 
     fluxes_tan(iflx_air_stores) = flux_store
@@ -1064,6 +1066,10 @@ contains
     fluxes_tan(iflx_to_store) = flux_avail_tan
 
     if (debug_fan) then
+       if (any(isnan(fluxes_nitr)) .or. any(isnan(fluxes_tan))) then
+          status = err_nan
+          return
+       end if
        if (abs(sum(fluxes_nitr) - nitr_input) > 1e-5*nitr_input) then
           status = err_balance_nitr
           return
