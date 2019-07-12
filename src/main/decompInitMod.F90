@@ -27,6 +27,7 @@ module decompInitMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public decompInit_lnd    ! initializes lnd grid decomposition into clumps and processors
+  public decompInit_lnd3D  ! initializes lnd grid 3D decomposition
   public decompInit_clumps ! initializes atm grid decomposition into clumps
   public decompInit_glcp   ! initializes g,l,c,p decomp info
   !
@@ -311,6 +312,56 @@ contains
     call shr_sys_flush(iulog)
 
   end subroutine decompInit_lnd
+
+  !------------------------------------------------------------------------------
+  subroutine decompInit_lnd3D(lni,lnj,lnk)
+    !
+    ! !DESCRIPTION:
+    !
+    !   Create a 3D decomposition gsmap for the global 2D grid with soil levels
+    !   as the 3rd dimesnion.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer , intent(in) :: lni,lnj,lnk   ! domain global size
+    !
+    ! !LOCAL VARIABLES:
+    integer :: n,k                    ! indices
+    integer :: beg,end,lsize,gsize    ! used for gsmap init
+    integer, pointer :: gindex(:)     ! global index for gsmap init
+
+
+    ! Set gsMap_lnd_gdc2glo (the global index here includes mask=0 or ocean points)
+
+    call get_proc_bounds(beg, end)
+    allocate(gindex(beg:end*lnk))
+    do k = 1, lnk
+    do n = beg,end
+       gindex(n) = ldecomp%gdc2glo(n) + (k-1)*(lni*lnj)
+    enddo
+    enddo
+    lsize = end*lnk-beg+1
+    gsize = lni * lnj * lnk
+    call mct_gsMap_init(gsMap_lnd2Dsoi_gdc2glo, gindex, mpicom, comp_id, lsize, gsize)
+    deallocate(gindex)
+
+    ! Diagnostic output
+
+    if (masterproc) then
+       write(iulog,*)' 2D GSMap'
+       write(iulog,*)'   longitude points               = ',lni
+       write(iulog,*)'   latitude points                = ',lnj
+       write(iulog,*)'   soil levels                    = ',lnk
+       write(iulog,*)' gsMap Characteristics'
+       write(iulog,*) '  lnd gsmap glo num of segs      = ',mct_gsMap_ngseg(gsMap_lnd2Dsoi_gdc2glo)
+       write(iulog,*)
+    end if
+
+    call shr_sys_flush(iulog)
+
+  end subroutine decompInit_lnd3D
 
   !------------------------------------------------------------------------------
   subroutine decompInit_clumps(lns,lni,lnj,glc_behavior)

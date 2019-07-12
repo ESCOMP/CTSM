@@ -16,7 +16,7 @@ module SoilMoistureStreamMod
   use clm_varctl      , only : iulog, use_soil_moisture_streams
   use clm_varcon      , only : grlnd
   use controlMod      , only : NLFilename
-  use decompMod       , only : gsmap_lnd_gdc2glo
+  use decompMod       , only : gsMap_lnd2Dsoi_gdc2glo
   use domainMod       , only : ldomain
   use fileutils       , only : getavu, relavu
   use ColumnType      , only : col                
@@ -151,7 +151,7 @@ contains
          pio_subsystem=pio_subsystem,                  & 
          pio_iotype=shr_pio_getiotype(inst_name),      &
          mpicom=mpicom, compid=comp_id,                &
-         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,       &
+         gsmap=gsMap_lnd2Dsoi_gdc2glo, ggrid=dom_clm,  &
          nxg=ldomain%ni, nyg=ldomain%nj,               &
          nzg=nlevsoi,                                  &
          yearFirst=stream_year_first_soilm,            &
