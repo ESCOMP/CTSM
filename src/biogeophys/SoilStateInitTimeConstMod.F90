@@ -100,7 +100,7 @@ contains
     use clm_varcon          , only : zsoi, dzsoi, zisoi, spval
     use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
-    use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct
+    use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct_predefined
     use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice_mec
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
     use fileutils           , only : getfil
@@ -389,7 +389,7 @@ contains
           do lev = 1,nlevgrnd
              ! DML - this if statement could probably be removed and just the
              ! top part used for all soil layer structures
-             if ( soil_layerstruct /= '10SL_3.5m' )then ! apply soil texture from 10 layer input dataset 
+             if ( soil_layerstruct_predefined /= '10SL_3.5m' )then ! apply soil texture from 10 layer input dataset 
                 if (lev .eq. 1) then
                    clay = clay3d(g,1)
                    sand = sand3d(g,1)

@@ -114,13 +114,26 @@ If TRUE, square the organic fraction when it's used (as was done in CLM4.5)
 Otherwise use the fraction straight up              (the default for CLM5.0)
 </entry>
 
-<entry id="soil_layerstruct" type="char*16" category="clm_physics"
-       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m,5SL_3m" >
+<entry id="soil_layerstruct_predefined" type="char*16" category="clm_physics"
+       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m,4SL_2m,UNSET" >
 10SL_3.5m    = standard CLM4 and CLM4.5 version
 23SL_3.5m    = more vertical layers for permafrost simulations 
 49SL_10m     = 49 layer soil column, 10m of soil, 5 bedrock layers
 20SL_8.5m    = 20 layer soil column, 8m of soil, 5 bedrock layers
-5SL_3m       = 5 layer soil column, 3m of soil, 0 bedrock layers
+4SL_2m       = 4 layer soil column, 2m of soil, 0 bedrock layers
+UNSET        = required when setting soil_layerstruct_userdefined in clm5
+</entry>
+
+<entry id="soil_layerstruct_userdefined" type="real(99)" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+User-defined vector of dzsoi. The length of this vector determines nlevgrnd. When the user sets this vector, they have to set nlevsoinl in the namelist, too; nlevsoinl must be less than nlevgrnd in this version of the model, even though ideally nlevsoinl could also equal nlevgrnd.
+<default>Default: rundef</default>
+</entry>
+
+<entry id="nlevsoinl" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+User-defined number of soil layers required to be set in the namelist when the user sets soil_layerstruct_userdefined in the namelist.
+<default>Default: iundef</default>
 </entry>
 
 <entry id="use_bedrock" type="logical" category="clm_physics"

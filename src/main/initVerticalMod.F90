@@ -17,7 +17,8 @@ module initVerticalMod
   use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb 
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
-  use clm_varctl        , only : use_bedrock, soil_layerstruct
+  use clm_varctl        , only : use_bedrock, nlevsoinl, rundef
+  use clm_varctl        , only : soil_layerstruct_predefined, soil_layerstruct_userdefined
   use clm_varctl        , only : use_fates
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
@@ -214,12 +215,15 @@ contains
     ! Soil layers and interfaces (assumed same for all non-lake patches)
     ! "0" refers to soil surface and "nlevsoi" refers to the bottom of model soil
 
-    if (soil_layerstruct == '10SL_3.5m' .or. soil_layerstruct == '23SL_3.5m') then
+    if (soil_layerstruct_predefined == '10SL_3.5m' .or. soil_layerstruct_predefined == '23SL_3.5m') then
        calc_method = 'node-based'
-    else if (soil_layerstruct == '49SL_10m' .or.  soil_layerstruct == '20SL_8.5m' .or. soil_layerstruct == '5SL_3m' .or. soil_layerstruct(1:5) == 'user:') then
+    else if (soil_layerstruct_predefined == '49SL_10m' .or. &
+             soil_layerstruct_predefined == '20SL_8.5m' .or. &
+             soil_layerstruct_predefined == '4SL_2m' .or. &
+             soil_layerstruct_userdefined(1) /= rundef) then
        calc_method = 'thickness-based'
     else
-       write(iulog,*) subname//' ERROR: Unrecognized soil layer structure: ', trim(soil_layerstruct)
+       write(iulog,*) subname//' ERROR: Unrecognized pre-defined and user-defined soil layer structures: ', trim(soil_layerstruct_predefined), soil_layerstruct_userdefined
        call endrun(subname//' ERROR: Unrecognized soil layer structure')
     end if
 
@@ -228,7 +232,7 @@ contains
           zsoi(j) = scalez*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
        enddo
 
-       if (soil_layerstruct == '23SL_3.5m') then
+       if (soil_layerstruct_predefined == '23SL_3.5m') then
        ! Soil layer structure that starts with standard exponential,
        ! then has several evenly spaced layers and finishes off exponential.
        ! This allows the upper soil to behave as standard, but then continues
@@ -241,7 +245,7 @@ contains
           do j = toplev_equalspace + nlev_equalspace + 1, nlevgrnd
              zsoi(j) = scalez * (exp(0.5_r8 * (j - nlev_equalspace - 0.5_r8)) - 1._r8) + nlev_equalspace * thick_equal
           enddo
-       end if  ! soil_layerstruct == '23SL_3.5m'
+       end if  ! soil_layerstruct_predefined == '23SL_3.5m'
 
        dzsoi(1) = 0.5_r8*(zsoi(1)+zsoi(2))             !thickness b/n two interfaces
        do j = 2,nlevgrnd-1
@@ -256,7 +260,7 @@ contains
        zisoi(nlevgrnd) = zsoi(nlevgrnd) + 0.5_r8*dzsoi(nlevgrnd)
 
     else if (calc_method == 'thickness-based') then
-       if (soil_layerstruct == '49SL_10m') then
+       if (soil_layerstruct_predefined == '49SL_10m') then
           !scs: 10 meter soil column, nlevsoi set to 49 in clm_varpar
           do j = 1, 10
              dzsoi(j) = 1.e-2_r8     ! 10-mm layers
@@ -270,7 +274,7 @@ contains
           do j = nlevsoi+2,nlevgrnd  ! 10-m bedrock layers
              dzsoi(j) = 10._r8
           enddo
-       else if (soil_layerstruct == '20SL_8.5m') then
+       else if (soil_layerstruct_predefined == '20SL_8.5m') then
           do j = 1, 4  ! linear increase in layer thickness of...
              dzsoi(j) = j * 0.02_r8                     ! ...2 cm each layer
           enddo
@@ -283,18 +287,18 @@ contains
           do j = nlevsoi + 1, nlevgrnd  ! bedrock layers
              dzsoi(j) = dzsoi(nlevsoi) + (((j - nlevsoi) * 25._r8)**1.5_r8) / 100._r8
           enddo
-       else if (soil_layerstruct == '5SL_3m') then
+       else if (soil_layerstruct_predefined == '4SL_2m') then
           dzsoi(1) = 0.1_r8
           dzsoi(2) = 0.3_r8
           dzsoi(3) = 0.6_r8
           dzsoi(4) = 1.0_r8
           dzsoi(5) = 1.0_r8
-       else if (soil_layerstruct(1:5) == 'user:') then
+       else if (soil_layerstruct_userdefined(1) /= rundef) then
           do j = 1, nlevgrnd
-             ! read string indices 8 to 11, 13 to 16, 18 to 21, and so on
-             read(soil_layerstruct(5*j+3:5*j+6),*) dzsoi(j)
+             ! read dzsoi from user-entered namelist vector
+             dzsoi(j) = soil_layerstruct_userdefined(j)
           end do
-       end if  ! soil_layerstruct options
+       end if  ! thickness-based options
        
        zisoi(0) = 0._r8
        do j = 1,nlevgrnd
