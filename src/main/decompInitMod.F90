@@ -335,17 +335,8 @@ contains
 
     ! Set gsMap_lnd_gdc2glo (the global index here includes mask=0 or ocean points)
 
-!!$    call get_proc_bounds(beg, end)
-!!$    allocate(gindex(beg:end*lnk))
-!!$    do k = 1, lnk
-!!$    do n = beg,end
-!!$       gindex(n) = ldecomp%gdc2glo(n) + (k-1)*(lni*lnj)
-!!$    enddo
-!!$    enddo
-!!$    lsize = end*lnk-beg+1
-
+    call get_proc_bounds(beg, end)
     lsize = (end-beg+1)*lnk
-    write(iulog,*) 'decomp3d: ', lni,lnj,lnk, lsize, beg,end
     allocate(gindex(1:lsize))
     do k = 1, lnk
        do n = beg,end
