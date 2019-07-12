@@ -340,7 +340,7 @@ contains
     allocate(gindex(1:lsize))
     do k = 1, lnk
        do n = beg,end
-          m = (k-1)*(end-beg+1)+k
+          m = (k-1)*(end-beg+1)+(n-beg+1)
           gindex(m) = ldecomp%gdc2glo(n) + (k-1)*(lni*lnj)
        enddo
     enddo
