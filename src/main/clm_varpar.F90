@@ -162,7 +162,7 @@ contains
           end do
           nlevsoi = nlevsoinl  ! value read in namelist
           if (nlevsoi >= nlevgrnd) then
-             write(iulog,*) subname//' ERROR: nlevsoi >= nlevgrnd NOT allowed'
+             write(iulog,*) subname//' ERROR: nlevsoi >= nlevgrnd; did you enter nlevsoinl correctly in user_nl_clm?'
              call shr_sys_abort(subname//' ERROR: nlevsoi must be less than nlevgrnd')
           end if
        end if
