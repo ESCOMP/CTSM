@@ -424,13 +424,9 @@ contains
             water_inst)
 
        if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after downscale_forcings')
-             call t_stopf("tracer_consistency_check")
-          end if
+          call t_startf("tracer_consistency_check")
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after downscale_forcings')
+          call t_stopf("tracer_consistency_check")
        end if
 
        ! Update filters that depend on variables set in clm_drv_init
@@ -460,13 +456,9 @@ contains
        end if
 
        if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after CalcAndWithdrawIrrigationFluxes')
-             call t_stopf("tracer_consistency_check")
-          end if
+          call t_startf("tracer_consistency_check")
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after CalcAndWithdrawIrrigationFluxes')
+          call t_stopf("tracer_consistency_check")
        end if
 
        ! ============================================================================
@@ -493,13 +485,9 @@ contains
        ! TODO(wjs, 2019-05-16) Remove this temporary check. We'll instead have one after
        ! FracH2oSfc.
        if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after HandleNewSnow')
-             call t_stopf("tracer_consistency_check")
-          end if
+          call t_startf("tracer_consistency_check")
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after HandleNewSnow')
+          call t_stopf("tracer_consistency_check")
        end if
 
        ! update surface water fraction (this may modify frac_sno)
@@ -1290,6 +1278,17 @@ contains
        call t_stopf('clm_drv_io')
 
     end if
+
+    ! BUG(wjs, 2019-07-12, ESCOMP/ctsm#762) Remove this block once above code is fully tracerized
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+       if (water_inst%DoConsistencyCheck()) then
+          call water_inst%ResetCheckedTracers(bounds_clump)
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after end-of-loop reset')
+       end if
+    end do
+    !$OMP END PARALLEL DO
 
   end subroutine clm_drv
 
