@@ -286,6 +286,7 @@ contains
     ! Set gsMap_lnd_gdc2glo (the global index here includes mask=0 or ocean points)
 
     call get_proc_bounds(beg, end)
+
     allocate(gindex(beg:end))
     do n = beg,end
        gindex(n) = ldecomp%gdc2glo(n)
@@ -330,23 +331,29 @@ contains
     ! !LOCAL VARIABLES:
     integer :: m,n,k                    ! indices
     integer :: begg,endg,lsize,gsize    ! used for gsmap init
+    integer :: begg3d,endg3d
     integer, pointer :: gindex(:)       ! global index for gsmap init
 
 
     ! Set gsMap_lnd_gdc2glo (the global index here includes mask=0 or ocean points)
-
     call get_proc_bounds(begg, endg)
-    lsize = (endg-begg+1)*lnk
-    allocate(gindex(1:lsize))
+    begg3d = (begg-1)*lnk + 1
+    endg3d = endg*lnk
+    lsize = (endg3d - begg3d + 1 )
+    allocate(gindex(begg3d:endg3d))
     do k = 1, lnk
        do n = begg,endg
-          m = (k-1)*(endg-begg+1)+(n-begg+1)
+          m = (begg-1)*lnk + (k-1)*(endg-begg+1) + (n-begg+1)
           gindex(m) = ldecomp%gdc2glo(n) + (k-1)*(lni*lnj)
+!          write(*,*) 'm3d: ', m
+!          write(*,*) 'm3d: ', m,ldecomp%gdc2glo(n),gindex(m)
        enddo
     enddo
 
     gsize = lni * lnj * lnk
+
     call mct_gsMap_init(gsMap_lnd2Dsoi_gdc2glo, gindex, mpicom, comp_id, lsize, gsize)
+
     deallocate(gindex)
 
     ! Diagnostic output
