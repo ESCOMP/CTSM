@@ -338,24 +338,29 @@ contains
     call get_proc_bounds(begg, endg)
     lsize = (endg-begg+1)*lnk
     allocate(gindex(1:lsize))
+    m = 0
     do k = 1, lnk
        do n = begg,endg
-          m = (k-1)*(endg-begg+1)+(n-begg+1)
+          m = m+1
           gindex(m) = ldecomp%gdc2glo(n) + (k-1)*(lni*lnj)
        enddo
     enddo
 
     gsize = lni * lnj * lnk
+    if (masterproc) then
+       write(iulog,*)' 3D GSMap'
+       write(iulog,*)'   longitude points               = ',lni
+       write(iulog,*)'   latitude points                = ',lnj
+       write(iulog,*)'   soil levels                    = ',lnk
+       write(iulog,*)'   gsize                          = ',gsize
+       write(iulog,*)'   lsize                          = ',lsize
+    end if
     call mct_gsMap_init(gsMap_lnd2Dsoi_gdc2glo, gindex, mpicom, comp_id, lsize, gsize)
     deallocate(gindex)
 
     ! Diagnostic output
 
     if (masterproc) then
-       write(iulog,*)' 3D GSMap'
-       write(iulog,*)'   longitude points               = ',lni
-       write(iulog,*)'   latitude points                = ',lnj
-       write(iulog,*)'   soil levels                    = ',lnk
        write(iulog,*)' gsMap Characteristics'
        write(iulog,*) '  lnd gsmap glo num of segs      = ',mct_gsMap_ngseg(gsMap_lnd2Dsoi_gdc2glo)
        write(iulog,*)
