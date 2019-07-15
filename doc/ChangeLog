@@ -1,4 +1,127 @@
 ===============================================================
+Tag name:  ctsm1.0.dev051
+Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
+Date:  Mon Jul 15 12:13:39 MDT 2019
+One-line Summary: Soil layer definition clean-up and user-defined option
+
+Purpose of changes
+------------------
+
+ Code clean-up clarifes that there are two types of soil layer
+ definition: the node-based and the thickness-based.
+
+ User-defined option allows user to specify a soil layer profile in the
+ form of a vector of dzsoi values in meters in the thickness-based
+ approach.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #279 #728
+
+Known bugs found since the previous tag (include github issue ID): #761 and bug in this PR (#759) causing model to abort when nlevsoi = nlevgrnd
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[X] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): specify at least one, either soil_layerstruct_predefined or soil_layerstruct_userdefined in the namelist
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): renamed soil_layerstruct to soil_layerstruct_predefined and added soil_layerstruct_userdefined
+
+Changes made to namelist defaults (e.g., changed parameter values): soil_layerstruct_predefined clm5 default changed from 20SL_8.5m to UNSET
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers
+--------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: TEST(S) ADDED TO THE TEST SUITE. Also specified soil_layerstruct_predefined in all pre-existing tests in the test suite.
+
+Code reviewed by: @billsacks
+
+
+CTSM testing:
+
+[... Remove before making master tag.  Available test levels:
+
+    a) regular (must be run before handing off a tag to SEs and must be run
+     before committing a tag)
+    b) build_namelist (if namelists and/or build_system changed))
+    c) tools (only if tools are modified and no CTSM source is modified)
+    d) short (for use during development and in rare cases where only a small
+          change with known behavior is added ... eg. a minor bug fix)
+    e) doc (no source testing required)
+
+... ]
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- 
+    hobart ------ 
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: nwp
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/759
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev049
 Originator(s):  erik (Erik Kluzek)
 Date: Sun Jun 23 20:56:55 MDT 2019
