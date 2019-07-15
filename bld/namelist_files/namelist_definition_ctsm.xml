@@ -1642,7 +1642,7 @@ Filename of input stream data for USTAR
 </entry>
 
 <entry id="soilm_mapalgo" type="char*256" category="datasets"
-       group="soil_moisture_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+       group="soil_moisture_streams" valid_values="none,bilinear,nn,nnoni,nnonj,spval,copy" >
 </entry>
 
 <!-- ========================================================================================  -->
