@@ -2089,10 +2089,30 @@ sub setup_logic_soilstate {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct_predefined',
-              'structure'=>$nl_flags->{'structure'});
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
               'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
+
+  my $var1 = "soil_layerstruct_predefined";
+  my $var2 = "soil_layerstruct_userdefined";
+  my $soil_layerstruct_predefined = $nl->get_value($var1);
+  my $soil_layerstruct_userdefined = $nl->get_value($var2);
+
+  if (defined($soil_layerstruct_userdefined)) {
+    if (defined($soil_layerstruct_predefined)) {
+      $log->fatal_error("You have set both soil_layerstruct_userdefined and soil_layerstruct_predefined in your namelist; model cannot determine which to use");
+    } else {
+      my $group = $definition->get_group_name($var1);
+      $nl->set_variable_value($group, $var1, 'UNSET' );
+    }
+  } else {
+    if (defined($soil_layerstruct_predefined)) {
+      my $group = $definition->get_group_name($var2);
+      $nl->set_variable_value($group, $var2, -9999999.);
+    } else {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct_predefined',
+                  'structure'=>$nl_flags->{'structure'});
+    }
+  }
 }
 
 #-------------------------------------------------------------------------------

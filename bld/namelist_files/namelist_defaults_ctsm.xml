@@ -126,7 +126,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <organic_frac_squared phys="clm5_0" >.false.</organic_frac_squared>
 
 <soil_layerstruct_predefined structure="fast">4SL_2m</soil_layerstruct_predefined>
-<soil_layerstruct_predefined structure="standard" phys="clm5_0">UNSET</soil_layerstruct_predefined>
+<soil_layerstruct_predefined structure="standard" phys="clm5_0">20SL_8.5m</soil_layerstruct_predefined>
 <soil_layerstruct_predefined structure="standard" phys="clm4_5">10SL_3.5m</soil_layerstruct_predefined>
 
 <soil_layerstruct_userdefined>-9999999._r8</soil_layerstruct_userdefined>
