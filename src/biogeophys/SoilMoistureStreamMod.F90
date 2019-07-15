@@ -82,7 +82,7 @@ contains
     integer            :: nml_error                  ! namelist i/o error flag
     type(mct_ggrid)    :: dom_clm                    ! domain information 
     character(len=CL)  :: stream_fldfilename_soilm   ! ustar stream filename to read
-    character(len=CL)  :: soilm_mapalgo = 'bilinear' ! Mapping alogrithm
+    character(len=CL)  :: soilm_mapalgo = 'none'     ! Mapping alogrithm
 
     character(*), parameter    :: subName = "('soil_moisture_init')"
     character(*), parameter    :: F00 = "('(soil_moisture_init) ',4a)"
@@ -138,7 +138,7 @@ contains
 
     endif
 
-    call clm_domain_mct (bounds, dom_clm)
+    call clm_domain_mct (bounds, dom_clm, nlevels=nlevsoi)
 
     !
     ! create the field list for these fields...use in shr_strdata_create
