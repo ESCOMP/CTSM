@@ -329,18 +329,18 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: m,n,k                    ! indices
-    integer :: beg,end,lsize,gsize    ! used for gsmap init
-    integer, pointer :: gindex(:)     ! global index for gsmap init
+    integer :: begg,endg,lsize,gsize    ! used for gsmap init
+    integer, pointer :: gindex(:)       ! global index for gsmap init
 
 
     ! Set gsMap_lnd_gdc2glo (the global index here includes mask=0 or ocean points)
 
-    call get_proc_bounds(beg, end)
-    lsize = (end-beg+1)*lnk
+    call get_proc_bounds(begg, endg)
+    lsize = (endg-begg+1)*lnk
     allocate(gindex(1:lsize))
     do k = 1, lnk
-       do n = beg,end
-          m = (k-1)*(end-beg+1)+(n-beg+1)
+       do n = begg,endg
+          m = (k-1)*(endg-begg+1)+(n-begg+1)
           gindex(m) = ldecomp%gdc2glo(n) + (k-1)*(lni*lnj)
        enddo
     enddo
