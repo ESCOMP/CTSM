@@ -270,7 +270,7 @@ contains
             moisture_increment = h2osoi_vol(c,j)
             
             ! update volumetric soil moisture
-            n = ig + (j-1)*ldomain%ni*ldomain%nj
+            n = ig + (j-1)*(bounds%endg-bounds%begg+1)
             h2osoi_vol(c,j) = sdat_soilm%avs(1)%rAttr(ism,n)
             h2osoi_vol(c,j) = min(h2osoi_vol(c,j), watsat(c, j))
             
