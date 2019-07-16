@@ -948,7 +948,7 @@ contains
     end do
 
     ! Calculate lakeresist and grnd_ch4_cond for CH4 Module
-    ! The CH4 will diffuse directly from the top soil layer to the atmosphere, so 
+    ! The CH4 will diffuse directly from the top lake layer to the atmosphere, so 
     ! the whole lake resistance is included.
 
     if (use_lch4) then
@@ -957,7 +957,7 @@ contains
              c = filter_lakec(fc)
 
              if (j > jconvect(c) .and. j < jconvectbot(c)) then  ! Assume resistance is zero for levels that convect
-                lakeresist(c) = lakeresist(c) + dz(c,j)/kme(c,j) ! dz/eddy or molecular diffusivity
+                lakeresist(c) = lakeresist(c) + dz_lake(c,j)/kme(c,j) ! dz/eddy or molecular diffusivity
              end if
 
              if (j == nlevlak) then ! Calculate grnd_ch4_cond
