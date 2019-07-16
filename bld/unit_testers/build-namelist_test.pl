@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 872;
+my $ntests = 804;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 543;
+   $ntests += 489;
 }
 plan( tests=>$ntests );
 
@@ -334,7 +334,7 @@ $mode = "-phys $phys";
 foreach my $options ( 
                       "-bgc bgc -use_case 1850-2100_SSP1-2.6_transient -namelist '&a start_ymd=20100101/'",
                       "-bgc sp  -use_case 1850-2100_SSP2-4.5_transient -namelist '&a start_ymd=18501223/'",
-                      "-bgc bgc -use_case 1850-2100_SSP4-6.0_transient -namelist '&a start_ymd=20701029/'",
+                      "-bgc bgc -use_case 1850-2100_SSP3-7.0_transient -namelist '&a start_ymd=20701029/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
                       "-bgc cn  -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19201023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
@@ -1084,6 +1084,10 @@ foreach my $res ( @resolutions ) {
              $res eq "360x720cru"  ||
              $res eq "512x1024" ) {
       next;
+   # Resolutions not supported on release branch
+   } elsif ( $res eq "ne120np4"    ||
+             $res eq "conus_30_x8" ) {
+      next;
    }
 
    &make_env_run();
@@ -1214,8 +1218,8 @@ $mode = "-phys $phys";
 &make_config_cache($phys);
 my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" );
 my @use_cases = ( "1850-2100_SSP1-2.6_transient",
-                  "1850-2100_SSP3-4.5_transient",
-                  "1850-2100_SSP4-6.0_transient",
+                  "1850-2100_SSP2-4.5_transient",
+                  "1850-2100_SSP3-7.0_transient",
                   "1850-2100_SSP5-8.5_transient",
                   "1850_control",
                   "2000_control",
@@ -1269,8 +1273,7 @@ $phys = "clm5_0";
 $mode = "-phys $phys";
 my @tran_res = ( "0.9x1.25", "1.9x2.5", "10x15" );
 foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient",
-                      "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transient", "1850-2100_SSP2-4.5_transient", "1850-2100_SSP1-1.9_transient", 
-                      "1850-2100_SSP4-6.0_transient" ) {
+                      "1850-2100_SSP2-4.5_transient" ) {
    foreach my $res ( @tran_res ) {
       $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
       &make_env_run();
@@ -1288,6 +1291,16 @@ foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100
       }
       &cleanup();
    }
+}
+# The SSP's that fail...
+my $res = "0.9x1.25";
+foreach my $usecase ( "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transient", "1850-2100_SSP1-1.9_transient",
+                      "1850-2100_SSP4-6.0_transient" ) {
+      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
+      &make_env_run();
+      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+      isnt( $?, 0, $usecase );
+      system( "cat $tempfile" );
 }
 
 print "\n==================================================\n";
@@ -1322,7 +1335,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
   my @clmoptions = ( "-bgc bgc -envxml_dir .", 
                      "-bgc sp -envxml_dir .", );
   foreach my $clmopts ( @clmoptions ) {
-     my @clmres = ( "ne16np4", "360x720cru" );
+     my @clmres = ( "ne16np4" );
      foreach my $res ( @clmres ) {
         $options = "-res $res -envxml_dir . ";
         &make_env_run( );

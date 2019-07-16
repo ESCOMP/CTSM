@@ -989,16 +989,20 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mkghg_bndtvghg  hgrid="lat-bands"                    >atm/waccm/lb/LBC_17500116-20150116_CMIP6_0p5degLat_c180905.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="global"                       >atm/waccm/lb/LBC_1750-2015_CMIP6_GlobAnnAvg_c180926.nc</mkghg_bndtvghg>
 
+<mkghg_bndtvghg  hgrid="lat-bands" ssp_rcp="SSP1-1.9" >atm/waccm/lb/LBC_20140116-25001216_CMIP6_SSP119_0p5degLat_c190514.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="lat-bands" ssp_rcp="SSP1-2.6" >atm/waccm/lb/LBC_20140116-25001216_CMIP6_SSP126_0p5degLat_c180905.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="lat-bands" ssp_rcp="SSP2-4.5" >atm/waccm/lb/LBC_20140116-25001216_CMIP6_SSP245_0p5degLat_c180905.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="lat-bands" ssp_rcp="SSP3-7.0" >atm/waccm/lb/LBC_20140116-25001216_CMIP6_SSP370_0p5degLat_c180905.nc</mkghg_bndtvghg>
+<mkghg_bndtvghg  hgrid="lat-bands" ssp_rcp="SSP4-3.4" >atm/waccm/lb/LBC_20140116-25001216_CMIP6_SSP119_0p5degLat_c190514.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="lat-bands" ssp_rcp="SSP4-6.0" >atm/waccm/lb/LBC_20140116-25001216_CMIP6_SSP460_0p5degLat_c180905.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="lat-bands" ssp_rcp="SSP5-3.4" >atm/waccm/lb/LBC_20140116-25001216_CMIP6_SSP534os_0p5degLat_c180905.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="lat-bands" ssp_rcp="SSP5-8.5" >atm/waccm/lb/LBC_20140116-25001216_CMIP6_SSP585_0p5degLat_c180905.nc</mkghg_bndtvghg>
 
+<mkghg_bndtvghg  hgrid="global"    ssp_rcp="SSP1-1.9" >atm/waccm/lb/LBC_2014-2500_CMIP6_SSP119_0p5degLat_GlobAnnAvg_c190514.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="global"    ssp_rcp="SSP1-2.6" >atm/waccm/lb/LBC_2014-2500_CMIP6_SSP126_0p5degLat_GlobAnnAvg_c190301.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="global"    ssp_rcp="SSP2-4.5" >atm/waccm/lb/LBC_2014-2500_CMIP6_SSP245_0p5degLat_GlobAnnAvg_c190301.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="global"    ssp_rcp="SSP3-7.0" >atm/waccm/lb/LBC_2014-2500_CMIP6_SSP370_0p5degLat_GlobAnnAvg_c190301.nc</mkghg_bndtvghg>
+<mkghg_bndtvghg  hgrid="global"    ssp_rcp="SSP4-3.4" >atm/waccm/lb/LBC_2014-2500_CMIP6_SSP434_0p5degLat_GlobAnnAvg_c190514.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="global"    ssp_rcp="SSP4-6.0" >atm/waccm/lb/LBC_2014-2500_CMIP6_SSP460_0p5degLat_GlobAnnAvg_c190301.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="global"    ssp_rcp="SSP5-3.4" >atm/waccm/lb/LBC_2014-2500_CMIP6_SSP534os_0p5degLat_GlobAnnAvg_c190301.nc</mkghg_bndtvghg>
 <mkghg_bndtvghg  hgrid="global"    ssp_rcp="SSP5-8.5" >atm/waccm/lb/LBC_2014-2500_CMIP6_SSP585_0p5degLat_GlobAnnAvg_c190301.nc</mkghg_bndtvghg>

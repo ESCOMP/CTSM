@@ -181,11 +181,11 @@
     <valid_values>constant,diagnostic,prognostic</valid_values>
     <default_value>constant</default_value>
     <values>
-      <value compset="_CAM"     >diagnostic</value>
+      <value compset="_CAM"        >diagnostic</value>
       <value compset="_BGC%BDRD"   >diagnostic</value>
       <value compset="_BGC%BPRP"   >prognostic</value>
       <value compset="HIST.*_DATM" >diagnostic</value>
-      <value compset="RCP.*_DATM"  >diagnostic</value>
+      <value compset="SSP.*_DATM"  >diagnostic</value>
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>
@@ -252,8 +252,10 @@
     <valid_values></valid_values>
     <default_value></default_value>
     <values match="last">
-      <value compset="_CLM50%[^_]*CMIP6DECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
-      <value compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
+      <value                  compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
+      <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_nociso_deck</value>
+      <value                  compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
+      <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_nociso_deck</value>
     </values>
     <group>run_component_clm</group>
     <file>env_case.xml</file>

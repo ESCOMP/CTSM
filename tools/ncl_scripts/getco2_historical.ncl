@@ -54,7 +54,7 @@ begin
    ntime   = dimsizes( ncg->date );
    sim_yr2 = ncg->date(ntime-1) / 10000;
 
-   sim_yr_rng = "_simyr_"+sim_yr0 + "-" + sim_yr2;
+   sim_yr_rng = "simyr_"+sim_yr0 + "-" + sim_yr2;
    
    cmip_vers = "_CMIP6_";
    outco2filename = "fco2_datm_"+hgrid+sim_yr_rng+cmip_vers+"c"+sdate+".nc";
@@ -99,7 +99,7 @@ begin
          end if
       end if
       nco->$vars(i)$@units = units(i);
-      nco->$vars(i)$@lname = lname(i);
+      nco->$vars(i)$@long_name = lname(i);
    end do
    filevardef ( nco, "time",      "float",    (/ "time" /) );
    filevardef ( nco, "time_bnds", "float",    (/ "time", "bounds" /) );
@@ -166,6 +166,7 @@ begin
    ;
    nco->date = (/ ncg->date /);
    nco->time = (/ ncg->time /);
+   nco->time_bnds = (/ ncg->time_bnds /);
    nco->date@comment = "This variable is NOT used when read by datm, the time coordinate is used";
    ;
    ; CO2

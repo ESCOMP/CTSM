@@ -932,7 +932,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Lm20_Mmpi-serial" grid="1x1_smallvilleIA" compset="I2000Clm50BgcCropGs" testmods="clm/monthly">
+  <test name="ERS_Lm20_Mmpi-serial" grid="1x1_smallvilleIA" compset="I2000Clm50BgcCropQianGs" testmods="clm/monthly">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -1102,7 +1102,6 @@
   <test name="PET_P36x2_D" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1401,6 +1400,33 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5" grid="f10_f10_musgs" compset="ISSP585Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Transient production low res future scenario SSP5-8.5 case with isotopes with a december 2050 start</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5" grid="f10_f10_musgs" compset="ISSP245Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Transient production low res future scenario SSP2-4.5 case with isotopes with a december 2050 start, use gnu to move off of intel</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5" grid="f10_f10_musgs" compset="ISSP370Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Transient production low res future scenario SSP3-7.0 case with isotopes with a december 2050 start, use gnu to move off of intel</option>
     </options>
   </test>
   <test name="SMS_Lm1" grid="f19_g17_gl4" compset="I1850Clm50Bgc" testmods="clm/clm50dynroots">
@@ -1862,6 +1888,16 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >The main point of this test is simply to make sure that the CMIP6WACCMDECK moifierd works. (This configuration is basically the same as I1850Clm50BgcCropCmip6, but without cmip6_glaciers_virtual_antarctica - so we don't need huge coverage of this.) Month-long so that we actually get some history output (because this test exercises a usermods directory with only monthly and yearly output).</option>
+    </options>
+  </test>
+  <test name="SMS_Lm1" grid="f19_g17" compset="I1850Clm50BgcCropCmip6waccm" testmods="clm/basic">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >The main point of this test is simply to make sure that the CMIP6WACCMDECK modifier works for
+2-degree since that resolution turns off Carbon isotopes </option>
     </options>
   </test>
   <test name="SMS_Lm1_D" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/output_crop_highfreq">
