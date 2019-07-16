@@ -42,7 +42,7 @@ module clm_driver
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
   use CanopyHydrologyMod     , only : CanopyInterceptionAndThroughfall
   use SnowHydrologyMod       , only : HandleNewSnow
-  use SurfaceWaterMod        , only : FracH2oSfc
+  use SurfaceWaterMod        , only : UpdateFracH2oSfc
   use LakeHydrologyMod       , only : LakeHydrology
   use SoilWaterMovementMod   , only : use_aquifer_layer
   !
@@ -483,9 +483,9 @@ contains
             aerosol_inst, water_inst)
 
        ! update surface water fraction (this may modify frac_sno)
-       call FracH2oSfc(bounds_clump, &
-            filter(nc)%num_nolakec, filter(nc)%nolakec, &
-            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst)
+       call UpdateFracH2oSfc(bounds_clump, &
+            filter(nc)%num_soilc, filter(nc)%soilc, &
+            water_inst)
 
        if (water_inst%DoConsistencyCheck()) then
           call t_startf("tracer_consistency_check")
