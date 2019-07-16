@@ -24,6 +24,7 @@ module SurfaceWaterMod
   use WaterFluxBulkType           , only : waterfluxbulk_type
   use WaterStateBulkType          , only : waterstatebulk_type
   use WaterDiagnosticBulkType     , only : waterdiagnosticbulk_type
+  use WaterTracerUtils            , only : CalcTracerFromBulk
 
   implicit none
   save
@@ -51,8 +52,6 @@ contains
     ! Determine fraction of land surfaces which are submerged based on surface
     ! microtopography and surface water storage.
     !
-    ! Note that this just operates over soil points: special landunits have frac_h2osfc fixed at 0
-    !
     ! The main purpose of this routine is to update frac_h2osfc. However, it also has
     ! some possible side-effects:
     !
@@ -61,6 +60,8 @@ contains
     !
     ! - frac_sno is potentially updated to ensure that frac_sno + frac_h2osfc <= 1
     !
+    ! Note that this just operates over soil points: special landunits have frac_h2osfc fixed at 0
+    !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds
     integer                        , intent(in)    :: num_soilc       ! number of points in soilc filter
@@ -68,7 +69,9 @@ contains
     type(water_type)               , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
-    real(r8) :: h2osno_total(bounds%begc:bounds%endc)             ! total snow water (mm H2O)
+    integer  :: i
+    real(r8) :: dtime ! land model time step (sec)
+    real(r8) :: h2osno_total(bounds%begc:bounds%endc) ! total snow water (mm H2O)
 
     character(len=*), parameter :: subname = 'UpdateFracH2oSfc'
     !-----------------------------------------------------------------------
@@ -78,8 +81,11 @@ contains
          endc => bounds%endc, &
 
          b_waterstate_inst      => water_inst%waterstatebulk_inst, &
+         b_waterflux_inst       => water_inst%waterfluxbulk_inst, &
          b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
          )
+
+    dtime = get_step_size()
 
     ! ------------------------------------------------------------------------
     ! Update diagnostics for bulk water
@@ -92,28 +98,74 @@ contains
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     call BulkDiag_FracH2oSfc(bounds, num_soilc, filter_soilc, &
-         micro_sigma        = col%micro_sigma(begc:endc), &
-         h2osno_total       = h2osno_total(begc:endc), &
-         h2osoi_liq         = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
-         h2osfc             = b_waterstate_inst%h2osfc_col(begc:endc), &
-         frac_sno           = b_waterdiagnostic_inst%frac_sno_col(begc:endc), &
-         frac_sno_eff       = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
-         frac_h2osfc        = b_waterdiagnostic_inst%frac_h2osfc_col(begc:endc), &
-         frac_h2osfc_nosnow = b_waterdiagnostic_inst%frac_h2osfc_nosnow_col(begc:endc))
+         ! Inputs
+         dtime                         = dtime, &
+         micro_sigma                   = col%micro_sigma(begc:endc), &
+         h2osno_total                  = h2osno_total(begc:endc), &
+         h2osfc                        = b_waterstate_inst%h2osfc_col(begc:endc), &
+         ! Outputs
+         frac_sno                      = b_waterdiagnostic_inst%frac_sno_col(begc:endc), &
+         frac_sno_eff                  = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+         frac_h2osfc                   = b_waterdiagnostic_inst%frac_h2osfc_col(begc:endc), &
+         frac_h2osfc_nosnow            = b_waterdiagnostic_inst%frac_h2osfc_nosnow_col(begc:endc), &
+         qflx_too_small_h2osfc_to_soil = b_waterflux_inst%qflx_too_small_h2osfc_to_soil_col(begc:endc))
+
+
+    ! ------------------------------------------------------------------------
+    ! Calculate tracer flux and update h2osfc
+    !
+    ! It's important that this state update happen soon after BulkDiag_FracH2oSfc so that
+    ! h2osfc remains in sync with frac_h2osfc.
+    ! ------------------------------------------------------------------------
+
+    do i = water_inst%tracers_beg, water_inst%tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call CalcTracerFromBulk( &
+            ! Inputs
+            lb            = begc, &
+            num_pts       = num_soilc, &
+            filter_pts    = filter_soilc, &
+            bulk_source   = b_waterstate_inst%h2osfc_col(begc:endc), &
+            bulk_val      = b_waterflux_inst%qflx_too_small_h2osfc_to_soil_col(begc:endc), &
+            tracer_source = w%waterstate_inst%h2osfc_col(begc:endc), &
+            ! Outputs
+            tracer_val    = w%waterflux_inst%qflx_too_small_h2osfc_to_soil_col(begc:endc))
+       end associate
+    end do
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call UpdateState_TooSmallH2osfcToSoil(bounds, num_soilc, filter_soilc, &
+            ! Inputs
+            dtime                         = dtime, &
+            qflx_too_small_h2osfc_to_soil = w%waterflux_inst%qflx_too_small_h2osfc_to_soil_col(begc:endc), &
+            ! Outputs
+            h2osfc                        = w%waterstate_inst%h2osfc_col(begc:endc), &
+            h2osoi_liq                    = w%waterstate_inst%h2osoi_liq_col(begc:endc,:))
+       end associate
+    end do
 
     end associate
 
   end subroutine UpdateFracH2oSfc
 
-
   !-----------------------------------------------------------------------
   subroutine BulkDiag_FracH2oSfc(bounds, num_soilc, filter_soilc, &
-       micro_sigma, h2osno_total, &
-       h2osoi_liq, h2osfc, frac_sno, frac_sno_eff, frac_h2osfc, frac_h2osfc_nosnow)
+       dtime, micro_sigma, h2osno_total, &
+       h2osfc, frac_sno, frac_sno_eff, frac_h2osfc, frac_h2osfc_nosnow, &
+       qflx_too_small_h2osfc_to_soil)
     !
     ! !DESCRIPTION:
     ! Determine fraction of land surfaces which are submerged  
     ! based on surface microtopography and surface water storage.
+    !
+    ! The main purpose of this routine is to update frac_h2osfc. However, it also has
+    ! some possible side-effects:
+    !
+    ! - If h2osfc is too small, a flux is calculated that should be applied immediately
+    !   after this routine to move all remaining h2osfc to the top soil layer
+    !
+    ! - frac_sno is potentially updated to ensure that frac_sno + frac_h2osfc <= 1
     !
     ! Note that this just operates over soil points: special landunits have frac_h2osfc fixed at 0
     !
@@ -122,14 +174,15 @@ contains
     integer               , intent(in)           :: num_soilc       ! number of points in soilc filter
     integer               , intent(in)           :: filter_soilc(:) ! column filter for soil points
 
-    real(r8) , intent(in)    :: micro_sigma( bounds%begc: )              ! microtopography pdf sigma (m)
-    real(r8) , intent(in)    :: h2osno_total( bounds%begc: )             ! total snow water (mm H2O)
-    real(r8) , intent(inout) :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (col,lyr) [kg/m2]
-    real(r8) , intent(inout) :: h2osfc( bounds%begc: )                   ! surface water (mm)
-    real(r8) , intent(inout) :: frac_sno( bounds%begc: )                 ! fraction of ground covered by snow (0 to 1)
-    real(r8) , intent(inout) :: frac_sno_eff( bounds%begc: )             ! eff. fraction of ground covered by snow (0 to 1)
-    real(r8) , intent(inout) :: frac_h2osfc( bounds%begc: )              ! col fractional area with surface water greater than zero
-    real(r8) , intent(inout) :: frac_h2osfc_nosnow( bounds%begc: )       ! col fractional area with surface water greater than zero (if no snow present)
+    real(r8) , intent(in)    :: dtime                                         ! land model time step (sec)
+    real(r8) , intent(in)    :: micro_sigma( bounds%begc: )                   ! microtopography pdf sigma (m)
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: )                  ! total snow water (mm H2O)
+    real(r8) , intent(in)    :: h2osfc( bounds%begc: )                        ! surface water (mm)
+    real(r8) , intent(inout) :: frac_sno( bounds%begc: )                      ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_eff( bounds%begc: )                  ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: frac_h2osfc( bounds%begc: )                   ! col fractional area with surface water greater than zero
+    real(r8) , intent(inout) :: frac_h2osfc_nosnow( bounds%begc: )            ! col fractional area with surface water greater than zero (if no snow present)
+    real(r8) , intent(inout) :: qflx_too_small_h2osfc_to_soil( bounds%begc: ) ! h2osfc transferred to soil if h2osfc is below some threshold (mm H2O /s)
     !
     ! !LOCAL VARIABLES:
     integer :: c,f,l          ! indices
@@ -140,12 +193,12 @@ contains
 
     SHR_ASSERT_FL((ubound(micro_sigma, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(h2osoi_liq) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osfc, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(frac_h2osfc, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(frac_h2osfc_nosnow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_too_small_h2osfc_to_soil, 1) == bounds%endc), sourcefile, __LINE__)
 
     ! arbitrary lower limit on h2osfc for safer numerics...
     min_h2osfc=1.e-8_r8
@@ -173,10 +226,16 @@ contains
           !--  update the submerged areal fraction using the new d value
           frac_h2osfc(c) = 0.5*(1.0_r8+erf(d/(sigma*sqrt(2.0))))
 
+          qflx_too_small_h2osfc_to_soil(c) = 0._r8
+
        else
           frac_h2osfc(c) = 0._r8
-          h2osoi_liq(c,1) = h2osoi_liq(c,1) + h2osfc(c)
-          h2osfc(c)=0._r8
+          qflx_too_small_h2osfc_to_soil(c) = h2osfc(c) / dtime
+          ! The update of h2osfc is deferred to later, keeping with our standard
+          ! separation of flux calculations from state updates, and because the state
+          ! update needs to happen for tracers as well as bulk. However, it's important
+          ! that this flux be applied soon after this routine, so that h2osfc remains in
+          ! sync with frac_h2osfc.
        endif
 
        frac_h2osfc_nosnow(c) = frac_h2osfc(c)
@@ -206,6 +265,53 @@ contains
     end do
 
   end subroutine BulkDiag_FracH2oSfc
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateState_TooSmallH2osfcToSoil(bounds, num_soilc, filter_soilc, &
+       dtime, qflx_too_small_h2osfc_to_soil, &
+       h2osfc, h2osoi_liq)
+    !
+    ! !DESCRIPTION:
+    ! For points where h2osfc was too small and the residual is transferred to soil, do
+    ! the relevant state update, for bulk or one tracer.
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)     , intent(in)           :: bounds
+    integer               , intent(in)           :: num_soilc       ! number of points in soilc filter
+    integer               , intent(in)           :: filter_soilc(:) ! column filter for soil points
+
+    real(r8) , intent(in)    :: dtime                                         ! land model time step (sec)
+    real(r8) , intent(in)    :: qflx_too_small_h2osfc_to_soil( bounds%begc: ) ! h2osfc transferred to soil if h2osfc is below some threshold (mm H2O /s)
+    real(r8) , intent(inout) :: h2osfc( bounds%begc: )                        ! surface water (mm)
+    real(r8) , intent(inout) :: h2osoi_liq( bounds%begc: , -nlevsno+1: )      ! liquid water (col,lyr) [kg/m2]
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c
+    real(r8) :: h2osfc_orig(bounds%begc:bounds%endc)
+
+    character(len=*), parameter :: subname = 'UpdateState_TooSmallH2osfcToSoil'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(qflx_too_small_h2osfc_to_soil, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osfc, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_liq) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
+
+    do fc = 1, num_soilc
+       c = filter_soilc(fc)
+       h2osfc_orig(c) = h2osfc(c)
+       h2osfc(c) = h2osfc(c) - qflx_too_small_h2osfc_to_soil(c) * dtime
+       h2osoi_liq(c,1) = h2osoi_liq(c,1) + qflx_too_small_h2osfc_to_soil(c) * dtime
+    end do
+
+    call truncate_small_values( &
+         num_f         = num_soilc, &
+         filter_f      = filter_soilc, &
+         lb            = bounds%begc, &
+         ub            = bounds%endc, &
+         data_baseline = h2osfc_orig(bounds%begc:bounds%endc), &
+         data          = h2osfc(bounds%begc:bounds%endc))
+
+  end subroutine UpdateState_TooSmallH2osfcToSoil
 
   !-----------------------------------------------------------------------
   subroutine UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
