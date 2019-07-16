@@ -162,8 +162,9 @@ module WaterType
      procedure, public :: InitAccVars
      procedure, public :: UpdateAccVars
      procedure, public :: Restart
-     procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
-     procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
+     procedure, public :: GetBulkOrTracerName ! Return name of a given tracer (or bulk)
+     procedure, public :: IsIsotope           ! Return true if a given tracer is an isotope
+     procedure, public :: GetIsotopeInfo      ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
      procedure, public :: DoConsistencyCheck ! Whether TracerConsistencyCheck should be called in this run
      procedure, public :: TracerConsistencyCheck
@@ -751,6 +752,32 @@ contains
     end do
 
   end subroutine Restart
+
+  !-----------------------------------------------------------------------
+  function GetBulkOrTracerName(this, i) result(name)
+    !
+    ! !DESCRIPTION:
+    ! Get name of the given tracer (or bulk)
+    !
+    ! i must be >= this%bulk_and_tracers_beg and <= this%bulk_and_tracers_end
+    !
+    ! !ARGUMENTS:
+    character(len=:), allocatable :: name  ! function result
+    class(water_type), intent(in) :: this
+    integer, intent(in) :: i  ! index of tracer (or bulk)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'GetBulkOrTracerName'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT(i >= this%bulk_and_tracers_beg, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(i <= this%bulk_and_tracers_end, errMsg(sourcefile, __LINE__))
+
+    name = this%bulk_and_tracers(i)%info%get_name()
+
+  end function GetBulkOrTracerName
+
 
   !-----------------------------------------------------------------------
   function IsIsotope(this, i)

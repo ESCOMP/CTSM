@@ -25,8 +25,9 @@ module WaterInfoTracerType
      logical :: communicated_with_coupler
      logical :: included_in_consistency_check
    contains
-     procedure, public :: fname  ! Get a history/restart field name for this tracer
-     procedure, public :: lname  ! Get a history/restart long name for this tracer
+     procedure, public :: get_name ! Get name of this tracer
+     procedure, public :: fname    ! Get a history/restart field name for this tracer
+     procedure, public :: lname    ! Get a history/restart long name for this tracer
      procedure, public :: is_communicated_with_coupler
      procedure, public :: is_included_in_consistency_check
   end type water_info_tracer_type
@@ -58,6 +59,25 @@ contains
     this%included_in_consistency_check = included_in_consistency_check
     call this%set_metadata(ratio = ratio)
   end function constructor
+
+  !-----------------------------------------------------------------------
+  pure function get_name(this) result(name)
+    !
+    ! !DESCRIPTION:
+    ! Get this tracer's name
+    !
+    ! !ARGUMENTS:
+    character(len=:), allocatable :: name  ! function result
+    class(water_info_tracer_type), intent(in) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_name'
+    !-----------------------------------------------------------------------
+
+    name = this%tracer_name
+
+  end function get_name
 
   !-----------------------------------------------------------------------
   pure function fname(this, basename)
