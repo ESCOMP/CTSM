@@ -1131,6 +1131,19 @@ contains
     ! Determine gridcell averaged properties to send to atm
     ! ============================================================================
 
+    ! BUG(wjs, 2019-07-12, ESCOMP/ctsm#762) Remove this block once above code is fully tracerized
+    ! We need this call here so that tracer values are consistent with bulk in lnd2atm;
+    ! without it, we get an error in CheckSnowConsistency.
+    if (water_inst%DoConsistencyCheck()) then
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1,nclumps
+          call get_clump_bounds(nc, bounds_clump)
+          call water_inst%ResetCheckedTracers(bounds_clump)
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after pre-lnd2atm reset')
+       end do
+       !$OMP END PARALLEL DO
+    end if
+
     call t_startf('lnd2atm')
     ! COMPILER_BUG(wjs, 2016-02-24, pgi 15.10) In principle, we should be able to make
     ! this function call inline in the CanopyFluxes argument list. However, with pgi
@@ -1280,15 +1293,17 @@ contains
     end if
 
     ! BUG(wjs, 2019-07-12, ESCOMP/ctsm#762) Remove this block once above code is fully tracerized
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-    do nc = 1,nclumps
-       call get_clump_bounds(nc, bounds_clump)
-       if (water_inst%DoConsistencyCheck()) then
+    ! (I'm not sure if we need this in addition to the call before lnd2atm, but it
+    ! doesn't hurt to have this extra call to ResetCheckedTracers for now.)
+    if (water_inst%DoConsistencyCheck()) then
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1,nclumps
+          call get_clump_bounds(nc, bounds_clump)
           call water_inst%ResetCheckedTracers(bounds_clump)
           call water_inst%TracerConsistencyCheck(bounds_clump, 'after end-of-loop reset')
-       end if
-    end do
-    !$OMP END PARALLEL DO
+       end do
+       !$OMP END PARALLEL DO
+    end if
 
   end subroutine clm_drv
 
