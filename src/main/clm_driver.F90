@@ -482,18 +482,16 @@ contains
             atm2lnd_inst, temperature_inst, &
             aerosol_inst, water_inst)
 
-       ! TODO(wjs, 2019-05-16) Remove this temporary check. We'll instead have one after
-       ! FracH2oSfc.
-       if (water_inst%DoConsistencyCheck()) then
-          call t_startf("tracer_consistency_check")
-          call water_inst%TracerConsistencyCheck(bounds_clump, 'after HandleNewSnow')
-          call t_stopf("tracer_consistency_check")
-       end if
-
        ! update surface water fraction (this may modify frac_sno)
        call FracH2oSfc(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst)
+
+       if (water_inst%DoConsistencyCheck()) then
+          call t_startf("tracer_consistency_check")
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after FracH2oSfc')
+          call t_stopf("tracer_consistency_check")
+       end if
 
        call t_stopf('hydro1')
 
