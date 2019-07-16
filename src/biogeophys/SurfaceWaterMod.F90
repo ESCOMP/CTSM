@@ -11,6 +11,7 @@ module SurfaceWaterMod
   use shr_const_mod               , only : shr_const_pi
   use shr_spfn_mod                , only : erf => shr_spfn_erf
   use clm_varcon                  , only : denh2o, denice, roverg, wimp, tfrz, pc, mu, rpi
+  use clm_varpar                  , only : nlevsno, nlevgrnd
   use clm_time_manager            , only : get_step_size
   use column_varcon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
   use decompMod                   , only : bounds_type
@@ -91,9 +92,14 @@ contains
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     call BulkDiag_FracH2oSfc(bounds, num_soilc, filter_soilc, &
-         h2osno_total = h2osno_total(begc:endc), &
-         waterstatebulk_inst = b_waterstate_inst, &
-         waterdiagnosticbulk_inst = b_waterdiagnostic_inst)
+         micro_sigma        = col%micro_sigma(begc:endc), &
+         h2osno_total       = h2osno_total(begc:endc), &
+         h2osoi_liq         = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+         h2osfc             = b_waterstate_inst%h2osfc_col(begc:endc), &
+         frac_sno           = b_waterdiagnostic_inst%frac_sno_col(begc:endc), &
+         frac_sno_eff       = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+         frac_h2osfc        = b_waterdiagnostic_inst%frac_h2osfc_col(begc:endc), &
+         frac_h2osfc_nosnow = b_waterdiagnostic_inst%frac_h2osfc_nosnow_col(begc:endc))
 
     end associate
 
@@ -102,8 +108,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BulkDiag_FracH2oSfc(bounds, num_soilc, filter_soilc, &
-       h2osno_total, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst)
+       micro_sigma, h2osno_total, &
+       h2osoi_liq, h2osfc, frac_sno, frac_sno_eff, frac_h2osfc, frac_h2osfc_nosnow)
     !
     ! !DESCRIPTION:
     ! Determine fraction of land surfaces which are submerged  
@@ -115,10 +121,15 @@ contains
     type(bounds_type)     , intent(in)           :: bounds           
     integer               , intent(in)           :: num_soilc       ! number of points in soilc filter
     integer               , intent(in)           :: filter_soilc(:) ! column filter for soil points
-    real(r8), intent(in) :: h2osno_total( bounds%begc: )  ! total snow water (mm H2O)
 
-    type(waterstatebulk_type) , intent(inout)        :: waterstatebulk_inst
-    type(waterdiagnosticbulk_type) , intent(inout)        :: waterdiagnosticbulk_inst
+    real(r8) , intent(in)    :: micro_sigma( bounds%begc: )              ! microtopography pdf sigma (m)
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: )             ! total snow water (mm H2O)
+    real(r8) , intent(inout) :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (col,lyr) [kg/m2]
+    real(r8) , intent(inout) :: h2osfc( bounds%begc: )                   ! surface water (mm)
+    real(r8) , intent(inout) :: frac_sno( bounds%begc: )                 ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_eff( bounds%begc: )             ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: frac_h2osfc( bounds%begc: )              ! col fractional area with surface water greater than zero
+    real(r8) , intent(inout) :: frac_h2osfc_nosnow( bounds%begc: )       ! col fractional area with surface water greater than zero (if no snow present)
     !
     ! !LOCAL VARIABLES:
     integer :: c,f,l          ! indices
@@ -127,18 +138,14 @@ contains
     real(r8):: min_h2osfc
     !-----------------------------------------------------------------------
 
+    SHR_ASSERT_FL((ubound(micro_sigma, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
-
-    associate(                                              & 
-         micro_sigma  => col%micro_sigma                  , & ! Input:  [real(r8) (:)   ] microtopography pdf sigma (m)                     
-         
-         h2osoi_liq   => waterstatebulk_inst%h2osoi_liq_col   , & ! Output: [real(r8) (:,:) ] liquid water (col,lyr) [kg/m2]                  
-         h2osfc       => waterstatebulk_inst%h2osfc_col       , & ! Output: [real(r8) (:)   ] surface water (mm)                                
-         frac_sno     => waterdiagnosticbulk_inst%frac_sno_col     , & ! Output: [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)       
-         frac_sno_eff => waterdiagnosticbulk_inst%frac_sno_eff_col , & ! Output: [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)  
-         frac_h2osfc  => waterdiagnosticbulk_inst%frac_h2osfc_col,   & ! Output: [real(r8) (:)   ] col fractional area with surface water greater than zero 
-         frac_h2osfc_nosnow  => waterdiagnosticbulk_inst%frac_h2osfc_nosnow_col    & ! Output: [real(r8) (:)   ] col fractional area with surface water greater than zero (if no snow present)
-         )
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_liq) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osfc, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_h2osfc, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_h2osfc_nosnow, 1) == bounds%endc), sourcefile, __LINE__)
 
     ! arbitrary lower limit on h2osfc for safer numerics...
     min_h2osfc=1.e-8_r8
@@ -197,8 +204,6 @@ contains
        endif
 
     end do
-
-    end associate
 
   end subroutine BulkDiag_FracH2oSfc
 
