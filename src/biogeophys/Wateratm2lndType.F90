@@ -404,7 +404,7 @@ contains
       real(r8), intent(in) :: addition
       real(r8), intent(in) :: subtraction
 
-      real(r8), parameter :: tolerance = 1.e-12_r8
+      real(r8), parameter :: tolerance = 1.e-13_r8
 
       downscaled = not_downscaled + addition - subtraction
       if (not_downscaled /= 0._r8) then
