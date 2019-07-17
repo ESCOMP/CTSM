@@ -3358,6 +3358,8 @@ sub setup_logic_soilm_streams {
       if ( &value_is_true( $nl->get_value('use_soil_moisture_streams') ) ) {
          add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_mapalgo',
                      'hgrid'=>$nl_flags->{'res'} );
+         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_tintalgo',
+                     'hgrid'=>$nl_flags->{'res'} );
          add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_soilm', 'phys'=>$nl_flags->{'phys'},
                      'sim_year'=>$nl_flags->{'sim_year'},
                      'sim_year_range'=>$nl_flags->{'sim_year_range'});

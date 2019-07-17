@@ -1645,6 +1645,10 @@ Filename of input stream data for USTAR
        group="soil_moisture_streams" valid_values="none" >
 </entry>
 
+<entry id="soilm_tintalgo" type="char*256" category="datasets"
+       group="soil_moisture_streams" valid_values="linear,nearest,lower,upper" >
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- lai_streams streams Namelist (when phys = CLM4_5)                              -->
 <!-- ========================================================================================  -->

@@ -19,6 +19,7 @@ module SoilMoistureStreamMod
   use decompMod       , only : gsMap_lnd2Dsoi_gdc2glo
   use domainMod       , only : ldomain
   use fileutils       , only : getavu, relavu
+  use LandunitType    , only : lun
   use ColumnType      , only : col                
   use SoilStateType   , only : soilstate_type
   use WaterStateBulkType, only : waterstatebulk_type
@@ -83,6 +84,7 @@ contains
     type(mct_ggrid)    :: dom_clm                    ! domain information 
     character(len=CL)  :: stream_fldfilename_soilm   ! ustar stream filename to read
     character(len=CL)  :: soilm_mapalgo = 'none'     ! Mapping alogrithm
+    character(len=CL)  :: soilm_tintalgo = 'linear'  ! Time interpolation alogrithm
 
     character(*), parameter    :: subName = "('soil_moisture_init')"
     character(*), parameter    :: F00 = "('(soil_moisture_init) ',4a)"
@@ -97,6 +99,7 @@ contains
          stream_year_last_soilm,     &
          model_year_align_soilm,     &
          soilm_mapalgo,              &
+         soilm_tintalgo,            &
          stream_fldfilename_soilm
 
     ! Default values for namelist
@@ -126,6 +129,8 @@ contains
     call shr_mpi_bcast(stream_year_last_soilm, mpicom)
     call shr_mpi_bcast(model_year_align_soilm, mpicom)
     call shr_mpi_bcast(stream_fldfilename_soilm, mpicom)
+    call shr_mpi_bcast(soilm_mapalgo, mpicom)
+    call shr_mpi_bcast(soilm_tintalgo, mpicom)
 
     if (masterproc) then
 
@@ -135,6 +140,8 @@ contains
        write(iulog,*) '  stream_year_last_soilm   = ',stream_year_last_soilm   
        write(iulog,*) '  model_year_align_soilm   = ',model_year_align_soilm   
        write(iulog,*) '  stream_fldfilename_soilm = ',trim(stream_fldfilename_soilm)
+       write(iulog,*) '  soilm_mapalgo = ',trim(soilm_mapalgo)
+       write(iulog,*) '  soilm_tintalgo = ',trim(soilm_tintalgo)
 
     endif
 
@@ -145,7 +152,7 @@ contains
     !
     fldList = trim(soilmString)
 
-    write(iulog,*) 'fieldlist: ', trim(fldList), nlevsoi
+    if (masterproc) write(iulog,*) 'fieldlist: ', trim(fldList)
     
     call shr_strdata_create(sdat_soilm,name="soil_moisture",    &
          pio_subsystem=pio_subsystem,                  & 
@@ -172,11 +179,11 @@ contains
          fldListModel=fldList,                         &
          fillalgo='none',                              &
          mapalgo=soilm_mapalgo,                        &
+         tintalgo=soilm_tintalgo,                      &
          calendar=get_calendar(),                      &
          dtlimit = 15._r8,                             &
          taxmode='cycle'                               )
 
-    write(*,*) 'initializedstream'
     if (masterproc) then
        call shr_strdata_print(sdat_soilm,'soil moisture data')
     endif
@@ -196,7 +203,8 @@ contains
     ! !USES:
     use clm_time_manager, only : get_curr_date
     use clm_varpar      , only : nlevsoi
-    use clm_varcon      , only : denh2o, denice 
+    use clm_varcon      , only : denh2o, denice, watmin
+    use landunit_varcon , only : istsoil
     !
     ! !ARGUMENTS:
     implicit none
@@ -216,7 +224,9 @@ contains
     real(r8) :: soilm_liq_frac            ! liquid fraction of soil moisture
     real(r8) :: soilm_ice_frac            ! ice fraction of soil moisture
     real(r8) :: moisture_increment        ! soil moisture adjustment increment
+    real(r8) :: h2osoi_vol_initial        ! initial vwc value
     character(len=CL)  :: stream_var_name
+
     !-----------------------------------------------------------------------
 
     associate( &
@@ -251,40 +261,45 @@ contains
          g_to_ig(g) = ig
       end do
       
-!      write(iulog,*) 'sdatavs: ',sdat_soilm%avs
-      write(iulog,*) ' '
-!      write(iulog,*) 'sdatsize: ',sdat_soilm%avs(1)
-      call mct_aVect_info(2, sdat_soilm%avs(1))
-
       ! Read data from stream into column level variable
       
       do c = bounds%begc, bounds%endc
-         !
-         ! Set variable for each gridcell/column combination
-         !
-         ig = g_to_ig(col%gridcell(c))
-         
-         !       this is a 2d field (gridcell/nlevsoi) !
-         do j = 1, nlevsoi
-            ! initialize increment to original soil moisture value
-            moisture_increment = h2osoi_vol(c,j)
+         if(lun%itype(col%landunit(c)) == istsoil) then
+            !
+            ! Set variable for each gridcell/column combination
+            !
+            ig = g_to_ig(col%gridcell(c))
             
-            ! update volumetric soil moisture
-            n = ig + (j-1)*(bounds%endg-bounds%begg+1)
-            h2osoi_vol(c,j) = sdat_soilm%avs(1)%rAttr(ism,n)
-            h2osoi_vol(c,j) = min(h2osoi_vol(c,j), watsat(c, j))
+            !       this is a 2d field (gridcell/nlevsoi) !
+            do j = 1, nlevsoi
+               
+               n = ig + (j-1)*(bounds%endg-bounds%begg+1)
+
+               ! if soil water is zero, liq/ice fractions cannot be calculated
+               if((h2osoi_liq(c, j) + h2osoi_ice(c, j)) > 0._r8) then
+                  
+                  ! save original soil moisture value
+                  h2osoi_vol_initial = h2osoi_vol(c,j)
             
-            ! calculate liq/ice mass fractions
-            soilm_liq_frac  = h2osoi_liq(c, j) /(h2osoi_liq(c, j) + h2osoi_ice(c, j))
-            soilm_ice_frac  = h2osoi_ice(c, j) /(h2osoi_liq(c, j) + h2osoi_ice(c, j))
-            ! update moisture increment (relative to original value)
-            moisture_increment = h2osoi_vol(c,j) - moisture_increment 
-            
-            ! update liq/ice water mass due to (volumetric) moisture increment
-            h2osoi_liq(c,j) = h2osoi_liq(c,j) + (soilm_liq_frac * moisture_increment * dz(c, j) * denh2o)
-            h2osoi_ice(c,j) = h2osoi_ice(c,j) + (soilm_ice_frac * moisture_increment * dz(c, j) * denice)
-         enddo
-         
+                  ! update volumetric soil moisture
+                  h2osoi_vol(c,j) = sdat_soilm%avs(1)%rAttr(ism,n)
+
+                  ! calculate liq/ice mass fractions
+                  soilm_liq_frac  = h2osoi_liq(c, j) /(h2osoi_liq(c, j) + h2osoi_ice(c, j))
+                  soilm_ice_frac  = h2osoi_ice(c, j) /(h2osoi_liq(c, j) + h2osoi_ice(c, j))
+
+                  ! calculate moisture increment
+                  moisture_increment = h2osoi_vol(c,j) - h2osoi_vol_initial
+                  ! add limitation check
+                  moisture_increment = min((watsat(c,j) - h2osoi_vol_initial),max(-(h2osoi_vol_initial-watmin),moisture_increment))
+
+                  ! update liq/ice water mass due to (volumetric) moisture increment
+                  h2osoi_liq(c,j) = h2osoi_liq(c,j) + (soilm_liq_frac * moisture_increment * dz(c, j) * denh2o)
+                  h2osoi_ice(c,j) = h2osoi_ice(c,j) + (soilm_ice_frac * moisture_increment * dz(c, j) * denice)
+
+               endif
+            enddo
+         endif      
       end do
 
     end associate
