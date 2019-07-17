@@ -337,21 +337,17 @@ contains
 
     ! Set gsMap_lnd_gdc2glo (the global index here includes mask=0 or ocean points)
     call get_proc_bounds(begg, endg)
-    begg3d = (begg-1)*lnk + 1
-    endg3d = endg*lnk
-    lsize = (endg3d - begg3d + 1 )
-    allocate(gindex(begg3d:endg3d))
+    lsize = endg + (lnk-1)*(endg-begg+1)
+    allocate(gindex(begg:lsize))
     do k = 1, lnk
        do n = begg,endg
-          m = (begg-1)*lnk + (k-1)*(endg-begg+1) + (n-begg+1)
+          m = n + (k-1)*(endg-begg+1)
           gindex(m) = ldecomp%gdc2glo(n) + (k-1)*(lni*lnj)
-!          write(*,*) 'm3d: ', m
-!          write(*,*) 'm3d: ', m,ldecomp%gdc2glo(n),gindex(m)
        enddo
     enddo
+    lsize = m - begg + 1
 
     gsize = lni * lnj * lnk
-
     call mct_gsMap_init(gsMap_lnd2Dsoi_gdc2glo, gindex, mpicom, comp_id, lsize, gsize)
 
     deallocate(gindex)
@@ -363,6 +359,9 @@ contains
        write(iulog,*)'   longitude points               = ',lni
        write(iulog,*)'   latitude points                = ',lnj
        write(iulog,*)'   soil levels                    = ',lnk
+       write(iulog,*)'   gsize                          = ',gsize
+       write(iulog,*)'   lsize                          = ',lsize
+       write(iulog,*)'   bounds(gindex)                 = ',size(gindex)
        write(iulog,*)' gsMap Characteristics'
        write(iulog,*) '  lnd gsmap glo num of segs      = ',mct_gsMap_ngseg(gsMap_lnd2Dsoi_gdc2glo)
        write(iulog,*)
