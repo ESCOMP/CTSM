@@ -43,7 +43,7 @@ include $(ESMFMKFILE)
 
 
 # -----------------------------------------------------------------------------
-demo_driver: demo_driver.o atmos_cap.o lilac_mod.o lilac_utils.o cpl_mod.o lnd_cap.o
+demo_driver: demo_driver.o atmos_cap.o lilac_mod.o lilac_utils.o cpl_mod.o lnd_cap.o lnd_comp_esmf.o
 	$(ESMF_F90LINKER) $(ESMF_F90LINKOPTS) $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) -o $@ $^ $(ESMF_F90ESMFLINKLIBS)
 	mv demo_driver demo_driver.exe
 	#rm *.o *.mod
