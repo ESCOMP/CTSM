@@ -111,9 +111,6 @@ module clm_varcon
   ! These are tunable constants from clm2_3
   ! ------------------------------------------------------------------------
 
-  real(r8), public :: zlnd = 0.01_r8        ! Roughness length for soil [m]
-  real(r8), public :: zsno = 0.0024_r8      ! Roughness length for snow [m]
-  real(r8), public :: csoilc = 0.004_r8     ! Drag coefficient for soil under canopy [-]
   real(r8), public :: capr   = 0.34_r8      ! Tuning factor to turn first layer T into surface T
   real(r8), public :: cnfac  = 0.5_r8       ! Crank Nicholson factor between 0 and 1
   real(r8), public :: ssi    = 0.033_r8     ! Irreducible water saturation of snow

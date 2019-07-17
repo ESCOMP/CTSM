@@ -20,6 +20,7 @@ module controlMod
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max, int_snow_max, n_melt_glcmec
   use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
+  use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
@@ -31,6 +32,7 @@ module controlMod
   use LakeCon                          , only: deepmixing_depthcrit, deepmixing_mixfact
   use CanopyfluxesMod                  , only: perchroot, perchroot_alt
   use CanopyHydrologyMod               , only: CanopyHydrology_readnl
+  use SurfaceAlbedoMod                 , only: SurfaceAlbedo_readnl
   use SurfaceResistanceMod             , only: soil_resistance_readNL
   use SnowHydrologyMod                 , only: SnowHydrology_readnl
   use SurfaceAlbedoMod                 , only: albice, lake_melt_icealb
@@ -114,7 +116,6 @@ contains
     !
     ! !USES:
     use clm_time_manager                 , only : set_timemgr_init
-    use fileutils                        , only : getavu, relavu
     use CNMRespMod                       , only : CNMRespReadNML
     use LunaMod                          , only : LunaReadNML
     use FrictionVelocityMod              , only : FrictionVelReadNML
@@ -256,8 +257,16 @@ contains
     ! Number of dominant pfts and landunits. Enhance ctsm performance by
     ! reducing the number of active pfts to n_dom_pfts and
     ! active landunits to n_dom_landunits.
+    ! Also choose to collapse the urban landunits to the dominant urban
+    ! landunit by setting collapse_urban = .true.
     namelist /clm_inparm/ n_dom_pfts
     namelist /clm_inparm/ n_dom_landunits
+    namelist /clm_inparm/ collapse_urban
+
+    ! Thresholds above which the model keeps the soil, crop, glacier, lake,
+    ! wetland, and urban landunits
+    namelist /clm_inparm/ toosmall_soil, toosmall_crop, toosmall_glacier
+    namelist /clm_inparm/ toosmall_lake, toosmall_wetland, toosmall_urban
 
     ! flag for SSRE diagnostic
     namelist /clm_inparm/ use_SSRE
@@ -335,7 +344,7 @@ contains
        call set_timemgr_init( dtime_in=dtime )
 
        if (use_init_interp) then
-          call apply_use_init_interp(finidat, finidat_interp_source)
+          call apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
        end if
 
        ! History and restart files
@@ -369,6 +378,56 @@ contains
        if (n_dom_landunits < 0 .or. n_dom_landunits > max_lunit) then
           call endrun(msg=' ERROR: expecting n_dom_landunits between 0 and  max_lunit where 0 is the default value that tells the model to do nothing ' // &
                errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_soil < 0._r8 .or. toosmall_soil > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_soil between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_crop < 0._r8 .or. toosmall_crop > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_crop between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_glacier < 0._r8 .or. toosmall_glacier > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_glacier between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_lake < 0._r8 .or. toosmall_lake > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_lake between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_wetland < 0._r8 .or. toosmall_wetland > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_wetland between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (toosmall_urban < 0._r8 .or. toosmall_urban > 100._r8) then
+          call endrun(msg=' ERROR: expecting toosmall_urban between 0._r8 and 100._r8 where 0 is the default value that tells the model to do nothing ' // &
+               errMsg(sourcefile, __LINE__))
+       end if
+
+       if (glc_do_dynglacier) then
+          if (collapse_urban) then
+             call endrun(msg='ERROR: glc_do_dynglacier is incompatible &
+                              with collapse_urban = .true.' // &
+                              errMsg(sourcefile, __LINE__))
+          end if
+          if (n_dom_pfts > 0 .or. n_dom_landunits > 0 &
+              .or. toosmall_soil > 0._r8 .or. toosmall_crop > 0._r8 &
+              .or. toosmall_glacier > 0._r8 .or. toosmall_lake > 0._r8 &
+              .or. toosmall_wetland > 0._r8 .or. toosmall_urban > 0._r8) then
+             call endrun(msg='ERROR: glc_do_dynglacier is incompatible &
+                              with any of the following set to > 0: &
+                              n_dom_pfts > 0, n_dom_landunits > 0, &
+                              toosmall_soil > 0._r8, toosmall_crop > 0._r8, &
+                              toosmall_glacier > 0._r8, toosmall_lake > 0._r8, &
+                              toosmall_wetland > 0._r8, toosmall_urban > 0._r8.' // &
+                              errMsg(sourcefile, __LINE__))
+          end if
        end if
 
        if (use_crop .and. .not. create_crop_landunit) then
@@ -477,6 +536,7 @@ contains
     call soil_resistance_readnl ( NLFilename )
     call CanopyFluxesReadNML    ( NLFilename )
     call CanopyHydrology_readnl ( NLFilename )
+    call SurfaceAlbedo_readnl   ( NLFilename )
     call SnowHydrology_readnl   ( NLFilename )
     call UrbanReadNML           ( NLFilename )
     call HumanIndexReadNML      ( NLFilename )
@@ -641,9 +701,21 @@ contains
     ! Number of dominant pfts and landunits. Enhance ctsm performance by
     ! reducing the number of active pfts to n_dom_pfts and
     ! active landunits to n_dom_landunits.
+    ! Also choose to collapse the urban landunits to the dominant urban
+    ! landunit by setting collapse_urban = .true.
     ! slevis: maxpatch_pft is MPI_LOGICAL? Doesn't matter since obsolete.
     call mpi_bcast(n_dom_pfts, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast(n_dom_landunits, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast(collapse_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    ! Thresholds above which the model keeps the soil, crop, glacier, lake,
+    ! wetland, and urban landunits
+    call mpi_bcast(toosmall_soil, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_crop, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_glacier, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_lake, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_wetland, 1, MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast(toosmall_urban, 1, MPI_REAL8, 0, mpicom, ier)
 
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
@@ -848,6 +920,13 @@ contains
     end if
     write(iulog,*) '   Number of ACTIVE PFTS (0 means input pft data NOT collapsed to n_dom_pfts) =', n_dom_pfts
     write(iulog,*) '   Number of ACTIVE LANDUNITS (0 means input landunit data NOT collapsed to n_dom_landunits) =', n_dom_landunits
+    write(iulog,*) '   Collapse urban landunits; done before collapsing all landunits to n_dom_landunits; .false. means do nothing i.e. keep all the urban landunits, though n_dom_landunits may still remove them =', collapse_urban
+    write(iulog,*) '   Threshold above which the model keeps the soil landunit =', toosmall_soil
+    write(iulog,*) '   Threshold above which the model keeps the crop landunit =', toosmall_crop
+    write(iulog,*) '   Threshold above which the model keeps the glacier landunit =', toosmall_glacier
+    write(iulog,*) '   Threshold above which the model keeps the lake landunit =', toosmall_lake
+    write(iulog,*) '   Threshold above which the model keeps the wetland landunit =', toosmall_wetland
+    write(iulog,*) '   Threshold above which the model keeps the urban landunits =', toosmall_urban
     if (use_cn) then
        if (suplnitro /= suplnNon)then
           write(iulog,*) '   Supplemental Nitrogen mode is set to run over Patches: ', &
@@ -1015,7 +1094,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine apply_use_init_interp(finidat, finidat_interp_source)
+  subroutine apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
     !
     ! !DESCRIPTION:
     ! Applies the use_init_interp option, setting finidat_interp_source to finidat
@@ -1028,6 +1107,7 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
+    character(len=*), intent(in)    :: finidat_interp_dest
     character(len=*), intent(inout) :: finidat
     character(len=*), intent(inout) :: finidat_interp_source
     !
@@ -1043,6 +1123,18 @@ contains
     if (finidat_interp_source /= ' ') then
        call endrun(msg=' ERROR: Cannot set use_init_interp if finidat_interp_source is &
             &already set')
+    end if
+
+    if (get_filename(finidat) == &
+         get_filename(finidat_interp_dest)) then
+       write(iulog,*) 'ERROR: With use_init_interp, cannot use the same filename for source and dest'
+       write(iulog,*) '(because this will lead to the source being overwritten before it is read).'
+       write(iulog,*) 'finidat             = ', trim(get_filename(finidat))
+       write(iulog,*) 'finidat_interp_dest = ', trim(get_filename(finidat_interp_dest))
+       write(iulog,*) '(Even if the two files are in different directories, you cannot use the same filename'
+       write(iulog,*) 'due to problems related to <https://github.com/ESCOMP/ctsm/issues/329>.)'
+       write(iulog,*) 'As a workaround, copy or move the finidat file to a different name.'
+       call endrun(msg=' ERROR: With use_init_interp, cannot use the same filename for source and dest')
     end if
 
     finidat_interp_source = finidat

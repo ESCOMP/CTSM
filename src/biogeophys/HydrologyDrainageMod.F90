@@ -160,7 +160,9 @@ contains
       end do
 
       call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-           waterstatebulk_inst, waterdiagnosticbulk_inst, endwb(bounds%begc:bounds%endc))
+           waterstatebulk_inst, waterdiagnosticbulk_inst, &
+           subtract_dynbal_baselines = .false., &
+           water_mass = endwb(bounds%begc:bounds%endc))
 
       ! Determine wetland and land ice hydrology (must be placed here
       ! since need snow updated from CombineSnowLayers)

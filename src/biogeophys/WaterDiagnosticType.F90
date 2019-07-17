@@ -19,6 +19,8 @@ module WaterDiagnosticType
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d
+  use WaterStateType, only : waterstate_type
+  use WaterFluxType, only : waterflux_type
   !
   implicit none
   save
@@ -32,6 +34,7 @@ module WaterDiagnosticType
      real(r8), pointer :: snowice_col            (:)   ! col average snow ice lens
      real(r8), pointer :: snowliq_col            (:)   ! col average snow liquid water
 
+     real(r8), pointer :: h2ocan_patch           (:)   ! patch total canopy water (liq+ice) (mm H2O)
      real(r8), pointer :: total_plant_stored_h2o_col(:) ! col water that is bound in plants, including roots, sapwood, leaves, etc
                                                         ! in most cases, the vegetation scheme does not have a dynamic
                                                         ! water storage in plants, and thus 0.0 is a suitable for the trivial case.
@@ -49,11 +52,12 @@ module WaterDiagnosticType
 
    contains
 
-     procedure          :: Init         
-     procedure          :: Restart      
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure          :: Init
+     procedure          :: Restart
+     procedure          :: Summary        ! Compute end-of-timestep summaries of water diagnostic terms
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
 
   end type waterdiagnostic_type
 
@@ -104,6 +108,9 @@ contains
     call AllocateVar1d(var = this%snowliq_col, name = 'snowliq_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%h2ocan_patch, name = 'h2ocan_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
     call AllocateVar1d(var = this%total_plant_stored_h2o_col, name = 'total_plant_stored_h2o_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
@@ -156,6 +163,14 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
+
+    this%h2ocan_patch(begp:endp) = spval 
+    call hist_addfld1d ( &
+         fname=this%info%fname('H2OCAN'), &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('intercepted water'), &
+         ptr_patch=this%h2ocan_patch)
 
     this%h2osoi_liqice_10cm_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -249,6 +264,10 @@ contains
 
     ratio = this%info%get_ratio()
 
+    ! h2ocan_patch is explicitly set for soil patches; this setting ensures that it will
+    ! be 0 for special landunits
+    this%h2ocan_patch(bounds%begp:bounds%endp) = 0._r8
+
     ! Water Stored in plants is almost always a static entity, with the exception
     ! of when FATES-hydraulics is used. As such, this is trivially set to 0.0 (rgk 03-2017)
     this%total_plant_stored_h2o_col(bounds%begc:bounds%endc) = 0.0_r8
@@ -311,5 +330,38 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%qaf_lun)
 
   end subroutine Restart
+
+  !-----------------------------------------------------------------------
+  subroutine Summary(this, bounds, &
+       num_soilp, filter_soilp, &
+       num_allc, filter_allc, &
+       waterstate_inst, waterflux_inst)
+    !
+    ! !DESCRIPTION:
+    ! Compute end-of-timestep summaries of water diagnostic terms
+    !
+    ! !ARGUMENTS:
+    class(waterdiagnostic_type) , intent(inout) :: this
+    type(bounds_type)           , intent(in)    :: bounds
+    integer                     , intent(in)    :: num_soilp       ! number of patches in soilp filter
+    integer                     , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    integer                     , intent(in)    :: num_allc        ! number of columns in allc filter
+    integer                     , intent(in)    :: filter_allc(:)  ! filter for all columns
+    class(waterstate_type)      , intent(in)    :: waterstate_inst
+    class(waterflux_type)       , intent(in)    :: waterflux_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fp, p
+
+    character(len=*), parameter :: subname = 'Summary'
+    !-----------------------------------------------------------------------
+
+    do fp = 1, num_soilp
+       p = filter_soilp(fp)
+       this%h2ocan_patch(p) = waterstate_inst%liqcan_patch(p) + waterstate_inst%snocan_patch(p)
+    end do
+
+  end subroutine Summary
+
 
 end module WaterDiagnosticType

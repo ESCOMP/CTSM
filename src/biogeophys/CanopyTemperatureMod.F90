@@ -40,9 +40,38 @@ module CanopyTemperatureMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyTemperature  
+  public :: readParams
+
+  type, private :: params_type
+      real(r8) :: zsno  ! Momentum roughness length for snow (m)
+      real(r8) :: zlnd  ! Momentum roughness length for soil, glacier, wetland (m)
+  end type params_type
+  type(params_type), private ::  params_inst
   !------------------------------------------------------------------------------
 
 contains
+
+  !------------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_CanopyTemperature'
+    !--------------------------------------------------------------------
+
+    ! Momentum roughness length for snow (m)
+    call readNcdioScalar(ncid, 'zsno', subname, params_inst%zsno)
+    ! Momentum roughness length for soil, glacier, wetland (m)
+    call readNcdioScalar(ncid, 'zlnd', subname, params_inst%zlnd)
+
+   end subroutine readParams
 
   !------------------------------------------------------------------------------
   subroutine CanopyTemperature(bounds, &
@@ -75,7 +104,7 @@ contains
     !
     ! !USES:
     use QSatMod            , only : QSat
-    use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, zlnd, zsno, tfrz, spval 
+    use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, tfrz, spval 
     use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
     use column_varcon      , only : icol_road_imperv, icol_road_perv
     use landunit_varcon    , only : istice_mec, istwet, istsoil, istdlak, istcrop, istdlak
@@ -384,9 +413,9 @@ contains
          ! underneath canopy, wetlands, etc.)
 
          if (frac_sno(c) > 0._r8) then
-            z0mg(c) = zsno
+            z0mg(c) = params_inst%zsno
          else
-            z0mg(c) = zlnd
+            z0mg(c) = params_inst%zlnd
          end if
          z0hg(c) = z0mg(c)            ! initial set only
          z0qg(c) = z0mg(c)            ! initial set only
