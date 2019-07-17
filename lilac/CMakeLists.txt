@@ -2,12 +2,17 @@ cmake_minimum_required(VERSION 2.8.12.1)
 
 project(LILAC Fortran)
 enable_language(Fortran)
+#include(CIME_initial_setup)
+#include(CIME_utils)
+
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/CMakeModules")
 
 find_package(MPI REQUIRED)
+add_definitions(-DHIDE_MPI)
 # TODO: This should be found from the find_package call but its not working
 #set(CMAKE_Fortran_COMPILER "/usr/lib64/mpich/bin/mpif90")
+#find_package (ESMF)
 find_package(ESMF REQUIRED)
 
 # Local CMake modules
@@ -29,12 +34,12 @@ set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} ${bounds}")
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${dialect}")
 
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_COMPILER_LINE}")
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_LINK_LINE} -g -cpp")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_LINK_LINE} -g -cpp -lesmf")
 # TODO: This should not be necessary but certain header files are missing from the build
 #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -I /usr/include/ -I/usr/src/lilac/external/esmf/src/Infrastructure/Util/include -I/usr/src/lilac/external/esmf/build_config/Linux.gfortran.default -I /usr/src/lilac/external/esmf/src/include")
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -I/usr/include/ -I/usr/src/esmf/src/Infrastructure/Util/include/ -I/usr/src/esmf/build_config/Linux.gfortran.default -I /usr/src/esmf/src/include")
-
-
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -I/usr/include/ -I/usr/src/esmf/src/Infrastructure/Util/include/ -I/usr/src/esmf/build_config/Linux.gfortran.default -I/usr/src/esmf/src/include -L/glade/u/home/dunlap/ESMF-INSTALL/8.0.0bs29/lib/libg/Linux.intel.64.mpt.default")
+include_directories("/glade/u/home/dunlap/ESMF-INSTALL/8.0.0bs29/lib/libg/Linux.intel.64.mpt.default")
+include_directories("/glade/scratch/negins/testlilac2/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf/")
 message(STATUS "==============================================================")
 message(STATUS "Fortran    Compiler : ${CMAKE_Fortran_COMPILER}")
 message(STATUS "cmake Fortran Flags : ${CMAKE_Fortran_FLAGS}")
