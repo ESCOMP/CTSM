@@ -7,9 +7,10 @@ module lilac_mod
     ! !USES
     use ESMF
     use lilac_utils
-    use atmos_cap ,  only :         atmos_register
-    use lnd_cap   ,  only :         lnd_register
-    use cpl_mod   ,  only :         cpl_atm2lnd_register , cpl_lnd2atm_register
+    use atmos_cap     ,  only :         atmos_register
+    use lnd_cap       ,  only :         lnd_register
+    !use lnd_comp_esmf ,  only :         lnd_register
+    use cpl_mod       ,  only :         cpl_atm2lnd_register , cpl_lnd2atm_register
 
     implicit none
 
@@ -44,8 +45,7 @@ module lilac_mod
     subroutine lilac_init( atm2lnd1d, atm2lnd2d, lnd2atm1d, lnd2atm2d)
 
         use atmos_cap ,  only :          a2c_fldlist, c2a_fldlist
-        use lnd_cap   ,  only :          l2c_fldlist, c2l_fldlist
-
+        use lnd_cap,   only : l2c_fldlist, c2l_fldlist
         character(len=*), parameter                      :: subname=trim(modname)//': [lilac_init] '
 
         ! input/output variables

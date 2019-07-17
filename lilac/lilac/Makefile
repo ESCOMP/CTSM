@@ -46,12 +46,20 @@ include $(ESMFMKFILE)
 demo_driver: demo_driver.o atmos_cap.o lilac_mod.o lilac_utils.o cpl_mod.o lnd_cap.o
 	$(ESMF_F90LINKER) $(ESMF_F90LINKOPTS) $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) -o $@ $^ $(ESMF_F90ESMFLINKLIBS)
 	mv demo_driver demo_driver.exe
-	rm *.o *.mod
+	#rm *.o *.mod
 
 # module dependencies:
-demo_driver.o: lilac_mod.o atmos_cap.o lilac_utils.o cpl_mod.o
-lilac_mod.o: atmos_cap.o lilac_utils.o cpl_mod.o lnd_cap.o
+demo_driver.o: lilac_mod.o atmos_cap.o lilac_utils.o cpl_mod.o shr_string_mod.o shr_kind_mod.o shr_sys_mod.o shr_log_mod.o shr_timer_mod.o
+#demo_driver.o: lilac_mod.o atmos_cap.o lilac_utils.o cpl_mod.o shr_string_mod.o
+lilac_mod.o: atmos_cap.o lilac_utils.o cpl_mod.o lnd_cap.o lnd_comp_esmf.o
+#lilac_mod.o: atmos_cap.o lilac_utils.o cpl_mod.o lnd_cap.o
+shr_string_mod.o: shr_kind_mod.o shr_sys_mod.o shr_log_mod.o shr_timer_mod.o
+shr_log_mod.o:
 atmos_cap.o: lilac_utils.o
+#lnd_comp_esmf.o: shr_string_mod.o abort_utils.o
+shr_sys_mod.o: shr_log_mod.o
+abort_utils.o: 
+clm_varctl.o:
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 .PHONY: dust clean distclean berzerk
