@@ -610,7 +610,7 @@ contains
     use clm_varcon       , only : pondmx, watmin, spval, nameg
     use landunit_varcon  , only : istcrop, istdlak, istsoil  
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step, is_restart
+    use clm_time_manager , only : is_first_step
     use clm_varctl       , only : bound_h2osoi
     use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
     use restUtilMod
@@ -623,7 +623,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     logical  :: readvar
-    integer  :: c
     !------------------------------------------------------------------------
 
 
@@ -646,21 +645,6 @@ contains
          long_name=this%info%lname('fraction of ground covered by h2osfc (0 to 1)'), &
          units='', &
          interpinic_flag='interp', readvar=readvar, data=this%frac_h2osfc_col)
-    ! BACKWARDS_COMPATIBILITY(wjs, 2019-07-18) We have some Clm45 initial conditions
-    ! files that have frac_h2osfc > 0 for some glacier columns
-    ! (clmi.I1850Clm45BgcGs.0901-01-01.0.9x1.25_gx1v7_simyr1850_c190111.nc and
-    ! clmi.I1850Clm45BgcCruGs.1101-01-01.0.9x1.25_gx1v7_simyr1850_c190111.nc). I'm not
-    ! sure how this happened, but it seems wrong. There used to be code in the driver
-    ! loop that would reset special landunit frac_h2osfc_col to 0 every time step, but I
-    ! have removed that. So for the code to work correctly, we need to reset these
-    ! special-landunit frac_h2osfc values to 0 here.
-    if (flag == 'read') then
-       do c = bounds%begc, bounds%endc
-          if (col%lun_itype(c) /= istsoil .and. col%lun_itype(c) /= istcrop) then
-             this%frac_h2osfc_col(c) = 0._r8
-          end if
-       end do
-    end if
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('SNOW_DEPTH'), &
