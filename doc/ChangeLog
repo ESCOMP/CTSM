@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev051
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
-Date:  Mon Jul 15 12:13:39 MDT 2019
+Date:  Wed Jul 17 17:55:52 MDT 2019
 One-line Summary: Soil layer definition clean-up and user-defined option
 
 Purpose of changes
@@ -11,7 +11,7 @@ Purpose of changes
  definition: the node-based and the thickness-based.
 
  User-defined option allows user to specify a soil layer profile in the
- form of a vector of dzsoi values in meters in the thickness-based
+ form of a dzsoi vector (values in meters) in the thickness-based
  approach.
 
 
@@ -20,7 +20,7 @@ Bugs fixed or introduced
 
 Issues fixed (include CTSM Issue #): #279 #728
 
-Known bugs found since the previous tag (include github issue ID): #761 and bug in this PR (#759) causing model to abort when nlevsoi = nlevgrnd
+Known bugs found since the previous tag (include github issue ID): #759 (this PR) bug causes model to abort when nlevsoi = nlevgrnd; bug has been corrected with an error check
 
 
 Significant changes to scientifically-supported configurations
@@ -40,11 +40,11 @@ Does this tag change answers significantly for any of the following physics conf
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions): specify at least one, either soil_layerstruct_predefined or soil_layerstruct_userdefined in the namelist
+Caveats for users (e.g., need to interpolate initial conditions): if neither soil_layerstruct_predefined nor soil_layerstruct_userdefined get specified in the namelist, then the model sets soil_layerstruct_predefined to the old default setting for soil_layerstruct, i.e. 20SL_8.5m
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): renamed soil_layerstruct to soil_layerstruct_predefined and added soil_layerstruct_userdefined
 
-Changes made to namelist defaults (e.g., changed parameter values): soil_layerstruct_predefined clm5 default changed from 20SL_8.5m to UNSET
+Changes made to namelist defaults (e.g., changed parameter values): none
 
 Changes to the datasets (e.g., parameter, surface or initial files): none
 
@@ -56,7 +56,16 @@ NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
 
-Changes to tests or testing: TEST(S) ADDED TO THE TEST SUITE. Also specified soil_layerstruct_predefined in all pre-existing tests in the test suite.
+Changes to tests or testing:
+ 1) New test...
+ ERP_P36x2_D_Ld5.f10_f10_musgs.I2000Ctsm50NwpBgcCropGswpGs.cheyenne_intel.clm-default
+ replaces existing test
+ ERS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-rm_indiv_lunits_and_collapse_to_dom
+ to check the correction described in known bugs above. The new test together with existing unit tests cover what the old test was testing.
+
+ 2) New test...
+ ERS_D_Ld5.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-soil_layerstruct
+ ensures that soil_layerstruct_userdefined will give bfb same answers as soil_layerstruct_predefined = '4SL_2m' when set with the same dzsoi values
 
 Code reviewed by: @billsacks
 

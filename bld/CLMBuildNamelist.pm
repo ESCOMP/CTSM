@@ -2100,15 +2100,9 @@ sub setup_logic_soilstate {
   if (defined($soil_layerstruct_userdefined)) {
     if (defined($soil_layerstruct_predefined)) {
       $log->fatal_error("You have set both soil_layerstruct_userdefined and soil_layerstruct_predefined in your namelist; model cannot determine which to use");
-    } else {
-      my $group = $definition->get_group_name($var1);
-      $nl->set_variable_value($group, $var1, 'UNSET' );
     }
   } else {
-    if (defined($soil_layerstruct_predefined)) {
-      my $group = $definition->get_group_name($var2);
-      $nl->set_variable_value($group, $var2, -9999999.);
-    } else {
+    if (not defined($soil_layerstruct_predefined)) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct_predefined',
                   'structure'=>$nl_flags->{'structure'});
     }
