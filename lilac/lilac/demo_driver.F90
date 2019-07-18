@@ -87,7 +87,12 @@ program demo_lilac_driver
 
     do curr_time = start_time, end_time
         if      (curr_time == start_time) then
+
             ! Initalization phase
+            print *,  "--------------------------"
+            print *,  " LILAC Initalization phase"
+            print *,  "--------------------------"
+
             call lilac_init     ( atm2lnd1d = atm2lnd   ,   lnd2atm1d =  lnd2atm )
         else if (curr_time == end_time  ) then
             ! Finalization phase

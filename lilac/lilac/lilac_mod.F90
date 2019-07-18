@@ -8,8 +8,10 @@ module lilac_mod
     use ESMF
     use lilac_utils
     use atmos_cap     ,  only :         atmos_register
-    !use lnd_cap       ,  only :         lnd_register
-    use lnd_comp_esmf
+    use lnd_cap       ,  only :         lnd_register
+    !use lnd_shr_methods
+    !use lnd_comp_esmf
+    !use lnd_comp_esmf ,  only :         lnd_register
     !use clm_share ,  only :         lnd_register
     !use lnd ,  only :         lnd_register
     use cpl_mod       ,  only :         cpl_atm2lnd_register , cpl_lnd2atm_register
@@ -88,6 +90,10 @@ module lilac_mod
         a2l_fldnum  = 3
         l2a_fldnum  = 3
 
+        print *,  "---------------------------------------"
+        print *,  "    Lilac Demo Application Start       "
+        print *,  "---------------------------------------"
+
         !-------------------------------------------------------------------------
         ! Initialize ESMF, set the default calendar and log type.
         !-------------------------------------------------------------------------
@@ -96,9 +102,6 @@ module lilac_mod
         call ESMF_LogWrite(subname//".........................", ESMF_LOGMSG_INFO)
         call ESMF_LogWrite(subname//"Initializing ESMF        ", ESMF_LOGMSG_INFO)
 
-        print *,  "---------------------------------------"
-        print *,  "    Lilac Demo Application Start       "
-        print *,  "---------------------------------------"
         !-------------------------------------------------------------------------
         ! Read in configuration data -- namelist.input from host atmosphere(wrf)
         !-------------------------------------------------------------------------
