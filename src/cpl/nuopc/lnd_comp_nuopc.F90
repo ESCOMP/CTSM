@@ -12,7 +12,7 @@ module lnd_comp_nuopc
   use NUOPC_Model       , only : model_label_DataInitialize => label_DataInitialize
   use NUOPC_Model       , only : model_label_SetRunClock    => label_SetRunClock
   use NUOPC_Model       , only : model_label_Finalize       => label_Finalize
-  use NUOPC_Model       , only : NUOPC_ModelGet, SetVM
+  use NUOPC_Model       , only : NUOPC_ModelGet
   use shr_kind_mod      , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod       , only : shr_sys_abort
   use shr_file_mod      , only : shr_file_getlogunit, shr_file_setlogunit
@@ -43,7 +43,6 @@ module lnd_comp_nuopc
 
   ! Module routines
   public  :: SetServices
-  public  :: SetVM
   private :: InitializeP0
   private :: InitializeAdvertise
   private :: InitializeRealize
