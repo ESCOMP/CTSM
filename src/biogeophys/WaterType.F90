@@ -77,7 +77,7 @@ module WaterType
   use Wateratm2lndType         , only : wateratm2lnd_type
   use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
   use WaterTracerContainerType , only : water_tracer_container_type
-  use WaterTracerUtils         , only : CompareBulkToTracer
+  use WaterTracerUtils         , only : CompareBulkToTracer, SetTracerToBulkTimesRatio
 
   implicit none
   private
@@ -162,11 +162,13 @@ module WaterType
      procedure, public :: InitAccVars
      procedure, public :: UpdateAccVars
      procedure, public :: Restart
-     procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
-     procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
+     procedure, public :: GetBulkOrTracerName ! Return name of a given tracer (or bulk)
+     procedure, public :: IsIsotope           ! Return true if a given tracer is an isotope
+     procedure, public :: GetIsotopeInfo      ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
      procedure, public :: DoConsistencyCheck ! Whether TracerConsistencyCheck should be called in this run
      procedure, public :: TracerConsistencyCheck
+     procedure, public :: ResetCheckedTracers
      procedure, public :: Summary            ! Calculate end-of-timestep summaries of water diagnostic terms
 
      ! Private routines
@@ -337,7 +339,7 @@ contains
          bulk_info, &
          bulk_vars, &
          snow_depth_input_col = snow_depth_col(begc:endc),    &
-         waterstatebulk_inst = this%waterstatebulk_inst )
+         h2osno_input_col = h2osno_col(begc:endc))
 
     call this%waterbalancebulk_inst%Init(bounds, &
          bulk_info, &
@@ -752,6 +754,32 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
+  function GetBulkOrTracerName(this, i) result(name)
+    !
+    ! !DESCRIPTION:
+    ! Get name of the given tracer (or bulk)
+    !
+    ! i must be >= this%bulk_and_tracers_beg and <= this%bulk_and_tracers_end
+    !
+    ! !ARGUMENTS:
+    character(len=:), allocatable :: name  ! function result
+    class(water_type), intent(in) :: this
+    integer, intent(in) :: i  ! index of tracer (or bulk)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'GetBulkOrTracerName'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT(i >= this%bulk_and_tracers_beg, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(i <= this%bulk_and_tracers_end, errMsg(sourcefile, __LINE__))
+
+    name = this%bulk_and_tracers(i)%info%get_name()
+
+  end function GetBulkOrTracerName
+
+
+  !-----------------------------------------------------------------------
   function IsIsotope(this, i)
     !
     ! !DESCRIPTION:
@@ -916,6 +944,65 @@ contains
      end do
 
   end subroutine TracerConsistencyCheck
+
+  !-----------------------------------------------------------------------
+  subroutine ResetCheckedTracers(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! For tracers set in TracerConsistencyCheck, reset all values to bulk * ratio
+    !
+    ! This is useful if some code has not been tracerized yet, but we want to perform the
+    ! tracer consistency check on later code: Put a call to TracerConsistencyCheck just
+    ! before the not-yet-tracerized code, then put a call to ResetCheckedTracers just
+    ! after the not-yet-tracerized code.
+    !
+    ! !ARGUMENTS:
+    class(water_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+    integer :: num_vars
+    integer :: var_num
+    integer :: begi, endi
+    real(r8), pointer :: bulk(:)
+    real(r8), pointer :: tracer(:)
+
+    character(len=*), parameter :: subname = 'ResetCheckedTracers'
+    !-----------------------------------------------------------------------
+
+    do i = this%tracers_beg, this%tracers_end
+
+       associate( &
+            tracer_vars => this%bulk_and_tracers(i)%vars, &
+            tracer_info => this%bulk_and_tracers(i)%info, &
+            bulk_vars => this%bulk_and_tracers(this%i_bulk)%vars &
+            )
+
+       if (tracer_info%is_included_in_consistency_check()) then
+          num_vars = tracer_vars%get_num_vars()
+          SHR_ASSERT(num_vars == bulk_vars%get_num_vars(), errMsg(sourcefile, __LINE__))
+
+          do var_num = 1, num_vars
+             SHR_ASSERT_FL(tracer_vars%get_description(var_num) == bulk_vars%get_description(var_num), sourcefile, __LINE__)
+
+             call tracer_vars%get_bounds(var_num, bounds, begi, endi)
+
+             call bulk_vars%get_data(var_num, bulk)
+             call tracer_vars%get_data(var_num, tracer)
+
+             call SetTracerToBulkTimesRatio(begi, endi, &
+                  bulk = bulk(begi:endi), &
+                  tracer = tracer(begi:endi), &
+                  ratio = tracer_info%get_ratio())
+          end do
+       end if
+       end associate
+
+    end do
+
+  end subroutine ResetCheckedTracers
+
 
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, &

@@ -187,7 +187,6 @@ contains
     associate(                                               &
          zi         => col%zi                           , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
          zwt        => soilhydrology_inst%zwt_col       , & ! Input:  [real(r8) (:)   ]  water table depth (m)
-         h2osno     => waterstate_inst%h2osno_col       , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)
          aquifer_water_baseline => waterstate_inst%aquifer_water_baseline, & ! Input: [real(r8)] baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
          wa         => waterstate_inst%wa_col           , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)
          begwb      => waterbalance_inst%begwb_col      , & ! Output: [real(r8) (:)   ]  water mass begining of the time step
@@ -215,9 +214,12 @@ contains
          subtract_dynbal_baselines = .false., &
          water_mass = begwb(bounds%begc:bounds%endc))
 
-    do c = bounds%begc, bounds%endc
-       h2osno_old(c) = h2osno(c)
-    end do
+    call waterstate_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
+         caller = 'BeginWaterBalanceSingle-nolake', &
+         h2osno_total = h2osno_old(bounds%begc:bounds%endc))
+    call waterstate_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+         caller = 'BeginWaterBalanceSingle-lake', &
+         h2osno_total = h2osno_old(bounds%begc:bounds%endc))
 
     end associate 
 
@@ -225,6 +227,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, &
+        num_allc, filter_allc, &
         atm2lnd_inst, solarabs_inst, waterflux_inst, waterstate_inst, &
         waterdiagnosticbulk_inst, waterbalance_inst, wateratm2lnd_inst, &
         surfalb_inst, energyflux_inst, canopystate_inst)
@@ -252,6 +255,8 @@ contains
      !
      ! !ARGUMENTS:
      type(bounds_type)     , intent(in)    :: bounds  
+     integer               , intent(in)    :: num_allc        ! number of columns in allc filter
+     integer               , intent(in)    :: filter_allc(:)  ! filter for all columns
      type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst
      type(solarabs_type)   , intent(in)    :: solarabs_inst
      class(waterflux_type) , intent(in)    :: waterflux_inst
@@ -271,6 +276,7 @@ contains
      integer  :: indexp,indexc,indexl,indexg            ! index of first found in search loop
      real(r8) :: forc_rain_col(bounds%begc:bounds%endc) ! column level rain rate [mm/s]
      real(r8) :: forc_snow_col(bounds%begc:bounds%endc) ! column level snow rate [mm/s]
+     real(r8) :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water [mm H2O]
 
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
      real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
@@ -292,7 +298,6 @@ contains
           forc_snow               =>    wateratm2lnd_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]
           forc_lwrad              =>    atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
 
-          h2osno                  =>    waterstate_inst%h2osno_col              , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
           h2osno_old              =>    waterbalance_inst%h2osno_old_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
           frac_sno_eff            =>    waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  effective snow fraction                 
           frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
@@ -470,6 +475,10 @@ contains
 
        ! Snow balance check
 
+       call waterstate_inst%CalculateTotalH2osno(bounds, num_allc, filter_allc, &
+            caller = 'BalanceCheck', &
+            h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+
        do c = bounds%begc,bounds%endc
           if (col%active(c)) then
              g = col%gridcell(c)
@@ -509,7 +518,7 @@ contains
                           + qflx_snow_drain(c) + qflx_sl_top_soil(c)
                 endif
 
-                errh2osno(c) = (h2osno(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
+                errh2osno(c) = (h2osno_total(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
              else
                 snow_sources(c) = 0._r8
                 snow_sinks(c) = 0._r8
@@ -540,7 +549,7 @@ contains
                  write(iulog,*)'snl                = ',col%snl(indexc)
                  write(iulog,*)'snow_depth         = ',snow_depth(indexc)
                  write(iulog,*)'frac_sno_eff       = ',frac_sno_eff(indexc)
-                 write(iulog,*)'h2osno             = ',h2osno(indexc)
+                 write(iulog,*)'h2osno             = ',h2osno_total(indexc)
                  write(iulog,*)'h2osno_old         = ',h2osno_old(indexc)
                  write(iulog,*)'snow_sources       = ',snow_sources(indexc)*dtime
                  write(iulog,*)'snow_sinks         = ',snow_sinks(indexc)*dtime
