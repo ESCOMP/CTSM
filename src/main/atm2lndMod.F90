@@ -358,10 +358,10 @@ contains
                   rain = forc_rain_c(c), &
                   snow = forc_snow_c(c))
              if (forc_rain_c(c) > rain_orig) then
-                snow_to_rain_conversion_c(c) = forc_rain_c(c) - rain_orig
+                snow_to_rain_conversion_c(c) = snow_orig - forc_snow_c(c)
              end if
              if (forc_snow_c(c) > snow_orig) then
-                rain_to_snow_conversion_c(c) = forc_snow_c(c) - snow_orig
+                rain_to_snow_conversion_c(c) = rain_orig - forc_rain_c(c)
              end if
              call sens_heat_from_precip_conversion(&
                   rain_to_snow = rain_to_snow_conversion_c(c), &

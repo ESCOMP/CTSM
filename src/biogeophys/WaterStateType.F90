@@ -192,7 +192,7 @@ contains
          fname=this%info%fname('H2OSOI'),  &
          units='mm3/mm3', type2d='levsoi', &
          avgflag='A', &
-         long_name=this%info%lname('volumetric soil water (vegetated landunits only)'), &
+         long_name=this%info%lname('volumetric soil water (natural vegetated and crop landunits only)'), &
          ptr_col=this%h2osoi_vol_col, l2g_scale_type='veg')
 
     ! this%h2osoi_liq_col(begc:endc,:) = spval
@@ -200,7 +200,7 @@ contains
     !      fname=this%info%fname('SOILLIQ'),  &
     !      units='kg/m2', type2d='levgrnd', &
     !      avgflag='A', &
-    !      long_name=this%info%lname('soil liquid water (vegetated landunits only)'), &
+    !      long_name=this%info%lname('soil liquid water (natural vegetated and crop landunits only)'), &
     !      ptr_col=this%h2osoi_liq_col, l2g_scale_type='veg')
 
     data2dptr => this%h2osoi_liq_col(begc:endc,1:nlevsoi) 
@@ -208,7 +208,7 @@ contains
          fname=this%info%fname('SOILLIQ'),  &
          units='kg/m2', type2d='levsoi', &
          avgflag='A', &
-         long_name=this%info%lname('soil liquid water (vegetated landunits only)'), &
+         long_name=this%info%lname('soil liquid water (natural vegetated and crop landunits only)'), &
          ptr_col=data2dptr, l2g_scale_type='veg')
 
     data2dptr => this%h2osoi_ice_col(begc:endc,1:nlevsoi)
@@ -216,7 +216,7 @@ contains
          fname=this%info%fname('SOILICE'),  &
          units='kg/m2', type2d='levsoi', &
          avgflag='A', &
-         long_name=this%info%lname('soil ice (vegetated landunits only)'), &
+         long_name=this%info%lname('soil ice (natural vegetated and crop landunits only)'), &
          ptr_col=data2dptr, l2g_scale_type='veg')
 
     this%snocan_patch(begp:endp) = spval 
@@ -245,7 +245,8 @@ contains
 
     this%wa_col(begc:endc) = spval
     call hist_addfld1d (fname=this%info%fname('WA'),  units='mm',  &
-         avgflag='A', long_name=this%info%lname('water in the unconfined aquifer (vegetated landunits only)'), &
+         avgflag='A', &
+         long_name=this%info%lname('water in the unconfined aquifer (natural vegetated and crop landunits only)'), &
          ptr_col=this%wa_col, l2g_scale_type='veg')
 
 
