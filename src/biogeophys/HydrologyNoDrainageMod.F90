@@ -276,8 +276,10 @@ contains
 
       call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
            filter_hydrologyc, soilstate_inst, canopystate_inst, waterfluxbulk_inst, energyflux_inst)
+      
+      ! save the h2osoi_liq in top layer before evaluating the soilwater movement
+      if ( use_fan ) call store_tsl_moisture(waterstatebulk_inst) 
 
-      if ( use_fan ) call store_tsl_moisture(waterstatebulk_inst)
       if ( use_fates ) then
          call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, waterfluxbulk_inst)
       end if
@@ -285,7 +287,8 @@ contains
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
            soilhydrology_inst, soilstate_inst, waterfluxbulk_inst, waterstatebulk_inst, temperature_inst, &
            canopystate_inst, energyflux_inst, soil_water_retention_curve)
-      if ( use_fan ) call eval_tsl_moist_tend(waterstatebulk_inst)
+      ! 
+      if ( use_fan ) call eval_tsl_moist_tend(waterstatebulk_inst) ! use the saved value to calculate the tendency
 
       if (use_vichydro) then
          ! mapping soilmoist from CLM to VIC layers for runoff calculations
@@ -658,6 +661,9 @@ contains
 
 
   contains
+    
+    ! Subroutines for storing the time derivative of top most soil layer moisture. This is
+    ! used for diagnosing the downwards moisture flux within FAN.
 
     subroutine store_tsl_moisture(waterstatebulk_inst)
       type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
