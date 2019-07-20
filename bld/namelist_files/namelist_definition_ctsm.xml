@@ -1591,7 +1591,7 @@ Mapping method from FAN Nitrogen (manure) deposition input file to the model res
 
 <entry id="fan_to_bgc_crop" type="logical" category="physics"
        group="fan_nml" valid_values="" >
-Fraction (0...1) of manure N moved from crops to native vegetation column
+Toggle to connect the FAN N pools to soil biogeochemistry for CROP VEGETATION columns
 </entry>
 
 <entry id="fan_to_bgc_veg" type="logical" category="physics"
@@ -1604,6 +1604,10 @@ Toggle to connect the FAN N pools to soil biogeochemistry for NATIVE VEGETATION 
 Toggle to connect the FAN N pools to soil biogeochemistry for NATIVE VEGETATION columns
 </entry>
 
+<entry id="nh4_ads_coef" type="real" category="physics"
+       group="fan_nml" valid_values="">
+  Adsorption coefficient for ammonium in FAN. Must be >= 0, 0 means no adsorption.
+</entry>
 <!-- ========================================================================================  -->
 <!-- finundatied stream -->
 <!-- ========================================================================================  -->

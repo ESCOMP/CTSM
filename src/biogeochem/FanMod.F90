@@ -62,6 +62,8 @@ module FanMod
   
   ! nominal depth where the soil TAN concentration vanishes:
   real(r8), parameter, public :: soildepth_reservoir = 0.04_r8
+  ! Adsorption coeffient of NH4 in soil:
+  real(r8), public, save :: nh4_ads_coef = 1.0_r8
 
   integer, parameter, public :: err_bad_theta = 1, err_negative_tan = 2, err_negative_flux = 3, &
        err_balance_tan = 4, err_balance_nitr = 5, err_nan = 6, err_bad_subst = 7, err_bad_type = 8, err_bad_arg = 9
@@ -592,8 +594,8 @@ contains
     integer :: indpl
     
     real(r8), parameter :: dz_layer = 0.02 ! thickness of the volatilization layer, m
-    real(r8), parameter :: kads = 1.0_r8   ! distriution coefficient kads = [TAN (s)] / [TAN (aq)], dimensionless
-
+    !real(r8), parameter :: kads = 1.0_r8   ! distriution coefficient kads = [TAN (s)] / [TAN (aq)], dimensionless
+    
     if (pools_size < 4 .or. fluxes_size < 5) then
        status = err_bad_arg
        return
@@ -622,7 +624,7 @@ contains
 
     call eval_fluxes_slurry(water_slurry(1), water_slurry(2), tanpools(1), Hconc(1), &
          tg, ratm, theta, thetasat, perc_slurry_mean, &
-         runoff, bsw, kads, fluxes(1:5,1), 5)
+         runoff, bsw, nh4_ads_coef, fluxes(1:5,1), 5)
 
     if (debug_fan) then
        if (any(isnan(fluxes))) then
@@ -656,7 +658,7 @@ contains
        ! water content at the mean age of the pool
        water_soil = water_in_layer * waterfunction(age_prev + 0.5*poolranges(indpl), water_relax_t)
        call eval_fluxes_soil(tanpools(indpl), water_soil, Hconc(indpl), tg, &
-            & ratm, theta, thetasat, percolation, runoff, bsw, kads, &
+            & ratm, theta, thetasat, percolation, runoff, bsw, nh4_ads_coef, &
             & dz_layer, fluxes(1:5,indpl), subst_tan, 5, status)
 
        if (status /= 0) return
@@ -723,7 +725,7 @@ contains
     real(r8) :: tanpools_old(size(tanpools)), imbalance, water_relax_t
     integer :: indpl
     
-    real(r8), parameter :: kads = 1.0_r8
+    !real(r8), parameter :: kads = 1.0_r8
     logical :: fixed
 
     if (size_fluxes < 5) then
@@ -791,7 +793,7 @@ contains
        ! water content at the middle of the age range
        water_soil = water_into_layer * waterfunction(age_prev + 0.5*poolranges(indpl), water_relax_t)
        call eval_fluxes_soil(tanpools(indpl), water_soil, Hconc(indpl), tg, &
-            & ratm, theta, thetasat, percolation, runoff, bsw, kads, &
+            & ratm, theta, thetasat, percolation, runoff, bsw, nh4_ads_coef, &
             & dz_layer, fluxes(1:5,indpl), subst_tan, 5, status)
        if (status /= 0) then
           return

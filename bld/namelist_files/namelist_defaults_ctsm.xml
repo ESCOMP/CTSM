@@ -1062,7 +1062,7 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <fract_spread_grass fan_mode="soil">0.0</fract_spread_grass>
 <fract_spread_grass fan_mode="full">0.0</fract_spread_grass>
 <fract_spread_grass fan_mode="atm">1.0</fract_spread_grass>
-
+<nh4_ads_coef>1.0</nh4_ads_coef>
 
 <!-- LAI streams namelist defaults -->
 <use_lai_streams        >.false.</use_lai_streams>

@@ -2907,6 +2907,9 @@ sub setup_logic_fan {
 		   'fan_mode'=>$fan_mode);
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fract_spread_grass',
 		   'fan_mode'=>$fan_mode);
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nh4_ads_coef',
+		   'fan_mode'=>$fan_mode);
+
    }
    
    if ( &value_is_true( $nl_flags->{'use_ed'} ) && &value_is_true( $nl_flags->{'use_fan'} ) ) {
