@@ -555,11 +555,6 @@ contains
           if (newsnow(c) > 0._r8) then
              fsno_new = 1._r8 - (1._r8 - tanh(accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
              frac_sno(c) = fsno_new
-
-             ! reset int_snow after accumulation events
-             temp_intsnow= (h2osno_total(c) + newsnow(c)) &
-                  / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
-             int_snow(c) = min(1.e8_r8,temp_intsnow)
           end if
 
           !====================================================================
@@ -595,12 +590,6 @@ contains
              fmelt=newsnow(c)
              frac_sno(c) = tanh(accum_factor * newsnow(c))
 
-             ! make int_snow consistent w/ new fsno, h2osno_total
-             int_snow(c) = 0. !reset prior to adding newsnow below
-             temp_intsnow= (h2osno_total(c) + newsnow(c)) &
-                  / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
-             int_snow(c) = min(1.e8_r8,temp_intsnow)
-
              ! update snow_depth to be consistent with frac_sno, z_avg
              if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
                 snow_depth(c)=z_avg/frac_sno(c)
@@ -626,7 +615,20 @@ contains
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
 
-       ! reset int_snow after accumulation events
+       if (newsnow(c) > 0._r8) then
+          ! reset int_snow after accumulation events: make int_snow consistent with new
+          ! fsno, h2osno_total
+
+          if (h2osno_total(c) == 0._r8) then
+             ! Snow pack started at 0, then adding new snow; reset int_snow prior to
+             ! adding newsnow
+             int_snow(c) = 0._r8
+          end if
+
+          temp_intsnow= (h2osno_total(c) + newsnow(c)) &
+               / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
+          int_snow(c) = min(1.e8_r8,temp_intsnow)
+       end if
 
        ! update h2osno for new snow
        int_snow(c) = int_snow(c) + newsnow(c)
