@@ -645,9 +645,6 @@ contains
          long_name=this%info%lname('fraction of ground covered by h2osfc (0 to 1)'), &
          units='', &
          interpinic_flag='interp', readvar=readvar, data=this%frac_h2osfc_col)
-    if (flag == 'read' .and. .not. readvar) then
-       this%frac_h2osfc_col(bounds%begc:bounds%endc) = 0.0_r8
-    end if
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('SNOW_DEPTH'), &

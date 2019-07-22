@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev052    sacks 07/22/2019 Fix rare soil color bug in mksurfdata_map
+  ctsm1.0.dev051    sacks 07/19/2019 Update water tracers for remainder of first stage of hydrology
+  ctsm1.0.dev050   slevis 07/15/2019 dz --> dz_lake bug-fix in LakeTemperatureMod.F90 line 960
   ctsm1.0.dev049     erik 06/23/2019 Update mosart and intel to intel-19 on cheyenne
   ctsm1.0.dev048     erik 06/23/2019 Updates for buildlib changes and cime and externals updates
   ctsm1.0.dev047    sacks 06/16/2019 Fix negative snow compaction during snow melt

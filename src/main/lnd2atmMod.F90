@@ -106,7 +106,7 @@ contains
             bounds, &
             filter_active_c%num, &
             filter_active_c%indices, &
-            caller = 'lnd2atm_minimal', &
+            caller = 'lnd2atm_minimal: '//water_inst%GetBulkOrTracerName(i), &
             h2osno_total = h2osno_total(bounds%begc:bounds%endc))
        call c2g(bounds, &
             h2osno_total(bounds%begc:bounds%endc), &

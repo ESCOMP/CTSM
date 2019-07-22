@@ -1,4 +1,502 @@
 ===============================================================
+Tag name:  ctsm1.0.dev052
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Jul 22 14:02:43 MDT 2019
+One-line Summary: Fix rare soil color bug in mksurfdata_map
+
+Purpose of changes
+------------------
+
+Under rare conditions, mksurfdata_map could put the default soil color
+in an output cell where there is actually more information. This tag
+fixes that issue. None of the out-of-the-box surface datasets are
+impacted by this bug, so I have not recreated any surface datasets. (I
+checked all out-of-the-box surface datasets except for
+surfdata_0.125x0.125_mp24_simyr2000_c150114.nc, because it doesn't get
+remade cleanly out of the box.)
+
+Also:
+
+- Add some unit tests for the creation of soil color in mksurfdata_map
+
+- Point to correct (existing) surface dataset for year-1850 at f05
+  resolution
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#4 (Minor bug in creation of soil color in
+  mksurfdata_map: points can be given the default soil color, when they
+  should have a real color)
+- Resolves ESCOMP/ctsm#765 (Year-1850 f05 surface dataset missing from
+  inputdata repository)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- Year-1850 f05 surface dataset now points to a file that actually exists
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - ok
+
+    Most tests pass, including baseline comparisons. The following tests fail, but also failed for me on master:
+
+      019 smiS4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional ....................\c
+       rc=6 FAIL
+      020 bliS4 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional ....................\c
+       rc=4 FAIL
+      027 smf84 TSMscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_clm4_5^buildtools ....................\c
+       rc=6 FAIL
+      028 blf84 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_clm4_5^buildtools ....................\c
+       rc=4 FAIL
+      029 smfc4 TSMscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Cycle_clm4_5^buildtools ..............\c
+       rc=6 FAIL
+      030 blfc4 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Cycle_clm4_5^buildtools ..............\c
+       rc=4 FAIL
+      031 smfg4 TSMscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Global_clm4_5^buildtools .............\c
+       rc=6 FAIL
+      032 blfg4 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Global_clm4_5^buildtools .............\c
+       rc=4 FAIL
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- not run
+    hobart ------ not run
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev051
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Jul 19 13:26:25 MDT 2019
+One-line Summary: Update water tracers for remainder of first stage of hydrology
+
+Purpose of changes
+------------------
+
+Main change is to do tracer updates for final pieces of first stage of
+hydrology: HandleNewSnow and UpdateFracH2oSfc. Along with this, I have
+introduced greater modularity into these routines (breaking the
+operations down into more granular steps).
+
+Other changes included here (somewhat related to the main changes) are:
+
+- Added a routine that resets checked tracers to bulk*ratio to allow
+  running the tracer consistency check for more than one time step; we
+  now run it for 10 days
+
+- Change logic for rain-snow conversion terms: Use rain diff in rain to
+  snow, snow diff in snow to rain. This is less sensitive to roundoff
+  errors, and was needed in order to get the 10-day tracer consistency
+  test to pass.
+
+- Setting of qflx_snow_h2osfc moved to CanopyInterceptionAndThroughfall
+
+- Add col%lun_itype. col%lun_itype(ci) is the same as
+  lun%itype(col%landunit(ci)), but is often a more convenient way to
+  access this type. I got tired of having to get the landunit index just
+  for the sake of getting the landunit's type of a given column. I have
+  NOT gone through the code and replaced lun%itype(l) with
+  col%lun_itype(c) where applicable, but this will be useful for the
+  future.
+
+- Removed unnecessary code for backwards compatibility of FH2OSFC from
+  restart files
+
+- Point to slightly modified initial conditions files for two CLm45
+  initial conditions files. These two had FH2OSFC > 0 for some glc_mec
+  points. I'm not sure how that came to be, but Sean Swenson and I think
+  that shouldn't be the case. This caused soil balance errors in these
+  tests:
+
+    ERS_Ly5_P72x1.f10_f10_musgs.IHistClm45BgcCrop.cheyenne_intel.clm-cropMonthOutput
+    SMS_D_Ld1.f09_g17.I1850Clm45BgcCruGs.cheyenne_intel.clm-default
+
+  I'm fixing the problem by pointing to updated files with FH2OSFC set
+  to 0 for special landunits, using the following python:
+
+      ctypel = dat.variables['cols1d_ityplun'][:]
+      dat.variables['FH2OSFC'][ctypel > 2] = 0
+
+- Small cime update to fix the SHAREDLIBBUILD phase of
+  ERS_D_Ln9_P480x3.f19_g16.I2000Clm50SpGs.cheyenne_intel.clm-waccmx_offline
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#718 (Implement water tracers for HandleNewSnow
+  and FracH2oSfc)
+- Resolves ESCOMP/ctsm#498 (Do tracer consistency checks every time
+  step, not just first)
+
+CIME Issues fixed (include issue #):
+- ESCMI/cime#3717 (Cheyenne ESMF missing for WACCM X)
+
+Known bugs introduced in this tag (include github issue ID):
+- ESCOMP/ctsm#762 (Water tracers: Make sure calls to ResetCheckedTracers
+  are removed)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- If you have an initial conditions file with non-zero FH2OSFC for
+  glacier (this was the case for some out-of-the-box clm45 files, which
+  are now fixed), may run into soil balance errors. To fix this, set
+  FH2OSFC to 0 in your restart file for all special landunits.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- Point to slightly modified initial conditions files for two CLm45
+  initial conditions files: see above for details.
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Changed tracer consistency test to 10 days rather than a single time step
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, some roundoff-level diffs in baseline
+    comparisons, as noted below
+
+  Also, in order to have a more powerful test of the changes in
+  SurfaceWaterMod (since the relevant code isn't triggered very often),
+  I introduced the following diffs:
+
+    diff --git a/src/biogeophys/SurfaceWaterMod.F90 b/src/biogeophys/SurfaceWaterMod.F90
+    index 1bc03cae..be656a15 100644
+    --- a/src/biogeophys/SurfaceWaterMod.F90
+    +++ b/src/biogeophys/SurfaceWaterMod.F90
+    @@ -12,6 +12,7 @@ module SurfaceWaterMod
+       use shr_spfn_mod                , only : erf => shr_spfn_erf
+       use clm_varcon                  , only : denh2o, denice, roverg, wimp, tfrz, pc, mu, rpi
+       use clm_varpar                  , only : nlevsno, nlevgrnd
+    +  use clm_varctl                  , only : iulog
+       use clm_time_manager            , only : get_step_size
+       use column_varcon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
+       use decompMod                   , only : bounds_type
+    @@ -201,7 +202,7 @@ subroutine BulkDiag_FracH2oSfc(bounds, num_soilc, filter_soilc, &
+         SHR_ASSERT_FL((ubound(qflx_too_small_h2osfc_to_soil, 1) == bounds%endc), sourcefile, __LINE__)
+     
+         ! arbitrary lower limit on h2osfc for safer numerics...
+    -    min_h2osfc=1.e-8_r8
+    +    min_h2osfc=1.e0_r8
+     
+         do f = 1, num_soilc
+            c = filter_soilc(f)
+    @@ -230,6 +231,9 @@ subroutine BulkDiag_FracH2oSfc(bounds, num_soilc, filter_soilc, &
+     
+            else
+               frac_h2osfc(c) = 0._r8
+    +          if (h2osfc(c) > 0._r8) then
+    +             write(iulog,*) 'WJS: in else'
+    +          end if
+               qflx_too_small_h2osfc_to_soil(c) = h2osfc(c) / dtime
+               ! The update of h2osfc is deferred to later, keeping with our standard
+               ! separation of flux calculations from state updates, and because the state
+
+  With those diffs, I ran the tracer consistency test; it passed. In
+  addition, I ran
+  SMS_D_Ld1_P4x1.f10_f10_musgs.I2000Clm50BgcCropQianRsGs.bishorn_gnu.clm-default
+  with comparison against master, with the following diffs on master
+  (the first change changes behavior to force the relevant code to be
+  triggered, and is the same on master and on the branch; the second
+  change on master divides then multiplies by dtime to avoid
+  roundoff-level diffs):
+
+    diff --git a/src/biogeophys/SurfaceWaterMod.F90 b/src/biogeophys/SurfaceWaterMod.F90
+    index 959d539b..4a4a4824 100644
+    --- a/src/biogeophys/SurfaceWaterMod.F90
+    +++ b/src/biogeophys/SurfaceWaterMod.F90
+    @@ -77,7 +77,7 @@ subroutine FracH2oSfc(bounds, num_nolakec, filter_nolakec, &
+              )
+     
+         ! arbitrary lower limit on h2osfc for safer numerics...
+    -    min_h2osfc=1.e-8_r8
+    +    min_h2osfc=1.e0_r8
+     
+         call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
+              caller = 'FracH2oSfc', &
+    @@ -112,7 +112,7 @@ subroutine FracH2oSfc(bounds, num_nolakec, filter_nolakec, &
+     
+               else
+                  frac_h2osfc(c) = 0._r8
+    -             h2osoi_liq(c,1) = h2osoi_liq(c,1) + h2osfc(c)
+    +             h2osoi_liq(c,1) = h2osoi_liq(c,1) + (h2osfc(c) / get_step_size()) * get_step_size()
+                  h2osfc(c)=0._r8
+               endif
+
+  This test passed and was bit-for-bit with master with the above changes.
+
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Many/all
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Roundoff: just roundoff-level changes in FSH_PRECIP_CONVERSION,
+      FSH_TO_COUPLER, l2x_Fall_sen due to refactored calculation of
+      FSH_PRECIP_CONVERSION
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? via summarize_cprnc_diffs
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: branch_tags/cime5.8.3_chint17-03 -> branch_tags/cime5.8.3_chint17-04
+  Fixes ESMCI/cime#3171
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev050
+Originator(s):  slevis (Samuel Levis,SLevisConsulting LLC,303-665-1310)
+Date:  Mon Jul 15 11:40:09 MDT 2019
+One-line Summary: dz --> dz_lake bug-fix in LakeTemperatureMod.F90 line 960
+
+Purpose of changes
+------------------
+
+ Bug-fix to prevent the model from aborting when running with fewer soil
+ layers than lake layers; not to imply that this was not a bug when the
+ model wasn't aborting. It was.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #760
+
+Known bugs found since the previous tag (include github issue ID): #759 bug causing model to abort when nlevsoi = nlevgrnd
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers
+--------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: @dlawrenncar @billsacks
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: use_lch4 = .true.
+    - what platforms/compilers: all
+    - nature of change: diagnostic variable WTGQ only
+                 Confirmed this on cheynne and hobart by running
+                 ./summarize_cprnc_diffs -baseline .../tests_0712... -testid '*'
+                 and inspecting the file cprnc.summary.*.by_varname
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/761
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev049
 Originator(s):  erik (Erik Kluzek)
 Date: Sun Jun 23 20:56:55 MDT 2019
