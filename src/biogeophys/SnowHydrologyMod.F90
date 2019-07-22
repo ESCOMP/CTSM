@@ -536,6 +536,10 @@ contains
 
        ! snowmelt from previous time step * dtime
        snowmelt(c) = qflx_snow_drain(c) * dtime
+    end do
+
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
 
        if (h2osno_total(c) > 0.0) then
 
