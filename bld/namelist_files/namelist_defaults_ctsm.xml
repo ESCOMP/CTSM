@@ -677,8 +677,6 @@ lnd/clm2/surfdata_map/surfdata_1x1_mexicocityMEX_16pfts_Irrig_CMIP6_simyr2000_c1
 lnd/clm2/surfdata_map/surfdata_1x1_urbanc_alpha_16pfts_Irrig_CMIP6_simyr2000_c171214.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 without crop -->
-<fsurdat hgrid="0.47x0.63"  sim_year="1850" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/surfdata_0.47x0.63_16pfts_Irrig_CMIP6_simyr1850_c180508.nc</fsurdat>
 <fsurdat hgrid="360x720cru"   sim_year="1850" use_crop=".false." irrigate=".true." >
 lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_Irrig_CMIP6_simyr1850_c170824.nc</fsurdat>
 <fsurdat hgrid="48x96"        sim_year="1850" use_crop=".false." irrigate=".true.">
