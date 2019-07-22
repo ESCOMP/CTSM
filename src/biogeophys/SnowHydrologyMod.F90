@@ -481,13 +481,14 @@ contains
     integer  :: fc, c
     integer  :: j
     real(r8) :: dz_snowf                              ! layer thickness rate change due to precipitation [mm/s]
-    real(r8) :: temp_snow_depth, temp_intsnow         ! temporary variables
+    real(r8) :: temp_snow_depth(bounds%begc:bounds%endc) ! snow depth prior to updating [mm]
+    real(r8) :: newsnow(bounds%begc:bounds%endc)
+    real(r8) :: temp_intsnow                          ! temporary variable
     real(r8) :: fmelt
     real(r8) :: smr
     real(r8) :: fsno_new
     real(r8) :: z_avg                                 ! grid cell average snow depth
     real(r8) :: int_snow_limited                      ! integrated snowfall, limited to be no greater than int_snow_max [mm]
-    real(r8) :: newsnow
     real(r8) :: snowmelt
 
     character(len=*), parameter :: subname = 'BulkDiag_NewSnowDiagnostics'
@@ -517,7 +518,7 @@ contains
        ! Progress Rep. 1, Alta Avalanche Study Center:Snow Layer Densification.
 
        ! set temporary variables prior to updating
-       temp_snow_depth=snow_depth(c)
+       temp_snow_depth(c) = snow_depth(c)
        ! save initial snow content
        do j= -nlevsno+1,snl(c)
           swe_old(c,j) = 0.0_r8
@@ -528,7 +529,7 @@ contains
 
        ! all snow falls on ground, no snow on h2osfc (note that qflx_snow_h2osfc is
        ! currently set to 0 always in CanopyHydrologyMod)
-       newsnow = qflx_snow_grnd(c) * dtime
+       newsnow(c) = qflx_snow_grnd(c) * dtime
 
        ! update int_snow
        int_snow(c) = max(int_snow(c),h2osno_total(c)) !h2osno_total could be larger due to frost
@@ -551,12 +552,12 @@ contains
           end if
 
           ! update fsca by new snow event, add to previous fsca
-          if (newsnow > 0._r8) then
-             fsno_new = 1._r8 - (1._r8 - tanh(accum_factor * newsnow)) * (1._r8 - frac_sno(c))
+          if (newsnow(c) > 0._r8) then
+             fsno_new = 1._r8 - (1._r8 - tanh(accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
              frac_sno(c) = fsno_new
 
              ! reset int_snow after accumulation events
-             temp_intsnow= (h2osno_total(c) + newsnow) &
+             temp_intsnow= (h2osno_total(c) + newsnow(c)) &
                   / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
              int_snow(c) = min(1.e8_r8,temp_intsnow)
           end if
@@ -566,13 +567,13 @@ contains
           ! for subgrid fluxes
           if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
              if (frac_sno(c) > 0._r8)then
-                snow_depth(c)=snow_depth(c) + newsnow/(bifall(c) * frac_sno(c))
+                snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall(c) * frac_sno(c))
              else
                 snow_depth(c)=0._r8
              end if
           else
              ! for uniform snow cover
-             snow_depth(c)=snow_depth(c)+newsnow/bifall(c)
+             snow_depth(c)=snow_depth(c)+newsnow(c)/bifall(c)
           end if
 
           ! use original fsca formulation (n&y 07)
@@ -580,7 +581,7 @@ contains
              ! snow cover fraction in Niu et al. 2007
              if(snow_depth(c) > 0.0_r8)  then
                 frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * zlnd * &
-                     (min(800._r8,(h2osno_total(c)+ newsnow)/snow_depth(c))/100._r8)**1._r8) )
+                     (min(800._r8,(h2osno_total(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
              end if
              if(h2osno_total(c) < 1.0_r8)  then
                 frac_sno(c)=min(frac_sno(c),h2osno_total(c))
@@ -589,14 +590,14 @@ contains
 
        else !h2osno_total == 0
           ! initialize frac_sno and snow_depth when no snow present initially
-          if (newsnow > 0._r8) then 
-             z_avg = newsnow/bifall(c)
-             fmelt=newsnow
-             frac_sno(c) = tanh(accum_factor * newsnow)
+          if (newsnow(c) > 0._r8) then 
+             z_avg = newsnow(c)/bifall(c)
+             fmelt=newsnow(c)
+             frac_sno(c) = tanh(accum_factor * newsnow(c))
 
              ! make int_snow consistent w/ new fsno, h2osno_total
              int_snow(c) = 0. !reset prior to adding newsnow below
-             temp_intsnow= (h2osno_total(c) + newsnow) &
+             temp_intsnow= (h2osno_total(c) + newsnow(c)) &
                   / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
              int_snow(c) = min(1.e8_r8,temp_intsnow)
 
@@ -604,14 +605,14 @@ contains
              if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
                 snow_depth(c)=z_avg/frac_sno(c)
              else
-                snow_depth(c)=newsnow/bifall(c)
+                snow_depth(c)=newsnow(c)/bifall(c)
              end if
              ! use n&y07 formulation
              if (oldfflag == 1) then 
                 ! snow cover fraction in Niu et al. 2007
                 if(snow_depth(c) > 0.0_r8)  then
                    frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * zlnd * &
-                        (min(800._r8,newsnow/snow_depth(c))/100._r8)**1._r8) )
+                        (min(800._r8,newsnow(c)/snow_depth(c))/100._r8)**1._r8) )
                 end if
              end if
           else
@@ -620,14 +621,19 @@ contains
              frac_sno(c) = 0._r8
           end if
        end if ! end of h2osno_total > 0
+    end do
 
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+
+       ! reset int_snow after accumulation events
 
        ! update h2osno for new snow
-       int_snow(c) = int_snow(c) + newsnow
+       int_snow(c) = int_snow(c) + newsnow(c)
 
        ! update change in snow depth
        if (snl(c) < 0) then
-          dz_snowf = (snow_depth(c) - temp_snow_depth) / dtime
+          dz_snowf = (snow_depth(c) - temp_snow_depth(c)) / dtime
           dz(c,snl(c)+1) = dz(c,snl(c)+1)+dz_snowf*dtime
        end if
 
