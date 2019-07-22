@@ -482,6 +482,7 @@ contains
     integer  :: j
     real(r8) :: dz_snowf                              ! layer thickness rate change due to precipitation [mm/s]
     real(r8) :: temp_snow_depth(bounds%begc:bounds%endc) ! snow depth prior to updating [mm]
+    real(r8) :: snowmelt(bounds%begc:bounds%endc)
     real(r8) :: newsnow(bounds%begc:bounds%endc)
     real(r8) :: temp_intsnow                          ! temporary variable
     real(r8) :: fmelt
@@ -489,7 +490,6 @@ contains
     real(r8) :: fsno_new
     real(r8) :: z_avg                                 ! grid cell average snow depth
     real(r8) :: int_snow_limited                      ! integrated snowfall, limited to be no greater than int_snow_max [mm]
-    real(r8) :: snowmelt
 
     character(len=*), parameter :: subname = 'BulkDiag_NewSnowDiagnostics'
     !-----------------------------------------------------------------------
@@ -535,14 +535,14 @@ contains
        int_snow(c) = max(int_snow(c),h2osno_total(c)) !h2osno_total could be larger due to frost
 
        ! snowmelt from previous time step * dtime
-       snowmelt = qflx_snow_drain(c) * dtime
+       snowmelt(c) = qflx_snow_drain(c) * dtime
 
        if (h2osno_total(c) > 0.0) then
 
           !======================  FSCA PARAMETERIZATIONS  ======================
           ! fsca parameterization based on *changes* in swe
           ! first compute change from melt during previous time step
-          if(snowmelt > 0._r8) then
+          if(snowmelt(c) > 0._r8) then
 
              int_snow_limited = min(int_snow(c), int_snow_max)
              smr=min(1._r8,h2osno_total(c)/int_snow_limited)
