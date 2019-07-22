@@ -1,4 +1,137 @@
 ===============================================================
+Tag name:  ctsm1.0.dev052
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Jul 22 14:02:43 MDT 2019
+One-line Summary: Fix rare soil color bug in mksurfdata_map
+
+Purpose of changes
+------------------
+
+Under rare conditions, mksurfdata_map could put the default soil color
+in an output cell where there is actually more information. This tag
+fixes that issue. None of the out-of-the-box surface datasets are
+impacted by this bug, so I have not recreated any surface datasets. (I
+checked all out-of-the-box surface datasets except for
+surfdata_0.125x0.125_mp24_simyr2000_c150114.nc, because it doesn't get
+remade cleanly out of the box.)
+
+Also:
+
+- Add some unit tests for the creation of soil color in mksurfdata_map
+
+- Point to correct (existing) surface dataset for year-1850 at f05
+  resolution
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#4 (Minor bug in creation of soil color in
+  mksurfdata_map: points can be given the default soil color, when they
+  should have a real color)
+- Resolves ESCOMP/ctsm#765 (Year-1850 f05 surface dataset missing from
+  inputdata repository)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- Year-1850 f05 surface dataset now points to a file that actually exists
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - ok
+
+    Most tests pass, including baseline comparisons. The following tests fail, but also failed for me on master:
+
+      019 smiS4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional ....................\c
+       rc=6 FAIL
+      020 bliS4 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional ....................\c
+       rc=4 FAIL
+      027 smf84 TSMscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_clm4_5^buildtools ....................\c
+       rc=6 FAIL
+      028 blf84 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_clm4_5^buildtools ....................\c
+       rc=4 FAIL
+      029 smfc4 TSMscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Cycle_clm4_5^buildtools ..............\c
+       rc=6 FAIL
+      030 blfc4 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Cycle_clm4_5^buildtools ..............\c
+       rc=4 FAIL
+      031 smfg4 TSMscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Global_clm4_5^buildtools .............\c
+       rc=6 FAIL
+      032 blfg4 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Global_clm4_5^buildtools .............\c
+       rc=4 FAIL
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- not run
+    hobart ------ not run
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev051
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Jul 19 13:26:25 MDT 2019
