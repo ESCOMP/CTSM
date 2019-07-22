@@ -44,7 +44,8 @@ module ColumnType
 
      ! topological mapping functionality
      integer , pointer :: itype                (:)   ! column type (after init, should only be modified via update_itype routine)
-     logical , pointer :: active               (:)   ! true=>do computations on this column 
+     integer , pointer :: lun_itype            (:)   ! landunit type (col%lun_itype(ci) is the same as lun%itype(col%landunit(ci)), but is often a more convenient way to access this type
+     logical , pointer :: active               (:)   ! true=>do computations on this column
      logical , pointer :: type_is_dynamic      (:)   ! true=>itype can change throughout the run
 
      ! topography
@@ -111,6 +112,7 @@ contains
     allocate(this%patchf      (begc:endc))                     ; this%patchf      (:)   = ispval
     allocate(this%npatches     (begc:endc))                    ; this%npatches     (:)   = ispval
     allocate(this%itype       (begc:endc))                     ; this%itype       (:)   = ispval
+    allocate(this%lun_itype   (begc:endc))                     ; this%lun_itype   (:)   = ispval
     allocate(this%active      (begc:endc))                     ; this%active      (:)   = .false.
     allocate(this%type_is_dynamic(begc:endc))                  ; this%type_is_dynamic(:) = .false.
 
@@ -151,6 +153,7 @@ contains
     deallocate(this%patchf     )
     deallocate(this%npatches    )
     deallocate(this%itype      )
+    deallocate(this%lun_itype  )
     deallocate(this%active     )
     deallocate(this%type_is_dynamic)
     deallocate(this%snl        )
@@ -179,24 +182,24 @@ contains
     ! Update the column type for one column. Any updates to col%itype after
     ! initialization should be made via this routine.
     !
+    ! This can NOT be used to change the landunit type: it can only be used to change the
+    ! column type within a fixed landunit.
+    !
     ! !ARGUMENTS:
     class(column_type), intent(inout) :: this
     integer, intent(in) :: c
     integer, intent(in) :: itype
     !
     ! !LOCAL VARIABLES:
-    integer :: l
 
     character(len=*), parameter :: subname = 'update_itype'
     !-----------------------------------------------------------------------
-
-    l = col%landunit(c)
 
     if (col%type_is_dynamic(c)) then
        col%itype(c) = itype
        col%hydrologically_active(c) = is_hydrologically_active( &
             col_itype = itype, &
-            lun_itype = lun%itype(l))
+            lun_itype = col%lun_itype(c))
        ! Properties that are tied to the landunit's properties (like urbpoi) are assumed
        ! not to change here.
     else
