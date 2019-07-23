@@ -2458,6 +2458,8 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 >lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_LandScan2004_to_0.125x0.125_nomask_aave_da_c140702.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="0.125x0.125"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_MODIS_to_0.125x0.125_nomask_aave_da_c140702.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODISv2"  to_hgrid="0.125x0.125"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_MODISv2_to_0.125x0.125_nomask_aave_da_c190613.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="0.125x0.125"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_MODIS-wCsp_to_0.125x0.125_nomask_aave_da_c160427.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"  to_hgrid="0.125x0.125"   to_lmask="nomask" 
