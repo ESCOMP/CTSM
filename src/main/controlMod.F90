@@ -204,7 +204,7 @@ contains
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
-         nlevsoinl, subgridflag, &
+         soil_layerstruct_userdefined_nlevsoi, subgridflag, &
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero
     
@@ -815,7 +815,7 @@ contains
     call mpi_bcast (albice, 2, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (soil_layerstruct_predefined,len(soil_layerstruct_predefined), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (soil_layerstruct_userdefined,size(soil_layerstruct_userdefined), MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (nlevsoinl, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (soil_layerstruct_userdefined_nlevsoi, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -1033,7 +1033,7 @@ contains
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   pre-defined soil layer structure = ', soil_layerstruct_predefined
     write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
-    write(iulog,*) '   user-defined number of soil layers = ', nlevsoinl
+    write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi
     write(iulog,*) '   plant hydraulic stress = ', use_hydrstress
     write(iulog,*) '   dynamic roots          = ', use_dynroot
     if (nsrest == nsrContinue) then

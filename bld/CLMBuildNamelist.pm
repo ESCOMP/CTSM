@@ -2094,21 +2094,21 @@ sub setup_logic_soilstate {
 
   my $var1 = "soil_layerstruct_predefined";
   my $var2 = "soil_layerstruct_userdefined";
-  my $var3 = "nlevsoinl";
+  my $var3 = "soil_layerstruct_userdefined_nlevsoi";
   my $soil_layerstruct_predefined = $nl->get_value($var1);
   my $soil_layerstruct_userdefined = $nl->get_value($var2);
-  my $nlevsoinl = $nl->get_value($var3);
+  my $soil_layerstruct_userdefined_nlevsoi = $nl->get_value($var3);
 
   if (defined($soil_layerstruct_userdefined)) {
     if (defined($soil_layerstruct_predefined)) {
       $log->fatal_error("You have set both soil_layerstruct_userdefined and soil_layerstruct_predefined in your namelist; model cannot determine which to use");
     }
-    if (not defined($nlevsoinl)) {
-      $log->fatal_error("You have set soil_layerstruct_userdefined and NOT set nlevsoinl in your namelist; both MUST be set");
+    if (not defined($soil_layerstruct_userdefined_nlevsoi)) {
+      $log->fatal_error("You have set soil_layerstruct_userdefined and NOT set soil_layerstruct_userdefined_nlevsoi in your namelist; both MUST be set");
     }
   } else {
-    if (defined($nlevsoinl)) {
-      $log->fatal_error("You have set nlevsoinl and NOT set soil_layerstruct_userdefined in your namelist; EITHER set both OR neither; in the latter case soil_layerstruct_predefined will be assigned a default value");
+    if (defined($soil_layerstruct_userdefined_nlevsoi)) {
+      $log->fatal_error("You have set soil_layerstruct_userdefined_nlevsoi and NOT set soil_layerstruct_userdefined in your namelist; EITHER set both OR neither; in the latter case soil_layerstruct_predefined will be assigned a default value");
     } else {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct_predefined',
                   'structure'=>$nl_flags->{'structure'});

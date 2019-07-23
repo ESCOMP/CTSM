@@ -17,7 +17,7 @@ module initVerticalMod
   use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb 
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
-  use clm_varctl        , only : use_bedrock, nlevsoinl, rundef
+  use clm_varctl        , only : use_bedrock, rundef
   use clm_varctl        , only : soil_layerstruct_predefined, soil_layerstruct_userdefined
   use clm_varctl        , only : use_fates
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
@@ -216,13 +216,28 @@ contains
     ! "0" refers to soil surface and "nlevsoi" refers to the bottom of model soil
 
     if (soil_layerstruct_predefined == '10SL_3.5m' .or. soil_layerstruct_predefined == '23SL_3.5m') then
-       calc_method = 'node-based'
+       calc_method = 'node-based'  ! node-based followed by error check
+       if (soil_layerstruct_userdefined(1) /= rundef) then
+          write(iulog,*) subname//' ERROR: Both soil_layerstruct_predefined and soil_layer_userdefined have values'
+          call shr_sys_abort(subname//' ERROR: Cannot decide how to set the soil layer structure')
+       end if
+    ! thickness-based (part 1) and error check
     else if (soil_layerstruct_predefined == '49SL_10m' .or. &
              soil_layerstruct_predefined == '20SL_8.5m' .or. &
-             soil_layerstruct_predefined == '4SL_2m' .or. &
-             soil_layerstruct_userdefined(1) /= rundef) then
+             soil_layerstruct_predefined == '4SL_2m') then
        calc_method = 'thickness-based'
-    else
+       if (soil_layerstruct_userdefined(1) /= rundef) then
+          write(iulog,*) subname//' ERROR: Both soil_layerstruct_predefined and soil_layer_userdefined have values'
+          call shr_sys_abort(subname//' ERROR: Cannot decide how to set the soil layer structure')
+       end if
+    ! thickness-based (part 2) and error check
+    else if (soil_layerstruct_userdefined(1) /= rundef) then
+       calc_method = 'thickness-based'
+       if (soil_layerstruct_predefined /= 'UNSET') then
+          write(iulog,*) subname//' ERROR: Both soil_layerstruct_predefined and soil_layer_userdefined have values'
+          call shr_sys_abort(subname//' ERROR: Cannot decide how to set the soil layer structure')
+       end if
+    else  ! error check
        write(iulog,*) subname//' ERROR: Unrecognized pre-defined and user-defined soil layer structures: ', trim(soil_layerstruct_predefined), soil_layerstruct_userdefined
        call endrun(subname//' ERROR: Unrecognized soil layer structure')
     end if
@@ -260,7 +275,12 @@ contains
        zisoi(nlevgrnd) = zsoi(nlevgrnd) + 0.5_r8*dzsoi(nlevgrnd)
 
     else if (calc_method == 'thickness-based') then
-       if (soil_layerstruct_predefined == '49SL_10m') then
+       if (soil_layerstruct_userdefined(1) /= rundef) then
+          do j = 1, nlevgrnd
+             ! read dzsoi from user-entered namelist vector
+             dzsoi(j) = soil_layerstruct_userdefined(j)
+          end do
+       else if (soil_layerstruct_predefined == '49SL_10m') then
           !scs: 10 meter soil column, nlevsoi set to 49 in clm_varpar
           do j = 1, 10
              dzsoi(j) = 1.e-2_r8     ! 10-mm layers
@@ -293,11 +313,6 @@ contains
           dzsoi(3) = 0.6_r8
           dzsoi(4) = 1.0_r8
           dzsoi(5) = 1.0_r8
-       else if (soil_layerstruct_userdefined(1) /= rundef) then
-          do j = 1, nlevgrnd
-             ! read dzsoi from user-entered namelist vector
-             dzsoi(j) = soil_layerstruct_userdefined(j)
-          end do
        end if  ! thickness-based options
        
        zisoi(0) = 0._r8
@@ -309,7 +324,10 @@ contains
           zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
        enddo
 
-    end if
+    else  ! error check
+       write(iulog,*) subname//' ERROR: Unrecognized calc_method: ', trim(calc_method)
+       call endrun(subname//' ERROR: Unrecognized calc_method')
+    end if  ! calc_method is node-based or thickness-based
 
     ! define a vertical grid spacing such that it is the normal dzsoi if
     ! nlevdecomp =nlevgrnd, or else 1 meter

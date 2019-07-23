@@ -11,8 +11,10 @@ module clm_varpar
   use clm_varctl   , only: use_extralakelayers, use_vertsoilc
   use clm_varctl   , only: use_century_decomp, use_c13, use_c14
   use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
-  use clm_varctl   , only: use_vichydro, nlevsoinl, rundef
-  use clm_varctl   , only: soil_layerstruct_predefined, soil_layerstruct_userdefined
+  use clm_varctl   , only: use_vichydro, rundef
+  use clm_varctl   , only: soil_layerstruct_predefined
+  use clm_varctl   , only: soil_layerstruct_userdefined
+  use clm_varctl   , only: soil_layerstruct_userdefined_nlevsoi
   use clm_varctl   , only: use_fates
 
   !
@@ -153,6 +155,7 @@ contains
           call shr_sys_abort(subname//' ERROR: Cannot decide how to set the soil layer structure')
        else
           nlevgrnd = size(soil_layerstruct_userdefined)
+          ! loops backwards until it hits the last valid user-defined value
           do j = nlevgrnd,1,-1
              if (soil_layerstruct_userdefined(j) /= rundef) then
                 exit
@@ -160,9 +163,9 @@ contains
                 nlevgrnd = nlevgrnd - 1
              end if
           end do
-          nlevsoi = nlevsoinl  ! value read in namelist
+          nlevsoi = soil_layerstruct_userdefined_nlevsoi  ! read in namelist
           if (nlevsoi >= nlevgrnd) then
-             write(iulog,*) subname//' ERROR: nlevsoi >= nlevgrnd; did you enter nlevsoinl correctly in user_nl_clm?'
+             write(iulog,*) subname//' ERROR: nlevsoi >= nlevgrnd; did you enter soil_layerstruct_userdefined_nlevsoi correctly in user_nl_clm?'
              call shr_sys_abort(subname//' ERROR: nlevsoi must be less than nlevgrnd')
           end if
        end if

@@ -14,13 +14,17 @@ Purpose of changes
  form of a dzsoi vector (values in meters) in the thickness-based
  approach.
 
+ Default nlevsoi for NWP configurations had to change from 5 to 4 for
+ consistency with the new error check described in known bugs below.
 
 Bugs fixed or introduced
 ------------------------
 
 Issues fixed (include CTSM Issue #): #279 #728
 
-Known bugs found since the previous tag (include github issue ID): #759 (this PR) bug causes model to abort when nlevsoi = nlevgrnd; bug has been corrected with an error check
+Known bugs found since the previous tag (include github issue ID):
+ #759 (this PR) bug causes model to abort when nlevsoi = nlevgrnd;
+ bug has been corrected with an error check
 
 
 Significant changes to scientifically-supported configurations
@@ -40,11 +44,19 @@ Does this tag change answers significantly for any of the following physics conf
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions): if neither soil_layerstruct_predefined nor soil_layerstruct_userdefined get specified in the namelist, then the model sets soil_layerstruct_predefined to the old default setting for soil_layerstruct, i.e. 20SL_8.5m
+Caveats for users (e.g., need to interpolate initial conditions):
+ if neither soil_layerstruct_predefined nor soil_layerstruct_userdefined
+ get specified in the namelist, then the model sets
+ soil_layerstruct_predefined to the old default setting for
+ soil_layerstruct, i.e. 20SL_8.5m
 
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): renamed soil_layerstruct to soil_layerstruct_predefined and added soil_layerstruct_userdefined
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ renamed soil_layerstruct to soil_layerstruct_predefined and added
+ soil_layerstruct_userdefined
 
-Changes made to namelist defaults (e.g., changed parameter values): none
+Changes made to namelist defaults (e.g., changed parameter values):
+ Default nlevsoi for NWP configurations had to change from 5 to 4 for
+ consistency with the new error check described in known bugs below
 
 Changes to the datasets (e.g., parameter, surface or initial files): none
 
@@ -61,11 +73,14 @@ Changes to tests or testing:
  ERP_P36x2_D_Ld5.f10_f10_musgs.I2000Ctsm50NwpBgcCropGswpGs.cheyenne_intel.clm-default
  replaces existing test
  ERS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-rm_indiv_lunits_and_collapse_to_dom
- to check the correction described in known bugs above. The new test together with existing unit tests cover what the old test was testing.
+ to check the correction described in known bugs above; the new test
+ together with existing unit tests cover what the old test was testing
 
  2) New test...
  ERS_D_Ld5.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-soil_layerstruct
- ensures that soil_layerstruct_userdefined will give bfb same answers as soil_layerstruct_predefined = '4SL_2m' when set with the same dzsoi values
+ ensures that soil_layerstruct_userdefined will give bfb same answers
+ as soil_layerstruct_predefined = '4SL_2m' when set with the same dzsoi
+ values
 
 Code reviewed by: @billsacks
 
