@@ -21,7 +21,7 @@ module SoilStateInitTimeConstMod
   !
   ! !PRIVATE DATA:
   ! Control variables (from namelist)
-  logical, private :: organic_frac_squared ! If organic fraction should be squared (as in CLM4.5)
+  logical, public :: organic_frac_squared ! If organic fraction should be squared (as in CLM4.5)
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -358,6 +358,8 @@ contains
              soilstate_inst%csol_col(c,lev)= spval
           end do
 
+! slevis: Safer and more organized to make this else-if part of the if
+!         because the two codes are identical
        else if (lun%urbpoi(l) .and. (col%itype(c) /= icol_road_perv) .and. (col%itype(c) /= icol_road_imperv) )then
 
           ! Urban Roof, sunwall, shadewall properties set to special value
@@ -389,17 +391,17 @@ contains
           do lev = 1,nlevgrnd
              ! DML - this if statement could probably be removed and just the
              ! top part used for all soil layer structures
-             if ( soil_layerstruct_predefined /= '10SL_3.5m' )then ! apply soil texture from 10 layer input dataset 
+!            if ( soil_layerstruct_predefined /= '10SL_3.5m' )then ! apply soil texture from 10 layer input dataset
                 if (lev .eq. 1) then
                    clay = clay3d(g,1)
                    sand = sand3d(g,1)
-                   om_frac = organic3d(g,1)/organic_max 
+                   om_frac = organic3d(g,1)/organic_max
                 else if (lev <= nlevsoi) then
                    do j = 1,nlevsoifl-1
                       if (zisoi(lev) >= zisoifl(j) .AND. zisoi(lev) < zisoifl(j+1)) then
                          clay = clay3d(g,j+1)
                          sand = sand3d(g,j+1)
-                         om_frac = organic3d(g,j+1)/organic_max    
+                         om_frac = organic3d(g,j+1)/organic_max
                       endif
                    end do
                 else
@@ -407,22 +409,32 @@ contains
                    sand = sand3d(g,nlevsoifl)
                    om_frac = 0._r8
                 endif
-             else
-                if (lev <= nlevsoi) then ! duplicate clay and sand values from 10th soil layer
-                   clay = clay3d(g,lev)
-                   sand = sand3d(g,lev)
-                   if ( organic_frac_squared )then
-                      om_frac = (organic3d(g,lev)/organic_max)**2._r8
-                   else
-                      om_frac = organic3d(g,lev)/organic_max
-                   end if
-                else
-                   clay = clay3d(g,nlevsoi)
-                   sand = sand3d(g,nlevsoi)
-                   om_frac = 0._r8
-                endif
-             end if
+                if ( organic_frac_squared )then
+                   om_frac = om_frac**2._r8
+                end if
+!            else
+!               if (lev <= nlevsoi) then ! duplicate clay and sand values from 10th soil layer
+!                  clay = clay3d(g,lev)
+!                  sand = sand3d(g,lev)
+!                  if ( organic_frac_squared )then
+!                     om_frac = (organic3d(g,lev)/organic_max)**2._r8
+!                  else
+!                     om_frac = organic3d(g,lev)/organic_max
+!                  end if
+!               else
+!                  clay = clay3d(g,nlevsoi)
+!                  sand = sand3d(g,nlevsoi)
+!                  om_frac = 0._r8
+!               endif
+!            end if
 
+! slevis: Seems inconsistent and disorganized to have the next if-statmt
+!         here and then have it again in a separate do-loop a few lines
+!         down. I propose that we bring the lake section up here.
+! slevis: Also I would pull out here the "No organic matter for urban"
+!         and consolidate the two identical codes repeated just below.
+! slevis: This section runs before SoilHydrologyInitTimeConst, so let's
+!         also simplify codes there with data gathered here.
              if (lun%itype(l) == istdlak) then
 
                 if (lev <= nlevsoi) then

@@ -48,6 +48,7 @@ contains
     use fileutils       , only : getfil
     use organicFileMod  , only : organicrd 
     use ncdio_pio       , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
+    use SoilStateInitTimeConstMod, only: organic_frac_squared
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds                                    
@@ -152,6 +153,8 @@ contains
           end do
        end do
 
+! slevis: Much of this code runs in SoilStateInitTimeConst first and
+!         repeats identically here
        allocate(sand3d(bounds%begg:bounds%endg,nlevsoifl))
        allocate(clay3d(bounds%begg:bounds%endg,nlevsoifl))
        allocate(organic3d(bounds%begg:bounds%endg,nlevsoifl))
@@ -198,7 +201,7 @@ contains
        zisoifl(nlevsoifl) = zsoifl(nlevsoifl) + 0.5_r8*dzsoifl(nlevsoifl)
 
        if ( masterproc )then
-          if ( soil_layerstruct_predefined /= '10SL_3.5m' ) write(iulog,*) 'Setting clay, sand, organic, in Soil Hydrology for VIC'
+          write(iulog,*) 'Setting clay, sand, organic, in Soil Hydrology for VIC'
        end if
        do c = bounds%begc, bounds%endc
           g = col%gridcell(c)
@@ -211,17 +214,17 @@ contains
                 ! do nothing
              else
                 do lev = 1,nlevgrnd
-                   if ( soil_layerstruct_predefined /= '10SL_3.5m' )then
+!                  if ( soil_layerstruct_predefined /= '10SL_3.5m' )then
                       if (lev .eq. 1) then
                          clay    = clay3d(g,1)
                          sand    = sand3d(g,1)
-                         om_frac = organic3d(g,1)/organic_max 
+                         om_frac = organic3d(g,1)/organic_max
                       else if (lev <= nlevsoi) then
                          do j = 1,nlevsoifl-1
                             if (zisoi(lev) >= zisoifl(j) .AND. zisoi(lev) < zisoifl(j+1)) then
                                clay    = clay3d(g,j+1)
                                sand    = sand3d(g,j+1)
-                               om_frac = organic3d(g,j+1)/organic_max    
+                               om_frac = organic3d(g,j+1)/organic_max
                             endif
                          end do
                       else
@@ -229,18 +232,21 @@ contains
                          sand    = sand3d(g,nlevsoifl)
                          om_frac = 0._r8
                       endif
-                   else
-                      ! duplicate clay and sand values from 10th soil layer
-                      if (lev <= nlevsoi) then
-                         clay    = clay3d(g,lev)
-                         sand    = sand3d(g,lev)
-                         om_frac = (organic3d(g,lev)/organic_max)**2._r8
-                      else
-                         clay    = clay3d(g,nlevsoi)
-                         sand    = sand3d(g,nlevsoi)
-                         om_frac = 0._r8
-                      endif
-                   end if
+                      if ( organic_frac_squared )then
+                         om_frac = om_frac**2._r8
+                      end if
+!                  else
+!                     ! duplicate clay and sand values from 10th soil layer
+!                     if (lev <= nlevsoi) then
+!                        clay    = clay3d(g,lev)
+!                        sand    = sand3d(g,lev)
+!                        om_frac = (organic3d(g,lev)/organic_max)**2._r8
+!                     else
+!                        clay    = clay3d(g,nlevsoi)
+!                        sand    = sand3d(g,nlevsoi)
+!                        om_frac = 0._r8
+!                     endif
+!                  end if
 
                    if (lun%urbpoi(l)) om_frac = 0._r8
                    claycol(c,lev)    = clay
