@@ -79,7 +79,8 @@ module WaterDiagnosticBulkType
      procedure, public  :: InitBulk
      procedure, public  :: RestartBulk
      procedure, public  :: Summary
-     procedure, public  :: ResetBulk 
+     procedure, public  :: ResetBulkFilter
+     procedure, public  :: ResetBulk
      procedure, private :: InitBulkAllocate 
      procedure, private :: InitBulkHistory  
      procedure, private :: InitBulkCold     
@@ -644,9 +645,6 @@ contains
          long_name=this%info%lname('fraction of ground covered by h2osfc (0 to 1)'), &
          units='', &
          interpinic_flag='interp', readvar=readvar, data=this%frac_h2osfc_col)
-    if (flag == 'read' .and. .not. readvar) then
-       this%frac_h2osfc_col(bounds%begc:bounds%endc) = 0.0_r8
-    end if
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('SNOW_DEPTH'), &
@@ -779,13 +777,38 @@ contains
   end subroutine Summary
 
   !-----------------------------------------------------------------------
+  subroutine ResetBulkFilter(this, num_c, filter_c)
+    !
+    ! !DESCRIPTION:
+    ! Initialize SNICAR variables for fresh snow columns, for all columns in the given
+    ! filter
+    !
+    ! !ARGUMENTS:
+    class(waterdiagnosticbulk_type), intent(inout) :: this
+    integer, intent(in) :: num_c       ! number of columns in filter_c
+    integer, intent(in) :: filter_c(:) ! column filter to operate over
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'ResetBulkFilter'
+    !-----------------------------------------------------------------------
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+       call this%ResetBulk(c)
+    end do
+
+  end subroutine ResetBulkFilter
+
+  !-----------------------------------------------------------------------
   subroutine ResetBulk(this, column)
     !
     ! !DESCRIPTION:
     ! Intitialize SNICAR variables for fresh snow column
     !
     ! !ARGUMENTS:
-    class(waterdiagnosticbulk_type), intent(in) :: this
+    class(waterdiagnosticbulk_type), intent(inout) :: this
     integer , intent(in)   :: column     ! column index
     !-----------------------------------------------------------------------
 
