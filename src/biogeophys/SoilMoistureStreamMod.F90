@@ -69,7 +69,6 @@ contains
     use shr_stream_mod   , only : shr_stream_file_null
     use shr_string_mod   , only : shr_string_listCreateField
     use clm_varpar       , only : nlevsoi
-    use shr_dmodel_mod   , only : shr_dmodel_gGridCompare
     !
     ! !ARGUMENTS:
     implicit none
@@ -180,12 +179,6 @@ contains
          calendar=get_calendar(),                      &
          dtlimit = 15._r8,                             &
          taxmode='cycle'                               )
-
-    ! --- It looks like there isn't a way to verify that the input and output grids are the same -- the following does not work ---
-    !if ( .not. shr_dmodel_gGridCompare(sdat_soilm%grid, sdat_soilm%gsmap, dom_clm, gsMap_lnd2Dsoi_gdc2glo, method=1, &
-    !                                  mpicom=mpicom ) )then
-    !   call endrun(subname // ':: ERROR soil_moisture_streams data is NOT on the same grid that you are running on')
-    !end if
 
     if (masterproc) then
        call shr_strdata_print(sdat_soilm,'soil moisture data')
