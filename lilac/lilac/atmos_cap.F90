@@ -138,21 +138,28 @@ module atmos_cap
            ! create field
            !!! Here we want to pass pointers
            !field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(a2c_fldlist(n)%stdname), rc=rc)
+           !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
            field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(a2c_fldlist(n)%stdname), farrayPtr=a2c_fldlist(n)%farrayptr1d, rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
            !call ESMF_FieldFill(field, dataFillScheme = "sincos" , rc=rc)
-           call ESMF_FieldFill(field, dataFillScheme = "const"  , const1=real(n, ESMF_KIND_R8), rc=rc)
+           !call ESMF_FieldFill(field, dataFillScheme = "const"  , const1=real(n, ESMF_KIND_R8), rc=rc)
+           !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+           call ESMF_FieldPrint(field,  rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+           !call ESMF_LogWrite(subname//"fieldget!", ESMF_LOGMSG_INFO)
+           !call ESMF_FieldGet(field,  rc=rc)
+           !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
            ! add field to field bundle
            call ESMF_FieldBundleAdd(a2c_fb, (/field/), rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
 
-           print *, a2c_fldlist(n)%farrayptr1d
-           print *, "this field is created"
+           !print *, a2c_fldlist(n)%farrayptr1d
+           !print *, "this field is created"
 
         enddo
+        call ESMF_LogWrite(subname//"fieldbundleadd is finished .... !", ESMF_LOGMSG_INFO)
 
         print *, "!Fields to  Coupler (atmos to  land ) (a2c_fb) Field Bundle Created!"
 
@@ -177,6 +184,10 @@ module atmos_cap
 
         do n = 1,c2a_fldlist_num
 
+           print *, "**********************************************************"
+           print *, "creating field for l2a:"
+           print *, trim(c2a_fldlist(n)%stdname)
+
            ! create field
            !!! Here we want to pass pointers
            if (mesh_switch) then
@@ -186,17 +197,19 @@ module atmos_cap
               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
               !call ESMF_FieldFill(field, dataFillScheme = "sincos" , rc=rc)
-              call ESMF_FieldFill(field, dataFillScheme = "const"  , const1=real(n, ESMF_KIND_R8)*5.5, rc=rc)
-              if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+              !call ESMF_FieldFill(field, dataFillScheme = "const"  , const1=real(n, ESMF_KIND_R8)*5.5, rc=rc)
+              !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
           else
               field = ESMF_FieldCreate(atmos_grid, name=trim(c2a_fldlist(n)%stdname), farrayPtr=c2a_fldlist(n)%farrayptr2d, rc=rc)
               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-           end if
+          end if
 
+          call ESMF_LogWrite(subname//"line 208 and going.... .... !", ESMF_LOGMSG_INFO)
            ! add field to field bundle
            call ESMF_FieldBundleAdd(c2a_fb, (/field/), rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        call ESMF_LogWrite(subname//"c2a fieldbundleadd is finished .... !", ESMF_LOGMSG_INFO)
 
            print *, "**********************************************************"
            print *, "creating field for c2a:"
