@@ -143,6 +143,10 @@
     <alias>I2000Clm50BgcCropQianRsGs</alias>
     <lname>2000_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
+  <compset>
+    <alias>I2000Clm45BgcCropQianRsGs</alias>
+    <lname>2000_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
 
   <compset>
     <alias>I2000Clm50BgcCruGs</alias>
