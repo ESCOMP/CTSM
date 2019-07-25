@@ -787,7 +787,7 @@
       <option name="comment"  >test transient PFTs (via HIST) with a December start, reading 78-pft data and running with 16 pfts</option>
     </options>
   </test>
-  <test name="SOILSTRUCTUD_Ld5" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/soil_layerstruct">
+  <test name="SOILSTRUCTUD_Ld5" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
