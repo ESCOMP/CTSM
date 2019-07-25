@@ -5,6 +5,7 @@ module SoilStateInitTimeConstMod
   ! Set hydraulic and thermal properties 
   !
   ! !USES
+  use shr_kind_mod  , only : r8 => shr_kind_r8
   use SoilStateType , only : soilstate_type
   use LandunitType  , only : lun                
   use ColumnType    , only : col                
@@ -19,10 +20,13 @@ module SoilStateInitTimeConstMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ReadNL
   !
-  ! !PRIVATE DATA:
+  ! !PUBLIC DATA:
+    real(r8), public :: organic_max  ! organic matter (kg/m3) where soil is assumed to act like peat
+
   ! Control variables (from namelist)
   logical, public :: organic_frac_squared ! If organic fraction should be squared (as in CLM4.5)
 
+  ! !PRIVATE DATA:
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
@@ -87,7 +91,6 @@ contains
   subroutine SoilStateInitTimeConst(bounds, soilstate_inst, nlfilename) 
     !
     ! !USES:
-    use shr_kind_mod        , only : r8 => shr_kind_r8
     use shr_log_mod         , only : errMsg => shr_log_errMsg
     use shr_infnan_mod      , only : nan => shr_infnan_nan, assignment(=)
     use decompMod           , only : bounds_type
@@ -140,7 +143,6 @@ contains
     real(r8)           :: tkm                           ! mineral conductivity
     real(r8)           :: xksat                         ! maximum hydraulic conductivity of soil [mm/s]
     real(r8)           :: clay,sand                     ! temporaries
-    real(r8)           :: organic_max                   ! organic matter (kg/m3) where soil is assumed to act like peat
     integer            :: dimid                         ! dimension id
     logical            :: readvar 
     type(file_desc_t)  :: ncid                          ! netcdf id
