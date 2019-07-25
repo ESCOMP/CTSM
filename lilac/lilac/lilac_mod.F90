@@ -32,8 +32,8 @@ module lilac_mod
     type(ESMF_Calendar),target                        :: calendar
     integer                                           :: yy,mm,dd,sec
     !  ! Gridded Components and Coupling Components
-    type(ESMF_GridComp)                               :: dummy_atmos_comp
-    type(ESMF_GridComp)                               :: dummy_land_comp
+    type(ESMF_GridComp)                               :: atmos_gcomp
+    type(ESMF_GridComp)                               :: land_gcomp
     type(ESMF_CplComp)                                :: cpl_atm2lnd_comp
     type(ESMF_CplComp)                                :: cpl_lnd2atm_comp
     type(ESMF_State)                                  :: atm2lnd_l_state , atm2lnd_a_state
@@ -109,7 +109,7 @@ module lilac_mod
 
         open(fileunit, status="old", file="./namelist",  action="read", iostat=rc)
 
-        if (rc == 0) then
+        if (rc .ne. 0) then
             call ESMF_LogSetError(rcToCheck=ESMF_RC_FILE_OPEN, msg="Failed to open namelist file 'namelist'",  line=__LINE__, file=__FILE__)
             call ESMF_Finalize(endflag=ESMF_END_ABORT)
         endif
@@ -190,22 +190,22 @@ module lilac_mod
         ! ======================================================================= ! create_fldlist
 
         !-------------------------------------------------------------------------
-        ! Create Gridded Component!  --- dummy atmosphere ( atmos_cap)
+        ! Create Gridded Component!  --  atmosphere ( atmos_cap)
         !-------------------------------------------------------------------------
-        gcname1 = "Dummy Atmosphere or Atmosphere Cap"
-        dummy_atmos_comp = ESMF_GridCompCreate(name=gcname1, rc=rc)
+        gcname1 = " Atmosphere or Atmosphere Cap"
+        atmos_gcomp = ESMF_GridCompCreate(name=gcname1, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"Created "//trim(gcname1)//" component", ESMF_LOGMSG_INFO)
-        print *, "Dummy Atmosphere Gridded Component Created!"
+        print *, "Atmosphere Gridded Component Created!"
 
         !-------------------------------------------------------------------------
-        ! Create Gridded Component!  --- dummy land       ( land cap )
+        ! Create Gridded Component!  --- CTSM land       ( land_capX )
         !-------------------------------------------------------------------------
-        gcname2 = "Dummy Land or Land Cap"
-        dummy_land_comp = ESMF_GridCompCreate(name=gcname2, rc=rc)
+        gcname2 = " Land ctsm "
+        land_gcomp = ESMF_GridCompCreate(name=gcname2, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"Created "//trim(gcname2)//" component", ESMF_LOGMSG_INFO)
-        print *, "Dummy Land  Gridded Component Created!"
+        print *, "  Land (ctsm) Gridded Component Created!"
 
         !-------------------------------------------------------------------------
         ! Create Coupling Component! --- Coupler  from atmos  to land
@@ -230,14 +230,14 @@ module lilac_mod
         !-------------------------------------------------------------------------
         ! Register section -- set services -- atmos_cap
         !-------------------------------------------------------------------------
-        call ESMF_GridCompSetServices(dummy_atmos_comp, userRoutine=atmos_register, rc=rc)
+        call ESMF_GridCompSetServices(atmos_gcomp, userRoutine=atmos_register, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        call ESMF_LogWrite(subname//"dummy atmos SetServices finished!", ESMF_LOGMSG_INFO)
-        print *, "Dummy Atmosphere Gridded Component SetServices finished!"
+        call ESMF_LogWrite(subname//"  atmos SetServices finished!", ESMF_LOGMSG_INFO)
+        print *, "  Atmosphere Gridded Component SetServices finished!"
         !-------------------------------------------------------------------------
         ! Register section -- set services -- land cap
         !-------------------------------------------------------------------------
-        call ESMF_GridCompSetServices(dummy_land_comp, userRoutine=lnd_register, rc=rc)
+        call ESMF_GridCompSetServices(land_gcomp, userRoutine=lnd_register, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"land SetServices finished!", ESMF_LOGMSG_INFO)
         print *, "Land  Gridded Component SetServices finished!"
@@ -314,14 +314,17 @@ module lilac_mod
         !                                   3- cpl_atm2lnd 4- cpl_lnd2atm         !
         ! -------------------------------------------------------------------------
 
-        call ESMF_GridCompInitialize(dummy_atmos_comp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=clock, rc=rc)
+        call ESMF_GridCompInitialize(atmos_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=clock, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        call ESMF_LogWrite(subname//"atmos_cap or dummy_atmos_comp initialized", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"atmos_cap or atmos_gcomp initialized", ESMF_LOGMSG_INFO)
         print *, "atmos_cap initialize finished, rc =", rc
 
-        call ESMF_GridCompInitialize(dummy_land_comp       , importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
+        rc = ESMF_SUCCESS
+        call ESMF_LogWrite(subname//"now we are initializing CTSM ....", ESMF_LOGMSG_INFO)
+        print *, "now we are initializing CTSM, rc =", rc
+        call ESMF_GridCompInitialize(land_gcomp       , importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        call ESMF_LogWrite(subname//"lnd_cap or dummy_land_comp initialized", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"lnd_cap or land_gcomp initialized", ESMF_LOGMSG_INFO)
         print *, "lnd_cap initialize finished, rc =", rc
 
         ! All 4 states that are module variables are no longer empty - have been initialized
@@ -391,9 +394,9 @@ module lilac_mod
 
         !!! if we want to loop through clock in atmos cap. 
         !do while (.NOT. ESMF_ClockIsStopTime(local_clock, rc=rc))
-            call ESMF_GridCompRun(dummy_atmos_comp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=local_clock, rc=rc)
+            call ESMF_GridCompRun(atmos_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=local_clock, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-            call ESMF_LogWrite(subname//"atmos_cap or dummy_atmos_comp is running", ESMF_LOGMSG_INFO)
+            call ESMF_LogWrite(subname//"atmos_cap or atmos_gcomp is running", ESMF_LOGMSG_INFO)
             print *, "Running atmos_cap gridded component , rc =", rc
 
             call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=local_clock, rc=rc)
@@ -401,9 +404,9 @@ module lilac_mod
             call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
             print *, "Running coupler component..... cpl_atm2lnd_comp , rc =", rc
 
-            call ESMF_GridCompRun(dummy_land_comp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=local_clock, rc=rc)
+            call ESMF_GridCompRun(land_gcomp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=local_clock, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-            call ESMF_LogWrite(subname//"lnd_cap or dummy_land_comp is running", ESMF_LOGMSG_INFO)
+            call ESMF_LogWrite(subname//"lnd_cap or land_gcomp is running", ESMF_LOGMSG_INFO)
             print *, "Running lnd_cap gridded component , rc =", rc
 
             call ESMF_CplCompRun(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=local_clock, rc=rc)
@@ -447,11 +450,11 @@ module lilac_mod
         print *,  "        Lilac Finalizing               "
         print *,  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
         !-------------------------------------------------------------------------
-        ! Gridded Component Finalizing!     ---     dummy atmosphere 
+        ! Gridded Component Finalizing!     ---       atmosphere 
         !-------------------------------------------------------------------------
-        call ESMF_GridCompFinalize(dummy_atmos_comp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=clock, rc=rc)
+        call ESMF_GridCompFinalize(atmos_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=clock, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        call ESMF_LogWrite(subname//"atmos_cap or dummy_atmos_comp is running", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"atmos_cap or atmos_gcomp is running", ESMF_LOGMSG_INFO)
         print *, "Finalizing atmos_cap gridded component , rc =", rc
 
         !-------------------------------------------------------------------------
@@ -463,11 +466,11 @@ module lilac_mod
         print *, "Finalizing coupler component..... cpl_atm2lnd_comp , rc =", rc
 
         !-------------------------------------------------------------------------
-        ! Gridded Component Finalizing!     ---     dummy land 
+        ! Gridded Component Finalizing!     ---       land 
         !-------------------------------------------------------------------------
-        call ESMF_GridCompFinalize(dummy_land_comp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
+        call ESMF_GridCompFinalize(land_gcomp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        call ESMF_LogWrite(subname//"lnd_cap or dummy_land_comp is running", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"lnd_cap or land_gcomp is running", ESMF_LOGMSG_INFO)
         print *, "Finalizing lnd_cap gridded component , rc =", rc
 
         !-------------------------------------------------------------------------
@@ -496,9 +499,9 @@ module lilac_mod
         call ESMF_LogWrite(subname//"destroying all components    ", ESMF_LOGMSG_INFO)
         print *, "ready to destroy all components"
 
-        call ESMF_GridCompDestroy(dummy_atmos_comp, rc=rc)
+        call ESMF_GridCompDestroy(atmos_gcomp, rc=rc)
         if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
-        call ESMF_GridCompDestroy(dummy_land_comp, rc=rc)
+        call ESMF_GridCompDestroy(land_gcomp, rc=rc)
         if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
         call ESMF_CplCompDestroy(cpl_atm2lnd_comp, rc=rc)
         if(rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT, rc=rc)
