@@ -31,6 +31,7 @@ module SnowHydrologyMod
   use WaterFluxBulkType   , only : waterfluxbulk_type
   use WaterStateBulkType  , only : waterstatebulk_type
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
+  use SnowCoverFractionMod, only : snow_cover_fraction_clm5_type
   use LandunitType    , only : landunit_type, lun
   use TopoMod, only : topo_type
   use ColumnType      , only : column_type, col
@@ -485,11 +486,11 @@ contains
     real(r8) :: snowmelt(bounds%begc:bounds%endc)
     real(r8) :: newsnow(bounds%begc:bounds%endc)
     real(r8) :: temp_intsnow                          ! temporary variable
-    real(r8) :: fmelt
-    real(r8) :: smr
-    real(r8) :: fsno_new
     real(r8) :: z_avg                                 ! grid cell average snow depth
-    real(r8) :: int_snow_limited                      ! integrated snowfall, limited to be no greater than int_snow_max [mm]
+
+    ! FIXME(wjs, 2019-07-22) eventually we'll get rid of this and used a passed-in
+    ! argument
+    type(snow_cover_fraction_clm5_type) :: scf_method
 
     character(len=*), parameter :: subname = 'BulkDiag_NewSnowDiagnostics'
     !-----------------------------------------------------------------------
@@ -509,6 +510,11 @@ contains
     SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc  &
+         )
 
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
@@ -538,46 +544,34 @@ contains
        snowmelt(c) = qflx_snow_drain(c) * dtime
     end do
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
+    ! FIXME(wjs, 2019-07-22) Eventually, this will call just the correct method, via
+    ! polymorphism. It will use an instance created in initialization.
+    call scf_method%UpdateSnowDepthAndFracClm5(bounds, num_nolakec, filter_nolakec, &
+         ! Inputs
+         accum_factor = accum_factor, &
+         urbpoi       = urbpoi(begc:endc), &
+         n_melt       = n_melt(begc:endc), &
+         h2osno_total = h2osno_total(begc:endc), &
+         snowmelt     = snowmelt(begc:endc), &
+         int_snow     = int_snow(begc:endc), &
+         newsnow      = newsnow(begc:endc), &
+         bifall       = bifall(begc:endc), &
+         ! Outputs
+         snow_depth   = snow_depth(begc:endc), &
+         frac_sno     = frac_sno(begc:endc))
 
-       if (h2osno_total(c) > 0.0) then
 
-          !======================  FSCA PARAMETERIZATIONS  ======================
-          ! fsca parameterization based on *changes* in swe
-          ! first compute change from melt during previous time step
-          if(snowmelt(c) > 0._r8) then
+    ! FIXME(wjs, 2019-07-22) this will become a different claass
+    if (oldfflag == 1) then
+       ! use original fsca formulation (n&y 07)
+       ! snow cover fraction in Niu et al. 2007
 
-             int_snow_limited = min(int_snow(c), int_snow_max)
-             smr=min(1._r8,h2osno_total(c)/int_snow_limited)
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
 
-             frac_sno(c) = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(n_melt(c))
-
-          end if
-
-          ! update fsca by new snow event, add to previous fsca
-          if (newsnow(c) > 0._r8) then
-             fsno_new = 1._r8 - (1._r8 - tanh(accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
-             frac_sno(c) = fsno_new
-          end if
-
-          !====================================================================
-
-          ! for subgrid fluxes
-          if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
-             if (frac_sno(c) > 0._r8)then
-                snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall(c) * frac_sno(c))
-             else
-                snow_depth(c)=0._r8
-             end if
-          else
-             ! for uniform snow cover
-             snow_depth(c)=snow_depth(c)+newsnow(c)/bifall(c)
-          end if
-
-          ! use original fsca formulation (n&y 07)
-          if (oldfflag == 1) then 
-             ! snow cover fraction in Niu et al. 2007
+          if (h2osno_total(c) > 0.0) then
+             ! FIXME(wjs, 2019-07-22) will need to calculate snow_depth using the
+             ! appropriate form.
              if(snow_depth(c) > 0.0_r8)  then
                 frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * zlnd * &
                      (min(800._r8,(h2osno_total(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
@@ -585,36 +579,24 @@ contains
              if(h2osno_total(c) < 1.0_r8)  then
                 frac_sno(c)=min(frac_sno(c),h2osno_total(c))
              end if
-          end if
 
-       else !h2osno_total == 0
-          ! initialize frac_sno and snow_depth when no snow present initially
-          if (newsnow(c) > 0._r8) then 
-             z_avg = newsnow(c)/bifall(c)
-             fmelt=newsnow(c)
-             frac_sno(c) = tanh(accum_factor * newsnow(c))
-
-             ! update snow_depth to be consistent with frac_sno, z_avg
-             if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
-                snow_depth(c)=z_avg/frac_sno(c)
-             else
-                snow_depth(c)=newsnow(c)/bifall(c)
-             end if
-             ! use n&y07 formulation
-             if (oldfflag == 1) then 
-                ! snow cover fraction in Niu et al. 2007
+          else !h2osno_total == 0
+             ! initialize frac_sno and snow_depth when no snow present initially
+             if (newsnow(c) > 0._r8) then
+                ! FIXME(wjs, 2019-07-22) will need to calculate snow_depth using the
+                ! appropriate form.
                 if(snow_depth(c) > 0.0_r8)  then
                    frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * zlnd * &
                         (min(800._r8,newsnow(c)/snow_depth(c))/100._r8)**1._r8) )
                 end if
+             else
+                z_avg = 0._r8
+                snow_depth(c) = 0._r8
+                frac_sno(c) = 0._r8
              end if
-          else
-             z_avg = 0._r8
-             snow_depth(c) = 0._r8
-             frac_sno(c) = 0._r8
-          end if
-       end if ! end of h2osno_total > 0
-    end do
+          end if ! end of h2osno_total > 0
+       end do
+    end if
 
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
@@ -655,6 +637,8 @@ contains
        end if
 
     end do
+
+    end associate
 
   end subroutine BulkDiag_NewSnowDiagnostics
 
