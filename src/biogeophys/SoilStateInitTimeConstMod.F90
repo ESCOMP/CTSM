@@ -333,7 +333,11 @@ contains
        g = col%gridcell(c)
        l = col%landunit(c)
 
-       if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec) then
+       ! istwet and istice_mec and
+       ! urban roof, sunwall, shadewall properties set to special value
+       if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec .or. &
+           (lun%urbpoi(l) .and. col%itype(c) /= icol_road_perv .and. &
+                                col%itype(c) /= icol_road_imperv)) then
 
           do lev = 1,nlevgrnd
              soilstate_inst%bsw_col(c,lev)    = spval
@@ -356,34 +360,6 @@ contains
              soilstate_inst%tksatu_col(c,lev) = spval
              soilstate_inst%tkdry_col(c,lev)  = spval
              soilstate_inst%csol_col(c,lev)= spval
-          end do
-
-! slevis: Safer and more organized to make this else-if part of the if
-!         because the two codes are identical
-       else if (lun%urbpoi(l) .and. (col%itype(c) /= icol_road_perv) .and. (col%itype(c) /= icol_road_imperv) )then
-
-          ! Urban Roof, sunwall, shadewall properties set to special value
-          do lev = 1,nlevgrnd
-             soilstate_inst%watsat_col(c,lev) = spval
-             soilstate_inst%watfc_col(c,lev)  = spval
-             soilstate_inst%bsw_col(c,lev)    = spval
-             soilstate_inst%hksat_col(c,lev)  = spval
-             soilstate_inst%sucsat_col(c,lev) = spval
-             soilstate_inst%watdry_col(c,lev) = spval 
-             soilstate_inst%watopt_col(c,lev) = spval 
-             soilstate_inst%bd_col(c,lev) = spval 
-             if (lev <= nlevsoi) then
-                soilstate_inst%cellsand_col(c,lev) = spval
-                soilstate_inst%cellclay_col(c,lev) = spval
-                soilstate_inst%cellorg_col(c,lev)  = spval
-             end if
-          end do
-
-          do lev = 1,nlevgrnd
-             soilstate_inst%tkmg_col(c,lev)   = spval
-             soilstate_inst%tksatu_col(c,lev) = spval
-             soilstate_inst%tkdry_col(c,lev)  = spval
-             soilstate_inst%csol_col(c,lev)   = spval
           end do
 
        else
