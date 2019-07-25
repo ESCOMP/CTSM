@@ -1,29 +1,90 @@
 cmake_minimum_required(VERSION 2.8.12.1)
 
-project(LILAC Fortran)
+
+
+### ********** ###
+set     (CIME_ROOT "/glade/work/negins/UFSCOMP/cime")
+message ("CIME_ROOT:                   ${CIME_ROOT}")
+set     (CIME_CMAKE_MODULE_DIRECTORY "/glade/work/negins/UFSCOMP/cime/src/CMake/")
+message ("CIME_CMAKE_MODULE_DIRECTORY: ${CIME_CMAKE_MODULE_DIRECTORY}")
+
+list(APPEND CMAKE_MODULE_PATH ${CIME_CMAKE_MODULE_DIRECTORY})
+message ("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
+include(CIME_initial_setup)
+
+message("----------------------------------------------------")
+
+project(LILAC Fortran C)
 enable_language(Fortran)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/CMakeModules")
+# We rely on pio for cmake utilities like findnetcdf.cmake, so that we don't
+# need to duplicate this cmake code
+message ("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
+list(APPEND CMAKE_MODULE_PATH "${CIME_ROOT}/src/externals/pio2/cmake")
+message ("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
+
+message("----------------------------------------------------")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/CMakeModules")
+message ("CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
+message ("CMAKE_MODULE_PATH:        ${CMAKE_MODULE_PATH}")
+message("----------------------------------------------------")
 
 find_package(MPI REQUIRED)
 # TODO: This should be found from the find_package call but its not working
 #set(CMAKE_Fortran_COMPILER "/usr/lib64/mpich/bin/mpif90")
 find_package(ESMF REQUIRED)
 
+
+include(CIME_utils)
+message("----------------------------------------------------")
+
+find_package(NetCDF COMPONENTS C Fortran)
+include_directories(${NetCDF_C_INCLUDE_DIRS} ${NetCDF_Fortran_INCLUDE_DIRS})
+message("NetCDF_C_INCLUDE_DIRS: ${NetCDF_C_INCLUDE_DIRS}")
+message("----------------------------------------------------")
+
+##=======##
+#set(CESM_ROOT "/glade/work/negins/UFSCOMP/")
+#set(CSM_SHR "/glade/work/negins/UFSCOMP/components/clm/src/unit_test_stubs/csm_share/")
+
+#add_subdirectory(${CESM_ROOT}/models/csm_share/shr csm_share)
+#add_subdirectory(${CSM_SHR} )
+
+#==============###
+set(SHARE_ROOT "${CIME_ROOT}/src/share")
+#add_subdirectory(${CIME_ROOT}/src/share/util csm_share)
+#add_subdirectory(${CIME_ROOT}/src/share/unit_test_stubs/util csm_share_stubs)
+#add_subdirectory(${CIME_ROOT}/src/share/esmf_wrf_timemgr esmf_wrf_timemgr)
+#add_subdirectory(${CIME_ROOT}/src/drivers/mct/shr drv_share)
+#message("----------------------------------------------------")
+
+
+add_subdirectory(${SHARE_ROOT}/util csm_share)
+add_subdirectory(${SHARE_ROOT}/unit_test_stubs/util csm_share_stubs)
+include_directories(${SHARE_ROOT}/include)
+
+# esmf_wrf_timemgr not built here because it depends on csm_share.
+#add_subdirectory(${SHARE_ROOT}/esmf_wrf_timemgr esmf_wrf_timemgr)
+#include_directories(${SHARE_ROOT}/esmf_wrf_timemgr)
+
+
+
+
 # -lclm libclm.a
 SET(NAMES libclm.a)
 
-find_library(LIB_TO_INCLUDE 
-    libclm.a
-    PATHS /glade/scratch/negins/baghale6/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf/lib/)
+#find_library(LIB_TO_INCLUDE 
+#    libclm.a
+#    PATHS /glade/scratch/negins/baghale6/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf/lib/)
 #find_library(LIB_TO_INCLUDE  /glade/scratch/negins/baghale6/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf/lib/)
 
-message(STATUS "include_directories for ${NAMES}: ${LIB_TO_INCLUDE}")
+#message(STATUS "include_directories for ${NAMES}: ${LIB_TO_INCLUDE}")
 #include_directories(${LIB_TO_INCLUDE})
 #link_directories(${LIB_TO_INCLUDE})
-message(STATUS "include_directories for ${NAMES}: ${LIB_TO_INCLUDE}")
+#message(STATUS "include_directories for ${NAMES}: ${LIB_TO_INCLUDE}")
 #find_library(LIB_TO_INCLUDE /glade/scratch/negins/baghale6/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf/lib/)
-message(STATUS "include_directories: ${LIB_TO_INCLUDE}")
+#message(STATUS "include_directories: ${LIB_TO_INCLUDE}")
 #target_link_libraries (${LIB_TO_INCLUDE})
 
 # Local CMake modules
