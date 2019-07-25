@@ -40,17 +40,15 @@ contains
     use shr_spfn_mod    , only : shr_spfn_erf
     use abortutils      , only : endrun
     use spmdMod         , only : masterproc
-    use clm_varctl      , only : fsurdat, paramfile, iulog, use_vichydro, soil_layerstruct_predefined
-    use clm_varpar      , only : nlevsoifl, toplev_equalspace 
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb, nlayer, nlayert 
-    use clm_varcon      , only : zsoi, dzsoi, zisoi, spval, nlvic, dzvic, pc, grlnd
+    use clm_varctl      , only : fsurdat, iulog, use_vichydro
+    use clm_varpar      , only : toplev_equalspace
+    use clm_varpar      , only : nlevsoi, nlevgrnd, nlayer, nlayert
+    use clm_varcon      , only : dzsoi, spval, nlvic, dzvic, pc, grlnd
     use clm_varcon      , only : aquifer_water_baseline
-    use landunit_varcon , only : istwet, istsoil, istdlak, istcrop, istice_mec
+    use landunit_varcon , only : istwet, istdlak, istice_mec
     use column_varcon   , only : icol_shadewall, icol_road_perv, icol_road_imperv, icol_roof, icol_sunwall
     use fileutils       , only : getfil
-    use organicFileMod  , only : organicrd 
     use ncdio_pio       , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
-    use SoilStateInitTimeConstMod, only: organic_frac_squared
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds                                    
@@ -66,8 +64,6 @@ contains
     logical            :: readvar 
     type(file_desc_t)  :: ncid        
     character(len=256) :: locfn       
-    real(r8)           :: clay,sand        ! temporaries
-    real(r8)           :: om_frac          ! organic matter fraction
     real(r8) ,pointer  :: b2d        (:)   ! read in - VIC b  
     real(r8) ,pointer  :: ds2d       (:)   ! read in - VIC Ds 
     real(r8) ,pointer  :: dsmax2d    (:)   ! read in - VIC Dsmax 
@@ -75,12 +71,6 @@ contains
     real(r8), pointer  :: sandcol    (:,:) ! column level sand fraction for calculating VIC parameters
     real(r8), pointer  :: claycol    (:,:) ! column level clay fraction for calculating VIC parameters
     real(r8), pointer  :: om_fraccol (:,:) ! column level organic matter fraction for calculating VIC parameters
-    real(r8) ,pointer  :: sand3d     (:,:) ! read in - soil texture: percent sand 
-    real(r8) ,pointer  :: clay3d     (:,:) ! read in - soil texture: percent clay 
-    real(r8) ,pointer  :: organic3d  (:,:) ! read in - organic matter: kg/m3 
-    real(r8) ,pointer  :: zisoifl    (:)   ! original soil interface depth 
-    real(r8) ,pointer  :: zsoifl     (:)   ! original soil midpoint 
-    real(r8) ,pointer  :: dzsoifl    (:)   ! original soil thickness 
     !-----------------------------------------------------------------------
     ! Initialize VIC variables
 
