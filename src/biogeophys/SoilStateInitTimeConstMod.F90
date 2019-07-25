@@ -391,7 +391,7 @@ contains
           do lev = 1,nlevgrnd
              ! DML - this if statement could probably be removed and just the
              ! top part used for all soil layer structures
-!            if ( soil_layerstruct_predefined /= '10SL_3.5m' )then ! apply soil texture from 10 layer input dataset
+             if (.not. organic_frac_squared) then
                 if (lev .eq. 1) then
                    clay = clay3d(g,1)
                    sand = sand3d(g,1)
@@ -409,24 +409,17 @@ contains
                    sand = sand3d(g,nlevsoifl)
                    om_frac = 0._r8
                 endif
-                if ( organic_frac_squared )then
-                   om_frac = om_frac**2._r8
-                end if
-!            else
-!               if (lev <= nlevsoi) then ! duplicate clay and sand values from 10th soil layer
-!                  clay = clay3d(g,lev)
-!                  sand = sand3d(g,lev)
-!                  if ( organic_frac_squared )then
-!                     om_frac = (organic3d(g,lev)/organic_max)**2._r8
-!                  else
-!                     om_frac = organic3d(g,lev)/organic_max
-!                  end if
-!               else
-!                  clay = clay3d(g,nlevsoi)
-!                  sand = sand3d(g,nlevsoi)
-!                  om_frac = 0._r8
-!               endif
-!            end if
+             else
+                if (lev <= nlevsoi) then ! duplicate clay and sand values from 10th soil layer
+                   clay = clay3d(g,lev)
+                   sand = sand3d(g,lev)
+                   om_frac = (organic3d(g,lev)/organic_max)**2._r8
+                else
+                   clay = clay3d(g,nlevsoi)
+                   sand = sand3d(g,nlevsoi)
+                   om_frac = 0._r8
+                endif
+             end if
 
 ! slevis: Seems inconsistent and disorganized to have the next if-statmt
 !         here and then have it again in a separate do-loop a few lines

@@ -214,7 +214,7 @@ contains
                 ! do nothing
              else
                 do lev = 1,nlevgrnd
-!                  if ( soil_layerstruct_predefined /= '10SL_3.5m' )then
+                   if (.not. organic_frac_squared) then
                       if (lev .eq. 1) then
                          clay    = clay3d(g,1)
                          sand    = sand3d(g,1)
@@ -232,21 +232,18 @@ contains
                          sand    = sand3d(g,nlevsoifl)
                          om_frac = 0._r8
                       endif
-                      if ( organic_frac_squared )then
-                         om_frac = om_frac**2._r8
-                      end if
-!                  else
-!                     ! duplicate clay and sand values from 10th soil layer
-!                     if (lev <= nlevsoi) then
-!                        clay    = clay3d(g,lev)
-!                        sand    = sand3d(g,lev)
-!                        om_frac = (organic3d(g,lev)/organic_max)**2._r8
-!                     else
-!                        clay    = clay3d(g,nlevsoi)
-!                        sand    = sand3d(g,nlevsoi)
-!                        om_frac = 0._r8
-!                     endif
-!                  end if
+                   else
+                      ! duplicate clay and sand values from 10th soil layer
+                      if (lev <= nlevsoi) then
+                         clay    = clay3d(g,lev)
+                         sand    = sand3d(g,lev)
+                         om_frac = (organic3d(g,lev)/organic_max)**2._r8
+                      else
+                         clay    = clay3d(g,nlevsoi)
+                         sand    = sand3d(g,nlevsoi)
+                         om_frac = 0._r8
+                      endif
+                   end if
 
                    if (lun%urbpoi(l)) om_frac = 0._r8
                    claycol(c,lev)    = clay
