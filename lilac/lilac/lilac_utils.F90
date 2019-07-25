@@ -20,6 +20,8 @@ module lilac_utils
         character(len=128)          :: units
         real(ESMF_KIND_R8), pointer :: farrayptr1d(:)  ! this will be filled in by lilac when it gets its data from the host atm
         real(ESMF_KIND_R8), pointer :: farrayptr2d(:,:)  ! this will be filled in by lilac when it gets its data from the host atm
+        integer                     :: ungridded_lbound = 0
+        integer                     :: ungridded_ubound = 0
     end type                           fld_list_type
 
     !!! 1d for when we have mesh and 2d for when we have grids....
@@ -60,26 +62,37 @@ module lilac_utils
     contains
     !===============================================================================
 
-    subroutine fldlist_add(num, fldlist, stdname, default_value, units)
-    ! This adds a field to a fieldlist!
+    subroutine fldlist_add(num, fldlist, stdname, default_value, units, ungridded_lbound, ungridded_ubound)
+        ! This adds a field to a fieldlist!
+        ! input/output variables
         integer,                     intent(inout) :: num
         type(fld_list_type),         intent(inout) :: fldlist(:)
         character(len=*),            intent(in)    :: stdname
         real, optional,              intent(in)    :: default_value
         character(len=*), optional,  intent(in)    :: units
+        integer,          optional,  intent(in)    :: ungridded_lbound
+        integer,          optional,  intent(in)    :: ungridded_ubound
 
         ! local variables
         integer :: rc
-        character(len=*), parameter                :: subname='(fldlist_add)'
+        character(len=*), parameter                :: subname=':[fldlist_add]'
         !-------------------------------------------------------------------------------
 
         ! Set up a list of field information
         num = num + 1
         if (num > fldsMax) then
             call ESMF_LogWrite(subname//"?!", ESMF_LOGMSG_INFO)
+            call ESMF_LogWrite(trim(subname)//": ERROR num > fldsMax "//trim(stdname), &
+                             ESMF_LOGMSG_ERROR, line=__LINE__, file=__FILE__)
+               return
         endif
 
         fldlist(num)%stdname = trim(stdname)
+
+        if (present(ungridded_lbound) .and. present(ungridded_ubound)) then
+           fldlist(num)%ungridded_lbound = ungridded_lbound
+           fldlist(num)%ungridded_ubound = ungridded_ubound
+        end if
 
         if(present(default_value)) then
            fldlist(num)%default_value = default_value
@@ -94,17 +107,156 @@ module lilac_utils
 
     end subroutine fldlist_add
 
-    subroutine create_fldlists(a2c_fldlist, c2l_fldlist, l2c_fldlist, c2a_fldlist )
+    subroutine create_fldlists(a2c_fldlist, c2l_fldlist, l2c_fldlist, c2a_fldlist, rof_prognostic, glc_present )
+        
         ! add all the necessary fields one by one to the fieldlist 
-        type(fld_list_type),        intent(inout)      ::  a2c_fldlist
-        type(fld_list_type),        intent(inout)      ::  c2a_fldlist
-        type(fld_list_type),        intent(inout)      ::  l2c_fldlist
-        type(fld_list_type),        intent(inout)      ::  c2l_fldlist
+        type(fld_list_type),        intent(inout) :: a2c_fldlist(fldsMax)
+        type(fld_list_type),        intent(inout) :: c2a_fldlist(fldsMax)
+        type(fld_list_type),        intent(inout) :: l2c_fldlist(fldsMax)
+        type(fld_list_type),        intent(inout) :: c2l_fldlist(fldsMax)
 
-        integer :: fldsFrCpl_num, fldsToCpl_num
+        !type (fld_list_type)                      :: fldsToLnd(fldsMax)
+        !type (fld_list_type)                      :: fldsFrLnd(fldsMax)
 
-        ! from atm
-        !call fldlist_add(fldsToCpl_num, fldsToCpl, 'atmos2lnd_var', default_value=0.0, units='m')
+        !integer                                   :: fldsFrCpl_num, fldsToCpl_num
+        integer                                   :: fldsToLnd_num != 0  ! From atmosphere to land (a2c and c2l)
+        integer                                   :: fldsFrLnd_num != 0  ! From land to atmosphere (l2c and c2a)
+        integer, parameter                        :: fldsMax = 100
+
+
+        logical                     , intent(in)  :: glc_present    ! .true. => running with a non-stub GLC model
+        logical                     , intent(in)  :: rof_prognostic ! .true. => running with a prognostic ROF model
+
+        ! TODO (NS) : I should add default value and units here.....
+
+        !-------------------------------------------------------------------------
+        !            !---- from atm ----! a2c_fldlist &  c2l_fldlist
+        !-------------------------------------------------------------------------
+        !--------------------------a2c_fldlist------------------------------------
+        ! from atm - states
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Sa_z'         )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Sa_topo'      )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Sa_u'         )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Sa_v'         )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Sa_ptem'      )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Sa_pbot'      )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Sa_tbot'      )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Sa_shum'      )
+        !call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Sa_methane'   )
+
+        ! from atm - fluxes
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Faxa_lwdn'    )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Faxa_rainc'   )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Faxa_rainl'   )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Faxa_snowc'   )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Faxa_snowl'   )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Faxa_swndr'   )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Faxa_swvdr'   )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Faxa_swndf'   )
+        call fldlist_add(fldsToLnd_num, a2c_fldlist, 'Faxa_swvdf'   )
+
+        !--------------------------c2l_fldlist------------------------------------
+        ! from atm - states
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Sa_z'         )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Sa_topo'      )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Sa_u'         )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Sa_v'         )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Sa_ptem'      )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Sa_pbot'      )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Sa_tbot'      )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Sa_shum'      )
+        !call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Sa_methane'   )
+
+        ! from atm - fluxes
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Faxa_lwdn'    )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Faxa_rainc'   )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Faxa_rainl'   )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Faxa_snowc'   )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Faxa_snowl'   )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Faxa_swndr'   )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Faxa_swvdr'   )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Faxa_swndf'   )
+        call fldlist_add(fldsToLnd_num, c2l_fldlist, 'Faxa_swvdf'   )
+
+        !-------------------------------------------------------------------------
+        !            !---- from lnd ----! l2c_fldlist &  c2a_fldlist
+        !-------------------------------------------------------------------------
+        !--------------------------l2c_fldlist------------------------------------
+        ! export land states
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_lfrin'      )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_t'          )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_tref'       )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_qref'       )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_avsdr'      )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_anidr'      )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_avsdf'      )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_anidf'      )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_snowh'      )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_u10'        )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_fv'         )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Sl_ram1'       )
+
+
+        ! export fluxes to river
+        if (rof_prognostic) then
+           call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Flrl_rofsur'   )
+           call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Flrl_rofgwl'   )
+           call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Flrl_rofsub'   )
+           call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Flrl_rofi'     )
+           call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Flrl_irrig'    )
+        end if
+
+        ! export fluxes to atm
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Fall_taux'     )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Fall_tauy'     )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Fall_lat'      )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Fall_sen'      )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Fall_lwup'     )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Fall_evap'     )
+        call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Fall_swnet'    )
+
+        ! call fldlist_add(fldsFrLnd_num, l2c_fldlist, 'Fall_methane'  )
+
+
+        !--------------------------c2a_fldlist------------------------------------
+        ! export land states
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_lfrin'      )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_t'          )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_tref'       )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_qref'       )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_avsdr'      )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_anidr'      )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_avsdf'      )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_anidf'      )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_snowh'      )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_u10'        )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_fv'         )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Sl_ram1'       )
+
+
+        ! export fluxes to river
+        if (rof_prognostic) then
+           call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Flrl_rofsur'   )
+           call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Flrl_rofgwl'   )
+           call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Flrl_rofsub'   )
+           call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Flrl_rofi'     )
+           call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Flrl_irrig'    )
+        end if
+
+        ! export fluxes to atm
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Fall_taux'     )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Fall_tauy'     )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Fall_lat'      )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Fall_sen'      )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Fall_lwup'     )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Fall_evap'     )
+        call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Fall_swnet'    )
+
+        ! call fldlist_add(fldsFrLnd_num, c2a_fldlist, 'Fall_methane'  )
+
+
+
+            !call fldlist_add(fldsToCpl_num, fldsToCpl, 'atmos2lnd_var', default_value=0.0, units='m')
         ! from lnd
         !call fldlist_add(fldsFrCpl_num, fldsFrCpl, 'lnd2atmos_var', default_value=0.0, units='m')
 
