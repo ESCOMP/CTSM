@@ -50,7 +50,7 @@ EXTRA_LIBS  =    -L/glade/scratch/negins/test_clean/bld/intel/mpt/nodebug/nothre
 demo_driver: demo_driver.o atmos_cap.o lilac_mod.o lilac_utils.o cpl_mod.o lnd_cap.o
 	$(ESMF_F90LINKER) $(ESMF_F90LINKOPTS) $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) -o $@ $^ $(ESMF_F90ESMFLINKLIBS) $(CTSM_INC) $(CTSM_LIB) $(EXTRA_LIBS)
 	mv demo_driver demo_driver.exe
-	#rm *.o *.mod
+	rm *.o *.mod
 
 # module dependencies:
 #demo_driver.o: lilac_mod.o atmos_cap.o lilac_utils.o cpl_mod.o shr_string_mod.o shr_kind_mod.o shr_sys_mod.o shr_log_mod.o shr_timer_mod.o
