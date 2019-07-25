@@ -12,6 +12,7 @@ module clm_driver
   use clm_varctl             , only : wrtdia, iulog, use_fates
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, ndep_from_cpl
+  use clm_varctl             , only : use_soil_moisture_streams
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -79,6 +80,7 @@ module clm_driver
   use clm_instMod
   use clm_initializeMod      , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
+  use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -332,6 +334,13 @@ contains
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
+       if (use_soil_moisture_streams) then 
+          call t_startf('prescribed_sm')
+          call PrescribedSoilMoistureInterp(bounds_clump, soilstate_inst, &
+               waterstate_inst)
+          call t_stopf('prescribed_sm')
+       endif
+       
        call t_startf('begwbal')
        call BeginWaterBalance(bounds_clump,                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
