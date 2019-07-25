@@ -23,7 +23,7 @@ module SnowHydrologyMod
   use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
   use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd
   use clm_varctl      , only : iulog, use_subgrid_fluxes
-  use clm_varcon      , only : namec, h2osno_max, hfus, denice, rpi, spval, tfrz, int_snow_max
+  use clm_varcon      , only : namec, h2osno_max, hfus, denice, rpi, spval, tfrz
   use atm2lndType     , only : atm2lnd_type
   use AerosolMod      , only : aerosol_type
   use TemperatureType , only : temperature_type
@@ -1294,7 +1294,7 @@ contains
     ! fraction after the melting versus before the melting.
     !
     ! !USES:
-    use clm_varcon      , only : denice, denh2o, tfrz, rpi, int_snow_max
+    use clm_varcon      , only : denice, denh2o, tfrz, rpi
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in) :: bounds
@@ -1330,7 +1330,10 @@ contains
     real(r8) :: wsum   ! snowpack total water mass (ice+liquid) [kg/m2]
     real(r8) :: fsno_melt
     real(r8) :: ddz4   ! Rate of compaction of snowpack due to wind drift.
-    real(r8) :: int_snow_limited ! integrated snowfall, limited to be no greater than int_snow_max [mm]
+
+    ! FIXME(wjs, 2019-07-22) eventually we'll get rid of this and used a passed-in
+    ! argument
+    type(snow_cover_fraction_clm5_type) :: scf_method
     !-----------------------------------------------------------------------
 
     associate( &
@@ -1431,8 +1434,10 @@ contains
                       ! 2nd term is delta fsno over fsno, allowing for negative values for ddz3
                       if((swe_old(c,j) - wx) > 0._r8) then
                          wsum = sum(h2osoi_liq(c,snl(c)+1:0)+h2osoi_ice(c,snl(c)+1:0))
-                         int_snow_limited = min(int_snow(c), int_snow_max)
-                         fsno_melt = 1. - (acos(2.*min(1._r8,wsum/int_snow_limited) - 1._r8)/rpi)**(n_melt(c))
+                         fsno_melt = scf_method%FracSnowDuringMeltClm5( &
+                              h2osno_total = wsum, &
+                              int_snow = int_snow(c), &
+                              n_melt = n_melt(c))
                          
                          ! Ensure sum of snow and surface water fractions are <= 1 after update
                          !
