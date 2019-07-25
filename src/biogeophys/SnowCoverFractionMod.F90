@@ -23,6 +23,7 @@ module SnowCoverFractionMod
    contains
      procedure :: UpdateSnowDepthAndFracClm5
      procedure :: AddNewsnowToIntsnowClm5
+     procedure :: FracSnowDuringMeltClm5
   end type snow_cover_fraction_clm5_type
 
   character(len=*), parameter, private :: sourcefile = &
@@ -60,8 +61,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
-    real(r8) :: int_snow_limited  ! integrated snowfall, limited to be no greater than int_snow_max [mm]
-    real(r8) :: smr
     real(r8) :: fsno_new
     real(r8) :: fmelt
     real(r8) :: z_avg                                 ! grid cell average snow depth
@@ -86,12 +85,10 @@ contains
           ! fsca parameterization based on *changes* in swe
           ! first compute change from melt during previous time step
           if(snowmelt(c) > 0._r8) then
-
-             int_snow_limited = min(int_snow(c), int_snow_max)
-             smr=min(1._r8,h2osno_total(c)/int_snow_limited)
-
-             frac_sno(c) = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(n_melt(c))
-
+             frac_sno(c) = this%FracSnowDuringMeltClm5( &
+                  h2osno_total = h2osno_total(c), &
+                  int_snow = int_snow(c), &
+                  n_melt = n_melt(c))
           end if
 
           ! update fsca by new snow event, add to previous fsca
@@ -192,5 +189,34 @@ contains
     end do
 
   end subroutine AddNewsnowToIntsnowClm5
+
+  !-----------------------------------------------------------------------
+  pure function FracSnowDuringMeltClm5(this, h2osno_total, int_snow, n_melt) result(frac_sno)
+    !
+    ! !DESCRIPTION:
+    ! Single-point function giving frac_snow during times when the snow pack is melting
+    !
+    ! !ARGUMENTS:
+    real(r8) :: frac_sno  ! function result
+    class(snow_cover_fraction_clm5_type), intent(in) :: this
+    real(r8), intent(in) :: h2osno_total ! total snow water (mm H2O)
+    real(r8), intent(in) :: int_snow     ! integrated snowfall (mm H2O)
+    ! FIXME(wjs, 2019-07-25) move this into the class
+    real(r8), intent(in) :: n_melt
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: int_snow_limited  ! integrated snowfall, limited to be no greater than int_snow_max [mm]
+    real(r8) :: smr
+
+    character(len=*), parameter :: subname = 'FracSnowDuringMeltClm5'
+    !-----------------------------------------------------------------------
+
+    int_snow_limited = min(int_snow, int_snow_max)
+    smr = min(1._r8, h2osno_total/int_snow_limited)
+
+    frac_sno = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(n_melt)
+
+  end function FracSnowDuringMeltClm5
+
 
 end module SnowCoverFractionMod
