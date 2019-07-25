@@ -2,10 +2,12 @@
 #PBS -N job_name
 #####PBS -A P54048000 
 #PBS -A P93300606 
-#PBS -l walltime=00:05:00
-#PBS -q regular
-#PBS -j oe
-#PBS -l select=2:ncpus=2:mpiprocs=4
+#PBS -l walltime=00:10:00
+#PBS -q premium
+##PBS -q regular
+###PBS -j oe
+##PBS -l select=2:ncpus=2:mpiprocs=4
+#PBS -l select=1:ncpus=1:mpiprocs=2
 ##PBS -l select=1:ncpus=1:mpiprocs=1
 
 ml 
@@ -19,4 +21,4 @@ echo "hello"
 ### Run the executable
 set MPI_SHEPHERD=true
 source /glade/scratch/negins/test_clean/.env_mach_specific.csh
-mpiexec_mpt ./demo_driver
+mpiexec_mpt ./demo_driver.exe
