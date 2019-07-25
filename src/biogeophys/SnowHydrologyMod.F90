@@ -485,7 +485,6 @@ contains
     real(r8) :: temp_snow_depth(bounds%begc:bounds%endc) ! snow depth prior to updating [mm]
     real(r8) :: snowmelt(bounds%begc:bounds%endc)
     real(r8) :: newsnow(bounds%begc:bounds%endc)
-    real(r8) :: temp_intsnow                          ! temporary variable
     real(r8) :: z_avg                                 ! grid cell average snow depth
 
     ! FIXME(wjs, 2019-07-22) eventually we'll get rid of this and used a passed-in
@@ -600,24 +599,24 @@ contains
 
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
-
-       if (newsnow(c) > 0._r8) then
-          ! reset int_snow after accumulation events: make int_snow consistent with new
-          ! fsno, h2osno_total
-
-          if (h2osno_total(c) == 0._r8) then
-             ! Snow pack started at 0, then adding new snow; reset int_snow prior to
-             ! adding newsnow
-             int_snow(c) = 0._r8
-          end if
-
-          temp_intsnow= (h2osno_total(c) + newsnow(c)) &
-               / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
-          int_snow(c) = min(1.e8_r8,temp_intsnow)
+       if (h2osno_total(c) == 0._r8 .and. newsnow(c) > 0._r8) then
+          ! Snow pack started at 0, then adding new snow; reset int_snow prior to
+          ! adding newsnow
+          int_snow(c) = 0._r8
        end if
+    end do
 
-       ! update h2osno for new snow
-       int_snow(c) = int_snow(c) + newsnow(c)
+    call scf_method%AddNewsnowToIntsnowClm5(bounds, num_nolakec, filter_nolakec, &
+         ! Inputs
+         newsnow      = newsnow(begc:endc), &
+         h2osno_total = h2osno_total(begc:endc), &
+         frac_sno     = frac_sno(begc:endc), &
+         n_melt       = n_melt(begc:endc), &
+         ! Outputs
+         int_snow     = int_snow(begc:endc))
+
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
 
        ! update change in snow depth
        if (snl(c) < 0) then

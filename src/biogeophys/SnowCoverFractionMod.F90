@@ -22,6 +22,7 @@ module SnowCoverFractionMod
      private
    contains
      procedure :: UpdateSnowDepthAndFracClm5
+     procedure :: AddNewsnowToIntsnowClm5
   end type snow_cover_fraction_clm5_type
 
   character(len=*), parameter, private :: sourcefile = &
@@ -37,7 +38,7 @@ contains
     !
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_clm5_type), intent(inout) :: this
+    class(snow_cover_fraction_clm5_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
@@ -134,5 +135,62 @@ contains
     end do
 
   end subroutine UpdateSnowDepthAndFracClm5
+
+  ! FIXME(wjs, 2019-07-25) For the old formulation (n&y) we'll just have the single line,
+  !   int_snow(c) = int_snow(c) + newsnow(c)
+  !-----------------------------------------------------------------------
+  subroutine AddNewsnowToIntsnowClm5(this, bounds, num_c, filter_c, &
+       newsnow, h2osno_total, frac_sno, n_melt, &
+       int_snow)
+    !
+    ! !DESCRIPTION:
+    !
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_clm5_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_c       ! number of columns in filter_c
+    integer, intent(in) :: filter_c(:) ! column filter to operate over
+
+    ! FIXME(wjs, 2019-07-22) document the following arguments
+    real(r8), intent(in) :: newsnow( bounds%begc: )
+    real(r8), intent(in) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+    real(r8), intent(in) :: frac_sno( bounds%begc: )
+    ! FIXME(wjs, 2019-07-25) Move n_melt to being class-local
+    real(r8), intent(in) :: n_melt( bounds%begc: )
+    real(r8), intent(inout) :: int_snow( bounds%begc: )
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c
+    real(r8) :: temp_intsnow    ! temporary version of int_snow
+
+    character(len=*), parameter :: subname = 'AddNewsnowToIntsnowClm5'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(newsnow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(n_melt, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(int_snow, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+
+       if (newsnow(c) > 0._r8) then
+          ! reset int_snow after accumulation events: make int_snow consistent with new
+          ! fsno, h2osno_total
+          temp_intsnow= (h2osno_total(c) + newsnow(c)) &
+               / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
+          int_snow(c) = min(1.e8_r8,temp_intsnow)
+       end if
+
+       ! NOTE(wjs, 2019-07-25) Sean Swenson and Bill Sacks aren't sure whether this extra
+       ! addition of new_snow is correct: it seems to be double-adding newsnow, but we're
+       ! not positive that it's wrong. This seems to have been in place ever since the
+       ! clm45 branch came to the trunk.
+       int_snow(c) = int_snow(c) + newsnow(c)
+    end do
+
+  end subroutine AddNewsnowToIntsnowClm5
 
 end module SnowCoverFractionMod
