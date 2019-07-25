@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 820;
+my $ntests = 825;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 498;
+   $ntests += 501;
 }
 plan( tests=>$ntests );
 
@@ -315,6 +315,7 @@ foreach my $options (
                       "-bgc sp  -use_case 1850-2100_SSP2-4.5_transient -namelist '&a start_ymd=18501223/'",
                       "-bgc bgc -use_case 1850-2100_SSP3-7.0_transient -namelist '&a start_ymd=20701029/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
+                      "-bgc sp  -use_case 2000_control -res 0.9x1.25 -namelist '&a use_soil_moisture_streams = T/'",
                       "-bgc cn  -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19201023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                       "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
@@ -407,6 +408,11 @@ my %failtest = (
                                      namelst=>"flanduse_timeseries='my_flanduse_timeseries_file.nc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-bgc cndv",
+                                   },
+     "soilm_stream wo use"       =>{ options=>"-res 0.9x1.25 -envxml_dir .",
+                                     namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='missing_file'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
                                    },
      "clm50CNDVwtransient"       =>{ options=>" -envxml_dir . -use_case 20thC_transient -dynamic_vegetation -res 10x15",
                                      namelst=>"",
