@@ -8,6 +8,7 @@ module SnowCoverFractionMod
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use spmdMod        , only : masterproc, mpicom
@@ -113,7 +114,18 @@ module SnowCoverFractionMod
      end function FracSnowDuringMelt_Interface
   end interface
 
+  type, extends(snow_cover_fraction_type) :: snow_cover_fraction_ny07_type
+     ! This implements the N&Y07 (Niu et al. 2007) parameterization of snow cover fraction
+     private
+   contains
+     procedure, public :: Init => InitNY07
+     procedure, public :: UpdateSnowDepthAndFrac => UpdateSnowDepthAndFracNY07
+     procedure, public :: AddNewsnowToIntsnow => AddNewsnowToIntsnowNY07
+     procedure, public :: FracSnowDuringMelt => FracSnowDuringMeltNY07
+  end type snow_cover_fraction_ny07_type
+
   type, extends(snow_cover_fraction_type) :: snow_cover_fraction_clm5_type
+     ! This implements the CLM5 parameterization of snow cover fraction
      private
      real(r8) :: int_snow_max = -999._r8  ! limit applied to integrated snowfall when determining changes in snow-covered fraction during melt (mm H2O)
      real(r8) :: accum_factor = -999._r8  ! Accumulation constant for fractional snow covered area (unitless)
@@ -173,6 +185,127 @@ contains
   end function CreateAndInitScfMethod
 
   ! ========================================================================
+  ! Methods for N&Y07 (Niu et al. 2007) parameterization
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine InitNY07(this, bounds, col, glc_behavior, NLFilename, params_ncid)
+    !
+    ! !DESCRIPTION:
+    !
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_ny07_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    type(column_type), intent(in) :: col
+    type(glc_behavior_type), intent(in) :: glc_behavior
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    type(file_desc_t), intent(inout) :: params_ncid ! pio netCDF file id for parameter file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitNY07'
+    !-----------------------------------------------------------------------
+
+    ! FIXME(wjs, 2019-07-26) fill this in
+
+  end subroutine InitNY07
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateSnowDepthAndFracNY07(this, bounds, num_c, filter_c, &
+       urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
+       snow_depth, frac_sno)
+    !
+    ! !DESCRIPTION:
+    !
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_ny07_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_c       ! number of columns in filter_c
+    integer, intent(in) :: filter_c(:) ! column filter to operate over
+
+    logical, intent(in) :: urbpoi( bounds%begc: ) ! true if the given column is urban
+    real(r8), intent(in) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+    ! FIXME(wjs, 2019-07-22) document the following arguments
+    real(r8), intent(in) :: snowmelt( bounds%begc: )
+    real(r8), intent(in) :: int_snow( bounds%begc: )
+    real(r8), intent(in) :: newsnow( bounds%begc: )
+    real(r8), intent(in) :: bifall( bounds%begc: )
+
+    real(r8), intent(inout) :: snow_depth( bounds%begc: )
+    real(r8), intent(inout) :: frac_sno( bounds%begc: )
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'UpdateSnowDepthAndFracNY07'
+    !-----------------------------------------------------------------------
+
+    ! FIXME(wjs, 2019-07-26) fill this in
+
+  end subroutine UpdateSnowDepthAndFracNY07
+
+  !-----------------------------------------------------------------------
+  subroutine AddNewsnowToIntsnowNY07(this, bounds, num_c, filter_c, &
+       newsnow, h2osno_total, frac_sno, &
+       int_snow)
+    !
+    ! !DESCRIPTION:
+    !
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_ny07_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_c       ! number of columns in filter_c
+    integer, intent(in) :: filter_c(:) ! column filter to operate over
+
+    ! FIXME(wjs, 2019-07-22) document the following arguments
+    real(r8), intent(in) :: newsnow( bounds%begc: )
+    real(r8), intent(in) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+    real(r8), intent(in) :: frac_sno( bounds%begc: )
+    real(r8), intent(inout) :: int_snow( bounds%begc: )
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'AddNewsnowToIntsnowNY07'
+    !-----------------------------------------------------------------------
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+       int_snow(c) = int_snow(c) + newsnow(c)
+    end do
+
+  end subroutine AddNewsnowToIntsnowNY07
+
+  !-----------------------------------------------------------------------
+  pure function FracSnowDuringMeltNY07(this, c, h2osno_total, int_snow) result(frac_sno)
+    !
+    ! !DESCRIPTION:
+    ! Single-point function giving frac_snow during times when the snow pack is melting
+    !
+    ! This is currently not implemented for the N&Y07 method, so simply returns NaN. (We
+    ! can't abort, since this is a pure function.) That's okay since this is only called
+    ! if use_subgrid_fluxes is true, and use_subgrid_fluxes cannot currently be used with
+    ! the N&Y07 method.
+    !
+    ! !ARGUMENTS:
+    real(r8) :: frac_sno  ! function result
+    class(snow_cover_fraction_ny07_type), intent(in) :: this
+    integer , intent(in) :: c            ! column we're operating on
+    real(r8), intent(in) :: h2osno_total ! total snow water (mm H2O)
+    real(r8), intent(in) :: int_snow     ! integrated snowfall (mm H2O)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'FracSnowDuringMeltNY07'
+    !-----------------------------------------------------------------------
+
+    frac_sno = nan
+
+  end function FracSnowDuringMeltNY07
+
+  ! ========================================================================
   ! Methods for CLM5 parameterization
   ! ========================================================================
 
@@ -228,7 +361,6 @@ contains
     use fileutils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_clm5_type), intent(inout) :: this
@@ -473,8 +605,6 @@ contains
 
   end subroutine UpdateSnowDepthAndFracClm5
 
-  ! FIXME(wjs, 2019-07-25) For the old formulation (n&y) we'll just have the single line,
-  !   int_snow(c) = int_snow(c) + newsnow(c)
   !-----------------------------------------------------------------------
   subroutine AddNewsnowToIntsnowClm5(this, bounds, num_c, filter_c, &
        newsnow, h2osno_total, frac_sno, &
@@ -553,6 +683,5 @@ contains
     frac_sno = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(this%n_melt(c))
 
   end function FracSnowDuringMeltClm5
-
 
 end module SnowCoverFractionMod
