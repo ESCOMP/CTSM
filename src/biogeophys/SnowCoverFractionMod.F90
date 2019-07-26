@@ -23,20 +23,106 @@ module SnowCoverFractionMod
   !
   ! !PUBLIC TYPES:
   public :: CreateAndInitScfMethod
-  ! FIXME(wjs, 2019-07-26) this specific type should not be public: only the generic type
-  ! should be public
-  public :: snow_cover_fraction_clm5_type
+  public :: snow_cover_fraction_type
 
-  type :: snow_cover_fraction_clm5_type
+  type, abstract :: snow_cover_fraction_type
+     private
+   contains
+     ! Initialize this instance
+     procedure(Init_Interface), deferred :: Init
+
+     ! Update snow depth and snow fraction
+     procedure(UpdateSnowDepthAndFrac_Interface), deferred :: UpdateSnowDepthAndFrac
+
+     ! Add new snow to integrated snow fall
+     procedure(AddNewsnowToIntsnow_Interface), deferred :: AddNewsnowToIntsnow
+
+     ! Single-point function: return fractional snow cover during melt
+     procedure(FracSnowDuringMelt_Interface), deferred :: FracSnowDuringMelt
+  end type snow_cover_fraction_type
+
+  abstract interface
+
+     subroutine Init_Interface(this, bounds, col, glc_behavior, NLFilename, params_ncid)
+       use decompMod, only : bounds_type
+       use ColumnType, only : column_type
+       use glcBehaviorMod, only : glc_behavior_type
+       use ncdio_pio, only : file_desc_t
+       import :: snow_cover_fraction_type
+
+       class(snow_cover_fraction_type), intent(inout) :: this
+       type(bounds_type), intent(in) :: bounds
+       type(column_type), intent(in) :: col
+       type(glc_behavior_type), intent(in) :: glc_behavior
+       character(len=*), intent(in) :: NLFilename ! Namelist filename
+       type(file_desc_t), intent(inout) :: params_ncid ! pio netCDF file id for parameter file
+     end subroutine Init_Interface
+
+     subroutine UpdateSnowDepthAndFrac_Interface(this, bounds, num_c, filter_c, &
+          urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
+          snow_depth, frac_sno)
+       use decompMod, only : bounds_type
+       use shr_kind_mod   , only : r8 => shr_kind_r8
+       import :: snow_cover_fraction_type
+
+       class(snow_cover_fraction_type), intent(in) :: this
+       type(bounds_type), intent(in) :: bounds
+       integer, intent(in) :: num_c       ! number of columns in filter_c
+       integer, intent(in) :: filter_c(:) ! column filter to operate over
+
+       logical, intent(in) :: urbpoi( bounds%begc: ) ! true if the given column is urban
+       real(r8), intent(in) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+       ! FIXME(wjs, 2019-07-22) document the following arguments
+       real(r8), intent(in) :: snowmelt( bounds%begc: )
+       real(r8), intent(in) :: int_snow( bounds%begc: )
+       real(r8), intent(in) :: newsnow( bounds%begc: )
+       real(r8), intent(in) :: bifall( bounds%begc: )
+
+       real(r8), intent(inout) :: snow_depth( bounds%begc: )
+       real(r8), intent(inout) :: frac_sno( bounds%begc: )
+     end subroutine UpdateSnowDepthAndFrac_Interface
+
+     subroutine AddNewsnowToIntsnow_Interface(this, bounds, num_c, filter_c, &
+          newsnow, h2osno_total, frac_sno, &
+          int_snow)
+       use decompMod, only : bounds_type
+       use shr_kind_mod   , only : r8 => shr_kind_r8
+       import :: snow_cover_fraction_type
+
+       class(snow_cover_fraction_type), intent(in) :: this
+       type(bounds_type), intent(in) :: bounds
+       integer, intent(in) :: num_c       ! number of columns in filter_c
+       integer, intent(in) :: filter_c(:) ! column filter to operate over
+
+       ! FIXME(wjs, 2019-07-22) document the following arguments
+       real(r8), intent(in) :: newsnow( bounds%begc: )
+       real(r8), intent(in) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+       real(r8), intent(in) :: frac_sno( bounds%begc: )
+       real(r8), intent(inout) :: int_snow( bounds%begc: )
+     end subroutine AddNewsnowToIntsnow_Interface
+
+     pure function FracSnowDuringMelt_Interface(this, c, h2osno_total, int_snow) result(frac_sno)
+       use shr_kind_mod   , only : r8 => shr_kind_r8
+       import :: snow_cover_fraction_type
+
+       real(r8) :: frac_sno  ! function result
+       class(snow_cover_fraction_type), intent(in) :: this
+       integer , intent(in) :: c            ! column we're operating on
+       real(r8), intent(in) :: h2osno_total ! total snow water (mm H2O)
+       real(r8), intent(in) :: int_snow     ! integrated snowfall (mm H2O)
+     end function FracSnowDuringMelt_Interface
+  end interface
+
+  type, extends(snow_cover_fraction_type) :: snow_cover_fraction_clm5_type
      private
      real(r8) :: int_snow_max = -999._r8  ! limit applied to integrated snowfall when determining changes in snow-covered fraction during melt (mm H2O)
      real(r8) :: accum_factor = -999._r8  ! Accumulation constant for fractional snow covered area (unitless)
      real(r8), allocatable :: n_melt(:)   ! SCA shape parameter
    contains
      procedure, public :: Init => InitClm5
-     procedure, public :: UpdateSnowDepthAndFracClm5
-     procedure, public :: AddNewsnowToIntsnowClm5
-     procedure, public :: FracSnowDuringMeltClm5
+     procedure, public :: UpdateSnowDepthAndFrac => UpdateSnowDepthAndFracClm5
+     procedure, public :: AddNewsnowToIntsnow => AddNewsnowToIntsnowClm5
+     procedure, public :: FracSnowDuringMelt => FracSnowDuringMeltClm5
 
      procedure, private :: ReadNamelistClm5
      procedure, private :: ReadParamsClm5
@@ -60,8 +146,7 @@ contains
     ! return it
     !
     ! !ARGUMENTS:
-    ! FIXME(wjs, 2019-07-26) Change this to generic snow_cover_fraction_type
-    class(snow_cover_fraction_clm5_type), allocatable :: scf_method  ! function result
+    class(snow_cover_fraction_type), allocatable :: scf_method  ! function result
     type(bounds_type), intent(in) :: bounds
     type(column_type), intent(in) :: col
     type(glc_behavior_type), intent(in) :: glc_behavior
@@ -340,7 +425,7 @@ contains
           ! fsca parameterization based on *changes* in swe
           ! first compute change from melt during previous time step
           if(snowmelt(c) > 0._r8) then
-             frac_sno(c) = this%FracSnowDuringMeltClm5( &
+             frac_sno(c) = this%FracSnowDuringMelt( &
                   c            = c, &
                   h2osno_total = h2osno_total(c), &
                   int_snow     = int_snow(c))

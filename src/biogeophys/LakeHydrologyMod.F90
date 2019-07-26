@@ -82,7 +82,7 @@ contains
     use SnowHydrologyMod, only : DivideSnowLayers, NewSnowBulkDensity
     use LakeCon         , only : lsadz
     use TopoMod         , only : topo_type
-    use SnowCoverFractionMod, only : snow_cover_fraction_clm5_type
+    use SnowCoverFractionMod, only : snow_cover_fraction_type
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -94,8 +94,7 @@ contains
     integer                , intent(out)   :: filter_shlakesnowc(:)   ! column filter for snow points
     integer                , intent(out)   :: num_shlakenosnowc       ! number of column non-snow points
     integer                , intent(out)   :: filter_shlakenosnowc(:) ! column filter for non-snow points
-    ! FIXME(wjs, 2019-07-26) change this to be generic
-    class(snow_cover_fraction_clm5_type), intent(in) :: scf_method
+    class(snow_cover_fraction_type), intent(in) :: scf_method
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(soilstate_type)   , intent(in)    :: soilstate_inst

@@ -31,7 +31,7 @@ module SnowHydrologyMod
   use WaterFluxBulkType   , only : waterfluxbulk_type
   use WaterStateBulkType  , only : waterstatebulk_type
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
-  use SnowCoverFractionMod, only : snow_cover_fraction_clm5_type
+  use SnowCoverFractionMod, only : snow_cover_fraction_type
   use LandunitType    , only : landunit_type, lun
   use TopoMod, only : topo_type
   use ColumnType      , only : column_type, col
@@ -291,8 +291,7 @@ contains
     type(bounds_type)      , intent(in)    :: bounds     
     integer                , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
     integer                , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
-    ! FIXME(wjs, 2019-07-26) Make this generic
-    class(snow_cover_fraction_clm5_type), intent(in) :: scf_method
+    class(snow_cover_fraction_type), intent(in) :: scf_method
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
@@ -462,8 +461,7 @@ contains
     integer, intent(in) :: num_nolakec
     integer, intent(in) :: filter_nolakec(:)
 
-    ! FIXME(wjs, 2019-07-26) make this generic
-    class(snow_cover_fraction_clm5_type), intent(in) :: scf_method
+    class(snow_cover_fraction_type), intent(in) :: scf_method
     real(r8)                  , intent(in)    :: dtime                           ! land model time step (sec)
     logical                   , intent(in)    :: urbpoi( bounds%begc: )          ! true=>urban point
     integer                   , intent(in)    :: snl( bounds%begc: )             ! negative number of snow layers
@@ -540,9 +538,7 @@ contains
        snowmelt(c) = qflx_snow_drain(c) * dtime
     end do
 
-    ! FIXME(wjs, 2019-07-22) Eventually, this will call just the correct method, via
-    ! polymorphism. It will use an instance created in initialization.
-    call scf_method%UpdateSnowDepthAndFracClm5(bounds, num_nolakec, filter_nolakec, &
+    call scf_method%UpdateSnowDepthAndFrac(bounds, num_nolakec, filter_nolakec, &
          ! Inputs
          urbpoi       = urbpoi(begc:endc), &
          h2osno_total = h2osno_total(begc:endc), &
@@ -601,7 +597,7 @@ contains
        end if
     end do
 
-    call scf_method%AddNewsnowToIntsnowClm5(bounds, num_nolakec, filter_nolakec, &
+    call scf_method%AddNewsnowToIntsnow(bounds, num_nolakec, filter_nolakec, &
          ! Inputs
          newsnow      = newsnow(begc:endc), &
          h2osno_total = h2osno_total(begc:endc), &
@@ -1295,8 +1291,7 @@ contains
     type(bounds_type)      , intent(in) :: bounds
     integer                , intent(in) :: num_snowc       ! number of column snow points in column filter
     integer                , intent(in) :: filter_snowc(:) ! column filter for snow points
-    ! FIXME(wjs, 2019-07-26) Make the following generic
-    class(snow_cover_fraction_clm5_type), intent(in) :: scf_method
+    class(snow_cover_fraction_type), intent(in) :: scf_method
     type(temperature_type) , intent(in) :: temperature_inst
     type(waterstatebulk_type)  , intent(in) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(in) :: waterdiagnosticbulk_inst
@@ -1426,7 +1421,7 @@ contains
                       ! 2nd term is delta fsno over fsno, allowing for negative values for ddz3
                       if((swe_old(c,j) - wx) > 0._r8) then
                          wsum = sum(h2osoi_liq(c,snl(c)+1:0)+h2osoi_ice(c,snl(c)+1:0))
-                         fsno_melt = scf_method%FracSnowDuringMeltClm5( &
+                         fsno_melt = scf_method%FracSnowDuringMelt( &
                               c            = c, &
                               h2osno_total = wsum, &
                               int_snow     = int_snow(c))
