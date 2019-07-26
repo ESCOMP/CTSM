@@ -25,7 +25,8 @@ module SnowCoverFractionMod
 
   type :: snow_cover_fraction_clm5_type
      private
-     real(r8) :: int_snow_max = -999.0_r8            ! limit applied to integrated snowfall when determining changes in snow-covered fraction during melt (mm H2O)
+     real(r8) :: int_snow_max = -999._r8  ! limit applied to integrated snowfall when determining changes in snow-covered fraction during melt (mm H2O)
+     real(r8) :: accum_factor = -999._r8  ! Accumulation constant for fractional snow covered area (unitless)
    contains
      procedure, public :: Init => InitClm5
      procedure, public :: UpdateSnowDepthAndFracClm5
@@ -178,6 +179,9 @@ contains
     character(len=*), parameter :: subname = 'ReadParamsClm5'
     !-----------------------------------------------------------------------
 
+    ! Accumulation constant for fractional snow covered area (unitless)
+    call readNcdioScalar(params_ncid, 'accum_factor', subname, this%accum_factor)
+
   end subroutine ReadParamsClm5
 
   !-----------------------------------------------------------------------
@@ -205,7 +209,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine UpdateSnowDepthAndFracClm5(this, bounds, num_c, filter_c, &
-       accum_factor, urbpoi, n_melt, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
+       urbpoi, n_melt, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
        snow_depth, frac_sno)
     !
     ! !DESCRIPTION:
@@ -217,8 +221,6 @@ contains
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-    ! FIXME(wjs, 2019-07-25) Move accum_factor to being class-local
-    real(r8), intent(in) :: accum_factor
     logical, intent(in) :: urbpoi( bounds%begc: ) ! true if the given column is urban
     ! FIXME(wjs, 2019-07-25) Move n_melt to being class-local
     real(r8), intent(in) :: n_melt( bounds%begc: )
@@ -266,7 +268,7 @@ contains
 
           ! update fsca by new snow event, add to previous fsca
           if (newsnow(c) > 0._r8) then
-             fsno_new = 1._r8 - (1._r8 - tanh(accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
+             fsno_new = 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
              frac_sno(c) = fsno_new
           end if
 
@@ -289,7 +291,7 @@ contains
           if (newsnow(c) > 0._r8) then
              z_avg = newsnow(c)/bifall(c)
              fmelt=newsnow(c)
-             frac_sno(c) = tanh(accum_factor * newsnow(c))
+             frac_sno(c) = tanh(this%accum_factor * newsnow(c))
 
              ! update snow_depth to be consistent with frac_sno, z_avg
              if (use_subgrid_fluxes .and. .not. urbpoi(c)) then

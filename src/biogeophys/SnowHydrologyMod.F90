@@ -129,7 +129,6 @@ module SnowHydrologyMod
   real(r8) :: min_wind_snowcompact        = 5._r8              ! minimum wind speed tht results in compaction (m/s)
 
   ! Parameters read from netCDF parameter file
-  real(r8) :: accum_factor                                     ! Accumulation constant for fractional snow covered area (unitless)
   real(r8) :: zlnd                                             ! Roughness length for soil (m)
 
   ! ------------------------------------------------------------------------
@@ -275,8 +274,6 @@ contains
 
     ! Roughness length for soil (m)
     call readNcdioScalar(ncid, 'zlnd', subname, zlnd)
-    ! Accumulation constant for fractional snow covered area (unitless)
-    call readNcdioScalar(ncid, 'accum_factor', subname, accum_factor)
 
   end subroutine readParams
 
@@ -550,7 +547,6 @@ contains
     ! polymorphism. It will use an instance created in initialization.
     call scf_method%UpdateSnowDepthAndFracClm5(bounds, num_nolakec, filter_nolakec, &
          ! Inputs
-         accum_factor = accum_factor, &
          urbpoi       = urbpoi(begc:endc), &
          n_melt       = n_melt(begc:endc), &
          h2osno_total = h2osno_total(begc:endc), &
