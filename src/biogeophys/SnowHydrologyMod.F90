@@ -283,6 +283,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine HandleNewSnow(bounds, &
        num_nolakec, filter_nolakec, &
+       scf_method, &
        atm2lnd_inst, temperature_inst, &
        aerosol_inst, water_inst)
     !
@@ -293,6 +294,8 @@ contains
     type(bounds_type)      , intent(in)    :: bounds     
     integer                , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
     integer                , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
+    ! FIXME(wjs, 2019-07-26) Make this generic
+    class(snow_cover_fraction_clm5_type), intent(in) :: scf_method
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
@@ -332,6 +335,7 @@ contains
 
     call BulkDiag_NewSnowDiagnostics(bounds, num_nolakec, filter_nolakec, &
          ! Inputs
+         scf_method          = scf_method, &
          dtime               = dtime, &
          urbpoi              = col%urbpoi(begc:endc), &
          snl                 = col%snl(begc:endc), &
@@ -443,6 +447,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BulkDiag_NewSnowDiagnostics(bounds, num_nolakec, filter_nolakec, &
+       scf_method, &
        dtime, urbpoi, snl, n_melt, bifall, h2osno_total, h2osoi_ice, h2osoi_liq, &
        qflx_snow_grnd, qflx_snow_drain, &
        dz, int_snow, swe_old, frac_sno, frac_sno_eff, snow_depth)
@@ -461,6 +466,8 @@ contains
     integer, intent(in) :: num_nolakec
     integer, intent(in) :: filter_nolakec(:)
 
+    ! FIXME(wjs, 2019-07-26) make this generic
+    class(snow_cover_fraction_clm5_type), intent(in) :: scf_method
     real(r8)                  , intent(in)    :: dtime                           ! land model time step (sec)
     logical                   , intent(in)    :: urbpoi( bounds%begc: )          ! true=>urban point
     integer                   , intent(in)    :: snl( bounds%begc: )             ! negative number of snow layers
@@ -486,10 +493,6 @@ contains
     real(r8) :: snowmelt(bounds%begc:bounds%endc)
     real(r8) :: newsnow(bounds%begc:bounds%endc)
     real(r8) :: z_avg                                 ! grid cell average snow depth
-
-    ! FIXME(wjs, 2019-07-22) eventually we'll get rid of this and used a passed-in
-    ! argument
-    type(snow_cover_fraction_clm5_type) :: scf_method
 
     character(len=*), parameter :: subname = 'BulkDiag_NewSnowDiagnostics'
     !-----------------------------------------------------------------------
@@ -1282,6 +1285,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SnowCompaction(bounds, num_snowc, filter_snowc, &
+       scf_method, &
        temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, atm2lnd_inst)
     !
     ! !DESCRIPTION:
@@ -1300,6 +1304,8 @@ contains
     type(bounds_type)      , intent(in) :: bounds
     integer                , intent(in) :: num_snowc       ! number of column snow points in column filter
     integer                , intent(in) :: filter_snowc(:) ! column filter for snow points
+    ! FIXME(wjs, 2019-07-26) Make the following generic
+    class(snow_cover_fraction_clm5_type), intent(in) :: scf_method
     type(temperature_type) , intent(in) :: temperature_inst
     type(waterstatebulk_type)  , intent(in) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(in) :: waterdiagnosticbulk_inst
@@ -1330,10 +1336,6 @@ contains
     real(r8) :: wsum   ! snowpack total water mass (ice+liquid) [kg/m2]
     real(r8) :: fsno_melt
     real(r8) :: ddz4   ! Rate of compaction of snowpack due to wind drift.
-
-    ! FIXME(wjs, 2019-07-22) eventually we'll get rid of this and used a passed-in
-    ! argument
-    type(snow_cover_fraction_clm5_type) :: scf_method
     !-----------------------------------------------------------------------
 
     associate( &

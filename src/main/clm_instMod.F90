@@ -9,11 +9,13 @@ module clm_instMod
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
-  use clm_varctl      , only : use_century_decomp, use_crop
+  use clm_varctl      , only : use_century_decomp, use_crop, paramfile
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice_mec, istsoil
   use perf_mod        , only : t_startf, t_stopf
   use controlMod      , only : NLFilename
+  use fileutils       , only : getfil
+  use ncdio_pio       , only : file_desc_t, ncd_pio_openfile, ncd_pio_closefile
 
   !-----------------------------------------
   ! Constants
@@ -74,6 +76,7 @@ module clm_instMod
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
+  use SnowCoverFractionMod            , only : CreateAndInitScfMethod, snow_cover_fraction_clm5_type
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
   !
@@ -119,6 +122,8 @@ module clm_instMod
   type(lnd2glc_type), public              :: lnd2glc_inst
   type(glc_behavior_type), target, public :: glc_behavior
   type(topo_type), public                 :: topo_inst
+  ! FIXME(wjs, 2019-07-26) Change the following to be generic snow_cover_fraction_type
+  class(snow_cover_fraction_clm5_type), public, allocatable :: scf_method
   class(soil_water_retention_curve_type), public, allocatable :: soil_water_retention_curve
 
   ! CN vegetation types
@@ -201,6 +206,8 @@ contains
     integer               :: begc, endc
     integer               :: begl, endl
     type(bounds_type)     :: bounds_clump
+    character(len=1024)   :: locfn        ! local file name
+    type(file_desc_t)     :: params_ncid  ! pio netCDF file id for parameter file
     real(r8), allocatable :: h2osno_col(:)
     real(r8), allocatable :: snow_depth_col(:)
 
@@ -213,6 +220,9 @@ contains
     begp = bounds%begp; endp = bounds%endp 
     begc = bounds%begc; endc = bounds%endc 
     begl = bounds%begl; endl = bounds%endl
+
+    call getfil (paramfile, locfn, 0)
+    call ncd_pio_openfile (params_ncid, trim(locfn), 0)
 
     allocate (h2osno_col(begc:endc))
     allocate (snow_depth_col(begc:endc))
@@ -319,6 +329,10 @@ contains
     call surfrad_inst%Init(bounds)
 
     call dust_inst%Init(bounds)
+
+    ! FIXME(wjs, 2019-07-26) For source, use a factory method, create_and_init_scf_method
+    allocate(scf_method, &
+         source = CreateAndInitScfMethod(NLFilename, params_ncid))
 
     ! Once namelist options are added to control the soil water retention curve method,
     ! we'll need to either pass the namelist file as an argument to this routine, or pass
@@ -441,6 +455,8 @@ contains
     end if
 
     call print_accum_fields()
+
+    call ncd_pio_closefile(params_ncid)
 
     call t_stopf('init_accflds')
 

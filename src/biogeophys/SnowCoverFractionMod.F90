@@ -11,24 +11,132 @@ module SnowCoverFractionMod
   ! FIXME(wjs, 2019-07-23) Move int_snow_max into snow_cover_fraction_clm5_type
   use clm_varcon     , only : int_snow_max, rpi
   use clm_varctl     , only : use_subgrid_fluxes
+  use ncdio_pio      , only : file_desc_t
   implicit none
   save
   private
   !
   ! !PUBLIC TYPES:
+  public :: CreateAndInitScfMethod
+  ! FIXME(wjs, 2019-07-26) this specific type should not be public: only the generic type
+  ! should be public
   public :: snow_cover_fraction_clm5_type
 
   type :: snow_cover_fraction_clm5_type
      private
    contains
-     procedure :: UpdateSnowDepthAndFracClm5
-     procedure :: AddNewsnowToIntsnowClm5
-     procedure :: FracSnowDuringMeltClm5
+     procedure, public :: Init => InitClm5
+     procedure, public :: UpdateSnowDepthAndFracClm5
+     procedure, public :: AddNewsnowToIntsnowClm5
+     procedure, public :: FracSnowDuringMeltClm5
+
+     procedure, private :: ReadNamelistClm5
+     procedure, private :: ReadParamsClm5
   end type snow_cover_fraction_clm5_type
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 contains
+
+  ! ========================================================================
+  ! Factory method
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  function CreateAndInitScfMethod(NLFilename, params_ncid) result(scf_method)
+    !
+    ! !DESCRIPTION:
+    ! Create an instance of the appropriate snow_cover_fraction_type, initialize it and
+    ! return it
+    !
+    ! !ARGUMENTS:
+    ! FIXME(wjs, 2019-07-26) Change this to generic snow_cover_fraction_type
+    class(snow_cover_fraction_clm5_type), allocatable :: scf_method  ! function result
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    type(file_desc_t), intent(inout) :: params_ncid ! pio netCDF file id for parameter file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'CreateAndInitScfMethod'
+    !-----------------------------------------------------------------------
+
+    ! FIXME(wjs, 2019-07-26) Have some logic to create the appropriate snow cover
+    ! fraction method (based on something read from controlMod/clm_varctl???)
+    allocate(scf_method, &
+         source = snow_cover_fraction_clm5_type())
+
+    call scf_method%Init( &
+         NLFilename  = NLFilename, &
+         params_ncid = params_ncid)
+
+  end function CreateAndInitScfMethod
+
+  ! ========================================================================
+  ! Methods for CLM5 parameterization
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine InitClm5(this, NLFilename, params_ncid)
+    !
+    ! !DESCRIPTION:
+    !
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_clm5_type), intent(inout) :: this
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    type(file_desc_t), intent(inout) :: params_ncid ! pio netCDF file id for parameter file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitClm5'
+    !-----------------------------------------------------------------------
+
+    call this%ReadNamelistClm5(NLFilename)
+    call this%ReadParamsClm5(params_ncid)
+
+  end subroutine InitClm5
+
+  !-----------------------------------------------------------------------
+  subroutine ReadNamelistClm5(this, NLFilename)
+    !
+    ! !DESCRIPTION:
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_clm5_type), intent(inout) :: this
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'ReadNamelistClm5'
+    !-----------------------------------------------------------------------
+
+  end subroutine ReadNamelistClm5
+
+  !-----------------------------------------------------------------------
+  subroutine ReadParamsClm5(this, params_ncid)
+    !
+    ! !DESCRIPTION:
+    !
+    ! !USES:
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_clm5_type), intent(inout) :: this
+    type(file_desc_t), intent(inout) :: params_ncid  ! pio netCDF file id for parameter file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'ReadParamsClm5'
+    !-----------------------------------------------------------------------
+
+  end subroutine ReadParamsClm5
+
 
   !-----------------------------------------------------------------------
   subroutine UpdateSnowDepthAndFracClm5(this, bounds, num_c, filter_c, &
