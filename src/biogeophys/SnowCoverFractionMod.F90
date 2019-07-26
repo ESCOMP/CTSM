@@ -15,6 +15,7 @@ module SnowCoverFractionMod
   use clm_varcon     , only : rpi
   use clm_varctl     , only : iulog, use_subgrid_fluxes
   use ncdio_pio      , only : file_desc_t
+  use paramUtilMod   , only : readNcdioScalar
   use ColumnType     , only : column_type
   use glcBehaviorMod , only : glc_behavior_type
   use landunit_varcon, only : istice_mec
@@ -117,11 +118,14 @@ module SnowCoverFractionMod
   type, extends(snow_cover_fraction_type) :: snow_cover_fraction_ny07_type
      ! This implements the N&Y07 (Niu et al. 2007) parameterization of snow cover fraction
      private
+     real(r8) :: zlnd = -999._r8  ! Roughness length for soil (m)
    contains
      procedure, public :: Init => InitNY07
      procedure, public :: UpdateSnowDepthAndFrac => UpdateSnowDepthAndFracNY07
      procedure, public :: AddNewsnowToIntsnow => AddNewsnowToIntsnowNY07
      procedure, public :: FracSnowDuringMelt => FracSnowDuringMeltNY07
+
+     procedure, private :: ReadParamsNY07
   end type snow_cover_fraction_ny07_type
 
   type, extends(snow_cover_fraction_type) :: snow_cover_fraction_clm5_type
@@ -216,9 +220,31 @@ contains
     character(len=*), parameter :: subname = 'InitNY07'
     !-----------------------------------------------------------------------
 
-    ! FIXME(wjs, 2019-07-26) fill this in
+    call this%ReadParamsNY07( &
+         params_ncid = params_ncid)
 
   end subroutine InitNY07
+
+  !-----------------------------------------------------------------------
+  subroutine ReadParamsNY07(this, params_ncid)
+    !
+    ! !DESCRIPTION:
+    ! Read parameters needed for the NY07 method
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_ny07_type), intent(inout) :: this
+    type(file_desc_t), intent(inout) :: params_ncid  ! pio netCDF file id for parameter file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'ReadParamsNY07'
+    !-----------------------------------------------------------------------
+
+    ! Roughness length for soil (m)
+    call readNcdioScalar(params_ncid, 'zlnd', subname, this%zlnd)
+
+  end subroutine ReadParamsNY07
+
 
   !-----------------------------------------------------------------------
   subroutine UpdateSnowDepthAndFracNY07(this, bounds, num_c, filter_c, &
@@ -246,11 +272,40 @@ contains
     real(r8), intent(inout) :: frac_sno( bounds%begc: )
     !
     ! !LOCAL VARIABLES:
+    integer :: fc, c
 
     character(len=*), parameter :: subname = 'UpdateSnowDepthAndFracNY07'
     !-----------------------------------------------------------------------
 
-    ! FIXME(wjs, 2019-07-26) fill this in
+    do fc = 1, num_c
+       c = filter_c(fc)
+
+       if (h2osno_total(c) > 0.0) then
+          ! FIXME(wjs, 2019-07-26) check that this was the only expression for snow_depth in old code (clm4 or clm3.5)
+          snow_depth(c) = snow_depth(c) + newsnow(c) / bifall(c)
+          if(snow_depth(c) > 0.0_r8)  then
+             frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * this%zlnd * &
+                  (min(800._r8,(h2osno_total(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
+          end if
+          if(h2osno_total(c) < 1.0_r8)  then
+             frac_sno(c)=min(frac_sno(c),h2osno_total(c))
+          end if
+
+       else !h2osno_total == 0
+          ! initialize frac_sno and snow_depth when no snow present initially
+          if (newsnow(c) > 0._r8) then
+             ! FIXME(wjs, 2019-07-26) check that this was the only expression for snow_depth in old code (clm4 or clm3.5)
+             snow_depth(c) = newsnow(c) / bifall(c)
+             if(snow_depth(c) > 0.0_r8)  then
+                frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * this%zlnd * &
+                     (min(800._r8,newsnow(c)/snow_depth(c))/100._r8)**1._r8) )
+             end if
+          else
+             snow_depth(c) = 0._r8
+             frac_sno(c) = 0._r8
+          end if
+       end if ! end of h2osno_total > 0
+    end do
 
   end subroutine UpdateSnowDepthAndFracNY07
 
@@ -427,9 +482,7 @@ contains
   subroutine ReadParamsClm5(this, params_ncid, n_melt_coef)
     !
     ! !DESCRIPTION:
-    !
-    ! !USES:
-    use paramUtilMod, only: readNcdioScalar
+    ! Read parameters needed for the CLM5 method
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_clm5_type), intent(inout) :: this

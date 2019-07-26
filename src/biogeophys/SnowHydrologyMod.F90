@@ -38,8 +38,6 @@ module SnowHydrologyMod
   use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
   use clm_time_manager, only : get_step_size, get_nstep
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
-  ! FIXME(wjs, 2019-07-26) remove this
-  use clm_varctl, only : oldfflag
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -48,7 +46,6 @@ module SnowHydrologyMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SnowHydrology_readnl       ! Read namelist
-  public :: readParams                 ! Read parameters from netCDF file
   public :: HandleNewSnow              ! Handle new snow falling on the ground
   public :: SnowWater                  ! Change of snow mass and the snow water onto soil
   public :: SnowCompaction             ! Change in snow layer thickness due to compaction
@@ -128,9 +125,6 @@ module SnowHydrologyMod
   real(r8) :: upplim_destruct_metamorph   = 100.0_r8           ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
   real(r8) :: overburden_compress_Tfactor = 0.08_r8            ! snow compaction overburden exponential factor (1/K)
   real(r8) :: min_wind_snowcompact        = 5._r8              ! minimum wind speed tht results in compaction (m/s)
-
-  ! Parameters read from netCDF parameter file
-  real(r8) :: zlnd                                             ! Roughness length for soil (m)
 
   ! ------------------------------------------------------------------------
   ! Parameters controlling the resetting of the snow pack
@@ -247,29 +241,6 @@ contains
     end if
 
   end subroutine SnowHydrology_readnl
-
-  !-----------------------------------------------------------------------
-  subroutine readParams(ncid)
-    !
-    ! !DESCRIPTION:
-    ! Read parameters in this module from netCDF parameter file
-    !
-    ! !USES:
-    use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
-    !
-    ! !ARGUMENTS:
-    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'readParams_SnowHydrology'
-    !-----------------------------------------------------------------------
-
-    ! Roughness length for soil (m)
-    call readNcdioScalar(ncid, 'zlnd', subname, zlnd)
-
-  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine HandleNewSnow(bounds, &
@@ -543,44 +514,6 @@ contains
          ! Outputs
          snow_depth   = snow_depth(begc:endc), &
          frac_sno     = frac_sno(begc:endc))
-
-
-    ! FIXME(wjs, 2019-07-22) this will become a different claass
-    if (oldfflag == 1) then
-       ! use original fsca formulation (n&y 07)
-       ! snow cover fraction in Niu et al. 2007
-
-       do fc = 1, num_nolakec
-          c = filter_nolakec(fc)
-
-          if (h2osno_total(c) > 0.0) then
-             ! FIXME(wjs, 2019-07-26) check that this was the only expression for snow_depth in old code (clm4 or clm3.5)
-             snow_depth(c) = snow_depth(c) + newsnow(c) / bifall(c)
-             if(snow_depth(c) > 0.0_r8)  then
-                frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * zlnd * &
-                     (min(800._r8,(h2osno_total(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
-             end if
-             if(h2osno_total(c) < 1.0_r8)  then
-                frac_sno(c)=min(frac_sno(c),h2osno_total(c))
-             end if
-
-          else !h2osno_total == 0
-             ! initialize frac_sno and snow_depth when no snow present initially
-             if (newsnow(c) > 0._r8) then
-                ! FIXME(wjs, 2019-07-26) check that this was the only expression for snow_depth in old code (clm4 or clm3.5)
-                snow_depth(c) = newsnow(c) / bifall(c)
-                if(snow_depth(c) > 0.0_r8)  then
-                   frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * zlnd * &
-                        (min(800._r8,newsnow(c)/snow_depth(c))/100._r8)**1._r8) )
-                end if
-             else
-                z_avg = 0._r8
-                snow_depth(c) = 0._r8
-                frac_sno(c) = 0._r8
-             end if
-          end if ! end of h2osno_total > 0
-       end do
-    end if
 
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
