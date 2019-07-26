@@ -151,7 +151,7 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  function CreateAndInitScfMethod(bounds, col, glc_behavior, NLFilename, params_ncid) result(scf_method)
+  function CreateAndInitScfMethod(oldfflag, bounds, col, glc_behavior, NLFilename, params_ncid) result(scf_method)
     !
     ! !DESCRIPTION:
     ! Create an instance of the appropriate snow_cover_fraction_type, initialize it and
@@ -159,6 +159,7 @@ contains
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_type), allocatable :: scf_method  ! function result
+    integer, intent(in) :: oldfflag
     type(bounds_type), intent(in) :: bounds
     type(column_type), intent(in) :: col
     type(glc_behavior_type), intent(in) :: glc_behavior
@@ -170,10 +171,18 @@ contains
     character(len=*), parameter :: subname = 'CreateAndInitScfMethod'
     !-----------------------------------------------------------------------
 
-    ! FIXME(wjs, 2019-07-26) Have some logic to create the appropriate snow cover
-    ! fraction method (based on something read from controlMod/clm_varctl???)
-    allocate(scf_method, &
-         source = snow_cover_fraction_clm5_type())
+    select case (oldfflag)
+    case (0)
+       allocate(scf_method, &
+            source = snow_cover_fraction_clm5_type())
+    case (1)
+       allocate(scf_method, &
+            source = snow_cover_fraction_ny07_type())
+    case default
+       write(iulog,*) subname//' ERROR: unknown oldfflag: ', oldfflag
+       call endrun(msg = 'unknown oldfflag', &
+            additional_msg = errMsg(sourcefile, __LINE__))
+    end select
 
     call scf_method%Init( &
          bounds       = bounds, &
