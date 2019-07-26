@@ -331,8 +331,12 @@ contains
     call dust_inst%Init(bounds)
 
     ! FIXME(wjs, 2019-07-26) For source, use a factory method, create_and_init_scf_method
-    allocate(scf_method, &
-         source = CreateAndInitScfMethod(NLFilename, params_ncid))
+    allocate(scf_method, source = CreateAndInitScfMethod( &
+         bounds = bounds, &
+         col = col, &
+         glc_behavior = glc_behavior, &
+         NLFilename = NLFilename, &
+         params_ncid = params_ncid))
 
     ! Once namelist options are added to control the soil water retention curve method,
     ! we'll need to either pass the namelist file as an argument to this routine, or pass

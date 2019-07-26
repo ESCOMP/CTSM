@@ -40,7 +40,6 @@ contains
     use SoilBiogeochemDecompCascadeBGCMod , only : readSoilBiogeochemDecompBgcParams      => readParams
     use SoilBiogeochemDecompCascadeCNMod  , only : readSoilBiogeochemDecompCnParams       => readParams
     use ch4Mod                            , only : readCH4Params                          => readParams
-    use initVerticalMod                   , only : readParams_initVertical                => readParams
     use LunaMod                           , only : readParams_Luna                        => readParams
     use BareGroundFluxesMod               , only : readParams_BareGroundFluxes            => readParams
     use LakeFluxesMod                     , only : readParams_LakeFluxes                  => readParams
@@ -104,11 +103,6 @@ contains
 
        call readCH4Params (ncid)
     end if
-
-    !
-    ! Main
-    !
-    call readParams_initVertical ( ncid )
 
     !
     ! Biogeophysics

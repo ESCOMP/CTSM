@@ -336,7 +336,6 @@ contains
          dtime               = dtime, &
          urbpoi              = col%urbpoi(begc:endc), &
          snl                 = col%snl(begc:endc), &
-         n_melt              = col%n_melt(begc:endc), &
          bifall              = bifall(begc:endc), &
          h2osno_total        = h2osno_total(begc:endc), &
          h2osoi_ice          = b_waterstate_inst%h2osoi_ice_col(begc:endc,:), &
@@ -445,7 +444,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BulkDiag_NewSnowDiagnostics(bounds, num_nolakec, filter_nolakec, &
        scf_method, &
-       dtime, urbpoi, snl, n_melt, bifall, h2osno_total, h2osoi_ice, h2osoi_liq, &
+       dtime, urbpoi, snl, bifall, h2osno_total, h2osoi_ice, h2osoi_liq, &
        qflx_snow_grnd, qflx_snow_drain, &
        dz, int_snow, swe_old, frac_sno, frac_sno_eff, snow_depth)
     !
@@ -468,7 +467,6 @@ contains
     real(r8)                  , intent(in)    :: dtime                           ! land model time step (sec)
     logical                   , intent(in)    :: urbpoi( bounds%begc: )          ! true=>urban point
     integer                   , intent(in)    :: snl( bounds%begc: )             ! negative number of snow layers
-    real(r8)                  , intent(in)    :: n_melt( bounds%begc: )           ! SCA shape parameter
     real(r8)                  , intent(in)    :: bifall( bounds%begc: )          ! bulk density of newly fallen dry snow [kg/m3]
     real(r8)                  , intent(in)    :: h2osno_total( bounds%begc: )    ! total snow water (mm H2O)
     real(r8)                  , intent(in)    :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
@@ -496,7 +494,6 @@ contains
 
     SHR_ASSERT_FL((ubound(urbpoi, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(n_melt, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(bifall, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osoi_ice, 1) == bounds%endc), sourcefile, __LINE__)
@@ -548,7 +545,6 @@ contains
     call scf_method%UpdateSnowDepthAndFracClm5(bounds, num_nolakec, filter_nolakec, &
          ! Inputs
          urbpoi       = urbpoi(begc:endc), &
-         n_melt       = n_melt(begc:endc), &
          h2osno_total = h2osno_total(begc:endc), &
          snowmelt     = snowmelt(begc:endc), &
          int_snow     = int_snow(begc:endc), &
@@ -610,7 +606,6 @@ contains
          newsnow      = newsnow(begc:endc), &
          h2osno_total = h2osno_total(begc:endc), &
          frac_sno     = frac_sno(begc:endc), &
-         n_melt       = n_melt(begc:endc), &
          ! Outputs
          int_snow     = int_snow(begc:endc))
 
@@ -1336,7 +1331,6 @@ contains
 
     associate( &
          snl          => col%snl                          , & ! Input:  [integer (:)    ] number of snow layers
-         n_melt       => col%n_melt                       , & ! Input:  [real(r8) (:)   ] SCA shape parameter
          lakpoi       => lun%lakpoi                       , & ! Input:  [logical  (:)   ] true => landunit is a lake point
          urbpoi       => lun%urbpoi                       , & ! Input:  [logical  (:)   ] true => landunit is an urban point
          forc_wind    => atm2lnd_inst%forc_wind_grc       , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed (m/s)
@@ -1433,9 +1427,9 @@ contains
                       if((swe_old(c,j) - wx) > 0._r8) then
                          wsum = sum(h2osoi_liq(c,snl(c)+1:0)+h2osoi_ice(c,snl(c)+1:0))
                          fsno_melt = scf_method%FracSnowDuringMeltClm5( &
+                              c            = c, &
                               h2osno_total = wsum, &
-                              int_snow = int_snow(c), &
-                              n_melt = n_melt(c))
+                              int_snow     = int_snow(c))
                          
                          ! Ensure sum of snow and surface water fractions are <= 1 after update
                          !

@@ -2450,12 +2450,13 @@ Only applies when using the CLM5 snow cover fraction method
 </entry>
 
 <entry id="n_melt_glcmec" type="real" category="clm_physics"
-       group="clm_inparm" valid_values="" >
+       group="scf_clm5_inparm" valid_values="" >
 SCA shape parameter for glc_mec (glacier multiple elevation class) columns
 For most columns, n_melt is based on the standard deviation of 1km topography in the grid cell;
 but glc_mec columns already account for subgrid topographic variability through their use of
 multiple elevation classes; thus, to avoid double-accounting for topographic variability
 in these columns, we use a fixed value of n_melt.
+Only applies when using the CLM5 snow cover fraction method
 </entry>
 
 <entry id="wind_dependent_snow_density" type="logical" category="clm_physics"
