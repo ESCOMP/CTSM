@@ -399,32 +399,23 @@ contains
                 endif
              end if
 
+             if (lun%urbpoi(l)) then
+                om_frac = 0._r8 ! No organic matter for urban
+             end if
+
+             if (lev <= nlevsoi) then
+                soilstate_inst%cellsand_col(c,lev) = sand
+                soilstate_inst%cellclay_col(c,lev) = clay
+                soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
+             end if
+
+             if (lun%itype(l) == istdlak) then
+
 ! slevis: Seems inconsistent and disorganized to have the next if-statmt
 !         here and then have it again in a separate do-loop a few lines
 !         down. I propose that we bring the lake section up here.
-! slevis: Also I would pull out here the "No organic matter for urban"
-!         and consolidate the two identical codes repeated just below.
-! slevis: This section runs before SoilHydrologyInitTimeConst, so let's
-!         also simplify codes there with data gathered here.
-             if (lun%itype(l) == istdlak) then
-
-                if (lev <= nlevsoi) then
-                   soilstate_inst%cellsand_col(c,lev) = sand
-                   soilstate_inst%cellclay_col(c,lev) = clay
-                   soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
-                end if
 
              else if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
-
-                if (lun%urbpoi(l)) then
-                   om_frac = 0._r8 ! No organic matter for urban
-                end if
-
-                if (lev <= nlevsoi) then
-                   soilstate_inst%cellsand_col(c,lev) = sand
-                   soilstate_inst%cellclay_col(c,lev) = clay
-                   soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
-                end if
 
                 ! Note that the following properties are overwritten for urban impervious road 
                 ! layers that are not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
