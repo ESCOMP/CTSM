@@ -1511,6 +1511,7 @@ sub process_namelist_inline_logic {
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_scf_clm5($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
 
   #########################################
@@ -3503,7 +3504,6 @@ sub setup_logic_snowpack {
               'structure'=>$nl_flags->{'structure'});
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'h2osno_max',
               'structure'=>$nl_flags->{'structure'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'int_snow_max');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_melt_glcmec');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'wind_dependent_snow_density');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_overburden_compaction_method');
@@ -3524,6 +3524,18 @@ sub setup_logic_snowpack {
   } else {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'overburden_compress_tfactor');
   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_scf_clm5 {
+   # Options related to the clm5 snow cover fraction method
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  # FIXME(wjs, 2019-07-26) Have this work differently depending on whether we're actually using this method
+  # See the logic near the end of setup_logic_snowpack for an example.
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'int_snow_max');
 }
 
 #-------------------------------------------------------------------------------
@@ -3672,6 +3684,10 @@ sub write_output_files {
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
   push @groups, "clm_canopy_inparm";
+  # FIXME(wjs, 2019-07-26) Change this conditional
+  if (1) {
+     push @groups, "scf_clm5_inparm";
+  }
 
   my $outfile;
   $outfile = "$opts->{'dir'}/lnd_in";

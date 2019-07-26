@@ -7,10 +7,11 @@ module SnowCoverFractionMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use abortutils     , only : endrun
   use decompMod      , only : bounds_type
-  ! FIXME(wjs, 2019-07-23) Move int_snow_max into snow_cover_fraction_clm5_type
-  use clm_varcon     , only : int_snow_max, rpi
-  use clm_varctl     , only : use_subgrid_fluxes
+  use clm_varcon     , only : rpi
+  use clm_varctl     , only : iulog, use_subgrid_fluxes
   use ncdio_pio      , only : file_desc_t
   implicit none
   save
@@ -24,6 +25,7 @@ module SnowCoverFractionMod
 
   type :: snow_cover_fraction_clm5_type
      private
+     real(r8) :: int_snow_max = -999.0_r8            ! limit applied to integrated snowfall when determining changes in snow-covered fraction during melt (mm H2O)
    contains
      procedure, public :: Init => InitClm5
      procedure, public :: UpdateSnowDepthAndFracClm5
@@ -32,6 +34,7 @@ module SnowCoverFractionMod
 
      procedure, private :: ReadNamelistClm5
      procedure, private :: ReadParamsClm5
+     procedure, private :: CheckValidInputsClm5
   end type snow_cover_fraction_clm5_type
 
   character(len=*), parameter, private :: sourcefile = &
@@ -93,6 +96,7 @@ contains
 
     call this%ReadNamelistClm5(NLFilename)
     call this%ReadParamsClm5(params_ncid)
+    call this%CheckValidInputsClm5()
 
   end subroutine InitClm5
 
@@ -106,15 +110,54 @@ contains
     use shr_nl_mod     , only : shr_nl_find_group_name
     use spmdMod        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
+    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_clm5_type), intent(inout) :: this
     character(len=*), intent(in) :: NLFilename ! Namelist filename
     !
     ! !LOCAL VARIABLES:
+    ! local variables corresponding to the namelist variables we read here
+    real(r8) :: int_snow_max
+
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: nmlname = 'scf_clm5_inparm'
 
     character(len=*), parameter :: subname = 'ReadNamelistClm5'
     !-----------------------------------------------------------------------
+
+    namelist /scf_clm5_inparm/ int_snow_max
+
+    int_snow_max = nan
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=scf_clm5_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast(int_snow_max, mpicom)
+
+    this%int_snow_max = int_snow_max
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname // ' settings:'
+       write(iulog, nml=scf_clm5_inparm)
+       write(iulog,*) ' '
+    end if
 
   end subroutine ReadNamelistClm5
 
@@ -136,6 +179,28 @@ contains
     !-----------------------------------------------------------------------
 
   end subroutine ReadParamsClm5
+
+  !-----------------------------------------------------------------------
+  subroutine CheckValidInputsClm5(this)
+    !
+    ! !DESCRIPTION:
+    !
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_clm5_type), intent(in) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'CheckValidInputsClm5'
+    !-----------------------------------------------------------------------
+
+    if (this%int_snow_max <= 0.0_r8) then
+       write(iulog,*)'ERROR: int_snow_max = ', this%int_snow_max,' is not supported, must be greater than 0.0.'
+       call endrun(msg=' ERROR: invalid value for int_snow_max in CLM namelist. '//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
+  end subroutine CheckValidInputsClm5
 
 
   !-----------------------------------------------------------------------
@@ -319,7 +384,7 @@ contains
     character(len=*), parameter :: subname = 'FracSnowDuringMeltClm5'
     !-----------------------------------------------------------------------
 
-    int_snow_limited = min(int_snow, int_snow_max)
+    int_snow_limited = min(int_snow, this%int_snow_max)
     smr = min(1._r8, h2osno_total/int_snow_limited)
 
     frac_sno = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(n_melt)

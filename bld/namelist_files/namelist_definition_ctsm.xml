@@ -2443,9 +2443,10 @@ Changes in this value should possibly be accompanied by changes in:
 </entry>
 
 <entry id="int_snow_max" type="real" category="clm_physics"
-       group="clm_inparm" valid_values="" >
+       group="scf_clm5_inparm" valid_values="" >
 Limit applied to integrated snowfall when determining changes in snow-covered fraction during melt
 (mm H2O)
+Only applies when using the CLM5 snow cover fraction method
 </entry>
 
 <entry id="n_melt_glcmec" type="real" category="clm_physics"

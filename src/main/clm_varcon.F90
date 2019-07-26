@@ -178,7 +178,6 @@ module clm_varcon
   !------------------------------------------------------------------
 
   real(r8), public :: h2osno_max   = -999.0_r8            ! max allowed snow thickness (mm H2O)
-  real(r8), public :: int_snow_max = -999.0_r8            ! limit applied to integrated snowfall when determining changes in snow-covered fraction during melt (mm H2O)
   real(r8), public :: n_melt_glcmec = -999.0_r8           ! SCA shape parameter for glc_mec columns
 
   integer, private :: i  ! loop index
