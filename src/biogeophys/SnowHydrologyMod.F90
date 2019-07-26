@@ -38,6 +38,8 @@ module SnowHydrologyMod
   use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
   use clm_time_manager, only : get_step_size, get_nstep
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
+  ! FIXME(wjs, 2019-07-26) remove this
+  use clm_varctl, only : oldfflag
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -123,7 +125,6 @@ module SnowHydrologyMod
   logical  :: wind_dependent_snow_density                      ! If snow density depends on wind or not
   integer  :: overburden_compaction_method = -1
   integer  :: new_snow_density            = LoTmpDnsSlater2017 ! Snow density type
-  integer  :: oldfflag                    = 0                  ! use old fsno parameterization (N&Y07) 
   real(r8) :: upplim_destruct_metamorph   = 100.0_r8           ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
   real(r8) :: overburden_compress_Tfactor = 0.08_r8            ! snow compaction overburden exponential factor (1/K)
   real(r8) :: min_wind_snowcompact        = 5._r8              ! minimum wind speed tht results in compaction (m/s)
@@ -187,7 +188,7 @@ contains
 
     namelist /clm_snowhydrology_inparm/ &
          wind_dependent_snow_density, snow_overburden_compaction_method, &
-         lotmp_snowdensity_method, oldfflag, upplim_destruct_metamorph, &
+         lotmp_snowdensity_method, upplim_destruct_metamorph, &
          overburden_compress_Tfactor, min_wind_snowcompact, &
          reset_snow, reset_snow_glc, reset_snow_glc_ela
 
@@ -214,7 +215,6 @@ contains
     call shr_mpi_bcast (wind_dependent_snow_density, mpicom)
     call shr_mpi_bcast (snow_overburden_compaction_method, mpicom)
     call shr_mpi_bcast (lotmp_snowdensity_method   , mpicom)
-    call shr_mpi_bcast (oldfflag                   , mpicom)
     call shr_mpi_bcast (upplim_destruct_metamorph  , mpicom)
     call shr_mpi_bcast (overburden_compress_Tfactor, mpicom)
     call shr_mpi_bcast (min_wind_snowcompact       , mpicom)
@@ -227,12 +227,6 @@ contains
        write(iulog,*) 'SnowHydrology settings:'
        write(iulog,nml=clm_snowhydrology_inparm)
        write(iulog,*) ' '
-    end if
-
-    if (masterproc) then
-       if (oldfflag == 1 .and. use_subgrid_fluxes) then
-          call endrun(msg="if oldfflag is ON, use_subgrid_fluxes can NOT also be on!")
-       end if
     end if
 
     if (      trim(lotmp_snowdensity_method) == 'Slater2017' ) then

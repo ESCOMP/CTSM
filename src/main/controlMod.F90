@@ -203,7 +203,7 @@ contains
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
-         albice, soil_layerstruct, use_subgrid_fluxes, &
+         albice, soil_layerstruct, use_subgrid_fluxes, oldfflag, &
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero
     
@@ -575,6 +575,10 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
+    if (oldfflag == 1 .and. use_subgrid_fluxes) then
+       call endrun(msg="if oldfflag is ON, use_subgrid_fluxes can NOT also be on!")
+    end if
+
     ! Check on run type
     if (nsrest == iundef) then
        call endrun(msg=' ERROR:: must set nsrest'//& 
@@ -796,6 +800,7 @@ contains
     ! physics variables
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_subgrid_fluxes , 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (oldfflag , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (wrtdia, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (scmlat, 1, MPI_REAL8,0, mpicom, ier)
