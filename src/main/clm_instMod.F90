@@ -329,7 +329,6 @@ contains
 
     call dust_inst%Init(bounds)
 
-    ! FIXME(wjs, 2019-07-26) For source, use a factory method, create_and_init_scf_method
     allocate(scf_method, source = CreateAndInitScfMethod( &
          bounds = bounds, &
          col = col, &
