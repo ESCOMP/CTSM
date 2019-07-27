@@ -9,6 +9,9 @@ module SnowCoverFractionMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
+  use shr_nl_mod     , only : shr_nl_find_group_name
+  use shr_mpi_mod    , only : shr_mpi_bcast
+  use fileutils      , only : getavu, relavu, opnfil
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use spmdMod        , only : masterproc, mpicom
@@ -72,16 +75,15 @@ module SnowCoverFractionMod
        integer, intent(in) :: num_c       ! number of columns in filter_c
        integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-       logical, intent(in) :: urbpoi( bounds%begc: ) ! true if the given column is urban
-       real(r8), intent(in) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-       ! FIXME(wjs, 2019-07-22) document the following arguments
-       real(r8), intent(in) :: snowmelt( bounds%begc: )
-       real(r8), intent(in) :: int_snow( bounds%begc: )
-       real(r8), intent(in) :: newsnow( bounds%begc: )
-       real(r8), intent(in) :: bifall( bounds%begc: )
+       logical  , intent(in)    :: urbpoi( bounds%begc: )       ! true if the given column is urban
+       real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+       real(r8) , intent(in)    :: snowmelt( bounds%begc: )     ! total snow melt in the time step (mm H2O)
+       real(r8) , intent(in)    :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
+       real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
+       real(r8) , intent(in)    :: bifall( bounds%begc: )       ! bulk density of newly fallen dry snow (kg/m3)
 
-       real(r8), intent(inout) :: snow_depth( bounds%begc: )
-       real(r8), intent(inout) :: frac_sno( bounds%begc: )
+       real(r8) , intent(inout) :: snow_depth( bounds%begc: )   ! snow height (m)
+       real(r8) , intent(inout) :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
      end subroutine UpdateSnowDepthAndFrac_Interface
 
      subroutine AddNewsnowToIntsnow_Interface(this, bounds, num_c, filter_c, &
@@ -96,11 +98,10 @@ module SnowCoverFractionMod
        integer, intent(in) :: num_c       ! number of columns in filter_c
        integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-       ! FIXME(wjs, 2019-07-22) document the following arguments
-       real(r8), intent(in) :: newsnow( bounds%begc: )
-       real(r8), intent(in) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-       real(r8), intent(in) :: frac_sno( bounds%begc: )
-       real(r8), intent(inout) :: int_snow( bounds%begc: )
+       real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
+       real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+       real(r8) , intent(in)    :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+       real(r8) , intent(inout) :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
      end subroutine AddNewsnowToIntsnow_Interface
 
      pure function FracSnowDuringMelt_Interface(this, c, h2osno_total, int_snow) result(frac_sno)
@@ -163,12 +164,12 @@ contains
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_type), allocatable :: scf_method  ! function result
-    integer, intent(in) :: oldfflag
-    type(bounds_type), intent(in) :: bounds
-    type(column_type), intent(in) :: col
-    type(glc_behavior_type), intent(in) :: glc_behavior
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
-    type(file_desc_t), intent(inout) :: params_ncid ! pio netCDF file id for parameter file
+    integer                 , intent(in)    :: oldfflag
+    type(bounds_type)       , intent(in)    :: bounds
+    type(column_type)       , intent(in)    :: col
+    type(glc_behavior_type) , intent(in)    :: glc_behavior
+    character(len=*)        , intent(in)    :: NLFilename ! Namelist filename
+    type(file_desc_t)       , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
     !
     ! !LOCAL VARIABLES:
 
@@ -205,19 +206,19 @@ contains
   subroutine InitNY07(this, bounds, col, glc_behavior, NLFilename, params_ncid)
     !
     ! !DESCRIPTION:
-    !
+    ! Initialize this instance of the NY07 parameterization
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_ny07_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds
-    type(column_type), intent(in) :: col
-    type(glc_behavior_type), intent(in) :: glc_behavior
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
-    type(file_desc_t), intent(inout) :: params_ncid ! pio netCDF file id for parameter file
+    class(snow_cover_fraction_ny07_type) , intent(inout) :: this
+    type(bounds_type)       , intent(in)    :: bounds
+    type(column_type)       , intent(in)    :: col
+    type(glc_behavior_type) , intent(in)    :: glc_behavior
+    character(len=*)        , intent(in)    :: NLFilename  ! Namelist filename
+    type(file_desc_t)       , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'InitNY07'
+    character(len=*), parameter             :: subname = 'InitNY07'
     !-----------------------------------------------------------------------
 
     if (use_subgrid_fluxes) then
@@ -235,11 +236,11 @@ contains
   subroutine ReadParamsNY07(this, params_ncid)
     !
     ! !DESCRIPTION:
-    ! Read parameters needed for the NY07 method
+    ! Read netCDF parameters needed for the NY07 method
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_ny07_type), intent(inout) :: this
-    type(file_desc_t), intent(inout) :: params_ncid  ! pio netCDF file id for parameter file
+    class(snow_cover_fraction_ny07_type) , intent(inout) :: this
+    type(file_desc_t) , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
     !
     ! !LOCAL VARIABLES:
 
@@ -251,14 +252,13 @@ contains
 
   end subroutine ReadParamsNY07
 
-
   !-----------------------------------------------------------------------
   subroutine UpdateSnowDepthAndFracNY07(this, bounds, num_c, filter_c, &
        urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
        snow_depth, frac_sno)
     !
     ! !DESCRIPTION:
-    !
+    ! Update snow depth and snow fraction using the NY07 parameterization
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_ny07_type), intent(in) :: this
@@ -266,22 +266,30 @@ contains
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-    logical, intent(in) :: urbpoi( bounds%begc: ) ! true if the given column is urban
-    real(r8), intent(in) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-    ! FIXME(wjs, 2019-07-22) document the following arguments
-    real(r8), intent(in) :: snowmelt( bounds%begc: )
-    real(r8), intent(in) :: int_snow( bounds%begc: )
-    real(r8), intent(in) :: newsnow( bounds%begc: )
-    real(r8), intent(in) :: bifall( bounds%begc: )
+    logical  , intent(in)    :: urbpoi( bounds%begc: )       ! true if the given column is urban
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+    real(r8) , intent(in)    :: snowmelt( bounds%begc: )     ! total snow melt in the time step (mm H2O)
+    real(r8) , intent(in)    :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
+    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
+    real(r8) , intent(in)    :: bifall( bounds%begc: )       ! bulk density of newly fallen dry snow (kg/m3)
 
-    real(r8), intent(inout) :: snow_depth( bounds%begc: )
-    real(r8), intent(inout) :: frac_sno( bounds%begc: )
+    real(r8) , intent(inout) :: snow_depth( bounds%begc: )   ! snow height (m)
+    real(r8) , intent(inout) :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
 
     character(len=*), parameter :: subname = 'UpdateSnowDepthAndFracNY07'
     !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(urbpoi, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(snowmelt, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(int_snow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(newsnow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bifall, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
 
     do fc = 1, num_c
        c = filter_c(fc)
@@ -321,7 +329,9 @@ contains
        int_snow)
     !
     ! !DESCRIPTION:
+    ! Add new snow to integrated snow fall
     !
+    ! This is straightforward for this NY07 parameterization
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_ny07_type), intent(in) :: this
@@ -329,17 +339,21 @@ contains
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-    ! FIXME(wjs, 2019-07-22) document the following arguments
-    real(r8), intent(in) :: newsnow( bounds%begc: )
-    real(r8), intent(in) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-    real(r8), intent(in) :: frac_sno( bounds%begc: )
-    real(r8), intent(inout) :: int_snow( bounds%begc: )
+    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+    real(r8) , intent(in)    :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
 
     character(len=*), parameter :: subname = 'AddNewsnowToIntsnowNY07'
     !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(newsnow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(int_snow, 1) == bounds%endc), sourcefile, __LINE__)
 
     do fc = 1, num_c
        c = filter_c(fc)
@@ -383,18 +397,18 @@ contains
   subroutine InitClm5(this, bounds, col, glc_behavior, NLFilename, params_ncid)
     !
     ! !DESCRIPTION:
-    !
+    ! Initialize this instance of the CLM5 parameterization
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_clm5_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds
-    type(column_type), intent(in) :: col
-    type(glc_behavior_type), intent(in) :: glc_behavior
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
-    type(file_desc_t), intent(inout) :: params_ncid ! pio netCDF file id for parameter file
+    class(snow_cover_fraction_clm5_type) , intent(inout) :: this
+    type(bounds_type)       , intent(in)    :: bounds
+    type(column_type)       , intent(in)    :: col
+    type(glc_behavior_type) , intent(in)    :: glc_behavior
+    character(len=*)        , intent(in)    :: NLFilename  ! Namelist filename
+    type(file_desc_t)       , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
     !
     ! !LOCAL VARIABLES:
-    real(r8) :: n_melt_coef    ! n_melt parameter (unitless)
+    real(r8)                                :: n_melt_coef    ! n_melt parameter (unitless)
     real(r8) :: n_melt_glcmec  ! SCA shape parameter for glc_mec columns
 
     character(len=*), parameter :: subname = 'InitClm5'
@@ -424,18 +438,13 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ReadNamelistClm5(this, NLFilename, n_melt_glcmec)
-    !
     ! !DESCRIPTION:
-    !
-    ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
-    use shr_nl_mod     , only : shr_nl_find_group_name
-    use shr_mpi_mod    , only : shr_mpi_bcast
+    ! Read namelist values needed for CLM5 parameterization
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_clm5_type), intent(inout) :: this
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
-    real(r8), intent(out) :: n_melt_glcmec  ! SCA shape parameter for glc_mec columns
+    character(len=*) , intent(in)  :: NLFilename    ! Namelist filename
+    real(r8)         , intent(out) :: n_melt_glcmec ! SCA shape parameter for glc_mec columns
     !
     ! !LOCAL VARIABLES:
     ! local variables corresponding to the namelist variables we read here
@@ -488,12 +497,12 @@ contains
   subroutine ReadParamsClm5(this, params_ncid, n_melt_coef)
     !
     ! !DESCRIPTION:
-    ! Read parameters needed for the CLM5 method
+    ! Read netCDF parameters needed for the CLM5 method
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_clm5_type), intent(inout) :: this
-    type(file_desc_t), intent(inout) :: params_ncid  ! pio netCDF file id for parameter file
-    real(r8), intent(out) :: n_melt_coef ! n_melt parameter (unitless)
+    type(file_desc_t) , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
+    real(r8)          , intent(out)   :: n_melt_coef ! n_melt parameter (unitless)
     !
     ! !LOCAL VARIABLES:
 
@@ -512,11 +521,11 @@ contains
   subroutine CheckValidInputsClm5(this, n_melt_glcmec)
     !
     ! !DESCRIPTION:
-    !
+    ! Check for validity of parameters read from namelist and netCDF
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_clm5_type), intent(in) :: this
-    real(r8), intent(out) :: n_melt_glcmec  ! SCA shape parameter for glc_mec columns
+    real(r8), intent(in) :: n_melt_glcmec  ! SCA shape parameter for glc_mec columns
     !
     ! !LOCAL VARIABLES:
 
@@ -545,11 +554,11 @@ contains
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_clm5_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds
-    type(column_type), intent(in) :: col
-    type(glc_behavior_type), intent(in) :: glc_behavior
-    real(r8), intent(in) :: n_melt_coef
-    real(r8), intent(in) :: n_melt_glcmec ! SCA shape parameter for glc_mec columns
+    type(bounds_type)       , intent(in) :: bounds
+    type(column_type)       , intent(in) :: col
+    type(glc_behavior_type) , intent(in) :: glc_behavior
+    real(r8)                , intent(in) :: n_melt_coef
+    real(r8)                , intent(in) :: n_melt_glcmec ! SCA shape parameter for glc_mec columns
     !
     ! !LOCAL VARIABLES:
     integer :: c, g
@@ -581,7 +590,7 @@ contains
        snow_depth, frac_sno)
     !
     ! !DESCRIPTION:
-    !
+    ! Update snow depth and snow fraction using the CLM5 parameterization
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_clm5_type), intent(in) :: this
@@ -589,16 +598,15 @@ contains
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-    logical, intent(in) :: urbpoi( bounds%begc: ) ! true if the given column is urban
-    real(r8), intent(in) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-    ! FIXME(wjs, 2019-07-22) document the following arguments
-    real(r8), intent(in) :: snowmelt( bounds%begc: )
-    real(r8), intent(in) :: int_snow( bounds%begc: )
-    real(r8), intent(in) :: newsnow( bounds%begc: )
-    real(r8), intent(in) :: bifall( bounds%begc: )
+    logical  , intent(in)    :: urbpoi( bounds%begc: )       ! true if the given column is urban
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+    real(r8) , intent(in)    :: snowmelt( bounds%begc: )     ! total snow melt in the time step (mm H2O)
+    real(r8) , intent(in)    :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
+    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
+    real(r8) , intent(in)    :: bifall( bounds%begc: )       ! bulk density of newly fallen dry snow (kg/m3)
 
-    real(r8), intent(inout) :: snow_depth( bounds%begc: )
-    real(r8), intent(inout) :: frac_sno( bounds%begc: )
+    real(r8) , intent(inout) :: snow_depth( bounds%begc: )   ! snow height (m)
+    real(r8) , intent(inout) :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
@@ -679,7 +687,10 @@ contains
        int_snow)
     !
     ! !DESCRIPTION:
+    ! Add new snow to integrated snow fall
     !
+    ! For this CLM5 parameterization, this involves some care to ensure consistency
+    ! between int_snow and other terms.
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_clm5_type), intent(in) :: this
@@ -687,11 +698,10 @@ contains
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-    ! FIXME(wjs, 2019-07-22) document the following arguments
-    real(r8), intent(in) :: newsnow( bounds%begc: )
-    real(r8), intent(in) :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-    real(r8), intent(in) :: frac_sno( bounds%begc: )
-    real(r8), intent(inout) :: int_snow( bounds%begc: )
+    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+    real(r8) , intent(in)    :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
