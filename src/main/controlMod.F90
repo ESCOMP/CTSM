@@ -575,10 +575,6 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
-    if (oldfflag == 1 .and. use_subgrid_fluxes) then
-       call endrun(msg="if oldfflag is ON, use_subgrid_fluxes can NOT also be on!")
-    end if
-
     ! Check on run type
     if (nsrest == iundef) then
        call endrun(msg=' ERROR:: must set nsrest'//& 

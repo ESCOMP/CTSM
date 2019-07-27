@@ -220,6 +220,12 @@ contains
     character(len=*), parameter :: subname = 'InitNY07'
     !-----------------------------------------------------------------------
 
+    if (use_subgrid_fluxes) then
+       write(iulog,*) 'ERROR: Attempt to use N&Y07 snow cover fraction parameterization with use_subgrid_fluxes.'
+       write(iulog,*) 'These two options are incompatible.'
+       call endrun('N&Y07 snow cover fraction parameterization incompatible with use_subgrid_fluxes')
+    end if
+
     call this%ReadParamsNY07( &
          params_ncid = params_ncid)
 
