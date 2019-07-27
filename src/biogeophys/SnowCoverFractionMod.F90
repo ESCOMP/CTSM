@@ -295,7 +295,6 @@ contains
        c = filter_c(fc)
 
        if (h2osno_total(c) > 0.0) then
-          ! FIXME(wjs, 2019-07-26) check that this was the only expression for snow_depth in old code (clm4 or clm3.5)
           snow_depth(c) = snow_depth(c) + newsnow(c) / bifall(c)
           if(snow_depth(c) > 0.0_r8)  then
              frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * this%zlnd * &
@@ -308,7 +307,6 @@ contains
        else !h2osno_total == 0
           ! initialize frac_sno and snow_depth when no snow present initially
           if (newsnow(c) > 0._r8) then
-             ! FIXME(wjs, 2019-07-26) check that this was the only expression for snow_depth in old code (clm4 or clm3.5)
              snow_depth(c) = newsnow(c) / bifall(c)
              if(snow_depth(c) > 0.0_r8)  then
                 frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * this%zlnd * &
