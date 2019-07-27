@@ -2724,18 +2724,19 @@ sub setup_logic_hydrology_switches {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_subgrid_fluxes');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_cover_fraction_method');
   my $subgrid    = $nl->get_value('use_subgrid_fluxes' );
   my $origflag   = $nl->get_value('origflag'    );
   my $h2osfcflag = $nl->get_value('h2osfcflag'  );
-  my $oldfflag   = $nl->get_value('oldfflag'    );
-  if ( $origflag == 1 && $subgrid == 1 ) {
+  my $scf_method = $nl->get_value('snow_cover_fraction_method');
+  if ( $origflag == 1 && &value_is_true($subgrid) ) {
     $log->fatal_error("if origflag is ON, use_subgrid_fluxes can NOT also be on!");
   }
-  if ( $h2osfcflag == 1 && $subgrid != 1 ) {
+  if ( $h2osfcflag == 1 && ! &value_is_true($subgrid) ) {
     $log->fatal_error("if h2osfcflag is ON, use_subgrid_fluxes can NOT be off!");
   }
-  if ( $oldfflag == 1 && $subgrid == 1 ) {
-    $log->fatal_error("if oldfflag is ON, use_subgrid_fluxes can NOT also be on!");
+  if ( remove_leading_and_trailing_quotes($scf_method) eq 'ny07' && &value_is_true($subgrid) ) {
+     $log->fatal_error("snow_cover_fraction_method ny07 is incompatible with use_subgrid_fluxes");
   }
   # Test bad configurations
   my $lower   = $nl->get_value( 'lower_boundary_condition'  );

@@ -117,7 +117,7 @@ module SnowCoverFractionMod
   end interface
 
   type, extends(snow_cover_fraction_type) :: snow_cover_fraction_ny07_type
-     ! This implements the N&Y07 (Niu et al. 2007) parameterization of snow cover fraction
+     ! This implements the N&Y07 (Niu & Yang 2007) parameterization of snow cover fraction
      private
      real(r8) :: zlnd = -999._r8  ! Roughness length for soil (m)
    contains
@@ -156,15 +156,18 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  function CreateAndInitScfMethod(oldfflag, bounds, col, glc_behavior, NLFilename, params_ncid) result(scf_method)
+  function CreateAndInitScfMethod(snow_cover_fraction_method, &
+       bounds, col, glc_behavior, NLFilename, params_ncid) &
+       result(scf_method)
     !
     ! !DESCRIPTION:
-    ! Create an instance of the appropriate snow_cover_fraction_type, initialize it and
-    ! return it
+    ! Create an instance of the appropriate snow_cover_fraction_type (based on
+    ! snow_cover_fraction_method), initialize it and return it
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_type), allocatable :: scf_method  ! function result
-    integer                 , intent(in)    :: oldfflag
+
+    character(len=*)        , intent(in)    :: snow_cover_fraction_method
     type(bounds_type)       , intent(in)    :: bounds
     type(column_type)       , intent(in)    :: col
     type(glc_behavior_type) , intent(in)    :: glc_behavior
@@ -176,16 +179,17 @@ contains
     character(len=*), parameter :: subname = 'CreateAndInitScfMethod'
     !-----------------------------------------------------------------------
 
-    select case (oldfflag)
-    case (0)
+    select case (snow_cover_fraction_method)
+    case ('clm5')
        allocate(scf_method, &
             source = snow_cover_fraction_clm5_type())
-    case (1)
+    case ('ny07')
        allocate(scf_method, &
             source = snow_cover_fraction_ny07_type())
     case default
-       write(iulog,*) subname//' ERROR: unknown oldfflag: ', oldfflag
-       call endrun(msg = 'unknown oldfflag', &
+       write(iulog,*) subname//' ERROR: unknown snow_cover_fraction_method: ', &
+            snow_cover_fraction_method
+       call endrun(msg = 'unknown snow_cover_fraction_method', &
             additional_msg = errMsg(sourcefile, __LINE__))
     end select
 
@@ -199,7 +203,7 @@ contains
   end function CreateAndInitScfMethod
 
   ! ========================================================================
-  ! Methods for N&Y07 (Niu et al. 2007) parameterization
+  ! Methods for N&Y07 (Niu & Yang 2007) parameterization
   ! ========================================================================
 
   !-----------------------------------------------------------------------

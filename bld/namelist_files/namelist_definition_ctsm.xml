@@ -2551,9 +2551,11 @@ below a given elevation, you risk forcing the system to evolve
 differently in areas below and above reset_snow_glc_ela.
 </entry>
 
-<entry id="oldfflag" type="integer" category="clm_physics"
-       group="clm_inparm" valid_values="0,1" >
-Use old snow cover fraction from Niu et al. 2007
+<entry id="snow_cover_fraction_method" type="char*64" category="clm_physics"
+       group="clm_inparm" valid_values="ny07,clm5" >
+Parameterization to use for snow cover fraction
+ny07: Niu and Yang 2007
+clm5: Newer method, default in CLM5
 </entry>
 
 <!-- ========================================================================================  -->
