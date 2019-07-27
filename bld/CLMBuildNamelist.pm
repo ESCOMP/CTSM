@@ -1511,7 +1511,6 @@ sub process_namelist_inline_logic {
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
-  setup_logic_scf_clm5($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
 
   #########################################
@@ -1684,6 +1683,11 @@ sub process_namelist_inline_logic {
   # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
   #######################################################################
   setup_logic_hydrology_switches($opts, $nl_flags, $definition, $defaults, $nl);
+
+  #######################################################################
+  # namelist group: scf_clm5_inparm                                     #
+  #######################################################################
+  setup_logic_scf_clm5($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: clm_initinterp_inparm #
@@ -3532,11 +3536,18 @@ sub setup_logic_scf_clm5 {
    # Options related to the clm5 snow cover fraction method
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  # FIXME(wjs, 2019-07-26) Have this work differently depending on whether we're actually using this method
-  # See the logic near the end of setup_logic_snowpack for an example.
-
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'int_snow_max');
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_melt_glcmec');
+  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'clm5') {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'int_snow_max');
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_melt_glcmec');
+  }
+  else {
+     if (defined($nl->get_value('int_snow_max'))) {
+        $log->fatal_error('int_snow_max is set, but only applies for snow_cover_fraction_method=clm5');
+     }
+     if (defined($nl->get_value('n_melt_glcmec'))) {
+        $log->fatal_error('n_melt_glcmec is set, but only applies for snow_cover_fraction_method=clm5');
+     }
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -3685,8 +3696,7 @@ sub write_output_files {
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
   push @groups, "clm_canopy_inparm";
-  # FIXME(wjs, 2019-07-26) Change this conditional
-  if (1) {
+  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'clm5') {
      push @groups, "scf_clm5_inparm";
   }
 
