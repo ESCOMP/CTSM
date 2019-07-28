@@ -486,6 +486,23 @@ contains
             lev1name='nglcec', &
             long_name='mean elevation on glacier elevation classes', units='m')
 
+       if ( outnc_3dglc ) then
+          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
+               lev1name='nglcec', &
+               long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', units='unitless')
+
+          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
+               lev1name='nglcec', &
+               long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
+
+          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_GIC', xtype=xtype, &
+               long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
+
+          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
+               long_name='percent ice sheet (% of landunit)', units='unitless')
+
+       end if
+
        call ncd_def_spatial_var(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
             lev1name='numurbl', &
             long_name='percent urban for each density type', units='unitless')
