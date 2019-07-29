@@ -97,8 +97,12 @@ program mksurfdat
     real(r8), pointer      :: harvest1D(:)       ! harvest 1D data: normalized harvesting
     real(r8), pointer      :: harvest2D(:,:)     ! harvest 1D data: normalized harvesting
     real(r8), allocatable  :: pctgla(:)          ! percent of grid cell that is glacier  
+    real(r8), allocatable  :: pctglc_gic(:)      ! percent of grid cell that is gic (% of glc landunit)
+    real(r8), allocatable  :: pctglc_icesheet(:) ! percent of grid cell that is ice sheet (% of glc landunit)
     real(r8), allocatable  :: pctglcmec(:,:)     ! glacier_mec pct coverage in each class (% of landunit)
     real(r8), allocatable  :: topoglcmec(:,:)    ! glacier_mec sfc elevation in each gridcell and class
+    real(r8), allocatable  :: pctglcmec_gic(:,:) ! GIC pct coverage in each class (% of landunit)
+    real(r8), allocatable  :: pctglcmec_icesheet(:,:) ! icesheet pct coverage in each class (% of landunit)
     real(r8), allocatable  :: elevclass(:)       ! glacier_mec elevation classes
     integer,  allocatable  :: glacier_region(:)  ! glacier region ID
     real(r8), allocatable  :: pctlak(:)          ! percent of grid cell that is lake
@@ -206,6 +210,7 @@ program mksurfdat
          outnc_double,             &
          outnc_dims,               &
          outnc_vic,                &
+         outnc_3dglc,              &
          fsurdat,                  &
          fdyndat,                  &   
          fsurlog,                  &
@@ -276,6 +281,7 @@ program mksurfdat
     !    outnc_double ------ If output should be in double precision
     !    outnc_large_files - If output should be in NetCDF large file format
     !    outnc_vic --------- Output fields needed for VIC
+    !    outnc_3dglc ------- Output 3D glacier fields (normally only needed for comparasion)
     !    nglcec ------------ If you want to change the number of Glacier elevation classes
     !    gitdescribe ------- Description of this version from git
     ! ======================================
@@ -303,6 +309,7 @@ program mksurfdat
     outnc_large_files = .false.
     outnc_double      = .true.
     outnc_vic         = .false.
+    outnc_3dglc       = .false.
     all_urban         = .false.
     no_inlandwet      = .true.
 
@@ -351,6 +358,9 @@ program mksurfdat
     end if
     if ( outnc_vic )then
        write(6,*)'Output VIC fields'
+    end if
+    if ( outnc_3dglc )then
+       write(6,*)'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
     end if
     if ( all_urban )then
        write(6,*) 'Output ALL data in file as 100% urban'
@@ -781,13 +791,28 @@ program mksurfdat
 
     allocate (pctglcmec(ns_o,nglcec), &
          topoglcmec(ns_o,nglcec) )
+    if ( outnc_3dglc )then
+       allocate( &
+         pctglcmec_gic(ns_o,nglcec), &
+         pctglcmec_icesheet(ns_o,nglcec))
+       allocate (pctglc_gic(ns_o))
+       allocate (pctglc_icesheet(ns_o))
+    end if
 
     pctglcmec(:,:)          = spval
     topoglcmec(:,:)         = spval
 
-    call mkglcmec (ldomain, mapfname=map_fglacier, &
-         datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
-         pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec )
+    if ( outnc_3dglc )then
+       call mkglcmec (ldomain, mapfname=map_fglacier, &
+            datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
+            pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
+            pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
+            pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet)
+    else
+       call mkglcmec (ldomain, mapfname=map_fglacier, &
+            datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
+            pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec )
+    end if
 
     ! Determine fractional land from pft dataset
 
@@ -868,6 +893,20 @@ program mksurfdat
 
        call check_ret(nf_inq_varid(ncid, 'TOPO_GLC_MEC', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, topoglcmec), subname)
+
+       if ( outnc_3dglc )then
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_icesheet), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_gic), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_icesheet), subname)
+       end if
 
        call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, urbn_classes_g), subname)
@@ -1005,6 +1044,7 @@ program mksurfdat
     deallocate ( organic )
     deallocate ( ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
     deallocate ( pctglcmec, topoglcmec)
+    if ( outnc_3dglc ) deallocate ( pctglc_gic, pctglc_icesheet)
     deallocate ( elevclass )
     deallocate ( fmax )
     deallocate ( pctsand, pctclay )
