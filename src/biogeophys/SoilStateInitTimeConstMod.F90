@@ -409,69 +409,11 @@ contains
                 soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
              end if
 
-    ! --------------------------------------------------------------------
-    ! Set soil hydraulic and thermal properties: lake
-    ! --------------------------------------------------------------------
-
              if (lun%itype(l) == istdlak) then
 
-                soilstate_inst%watsat_col(c,lev) = 0.489_r8 - 0.00126_r8*sand
-
-                soilstate_inst%bsw_col(c,lev)    = 2.91 + 0.159*clay
-
-                soilstate_inst%sucsat_col(c,lev) = 10._r8 * ( 10._r8**(1.88_r8-0.0131_r8*sand) )
-
-                bd = (1._r8-soilstate_inst%watsat_col(c,lev))*2.7e3_r8
-
-                soilstate_inst%watsat_col(c,lev) = (1._r8 - om_frac)*soilstate_inst%watsat_col(c,lev) + om_watsat_lake * om_frac
-
-                tkm = (1._r8-om_frac)*(8.80_r8*sand+2.92_r8*clay)/(sand+clay) + om_tkm * om_frac ! W/(m K)
-
-                soilstate_inst%bsw_col(c,lev)    = (1._r8-om_frac)*(2.91_r8 + 0.159_r8*clay) + om_frac * om_b_lake
-
-                soilstate_inst%sucsat_col(c,lev) = (1._r8-om_frac)*soilstate_inst%sucsat_col(c,lev) + om_sucsat_lake * om_frac
-
-                xksat = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
-
-                ! perc_frac is zero unless perf_frac greater than percolation threshold
-                if (om_frac > pc_lake) then
-                   perc_norm = (1._r8 - pc_lake)**(-pcbeta)
-                   perc_frac = perc_norm*(om_frac - pc_lake)**pcbeta
-                else
-                   perc_frac = 0._r8
-                endif
-
-                ! uncon_frac is fraction of mineral soil plus fraction of "nonpercolating" organic soil
-                uncon_frac = (1._r8-om_frac) + (1._r8-perc_frac)*om_frac
-
-                ! uncon_hksat is series addition of mineral/organic conductivites
-                if (om_frac < 1._r8) then
-                   xksat = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
-                   uncon_hksat = uncon_frac/((1._r8-om_frac)/xksat + ((1._r8-perc_frac)*om_frac)/om_hksat_lake)
-                else
-                   uncon_hksat = 0._r8
-                end if
-
-                soilstate_inst%hksat_col(c,lev)  = uncon_frac*uncon_hksat + (perc_frac*om_frac)*om_hksat_lake
-                soilstate_inst%tkmg_col(c,lev)   = tkm ** (1._r8- soilstate_inst%watsat_col(c,lev))
-                soilstate_inst%tksatu_col(c,lev) = soilstate_inst%tkmg_col(c,lev)*0.57_r8**soilstate_inst%watsat_col(c,lev)
-                soilstate_inst%tkdry_col(c,lev)  = ((0.135_r8*bd + 64.7_r8) / &
-                                (2.7e3_r8 - 0.947_r8*bd)) * (1._r8-om_frac) + &
-                                om_tkd * om_frac
-                soilstate_inst%csol_col(c,lev)   = ((1._r8-om_frac) * &
-                    (2.128_r8*sand + 2.385_r8*clay) / (sand + clay) + &
-                    om_csol * om_frac) * 1.e6_r8  ! J/(m3 K)
-                soilstate_inst%watdry_col(c,lev) = soilstate_inst%watsat_col(c,lev) &
-                    * (316230._r8/soilstate_inst%sucsat_col(c,lev)) ** (-1._r8/soilstate_inst%bsw_col(c,lev))
-                soilstate_inst%watopt_col(c,lev) = soilstate_inst%watsat_col(c,lev) &
-                    * (158490._r8/soilstate_inst%sucsat_col(c,lev)) ** (-1._r8/soilstate_inst%bsw_col(c,lev))
-
-                !! added by K.Sakaguchi for beta from Lee and Pielke, 1992
-                ! water content at field capacity, defined as hk = 0.1 mm/day
-                ! used eqn (7.70) in CLM3 technote with k = 0.1 (mm/day) / (# seconds/day)
-                soilstate_inst%watfc_col(c,lev) = soilstate_inst%watsat_col(c,lev) * &
-                   (0.1_r8 / &
-                    (soilstate_inst%hksat_col(c,lev)*secspday))**(1._r8/(2._r8*soilstate_inst%bsw_col(c,lev)+3._r8))
+! slevis: Seems inconsistent and disorganized to have the next if-statmt
+!         here and then have it again in a separate do-loop a few lines
+!         down. I propose that we bring the lake section up here.
 
              else if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
 
@@ -553,6 +495,90 @@ contains
           end if
 
        end if
+    end do
+
+    ! --------------------------------------------------------------------
+    ! Set soil hydraulic and thermal properties: lake
+    ! --------------------------------------------------------------------
+
+    do c = begc, endc
+       g = col%gridcell(c)
+       l = col%landunit(c)
+
+       if (lun%itype(l)==istdlak) then
+
+          do lev = 1,nlevgrnd
+             if ( lev <= nlevsoi )then
+                clay    =  soilstate_inst%cellclay_col(c,lev)
+                sand    =  soilstate_inst%cellsand_col(c,lev)
+                if ( organic_frac_squared )then
+                   om_frac = (soilstate_inst%cellorg_col(c,lev)/organic_max)**2._r8
+                else
+                   om_frac = soilstate_inst%cellorg_col(c,lev)/organic_max
+                end if
+             else
+                clay    = soilstate_inst%cellclay_col(c,nlevsoi)
+                sand    = soilstate_inst%cellsand_col(c,nlevsoi)
+                om_frac = 0.0_r8
+             end if
+
+             soilstate_inst%watsat_col(c,lev) = 0.489_r8 - 0.00126_r8*sand
+
+             soilstate_inst%bsw_col(c,lev)    = 2.91 + 0.159*clay
+
+             soilstate_inst%sucsat_col(c,lev) = 10._r8 * ( 10._r8**(1.88_r8-0.0131_r8*sand) )
+
+             bd = (1._r8-soilstate_inst%watsat_col(c,lev))*2.7e3_r8
+
+             soilstate_inst%watsat_col(c,lev) = (1._r8 - om_frac)*soilstate_inst%watsat_col(c,lev) + om_watsat_lake * om_frac
+
+             tkm = (1._r8-om_frac)*(8.80_r8*sand+2.92_r8*clay)/(sand+clay) + om_tkm * om_frac ! W/(m K)
+
+             soilstate_inst%bsw_col(c,lev)    = (1._r8-om_frac)*(2.91_r8 + 0.159_r8*clay) + om_frac * om_b_lake
+
+             soilstate_inst%sucsat_col(c,lev) = (1._r8-om_frac)*soilstate_inst%sucsat_col(c,lev) + om_sucsat_lake * om_frac
+
+             xksat = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
+
+             ! perc_frac is zero unless perf_frac greater than percolation threshold
+             if (om_frac > pc_lake) then
+                perc_norm = (1._r8 - pc_lake)**(-pcbeta)
+                perc_frac = perc_norm*(om_frac - pc_lake)**pcbeta
+             else
+                perc_frac = 0._r8
+             endif
+
+             ! uncon_frac is fraction of mineral soil plus fraction of "nonpercolating" organic soil
+             uncon_frac = (1._r8-om_frac) + (1._r8-perc_frac)*om_frac
+
+             ! uncon_hksat is series addition of mineral/organic conductivites
+             if (om_frac < 1._r8) then
+                xksat = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
+                uncon_hksat = uncon_frac/((1._r8-om_frac)/xksat + ((1._r8-perc_frac)*om_frac)/om_hksat_lake)
+             else
+                uncon_hksat = 0._r8
+             end if
+
+             soilstate_inst%hksat_col(c,lev)  = uncon_frac*uncon_hksat + (perc_frac*om_frac)*om_hksat_lake
+             soilstate_inst%tkmg_col(c,lev)   = tkm ** (1._r8- soilstate_inst%watsat_col(c,lev))
+             soilstate_inst%tksatu_col(c,lev) = soilstate_inst%tkmg_col(c,lev)*0.57_r8**soilstate_inst%watsat_col(c,lev)
+             soilstate_inst%tkdry_col(c,lev)  = ((0.135_r8*bd + 64.7_r8) / (2.7e3_r8 - 0.947_r8*bd))*(1._r8-om_frac) + &
+                                       om_tkd * om_frac
+             soilstate_inst%csol_col(c,lev)   = ((1._r8-om_frac)*(2.128_r8*sand+2.385_r8*clay) / (sand+clay) +   &
+                                       om_csol * om_frac)*1.e6_r8  ! J/(m3 K)
+             soilstate_inst%watdry_col(c,lev) = soilstate_inst%watsat_col(c,lev) &
+                  * (316230._r8/soilstate_inst%sucsat_col(c,lev)) ** (-1._r8/soilstate_inst%bsw_col(c,lev))
+             soilstate_inst%watopt_col(c,lev) = soilstate_inst%watsat_col(c,lev) &
+                  * (158490._r8/soilstate_inst%sucsat_col(c,lev)) ** (-1._r8/soilstate_inst%bsw_col(c,lev))
+
+             !! added by K.Sakaguchi for beta from Lee and Pielke, 1992
+             ! water content at field capacity, defined as hk = 0.1 mm/day
+             ! used eqn (7.70) in CLM3 technote with k = 0.1 (mm/day) / (# seconds/day)
+             soilstate_inst%watfc_col(c,lev) = soilstate_inst%watsat_col(c,lev) * (0.1_r8 / &
+                  (soilstate_inst%hksat_col(c,lev)*secspday))**(1._r8/(2._r8*soilstate_inst%bsw_col(c,lev)+3._r8))
+          end do
+       endif
+
     end do
 
     ! --------------------------------------------------------------------
