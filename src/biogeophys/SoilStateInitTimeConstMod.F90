@@ -409,13 +409,7 @@ contains
                 soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
              end if
 
-             if (lun%itype(l) == istdlak) then
-
-! slevis: Seems inconsistent and disorganized to have the next if-statmt
-!         here and then have it again in a separate do-loop a few lines
-!         down. I propose that we bring the lake section up here.
-
-             else if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
+             if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
 
                 ! Note that the following properties are overwritten for urban impervious road 
                 ! layers that are not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
