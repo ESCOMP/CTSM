@@ -278,7 +278,7 @@ contains
            filter_hydrologyc, soilstate_inst, canopystate_inst, waterfluxbulk_inst, energyflux_inst)
       
       ! save the h2osoi_liq in top layer before evaluating the soilwater movement
-      if ( use_fan ) call store_tsl_moisture(waterstatebulk_inst) 
+      if ( use_fan ) call store_tsl_moisture(waterstatebulk_inst, filter_hydrologyc, num_hydrologyc) 
 
       if ( use_fates ) then
          call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, waterfluxbulk_inst)
@@ -287,8 +287,9 @@ contains
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
            soilhydrology_inst, soilstate_inst, waterfluxbulk_inst, waterstatebulk_inst, temperature_inst, &
            canopystate_inst, energyflux_inst, soil_water_retention_curve)
-      ! 
-      if ( use_fan ) call eval_tsl_moist_tend(waterstatebulk_inst) ! use the saved value to calculate the tendency
+
+      ! use the saved value to calculate the tendency
+      if ( use_fan ) call eval_tsl_moist_tend(waterstatebulk_inst , filter_hydrologyc, num_hydrologyc)
 
       if (use_vichydro) then
          ! mapping soilmoist from CLM to VIC layers for runoff calculations
@@ -665,19 +666,35 @@ contains
     ! Subroutines for storing the time derivative of top most soil layer moisture. This is
     ! used for diagnosing the downwards moisture flux within FAN.
 
-    subroutine store_tsl_moisture(waterstatebulk_inst)
+    subroutine store_tsl_moisture(waterstatebulk_inst, filter, num_fc)
       type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
-      associate(h2osoi_tend_tsl => waterstatebulk_inst%h2osoi_tend_tsl_col(bounds%begc:bounds%endc), &
-           h2osoi_liq_tsl => waterstatebulk_inst%h2osoi_liq_col(bounds%begc:bounds%endc,1))
-        h2osoi_tend_tsl = h2osoi_liq_tsl
-      end associate
+      integer, intent(in) :: filter(:)
+      integer, intent(in) :: num_fc
+
+      integer :: fc, c
+
+      do fc = 1, num_fc
+         c = filter(fc)
+         waterstatebulk_inst%h2osoi_tend_tsl_col(c) = waterstatebulk_inst%h2osoi_liq_col(c,1)
+      end do
+
     end subroutine store_tsl_moisture
 
-    subroutine eval_tsl_moist_tend(waterstatebulk_inst)
+    subroutine eval_tsl_moist_tend(waterstatebulk_inst, filter, num_fc)
       type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
-      associate(h2osoi_tend_tsl => waterstatebulk_inst%h2osoi_tend_tsl_col(bounds%begc:bounds%endc), &
-           h2osoi_liq_tsl => waterstatebulk_inst%h2osoi_liq_col(bounds%begc:bounds%endc,1))
-        h2osoi_tend_tsl = (h2osoi_liq_tsl - h2osoi_tend_tsl) / dtime
+      integer, intent(in) :: filter(:)
+      integer, intent(in) :: num_fc
+
+      integer :: fc, c
+
+      associate(h2osoi_tend_tsl => waterstatebulk_inst%h2osoi_tend_tsl_col, &
+           h2osoi_liq => waterstatebulk_inst%h2osoi_liq_col)
+
+      do fc = 1, num_fc
+         c = filter(fc)
+         h2osoi_tend_tsl(c) = (h2osoi_liq(c,1) - h2osoi_tend_tsl(c)) / dtime
+      end do
+
       end associate
 
     end subroutine eval_tsl_moist_tend
