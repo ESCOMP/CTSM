@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev053
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
-Date:  Thu Jul 25 14:57:31 MDT 2019
+Date:  Mon Jul 29 12:19:02 MDT 2019
 One-line Summary: Soil layer definition clean-up and user-defined option
 
 Purpose of changes
@@ -16,6 +16,8 @@ Purpose of changes
 
  Default nlevsoi for NWP configurations had to change from 5 to 4 for
  consistency with the new error check described in known bugs below.
+
+ Other code clean-up removes a couple of sections of repeating code.
 
 Bugs fixed or introduced
 ------------------------
@@ -89,18 +91,6 @@ Code reviewed by: @billsacks
 
 CTSM testing:
 
-[... Remove before making master tag.  Available test levels:
-
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CTSM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
-
-... ]
-
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
   build-namelist tests:
@@ -121,8 +111,8 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- 
-    hobart ------ 
+    cheyenne ---- OK
+    hobart ------ OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
@@ -136,7 +126,9 @@ Changes answers relative to baseline:
     - what code configurations: nwp
     - what platforms/compilers: all
     - nature of change: larger than roundoff/same climate
-
+  This is due to the change of nlevsoi from 5 to 4 (more info above).
+  I confirmed that nwp does return bfb same answers when I revert this
+  change.
 
 Detailed list of changes
 ------------------------
