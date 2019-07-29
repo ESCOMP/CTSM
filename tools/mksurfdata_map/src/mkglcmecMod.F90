@@ -146,11 +146,13 @@ subroutine mkglcmec(ldomain, mapfname, &
 ! variables in an arbitrary way.
 !
 ! !USES:
+  use shr_sys_mod, only : shr_sys_abort
   use mkdomainMod, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkutilsMod, only : slightly_below, slightly_above
   use mkncdio
+  use mkvarctl  , only : outnc_3dglc
 !
 ! !ARGUMENTS:
   implicit none
@@ -211,7 +213,7 @@ subroutine mkglcmec(ldomain, mapfname, &
   topoglcmec_o(:,:)         = 0.
   if ( outnc_3dglc )then
       if ( (.not. present(pctglcmec_gic_o)) .or. (.not. present(pctglcmec_icesheet_o)) .or. &
-           (.not. present(pctglc_gic_o)     .or. (.not. present(pctglc_icesheet_o) )then
+           (.not. present(pctglc_gic_o)   ) .or. (.not. present(pctglc_icesheet_o)   ) )then
          call shr_sys_abort( subname//' ERROR: 3D glacier fields were NOT sent in and they are required' )
       end if
       pctglcmec_gic_o(:,:)      = 0.
