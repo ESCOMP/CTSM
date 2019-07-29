@@ -13,7 +13,7 @@ module WaterStateType
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN
-  use clm_varctl     , only : use_bedrock, iulog, use_fan
+  use clm_varctl     , only : use_bedrock, iulog
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -34,7 +34,6 @@ module WaterStateType
      real(r8), pointer :: h2osno_col             (:)   ! col snow water (mm H2O)
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
-     real(r8), pointer :: h2osoi_tend_tsl_col    (:)   ! col moisture tendency due to vertical movement at topmost layer (m3/m3/s) 
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
      real(r8), pointer :: h2ocan_patch           (:)   ! patch canopy water (mm H2O)
      real(r8), pointer :: h2osfc_col             (:)   ! col surface water (mm H2O)
@@ -135,11 +134,6 @@ contains
     call AllocateVar1d(var = this%wa_col, name = 'wa_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    if (use_fan) then
-       call AllocateVar1d(var = this%h2osoi_tend_tsl_col, name = 'h2osoi_tend_tsl_col', &
-            container = tracer_vars, &
-            bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    end if
     
   end subroutine InitAllocate
 
@@ -218,13 +212,6 @@ contains
          long_name=this%info%lname('soil ice (vegetated landunits only)'), &
          ptr_col=data2dptr, l2g_scale_type='veg')
 
-    if (use_fan) then
-       this%h2osoi_tend_tsl_col(begc:endc) = spval
-       call hist_addfld1d (fname='SOILWATERTEND_TSL',  units='kg/m2/s', &
-            avgflag='A', long_name='Tendency of volumetric soil water in the topmost soil layer', &
-            ptr_col=this%h2osoi_tend_tsl_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg', &
-            default='inactive')
-    end if
 
     this%h2ocan_patch(begp:endp) = spval 
     call hist_addfld1d ( &
@@ -427,8 +414,6 @@ contains
                end if
             end do
          end if
-         if (use_fan) this%h2osoi_tend_tsl_col(c) = 0.0_r8
-
       end do
 
 
