@@ -165,6 +165,7 @@ contains
     real(r8) :: rwat(bounds%begc:bounds%endc) ! soil water wgted by depth to maximum depth of 0.5 m
     real(r8) :: swat(bounds%begc:bounds%endc) ! same as rwat but at saturation
     real(r8) :: rz(bounds%begc:bounds%endc)   ! thickness of soil layers contributing to rwat (m)
+    real(r8) :: h2osoi_liq_saved(bounds%begc:bounds%endc) ! h2osoi_liq_col in topmost layer before calling SoilWater
     real(r8) :: tsw                           ! volumetric soil water to 0.5 m
     real(r8) :: stsw                          ! volumetric soil water to 0.5 m at saturation
     real(r8) :: fracl                         ! fraction of soil layer contributing to 10cm total soil water
@@ -277,8 +278,10 @@ contains
       call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
            filter_hydrologyc, soilstate_inst, canopystate_inst, waterfluxbulk_inst, energyflux_inst)
       
-      ! save the h2osoi_liq in top layer before evaluating the soilwater movement
-      if ( use_fan ) call store_tsl_moisture(waterstatebulk_inst, filter_hydrologyc, num_hydrologyc) 
+      if ( use_fan ) then 
+         ! save the h2osoi_liq in top layer before evaluating the soilwater movement
+         call store_tsl_moisture(waterstatebulk_inst, filter_hydrologyc, num_hydrologyc) 
+      end if
 
       if ( use_fates ) then
          call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, waterfluxbulk_inst)
@@ -288,8 +291,10 @@ contains
            soilhydrology_inst, soilstate_inst, waterfluxbulk_inst, waterstatebulk_inst, temperature_inst, &
            canopystate_inst, energyflux_inst, soil_water_retention_curve)
 
-      ! use the saved value to calculate the tendency
-      if ( use_fan ) call eval_tsl_moist_tend(waterstatebulk_inst , filter_hydrologyc, num_hydrologyc)
+      if ( use_fan ) then 
+         ! use the saved value to calculate the tendency
+         call eval_tsl_moist_tend(waterstatebulk_inst , filter_hydrologyc, num_hydrologyc)
+      end if
 
       if (use_vichydro) then
          ! mapping soilmoist from CLM to VIC layers for runoff calculations
@@ -675,7 +680,7 @@ contains
 
       do fc = 1, num_fc
          c = filter(fc)
-         waterstatebulk_inst%h2osoi_tend_tsl_col(c) = waterstatebulk_inst%h2osoi_liq_col(c,1)
+         h2osoi_liq_saved(c) = waterstatebulk_inst%h2osoi_liq_col(c,1)
       end do
 
     end subroutine store_tsl_moisture
@@ -692,7 +697,7 @@ contains
 
       do fc = 1, num_fc
          c = filter(fc)
-         h2osoi_tend_tsl(c) = (h2osoi_liq(c,1) - h2osoi_tend_tsl(c)) / dtime
+         h2osoi_tend_tsl(c) = (h2osoi_liq(c,1) - h2osoi_liq_saved(c)) / dtime
       end do
 
       end associate
