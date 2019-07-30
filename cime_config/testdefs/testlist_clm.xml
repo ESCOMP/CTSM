@@ -1674,6 +1674,16 @@
 
     </machines>
   </test>
+  <test name="LWISO_Ld10" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/coldStart">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+        <options>
+          <option name="wallclock">0:30:00</option>
+          <option name="comment">Ensure that turning on water tracers doesn't change answers. Cold start for now, until we can use initial conditions from a non-isotope case in an isotope case; once we can do that, this should be changed to not be cold start (e.g., 5-day decStart transient test: see also https://github.com/ESCOMP/ctsm/issues/495#issuecomment-516619853).</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
   <test name="ERP_P36x2_D_Ld5" grid="f10_f10_musgs" compset="I2000Ctsm50NwpSpGswpGs" testmods="clm/default">
     <machines>
 
