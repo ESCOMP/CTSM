@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.26    sacks 07/29/2019 Add a CN precision control call to fix problems related to small negative values
 release-clm5.0.25     erik 05/29/2019 Change two files from NetCDF-4 format to NetCDF-3 (because some machines have trouble with NetCDF-4 in pnetcdf)
 release-clm5.0.24     erik 05/22/2019 Correct ndep end year for SSPs, 2-degree CMIP6WACCMDECK with C-isotopes off, fixes mksurfdata for high resolution
 release-clm5.0.23     erik 05/15/2019 Update cime to bring in CO2 transient files for the CMIP6 SSP's as well as presaero for three of them
