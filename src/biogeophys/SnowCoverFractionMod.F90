@@ -129,6 +129,10 @@ module SnowCoverFractionMod
      procedure, private :: ReadParamsNY07
   end type snow_cover_fraction_ny07_type
 
+  interface snow_cover_fraction_ny07_type
+     module procedure ConstructorNY07
+  end interface snow_cover_fraction_ny07_type
+
   type, extends(snow_cover_fraction_type) :: snow_cover_fraction_clm5_type
      ! This implements the CLM5 parameterization of snow cover fraction
      private
@@ -146,6 +150,10 @@ module SnowCoverFractionMod
      procedure, private :: CheckValidInputsClm5
      procedure, private :: SetDerivedParametersClm5
   end type snow_cover_fraction_clm5_type
+
+  interface snow_cover_fraction_clm5_type
+     module procedure ConstructorClm5
+  end interface snow_cover_fraction_clm5_type
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -205,6 +213,11 @@ contains
   ! ========================================================================
   ! Methods for N&Y07 (Niu & Yang 2007) parameterization
   ! ========================================================================
+
+  function ConstructorNY07()
+    type(snow_cover_fraction_ny07_type) :: ConstructorNY07
+    ! DO NOTHING (simply return a variable of the appropriate type)
+  end function ConstructorNY07
 
   !-----------------------------------------------------------------------
   subroutine InitNY07(this, bounds, col, glc_behavior, NLFilename, params_ncid)
@@ -394,6 +407,11 @@ contains
   ! ========================================================================
   ! Methods for CLM5 parameterization
   ! ========================================================================
+
+  function ConstructorClm5()
+    type(snow_cover_fraction_clm5_type) :: ConstructorClm5
+    ! DO NOTHING (simply return a variable of the appropriate type)
+  end function ConstructorClm5
 
   !-----------------------------------------------------------------------
   subroutine InitClm5(this, bounds, col, glc_behavior, NLFilename, params_ncid)
