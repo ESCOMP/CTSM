@@ -22,7 +22,7 @@ class LWISO(SystemTestsCompareTwo):
     def __init__(self, case):
         SystemTestsCompareTwo.__init__(self, case,
                                        separate_builds = False,
-                                       run_two_suffix = 'wiso',
+                                       run_two_suffix = 'nowiso',
                                        run_one_description = 'water isotopes on',
                                        run_two_description = 'water isotopes off',
                                        ignore_fieldlist_diffs = True)
