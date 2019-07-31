@@ -1186,6 +1186,16 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="ERP_D_P36x2_Ld3" grid="f10_f10_musgs" compset="I2000Clm45BgcCrop" testmods="clm/no_subgrid_fluxes">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+        <options>
+          <option name="wallclock">00:20:00</option>
+          <option name="comment">This covers some code that isn't covered by any existing tests (such as the oldhyd test), though the amount of additional code coverage is small, so we don't necessarily need to keep this test long-term.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
   <test name="SMS_D_Ld1_P48x1" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/af_bias_v7">
     <machines>
       <machine name="hobart" compiler="nag" category="aux_clm"/>
