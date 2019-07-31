@@ -24,7 +24,7 @@ module SoilStateInitTimeConstMod
     real(r8), public :: organic_max  ! organic matter (kg/m3) where soil is assumed to act like peat
 
   ! Control variables (from namelist)
-  logical, public :: organic_frac_squared ! If organic fraction should be squared (as in CLM4.5)
+  logical, private :: organic_frac_squared ! If organic fraction should be squared (as in CLM4.5)
 
   ! !PRIVATE DATA:
   character(len=*), parameter, private :: sourcefile = &
@@ -369,7 +369,7 @@ contains
           do lev = 1,nlevgrnd
              ! DML - this if statement could probably be removed and just the
              ! top part used for all soil layer structures
-             if (.not. organic_frac_squared) then
+             if ( soil_layerstruct /= '10SL_3.5m' )then
                 if (lev .eq. 1) then
                    clay = clay3d(g,1)
                    sand = sand3d(g,1)
@@ -387,11 +387,15 @@ contains
                    sand = sand3d(g,nlevsoifl)
                    om_frac = 0._r8
                 endif
-             else
+             else  ! apply soil texture from 10 layer input dataset
                 if (lev <= nlevsoi) then ! duplicate clay and sand values from 10th soil layer
                    clay = clay3d(g,lev)
                    sand = sand3d(g,lev)
-                   om_frac = (organic3d(g,lev)/organic_max)**2._r8
+                   if (organic_frac_squared) then
+                      om_frac = (organic3d(g,lev)/organic_max)**2._r8
+                   else
+                      om_frac = organic3d(g,lev)/organic_max
+                   end if
                 else
                    clay = clay3d(g,nlevsoi)
                    sand = sand3d(g,nlevsoi)
