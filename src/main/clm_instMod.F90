@@ -306,7 +306,7 @@ contains
 
     call soilhydrology_inst%Init(bounds, nlfilename, water_inst%waterstatebulk_inst, &
          use_aquifer_layer = use_aquifer_layer())
-    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst)
+    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, soilstate_inst)
 
     call saturated_excess_runoff_inst%Init(bounds)
     call infiltration_excess_runoff_inst%Init(bounds)

@@ -787,13 +787,13 @@
       <option name="comment"  >test transient PFTs (via HIST) with a December start, reading 78-pft data and running with 16 pfts</option>
     </options>
   </test>
-  <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/rm_indiv_lunits_and_collapse_to_dom">
+  <test name="SOILSTRUCTUD_Ld5" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >test toosmall_* (soil, crop, glacier, lake, wetland, urban) all set to 5% (ie keep the landunits in gridcells where they exceed 5%) and also n_dom_pfts = 2, n_dom_landunits = 2, collapse_urbar = .true. in a 2000 case</option>
+      <option name="comment"  >test soil_layerstruct_userdefined set to the same dzsoi values as in the predefined case 4SL_2m and expect bfb same answers</option>
     </options>
   </test>
   <test name="ERS_D_Ld12" grid="f10_f10_musgs" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_spunup_inc_dec_bgc">
@@ -1669,6 +1669,18 @@
                memory leak. See
                https://github.com/ESCOMP/ctsm/issues/763 for details. -->
           <option name="memleak_tolerance">0.2</option>
+        </options>
+      </machine>
+
+    </machines>
+  </test>
+  <test name="ERP_P36x2_D_Ld5" grid="f10_f10_musgs" compset="I2000Ctsm50NwpBgcCropGswpGs" testmods="clm/default">
+    <machines>
+
+      <machine name="cheyenne" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">0:30</option>
+          <option name="comment">A debug ERP test of the NWP configuration with active BGC and CROP.</option>
         </options>
       </machine>
 

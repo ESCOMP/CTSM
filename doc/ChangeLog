@@ -1,4 +1,145 @@
 ===============================================================
+Tag name:  ctsm1.0.dev053
+Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
+Date: Thu Aug  1 16:56:09 MDT 2019
+One-line Summary: Soil layer definition clean-up and user-defined option
+
+Purpose of changes
+------------------
+
+ Code clean-up clarifes that there are two types of soil layer
+ definition: the node-based and the thickness-based.
+
+ User-defined option allows user to specify a soil layer profile in the
+ form of a dzsoi vector (values in meters) in the thickness-based
+ approach.
+
+ Default nlevsoi for NWP configurations had to change from 5 to 4 for
+ consistency with the new error check described in known bugs below.
+
+ Other code clean-up removes a couple of sections of repeating code.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #279 #728
+
+Known bugs found since the previous tag (include github issue ID):
+ #759 (this PR) bug causes model to abort when nlevsoi = nlevgrnd;
+ bug has been corrected with an error check
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[X] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+ if neither soil_layerstruct_predefined nor soil_layerstruct_userdefined
+ get specified in the namelist, then the model sets
+ soil_layerstruct_predefined to the old default setting for
+ soil_layerstruct (clm5: 20SL_8.5m, clm4.5: 10SL_3.5m)
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ renamed soil_layerstruct to soil_layerstruct_predefined and added
+ soil_layerstruct_userdefined
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ Default nlevsoi for NWP configurations had to change from 5 to 4 for
+ consistency with the new error check described in known bugs below
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers
+--------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+ 1) New test...
+ ERP_P36x2_D_Ld5.f10_f10_musgs.I2000Ctsm50NwpBgcCropGswpGs.cheyenne_intel.clm-default
+ replaces existing test
+ ERS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-rm_indiv_lunits_and_collapse_to_dom
+ to check the correction described in known bugs above; the new test
+ together with existing unit tests cover what the old test was testing
+
+ 2) New test and new test type...
+ SOILSTRUCTUD_Ld5.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-default
+ ensures that soil_layerstruct_userdefined gives bfb same answers as
+ soil_layerstruct_predefined = '4SL_2m' when set with the same dzsoi
+ values. The new test type was put together by:
+ - listing the test in (1) testlist_clm.xml (as all tests) and (2) config_tests.xml
+ - creating the file .../cime_config/SystemTests/soilstructud.py named after the test in lower case
+
+Code reviewed by: @billsacks
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: nwp
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+  This is due to the change of nlevsoi from 5 to 4 (more info above).
+  I confirmed that nwp does return bfb same answers when I revert this
+  change.
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/759
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev052
 Originator(s):  sacks (Bill Sacks)
 Date: Mon Jul 22 14:02:43 MDT 2019

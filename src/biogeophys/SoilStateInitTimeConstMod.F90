@@ -5,6 +5,7 @@ module SoilStateInitTimeConstMod
   ! Set hydraulic and thermal properties 
   !
   ! !USES
+  use shr_kind_mod  , only : r8 => shr_kind_r8
   use SoilStateType , only : soilstate_type
   use LandunitType  , only : lun                
   use ColumnType    , only : col                
@@ -19,6 +20,9 @@ module SoilStateInitTimeConstMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ReadNL
   !
+  ! !PUBLIC DATA:
+    real(r8), public :: organic_max  ! organic matter (kg/m3) where soil is assumed to act like peat
+
   ! !PRIVATE DATA:
   ! Control variables (from namelist)
   logical, private :: organic_frac_squared ! If organic fraction should be squared (as in CLM4.5)
@@ -87,7 +91,6 @@ contains
   subroutine SoilStateInitTimeConst(bounds, soilstate_inst, nlfilename) 
     !
     ! !USES:
-    use shr_kind_mod        , only : r8 => shr_kind_r8
     use shr_log_mod         , only : errMsg => shr_log_errMsg
     use shr_infnan_mod      , only : nan => shr_infnan_nan, assignment(=)
     use decompMod           , only : bounds_type
@@ -100,7 +103,7 @@ contains
     use clm_varcon          , only : zsoi, dzsoi, zisoi, spval
     use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
-    use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct
+    use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct_predefined
     use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice_mec
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
     use fileutils           , only : getfil
@@ -140,7 +143,6 @@ contains
     real(r8)           :: tkm                           ! mineral conductivity
     real(r8)           :: xksat                         ! maximum hydraulic conductivity of soil [mm/s]
     real(r8)           :: clay,sand                     ! temporaries
-    real(r8)           :: organic_max                   ! organic matter (kg/m3) where soil is assumed to act like peat
     integer            :: dimid                         ! dimension id
     logical            :: readvar 
     type(file_desc_t)  :: ncid                          ! netcdf id
@@ -333,7 +335,11 @@ contains
        g = col%gridcell(c)
        l = col%landunit(c)
 
-       if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec) then
+       ! istwet and istice_mec and
+       ! urban roof, sunwall, shadewall properties set to special value
+       if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec .or. &
+           (lun%urbpoi(l) .and. col%itype(c) /= icol_road_perv .and. &
+                                col%itype(c) /= icol_road_imperv)) then
 
           do lev = 1,nlevgrnd
              soilstate_inst%bsw_col(c,lev)    = spval
@@ -358,48 +364,22 @@ contains
              soilstate_inst%csol_col(c,lev)= spval
           end do
 
-       else if (lun%urbpoi(l) .and. (col%itype(c) /= icol_road_perv) .and. (col%itype(c) /= icol_road_imperv) )then
-
-          ! Urban Roof, sunwall, shadewall properties set to special value
-          do lev = 1,nlevgrnd
-             soilstate_inst%watsat_col(c,lev) = spval
-             soilstate_inst%watfc_col(c,lev)  = spval
-             soilstate_inst%bsw_col(c,lev)    = spval
-             soilstate_inst%hksat_col(c,lev)  = spval
-             soilstate_inst%sucsat_col(c,lev) = spval
-             soilstate_inst%watdry_col(c,lev) = spval 
-             soilstate_inst%watopt_col(c,lev) = spval 
-             soilstate_inst%bd_col(c,lev) = spval 
-             if (lev <= nlevsoi) then
-                soilstate_inst%cellsand_col(c,lev) = spval
-                soilstate_inst%cellclay_col(c,lev) = spval
-                soilstate_inst%cellorg_col(c,lev)  = spval
-             end if
-          end do
-
-          do lev = 1,nlevgrnd
-             soilstate_inst%tkmg_col(c,lev)   = spval
-             soilstate_inst%tksatu_col(c,lev) = spval
-             soilstate_inst%tkdry_col(c,lev)  = spval
-             soilstate_inst%csol_col(c,lev)   = spval
-          end do
-
        else
 
           do lev = 1,nlevgrnd
              ! DML - this if statement could probably be removed and just the
              ! top part used for all soil layer structures
-             if ( soil_layerstruct /= '10SL_3.5m' )then ! apply soil texture from 10 layer input dataset 
+             if ( soil_layerstruct_predefined /= '10SL_3.5m' )then ! apply soil texture from 10 layer input dataset
                 if (lev .eq. 1) then
                    clay = clay3d(g,1)
                    sand = sand3d(g,1)
-                   om_frac = organic3d(g,1)/organic_max 
+                   om_frac = organic3d(g,1)/organic_max
                 else if (lev <= nlevsoi) then
                    do j = 1,nlevsoifl-1
                       if (zisoi(lev) >= zisoifl(j) .AND. zisoi(lev) < zisoifl(j+1)) then
                          clay = clay3d(g,j+1)
                          sand = sand3d(g,j+1)
-                         om_frac = organic3d(g,j+1)/organic_max    
+                         om_frac = organic3d(g,j+1)/organic_max
                       endif
                    end do
                 else
@@ -411,7 +391,7 @@ contains
                 if (lev <= nlevsoi) then ! duplicate clay and sand values from 10th soil layer
                    clay = clay3d(g,lev)
                    sand = sand3d(g,lev)
-                   if ( organic_frac_squared )then
+                   if (organic_frac_squared) then
                       om_frac = (organic3d(g,lev)/organic_max)**2._r8
                    else
                       om_frac = organic3d(g,lev)/organic_max
@@ -423,25 +403,17 @@ contains
                 endif
              end if
 
-             if (lun%itype(l) == istdlak) then
+             if (lun%urbpoi(l)) then
+                om_frac = 0._r8 ! No organic matter for urban
+             end if
 
-                if (lev <= nlevsoi) then
-                   soilstate_inst%cellsand_col(c,lev) = sand
-                   soilstate_inst%cellclay_col(c,lev) = clay
-                   soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
-                end if
+             if (lev <= nlevsoi) then
+                soilstate_inst%cellsand_col(c,lev) = sand
+                soilstate_inst%cellclay_col(c,lev) = clay
+                soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
+             end if
 
-             else if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
-
-                if (lun%urbpoi(l)) then
-                   om_frac = 0._r8 ! No organic matter for urban
-                end if
-
-                if (lev <= nlevsoi) then
-                   soilstate_inst%cellsand_col(c,lev) = sand
-                   soilstate_inst%cellclay_col(c,lev) = clay
-                   soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
-                end if
+             if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
 
                 ! Note that the following properties are overwritten for urban impervious road 
                 ! layers that are not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
