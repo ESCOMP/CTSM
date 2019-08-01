@@ -215,7 +215,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- mksrf_lai -->
 
 <mksrf_flai hgrid="3x3min" lmask="MODISv2"
->lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190119/mksrf_lai_histclm52deg005_earthstatmirca_2005.c190119.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_lai_histclm52deg005_earthstatmirca_2005.c190119.nc
 </mksrf_flai>
 
 <mksrf_flai hgrid="0.25x0.25" lmask="MODIS"
@@ -230,7 +230,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc</mksrf_fsoitex>
 
 <mksrf_fsoicol  hgrid="3x3min"  lmask="MODISv2"
->lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190119/mksrf_soilcolor_histclm52deg005_earthstatmirca_2005.c190116.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_soilcolor_histclm52deg005_earthstatmirca_2005.c190116.nc
 </mksrf_fsoicol>
 
 <mksrf_fsoicol  hgrid="0.25x0.25"  lmask="MODIS"
@@ -309,10 +309,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- High resolution -->
 <mksrf_fvegtyp hgrid="3x3min" ssp_rcp="hist" sim_year="1850" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190119/mksrf_landuse_clm52deg005_histLUH2_1850.c190119.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_landuse_clm52deg005_histLUH2_1850.c190119.nc
 </mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="3x3min" ssp_rcp="hist" sim_year="2005" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190119/mksrf_landuse_clm52deg005_histLUH2_2005.c190119.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_landuse_clm52deg005_histLUH2_2005.c190119.nc
 </mksrf_fvegtyp>
 
 
