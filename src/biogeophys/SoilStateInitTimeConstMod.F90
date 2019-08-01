@@ -303,9 +303,12 @@ contains
     ! --------------------------------------------------------------------
 
     ! Note that the depths on the file are assumed to be the same as the depths in the
-    ! model when running with 10SL_3.5m. We need to specify zsoifl down to nlevsoifl+1
-    ! (rather than just nlevsoifl) so that we can get the appropriate zisoifl at level
-    ! nlevsoifl (i.e., the bottom interface depth).
+    ! model when running with 10SL_3.5m. Ideally zsoifl and zisoifl would be read from
+    ! the surface dataset rather than assumed here.
+    !
+    ! We need to specify zsoifl down to nlevsoifl+1 (rather than just nlevsoifl) so that
+    ! we can get the appropriate zisoifl at level nlevsoifl (i.e., the bottom interface
+    ! depth).
     allocate(zsoifl(1:nlevsoifl+1), zisoifl(0:nlevsoifl))
     do j = 1, nlevsoifl+1
        zsoifl(j) = 0.025_r8*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
@@ -368,6 +371,12 @@ contains
                 om_frac = organic3d(g,1)/organic_max
              else if (lev <= nlevsoi) then
                 do j = 1,nlevsoifl-1
+                   ! NOTE(wjs, 2019-08-01) It appears that the code currently doesn't set
+                   ! clay, sand and om_frac explicitly under some conditions. It probably
+                   ! should. My understanding is that currently things work okay, though,
+                   ! because clay, sand and om_frac will remain set at their previous
+                   ! values, which is probably reasonable enough. See also
+                   ! <https://github.com/ESCOMP/ctsm/pull/771#discussion_r309509596>.
                    if (zisoi(lev) > zisoifl(j) .AND. zisoi(lev) <= zisoifl(j+1)) then
                       clay = clay3d(g,j+1)
                       sand = sand3d(g,j+1)
