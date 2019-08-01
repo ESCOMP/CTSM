@@ -82,10 +82,10 @@ test_driver_*.sh
 
 # mksurfdata output
 surfdata_*.log
-surfdata_*.namelist
-landuse.timeseries_*.namelist
+#surfdata_*.namelist
+#landuse.timeseries_*.namelist
 landuse.timeseries_*.log
-landuse_timeseries_*.txt
+#landuse_timeseries_*.txt
 clm.input_data_list
 clm.input_data_list.previous
 *.stdout.txt.o*
