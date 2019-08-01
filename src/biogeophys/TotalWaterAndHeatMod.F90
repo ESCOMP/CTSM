@@ -927,7 +927,7 @@ contains
                latent_heat_liquid = latent_heat_liquid_lake(c))
     end do
 
-     write(iulog,*) 'lake heat (J/m^2)', heat_lake(c)+latent_heat_liquid(c)
+    ! write(iulog,*) 'lake heat (J/m^2)', heat_lake(c)+latent_heat_liquid(c)
 
 ! Add lake heat here if wanted to incorporate
     do fc = 1, num_lakec
