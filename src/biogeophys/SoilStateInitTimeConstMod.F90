@@ -369,7 +369,7 @@ contains
           do lev = 1,nlevgrnd
              ! DML - this if statement could probably be removed and just the
              ! top part used for all soil layer structures
-             if ( soil_layerstruct /= '10SL_3.5m' )then
+             if ( soil_layerstruct /= '10SL_3.5m' )then ! apply soil texture from 10 layer input dataset
                 if (lev .eq. 1) then
                    clay = clay3d(g,1)
                    sand = sand3d(g,1)
@@ -387,7 +387,7 @@ contains
                    sand = sand3d(g,nlevsoifl)
                    om_frac = 0._r8
                 endif
-             else  ! apply soil texture from 10 layer input dataset
+             else
                 if (lev <= nlevsoi) then ! duplicate clay and sand values from 10th soil layer
                    clay = clay3d(g,lev)
                    sand = sand3d(g,lev)
