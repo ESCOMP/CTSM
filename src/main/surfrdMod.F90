@@ -284,10 +284,12 @@ contains
     !    o real % abundance PFTs (as a percent of vegetated area)
     !
     ! !USES:
-    use clm_varctl  , only : create_crop_landunit
-    use fileutils   , only : getfil
-    use domainMod   , only : domain_type, domain_init, domain_clean
-    use clm_instur  , only : wt_lunit, topo_glc_mec
+    use clm_varctl          , only : create_crop_landunit
+    use fileutils           , only : getfil
+    use domainMod           , only : domain_type, domain_init, domain_clean
+    use clm_instur          , only : wt_lunit, topo_glc_mec
+    use dynSubgridControlMod, only : get_flanduse_timeseries
+    use clm_varctl          , only : fname_len
     !
     ! !ARGUMENTS:
     integer,          intent(in) :: begg, endg      
@@ -304,8 +306,11 @@ contains
     logical           :: readvar              ! true => variable is on dataset
     real(r8)          :: rmaxlon,rmaxlat      ! local min/max vars
     type(file_desc_t) :: ncid                 ! netcdf id
+    type(file_desc_t) :: ncid_dynuse          ! netcdf id for landuse timeseries file
     logical           :: istype_domain        ! true => input file is of type domain
     logical           :: isgrid2d             ! true => intut grid is 2d 
+    character(len=fname_len)  :: fdynuse              ! landuse.timeseries filename
+
     character(len=32) :: subname = 'surfrd_get_data'    ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -409,6 +414,33 @@ contains
        write(iulog,*) 'Successfully read surface boundary data'
        write(iulog,*)
     end if
+    
+    
+    ! IV: add here call to subroutine to read in lake mask (necessary for initialisation of dynamical lakes)
+    ! First open landuse.timeseries file for this. 
+    
+     if (masterproc) then
+       write(iulog,*) 'Attempting to read landuse.timeseries data .....'
+       if (lfsurdat == ' ') then
+          write(iulog,*)'fdynuse must be specified'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       endif
+    endif   
+    
+    
+    ! open landuse_timeseries file 
+    fdynuse = get_flanduse_timeseries()
+    
+    call getfil(fdynuse, locfn, 0 )
+
+    call ncd_pio_openfile (ncid_dynuse, trim(locfn), 0)    
+
+    ! read the lakemask
+    call surfrd_lakemask(begg, endg, ncid_dynuse)
+    
+    ! close landuse_timeseries file again 
+    call ncd_pio_closefile(ncid_dynuse)
+
 
   end subroutine surfrd_get_data
 
@@ -620,7 +652,7 @@ contains
     wt_nat_patch(begg:,natpft_lb:natpft_size-1+natpft_lb) = array2D(begg:,:)
     deallocate( array2D )
 
-  end subroutine surfrd_cftformat
+  end subroutine surfrd_cftformat      
 
 !-----------------------------------------------------------------------
   subroutine surfrd_pftformat( begg, endg, ncid )
@@ -795,4 +827,48 @@ contains
 
   end subroutine surfrd_veg_dgvm
 
+  !-----------------------------------------------------------------------
+  subroutine surfrd_lakemask(begg, endg, ncid)
+    !
+    ! !DESCRIPTION:
+    ! Reads the lake mask, indicating where lakes are and will grow
+    ! of the landuse.timeseries file.
+    ! Necessary for the initialisation of the lake land units
+    !
+    ! !USES:
+     use clm_instur      , only : haslake
+    ! !ARGUMENTS:
+    integer,           intent(in)    :: begg, endg  
+    type(file_desc_t), intent(inout) :: ncid 
+    ! 
+    !
+    ! !LOCAL VARIABLES:
+    logical          :: readvar
+    integer ,pointer :: haslake_id(:)
+    !
+    !
+    character(len=*), parameter :: subname = 'surfrd_lakemask'
+    !
+    !-----------------------------------------------------------------------
+
+    
+    allocate(haslake_id(begg:endg))
+    
+    call ncd_io(ncid=ncid, varname='HASLAKE'  , flag='read', data=haslake_id, &
+           dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( msg=' ERROR: HASLAKE is not on landuse.timeseries file'//errMsg(sourcefile, __LINE__))
+
+    where (haslake_id == 1.)
+        haslake = .true.
+    elsewhere
+        haslake = .false.
+    end where
+
+    
+    deallocate(haslake_id)
+
+    
+  end subroutine surfrd_lakemask
+  
+  
 end module surfrdMod

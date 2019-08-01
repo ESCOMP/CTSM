@@ -1000,9 +1000,10 @@ contains
 
        end do
     end do
-	write(iulog,*)'Energy content of lake after calculating lake temperature (J/m²)', ncvts
+	! write(iulog,*)'Energy content of lake after calculating lake temperature (J/m²)', ncvts
 
-    lake_heat(c) = ncvts(c) 
+	! IV: currently commented out: caused crash. To do: look at this part of the code!!!
+    ! lake_heat(c) = ncvts(c) 
 
     do j = -nlevsno + 1, nlevgrnd
        do fc = 1, num_lakec
