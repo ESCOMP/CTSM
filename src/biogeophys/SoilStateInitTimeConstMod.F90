@@ -21,12 +21,13 @@ module SoilStateInitTimeConstMod
   private :: ReadNL
   !
   ! !PUBLIC DATA:
-    real(r8), public :: organic_max  ! organic matter (kg/m3) where soil is assumed to act like peat
-
-  ! Control variables (from namelist)
-  logical, public :: organic_frac_squared ! If organic fraction should be squared (as in CLM4.5)
+  real(r8), public :: organic_max  ! organic matter (kg/m3) where soil is assumed to act like peat
 
   ! !PRIVATE DATA:
+
+  ! Control variables (from namelist)
+  logical, private :: organic_frac_squared ! If organic fraction should be squared (as in CLM4.5)
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
