@@ -43,7 +43,7 @@ MACHINE_DEFAULTS = {
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
                 queue='regular',
-                walltime='06:00:00',
+                walltime='11:50:00',
                 extra_args='',
                 # The following assumes a single node, with a single mpi proc; we may want
                 # to add more flexibility in the future, making the node / proc counts

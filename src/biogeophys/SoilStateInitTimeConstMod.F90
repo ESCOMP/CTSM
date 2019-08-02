@@ -21,9 +21,10 @@ module SoilStateInitTimeConstMod
   private :: ReadNL
   !
   ! !PUBLIC DATA:
-    real(r8), public :: organic_max  ! organic matter (kg/m3) where soil is assumed to act like peat
+  real(r8), public :: organic_max  ! organic matter (kg/m3) where soil is assumed to act like peat
 
   ! !PRIVATE DATA:
+
   ! Control variables (from namelist)
   logical, private :: organic_frac_squared ! If organic fraction should be squared (as in CLM4.5)
 
@@ -148,7 +149,6 @@ contains
     type(file_desc_t)  :: ncid                          ! netcdf id
     real(r8) ,pointer  :: zsoifl (:)                    ! Output: [real(r8) (:)]  original soil midpoint 
     real(r8) ,pointer  :: zisoifl (:)                   ! Output: [real(r8) (:)]  original soil interface depth 
-    real(r8) ,pointer  :: dzsoifl (:)                   ! Output: [real(r8) (:)]  original soil thickness 
     real(r8) ,pointer  :: gti (:)                       ! read in - fmax 
     real(r8) ,pointer  :: sand3d (:,:)                  ! read in - soil texture: percent sand (needs to be a pointer for use in ncdio)
     real(r8) ,pointer  :: clay3d (:,:)                  ! read in - soil texture: percent clay (needs to be a pointer for use in ncdio)
@@ -303,22 +303,22 @@ contains
     ! get original soil depths to be used in interpolation of sand and clay
     ! --------------------------------------------------------------------
 
-    allocate(zsoifl(1:nlevsoifl), zisoifl(0:nlevsoifl), dzsoifl(1:nlevsoifl))
-    do j = 1, nlevsoifl
-       zsoifl(j) = 0.025*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
+    ! Note that the depths on the file are assumed to be the same as the depths in the
+    ! model when running with 10SL_3.5m. Ideally zsoifl and zisoifl would be read from
+    ! the surface dataset rather than assumed here.
+    !
+    ! We need to specify zsoifl down to nlevsoifl+1 (rather than just nlevsoifl) so that
+    ! we can get the appropriate zisoifl at level nlevsoifl (i.e., the bottom interface
+    ! depth).
+    allocate(zsoifl(1:nlevsoifl+1), zisoifl(0:nlevsoifl))
+    do j = 1, nlevsoifl+1
+       zsoifl(j) = 0.025_r8*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
     enddo
-
-    dzsoifl(1) = 0.5_r8*(zsoifl(1)+zsoifl(2))             !thickness b/n two interfaces
-    do j = 2,nlevsoifl-1
-       dzsoifl(j)= 0.5_r8*(zsoifl(j+1)-zsoifl(j-1))
-    enddo
-    dzsoifl(nlevsoifl) = zsoifl(nlevsoifl)-zsoifl(nlevsoifl-1)
 
     zisoifl(0) = 0._r8
-    do j = 1, nlevsoifl-1
+    do j = 1, nlevsoifl
        zisoifl(j) = 0.5_r8*(zsoifl(j)+zsoifl(j+1))         !interface depths
     enddo
-    zisoifl(nlevsoifl) = zsoifl(nlevsoifl) + 0.5_r8*dzsoifl(nlevsoifl)
 
     ! --------------------------------------------------------------------
     ! Set soil hydraulic and thermal properties: non-lake
@@ -329,7 +329,6 @@ contains
     !   value because thermal conductivity and heat capacity for urban 
     !   roof, sunwall and shadewall are prescribed in SoilThermProp.F90 
     !   in SoilPhysicsMod.F90
-
 
     do c = begc, endc
        g = col%gridcell(c)
@@ -367,40 +366,32 @@ contains
        else
 
           do lev = 1,nlevgrnd
-             ! DML - this if statement could probably be removed and just the
-             ! top part used for all soil layer structures
-             if ( soil_layerstruct_predefined /= '10SL_3.5m' )then ! apply soil texture from 10 layer input dataset
-                if (lev .eq. 1) then
-                   clay = clay3d(g,1)
-                   sand = sand3d(g,1)
-                   om_frac = organic3d(g,1)/organic_max
-                else if (lev <= nlevsoi) then
-                   do j = 1,nlevsoifl-1
-                      if (zisoi(lev) >= zisoifl(j) .AND. zisoi(lev) < zisoifl(j+1)) then
-                         clay = clay3d(g,j+1)
-                         sand = sand3d(g,j+1)
-                         om_frac = organic3d(g,j+1)/organic_max
-                      endif
-                   end do
-                else
-                   clay = clay3d(g,nlevsoifl)
-                   sand = sand3d(g,nlevsoifl)
-                   om_frac = 0._r8
-                endif
+             if (lev .eq. 1) then
+                clay = clay3d(g,1)
+                sand = sand3d(g,1)
+                om_frac = organic3d(g,1)/organic_max
+             else if (lev <= nlevsoi) then
+                do j = 1,nlevsoifl-1
+                   ! NOTE(wjs, 2019-08-01) It appears that the code currently doesn't set
+                   ! clay, sand and om_frac explicitly under some conditions. It probably
+                   ! should. My understanding is that currently things work okay, though,
+                   ! because clay, sand and om_frac will remain set at their previous
+                   ! values, which is probably reasonable enough. See also
+                   ! <https://github.com/ESCOMP/ctsm/pull/771#discussion_r309509596>.
+                   if (zisoi(lev) > zisoifl(j) .AND. zisoi(lev) <= zisoifl(j+1)) then
+                      clay = clay3d(g,j+1)
+                      sand = sand3d(g,j+1)
+                      om_frac = organic3d(g,j+1)/organic_max
+                   endif
+                end do
              else
-                if (lev <= nlevsoi) then ! duplicate clay and sand values from 10th soil layer
-                   clay = clay3d(g,lev)
-                   sand = sand3d(g,lev)
-                   if (organic_frac_squared) then
-                      om_frac = (organic3d(g,lev)/organic_max)**2._r8
-                   else
-                      om_frac = organic3d(g,lev)/organic_max
-                   end if
-                else
-                   clay = clay3d(g,nlevsoi)
-                   sand = sand3d(g,nlevsoi)
-                   om_frac = 0._r8
-                endif
+                clay = clay3d(g,nlevsoifl)
+                sand = sand3d(g,nlevsoifl)
+                om_frac = 0._r8
+             endif
+
+             if (organic_frac_squared) then
+                om_frac = om_frac**2._r8
              end if
 
              if (lun%urbpoi(l)) then
@@ -595,7 +586,7 @@ contains
     ! --------------------------------------------------------------------
 
     deallocate(sand3d, clay3d, organic3d)
-    deallocate(zisoifl, zsoifl, dzsoifl)
+    deallocate(zisoifl, zsoifl)
 
   end subroutine SoilStateInitTimeConst
 
