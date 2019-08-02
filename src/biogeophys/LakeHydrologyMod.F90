@@ -30,6 +30,7 @@ module LakeHydrologyMod
   use TemperatureType      , only : temperature_type
   use WaterType            , only : water_type
   use TotalWaterAndHeatMod , only : ComputeWaterMassLake
+  use perf_mod             , only : t_startf, t_stopf
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -214,6 +215,14 @@ contains
          endc => bounds%endc  &
          )
 
+    ! BUG(wjs, 2019-07-12, ESCOMP/ctsm#762) This is needed so that temporary tracer
+    ! consistency checks later in this routine pass. Remove this block once code before
+    ! this point is fully tracerized.
+    if (water_inst%DoConsistencyCheck()) then
+       call water_inst%ResetCheckedTracers(bounds)
+       call water_inst%TracerConsistencyCheck(bounds, 'start of LakeHydrology')
+    end if
+
       ! Determine step size
       dtime = get_step_size()
 
@@ -279,6 +288,15 @@ contains
          end if
 
       end do
+
+      ! TODO(wjs, 2019-08-01) Eventually move this down, merging this with later tracer
+      ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
+      ! module, remember to also remove 'use perf_mod' at the top.
+      if (water_inst%DoConsistencyCheck()) then
+         call t_startf("tracer_consistency_check")
+         call water_inst%TracerConsistencyCheck(bounds, 'after initial snow stuff in LakeHydrology')
+         call t_stopf("tracer_consistency_check")
+      end if
 
       ! Calculate sublimation and dew, adapted from HydrologyLake and Biogeophysics2.
 
