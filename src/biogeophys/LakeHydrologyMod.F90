@@ -28,11 +28,7 @@ module LakeHydrologyMod
   use LakeStateType        , only : lakestate_type
   use SoilStateType        , only : soilstate_type
   use TemperatureType      , only : temperature_type
-  use WaterFluxBulkType        , only : waterfluxbulk_type
-  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
-  use WaterStateBulkType       , only : waterstatebulk_type
-  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
-  use WaterBalanceType       , only : waterbalance_type
+  use WaterType            , only : water_type
   use TotalWaterAndHeatMod , only : ComputeWaterMassLake
   !
   ! !PUBLIC TYPES:
@@ -50,10 +46,9 @@ contains
   subroutine LakeHydrology(bounds, &
        num_lakec, filter_lakec, num_lakep, filter_lakep, &
        num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
-       scf_method, &
-       atm2lnd_inst, temperature_inst, soilstate_inst, waterstatebulk_inst, &
-       waterdiagnosticbulk_inst, waterbalancebulk_inst, waterfluxbulk_inst, &
-       wateratm2lndbulk_inst, energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
+       scf_method, water_inst, &
+       atm2lnd_inst, temperature_inst, soilstate_inst, &
+       energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
     !
     ! !DESCRIPTION:
     ! WARNING: This subroutine assumes lake columns have one and only one pft.
@@ -95,14 +90,10 @@ contains
     integer                , intent(out)   :: num_shlakenosnowc       ! number of column non-snow points
     integer                , intent(out)   :: filter_shlakenosnowc(:) ! column filter for non-snow points
     class(snow_cover_fraction_type), intent(in) :: scf_method
+    type(water_type)       , intent(inout) :: water_inst
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(soilstate_type)   , intent(in)    :: soilstate_inst
-    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
-    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)  , intent(inout) :: waterbalancebulk_inst
-    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
-    type(wateratm2lndbulk_type)   , intent(inout) :: wateratm2lndbulk_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
     type(lakestate_type)   , intent(inout) :: lakestate_inst
@@ -129,6 +120,14 @@ contains
     real(r8), parameter :: snow_bd = 250._r8                    ! assumed snow bulk density (for lakes w/out resolved snow layers) [kg/m^3]
                                                                 ! Should only be used for frost below.
     !-----------------------------------------------------------------------
+
+    associate( &
+         waterstatebulk_inst  => water_inst%waterstatebulk_inst, &
+         waterdiagnosticbulk_inst => water_inst%waterdiagnosticbulk_inst, &
+         waterbalancebulk_inst => water_inst%waterbalancebulk_inst, &
+         waterfluxbulk_inst => water_inst%waterfluxbulk_inst, &
+         wateratm2lndbulk_inst => water_inst%wateratm2lndbulk_inst &
+         )
 
     associate(                                                            & 
          pcolumn              =>  patch%column                            , & ! Input:  [integer  (:)   ]  pft's column index                       
@@ -680,6 +679,8 @@ contains
          snw_rds_top(c)     = spval
          sno_liq_top(c)     = spval
       end do
+
+    end associate
 
     end associate
 
