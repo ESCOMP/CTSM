@@ -107,8 +107,6 @@ contains
     real(r8) :: bifall(bounds%begc:bounds%endc)                 ! bulk density of newly fallen dry snow [kg/m3]
     real(r8) :: fracsnow(bounds%begp:bounds%endp)               ! frac of precipitation that is snow
     real(r8) :: fracrain(bounds%begp:bounds%endp)               ! frac of precipitation that is rain
-    real(r8) :: qflx_prec_grnd_snow(bounds%begp:bounds%endp)    ! snow precipitation incident on ground [mm/s]
-    real(r8) :: qflx_prec_grnd_rain(bounds%begp:bounds%endp)    ! rain precipitation incident on ground [mm/s]
     real(r8) :: qflx_evap_soi_lim                               ! temporary evap_soi limited by top snow layer content [mm/s]
     real(r8) :: h2osno_temp                                     ! temporary h2osno [kg/m^2]
     real(r8) :: h2osno_total(bounds%begc:bounds%endc)           ! total snow water (mm H2O)
@@ -229,18 +227,12 @@ contains
       !!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Do precipitation onto ground, etc., from CanopyHydrology
 
-      do fp = 1, num_lakep
-         p = filter_lakep(fp)
-         c = pcolumn(p)
+      do fc = 1, num_lakec
+         c = filter_lakec(fc)
 
-         qflx_prec_grnd_snow(p) = forc_snow(c)
-         qflx_prec_grnd_rain(p) = forc_rain(c)
-
-         ! Assuming one patch per col
-         qflx_snow_grnd(c) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
-         qflx_liq_grnd(c)  = qflx_prec_grnd_rain(p)           ! liquid water onto ground (mm/s)
-
-      end do ! (end pft loop)
+         qflx_snow_grnd(c) = forc_snow(c)           ! ice onto ground (mm/s)
+         qflx_liq_grnd(c)  = forc_rain(c)           ! liquid water onto ground (mm/s)
+      end do
 
       ! Determine snow height and snow water
 
@@ -672,7 +664,7 @@ contains
               (endwb(c)-begwb(c))/dtime + qflx_floodg(g)
          qflx_floodc(c)    = qflx_floodg(g)
          qflx_runoff(c)    = qflx_drain(c) + qflx_qrgwl(c)
-         qflx_rain_plus_snomelt(c) = qflx_prec_grnd_rain(p) + qflx_snow_drain(c)
+         qflx_rain_plus_snomelt(c) = qflx_liq_grnd(c) + qflx_snow_drain(c)
          qflx_top_soil(c)  = qflx_rain_plus_snomelt(c)
          qflx_ice_runoff_snwcp(c) = qflx_snwcp_ice(c)
 
