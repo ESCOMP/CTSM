@@ -3,11 +3,13 @@
 #####PBS -A P54048000 
 #PBS -A P93300606 
 #PBS -l walltime=00:10:00
-#PBS -q premium
+##PBS -q premium
+#PBS -q share
 ##PBS -q regular
-###PBS -j oe
-##PBS -l select=2:ncpus=2:mpiprocs=4
-#PBS -l select=1:ncpus=1:mpiprocs=2
+#PBS -j oe
+
+#PBS -l select=2:ncpus=2:mpiprocs=4
+##PBS -l select=1:ncpus=1:mpiprocs=2
 ##PBS -l select=1:ncpus=1:mpiprocs=1
 
 ml 

@@ -50,7 +50,7 @@ program demo_lilac_driver
     ! real atmosphere:
     begc       = 1
     !endc       = 10
-    endc       = 6912
+    endc       = 6912/4
     !endc       = 13824
     !endc       = 13968
 

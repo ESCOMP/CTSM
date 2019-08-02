@@ -13,6 +13,9 @@ module lilac_mod
     use lnd_comp_esmf ,  only :         lnd_register
     use cpl_mod       ,  only :         cpl_atm2lnd_register , cpl_lnd2atm_register
 
+    use mpi,             only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
+    use shr_pio_mod,     only : shr_pio_init1, shr_pio_init2
+
     implicit none
 
 
@@ -61,7 +64,7 @@ module lilac_mod
 
         !character(len=*)                                :: atm_mesh_filepath   !!! For now this is hardcoded in the atmos init
 
-        integer                                          :: rc         , urc
+        integer                                          :: rc         , urc 
         character(len=ESMF_MAXSTR)                       :: gcname1    , gcname2   !    Gridded components names
         character(len=ESMF_MAXSTR)                       :: ccname1    , ccname2   !    Coupling components names
         integer                                          :: a2l_fldnum , l2a_fldnum
@@ -78,6 +81,13 @@ module lilac_mod
                                      e_month, e_day, e_hour, e_min
 
 
+        integer                    :: COMP_COMM
+        integer ::  ierr
+        integer                       :: ntasks,mytask ! mpicom size and rank
+
+        integer :: ncomps = 1      ! land only
+
+        !!! above: https://github.com/yudong-tian/LIS-CLM4.5SP/blob/8cec515a628325c73058cfa466db63210cd562ac/pio-xlis-bld/xlis_main.F90
 
 
         !------------------------------------------------------------------------
@@ -91,11 +101,58 @@ module lilac_mod
         print *,  "    Lilac Demo Application Start       "
         print *,  "---------------------------------------"
 
+        !-----------------------------------------------------------------------------
+        ! Initiallize MPI
+        !-----------------------------------------------------------------------------
+
+        ! this is coming from
+        ! /glade/work/mvertens/ctsm.nuopc/cime/src/drivers/nuopc/drivers/cime/esmApp.F90
+        call MPI_init(ierr)
+        COMP_COMM = MPI_COMM_WORLD
+
+        !https://github.com/yudong-tian/LIS-CLM4.5SP/blob/8cec515a628325c73058cfa466db63210cd562ac/xlis-bld/xlis_main.F90
+        if (ierr .ne. MPI_SUCCESS) then
+            print *,'Error starting MPI program. Terminating.'
+            call MPI_ABORT(MPI_COMM_WORLD, ierr)
+        end if
+
+
+
+        !
+
+        call MPI_COMM_RANK(COMP_COMM, mytask, ierr)
+        call MPI_COMM_SIZE(COMP_COMM, ntasks, ierr)
+
+        print *, "MPI initialization done ..., ntasks=", ntasks
+
+        !-----------------------------------------------------------------------------
+        ! Initialize PIO
+        !-----------------------------------------------------------------------------
+
+        ! this is coming from
+        ! /glade/work/mvertens/ctsm.nuopc/cime/src/drivers/nuopc/drivers/cime/esmApp.F90
+        ! with call shr_pio_init1(8, "drv_in", COMP_COMM)
+
+        ! For planned future use of async io using pio2.  The IO tasks are seperated from the compute tasks here
+        ! and COMP_COMM will be MPI_COMM_NULL on the IO tasks which then call shr_pio_init2 and do not return until
+        ! the model completes.  All other tasks call ESMF_Initialize.  8 is the maximum number of component models
+        ! supported
+
+        call shr_pio_init1(ncomps, "drv_in", COMP_COMM)
+        ! NS Question: How many should ncomps (above 1) be??????
+
+        if (COMP_COMM .eq. MPI_COMM_NULL) then
+            !call shr_pio_init2(
+            call mpi_finalize(ierror=rc)
+            stop
+        endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !-------------------------------------------------------------------------
         ! Initialize ESMF, set the default calendar and log type.
         !-------------------------------------------------------------------------
-        call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN, rc=rc)
+        call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN,logappendflag=.false., rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        call ESMF_LogSet(flush=.true.)
         call ESMF_LogWrite(subname//".........................", ESMF_LOGMSG_INFO)
         call ESMF_LogWrite(subname//"Initializing ESMF        ", ESMF_LOGMSG_INFO)
 
@@ -107,7 +164,7 @@ module lilac_mod
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         print *,  "---------------------------------------"
 
-        open(fileunit, status="old", file="./namelist",  action="read", iostat=rc)
+        open(fileunit, status="old", file="namelist_lilac",  action="read", iostat=rc)
 
         if (rc .ne. 0) then
             call ESMF_LogSetError(rcToCheck=ESMF_RC_FILE_OPEN, msg="Failed to open namelist file 'namelist'",  line=__LINE__, file=__FILE__)
@@ -128,6 +185,7 @@ module lilac_mod
         allocate (l2c_fldlist(l2a_fldnum))
         allocate (c2l_fldlist(a2l_fldnum))
         print *, "creating empty field lists !"
+        call ESMF_LogWrite(subname//"EMPTY field lists are created...", ESMF_LOGMSG_INFO)
 
         ! ======================================================================= ! maybe move to create_fldlist?
         !    call create_fldlists(c2a_fldlist, a2c_fldlist, )
@@ -320,8 +378,9 @@ module lilac_mod
         print *, "atmos_cap initialize finished, rc =", rc
 
         rc = ESMF_SUCCESS
-        call ESMF_LogWrite(subname//"now we are initializing CTSM ....", ESMF_LOGMSG_INFO)
-        print *, "now we are initializing CTSM, rc =", rc
+        print *, rc 
+        call ESMF_LogWrite(subname//"Now we are initializing CTSM ....", ESMF_LOGMSG_INFO)
+        print *, "Now we are initializing CTSM, rc =", rc
         call ESMF_GridCompInitialize(land_gcomp       , importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"lnd_cap or land_gcomp initialized", ESMF_LOGMSG_INFO)
