@@ -17,6 +17,7 @@ module LakeHydrologyMod
   ! Also frost / dew is prevented from being added to top snow layers that have already melted during the phase change step.
   !
   ! ! USES
+#include "shr_assert.h"
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use decompMod            , only : bounds_type
   use ColumnType           , only : col                
@@ -39,6 +40,12 @@ module LakeHydrologyMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: LakeHydrology              ! Calculates soil/snow hydrology
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private :: SumFlux_FluxesOntoGround  ! Compute summed fluxes onto ground, for bulk or one tracer
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -102,6 +109,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: p,fp,g,l,c,j,fc,jtop                            ! indices
+    integer  :: i                                               ! index of water tracer or bulk
     real(r8) :: dtime                                           ! land model time step (sec)
     real(r8) :: dz_snowf                                        ! layer thickness rate change due to precipitation [mm/s]
     real(r8) :: bifall(bounds%begc:bounds%endc)                 ! bulk density of newly fallen dry snow [kg/m3]
@@ -224,14 +232,20 @@ contains
       ! Determine step size
       dtime = get_step_size()
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Do precipitation onto ground, etc., from CanopyHydrology
-
-      do fc = 1, num_lakec
-         c = filter_lakec(fc)
-
-         qflx_snow_grnd(c) = forc_snow(c)           ! ice onto ground (mm/s)
-         qflx_liq_grnd(c)  = forc_rain(c)           ! liquid water onto ground (mm/s)
+      ! Compute "summed" (really just copies here) fluxes onto "ground" (really the lake
+      ! surface here), for bulk water and each tracer. (Subroutine name mimics the one in
+      ! CanopyHydrologyMod.)
+      do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+         associate(w => water_inst%bulk_and_tracers(i))
+         call SumFlux_FluxesOntoGround(bounds, &
+              num_lakec, filter_lakec, &
+              ! Inputs
+              forc_snow      = w%wateratm2lnd_inst%forc_snow_downscaled_col(begc:endc), &
+              forc_rain      = w%wateratm2lnd_inst%forc_rain_downscaled_col(begc:endc), &
+              ! Outputs
+              qflx_snow_grnd = w%waterflux_inst%qflx_snow_grnd_col(begc:endc), &
+              qflx_liq_grnd  = w%waterflux_inst%qflx_liq_grnd_col(begc:endc))
+         end associate
       end do
 
       ! Determine snow height and snow water
@@ -695,5 +709,48 @@ contains
     end associate
 
   end subroutine LakeHydrology
+
+   !-----------------------------------------------------------------------
+   subroutine SumFlux_FluxesOntoGround(bounds, &
+        num_lakec, filter_lakec, &
+        forc_snow, forc_rain, &
+        qflx_snow_grnd, qflx_liq_grnd)
+     !
+     ! !DESCRIPTION:
+     ! Compute "summed" (really just copies here) fluxes onto "ground" (really the lake
+     ! surface here), for bulk or one tracer.
+     !
+     ! (Subroutine name mimics the one in CanopyHydrologyMod.)
+     !
+     ! !ARGUMENTS:
+     type(bounds_type), intent(in) :: bounds
+     integer, intent(in) :: num_lakec
+     integer, intent(in) :: filter_lakec(:)
+
+     real(r8) , intent(in)    :: forc_rain( bounds%begc: )         ! atm rain rate [mm/s]
+     real(r8) , intent(in)    :: forc_snow( bounds%begc: )         ! atm snow rate [mm/s]
+
+     real(r8) , intent(inout) :: qflx_snow_grnd( bounds%begc: )    ! snow on ground after interception (mm H2O/s)
+     real(r8) , intent(inout) :: qflx_liq_grnd( bounds%begc: )     ! liquid on ground after interception (mm H2O/s)
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: fc, c
+
+     character(len=*), parameter :: subname = 'SumFlux_FluxesOntoGround'
+     !-----------------------------------------------------------------------
+
+     SHR_ASSERT_FL((ubound(forc_rain, 1) == bounds%endc), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(forc_snow, 1) == bounds%endc), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_snow_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+     SHR_ASSERT_FL((ubound(qflx_liq_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+
+     do fc = 1, num_lakec
+        c = filter_lakec(fc)
+
+        qflx_snow_grnd(c) = forc_snow(c)
+        qflx_liq_grnd(c)  = forc_rain(c)
+     end do
+
+   end subroutine SumFlux_FluxesOntoGround
 
 end module LakeHydrologyMod
