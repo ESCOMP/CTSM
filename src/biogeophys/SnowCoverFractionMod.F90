@@ -49,6 +49,7 @@ module SnowCoverFractionMod
   abstract interface
 
      subroutine Init_Interface(this, bounds, col, glc_behavior, NLFilename, params_ncid)
+       ! Initialize this instance
        use decompMod, only : bounds_type
        use ColumnType, only : column_type
        use glcBehaviorMod, only : glc_behavior_type
@@ -66,6 +67,7 @@ module SnowCoverFractionMod
      subroutine UpdateSnowDepthAndFrac_Interface(this, bounds, num_c, filter_c, &
           urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
           snow_depth, frac_sno)
+       ! Update snow depth and snow fraction
        use decompMod, only : bounds_type
        use shr_kind_mod   , only : r8 => shr_kind_r8
        import :: snow_cover_fraction_type
@@ -89,6 +91,7 @@ module SnowCoverFractionMod
      subroutine AddNewsnowToIntsnow_Interface(this, bounds, num_c, filter_c, &
           newsnow, h2osno_total, frac_sno, &
           int_snow)
+       ! Add new snow to integrated snow fall
        use decompMod, only : bounds_type
        use shr_kind_mod   , only : r8 => shr_kind_r8
        import :: snow_cover_fraction_type
@@ -105,6 +108,7 @@ module SnowCoverFractionMod
      end subroutine AddNewsnowToIntsnow_Interface
 
      pure function FracSnowDuringMelt_Interface(this, c, h2osno_total, int_snow) result(frac_sno)
+       ! Single-point function: return fractional snow cover during melt
        use shr_kind_mod   , only : r8 => shr_kind_r8
        import :: snow_cover_fraction_type
 
