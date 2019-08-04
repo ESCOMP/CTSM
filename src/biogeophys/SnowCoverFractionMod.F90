@@ -634,8 +634,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
-    real(r8) :: fsno_new
-    real(r8) :: fmelt
     real(r8) :: z_avg                                 ! grid cell average snow depth
 
     character(len=*), parameter :: subname = 'UpdateSnowDepthAndFracClm5'
@@ -665,8 +663,7 @@ contains
 
           ! update fsca by new snow event, add to previous fsca
           if (newsnow(c) > 0._r8) then
-             fsno_new = 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
-             frac_sno(c) = fsno_new
+             frac_sno(c) = 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
           end if
 
           !====================================================================
@@ -687,7 +684,6 @@ contains
           ! initialize frac_sno and snow_depth when no snow present initially
           if (newsnow(c) > 0._r8) then
              z_avg = newsnow(c)/bifall(c)
-             fmelt=newsnow(c)
              frac_sno(c) = tanh(this%accum_factor * newsnow(c))
 
              ! update snow_depth to be consistent with frac_sno, z_avg
