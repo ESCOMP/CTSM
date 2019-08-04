@@ -2455,20 +2455,20 @@ Changes in this value should possibly be accompanied by changes in:
 </entry>
 
 <entry id="int_snow_max" type="real" category="clm_physics"
-       group="scf_clm5_inparm" valid_values="" >
+       group="scf_sl12_inparm" valid_values="" >
 Limit applied to integrated snowfall when determining changes in snow-covered fraction during melt
 (mm H2O)
-Only applies when using the CLM5 snow cover fraction method
+Only applies when using the SL12 snow cover fraction method
 </entry>
 
 <entry id="n_melt_glcmec" type="real" category="clm_physics"
-       group="scf_clm5_inparm" valid_values="" >
+       group="scf_sl12_inparm" valid_values="" >
 SCA shape parameter for glc_mec (glacier multiple elevation class) columns
 For most columns, n_melt is based on the standard deviation of 1km topography in the grid cell;
 but glc_mec columns already account for subgrid topographic variability through their use of
 multiple elevation classes; thus, to avoid double-accounting for topographic variability
 in these columns, we use a fixed value of n_melt.
-Only applies when using the CLM5 snow cover fraction method
+Only applies when using the SL12 snow cover fraction method
 </entry>
 
 <entry id="wind_dependent_snow_density" type="logical" category="clm_physics"
@@ -2564,10 +2564,10 @@ differently in areas below and above reset_snow_glc_ela.
 </entry>
 
 <entry id="snow_cover_fraction_method" type="char*64" category="clm_physics"
-       group="clm_inparm" valid_values="ny07,clm5" >
+       group="clm_inparm" valid_values="ny07,sl12" >
 Parameterization to use for snow cover fraction
 ny07: Niu and Yang 2007
-clm5: Newer method, default in CLM5
+sl12: Swenson and Lawrence 2012
 </entry>
 
 <!-- ========================================================================================  -->

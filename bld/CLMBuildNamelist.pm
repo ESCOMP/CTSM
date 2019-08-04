@@ -1685,9 +1685,9 @@ sub process_namelist_inline_logic {
   setup_logic_hydrology_switches($opts, $nl_flags, $definition, $defaults, $nl);
 
   #######################################################################
-  # namelist group: scf_clm5_inparm                                     #
+  # namelist group: scf_sl12_inparm                                     #
   #######################################################################
-  setup_logic_scf_clm5($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_scf_sl12($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: clm_initinterp_inparm #
@@ -3553,20 +3553,20 @@ sub setup_logic_snowpack {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_scf_clm5 {
-   # Options related to the clm5 snow cover fraction method
+sub setup_logic_scf_sl12 {
+   # Options related to the sl12 snow cover fraction method
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'clm5') {
+  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'sl12') {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'int_snow_max');
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_melt_glcmec');
   }
   else {
      if (defined($nl->get_value('int_snow_max'))) {
-        $log->fatal_error('int_snow_max is set, but only applies for snow_cover_fraction_method=clm5');
+        $log->fatal_error('int_snow_max is set, but only applies for snow_cover_fraction_method=sl12');
      }
      if (defined($nl->get_value('n_melt_glcmec'))) {
-        $log->fatal_error('n_melt_glcmec is set, but only applies for snow_cover_fraction_method=clm5');
+        $log->fatal_error('n_melt_glcmec is set, but only applies for snow_cover_fraction_method=sl12');
      }
   }
 }
@@ -3717,8 +3717,8 @@ sub write_output_files {
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
   push @groups, "clm_canopy_inparm";
-  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'clm5') {
-     push @groups, "scf_clm5_inparm";
+  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'sl12') {
+     push @groups, "scf_sl12_inparm";
   }
 
   my $outfile;
