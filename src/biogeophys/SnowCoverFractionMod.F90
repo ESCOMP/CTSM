@@ -315,29 +315,28 @@ contains
     do fc = 1, num_c
        c = filter_c(fc)
 
-       if (h2osno_total(c) > 0.0) then
-          snow_depth(c) = snow_depth(c) + newsnow(c) / bifall(c)
-          if(snow_depth(c) > 0.0_r8)  then
-             frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * this%zlnd * &
-                  (min(800._r8,(h2osno_total(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
-          end if
-          if(h2osno_total(c) < 1.0_r8)  then
-             frac_sno(c)=min(frac_sno(c),h2osno_total(c))
-          end if
+       if (h2osno_total(c) == 0.0_r8) then
+          ! NOTE(wjs, 2019-08-03) This resetting of snow_depth to 0 when h2osno_total is
+          ! 0 may already be done elsewhere; if it isn't, it probably *should* be done
+          ! elsewhere rather than here.
+          snow_depth(c) = 0._r8
+       end if
 
-       else !h2osno_total == 0
-          ! initialize frac_sno and snow_depth when no snow present initially
-          if (newsnow(c) > 0._r8) then
-             snow_depth(c) = newsnow(c) / bifall(c)
-             if(snow_depth(c) > 0.0_r8)  then
-                frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * this%zlnd * &
-                     (min(800._r8,newsnow(c)/snow_depth(c))/100._r8)**1._r8) )
-             end if
-          else
-             snow_depth(c) = 0._r8
-             frac_sno(c) = 0._r8
-          end if
-       end if ! end of h2osno_total > 0
+       snow_depth(c) = snow_depth(c) + newsnow(c) / bifall(c)
+
+       if (snow_depth(c) > 0.0_r8) then
+          frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * this%zlnd * &
+               (min(800._r8,(h2osno_total(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
+       else
+          frac_sno(c) = 0._r8
+       end if
+
+       ! NOTE(wjs, 2019-08-03) I'm not sure what the intent is of the following block, and
+       ! it feels to me like this should be looking at (h2osno_total+newsnow), both in the
+       ! condition and in the min, but for now I'm keeping the pre-existing logic.
+       if (h2osno_total(c) > 0.0_r8 .and. h2osno_total(c) < 1.0_r8) then
+          frac_sno(c) = min(frac_sno(c), h2osno_total(c))
+       end if
     end do
 
   end subroutine UpdateSnowDepthAndFracNY07
