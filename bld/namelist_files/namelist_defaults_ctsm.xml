@@ -329,7 +329,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      to .true. -->
 <reset_snow_glc_ela>1.e9</reset_snow_glc_ela>
 
-<snow_cover_fraction_method>sl12</snow_cover_fraction_method>
+<snow_cover_fraction_method>SwensonLawrence2012</snow_cover_fraction_method>
 
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo

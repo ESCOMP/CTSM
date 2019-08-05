@@ -120,44 +120,44 @@ module SnowCoverFractionMod
      end function FracSnowDuringMelt_Interface
   end interface
 
-  type, extends(snow_cover_fraction_type) :: snow_cover_fraction_ny07_type
+  type, extends(snow_cover_fraction_type) :: snow_cover_fraction_niu_yang_2007_type
      ! This implements the N&Y07 (Niu & Yang 2007) parameterization of snow cover fraction
      private
      real(r8) :: zlnd = -999._r8  ! Roughness length for soil (m)
    contains
-     procedure, public :: Init => InitNY07
-     procedure, public :: UpdateSnowDepthAndFrac => UpdateSnowDepthAndFracNY07
-     procedure, public :: AddNewsnowToIntsnow => AddNewsnowToIntsnowNY07
-     procedure, public :: FracSnowDuringMelt => FracSnowDuringMeltNY07
+     procedure, public :: Init => InitNiuYang2007
+     procedure, public :: UpdateSnowDepthAndFrac => UpdateSnowDepthAndFracNiuYang2007
+     procedure, public :: AddNewsnowToIntsnow => AddNewsnowToIntsnowNiuYang2007
+     procedure, public :: FracSnowDuringMelt => FracSnowDuringMeltNiuYang2007
 
-     procedure, private :: ReadParamsNY07
-  end type snow_cover_fraction_ny07_type
+     procedure, private :: ReadParamsNiuYang2007
+  end type snow_cover_fraction_niu_yang_2007_type
 
-  interface snow_cover_fraction_ny07_type
-     module procedure ConstructorNY07
-  end interface snow_cover_fraction_ny07_type
+  interface snow_cover_fraction_niu_yang_2007_type
+     module procedure ConstructorNiuYang2007
+  end interface snow_cover_fraction_niu_yang_2007_type
 
-  type, extends(snow_cover_fraction_type) :: snow_cover_fraction_sl12_type
+  type, extends(snow_cover_fraction_type) :: snow_cover_fraction_swenson_lawrence_2012_type
      ! This implements the S&L12 (Swenson & Lawrence 2012) parameterization of snow cover fraction
      private
      real(r8) :: int_snow_max = -999._r8  ! limit applied to integrated snowfall when determining changes in snow-covered fraction during melt (mm H2O)
      real(r8) :: accum_factor = -999._r8  ! Accumulation constant for fractional snow covered area (unitless)
      real(r8), allocatable :: n_melt(:)   ! SCA shape parameter
    contains
-     procedure, public :: Init => InitSL12
-     procedure, public :: UpdateSnowDepthAndFrac => UpdateSnowDepthAndFracSL12
-     procedure, public :: AddNewsnowToIntsnow => AddNewsnowToIntsnowSL12
-     procedure, public :: FracSnowDuringMelt => FracSnowDuringMeltSL12
+     procedure, public :: Init => InitSwensonLawrence2012
+     procedure, public :: UpdateSnowDepthAndFrac => UpdateSnowDepthAndFracSwensonLawrence2012
+     procedure, public :: AddNewsnowToIntsnow => AddNewsnowToIntsnowSwensonLawrence2012
+     procedure, public :: FracSnowDuringMelt => FracSnowDuringMeltSwensonLawrence2012
 
-     procedure, private :: ReadNamelistSL12
-     procedure, private :: ReadParamsSL12
-     procedure, private :: CheckValidInputsSL12
-     procedure, private :: SetDerivedParametersSL12
-  end type snow_cover_fraction_sl12_type
+     procedure, private :: ReadNamelistSwensonLawrence2012
+     procedure, private :: ReadParamsSwensonLawrence2012
+     procedure, private :: CheckValidInputsSwensonLawrence2012
+     procedure, private :: SetDerivedParametersSwensonLawrence2012
+  end type snow_cover_fraction_swenson_lawrence_2012_type
 
-  interface snow_cover_fraction_sl12_type
-     module procedure ConstructorSL12
-  end interface snow_cover_fraction_sl12_type
+  interface snow_cover_fraction_swenson_lawrence_2012_type
+     module procedure ConstructorSwensonLawrence2012
+  end interface snow_cover_fraction_swenson_lawrence_2012_type
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -192,12 +192,12 @@ contains
     !-----------------------------------------------------------------------
 
     select case (snow_cover_fraction_method)
-    case ('sl12')
+    case ('SwensonLawrence2012')
        allocate(scf_method, &
-            source = snow_cover_fraction_sl12_type())
-    case ('ny07')
+            source = snow_cover_fraction_swenson_lawrence_2012_type())
+    case ('NiuYang2007')
        allocate(scf_method, &
-            source = snow_cover_fraction_ny07_type())
+            source = snow_cover_fraction_niu_yang_2007_type())
     case default
        write(iulog,*) subname//' ERROR: unknown snow_cover_fraction_method: ', &
             snow_cover_fraction_method
@@ -218,19 +218,19 @@ contains
   ! Methods for N&Y07 (Niu & Yang 2007) parameterization
   ! ========================================================================
 
-  function ConstructorNY07()
-    type(snow_cover_fraction_ny07_type) :: ConstructorNY07
+  function ConstructorNiuYang2007()
+    type(snow_cover_fraction_niu_yang_2007_type) :: ConstructorNiuYang2007
     ! DO NOTHING (simply return a variable of the appropriate type)
-  end function ConstructorNY07
+  end function ConstructorNiuYang2007
 
   !-----------------------------------------------------------------------
-  subroutine InitNY07(this, bounds, col, glc_behavior, NLFilename, params_ncid)
+  subroutine InitNiuYang2007(this, bounds, col, glc_behavior, NLFilename, params_ncid)
     !
     ! !DESCRIPTION:
-    ! Initialize this instance of the NY07 parameterization
+    ! Initialize this instance of the NiuYang2007 parameterization
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_ny07_type) , intent(inout) :: this
+    class(snow_cover_fraction_niu_yang_2007_type) , intent(inout) :: this
     type(bounds_type)       , intent(in)    :: bounds
     type(column_type)       , intent(in)    :: col
     type(glc_behavior_type) , intent(in)    :: glc_behavior
@@ -239,7 +239,7 @@ contains
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter             :: subname = 'InitNY07'
+    character(len=*), parameter             :: subname = 'InitNiuYang2007'
     !-----------------------------------------------------------------------
 
     if (use_subgrid_fluxes) then
@@ -248,41 +248,41 @@ contains
        call endrun('N&Y07 snow cover fraction parameterization incompatible with use_subgrid_fluxes')
     end if
 
-    call this%ReadParamsNY07( &
+    call this%ReadParamsNiuYang2007( &
          params_ncid = params_ncid)
 
-  end subroutine InitNY07
+  end subroutine InitNiuYang2007
 
   !-----------------------------------------------------------------------
-  subroutine ReadParamsNY07(this, params_ncid)
+  subroutine ReadParamsNiuYang2007(this, params_ncid)
     !
     ! !DESCRIPTION:
-    ! Read netCDF parameters needed for the NY07 method
+    ! Read netCDF parameters needed for the NiuYang2007 method
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_ny07_type) , intent(inout) :: this
+    class(snow_cover_fraction_niu_yang_2007_type) , intent(inout) :: this
     type(file_desc_t) , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'ReadParamsNY07'
+    character(len=*), parameter :: subname = 'ReadParamsNiuYang2007'
     !-----------------------------------------------------------------------
 
     ! Roughness length for soil (m)
     call readNcdioScalar(params_ncid, 'zlnd', subname, this%zlnd)
 
-  end subroutine ReadParamsNY07
+  end subroutine ReadParamsNiuYang2007
 
   !-----------------------------------------------------------------------
-  subroutine UpdateSnowDepthAndFracNY07(this, bounds, num_c, filter_c, &
+  subroutine UpdateSnowDepthAndFracNiuYang2007(this, bounds, num_c, filter_c, &
        urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
        snow_depth, frac_sno)
     !
     ! !DESCRIPTION:
-    ! Update snow depth and snow fraction using the NY07 parameterization
+    ! Update snow depth and snow fraction using the NiuYang2007 parameterization
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_ny07_type), intent(in) :: this
+    class(snow_cover_fraction_niu_yang_2007_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
@@ -300,7 +300,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fc, c
 
-    character(len=*), parameter :: subname = 'UpdateSnowDepthAndFracNY07'
+    character(len=*), parameter :: subname = 'UpdateSnowDepthAndFracNiuYang2007'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(urbpoi, 1) == bounds%endc), sourcefile, __LINE__)
@@ -339,20 +339,20 @@ contains
        end if
     end do
 
-  end subroutine UpdateSnowDepthAndFracNY07
+  end subroutine UpdateSnowDepthAndFracNiuYang2007
 
   !-----------------------------------------------------------------------
-  subroutine AddNewsnowToIntsnowNY07(this, bounds, num_c, filter_c, &
+  subroutine AddNewsnowToIntsnowNiuYang2007(this, bounds, num_c, filter_c, &
        newsnow, h2osno_total, frac_sno, &
        int_snow)
     !
     ! !DESCRIPTION:
     ! Add new snow to integrated snow fall
     !
-    ! This is straightforward for this NY07 parameterization
+    ! This is straightforward for this NiuYang2007 parameterization
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_ny07_type), intent(in) :: this
+    class(snow_cover_fraction_niu_yang_2007_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
@@ -365,7 +365,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fc, c
 
-    character(len=*), parameter :: subname = 'AddNewsnowToIntsnowNY07'
+    character(len=*), parameter :: subname = 'AddNewsnowToIntsnowNiuYang2007'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(newsnow, 1) == bounds%endc), sourcefile, __LINE__)
@@ -378,10 +378,10 @@ contains
        int_snow(c) = int_snow(c) + newsnow(c)
     end do
 
-  end subroutine AddNewsnowToIntsnowNY07
+  end subroutine AddNewsnowToIntsnowNiuYang2007
 
   !-----------------------------------------------------------------------
-  pure function FracSnowDuringMeltNY07(this, c, h2osno_total, int_snow) result(frac_sno)
+  pure function FracSnowDuringMeltNiuYang2007(this, c, h2osno_total, int_snow) result(frac_sno)
     !
     ! !DESCRIPTION:
     ! Single-point function giving frac_snow during times when the snow pack is melting
@@ -393,37 +393,37 @@ contains
     !
     ! !ARGUMENTS:
     real(r8) :: frac_sno  ! function result
-    class(snow_cover_fraction_ny07_type), intent(in) :: this
+    class(snow_cover_fraction_niu_yang_2007_type), intent(in) :: this
     integer , intent(in) :: c            ! column we're operating on
     real(r8), intent(in) :: h2osno_total ! total snow water (mm H2O)
     real(r8), intent(in) :: int_snow     ! integrated snowfall (mm H2O)
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'FracSnowDuringMeltNY07'
+    character(len=*), parameter :: subname = 'FracSnowDuringMeltNiuYang2007'
     !-----------------------------------------------------------------------
 
     frac_sno = nan
 
-  end function FracSnowDuringMeltNY07
+  end function FracSnowDuringMeltNiuYang2007
 
   ! ========================================================================
-  ! Methods for SL12 parameterization
+  ! Methods for SwensonLawrence2012 parameterization
   ! ========================================================================
 
-  function ConstructorSL12()
-    type(snow_cover_fraction_sl12_type) :: ConstructorSL12
+  function ConstructorSwensonLawrence2012()
+    type(snow_cover_fraction_swenson_lawrence_2012_type) :: ConstructorSwensonLawrence2012
     ! DO NOTHING (simply return a variable of the appropriate type)
-  end function ConstructorSL12
+  end function ConstructorSwensonLawrence2012
 
   !-----------------------------------------------------------------------
-  subroutine InitSL12(this, bounds, col, glc_behavior, NLFilename, params_ncid)
+  subroutine InitSwensonLawrence2012(this, bounds, col, glc_behavior, NLFilename, params_ncid)
     !
     ! !DESCRIPTION:
-    ! Initialize this instance of the SL12 parameterization
+    ! Initialize this instance of the SwensonLawrence2012 parameterization
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_sl12_type) , intent(inout) :: this
+    class(snow_cover_fraction_swenson_lawrence_2012_type) , intent(inout) :: this
     type(bounds_type)       , intent(in)    :: bounds
     type(column_type)       , intent(in)    :: col
     type(glc_behavior_type) , intent(in)    :: glc_behavior
@@ -434,38 +434,38 @@ contains
     real(r8)                                :: n_melt_coef    ! n_melt parameter (unitless)
     real(r8) :: n_melt_glcmec  ! SCA shape parameter for glc_mec columns
 
-    character(len=*), parameter :: subname = 'InitSL12'
+    character(len=*), parameter :: subname = 'InitSwensonLawrence2012'
     !-----------------------------------------------------------------------
 
-    call this%ReadNamelistSL12( &
+    call this%ReadNamelistSwensonLawrence2012( &
          NLFilename = NLFilename, &
          n_melt_glcmec = n_melt_glcmec)
 
-    call this%ReadParamsSL12( &
+    call this%ReadParamsSwensonLawrence2012( &
          params_ncid = params_ncid, &
          n_melt_coef = n_melt_coef)
 
     if (masterproc) then
-       call this%CheckValidInputsSL12( &
+       call this%CheckValidInputsSwensonLawrence2012( &
             n_melt_glcmec = n_melt_glcmec)
     end if
 
-    call this%SetDerivedParametersSL12( &
+    call this%SetDerivedParametersSwensonLawrence2012( &
          bounds        = bounds, &
          col           = col, &
          glc_behavior  = glc_behavior, &
          n_melt_coef   = n_melt_coef, &
          n_melt_glcmec = n_melt_glcmec)
 
-  end subroutine InitSL12
+  end subroutine InitSwensonLawrence2012
 
   !-----------------------------------------------------------------------
-  subroutine ReadNamelistSL12(this, NLFilename, n_melt_glcmec)
+  subroutine ReadNamelistSwensonLawrence2012(this, NLFilename, n_melt_glcmec)
     ! !DESCRIPTION:
-    ! Read namelist values needed for SL12 parameterization
+    ! Read namelist values needed for SwensonLawrence2012 parameterization
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_sl12_type), intent(inout) :: this
+    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(inout) :: this
     character(len=*) , intent(in)  :: NLFilename    ! Namelist filename
     real(r8)         , intent(out) :: n_melt_glcmec ! SCA shape parameter for glc_mec columns
     !
@@ -476,12 +476,12 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: nmlname = 'scf_sl12_inparm'
+    character(len=*), parameter :: nmlname = 'scf_swenson_lawrence_2012_inparm'
 
-    character(len=*), parameter :: subname = 'ReadNamelistSL12'
+    character(len=*), parameter :: subname = 'ReadNamelistSwensonLawrence2012'
     !-----------------------------------------------------------------------
 
-    namelist /scf_sl12_inparm/ int_snow_max, n_melt_glcmec
+    namelist /scf_swenson_lawrence_2012_inparm/ int_snow_max, n_melt_glcmec
 
     int_snow_max = nan
     n_melt_glcmec = nan
@@ -492,7 +492,7 @@ contains
        call opnfil (NLFilename, unitn, 'F')
        call shr_nl_find_group_name(unitn, nmlname, status=ierr)
        if (ierr == 0) then
-          read(unitn, nml=scf_sl12_inparm, iostat=ierr)
+          read(unitn, nml=scf_swenson_lawrence_2012_inparm, iostat=ierr)
           if (ierr /= 0) then
              call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
           end if
@@ -510,26 +510,26 @@ contains
     if (masterproc) then
        write(iulog,*) ' '
        write(iulog,*) nmlname // ' settings:'
-       write(iulog, nml=scf_sl12_inparm)
+       write(iulog, nml=scf_swenson_lawrence_2012_inparm)
        write(iulog,*) ' '
     end if
 
-  end subroutine ReadNamelistSL12
+  end subroutine ReadNamelistSwensonLawrence2012
 
   !-----------------------------------------------------------------------
-  subroutine ReadParamsSL12(this, params_ncid, n_melt_coef)
+  subroutine ReadParamsSwensonLawrence2012(this, params_ncid, n_melt_coef)
     !
     ! !DESCRIPTION:
-    ! Read netCDF parameters needed for the SL12 method
+    ! Read netCDF parameters needed for the SwensonLawrence2012 method
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_sl12_type), intent(inout) :: this
+    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(inout) :: this
     type(file_desc_t) , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
     real(r8)          , intent(out)   :: n_melt_coef ! n_melt parameter (unitless)
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'ReadParamsSL12'
+    character(len=*), parameter :: subname = 'ReadParamsSwensonLawrence2012'
     !-----------------------------------------------------------------------
 
     ! Accumulation constant for fractional snow covered area (unitless)
@@ -538,21 +538,21 @@ contains
     ! n_melt parameter (unitless)
     call readNcdioScalar(params_ncid, 'n_melt_coef', subname, n_melt_coef)
 
-  end subroutine ReadParamsSL12
+  end subroutine ReadParamsSwensonLawrence2012
 
   !-----------------------------------------------------------------------
-  subroutine CheckValidInputsSL12(this, n_melt_glcmec)
+  subroutine CheckValidInputsSwensonLawrence2012(this, n_melt_glcmec)
     !
     ! !DESCRIPTION:
     ! Check for validity of parameters read from namelist and netCDF
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_sl12_type), intent(in) :: this
+    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(in) :: this
     real(r8), intent(in) :: n_melt_glcmec  ! SCA shape parameter for glc_mec columns
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'CheckValidInputsSL12'
+    character(len=*), parameter :: subname = 'CheckValidInputsSwensonLawrence2012'
     !-----------------------------------------------------------------------
 
     if (this%int_snow_max <= 0.0_r8) then
@@ -567,16 +567,16 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
-  end subroutine CheckValidInputsSL12
+  end subroutine CheckValidInputsSwensonLawrence2012
 
   !-----------------------------------------------------------------------
-  subroutine SetDerivedParametersSL12(this, bounds, col, glc_behavior, n_melt_coef, n_melt_glcmec)
+  subroutine SetDerivedParametersSwensonLawrence2012(this, bounds, col, glc_behavior, n_melt_coef, n_melt_glcmec)
     !
     ! !DESCRIPTION:
     ! Set parameters that are derived from other inputs
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_sl12_type), intent(inout) :: this
+    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(inout) :: this
     type(bounds_type)       , intent(in) :: bounds
     type(column_type)       , intent(in) :: col
     type(glc_behavior_type) , intent(in) :: glc_behavior
@@ -586,7 +586,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: c, g
 
-    character(len=*), parameter :: subname = 'SetDerivedParametersSL12'
+    character(len=*), parameter :: subname = 'SetDerivedParametersSwensonLawrence2012'
     !-----------------------------------------------------------------------
 
     allocate(this%n_melt(bounds%begc:bounds%endc))
@@ -605,18 +605,18 @@ contains
        end if
     end do
 
-  end subroutine SetDerivedParametersSL12
+  end subroutine SetDerivedParametersSwensonLawrence2012
 
   !-----------------------------------------------------------------------
-  subroutine UpdateSnowDepthAndFracSL12(this, bounds, num_c, filter_c, &
+  subroutine UpdateSnowDepthAndFracSwensonLawrence2012(this, bounds, num_c, filter_c, &
        urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
        snow_depth, frac_sno)
     !
     ! !DESCRIPTION:
-    ! Update snow depth and snow fraction using the SL12 parameterization
+    ! Update snow depth and snow fraction using the SwensonLawrence2012 parameterization
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_sl12_type), intent(in) :: this
+    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
@@ -635,7 +635,7 @@ contains
     integer  :: fc, c
     real(r8) :: z_avg                                 ! grid cell average snow depth
 
-    character(len=*), parameter :: subname = 'UpdateSnowDepthAndFracSL12'
+    character(len=*), parameter :: subname = 'UpdateSnowDepthAndFracSwensonLawrence2012'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(urbpoi, 1) == bounds%endc), sourcefile, __LINE__)
@@ -698,21 +698,21 @@ contains
        end if
     end do
 
-  end subroutine UpdateSnowDepthAndFracSL12
+  end subroutine UpdateSnowDepthAndFracSwensonLawrence2012
 
   !-----------------------------------------------------------------------
-  subroutine AddNewsnowToIntsnowSL12(this, bounds, num_c, filter_c, &
+  subroutine AddNewsnowToIntsnowSwensonLawrence2012(this, bounds, num_c, filter_c, &
        newsnow, h2osno_total, frac_sno, &
        int_snow)
     !
     ! !DESCRIPTION:
     ! Add new snow to integrated snow fall
     !
-    ! For this SL12 parameterization, this involves some care to ensure consistency
+    ! For this SwensonLawrence2012 parameterization, this involves some care to ensure consistency
     ! between int_snow and other terms.
     !
     ! !ARGUMENTS:
-    class(snow_cover_fraction_sl12_type), intent(in) :: this
+    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
@@ -726,7 +726,7 @@ contains
     integer  :: fc, c
     real(r8) :: temp_intsnow    ! temporary version of int_snow
 
-    character(len=*), parameter :: subname = 'AddNewsnowToIntsnowSL12'
+    character(len=*), parameter :: subname = 'AddNewsnowToIntsnowSwensonLawrence2012'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(newsnow, 1) == bounds%endc), sourcefile, __LINE__)
@@ -752,17 +752,17 @@ contains
        int_snow(c) = int_snow(c) + newsnow(c)
     end do
 
-  end subroutine AddNewsnowToIntsnowSL12
+  end subroutine AddNewsnowToIntsnowSwensonLawrence2012
 
   !-----------------------------------------------------------------------
-  pure function FracSnowDuringMeltSL12(this, c, h2osno_total, int_snow) result(frac_sno)
+  pure function FracSnowDuringMeltSwensonLawrence2012(this, c, h2osno_total, int_snow) result(frac_sno)
     !
     ! !DESCRIPTION:
     ! Single-point function giving frac_snow during times when the snow pack is melting
     !
     ! !ARGUMENTS:
     real(r8) :: frac_sno  ! function result
-    class(snow_cover_fraction_sl12_type), intent(in) :: this
+    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(in) :: this
     integer , intent(in) :: c            ! column we're operating on
     real(r8), intent(in) :: h2osno_total ! total snow water (mm H2O)
     real(r8), intent(in) :: int_snow     ! integrated snowfall (mm H2O)
@@ -771,7 +771,7 @@ contains
     real(r8) :: int_snow_limited  ! integrated snowfall, limited to be no greater than int_snow_max [mm]
     real(r8) :: smr
 
-    character(len=*), parameter :: subname = 'FracSnowDuringMeltSL12'
+    character(len=*), parameter :: subname = 'FracSnowDuringMeltSwensonLawrence2012'
     !-----------------------------------------------------------------------
 
     int_snow_limited = min(int_snow, this%int_snow_max)
@@ -779,6 +779,6 @@ contains
 
     frac_sno = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(this%n_melt(c))
 
-  end function FracSnowDuringMeltSL12
+  end function FracSnowDuringMeltSwensonLawrence2012
 
 end module SnowCoverFractionMod

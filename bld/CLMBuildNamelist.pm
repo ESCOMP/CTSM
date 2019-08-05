@@ -1685,9 +1685,9 @@ sub process_namelist_inline_logic {
   setup_logic_hydrology_switches($opts, $nl_flags, $definition, $defaults, $nl);
 
   #######################################################################
-  # namelist group: scf_sl12_inparm                                     #
+  # namelist group: scf_swenson_lawrence_2012_inparm                    #
   #######################################################################
-  setup_logic_scf_sl12($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_scf_SwensonLawrence2012($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: clm_initinterp_inparm #
@@ -2760,8 +2760,8 @@ sub setup_logic_hydrology_switches {
   if ( $h2osfcflag == 1 && ! &value_is_true($subgrid) ) {
     $log->fatal_error("if h2osfcflag is ON, use_subgrid_fluxes can NOT be off!");
   }
-  if ( remove_leading_and_trailing_quotes($scf_method) eq 'ny07' && &value_is_true($subgrid) ) {
-     $log->fatal_error("snow_cover_fraction_method ny07 is incompatible with use_subgrid_fluxes");
+  if ( remove_leading_and_trailing_quotes($scf_method) eq 'NiuYang2007' && &value_is_true($subgrid) ) {
+     $log->fatal_error("snow_cover_fraction_method NiuYang2007 is incompatible with use_subgrid_fluxes");
   }
   # Test bad configurations
   my $lower   = $nl->get_value( 'lower_boundary_condition'  );
@@ -3553,20 +3553,20 @@ sub setup_logic_snowpack {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_scf_sl12 {
-   # Options related to the sl12 snow cover fraction method
+sub setup_logic_scf_SwensonLawrence2012 {
+   # Options related to the SwensonLawrence2012 snow cover fraction method
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'sl12') {
+  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'int_snow_max');
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_melt_glcmec');
   }
   else {
      if (defined($nl->get_value('int_snow_max'))) {
-        $log->fatal_error('int_snow_max is set, but only applies for snow_cover_fraction_method=sl12');
+        $log->fatal_error('int_snow_max is set, but only applies for snow_cover_fraction_method=SwensonLawrence2012');
      }
      if (defined($nl->get_value('n_melt_glcmec'))) {
-        $log->fatal_error('n_melt_glcmec is set, but only applies for snow_cover_fraction_method=sl12');
+        $log->fatal_error('n_melt_glcmec is set, but only applies for snow_cover_fraction_method=SwensonLawrence2012');
      }
   }
 }
@@ -3717,8 +3717,8 @@ sub write_output_files {
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
   push @groups, "clm_canopy_inparm";
-  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'sl12') {
-     push @groups, "scf_sl12_inparm";
+  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
+     push @groups, "scf_swenson_lawrence_2012_inparm";
   }
 
   my $outfile;
