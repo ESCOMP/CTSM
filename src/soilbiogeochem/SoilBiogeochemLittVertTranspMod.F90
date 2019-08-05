@@ -171,8 +171,8 @@ contains
          altmax_lastyear  => canopystate_inst%altmax_lastyear_col       ,  & ! Input:  [real(r8) (:)   ]  prior year maximum annual depth of thaw                  
 
          som_adv_coef     => soilbiogeochem_state_inst%som_adv_coef_col ,  & ! Output: [real(r8) (:,:) ]  SOM advective flux (m/s)                               
-         som_diffus_coef  => soilbiogeochem_state_inst%som_diffus_coef_col, & ! Output: [real(r8) (:,:) ]  SOM diffusivity due to bio/cryo-turbation (m2/s)  
-         tri_ma_vr        => soilbiogeochem_carbonflux_inst%tri_ma_vr &
+         som_diffus_coef  => soilbiogeochem_state_inst%som_diffus_coef_col,& ! Output: [real(r8) (:,:) ]  SOM diffusivity due to bio/cryo-turbation (m2/s)  
+         tri_ma_vr        => soilbiogeochem_carbonflux_inst%tri_ma_vr &      ! Output: [real(r8) (:,:) ]  Vertical CN transfer rate in sparse matrix format (gC*m3)/(gC*m3*step))
          )
 
       !Set parameters of vertical mixing of SOM

@@ -28,16 +28,7 @@ module SoilBiogeochemNitrogenStateType
   type, public :: soilbiogeochem_nitrogenstate_type
 
      real(r8), pointer :: decomp_npools_vr_col         (:,:,:) ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools
-     real(r8), pointer :: matrix_cap_decomp_npools_vr_col         (:,:,:) ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools
-     real(r8), pointer :: decomp0_npools_vr_col         (:,:,:) ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools
-     real(r8), pointer :: in_nacc                (:,:)
-     real(r8), pointer :: tran_nacc              (:,:,:)
-     real(r8), pointer :: in_nacc_2d          (:,:,:) ! (gC/m2) accumulated litter fall N input
-     real(r8), pointer :: vert_up_tran_nacc   (:,:,:) ! (gC/m3) accumulated upward vertical N transport
-     real(r8), pointer :: vert_down_tran_nacc (:,:,:) ! (gC/m3) accumulated downward vertical N transport
-     real(r8), pointer :: exit_nacc           (:,:,:) ! (gC/m3) accumulated exit N
-     real(r8), pointer :: hori_tran_nacc      (:,:,:) ! (gC/m3) accumulated N transport between pools at the same level
-     type(sparse_matrix_type) :: AKXnacc              ! (gC/m3) accumulated exit N
+     real(r8), pointer :: decomp0_npools_vr_col        (:,:,:) ! col (gN/m3) vertically-resolved N baseline (initial value of this year) in decomposing (litter, cwd, soil) pools in dimension (col,nlev,npools)
 
      real(r8), pointer :: sminn_vr_col                 (:,:)   ! col (gN/m3) vertically-resolved soil mineral N
      real(r8), pointer :: ntrunc_vr_col                (:,:)   ! col (gN/m3) vertically-resolved column-level sink for N truncation
@@ -51,7 +42,7 @@ module SoilBiogeochemNitrogenStateType
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: decomp_npools_col            (:,:)   ! col (gN/m2)  decomposing (litter, cwd, soil) N pools
      real(r8), pointer :: decomp_npools_1m_col         (:,:)   ! col (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 1 meter
-     real(r8), pointer :: matrix_cap_decomp_npools_col            (:,:)   ! col (gN/m2)  decomposing (litter, cwd, soil) N pools
+     real(r8), pointer :: matrix_cap_decomp_npools_col (:,:)   ! col (gN/m2) N capacity in decomposing (litter, cwd, soil) N pools in dimension (col,npools)
      real(r8), pointer :: sminn_col                    (:)     ! col (gN/m2) soil mineral N
      real(r8), pointer :: ntrunc_col                   (:)     ! col (gN/m2) column-level sink for N truncation
      real(r8), pointer :: cwdn_col                     (:)     ! col (gN/m2) Diagnostic: coarse woody debris N
@@ -67,11 +58,18 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: dyn_nh4bal_adjustments_col (:) ! (gN/m2) NH4 adjustments to each column made in this timestep via dynamic column adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level)
      real(r8)          :: totvegcthresh                  ! threshold for total vegetation carbon to zero out decomposition pools
 
-     !Matrix-cn zgdu
-	 real(r8), pointer :: matrix_npools_vr_col (:,:,:)  !  col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools
-	 real(r8), pointer :: matrix_npools_col    (:,:)    ! (gN/m2)
+     ! Matrix-cn
+     real(r8), pointer :: in_nacc                         (:,:)   ! col (gN/m3/yr) accumulated litter fall N input per year in dimension(col,nlev*npools)
+     real(r8), pointer :: in_nacc_2d                      (:,:,:) ! col (gN/m3/yr) accumulated litter fall N input per year in dimension(col,nlev,npools)
+     real(r8), pointer :: tran_nacc                       (:,:,:) ! col (gN/m3/yr) accumulated N transfers from j to i (col,i,j) per year in dimension(col,nlev*npools,nlev*npools)
+     real(r8), pointer :: vert_up_tran_nacc               (:,:,:) ! col (gN/m3/yr) accumulated upward vertical N transport in dimension(col,nlev,npools)
+     real(r8), pointer :: vert_down_tran_nacc             (:,:,:) ! col (gN/m3/yr) accumulated downward vertical N transport in dimension(col,nlev,npools)
+     real(r8), pointer :: exit_nacc                       (:,:,:) ! col (gN/m3/yr) accumulated exit N in dimension(col,nlev,npools)
+     real(r8), pointer :: hori_tran_nacc                  (:,:,:) ! col (gN/m3/yr) accumulated N transport between pools at the same level in dimension(col,nlev,ntransfers)
+     type(sparse_matrix_type) :: AKXnacc                          ! col (gN/m3/yr) accumulated N transfers from j to i (col,i,j) per year in dimension(col,nlev*npools,nlev*npools) in sparse matrix type
+     real(r8), pointer :: matrix_cap_decomp_npools_vr_col (:,:,:) ! col (gN/m3) vertically-resolved N capacity in decomposing (litter, cwd, soil) pools in dimension(col,nlev,npools)
+     type(vector_type) :: matrix_Ninter                           ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools in dimension(col,nlev*npools) in vector type
 
-     type(vector_type) :: matrix_Ninter
    contains
 
      procedure , public  :: Init   
@@ -423,9 +421,11 @@ contains
              this%ntrunc_vr_col(c,j) = 0._r8
           end do
 
-          do j = 1,decomp_cascade_con%n_all_entries
-             this%AKXnacc%M(c,j) = 0._r8
-          end do
+          if(use_soil_matrixcn)then
+             do j = 1,decomp_cascade_con%n_all_entries
+                this%AKXnacc%M(c,j) = 0._r8
+             end do
+          end if
  
           if ( nlevdecomp > 1 ) then
              do j = nlevdecomp+1, nlevdecomp_full
@@ -990,7 +990,6 @@ contains
           this%decomp_npools_1m_col(i,k) = value_column
           if(use_soil_matrixcn)then
              this%matrix_cap_decomp_npools_col(i,k)    = value_column
-!          this%matrix_npools_col(i,k)    = value_column
           end if
        end do
     end do
@@ -1009,27 +1008,25 @@ contains
        end do
     end do
 
-    do j = 1,nlevdecomp
-       do k = 1, ndecomp_pools
-          do fi = 1, num_column
-             i = filter_column(fi)
-             if(use_soil_matrixcn)then
+    if(use_soil_matrixcn)then
+       do j = 1,nlevdecomp
+          do k = 1, ndecomp_pools
+             do fi = 1, num_column
+                i = filter_column(fi)
                 this%in_nacc_2d(i,j,k)          = value_column
                 this%vert_up_tran_nacc(i,j,k)   = value_column
                 this%vert_down_tran_nacc(i,j,k) = value_column
                 this%exit_nacc(i,j,k) = value_column
-             end if
+             end do
           end do
-       end do
-       do k = 1, ndecomp_cascade_transitions
-          do fi = 1, num_column
-             i = filter_column(fi)
-             if(use_soil_matrixcn)then
+          do k = 1, ndecomp_cascade_transitions
+             do fi = 1, num_column
+                i = filter_column(fi)
                 this%hori_tran_nacc(i,j,k)   = value_column
-             end if
+             end do
           end do
        end do
-    end do
+    end if
 
     if(use_soil_matrixcn)then
        do j = 1,decomp_cascade_con%n_all_entries

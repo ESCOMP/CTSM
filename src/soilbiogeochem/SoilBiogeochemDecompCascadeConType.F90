@@ -138,6 +138,8 @@ contains
   end subroutine init_decomp_cascade_constants
 
  subroutine InitSoilTransfer()
+! Initialize sparse matrix variables and index. Count possible non-zero entries and note their x and y in the matrix.
+! Collect those non-zero entry information, and save them into the list.
 
   use SPMMod         , only : sparse_matrix_type, diag_matrix_type, vector_type
 
