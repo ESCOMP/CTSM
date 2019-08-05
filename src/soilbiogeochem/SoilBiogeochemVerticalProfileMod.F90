@@ -62,7 +62,7 @@ contains
     integer                         , intent(in)    :: num_soilp                               ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:)                         ! filter for soil patches
     type(canopystate_type)          , intent(in)    :: canopystate_inst
-    type(soilstate_type)            , intent(in)    :: soilstate_inst				
+    type(soilstate_type)            , intent(in)    :: soilstate_inst				    
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
     !
     ! !LOCAL VARIABLES:
