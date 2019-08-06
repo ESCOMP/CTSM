@@ -138,7 +138,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 927;
+my $ntests = 928;
 if ( defined($opts{'compare'}) ) {
    $ntests += 588;
 }
@@ -846,6 +846,11 @@ my %failtest = (
                                    },
      "spdotransconflict"          =>{ options=>"-envxml_dir . -bgc sp -use_case 20thC_transient",
                                      namelst=>"do_transient_pfts=T,do_transient_crops=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "dogrossandsp"               =>{ options=>"-envxml_dir . -bgc sp -use_case 20thC_transient",
+                                     namelst=>"do_grossunrep=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
