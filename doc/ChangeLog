@@ -1,4 +1,152 @@
 ===============================================================
+Tag name:  ctsm1.0.dev055
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Aug  6 14:06:50 MDT 2019
+One-line Summary: Modularize snow cover fraction method
+
+Purpose of changes
+------------------
+
+This tag moves the calculation of frac_sno - and the related updates of
+snow_depth - into a new set of classes, with one class for each
+parameterization (Niu & Yang 2007 and Swenson & Lawrence 2012).
+
+Previously, the code always calculated frac_sno the new way, but then
+possibly overwrote it if using the older Niu & Yang method. The new code
+cleans this up, only doing the calculations that are needed for each
+method.
+
+In addition, other code that is specific to one of the two methods is
+now moved to a home that makes this dependence on method explicit. This
+includes the addition of newsnow to int_snow: previously, int_snow was
+always updated using an equation specific to the newer CLM5
+parameterization of frac_sno, which was not appropriate if using the Niu
+& Yang parameterization; this doesn't make a difference currently, since
+int_snow is only referenced if using the Swenson & Lawrence
+parameterization, but this clears up some confusion. Also, time-constant
+parameters read from namelist or the netCDF parameter file now reside in
+the appropriate class rather than being more global.
+
+This tag also renames two namelist options to increase clarity:
+- subgridflag is renamed to use_subgrid_fluxes, and is now a logical
+- oldfflag is renamed to snow_cover_fraction_method, and is now a string
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#502 (oldfflag can NOT be used with
+  subgridflag==1, and rename subgridflag)
+- Resolves ESCOMP/ctsm#503 (Clean up CanopyHydrology)
+  - This tag does the last piece of cleanup called for in that issue
+- Resolves ESCOMP/ctsm#571 (Add a system test: turning on water isotopes
+  shouldn't change answers)
+  - This is unrelated to the other changes in this tag
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+This tag renames two namelist options to increase clarity:
+- subgridflag is renamed to use_subgrid_fluxes, and is now a logical
+- oldfflag is renamed to snow_cover_fraction_method, and is now a string
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Added a LWISO test, which confirms that turning on water isotopes
+  doesn't change answers for bulk
+- Added a test with the newer snow cover fraction method but
+  use_subgrid_fluxes false (testmod no_subgrid_fluxes)
+
+Code reviewed by: Sean Swenson, Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok
+
+    Tests pass; baseline comparisons not done (baseline comparisons
+    expected to differ)
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    hobart ------ pass
+
+  Additional tests: Compared both of these against ctsm1.0.dev052 (which
+  should be bit-for-bit with ctsm1.0.dev054): Both were bit-for-bit:
+
+  ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm45BgcCrop.cheyenne_gnu.clm-no_subgrid_fluxes
+    This is a new test, so did not have baselines; I created baselines
+    from ctsm1.0.dev052 and compared against those
+  SMS_Ly3.f10_f10_musgs.I2000Clm45BgcCrop.cheyenne_intel.clm-oldhyd_monthly
+    This was a temporary test for the sake of running a longer test with
+    the oldhyd testmod. This testmod was created as a one-off by
+    changing the current oldhyd testmod to inherit from monthly rather
+    than default. I ran baselines like this from ctsm1.0.dev052 then ran
+    this test from this branch and compared against those baselines.
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/ctsm/pull/769
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev054
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Aug  2 07:57:51 MDT 2019
