@@ -331,19 +331,19 @@ contains
                                     ideadcroot,ideadcroot_st,ideadcroot_xf,iretransn,ioutc,ioutn
    !
    ! !ARGUMENTS:
-   class(cnfire_base_type)                             :: this
+   class(cnfire_base_type)                              :: this
    type(bounds_type)                    , intent(in)    :: bounds  
-   integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
-   integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
-   integer                              , intent(in)    :: num_soilp       ! number of soil patches in filter
-   integer                              , intent(in)    :: filter_soilp(:) ! filter for soil patches
-   integer                              , intent(out)   :: num_actfirep    ! number of active patches on fire in filter
-   integer                              , intent(out)   :: filter_actfirep(:) ! filter for soil patches
-   integer                              , intent(out)   :: num_actfirec    ! number of active columns on fire in filter
-   integer                              , intent(out)   :: filter_actfirec(:) ! filter for soil columns
+   integer                              , intent(in)    :: num_soilc                               ! number of soil columns in filter
+   integer                              , intent(in)    :: filter_soilc(:)                         ! filter for soil columns
+   integer                              , intent(in)    :: num_soilp                               ! number of soil patches in filter
+   integer                              , intent(in)    :: filter_soilp(:)                         ! filter for soil patches
+   integer                              , intent(out)   :: num_actfirep                            ! number of active patches on fire in filter
+   integer                              , intent(out)   :: filter_actfirep(:)                      ! filter for soil patches
+   integer                              , intent(out)   :: num_actfirec                            ! number of active columns on fire in filter
+   integer                              , intent(out)   :: filter_actfirec(:)                      ! filter for soil columns
    type(dgvs_type)                      , intent(inout) :: dgvs_inst
    type(cnveg_state_type)               , intent(inout) :: cnveg_state_inst
-   type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst ! only for matrix_decomp_fire_k: (gC/m3/step) VR deomp. C fire loss in matrix representation
+   type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst          ! only for matrix_decomp_fire_k: (gC/m3/step) VR deomp. C fire loss in matrix representation
    type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
    type(cnveg_carbonflux_type)          , intent(inout) :: cnveg_carbonflux_inst
    type(cnveg_nitrogenstate_type)       , intent(in)    :: cnveg_nitrogenstate_inst

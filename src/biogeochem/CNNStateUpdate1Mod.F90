@@ -12,7 +12,7 @@ module CNNStateUpdate1Mod
   use clm_varctl                      , only : iulog, use_nitrif_denitrif, use_matrixcn, use_soil_matrixcn
   use clm_varcon                      , only : nitrif_n2o_loss_frac
   use pftconMod                       , only : npcropmin, pftcon
-  use decompMod                          , only : bounds_type
+  use decompMod                       , only : bounds_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type

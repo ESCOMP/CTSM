@@ -17,8 +17,6 @@ module SoilBiogeochemPotentialMod
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
   use clm_varctl                         , only : use_fates, iulog
-  use ColumnType                      , only : col                
-  use GridcellType                   , only : grc
   !
   implicit none
   private

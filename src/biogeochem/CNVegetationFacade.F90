@@ -848,6 +848,7 @@ contains
 
     character(len=*), parameter :: subname = 'EcosystemDynamicsPreDrainage'
     !-----------------------------------------------------------------------
+
     call crop_inst%CropIncrementYear(num_pcropp, filter_pcropp)
 
     call CNDriverNoLeaching(bounds,                                         &
@@ -931,11 +932,6 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
-
-!     type(cnveg_carbonstate_type)           , intent(inout) :: c13_cnveg_carbonstate_inst
-!     type(cnveg_carbonstate_type)           , intent(inout) :: c14_cnveg_carbonstate_inst
-!     type(cnveg_carbonflux_type)            , intent(inout) :: c13_cnveg_carbonflux_inst
-!     type(cnveg_carbonflux_type)            , intent(inout) :: c14_cnveg_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
 
@@ -959,6 +955,7 @@ contains
          this%c13_cnveg_carbonflux_inst,this%c14_cnveg_carbonflux_inst, &
          c13_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonstate_inst,&
          c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst)
+
     ! Set controls on very low values in critical state variables 
 
     call t_startf('CNPrecisionControl')
@@ -974,6 +971,7 @@ contains
     call t_stopf('SoilBiogeochemPrecisionControl')
 
     ! Call to all CN summary routines
+
     call  CNDriverSummarizeStates(bounds, &
          num_allc, filter_allc, &
          num_soilc, filter_soilc, &
@@ -986,7 +984,6 @@ contains
          c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_nitrogenstate_inst)
-
 
     call  CNDriverSummarizeFluxes(bounds, &
          num_soilc, filter_soilc, &
@@ -1003,12 +1000,12 @@ contains
 
     ! On the radiation time step, use C state variables to calculate
     ! vegetation structure (LAI, SAI, height)
+
     if (doalb) then   
        call CNVegStructUpdate(num_soilp, filter_soilp, &
             waterdiagnosticbulk_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
             crop_inst, this%cnveg_carbonstate_inst, canopystate_inst)
     end if
-
 
   end subroutine EcosystemDynamicsPostDrainage
 
@@ -1172,7 +1169,7 @@ contains
     real(r8) :: net_carbon_exchange_grc(bounds%begg:bounds%endg)  ! function result: net carbon exchange between land and atmosphere, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for source (gC/m2/s)
     !
     ! !LOCAL VARIABLES:
-    integer g
+
     character(len=*), parameter :: subname = 'get_net_carbon_exchange_grc'
     !-----------------------------------------------------------------------
 

@@ -148,7 +148,7 @@ contains
          laisun                   => canopystate_inst%laisun_patch  , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index      
          laisha                   => canopystate_inst%laisha_patch  , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index   
                                                          
-         nind                     => dgvs_inst%nind_patch                           , & ! Output: [real(r8) (:) ]  number of individuals (#/m2) added by F. Li and S. Levis		
+         nind                     => dgvs_inst%nind_patch                           , & ! Output:[real(r8)(:)] number of individuals (#/m2) added by F. Li and S. Levis		
          ileaf_to_iout_gmc        => cnveg_carbonflux_inst%ileaf_to_iout_gm         , & ! Input: [integer (:)] Index of gap mortality related C transfer from leaf pool to outside of vegetation pools
          ileafst_to_iout_gmc      => cnveg_carbonflux_inst%ileafst_to_iout_gm       , & ! Input: [integer (:)] Index of gap mortality related C transfer from leaf storage pool to outside of vegetation pools
          ileafxf_to_iout_gmc      => cnveg_carbonflux_inst%ileafxf_to_iout_gm       , & ! Input: [integer (:)] Index of gap mortality related C transfer from leaf transfer pool to outside of vegetation pools

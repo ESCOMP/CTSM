@@ -15,7 +15,6 @@ module SoilBiogeochemNLeachingMod
   use WaterStateBulkType                  , only : waterstatebulk_type
   use WaterFluxBulkType                   , only : waterfluxbulk_type
   use ColumnType                      , only : col                
-  use GridcellType                   , only : grc
   !
   implicit none
   private
