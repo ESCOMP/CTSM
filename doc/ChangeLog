@@ -263,7 +263,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: YES (just for NWP configurations)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: nwp
