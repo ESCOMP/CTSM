@@ -38,10 +38,10 @@ module SnowCoverFractionSwensonLawrence2012Mod
      real(r8) :: accum_factor = -999._r8  ! Accumulation constant for fractional snow covered area (unitless)
      real(r8), allocatable :: n_melt(:)   ! SCA shape parameter
    contains
-     procedure, public :: Init
      procedure, public :: UpdateSnowDepthAndFrac
      procedure, public :: AddNewsnowToIntsnow
      procedure, public :: FracSnowDuringMelt
+     procedure, public :: Init
 
      procedure, private :: ReadNamelist
      procedure, private :: ReadParams
@@ -56,6 +56,188 @@ module SnowCoverFractionSwensonLawrence2012Mod
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 contains
+
+  ! ========================================================================
+  ! Science routines
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateSnowDepthAndFrac(this, bounds, num_c, filter_c, &
+       urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
+       snow_depth, frac_sno)
+    !
+    ! !DESCRIPTION:
+    ! Update snow depth and snow fraction using the SwensonLawrence2012 parameterization
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_c       ! number of columns in filter_c
+    integer, intent(in) :: filter_c(:) ! column filter to operate over
+
+    logical  , intent(in)    :: urbpoi( bounds%begc: )       ! true if the given column is urban
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+    real(r8) , intent(in)    :: snowmelt( bounds%begc: )     ! total snow melt in the time step (mm H2O)
+    real(r8) , intent(in)    :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
+    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
+    real(r8) , intent(in)    :: bifall( bounds%begc: )       ! bulk density of newly fallen dry snow (kg/m3)
+
+    real(r8) , intent(inout) :: snow_depth( bounds%begc: )   ! snow height (m)
+    real(r8) , intent(inout) :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c
+    real(r8) :: z_avg                                 ! grid cell average snow depth
+
+    character(len=*), parameter :: subname = 'UpdateSnowDepthAndFrac'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(urbpoi, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(snowmelt, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(int_snow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(newsnow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bifall, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+       if (h2osno_total(c) > 0.0_r8) then
+          !======================  FSCA PARAMETERIZATIONS  ======================
+          ! fsca parameterization based on *changes* in swe
+          ! first compute change from melt during previous time step
+          if(snowmelt(c) > 0._r8) then
+             frac_sno(c) = this%FracSnowDuringMelt( &
+                  c            = c, &
+                  h2osno_total = h2osno_total(c), &
+                  int_snow     = int_snow(c))
+          end if
+
+          ! update fsca by new snow event, add to previous fsca
+          if (newsnow(c) > 0._r8) then
+             frac_sno(c) = 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
+          end if
+
+          !====================================================================
+
+          ! for subgrid fluxes
+          if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
+             if (frac_sno(c) > 0._r8)then
+                snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall(c) * frac_sno(c))
+             else
+                snow_depth(c)=0._r8
+             end if
+          else
+             ! for uniform snow cover
+             snow_depth(c)=snow_depth(c)+newsnow(c)/bifall(c)
+          end if
+
+       else ! h2osno_total == 0
+          ! initialize frac_sno and snow_depth when no snow present initially
+          if (newsnow(c) > 0._r8) then
+             z_avg = newsnow(c)/bifall(c)
+             frac_sno(c) = tanh(this%accum_factor * newsnow(c))
+
+             ! update snow_depth to be consistent with frac_sno, z_avg
+             if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
+                snow_depth(c)=z_avg/frac_sno(c)
+             else
+                snow_depth(c)=newsnow(c)/bifall(c)
+             end if
+          else
+             snow_depth(c) = 0._r8
+             frac_sno(c) = 0._r8
+          end if
+       end if
+    end do
+
+  end subroutine UpdateSnowDepthAndFrac
+
+  !-----------------------------------------------------------------------
+  subroutine AddNewsnowToIntsnow(this, bounds, num_c, filter_c, &
+       newsnow, h2osno_total, frac_sno, &
+       int_snow)
+    !
+    ! !DESCRIPTION:
+    ! Add new snow to integrated snow fall
+    !
+    ! For this SwensonLawrence2012 parameterization, this involves some care to ensure consistency
+    ! between int_snow and other terms.
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_c       ! number of columns in filter_c
+    integer, intent(in) :: filter_c(:) ! column filter to operate over
+
+    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+    real(r8) , intent(in)    :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c
+    real(r8) :: temp_intsnow    ! temporary version of int_snow
+
+    character(len=*), parameter :: subname = 'AddNewsnowToIntsnow'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(newsnow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(int_snow, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+
+       if (newsnow(c) > 0._r8) then
+          ! reset int_snow after accumulation events: make int_snow consistent with new
+          ! fsno, h2osno_total
+          temp_intsnow= (h2osno_total(c) + newsnow(c)) &
+               / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./this%n_melt(c)))+1._r8))
+          int_snow(c) = min(1.e8_r8,temp_intsnow)
+       end if
+
+       ! NOTE(wjs, 2019-07-25) Sean Swenson and Bill Sacks aren't sure whether this extra
+       ! addition of new_snow is correct: it seems to be double-adding newsnow, but we're
+       ! not positive that it's wrong. This seems to have been in place ever since the
+       ! clm45 branch came to the trunk.
+       int_snow(c) = int_snow(c) + newsnow(c)
+    end do
+
+  end subroutine AddNewsnowToIntsnow
+
+  !-----------------------------------------------------------------------
+  pure function FracSnowDuringMelt(this, c, h2osno_total, int_snow) result(frac_sno)
+    !
+    ! !DESCRIPTION:
+    ! Single-point function giving frac_snow during times when the snow pack is melting
+    !
+    ! !ARGUMENTS:
+    real(r8) :: frac_sno  ! function result
+    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(in) :: this
+    integer , intent(in) :: c            ! column we're operating on
+    real(r8), intent(in) :: h2osno_total ! total snow water (mm H2O)
+    real(r8), intent(in) :: int_snow     ! integrated snowfall (mm H2O)
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: int_snow_limited  ! integrated snowfall, limited to be no greater than int_snow_max [mm]
+    real(r8) :: smr
+
+    character(len=*), parameter :: subname = 'FracSnowDuringMelt'
+    !-----------------------------------------------------------------------
+
+    int_snow_limited = min(int_snow, this%int_snow_max)
+    smr = min(1._r8, h2osno_total/int_snow_limited)
+
+    frac_sno = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(this%n_melt(c))
+
+  end function FracSnowDuringMelt
+
+  ! ========================================================================
+  ! Infrastructure routines (for initialization)
+  ! ========================================================================
 
   function Constructor()
     type(snow_cover_fraction_swenson_lawrence_2012_type) :: Constructor
@@ -252,179 +434,5 @@ contains
     end do
 
   end subroutine SetDerivedParameters
-
-  !-----------------------------------------------------------------------
-  subroutine UpdateSnowDepthAndFrac(this, bounds, num_c, filter_c, &
-       urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
-       snow_depth, frac_sno)
-    !
-    ! !DESCRIPTION:
-    ! Update snow depth and snow fraction using the SwensonLawrence2012 parameterization
-    !
-    ! !ARGUMENTS:
-    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_c       ! number of columns in filter_c
-    integer, intent(in) :: filter_c(:) ! column filter to operate over
-
-    logical  , intent(in)    :: urbpoi( bounds%begc: )       ! true if the given column is urban
-    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-    real(r8) , intent(in)    :: snowmelt( bounds%begc: )     ! total snow melt in the time step (mm H2O)
-    real(r8) , intent(in)    :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
-    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
-    real(r8) , intent(in)    :: bifall( bounds%begc: )       ! bulk density of newly fallen dry snow (kg/m3)
-
-    real(r8) , intent(inout) :: snow_depth( bounds%begc: )   ! snow height (m)
-    real(r8) , intent(inout) :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
-    !
-    ! !LOCAL VARIABLES:
-    integer  :: fc, c
-    real(r8) :: z_avg                                 ! grid cell average snow depth
-
-    character(len=*), parameter :: subname = 'UpdateSnowDepthAndFrac'
-    !-----------------------------------------------------------------------
-
-    SHR_ASSERT_FL((ubound(urbpoi, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(snowmelt, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(int_snow, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(newsnow, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(bifall, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
-
-    do fc = 1, num_c
-       c = filter_c(fc)
-       if (h2osno_total(c) > 0.0_r8) then
-          !======================  FSCA PARAMETERIZATIONS  ======================
-          ! fsca parameterization based on *changes* in swe
-          ! first compute change from melt during previous time step
-          if(snowmelt(c) > 0._r8) then
-             frac_sno(c) = this%FracSnowDuringMelt( &
-                  c            = c, &
-                  h2osno_total = h2osno_total(c), &
-                  int_snow     = int_snow(c))
-          end if
-
-          ! update fsca by new snow event, add to previous fsca
-          if (newsnow(c) > 0._r8) then
-             frac_sno(c) = 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
-          end if
-
-          !====================================================================
-
-          ! for subgrid fluxes
-          if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
-             if (frac_sno(c) > 0._r8)then
-                snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall(c) * frac_sno(c))
-             else
-                snow_depth(c)=0._r8
-             end if
-          else
-             ! for uniform snow cover
-             snow_depth(c)=snow_depth(c)+newsnow(c)/bifall(c)
-          end if
-
-       else ! h2osno_total == 0
-          ! initialize frac_sno and snow_depth when no snow present initially
-          if (newsnow(c) > 0._r8) then
-             z_avg = newsnow(c)/bifall(c)
-             frac_sno(c) = tanh(this%accum_factor * newsnow(c))
-
-             ! update snow_depth to be consistent with frac_sno, z_avg
-             if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
-                snow_depth(c)=z_avg/frac_sno(c)
-             else
-                snow_depth(c)=newsnow(c)/bifall(c)
-             end if
-          else
-             snow_depth(c) = 0._r8
-             frac_sno(c) = 0._r8
-          end if
-       end if
-    end do
-
-  end subroutine UpdateSnowDepthAndFrac
-
-  !-----------------------------------------------------------------------
-  subroutine AddNewsnowToIntsnow(this, bounds, num_c, filter_c, &
-       newsnow, h2osno_total, frac_sno, &
-       int_snow)
-    !
-    ! !DESCRIPTION:
-    ! Add new snow to integrated snow fall
-    !
-    ! For this SwensonLawrence2012 parameterization, this involves some care to ensure consistency
-    ! between int_snow and other terms.
-    !
-    ! !ARGUMENTS:
-    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_c       ! number of columns in filter_c
-    integer, intent(in) :: filter_c(:) ! column filter to operate over
-
-    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
-    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-    real(r8) , intent(in)    :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
-    real(r8) , intent(inout) :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
-    !
-    ! !LOCAL VARIABLES:
-    integer  :: fc, c
-    real(r8) :: temp_intsnow    ! temporary version of int_snow
-
-    character(len=*), parameter :: subname = 'AddNewsnowToIntsnow'
-    !-----------------------------------------------------------------------
-
-    SHR_ASSERT_FL((ubound(newsnow, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(int_snow, 1) == bounds%endc), sourcefile, __LINE__)
-
-    do fc = 1, num_c
-       c = filter_c(fc)
-
-       if (newsnow(c) > 0._r8) then
-          ! reset int_snow after accumulation events: make int_snow consistent with new
-          ! fsno, h2osno_total
-          temp_intsnow= (h2osno_total(c) + newsnow(c)) &
-               / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./this%n_melt(c)))+1._r8))
-          int_snow(c) = min(1.e8_r8,temp_intsnow)
-       end if
-
-       ! NOTE(wjs, 2019-07-25) Sean Swenson and Bill Sacks aren't sure whether this extra
-       ! addition of new_snow is correct: it seems to be double-adding newsnow, but we're
-       ! not positive that it's wrong. This seems to have been in place ever since the
-       ! clm45 branch came to the trunk.
-       int_snow(c) = int_snow(c) + newsnow(c)
-    end do
-
-  end subroutine AddNewsnowToIntsnow
-
-  !-----------------------------------------------------------------------
-  pure function FracSnowDuringMelt(this, c, h2osno_total, int_snow) result(frac_sno)
-    !
-    ! !DESCRIPTION:
-    ! Single-point function giving frac_snow during times when the snow pack is melting
-    !
-    ! !ARGUMENTS:
-    real(r8) :: frac_sno  ! function result
-    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(in) :: this
-    integer , intent(in) :: c            ! column we're operating on
-    real(r8), intent(in) :: h2osno_total ! total snow water (mm H2O)
-    real(r8), intent(in) :: int_snow     ! integrated snowfall (mm H2O)
-    !
-    ! !LOCAL VARIABLES:
-    real(r8) :: int_snow_limited  ! integrated snowfall, limited to be no greater than int_snow_max [mm]
-    real(r8) :: smr
-
-    character(len=*), parameter :: subname = 'FracSnowDuringMelt'
-    !-----------------------------------------------------------------------
-
-    int_snow_limited = min(int_snow, this%int_snow_max)
-    smr = min(1._r8, h2osno_total/int_snow_limited)
-
-    frac_sno = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(this%n_melt(c))
-
-  end function FracSnowDuringMelt
 
 end module SnowCoverFractionSwensonLawrence2012Mod

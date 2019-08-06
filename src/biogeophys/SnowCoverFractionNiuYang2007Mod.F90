@@ -27,10 +27,10 @@ module SnowCoverFractionNiuYang2007Mod
      private
      real(r8) :: zlnd = -999._r8  ! Roughness length for soil (m)
    contains
-     procedure, public :: Init
      procedure, public :: UpdateSnowDepthAndFrac
      procedure, public :: AddNewsnowToIntsnow
      procedure, public :: FracSnowDuringMelt
+     procedure, public :: Init
 
      procedure, private :: ReadParams
   end type snow_cover_fraction_niu_yang_2007_type
@@ -42,61 +42,6 @@ module SnowCoverFractionNiuYang2007Mod
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 contains
-
-  ! ========================================================================
-  ! Infrastructure routines (for initialization)
-  ! ========================================================================
-
-  function Constructor()
-    type(snow_cover_fraction_niu_yang_2007_type) :: Constructor
-    ! DO NOTHING (simply return a variable of the appropriate type)
-  end function Constructor
-
-  !-----------------------------------------------------------------------
-  subroutine Init(this, params_ncid)
-    !
-    ! !DESCRIPTION:
-    ! Initialize this instance of the NiuYang2007 parameterization
-    !
-    ! !ARGUMENTS:
-    class(snow_cover_fraction_niu_yang_2007_type) , intent(inout) :: this
-    type(file_desc_t)       , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter             :: subname = 'Init'
-    !-----------------------------------------------------------------------
-
-    if (use_subgrid_fluxes) then
-       write(iulog,*) 'ERROR: Attempt to use NiuYang07 snow cover fraction parameterization with use_subgrid_fluxes.'
-       write(iulog,*) 'These two options are incompatible.'
-       call endrun('NiuYang07 snow cover fraction parameterization incompatible with use_subgrid_fluxes')
-    end if
-
-    call this%ReadParams( &
-         params_ncid = params_ncid)
-
-  end subroutine Init
-
-  !-----------------------------------------------------------------------
-  subroutine ReadParams(this, params_ncid)
-    !
-    ! !DESCRIPTION:
-    ! Read netCDF parameters needed for the NiuYang2007 method
-    !
-    ! !ARGUMENTS:
-    class(snow_cover_fraction_niu_yang_2007_type) , intent(inout) :: this
-    type(file_desc_t) , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'ReadParams'
-    !-----------------------------------------------------------------------
-
-    ! Roughness length for soil (m)
-    call readNcdioScalar(params_ncid, 'zlnd', subname, this%zlnd)
-
-  end subroutine ReadParams
 
   ! ========================================================================
   ! Science routines
@@ -235,5 +180,60 @@ contains
     frac_sno = nan
 
   end function FracSnowDuringMelt
+
+  ! ========================================================================
+  ! Infrastructure routines (for initialization)
+  ! ========================================================================
+
+  function Constructor()
+    type(snow_cover_fraction_niu_yang_2007_type) :: Constructor
+    ! DO NOTHING (simply return a variable of the appropriate type)
+  end function Constructor
+
+  !-----------------------------------------------------------------------
+  subroutine Init(this, params_ncid)
+    !
+    ! !DESCRIPTION:
+    ! Initialize this instance of the NiuYang2007 parameterization
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_niu_yang_2007_type) , intent(inout) :: this
+    type(file_desc_t)       , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter             :: subname = 'Init'
+    !-----------------------------------------------------------------------
+
+    if (use_subgrid_fluxes) then
+       write(iulog,*) 'ERROR: Attempt to use NiuYang07 snow cover fraction parameterization with use_subgrid_fluxes.'
+       write(iulog,*) 'These two options are incompatible.'
+       call endrun('NiuYang07 snow cover fraction parameterization incompatible with use_subgrid_fluxes')
+    end if
+
+    call this%ReadParams( &
+         params_ncid = params_ncid)
+
+  end subroutine Init
+
+  !-----------------------------------------------------------------------
+  subroutine ReadParams(this, params_ncid)
+    !
+    ! !DESCRIPTION:
+    ! Read netCDF parameters needed for the NiuYang2007 method
+    !
+    ! !ARGUMENTS:
+    class(snow_cover_fraction_niu_yang_2007_type) , intent(inout) :: this
+    type(file_desc_t) , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'ReadParams'
+    !-----------------------------------------------------------------------
+
+    ! Roughness length for soil (m)
+    call readNcdioScalar(params_ncid, 'zlnd', subname, this%zlnd)
+
+  end subroutine ReadParams
 
 end module SnowCoverFractionNiuYang2007Mod
