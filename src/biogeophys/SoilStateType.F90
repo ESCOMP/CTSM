@@ -211,7 +211,7 @@ contains
     end if
 
     call hist_addfld2d (fname='SMP',  units='mm', type2d='levgrnd',  &
-         avgflag='A', long_name='soil matric potential (vegetated landunits only)', &
+         avgflag='A', long_name='soil matric potential (natural vegetated and crop landunits only)', &
          ptr_col=this%smp_l_col, set_spec=spval, l2g_scale_type='veg')
 
        this%root_conductance_patch(begp:endp,:) = spval
@@ -280,7 +280,7 @@ contains
 
     this%hk_l_col(begc:endc,:) = spval
     call hist_addfld2d (fname='HK',  units='mm/s', type2d='levgrnd',  &
-         avgflag='A', long_name='hydraulic conductivity (vegetated landunits only)', &
+         avgflag='A', long_name='hydraulic conductivity (natural vegetated and crop landunits only)', &
          ptr_col=this%hk_l_col, set_spec=spval, l2g_scale_type='veg', default='inactive')
 
     this%soilalpha_col(begc:endc) = spval
@@ -389,11 +389,6 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%hk_l_col)
 
      if( use_dynroot ) then
-         call restartvar(ncid=ncid, flag=flag, varname='root_depth', xtype=ncd_double,  &
-              dim1name='pft', &
-              long_name='root depth', units='m', &
-              interpinic_flag='interp', readvar=readvar, data=this%root_depth_patch)
- 
          call restartvar(ncid=ncid, flag=flag, varname='rootfr', xtype=ncd_double,  &
               dim1name='pft', dim2name='levgrnd', switchdim=.true., &
               long_name='root fraction', units='', &

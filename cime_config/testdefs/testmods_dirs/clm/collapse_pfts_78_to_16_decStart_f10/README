@@ -1,0 +1,26 @@
+This test reads 78-pft datasets (glcMEC_decrease happens to be similar but
+reads 16-pft datasets). In this way, it tests the
+new combination do_transient_crops = .true. and use_crop = .false. while
+exercising the collapse2gencrop branch ability to collapse the full crop data
+to clm's generic crops.
+
+According to the file
+/glade/work/slevis/git/collapse_pfts/bld/namelist_files/namelist_defaults_clm4_5.xml
+the following two files used in this test
+are default files for the following options:
+
+fsurdat = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_10x15_78pfts_CMIP6_simyr1850_c170824.nc'
+hgrid="10x15" sim_year="1850" use_crop=".true."
+
+flanduse_timeseries = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/landuse.timeseries_10x15_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc'
+hgrid="10x15" sim_year_range="1850-2000" use_crop=".true."
+hgrid="10x15" rcp="8.5" sim_year_range="1850-2100" use_crop=".true."
+hgrid="10x15" rcp="6" sim_year_range="1850-2100" use_crop=".true."
+hgrid="10x15" rcp="4.5" sim_year_range="1850-2100" use_crop=".true."
+hgrid="10x15" rcp="2.6" sim_year_range="1850-2100" use_crop=".true."
+
+This test includes the settings of the decStart test so as to also test the
+end-of-year transition since it's an IHist case and transient vegetation gets
+updated every new year.
+
+NB: This test is testing the 10x15 resolution only.

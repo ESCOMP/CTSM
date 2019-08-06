@@ -181,13 +181,16 @@ module CNVegetationFacade
      procedure, private :: CNReadNML                    ! Read in the CN general namelist
   end type cn_vegetation_type
 
+  ! !PRIVATE DATA MEMBERS:
+
+  integer, private :: skip_steps    ! Number of steps to skip at startup
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine Init(this, bounds, NLFilename)
+  subroutine Init(this, bounds, NLFilename, nskip_steps)
     !
     ! !DESCRIPTION:
     ! Initialize a CNVeg object.
@@ -201,7 +204,8 @@ contains
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
-    character(len=*) , intent(in)    :: NLFilename ! namelist filename
+    character(len=*) , intent(in)    :: NLFilename  ! namelist filename
+    integer          , intent(in)    :: nskip_steps ! Number of steps to skip at startup
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -215,6 +219,8 @@ contains
     ! Note - always initialize the memory for cnveg_state_inst (used in biogeophys/)
     call this%cnveg_state_inst%Init(bounds)
     
+    skip_steps = nskip_steps
+
     if (use_cn) then
 
        ! Read in the general CN namelist
@@ -706,12 +712,12 @@ contains
     if (use_c13) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
             this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, &
-            soilbiogeochem_carbonstate_inst)
+            c13_soilbiogeochem_carbonstate_inst)
     end if
     if (use_c14) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
             this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, &
-            soilbiogeochem_carbonstate_inst)
+            c14_soilbiogeochem_carbonstate_inst)
     end if
     call NStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
@@ -1016,7 +1022,7 @@ contains
     !-----------------------------------------------------------------------
 
     DA_nstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
-    if (DA_nstep < 2 )then
+    if (DA_nstep <= skip_steps )then
        if (masterproc) then
           write(iulog,*) '--WARNING-- skipping CN balance check for first timesteps after startup or data assimilation'
        end if

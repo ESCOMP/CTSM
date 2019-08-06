@@ -22,6 +22,7 @@ module subgridAveMod
   ! !PUBLIC TYPES:
   implicit none
   save
+  private    ! By default make everything private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: p2c   ! Perform an average patches to columns
@@ -732,7 +733,7 @@ contains
   end subroutine p2g_2d
 
   !-----------------------------------------------------------------------
-  subroutine c2l_1d (bounds, carr, larr, c2l_scale_type)
+  subroutine c2l_1d (bounds, carr, larr, c2l_scale_type, include_inactive)
     !
     ! !DESCRIPTION:
     ! Perfrom subgrid-average from columns to landunits
@@ -743,8 +744,16 @@ contains
     real(r8), intent(in)  :: carr( bounds%begc: )  ! input column array
     real(r8), intent(out) :: larr( bounds%begl: )  ! output landunit array
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging (see note at top of module)
+
+    ! If include_inactive is present and .true., then include inactive as well as active
+    ! columns in the averages. The purpose of this is to produce valid landunit-level
+    ! output for inactive landunits. This should only be set if carr has no NaN values,
+    ! even for inactive columns.
+    logical, intent(in), optional :: include_inactive
+
     !
     ! !LOCAL VARIABLES:
+    logical  :: l_include_inactive
     integer  :: c,l,index                       ! indices
     logical  :: found                              ! temporary for error check
     real(r8) :: scale_c2l(bounds%begc:bounds%endc) ! scale factor for column->landunit mapping
@@ -754,6 +763,12 @@ contains
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+
+    if (present(include_inactive)) then
+       l_include_inactive = include_inactive
+    else
+       l_include_inactive = .false.
+    end if
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -801,7 +816,7 @@ contains
     larr(bounds%begl : bounds%endl) = spval
     sumwt(bounds%begl : bounds%endl) = 0._r8
     do c = bounds%begc,bounds%endc
-       if (col%active(c) .and. col%wtlunit(c) /= 0._r8) then
+       if ((col%active(c) .or. l_include_inactive) .and. col%wtlunit(c) /= 0._r8) then
           if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
              l = col%landunit(c)
              if (sumwt(l) == 0._r8) larr(l) = 0._r8

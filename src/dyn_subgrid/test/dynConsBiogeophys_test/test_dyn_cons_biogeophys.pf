@@ -1,0 +1,274 @@
+module test_dyn_cons_biogeophys
+
+  ! Tests of dynConsBiogeophysMod
+
+  use pfunit_mod
+  use dynConsBiogeophysMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSubgridMod
+  use unittestArrayMod, only : col_array
+  use unittestFilterBuilderMod, only : filter_from_range
+  use unittestWaterTypeFactory, only : unittest_water_type_factory_type
+  use clm_varpar, only : nlevgrnd, nlevsno, maxpatch_glcmec
+  use column_varcon, only : icemec_class_to_col_itype
+  use landunit_varcon, only : istsoil, istice_mec, istdlak
+  use ColumnType, only : col
+  use LandunitType, only : lun
+  use PatchType, only : patch
+  use SoilStateType, only : soilstate_type
+  use TemperatureType, only : temperature_type
+  use UrbanParamsType, only : urbanparams_type
+  use WaterType, only : water_type
+  use TotalWaterAndHeatMod, only : AccumulateSoilLiqIceMassNonLake
+  use TotalWaterAndHeatMod, only : AccumulateSoilHeatNonLake
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestDCB
+     type(unittest_water_type_factory_type) :: water_type_factory
+     type(soilstate_type) :: soilstate_inst
+     type(temperature_type) :: temperature_inst
+     type(urbanparams_type) :: urbanparams_inst
+     type(water_type) :: water_inst
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestDCB
+
+  integer, parameter :: my_nlevsoi = 6
+  integer, parameter :: nlevgrnd_additional = 5
+  integer, parameter :: my_nlevsno = 4
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestDCB), intent(inout) :: this
+
+    maxpatch_glcmec = 10
+    call this%water_type_factory%init()
+    call this%water_type_factory%setup_before_subgrid( &
+         my_nlevsoi = my_nlevsoi, &
+         nlevgrnd_additional = nlevgrnd_additional, &
+         my_nlevsno = my_nlevsno)
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestDCB), intent(inout) :: this
+
+    if (associated(this%soilstate_inst%watsat_col)) then
+       deallocate(this%soilstate_inst%watsat_col)
+    end if
+    if (associated(this%soilstate_inst%csol_col)) then
+       deallocate(this%soilstate_inst%csol_col)
+    end if
+
+    if (associated(this%temperature_inst%t_soisno_col)) then
+       deallocate(this%temperature_inst%t_soisno_col)
+    end if
+    if (associated(this%temperature_inst%dynbal_baseline_heat_col)) then
+       deallocate(this%temperature_inst%dynbal_baseline_heat_col)
+    end if
+
+    if (associated(this%urbanparams_inst%nlev_improad)) then
+       deallocate(this%urbanparams_inst%nlev_improad)
+    end if
+
+    call this%water_type_factory%teardown(this%water_inst)
+
+    call unittest_subgrid_teardown()
+  end subroutine tearDown
+
+  @Test
+  subroutine test_setBaselines(this)
+    ! A basic test of dyn_hwcontent_set_baselines
+    !
+    ! This covers the relevant logic in dynConsBiogeophysMod, but NOT the logic invoked
+    ! in TotalWaterAndHeatMod (we take the latter as a given). This particularly covers
+    ! the setting of baselines for a glacier column based on the average value from the
+    ! vegetated landunit. This includes coverage of some particular points that would not
+    ! currently be covered in system tests (which was part of the motivation for creating
+    ! this unit test):
+    ! - calculating baselines for inactive as well as active points (since, in typical
+    !   operation, all relevant glacier points begin active)
+    ! - averaging vegetated values from column to landunit (since, in typical operation,
+    !   there is only one column on the natural vegetation landunit)
+    class(TestDCB), intent(inout) :: this
+    real(r8), parameter :: wt_veg_col1 = 0.25_r8
+    real(r8), parameter :: wt_veg_col2 = 0.75_r8
+    integer :: veg_col1, veg_col2, glc_col
+    integer :: num_icemecc, num_natveg_and_icemecc
+    integer, allocatable :: filter_icemecc(:), filter_natveg_and_icemecc(:)
+    integer :: c
+    real(r8), allocatable :: expected_vals_liq_col(:)
+    real(r8), allocatable :: expected_vals_ice_col(:)
+    real(r8), allocatable :: expected_vals_heat_col(:)
+    real(r8), allocatable :: ignored_heatliq_col(:)
+    real(r8), allocatable :: ignored_cvliq_col(:)
+
+    ! ------------------------------------------------------------------------
+    ! Create subgrid structure.
+    !
+    ! There is one ice_mec column (the target column for this test) and two vegetated
+    ! columns (to test averaging from column to landunit). The weights of all of those
+    ! columns on the grid cell are 0, and they are all inactive (in order to ensure that
+    ! the code operates on inactive as well as active points). In addition, there is one
+    ! lake column that fills 100% of the grid cell (just so we have something that fills
+    ! the grid cell).
+    ! ------------------------------------------------------------------------
+
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+
+    ! Add vegetated landunit
+    call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=0._r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=wt_veg_col1)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1._r8)
+    veg_col1 = ci
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=wt_veg_col2)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1._r8)
+    veg_col2 = ci
+
+    ! Add glacier landunit
+    call unittest_add_landunit(my_gi=gi, ltype=istice_mec, wtgcell=0._r8)
+    call unittest_add_column(my_li=li, &
+         ctype = icemec_class_to_col_itype(1), &
+         wtlunit=1._r8)
+    call unittest_add_patch(my_ci=ci, ptype=0, wtcol=1._r8)
+    glc_col = ci
+
+    ! Add lake landunit
+    call unittest_add_landunit(my_gi=gi, ltype=istdlak, wtgcell=1._r8)
+    call unittest_add_column(my_li=li, ctype=istdlak*100, wtlunit=1._r8)
+    call unittest_add_patch(my_ci=ci, ptype=0, wtcol=1._r8)
+
+    call unittest_subgrid_setup_end()
+
+    ! Make everything inactive except lake
+    lun%active(bounds%begl:bounds%endl-1) = .false.
+    col%active(bounds%begc:bounds%endc-1) = .false.
+    patch%active(bounds%begp:bounds%endp-1) = .false.
+
+    ! ------------------------------------------------------------------------
+    ! Initialize various necessary data structures and variables
+    ! ------------------------------------------------------------------------
+
+    ! Create filters
+    call filter_from_range(start=glc_col, end=glc_col, &
+         numf=num_icemecc, filter=filter_icemecc)
+    call filter_from_range(start=veg_col1, end=glc_col, &
+         numf=num_natveg_and_icemecc, filter=filter_natveg_and_icemecc)
+
+    ! Initialize necessary variables in soilstate_inst
+    allocate(this%soilstate_inst%csol_col(bounds%begc:bounds%endc, nlevgrnd))
+    allocate(this%soilstate_inst%watsat_col(bounds%begc:bounds%endc, nlevgrnd))
+    do c = bounds%begc, bounds%endc
+       ! Use a different value of csol and watsat for each column
+       this%soilstate_inst%csol_col(c,:) = 1.e6_r8 * (c - bounds%begc + 1)
+       this%soilstate_inst%watsat_col(c,:) = 0.05_r8 * (c - bounds%begc + 1)
+    end do
+
+    ! Initialize necessary variables in temperature_inst
+    allocate(this%temperature_inst%t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
+    allocate(this%temperature_inst%dynbal_baseline_heat_col(bounds%begc:bounds%endc))
+    do c = bounds%begc, bounds%endc
+       ! Use a different value of temperature for each column
+       if (c == glc_col) then
+          this%temperature_inst%t_soisno_col(c,:) = 250._r8
+       else
+          this%temperature_inst%t_soisno_col(c,:) = 275._r8 + (c - bounds%begc)
+       end if
+
+       ! mimic initialization done in TemperatureType: InitCold
+       this%temperature_inst%dynbal_baseline_heat_col(c) = 0._r8
+    end do
+
+    ! Initialize necessary variables in urbanparams_inst
+    allocate(this%urbanparams_inst%nlev_improad(bounds%begl:bounds%endl))
+    ! Arbitrary value, not important here
+    this%urbanparams_inst%nlev_improad(bounds%begl:bounds%endl) = 3
+
+    ! Initialize water_inst
+    ! (snl and dz are totally arbitrary here: these are unimportant for this test)
+    call this%water_type_factory%setup_after_subgrid(snl = -2, dz = 0.05_r8)
+    call this%water_type_factory%create_water_type( &
+         water_inst = this%water_inst, &
+         t_soisno_col = this%temperature_inst%t_soisno_col(bounds%begc:bounds%endc,:), &
+         watsat_col = this%soilstate_inst%watsat_col(bounds%begc:bounds%endc,:))
+
+    ! ------------------------------------------------------------------------
+    ! Call the routine we're testing
+    ! ------------------------------------------------------------------------
+
+    call dyn_hwcontent_set_baselines(bounds, num_icemecc, filter_icemecc, &
+         this%urbanparams_inst, this%soilstate_inst, &
+         this%water_inst, this%temperature_inst)
+
+    ! ------------------------------------------------------------------------
+    ! Compute expected values
+    !
+    ! Note that we take these Accumulate routines as a given: We're not trying to catch
+    ! problems in those routines here; rather, we're just trying to see if the logic that
+    ! uses the results of those routines is correct.
+    ! ------------------------------------------------------------------------
+
+    expected_vals_liq_col = col_array(0._r8)
+    expected_vals_ice_col = col_array(0._r8)
+    expected_vals_heat_col = col_array(0._r8)
+    ignored_heatliq_col = col_array(0._r8)
+    ignored_cvliq_col = col_array(0._r8)
+
+    call AccumulateSoilLiqIceMassNonLake(bounds, &
+         num_natveg_and_icemecc, filter_natveg_and_icemecc, &
+         this%water_inst%waterstatebulk_inst, &
+         liquid_mass = expected_vals_liq_col, &
+         ice_mass = expected_vals_ice_col)
+
+    call AccumulateSoilHeatNonLake(bounds, &
+         num_natveg_and_icemecc, filter_natveg_and_icemecc, &
+         this%urbanparams_inst, this%soilstate_inst, this%temperature_inst, &
+         this%water_inst%waterstatebulk_inst, &
+         heat = expected_vals_heat_col, &
+         heat_liquid = ignored_heatliq_col, &
+         cv_liquid = ignored_cvliq_col)
+
+    ! ------------------------------------------------------------------------
+    ! Assert results
+    ! ------------------------------------------------------------------------
+
+    call assertBaselines( &
+         expected_vals_col = expected_vals_liq_col, &
+         baselines_col = this%water_inst%waterstatebulk_inst%dynbal_baseline_liq_col, &
+         msg = 'liq')
+    call assertBaselines( &
+         expected_vals_col = expected_vals_ice_col, &
+         baselines_col = this%water_inst%waterstatebulk_inst%dynbal_baseline_ice_col, &
+         msg = 'ice')
+    call assertBaselines( &
+         expected_vals_col = expected_vals_heat_col, &
+         baselines_col = this%temperature_inst%dynbal_baseline_heat_col, &
+         msg = 'heat')
+
+  contains
+    subroutine assertBaselines(expected_vals_col, baselines_col, msg)
+      real(r8), intent(in) :: expected_vals_col(bounds%begc:)
+      real(r8), intent(in) :: baselines_col(bounds%begc:)
+      character(len=*), intent(in) :: msg
+
+      real(r8) :: expected_baseline_glc
+      real(r8) :: expected_baselines(bounds%begc:bounds%endc)
+
+      expected_baseline_glc = expected_vals_col(glc_col) - &
+           (wt_veg_col1*expected_vals_col(veg_col1) + wt_veg_col2*expected_vals_col(veg_col2))
+
+      expected_baselines(:) = 0._r8
+      expected_baselines(glc_col) = expected_baseline_glc
+
+      @assertEqual(expected_baselines(:), baselines_col(:), tolerance=tol, message=msg)
+    end subroutine assertBaselines
+
+  end subroutine test_setBaselines
+
+end module test_dyn_cons_biogeophys

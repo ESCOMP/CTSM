@@ -131,7 +131,7 @@ contains
     ! !USES:
     use shr_const_mod   , only : SHR_CONST_CDAY
     use shr_sys_mod     , only : shr_sys_getenv
-    use clm_varpar      , only : maxpatch_pft
+    use clm_varpar      , only : maxsoil_patches
     use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, paramfile, iulog
     use clm_varcon      , only : spval
     use clm_time_manager, only : get_ref_date, get_nstep, get_curr_date, get_curr_time
@@ -170,7 +170,7 @@ contains
          nind    => dgvs_inst%nind_patch      & ! Input:  [real(r8) (:)]  number of individuals (#/m**2)                    
          )
 
-      allocate(rbuf2dg(bounds%begg:bounds%endg,maxpatch_pft), stat=ier)
+      allocate(rbuf2dg(bounds%begg:bounds%endg,maxsoil_patches), stat=ier)
       if (ier /= 0) call endrun(msg='histCNDV: allocation error for rbuf2dg'//&
            errMsg(sourcefile, __LINE__))
 
@@ -240,7 +240,7 @@ contains
       else
          call ncd_defdim (ncid, 'gridcell', ldomain%ns, dimid)
       end if
-      call ncd_defdim (ncid, 'pft' , maxpatch_pft , dimid)
+      call ncd_defdim (ncid, 'pft' , maxsoil_patches, dimid)
       call ncd_defdim (ncid, 'time', ncd_unlimited, dimid)
       call ncd_defdim (ncid, 'string_length', 80  , dimid)
 
@@ -373,7 +373,7 @@ contains
       ! Write time dependent variables to CNDV history file
 
       ! The if .not. ifspecial statment below guarantees that the m index will
-      ! always lie between 1 and maxpatch_pft
+      ! always lie between 1 and maxsoil_patches
 
       rbuf2dg(bounds%begg : bounds%endg, :) = 0._r8
       do p = bounds%begp,bounds%endp

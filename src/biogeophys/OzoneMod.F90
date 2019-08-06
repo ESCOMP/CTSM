@@ -361,51 +361,21 @@ contains
        p = filter_exposedvegp(fp)
        c = patch%column(p)
 
-!       if (.not.patch%is_fates(p)) then   ! When FATES coexists with other vegetation,
-                                     ! or when it has an ozone compatible module,  this
-                                     ! logic will likely come into play
-          
-          ! Ozone stress for shaded leaves
-          call CalcOzoneStressOnePoint( &
-               forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
-               rs=rssha(p), rb=rb(p), ram=ram(p), &
-               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
-               o3uptake=o3uptakesha(p), o3coefv=o3coefvsha(p), o3coefg=o3coefgsha(p))
-          
-          ! Ozone stress for sunlit leaves
-          call CalcOzoneStressOnePoint( &
-               forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
-               rs=rssun(p), rb=rb(p), ram=ram(p), &
-               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
-               o3uptake=o3uptakesun(p), o3coefv=o3coefvsun(p), o3coefg=o3coefgsun(p))
-          
-          tlai_old(p) = tlai(p)
+       ! Ozone stress for shaded leaves
+       call CalcOzoneStressOnePoint( &
+            forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+            rs=rssha(p), rb=rb(p), ram=ram(p), &
+            tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
+            o3uptake=o3uptakesha(p), o3coefv=o3coefvsha(p), o3coefg=o3coefgsha(p))
 
-!       else
-!          ! FATES is fundamentlaly incompatible with this type of patch-level
-!          ! association with plant functional type, so for the time
-!          ! being, fates patches will just push these values to invalid
-!          o3uptakesha(p) = spval
-!          o3coefvsha(p)  = spval
-!          o3coefgsha(p)  = spval
-!          o3uptakesun(p) = spval
-!          o3coefvsun(p)  = spval
-!          o3coefgsun(p)  = spval 
-!
-!       end if
+       ! Ozone stress for sunlit leaves
+       call CalcOzoneStressOnePoint( &
+            forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+            rs=rssun(p), rb=rb(p), ram=ram(p), &
+            tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
+            o3uptake=o3uptakesun(p), o3coefv=o3coefvsun(p), o3coefg=o3coefgsun(p))
 
-!       else
-!          ! FATES is fundamentlaly incompatible with this type of patch-level
-!          ! association with plant functional type, so for the time
-!          ! being, fates patches will just push these values to invalid
-!          o3uptakesha(p) = spval
-!          o3coefvsha(p)  = spval
-!          o3coefgsha(p)  = spval
-!          o3uptakesun(p) = spval
-!          o3coefvsun(p)  = spval
-!          o3coefgsun(p)  = spval 
-!
-!       end if
+       tlai_old(p) = tlai(p)
 
     end do
 

@@ -95,6 +95,10 @@ module TemperatureType
 
      ! Heat content
      real(r8), pointer :: beta_col                 (:)   ! coefficient of convective velocity [-]
+     ! For the following dynbal baseline variable: positive values are subtracted to avoid
+     ! counting liquid water content of "virtual" states; negative values are added to
+     ! account for missing states in the model.
+     real(r8), pointer :: dynbal_baseline_heat_col (:)   ! baseline heat content subtracted from each column's total heat calculation [J/m^2]
      real(r8), pointer :: heat1_grc                (:)   ! grc initial gridcell total heat content
      real(r8), pointer :: heat2_grc                (:)   ! grc post land cover change total heat content
      real(r8), pointer :: liquid_water_temp1_grc   (:)   ! grc initial weighted average liquid water temperature (K)
@@ -257,6 +261,7 @@ contains
 
     ! Heat content
     allocate(this%beta_col                 (begc:endc))                      ; this%beta_col                 (:)   = nan
+    allocate(this%dynbal_baseline_heat_col (begc:endc))                      ; this%dynbal_baseline_heat_col (:)   = nan
     allocate(this%heat1_grc                (begg:endg))                      ; this%heat1_grc                (:)   = nan
     allocate(this%heat2_grc                (begg:endg))                      ; this%heat2_grc                (:)   = nan
     allocate(this%liquid_water_temp1_grc   (begg:endg))                      ; this%liquid_water_temp1_grc   (:)   = nan
@@ -410,7 +415,7 @@ contains
 
     this%t_soisno_col(begc:endc,:) = spval
     call hist_addfld2d (fname='TSOI',  units='K', type2d='levgrnd', &
-         avgflag='A', long_name='soil temperature (vegetated landunits only)', &
+         avgflag='A', long_name='soil temperature (natural vegetated and crop landunits only)', &
          ptr_col=this%t_soisno_col, l2g_scale_type='veg')
 
     call hist_addfld2d (fname='TSOI_ICE',  units='K', type2d='levgrnd', &
@@ -424,7 +429,8 @@ contains
 
     this%tsl_col(begc:endc) = spval
     call hist_addfld1d (fname='TSL',  units='K', &
-         avgflag='A', long_name='temperature of near-surface soil layer (vegetated landunits only)', &
+         avgflag='A', &
+         long_name='temperature of near-surface soil layer (natural vegetated and crop landunits only)', &
          ptr_col=this%tsl_col, l2g_scale_type='veg')
     this%t_sno_mul_mss_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOTXMASS',  units='K kg/m2', &
@@ -503,7 +509,8 @@ contains
          avgflag='A', long_name='initial gridcell total heat content', &
          ptr_lnd=this%heat1_grc)
     call hist_addfld1d (fname='HEAT_CONTENT1_VEG',  units='J/m^2',  &
-         avgflag='A', long_name='initial gridcell total heat content - vegetated landunits only', &
+         avgflag='A', &
+         long_name='initial gridcell total heat content - natural vegetated and crop landunits only', &
          ptr_lnd=this%heat1_grc, l2g_scale_type='veg', default='inactive')
 
     this%heat2_grc(begg:endg) = spval
@@ -840,6 +847,11 @@ contains
        if (col%itype(c) == icol_road_perv  ) this%emg_col(c) = em_perroad_lun(l)
     end do
 
+    ! Initialize dynbal_baseline_heat_col: for some columns, this is set elsewhere in
+    ! initialization, but we need it to be 0 for columns for which it is not explicitly
+    ! set.
+    this%dynbal_baseline_heat_col(bounds%begc:bounds%endc) = 0._r8
+
   end subroutine InitCold
 
   !------------------------------------------------------------------------
@@ -981,6 +993,12 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='taf', xtype=ncd_double, dim1name='landunit',                       &
          long_name='urban canopy air temperature', units='K',                                                         &
          interpinic_flag='interp', readvar=readvar, data=this%taf_lun)
+
+    call restartvar(ncid=ncid, flag=flag, varname='DYNBAL_BASELINE_HEAT', xtype=ncd_double, &
+         dim1name='column', &
+         long_name="baseline heat content subtracted from each column's total heat calculation", &
+         units='J/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_heat_col)
 
     if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='gdd1020', xtype=ncd_double,  &

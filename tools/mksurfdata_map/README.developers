@@ -72,7 +72,7 @@ in a separate section of this document.
       for dynlanduse = false and/or true, as appropriate
     - add a deallocation statement for each new output variable
 
-- Add your new file in $CTSMROOT/bld/namelist_files/namelist_definition_clm4_5.xml;
+- Add your new file in $CTSMROOT/bld/namelist_files/namelist_definition_ctsm.xml;
   e.g. (replace xxx with your new field):
 
     <entry id="mksrf_fxxx" type="char*256" category="mksurfdata"
@@ -81,9 +81,9 @@ in a separate section of this document.
     </entry>
 
 - Add your new mksrf_fxxx variable to the list of valid_values for
-  mksrf_filename in $CTSMROOT/bld/namelist_files/namelist_definition_clm4_5.xml
+  mksrf_filename in $CTSMROOT/bld/namelist_files/namelist_definition_ctsm.xml
 
-- Add defaults in $CTSMROOT/bld/namelist_files/namelist_defaults_clm4_5_tools.xml;
+- Add defaults in $CTSMROOT/bld/namelist_files/namelist_defaults_ctsm_tools.xml;
   note that the "type" attribute is a short code that can be used in
   mksurfdata.pl, and doesn't have to match the "xxx" that is used elsewhere
     - lmask
@@ -120,10 +120,10 @@ laid out here.
   to the inputdata directory
 
 - Add a scripgriddata entry for the new scrip grid file in
-  $CTSMROOT/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+  $CTSMROOT/bld/namelist_files/namelist_defaults_ctsm_tools.xml
 
 - If necessary, add other entries in
-  $CTSMROOT/bld/namelist_files/namelist_defaults_clm4_5_tools.xml giving information about your
+  $CTSMROOT/bld/namelist_files/namelist_defaults_ctsm_tools.xml giving information about your
   scrip grid file:
     - If this is a high resolution grid (e.g., 3min or higher), add a
       scripgriddata_lrgfile_needed entry, saying we need 64bit_offset
@@ -135,7 +135,7 @@ laid out here.
       grid file is in SCRIP format and you can ignore this.
 
 - If necessary, add new grid and/or landmask to lists of valid values for
-  hgrid, res and lmask in $CTSMROOT/bld/namelist_files/namelist_definition_clm4_5.xml
+  hgrid, res and lmask in $CTSMROOT/bld/namelist_files/namelist_definition_ctsm.xml
     - Note that a new resolution currently needs to be added to both the hgrid
       and res lists of valid values, although in the future this
       should probably be changed so that these raw data grids just
@@ -166,7 +166,7 @@ laid out here.
   $CTSMROOT/tools/shared/mkmapdata (usage: just run the script with no arguments)
 
 - Cut and paste the xml entries from mapping_entries.txt (created by
-  createXMLEntries.pl) into $CTSMROOT/bld/namelist_files/namelist_defaults_clm4_5.xml,
+  createXMLEntries.pl) into $CTSMROOT/bld/namelist_files/namelist_defaults_ctsm.xml,
   in the correct locations
 
 - Move mapping files to correct location, either using mv_cmds.sh created by

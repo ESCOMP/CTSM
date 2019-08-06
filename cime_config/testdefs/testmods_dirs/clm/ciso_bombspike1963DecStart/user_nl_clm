@@ -1,0 +1,2 @@
+use_c14_bombspike=.true.
+use_c13_timeseries = .true.

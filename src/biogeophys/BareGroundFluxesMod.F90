@@ -30,9 +30,38 @@ module BareGroundFluxesMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: BareGroundFluxes   ! Calculate sensible and latent heat fluxes
+  public :: readParams
+
+  type, private :: params_type
+      real(r8) :: a_coef  ! Drag coefficient under less dense canopy (unitless)
+      real(r8) :: a_exp  ! Drag exponent under less dense canopy (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
   !------------------------------------------------------------------------------
 
 contains
+
+  !------------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_BareGroundFluxes'
+    !--------------------------------------------------------------------
+
+    ! Drag coefficient under less dense canopy (unitless)
+    call readNcdioScalar(ncid, 'a_coef', subname, params_inst%a_coef)
+    ! Drag exponent under less dense canopy (unitless)
+    call readNcdioScalar(ncid, 'a_exp', subname, params_inst%a_exp)
+
+   end subroutine readParams
 
   !------------------------------------------------------------------------------
   subroutine BareGroundFluxes(bounds, num_noexposedvegp, filter_noexposedvegp, &
@@ -54,7 +83,8 @@ contains
     use FrictionVelocityMod  , only : FrictionVelocity, MoninObukIni
     use QSatMod              , only : QSat
     use SurfaceResistanceMod , only : do_soilevap_beta,do_soil_resistance_sl14
-    use HumanIndexMod        , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
+    use HumanIndexMod        , only : all_human_stress_indices, fast_human_stress_indices, &
+                                      Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                       swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                       SwampCoolEff, KtoC, VaporPres
     use FrictionVelocityMod  , only : frictionvel_parms_inst
@@ -294,7 +324,7 @@ contains
 
             tstar = temp1(p)*dth(p)
             qstar = temp2(p)*dqh(p)
-            z0hg_patch(p) = z0mg_patch(p)/exp(0.13_r8 * (ustar(p)*z0mg_patch(p)/1.5e-5_r8)**0.45_r8)
+            z0hg_patch(p) = z0mg_patch(p) / exp(params_inst%a_coef * (ustar(p) * z0mg_patch(p) / 1.5e-5_r8)**params_inst%a_exp)
             z0qg_patch(p) = z0hg_patch(p)
             thvstar = tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
             zeta = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
@@ -395,37 +425,42 @@ contains
          end if
 
          ! Human Heat Stress
-         if ( calc_human_stress_indices )then
+         if ( all_human_stress_indices .or. fast_human_stress_indices ) then
             call KtoC(t_ref2m(p), tc_ref2m(p))
             call VaporPres(rh_ref2m(p), e_ref2m, vap_ref2m(p))
-            call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), q_ref2m(p), &
-                            teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
             call Wet_BulbS(tc_ref2m(p),rh_ref2m(p), wbt_ref2m(p))
             call HeatIndex(tc_ref2m(p), rh_ref2m(p), nws_hi_ref2m(p))
             call AppTemp(tc_ref2m(p), vap_ref2m(p), u10_clm(p), appar_temp_ref2m(p))
             call swbgt(tc_ref2m(p), vap_ref2m(p), swbgt_ref2m(p))
             call hmdex(tc_ref2m(p), vap_ref2m(p), humidex_ref2m(p))
-            call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
             call dis_coiS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p), discomf_index_ref2mS(p))
-            call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
-            call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            if ( all_human_stress_indices ) then
+               call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), q_ref2m(p), &
+                               teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
+               call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
+               call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
+               call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            end if
   
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-              teq_ref2m_r(p)            = teq_ref2m(p)
-              ept_ref2m_r(p)            = ept_ref2m(p)
-              wb_ref2m_r(p)             = wb_ref2m(p)
               wbt_ref2m_r(p)            = wbt_ref2m(p)
               nws_hi_ref2m_r(p)         = nws_hi_ref2m(p)
               appar_temp_ref2m_r(p)     = appar_temp_ref2m(p)
               swbgt_ref2m_r(p)          = swbgt_ref2m(p)
               humidex_ref2m_r(p)        = humidex_ref2m(p)
-              discomf_index_ref2m_r(p)  = discomf_index_ref2m(p)
               discomf_index_ref2mS_r(p) = discomf_index_ref2mS(p)
-              thic_ref2m_r(p)           = thic_ref2m(p)
-              thip_ref2m_r(p)           = thip_ref2m(p)
-              swmp80_ref2m_r(p)         = swmp80_ref2m(p)
-              swmp65_ref2m_r(p)         = swmp65_ref2m(p)
+              if ( all_human_stress_indices ) then
+                 teq_ref2m_r(p)            = teq_ref2m(p)
+                 ept_ref2m_r(p)            = ept_ref2m(p)
+                 wb_ref2m_r(p)             = wb_ref2m(p)
+                 discomf_index_ref2m_r(p)  = discomf_index_ref2m(p)
+                 thic_ref2m_r(p)           = thic_ref2m(p)
+                 thip_ref2m_r(p)           = thip_ref2m(p)
+                 swmp80_ref2m_r(p)         = swmp80_ref2m(p)
+                 swmp65_ref2m_r(p)         = swmp65_ref2m(p)
+              end if
             end if
+
          end if
       end do
 

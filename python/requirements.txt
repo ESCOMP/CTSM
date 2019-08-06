@@ -1,0 +1,4 @@
+Requirements for testing:
+
+- If using python < 3.3, requires the mock library (this is available in
+  the standard library in python 3.3+)
