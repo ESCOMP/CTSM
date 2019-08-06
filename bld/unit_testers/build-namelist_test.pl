@@ -1224,7 +1224,7 @@ my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne120np4", "10x15" 
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 10;
 foreach my $res ( @tran_res ) {
-   $options = "-res $res -use_case $usecase -envxml_dir . ";
+   $options = "-res $res -use_case $usecase -envxml_dir . -bgc bgc -crop -namelist '&a do_grossunrep=T/'";
    &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );

@@ -2344,7 +2344,7 @@ If TRUE, apply harvest from flanduse_timeseries file.
 
 <entry id="do_grossunrep" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
-If TRUE, apply grossunrep from flanduse_timeseries file.
+If TRUE, apply gross unrepresented landuse/land-cover change from flanduse_timeseries file.
 (Only valid for transient runs, where there is a flanduse_timeseries file.)
 (Also, only valid for use_cn = true.)
 </entry>
