@@ -40,7 +40,6 @@ contains
     use SoilBiogeochemDecompCascadeBGCMod , only : readSoilBiogeochemDecompBgcParams      => readParams
     use SoilBiogeochemDecompCascadeCNMod  , only : readSoilBiogeochemDecompCnParams       => readParams
     use ch4Mod                            , only : readCH4Params                          => readParams
-    use initVerticalMod                   , only : readParams_initVertical                => readParams
     use LunaMod                           , only : readParams_Luna                        => readParams
     use BareGroundFluxesMod               , only : readParams_BareGroundFluxes            => readParams
     use LakeFluxesMod                     , only : readParams_LakeFluxes                  => readParams
@@ -49,7 +48,6 @@ contains
     use CanopyHydrologyMod                , only : readParams_CanopyHydrology             => readParams
     use SoilHydrologyMod                  , only : readParams_SoilHydrology               => readParams
     use SaturatedExcessRunoffMod          , only : readParams_SaturatedExcessRunoff       => readParams
-    use SnowHydrologyMod                  , only : readParams_SnowHydrology               => readParams
     use SurfaceResistanceMod              , only : readParams_SurfaceResistance           => readParams
     use WaterDiagnosticBulkType           , only : readParams_WaterDiagnosticBulk         => readParams
     use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
@@ -106,11 +104,6 @@ contains
     end if
 
     !
-    ! Main
-    !
-    call readParams_initVertical ( ncid )
-
-    !
     ! Biogeophysics
     !
     call photosyns_inst%ReadParams( ncid )
@@ -122,7 +115,6 @@ contains
     call readParams_CanopyHydrology ( ncid )
     call readParams_SoilHydrology ( ncid )
     call readParams_SaturatedExcessRunoff ( ncid )
-    call readParams_SnowHydrology( ncid )
     call readParams_SurfaceResistance ( ncid )
     call readParams_WaterDiagnosticBulk ( ncid )
 

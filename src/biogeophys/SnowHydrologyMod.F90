@@ -22,8 +22,8 @@ module SnowHydrologyMod
   use abortutils      , only : endrun
   use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
   use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd
-  use clm_varctl      , only : iulog, subgridflag
-  use clm_varcon      , only : namec, h2osno_max, hfus, denice, rpi, spval, tfrz, int_snow_max
+  use clm_varctl      , only : iulog, use_subgrid_fluxes
+  use clm_varcon      , only : namec, h2osno_max, hfus, denice, rpi, spval, tfrz
   use atm2lndType     , only : atm2lnd_type
   use AerosolMod      , only : aerosol_type
   use TemperatureType , only : temperature_type
@@ -31,6 +31,7 @@ module SnowHydrologyMod
   use WaterFluxBulkType   , only : waterfluxbulk_type
   use WaterStateBulkType  , only : waterstatebulk_type
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
+  use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
   use LandunitType    , only : landunit_type, lun
   use TopoMod, only : topo_type
   use ColumnType      , only : column_type, col
@@ -45,7 +46,6 @@ module SnowHydrologyMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SnowHydrology_readnl       ! Read namelist
-  public :: readParams                 ! Read parameters from netCDF file
   public :: HandleNewSnow              ! Handle new snow falling on the ground
   public :: SnowWater                  ! Change of snow mass and the snow water onto soil
   public :: SnowCompaction             ! Change in snow layer thickness due to compaction
@@ -122,14 +122,9 @@ module SnowHydrologyMod
   logical  :: wind_dependent_snow_density                      ! If snow density depends on wind or not
   integer  :: overburden_compaction_method = -1
   integer  :: new_snow_density            = LoTmpDnsSlater2017 ! Snow density type
-  integer  :: oldfflag                    = 0                  ! use old fsno parameterization (N&Y07) 
   real(r8) :: upplim_destruct_metamorph   = 100.0_r8           ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
   real(r8) :: overburden_compress_Tfactor = 0.08_r8            ! snow compaction overburden exponential factor (1/K)
   real(r8) :: min_wind_snowcompact        = 5._r8              ! minimum wind speed tht results in compaction (m/s)
-
-  ! Parameters read from netCDF parameter file
-  real(r8) :: accum_factor                                     ! Accumulation constant for fractional snow covered area (unitless)
-  real(r8) :: zlnd                                             ! Roughness length for soil (m)
 
   ! ------------------------------------------------------------------------
   ! Parameters controlling the resetting of the snow pack
@@ -187,7 +182,7 @@ contains
 
     namelist /clm_snowhydrology_inparm/ &
          wind_dependent_snow_density, snow_overburden_compaction_method, &
-         lotmp_snowdensity_method, oldfflag, upplim_destruct_metamorph, &
+         lotmp_snowdensity_method, upplim_destruct_metamorph, &
          overburden_compress_Tfactor, min_wind_snowcompact, &
          reset_snow, reset_snow_glc, reset_snow_glc_ela
 
@@ -214,7 +209,6 @@ contains
     call shr_mpi_bcast (wind_dependent_snow_density, mpicom)
     call shr_mpi_bcast (snow_overburden_compaction_method, mpicom)
     call shr_mpi_bcast (lotmp_snowdensity_method   , mpicom)
-    call shr_mpi_bcast (oldfflag                   , mpicom)
     call shr_mpi_bcast (upplim_destruct_metamorph  , mpicom)
     call shr_mpi_bcast (overburden_compress_Tfactor, mpicom)
     call shr_mpi_bcast (min_wind_snowcompact       , mpicom)
@@ -249,33 +243,9 @@ contains
   end subroutine SnowHydrology_readnl
 
   !-----------------------------------------------------------------------
-  subroutine readParams(ncid)
-    !
-    ! !DESCRIPTION:
-    ! Read parameters in this module from netCDF parameter file
-    !
-    ! !USES:
-    use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
-    !
-    ! !ARGUMENTS:
-    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'readParams_SnowHydrology'
-    !-----------------------------------------------------------------------
-
-    ! Roughness length for soil (m)
-    call readNcdioScalar(ncid, 'zlnd', subname, zlnd)
-    ! Accumulation constant for fractional snow covered area (unitless)
-    call readNcdioScalar(ncid, 'accum_factor', subname, accum_factor)
-
-  end subroutine readParams
-
-  !-----------------------------------------------------------------------
   subroutine HandleNewSnow(bounds, &
        num_nolakec, filter_nolakec, &
+       scf_method, &
        atm2lnd_inst, temperature_inst, &
        aerosol_inst, water_inst)
     !
@@ -286,6 +256,7 @@ contains
     type(bounds_type)      , intent(in)    :: bounds     
     integer                , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
     integer                , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
+    class(snow_cover_fraction_base_type), intent(in) :: scf_method
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
@@ -325,10 +296,10 @@ contains
 
     call BulkDiag_NewSnowDiagnostics(bounds, num_nolakec, filter_nolakec, &
          ! Inputs
+         scf_method          = scf_method, &
          dtime               = dtime, &
          urbpoi              = col%urbpoi(begc:endc), &
          snl                 = col%snl(begc:endc), &
-         n_melt              = col%n_melt(begc:endc), &
          bifall              = bifall(begc:endc), &
          h2osno_total        = h2osno_total(begc:endc), &
          h2osoi_ice          = b_waterstate_inst%h2osoi_ice_col(begc:endc,:), &
@@ -436,7 +407,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BulkDiag_NewSnowDiagnostics(bounds, num_nolakec, filter_nolakec, &
-       dtime, urbpoi, snl, n_melt, bifall, h2osno_total, h2osoi_ice, h2osoi_liq, &
+       scf_method, &
+       dtime, urbpoi, snl, bifall, h2osno_total, h2osoi_ice, h2osoi_liq, &
        qflx_snow_grnd, qflx_snow_drain, &
        dz, int_snow, swe_old, frac_sno, frac_sno_eff, snow_depth)
     !
@@ -454,10 +426,10 @@ contains
     integer, intent(in) :: num_nolakec
     integer, intent(in) :: filter_nolakec(:)
 
+    class(snow_cover_fraction_base_type), intent(in) :: scf_method
     real(r8)                  , intent(in)    :: dtime                           ! land model time step (sec)
     logical                   , intent(in)    :: urbpoi( bounds%begc: )          ! true=>urban point
     integer                   , intent(in)    :: snl( bounds%begc: )             ! negative number of snow layers
-    real(r8)                  , intent(in)    :: n_melt( bounds%begc: )           ! SCA shape parameter
     real(r8)                  , intent(in)    :: bifall( bounds%begc: )          ! bulk density of newly fallen dry snow [kg/m3]
     real(r8)                  , intent(in)    :: h2osno_total( bounds%begc: )    ! total snow water (mm H2O)
     real(r8)                  , intent(in)    :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
@@ -475,21 +447,16 @@ contains
     integer  :: fc, c
     integer  :: j
     real(r8) :: dz_snowf                              ! layer thickness rate change due to precipitation [mm/s]
-    real(r8) :: temp_snow_depth, temp_intsnow         ! temporary variables
-    real(r8) :: fmelt
-    real(r8) :: smr
-    real(r8) :: fsno_new
+    real(r8) :: temp_snow_depth(bounds%begc:bounds%endc) ! snow depth prior to updating [mm]
+    real(r8) :: snowmelt(bounds%begc:bounds%endc)
+    real(r8) :: newsnow(bounds%begc:bounds%endc)
     real(r8) :: z_avg                                 ! grid cell average snow depth
-    real(r8) :: int_snow_limited                      ! integrated snowfall, limited to be no greater than int_snow_max [mm]
-    real(r8) :: newsnow
-    real(r8) :: snowmelt
 
     character(len=*), parameter :: subname = 'BulkDiag_NewSnowDiagnostics'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(urbpoi, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(n_melt, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(bifall, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osoi_ice, 1) == bounds%endc), sourcefile, __LINE__)
@@ -503,6 +470,11 @@ contains
     SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
 
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc  &
+         )
+
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
        
@@ -511,7 +483,7 @@ contains
        ! Progress Rep. 1, Alta Avalanche Study Center:Snow Layer Densification.
 
        ! set temporary variables prior to updating
-       temp_snow_depth=snow_depth(c)
+       temp_snow_depth(c) = snow_depth(c)
        ! save initial snow content
        do j= -nlevsno+1,snl(c)
           swe_old(c,j) = 0.0_r8
@@ -522,112 +494,56 @@ contains
 
        ! all snow falls on ground, no snow on h2osfc (note that qflx_snow_h2osfc is
        ! currently set to 0 always in CanopyHydrologyMod)
-       newsnow = qflx_snow_grnd(c) * dtime
+       newsnow(c) = qflx_snow_grnd(c) * dtime
 
        ! update int_snow
        int_snow(c) = max(int_snow(c),h2osno_total(c)) !h2osno_total could be larger due to frost
 
        ! snowmelt from previous time step * dtime
-       snowmelt = qflx_snow_drain(c) * dtime
+       snowmelt(c) = qflx_snow_drain(c) * dtime
+    end do
 
-       if (h2osno_total(c) > 0.0) then
+    call scf_method%UpdateSnowDepthAndFrac(bounds, num_nolakec, filter_nolakec, &
+         ! Inputs
+         urbpoi       = urbpoi(begc:endc), &
+         h2osno_total = h2osno_total(begc:endc), &
+         snowmelt     = snowmelt(begc:endc), &
+         int_snow     = int_snow(begc:endc), &
+         newsnow      = newsnow(begc:endc), &
+         bifall       = bifall(begc:endc), &
+         ! Outputs
+         snow_depth   = snow_depth(begc:endc), &
+         frac_sno     = frac_sno(begc:endc))
 
-          !======================  FSCA PARAMETERIZATIONS  ======================
-          ! fsca parameterization based on *changes* in swe
-          ! first compute change from melt during previous time step
-          if(snowmelt > 0._r8) then
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+       if (h2osno_total(c) == 0._r8 .and. newsnow(c) > 0._r8) then
+          ! Snow pack started at 0, then adding new snow; reset int_snow prior to
+          ! adding newsnow
+          int_snow(c) = 0._r8
+       end if
+    end do
 
-             int_snow_limited = min(int_snow(c), int_snow_max)
-             smr=min(1._r8,h2osno_total(c)/int_snow_limited)
+    call scf_method%AddNewsnowToIntsnow(bounds, num_nolakec, filter_nolakec, &
+         ! Inputs
+         newsnow      = newsnow(begc:endc), &
+         h2osno_total = h2osno_total(begc:endc), &
+         frac_sno     = frac_sno(begc:endc), &
+         ! Outputs
+         int_snow     = int_snow(begc:endc))
 
-             frac_sno(c) = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(n_melt(c))
-
-          end if
-
-          ! update fsca by new snow event, add to previous fsca
-          if (newsnow > 0._r8) then
-             fsno_new = 1._r8 - (1._r8 - tanh(accum_factor * newsnow)) * (1._r8 - frac_sno(c))
-             frac_sno(c) = fsno_new
-
-             ! reset int_snow after accumulation events
-             temp_intsnow= (h2osno_total(c) + newsnow) &
-                  / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
-             int_snow(c) = min(1.e8_r8,temp_intsnow)
-          end if
-
-          !====================================================================
-
-          ! for subgrid fluxes
-          if (subgridflag ==1 .and. .not. urbpoi(c)) then
-             if (frac_sno(c) > 0._r8)then
-                snow_depth(c)=snow_depth(c) + newsnow/(bifall(c) * frac_sno(c))
-             else
-                snow_depth(c)=0._r8
-             end if
-          else
-             ! for uniform snow cover
-             snow_depth(c)=snow_depth(c)+newsnow/bifall(c)
-          end if
-
-          ! use original fsca formulation (n&y 07)
-          if (oldfflag == 1) then 
-             ! snow cover fraction in Niu et al. 2007
-             if(snow_depth(c) > 0.0_r8)  then
-                frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * zlnd * &
-                     (min(800._r8,(h2osno_total(c)+ newsnow)/snow_depth(c))/100._r8)**1._r8) )
-             end if
-             if(h2osno_total(c) < 1.0_r8)  then
-                frac_sno(c)=min(frac_sno(c),h2osno_total(c))
-             end if
-          end if
-
-       else !h2osno_total == 0
-          ! initialize frac_sno and snow_depth when no snow present initially
-          if (newsnow > 0._r8) then 
-             z_avg = newsnow/bifall(c)
-             fmelt=newsnow
-             frac_sno(c) = tanh(accum_factor * newsnow)
-
-             ! make int_snow consistent w/ new fsno, h2osno_total
-             int_snow(c) = 0. !reset prior to adding newsnow below
-             temp_intsnow= (h2osno_total(c) + newsnow) &
-                  / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
-             int_snow(c) = min(1.e8_r8,temp_intsnow)
-
-             ! update snow_depth to be consistent with frac_sno, z_avg
-             if (subgridflag ==1 .and. .not. urbpoi(c)) then
-                snow_depth(c)=z_avg/frac_sno(c)
-             else
-                snow_depth(c)=newsnow/bifall(c)
-             end if
-             ! use n&y07 formulation
-             if (oldfflag == 1) then 
-                ! snow cover fraction in Niu et al. 2007
-                if(snow_depth(c) > 0.0_r8)  then
-                   frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * zlnd * &
-                        (min(800._r8,newsnow/snow_depth(c))/100._r8)**1._r8) )
-                end if
-             end if
-          else
-             z_avg = 0._r8
-             snow_depth(c) = 0._r8
-             frac_sno(c) = 0._r8
-          end if
-       end if ! end of h2osno_total > 0
-
-
-       ! update h2osno for new snow
-       int_snow(c) = int_snow(c) + newsnow
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
 
        ! update change in snow depth
        if (snl(c) < 0) then
-          dz_snowf = (snow_depth(c) - temp_snow_depth) / dtime
+          dz_snowf = (snow_depth(c) - temp_snow_depth(c)) / dtime
           dz(c,snl(c)+1) = dz(c,snl(c)+1)+dz_snowf*dtime
        end if
 
        ! set frac_sno_eff variable
        if (.not. urbpoi(c)) then
-          if (subgridflag ==1) then 
+          if (use_subgrid_fluxes) then 
              frac_sno_eff(c) = frac_sno(c)
           else
              frac_sno_eff(c) = 1._r8
@@ -637,6 +553,8 @@ contains
        end if
 
     end do
+
+    end associate
 
   end subroutine BulkDiag_NewSnowDiagnostics
 
@@ -1281,6 +1199,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SnowCompaction(bounds, num_snowc, filter_snowc, &
+       scf_method, &
        temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, atm2lnd_inst)
     !
     ! !DESCRIPTION:
@@ -1293,13 +1212,13 @@ contains
     ! fraction after the melting versus before the melting.
     !
     ! !USES:
-    use clm_varcon      , only : denice, denh2o, tfrz, rpi, int_snow_max
-    use clm_varctl      , only : subgridflag
+    use clm_varcon      , only : denice, denh2o, tfrz, rpi
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in) :: bounds
     integer                , intent(in) :: num_snowc       ! number of column snow points in column filter
     integer                , intent(in) :: filter_snowc(:) ! column filter for snow points
+    class(snow_cover_fraction_base_type), intent(in) :: scf_method
     type(temperature_type) , intent(in) :: temperature_inst
     type(waterstatebulk_type)  , intent(in) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(in) :: waterdiagnosticbulk_inst
@@ -1330,12 +1249,10 @@ contains
     real(r8) :: wsum   ! snowpack total water mass (ice+liquid) [kg/m2]
     real(r8) :: fsno_melt
     real(r8) :: ddz4   ! Rate of compaction of snowpack due to wind drift.
-    real(r8) :: int_snow_limited ! integrated snowfall, limited to be no greater than int_snow_max [mm]
     !-----------------------------------------------------------------------
 
     associate( &
          snl          => col%snl                          , & ! Input:  [integer (:)    ] number of snow layers
-         n_melt       => col%n_melt                       , & ! Input:  [real(r8) (:)   ] SCA shape parameter
          lakpoi       => lun%lakpoi                       , & ! Input:  [logical  (:)   ] true => landunit is a lake point
          urbpoi       => lun%urbpoi                       , & ! Input:  [logical  (:)   ] true => landunit is an urban point
          forc_wind    => atm2lnd_inst%forc_wind_grc       , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed (m/s)
@@ -1420,19 +1337,21 @@ contains
 
                 if (imelt(c,j) == 1) then
                    l = col%landunit(c)
-                   ! For consistency with other uses of subgridflag==1 (e.g., in
-                   ! CanopyHydrologyMod), we apply this code over all landunits other
-                   ! than lake and urban. (In CanopyHydrologyMod, the uses of subgridflag
-                   ! are in a nolake filter, and check .not. urbpoi.)
-                   if(subgridflag==1 .and. (.not. lakpoi(l) .and. .not. urbpoi(l))) then
+                   ! For consistency with other uses of use_subgrid_fluxes (e.g., in
+                   ! CanopyHydrologyMod), we apply this code over all landunits other than
+                   ! lake and urban. (In CanopyHydrologyMod, the uses of
+                   ! use_subgrid_fluxes are in a nolake filter, and check .not. urbpoi.)
+                   if(use_subgrid_fluxes .and. (.not. lakpoi(l) .and. .not. urbpoi(l))) then
                       ! first term is delta mass over mass
                       ddz3 = max(0._r8,min(1._r8,(swe_old(c,j) - wx)/wx))
 
                       ! 2nd term is delta fsno over fsno, allowing for negative values for ddz3
                       if((swe_old(c,j) - wx) > 0._r8) then
                          wsum = sum(h2osoi_liq(c,snl(c)+1:0)+h2osoi_ice(c,snl(c)+1:0))
-                         int_snow_limited = min(int_snow(c), int_snow_max)
-                         fsno_melt = 1. - (acos(2.*min(1._r8,wsum/int_snow_limited) - 1._r8)/rpi)**(n_melt(c))
+                         fsno_melt = scf_method%FracSnowDuringMelt( &
+                              c            = c, &
+                              h2osno_total = wsum, &
+                              int_snow     = int_snow(c))
                          
                          ! Ensure sum of snow and surface water fractions are <= 1 after update
                          !

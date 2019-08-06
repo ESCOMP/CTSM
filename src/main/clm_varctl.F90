@@ -188,7 +188,10 @@ module clm_varctl
   !----------------------------------------------------------
 
   ! use subgrid fluxes
-  integer,  public :: subgridflag = 1                   
+  logical,  public :: use_subgrid_fluxes = .true.
+
+  ! which snow cover fraction parameterization to use
+  character(len=64), public :: snow_cover_fraction_method
 
   ! true => write global average diagnostics to std out
   logical,  public :: wrtdia       = .false.            

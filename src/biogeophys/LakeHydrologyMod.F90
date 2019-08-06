@@ -50,6 +50,7 @@ contains
   subroutine LakeHydrology(bounds, &
        num_lakec, filter_lakec, num_lakep, filter_lakep, &
        num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
+       scf_method, &
        atm2lnd_inst, temperature_inst, soilstate_inst, waterstatebulk_inst, &
        waterdiagnosticbulk_inst, waterbalancebulk_inst, waterfluxbulk_inst, &
        wateratm2lndbulk_inst, energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
@@ -80,7 +81,8 @@ contains
     use SnowHydrologyMod, only : ZeroEmptySnowLayers, BuildSnowFilter, SnowCapping
     use SnowHydrologyMod, only : DivideSnowLayers, NewSnowBulkDensity
     use LakeCon         , only : lsadz
-    use TopoMod, only : topo_type
+    use TopoMod         , only : topo_type
+    use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -92,6 +94,7 @@ contains
     integer                , intent(out)   :: filter_shlakesnowc(:)   ! column filter for snow points
     integer                , intent(out)   :: num_shlakenosnowc       ! number of column non-snow points
     integer                , intent(out)   :: filter_shlakenosnowc(:) ! column filter for non-snow points
+    class(snow_cover_fraction_base_type), intent(in) :: scf_method
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(soilstate_type)   , intent(in)    :: soilstate_inst
@@ -435,6 +438,7 @@ contains
       ! Natural compaction and metamorphosis.
 
       call SnowCompaction(bounds, num_shlakesnowc, filter_shlakesnowc, &
+           scf_method, &
            temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, atm2lnd_inst)
 
       ! Combine thin snow elements

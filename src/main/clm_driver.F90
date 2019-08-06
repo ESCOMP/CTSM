@@ -479,6 +479,7 @@ contains
 
        call HandleNewSnow(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            scf_method, &
             atm2lnd_inst, temperature_inst, &
             aerosol_inst, water_inst)
 
@@ -773,7 +774,7 @@ contains
             water_inst%waterdiagnosticbulk_inst, soilhydrology_inst, &
             saturated_excess_runoff_inst, &
             infiltration_excess_runoff_inst, &
-            aerosol_inst, canopystate_inst, soil_water_retention_curve, topo_inst)
+            aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst)
 
        ! The following needs to be done after HydrologyNoDrainage (because it needs
        ! waterfluxbulk_inst%qflx_snwcp_ice_col), but before HydrologyDrainage (because
@@ -813,6 +814,7 @@ contains
             filter(nc)%num_lakep, filter(nc)%lakep,                                          &
             filter(nc)%num_lakesnowc, filter(nc)%lakesnowc,                                  &
             filter(nc)%num_lakenosnowc, filter(nc)%lakenosnowc,                              &
+            scf_method, &
             atm2lnd_inst, temperature_inst, soilstate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%waterbalancebulk_inst, &
             water_inst%waterfluxbulk_inst, water_inst%wateratm2lndbulk_inst, &

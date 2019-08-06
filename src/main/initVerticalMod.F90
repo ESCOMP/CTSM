@@ -39,12 +39,6 @@ module initVerticalMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: initVertical
-  public :: readParams
-
-  type, private :: params_type
-      real(r8) :: n_melt_coef
-  end type params_type
-  type(params_type), private ::  params_inst
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ReadNL
@@ -114,28 +108,8 @@ contains
   end subroutine ReadNL
 
   !------------------------------------------------------------------------
-  subroutine readParams( ncid )
-    !
-    ! !USES:
-    use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-    !
-    ! !LOCAL VARIABLES:
-    character(len=*), parameter :: subname = 'readParams_initVertical'
-    !--------------------------------------------------------------------
-
-    ! n_melt parameter (unitless)
-    call readNcdioScalar(ncid, 'n_melt_coef', subname, params_inst%n_melt_coef)
-
-   end subroutine readParams
-
-  !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
-    use clm_varcon, only : zmin_bedrock, n_melt_glcmec
+    use clm_varcon, only : zmin_bedrock
     !
     ! !ARGUMENTS:
     type(bounds_type)   , intent(in)    :: bounds
@@ -757,21 +731,7 @@ contains
     !-----------------------------------------------
 
     do c = begc,endc
-       l = col%landunit(c)
-       g = col%gridcell(c)
-
-       if (lun%itype(l)==istice_mec .and. glc_behavior%allow_multiple_columns_grc(g)) then
-          ! ice_mec columns already account for subgrid topographic variability through
-          ! their use of multiple elevation classes; thus, to avoid double-accounting for
-          ! topographic variability in these columns, we ignore topo_std and use a fixed
-          ! value of n_melt.
-          col%n_melt(c) = n_melt_glcmec
-       else
-          col%n_melt(c) = params_inst%n_melt_coef / max(10._r8, col%topo_std(c))
-       end if
-
        ! microtopographic parameter, units are meters (try smooth function of slope)
-
        slopebeta = 3._r8
        slopemax = 0.4_r8
        slope0 = slopemax**(-1._r8/slopebeta)
