@@ -15,9 +15,6 @@ module SnowCoverFractionBaseMod
   type, abstract :: snow_cover_fraction_base_type
      private
    contains
-     ! Initialize this instance
-     procedure(Init_Interface), deferred :: Init
-
      ! Update snow depth and snow fraction
      procedure(UpdateSnowDepthAndFrac_Interface), deferred :: UpdateSnowDepthAndFrac
 
@@ -29,22 +26,6 @@ module SnowCoverFractionBaseMod
   end type snow_cover_fraction_base_type
 
   abstract interface
-
-     subroutine Init_Interface(this, bounds, col, glc_behavior, NLFilename, params_ncid)
-       ! Initialize this instance
-       use decompMod, only : bounds_type
-       use ColumnType, only : column_type
-       use glcBehaviorMod, only : glc_behavior_type
-       use ncdio_pio, only : file_desc_t
-       import :: snow_cover_fraction_base_type
-
-       class(snow_cover_fraction_base_type), intent(inout) :: this
-       type(bounds_type), intent(in) :: bounds
-       type(column_type), intent(in) :: col
-       type(glc_behavior_type), intent(in) :: glc_behavior
-       character(len=*), intent(in) :: NLFilename ! Namelist filename
-       type(file_desc_t), intent(inout) :: params_ncid ! pio netCDF file id for parameter file
-     end subroutine Init_Interface
 
      subroutine UpdateSnowDepthAndFrac_Interface(this, bounds, num_c, filter_c, &
           urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &

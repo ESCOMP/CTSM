@@ -11,8 +11,6 @@ module SnowCoverFractionNiuYang2007Mod
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
-  use ColumnType     , only : column_type
-  use glcBehaviorMod , only : glc_behavior_type
   use ncdio_pio      , only : file_desc_t
   use clm_varctl     , only : iulog, use_subgrid_fluxes
   use paramUtilMod   , only : readNcdioScalar
@@ -55,17 +53,13 @@ contains
   end function Constructor
 
   !-----------------------------------------------------------------------
-  subroutine Init(this, bounds, col, glc_behavior, NLFilename, params_ncid)
+  subroutine Init(this, params_ncid)
     !
     ! !DESCRIPTION:
     ! Initialize this instance of the NiuYang2007 parameterization
     !
     ! !ARGUMENTS:
     class(snow_cover_fraction_niu_yang_2007_type) , intent(inout) :: this
-    type(bounds_type)       , intent(in)    :: bounds
-    type(column_type)       , intent(in)    :: col
-    type(glc_behavior_type) , intent(in)    :: glc_behavior
-    character(len=*)        , intent(in)    :: NLFilename  ! Namelist filename
     type(file_desc_t)       , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
     !
     ! !LOCAL VARIABLES:

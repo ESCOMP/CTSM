@@ -55,22 +55,49 @@ contains
     case ('SwensonLawrence2012')
        allocate(scf_method, &
             source = snow_cover_fraction_swenson_lawrence_2012_type())
+
+       ! NOTE(wjs, 2019-08-05) This would be more straightforward if we could just do all
+       ! initialization in the constructor: then we could avoid an Init method, and the
+       ! consequent need for a 'select type' construct. But we have had some compilers
+       ! (e.g., intel17) that don't seem to work right with function constructors; Init
+       ! methods seem to be more reliable.
+       select type (scf_method)
+       class is (snow_cover_fraction_swenson_lawrence_2012_type)
+          call scf_method%Init( &
+               bounds       = bounds, &
+               col          = col, &
+               glc_behavior = glc_behavior, &
+               NLFilename   = NLFilename, &
+               params_ncid  = params_ncid)
+       class default
+          call endrun(msg = "Unexpected class", &
+               additional_msg = errMsg(sourcefile, __LINE__))
+       end select
+
     case ('NiuYang2007')
        allocate(scf_method, &
             source = snow_cover_fraction_niu_yang_2007_type())
+
+       ! NOTE(wjs, 2019-08-05) This would be more straightforward if we could just do all
+       ! initialization in the constructor: then we could avoid an Init method, and the
+       ! consequent need for a 'select type' construct. But we have had some compilers
+       ! (e.g., intel17) that don't seem to work right with function constructors; Init
+       ! methods seem to be more reliable.
+       select type (scf_method)
+       class is (snow_cover_fraction_niu_yang_2007_type)
+          call scf_method%Init( &
+               params_ncid = params_ncid)
+       class default
+          call endrun(msg = "Unexpected class", &
+               additional_msg = errMsg(sourcefile, __LINE__))
+       end select
+
     case default
        write(iulog,*) subname//' ERROR: unknown snow_cover_fraction_method: ', &
             snow_cover_fraction_method
        call endrun(msg = 'unknown snow_cover_fraction_method', &
             additional_msg = errMsg(sourcefile, __LINE__))
     end select
-
-    call scf_method%Init( &
-         bounds       = bounds, &
-         col          = col, &
-         glc_behavior = glc_behavior, &
-         NLFilename   = NLFilename, &
-         params_ncid  = params_ncid)
 
   end function CreateAndInitSnowCoverFraction
 
