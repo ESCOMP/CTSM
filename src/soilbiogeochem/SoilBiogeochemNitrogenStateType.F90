@@ -419,7 +419,7 @@ contains
                    this%vert_up_tran_nacc(c,j,k) = 0._r8
                    this%vert_down_tran_nacc(c,j,k) = 0._r8
                    this%exit_nacc(c,j,k) = 0._r8
-                   this%decomp0_npools_vr_col(c,j,k) = amax1(this%decomp_npools_vr_col(c,j,k),1.e-30_r8)
+                   this%decomp0_npools_vr_col(c,j,k) = max(this%decomp_npools_vr_col(c,j,k),1.e-30_r8)
                 end if
             end do
             if(use_soil_matrixcn)then
@@ -616,7 +616,7 @@ contains
                    end if
                 end if
              end if
-             if(.not. found)write(*,*),'Error in storing matrix restart variables',i,i_decomp,j_decomp,i_lev,j_lev
+             if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i,i_decomp,j_decomp,i_lev,j_lev
           end do
        end if
     end if
@@ -750,7 +750,7 @@ contains
                    end if
                 end if
              end if
-             if(.not. found)write(*,*),'Error in storing matrix restart variables',i
+             if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
           end do
        end if
     end if

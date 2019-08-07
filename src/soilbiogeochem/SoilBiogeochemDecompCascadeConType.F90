@@ -9,7 +9,7 @@ module SoilBiogeochemDecompCascadeConType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar     , only : ndecomp_cascade_transitions, ndecomp_pools, nlevdecomp, &
                               ndecomp_cascade_outtransitions
-  use clm_varctl     , only : use_soil_matrixcn
+  use clm_varctl     , only : use_soil_matrixcn, iulog
   use SPMMod         , only : sparse_matrix_type, diag_matrix_type, vector_type
   !
   implicit none
@@ -176,7 +176,7 @@ contains
      
      SM = 1._r8
      if(n-1 .ne. decomp_cascade_con%Ntrans_setup)then
-        write(*,*),'error in InitSoilTransfer: number of transfers is error in count'
+        write(iulog,*) 'error in InitSoilTransfer: number of transfers is error in count'
      end if
 
      n = 1
@@ -204,7 +204,7 @@ contains
      end do
 
      if(n-1 .ne. decomp_cascade_con%Ntri_setup)then
-        write(*,*),'error in InitSoilTransfer: number of vertical-transfers is error in count'
+        write(iulog,*) 'error in InitSoilTransfer: number of vertical-transfers is error in count'
      end if
 
      num_soilc = 1

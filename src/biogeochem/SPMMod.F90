@@ -15,6 +15,7 @@ module SPMMod
 
   use shr_kind_mod                   , only : r8 => shr_kind_r8
   use decompMod                      , only : bounds_type
+  use clm_varctl                     , only : iulog
   implicit none
   private
 
@@ -201,7 +202,7 @@ type(sparse_matrix_type) :: A_diag, A_nondiag
 list_ready = .false.
 
 if(init_ready .and. .not. (present(list) .and. present(RI_A) .and. present(CI_A)))then
-   write(*,*),"Error: initialization is ready, but at least one of list, RI_A or CI_A is not presented"
+   write(iulog,*) "Error: initialization is ready, but at least one of list, RI_A or CI_A is not presented"
 end if
  
 if(Init_ready)then
@@ -476,7 +477,7 @@ integer i,fu,u
 ! for the first time call this subroutine.
 
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(NE_AB) .and. present(RI_AB) .and. present(CI_AB)))then
-   write(*,*),"error in SPMP_AB: list_ready is True, but at least one of list_A, list_B, NE_AB, RI_AB and CI_AB are not presented"
+   write(iulog,*) "error in SPMP_AB: list_ready is True, but at least one of list_A, list_B, NE_AB, RI_AB and CI_AB are not presented"
 end if
 
 if(.not. list_ready)then
@@ -604,31 +605,31 @@ integer i,fu,u
 ! for the first time call this subroutine.
 
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(list_C) .and. present(NE_ABC) .and. present(RI_ABC) .and. present(CI_ABC)))then
-   write(*,*),"error in SPMP_ABC: list_ready is True, but at least one of list_A, list_B, list_C, NE_ABC, RI_ABC and CI_ABC are not presented",&
+   write(iulog,*) "error in SPMP_ABC: list_ready is True, but at least one of list_A, list_B, list_C, NE_ABC, RI_ABC and CI_ABC are not presented",&
               present(list_A),present(list_B),present(list_C),present(NE_ABC),present(RI_ABC),present(CI_ABC)
 end if
 if(present(num_actunit_A))then
    if(num_actunit_A .eq. 0)then
-      write(*,*),"error: num_actunit_A cannot be set to 0"
+      write(iulog,*) "error: num_actunit_A cannot be set to 0"
    end if
    if(.not. present(filter_actunit_A))then
-      write(*,*),"error: num_actunit_A is presented but filter_actunit_A is missing"
+      write(iulog,*) "error: num_actunit_A is presented but filter_actunit_A is missing"
    end if
 end if
 if(present(num_actunit_B))then
    if(num_actunit_B .eq. 0)then
-      write(*,*),"error: num_actunit_B cannot be set to 0"
+      write(iulog,*) "error: num_actunit_B cannot be set to 0"
    end if
    if(.not. present(filter_actunit_B))then
-      write(*,*),"error: num_actunit_B is presented but filter_actunit_B is missing"
+      write(iulog,*) "error: num_actunit_B is presented but filter_actunit_B is missing"
    end if
 end if
 if(present(num_actunit_C))then
    if(num_actunit_C .eq. 0)then
-      write(*,*),"error: num_actunit_C cannot be set to 0"
+      write(iulog,*) "error: num_actunit_C cannot be set to 0"
    end if
    if(.not. present(filter_actunit_C))then
-      write(*,*),"error: num_actunit_C is presented but filter_actunit_C is missing"
+      write(iulog,*) "error: num_actunit_C is presented but filter_actunit_C is missing"
    end if
 end if
 
@@ -725,7 +726,7 @@ if(.not. list_ready)then
                            i_c   = i_c  + 1
                            i_abc = i_abc + 1
                         else
-                           write(*,*),'Error in subroutine SPMP_ABC',Aindex(i_a),Bindex(i_b),Cindex(i_c)
+                           write(iulog,*) 'Error in subroutine SPMP_ABC',Aindex(i_a),Bindex(i_b),Cindex(i_c)
                         end if
                      end if
                   end if

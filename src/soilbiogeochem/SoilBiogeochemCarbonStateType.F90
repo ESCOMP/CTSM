@@ -582,7 +582,7 @@ contains
                    this%vert_up_tran_acc(c,j,k) = 0._r8
                    this%vert_down_tran_acc(c,j,k) = 0._r8
                    this%exit_acc(c,j,k) = 0._r8
-                   this%decomp0_cpools_vr_col(c,j,k) = amax1(this%decomp_cpools_vr_col(c,j,k),1.e-30_r8)
+                   this%decomp0_cpools_vr_col(c,j,k) = max(this%decomp_cpools_vr_col(c,j,k),1.e-30_r8)
                 end do
                 do k = 1, ndecomp_cascade_transitions
                    this%hori_tran_acc(c,j,k) = 0._r8
@@ -752,7 +752,7 @@ contains
                       end if
                    end if
                 end if
-                if(.not. found)write(*,*),'Error in storing matrix restart variables',i
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
              end do
           end if
           do k = 1, ndecomp_pools
@@ -847,7 +847,7 @@ contains
                       end if
                    end if
                 end if
-                if(.not. found)write(*,*),'Error in storing matrix restart variables',i
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
              end do
           end if
        end if
