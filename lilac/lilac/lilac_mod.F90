@@ -94,8 +94,8 @@ module lilac_mod
         ! Initialize return code
         rc = ESMF_SUCCESS
 
-        a2l_fldnum  = 3
-        l2a_fldnum  = 3
+        a2l_fldnum  = 14
+        l2a_fldnum  = 16
 
         print *,  "---------------------------------------"
         print *,  "    Lilac Demo Application Start       "
@@ -179,71 +179,28 @@ module lilac_mod
         ! value to them.
         !-------------------------------------------------------------------------
 
-        allocate (a2c_fldlist(a2l_fldnum))
-        allocate (c2a_fldlist(l2a_fldnum))
+        !allocate (a2c_fldlist(a2l_fldnum))
+        !allocate (c2a_fldlist(l2a_fldnum))
 
-        allocate (l2c_fldlist(l2a_fldnum))
-        allocate (c2l_fldlist(a2l_fldnum))
+        !allocate (l2c_fldlist(l2a_fldnum))
+        !allocate (c2l_fldlist(a2l_fldnum))
+        allocate (a2c_fldlist(fldsMax))
+        allocate (c2a_fldlist(fldsMax))
+
+        allocate (l2c_fldlist(fldsmax))
+        allocate (c2l_fldlist(fldsmax))
         print *, "creating empty field lists !"
         call ESMF_LogWrite(subname//"EMPTY field lists are created...", ESMF_LOGMSG_INFO)
 
         ! ======================================================================= ! maybe move to create_fldlist?
         !    call create_fldlists(c2a_fldlist, a2c_fldlist, )
-
+             call create_fldlists(a2c_fldlist, c2a_fldlist,l2c_fldlist, c2l_fldlist)
         !-------------------------------------------------------------------------
         !            !---- from atm ----! a2c_fldlist & c2l_fldlist
         !-------------------------------------------------------------------------
 
-        a2c_fldlist(1)%stdname      =  'uwind'
-        a2c_fldlist(1)%farrayptr1d  => atm2lnd1d%uwind !*** this now sets the module variable memory in atmos_cap.F90
-        print *,      a2c_fldlist(1)%stdname
-        !print *,      a2c_fldlist(1)%farrayptr1d(:)
-        a2c_fldlist(2)%stdname      =  'vwind'
-        a2c_fldlist(2)%farrayptr1d  => atm2lnd1d%vwind !*** this now sets the module variable memory in atmos_cap.F90
-        print *,      a2c_fldlist(2)%stdname
-        !print *,      a2c_fldlist(2)%farrayptr1d(:)
-        a2c_fldlist(3)%stdname      =  'tbot'
-        a2c_fldlist(3)%farrayptr1d  => atm2lnd1d%vwind
-        print *,      a2c_fldlist(3)%stdname
-        !print *,      a2c_fldlist(3)%farrayptr1d
-
-
-        !!! Where should these point to? pointer to an empty array which will be filled in the land....
-
-        ! Similary we need c2a_fldlist
-        c2l_fldlist(1)%stdname      =  'uwind'
-        print *,      c2l_fldlist(1)%stdname
-        c2l_fldlist(2)%stdname      =  'vwind'
-        print *,      c2l_fldlist(1)%stdname
-        c2l_fldlist(3)%stdname      =  'tbot'
-        print *,      c2l_fldlist(1)%stdname
-
-        !-------------------------------------------------------------------------
         !            !---- from land ----! l2c_fldlist & c2a_fldlist
         !-------------------------------------------------------------------------
-
-
-        l2c_fldlist(1)%stdname      =  'lwup'
-        l2c_fldlist(1)%farrayptr1d  => lnd2atm1d%lwup
-        print *,      l2c_fldlist(1)%stdname
-
-        l2c_fldlist(2)%stdname      =  'taux'
-        print *,      l2c_fldlist(2)%stdname
-        l2c_fldlist(2)%farrayptr1d  => lnd2atm1d%taux
-
-        l2c_fldlist(3)%stdname      =  'tauy'
-        print *,      l2c_fldlist(3)%stdname
-        l2c_fldlist(3)%farrayptr1d  => lnd2atm1d%taux
-
-
-        c2a_fldlist(1)%stdname      =  'lwup'
-        print *,      c2a_fldlist(1)%stdname
-
-        c2a_fldlist(2)%stdname      =  'taux'
-        print *,      c2a_fldlist(2)%stdname
-
-        c2a_fldlist(3)%stdname      =  'tauy'
-        print *,      c2a_fldlist(3)%stdname
 
         ! ======================================================================= ! create_fldlist
 
@@ -384,7 +341,7 @@ module lilac_mod
         call ESMF_GridCompInitialize(land_gcomp       , importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"lnd_cap or land_gcomp initialized", ESMF_LOGMSG_INFO)
-        print *, "lnd_cap initialize finished, rc =", rc
+        !print *, "lnd_cap initialize finished, rc =", rc
 
         ! All 4 states that are module variables are no longer empty - have been initialized
 
@@ -414,7 +371,7 @@ module lilac_mod
         integer                                          :: rc, urc
         character(len=ESMF_MAXSTR)                       :: gcname1, gcname2   !    Gridded components names
         character(len=ESMF_MAXSTR)                       :: ccname1, ccname2   !    Coupling components names
-        !integer, parameter                              :: fldsMax = 100
+        integer, parameter                              :: fldsMax = 100
         integer                                          :: a2l_fldnum, l2a_fldnum
 
         ! input/output variables
