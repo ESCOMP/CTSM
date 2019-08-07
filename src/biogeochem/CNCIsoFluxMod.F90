@@ -1767,7 +1767,7 @@ contains
           )
 
        do j = 1, nlevdecomp
-          do pi = 1,maxpatch_pft
+          do pi = 1,maxsoil_patches
              do fc = 1,num_soilc
                 c = filter_soilc(fc)
                 
@@ -1806,7 +1806,7 @@ contains
           end do
        end do
    
-       do pi = 1,maxpatch_pft
+       do pi = 1,maxsoil_patches
           do fc = 1,num_soilc
              c = filter_soilc(fc)
 

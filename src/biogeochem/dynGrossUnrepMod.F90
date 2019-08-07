@@ -375,7 +375,7 @@ contains
    ! to the column level and assign them to the three litter pools
    !
    ! !USES:
-   use clm_varpar , only : maxpatch_pft, nlevdecomp, numpft
+   use clm_varpar , only : maxsoil_patches, nlevdecomp
    !
    ! !ARGUMENTS:
    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
@@ -435,7 +435,7 @@ contains
         )
 
      do j = 1, nlevdecomp
-        do pi = 1,maxpatch_pft
+        do pi = 1,maxsoil_patches
            do fc = 1,num_soilc
               c = filter_soilc(fc)
 
@@ -500,7 +500,7 @@ contains
         end do
      end do
    
-     do pi = 1,maxpatch_pft
+     do pi = 1,maxsoil_patches
         do fc = 1,num_soilc
            c = filter_soilc(fc)
 
