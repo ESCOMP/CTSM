@@ -48,7 +48,7 @@ module glc2lndMod
      real(r8), pointer, private :: topo_grc    (:,:) => null()
      real(r8), pointer, private :: hflx_grc    (:,:) => null()
 
-     ! Area in which GLC model can accept surface mass balance, received from glc (0-1)
+     ! Area in which values from GLC are valid, received from GLC (0-1)
      real(r8), pointer, private :: icemask_grc (:)   => null()
 
      ! icemask_coupled_fluxes_grc is like icemask_grc, but the mask only contains icesheet

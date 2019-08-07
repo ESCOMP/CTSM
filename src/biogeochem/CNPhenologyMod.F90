@@ -20,7 +20,7 @@ module CNPhenologyMod
                                                ilivecroot,ilivecroot_st,ilivecroot_xf,&
                                                ideadcroot,ideadcroot_st,ideadcroot_xf,&
                                                igrain,igrain_st,igrain_xf,iretransn,ioutc,ioutn
-  use clm_varpar                      , only : numpft, nlevdecomp_full
+  use clm_varpar                      , only : maxveg, nlevdecomp_full
   use clm_varctl                      , only : iulog, use_cndv, use_matrixcn
   use clm_varcon                      , only : tfrz
   use abortutils                      , only : endrun
@@ -2285,8 +2285,8 @@ contains
 
     allocate( inhemi(bounds%begp:bounds%endp) )
 
-    allocate( minplantjday(0:numpft,inSH)) ! minimum planting julian day
-    allocate( maxplantjday(0:numpft,inSH)) ! minimum planting julian day
+    allocate( minplantjday(0:maxveg,inSH)) ! minimum planting julian day
+    allocate( maxplantjday(0:maxveg,inSH)) ! minimum planting julian day
 
     ! Julian day for the start of the year (mid-winter)
     jdayyrstart(inNH) =   1
