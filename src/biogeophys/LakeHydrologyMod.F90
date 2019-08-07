@@ -20,6 +20,7 @@ module LakeHydrologyMod
 #include "shr_assert.h"
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use decompMod            , only : bounds_type
+  use clm_varpar           , only : nlevsno, nlevgrnd, nlevsoi
   use ColumnType           , only : col                
   use PatchType            , only : patch                
   use atm2lndType          , only : atm2lnd_type
@@ -42,7 +43,8 @@ module LakeHydrologyMod
   public :: LakeHydrology              ! Calculates soil/snow hydrology
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: SumFlux_FluxesOntoGround  ! Compute summed fluxes onto ground, for bulk or one tracer
+  private :: SumFlux_FluxesOntoGround    ! Compute summed fluxes onto ground, for bulk or one tracer
+  private :: BulkDiag_NewSnowDiagnostics ! Update various snow-related diagnostic quantities to account for new snow
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -77,7 +79,6 @@ contains
     !
     ! !USES:
     use clm_varcon      , only : denh2o, denice, spval, hfus, tfrz, cpliq, cpice
-    use clm_varpar      , only : nlevsno, nlevgrnd, nlevsoi
     use clm_varctl      , only : iulog
     use clm_time_manager, only : get_step_size
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater
@@ -256,15 +257,19 @@ contains
     call NewSnowBulkDensity(bounds, num_lakec, filter_lakec, &
          atm2lnd_inst, bifall(bounds%begc:bounds%endc))
 
+    call BulkDiag_NewSnowDiagnostics(bounds, num_lakec, filter_lakec, &
+         ! Inputs
+         dtime          = dtime, &
+         snl            = col%snl(begc:endc), &
+         bifall         = bifall(begc:endc), &
+         qflx_snow_grnd = b_waterflux_inst%qflx_snow_grnd_col(begc:endc), &
+         ! Outputs
+         dz             = col%dz(begc:endc,:), &
+         snow_depth     = b_waterdiagnostic_inst%snow_depth_col(begc:endc))
+
     do fc = 1, num_lakec
        c = filter_lakec(fc)
 
-       ! Use Alta relationship, Anderson(1976); LaChapelle(1961),
-       ! U.S.Department of Agriculture Forest Service, Project F,
-       ! Progress Rep. 1, Alta Avalanche Study Center:Snow Layer Densification.
-
-       dz_snowf = qflx_snow_grnd(c)/bifall(c)
-       snow_depth(c) = snow_depth(c) + dz_snowf*dtime
        if (snl(c) == 0) then
           h2osno_no_layers(c) = h2osno_no_layers(c) + qflx_snow_grnd(c)*dtime  ! snow water equivalent (mm)
        else
@@ -272,7 +277,6 @@ contains
           ! Only ice part of snowfall is added here, the liquid part will be added
           ! later.
           h2osoi_ice(c,snl(c)+1) = h2osoi_ice(c,snl(c)+1)+dtime*qflx_snow_grnd(c)
-          dz(c,snl(c)+1) = dz(c,snl(c)+1)+dz_snowf*dtime
        end if
     end do
 
@@ -760,5 +764,62 @@ contains
     end do
 
   end subroutine SumFlux_FluxesOntoGround
+
+  !-----------------------------------------------------------------------
+  subroutine BulkDiag_NewSnowDiagnostics(bounds, num_lakec, filter_lakec, &
+       dtime, snl, bifall, &
+       qflx_snow_grnd, &
+       dz, snow_depth)
+    !
+    ! !DESCRIPTION:
+    ! Update various snow-related diagnostic quantities to account for new snow
+    !
+    ! We pass in the entire waterstatebulk instance because we need to call a method on
+    ! this instance. Note that we operate on individual components of this instance, too,
+    ! but we do not pass them in explicitly because it can be confusing and error-prone to
+    ! have a single array accessible in two different ways in a subroutine (via the array
+    ! argument and via an instance).
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_lakec
+    integer, intent(in) :: filter_lakec(:)
+
+    real(r8)                  , intent(in)    :: dtime                           ! land model time step (sec)
+    integer                   , intent(in)    :: snl( bounds%begc: )             ! negative number of snow layers
+    real(r8)                  , intent(in)    :: bifall( bounds%begc: )          ! bulk density of newly fallen dry snow [kg/m3]
+    real(r8)                  , intent(in)    :: qflx_snow_grnd( bounds%begc: )  ! snow on ground after interception (mm H2O/s)
+    real(r8)                  , intent(inout) :: dz( bounds%begc: , -nlevsno+1: ) ! layer depth (m)
+    real(r8)                  , intent(inout) :: snow_depth( bounds%begc: )      ! snow height (m)
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c
+    real(r8) :: dz_snowf    ! layer thickness rate change due to precipitation [mm/s]
+
+    character(len=*), parameter :: subname = 'BulkDiag_NewSnowDiagnostics'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bifall, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snow_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(dz, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do fc = 1, num_lakec
+       c = filter_lakec(fc)
+
+       ! Use Alta relationship, Anderson(1976); LaChapelle(1961),
+       ! U.S.Department of Agriculture Forest Service, Project F,
+       ! Progress Rep. 1, Alta Avalanche Study Center:Snow Layer Densification.
+
+       dz_snowf = qflx_snow_grnd(c)/bifall(c)
+       snow_depth(c) = snow_depth(c) + dz_snowf*dtime
+
+       if (snl(c) < 0) then
+          dz(c,snl(c)+1) = dz(c,snl(c)+1)+dz_snowf*dtime
+       end if
+    end do
+
+  end subroutine BulkDiag_NewSnowDiagnostics
 
 end module LakeHydrologyMod

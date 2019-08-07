@@ -415,12 +415,6 @@ contains
     ! !DESCRIPTION:
     ! Update various snow-related diagnostic quantities to account for new snow
     !
-    ! We pass in the entire waterstatebulk instance because we need to call a method on
-    ! this instance. Note that we operate on individual components of this instance, too,
-    ! but we do not pass them in explicitly because it can be confusing and error-prone to
-    ! have a single array accessible in two different ways in a subroutine (via the array
-    ! argument and via an instance).
-    !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num_nolakec
@@ -805,11 +799,6 @@ contains
     ! This routine just operates on bulk-only quantities; state variables are handled in
     ! UpdateState_InitializeSnowPack.
     !
-    ! We pass in the entire waterdiagnosticbulk instance because we need to call a method
-    ! on this instance. Note that we operate on individual components of this instance,
-    ! too, but we do not pass them in explicitly because it can be confusing and
-    ! error-prone to have a single array accessible in two different ways in a subroutine
-    ! (via the array argument and via an instance).
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     type(filter_col_type), intent(in) :: snowpack_initialized_filterc ! column filter: columns where an explicit snow pack is initialized
