@@ -19,7 +19,6 @@ module SoilBiogeochemCompetitionMod
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenUptakeMod , only : SoilBiogeochemNitrogenUptake
   use ColumnType                      , only : col                
-  use GridcellType                   , only : grc
   use CNVegstateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
@@ -31,7 +30,6 @@ module SoilBiogeochemCompetitionMod
   use TemperatureType                 , only : temperature_type
   use SoilStateType                   , only : soilstate_type
   use CanopyStateType                 , only : CanopyState_type
-
   !
   implicit none
   private
@@ -284,6 +282,7 @@ contains
       sminn_to_plant_new(bounds%begc:bounds%endc)  =  0._r8
 
       local_use_fun = use_fun
+
       if (.not. use_nitrif_denitrif) then
 
          ! init sminn_tot

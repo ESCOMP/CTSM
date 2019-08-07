@@ -729,7 +729,8 @@ contains
     real(r8):: Q10                          ! temperature dependence
     real(r8):: froz_q10                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
     real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [
-    integer :: c, fc, j, k, l, dt
+    integer :: c, fc, j, k, l
+    real(r8):: dt                           ! decomposition time step
     real(r8):: catanf                       ! hyperbolic temperature function from CENTURY
     real(r8):: catanf_30                    ! reference rate at 30C
     real(r8):: t1                           ! temperature argument
@@ -1125,7 +1126,6 @@ contains
                                        * spinup_geogterm_s2(c)
                decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
                                        * spinup_geogterm_s3(c)
- ! If use soil_matrix              
                if(use_soil_matrixcn)then
                   Ksoil%DM(c,j+nlevdecomp*(i_litr1-1)) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) * dt
                   Ksoil%DM(c,j+nlevdecomp*(i_litr2-1)) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) * dt
@@ -1133,7 +1133,7 @@ contains
                   Ksoil%DM(c,j+nlevdecomp*(i_soil1-1)) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) * dt
                   Ksoil%DM(c,j+nlevdecomp*(i_soil2-1)) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) * dt
                   Ksoil%DM(c,j+nlevdecomp*(i_soil3-1)) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) * dt
-               end if
+               end if !use_soil_matrixcn
             end do
          end do
       else
@@ -1146,7 +1146,6 @@ contains
                decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s1(c)
                decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s2(c)
                decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s3(c)
- !if use soil_matrix              
                if(use_soil_matrixcn)then
                   Ksoil%DM(c,j+nlevdecomp*(i_litr1-1)) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
                   Ksoil%DM(c,j+nlevdecomp*(i_litr2-1)) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
@@ -1154,7 +1153,7 @@ contains
                   Ksoil%DM(c,j+nlevdecomp*(i_soil1-1)) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
                   Ksoil%DM(c,j+nlevdecomp*(i_soil2-1)) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
                   Ksoil%DM(c,j+nlevdecomp*(i_soil3-1)) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-               end if
+               end if !use_soil_matrixcn
             end do
          end do
       end if
@@ -1167,12 +1166,10 @@ contains
                   c = filter_soilc(fc)
                   decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * &
                        o_scalar(c,j) * spinup_geogterm_cwd(c)
-! if use soil_matrix                  
                   if(use_soil_matrixcn)then
                      Ksoil%DM(c,j+nlevdecomp*(i_cwd-1))   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * &
                             o_scalar(c,j) * dt
-!                     write(420,"(A,2I,10E17.9)"),'decomp',c,j,t_scalar(c,j),w_scalar(c,j),o_scalar(c,j),depth_scalar(c,j),k_l1,k_l2_l3,k_s1,k_s2,k_s3,k_frag
-                  end if
+                  end if !use_soil_matrixcn
                end do
             end do
          else
@@ -1181,11 +1178,10 @@ contains
                   c = filter_soilc(fc)
                   decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * &
                        o_scalar(c,j) * spinup_geogterm_cwd(c)
-  ! if use soil_matrix                
                   if(use_soil_matrixcn)then
                       Ksoil%DM(c,j+nlevdecomp*(i_cwd-1))   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * &
                              o_scalar(c,j)
-                  end if
+                  end if !use_soil_matrixcn
                end do
             end do
          end if

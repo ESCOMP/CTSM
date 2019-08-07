@@ -42,7 +42,6 @@ module SoilBiogeochemNitrogenStateType
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: decomp_npools_col            (:,:)   ! col (gN/m2)  decomposing (litter, cwd, soil) N pools
      real(r8), pointer :: decomp_npools_1m_col         (:,:)   ! col (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 1 meter
-     real(r8), pointer :: matrix_cap_decomp_npools_col (:,:)   ! col (gN/m2) N capacity in decomposing (litter, cwd, soil) N pools in dimension (col,npools)
      real(r8), pointer :: sminn_col                    (:)     ! col (gN/m2) soil mineral N
      real(r8), pointer :: ntrunc_col                   (:)     ! col (gN/m2) column-level sink for N truncation
      real(r8), pointer :: cwdn_col                     (:)     ! col (gN/m2) Diagnostic: coarse woody debris N
@@ -59,6 +58,8 @@ module SoilBiogeochemNitrogenStateType
      real(r8)          :: totvegcthresh                  ! threshold for total vegetation carbon to zero out decomposition pools
 
      ! Matrix-cn
+     real(r8), pointer :: matrix_cap_decomp_npools_col    (:,:)   ! col (gN/m2) N capacity in decomposing (litter, cwd, soil) N pools in dimension (col,npools)
+     real(r8), pointer :: matrix_cap_decomp_npools_vr_col (:,:,:) ! col (gN/m3) vertically-resolved N capacity in decomposing (litter, cwd, soil) pools in dimension(col,nlev,npools)
      real(r8), pointer :: in_nacc                         (:,:)   ! col (gN/m3/yr) accumulated litter fall N input per year in dimension(col,nlev*npools)
      real(r8), pointer :: in_nacc_2d                      (:,:,:) ! col (gN/m3/yr) accumulated litter fall N input per year in dimension(col,nlev,npools)
      real(r8), pointer :: tran_nacc                       (:,:,:) ! col (gN/m3/yr) accumulated N transfers from j to i (col,i,j) per year in dimension(col,nlev*npools,nlev*npools)
@@ -67,7 +68,6 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: exit_nacc                       (:,:,:) ! col (gN/m3/yr) accumulated exit N in dimension(col,nlev,npools)
      real(r8), pointer :: hori_tran_nacc                  (:,:,:) ! col (gN/m3/yr) accumulated N transport between pools at the same level in dimension(col,nlev,ntransfers)
      type(sparse_matrix_type) :: AKXnacc                          ! col (gN/m3/yr) accumulated N transfers from j to i (col,i,j) per year in dimension(col,nlev*npools,nlev*npools) in sparse matrix type
-     real(r8), pointer :: matrix_cap_decomp_npools_vr_col (:,:,:) ! col (gN/m3) vertically-resolved N capacity in decomposing (litter, cwd, soil) pools in dimension(col,nlev,npools)
      type(vector_type) :: matrix_Ninter                           ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools in dimension(col,nlev*npools) in vector type
 
    contains

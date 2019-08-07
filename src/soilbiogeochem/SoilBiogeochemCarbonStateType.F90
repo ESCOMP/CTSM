@@ -25,36 +25,36 @@ module SoilBiogeochemCarbonStateType
   type, public :: soilbiogeochem_carbonstate_type
      
      ! all c pools involved in decomposition
-     real(r8), pointer :: decomp_cpools_vr_col (:,:,:) ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
-     real(r8), pointer :: matrix_cap_decomp_cpools_vr_col (:,:,:) ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
-!for matrix-spinup
-     real(r8), pointer :: decomp0_cpools_vr_col (:,:,:) ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
-     real(r8), pointer :: in_acc                (:,:) 
-     real(r8), pointer :: tran_acc              (:,:,:)
-     real(r8), pointer :: in_acc_2d          (:,:,:) ! (gC/m2) accumulated litter fall C input
-     real(r8), pointer :: vert_up_tran_acc   (:,:,:) ! (gC/m3) accumulated upward vertical C transport
-     real(r8), pointer :: vert_down_tran_acc (:,:,:) ! (gC/m3) accumulated downward vertical C transport
-     real(r8), pointer :: exit_acc           (:,:,:) ! (gC/m3) accumulated exit C 
-     real(r8), pointer :: hori_tran_acc      (:,:,:) ! (gC/m3) accumulated C transport between pools at the same level
-     type(sparse_matrix_type) :: AKXcacc              ! (gC/m3) accumulated exit N
+     real(r8), pointer :: decomp_cpools_vr_col    (:,:,:) ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
+     real(r8), pointer :: decomp0_cpools_vr_col   (:,:,:) ! (gC/m3) vertically-resolved C baseline (initial value of this year) in decomposing (litter, cwd, soil) pools in dimension (col,nlev,npools)
 
-     real(r8), pointer :: ctrunc_vr_col        (:,:)   ! (gC/m3) vertically-resolved column-level sink for C truncation
+     real(r8), pointer :: ctrunc_vr_col           (:,:)   ! (gC/m3) vertically-resolved column-level sink for C truncation
 
      ! summary (diagnostic) state variables, not involved in mass balance
-     real(r8), pointer :: ctrunc_col               (:) ! (gC/m2) column-level sink for C truncation
-     real(r8), pointer :: totlitc_col          (:)     ! (gC/m2) total litter carbon
-     real(r8), pointer :: totlitc_1m_col       (:)     ! (gC/m2) total litter carbon to 1 meter
-     real(r8), pointer :: totsomc_col          (:)     ! (gC/m2) total soil organic matter carbon
-     real(r8), pointer :: totsomc_1m_col       (:)     ! (gC/m2) total soil organic matter carbon to 1 meter
-     real(r8), pointer :: cwdc_col             (:)     ! (gC/m2) coarse woody debris C (diagnostic)
-     real(r8), pointer :: decomp_cpools_1m_col (:,:)   ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 1 meter
-     real(r8), pointer :: decomp_cpools_col    (:,:)   ! (gC/m2)  decomposing (litter, cwd, soil) c pools
-     real(r8), pointer :: matrix_cap_decomp_cpools_col    (:,:)   ! (gC/m2)  decomposing (litter, cwd, soil) c pools
-     real(r8), pointer :: dyn_cbal_adjustments_col (:) ! (gC/m2) adjustments to each column made in this timestep via dynamic column area adjustments (note: this variable only makes sense at the column-level: it is meaningless if averaged to the gridcell-level)
-     integer  :: restart_file_spinup_state             ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
-     real(r8)          :: totvegcthresh                ! threshold for total vegetation carbon to zero out decomposition pools
+     real(r8), pointer :: ctrunc_col              (:)     ! (gC/m2) column-level sink for C truncation
+     real(r8), pointer :: totlitc_col             (:)     ! (gC/m2) total litter carbon
+     real(r8), pointer :: totlitc_1m_col          (:)     ! (gC/m2) total litter carbon to 1 meter
+     real(r8), pointer :: totsomc_col             (:)     ! (gC/m2) total soil organic matter carbon
+     real(r8), pointer :: totsomc_1m_col          (:)     ! (gC/m2) total soil organic matter carbon to 1 meter
+     real(r8), pointer :: cwdc_col                (:)     ! (gC/m2) coarse woody debris C (diagnostic)
+     real(r8), pointer :: decomp_cpools_1m_col    (:,:)   ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 1 meter
+     real(r8), pointer :: decomp_cpools_col       (:,:)   ! (gC/m2)  decomposing (litter, cwd, soil) c pools
+     real(r8), pointer :: dyn_cbal_adjustments_col(:)     ! (gC/m2) adjustments to each column made in this timestep via dynamic column area adjustments (note: this variable only makes sense at the column-level: it is meaningless if averaged to the gridcell-level)
+     integer           :: restart_file_spinup_state       ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
+     real(r8)          :: totvegcthresh                   ! threshold for total vegetation carbon to zero out decomposition pools
 
-     type(vector_type)        :: matrix_Cinter
+     ! Matrix-cn
+     real(r8), pointer :: matrix_cap_decomp_cpools_col    (:,:)   ! (gC/m2) C capacity in decomposing (litter, cwd, soil) N pools in dimension (col,npools)
+     real(r8), pointer :: matrix_cap_decomp_cpools_vr_col (:,:,:) ! (gC/m3) vertically-resolved C capacity in decomposing (litter, cwd, soil) pools in dimension(col,nlev,npools)
+     real(r8), pointer :: in_acc                          (:,:)   ! (gC/m3/yr) accumulated litter fall C input per year in dimension(col,nlev*npools)
+     real(r8), pointer :: in_acc_2d                       (:,:,:) ! (gC/m3/yr) accumulated litter fall C input per year in dimension(col,nlev,npools)
+     real(r8), pointer :: tran_acc                        (:,:,:) ! (gC/m3/yr) accumulated C transfers from j to i (col,i,j) per year in dimension(col,nlev*npools,nlev*npools)
+     real(r8), pointer :: vert_up_tran_acc                (:,:,:) ! (gC/m3/yr) accumulated upward vertical C transport in dimension(col,nlev,npools)
+     real(r8), pointer :: vert_down_tran_acc              (:,:,:) ! (gC/m3/yr) accumulated downward vertical C transport in dimension(col,nlev,npools)
+     real(r8), pointer :: exit_acc                        (:,:,:) ! (gC/m3/yr) accumulated exit C in dimension(col,nlev,npools)
+     real(r8), pointer :: hori_tran_acc                   (:,:,:) ! (gC/m3/yr) accumulated C transport between pools at the same level in dimension(col,nlev,ntransfers)
+     type(sparse_matrix_type) :: AKXcacc                          ! (gC/m3/yr) accumulated N transfers from j to i (col,i,j) per year in dimension(col,nlev*npools,nlev*npools) in sparse matrix type
+     type(vector_type) :: matrix_Cinter                           ! (gC/m3)    vertically-resolved decomposing (litter, cwd, soil) N pools in dimension(col,nlev*npools) in vector type
 
    contains
 

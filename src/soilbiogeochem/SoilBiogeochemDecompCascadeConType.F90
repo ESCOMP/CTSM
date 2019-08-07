@@ -43,25 +43,25 @@ module SoilBiogeochemDecompCascadeConType
      logical           , pointer  :: is_lignin(:)                      ! TRUE => pool is lignin
      real(r8)          , pointer  :: spinup_factor(:)                  ! factor by which to scale AD and relevant processes by
 
-     integer,pointer :: spm_tranlist_a(:,:)
-     integer,pointer :: A_i(:)
-     integer,pointer :: A_j(:)
-     integer,pointer :: tri_i(:)
-     integer,pointer :: tri_j(:)
-     integer,pointer :: all_i(:)
-     integer,pointer :: all_j(:)
+     integer,pointer :: spm_tranlist_a(:,:)                            ! Prescribed subscripts to map 2D variables (transitions,soil layer) to 1D sparse matrix format in a_ma_vr and na_ma_vr
+     integer,pointer :: A_i(:)                                         ! Prescribed row number of all elements in a_ma_vr
+     integer,pointer :: A_j(:)                                         ! Prescribed column number of all elements in na_ma_vr
+     integer,pointer :: tri_i(:)                                       ! Prescribed row index of all entries in AVsoil
+     integer,pointer :: tri_j(:)                                       ! Prescribed column index of all entries in AVsoil
+     integer,pointer :: all_i(:)                                       ! Prescribed row index of all entries in AKallsoilc, AKallsoiln, AKXcacc, and AKXnacc
+     integer,pointer :: all_j(:)                                       ! Prescribed column index of all entries in AKallsoilc, AKallsoiln, AKXcacc, and AKXnacc
 
-     integer,pointer :: list_V_AKVfire (:)
-     integer,pointer :: list_AK_AKVfire(:)
-     integer,pointer :: list_fire_AKVfire(:)
-     integer,pointer :: list_AK_AKV    (:)
-     integer,pointer :: list_V_AKV     (:)
-     integer,pointer :: list_Asoilc    (:)
-     integer,pointer :: list_Asoiln    (:)
+     integer,pointer :: list_V_AKVfire (:)                             ! Saves mapping indices from V to (A*K+V-Kfire) in the addition subroutine SPMP_ABC
+     integer,pointer :: list_AK_AKVfire(:)                             ! Saves mapping indices from A*K to (A*K+V-Kfire) in the addition subroutine SPMP_ABC
+     integer,pointer :: list_fire_AKVfire(:)                           ! Saves mapping indices from Kfire to (A*K+V-Kfire) in the addition subroutine SPMP_ABC
+     integer,pointer :: list_AK_AKV    (:)                             ! Saves mapping indices from A*K to (A*K+V) in the addition subroutine SPMP_AB
+     integer,pointer :: list_V_AKV     (:)                             ! Saves mapping indices from V to (A*K+V) in the addition subroutine SPMP_AB
+     integer,pointer :: list_Asoilc    (:)                             ! Saves mapping indices from a_ma_vr to AKsoilc
+     integer,pointer :: list_Asoiln    (:)                             ! Saves mapping indices from na_ma_vr to AKsoiln
 
-     integer, public :: n_all_entries
-     integer, public :: Ntrans_setup 
-     integer, public :: Ntri_setup
+     integer, public :: n_all_entries                                  ! Number of all entries in AKallsoilc, AKallsoiln, AKXcacc, and AKXnacc
+     integer, public :: Ntrans_setup                                   ! Number of horizontal transfers between soil and litter pools
+     integer, public :: Ntri_setup                                     ! Number of non-zero entries in AVsoil
 
   end type decomp_cascade_type
 
@@ -138,7 +138,7 @@ contains
   end subroutine init_decomp_cascade_constants
 
  subroutine InitSoilTransfer()
-! Initialize sparse matrix variables and index. Count possible non-zero entries and note their x and y in the matrix.
+! Initialize sparse matrix variables and index. Count possible non-zero entries and record their x and y in the matrix.
 ! Collect those non-zero entry information, and save them into the list.
 
   use SPMMod         , only : sparse_matrix_type, diag_matrix_type, vector_type

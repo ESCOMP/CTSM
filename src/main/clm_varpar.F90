@@ -52,9 +52,9 @@ module clm_varpar
   integer, parameter :: nvariants   =   2     ! number of variants of PFT constants
   integer, parameter :: nvegpool_natveg = 18  ! number of vegetation matrix pool without crop
   integer, parameter :: nvegpool_crop   =  3  ! number of vegetation matrix pool with crop
-  integer, parameter :: nveg_retransn   =  1
-  integer            :: nvegcpool        
-  integer            :: nvegnpool        
+  integer, parameter :: nveg_retransn   =  1  ! number of vegetation retranslocation pool
+  integer            :: nvegcpool             ! number of vegetation C pools
+  integer            :: nvegnpool             ! number of vegetation N pools
 
   integer :: numpft      = mxpft   ! actual # of pfts (without bare)
   integer :: numcft      =  64     ! actual # of crops (includes unused CFTs that are merged into other CFTs)
@@ -69,52 +69,53 @@ module clm_varpar
   integer, parameter :: i_lig_lit  = i_cel_lit + 1
   integer            :: i_cwd
    !Matrix index (when use_matrixcn)
-  integer, parameter :: ileaf         = 1
-  integer, parameter :: ileaf_st      = 2
-  integer, parameter :: ileaf_xf      = 3
-  integer, parameter :: ifroot        = 4
-  integer, parameter :: ifroot_st     = 5
-  integer, parameter :: ifroot_xf     = 6
-  integer, parameter :: ilivestem     = 7
-  integer, parameter :: ilivestem_st  = 8
-  integer, parameter :: ilivestem_xf  = 9
-  integer, parameter :: ideadstem     = 10
-  integer, parameter :: ideadstem_st  = 11
-  integer, parameter :: ideadstem_xf  = 12
-  integer, parameter :: ilivecroot    = 13
-  integer, parameter :: ilivecroot_st = 14
-  integer, parameter :: ilivecroot_xf = 15
-  integer, parameter :: ideadcroot    = 16
-  integer, parameter :: ideadcroot_st = 17
-  integer, parameter :: ideadcroot_xf = 18
-  integer, parameter :: igrain        = 19
-  integer, parameter :: igrain_st     = 20
-  integer, parameter :: igrain_xf     = 21
+  integer, parameter :: ileaf         = 1     ! leaf pool index
+  integer, parameter :: ileaf_st      = 2     ! leaf storage pool index
+  integer, parameter :: ileaf_xf      = 3     ! leaf transfer pool index
+  integer, parameter :: ifroot        = 4     ! fine root pool index
+  integer, parameter :: ifroot_st     = 5     ! fine root storage pool index
+  integer, parameter :: ifroot_xf     = 6     ! fine root transfer pool index
+  integer, parameter :: ilivestem     = 7     ! live stem pool index
+  integer, parameter :: ilivestem_st  = 8     ! live stem storage pool index
+  integer, parameter :: ilivestem_xf  = 9     ! live stem transfer pool index
+  integer, parameter :: ideadstem     = 10    ! dead stem pool index
+  integer, parameter :: ideadstem_st  = 11    ! dead stem storage pool index
+  integer, parameter :: ideadstem_xf  = 12    ! dead stem transfer pool index
+  integer, parameter :: ilivecroot    = 13    ! live coarse root pool index
+  integer, parameter :: ilivecroot_st = 14    ! live coarse root storage pool index
+  integer, parameter :: ilivecroot_xf = 15    ! live coarse root transfer pool index
+  integer, parameter :: ideadcroot    = 16    ! dead coarse root pool index
+  integer, parameter :: ideadcroot_st = 17    ! dead coarse root storage pool index
+  integer, parameter :: ideadcroot_xf = 18    ! dead coarse root transfer pool index
+  integer, parameter :: igrain        = 19    ! grain pool index
+  integer, parameter :: igrain_st     = 20    ! grain storage pool index
+  integer, parameter :: igrain_xf     = 21    ! grain transfer pool index
 
-  integer            :: ncphtrans               !maximum number of vegetation C transfers through phenology
-  integer            :: ncphouttrans            !maximum number of vegetation C transfers out of vegetation through phenology
-  integer            :: ncgmtrans               !maximum number of vegetation C transfers through gap mortality
-  integer            :: ncgmouttrans            !maximum number of vegetation C transfers out of vegetation through gap mortality
-  integer            :: ncfitrans               !maximum number of vegetation C transfers through fire
-  integer            :: ncfiouttrans            !maximum number of vegetation C transfers out of vegetation trhough fire
-  integer            :: nnphtrans               !maximum number of vegetation N transfers through phenology
-  integer            :: nnphouttrans            !maximum number of vegetation N transfers out of vegetation through phenology
-  integer            :: nngmtrans               !maximum number of vegetation N transfers through gap mortality
-  integer            :: nngmouttrans            !maximum number of vegetation N transfers out of vegetation through gap mortality
-  integer            :: nnfitrans               !maximum number of vegetation N transfers through fire
-  integer            :: nnfiouttrans            !maximum number of vegetation N transfers out of vegetation trhough fire
+  integer            :: ncphtrans             !maximum number of vegetation C transfers through phenology
+  integer            :: ncphouttrans          !maximum number of vegetation C transfers out of vegetation through phenology
+  integer            :: ncgmtrans             !maximum number of vegetation C transfers through gap mortality
+  integer            :: ncgmouttrans          !maximum number of vegetation C transfers out of vegetation through gap mortality
+  integer            :: ncfitrans             !maximum number of vegetation C transfers through fire
+  integer            :: ncfiouttrans          !maximum number of vegetation C transfers out of vegetation trhough fire
+  integer            :: nnphtrans             !maximum number of vegetation N transfers through phenology
+  integer            :: nnphouttrans          !maximum number of vegetation N transfers out of vegetation through phenology
+  integer            :: nngmtrans             !maximum number of vegetation N transfers through gap mortality
+  integer            :: nngmouttrans          !maximum number of vegetation N transfers out of vegetation through gap mortality
+  integer            :: nnfitrans             !maximum number of vegetation N transfers through fire
+  integer            :: nnfiouttrans          !maximum number of vegetation N transfers out of vegetation trhough fire
 
   
-  integer            :: iretransn     
+  integer            :: iretransn             ! retranslocation pool index
      
-  integer            :: ioutc 
-  integer            :: ioutn 
+  integer            :: ioutc                 ! external C pool index
+  integer            :: ioutn                 ! external N pool index
 
   integer :: ndecomp_pools
   integer :: ndecomp_cascade_transitions
   integer :: ndecomp_cascade_outtransitions
+
 ! for soil matrix 
- integer :: ndecomp_pools_vr   !total number of pools ndecomp_pools*vertical levels
+ integer  :: ndecomp_pools_vr   !total number of pools ndecomp_pools*vertical levels
 
   ! Indices used in surface file read and set in clm_varpar_init
 

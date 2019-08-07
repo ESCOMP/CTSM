@@ -263,26 +263,26 @@ contains
          sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch          , & ! Output:  [real(r8) (:) ]  Total N uptake of FUN (gN/m2/s)
          matrix_Cinput                => cnveg_carbonflux_inst%matrix_Cinput_patch                 , & ! Output:  [real(r8) (:) ]  C input of matrix (gC/m2/s)
          matrix_Ninput                => cnveg_nitrogenflux_inst%matrix_Ninput_patch               , & ! Output:  [real(r8) (:) ]  N input of matrix (gN/m2/s)
-         matrix_nphtransfer           => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch          , & ! Output:  [real(r8) (:,:,:) ]  A-matrix_phenologh for nitrogen
+         matrix_nphtransfer           => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch          , & ! Output:  [real(r8) (:,:,:) ]  A-matrix_phenology for nitrogen
          matrix_alloc                 => cnveg_carbonflux_inst%matrix_alloc_patch                  , & ! Output:  [real(r8) (:,:) ]    B-matrix for carbon allocation
          matrix_nalloc                => cnveg_nitrogenflux_inst%matrix_nalloc_patch               , & ! Output:  [real(r8) (:,:) ]    B-matrix for nitrogen allocation
-         iretransn_to_ileaf           => cnveg_nitrogenflux_inst%iretransn_to_ileaf_ph             , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to leaf pool
-         iretransn_to_ileafst         => cnveg_nitrogenflux_inst%iretransn_to_ileafst_ph           , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to leaf storage pool
-         iretransn_to_ifroot          => cnveg_nitrogenflux_inst%iretransn_to_ifroot_ph            , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to fine root pool
-         iretransn_to_ifrootst        => cnveg_nitrogenflux_inst%iretransn_to_ifrootst_ph          , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to fine root storage pool
-         iretransn_to_ilivestem       => cnveg_nitrogenflux_inst%iretransn_to_ilivestem_ph         , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to live stem pool
-         iretransn_to_ilivestemst     => cnveg_nitrogenflux_inst%iretransn_to_ilivestemst_ph       , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to live stem storage pool
-         iretransn_to_ideadstem       => cnveg_nitrogenflux_inst%iretransn_to_ideadstem_ph         , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to dead stem pool
-         iretransn_to_ideadstemst     => cnveg_nitrogenflux_inst%iretransn_to_ideadstemst_ph       , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to dead stem storage pool
-         iretransn_to_ilivecroot      => cnveg_nitrogenflux_inst%iretransn_to_ilivecroot_ph        , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to live coarse root pool
-         iretransn_to_ilivecrootst    => cnveg_nitrogenflux_inst%iretransn_to_ilivecrootst_ph      , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to live coarse root storage pool
-         iretransn_to_ideadcroot      => cnveg_nitrogenflux_inst%iretransn_to_ideadcroot_ph        , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to dead coarse root pool
-         iretransn_to_ideadcrootst    => cnveg_nitrogenflux_inst%iretransn_to_ideadcrootst_ph      , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to dead coarse root storage pool
-         iretransn_to_igrain          => cnveg_nitrogenflux_inst%iretransn_to_igrain_ph            , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to grain pool
-         iretransn_to_igrainst        => cnveg_nitrogenflux_inst%iretransn_to_igrainst_ph          , & ! Input:   [integer] Index of phenology related N transfer from retranslocation pool to grain storage pool
-         ileaf_to_iretransn           => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph             , & ! Input:   [integer] Index of phenology related N transfer from leaf pool to retranslocation pools
-         ifroot_to_iretransn          => cnveg_nitrogenflux_inst%ifroot_to_iretransn_ph            , & ! Input:   [integer] Index of phenology related N transfer from fine root pool to retranslocation pools
-         ilivestem_to_iretransn       => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           & ! Input:   [integer] Index of phenology related N transfer from live stem pool to retranslocation pools
+         iretransn_to_ileaf           => cnveg_nitrogenflux_inst%iretransn_to_ileaf_ph             , & ! Input:   [integer] Transfer index (from retranslocation pool to leaf pool)
+         iretransn_to_ileafst         => cnveg_nitrogenflux_inst%iretransn_to_ileafst_ph           , & ! Input:   [integer] Transfer index (from retranslocation pool to leaf storage pool)
+         iretransn_to_ifroot          => cnveg_nitrogenflux_inst%iretransn_to_ifroot_ph            , & ! Input:   [integer] Transfer index (from retranslocation pool to fine root pool)
+         iretransn_to_ifrootst        => cnveg_nitrogenflux_inst%iretransn_to_ifrootst_ph          , & ! Input:   [integer] Transfer index (from retranslocation pool to fine root storage pool)
+         iretransn_to_ilivestem       => cnveg_nitrogenflux_inst%iretransn_to_ilivestem_ph         , & ! Input:   [integer] Transfer index (from retranslocation pool to live stem pool)
+         iretransn_to_ilivestemst     => cnveg_nitrogenflux_inst%iretransn_to_ilivestemst_ph       , & ! Input:   [integer] Transfer index (from retranslocation pool to live stem storage pool)
+         iretransn_to_ideadstem       => cnveg_nitrogenflux_inst%iretransn_to_ideadstem_ph         , & ! Input:   [integer] Transfer index (from retranslocation pool to dead stem pool)
+         iretransn_to_ideadstemst     => cnveg_nitrogenflux_inst%iretransn_to_ideadstemst_ph       , & ! Input:   [integer] Transfer index (from retranslocation pool to dead stem storage pool)
+         iretransn_to_ilivecroot      => cnveg_nitrogenflux_inst%iretransn_to_ilivecroot_ph        , & ! Input:   [integer] Transfer index (from retranslocation pool to live coarse root pool)
+         iretransn_to_ilivecrootst    => cnveg_nitrogenflux_inst%iretransn_to_ilivecrootst_ph      , & ! Input:   [integer] Transfer index (from retranslocation pool to live coarse root storage pool)
+         iretransn_to_ideadcroot      => cnveg_nitrogenflux_inst%iretransn_to_ideadcroot_ph        , & ! Input:   [integer] Transfer index (from retranslocation pool to dead coarse root pool)
+         iretransn_to_ideadcrootst    => cnveg_nitrogenflux_inst%iretransn_to_ideadcrootst_ph      , & ! Input:   [integer] Transfer index (from retranslocation pool to dead coarse root storage pool)
+         iretransn_to_igrain          => cnveg_nitrogenflux_inst%iretransn_to_igrain_ph            , & ! Input:   [integer] Transfer index (from retranslocation pool to grain pool)
+         iretransn_to_igrainst        => cnveg_nitrogenflux_inst%iretransn_to_igrainst_ph          , & ! Input:   [integer] Transfer index (from retranslocation pool to grain storage pool)
+         ileaf_to_iretransn           => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph             , & ! Input:   [integer] Transfer index (from leaf pool to retranslocation pools)
+         ifroot_to_iretransn          => cnveg_nitrogenflux_inst%ifroot_to_iretransn_ph            , & ! Input:   [integer] Transfer index (from fine root pool to retranslocation pools)
+         ilivestem_to_iretransn       => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           & ! Input:   [integer] Transfer index (from live stem pool to retranslocation pools)
          )
 
       ! patch loop to distribute the available N between the competing patches 

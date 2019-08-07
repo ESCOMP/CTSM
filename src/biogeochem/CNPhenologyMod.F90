@@ -3183,7 +3183,7 @@ contains
          end if
 
       end do
-!matrix for leafn_to_retransn will be added in allocation subroutine
+      !matrix for retransn_to_leafn will be added in allocation subroutine
     end associate 
 
   end subroutine CNBackgroundLitterfall

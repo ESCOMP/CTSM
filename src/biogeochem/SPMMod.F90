@@ -22,26 +22,26 @@ module SPMMod
  
   !sparse matrix is in COO format, Both row index and column index should be in ascending order. 
   !Row index should change faster than Column index to ensure SPMP_AB work properly.
-
-     real(r8), pointer :: M(:,:)
-     integer , pointer :: RI(:) !Row index
-     integer , pointer :: CI(:) !Column index
-     integer NE
-     integer SM
-     integer num_unit
-     integer begu
-     integer endu
+ 
+     real(r8), pointer :: M(:,:)        ! non-zero entries in sparse matrix (unit,sparse matrix index)
+     integer , pointer :: RI(:)         ! Row index
+     integer , pointer :: CI(:)         ! Column index
+     integer NE                         ! Number of nonzero entries
+     integer SM                         ! Size of matrix, eg. for nxn matrix, SM=n
+     integer num_unit                   ! number of active unit, such as patch, col, or gridcell
+     integer begu                       ! begin index of unit in current process
+     integer endu                       ! end index of unit in current process
   
   contains
     
-    procedure, public :: InitSM
-    procedure, public :: SetValueSM
-    procedure, public :: SetValueA
-    procedure, public :: SetValueA_diag
-    procedure, public :: SPMM_AK
-    procedure, public :: SPMP_AB   
-    procedure, public :: SPMP_B_ACC
-    procedure, public :: SPMP_ABC
+    procedure, public :: InitSM         ! subroutine to initilize sparse matrix type
+    procedure, public :: SetValueSM     ! subroutine to set values in sparse matrix of any shape
+    procedure, public :: SetValueA      ! subroutine to set off-diagonal values in sparse matrix of A
+    procedure, public :: SetValueA_diag ! subroutine to set diagonal values in sparse matrix of A
+    procedure, public :: SPMM_AK        ! subroutine to calculate sparse matrix multiplication: A(sparse matrix) = A(sparse matrix) * K(diagonal matrix)
+    procedure, public :: SPMP_AB        ! subroutine to calculate sparse matrix addition AB(sparse matrix) = A(sparse matrix) + B(sparse matrix)
+    procedure, public :: SPMP_B_ACC     ! subroutine to calculate sparse matrix accumulation: B(sparse matrix) = B(sparse matrix) + A(sparse matrix)
+    procedure, public :: SPMP_ABC       ! subroutine to calculate sparse matrix addition ABC(sparse matrix) = A(sparse matrix) + B(sparse matrix) + C(sparse matrix)
 
   end type sparse_matrix_type
 
@@ -49,16 +49,16 @@ module SPMMod
   
   !diagnoal matrix only store diagnoal entries
 
-     real(r8), pointer :: DM(:,:)
-     integer SM
-     integer num_unit
-     integer begu
-     integer endu
+     real(r8), pointer :: DM(:,:)         ! entries in diagonal matrix (unit,diagonal matrix index)
+     integer SM                           ! Size of matrix, eg. for nxn matrix, SM=n
+     integer num_unit                     ! number of active unit, such as patch, col, or gridcell
+     integer begu                         ! begin index of unit in current process
+     integer endu                         ! end index of unit in current process
   
   contains
 
-    procedure, public :: InitDM
-    procedure, public :: SetValueDM
+    procedure, public :: InitDM           ! subroutine to initialize diagonal matrix type
+    procedure, public :: SetValueDM       ! subroutine to set values in diagonal matrix
 
   end type diag_matrix_type
 
@@ -66,19 +66,19 @@ module SPMMod
   
   !vector 
 
-     real(r8), pointer :: V(:,:)
-     integer SV
-     integer num_unit
-     integer begu
-     integer endu
+     real(r8), pointer :: V(:,:)          ! entries in vector (unit,vector index)
+     integer SV                           ! Size of vector
+     integer num_unit                     ! number of active unit, such as patch, col, or gridcell
+     integer begu                         ! begin index of unit in current process
+     integer endu                         ! end index of unit in current process
 
   contains 
   
-    procedure, public :: InitV
-    procedure, public :: ReleaseV
-    procedure, public :: SetValueV
-    procedure, public :: SetValueV_scaler
-    procedure, public :: SPMM_AX
+    procedure, public :: InitV            ! subroutine to initialize vector type
+    procedure, public :: ReleaseV         ! subroutine to deallocate veector type
+    procedure, public :: SetValueV        ! subroutine to set values in vector
+    procedure, public :: SetValueV_scaler ! subroutine to set a constant value to a vector
+    procedure, public :: SPMM_AX          ! subroutine to calculate multiplication X(vector)=A(sparse matrix)*X(vector)
 
   end type vector_type
 
