@@ -31,7 +31,7 @@ module SnowHydrologyMod
   use WaterFluxBulkType   , only : waterfluxbulk_type
   use WaterStateBulkType  , only : waterstatebulk_type
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
-  use SnowCoverFractionMod, only : snow_cover_fraction_type
+  use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
   use LandunitType    , only : landunit_type, lun
   use TopoMod, only : topo_type
   use ColumnType      , only : column_type, col
@@ -256,7 +256,7 @@ contains
     type(bounds_type)      , intent(in)    :: bounds     
     integer                , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
     integer                , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
-    class(snow_cover_fraction_type), intent(in) :: scf_method
+    class(snow_cover_fraction_base_type), intent(in) :: scf_method
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
@@ -426,7 +426,7 @@ contains
     integer, intent(in) :: num_nolakec
     integer, intent(in) :: filter_nolakec(:)
 
-    class(snow_cover_fraction_type), intent(in) :: scf_method
+    class(snow_cover_fraction_base_type), intent(in) :: scf_method
     real(r8)                  , intent(in)    :: dtime                           ! land model time step (sec)
     logical                   , intent(in)    :: urbpoi( bounds%begc: )          ! true=>urban point
     integer                   , intent(in)    :: snl( bounds%begc: )             ! negative number of snow layers
@@ -1218,7 +1218,7 @@ contains
     type(bounds_type)      , intent(in) :: bounds
     integer                , intent(in) :: num_snowc       ! number of column snow points in column filter
     integer                , intent(in) :: filter_snowc(:) ! column filter for snow points
-    class(snow_cover_fraction_type), intent(in) :: scf_method
+    class(snow_cover_fraction_base_type), intent(in) :: scf_method
     type(temperature_type) , intent(in) :: temperature_inst
     type(waterstatebulk_type)  , intent(in) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(in) :: waterdiagnosticbulk_inst

@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev055    sacks 08/06/2019 Modularize snow cover fraction method
+  ctsm1.0.dev054    sacks 08/02/2019 Fix interpolation of surfdat soil layers so we can use interpolation for 10SL case
+  ctsm1.0.dev053   slevis 08/01/2019 Soil layer definition clean-up and user-defined option
   ctsm1.0.dev052    sacks 07/22/2019 Fix rare soil color bug in mksurfdata_map
   ctsm1.0.dev051    sacks 07/19/2019 Update water tracers for remainder of first stage of hydrology
   ctsm1.0.dev050   slevis 07/15/2019 dz --> dz_lake bug-fix in LakeTemperatureMod.F90 line 960

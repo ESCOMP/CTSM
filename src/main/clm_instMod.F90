@@ -76,7 +76,8 @@ module clm_instMod
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
-  use SnowCoverFractionMod            , only : CreateAndInitScfMethod, snow_cover_fraction_type
+  use SnowCoverFractionBaseMod        , only : snow_cover_fraction_base_type
+  use SnowCoverFractionFactoryMod     , only : CreateAndInitSnowCoverFraction
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
   !
@@ -122,7 +123,7 @@ module clm_instMod
   type(lnd2glc_type), public              :: lnd2glc_inst
   type(glc_behavior_type), target, public :: glc_behavior
   type(topo_type), public                 :: topo_inst
-  class(snow_cover_fraction_type), public, allocatable :: scf_method
+  class(snow_cover_fraction_base_type), public, allocatable :: scf_method
   class(soil_water_retention_curve_type), public, allocatable :: soil_water_retention_curve
 
   ! CN vegetation types
@@ -315,7 +316,7 @@ contains
 
     call soilhydrology_inst%Init(bounds, nlfilename, water_inst%waterstatebulk_inst, &
          use_aquifer_layer = use_aquifer_layer())
-    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst)
+    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, soilstate_inst)
 
     call saturated_excess_runoff_inst%Init(bounds)
     call infiltration_excess_runoff_inst%Init(bounds)
@@ -329,7 +330,7 @@ contains
 
     call dust_inst%Init(bounds)
 
-    allocate(scf_method, source = CreateAndInitScfMethod( &
+    allocate(scf_method, source = CreateAndInitSnowCoverFraction( &
          snow_cover_fraction_method = snow_cover_fraction_method, &
          bounds = bounds, &
          col = col, &
