@@ -274,6 +274,11 @@ contains
           h2osoi_ice(c,snl(c)+1) = h2osoi_ice(c,snl(c)+1)+dtime*qflx_snow_grnd(c)
           dz(c,snl(c)+1) = dz(c,snl(c)+1)+dz_snowf*dtime
        end if
+    end do
+
+
+    do fc = 1, num_lakec
+       c = filter_lakec(fc)
 
        ! When the snow accumulation exceeds 40 mm, initialize snow layer
        ! Currently, the water temperature for the precipitation is simply set
