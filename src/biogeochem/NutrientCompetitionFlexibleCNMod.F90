@@ -410,29 +410,29 @@ contains
          sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch          , & ! Output:  [real(r8) (:) ]  Total soil N uptake of FUN (gN/m2/s)
 
          matrix_Cinput                => cnveg_carbonflux_inst%matrix_Cinput_patch                 , & ! C input of matrix 
-         matrix_C13input              => cnveg_carbonflux_inst%matrix_C13input_patch               , & ! C input of matrix
-         matrix_C14input              => cnveg_carbonflux_inst%matrix_C14input_patch               , & ! C input of matrix
+         matrix_C13input              => cnveg_carbonflux_inst%matrix_C13input_patch               , & ! C13 input of matrix
+         matrix_C14input              => cnveg_carbonflux_inst%matrix_C14input_patch               , & ! C14 input of matrix
          matrix_Ninput                => cnveg_nitrogenflux_inst%matrix_Ninput_patch               , & ! N input of matrix
-         matrix_nphtransfer        =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch          , & ! Input: N:N ratio for vegetation parts
-         matrix_alloc                 => cnveg_carbonflux_inst%matrix_alloc_patch                  , & ! C allocation of matrix
-         matrix_nalloc                => cnveg_nitrogenflux_inst%matrix_nalloc_patch               , & ! N allocation of matrix
-         iretransn_to_ileaf           => cnveg_nitrogenflux_inst%iretransn_to_ileaf_ph             , &
-         iretransn_to_ileafst         => cnveg_nitrogenflux_inst%iretransn_to_ileafst_ph           , &
-         iretransn_to_ifroot          => cnveg_nitrogenflux_inst%iretransn_to_ifroot_ph            , &
-         iretransn_to_ifrootst        => cnveg_nitrogenflux_inst%iretransn_to_ifrootst_ph          , &
-         iretransn_to_ilivestem       => cnveg_nitrogenflux_inst%iretransn_to_ilivestem_ph         , &
-         iretransn_to_ilivestemst     => cnveg_nitrogenflux_inst%iretransn_to_ilivestemst_ph       , &
-         iretransn_to_ideadstem       => cnveg_nitrogenflux_inst%iretransn_to_ideadstem_ph         , &
-         iretransn_to_ideadstemst     => cnveg_nitrogenflux_inst%iretransn_to_ideadstemst_ph       , &
-         iretransn_to_ilivecroot      => cnveg_nitrogenflux_inst%iretransn_to_ilivecroot_ph        , &
-         iretransn_to_ilivecrootst    => cnveg_nitrogenflux_inst%iretransn_to_ilivecrootst_ph      , &
-         iretransn_to_ideadcroot      => cnveg_nitrogenflux_inst%iretransn_to_ideadcroot_ph       , &
-         iretransn_to_ideadcrootst    => cnveg_nitrogenflux_inst%iretransn_to_ideadcrootst_ph             , &
-         iretransn_to_igrain           => cnveg_nitrogenflux_inst%iretransn_to_igrain_ph             , &
-         iretransn_to_igrainst         => cnveg_nitrogenflux_inst%iretransn_to_igrainst_ph             , &
-         ileaf_to_iretransn           => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph                 , &
-         ifroot_to_iretransn          => cnveg_nitrogenflux_inst%ifroot_to_iretransn_ph                 , &
-         ilivestem_to_iretransn       => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph                &
+         matrix_nphtransfer           => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch          , & ! A-matrix_phenology for nitrogen
+         matrix_alloc                 => cnveg_carbonflux_inst%matrix_alloc_patch                  , & ! B-matrix for carbon allocation
+         matrix_nalloc                => cnveg_nitrogenflux_inst%matrix_nalloc_patch               , & ! B-matrix for nitrogen allocation
+         iretransn_to_ileaf           => cnveg_nitrogenflux_inst%iretransn_to_ileaf_ph             , & ! Transfer index (from retranslocation pool to leaf pool)
+         iretransn_to_ileafst         => cnveg_nitrogenflux_inst%iretransn_to_ileafst_ph           , & ! Transfer index (from retranslocation pool to leaf storage pool)
+         iretransn_to_ifroot          => cnveg_nitrogenflux_inst%iretransn_to_ifroot_ph            , & ! Transfer index (from retranslocation pool to fine root pool)
+         iretransn_to_ifrootst        => cnveg_nitrogenflux_inst%iretransn_to_ifrootst_ph          , & ! Transfer index (from retranslocation pool to fine root storage pool)
+         iretransn_to_ilivestem       => cnveg_nitrogenflux_inst%iretransn_to_ilivestem_ph         , & ! Transfer index (from retranslocation pool to live stem pool)
+         iretransn_to_ilivestemst     => cnveg_nitrogenflux_inst%iretransn_to_ilivestemst_ph       , & ! Transfer index (from retranslocation pool to live stem storage pool)
+         iretransn_to_ideadstem       => cnveg_nitrogenflux_inst%iretransn_to_ideadstem_ph         , & ! Transfer index (from retranslocation pool to dead stem pool)
+         iretransn_to_ideadstemst     => cnveg_nitrogenflux_inst%iretransn_to_ideadstemst_ph       , & ! Transfer index (from retranslocation pool to dead stem storage pool)
+         iretransn_to_ilivecroot      => cnveg_nitrogenflux_inst%iretransn_to_ilivecroot_ph        , & ! Transfer index (from retranslocation pool to live coarse root pool)
+         iretransn_to_ilivecrootst    => cnveg_nitrogenflux_inst%iretransn_to_ilivecrootst_ph      , & ! Transfer index (from retranslocation pool to live coarse root storage pool)
+         iretransn_to_ideadcroot      => cnveg_nitrogenflux_inst%iretransn_to_ideadcroot_ph        , & ! Transfer index (from retranslocation pool to dead coarse root pool)
+         iretransn_to_ideadcrootst    => cnveg_nitrogenflux_inst%iretransn_to_ideadcrootst_ph      , & ! Transfer index (from retranslocation pool to dead coarse root storage pool)
+         iretransn_to_igrain          => cnveg_nitrogenflux_inst%iretransn_to_igrain_ph            , & ! Transfer index (from retranslocation pool to grain pool)
+         iretransn_to_igrainst        => cnveg_nitrogenflux_inst%iretransn_to_igrainst_ph          , & ! Transfer index (from retranslocation pool to grain storage pool)
+         ileaf_to_iretransn           => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph             , & ! Transfer index (from leaf pool to retranslocation pools)
+         ifroot_to_iretransn          => cnveg_nitrogenflux_inst%ifroot_to_iretransn_ph            , & ! Transfer index (from fine root pool to retranslocation pools)
+         ilivestem_to_iretransn       => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           & ! Transfer index (from live stem pool to retranslocation pools)
          )
 
       ! set time steps

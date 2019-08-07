@@ -13,15 +13,922 @@ module test_surfrdUtils
 
 contains
   
+  subroutine setup_test_collapse_routines(cftsize)
+     ! called during setup of all subroutines test_collapse_crop_types_*
+     use pftconMod, only : pftcon, nc3crop, nc3irrig
+     use clm_varpar, only : maxveg, cft_lb, cft_ub, natpft_size, natpft_lb, natpft_ub
+
+     implicit none
+     integer, intent(in) :: cftsize
+     integer :: m
+
+     ! Set relevant pftcon values to defaults; override where necessary
+     call pftcon%InitForTesting()
+     nc3crop     = 15
+     nc3irrig    = nc3crop + 1
+     do m = 1, nc3irrig
+        pftcon%mergetoclmpft(m) = m
+     end do
+     if (cftsize == 0) then  ! crops lumped together with unmanaged pfts
+        maxveg = nc3irrig  ! # of patches without bare ground
+        natpft_size = maxveg + 1  ! includes bare ground
+     else
+        natpft_size = nc3crop  ! includes bare ground
+        maxveg = natpft_size + cftsize - 1  ! # of patches without bare ground
+     end if
+     natpft_lb = 0
+     natpft_ub = natpft_lb + natpft_size - 1
+     cft_lb = natpft_ub + 1
+     cft_ub = cft_lb + cftsize - 1
+
+  end subroutine setup_test_collapse_routines
+
+  @Test
+  subroutine test_collapse_all_lunit_opts_active
+     ! Tests subroutine collapse_to_dominant when called first with
+     ! collapse_urban = .true. and then with n_dom_landunits.
+     ! The same test subsequently calls collapse_individual_lunits.
+     use pftconMod, only: pftcon
+     use clm_instur, only: wt_lunit
+     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+                                istdlak, istwet, isturb_tbd, isturb_hd, &
+                                isturb_md
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 4
+     integer, parameter :: n_dom_urban = 1, n_dom_landunits = 2
+     real(r8) :: wt_lunit_sum, expctd(9)
+     real(r8), allocatable :: wt_expected(:,:)
+     real(r8), allocatable :: wt_in_out(:,:)  ! used in subr. call
+     real(r8), allocatable :: input_val_1_new(:)  ! (%)
+     real(r8), parameter :: toosmall_soil = 11._r8  ! (%)
+     real(r8), parameter :: toosmall_crop = 0._r8  ! (%)
+     real(r8), parameter :: toosmall_glacier = 0._r8  ! (%)
+     real(r8), parameter :: toosmall_lake = 0._r8  ! (%)
+     real(r8), parameter :: toosmall_wetland = 0._r8  ! (%)
+     real(r8), parameter :: toosmall_urban = 0._r8  ! (%)
+     real(r8), parameter :: input_val(9) = (/40._r8, 35._r8, 30._r8, 15._r8, 11._r8, 10._r8, 5._r8, 4._r8, 0._r8/)  ! (%)
+
+     ! Set relevant pftcon values to defaults; override where necessary
+     call pftcon%InitForTesting()
+     allocate( input_val_1_new(begg:endg) )
+     allocate( wt_lunit(begg:endg,istsoil:max_lunit) )
+     allocate( wt_expected(begg:endg,istsoil:max_lunit) )
+     allocate( wt_in_out(begg:endg,istsoil:max_lunit) )
+
+     ! INPUT VALUES
+     wt_lunit(begg:,:) = 0._r8  ! initialize
+     ! wt_lunit is assigned values from input_val to test various combinations
+     ! of values that sum to 100%. The index values used with array input_val in
+     ! these assignments have no other significance.
+     wt_lunit(begg:,istsoil) = (/ input_val(4), input_val(6), input_val(5)/)
+     wt_lunit(begg:,istcrop) = (/ input_val(7), input_val(9), input_val(9)/)
+     wt_lunit(begg:,istice_mec) = (/ input_val(6), input_val(9), input_val(6)/)
+     wt_lunit(begg:,istdlak) = (/ input_val(1), input_val(9), input_val(9)/)
+     wt_lunit(begg:,istwet) = (/ input_val(3), input_val(9),  input_val(9)/)
+     wt_lunit(begg:,isturb_tbd) = (/ input_val(9),  input_val(2), input_val(2)/)
+     wt_lunit(begg:,isturb_hd) = (/ input_val(9),  input_val(1), input_val(1)/)
+     wt_lunit(begg:,isturb_md) = (/ input_val(9),  input_val(4), input_val(8)/)
+     wt_lunit(:,:) = wt_lunit(:,:) / 100._r8
+     call check_sums_equal_1( wt_lunit, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     wt_lunit_sum = sum(wt_lunit(begg,:))
+
+     ! OUTPUT VALUES EXPECTED
+     expctd(1) = input_val(1) * wt_lunit_sum / (input_val(1) + input_val(3))
+     expctd(2) = input_val(3) * wt_lunit_sum / (input_val(1) + input_val(3))
+     ! input_val(1) changes after collapse_urban (1st subroutine call below)
+     ! for endg and endg-1
+     input_val_1_new(:) = sum(wt_lunit(:,isturb_tbd:isturb_md), DIM=2) * 100._r8
+     expctd(3) = input_val_1_new(endg-1) * wt_lunit_sum / input_val_1_new(endg-1)
+     expctd(4) = input_val_1_new(endg) * wt_lunit_sum / (input_val_1_new(endg) + input_val(5))
+     expctd(5) = input_val(5) * wt_lunit_sum / (input_val_1_new(endg) + input_val(5))
+     wt_expected(begg:,:) = 0._r8  ! initialize
+     wt_expected(begg:,istsoil) = (/ 0._r8, 0._r8, expctd(5) /)
+     wt_expected(begg:,istdlak) = (/ expctd(1), 0._r8, 0._r8 /)
+     wt_expected(begg:,istwet) = (/ expctd(2), 0._r8, 0._r8 /)
+     wt_expected(begg:,isturb_hd) = (/ 0._r8, expctd(3), expctd(4) /)
+
+     call check_sums_equal_1(wt_expected, begg, "test_check_sums_add_to_1", &
+                             "should not trigger an error")
+
+     ! First collapse urban to dominant urban landunit, then collapse landunits
+     ! to n_dom_landunits, and finally collapse individual landunits according
+     ! to the toosmall_* thresholds
+     wt_in_out = wt_lunit  ! reset argument for next call
+     call collapse_to_dominant(wt_in_out(begg:endg,isturb_tbd:isturb_md), &
+                               isturb_tbd, isturb_md, begg, endg, n_dom_urban)
+     call collapse_to_dominant(wt_in_out, &
+                               istsoil, max_lunit, begg, endg, n_dom_landunits)
+     call collapse_individual_lunits(wt_in_out, begg, endg, &
+                                     toosmall_soil, toosmall_crop, &
+                                     toosmall_glacier, toosmall_lake, &
+                                     toosmall_wetland, toosmall_urban)
+
+     ! Now check that output is as expected
+     call check_sums_equal_1( wt_in_out, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+
+     @assertEqual(wt_in_out(begg:,:), wt_expected(begg:,:), tolerance=tol)
+
+     deallocate( wt_expected )
+     deallocate( wt_in_out )
+     deallocate( wt_lunit )
+
+     call pftcon%clean()
+
+  end subroutine test_collapse_all_lunit_opts_active
+
+  @Test
+  subroutine test_collapse_individual_lunits()
+     ! This test sets the user-defined thresholds toosmall_*
+     ! (soil, crop, glacier, lake, wetland, urb_tbd, urb_hd, urb_md)
+     ! to a range of values and the subroutine call returns and checks the
+     ! updated wt_lunit values.
+     ! Tests performed:
+     ! - toosmall_* = 0._r8 ... DO NOTHING
+     ! - toosmall_* = 1._r8 ... Remove landunits with <= 1% of the gridcell area
+     ! - toosmall_* = 8._r8 ... Rm landunits with <= 8% of the gridcell area
+     ! - toosmall_* = 39._r8 .. Rm landunits with <= 39% of the gridcell area
+     ! - toosmall_* = 100._r8 . Keep only the dominant landunit per gridcell
+     use pftconMod, only: pftcon
+     use clm_instur, only: wt_lunit
+     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+                                istdlak, istwet, isturb_tbd, isturb_hd, &
+                                isturb_md
+
+     implicit none
+     integer :: test  ! test number in loop of tests
+     integer, parameter :: begg = 2, endg = 4, tests = 5
+     real(r8), parameter :: toosmall_soil(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_crop(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_glacier(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_lake(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_wetland(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     real(r8), parameter :: toosmall_urban(tests) = (/ 0._r8, 1._r8, 8._r8, 39._r8, 100._r8/)
+     integer, parameter :: test_toosmall_is_0 = 1
+     integer, parameter :: test_toosmall_is_1 = 2
+     integer, parameter :: test_toosmall_is_8 = 3
+     integer, parameter :: test_toosmall_is_39 = 4
+     integer, parameter :: test_toosmall_is_100 = tests
+     real(r8), allocatable :: wt_expected(:,:)
+     real(r8), allocatable :: wt_in_out(:,:)  ! used in subr. call
+     real(r8) :: expctd(9)
+     real(r8), parameter :: input_value(8) = (/40._r8, 33._r8, 12._r8, 7._r8, 5._r8, 2._r8, 1._r8, 0._r8/)
+
+     ! Set relevant pftcon values to defaults; override where necessary
+     call pftcon%InitForTesting()
+     allocate( wt_lunit(begg:endg,istsoil:max_lunit) )
+     allocate( wt_expected(begg:endg,istsoil:max_lunit) )
+     allocate( wt_in_out(begg:endg,istsoil:max_lunit) )
+
+     ! INPUT VALUES
+     wt_lunit(begg:,:) = 0._r8  ! initialize
+     ! wt_lunit(begg:endg,:) must sum to 100 in each column begg, begg + 1, ...
+     ! We assign input_value (where sum(input_value) = 100._r8) to wt_lunit
+     ! - in ascending order in the first column,
+     ! - in descending order in the second column,
+     ! - in ascending order starting from input_value(4) in the third column.
+     ! The assignment could have also been in random order, as long as each
+     ! column still summed to 100.
+     wt_lunit(begg:,istsoil) = (/ input_value(1), input_value(8), input_value(4)/)
+     wt_lunit(begg:,istcrop) = (/ input_value(2), input_value(7), input_value(5)/)
+     wt_lunit(begg:,istice_mec) = (/ input_value(3), input_value(6), input_value(6)/)
+     wt_lunit(begg:,istdlak) = (/ input_value(4), input_value(5), input_value(7)/)
+     wt_lunit(begg:,istwet) = (/ input_value(5), input_value(4),  input_value(8)/)
+     wt_lunit(begg:,isturb_tbd) = (/ input_value(6),  input_value(3), input_value(1)/)
+     wt_lunit(begg:,isturb_hd) = (/ input_value(7),  input_value(2), input_value(2)/)
+     wt_lunit(begg:,isturb_md) = (/ input_value(8),  input_value(1), input_value(3)/)
+     wt_lunit(:,:) = wt_lunit(:,:) / 100._r8
+     call check_sums_equal_1( wt_lunit, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+
+     do test = 1, tests
+
+        ! OUTPUT VALUES EXPECTED
+        if (test == test_toosmall_is_0) then
+           wt_expected = wt_lunit
+        else if (test == test_toosmall_is_1) then
+           ! Keeping landunits exceeding 1% of the grid cell, hence
+           ! we sum the first 6 entries of input_value
+           wt_expected = 100._r8 * wt_lunit / sum(input_value(1:6))
+           wt_expected(begg, isturb_hd) = 0._r8
+           wt_expected(begg+1, istcrop) = 0._r8
+           wt_expected(begg+2, istdlak) = 0._r8
+        else if (test == test_toosmall_is_8) then
+           ! Keeping landunits exceeding 8% of the grid cell, hence
+           ! we sum the first 3 entries of input_value
+           wt_expected = 100._r8 * wt_lunit / sum(input_value(1:3))
+           wt_expected(begg, istdlak:isturb_hd) = 0._r8
+           wt_expected(begg+1, istcrop:istwet) = 0._r8
+           wt_expected(begg+2, istsoil:istdlak) = 0._r8
+        else if (test == test_toosmall_is_39 .or. test == test_toosmall_is_100) then
+           ! Keeping the largest landunit, hence
+           ! we sum the first entry of input_value
+           wt_expected = 100._r8 * wt_lunit / input_value(1)
+           wt_expected(begg, istcrop:isturb_hd) = 0._r8
+           wt_expected(begg+1, istcrop:isturb_hd) = 0._r8
+           wt_expected(begg+2, istsoil:istdlak) = 0._r8
+           wt_expected(begg+2, isturb_hd:isturb_md) = 0._r8
+        end if
+
+        call check_sums_equal_1( wt_expected, begg, "test_check_sums_add_to_1", &
+                                 "should not trigger an error for wt_expected")
+
+        ! Collapse landunits
+        wt_in_out = wt_lunit  ! reset argument for next call
+        call collapse_individual_lunits(wt_in_out, begg, endg, &
+                                        toosmall_soil(test), &
+                                        toosmall_crop(test), &
+                                        toosmall_glacier(test), &
+                                        toosmall_lake(test), &
+                                        toosmall_wetland(test), &
+                                        toosmall_urban(test))
+
+        ! Now check that are correct
+        call check_sums_equal_1( wt_in_out, begg, "test_check_sums_add_to_1", &
+                                 "should not trigger an error for wt_in_out")
+
+        @assertEqual(wt_in_out(begg:,:), wt_expected(begg:,:), tolerance=tol)
+
+     end do
+
+     deallocate( wt_expected )
+     deallocate( wt_in_out )
+     deallocate( wt_lunit )
+
+     call pftcon%clean()
+
+  end subroutine test_collapse_individual_lunits
+
+  @Test
+  subroutine test_collapse_urban()
+     ! Tests subroutine collapse_to_dominant when used with
+     ! collapse_urban = .true. when the user wishes to collapse all urban
+     ! landunits to the dominant urban landunit.
+     ! We test three configurations that will be collapsed.
+     ! 1) Three urban landunits sum to 100%
+     ! 2) Three urban landunits sum to < 100%
+     ! 3) Same as (2) and third urban landunit = 0%
+     use pftconMod, only: pftcon
+     use clm_instur, only: wt_lunit
+     use landunit_varcon, only: isturb_MIN, isturb_MAX, isturb_tbd, isturb_hd, isturb_md
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 4, n_dom_urban = 1
+     real(r8), allocatable :: wt_expected(:,:)
+     real(r8), allocatable :: wt_in_out(:,:)  ! used in subr. call
+     real(r8) :: expctd(9)
+     real(r8), parameter :: input_value(5) = (/40._r8, 36._r8, 24._r8, 7._r8, 0._r8/)
+
+     ! Set relevant pftcon values to defaults; override where necessary
+     call pftcon%InitForTesting()
+     allocate( wt_lunit(begg:endg,isturb_MIN:isturb_MAX) )
+     allocate( wt_expected(begg:endg,isturb_MIN:isturb_MAX) )
+     allocate( wt_in_out(begg:endg,isturb_MIN:isturb_MAX) )
+
+     ! INPUT VALUES
+     wt_lunit(begg:,:) = 0._r8  ! initialize
+     ! wt_lunit is assigned values from input_value to test various
+     ! combinations of values. The index values used with array input_value in
+     ! these assignments intentionally placed the largest input_value in
+     ! - isturb_tbd for begg
+     ! - isturb_md for begg + 1
+     ! - isturb_hd for begg + 2
+     ! Other index value choices do not affect the outcome because
+     ! n_dom_urban = 1, so we always end up with a single dominant urban
+     ! landunit
+     wt_lunit(begg:,isturb_tbd) = (/ input_value(1),  input_value(4), input_value(5)/)
+     wt_lunit(begg:,isturb_hd) = (/ input_value(2),  input_value(3), input_value(3)/)
+     wt_lunit(begg:,isturb_md) = (/ input_value(3),  input_value(2), input_value(4)/)
+     wt_lunit(:,:) = wt_lunit(:,:) / 100._r8
+
+     ! OUTPUT VALUES EXPECTED
+     expctd(1) = sum(input_value(1:3)) / 100._r8
+     expctd(2) = sum(input_value(2:4)) / 100._r8
+     expctd(3) = sum(input_value(3:5)) / 100._r8
+     wt_expected(begg:,:) = 0._r8  ! initialize
+     wt_expected(begg:,isturb_tbd) = (/ expctd(1), 0._r8, 0._r8 /)
+     wt_expected(begg:,isturb_hd) = (/ 0._r8, 0._r8, expctd(3) /)
+     wt_expected(begg:,isturb_md) = (/ 0._r8, expctd(2), 0._r8 /)
+
+     ! Collapse landunits
+     wt_in_out = wt_lunit  ! reset argument for next call
+     call collapse_to_dominant(wt_in_out(begg:endg,isturb_MIN:isturb_MAX), &
+                               isturb_MIN, isturb_MAX, begg, endg, &
+                               n_dom_urban)
+
+     @assertEqual(wt_in_out(begg:,:), wt_expected(begg:,:), tolerance=tol)
+
+     deallocate( wt_expected )
+     deallocate( wt_in_out )
+     deallocate( wt_lunit )
+
+     call pftcon%clean()
+
+  end subroutine test_collapse_urban
+
+  @Test
+  subroutine test_collapse_to_dom_landunits()
+     ! Tests subroutine collapse_to_dominant when used with n_dom_landunits.
+     ! This test tries 5 values of n_dom_landunits:
+     ! 1) 0, which ends up with the same output values as were used as inputs
+     ! 2) 1, which collapses to 1 dominant landunit
+     ! 3) 2, which collapses to 2 dominant landunits
+     ! 4) 3, which collapses to 3 dominant landunits
+     ! 5) max_lunit, which behaves the same as (1) whether subroutine
+     ! collapse_to_dominant actively collapses the landunits to themselves or
+     ! simply skips the work with an if statement (current implementation).
+     !
+     ! For each value of n_dom_landunits, we test three configurations that
+     ! need to be collapsed.
+     use pftconMod, only: pftcon
+     use clm_instur, only: wt_lunit
+     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+                                istdlak, istwet, isturb_tbd, isturb_hd, &
+                                isturb_md
+
+     implicit none
+     integer :: test  ! test number in loop of tests
+     integer, parameter :: begg = 2, endg = 4, tests = 5
+     integer, parameter :: n_dom_landunits(tests) = (/ 0, 1, 2, 3, max_lunit/)
+     integer, parameter :: test_n_dom_is_0 = 1
+     integer, parameter :: test_n_dom_is_1 = 2
+     integer, parameter :: test_n_dom_is_2 = 3
+     integer, parameter :: test_n_dom_is_3 = 4
+     integer, parameter :: test_n_dom_is_max_lunit = tests
+     real(r8), allocatable :: wt_expected(:,:)
+     real(r8), allocatable :: wt_in_out(:,:)  ! used in subr. call
+     real(r8) :: expctd(9)
+     real(r8), parameter :: input_value(9) = (/40._r8, 35._r8, 30._r8, 15._r8, 11._r8, 10._r8, 5._r8, 4._r8, 0._r8/)
+
+     ! Set relevant pftcon values to defaults; override where necessary
+     call pftcon%InitForTesting()
+     allocate( wt_lunit(begg:endg,istsoil:max_lunit) )
+     allocate( wt_expected(begg:endg,istsoil:max_lunit) )
+     allocate( wt_in_out(begg:endg,istsoil:max_lunit) )
+
+     ! INPUT VALUES
+     wt_lunit(begg:,:) = 0._r8  ! initialize
+     ! wt_lunit is assigned values from input_value to test various
+     ! combinations of values. The index values used with array input_value in
+     ! these assignments have no other significance.
+     wt_lunit(begg:,istsoil) = (/ input_value(4), input_value(5), input_value(4)/)
+     wt_lunit(begg:,istcrop) = (/ input_value(7), input_value(7), input_value(7)/)
+     wt_lunit(begg:,istice_mec) = (/ input_value(6), input_value(6), input_value(2)/)
+     wt_lunit(begg:,istdlak) = (/ input_value(1), input_value(3), input_value(6)/)
+     wt_lunit(begg:,istwet) = (/ input_value(3), input_value(1),  input_value(9)/)
+     wt_lunit(begg:,isturb_tbd) = (/ input_value(9),  input_value(8), input_value(2)/)
+     wt_lunit(:,:) = wt_lunit(:,:) / 100._r8
+     call check_sums_equal_1( wt_lunit, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+
+     do test = 1, tests
+
+        ! OUTPUT VALUES EXPECTED
+        if (test == test_n_dom_is_0 .or. test == test_n_dom_is_max_lunit) then
+           wt_expected = wt_lunit
+        else if (test == test_n_dom_is_1) then
+           expctd(1) = input_value(1) / input_value(1)
+           expctd(2) = input_value(2) / input_value(2)
+           wt_expected(begg:,:) = 0._r8  ! initialize
+           wt_expected(begg:,istice_mec) = (/ 0._r8, 0._r8, expctd(2) /)
+           wt_expected(begg:,istdlak) = (/ expctd(1), 0._r8, 0._r8 /)
+           wt_expected(begg:,istwet) = (/ 0._r8, expctd(1), 0._r8 /)
+        else if (test == test_n_dom_is_2) then
+           expctd(1) = input_value(1) / (input_value(1) + input_value(3))
+           expctd(2) = input_value(3) / (input_value(1) + input_value(3))
+           expctd(3) = input_value(2) / (input_value(2) + input_value(2))
+           wt_expected(begg:,:) = 0._r8  ! initialize
+           wt_expected(begg:,istice_mec) = (/ 0._r8, 0._r8, expctd(3) /)
+           wt_expected(begg:,istdlak) = (/ expctd(1), expctd(2), 0._r8 /)
+           wt_expected(begg:,istwet) = (/ expctd(2), expctd(1), 0._r8 /)
+           wt_expected(begg:,isturb_tbd) = (/ 0._r8, 0._r8, expctd(3) /)
+        else if (test == test_n_dom_is_3) then
+           expctd(1) = input_value(1) / &
+                      (input_value(1) + input_value(3) + input_value(4))
+           expctd(2) = input_value(3) / &
+                      (input_value(1) + input_value(3) + input_value(4))
+           expctd(3) = input_value(4) / &
+                      (input_value(1) + input_value(3) + input_value(4))
+           expctd(4) = input_value(1) / &
+                      (input_value(1) + input_value(3) + input_value(5))
+           expctd(5) = input_value(3) / &
+                      (input_value(1) + input_value(3) + input_value(5))
+           expctd(6) = input_value(5) / &
+                      (input_value(1) + input_value(3) + input_value(5))
+           expctd(7) = input_value(2) / &
+                      (input_value(2) + input_value(2) + input_value(4))
+           expctd(8) = input_value(2) / &
+                      (input_value(2) + input_value(2) + input_value(4))
+           expctd(9) = input_value(4) / &
+                      (input_value(2) + input_value(2) + input_value(4))
+           wt_expected(begg:,:) = 0._r8  ! initialize
+           wt_expected(begg:,istsoil) = (/ expctd(3), expctd(6), expctd(9) /)
+           wt_expected(begg:,istice_mec) = (/ 0._r8, 0._r8, expctd(8) /)
+           wt_expected(begg:,istdlak) = (/ expctd(1), expctd(5), 0._r8 /)
+           wt_expected(begg:,istwet) = (/ expctd(2), expctd(4), 0._r8 /)
+           wt_expected(begg:,isturb_tbd) = (/ 0._r8, 0._r8, expctd(7) /)
+        end if
+
+        call check_sums_equal_1( wt_expected, begg, "test_check_sums_add_to_1", &
+                                 "should not trigger an error")
+
+        ! Collapse landunits
+        wt_in_out = wt_lunit  ! reset argument for next call
+        call collapse_to_dominant(wt_in_out(begg:endg,:), &
+                                  istsoil, max_lunit, begg, endg, &
+                                  n_dom_landunits(test))
+
+        ! Now check that are correct
+        call check_sums_equal_1( wt_in_out, begg, "test_check_sums_add_to_1", &
+                                 "should not trigger an error")
+
+        @assertEqual(wt_in_out(begg:,:), wt_expected(begg:,:), tolerance=tol)
+
+     end do  ! loop of tests
+
+     deallocate( wt_expected )
+     deallocate( wt_in_out )
+     deallocate( wt_lunit )
+
+     call pftcon%clean()
+
+  end subroutine test_collapse_to_dom_landunits
+
+  @Test
+  subroutine test_collapse_to_dom_pfts()
+     ! Tests subroutine collapse_to_dominant when used with n_dom_pfts.
+     ! This test tries 5 values of n_dom_pfts:
+     ! 1) 0, which ends up with the same output values as were used as inputs
+     ! 2) 1, which collapses the vegetation to 1 dominant pft
+     ! 3) 2, which collapses the vegetation to 2 dominant pfts
+     ! 4) 3, which collapses the vegetation to 3 dominant pfts
+     ! 5) natpft_size, which behaves the same as (1) whether subroutine
+     ! collapse_to_dominant actively collapses the pfts to themselves or simply
+     ! skips the work with an if statement (current implementation).
+     !
+     ! For each value of n_dom_pfts, we test three pft configurations that
+     ! need to be collapsed.
+     use pftconMod, only: pftcon
+     use clm_instur, only: wt_nat_patch
+     use clm_varpar, only: natpft_lb, natpft_ub
+
+     implicit none
+     integer :: test  ! test number in loop of tests
+     integer, parameter :: begg = 2, endg = 4, natpft_size = 15, tests = 5
+     integer, parameter :: n_dom_pfts(tests) = (/ 0, 1, 2, 3, natpft_size /)
+     integer, parameter :: test_n_dom_is_0 = 1
+     integer, parameter :: test_n_dom_is_1 = 2
+     integer, parameter :: test_n_dom_is_2 = 3
+     integer, parameter :: test_n_dom_is_3 = 4
+     integer, parameter :: test_n_dom_is_natpft_size = tests
+     real(r8), allocatable :: wt_nat_patch_expected(:,:)
+     real(r8), allocatable :: wt_nat_patch_in_out(:,:)  ! used in subr. call
+     real(r8) :: expctd(9)
+
+     ! Set relevant pftcon values to defaults; override where necessary
+     call pftcon%InitForTesting()
+     natpft_ub = natpft_size - 1
+     allocate( wt_nat_patch(begg:endg,natpft_lb:natpft_ub) )
+     allocate( wt_nat_patch_expected(begg:endg,natpft_lb:natpft_ub) )
+     allocate( wt_nat_patch_in_out(begg:endg,natpft_lb:natpft_ub) )
+
+     ! INPUT VALUES
+     wt_nat_patch(begg:,:) = 0._r8  ! initialize
+     wt_nat_patch(begg:,0) = (/ 30._r8, 40._r8,  0._r8/)  ! pft0
+     wt_nat_patch(begg:,1) = (/ 15._r8, 11._r8, 15._r8/)  ! pft1
+     wt_nat_patch(begg:,2) = (/  5._r8,  5._r8,  5._r8/)  ! pft2
+     wt_nat_patch(begg:,3) = (/  0._r8,  4._r8, 35._r8/)  ! pft3
+     wt_nat_patch(begg:,4) = (/ 10._r8, 10._r8, 35._r8/)  ! pft4
+     wt_nat_patch(begg:,5) = (/ 40._r8, 30._r8, 10._r8/)  ! pft5
+     wt_nat_patch(:,:) = wt_nat_patch(:,:) / 100._r8
+     call check_sums_equal_1( wt_nat_patch, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+
+     do test = 1, tests
+
+        ! OUTPUT VALUES EXPECTED
+        if (test == test_n_dom_is_0 .or. test == test_n_dom_is_natpft_size) then
+           wt_nat_patch_expected = wt_nat_patch
+        else if (test == test_n_dom_is_1) then
+           expctd(1) = 40._r8 / 40._r8
+           expctd(2) = 35._r8 / 35._r8
+           wt_nat_patch_expected(begg:,:) = 0._r8  ! initialize
+           wt_nat_patch_expected(begg:,0) = (/ 0._r8, expctd(1), 0._r8 /)  ! pft 0
+           wt_nat_patch_expected(begg:,3) = (/ 0._r8, 0._r8, expctd(2) /)  ! pft 3
+           wt_nat_patch_expected(begg:,5) = (/ expctd(1), 0._r8, 0._r8 /)  ! pft 5
+        else if (test == test_n_dom_is_2) then
+           expctd(1) = 40._r8 / 70._r8
+           expctd(2) = 30._r8 / 70._r8
+           expctd(3) = 35._r8 / 70._r8
+           wt_nat_patch_expected(begg:,:) = 0._r8  ! initialize
+           wt_nat_patch_expected(begg:,0) = (/ expctd(2), expctd(1), 0._r8 /)  ! pft 0
+           wt_nat_patch_expected(begg:,3) = (/ 0._r8, 0._r8, expctd(3) /)  ! pft 3
+           wt_nat_patch_expected(begg:,4) = (/ 0._r8, 0._r8, expctd(3) /)  ! pft 4
+           wt_nat_patch_expected(begg:,5) = (/ expctd(1), expctd(2), 0._r8 /)  ! pft 5
+        else if (test == test_n_dom_is_3) then
+           expctd(1) = 40._r8 / 85._r8
+           expctd(2) = 30._r8 / 85._r8
+           expctd(3) = 15._r8 / 85._r8
+           expctd(4) = 40._r8 / 81._r8
+           expctd(5) = 30._r8 / 81._r8
+           expctd(6) = 11._r8 / 81._r8
+           expctd(7) = 35._r8 / 85._r8
+           expctd(8) = 35._r8 / 85._r8
+           expctd(9) = 15._r8 / 85._r8
+           wt_nat_patch_expected(begg:,:) = 0._r8  ! initialize
+           wt_nat_patch_expected(begg:,0) = (/ expctd(2), expctd(4), 0._r8 /)  ! pft 0
+           wt_nat_patch_expected(begg:,1) = (/ expctd(3), expctd(6), expctd(9) /)  ! pft 1
+           wt_nat_patch_expected(begg:,3) = (/ 0._r8, 0._r8, expctd(7) /)  ! pft 3
+           wt_nat_patch_expected(begg:,4) = (/ 0._r8, 0._r8, expctd(8) /)  ! pft 4
+           wt_nat_patch_expected(begg:,5) = (/ expctd(1), expctd(5), 0._r8 /)  ! pft 5
+        end if
+
+        call check_sums_equal_1( wt_nat_patch_expected, begg, "test_check_sums_add_to_1", &
+                                 "should not trigger an error")
+
+        ! Collapse pfts
+        wt_nat_patch_in_out = wt_nat_patch  ! reset argument for next call
+        call collapse_to_dominant(wt_nat_patch_in_out(begg:endg,:), &
+                                  natpft_lb, natpft_ub, begg, endg, &
+                                  n_dom_pfts(test))
+
+        ! Now check that are correct
+        call check_sums_equal_1( wt_nat_patch_in_out, begg, "test_check_sums_add_to_1", &
+                                 "should not trigger an error")
+
+        @assertEqual(wt_nat_patch_in_out(begg:,:), wt_nat_patch_expected(begg:,:), tolerance=tol)
+
+     end do  ! loop of tests
+
+     deallocate( wt_nat_patch_expected )
+     deallocate( wt_nat_patch_in_out )
+     deallocate( wt_nat_patch )
+
+     call pftcon%clean()
+
+  end subroutine test_collapse_to_dom_pfts
+
+  @Test
+  subroutine test_collapse_crop_types_none()
+     ! This test sets cftsize = 0, ie crops are lumped together with unmanaged
+     ! pfts. This means that the test returns from having collapsed no crops.
+     use pftconMod, only : pftcon
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 0
+     real(r8) :: wt_cft(begg:endg,1)  ! need second dimension > 0 to call the...
+     real(r8) :: fert_cft(begg:endg,1)  ! ...subroutine successfully
+     real(r8) :: wt_cft_expected(begg:endg,1)
+     real(r8) :: fert_cft_expected(begg:endg,1)
+
+     ! Input values
+     wt_cft(begg:,1) = 0.0_r8
+     fert_cft(begg:,1) = 0.0_r8
+     ! Output values expected
+     wt_cft_expected(begg:,1) = wt_cft(begg:,1)
+     fert_cft_expected(begg:,1) = fert_cft(begg:,1)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_routines(cftsize)
+
+     ! Collapse crop types
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true.)
+
+     ! Now check that are correct
+     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
+     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_none
+
+  @Test
+  subroutine test_collapse_crop_types_16_to_15()
+     ! This test collapses the nc3irrig generic crop into the nc3crop
+     ! because irrigate = .false. and use_crop = .false.
+     use pftconMod, only : pftcon
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 25.0_r8, 25.0_r8, 75.0_r8, 75.0_r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter as long as they come back the same in this test
+
+     ! Output values expected
+     wt_cft_expected(begg:,1) = wt_cft(begg:,1) + wt_cft(begg:,2)
+     wt_cft_expected(begg:,2) = 0.0_r8
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,:) = fert_cft(begg:,:)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_routines(cftsize)
+     irrigate = .false.  ! named the test 16_to_15 because we collapse the...
+     use_crop = .false.  ! ...irrigated with the unirrigated
+
+     ! Collapse crop types
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum)
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
+     ! INTENTIONAL? As written, subr. collapse_crop_types does NOT take
+     ! -----------  the avg fert_cft of the irrigated and unirrigated when
+     !              irrigate = .false.. Assuming intentional for now.
+     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_16_to_15
+
+  @Test
+  subroutine test_collapse_crop_types_16_to_16()
+     ! This test calls collapse_crop_types but ends up with the same generic
+     ! crops as it started with becase irrigate = .true. and use_crop = .false.
+     use pftconMod, only : pftcon
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 25.0_r8, 25.0_r8, 75.0_r8, 75.0_r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter as long as they come back the same in this test
+
+     ! Output values expected
+     wt_cft_expected(begg:,:) = wt_cft(begg:,:)
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,:) = fert_cft(begg:,:)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_routines(cftsize)
+     irrigate = .true.
+     use_crop = .false.
+
+     ! Collapse crop types
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum)
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
+     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_16_to_16
+
+  @Test
+  subroutine test_collapse_crop_types_18_to_16()
+     ! This test starts with two non-generic and two generic crops in the data
+     ! but ends up with only two generic crops because use_crop = .false. and
+     ! irrigate = .true.
+     use pftconMod, only : pftcon, nc3crop, nc3irrig
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 4
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter
+
+     ! Output values expected
+     ! Collapsing to nc3crop & nc3irrig so only entries 1 & 2 matter
+     wt_cft_expected(begg:,1) = wt_cft(begg:,1) + wt_cft(begg:,3)
+     wt_cft_expected(begg:,2) = wt_cft(begg:,2) + wt_cft(begg:,4)
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,1) = (fert_cft(begg:,1) * wt_cft(begg:,1) +  &
+                                   fert_cft(begg:,3) * wt_cft(begg:,3)) / &
+                                  (wt_cft(begg:,1) + wt_cft(begg:,3))
+     fert_cft_expected(begg:,2) = (fert_cft(begg:,2) * wt_cft(begg:,2) +  &
+                                   fert_cft(begg:,4) * wt_cft(begg:,4)) / &
+                                  (wt_cft(begg:,2) + wt_cft(begg:,4))
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_routines(cftsize)
+     irrigate = .true.
+     use_crop = .false.
+     pftcon%mergetoclmpft(17) = nc3crop
+     pftcon%mergetoclmpft(18) = nc3irrig
+
+     ! Collapse crop types
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum)
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:2), wt_cft_expected(begg:,:2))
+     @assertEqual(fert_cft(begg:,:2), fert_cft_expected(begg:,:2))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_18_to_16
+
+  @Test
+  subroutine test_collapse_crop_types_18_to_15()
+     ! This test starts with two non-generic and two generic crops in the data
+     ! and ends up with only one generic crop because use_crop = .false. and
+     ! irrigate = .false.
+     use pftconMod, only : pftcon, nc3crop, nc3irrig
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 4
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter
+
+     ! Output values expected
+     ! Collapsing to nc3crop so only entries 1 & 2 matter
+     wt_cft_expected(begg:,1) = sum(wt_cft(begg:,:), dim=2) 
+     wt_cft_expected(begg:,2) = 0.0_r8
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     ! Collapsing to nc3crop so only entry 1 matters
+     fert_cft_expected(begg:,1) = (fert_cft(begg:,1) *                   &
+                                   (wt_cft(begg:,1) + wt_cft(begg:,2)) + &
+                                   fert_cft(begg:,3) *                   &
+                                   (wt_cft(begg:,3) + wt_cft(begg:,4))) / &
+                                  wt_cft_expected(begg:,1)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_routines(cftsize)
+     irrigate = .false.
+     use_crop = .false.
+     pftcon%mergetoclmpft(17) = nc3crop
+     pftcon%mergetoclmpft(18) = nc3irrig
+
+     ! Collapse crop types
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum)
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:2), wt_cft_expected(begg:,:2))
+     @assertEqual(fert_cft(begg:,1), fert_cft_expected(begg:,1))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_18_to_15
+
+  @Test
+  subroutine test_collapse_crop_types_18_to_18()
+     ! This test starts with 2 non-generic and 2 generic crops in the data
+     ! and ends up with the same because use_crop = .true. and irrigate = .true.
+     ! and mergetoclmpft does not lead to collapsing pfts
+     use pftconMod, only : pftcon
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 4
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 15._r8, 15._r8, 20._r8, 20._r8, 30._r8, 30._r8, 35._r8, 35._r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter
+
+     ! Output values expected
+     wt_cft_expected(begg:,:) = wt_cft(begg:,:)
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,:) = fert_cft(begg:,:)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_routines(cftsize)
+     irrigate = .true.
+     use_crop = .true.
+     pftcon%mergetoclmpft(17) = 17
+     pftcon%mergetoclmpft(18) = 18
+
+     ! Collapse crop types
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum )
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
+     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_18_to_18
+
+  @Test
+  subroutine test_collapse_crop_types_20_to_18()
+     ! This test starts with 4 non-generic and 2 generic crops in the data
+     ! and ends up with 2 of each because use_crop = .true. & irrigate = .true.
+     ! and mergetoclmpft does lead to some collapsing pfts
+     use pftconMod, only : pftcon
+     use clm_varctl, only : irrigate, use_crop
+
+     implicit none
+     integer, parameter :: begg = 2, endg = 3, cftsize = 6
+     real(r8) :: wt_cft(begg:endg,cftsize)
+     real(r8) :: fert_cft(begg:endg,cftsize)
+     real(r8) :: wt_cft_expected(begg:endg,cftsize)
+     real(r8) :: fert_cft_expected(begg:endg,cftsize)
+     real(r8) :: TotalSum(begg:endg)
+
+     ! Input values
+     wt_cft(begg:,:) = reshape((/ 5._r8, 5._r8, 10._r8, 10._r8, 20._r8, 20._r8, 30._r8, 30._r8, 15._r8, 15._r8, 20._r8, 20._r8 /), shape(wt_cft))
+     call check_sums_equal_1( (wt_cft/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft(begg:,:) = wt_cft(begg:,:)  ! magnitude of these values does not matter
+
+     ! Output values expected
+     wt_cft_expected(begg:,1:2) = wt_cft(begg:,1:2)
+     wt_cft_expected(begg:,3:4) = 0.0_r8
+     wt_cft_expected(begg:,5:6) = wt_cft(begg:,3:4) + wt_cft(begg:,5:6)
+     call check_sums_equal_1( (wt_cft_expected/100.0_r8), begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     fert_cft_expected(begg:,1:4) = fert_cft(begg:,1:4)
+     fert_cft_expected(begg:,5) = (fert_cft(begg:,3) * wt_cft(begg:,3) + &
+                                   fert_cft(begg:,5) * wt_cft(begg:,5)) / &
+                                  wt_cft_expected(begg:,5)
+     fert_cft_expected(begg:,6) = (fert_cft(begg:,4) * wt_cft(begg:,4) + &
+                                   fert_cft(begg:,6) * wt_cft(begg:,6)) / &
+                                  wt_cft_expected(begg:,6)
+
+     ! Setup before calling the subroutine that's being tested
+     @assertGreaterThanOrEqual(cftsize, 0)
+     call setup_test_collapse_routines(cftsize)
+     irrigate = .true.
+     use_crop = .true.
+     pftcon%mergetoclmpft(17) = 19
+     pftcon%mergetoclmpft(18) = 20
+     pftcon%mergetoclmpft(19) = 19
+     pftcon%mergetoclmpft(20) = 20
+
+     ! Collapse crop types
+     TotalSum = 100._r8
+     call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true., sumto = TotalSum )
+
+     ! Now check that are correct
+     call check_sums_equal_1( wt_cft/100.0_r8, begg, "test_check_sums_add_to_1", &
+                              "should not trigger an error")
+     @assertEqual(wt_cft(begg:,:), wt_cft_expected(begg:,:))
+     @assertEqual(fert_cft(begg:,:), fert_cft_expected(begg:,:))
+
+     call pftcon%clean()
+  end subroutine test_collapse_crop_types_20_to_18
+
   @Test
   subroutine test_convert_cft_to_pft_with_zerocft()
      use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
      use pftconMod       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
      use pftconMod       , only : nbrdlf_evr_shrub, nc4_grass, noveg
      use landunit_varcon , only : istsoil, istcrop, max_lunit
-     use clm_varpar      , only : natpft_size, cft_size, numveg 
+     use clm_varpar      , only : natpft_size, cft_size
      implicit none
-     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2, numveg = 16
      real(r8) :: wt_cft(begg:endg,cftsize)
      real(r8), allocatable ::  wtpft(:,:)
 
@@ -77,10 +984,10 @@ contains
      use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
      use pftconMod       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
      use landunit_varcon , only : istsoil, istcrop, max_lunit
-     use clm_varpar      , only : natpft_size, cft_size, numveg
+     use clm_varpar      , only : natpft_size, cft_size
 
      implicit none
-     integer, parameter :: begg = 2, endg = 3, cftsize = 2
+     integer, parameter :: begg = 2, endg = 3, cftsize = 2, numveg = 16
      real(r8) :: wt_cft(begg:endg,cftsize)
 
      ! Set relevant pftcon values to defaults; these should be overridden by individual

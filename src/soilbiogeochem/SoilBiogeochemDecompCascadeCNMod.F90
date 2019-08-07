@@ -998,10 +998,10 @@ contains
                 do fc = 1,num_soilc
                    c = filter_soilc(fc)
                    decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                  if(use_soil_matrixcn)then
-                     Ksoil%DM(c,j+nlevdecomp*(i_cwd-1))   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * &
-                            o_scalar(c,j) * dt
-                  end if
+                   if(use_soil_matrixcn)then
+                      Ksoil%DM(c,j+nlevdecomp*(i_cwd-1))   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * &
+                             o_scalar(c,j) * dt
+                   end if
                 end do
              end do
           else

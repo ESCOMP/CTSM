@@ -19,7 +19,6 @@ module SoilBiogeochemCompetitionMod
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenUptakeMod , only : SoilBiogeochemNitrogenUptake
   use ColumnType                      , only : col                
-  use GridcellType                   , only : grc
   use CNVegstateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
@@ -31,7 +30,6 @@ module SoilBiogeochemCompetitionMod
   use TemperatureType                 , only : temperature_type
   use SoilStateType                   , only : soilstate_type
   use CanopyStateType                 , only : CanopyState_type
-
   !
   implicit none
   private
@@ -181,7 +179,7 @@ contains
     use clm_varcon       , only: nitrif_n2o_loss_frac
     use CNSharedParamsMod, only: use_fun
     use CNFUNMod         , only: CNFUN
-    use subgridAveMod    , only: p2c_2d
+    use subgridAveMod    , only: p2c
     use perf_mod         , only : t_startf, t_stopf
     !
     ! !ARGUMENTS:
@@ -284,6 +282,7 @@ contains
       sminn_to_plant_new(bounds%begc:bounds%endc)  =  0._r8
 
       local_use_fun = use_fun
+
       if (.not. use_nitrif_denitrif) then
 
          ! init sminn_tot
@@ -372,7 +371,7 @@ contains
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
                       soilbiogeochem_nitrogenflux_inst,soilbiogeochem_carbonflux_inst,canopystate_inst,      &
                       soilbiogeochem_nitrogenstate_inst)
-            call p2c_2d(bounds, nlevdecomp, &
+            call p2c(bounds, nlevdecomp, &
                       cnveg_nitrogenflux_inst%sminn_to_plant_fun_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                       soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_vr_col(bounds%begc:bounds%endc,1:nlevdecomp), &
                       'unity')
@@ -742,12 +741,12 @@ contains
                       soilbiogeochem_nitrogenstate_inst)
                       
             ! sminn_to_plant_fun is output of actual N uptake from FUN
-            call p2c_2d(bounds,nlevdecomp, &
+            call p2c(bounds,nlevdecomp, &
                        cnveg_nitrogenflux_inst%sminn_to_plant_fun_no3_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                        soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_no3_vr_col(bounds%begc:bounds%endc,1:nlevdecomp),&
                        'unity')
 
-            call p2c_2d(bounds,nlevdecomp, &
+            call p2c(bounds,nlevdecomp, &
                        cnveg_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                        soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_col(bounds%begc:bounds%endc,1:nlevdecomp),&
                        'unity')
