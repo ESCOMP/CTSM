@@ -409,16 +409,12 @@ contains
          num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc)
 
     ! specify snow fraction
-    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
-         caller = 'LakeHydrology-1', &
-         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
     do fc = 1, num_lakec
        c = filter_lakec(fc)
-       if (h2osno_total(c) > 0.0_r8) then
-          frac_sno_eff(c)     = 1._r8 
-       else
-          frac_sno_eff(c)     = 0._r8 
-       endif
+       ! As with urban landunits or anything when use_subgrid_fluxes is .false.: We
+       ! always set frac_sno_eff to 1, even if there is no snow. Other code should ignore
+       ! this if there is no snow.
+       frac_sno_eff(c) = 1._r8
     enddo
 
     ! Determine the change of snow mass and the snow water onto soil
