@@ -81,6 +81,7 @@ contains
     use clm_varcon      , only : denh2o, denice, spval, hfus, tfrz, cpliq, cpice
     use clm_varctl      , only : iulog
     use clm_time_manager, only : get_step_size
+    use SnowHydrologyMod, only : UpdateState_AddNewSnow
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater
     use SnowHydrologyMod, only : ZeroEmptySnowLayers, BuildSnowFilter, SnowCapping
     use SnowHydrologyMod, only : DivideSnowLayers, NewSnowBulkDensity
@@ -267,19 +268,18 @@ contains
          dz             = col%dz(begc:endc,:), &
          snow_depth     = b_waterdiagnostic_inst%snow_depth_col(begc:endc))
 
-    do fc = 1, num_lakec
-       c = filter_lakec(fc)
-
-       if (snl(c) == 0) then
-          h2osno_no_layers(c) = h2osno_no_layers(c) + qflx_snow_grnd(c)*dtime  ! snow water equivalent (mm)
-       else
-          ! The change of ice partial density of surface node due to precipitation.
-          ! Only ice part of snowfall is added here, the liquid part will be added
-          ! later.
-          h2osoi_ice(c,snl(c)+1) = h2osoi_ice(c,snl(c)+1)+dtime*qflx_snow_grnd(c)
-       end if
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call UpdateState_AddNewSnow(bounds, num_lakec, filter_lakec, &
+            ! Inputs
+            dtime            = dtime, &
+            snl              = col%snl(begc:endc), &
+            qflx_snow_grnd   = w%waterflux_inst%qflx_snow_grnd_col(begc:endc), &
+            ! Outputs
+            h2osno_no_layers = w%waterstate_inst%h2osno_no_layers_col(begc:endc), &
+            h2osoi_ice       = w%waterstate_inst%h2osoi_ice_col(begc:endc,:))
+       end associate
     end do
-
 
     do fc = 1, num_lakec
        c = filter_lakec(fc)

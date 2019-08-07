@@ -47,6 +47,7 @@ module SnowHydrologyMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SnowHydrology_readnl       ! Read namelist
   public :: HandleNewSnow              ! Handle new snow falling on the ground
+  public :: UpdateState_AddNewSnow     ! Update h2osno_no_layers or h2osoi_ice based on new snow
   public :: SnowWater                  ! Change of snow mass and the snow water onto soil
   public :: SnowCompaction             ! Change in snow layer thickness due to compaction
   public :: CombineSnowLayers          ! Combine snow layers less than a min thickness
@@ -63,7 +64,6 @@ module SnowHydrologyMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: BulkDiag_NewSnowDiagnostics ! Update various snow-related diagnostic quantities to account for new snow
-  private :: UpdateState_AddNewSnow ! Update h2osno_no_layers or h2osoi_ice based on new snow
   private :: BuildFilter_ThawedWetlandThinSnowpack ! Build a column-level filter of thawed wetland columns with a thin snowpack
   private :: UpdateState_RemoveSnowFromThawedWetlands ! For bulk or one tracer: remove snow from thawed wetlands, for state variables
   private :: Bulk_RemoveSnowFromThawedWetlands ! Remove snow from thawed wetlands, for bulk-only quantities
@@ -553,7 +553,7 @@ contains
   end subroutine BulkDiag_NewSnowDiagnostics
 
   !-----------------------------------------------------------------------
-  subroutine UpdateState_AddNewSnow(bounds, num_nolakec, filter_nolakec, &
+  subroutine UpdateState_AddNewSnow(bounds, num_c, filter_c, &
        dtime, snl, qflx_snow_grnd, &
        h2osno_no_layers, h2osoi_ice)
     !
@@ -562,8 +562,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_nolakec
-    integer, intent(in) :: filter_nolakec(:)
+    integer, intent(in) :: num_c
+    integer, intent(in) :: filter_c(:)
 
     real(r8) , intent(in)    :: dtime                                    ! land model time step (sec)
     integer  , intent(in)    :: snl( bounds%begc: )                      ! negative number of snow layers
@@ -582,8 +582,8 @@ contains
     SHR_ASSERT_FL((ubound(h2osno_no_layers, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osoi_ice, 1) == bounds%endc), sourcefile, __LINE__)
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
+    do fc = 1, num_c
+       c = filter_c(fc)
 
        if (snl(c) == 0) then
           h2osno_no_layers(c) = h2osno_no_layers(c) + (qflx_snow_grnd(c) * dtime)
