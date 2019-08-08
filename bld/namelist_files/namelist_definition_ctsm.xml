@@ -114,13 +114,25 @@ If TRUE, square the organic fraction when it's used (as was done in CLM4.5)
 Otherwise use the fraction straight up              (the default for CLM5.0)
 </entry>
 
-<entry id="soil_layerstruct" type="char*16" category="clm_physics"
-       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m,5SL_3m" >
+<entry id="soil_layerstruct_predefined" type="char*16" category="clm_physics"
+       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m,4SL_2m" >
 10SL_3.5m    = standard CLM4 and CLM4.5 version
 23SL_3.5m    = more vertical layers for permafrost simulations 
 49SL_10m     = 49 layer soil column, 10m of soil, 5 bedrock layers
 20SL_8.5m    = 20 layer soil column, 8m of soil, 5 bedrock layers
-5SL_3m       = 5 layer soil column, 3m of soil, 0 bedrock layers
+4SL_2m       = 4 layer soil column, 2m of soil, 0 bedrock layers
+</entry>
+
+<entry id="soil_layerstruct_userdefined" type="real(99)" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+User-defined vector of dzsoi. The length of this vector determines nlevgrnd. When the user sets this vector, they have to set soil_layerstruct_userdefined_nlevsoi in the namelist, too; soil_layerstruct_userdefined_nlevsoi must be less than nlevgrnd in this version of the model, even though ideally soil_layerstruct_userdefined_nlevsoi could also equal nlevgrnd.
+<default>Default: rundef</default>
+</entry>
+
+<entry id="soil_layerstruct_userdefined_nlevsoi" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+User-defined number of soil layers required to be set in the namelist when the user sets soil_layerstruct_userdefined in the namelist.
+<default>Default: iundef</default>
 </entry>
 
 <entry id="use_bedrock" type="logical" category="clm_physics"
@@ -910,9 +922,9 @@ Human heat stress indices:
 If TRUE, write diagnostic of global radiative temperature written to CLM log file.
 </entry>
 
-<entry id="subgridflag" type="integer" category="clm_physics"
-       group="clm_inparm" valid_values="0,1" >
-Subgrid fluxes for snow
+<entry id="use_subgrid_fluxes" type="logical" category="clm_physics"
+       group="clm_inparm" >
+Whether to use subgrid fluxes for snow
 </entry>
 
 <entry id="snowveg_affects_radiation" type="logical" category="clm_physics"
@@ -2443,18 +2455,20 @@ Changes in this value should possibly be accompanied by changes in:
 </entry>
 
 <entry id="int_snow_max" type="real" category="clm_physics"
-       group="clm_inparm" valid_values="" >
+       group="scf_swenson_lawrence_2012_inparm" valid_values="" >
 Limit applied to integrated snowfall when determining changes in snow-covered fraction during melt
 (mm H2O)
+Only applies when using the SwensonLawrence2012 snow cover fraction method
 </entry>
 
 <entry id="n_melt_glcmec" type="real" category="clm_physics"
-       group="clm_inparm" valid_values="" >
+       group="scf_swenson_lawrence_2012_inparm" valid_values="" >
 SCA shape parameter for glc_mec (glacier multiple elevation class) columns
 For most columns, n_melt is based on the standard deviation of 1km topography in the grid cell;
 but glc_mec columns already account for subgrid topographic variability through their use of
 multiple elevation classes; thus, to avoid double-accounting for topographic variability
 in these columns, we use a fixed value of n_melt.
+Only applies when using the SwensonLawrence2012 snow cover fraction method
 </entry>
 
 <entry id="wind_dependent_snow_density" type="logical" category="clm_physics"
@@ -2549,10 +2563,11 @@ below a given elevation, you risk forcing the system to evolve
 differently in areas below and above reset_snow_glc_ela.
 </entry>
 
-<entry id="oldfflag" type="integer" category="clm_physics"
-       group="clm_snowhydrology_inparm" valid_values="0,1" >
-Use old snow cover fraction from Niu et al. 2007
-(deprecated -- will be removed)
+<entry id="snow_cover_fraction_method" type="char*64" category="clm_physics"
+       group="clm_inparm" valid_values="NiuYang2007,SwensonLawrence2012" >
+Parameterization to use for snow cover fraction
+NiuYang2007: Niu and Yang 2007
+SwensonLawrence2012: Swenson and Lawrence 2012
 </entry>
 
 <!-- ========================================================================================  -->

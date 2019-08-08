@@ -143,6 +143,10 @@
     <alias>I2000Clm50BgcCropQianRsGs</alias>
     <lname>2000_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
+  <compset>
+    <alias>I2000Clm45BgcCropQianRsGs</alias>
+    <lname>2000_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
 
   <compset>
     <alias>I2000Clm50BgcCruGs</alias>
@@ -246,6 +250,11 @@
   <compset>
     <alias>I2000Ctsm50NwpSpGswpGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%NWP-SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I2000Ctsm50NwpBgcCropGswpGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%NWP-BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <!-- NLDAS datm forcing, for regional runs over the CONUS, e.g., using

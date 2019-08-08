@@ -141,7 +141,7 @@ contains
          fname=this%info%fname('INT_SNOW'),  &
          units='mm',  &
          avgflag='A', &
-         long_name=this%info%lname('accumulated swe (vegetated landunits only)'), &
+         long_name=this%info%lname('accumulated swe (natural vegetated and crop landunits only)'), &
          ptr_col=this%int_snow_col, l2g_scale_type='veg', &
          default='inactive')
 

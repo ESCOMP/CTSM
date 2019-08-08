@@ -686,7 +686,8 @@ contains
 
     this%ch4_dfsat_flux_col(begc:endc) = spval
     call hist_addfld1d (fname='FCH4_DFSAT', units='kgC/m2/s',  &
-         avgflag='A', long_name='CH4 additional flux due to changing fsat, vegetated landunits only', &
+         avgflag='A', &
+         long_name='CH4 additional flux due to changing fsat, natural vegetated and crop landunits only', &
          ptr_col=this%ch4_dfsat_flux_col)
 
     this%zwt_ch4_unsat_col(begc:endc) = spval

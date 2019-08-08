@@ -415,7 +415,7 @@ contains
 
     this%t_soisno_col(begc:endc,:) = spval
     call hist_addfld2d (fname='TSOI',  units='K', type2d='levgrnd', &
-         avgflag='A', long_name='soil temperature (vegetated landunits only)', &
+         avgflag='A', long_name='soil temperature (natural vegetated and crop landunits only)', &
          ptr_col=this%t_soisno_col, l2g_scale_type='veg')
 
     call hist_addfld2d (fname='TSOI_ICE',  units='K', type2d='levgrnd', &
@@ -429,7 +429,8 @@ contains
 
     this%tsl_col(begc:endc) = spval
     call hist_addfld1d (fname='TSL',  units='K', &
-         avgflag='A', long_name='temperature of near-surface soil layer (vegetated landunits only)', &
+         avgflag='A', &
+         long_name='temperature of near-surface soil layer (natural vegetated and crop landunits only)', &
          ptr_col=this%tsl_col, l2g_scale_type='veg')
     this%t_sno_mul_mss_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOTXMASS',  units='K kg/m2', &
@@ -508,7 +509,8 @@ contains
          avgflag='A', long_name='initial gridcell total heat content', &
          ptr_lnd=this%heat1_grc)
     call hist_addfld1d (fname='HEAT_CONTENT1_VEG',  units='J/m^2',  &
-         avgflag='A', long_name='initial gridcell total heat content - vegetated landunits only', &
+         avgflag='A', &
+         long_name='initial gridcell total heat content - natural vegetated and crop landunits only', &
          ptr_lnd=this%heat1_grc, l2g_scale_type='veg', default='inactive')
 
     this%heat2_grc(begg:endg) = spval
