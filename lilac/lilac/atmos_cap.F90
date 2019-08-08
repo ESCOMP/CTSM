@@ -5,7 +5,8 @@ module atmos_cap
 
     ! !USES
     use ESMF
-    use lilac_utils
+    use lilac_utils, only : fld_list_type
+
 
     implicit none
 
@@ -21,9 +22,8 @@ module atmos_cap
     !type (fld_list_type)            ::  a2c_fldlist(fldsMax)
     !type (fld_list_type)            ::  c2a_fldlist(fldsMax)
 
-    integer                          ::  a2c_fldlist_num
-    integer                          ::  c2a_fldlist_num
-
+    integer                           :: a2c_fldlist_num
+    integer                           :: c2a_fldlist_num
     !private
 
     public  :: atmos_register
@@ -88,7 +88,7 @@ module atmos_cap
         mesh_switch = .True.
 
         if(mesh_switch) then
-            ! For now this is our dummy mesh: 
+            ! For now this is our dummy mesh:
             !atmos_mesh_filepath  =   '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'  !! Negin: This did not work.... 
             atmos_mesh_filepath  =   '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc'
 
@@ -122,12 +122,11 @@ module atmos_cap
 
         a2c_fb = ESMF_FieldBundleCreate(name="a2c_fb", rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        call ESMF_LogWrite(subname//"field bundle", ESMF_LOGMSG_INFO)
 
         ! Create individual fields and add to field bundle -- a2l
 
         !call fldlist_add(a2c_fldlist_num, a2c_fldlist, 'dum_var2'      )
-        a2c_fldlist_num = 3
+        a2c_fldlist_num = 14
 
         do n = 1,a2c_fldlist_num
 
@@ -180,7 +179,7 @@ module atmos_cap
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
         ! Create individual fields and add to field bundle -- l2a
-        c2a_fldlist_num = 3
+        c2a_fldlist_num = 16
 
         do n = 1,c2a_fldlist_num
 
@@ -191,9 +190,9 @@ module atmos_cap
            ! create field
            !!! Here we want to pass pointers
            if (mesh_switch) then
-              !field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(c2a_fldlist(n)%stdname), rc=rc)
+              field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(c2a_fldlist(n)%stdname), rc=rc)
               !field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(c2a_fldlist(n)%stdname), farrayPtr=c2a_fldlist(n)%farrayptr1d, rc=rc)
-              field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(a2c_fldlist(n)%stdname), farrayPtr=a2c_fldlist(n)%farrayptr1d, rc=rc)
+              !field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(a2c_fldlist(n)%stdname), farrayPtr=a2c_fldlist(n)%farrayptr1d, rc=rc)
               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
               !call ESMF_FieldFill(field, dataFillScheme = "sincos" , rc=rc)
@@ -225,6 +224,8 @@ module atmos_cap
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         print *, "!lnd2atm_a_state is filld with dummy_var field bundle!"
 
+        ! Set Attributes needed by land
+        call ESMF_AttributeSet(lnd2atm_a_state, name="nextsw_cday", value=11, rc=rc)
 
     end subroutine atmos_init
 
