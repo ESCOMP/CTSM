@@ -1,4 +1,167 @@
 ===============================================================
+Tag name:  release-clm5.0.26
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Jul 29 18:11:26 MDT 2019
+One-line Summary: Add a CN precision control call to fix problems related to small negative values
+
+Purpose of this version:
+------------------------
+
+Small negative values (roughly roundoff-level different from zero) in
+frootc (and possibly other quantities) were occasionally creating
+problems with carbon isotope fluxes and FPI in the first time step of
+the year, at the time of transient landcover change. This tag fixes the
+problem by introducing an extra call to SoilBiogeochemPrecisionControl
+in between computing the patch-level transient landcover fluxes and
+moving these to column-level. In particular, this truncates small
+negative values of decomp_cpools_vr_col to zero, which prevents the
+previous blow-ups.
+
+For most of the problematic fields, the explanation seems to be: frootc
+can sometimes be negative; this is intentional. Negative frootc causes
+negative dwt_frootc_to_litter if the patch in question is shrinking. The
+resulting negative fluxes cause problems in the ciso calculation. This
+can be worked around by inserting an extra precision control call
+between the calculation of the dwt fluxes and the ciso fluxes, so that
+small negative dwt fluxes are set to 0.
+
+This does not necessarily fully explain the issue with FPI, but the
+insertion of the extra precision control call fixes that issue, too.
+
+For more details, see the discussion in
+https://github.com/ESCOMP/ctsm/issues/741
+
+
+CTSM Master Tag This Corresponds To: N/A
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#741
+
+Science changes since: release-clm5.0.25
+    None
+
+Software changes since: release-clm5.0.25
+    Extra call to SoilBiogeochemPrecisionControl
+
+Changes to User Interface since: release-clm5.0.25
+    None
+
+Testing:
+--------
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - not run
+    hobart --- not run
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+    hobart --- not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+     hobart --- not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ ok
+    hobart_nag -------- ok
+    hobart_pgi -------- ok
+    hobart_intel ------ ok
+
+    ok means tests pass (other thana expected failures), answers change
+    as expected for some tests
+
+  regular tests (prealpha):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+  regular tests (prebeta):
+
+    cheyenne_intel - not run
+    cheyenne_gnu --- not run
+    hobart_nag ----- not run
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Transient cases and a few other
+      configurations as noted below
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff / same climate
+
+      According to Keith Oleson's analysis of the LMWG diagnostics:
+      Changes are possibly greater than roundoff-level, but are not
+      climate changing or scientifically meaningful.
+
+      Other than transient cases (including cases with transient glacier
+      area as well as those with transient natural vegetation / crop
+      area), the test suite showed differences in the following cases:
+
+      - Two present-day tests that specify changes in soil layer
+        structure
+        (ERI_D_Ld9.ne30_g16.I2000Clm50BgcCruGs.cheyenne_intel.clm-vrtlay
+        and
+        ERS_D_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-deepsoil_bedrock),
+        have changes in many fields (for the latter: mostly looks
+        roundoff-level, but a few greater than roundoff-level diffs)
+
+      - The present-day ciso test,
+        ERP_D_Ld5.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_gnu.clm-ciso_flexCN_FUN,
+        has changes in a few c13 and c14 fields
+
+      - There are changes in many fields in SSP tests
+
+      - ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-noFUN_flexCN
+        (and a similar test on hobart) have roundoff-level changes in
+        SMINN_vr, SMIN_NH4_vr and SMIN_NO3_vr
+
+  URL for LMWG diagnostics output for new climate:
+  http://webext.cgd.ucar.edu/I20TR/clm50_cesm20R_2deg_GSWP3V1_issue741_hist/lnd/clm50_cesm20R_2deg_GSWP3V1_issue741_hist.1995_2014-clm50_cesm20R_2deg_GSWP3V1_hist.1995_2014/setsIndex.html
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+  (This will likely be true if the LII tests failed)
+
+Detailed list of changes:
+------------------------
+
+Externals being used:  No updates
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.02
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.16
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): None
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.25
 Originator(s):  erik (Erik Kluzek)
 Date: Wed May 29 11:16:13 MDT 2019
