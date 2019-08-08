@@ -1326,10 +1326,10 @@ contains
 
                 if (imelt(c,j) == 1) then
                    l = col%landunit(c)
-                   ! For consistency with other uses of use_subgrid_fluxes (e.g., in
-                   ! CanopyHydrologyMod), we apply this code over all landunits other than
-                   ! lake and urban. (In CanopyHydrologyMod, the uses of
-                   ! use_subgrid_fluxes are in a nolake filter, and check .not. urbpoi.)
+                   ! For consistency with other uses of use_subgrid_fluxes, we apply this
+                   ! code over all landunits other than lake and urban. (Elsewhere, the
+                   ! uses of use_subgrid_fluxes are in a nolake filter, and check
+                   ! .not. urbpoi.)
                    if(use_subgrid_fluxes .and. (.not. lakpoi(l) .and. .not. urbpoi(l))) then
                       ! first term is delta mass over mass
                       ddz3 = max(0._r8,min(1._r8,(swe_old(c,j) - wx)/wx))
