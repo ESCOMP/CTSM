@@ -298,6 +298,7 @@ contains
          ! Inputs
          scf_method          = scf_method, &
          dtime               = dtime, &
+         lun_itype_col       = col%lun_itype(begc:endc), &
          urbpoi              = col%urbpoi(begc:endc), &
          snl                 = col%snl(begc:endc), &
          bifall              = bifall(begc:endc), &
@@ -408,7 +409,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BulkDiag_NewSnowDiagnostics(bounds, num_nolakec, filter_nolakec, &
        scf_method, &
-       dtime, urbpoi, snl, bifall, h2osno_total, h2osoi_ice, h2osoi_liq, &
+       dtime, lun_itype_col, urbpoi, snl, bifall, h2osno_total, h2osoi_ice, h2osoi_liq, &
        qflx_snow_grnd, qflx_snow_drain, &
        dz, int_snow, swe_old, frac_sno, frac_sno_eff, snow_depth)
     !
@@ -422,6 +423,7 @@ contains
 
     class(snow_cover_fraction_base_type), intent(in) :: scf_method
     real(r8)                  , intent(in)    :: dtime                           ! land model time step (sec)
+    integer                   , intent(in)    :: lun_itype_col( bounds%begc: )   ! landunit type for each column
     logical                   , intent(in)    :: urbpoi( bounds%begc: )          ! true=>urban point
     integer                   , intent(in)    :: snl( bounds%begc: )             ! negative number of snow layers
     real(r8)                  , intent(in)    :: bifall( bounds%begc: )          ! bulk density of newly fallen dry snow [kg/m3]
@@ -449,6 +451,7 @@ contains
     character(len=*), parameter :: subname = 'BulkDiag_NewSnowDiagnostics'
     !-----------------------------------------------------------------------
 
+    SHR_ASSERT_FL((ubound(lun_itype_col, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(urbpoi, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(bifall, 1) == bounds%endc), sourcefile, __LINE__)
@@ -499,15 +502,17 @@ contains
 
     call scf_method%UpdateSnowDepthAndFrac(bounds, num_nolakec, filter_nolakec, &
          ! Inputs
-         urbpoi       = urbpoi(begc:endc), &
-         h2osno_total = h2osno_total(begc:endc), &
-         snowmelt     = snowmelt(begc:endc), &
-         int_snow     = int_snow(begc:endc), &
-         newsnow      = newsnow(begc:endc), &
-         bifall       = bifall(begc:endc), &
+         lun_itype_col = lun_itype_col(begc:endc), &
+         urbpoi        = urbpoi(begc:endc), &
+         h2osno_total  = h2osno_total(begc:endc), &
+         snowmelt      = snowmelt(begc:endc), &
+         int_snow      = int_snow(begc:endc), &
+         newsnow       = newsnow(begc:endc), &
+         bifall        = bifall(begc:endc), &
          ! Outputs
-         snow_depth   = snow_depth(begc:endc), &
-         frac_sno     = frac_sno(begc:endc))
+         snow_depth    = snow_depth(begc:endc), &
+         frac_sno      = frac_sno(begc:endc), &
+         frac_sno_eff  = frac_sno_eff(begc:endc))
 
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
@@ -533,17 +538,6 @@ contains
        if (snl(c) < 0) then
           dz_snowf = (snow_depth(c) - temp_snow_depth(c)) / dtime
           dz(c,snl(c)+1) = dz(c,snl(c)+1)+dz_snowf*dtime
-       end if
-
-       ! set frac_sno_eff variable
-       if (.not. urbpoi(c)) then
-          if (use_subgrid_fluxes) then 
-             frac_sno_eff(c) = frac_sno(c)
-          else
-             frac_sno_eff(c) = 1._r8
-          end if
-       else
-          frac_sno_eff(c) = 1._r8
        end if
 
     end do
