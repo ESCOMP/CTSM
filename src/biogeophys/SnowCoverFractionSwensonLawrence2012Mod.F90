@@ -101,23 +101,49 @@ contains
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
 
+    ! ------------------------------------------------------------------------
+    ! Update frac_sno
+    ! ------------------------------------------------------------------------
+
     do fc = 1, num_c
        c = filter_c(fc)
-       if (h2osno_total(c) > 0.0_r8) then
-          !======================  FSCA PARAMETERIZATIONS  ======================
-          ! fsca parameterization based on *changes* in swe
-          ! first compute change from melt during previous time step
-          if(snowmelt(c) > 0._r8) then
+
+       !======================  FSCA PARAMETERIZATIONS  ======================
+       ! fsca parameterization based on *changes* in swe
+       if (h2osno_total(c) == 0._r8) then
+          if (newsnow(c) > 0._r8) then
+             frac_sno(c) = tanh(this%accum_factor * newsnow(c))
+          else
+             ! NOTE(wjs, 2019-08-07) This resetting of frac_sno to 0 when h2osno_total is 0
+             ! may already be done elsewhere; if it isn't, it possibly *should* be done
+             ! elsewhere rather than here.
+             frac_sno(c) = 0._r8
+          end if
+
+       else ! h2osno_total(c) > 0
+          if (snowmelt(c) > 0._r8) then
+             ! first compute change from melt during previous time step
              frac_sno(c) = this%FracSnowDuringMelt( &
                   c            = c, &
                   h2osno_total = h2osno_total(c), &
                   int_snow     = int_snow(c))
           end if
 
-          ! update fsca by new snow event, add to previous fsca
           if (newsnow(c) > 0._r8) then
+             ! Update fsca by new snow event, add to previous fsca
              frac_sno(c) = 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
           end if
+       end if
+    end do
+
+    ! ------------------------------------------------------------------------
+    ! Update snow_depth
+    ! ------------------------------------------------------------------------
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+
+       if (h2osno_total(c) > 0.0_r8) then
 
           !====================================================================
 
@@ -137,7 +163,6 @@ contains
           ! initialize frac_sno and snow_depth when no snow present initially
           if (newsnow(c) > 0._r8) then
              z_avg = newsnow(c)/bifall(c)
-             frac_sno(c) = tanh(this%accum_factor * newsnow(c))
 
              ! update snow_depth to be consistent with frac_sno, z_avg
              if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
@@ -147,7 +172,6 @@ contains
              end if
           else
              snow_depth(c) = 0._r8
-             frac_sno(c) = 0._r8
           end if
        end if
     end do
