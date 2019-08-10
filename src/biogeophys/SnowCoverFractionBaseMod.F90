@@ -140,6 +140,7 @@ contains
        c = filter_c(fc)
 
        if (urbpoi(c) .or. lun_itype_col(c) == istdlak) then
+          ! subgrid_fluxes parameterization not used for urban and lake columns
           frac_sno_eff(c) = 1._r8
        else
           if (use_subgrid_fluxes) then
