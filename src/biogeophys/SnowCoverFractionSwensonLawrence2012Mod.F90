@@ -15,7 +15,7 @@ module SnowCoverFractionSwensonLawrence2012Mod
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use ncdio_pio      , only : file_desc_t
-  use clm_varctl     , only : iulog, use_subgrid_fluxes
+  use clm_varctl     , only : iulog
   use spmdMod        , only : masterproc, mpicom
   use fileutils      , only : getavu, relavu, opnfil
   use clm_varcon     , only : rpi
@@ -159,32 +159,16 @@ contains
        c = filter_c(fc)
 
        if (h2osno_total(c) > 0.0_r8) then
-
-          !====================================================================
-
-          ! for subgrid fluxes
-          if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
-             if (frac_sno(c) > 0._r8)then
-                snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall(c) * frac_sno(c))
-             else
-                snow_depth(c)=0._r8
-             end if
+          if (frac_sno_eff(c) > 0._r8)then
+             snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall(c) * frac_sno_eff(c))
           else
-             ! for uniform snow cover
-             snow_depth(c)=snow_depth(c)+newsnow(c)/bifall(c)
+             snow_depth(c)=0._r8
           end if
 
        else ! h2osno_total == 0
-          ! initialize frac_sno and snow_depth when no snow present initially
           if (newsnow(c) > 0._r8) then
              z_avg = newsnow(c)/bifall(c)
-
-             ! update snow_depth to be consistent with frac_sno, z_avg
-             if (use_subgrid_fluxes .and. .not. urbpoi(c)) then
-                snow_depth(c)=z_avg/frac_sno(c)
-             else
-                snow_depth(c)=newsnow(c)/bifall(c)
-             end if
+             snow_depth(c) = z_avg/frac_sno_eff(c)
           else
              snow_depth(c) = 0._r8
           end if
