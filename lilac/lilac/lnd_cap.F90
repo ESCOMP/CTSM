@@ -1,6 +1,6 @@
 module lnd_cap
   use ESMF
-  use lilac_utils
+  use lilac_utils, only : fld_list_type
 
   implicit none
 
