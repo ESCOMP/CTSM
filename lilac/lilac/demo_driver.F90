@@ -70,26 +70,37 @@ program demo_lilac_driver
     allocate ( rand1                   (begc:endc) ) ; call random_number (rand1)
     allocate ( rand2                   (begc:endc) ) ; call random_number (rand2)
 
+    !allocating these values of default for now!
+    allocate ( atm2lnd%Sa_z       (begc:endc) ) ; atm2lnd%Sa_z       (:) =  30.0
+    allocate ( atm2lnd%Sa_topo    (begc:endc) ) ; atm2lnd%Sa_topo    (:) =  10.0
+    allocate ( atm2lnd%Sa_u       (begc:endc) ) ; atm2lnd%Sa_u       (:) =  0.0
+    allocate ( atm2lnd%Sa_v       (begc:endc) ) ; atm2lnd%Sa_v       (:) =  0.0
+    allocate ( atm2lnd%Sa_ptem    (begc:endc) ) ; atm2lnd%Sa_ptem    (:) =  280.0
+    allocate ( atm2lnd%Sa_pbot    (begc:endc) ) ; atm2lnd%Sa_pbot    (:) =  100100.0
+    allocate ( atm2lnd%Sa_tbot    (begc:endc) ) ; atm2lnd%Sa_tbot    (:) =  280.0
+    allocate ( atm2lnd%Sa_shum    (begc:endc) ) ; atm2lnd%Sa_shum    (:) =  0.0004
+    allocate ( atm2lnd%Faxa_lwdn  (begc:endc) ) ; atm2lnd%Faxa_lwdn  (:) =  500.0 !200.0
+    allocate ( atm2lnd%Faxa_rainc (begc:endc) ) ; atm2lnd%Faxa_rainc (:) =  4.0e-8
+    allocate ( atm2lnd%Faxa_rainl (begc:endc) ) ; atm2lnd%Faxa_rainl (:) =  3.0e-8
+    allocate ( atm2lnd%Faxa_snowc (begc:endc) ) ; atm2lnd%Faxa_snowc (:) =  1.0e-8
+    allocate ( atm2lnd%Faxa_snowl (begc:endc) ) ; atm2lnd%Faxa_snowl (:) =  2.0e-8
+    allocate ( atm2lnd%Faxa_swndr (begc:endc) ) ; atm2lnd%Faxa_swndr (:) =  100.0
+    allocate ( atm2lnd%Faxa_swvdr (begc:endc) ) ; atm2lnd%Faxa_swvdr (:) =  90.0
+    allocate ( atm2lnd%Faxa_swndf (begc:endc) ) ; atm2lnd%Faxa_swndf (:) =  20.0
+    allocate ( atm2lnd%Faxa_swvdf (begc:endc) ) ; atm2lnd%Faxa_swvdf (:) =  40.0
 
-    allocate ( atm2lnd%uwind           (begc:endc) ) ; atm2lnd%uwind   (:)      =  rand1
-    allocate ( atm2lnd%vwind           (begc:endc) ) ; atm2lnd%vwind   (:)      =  rand1
-    allocate ( atm2lnd%tbot            (begc:endc) ) ; atm2lnd%tbot    (:)      =  rand1
     !endc       = 18048 ? should this be the size of the land or atmosphere???
+
     allocate ( lnd2atm%lwup            (begc:endc) ) ; lnd2atm%lwup    (:)      =  rand2
     allocate ( lnd2atm%taux            (begc:endc) ) ; lnd2atm%taux    (:)      =  rand2
     allocate ( lnd2atm%tauy            (begc:endc) ) ; lnd2atm%tauy    (:)      =  rand2
-
-
-    print *,  "======================================="
-    print *,  atm2lnd%uwind(1:10)
-    print *,  "======================================="
 
     !------------------------------------------------------------------------
     ! looping over imaginary time ....
     !------------------------------------------------------------------------
 
     do curr_time = start_time, end_time
-        if      (curr_time == start_time) then
+        if  (curr_time == start_time) then
 
             ! Initalization phase
             print *,  "--------------------------"
