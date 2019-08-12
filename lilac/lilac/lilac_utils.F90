@@ -19,19 +19,67 @@ module lilac_utils
         character(len=128)          :: stdname
         real*8                      :: default_value
         character(len=128)          :: units
-        real(ESMF_KIND_R8), pointer :: farrayptr1d(:)  ! this will be filled in by lilac when it gets its data from the host atm
+        real(ESMF_KIND_R8), pointer :: farrayptr1d(:)    ! this will be filled in by lilac when it gets its data from the host atm
         real(ESMF_KIND_R8), pointer :: farrayptr2d(:,:)  ! this will be filled in by lilac when it gets its data from the host atm
         integer                     :: ungridded_lbound = 0
         integer                     :: ungridded_ubound = 0
     end type                           fld_list_type
 
     !!! 1d for when we have mesh and 2d for when we have grids....
-
-    type                   :: atm2lnd_data1d_type
-        real*8, pointer    :: uwind (:)
-        real*8, pointer    :: vwind (:)
-        real*8, pointer    :: tbot  (:)
+    type , public          :: atm2lnd_data1d_type
+        real*8, pointer    :: Sa_z (:)
+        real*8, pointer    :: Sa_topo (:)
+        real*8, pointer    :: Sa_u  (:)
+        real*8, pointer    :: Sa_v  (:)
+        real*8, pointer    :: Sa_ptem  (:)
+        real*8, pointer    :: Sa_pbot  (:)
+        real*8, pointer    :: Sa_tbot  (:)
+        real*8, pointer    :: Sa_shum  (:)
+       !real*8, pointer    :: Sa_methane  (:)
+       ! from atm - fluxes
+        real*8, pointer    :: Faxa_lwdn  (:)
+        real*8, pointer    :: Faxa_rainc  (:)
+        real*8, pointer    :: Faxa_rainl  (:)
+        real*8, pointer    :: Faxa_snowc  (:)
+        real*8, pointer    :: Faxa_snowl  (:)
+        real*8, pointer    :: Faxa_swndr  (:)
+        real*8, pointer    :: Faxa_swvdr  (:)
+        real*8, pointer    :: Faxa_swndf  (:)
+        real*8, pointer    :: Faxa_swvdf  (:)
     end type                  atm2lnd_data1d_type
+
+!
+
+    type , public          :: atm2lnd_data2d_type
+        real*8, pointer    :: Sa_z (:,:)
+        real*8, pointer    :: Sa_topo (:,:)
+        real*8, pointer    :: Sa_u  (:,:)
+        real*8, pointer    :: Sa_v  (:,:)
+        real*8, pointer    :: Sa_ptem  (:,:)
+        real*8, pointer    :: Sa_pbot  (:,:)
+        real*8, pointer    :: Sa_tbot  (:,:)
+        real*8, pointer    :: Sa_shum  (:,:)
+       !real*8, pointer    :: Sa_methane  (:,:)
+       ! from atm - fluxes
+        real*8, pointer    :: Faxa_lwdn  (:,:)
+        real*8, pointer    :: Faxa_rainc  (:,:)
+        real*8, pointer    :: Faxa_rainl  (:,:)
+        real*8, pointer    :: Faxa_snowc  (:,:)
+        real*8, pointer    :: Faxa_snowl  (:,:)
+        real*8, pointer    :: Faxa_swndr  (:,:)
+        real*8, pointer    :: Faxa_swvdr  (:,:)
+        real*8, pointer    :: Faxa_swndf  (:,:)
+        real*8, pointer    :: Faxa_swvdf  (:,:)
+    end type                  atm2lnd_data2d_type
+
+
+
+
+    !type                   :: atm2lnd_data1d_type
+    !    real*8, pointer    :: uwind (:)
+    !    real*8, pointer    :: vwind (:)
+    !    real*8, pointer    :: tbot  (:)
+    !end type                  atm2lnd_data1d_type
 
     type                   :: lnd2atm_data1d_type
         real*8, pointer    :: lwup  (:)
@@ -39,17 +87,17 @@ module lilac_utils
         real*8, pointer    :: tauy  (:)
     end type                  lnd2atm_data1d_type
 
-    type                   :: atm2lnd_data2d_type
-        real*8, pointer    :: uwind (:,:)
-        real*8, pointer    :: vwind (:,:)
-        real*8, pointer    :: tbot  (:,:)
-    end type                  atm2lnd_data2d_type
+    !type                   :: atm2lnd_data2d_type
+    !    real*8, pointer    :: uwind (:,:)
+    !    real*8, pointer    :: vwind (:,:)
+    !    real*8, pointer    :: tbot  (:,:)
+    !end type                  atm2lnd_data2d_type
 
-    type                   :: lnd2atm_data2d_type
-        real*8, pointer    :: lwup  (:,:)
-        real*8, pointer    :: taux  (:,:)
-        real*8, pointer    :: tauy  (:,:)
-     end type                 lnd2atm_data2d_type
+    !type                   :: lnd2atm_data2d_type
+    !    real*8, pointer    :: lwup  (:,:)
+    !    real*8, pointer    :: taux  (:,:)
+    !    real*8, pointer    :: tauy  (:,:)
+    ! end type                 lnd2atm_data2d_type
 
     type                   :: this_clock
         integer, pointer   :: yy
@@ -106,6 +154,10 @@ module lilac_utils
         else
            fldlist(num)%units = ""
         end if
+
+        !allocate (fldlist%farrayptr1d(fldsMax))
+
+        !fldlist%farrayptr1d = default_value
 
     end subroutine fldlist_add
 
