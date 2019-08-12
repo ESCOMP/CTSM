@@ -6,10 +6,11 @@ module lilac_mod
 
     ! !USES
     use ESMF
-    use lilac_utils
+    use lilac_utils   , only  : fld_list_type, fldsMax, create_fldlists 
+    use lilac_utils   , only  : atm2lnd_data1d_type , lnd2atm_data1d_type
+    use lilac_utils   , only  : atm2lnd_data2d_type , lnd2atm_data2d_type
     use atmos_cap     ,  only :         atmos_register
     !use lnd_shr_methods
-    !use lnd_comp_esmf
     use lnd_comp_esmf ,  only :         lnd_register
     use cpl_mod       ,  only :         cpl_atm2lnd_register , cpl_lnd2atm_register
 
@@ -18,6 +19,11 @@ module lilac_mod
 
     implicit none
 
+    !TODO (NS,2019-08-07):
+    ! We will move this later to lnd_cap (ctsm_cap) and atmos_cap
+    !use atmos_cap     ,  only :         a2l_fldnum
+    integer    , public ,  parameter                  :: a2l_fldnum        =  14
+    integer    , public ,  parameter                  :: l2a_fldnum        =  16
 
     public                                            :: lilac_init
     public                                            :: lilac_run
@@ -48,8 +54,9 @@ module lilac_mod
 
     subroutine lilac_init( atm2lnd1d, atm2lnd2d, lnd2atm1d, lnd2atm2d)
 
-        use atmos_cap ,  only :          a2c_fldlist, c2a_fldlist
-        use lnd_cap,   only : l2c_fldlist, c2l_fldlist
+        use atmos_cap , only :          a2c_fldlist , c2a_fldlist
+        use lnd_cap   , only :          l2c_fldlist , c2l_fldlist
+ 
         character(len=*), parameter                      :: subname=trim(modname)//': [lilac_init] '
 
         ! input/output variables
@@ -67,7 +74,6 @@ module lilac_mod
         integer                                          :: rc         , urc 
         character(len=ESMF_MAXSTR)                       :: gcname1    , gcname2   !    Gridded components names
         character(len=ESMF_MAXSTR)                       :: ccname1    , ccname2   !    Coupling components names
-        integer                                          :: a2l_fldnum , l2a_fldnum
 
 
         ! Namelist and related variables
@@ -87,6 +93,7 @@ module lilac_mod
 
         integer :: ncomps = 1      ! land only
 
+        integer                      ::  n
         !!! above: https://github.com/yudong-tian/LIS-CLM4.5SP/blob/8cec515a628325c73058cfa466db63210cd562ac/pio-xlis-bld/xlis_main.F90
 
 
@@ -94,8 +101,6 @@ module lilac_mod
         ! Initialize return code
         rc = ESMF_SUCCESS
 
-        a2l_fldnum  = 14
-        l2a_fldnum  = 16
 
         print *,  "---------------------------------------"
         print *,  "    Lilac Demo Application Start       "
@@ -146,7 +151,7 @@ module lilac_mod
             call mpi_finalize(ierror=rc)
             stop
         endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
         !-------------------------------------------------------------------------
         ! Initialize ESMF, set the default calendar and log type.
         !-------------------------------------------------------------------------
@@ -179,30 +184,61 @@ module lilac_mod
         ! value to them.
         !-------------------------------------------------------------------------
 
+        !-------------------------------------------------------------------------
+        !            !---- from atm ----! a2c_fldlist & c2l_fldlist
+        !-------------------------------------------------------------------------
         !allocate (a2c_fldlist(a2l_fldnum))
-        !allocate (c2a_fldlist(l2a_fldnum))
-
-        !allocate (l2c_fldlist(l2a_fldnum))
         !allocate (c2l_fldlist(a2l_fldnum))
+
+        !-------------------------------------------------------------------------
+        !            !---- from land ----! l2c_fldlist & c2a_fldlist
+        !-------------------------------------------------------------------------
+        !allocate (c2a_fldlist(l2a_fldnum))
+        !allocate (l2c_fldlist(l2a_fldnum))
+
         allocate (a2c_fldlist(fldsMax))
         allocate (c2a_fldlist(fldsMax))
 
         allocate (l2c_fldlist(fldsmax))
         allocate (c2l_fldlist(fldsmax))
+
         print *, "creating empty field lists !"
-        call ESMF_LogWrite(subname//"EMPTY field lists are created...", ESMF_LOGMSG_INFO)
+        call ESMF_LogWrite(subname//"fielldlists are allocated!", ESMF_LOGMSG_INFO)
 
-        ! ======================================================================= ! maybe move to create_fldlist?
-        !    call create_fldlists(c2a_fldlist, a2c_fldlist, )
-             call create_fldlists(a2c_fldlist, c2a_fldlist,l2c_fldlist, c2l_fldlist)
-        !-------------------------------------------------------------------------
-        !            !---- from atm ----! a2c_fldlist & c2l_fldlist
-        !-------------------------------------------------------------------------
+        ! create field lists  
+        call create_fldlists(a2c_fldlist, c2a_fldlist,l2c_fldlist, c2l_fldlist)
+        call ESMF_LogWrite(subname//"fielldlists are created!", ESMF_LOGMSG_INFO)
 
-        !            !---- from land ----! l2c_fldlist & c2a_fldlist
+        !-------------------------------------------------------------------------
+        !            !---- from atm ----! a2c_fldlist filling the arrayptr..
         !-------------------------------------------------------------------------
 
-        ! ======================================================================= ! create_fldlist
+
+        ! FIXME: This should go to the demo_driver or real atmosphere......
+        !allocate( a2c_fldlist(fldsmax)%farrayptr1d(1728))
+        !do n = 1,a2l_fldnum
+        !    print *, " index is ", n
+        !    a2c_fldlist(1)%farrayptr1d(:) = 300.0
+        !end do 
+
+        a2c_fldlist(1)%farrayptr1d   =>  atm2lnd1d%Sa_z
+        a2c_fldlist(2)%farrayptr1d   =>  atm2lnd1d%Sa_topo
+        a2c_fldlist(3)%farrayptr1d   =>  atm2lnd1d%Sa_u
+        a2c_fldlist(4)%farrayptr1d   =>  atm2lnd1d%Sa_v
+        a2c_fldlist(5)%farrayptr1d   =>  atm2lnd1d%Sa_ptem
+        a2c_fldlist(6)%farrayptr1d   =>  atm2lnd1d%Sa_pbot
+        a2c_fldlist(7)%farrayptr1d   =>  atm2lnd1d%Sa_shum
+        a2c_fldlist(8)%farrayptr1d   =>  atm2lnd1d%Faxa_lwdn
+        a2c_fldlist(9)%farrayptr1d   =>  atm2lnd1d%Faxa_rainc
+        a2c_fldlist(10)%farrayptr1d  =>  atm2lnd1d%Faxa_rainl
+        a2c_fldlist(11)%farrayptr1d  =>  atm2lnd1d%Faxa_snowc
+        a2c_fldlist(12)%farrayptr1d  =>  atm2lnd1d%Faxa_snowl
+        a2c_fldlist(13)%farrayptr1d  =>  atm2lnd1d%Faxa_swndr
+        a2c_fldlist(14)%farrayptr1d  =>  atm2lnd1d%Faxa_swvdr
+        a2c_fldlist(15)%farrayptr1d  =>  atm2lnd1d%Faxa_swndf
+        a2c_fldlist(16)%farrayptr1d  =>  atm2lnd1d%Faxa_swvdf
+
+        ! ========================================================================
 
         !-------------------------------------------------------------------------
         ! Create Gridded Component!  --  atmosphere ( atmos_cap)
@@ -299,6 +335,8 @@ module lilac_mod
         call ESMF_CalendarPrint ( calendar , rc=rc)
         print *,  "---------------------------------------"
 
+        ! ========================================================================
+
         !-------------------------------------------------------------------------
         ! Create the necessary import and export states used to pass data
         !  between components.
@@ -332,28 +370,22 @@ module lilac_mod
         call ESMF_GridCompInitialize(atmos_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=clock, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"atmos_cap or atmos_gcomp initialized", ESMF_LOGMSG_INFO)
-        print *, "atmos_cap initialize finished, rc =", rc
 
-        rc = ESMF_SUCCESS
-        print *, rc 
-        call ESMF_LogWrite(subname//"Now we are initializing CTSM ....", ESMF_LOGMSG_INFO)
-        print *, "Now we are initializing CTSM, rc =", rc
         call ESMF_GridCompInitialize(land_gcomp       , importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"lnd_cap or land_gcomp initialized", ESMF_LOGMSG_INFO)
-        !print *, "lnd_cap initialize finished, rc =", rc
 
         ! All 4 states that are module variables are no longer empty - have been initialized
 
         call ESMF_CplCompInitialize(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=clock, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"coupler :: cpl_atm2lnd_comp initialized", ESMF_LOGMSG_INFO)
-        print *, "coupler :: cpl_atm2lnd_comp initialize finished, rc =", rc
+        print *, "coupler :: cpl_atm2lnd_comp initialize finished" !, rc =", rc
 
         call ESMF_CplCompInitialize(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=clock, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"coupler :: cpl_lnd2atm_comp initialized", ESMF_LOGMSG_INFO)
-        print *, "coupler :: cpl_lnd2atm_comp initialize finished, rc =", rc
+        print *, "coupler :: cpl_lnd2atm_comp initialize finished" !, rc =", rc
 
     end subroutine lilac_init
 
@@ -371,8 +403,7 @@ module lilac_mod
         integer                                          :: rc, urc
         character(len=ESMF_MAXSTR)                       :: gcname1, gcname2   !    Gridded components names
         character(len=ESMF_MAXSTR)                       :: ccname1, ccname2   !    Coupling components names
-        integer, parameter                              :: fldsMax = 100
-        integer                                          :: a2l_fldnum, l2a_fldnum
+        !integer, parameter                              :: fldsMax = 100
 
         ! input/output variables
         !type(atm2lnd_data1d_type), intent(in), optional  :: atm2lnd1d
@@ -413,22 +444,22 @@ module lilac_mod
             call ESMF_GridCompRun(atmos_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=local_clock, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
             call ESMF_LogWrite(subname//"atmos_cap or atmos_gcomp is running", ESMF_LOGMSG_INFO)
-            print *, "Running atmos_cap gridded component , rc =", rc
+            print *, "Running atmos_cap gridded component "!, rc =", rc
 
             call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=local_clock, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
             call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
-            print *, "Running coupler component..... cpl_atm2lnd_comp , rc =", rc
+            print *, "Running coupler component..... cpl_atm2lnd_comp"! , rc =", rc
 
             call ESMF_GridCompRun(land_gcomp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=local_clock, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
             call ESMF_LogWrite(subname//"lnd_cap or land_gcomp is running", ESMF_LOGMSG_INFO)
-            print *, "Running lnd_cap gridded component , rc =", rc
+            print *, "Running lnd_cap gridded component"!  , rc =", rc
 
             call ESMF_CplCompRun(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=local_clock, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
             call ESMF_LogWrite(subname//"running cpl_lnd2atm_comp ", ESMF_LOGMSG_INFO)
-            print *, "Running coupler component..... cpl_lnd2atm_comp , rc =", rc
+            print *, "Running coupler component..... cpl_lnd2atm_comp" ! , rc =", rc
 
             ! Advance the time
             call ESMF_ClockAdvance(local_clock, rc=rc)
@@ -455,7 +486,6 @@ module lilac_mod
         character(len=ESMF_MAXSTR)                       :: gcname1, gcname2   !    Gridded components names
         character(len=ESMF_MAXSTR)                       :: ccname1, ccname2   !    Coupling components names
         !integer, parameter                              :: fldsMax = 100
-        integer                                          :: a2l_fldnum, l2a_fldnum
 
         !------------------------------------------------------------------------
         !------------------------------------------------------------------------
