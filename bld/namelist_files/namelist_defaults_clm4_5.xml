@@ -1093,6 +1093,17 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <ndepmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
+<!-- Soilm moisture streams namelist defaults -->
+<!-- This is if you want to prescribe the soil moisture from input datasets rather than model it -->
+<use_soil_moisture_streams>.false.</use_soil_moisture_streams>
+<stream_year_first_soilm  >1997</stream_year_first_soilm>
+<stream_year_last_soilm   >1997</stream_year_last_soilm>
+<model_year_align_soilm   >1997</model_year_align_soilm>
+
+<stream_fldfilename_soilm hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.climo1980-2014.MONS_c190709.nc</stream_fldfilename_soilm>
+
+<soilm_tintalgo>linear</soilm_tintalgo>
+
 <!-- LAI streams namelist defaults -->
 <use_lai_streams        >.false.</use_lai_streams>
 <stream_year_first_lai  >2001</stream_year_first_lai>
@@ -2458,6 +2469,8 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 >lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_LandScan2004_to_0.125x0.125_nomask_aave_da_c140702.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="0.125x0.125"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_MODIS_to_0.125x0.125_nomask_aave_da_c140702.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODISv2"  to_hgrid="0.125x0.125"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_MODISv2_to_0.125x0.125_nomask_aave_da_c190613.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="0.125x0.125"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_MODIS-wCsp_to_0.125x0.125_nomask_aave_da_c160427.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"  to_hgrid="0.125x0.125"   to_lmask="nomask" 
