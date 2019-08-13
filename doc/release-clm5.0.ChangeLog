@@ -1,4 +1,109 @@
 ===============================================================
+Tag name:  release-clm5.0.27
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Aug 13 10:21:07 MDT 2019
+One-line Summary: Add presoribed soil moisture streams as an option, and a few fixes
+
+Purpose of this version:
+------------------------
+
+Add new prescribed moisture streams feature from Sean Swenson. This allows the user
+to specify a steams file for soil moisture and use it in place of the model prognostically
+determining soil moisture. To turn it on set use_soil_moisture_streams=T. You can also 
+set the filename to use with stream_fldfilename_soilm, and there are other _soilm namelist
+items to control the years to run over. The file MUST be on the same grid as the model resolution.
+
+Update 0.125x0.125 mapping and surfdata data, and fix hirespft data issues. Update cime 
+with SSP1-2.6 presaero data. So now can run the SSP1-2.6 CMIP6 future scenario.
+Update rtm release branch to rtm1_0_69, which brings in a fix for cold starts.
+
+Move mksurfdata changes from ctsm1.0.dev053 over, which fixes a rare soil color bug.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #757 #629 #343 #276
+  Fixes #757 -- Softlinks in inputdata repo saved as a link rather than a datafile
+  Fixes #629 -- Remove unused fields on surface datasets (add option for glc fields)
+  Fixes #343 -- Move config_archive to ctsm
+  Fixes #276 -- Add some CLM tests for CESM to run
+
+CIME Issues fixed (include issue #): #3163 #3170
+ #3170 -- fixes creation of empty file from inputdata download
+ #3163 -- JOB_WALLCLOCK error
+
+Science changes since: release-clm5.0.26
+   Add SSP1-2.6 prescribed aerosol
+   Fix soil color bug in mksurfdata_map
+
+Software changes since: release-clm5.0.26
+   Add ability to run with prescribed soil moisture streams
+
+Changes to User Interface since: release-clm5.0.26
+   New soil_moisture_streams namelist
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+    hobart --- OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+     hobart --- OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used: Update cime and rtm
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.03
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.20
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: ctsm1.0.dev053
+
+Pull Requests that document the changes (include PR ids): #781
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #781 -- Prescribed soil moisture on release branch and some other updates and fixes
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.26
 Originator(s):  sacks (Bill Sacks)
 Date: Mon Jul 29 18:11:26 MDT 2019
