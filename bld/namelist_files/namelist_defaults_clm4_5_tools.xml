@@ -219,7 +219,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_flai>
 
 <mksrf_flai hgrid="0.25x0.25" lmask="MODIS"
->lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc
+>lnd/clm2/rawdata/lai.0.25x0.25.TRENDY.histsimyr2005.c190805/mksrf_lai_histclm52deg025_earthstatmirca_2005.c190805.nc
 </mksrf_flai>
 
 <!-- soil properties: forganic, fmax, soil-texture and soil color-->
@@ -234,7 +234,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fsoicol>
 
 <mksrf_fsoicol  hgrid="0.25x0.25"  lmask="MODIS"
->lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170623.nc</mksrf_fsoicol>
+>lnd/clm2/rawdata/soicol.0.25x0.25.TRENDY.histsimyr2005.c190805/mksrf_soilcolor_histclm52deg025_earthstatmirca_2005.c190805.nc
+</mksrf_fsoicol>
 
 <mksrf_forganic hgrid="5x5min"  lmask="ISRIC-WISE"
 >lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc</mksrf_forganic>
