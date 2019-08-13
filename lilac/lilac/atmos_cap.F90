@@ -26,7 +26,7 @@ module atmos_cap
     integer                           :: c2a_fldlist_num
     !private
 
-    public  :: atmos_register
+    public                            :: atmos_register
     !real(kind=ESMF_KIND_R8), dimension(:), public, pointer, save :: fldptr
 
     !========================================================================
@@ -126,7 +126,7 @@ module atmos_cap
         ! Create individual fields and add to field bundle -- a2l
 
         !call fldlist_add(a2c_fldlist_num, a2c_fldlist, 'dum_var2'      )
-        a2c_fldlist_num = 16
+        a2c_fldlist_num = 14
 
         do n = 1,a2c_fldlist_num
 
@@ -156,8 +156,8 @@ module atmos_cap
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
 
-           call ESMF_StateAdd(atm2lnd_a_state, (/field/) , rc=rc)
-           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+           !call ESMF_StateAdd(atm2lnd_a_state, (/field/) , rc=rc)
+           !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
            
            !print *, a2c_fldlist(n)%farrayptr1d
            !print *, "this field is created"
@@ -168,8 +168,9 @@ module atmos_cap
         print *, "!Fields to  Coupler (atmos to  land ) (a2c_fb) Field Bundle Created!"
 
         ! Add field bundle to state
-        !call ESMF_StateAdd(atm2lnd_a_state, (/a2c_fb/), rc=rc)
-        !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        call ESMF_StateAdd(atm2lnd_a_state, (/a2c_fb/), rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        
         call ESMF_LogWrite(subname//"atm2lnd_a_state is filled with dummy_var field bundle!", ESMF_LOGMSG_INFO)
         print *, "!atm2lnd_a_state is filld with dummy_var field bundle!"
 
@@ -184,7 +185,7 @@ module atmos_cap
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
         ! Create individual fields and add to field bundle -- l2a
-        c2a_fldlist_num = 16
+        c2a_fldlist_num = 14
 
         do n = 1,c2a_fldlist_num
 
@@ -213,7 +214,7 @@ module atmos_cap
            ! add field to field bundle
            call ESMF_FieldBundleAdd(c2a_fb, (/field/), rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        call ESMF_LogWrite(subname//"c2a fieldbundleadd is finished .... !", ESMF_LOGMSG_INFO)
+          call ESMF_LogWrite(subname//"c2a fieldbundleadd is finished .... !", ESMF_LOGMSG_INFO)
 
            print *, "**********************************************************"
            print *, "creating field for c2a:"
