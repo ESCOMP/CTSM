@@ -90,7 +90,7 @@ module cpl_mod
 
 
         !call ESMF_FieldBundlePrint (import_fieldbundle, rc=rc)
-        call ESMF_FieldBundlePrint (export_fieldbundle, rc=rc)
+        !call ESMF_FieldBundlePrint (export_fieldbundle, rc=rc)
 
         call ESMF_FieldBundleRegridStore(import_fieldbundle, export_fieldbundle, routehandle=rh_atm2lnd, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
