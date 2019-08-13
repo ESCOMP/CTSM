@@ -126,13 +126,14 @@ module atmos_cap
         ! Create individual fields and add to field bundle -- a2l
 
         !call fldlist_add(a2c_fldlist_num, a2c_fldlist, 'dum_var2'      )
-        a2c_fldlist_num = 14
+        a2c_fldlist_num = 16
 
         do n = 1,a2c_fldlist_num
 
            print *, "**********************************************************"
            print *, "creating field for a2l:"
            print *, trim(a2c_fldlist(n)%stdname)
+           print *, a2c_fldlist(n)%farrayptr1d
 
            ! create field
            !!! Here we want to pass pointers
@@ -143,6 +144,7 @@ module atmos_cap
            !call ESMF_FieldFill(field, dataFillScheme = "sincos" , rc=rc)
            !call ESMF_FieldFill(field, dataFillScheme = "const"  , const1=real(n, ESMF_KIND_R8), rc=rc)
            !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+           print *, 'Here we are printing field!'
            call ESMF_FieldPrint(field,  rc=rc)
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
            !call ESMF_LogWrite(subname//"fieldget!", ESMF_LOGMSG_INFO)
@@ -154,6 +156,9 @@ module atmos_cap
            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
 
+           call ESMF_StateAdd(atm2lnd_a_state, (/field/) , rc=rc)
+           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+           
            !print *, a2c_fldlist(n)%farrayptr1d
            !print *, "this field is created"
 
@@ -163,8 +168,8 @@ module atmos_cap
         print *, "!Fields to  Coupler (atmos to  land ) (a2c_fb) Field Bundle Created!"
 
         ! Add field bundle to state
-        call ESMF_StateAdd(atm2lnd_a_state, (/a2c_fb/), rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        !call ESMF_StateAdd(atm2lnd_a_state, (/a2c_fb/), rc=rc)
+        !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"atm2lnd_a_state is filled with dummy_var field bundle!", ESMF_LOGMSG_INFO)
         print *, "!atm2lnd_a_state is filld with dummy_var field bundle!"
 
@@ -190,8 +195,8 @@ module atmos_cap
            ! create field
            !!! Here we want to pass pointers
            if (mesh_switch) then
-              field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(c2a_fldlist(n)%stdname), rc=rc)
-              !field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(c2a_fldlist(n)%stdname), farrayPtr=c2a_fldlist(n)%farrayptr1d, rc=rc)
+              !field = ESMF_FieldCreate(atmos_mesh, ESMF_TYPEKIND_R8 ,  meshloc=ESMF_MESHLOC_ELEMENT , name=trim(c2a_fldlist(n)%stdname), rc=rc)
+              field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(c2a_fldlist(n)%stdname), farrayPtr=a2c_fldlist(n)%farrayptr1d, rc=rc)
               !field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(a2c_fldlist(n)%stdname), farrayPtr=a2c_fldlist(n)%farrayptr1d, rc=rc)
               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 

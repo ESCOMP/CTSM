@@ -68,7 +68,7 @@ atmos_cap.o: lilac_utils.o
 dust:
 	rm -f PET*.ESMF_LogFile DE.nc FLAG.nc OMEGA.nc SIE.nc U_velocity.nc V_velocity.nc
 clean:
-	rm -f *.exe *.o *.mod
+	rm -f *.exe
 distclean: dust clean
 berzerk:
 	rm -f PET*.ESMF_LogFile job_name* *.o *.mod *.exe

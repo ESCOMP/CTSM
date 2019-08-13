@@ -93,11 +93,11 @@ module lilac_utils
     !    real*8, pointer    :: tbot  (:,:)
     !end type                  atm2lnd_data2d_type
 
-    !type                   :: lnd2atm_data2d_type
-    !    real*8, pointer    :: lwup  (:,:)
-    !    real*8, pointer    :: taux  (:,:)
-    !    real*8, pointer    :: tauy  (:,:)
-    ! end type                 lnd2atm_data2d_type
+    type                   :: lnd2atm_data2d_type
+        real*8, pointer    :: lwup  (:,:)
+        real*8, pointer    :: taux  (:,:)
+        real*8, pointer    :: tauy  (:,:)
+     end type                 lnd2atm_data2d_type
 
     type                   :: this_clock
         integer, pointer   :: yy
