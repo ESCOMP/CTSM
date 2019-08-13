@@ -34,7 +34,7 @@ module CNSoilMatrixMod
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type  
   use CNSharedParamsMod                  , only : CNParamsShareInst
   use SoilStateType                      , only : soilstate_type  
-  use clm_varctl                         , only : isspinup, use_soil_matrixcn, is_outmatrix
+  use clm_varctl                         , only : isspinup, use_soil_matrixcn, is_outmatrix, nyr_forcing
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use clm_varctl                         , only : use_c13, use_c14
@@ -104,6 +104,7 @@ contains
     logical,save :: init_readyAsoilc = .False.
     logical,save :: init_readyAsoiln = .False.
     logical isbegofyear
+    integer,save :: iyr=0
 
     !-----------------------------------------------------------------------
     begc = bounds%begc; endc = bounds%endc
@@ -218,7 +219,7 @@ contains
       call t_stopf('CN Soil matrix-init. matrix')
 
       call t_startf('CN Soil matrix-assign matrix-a-na')
-  ! Calculate non-diagonal entries (a_ma_vr and na_ma_vr) in transfer coefficient matrix A 
+      ! Calculate non-diagonal entries (a_ma_vr and na_ma_vr) in transfer coefficient matrix A 
       do k = 1, ndecomp_cascade_transitions
          if(cascade_receiver_pool(k) .ne. 0)then  !transition to atmosphere
             do j = 1, nlevdecomp
@@ -239,7 +240,7 @@ contains
 
       call t_stopf('CN Soil matrix-assign matrix-a-na')
 
-  ! Update the turnover rate matrix K with N limitation (fpi_vr)
+      ! Update the turnover rate matrix K with N limitation (fpi_vr)
       call t_startf('CN Soil matrix-assign matrix-in')
       do i = 1,ndecomp_pools
          if(is_litter(i))then
@@ -254,7 +255,7 @@ contains
 
       call t_stopf('CN Soil matrix-assign matrix-in')
 
-  ! Assign old value to vector, and be ready for matrix operation
+      ! Assign old value to vector, and be ready for matrix operation
       call t_startf('CN Soil matrix-assign matrix-in')
       call t_startf('CN Soil matrix-assign matrix-inter')
       do i = 1,ndecomp_pools
@@ -293,9 +294,10 @@ contains
       end if !c14
       call t_stopf('CN Soil matrix-assign matrix-inter')
 
-  ! Save the C and N pool size at begin of each year, which are used to calculate C and N capacity at end of each year.
+      ! Save the C and N pool size at begin of each year, which are used to calculate C and N capacity at end of each year.
       call t_startf('CN Soil matrix-assign matrix-decomp0')
       if (isbegofyear)then  
+         iyr = iyr + 1
          do i = 1,ndecomp_pools
             do j = 1, nlevdecomp
                do fc = 1,num_soilc
@@ -314,31 +316,31 @@ contains
       end if
       call t_stopf('CN Soil matrix-assign matrix-decomp0')
    
-  ! Set C transfer matrix Ac from a_ma_vr
+      ! Set C transfer matrix Ac from a_ma_vr
       call t_startf('CN Soil matrix-matrix mult1-lev3-SetValueAK1')
       call AKsoilc%SetValueA(begc,endc,num_soilc,filter_soilc,a_ma_vr,A_i,A_j,Ntrans,init_readyAsoilc,list_Asoilc,RI_a,CI_a)
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SetValueAK1')
 
-  ! Set N transfer matrix An from na_ma_vr
+      ! Set N transfer matrix An from na_ma_vr
       call t_startf('CN Soil matrix-matrix mult1-lev3-SetValueAK2')
       call AKsoiln%SetValueA(begc,endc,num_soilc,filter_soilc,na_ma_vr,A_i,A_j,Ntrans,init_readyAsoiln,list_Asoiln,RI_na,CI_na)
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SetValueAK2')
 
-  ! calculate matrix Ac*K for C
+      ! calculate matrix Ac*K for C
       call t_startf('CN Soil matrix-matrix mult1-lev3-SPMM_AK1')
       call AKsoilc%SPMM_AK(num_soilc,filter_soilc,Ksoil)
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SPMM_AK1')
 
-  ! calculate matrix An*K for N
+      ! calculate matrix An*K for N
       call t_startf('CN Soil matrix-matrix mult1-lev3-SPMM_AK2')
       call AKsoiln%SPMM_AK(num_soilc,filter_soilc,Ksoil)
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SPMM_AK2')
 
-  ! Set vertical transfer matrix V from tri_ma_vr
+      ! Set vertical transfer matrix V from tri_ma_vr
       call t_startf('CN Soil matrix-matrix mult1-lev3-SetValueAV,AKfire')
       call AVsoil%SetValueSM(begc,endc,num_soilc,filter_soilc,tri_ma_vr(begc:endc,1:Ntri_setup),tri_i,tri_j,Ntri_setup)
 
-  ! Set fire decomposition matrix Kfire from matrix_decomp_fire_k
+      ! Set fire decomposition matrix Kfire from matrix_decomp_fire_k
       do j=1,ndecomp_pools_vr
          kfire_i(j) = j
          kfire_j(j) = j
@@ -346,11 +348,11 @@ contains
       call AKfiresoil%SetValueSM(begc,endc,num_soilc,filter_soilc,matrix_decomp_fire_k(begc:endc,1:ndecomp_pools_vr),kfire_i,kfire_j,ndecomp_pools_vr)
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SetValueAV,AKfire')
 
-  ! Calculate AKallsoilc = A*K + AVsoil + AKfiresoil. (AKfiresoil = -Kfire)
-  ! When no fire, AKallsoilc = A*K + AVsoil
-  ! When fire is on, AKallsoilc = A*K + AVsoil + AKfiresoil
-  ! Here, AKallsoilc represents all soil C transfer rate (gC/(gC*m3*step))
-  ! and AKallsoiln represents all soil N transfer rate (gN/(gN*m3*step))
+      ! Calculate AKallsoilc = A*K + AVsoil + AKfiresoil. (AKfiresoil = -Kfire)
+      ! When no fire, AKallsoilc = A*K + AVsoil
+      ! When fire is on, AKallsoilc = A*K + AVsoil + AKfiresoil
+      ! Here, AKallsoilc represents all soil C transfer rate (gC/(gC*m3*step))
+      ! and AKallsoiln represents all soil N transfer rate (gN/(gN*m3*step))
       call t_startf('CN Soil matrix-matrix mult1-lev3-SPMP_AB')
       if(num_actfirec .eq. 0)then
          call AKallsoilc%SPMP_AB(num_soilc,filter_soilc,AKsoilc,AVsoil,list_ready1_nofire,list_A=list_AK_AKV, list_B=list_V_AKV,&
@@ -370,23 +372,23 @@ contains
 
       call t_startf('CN Soil matrix-matrix mult2-lev2')
 
-  ! Update soil C pool size: X(matrix_Cinter) = X(matrix_Cinter) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter)
-  ! Update soil N pool size: X(matrix_Ninter) = X(matrix_Ninter) + (A*K + AVsoil + AKfiresoil) * X(matrix_Ninter)
+      ! Update soil C pool size: X(matrix_Cinter) = X(matrix_Cinter) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter)
+      ! Update soil N pool size: X(matrix_Ninter) = X(matrix_Ninter) + (A*K + AVsoil + AKfiresoil) * X(matrix_Ninter)
       call matrix_Cinter%SPMM_AX(num_soilc,filter_soilc,AKallsoilc)
       call matrix_Ninter%SPMM_AX(num_soilc,filter_soilc,AKallsoiln)
 
-  ! Update soil C13 pool size: X(matrix_Cinter13) = X(matrix_Cinter13) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter13)
+      ! Update soil C13 pool size: X(matrix_Cinter13) = X(matrix_Cinter13) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter13)
       if ( use_c13)then
          call matrix_Cinter13%SPMM_AX(num_soilc,filter_soilc,AKallsoilc)
       end if
 
-  ! Update soil C14 pool size: X(matrix_Cinter14) = X(matrix_Cinter14) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter14)
+      ! Update soil C14 pool size: X(matrix_Cinter14) = X(matrix_Cinter14) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter14)
       if ( use_c14)then
          call matrix_Cinter14%SPMM_AX(num_soilc,filter_soilc,AKallsoilc)
       end if
 
-  ! Update soil C pool size: X(matrix_Cinter) = X(matrix_Cinter) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter) + I(matrix_Cinput)
-  ! Update soil N pool size: X(matrix_Ninter) = X(matrix_Ninter) + (A*K + AVsoil + AKfiresoil) * X(matrix_Ninter) + I(matrix_Ninput)
+      ! Update soil C pool size: X(matrix_Cinter) = X(matrix_Cinter) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter) + I(matrix_Cinput)
+      ! Update soil N pool size: X(matrix_Ninter) = X(matrix_Ninter) + (A*K + AVsoil + AKfiresoil) * X(matrix_Ninter) + I(matrix_Ninput)
       do j = 1, ndecomp_pools_vr
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -395,7 +397,7 @@ contains
          end do
       end do
 
-  ! Update soil C13 pool size: X(matrix_Cinter13) = X(matrix_Cinter13) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter13) + I(matrix_Cinput13)
+      ! Update soil C13 pool size: X(matrix_Cinter13) = X(matrix_Cinter13) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter13) + I(matrix_Cinput13)
       if ( use_c13)then
          do j = 1, ndecomp_pools_vr
             do fc = 1,num_soilc
@@ -405,7 +407,7 @@ contains
          end do
       end if     
  
-  ! Update soil C14 pool size: X(matrix_Cinter14) = X(matrix_Cinter14) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter14) + I(matrix_Cinput14)
+      ! Update soil C14 pool size: X(matrix_Cinter14) = X(matrix_Cinter14) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter14) + I(matrix_Cinput14)
       if ( use_c14)then
          do j = 1, ndecomp_pools_vr
             do fc = 1,num_soilc
@@ -415,8 +417,8 @@ contains
          end do
       end if !c14
 
-  ! Adjust heterotrophic respiration and fire flux because the pool size updating order is different between default and matrix code, balance error will occur
-  ! while sudden big changes happen in C pool, eg. crop harvest and fire.
+      ! Adjust heterotrophic respiration and fire flux because the pool size updating order is different between default and matrix code, balance error will occur
+      ! while sudden big changes happen in C pool, eg. crop harvest and fire.
       call t_stopf('CN Soil matrix-matrix mult2-lev2')
       do i=1,ndecomp_pools
          do j=1,nlevdecomp
@@ -444,7 +446,7 @@ contains
 
       call t_startf('CN Soil matrix-assign back')
 
-  ! Send vector type soil C and N pool size back to decomp_cpools_vr_col and decomp_npools_vr_col
+      ! Send vector type soil C and N pool size back to decomp_cpools_vr_col and decomp_npools_vr_col
       do i=1,ndecomp_pools
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
@@ -482,7 +484,7 @@ contains
       if(use_soil_matrixcn .and. (is_outmatrix .or. isspinup))then
          call t_startf('CN Soil matrix-spinup & output1')
             
-   ! Accumulate C transfers during a whole calendar year to calculate the C and N capacity
+         ! Accumulate C transfers during a whole calendar year to calculate the C and N capacity
          do j=1,ndecomp_pools*nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
@@ -491,8 +493,8 @@ contains
             end do
          end do
 
-   ! Calculate all the soil N transfers in current time step
-   ! After this step, AKallsoiln represents all the N transfers (gN/m3/step)
+         ! Calculate all the soil N transfers in current time step
+         ! After this step, AKallsoiln represents all the N transfers (gN/m3/step)
          call t_stopf('CN Soil matrix-spinup & output1')
          call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,Ninter_old(begc:endc,1:ndecomp_pools_vr))
          call t_startf('CN Soil matrix-spinup & output1.5')
@@ -500,28 +502,29 @@ contains
          call AKallsoiln%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
          call t_stopf('CN Soil matrix-spinup & output1.5')
 
-   ! Calculate all the soil C transfers in current time step. 
-   ! After this step, AKallsoilc represents all the C transfers (gC/m3/step)
+         ! Calculate all the soil C transfers in current time step. 
+         ! After this step, AKallsoilc represents all the C transfers (gC/m3/step)
          call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,Cinter_old(begc:endc,1:ndecomp_pools_vr))
          call t_startf('CN Soil matrix-spinup & output1.6')
          call AKallsoilc%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
          call t_stopf('CN Soil matrix-spinup & output1.6')
         
-   ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
+         ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
          call t_startf('CN Soil matrix-spinup & output2')
          call AKXnacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoiln)
          call t_stopf('CN Soil matrix-spinup & output2')
 
-   ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
+         ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
          call t_startf('CN Soil matrix-spinup & output3')
          call AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoilc)
          call t_stopf('CN Soil matrix-spinup & output3')
 
 
          call t_startf('CN Soil matrix-calc. C capacity')
-         if(is_end_curr_year())then
-   ! Copy C transfers from sparse matrix to 2D temporary variables tran_acc and tran_nacc
-   ! Calculate the C and N transfer rate by dividing CN transfer by base value saved at begin of each year.
+         if((.not. isspinup .and. is_end_curr_year()) .or. (isspinup .and. is_end_curr_year() .and. iyr .eq. nyr_forcing))then
+            ! Copy C transfers from sparse matrix to 2D temporary variables tran_acc and tran_nacc
+            ! Calculate the C and N transfer rate by dividing CN transfer by base value saved at begin of each year.
+            iyr = 0
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                cs_soil%tran_acc (c,1:ndecomp_pools_vr,1:ndecomp_pools_vr) = 0._r8
@@ -555,7 +558,7 @@ contains
                end do
             end do
 
-   ! Calculate capacity 
+            ! Calculate capacity 
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                call inverse(cs_soil%tran_acc(c,1:ndecomp_pools_vr,1:ndecomp_pools_vr),AKinv(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ndecomp_pools_vr)
@@ -564,8 +567,8 @@ contains
                soilmatrixn_cap(c,:,1) = -matmul(AKinvn(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ns_soil%in_nacc(c,1:ndecomp_pools_vr))
             end do
          
-   ! If spin up is on, the capacity replaces the pool size with capacity.
-   ! Copy the capacity into a 3D variable, and be ready to write to history files.
+            ! If spin up is on, the capacity replaces the pool size with capacity.
+            ! Copy the capacity into a 3D variable, and be ready to write to history files.
             do i=1,ndecomp_pools
                do j = 1,nlevdecomp
                   do fc = 1,num_soilc
@@ -580,7 +583,7 @@ contains
                end do
             end do
 
-   ! Reset to accumulation variables to 0 at end of each year
+            ! Reset to accumulation variables to 0 at end of each year
             do j=1,n_all_entries
                do fc = 1,num_soilc
                   c = filter_soilc(fc)

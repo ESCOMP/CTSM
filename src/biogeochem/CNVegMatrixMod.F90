@@ -21,7 +21,7 @@ module CNVegMatrixMod
   ! !USES:
   use shr_kind_mod                   , only : r8 => shr_kind_r8
   use clm_time_manager               , only : get_step_size,is_end_curr_year,is_first_step_of_this_run_segment,&
-                                              get_days_per_year,is_beg_curr_year,is_end_curr_year
+                                              get_days_per_year,is_beg_curr_year
   use decompMod                      , only : bounds_type 
   use clm_varpar                     , only : nlevdecomp, nvegcpool, nvegnpool
   use clm_varpar                     , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
@@ -44,7 +44,7 @@ module CNVegMatrixMod
   use CNVegNitrogenFluxType          , only : cnveg_nitrogenflux_type
   use CNVegStateType                 , only : cnveg_state_type
   use SoilBiogeochemNitrogenFluxType , only : soilbiogeochem_nitrogenflux_type
-  use clm_varctl                     , only : isspinup, is_outmatrix
+  use clm_varctl                     , only : isspinup, is_outmatrix, nyr_forcing
   use clm_varctl                     , only : use_c13, use_c14 
   use SPMMod                         , only : sparse_matrix_type,diag_matrix_type,vector_type
   !
@@ -127,6 +127,8 @@ contains
      logical, save             :: list_ready_phgmc     = .false.
      logical, save             :: list_ready_phgmfin   = .false.
      logical, save             :: list_ready_phgmn     = .false.
+
+     integer, save             :: iyr=0
 
   ! Temporary variables are only used at end of the year to calculate C and N storage capacity
      real(r8),dimension(:)     :: matrix_calloc_acc    (1:nvegcpool)
@@ -1204,6 +1206,7 @@ contains
 
   ! Save *c0* and *n0* variables at begin of each year.
       if (is_beg_curr_year())then
+         iyr = iyr + 1
          do fp = 1,num_soilp
             p = filter_soilp(fp)
             leafc0(p)                = max(leafc(p),  epsi)
@@ -1991,7 +1994,8 @@ contains
 
   ! Calculate C storage capacity. 2D matrix instead of sparse matrix is still used when calculating the inverse
          if(isspinup .or. is_outmatrix)then
-            if(is_end_curr_year())then
+            if((.not. isspinup .and. is_end_curr_year()) .or. (isspinup .and. is_end_curr_year() .and. iyr .eq. nyr_forcing))then
+               iyr = 0
                do fp = 1,num_soilp
                   call t_startf('CN veg matrix-prepare AK^-1')
                   p = filter_soilp(fp)
