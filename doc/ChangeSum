@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.27     erik 08/13/2019 Add presoribed soil moisture streams as an option, and a few fixes
 release-clm5.0.26    sacks 07/29/2019 Add a CN precision control call to fix problems related to small negative values
 release-clm5.0.25     erik 05/29/2019 Change two files from NetCDF-4 format to NetCDF-3 (because some machines have trouble with NetCDF-4 in pnetcdf)
 release-clm5.0.24     erik 05/22/2019 Correct ndep end year for SSPs, 2-degree CMIP6WACCMDECK with C-isotopes off, fixes mksurfdata for high resolution
