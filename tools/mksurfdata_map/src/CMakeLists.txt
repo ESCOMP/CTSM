@@ -17,6 +17,7 @@ list(APPEND mksurfdat_sources
   mkpctPftTypeMod.F90
   mkutilsMod.F90
   mkpftUtilsMod.F90
+  mksoilUtilsMod.F90
   mkvarctl.F90
   mkvarpar.F90
   shr_const_mod.F90
