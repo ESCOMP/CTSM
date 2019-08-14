@@ -21,7 +21,7 @@ module CNVegMatrixMod
   ! !USES:
   use shr_kind_mod                   , only : r8 => shr_kind_r8
   use clm_time_manager               , only : get_step_size,is_end_curr_year,is_first_step_of_this_run_segment,&
-                                              get_days_per_year,is_beg_curr_year
+                                              get_days_per_year,is_beg_curr_year,update_DA_nstep
   use decompMod                      , only : bounds_type 
   use clm_varpar                     , only : nlevdecomp, nvegcpool, nvegnpool
   use clm_varpar                     , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
@@ -2262,6 +2262,7 @@ contains
                      if(ivt(p) >= npcropmin)then
                         grainn(p)              = vegmatrixn_rt(igrain)
                      end if
+                     call update_DA_nstep()
                   end if
 
   ! Save C storage capacity from temporary variables to module variables

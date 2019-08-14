@@ -18,7 +18,7 @@ module CNSoilMatrixMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type  
   use abortutils                         , only : endrun
-  use clm_time_manager                   , only : get_step_size, is_end_curr_month,get_curr_date
+  use clm_time_manager                   , only : get_step_size, is_end_curr_month,get_curr_date,update_DA_nstep
   use clm_time_manager                   , only : is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year
   use clm_varpar                         , only : ndecomp_pools, nlevdecomp, ndecomp_pools_vr        !number of biogeochemically active soil layers
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_cascade_outtransitions
@@ -582,6 +582,8 @@ contains
                   end do
                end do
             end do
+         
+            if(isspinup)call update_DA_nstep()
 
             ! Reset to accumulation variables to 0 at end of each year
             do j=1,n_all_entries
