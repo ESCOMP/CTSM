@@ -34,8 +34,6 @@ module CNVegMatrixMod
                                               ncphouttrans,nnphouttrans,ncgmouttrans,nngmouttrans,ncfiouttrans,nnfiouttrans
   use perf_mod                       , only : t_startf, t_stopf
   use PatchType                      , only : patch
-  use GridcellType                   , only : grc
-
   use clm_varcon                     , only : secspday
   use pftconMod                      , only : pftcon,npcropmin
   use CNVegCarbonStateType           , only : cnveg_carbonstate_type
