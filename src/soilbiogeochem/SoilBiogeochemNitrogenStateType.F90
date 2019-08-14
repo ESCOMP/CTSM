@@ -11,10 +11,7 @@ module SoilBiogeochemNitrogenStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
-!KO  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
-!KO
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp, use_fan
-!KO
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
   use landunit_varcon                    , only : istcrop, istsoil 
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
@@ -41,7 +38,7 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: smin_nh4_vr_col              (:,:)   ! col (gN/m3) vertically-resolved soil mineral NH4
      real(r8), pointer :: smin_nh4_col                 (:)     ! col (gN/m2) soil mineral NH4 pool
 
-     !JV, FAN
+     ! FAN
      real(r8), pointer :: tan_g1_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool G1
      real(r8), pointer :: tan_g2_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool G2
      real(r8), pointer :: tan_g3_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool G2
@@ -168,7 +165,6 @@ contains
     allocate(this%decomp_soiln_vr_col(begc:endc,1:nlevdecomp_full))
     this%decomp_soiln_vr_col(:,:)= nan
 
-    !JV
     if (use_fan) then
        allocate(this%tan_g1_col(begc:endc)) ; this%tan_g1_col(:) = nan
        allocate(this%tan_g2_col(begc:endc)) ; this%tan_g2_col(:) = nan
@@ -355,7 +351,6 @@ contains
          &only makes sense at the column level: should not be averaged to gridcell', &
          ptr_col=this%dyn_nbal_adjustments_col, default='inactive')
 
-    !JV
     if (use_fan) then
        this%tan_g1_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_G1', units='gN/m^2', &
@@ -562,7 +557,6 @@ contains
           this%cwdn_col(c)       = 0._r8
 
           if ( use_fan ) then
-             !JV
              this%tan_g1_col(c) = 0.0_r8
              this%tan_g2_col(c) = 0.0_r8
              this%tan_g3_col(c) = 0.0_r8
@@ -1031,11 +1025,9 @@ contains
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, num_allc, filter_allc)
     !
-!KO
     ! !USES:
     use clm_time_manager    , only : get_curr_date
     !
-!KO
     ! !ARGUMENTS:
     class (soilbiogeochem_nitrogenstate_type) :: this
     type(bounds_type) , intent(in) :: bounds  
@@ -1046,18 +1038,14 @@ contains
     integer  :: c,j,k,l     ! indices
     integer  :: fc          ! lake filter indices
     real(r8) :: maxdepth    ! depth to integrate soil variables
-!KO
     ! !LOCAL VARIABLES:
     integer kyr             ! current year
     integer kmo             ! month of year  (1, ..., 12)
     integer kda             ! day of month   (1, ..., 31)
     integer mcsec           ! seconds of day (0, ..., seconds/day)
-!KO
     !-----------------------------------------------------------------------
 
-!KO
    call get_curr_date (kyr, kmo, kda, mcsec)
-!KO
 
    ! vertically integrate NO3 NH4 N2O pools
    if (use_nitrif_denitrif) then

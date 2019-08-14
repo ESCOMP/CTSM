@@ -184,9 +184,7 @@ contains
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
     type(saturated_excess_runoff_type)      , intent(in)    :: saturated_excess_runoff_inst
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
-!KO
     type(frictionvel_type)                  , intent(inout) :: frictionvel_inst
-!KO
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     class(cnfire_method_type)               , intent(inout) :: cnfire_method
     !
@@ -271,9 +269,6 @@ contains
     ! --------------------------------------------------
 
     call t_startf('CNDeposition')
-!KO    call CNNDeposition(bounds, &
-!KO         atm2lnd_inst, soilbiogeochem_nitrogenflux_inst)
-!KO
     call CNNDeposition(bounds, num_soilc, filter_soilc, &
          atm2lnd_inst, wateratm2lndbulk_inst, &
          soilbiogeochem_nitrogenflux_inst, cnveg_carbonstate_inst, &
@@ -281,7 +276,6 @@ contains
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
          waterstatebulk_inst, soilstate_inst, temperature_inst, &
          waterfluxbulk_inst, frictionvel_inst)
-!KO
     call t_stopf('CNDeposition')
     
     if(use_fun)then

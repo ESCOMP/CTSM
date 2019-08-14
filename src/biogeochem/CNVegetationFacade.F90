@@ -835,9 +835,7 @@ contains
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
     type(saturated_excess_runoff_type)      , intent(in)    :: saturated_excess_runoff_inst
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
-!KO
     type(frictionvel_type)                  , intent(inout) :: frictionvel_inst
-!KO
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
     !

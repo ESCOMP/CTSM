@@ -7,10 +7,7 @@ module SoilBiogeochemNitrogenFluxType
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use decompMod                          , only : bounds_type
-!KO  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop
-!KO
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop, use_fan
-!KO
   use CNSharedParamsMod                  , only : use_fun
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use abortutils                         , only : endrun
@@ -30,7 +27,7 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: fert_to_sminn_col                         (:)     ! col fertilizer N to soil mineral N (gN/m2/s)
      real(r8), pointer :: soyfixn_to_sminn_col                      (:)     ! col soybean fixation to soil mineral N (gN/m2/s)
  
-     !JV FAN fluxes
+     ! FAN fluxes
      real(r8), pointer :: man_tan_appl_col                           (:)   ! Manure TAN applied on soil (gN/m2/s)
      real(r8), pointer :: man_n_appl_col                             (:)   ! Manure N (TAN+organic) applied on soil (gN/m2/s)
      real(r8), pointer :: man_n_grz_col                              (:)   ! Manure N from grazing animals (gN/m2/s)
@@ -209,7 +206,6 @@ contains
     allocate(this%fert_to_sminn_col                 (begc:endc))                   ; this%fert_to_sminn_col          (:)   = nan
     allocate(this%soyfixn_to_sminn_col              (begc:endc))                   ; this%soyfixn_to_sminn_col       (:)   = nan
     
-    !JV
     if (use_fan) then
        allocate(this%man_tan_appl_col               (begc:endc))                   ; this%man_tan_appl_col           (:)   = spval
        allocate(this%man_n_appl_col                 (begc:endc))                   ; this%man_n_appl_col             (:)   = spval

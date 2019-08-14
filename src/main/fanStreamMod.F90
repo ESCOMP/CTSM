@@ -22,9 +22,7 @@ module FanStreamMod
   use fileutils   , only: getavu, relavu
   use decompMod   , only: bounds_type, ldecomp, gsmap_lnd_gdc2glo 
   use domainMod   , only: ldomain
-!KO
   use ndepStreamMod, only: clm_domain_mct
-!KO
 
   ! !PUBLIC TYPES:
   implicit none

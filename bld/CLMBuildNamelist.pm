@@ -2867,7 +2867,6 @@ sub setup_logic_fertilizer {
 
 #-------------------------------------------------------------------------------
 
-#!KO
 sub setup_logic_fan {
   #
   # Flags to control FAN (Flow of Agricultural Nitrogen) nitrogen deposition (manure and fertilizer)
@@ -2921,7 +2920,6 @@ sub setup_logic_fan {
 }
 
 #-------------------------------------------------------------------------------
-#!KO
 
 sub setup_logic_grainproduct {
   #
@@ -3081,7 +3079,6 @@ sub setup_logic_nitrogen_deposition {
 
 #-------------------------------------------------------------------------------
 
-#!KO
 sub setup_logic_fan_nml {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 

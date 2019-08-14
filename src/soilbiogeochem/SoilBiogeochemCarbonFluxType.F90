@@ -11,10 +11,7 @@ module SoilBiogeochemCarbonFluxType
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
-!KO  use clm_varctl                         , only : use_ed
-!KO
   use clm_varctl                         , only : use_fates, use_fan
-!KO
   
   ! 
   ! !PUBLIC TYPES:
@@ -35,11 +32,9 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate constant for decomposition (1./sec)
      real(r8), pointer :: hr_vr_col                                 (:,:)   ! (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
      real(r8), pointer :: o_scalar_col                              (:,:)   ! fraction by which decomposition is limited by anoxia
-!KO
      real(r8), pointer :: soi_gd_col                                (:,:)   !KO
      real(r8), pointer :: cmanure_to_sminn_col                      (:)     ! (gC/m2/s) deposition of C from manure to soil mineral C
      real(r8), pointer :: methane_manure_col                        (:)     ! (gC/m2/s) emission of CH4 from cows
-!KO
      real(r8), pointer :: w_scalar_col                              (:,:)   ! fraction by which decomposition is limited by moisture availability
      real(r8), pointer :: t_scalar_col                              (:,:)   ! fraction by which decomposition is limited by temperature
      real(r8), pointer :: som_c_leached_col                         (:)     ! (gC/m^2/s) total SOM C loss from vertical transport 
@@ -106,13 +101,11 @@ contains
      allocate(this%t_scalar_col      (begc:endc,1:nlevdecomp_full)); this%t_scalar_col      (:,:) =spval
      allocate(this%w_scalar_col      (begc:endc,1:nlevdecomp_full)); this%w_scalar_col      (:,:) =spval
      allocate(this%o_scalar_col      (begc:endc,1:nlevdecomp_full)); this%o_scalar_col      (:,:) =spval
-!KO
      if ( use_fan ) then
         allocate(this%soi_gd_col           (begc:endc,1:nlevdecomp_full)) ; this%soi_gd_col           (:,:) = spval
         allocate(this%cmanure_to_sminn_col (begc:endc))                   ; this%cmanure_to_sminn_col (:)   = nan
         allocate(this%methane_manure_col   (begc:endc))                   ; this%methane_manure_col   (:)   = nan
      end if
-!KO
      allocate(this%phr_vr_col        (begc:endc,1:nlevdecomp_full)); this%phr_vr_col        (:,:) =nan 
      allocate(this%fphr_col          (begc:endc,1:nlevgrnd))       ; this%fphr_col          (:,:) =nan 
      allocate(this%som_c_leached_col (begc:endc))                  ; this%som_c_leached_col (:)   =nan
@@ -214,7 +207,6 @@ contains
         call hist_addfld1d (fname='HR', units='gC/m^2/s', &
              avgflag='A', long_name='total heterotrophic respiration', &
              ptr_col=this%hr_col)
-!KO
         if ( use_fan ) then
 
            this%cmanure_to_sminn_col(begc:endc) = spval
@@ -228,7 +220,6 @@ contains
                 ptr_col=this%methane_manure_col)
 
         end if
-!KO
 
         this%lithr_col(begc:endc) = spval
         call hist_addfld1d (fname='LITTERC_HR', units='gC/m^2/s', &
@@ -737,7 +728,6 @@ contains
        this%soilc_change_col(i)  = value_column
     end do
 
-!KO
     if ( use_fan ) then
        do j = 1, nlevdecomp_full
           do fi = 1,num_column
@@ -751,7 +741,6 @@ contains
           this%methane_manure_col(i)   = value_column
        end do
     end if
-!KO
 
     ! NOTE: do not zero the fates to BGC C flux variables since they need to persist from the daily fates timestep s to the half-hourly BGC timesteps.  I.e. FATES_c_to_litr_lab_c_col, FATES_c_to_litr_cel_c_col, FATES_c_to_litr_lig_c_col
     

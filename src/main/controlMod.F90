@@ -694,9 +694,7 @@ contains
 
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-!KO
     call mpi_bcast (use_fan, 1, MPI_LOGICAL, 0, mpicom, ier)
-!KO
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -952,9 +950,7 @@ contains
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   soil layer structure = ', soil_layerstruct
     write(iulog,*) '   plant hydraulic stress = ', use_hydrstress
-!KO
     write(iulog,*) '   FAN = ', use_fan
-!KO
     write(iulog,*) '   dynamic roots          = ', use_dynroot
     if (nsrest == nsrContinue) then
        write(iulog,*) 'restart warning:'
