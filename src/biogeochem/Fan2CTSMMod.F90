@@ -175,7 +175,7 @@ contains
     use shr_sys_mod, only : shr_sys_flush
     use GridcellType, only: grc
     use abortutils, only : endrun
-    use pftconMod, only : nc4_grass, nc3_nonarctic_grass
+    use pftconMod, only : nc4_grass, nc3_nonarctic_grass, nc3_arctic_grass
     use landunit_varcon, only:  istsoil, istcrop
     use clm_varcon, only : spval, ispval
     use decompMod, only : bounds_type
@@ -334,7 +334,9 @@ contains
           ratm = 0.0
           patchcounter = 0
           do p = col%patchi(c), col%patchf(c)
-             if (patch%itype(p) == nc4_grass .or. patch%itype(p) == nc3_nonarctic_grass) then
+             if (      patch%itype(p) == nc4_grass &
+                  .or. patch%itype(p) == nc3_nonarctic_grass &
+                  .or. patch%itype(p) == nc3_arctic_grass) then
                 if (.not. patch%active(p) .or. ram1(p) == spval .or. rb1(p) == spval) cycle
                 ratm = ratm + ram1(p) + rb1(p)
                 patchcounter = patchcounter + 1
@@ -716,7 +718,7 @@ contains
     ! native vegatation.
     ! 
     use landunit_varcon, only : max_lunit
-    use pftconMod, only : nc4_grass, nc3_nonarctic_grass
+    use pftconMod, only : nc4_grass, nc3_nonarctic_grass, nc3_arctic_grass
     use clm_varcon, only : ispval
     use landunit_varcon,      only:  istsoil, istcrop
     use abortutils     , only : endrun
@@ -764,6 +766,7 @@ contains
     real(r8) :: fluxes_nitr(4,2), fluxes_tan(4,2)
     ! The fraction of manure applied continuously on grasslands (if present in the gridcell)
     real(r8), parameter :: kg_to_g = 1e3_r8
+    logical :: is_grass
     
     begg = bounds%begg; endg = bounds%endg
     nh3_flux_stores(bounds%begc:bounds%endc) = 0_r8
@@ -782,8 +785,10 @@ contains
           if (l == ispval) cycle
           if (lun%itype(l) == istsoil) then
              do p = lun%patchi(l), lun%patchf(l)
-                if ((patch%itype(p) == nc4_grass .or. patch%itype(p) == nc3_nonarctic_grass) &
-                    .and. col%wtgcell(patch%column(p)) > 1e-6) then
+                is_grass = patch%itype(p) == nc4_grass &
+                     .or. patch%itype(p) == nc3_nonarctic_grass &
+                     .or. patch%itype(p) == nc3_arctic_grass
+                if (is_grass .and. col%wtgcell(patch%column(p)) > 1e-6) then
                    col_grass = patch%column(p)
                    exit
                 end if
