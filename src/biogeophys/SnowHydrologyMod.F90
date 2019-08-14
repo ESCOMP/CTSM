@@ -364,7 +364,7 @@ contains
   end subroutine HandleNewSnow
 
   !-----------------------------------------------------------------------
-  subroutine UpdateQuantitiesForNewSnow(bounds, num_nolakec, filter_nolakec, &
+  subroutine UpdateQuantitiesForNewSnow(bounds, num_c, filter_c, &
        scf_method, atm2lnd_inst, water_inst)
     !
     ! !DESCRIPTION:
@@ -372,8 +372,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
-    integer                , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
-    integer                , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
+    integer                , intent(in)    :: num_c          ! number of column points in column filter
+    integer                , intent(in)    :: filter_c(:)    ! column filter
     class(snow_cover_fraction_base_type), intent(in) :: scf_method
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(water_type)       , intent(inout) :: water_inst
@@ -399,14 +399,14 @@ contains
     ! Get time step
     dtime = get_step_size()
 
-    call NewSnowBulkDensity(bounds, num_nolakec, filter_nolakec, &
+    call NewSnowBulkDensity(bounds, num_c, filter_c, &
          atm2lnd_inst, bifall(bounds%begc:bounds%endc))
 
-    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
+    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_c, filter_c, &
          caller = 'HandleNewSnow', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
-    call BulkDiag_NewSnowDiagnostics(bounds, num_nolakec, filter_nolakec, &
+    call BulkDiag_NewSnowDiagnostics(bounds, num_c, filter_c, &
          ! Inputs
          scf_method          = scf_method, &
          dtime               = dtime, &
@@ -429,7 +429,7 @@ contains
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
        associate(w => water_inst%bulk_and_tracers(i))
-       call UpdateState_AddNewSnow(bounds, num_nolakec, filter_nolakec, &
+       call UpdateState_AddNewSnow(bounds, num_c, filter_c, &
             ! Inputs
             dtime            = dtime, &
             snl              = col%snl(begc:endc), &
@@ -445,7 +445,7 @@ contains
   end subroutine UpdateQuantitiesForNewSnow
 
   !-----------------------------------------------------------------------
-  subroutine BulkDiag_NewSnowDiagnostics(bounds, num_nolakec, filter_nolakec, &
+  subroutine BulkDiag_NewSnowDiagnostics(bounds, num_c, filter_c, &
        scf_method, &
        dtime, lun_itype_col, urbpoi, snl, bifall, h2osno_total, h2osoi_ice, h2osoi_liq, &
        qflx_snow_grnd, qflx_snow_drain, &
@@ -456,8 +456,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_nolakec
-    integer, intent(in) :: filter_nolakec(:)
+    integer, intent(in) :: num_c
+    integer, intent(in) :: filter_c(:)
 
     class(snow_cover_fraction_base_type), intent(in) :: scf_method
     real(r8)                  , intent(in)    :: dtime                           ! land model time step (sec)
@@ -510,8 +510,8 @@ contains
          endc => bounds%endc  &
          )
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
+    do fc = 1, num_c
+       c = filter_c(fc)
        
        ! Use Alta relationship, Anderson(1976); LaChapelle(1961),
        ! U.S.Department of Agriculture Forest Service, Project F,
@@ -538,7 +538,7 @@ contains
        snowmelt(c) = qflx_snow_drain(c) * dtime
     end do
 
-    call scf_method%UpdateSnowDepthAndFrac(bounds, num_nolakec, filter_nolakec, &
+    call scf_method%UpdateSnowDepthAndFrac(bounds, num_c, filter_c, &
          ! Inputs
          lun_itype_col = lun_itype_col(begc:endc), &
          urbpoi        = urbpoi(begc:endc), &
@@ -552,8 +552,8 @@ contains
          frac_sno      = frac_sno(begc:endc), &
          frac_sno_eff  = frac_sno_eff(begc:endc))
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
+    do fc = 1, num_c
+       c = filter_c(fc)
        if (h2osno_total(c) == 0._r8 .and. newsnow(c) > 0._r8) then
           ! Snow pack started at 0, then adding new snow; reset int_snow prior to
           ! adding newsnow
@@ -561,7 +561,7 @@ contains
        end if
     end do
 
-    call scf_method%AddNewsnowToIntsnow(bounds, num_nolakec, filter_nolakec, &
+    call scf_method%AddNewsnowToIntsnow(bounds, num_c, filter_c, &
          ! Inputs
          newsnow      = newsnow(begc:endc), &
          h2osno_total = h2osno_total(begc:endc), &
@@ -569,8 +569,8 @@ contains
          ! Outputs
          int_snow     = int_snow(begc:endc))
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
+    do fc = 1, num_c
+       c = filter_c(fc)
 
        ! update change in snow depth
        if (snl(c) < 0) then
