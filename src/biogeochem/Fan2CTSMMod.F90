@@ -455,7 +455,7 @@ contains
        ns%tan_g3_col(c) = tanpools(3)
 
        nf%nh3_grz_col(c) = fluxes_tmp(iflx_air)
-       nf%manure_runoff_col(c) = fluxes_tmp(iflx_roff)
+       nf%manure_nh4_runoff_col(c) = fluxes_tmp(iflx_roff)
        nf%manure_no3_prod_col(c) = fluxes_tmp(iflx_no3)
        nf%manure_nh4_to_soil_col(c) &
             = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + n_residual_total / dt + soilflux_org
@@ -519,7 +519,7 @@ contains
        ns%tan_s3_col(c) = tanpools(4)
 
        nf%nh3_man_app_col(c) = fluxes_tmp(iflx_air)
-       nf%manure_runoff_col(c) = nf%manure_runoff_col(c) + fluxes_tmp(iflx_roff)
+       nf%manure_nh4_runoff_col(c) = nf%manure_nh4_runoff_col(c) + fluxes_tmp(iflx_roff)
        nf%manure_no3_prod_col(c) = nf%manure_no3_prod_col(c) + fluxes_tmp(iflx_no3)
        nf%manure_nh4_to_soil_col(c) &
             = nf%manure_nh4_to_soil_col(c) + fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) &
@@ -613,7 +613,7 @@ contains
        ! !!tan_f4_col already updated above by update_npool!!
 
        nf%nh3_fert_col(c) = fluxes_tmp(iflx_air)
-       nf%fert_runoff_col(c) = fluxes_tmp(iflx_roff)
+       nf%fert_nh4_runoff_col(c) = fluxes_tmp(iflx_roff)
        nf%fert_no3_prod_col(c) = fluxes_tmp(iflx_no3) + fert_no3
        nf%fert_nh4_to_soil_col(c) = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + n_residual_total/dt + fert_inc_tan
 
@@ -692,7 +692,7 @@ contains
       case('fluxes_manure')
          total = sum(nf%man_n_grz_col(soilc)) + sum(nf%man_n_appl_col(soilc)) 
          total = total - sum(nf%nh3_man_app_col(soilc)) &
-              - sum(nf%nh3_grz_col(soilc)) - sum(nf%manure_runoff_col(soilc))
+              - sum(nf%nh3_grz_col(soilc)) - sum(nf%manure_nh4_runoff_col(soilc))
          total = total - sum(nf%manure_no3_prod_col(soilc)) - sum(nf%manure_nh4_to_soil_col(soilc))
          
       case('pools_fertilizer')
@@ -702,7 +702,7 @@ contains
          
       case('fluxes_fertilizer')
          total = sum(nf%fert_n_appl_col(soilc))
-         total = total - sum(nf%nh3_fert_col(soilc)) - sum(nf%fert_runoff_col(soilc))
+         total = total - sum(nf%nh3_fert_col(soilc)) - sum(nf%fert_nh4_runoff_col(soilc))
          total = total - sum(nf%fert_no3_prod_col(soilc)) - sum(nf%fert_nh4_to_soil_col(soilc))
          
       case default
@@ -994,9 +994,9 @@ contains
           fluxin = nf%man_n_grz_col(c) + nf%man_n_appl_col(c)
        end if
 
-       flux_loss = nf%nh3_man_app_col(c) + nf%nh3_grz_col(c) + nf%manure_runoff_col(c) &
+       flux_loss = nf%nh3_man_app_col(c) + nf%nh3_grz_col(c) + nf%manure_nh4_runoff_col(c) &
             + nf%nh3_stores_col(c) + nf%nh3_barns_col(c) &
-            + nf%nh3_fert_col(c) + nf%fert_runoff_col(c)
+            + nf%nh3_fert_col(c) + nf%fert_nh4_runoff_col(c)
        fluxout = nf%fert_no3_prod_col(c) + nf%fert_nh4_to_soil_col(c) &
             + nf%manure_no3_prod_col(c) + nf%manure_nh4_to_soil_col(c) &
             + nf%man_n_transf_col(c) + flux_loss

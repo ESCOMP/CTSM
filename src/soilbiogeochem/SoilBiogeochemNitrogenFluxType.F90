@@ -47,12 +47,12 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: fert_no3_prod_col                          (:)   ! Nitrification flux from fertilizer (gN/m2/s)
      real(r8), pointer :: manure_nh4_to_soil_col                     (:)   ! NH4 flux to soil mineral N pools from manure (gN/m2/s)
      real(r8), pointer :: fert_nh4_to_soil_col                       (:)   ! NH4 flux to soil mineral N pools from fertilizer (gN/m2/s)
-     real(r8), pointer :: manure_runoff_col                          (:)   ! NH4 runoff flux from manure, gN/m2/s
-     real(r8), pointer :: fert_runoff_col                            (:)   ! NH4 runoff flux from fertilizer, gN/m2/s
+     real(r8), pointer :: manure_nh4_runoff_col                      (:)   ! NH4 runoff flux from manure, gN/m2/s
+     real(r8), pointer :: fert_nh4_runoff_col                        (:)   ! NH4 runoff flux from fertilizer, gN/m2/s
 
      real(r8), pointer :: nh3_total_col                              (:)   ! Total NH3 emission from agriculture, gN/m2/s
      real(r8), pointer :: fan_totnout_col                            (:)   ! Total input N into FAN pools, gN/m2/s
-     real(r8), pointer :: fan_totnin_col                                 (:)   ! Total output N from FAN pools, gN/m2/s
+     real(r8), pointer :: fan_totnin_col                             (:)   ! Total output N from FAN pools, gN/m2/s
      
      ! decomposition fluxes
      real(r8), pointer :: decomp_cascade_ntransfer_vr_col           (:,:,:) ! col vert-res transfer of N from donor to receiver pool along decomp. cascade (gN/m3/s)
@@ -230,8 +230,8 @@ contains
        allocate(this%fert_no3_prod_col              (begc:endc))                   ; this%fert_no3_prod_col          (:)   = spval
        allocate(this%manure_nh4_to_soil_col         (begc:endc))                   ; this%manure_nh4_to_soil_col     (:)   = spval
        allocate(this%fert_nh4_to_soil_col           (begc:endc))                   ; this%fert_nh4_to_soil_col       (:)   = spval
-       allocate(this%manure_runoff_col              (begc:endc))                   ; this%manure_runoff_col          (:)   = spval
-       allocate(this%fert_runoff_col                (begc:endc))                   ; this%fert_runoff_col            (:)   = spval
+       allocate(this%manure_nh4_runoff_col          (begc:endc))                   ; this%manure_nh4_runoff_col      (:)   = spval
+       allocate(this%fert_nh4_runoff_col            (begc:endc))                   ; this%fert_nh4_runoff_col        (:)   = spval
     end if
     ! Allocate FAN summary fluxes even if FAN is off and set them to 0.
     allocate(this%fan_totnin_col                    (begc:endc))                   ; this%fan_totnin_col             (:)   = spval
@@ -470,15 +470,15 @@ contains
             ptr_col=this%manure_nh4_to_soil_col)
 
 
-       this%manure_runoff_col(begc:endc) = spval
-       call hist_addfld1d( fname='MANURE_RUNOFF', units='gN/m^2/s', &
+       this%manure_nh4_runoff_col(begc:endc) = spval
+       call hist_addfld1d( fname='MANURE_NH4_RUNOFF', units='gN/m^2/s', &
             avgflag='A', long_name='NH4 in surface runoff, manure', &
-            ptr_col=this%manure_runoff_col)
+            ptr_col=this%manure_nh4_runoff_col)
 
-       this%fert_runoff_col(begc:endc) = spval
-       call hist_addfld1d( fname='FERT_RUNOFF', units='gN/m^2/s', &
-            avgflag='A', long_name='NH4 in surface runoff, fertilizer', &
-            ptr_col=this%fert_runoff_col)
+       this%fert_nh4_runoff_col(begc:endc) = spval
+       call hist_addfld1d( fname='FERT_NH4_RUNOFF', units='gN/m^2/s', &
+            avgflag='A', long_name='NH4 (and urea) in surface runoff, fertilizer', &
+            ptr_col=this%fert_nh4_runoff_col)
     end if
 
     this%fan_totnin_col(begc:endc) = spval
@@ -1185,8 +1185,8 @@ contains
           this%fert_no3_prod_col(i)      = value_column
           this%manure_nh4_to_soil_col(i) = value_column
           this%fert_nh4_to_soil_col(i)   = value_column
-          this%manure_runoff_col(i)      = value_column
-          this%fert_runoff_col(i)        = value_column
+          this%manure_nh4_runoff_col(i)  = value_column
+          this%fert_nh4_runoff_col(i)    = value_column
           
        end do
     end if
