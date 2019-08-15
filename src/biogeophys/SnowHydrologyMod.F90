@@ -323,9 +323,9 @@ contains
 
     call BuildFilter_SnowpackInitialized(bounds, num_nolakec, filter_nolakec, &
          ! Inputs
-         snl        = col%snl(begc:endc), &
-         frac_sno   = b_waterdiagnostic_inst%frac_sno_col(begc:endc), &
-         snow_depth = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
+         snl          = col%snl(begc:endc), &
+         frac_sno_eff = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+         snow_depth   = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
          ! Outputs
          snowpack_initialized_filterc = snowpack_initialized_filterc)
 
@@ -740,7 +740,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BuildFilter_SnowpackInitialized(bounds, num_nolakec, filter_nolakec, &
-       snl, frac_sno, snow_depth, snowpack_initialized_filterc)
+       snl, frac_sno_eff, snow_depth, snowpack_initialized_filterc)
     !
     ! !DESCRIPTION:
     ! Build a column-level filter of columns where an explicit snow pack needs to be initialized
@@ -751,7 +751,7 @@ contains
     integer, intent(in) :: filter_nolakec(:)
 
     integer               , intent(in)  :: snl( bounds%begc: )          ! negative number of snow layers
-    real(r8)              , intent(in)  :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+    real(r8)              , intent(in)  :: frac_sno_eff( bounds%begc: ) ! fraction of ground covered by snow (0 to 1)
     real(r8)              , intent(in)  :: snow_depth( bounds%begc: )   ! snow height (m)
     type(filter_col_type) , intent(out) :: snowpack_initialized_filterc ! column filter: columns where an explicit snow pack is initialized
     !
@@ -763,14 +763,14 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
 
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
 
        ! When the snow accumulation exceeds 10 mm, initialize snow layer
-       if (snl(c) == 0 .and. frac_sno(c)*snow_depth(c) >= 0.01_r8) then
+       if (snl(c) == 0 .and. frac_sno_eff(c)*snow_depth(c) >= 0.01_r8) then
           snowpack_initialized(c) = .true.
        else
           snowpack_initialized(c) = .false.
