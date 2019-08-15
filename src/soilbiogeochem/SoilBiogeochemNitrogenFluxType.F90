@@ -465,7 +465,7 @@ contains
             ptr_col=this%fert_nh4_to_soil_col)
 
        this%manure_nh4_to_soil_col(begc:endc) = spval
-       call hist_addfld1d( fname='MANURE_NH3_TO_SOIL', units='gN/m^2/s', &
+       call hist_addfld1d( fname='MANURE_NH4_TO_SOIL', units='gN/m^2/s', &
             avgflag='A', long_name='Flux of NH4 to soil mineral pools, manure', &
             ptr_col=this%manure_nh4_to_soil_col)
 
