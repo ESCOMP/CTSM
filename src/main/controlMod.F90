@@ -193,7 +193,7 @@ contains
 
     ! CN Matrix solution
     namelist /clm_inparm / &
-         use_matrixcn, use_soil_matrixcn, is_outmatrix
+         use_matrixcn, use_soil_matrixcn, is_outmatrix, isspinup
 
     ! lake_melt_icealb is of dimension numrad
 
@@ -519,6 +519,7 @@ contains
        use_matrixcn = .false.
        use_soil_matrixcn = .false.    ! true => use cn matrix  
        is_outmatrix = .false.     !.false.              ! true => use acc spinup
+       isspinup = .false.
     end if
     ! ----------------------------------------------------------------------
     ! Read in other namelists for other modules
@@ -773,6 +774,7 @@ contains
     call mpi_bcast (use_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_soil_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (is_outmatrix, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (isspinup, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     if (use_cn .and. use_vertsoilc) then
        ! vertical soil mixing variables
