@@ -265,6 +265,14 @@ contains
        frac_sno(c) = 0._r8
     end do
 
+    ! TODO(wjs, 2019-08-01) Eventually move this down, merging this with later tracer
+    ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
+    ! module, remember to also remove 'use perf_mod' at the top.
+    if (water_inst%DoConsistencyCheck()) then
+       call t_startf("tracer_consistency_check")
+       call water_inst%TracerConsistencyCheck(bounds, 'after initial snow stuff in LakeHydrology')
+       call t_stopf("tracer_consistency_check")
+    end if
 
     do fc = 1, num_lakec
        c = filter_lakec(fc)
@@ -291,15 +299,6 @@ contains
        end if
 
     end do
-
-    ! TODO(wjs, 2019-08-01) Eventually move this down, merging this with later tracer
-    ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
-    ! module, remember to also remove 'use perf_mod' at the top.
-    if (water_inst%DoConsistencyCheck()) then
-       call t_startf("tracer_consistency_check")
-       call water_inst%TracerConsistencyCheck(bounds, 'after initial snow stuff in LakeHydrology')
-       call t_stopf("tracer_consistency_check")
-    end if
 
     ! Calculate sublimation and dew, adapted from HydrologyLake and Biogeophysics2.
 
