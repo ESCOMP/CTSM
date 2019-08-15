@@ -857,7 +857,6 @@ contains
                 if (tempr_min_10day > tempr_min_grazing) then
                    ! fraction of animals grazing -> allocate some manure to grasslands before barns
                    flux_grazing = max_grazing_fract * ndep_sgrz_grc(g) * kg_to_g / lun%wtgcell(l)
-                   !flux_avail = (ndep_ngrz_grc(g) + ndep_sgrz_grc(g)*(1.0_r8 - max_grazing_fract)) * kg_to_g / lun%wtgcell(l)
                    flux_avail_rum = (ndep_sgrz_grc(g)*(1.0_r8 - max_grazing_fract)) * kg_to_g / lun%wtgcell(l)
                    grz_fract(c) = max_grazing_fract
                 else
@@ -948,7 +947,6 @@ contains
           tan_manure_spread_col(col_grass) = tan_manure_spread_col(col_grass) &
                + flux_grass_spread_tan / col%wtgcell(col_grass)
           n_manure_graze_col(col_grass) = n_manure_graze_col(col_grass) + flux_grass_graze / col%wtgcell(col_grass)
-          !write(iulog, *) 'to grass:', n_manure_spread(col_grass), col_grass
           if (tan_manure_spread_col(col_grass) > 1) then
              write(iulog, *) 'bad tan_manure col_grass', flux_grass_spread_tan, col%wtgcell(col_grass)
           end if
