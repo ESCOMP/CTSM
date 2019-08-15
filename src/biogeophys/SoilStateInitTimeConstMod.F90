@@ -378,7 +378,7 @@ contains
                    ! because clay, sand and om_frac will remain set at their previous
                    ! values, which is probably reasonable enough. See also
                    ! <https://github.com/ESCOMP/ctsm/pull/771#discussion_r309509596>.
-                   if (zisoi(lev) > zisoifl(j) .AND. zisoi(lev) <= zisoifl(j+1)) then
+                   if (zsoi(lev) > zisoifl(j) .AND. zsoi(lev) <= zisoifl(j+1)) then
                       clay = clay3d(g,j+1)
                       sand = sand3d(g,j+1)
                       om_frac = organic3d(g,j+1)/organic_max
