@@ -82,9 +82,18 @@ module lilac_utils
     !end type                  atm2lnd_data1d_type
 
     type                   :: lnd2atm_data1d_type
-        real*8, pointer    :: lwup  (:)
-        real*8, pointer    :: taux  (:)
-        real*8, pointer    :: tauy  (:)
+        real*8, pointer    :: Sl_lfrin  (:)
+        real*8, pointer    :: Sl_t  (:)
+        real*8, pointer    :: Sl_tref  (:)
+        real*8, pointer    :: Sl_qref  (:)
+        real*8, pointer    :: Sl_avsdr  (:)
+        real*8, pointer    :: Sl_anidr  (:)
+        real*8, pointer    :: Sl_avsdf  (:)
+        real*8, pointer    :: Sl_anidf  (:)
+        real*8, pointer    :: Sl_snowh  (:)
+        real*8, pointer    :: Sl_u10  (:)
+        real*8, pointer    :: Sl_fv  (:)
+        real*8, pointer    :: Sl_ram1  (:)
     end type                  lnd2atm_data1d_type
 
     !type                   :: atm2lnd_data2d_type

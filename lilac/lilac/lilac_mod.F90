@@ -22,8 +22,8 @@ module lilac_mod
     !TODO (NS,2019-08-07):
     ! We will move this later to lnd_cap (ctsm_cap) and atmos_cap
     !use atmos_cap     ,  only :         a2l_fldnum
-    integer    , public ,  parameter                  :: a2l_fldnum        =  14
-    integer    , public ,  parameter                  :: l2a_fldnum        =  16
+    integer    , public ,  parameter                  :: a2l_fldnum        =  17
+    integer    , public ,  parameter                  :: l2a_fldnum        =  12
 
     public                                            :: lilac_init
     public                                            :: lilac_run
@@ -71,7 +71,7 @@ module lilac_mod
 
         !character(len=*)                                :: atm_mesh_filepath   !!! For now this is hardcoded in the atmos init
 
-        integer                                          :: rc         , urc 
+        integer                                          :: rc         , userRC 
         character(len=ESMF_MAXSTR)                       :: gcname1    , gcname2   !    Gridded components names
         character(len=ESMF_MAXSTR)                       :: ccname1    , ccname2   !    Coupling components names
 
@@ -227,16 +227,37 @@ module lilac_mod
         a2c_fldlist(4)%farrayptr1d   =>  atm2lnd1d%Sa_v
         a2c_fldlist(5)%farrayptr1d   =>  atm2lnd1d%Sa_ptem
         a2c_fldlist(6)%farrayptr1d   =>  atm2lnd1d%Sa_pbot
-        a2c_fldlist(7)%farrayptr1d   =>  atm2lnd1d%Sa_shum
-        a2c_fldlist(8)%farrayptr1d   =>  atm2lnd1d%Faxa_lwdn
-        a2c_fldlist(9)%farrayptr1d   =>  atm2lnd1d%Faxa_rainc
-        a2c_fldlist(10)%farrayptr1d  =>  atm2lnd1d%Faxa_rainl
-        a2c_fldlist(11)%farrayptr1d  =>  atm2lnd1d%Faxa_snowc
-        a2c_fldlist(12)%farrayptr1d  =>  atm2lnd1d%Faxa_snowl
-        a2c_fldlist(13)%farrayptr1d  =>  atm2lnd1d%Faxa_swndr
-        a2c_fldlist(14)%farrayptr1d  =>  atm2lnd1d%Faxa_swvdr
-        a2c_fldlist(15)%farrayptr1d  =>  atm2lnd1d%Faxa_swndf
-        a2c_fldlist(16)%farrayptr1d  =>  atm2lnd1d%Faxa_swvdf
+        a2c_fldlist(7)%farrayptr1d   =>  atm2lnd1d%Sa_tbot
+        a2c_fldlist(8)%farrayptr1d   =>  atm2lnd1d%Sa_shum
+
+        a2c_fldlist(9)%farrayptr1d   =>  atm2lnd1d%Faxa_lwdn
+        a2c_fldlist(10)%farrayptr1d  =>  atm2lnd1d%Faxa_rainc
+        a2c_fldlist(11)%farrayptr1d  =>  atm2lnd1d%Faxa_rainl
+        a2c_fldlist(12)%farrayptr1d  =>  atm2lnd1d%Faxa_snowc
+        a2c_fldlist(13)%farrayptr1d  =>  atm2lnd1d%Faxa_snowl
+        a2c_fldlist(14)%farrayptr1d  =>  atm2lnd1d%Faxa_swndr
+        a2c_fldlist(15)%farrayptr1d  =>  atm2lnd1d%Faxa_swvdr
+        a2c_fldlist(16)%farrayptr1d  =>  atm2lnd1d%Faxa_swndf
+        a2c_fldlist(17)%farrayptr1d  =>  atm2lnd1d%Faxa_swvdf
+        !-------------------------------------------------------------------------
+
+        ! should I point to zero???
+
+        c2a_fldlist(1)%farrayptr1d   =>  lnd2atm1d%Sl_lfrin
+        c2a_fldlist(2)%farrayptr1d   =>  lnd2atm1d%Sl_t
+        c2a_fldlist(3)%farrayptr1d   =>  lnd2atm1d%Sl_tref
+        c2a_fldlist(4)%farrayptr1d   =>  lnd2atm1d%Sl_qref
+        c2a_fldlist(5)%farrayptr1d   =>  lnd2atm1d%Sl_avsdr
+        c2a_fldlist(6)%farrayptr1d   =>  lnd2atm1d%Sl_anidr
+        c2a_fldlist(7)%farrayptr1d   =>  lnd2atm1d%Sl_avsdf
+        c2a_fldlist(8)%farrayptr1d   =>  lnd2atm1d%Sl_anidf
+
+        c2a_fldlist(9)%farrayptr1d   =>  lnd2atm1d%Sl_snowh
+        c2a_fldlist(10)%farrayptr1d  =>  lnd2atm1d%Sl_u10
+        c2a_fldlist(11)%farrayptr1d  =>  lnd2atm1d%Sl_fv
+        c2a_fldlist(12)%farrayptr1d  =>  lnd2atm1d%Sl_ram1
+
+
 
         ! ========================================================================
 
@@ -400,7 +421,7 @@ module lilac_mod
         type(ESMF_State)                                 :: importState, exportState
 
         ! local variables
-        integer                                          :: rc, urc
+        integer                                          :: rc, userRC
         character(len=ESMF_MAXSTR)                       :: gcname1, gcname2   !    Gridded components names
         character(len=ESMF_MAXSTR)                       :: ccname1, ccname2   !    Coupling components names
         !integer, parameter                              :: fldsMax = 100
@@ -441,25 +462,29 @@ module lilac_mod
 
         !!! if we want to loop through clock in atmos cap. 
         !do while (.NOT. ESMF_ClockIsStopTime(local_clock, rc=rc))
-            call ESMF_GridCompRun(atmos_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=local_clock, rc=rc)
+            call ESMF_GridCompRun(atmos_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=local_clock, rc=rc, userRC=userRC)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+            if (ESMF_LogFoundError(rcToCheck=userRC, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
             call ESMF_LogWrite(subname//"atmos_cap or atmos_gcomp is running", ESMF_LOGMSG_INFO)
-            print *, "Running atmos_cap gridded component "!, rc =", rc
+            print *, "Running atmos_cap gridded component , rc =", rc
 
-            call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=local_clock, rc=rc)
+            call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=local_clock, rc=rc , userRC=userRC)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+            if (ESMF_LogFoundError(rcToCheck=userRC, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
             call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
-            print *, "Running coupler component..... cpl_atm2lnd_comp"! , rc =", rc
+            print *, "Running coupler component..... cpl_atm2lnd_comp , rc =", rc
 
-            call ESMF_GridCompRun(land_gcomp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=local_clock, rc=rc)
+            call ESMF_GridCompRun(land_gcomp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=local_clock, rc=rc, userRC=userRC)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+            if (ESMF_LogFoundError(rcToCheck=userRC, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
             call ESMF_LogWrite(subname//"lnd_cap or land_gcomp is running", ESMF_LOGMSG_INFO)
-            print *, "Running lnd_cap gridded component"!  , rc =", rc
+            print *, "Running lnd_cap gridded component  , rc =", rc
 
-            call ESMF_CplCompRun(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=local_clock, rc=rc)
+            call ESMF_CplCompRun(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=local_clock, rc=rc, userRC=userRC)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+            if (ESMF_LogFoundError(rcToCheck=userRC, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
             call ESMF_LogWrite(subname//"running cpl_lnd2atm_comp ", ESMF_LOGMSG_INFO)
-            print *, "Running coupler component..... cpl_lnd2atm_comp" ! , rc =", rc
+            print *, "Running coupler component..... cpl_lnd2atm_comp , rc =", rc
 
             ! Advance the time
             call ESMF_ClockAdvance(local_clock, rc=rc)
@@ -482,7 +507,7 @@ module lilac_mod
         type(ESMF_State)                                 :: importState, exportState
 
         ! local variables
-        integer                                          :: rc, urc
+        integer                                          :: rc, userRC
         character(len=ESMF_MAXSTR)                       :: gcname1, gcname2   !    Gridded components names
         character(len=ESMF_MAXSTR)                       :: ccname1, ccname2   !    Coupling components names
         !integer, parameter                              :: fldsMax = 100

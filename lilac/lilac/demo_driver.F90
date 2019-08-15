@@ -73,13 +73,13 @@ program demo_lilac_driver
     !allocating these values of default for now!
     allocate ( atm2lnd%Sa_z       (begc:endc) ) ; atm2lnd%Sa_z       (:) =  30.0
     allocate ( atm2lnd%Sa_topo    (begc:endc) ) ; atm2lnd%Sa_topo    (:) =  10.0
-    allocate ( atm2lnd%Sa_u       (begc:endc) ) ; atm2lnd%Sa_u       (:) =  0.0
-    allocate ( atm2lnd%Sa_v       (begc:endc) ) ; atm2lnd%Sa_v       (:) =  0.0
+    allocate ( atm2lnd%Sa_u       (begc:endc) ) ; atm2lnd%Sa_u       (:) =  20.0
+    allocate ( atm2lnd%Sa_v       (begc:endc) ) ; atm2lnd%Sa_v       (:) =  40.0
     allocate ( atm2lnd%Sa_ptem    (begc:endc) ) ; atm2lnd%Sa_ptem    (:) =  280.0
     allocate ( atm2lnd%Sa_pbot    (begc:endc) ) ; atm2lnd%Sa_pbot    (:) =  100100.0
     allocate ( atm2lnd%Sa_tbot    (begc:endc) ) ; atm2lnd%Sa_tbot    (:) =  280.0
     allocate ( atm2lnd%Sa_shum    (begc:endc) ) ; atm2lnd%Sa_shum    (:) =  0.0004
-    allocate ( atm2lnd%Faxa_lwdn  (begc:endc) ) ; atm2lnd%Faxa_lwdn  (:) =  500.0 !200.0
+    allocate ( atm2lnd%Faxa_lwdn  (begc:endc) ) ; atm2lnd%Faxa_lwdn  (:) =  200.0
     allocate ( atm2lnd%Faxa_rainc (begc:endc) ) ; atm2lnd%Faxa_rainc (:) =  4.0e-8
     allocate ( atm2lnd%Faxa_rainl (begc:endc) ) ; atm2lnd%Faxa_rainl (:) =  3.0e-8
     allocate ( atm2lnd%Faxa_snowc (begc:endc) ) ; atm2lnd%Faxa_snowc (:) =  1.0e-8
@@ -91,9 +91,20 @@ program demo_lilac_driver
 
     !endc       = 18048 ? should this be the size of the land or atmosphere???
 
-    allocate ( lnd2atm%lwup            (begc:endc) ) ; lnd2atm%lwup    (:)      =  rand2
-    allocate ( lnd2atm%taux            (begc:endc) ) ; lnd2atm%taux    (:)      =  rand2
-    allocate ( lnd2atm%tauy            (begc:endc) ) ; lnd2atm%tauy    (:)      =  rand2
+
+
+    allocate ( lnd2atm%Sl_lfrin (begc:endc) ) ; lnd2atm%Sl_lfrin (:) =  0
+    allocate ( lnd2atm%Sl_t     (begc:endc) ) ; lnd2atm%Sl_t     (:) =  0
+    allocate ( lnd2atm%Sl_tref  (begc:endc) ) ; lnd2atm%Sl_tref  (:) =  0
+    allocate ( lnd2atm%Sl_qref  (begc:endc) ) ; lnd2atm%Sl_qref  (:) =  0
+    allocate ( lnd2atm%Sl_avsdr (begc:endc) ) ; lnd2atm%Sl_avsdr (:) =  0
+    allocate ( lnd2atm%Sl_anidr (begc:endc) ) ; lnd2atm%Sl_anidr (:) =  0
+    allocate ( lnd2atm%Sl_avsdf (begc:endc) ) ; lnd2atm%Sl_avsdf (:) =  0
+    allocate ( lnd2atm%Sl_anidf (begc:endc) ) ; lnd2atm%Sl_anidf (:) =  0
+    allocate ( lnd2atm%Sl_snowh (begc:endc) ) ; lnd2atm%Sl_snowh (:) =  0
+    allocate ( lnd2atm%Sl_u10   (begc:endc) ) ; lnd2atm%Sl_u10   (:) =  0
+    allocate ( lnd2atm%Sl_fv    (begc:endc) ) ; lnd2atm%Sl_fv    (:) =  0
+    allocate ( lnd2atm%Sl_ram1  (begc:endc) ) ; lnd2atm%Sl_ram1  (:) =  0
 
     !------------------------------------------------------------------------
     ! looping over imaginary time ....

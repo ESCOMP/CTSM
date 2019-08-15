@@ -10,6 +10,8 @@ module cpl_mod
     use ESMF
     implicit none
 
+    include 'mpif.h'
+
     private
 
 
@@ -18,6 +20,12 @@ module cpl_mod
 
     character(*), parameter      :: modname =  "  cpl_mod"
     type(ESMF_RouteHandle), save :: rh_atm2lnd, rh_lnd2atm
+
+
+    integer :: mpierror, numprocs
+    integer :: i, myid
+    integer status(MPI_STATUS_SIZE)
+
 
     !======================================================================
      contains
@@ -82,15 +90,26 @@ module cpl_mod
         print *, "Coupler for atmosphere to land initialize routine called"
         call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
 
-        call ESMF_StateGet(importState, "a2c_fb", import_fieldbundle, rc=rc)
+        call MPI_Comm_size(MPI_COMM_WORLD, numprocs, mpierror)
+        call MPI_Comm_rank(MPI_COMM_WORLD, myid, mpierror)
+
+
+
+        call ESMF_StateGet(importState, trim("a2c_fb"), import_fieldbundle, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-        call ESMF_StateGet(exportState, "c2l_fb", export_fieldbundle, rc=rc)
+        call ESMF_StateGet(exportState, trim("c2l_fb"), export_fieldbundle, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
 
-        !call ESMF_FieldBundlePrint (import_fieldbundle, rc=rc)
-        !call ESMF_FieldBundlePrint (export_fieldbundle, rc=rc)
+        if (myid == 0) then
+            print *, "PRINTING FIELDBUNDLES"
+            call ESMF_FieldBundlePrint (import_fieldbundle, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+            call ESMF_FieldBundlePrint (export_fieldbundle, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+        end if
+
 
         call ESMF_FieldBundleRegridStore(import_fieldbundle, export_fieldbundle, routehandle=rh_atm2lnd, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
