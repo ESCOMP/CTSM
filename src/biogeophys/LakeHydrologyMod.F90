@@ -258,14 +258,6 @@ contains
     call UpdateQuantitiesForNewSnow(bounds, num_lakec, filter_lakec, &
          scf_method, atm2lnd_inst, water_inst)
 
-    ! BUG(wjs, 2019-08-14, ESCOMP/ctsm#783) For now, maintain answers with the buggy
-    ! code, which sets frac_sno to 0 for lake, always.
-    do fc = 1, num_lakec
-       c = filter_lakec(fc)
-       frac_sno(c) = 0._r8
-    end do
-
-
     do fc = 1, num_lakec
        c = filter_lakec(fc)
 
