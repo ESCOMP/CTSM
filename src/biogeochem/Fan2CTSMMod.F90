@@ -549,8 +549,8 @@ contains
        
        ! Urea decomposition 
        ! 
-       ureapools(1) = ns%fert_u0_col(c)
-       ureapools(2) = ns%fert_u1_col(c)
+       ureapools(1) = ns%fert_u1_col(c)
+       ureapools(2) = ns%fert_u2_col(c)
        fluxes = 0.0
        call update_urea(tg, theta, thetasat, infiltr_m_s, evap_m_s, watertend, &
             runoff_m_s, fert_urea, bsw, ureapools,  fluxes(1:num_fluxes,1:num_cls_urea), &
@@ -562,22 +562,22 @@ contains
        ! Nitrogen fluxes from urea pool. Be sure to not zero below!
        fluxes_tmp = sum(fluxes(:,1:num_cls_urea), dim=2)
 
-       ns%fert_u0_col(c) = ureapools(1)
-       ns%fert_u1_col(c) = ureapools(2)
+       ns%fert_u1_col(c) = ureapools(1)
+       ns%fert_u2_col(c) = ureapools(2)
        ! Collect the formed ammonia for updating the TAN pools
        tanprod_from_urea(1:num_cls_urea) = fluxes(iflx_to_tan, 1:num_cls_urea)
        ! There is no urea pool corresponding to tan_f2, because most of the urea will
        ! have decomposed. Here whatever remains gets sent to tan_f2. 
        tanprod_from_urea(num_cls_urea+1) = urea_resid / dt 
 
-       tanpools(1) = ns%tan_f0_col(c)
-       tanpools(2) = ns%tan_f1_col(c)
-       tanpools(3) = ns%tan_f2_col(c)         
+       tanpools(1) = ns%tan_f1_col(c)
+       tanpools(2) = ns%tan_f2_col(c)
+       tanpools(3) = ns%tan_f3_col(c)         
        n_residual_total = 0.0
        fluxes = 0.0
        nf%nh3_otherfert_col(c) = 0.0
        do ind_substep = 1, num_substeps
-          ! Fertilizer pools f0...f2
+          ! Fertilizer pools f1...f3
           call update_npool(tg, ratm, theta, thetasat, infiltr_m_s, evap_m_s, &
                wateratm2lndbulk_inst%forc_q_downscaled_col(c), watertend, &
                runoff_m_s, 0.0_r8, tanprod_from_urea, water_init_fert, bsw, &
@@ -591,15 +591,15 @@ contains
           fluxes_tmp = fluxes_tmp + sum(fluxes(:,1:num_cls_fert), dim=2) / num_substeps
           n_residual_total = n_residual_total + n_residual
 
-          ! Fertilizer pool f3
+          ! Fertilizer pool f4
           call update_npool(tg, ratm, theta, thetasat, infiltr_m_s, evap_m_s, &
                wateratm2lndbulk_inst%forc_q_downscaled_col(c), watertend, &
                runoff_m_s, fert_generic, (/0.0_r8/), water_init_fert, bsw, &
                poolrange_otherfert, (/10**(-ph_crop)/), dz_layer_fert, &
-               ns%tan_f3_col(c:c), fluxes(1:num_fluxes,1:1), &
+               ns%tan_f4_col(c:c), fluxes(1:num_fluxes,1:1), &
                n_residual, dt/num_substeps, 1, num_fluxes, status)
           if (status /= 0) then
-             write(iulog, *) 'status:', status, ns%tan_f3_col(c:c), nf%fert_n_appl_col(c)
+             write(iulog, *) 'status:', status, ns%tan_f4_col(c:c), nf%fert_n_appl_col(c)
              call endrun(msg='Bad status after npool for generic')
           end if
           fluxes_tmp = fluxes_tmp + fluxes(:, 1) / num_substeps
@@ -607,10 +607,10 @@ contains
           nf%nh3_otherfert_col(c) = nf%nh3_otherfert_col(c) + fluxes(iflx_air, 1) / num_substeps
        end do
 
-       ns%tan_f0_col(c) = tanpools(1)
-       ns%tan_f1_col(c) = tanpools(2)
-       ns%tan_f2_col(c) = tanpools(3)
-       ! !!tan_f3_col already updated above by update_npool!!
+       ns%tan_f1_col(c) = tanpools(1)
+       ns%tan_f2_col(c) = tanpools(2)
+       ns%tan_f3_col(c) = tanpools(3)
+       ! !!tan_f4_col already updated above by update_npool!!
 
        nf%nh3_fert_col(c) = fluxes_tmp(iflx_air)
        nf%fert_runoff_col(c) = fluxes_tmp(iflx_roff)
@@ -696,9 +696,9 @@ contains
          total = total - sum(nf%manure_no3_prod_col(soilc)) - sum(nf%manure_nh4_to_soil_col(soilc))
          
       case('pools_fertilizer')
-         total = sum(ns%tan_f0_col((soilc))) + sum(ns%tan_f1_col((soilc))) + sum(ns%tan_f2_col(soilc)) &
-              + sum(ns%tan_f3_col(soilc))
-         total = total + sum(ns%fert_u0_col(soilc)) + sum(ns%fert_u1_col(soilc))
+         total = sum(ns%tan_f1_col((soilc))) + sum(ns%tan_f2_col((soilc))) + sum(ns%tan_f3_col(soilc)) &
+              + sum(ns%tan_f4_col(soilc))
+         total = total + sum(ns%fert_u1_col(soilc)) + sum(ns%fert_u2_col(soilc))
          
       case('fluxes_fertilizer')
          total = sum(nf%fert_n_appl_col(soilc))
@@ -981,8 +981,8 @@ contains
        total = total + ns%man_u_grz_col(c) + ns%man_a_grz_col(c) + ns%man_r_grz_col(c)
        total = total + ns%tan_s0_col(c) + ns%tan_s1_col(c) + ns%tan_s2_col(c) + ns%tan_s3_col(c)
        total = total + ns%man_u_app_col(c) + ns%man_a_app_col(c) + ns%man_r_app_col(c)
-       total = total + ns%tan_f0_col(c) + ns%tan_f1_col(c) + ns%tan_f2_col(c) + ns%tan_f3_col(c)
-       total = total + ns%fert_u0_col(c) + ns%fert_u1_col(c)
+       total = total + ns%tan_f1_col(c) + ns%tan_f2_col(c) + ns%tan_f3_col(c) + ns%tan_f4_col(c)
+       total = total + ns%fert_u1_col(c) + ns%fert_u2_col(c)
        ns%fan_totn_col(c) = total
        
        if (lun%itype(col%landunit(c)) == istcrop) then

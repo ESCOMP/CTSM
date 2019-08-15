@@ -48,13 +48,13 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: tan_s2_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool S2
      real(r8), pointer :: tan_s3_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool S2
 
-     real(r8), pointer :: tan_f0_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool F0
      real(r8), pointer :: tan_f1_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool F1
      real(r8), pointer :: tan_f2_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool F2
      real(r8), pointer :: tan_f3_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool F3
+     real(r8), pointer :: tan_f4_col(:)                        ! col (gN/m2) total ammoniacal N in FAN pool F4
      
-     real(r8), pointer :: fert_u0_col(:)                      ! col (gN/m2) total urea N in FAN pool U0
      real(r8), pointer :: fert_u1_col(:)                      ! col (gN/m2) total urea N in FAN pool U1
+     real(r8), pointer :: fert_u2_col(:)                      ! col (gN/m2) total urea N in FAN pool U2
      
      real(r8), pointer :: man_u_grz_col(:)                     ! col (gN/m2) unavailable organic N, grazing
      real(r8), pointer :: man_a_grz_col(:)                     ! col (gN/m2) available organic N, grazing
@@ -104,6 +104,7 @@ module SoilBiogeochemNitrogenStateType
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
+  
   !------------------------------------------------------------------------
 
 contains
@@ -173,12 +174,12 @@ contains
        allocate(this%tan_s1_col(begc:endc)) ; this%tan_s1_col(:) = nan
        allocate(this%tan_s2_col(begc:endc)) ; this%tan_s2_col(:) = nan
        allocate(this%tan_s3_col(begc:endc)) ; this%tan_s3_col(:) = nan
-       allocate(this%tan_f0_col(begc:endc)) ; this%tan_f0_col(:) = nan
        allocate(this%tan_f1_col(begc:endc)) ; this%tan_f1_col(:) = nan
        allocate(this%tan_f2_col(begc:endc)) ; this%tan_f2_col(:) = nan
        allocate(this%tan_f3_col(begc:endc)) ; this%tan_f3_col(:) = nan
-       allocate(this%fert_u0_col(begc:endc)) ; this%fert_u0_col(:) = nan
+       allocate(this%tan_f4_col(begc:endc)) ; this%tan_f4_col(:) = nan
        allocate(this%fert_u1_col(begc:endc)) ; this%fert_u1_col(:) = nan
+       allocate(this%fert_u2_col(begc:endc)) ; this%fert_u2_col(:) = nan
 
        allocate(this%man_u_grz_col(begc:endc)) ; this%man_u_grz_col(:) = nan
        allocate(this%man_a_grz_col(begc:endc)) ; this%man_a_grz_col(:) = nan
@@ -223,6 +224,9 @@ contains
     character(100)    :: longname
     real(r8), pointer :: data1dptr(:)   ! temp. pointer for slicing larger arrays
     real(r8), pointer :: data2dptr(:,:) ! temp. pointer for slicing larger arrays
+    ! Switch to quickly enable/disable FAN N pools in output
+    character(len=*), parameter :: fanpools_default = 'inactive'
+
     !---------------------------------------------------------------------
 
     begc = bounds%begc; endc = bounds%endc
@@ -355,109 +359,107 @@ contains
        this%tan_g1_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_G1', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool G1', &
-            ptr_col=this%tan_g1_col)
+            ptr_col=this%tan_g1_col, default=fanpools_default)
 
        this%tan_g2_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_G2', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool G2', &
-            ptr_col=this%tan_g2_col)
+            ptr_col=this%tan_g2_col, default=fanpools_default)
 
        this%tan_g3_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_G3', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool G3', &
-            ptr_col=this%tan_g3_col)
+            ptr_col=this%tan_g3_col, default=fanpools_default)
        
-       this%tan_f0_col(begc:endc) = spval
-       call hist_addfld1d (fname='TAN_F0', units='gN/m^2', &
-            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F0', &
-            ptr_col=this%tan_f0_col)
-
        this%tan_f1_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_F1', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F1', &
-            ptr_col=this%tan_f1_col)
+            ptr_col=this%tan_f1_col, default=fanpools_default)
 
        this%tan_f2_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_F2', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F2', &
-            ptr_col=this%tan_f2_col)
+            ptr_col=this%tan_f2_col, default=fanpools_default)
 
        this%tan_f3_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_F3', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F3', &
-            ptr_col=this%tan_f3_col)
+            ptr_col=this%tan_f3_col, default=fanpools_default)
 
-       this%tan_f0_col(begc:endc) = spval
-       call hist_addfld1d (fname='FERT_U0', units='gN/m^2', &
-            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F0', &
-            ptr_col=this%fert_u0_col)
+       this%tan_f4_col(begc:endc) = spval
+       call hist_addfld1d (fname='TAN_F4', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F4', &
+            ptr_col=this%tan_f4_col, default=fanpools_default)
 
-       this%tan_f1_col(begc:endc) = spval
+       this%fert_u1_col(begc:endc) = spval
        call hist_addfld1d (fname='FERT_U1', units='gN/m^2', &
-            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool F1', &
-            ptr_col=this%fert_u1_col)
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool U1', &
+            ptr_col=this%fert_u1_col, default=fanpools_default)
 
+       this%fert_u2_col(begc:endc) = spval
+       call hist_addfld1d (fname='FERT_U2', units='gN/m^2', &
+            avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool U2', &
+            ptr_col=this%fert_u2_col, default=fanpools_default)
        
        this%tan_s0_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_S0', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool S0', &
-            ptr_col=this%tan_s0_col)
+            ptr_col=this%tan_s0_col, default=fanpools_default)
 
        this%tan_s1_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_S1', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool S1', &
-            ptr_col=this%tan_s1_col)
+            ptr_col=this%tan_s1_col, default=fanpools_default)
 
        this%tan_s2_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_S2', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool S2', &
-            ptr_col=this%tan_s2_col)
+            ptr_col=this%tan_s2_col, default=fanpools_default)
 
        this%tan_s3_col(begc:endc) = spval
        call hist_addfld1d (fname='TAN_S3', units='gN/m^2', &
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool S3', &
-            ptr_col=this%tan_s3_col)
-
+            ptr_col=this%tan_s3_col, default=fanpools_default)
 
        this%man_u_grz_col(begc:endc) = spval
        call hist_addfld1d (fname='MAN_U_GRZ', units='gN/m^2', &
             avgflag='A', long_name='Unavailable manure nitrogen, grazing', &
-            ptr_col=this%man_u_grz_col)
+            ptr_col=this%man_u_grz_col, default=fanpools_default)
 
        this%man_a_grz_col(begc:endc) = spval
        call hist_addfld1d (fname='MAN_A_GRZ', units='gN/m^2', &
             avgflag='A', long_name='Available manure nitrogen, grazing', &
-            ptr_col=this%man_a_grz_col)
+            ptr_col=this%man_a_grz_col, default=fanpools_default)
        
        this%man_r_grz_col(begc:endc) = spval
        call hist_addfld1d (fname='MAN_R_GRZ', units='gN/m^2', &
             avgflag='A', long_name='Resistant manure nitrogen, grazing', &
-            ptr_col=this%man_r_grz_col)
+            ptr_col=this%man_r_grz_col, default=fanpools_default)
 
        this%man_u_grz_col(begc:endc) = spval
        call hist_addfld1d (fname='MAN_U_APP', units='gN/m^2', &
             avgflag='A', long_name='Unavailable manure nitrogen, application', &
-            ptr_col=this%man_u_app_col)
+            ptr_col=this%man_u_app_col, default=fanpools_default)
 
        this%man_a_app_col(begc:endc) = spval
        call hist_addfld1d (fname='MAN_A_APP', units='gN/m^2', &
             avgflag='A', long_name='Available manure nitrogen, application', &
-            ptr_col=this%man_a_app_col)
+            ptr_col=this%man_a_app_col, default=fanpools_default)
        
        this%man_r_app_col(begc:endc) = spval
        call hist_addfld1d (fname='MAN_R_APP', units='gN/m^2', &
             avgflag='A', long_name='Resistant manure nitrogen, application', &
-            ptr_col=this%man_r_app_col)
+            ptr_col=this%man_r_app_col, default=fanpools_default)
 
        this%man_n_stored_col(begc:endc) = spval
        call hist_addfld1d (fname='MAN_N_STORED', units='gN/m^2', &
             avgflag='A', long_name='Manure nitrogen in storage', &
-            ptr_col=this%man_n_stored_col)
+            ptr_col=this%man_n_stored_col, default=fanpools_default)
        
        this%man_tan_stored_col(begc:endc) = spval
        call hist_addfld1d (fname='MAN_TAN_STORED', units='gN/m^2', &
             avgflag='A', long_name='Manure ammoniacal nitrogen in storage', &
-            ptr_col=this%man_tan_stored_col)
+            ptr_col=this%man_tan_stored_col, default=fanpools_default)
 
        this%fan_grz_fract_col(begc:endc) = spval
        call hist_addfld1d (fname='FAN_GRZ_FRACT', units='', &
@@ -466,6 +468,7 @@ contains
 
     end if
 
+    ! The FAN total N is always allocated but may be zero.
     this%fan_totn_col(begc:endc) = spval
     call hist_addfld1d (fname='FAN_TOTN', units='gN/m2', &
          avgflag='A', long_name='FAN total N', &
@@ -564,12 +567,12 @@ contains
              this%tan_s1_col(c) = 0.0_r8
              this%tan_s2_col(c) = 0.0_r8
              this%tan_s3_col(c) = 0.0_r8
-             this%tan_f0_col(c) = 0.0_r8
              this%tan_f1_col(c) = 0.0_r8
              this%tan_f2_col(c) = 0.0_r8
              this%tan_f3_col(c) = 0.0_r8
+             this%tan_f4_col(c) = 0.0_r8
              this%fert_u1_col(c) = 0.0_r8
-             this%fert_u0_col(c) = 0.0_r8
+             this%fert_u2_col(c) = 0.0_r8
 
              this%man_u_grz_col(c) = 0.0_r8
              this%man_a_grz_col(c) = 0.0_r8
@@ -741,9 +744,6 @@ contains
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%tan_s3_col)
 
-       call restartvar(ncid=ncid, flag=flag, varname='tan_f0', xtype=ncd_double, &
-                     dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%tan_f0_col)
        call restartvar(ncid=ncid, flag=flag, varname='tan_f1', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%tan_f1_col)
@@ -753,13 +753,16 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='tan_f3', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%tan_f3_col)
-
-       call restartvar(ncid=ncid, flag=flag, varname='fert_u0', xtype=ncd_double, &
+       call restartvar(ncid=ncid, flag=flag, varname='tan_f4', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%fert_u0_col)
+                     interpinic_flag='interp', readvar=readvar, data=this%tan_f4_col)
+
        call restartvar(ncid=ncid, flag=flag, varname='fert_u1', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%fert_u1_col)
+       call restartvar(ncid=ncid, flag=flag, varname='fert_u2', xtype=ncd_double, &
+                     dim1name='column', long_name='', units='', &
+                     interpinic_flag='interp', readvar=readvar, data=this%fert_u2_col)
 
        call restartvar(ncid=ncid, flag=flag, varname='man_u_grz', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
