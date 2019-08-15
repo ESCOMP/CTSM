@@ -143,7 +143,7 @@ contains
      real(r8):: dt        ! time step (seconds)
      real(r8):: secspyear ! time step (seconds)
  
-    associate(                          &                                                                        
+    associate(                          &
      ivt                   => patch%itype                                       , & ! Input:  [integer  (:) ]  patch vegetation type
      cf13_veg              => c13_cnveg_carbonflux_inst                         , & ! In
      cf14_veg              => c14_cnveg_carbonflux_inst                         , & ! In
@@ -347,8 +347,10 @@ contains
                     ! In/Output: [real(r8) (:) ] (gC/m2/year) C turnover from grain
     matrix_cturnover_grainst_acc     => cnveg_carbonstate_inst%matrix_cturnover_grainst_acc_patch     , & 
                     ! In/Output: [real(r8) (:) ] (gC/m2/year) C turnover from grain storage
-    matrix_cturnover_grainxf_acc     => cnveg_carbonstate_inst%matrix_cturnover_grainxf_acc_patch     , & 
+    matrix_cturnover_grainxf_acc     => cnveg_carbonstate_inst%matrix_cturnover_grainxf_acc_patch       &
                     ! In/Output: [real(r8) (:) ] (gC/m2/year) C turnover from grain transfer
+    )
+    associate(                          &
 
   ! Variables matrix_nalloc_*_acc, matrix_ntransfer_*_acc, and matrix_nturnover_*_acc are used to calculate the N capacity as the N steady state estimates in spin up.
   ! These variables are all state variables, saving accumulated N transfers during the calendar year.
@@ -544,7 +546,9 @@ contains
     grainn0             => cnveg_nitrogenstate_inst%grainn0_patch             , & ! In/Output: [real(r8) (:) ] (gN/m2) grain N at begin of this year
     grainn0_storage     => cnveg_nitrogenstate_inst%grainn0_storage_patch     , & ! In/Output: [real(r8) (:) ] (gN/m2) grain storage N at begin of this year
     grainn0_xfer        => cnveg_nitrogenstate_inst%grainn0_xfer_patch        , & ! In/Output: [real(r8) (:) ] (gN/m2) grain transfer N at begin of this year
-    retransn0           => cnveg_nitrogenstate_inst%retransn0_patch           , & ! In/Output: [real(r8) (:) ] (gN/m2) plant retranslocated N at begin of this year
+    retransn0           => cnveg_nitrogenstate_inst%retransn0_patch             & ! In/Output: [real(r8) (:) ] (gN/m2) plant retranslocated N at begin of this year
+    )
+    associate(                          &
 
   ! Following variables save the C and N transfer rate of different processes at current time step. 
   ! Eg. ph: phenology, gm: gap mortality (including harvest), fi: fire.
@@ -850,8 +854,10 @@ contains
                           ! Input: [integer (:)] Index of fire related N transfer from live stem to dead stem pool
     ilivecroot_to_ideadcroot_fin      => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_fi    , & 
                           ! Input: [integer (:)] Index of fire related N transfer from live coarse root pool to dead coarse root pool
-    iretransn_to_iout_fin             => cnveg_nitrogenflux_inst%iretransn_to_iout_fi           , & 
+    iretransn_to_iout_fin             => cnveg_nitrogenflux_inst%iretransn_to_iout_fi              &
                           ! Input: [integer (:)] Index of fire related N transfer from retranslocated N pool to outside of vegetation pools
+    )
+    associate(                          &
  
   ! Sparse matrix type of A*K 
     AKphvegc                            => cnveg_carbonflux_inst%AKphvegc           , & ! Aph*Kph for C cycle in sparse matrix format
@@ -2466,7 +2472,10 @@ contains
       call vegmatrixc14_input%ReleaseV()
       call vegmatrixn_input%ReleaseV()
     
-   end associate 
+   end associate
+   end associate
+   end associate
+   end associate
  end subroutine CNVegMatrix
 
  subroutine inverse(a,c,n)
