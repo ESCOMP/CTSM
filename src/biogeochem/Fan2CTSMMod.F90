@@ -305,7 +305,7 @@ contains
        end if
     end do
 
-    call handle_storage_v2(bounds, temperature_inst, frictionvel_inst, dt, &
+    call handle_storage(bounds, temperature_inst, frictionvel_inst, dt, &
          atm2lnd_inst%forc_ndep_sgrz_grc, atm2lnd_inst%forc_ndep_ngrz_grc, &
          ns%man_n_stored_col, ns%man_tan_stored_col, &
          nf%man_n_appl_col, nf%man_tan_appl_col, &
@@ -733,7 +733,7 @@ contains
 
   !************************************************************************************
   
-  subroutine handle_storage_v2(bounds, temperature_inst, frictionvel_inst, dt,  &
+  subroutine handle_storage(bounds, temperature_inst, frictionvel_inst, dt,  &
        ndep_sgrz_grc, ndep_ngrz_grc, n_stored_col, tan_stored_col, &
        n_manure_spread_col, tan_manure_spread_col, &
        n_manure_graze_col, n_manure_mixed_col, &
@@ -959,7 +959,7 @@ contains
 
     end do ! grid
 
-  end subroutine handle_storage_v2
+  end subroutine handle_storage
 
   !************************************************************************************
   
