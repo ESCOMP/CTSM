@@ -51,7 +51,10 @@ module FanMod
        iflx_no3 = 3, &   ! nitrification
        iflx_soilq = 4, & ! percolation to soil
        iflx_roff = 5, &  ! surface runoff
-       iflx_to_tan = 6   ! conversion to tan (from urea) 
+       iflx_to_tan = 6   ! conversion to tan (from urea)
+  ! Number of different fluxes, the minimum size for flux vectors:
+  integer, parameter, public :: num_fluxes = 6
+  
   ! Indices in flux arrays, storage:
   integer, parameter, public :: iflx_air_barns = 1, &
        iflx_air_stores = 2, &

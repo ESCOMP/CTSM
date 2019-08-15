@@ -39,15 +39,23 @@ module Fan2CTSMMod
   public fan_readnml
   public fan_eval
   public fan_to_sminn
+
+  ! Structure of FAN TAN pools: number of age classes for N each type:
+  integer, parameter :: num_cls_slr = 4 ! slurry (S1,S2,S3,S4)
+  integer, parameter :: num_cls_grz = 3 ! grazing (G1, G2, G3)
+  integer, parameter :: num_cls_urea = 2 ! urea before hydrolysis (U1, U2)
+  integer, parameter :: num_cls_fert = 3 ! tan formed from urea (F1, F2, F3)
+  integer, parameter :: num_cls_otherfert = 1 ! F4
+  integer, parameter :: num_cls_max = 4 ! max of above
   
   ! Hydrogen ion concentration in TAN pools, mol/l == 10**-pH
   !
-  ! Pastures and slurry. The last age class gets soil pH.
-  real(r8), parameter :: Hconc_grz_def(2) = (/10**(-8.5_r8), 10**(-8.0_r8)/)
-  real(r8), parameter :: Hconc_slr_def(3) &
-       = (/10.0_r8**(-8.0_r8), 10.0_r8**(-8.0_r8), 10.0_r8**(-8.0_r8)/)
+  ! Pastures and slurry. The last age class gets soil pH (from the FAN stream), so sizes
+  ! are one less than the number of classes.
+  real(r8), parameter :: hconc_grz_def(num_cls_grz-1) = 10**(/-8.5_r8, -8.0_r8/)
+  real(r8), parameter :: Hconc_slr_def(num_cls_slr-1) = 10**(/-8.0_r8, -8.0_r8, -8.0_r8/)
   ! Urea fertilizer. The other fertilizer (F4) pool gets soil pH.
-  real(r8), parameter :: Hconc_fert(3) = (/10**(-7.0_r8), 10**(-8.5_r8), 10**(-8.0_r8)/)
+  real(r8), parameter :: Hconc_fert(num_cls_fert) = 10**(/-7.0_r8, -8.5_r8, -8.0_r8/)
 
   ! Active layer thickness used by FAN. This is assumed to match the topmost CLM layer. If
   ! this is not the case, handling of the soil moisture becomes inconsistent. 
@@ -74,10 +82,10 @@ module Fan2CTSMMod
   
   ! TAN pool age ranges (sec). 
   real(r8), parameter ::          &
-       poolranges_grz(3) = (/24*3600.0_r8, 10*24*3600.0_r8, 360*24*3600.0_r8/), &
-       poolranges_fert(3) = (/2.36*24*3600.0_r8, 24*3600.0_r8, 360*24*3600.0_r8/), &
-       poolranges_slr(4) = (/slurry_infiltr_time, 24*3600.0_r8, 10*24*3600.0_r8, 360*24*3600.0_r8/), &
-       poolrange_otherfert(1) = (/360*24*3600.0_r8/)
+       poolranges_grz(num_cls_grz) = (/24*3600.0_r8, 10*24*3600.0_r8, 360*24*3600.0_r8/), &
+       poolranges_fert(num_cls_fert) = (/2.36_r8*24*3600.0_r8, 24*3600.0_r8, 360*24*3600.0_r8/), &
+       poolranges_slr(num_cls_slr) = (/slurry_infiltr_time, 24*3600.0_r8, 10*24*3600.0_r8, 360*24*3600.0_r8/), &
+       poolrange_otherfert(num_cls_otherfert) = (/360*24*3600.0_r8/)
 
   ! soil pH for crops restricted between these limits: 
   real(r8), parameter :: pH_crop_min = 5.5_r8
@@ -87,8 +95,9 @@ module Fan2CTSMMod
   real(r8), parameter :: tempr_min_grazing = 283.0_r8 ! Lowest 10-day daily-min temperature for grazing, K
   ! Fraction of ruminants grazing when permitted by temperature
   real(r8), parameter :: max_grazing_fract = 0.65_r8
-  ! Normalization constants for barn and storage emissions.
-  real(r8), parameter :: volat_coef_barns_open = 0.03_r8, volat_coef_barns_closed = 0.025, volat_coef_stores = 0.025_r8
+  ! Normalization constants for barn and storage emissions.  The defaults are calibrated
+  ! to roughly reproduce the EMEP emission factors under European climate.
+  real(r8), parameter :: volat_coef_barns_open = 0.03_r8, volat_coef_barns_closed = 0.025_r8, volat_coef_stores = 0.025_r8
 
   ! Fraction of manure N moved from crop to native columns (manure spreading)
   real(r8) :: fract_spread_grass = 1.0_r8
@@ -180,7 +189,7 @@ contains
     use clm_varcon, only : spval, ispval
     use decompMod, only : bounds_type
     use subgridAveMod, only: p2c
-
+    
     type(bounds_type)        , intent(in)    :: bounds  
     integer                  , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                  , intent(in)    :: filter_soilc(:) ! filter for soil columns
@@ -205,22 +214,36 @@ contains
          ! now included in the main CLM soil N balance check. The FAN check has more
          ! detail.
          balance_check_freq = 1000
+    ! Number of organic N types (available, unavailable, resistant)
+    integer, parameter :: num_org_n_types = 3
     integer :: c, g, patchcounter, p, status, c1, c2, l, fc, ind_substep
-    real(r8) :: dt, ndep_org(3), orgpools(3), tanprod(3), watertend, fluxes(6,4), tanpools(4), ratm, tandep, &
-         fluxes_tmp(6), garbage_total
-    real(r8) :: Hconc_grz(3), Hconc_slr(4), pH_soil, pH_crop
-    real(r8) :: fert_inc_tan
+    real(r8) :: dt, watertend, ratm, tandep
+    
+    ! Organic (non-urea) manure N: production, pools, flux to TAN. Named indices to denote
+    ! each N fraction.
+    real(r8) :: ndep_org(num_org_n_types), orgpools(num_org_n_types), tanprod(num_org_n_types)
+    ! Temporary arrays for N fluxes and pools. Named indices to denote different fluxes;
+    ! numerical indices to denote the age class.
+    real(r8) :: fluxes(num_fluxes, num_cls_max), tanpools(num_cls_max), fluxes_tmp(num_fluxes)
+    ! timestep-cumulative (gN/m2) aging flux out of the oldest class
+    real(r8) :: n_residual, n_residual_total
+    ! H ion concentrations for grz and slr pools (== prescribed + soil pH for oldest class)
+    real(r8) :: Hconc_grz(num_cls_grz), Hconc_slr(num_cls_slr)
+    real(r8) :: fert_inc_tan, pH_soil, pH_crop
 
     logical :: do_balance_checks
-    real(r8) :: tg, garbage, theta, thetasat, infiltr_m_s, evap_m_s, runoff_m_s, org_n_tot, &
+    real(r8) :: tg, theta, thetasat, infiltr_m_s, evap_m_s, runoff_m_s, org_n_tot, &
          nstored_old, nsoilman_old, nsoilfert_old, fert_to_air, fert_to_soil, fert_total, fert_urea, fert_tan, &
          soilflux_org, urea_resid
-    real(r8) :: tanprod_from_urea(3), ureapools(2), fert_no3, fert_generic, bsw
-    real(r8) :: fract_urea, fract_no3, soilph_min, soilph_max, soilpsi
+    ! TAN production flux from urea. Include one extra flux for the residual flux out of U2.
+    real(r8) :: tanprod_from_urea(num_cls_urea + 1)
+    real(r8) :: ureapools(num_cls_urea)
+    real(r8) :: fract_urea, fract_no3, soilph_min, soilph_max, &
+         soilpsi, fert_no3, fert_generic, bsw
     integer :: def_ph_count
     
-    Hconc_grz(1:2) = Hconc_grz_def
-    Hconc_slr(1:3) = Hconc_slr_def
+    Hconc_grz(1:num_cls_grz-1) = Hconc_grz_def
+    Hconc_slr(1:num_cls_slr-1) = Hconc_slr_def
 
     soilph_min = 999
     soilph_max = -999
@@ -280,7 +303,6 @@ contains
        else
           ngrz(c) = 0.0
        end if
-
     end do
 
     call handle_storage_v2(bounds, temperature_inst, frictionvel_inst, dt, &
@@ -405,22 +427,26 @@ contains
        soilph_min = min(soilph_min, ph_soil)
 
        fluxes_tmp = 0.0
-       garbage_total = 0.0
+       n_residual_total = 0.0
        fluxes = 0.0
-       garbage = 0
+       n_residual = 0
        do ind_substep = 1, num_substeps
           call update_npool(tg, ratm, &
                theta, thetasat, infiltr_m_s, evap_m_s, &
                wateratm2lndbulk_inst%forc_q_downscaled_col(c), watertend, &
-               runoff_m_s, tandep, (/0.0_r8, 0.0_r8, sum(tanprod)/), water_init_grz, &
-               bsw, poolranges_grz, Hconc_grz, dz_layer_grz, tanpools(1:3), &
-               fluxes(1:5,1:3), garbage, dt/num_substeps, 3, 5, status)
+               runoff_m_s, tandep, &
+               (/0.0_r8, 0.0_r8, sum(tanprod)/), & ! all TAN procuced from org N goes to G3
+               water_init_grz, &
+               bsw, poolranges_grz, Hconc_grz, dz_layer_grz, tanpools(1:num_cls_grz), &
+               fluxes(1:num_fluxes,1:num_cls_grz), &
+               n_residual, dt/num_substeps, num_cls_grz, num_fluxes, status)
           if (status /= 0) then
-             write(iulog, *) 'status = ', status, tanpools(1:3), ratm, theta, thetasat, tandep, tanprod
+             write(iulog, *) 'status = ', status, tanpools(1:num_cls_grz), &
+                  ratm, theta, thetasat, tandep, tanprod
              call endrun(msg='update_npool status /= 0')
           end if
-          fluxes_tmp = fluxes_tmp + sum(fluxes(:,1:3), dim=2)
-          garbage_total = garbage_total + garbage
+          fluxes_tmp = fluxes_tmp + sum(fluxes(:,1:num_cls_grz), dim=2)
+          n_residual_total = n_residual_total + n_residual
        end do
        fluxes_tmp = fluxes_tmp / num_substeps
 
@@ -432,7 +458,7 @@ contains
        nf%manure_runoff_col(c) = fluxes_tmp(iflx_roff)
        nf%manure_no3_prod_col(c) = fluxes_tmp(iflx_no3)
        nf%manure_nh4_to_soil_col(c) &
-            = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + garbage_total / dt + soilflux_org
+            = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + n_residual_total / dt + soilflux_org
 
        ! Manure application
 
@@ -461,7 +487,7 @@ contains
        Hconc_slr(4) = 10**(-ph_crop)
 
        fluxes_tmp = 0.0
-       garbage_total = 0.0
+       n_residual_total = 0.0
        fluxes = 0.0
        do ind_substep = 1, num_substeps
           if (debug_fan .and. any(abs(tanpools(1:4)) > 1e12)) then
@@ -473,15 +499,17 @@ contains
           call update_4pool(tg, ratm, theta, thetasat, infiltr_m_s, evap_m_s, &
                wateratm2lndbulk_inst%forc_q_downscaled_col(c), watertend, &
                runoff_m_s, tandep, sum(tanprod), bsw, depth_slurry, &
-               poolranges_slr, tanpools(1:4), Hconc_slr, fluxes(1:5, 1:4), &
-               garbage, dt / num_substeps, 4, 5, status)
+               poolranges_slr, tanpools(1:num_cls_slr), Hconc_slr, &
+               fluxes(1:num_fluxes, 1:num_cls_slr), &
+               n_residual, dt / num_substeps, num_cls_slr, num_fluxes, status)
           if (status /= 0) then
-             write(iulog, *) 'status = ', status, tanpools(1:4), tg, ratm, 'th', theta, &
-                  thetasat, tandep, 'tp', tanprod, 'fx', fluxes(1:5,1:4)
-             call endrun(msg='update_3pool status /= 0')
+             write(iulog, *) 'status = ', status, tanpools(1:num_cls_slr), &
+                  & tg, ratm, 'th', theta, &
+                  thetasat, tandep, 'tp', tanprod, 'fx', fluxes(1:num_fluxes,1:num_cls_slr)
+             call endrun(msg='update_4pool status /= 0')
           end if
-          fluxes_tmp = fluxes_tmp + sum(fluxes(:,1:4), dim=2)
-          garbage_total = garbage_total + garbage
+          fluxes_tmp = fluxes_tmp + sum(fluxes(:,1:num_cls_slr), dim=2)
+          n_residual_total = n_residual_total + n_residual
        end do
        fluxes_tmp = fluxes_tmp / num_substeps
 
@@ -495,7 +523,7 @@ contains
        nf%manure_no3_prod_col(c) = nf%manure_no3_prod_col(c) + fluxes_tmp(iflx_no3)
        nf%manure_nh4_to_soil_col(c) &
             = nf%manure_nh4_to_soil_col(c) + fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) &
-            + garbage_total / dt + soilflux_org
+            + n_residual_total / dt + soilflux_org
 
        ! Fertilizer
        !
@@ -525,26 +553,27 @@ contains
        ureapools(2) = ns%fert_u1_col(c)
        fluxes = 0.0
        call update_urea(tg, theta, thetasat, infiltr_m_s, evap_m_s, watertend, &
-            runoff_m_s, fert_urea, bsw, ureapools,  fluxes(1:6,1:2), urea_resid, poolranges_fert(1:2), &
-            dt, 2, 6, status)
+            runoff_m_s, fert_urea, bsw, ureapools,  fluxes(1:num_fluxes,1:num_cls_urea), &
+            urea_resid, poolranges_fert(1:num_cls_urea), &
+            dt, num_cls_urea, num_fluxes, status)
        if (status /= 0) then
           call endrun(msg='Bad status after update_urea for fertilizer')
        end if
        ! Nitrogen fluxes from urea pool. Be sure to not zero below!
-       fluxes_tmp = sum(fluxes(:,1:2), dim=2)
+       fluxes_tmp = sum(fluxes(:,1:num_cls_urea), dim=2)
 
        ns%fert_u0_col(c) = ureapools(1)
        ns%fert_u1_col(c) = ureapools(2)
        ! Collect the formed ammonia for updating the TAN pools
-       tanprod_from_urea(1:2) = fluxes(iflx_to_tan, 1:2)
+       tanprod_from_urea(1:num_cls_urea) = fluxes(iflx_to_tan, 1:num_cls_urea)
        ! There is no urea pool corresponding to tan_f2, because most of the urea will
        ! have decomposed. Here whatever remains gets sent to tan_f2. 
-       tanprod_from_urea(3) = urea_resid / dt 
+       tanprod_from_urea(num_cls_urea+1) = urea_resid / dt 
 
        tanpools(1) = ns%tan_f0_col(c)
        tanpools(2) = ns%tan_f1_col(c)
        tanpools(3) = ns%tan_f2_col(c)         
-       garbage_total = 0.0
+       n_residual_total = 0.0
        fluxes = 0.0
        nf%nh3_otherfert_col(c) = 0.0
        do ind_substep = 1, num_substeps
@@ -552,27 +581,29 @@ contains
           call update_npool(tg, ratm, theta, thetasat, infiltr_m_s, evap_m_s, &
                wateratm2lndbulk_inst%forc_q_downscaled_col(c), watertend, &
                runoff_m_s, 0.0_r8, tanprod_from_urea, water_init_fert, bsw, &
-               poolranges_fert, Hconc_fert, dz_layer_fert, tanpools(1:3), fluxes(1:5,1:3), &
-               garbage, dt/num_substeps, 3, 5, status)
+               poolranges_fert, Hconc_fert, dz_layer_fert, &
+               tanpools(1:num_cls_fert), fluxes(1:num_fluxes,1:num_cls_fert), &
+               n_residual, dt/num_substeps, num_cls_fert, num_fluxes, status)
           if (status /= 0) then
-             write(iulog, *) 'status:', status, tanpools(1:3), nf%fert_n_appl_col(c)
+             write(iulog, *) 'status:', status, tanpools(1:num_cls_fert), nf%fert_n_appl_col(c)
              call endrun(msg='Bad status after npool for fertilizer')
           end if
-          fluxes_tmp = fluxes_tmp + sum(fluxes(:,1:3), dim=2) / num_substeps
-          garbage_total = garbage_total + garbage
+          fluxes_tmp = fluxes_tmp + sum(fluxes(:,1:num_cls_fert), dim=2) / num_substeps
+          n_residual_total = n_residual_total + n_residual
 
           ! Fertilizer pool f3
           call update_npool(tg, ratm, theta, thetasat, infiltr_m_s, evap_m_s, &
                wateratm2lndbulk_inst%forc_q_downscaled_col(c), watertend, &
                runoff_m_s, fert_generic, (/0.0_r8/), water_init_fert, bsw, &
-               poolrange_otherfert, (/10**(-ph_crop)/), dz_layer_fert, ns%tan_f3_col(c:c), fluxes(1:5,1:1), &
-               garbage, dt/num_substeps, 1, 5, status)
+               poolrange_otherfert, (/10**(-ph_crop)/), dz_layer_fert, &
+               ns%tan_f3_col(c:c), fluxes(1:num_fluxes,1:1), &
+               n_residual, dt/num_substeps, 1, num_fluxes, status)
           if (status /= 0) then
              write(iulog, *) 'status:', status, ns%tan_f3_col(c:c), nf%fert_n_appl_col(c)
              call endrun(msg='Bad status after npool for generic')
           end if
           fluxes_tmp = fluxes_tmp + fluxes(:, 1) / num_substeps
-          garbage_total = garbage_total + garbage
+          n_residual_total = n_residual_total + n_residual
           nf%nh3_otherfert_col(c) = nf%nh3_otherfert_col(c) + fluxes(iflx_air, 1) / num_substeps
        end do
 
@@ -584,7 +615,7 @@ contains
        nf%nh3_fert_col(c) = fluxes_tmp(iflx_air)
        nf%fert_runoff_col(c) = fluxes_tmp(iflx_roff)
        nf%fert_no3_prod_col(c) = fluxes_tmp(iflx_no3) + fert_no3
-       nf%fert_nh4_to_soil_col(c) = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + garbage_total/dt + fert_inc_tan
+       nf%fert_nh4_to_soil_col(c) = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + n_residual_total/dt + fert_inc_tan
 
        ! Total flux
        ! 
@@ -763,7 +794,8 @@ contains
     real(r8) :: tempr_barns, tempr_stores, vent_barns, flux_grass_crop, tempr_min_10day, &
          flux_grass_graze, flux_grass_spread, flux_grass_spread_tan, flux_grass_crop_tan
     real(r8) :: cumflux, totalinput, total_to_store, total_to_store_tan
-    real(r8) :: fluxes_nitr(4,2), fluxes_tan(4,2)
+    ! dimensions are (type of flux, ruminant/other)
+    real(r8) :: fluxes_nitr(num_fluxes,2), fluxes_tan(num_fluxes,2) 
     ! The fraction of manure applied continuously on grasslands (if present in the gridcell)
     real(r8), parameter :: kg_to_g = 1e3_r8
     logical :: is_grass
@@ -875,7 +907,7 @@ contains
                 ! Others
                 call eval_fluxes_storage(flux_avail_mg, 'closed', tempr_ave, windspeed_ave, 0.0_r8, &
                      volat_coef_barns_closed, volat_coef_stores, tan_fract_excr, fluxes_nitr(:,2), fluxes_tan(:,2), &
-                     size(fluxes_nitr, 1), status)
+                     size(fluxes_nitr, 2), status)
                 if (status /=0) then 
                    write(iulog, *) 'status = ', status
                    call endrun(msg='eval_fluxes_storage failed for other livestock')
