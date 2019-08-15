@@ -93,8 +93,8 @@ contains
    integer            :: nml_error ! namelist i/o error flag
    type(mct_ggrid)    :: dom_clm   ! domain information 
    character(*), parameter :: shr_strdata_unset = 'NOT_SET'
-   character(*), parameter :: subName = "('ndep2dyn_init')"
-   character(*), parameter :: F00 = "('(ndep2dyn_init) ',4a)"
+   character(*), parameter :: subName = "('fanstream_init')"
+   character(*), parameter :: F00 = "('(fanstream_init) ',4a)"
    !-----------------------------------------------------------------------
 
    if (stream_year_first_fan == ispval) then
