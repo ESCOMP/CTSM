@@ -90,6 +90,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: fc, c
     real(r8) :: z_avg                                 ! grid cell average snow depth
+    real(r8) :: frac_sno_oldform
 
     character(len=*), parameter :: subname = 'UpdateSnowDepthAndFrac'
     !-----------------------------------------------------------------------
@@ -140,7 +141,24 @@ contains
 
           if (newsnow(c) > 0._r8) then
              ! Update fsca by new snow event, add to previous fsca
-             frac_sno(c) = 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
+
+             ! FIXME(wjs, 2019-08-16) Remove this line and the declaration of frac_sno_oldform
+             frac_sno_oldform = 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
+
+             ! The form in Swenson & Lawrence 2012 (eqn. 3) is:
+             ! 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
+             !
+             ! This form is algebraically equivalent, but simpler and less prone to
+             ! roundoff errors (see https://github.com/ESCOMP/ctsm/issues/784)
+             frac_sno(c) = frac_sno(c) + tanh(this%accum_factor * newsnow(c)) * (1._r8 - frac_sno(c))
+
+             ! FIXME(wjs, 2019-08-16) Remove this
+             if (abs(frac_sno(c) - frac_sno_oldform) > 1.e-13) then
+                write(iulog,*) 'Fix of #784 exceeds tolerance: ', c, frac_sno(c), &
+                     frac_sno_oldform
+                call endrun('Fix of #784 exceeds tolerance')
+             end if
+
           end if
        end if
     end do
