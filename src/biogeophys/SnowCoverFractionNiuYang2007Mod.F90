@@ -49,8 +49,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine UpdateSnowDepthAndFrac(this, bounds, num_c, filter_c, &
-       urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
-       snow_depth, frac_sno)
+       lun_itype_col, urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
+       snow_depth, frac_sno, frac_sno_eff)
     !
     ! !DESCRIPTION:
     ! Update snow depth and snow fraction using the NiuYang2007 parameterization
@@ -61,15 +61,17 @@ contains
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-    logical  , intent(in)    :: urbpoi( bounds%begc: )       ! true if the given column is urban
-    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-    real(r8) , intent(in)    :: snowmelt( bounds%begc: )     ! total snow melt in the time step (mm H2O)
-    real(r8) , intent(in)    :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
-    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
-    real(r8) , intent(in)    :: bifall( bounds%begc: )       ! bulk density of newly fallen dry snow (kg/m3)
+    integer  , intent(in)    :: lun_itype_col( bounds%begc: ) ! landunit type for each column
+    logical  , intent(in)    :: urbpoi( bounds%begc: )        ! true if the given column is urban
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: )  ! total snow water (mm H2O)
+    real(r8) , intent(in)    :: snowmelt( bounds%begc: )      ! total snow melt in the time step (mm H2O)
+    real(r8) , intent(in)    :: int_snow( bounds%begc: )      ! integrated snowfall (mm H2O)
+    real(r8) , intent(in)    :: newsnow( bounds%begc: )       ! total new snow in the time step (mm H2O)
+    real(r8) , intent(in)    :: bifall( bounds%begc: )        ! bulk density of newly fallen dry snow (kg/m3)
 
-    real(r8) , intent(inout) :: snow_depth( bounds%begc: )   ! snow height (m)
-    real(r8) , intent(inout) :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: snow_depth( bounds%begc: )    ! snow height (m)
+    real(r8) , intent(inout) :: frac_sno( bounds%begc: )      ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_eff( bounds%begc: )  ! eff. fraction of ground covered by snow (0 to 1)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
@@ -77,6 +79,7 @@ contains
     character(len=*), parameter :: subname = 'UpdateSnowDepthAndFrac'
     !-----------------------------------------------------------------------
 
+    SHR_ASSERT_FL((ubound(lun_itype_col, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(urbpoi, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snowmelt, 1) == bounds%endc), sourcefile, __LINE__)
@@ -85,6 +88,12 @@ contains
     SHR_ASSERT_FL((ubound(bifall, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc  &
+         )
 
     do fc = 1, num_c
        c = filter_c(fc)
@@ -113,6 +122,13 @@ contains
        end if
     end do
 
+    call this%CalcFracSnoEff(bounds, num_c, filter_c, &
+         lun_itype_col = lun_itype_col(begc:endc), &
+         urbpoi        = urbpoi(begc:endc), &
+         frac_sno      = frac_sno(begc:endc), &
+         frac_sno_eff  = frac_sno_eff(begc:endc))
+
+    end associate
   end subroutine UpdateSnowDepthAndFrac
 
   !-----------------------------------------------------------------------
