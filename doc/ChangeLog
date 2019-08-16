@@ -1,4 +1,183 @@
 ===============================================================
+Tag name:  ctsm1.0.dev056
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Aug 16 11:44:43 MDT 2019
+One-line Summary: Start adding water tracers to LakeHydrology, and related refactoring
+
+Purpose of changes
+------------------
+
+Start adding water tracers to LakeHydrology, beginning with some initial
+things done for snow.
+
+This also includes some significant refactoring to allow LakeHydrology
+to reuse some of the same snow code used for non-lake columns.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Partially addresses ESCOMP/ctsm#775 (Implement water tracers for
+  initial snow-related code in LakeHydrology)
+
+Known bugs found since the previous tag (include github issue ID):
+The following will be fixed in an upcoming tag:
+- ESCOMP/ctsm#783 (frac_sno is always 0 for lake points)
+- ESCOMP/ctsm#784 (Suggested algebraic rework of frac_sno calculation)
+- ESCOMP/ctsm#785 (Threshold for explicit snow pack initiation should
+  use frac_sno_eff, not frac_sno)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, answers change as expected
+
+    Note: Did most testing on 054dc95b (before the small change in
+    7e4e52a9); just ran
+    LWISO_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_gnu.clm-coldStart
+    on the final commit
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): roundoff
+
+    There are two answer-changes here:
+
+    (1) Roundoff-level changes due to changing some order of operations
+        for the updating of snow_depth and dz for lakes: The previous
+        code effectively used (qflx_snow_grnd(c)/bifall(c))*dtime,
+        whereas the new code uses (qflx_snow_grnd(c)*dtime)/bifall(c);
+        similarly, the dz update differs.
+
+    (2) A change in FSNO_EFF for lakes: previously, this was set to 0
+        when there was no snow. Now this is set consistently with other
+        landunits, for which it is 1 even if there is no snow. Note that
+        this only affects the FSNO_EFF diagnostic field, and nothing
+        else.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+        I confirmed that the order-of-operations change is the only
+        answer-changing part of this tag by comparing against a one-off
+        from master with the following diffs; this comparison was
+        bit-for-bit except for changes in the FSNO_EFF diagnostic field:
+
+            diff --git a/src/biogeophys/LakeHydrologyMod.F90 b/src/biogeophys/LakeHydrologyMod.F90
+            index 91ddfc79..9711dad7 100644
+            --- a/src/biogeophys/LakeHydrologyMod.F90
+            +++ b/src/biogeophys/LakeHydrologyMod.F90
+            @@ -126,6 +126,8 @@ subroutine LakeHydrology(bounds, &
+                 real(r8) :: heatsum(bounds%begc:bounds%endc)                ! used in case above [J/m^2]
+                 real(r8) :: snowmass                                        ! liquid+ice snow mass in a layer [kg/m2]
+                 real(r8) :: snowcap_scl_fct                                 ! temporary factor used to correct for snow capping
+            +    real(r8) :: temp_snow_depth
+            +    real(r8) :: newsnow
+                 real(r8), parameter :: snow_bd = 250._r8                    ! assumed snow bulk density (for lakes w/out resolved snow layers) [kg/m^3]
+                                                                             ! Should only be used for frost below.
+                 !-----------------------------------------------------------------------
+            @@ -246,8 +248,10 @@ subroutine LakeHydrology(bounds, &
+                      ! U.S.Department of Agriculture Forest Service, Project F,
+                      ! Progress Rep. 1, Alta Avalanche Study Center:Snow Layer Densification.
+
+            -         dz_snowf = qflx_snow_grnd(c)/bifall(c)
+            -         snow_depth(c) = snow_depth(c) + dz_snowf*dtime
+            +         temp_snow_depth = snow_depth(c)
+            +         newsnow = qflx_snow_grnd(c)*dtime
+            +         snow_depth(c) = snow_depth(c) + newsnow/bifall(c)
+            +         dz_snowf = (snow_depth(c) - temp_snow_depth)/dtime
+                      if (snl(c) == 0) then
+                         h2osno_no_layers(c) = h2osno_no_layers(c) + qflx_snow_grnd(c)*dtime  ! snow water equivalent (mm)
+                      else
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev055
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Aug  6 14:06:50 MDT 2019
