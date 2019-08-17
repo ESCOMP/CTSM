@@ -158,6 +158,7 @@ contains
     integer            :: begp, endp
     integer            :: begc, endc
     integer            :: begg, endg
+    integer :: found  ! flag that equals 0 if not found and 1 if found
     !-----------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
@@ -371,20 +372,26 @@ contains
                 sand = sand3d(g,1)
                 om_frac = organic3d(g,1)/organic_max
              else if (lev <= nlevsoi) then
+                found = 0  ! reset value
+                ! Search within the dataset's range of zisoifl values
                 do j = 1,nlevsoifl-1
-                   ! NOTE(wjs, 2019-08-01) It appears that the code currently doesn't set
-                   ! clay, sand and om_frac explicitly under some conditions. It probably
-                   ! should. My understanding is that currently things work okay, though,
-                   ! because clay, sand and om_frac will remain set at their previous
-                   ! values, which is probably reasonable enough. See also
-                   ! <https://github.com/ESCOMP/ctsm/pull/771#discussion_r309509596>.
-                   if (zsoi(lev) > zisoifl(j) .AND. zsoi(lev) <= zisoifl(j+1)) then
+                   if (zisoi(lev) > zisoifl(j) .AND. zisoi(lev) <= zisoifl(j+1)) then
                       clay = clay3d(g,j+1)
                       sand = sand3d(g,j+1)
                       om_frac = organic3d(g,j+1)/organic_max
+                      found = 1
                    endif
                 end do
-             else
+                if (found == 0) then  ! go outside dataset's range of zisoifl
+                   do j = 1,nlevsoifl-1
+                      if (zisoi(lev) <= zisoifl(j) .or. zisoi(lev) > zisoifl(j+1)) then
+                         clay = clay3d(g,j+1)
+                         sand = sand3d(g,j+1)
+                         om_frac = organic3d(g,j+1)/organic_max
+                      end if
+                   end do
+                end if
+             else  ! if lev > nlevsoi
                 clay = clay3d(g,nlevsoifl)
                 sand = sand3d(g,nlevsoifl)
                 om_frac = 0._r8
