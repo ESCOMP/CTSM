@@ -477,8 +477,8 @@ contains
      ! !USES:
      use clm_varpar       , only : numrad, nlevsno
      use clm_varcon       , only : spval
-     use landunit_varcon  , only : istsoil, istcrop
-     use clm_varctl       , only : subgridflag, use_snicar_frc, iulog, use_SSRE
+     use landunit_varcon  , only : istsoil, istcrop 
+     use clm_varctl       , only : use_subgrid_fluxes, use_snicar_frc, iulog, use_SSRE
      use clm_time_manager , only : get_step_size, is_near_local_noon
      use SnowSnicarMod    , only : DO_SNO_OC
      use abortutils       , only : endrun
@@ -717,7 +717,7 @@ contains
                 sabg_soil(p) = sabg(p)
              endif
              ! if no subgrid fluxes, make sure to set both components equal to weighted average
-             if (subgridflag == 0 .or. lun%itype(l) == istdlak) then
+             if (.not. use_subgrid_fluxes .or. lun%itype(l) == istdlak) then
                 sabg_snow(p) = sabg(p)
                 sabg_soil(p) = sabg(p)
              endif
@@ -808,8 +808,8 @@ contains
              endif
 
              ! If shallow snow depth, all solar radiation absorbed in top or top two snow layers
-             ! to prevent unrealistic timestep soil warming
-             if (subgridflag == 0 .or. lun%itype(l) == istdlak) then
+             ! to prevent unrealistic timestep soil warming 
+             if (.not. use_subgrid_fluxes .or. lun%itype(l) == istdlak) then 
                 if (snow_depth(c) < 0.10_r8) then
                    if (snl(c) == 0) then
                       sabg_lyr(p,-nlevsno+1:0) = 0._r8

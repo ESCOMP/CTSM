@@ -100,7 +100,7 @@ contains
        wateratm2lndbulk_inst, &
        waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
        soilhydrology_inst, saturated_excess_runoff_inst, infiltration_excess_runoff_inst, &
-       aerosol_inst, canopystate_inst, soil_water_retention_curve, topo_inst)
+       aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst)
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
@@ -122,7 +122,8 @@ contains
     use SoilHydrologyMod     , only : UpdateUrbanPonding
     use SoilHydrologyMod     , only : WaterTable, PerchedWaterTable
     use SoilHydrologyMod     , only : ThetaBasedWaterTable, RenewCondensation
-    use SoilWaterMovementMod , only : SoilWater 
+    use SoilWaterMovementMod , only : SoilWater
+    use SnowCoverFractionBaseMod , only : snow_cover_fraction_base_type
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use SoilWaterMovementMod , only : use_aquifer_layer
     use SoilWaterPlantSinkMod , only : Compute_EffecRootFrac_And_VertTranSink
@@ -155,6 +156,7 @@ contains
     type(saturated_excess_runoff_type), intent(inout) :: saturated_excess_runoff_inst
     type(infiltration_excess_runoff_type), intent(inout) :: infiltration_excess_runoff_inst
     type(canopystate_type)   , intent(inout) :: canopystate_inst
+    class(snow_cover_fraction_base_type), intent(in) :: scf_method
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     class(topo_type)   , intent(in)    :: topo_inst
     !
@@ -322,6 +324,7 @@ contains
 
       ! Natural compaction and metamorphosis.
       call SnowCompaction(bounds, num_snowc, filter_snowc, &
+           scf_method, &
            temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, atm2lnd_inst)
 
       ! Combine thin snow elements

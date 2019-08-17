@@ -18,7 +18,7 @@ module controlMod
   use spmdMod                          , only: masterproc, mpicom
   use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
   use decompMod                        , only: clump_pproc
-  use clm_varcon                       , only: h2osno_max, int_snow_max, n_melt_glcmec
+  use clm_varcon                       , only: h2osno_max
   use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
   use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen 
@@ -196,14 +196,15 @@ contains
     namelist /clm_inparm/ &    
          maxpatch_glcmec, glc_do_dynglacier, &
          glc_snow_persistence_max_days, &
-         nlevsno, h2osno_max, int_snow_max, n_melt_glcmec
+         nlevsno, h2osno_max
 
     ! Other options
 
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
-         albice, soil_layerstruct, subgridflag, &
+         albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
+         soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero
     
@@ -493,7 +494,7 @@ contains
           end if
        end if
 
-       ! If nlevsno, h2osno_max, int_snow_max or n_melt_glcmec are equal to their junk
+       ! If nlevsno or h2osno_max are equal to their junk
        ! default value, then they were not specified by the user namelist and we generate
        ! an error message. Also check nlevsno for bounds.
        if (nlevsno < 3 .or. nlevsno > 12)  then
@@ -504,16 +505,6 @@ contains
        if (h2osno_max <= 0.0_r8) then
           write(iulog,*)'ERROR: h2osno_max = ',h2osno_max,' is not supported, must be greater than 0.0.'
           call endrun(msg=' ERROR: invalid value for h2osno_max in CLM namelist. '//&
-               errMsg(sourcefile, __LINE__))
-       endif
-       if (int_snow_max <= 0.0_r8) then
-          write(iulog,*)'ERROR: int_snow_max = ',int_snow_max,' is not supported, must be greater than 0.0.'
-          call endrun(msg=' ERROR: invalid value for int_snow_max in CLM namelist. '//&
-               errMsg(sourcefile, __LINE__))
-       endif
-       if (n_melt_glcmec <= 0.0_r8) then
-          write(iulog,*)'ERROR: n_melt_glcmec = ',n_melt_glcmec,' is not supported, must be greater than 0.0.'
-          call endrun(msg=' ERROR: invalid value for n_melt_glcmec in CLM namelist. '//&
                errMsg(sourcefile, __LINE__))
        endif
 
@@ -805,20 +796,21 @@ contains
 
     ! physics variables
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (subgridflag , 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_subgrid_fluxes , 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (snow_cover_fraction_method , len(snow_cover_fraction_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (wrtdia, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (scmlat, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (scmlon, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (co2_ppmv, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (albice, 2, MPI_REAL8,0, mpicom, ier)
-    call mpi_bcast (soil_layerstruct,len(soil_layerstruct), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (soil_layerstruct_predefined,len(soil_layerstruct_predefined), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (soil_layerstruct_userdefined,size(soil_layerstruct_userdefined), MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast (soil_layerstruct_userdefined_nlevsoi, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (h2osno_max, 1, MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (int_snow_max, 1, MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (n_melt_glcmec, 1, MPI_REAL8, 0, mpicom, ier)
 
     ! glacier_mec variables
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -991,9 +983,6 @@ contains
 
     write(iulog,*) '   Number of snow layers =', nlevsno
     write(iulog,*) '   Max snow depth (mm) =', h2osno_max
-    write(iulog,*) '   Limit applied to integrated snowfall when determining changes in'
-    write(iulog,*) '       snow-covered fraction during melt (mm) =', int_snow_max
-    write(iulog,*) '   SCA shape parameter for glc_mec columns (n_melt_glcmec) =', n_melt_glcmec
 
     write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
     if (glc_do_dynglacier) then
@@ -1028,7 +1017,9 @@ contains
     end if
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
-    write(iulog,*) '   soil layer structure = ', soil_layerstruct
+    write(iulog,*) '   pre-defined soil layer structure = ', soil_layerstruct_predefined
+    write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
+    write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi
     write(iulog,*) '   plant hydraulic stress = ', use_hydrstress
     write(iulog,*) '   dynamic roots          = ', use_dynroot
     if (nsrest == nsrContinue) then

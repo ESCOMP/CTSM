@@ -84,8 +84,9 @@ module AerosolMod
 
      ! Public procedures
      procedure, public  :: Init         
-     procedure, public  :: Restart      
-     procedure, public  :: Reset 
+     procedure, public  :: Restart
+     procedure, public  :: ResetFilter
+     procedure, public  :: Reset
 
      ! Private procedures
      procedure, private :: InitAllocate 
@@ -480,14 +481,39 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
+  subroutine ResetFilter(this, num_c, filter_c)
+    !
+    ! !DESCRIPTION:
+    ! Initialize SNICAR variables for fresh snow columns, for all columns in the given
+    ! filter
+    !
+    ! !ARGUMENTS:
+    class(aerosol_type), intent(inout) :: this
+    integer, intent(in) :: num_c       ! number of columns in filter_c
+    integer, intent(in) :: filter_c(:) ! column filter to operate over
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'ResetFilter'
+    !-----------------------------------------------------------------------
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+       call this%Reset(c)
+    end do
+
+  end subroutine ResetFilter
+
+  !-----------------------------------------------------------------------
   subroutine Reset(this, column)
     !
     ! !DESCRIPTION:
     ! Intitialize SNICAR variables for fresh snow column
     !
     ! !ARGUMENTS:
-    class(aerosol_type)             :: this
-    integer           , intent(in)  :: column     ! column index
+    class(aerosol_type), intent(inout):: this
+    integer, intent(in)  :: column     ! column index
     !-----------------------------------------------------------------------
 
     this%mss_bcpho_col(column,:)  = 0._r8

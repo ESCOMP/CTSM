@@ -43,7 +43,6 @@ module clm_varcon
   ! Initialize physical constants
   !------------------------------------------------------------------
 
-  real(r8), public, parameter :: n_melt=0.7                         ! fsca shape parameter
   real(r8), public, parameter :: e_ice=6.0                          ! soil ice impedance factor
   real(r8), public, parameter :: pc = 0.4                           ! threshold probability
   real(r8), public, parameter :: mu = 0.13889                       ! connectivity exponent 
@@ -178,8 +177,6 @@ module clm_varcon
   !------------------------------------------------------------------
 
   real(r8), public :: h2osno_max   = -999.0_r8            ! max allowed snow thickness (mm H2O)
-  real(r8), public :: int_snow_max = -999.0_r8            ! limit applied to integrated snowfall when determining changes in snow-covered fraction during melt (mm H2O)
-  real(r8), public :: n_melt_glcmec = -999.0_r8           ! SCA shape parameter for glc_mec columns
 
   integer, private :: i  ! loop index
 

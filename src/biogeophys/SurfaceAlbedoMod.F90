@@ -259,7 +259,7 @@ contains
     use shr_orb_mod
     use clm_time_manager   , only : get_nstep
     use abortutils         , only : endrun
-    use clm_varctl         , only : subgridflag, use_snicar_frc, use_fates
+    use clm_varctl         , only : use_subgrid_fluxes, use_snicar_frc, use_fates
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
 
     ! !ARGUMENTS:
@@ -752,7 +752,7 @@ contains
              !  weight snow layer radiative absorption factors based on snow fraction and soil albedo
              !  (NEEDED FOR ENERGY CONSERVATION)
              do i = -nlevsno+1,1,1
-              if (subgridflag == 0 .or. lun%itype(col%landunit(c)) == istdlak) then 
+              if (.not. use_subgrid_fluxes .or. lun%itype(col%landunit(c)) == istdlak) then 
                  if (ib == 1) then
                    flx_absdv(c,i) = flx_absd_snw(c,i,ib)*frac_sno(c) + &
                         ((1.-frac_sno(c))*(1-albsod(c,ib))*(flx_absd_snw(c,i,ib)/(1.-albsnd(c,ib))))

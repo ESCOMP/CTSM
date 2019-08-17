@@ -27,6 +27,7 @@ module WaterTracerUtils
   public :: CalcTracerFromBulk
   public :: CalcTracerFromBulkFixedRatio
   public :: CompareBulkToTracer
+  public :: SetTracerToBulkTimesRatio
 
   ! !PRIVATE MEMBER DATA:
   
@@ -308,5 +309,40 @@ contains
        call endrun(msg=subname//': tracer does not agree with bulk water')
     end if
   end subroutine CompareBulkToTracer
+
+  !-----------------------------------------------------------------------
+  subroutine SetTracerToBulkTimesRatio(bounds_beg, bounds_end, &
+       bulk, tracer, ratio)
+    !
+    ! !DESCRIPTION:
+    ! Set tracer quantities equal to bulk times ratio
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: bounds_beg
+    integer, intent(in) :: bounds_end
+    real(r8), intent(in) :: bulk( bounds_beg: )
+    real(r8), intent(inout) :: tracer( bounds_beg: )
+    real(r8), intent(in) :: ratio
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'SetTracerToBulkTimesRatio'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(bulk) == [bounds_end]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tracer) == [bounds_end]), errMsg(sourcefile, __LINE__))
+
+    do i = bounds_beg, bounds_end
+       if (.not. shr_infnan_isnan(bulk(i))) then
+          if (bulk(i) == spval) then
+             tracer(i) = spval
+          else
+             tracer(i) = bulk(i) * ratio
+          end if
+       end if
+    end do
+
+  end subroutine SetTracerToBulkTimesRatio
 
 end module WaterTracerUtils
