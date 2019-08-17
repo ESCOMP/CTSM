@@ -22,7 +22,7 @@ module CNVegCarbonFluxType
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
   use AnnualFluxDribbler                 , only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
-  use dynSubgridControlMod               , only : get_for_testing_allow_non_annual_changes
+  use dynSubgridControlMod               , only : get_for_testing_allow_non_annual_changes, get_do_grossunrep
   use abortutils                         , only : endrun
   ! 
   ! !PUBLIC TYPES:
@@ -2993,26 +2993,28 @@ contains
             avgflag='A', long_name='dead coarse root to CWD due to landcover change', &
             ptr_col=this%dwt_deadcrootc_to_cwdc_col, default='inactive')
 
-        this%gru_conv_cflux_patch(begp:endp) = spval
-        call hist_addfld1d (fname='GRU_CONV_CFLUX', units='gC/m^2/s', &
-             avgflag='A', long_name='gross unrepresented conversion C flux (immediate loss to atm) (0 at all times except first timestep of year)', &
-             ptr_patch=this%gru_conv_cflux_patch)
+        if ( get_do_grossunrep() )then
+            this%gru_conv_cflux_patch(begp:endp) = spval
+            call hist_addfld1d (fname='GRU_CONV_CFLUX', units='gC/m^2/s', &
+                 avgflag='A', long_name='gross unrepresented conversion C flux (immediate loss to atm) (0 at all times except first timestep of year)', &
+                 ptr_patch=this%gru_conv_cflux_patch)
 
-       this%gru_conv_cflux_dribbled_grc(begg:endg) = spval
-       call hist_addfld1d (fname='GRU_CONV_CFLUX_DRIBBLED', units='gC/m^2/s', &
-            avgflag='A', &
-            long_name='gross unrepresented conversion C flux (immediate loss to atm), dribbled throughout the year', &
-            ptr_gcell=this%gru_conv_cflux_dribbled_grc)
+           this%gru_conv_cflux_dribbled_grc(begg:endg) = spval
+           call hist_addfld1d (fname='GRU_CONV_CFLUX_DRIBBLED', units='gC/m^2/s', &
+                avgflag='A', &
+                long_name='gross unrepresented conversion C flux (immediate loss to atm), dribbled throughout the year', &
+                ptr_gcell=this%gru_conv_cflux_dribbled_grc)
 
-        this%gru_wood_productc_gain_patch(begp:endp) = spval
-        call hist_addfld1d (fname='GRU_WOODPRODC_GAIN', units='gC/m^2/s', &
-             avgflag='A', long_name='gross unrepresented landcover change driven addition to wood product carbon pools (0 at all times except first timestep of year)', &
-             ptr_patch=this%gru_wood_productc_gain_patch)
+            this%gru_wood_productc_gain_patch(begp:endp) = spval
+            call hist_addfld1d (fname='GRU_WOODPRODC_GAIN', units='gC/m^2/s', &
+                 avgflag='A', long_name='gross unrepresented landcover change driven addition to wood product carbon pools (0 at all times except first timestep of year)', &
+                 ptr_patch=this%gru_wood_productc_gain_patch)
 
-        this%gru_slash_cflux_patch(begp:endp) = spval
-        call hist_addfld1d (fname='GRU_SLASH_CFLUX', units='gC/m^2/s', &
-             avgflag='A', long_name='slash gross unrepresented landcover change carbon (to litter)', &
-             ptr_patch=this%gru_slash_cflux_patch)
+            this%gru_slash_cflux_patch(begp:endp) = spval
+            call hist_addfld1d (fname='GRU_SLASH_CFLUX', units='gC/m^2/s', &
+                 avgflag='A', long_name='slash gross unrepresented landcover change carbon (to litter)', &
+                 ptr_patch=this%gru_slash_cflux_patch)
+       end if
 
        this%crop_seedc_to_leaf_patch(begp:endp) = spval
        call hist_addfld1d (fname='CROP_SEEDC_TO_LEAF', units='gC/m^2/s', &

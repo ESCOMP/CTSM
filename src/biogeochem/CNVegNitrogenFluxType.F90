@@ -11,6 +11,7 @@ module CNVegNitrogenFluxType
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use dynSubgridControlMod               , only : get_do_grossunrep
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
@@ -1120,15 +1121,17 @@ contains
          avgflag='A', long_name='dead coarse root to CWD due to landcover change', &
          ptr_col=this%dwt_deadcrootn_to_cwdn_col, default='inactive')
 
-    this%gru_conv_nflux_patch(begp:endp) = spval
-    call hist_addfld1d (fname='GRU_CONV_NFLUX', units='gN/m^2/s', &
-         avgflag='A', long_name='gross unrepresented conversion N flux (immediate loss to atm) (0 at all times except first timestep of year)', &
-         ptr_patch=this%gru_conv_nflux_patch)
+    if ( get_do_grossunrep() )then
+       this%gru_conv_nflux_patch(begp:endp) = spval
+       call hist_addfld1d (fname='GRU_CONV_NFLUX', units='gN/m^2/s', &
+            avgflag='A', long_name='gross unrepresented conversion N flux (immediate loss to atm) (0 at all times except first timestep of year)', &
+            ptr_patch=this%gru_conv_nflux_patch)
 
-    this%gru_wood_productn_gain_patch(begp:endp) = spval
-    call hist_addfld1d (fname='GRU_WOODPRODN_GAIN', units='gN/m^2/s', &
-         avgflag='A', long_name='gross unrepresented landcover change driven addition to wood product nitrogen pools (0 at all times except first timestep of year)', &
-         ptr_patch=this%gru_wood_productn_gain_patch)
+       this%gru_wood_productn_gain_patch(begp:endp) = spval
+       call hist_addfld1d (fname='GRU_WOODPRODN_GAIN', units='gN/m^2/s', &
+            avgflag='A', long_name='gross unrepresented landcover change driven addition to wood product nitrogen pools (0 at all times except first timestep of year)', &
+            ptr_patch=this%gru_wood_productn_gain_patch)
+    end if
 
     this%crop_seedn_to_leaf_patch(begp:endp) = spval
     call hist_addfld1d (fname='CROP_SEEDN_TO_LEAF', units='gN/m^2/s', &
