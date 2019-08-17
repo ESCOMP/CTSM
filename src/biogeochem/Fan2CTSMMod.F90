@@ -13,6 +13,13 @@ module Fan2CTSMMod
   ! is allocated to the native soil column. The mixed/landless systems are associated with
   ! crop columns, however, some N may be transferred to the native column due to manure
   ! spreading or seasonal grazing. 
+  !
+  ! Within FAN, the nitrogen is distributed to several pools which represent different
+  ! types of input (manures, fertilizers) and different "age" (time since
+  ! fertilizer/manure application). The pools of same type but different age are called
+  ! age classes in the FAN description paper. The model includes 4 slurry (manure) age
+  ! classes, 3 grazing manure age classes, 2 urea age classes, 3 age classes for ammonium
+  ! produced from urea, and 1 age class for non-urea NH4 fertilizer N.
   
   use FanMod
   use shr_kind_mod, only : r8 => shr_kind_r8, CL => shr_kind_cl
@@ -41,7 +48,7 @@ module Fan2CTSMMod
   public fan_to_sminn
 
   ! Structure of FAN TAN pools: number of age classes for N each type:
-  integer, parameter :: num_cls_slr = 4 ! slurry (S1,S2,S3,S4)
+  integer, parameter :: num_cls_slr = 4 ! slurry (S0,S1,S2,S3)
   integer, parameter :: num_cls_grz = 3 ! grazing (G1, G2, G3)
   integer, parameter :: num_cls_urea = 2 ! urea before hydrolysis (U1, U2)
   integer, parameter :: num_cls_fert = 3 ! tan formed from urea (F1, F2, F3)
@@ -52,7 +59,7 @@ module Fan2CTSMMod
   !
   ! Pastures and slurry. The last age class gets soil pH (from the FAN stream), so sizes
   ! are one less than the number of classes.
-  real(r8), parameter :: hconc_grz_def(num_cls_grz-1) = 10**(/-8.5_r8, -8.0_r8/)
+  real(r8), parameter :: Hconc_grz_def(num_cls_grz-1) = 10**(/-8.5_r8, -8.0_r8/)
   real(r8), parameter :: Hconc_slr_def(num_cls_slr-1) = 10**(/-8.0_r8, -8.0_r8, -8.0_r8/)
   ! Urea fertilizer. The other fertilizer (F4) pool gets soil pH.
   real(r8), parameter :: Hconc_fert(num_cls_fert) = 10**(/-7.0_r8, -8.5_r8, -8.0_r8/)
