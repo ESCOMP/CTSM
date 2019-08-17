@@ -1601,7 +1601,7 @@ Toggle to connect the FAN N pools to soil biogeochemistry for NATIVE VEGETATION 
 
 <entry id="fract_spread_grass" type="real" category="physics"
        group="fan_nml" valid_values="" >
-Toggle to connect the FAN N pools to soil biogeochemistry for NATIVE VEGETATION columns
+Fraction of manure N produced in crop columns but spread on native vegetation columns (grasslands)
 </entry>
 
 <entry id="nh4_ads_coef" type="real" category="physics"
