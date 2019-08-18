@@ -412,7 +412,8 @@ contains
                 end if
                 ! If still not found, then something's wrong
                 if (found == 0) then
-                   call endrun(msg="ERROR finding a soil dataset depth to interpolate the model depth to for model level ="//lev//' '//errmsg(sourcefile, __LINE__))
+                   write(iulog,*) 'For model soil level =', lev
+                   call endrun(msg="ERROR finding a soil dataset depth to interpolate the model depth to"//errmsg(sourcefile, __LINE__))
                 end if
              else  ! if lev > nlevsoi
                 clay = clay3d(g,nlevsoifl)
