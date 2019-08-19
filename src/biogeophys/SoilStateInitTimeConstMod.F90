@@ -376,14 +376,10 @@ contains
              else if (lev <= nlevsoi) then
                 found = 0  ! reset value
                 ! For remaining model soil levels, search within the dataset's
-                ! range of zisoifl values. Look for model interface depths
-                ! that are between the dataset's interface depths. IN ONE OF
-                ! THE NEXT FEW COMMITS I WILL REPLACE the first occurrence of
-                ! "interface" with "node" in this comment and in the three
-                ! corresponding if-statements below. At that time clean up this
-                ! comment, too.
+                ! range of zisoifl values. Look for model node depths
+                ! that are between the dataset's interface depths.
                 do j = 1,nlevsoifl-1
-                   if (zisoi(lev) > zisoifl(j) .AND. zisoi(lev) <= zisoifl(j+1)) then
+                   if (zsoi(lev) > zisoifl(j) .AND. zsoi(lev) <= zisoifl(j+1)) then
                       clay = clay3d(g,j+1)
                       sand = sand3d(g,j+1)
                       om_frac = organic3d(g,j+1)/organic_max
@@ -394,7 +390,7 @@ contains
                 ! If not found, search below the dataset's range of zisoifl
                 ! depths
                 if (found == 0) then
-                   if (zisoi(lev) > zisoifl(nlevsoifl)) then
+                   if (zsoi(lev) > zisoifl(nlevsoifl)) then
                       clay = clay3d(g,nlevsoifl)
                       sand = sand3d(g,nlevsoifl)
                       om_frac = organic3d(g,nlevsoifl)/organic_max
@@ -403,7 +399,7 @@ contains
                 end if
                 ! If still not found, search closer to the surface again
                 if (found == 0) then
-                   if (zisoi(lev) <= zisoifl(1)) then
+                   if (zsoi(lev) <= zisoifl(1)) then
                       clay = clay3d(g,1)
                       sand = sand3d(g,1)
                       om_frac = organic3d(g,1)/organic_max
