@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev057   slevis 08/19/2019 Soil texture interpolation bug-fix
   ctsm1.0.dev055    sacks 08/06/2019 Modularize snow cover fraction method
   ctsm1.0.dev054    sacks 08/02/2019 Fix interpolation of surfdat soil layers so we can use interpolation for 10SL case
   ctsm1.0.dev053   slevis 08/01/2019 Soil layer definition clean-up and user-defined option
