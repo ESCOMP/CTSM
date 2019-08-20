@@ -2421,7 +2421,7 @@ contains
    use clm_time_manager  , only : get_days_per_year, &
                                   get_curr_date,     &
                                   get_ref_date,      &
-                                  timemgr_datediff,  &
+                                  timemgr_datediff
 
    ! FATES MODULES
    use FatesInterfaceMod     , only : SetFatesTime
