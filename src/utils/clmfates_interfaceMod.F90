@@ -518,11 +518,11 @@ contains
       call FatesReportParameters(masterproc)
 
     end subroutine init
-init
-init=================================
-init
-init
-init
+
+    ! ===================================================================================
+   
+    subroutine check_hlm_active(this, nc, bounds_clump)
+
       ! ---------------------------------------------------------------------------------
       ! This subroutine is not currently used.  It is just a utility that may come
       ! in handy when we have dynamic sites in FATES
