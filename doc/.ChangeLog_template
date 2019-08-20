@@ -31,6 +31,8 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm5_0
 
+[ ] ctsm5_0-nwp
+
 [ ] clm4_5
 
 Notes of particular relevance for users
@@ -83,14 +85,18 @@ CTSM testing:
 
   PTCLM testing (tools/shared/PTCLM/test):
 
-     cheyenne - 
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
 
   regular tests (aux_clm):
 
     cheyenne ---- 
     hobart ------ 
 
-CTSM tag used for the baseline comparisons: 
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
 
 Answer changes

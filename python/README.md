@@ -20,4 +20,7 @@ support different options:
    
 ## pylint
 
-You can run pylint on everything in the ctsm package with `make lint`
+You can run pylint on everything in the ctsm package with `make lint`.
+
+Note: you should expect some errors if using a python2 version of
+pylint, but this should be clean if running with a python3 version.

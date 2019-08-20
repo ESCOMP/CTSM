@@ -9,7 +9,7 @@ import os
 from ctsm import add_cime_to_path # pylint: disable=unused-import
 from ctsm import unit_testing
 
-from ctsm.machine import create_machine
+from ctsm.machine import create_machine, get_possibly_overridden_baseline_dir
 from ctsm.machine_utils import get_user
 from ctsm.machine_defaults import MACHINE_DEFAULTS, MachineDefaults, QsubDefaults
 from ctsm.joblauncher.job_launcher_no_batch import JobLauncherNoBatch
@@ -23,12 +23,13 @@ from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_QSUB, JOB_LAUNCHE
 class TestCreateMachine(unittest.TestCase):
     """Tests of create_machine"""
 
-    def assertMachineInfo(self, machine, name, scratch_dir, account):
+    def assertMachineInfo(self, machine, name, scratch_dir, baseline_dir, account):
         """Asserts that the basic machine info is as expected.
 
         This does NOT dive down into the job launcher"""
         self.assertEqual(machine.name, name)
         self.assertEqual(machine.scratch_dir, scratch_dir)
+        self.assertEqual(machine.baseline_dir, baseline_dir)
         self.assertEqual(machine.account, account)
 
     def assertNoBatchInfo(self, machine, nice_level=None):
@@ -59,6 +60,7 @@ class TestCreateMachine(unittest.TestCase):
             'cheyenne': MachineDefaults(
                 job_launcher_type=default_job_launcher,
                 scratch_dir=os.path.join(os.path.sep, 'glade', 'scratch', get_user()),
+                baseline_dir=os.path.join(os.path.sep, 'my', 'baselines'),
                 account_required=True,
                 job_launcher_defaults={
                     JOB_LAUNCHER_QSUB: QsubDefaults(
@@ -78,6 +80,7 @@ class TestCreateMachine(unittest.TestCase):
         self.assertMachineInfo(machine=machine,
                                name='unknown_test_machine',
                                scratch_dir=None,
+                               baseline_dir=None,
                                account='a123')
         self.assertNoBatchInfo(machine)
 
@@ -91,6 +94,7 @@ class TestCreateMachine(unittest.TestCase):
         self.assertMachineInfo(machine=machine,
                                name='unknown_test_machine',
                                scratch_dir='/path/to/scratch',
+                               baseline_dir=None,
                                account='a123')
         self.assertNoBatchInfo(machine, nice_level=13)
 
@@ -106,6 +110,7 @@ class TestCreateMachine(unittest.TestCase):
         self.assertMachineInfo(machine=machine,
                                name='unknown_test_machine',
                                scratch_dir='/path/to/scratch',
+                               baseline_dir=None,
                                account='a123')
         self.assertQsubInfo(machine=machine,
                             queue='my_queue',
@@ -124,6 +129,7 @@ class TestCreateMachine(unittest.TestCase):
                                                         'glade',
                                                         'scratch',
                                                         get_user()),
+                               baseline_dir=os.path.join(os.path.sep, 'my', 'baselines'),
                                account='a123')
         self.assertQsubInfo(machine=machine,
                             queue='regular',
@@ -145,6 +151,7 @@ class TestCreateMachine(unittest.TestCase):
         self.assertMachineInfo(machine=machine,
                                name='cheyenne',
                                scratch_dir='/custom/path/to/scratch',
+                               baseline_dir=os.path.join(os.path.sep, 'my', 'baselines'),
                                account='a123')
         self.assertQsubInfo(machine=machine,
                             queue='custom_queue',
@@ -152,6 +159,32 @@ class TestCreateMachine(unittest.TestCase):
                             account='a123',
                             required_args='-l select=1:ncpus=36:mpiprocs=1 -r n -l inception=login',
                             extra_args='--custom args')
+
+    # ------------------------------------------------------------------------
+    # Tests of get_possibly_overridden_baseline_dir
+    # ------------------------------------------------------------------------
+
+    def test_baselineDir_overridden(self):
+        """Tests get_possibly_overridden_baseline_dir when baseline_dir is provided"""
+        defaults = self.create_defaults()
+        machine = create_machine('cheyenne', defaults, account='a123')
+        baseline_dir = get_possibly_overridden_baseline_dir(machine, baseline_dir='mypath')
+        self.assertEqual(baseline_dir, 'mypath')
+
+    def test_baselineDir_default(self):
+        """Tests get_possibly_overridden_baseline_dir when baseline_dir is not provided"""
+        defaults = self.create_defaults()
+        machine = create_machine('cheyenne', defaults, account='a123')
+        baseline_dir = get_possibly_overridden_baseline_dir(machine, baseline_dir=None)
+        self.assertEqual(baseline_dir, os.path.join(os.path.sep, 'my', 'baselines'))
+
+    def test_baselineDir_noDefault(self):
+        """Tests get_possibly_overridden_baseline_dir when baseline_dir is not provided
+        and there is no default"""
+        machine = create_machine('unknown_test_machine', MACHINE_DEFAULTS,
+                                 account='a123')
+        baseline_dir = get_possibly_overridden_baseline_dir(machine, baseline_dir=None)
+        self.assertIsNone(baseline_dir)
 
 if __name__ == '__main__':
     unit_testing.setup_for_tests()
