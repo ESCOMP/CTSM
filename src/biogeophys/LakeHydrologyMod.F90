@@ -258,13 +258,6 @@ contains
     call UpdateQuantitiesForNewSnow(bounds, num_lakec, filter_lakec, &
          scf_method, atm2lnd_inst, water_inst)
 
-    ! BUG(wjs, 2019-08-14, ESCOMP/ctsm#783) For now, maintain answers with the buggy
-    ! code, which sets frac_sno to 0 for lake, always.
-    do fc = 1, num_lakec
-       c = filter_lakec(fc)
-       frac_sno(c) = 0._r8
-    end do
-
     ! TODO(wjs, 2019-08-01) Eventually move this down, merging this with later tracer
     ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
     ! module, remember to also remove 'use perf_mod' at the top.
@@ -273,7 +266,6 @@ contains
        call water_inst%TracerConsistencyCheck(bounds, 'after initial snow stuff in LakeHydrology')
        call t_stopf("tracer_consistency_check")
     end if
-
     do fc = 1, num_lakec
        c = filter_lakec(fc)
 

@@ -1,4 +1,166 @@
 ===============================================================
+Tag name:  ctsm1.0.dev057
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Aug 20 13:17:39 MDT 2019
+One-line Summary: Fix frac_sno bugs
+
+Purpose of changes
+------------------
+
+Two bug fixes related to frac_sno, and a third change involving
+replacing a frac_sno calculation with a simpler equation that is
+algebraically equivalent:
+
+(1) Fix lake frac_sno always being 0
+    (https://github.com/ESCOMP/ctsm/issues/783). This fixes the albedo
+    calculation (and possibly others) over snow-covered lake surfaces.
+
+(2) Fix threshold for explicit snow pack initiation to use frac_sno_eff,
+    not frac_sno (https://github.com/ESCOMP/ctsm/issues/785). For
+    standard runs (which have use_subgrid_fluxes = .true.), this just
+    changes answers for urban columns. This also changes answers more
+    widely for runs with use_subgrid_fluxes = .false.
+
+(3) Rewrite Swenson & Lawrence 2012 frac_sno equation to be more
+    straightforward and less sensitive to roundoff errors
+    (https://github.com/ESCOMP/ctsm/issues/784)
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#783 (frac_sno is always 0 for lake points)
+- Resolves ESCOMP/ctsm#785 (Threshold for explicit snow pack initiation
+  should use frac_sno_eff, not frac_sno)
+- Resolves ESCOMP/ctsm#784 (Suggested algebraic rework of frac_sno
+  calculation)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests pass, answers change as expected
+
+    Ran most testing on 95dad328 (before 8f1263a7, which removes a
+    temporary endrun error check). Just reran
+    SMS_Ld5_D_P48x1.f10_f10_musgs.IHistClm50Bgc.hobart_nag.clm-decStart
+    on the final version.
+
+    There was a memleak for this test:
+
+        FAIL SMS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.hobart_nag.clm-tracer_consistency MEMLEAK memleak detected, memory went from 1250.830000 to 1518.500000 in 8 days
+
+    I have had memleak issues for this test before
+    (https://github.com/ESCOMP/ctsm/issues/763), which I have chalked up
+    to a compiler-specific issue. I have simply increased the tolerance
+    for memleaks for this test moving forward.
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff; expected to be same climate in general,
+      because the only impacts are on urban and lake points, which
+      represent a small fraction of most grid cells. However, this needs
+      further investigation.
+
+      See above (under "Purpose of changes") for a description of the
+      different answer changes in this tag.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+      I verified that change (3) is no greater than roundoff by
+      temporarily putting in an endrun if the new frac_sno differs from
+      the old by more than 1e-13; this was not triggered for any test in
+      the aux_clm test suite.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A (Keith Oleson will run this)
+
+   URL for LMWG diagnostics output used to validate new climate: N/A (Keith Oleson will run this)
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev056
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Aug 16 11:44:43 MDT 2019

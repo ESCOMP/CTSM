@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev057    sacks 08/20/2019 Fix frac_sno bugs
   ctsm1.0.dev056    sacks 08/16/2019 Start adding water tracers to LakeHydrology, and related refactoring
   ctsm1.0.dev055    sacks 08/06/2019 Modularize snow cover fraction method
   ctsm1.0.dev054    sacks 08/02/2019 Fix interpolation of surfdat soil layers so we can use interpolation for 10SL case

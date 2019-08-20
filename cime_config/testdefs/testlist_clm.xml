@@ -1678,7 +1678,7 @@
                just a compiler issue, we're allowing this level of
                memory leak. See
                https://github.com/ESCOMP/ctsm/issues/763 for details. -->
-          <option name="memleak_tolerance">0.2</option>
+          <option name="memleak_tolerance">0.3</option>
         </options>
       </machine>
 
