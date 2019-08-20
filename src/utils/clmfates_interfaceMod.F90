@@ -197,6 +197,11 @@ module CLMFatesInterfaceMod
    ! developer will at least question its usage (RGK)
    private :: hlm_bounds_to_fates_bounds
 
+   ! ThGetAndSetFatesTimeis function is used to get the current time from the CIME 
+   ! time procedures and then set to the fates global time variables during restart, 
+   ! init_coldstart, and dynamics_driv function calls
+   private :: GetAndSetTime
+
    logical :: debug  = .false.
 
    character(len=*), parameter, private :: sourcefile = &
@@ -513,11 +518,11 @@ contains
       call FatesReportParameters(masterproc)
 
     end subroutine init
-
-    ! ===================================================================================
-   
-    subroutine check_hlm_active(this, nc, bounds_clump)
-
+init
+init=================================
+init
+init
+init
       ! ---------------------------------------------------------------------------------
       ! This subroutine is not currently used.  It is just a utility that may come
       ! in handy when we have dynamic sites in FATES
@@ -579,22 +584,9 @@ contains
       integer  :: c                        ! column index (HLM)
       integer  :: ifp                      ! patch index
       integer  :: p                        ! HLM patch index
-      integer  :: yr                       ! year (0, ...)
-      integer  :: mon                      ! month (1, ..., 12)
-      integer  :: day                      ! day of month (1, ..., 31)
-      integer  :: sec                      ! seconds of the day
       integer  :: nlevsoil                 ! number of soil layers at the site
       integer  :: nld_si                   ! site specific number of decomposition layers
-      integer  :: current_year             
-      integer  :: current_month
-      integer  :: current_day
-      integer  :: current_tod
-      integer  :: current_date
-      integer  :: jan01_curr_year
-      integer  :: reference_date
-      integer  :: days_per_year
-      real(r8) :: model_day
-      real(r8) :: day_of_year
+
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -606,24 +598,8 @@ contains
       ! and it keeps all the boundaries in one location
       ! ---------------------------------------------------------------------------------
 
-      days_per_year = get_days_per_year()
-      call get_curr_date(current_year,current_month,current_day,current_tod)
-      current_date = current_year*10000 + current_month*100 + current_day
-      jan01_curr_year = current_year*10000 + 100 + 1
-
-      call get_ref_date(yr, mon, day, sec)
-      reference_date = yr*10000 + mon*100 + day
-
-      call timemgr_datediff(reference_date, sec, current_date, current_tod, model_day)
-
-      call timemgr_datediff(jan01_curr_year,0,current_date,sec,day_of_year)
-      
-      call SetFatesTime(current_year, current_month, &
-                        current_day, current_tod, &
-                        current_date, reference_date, &
-                        model_day, floor(day_of_year), &
-                        days_per_year, 1.0_r8/dble(days_per_year))
-
+      ! Set the FATES global time and date variables
+      call GetAndSetTime
 
       do s=1,this%fates(nc)%nsites
 
@@ -1176,7 +1152,8 @@ contains
                                                                 this%fates(nc)%sites, &
                                                                 this%fates(nc)%bc_out)
                     
-              
+               ! Set the FATES global time and date variables
+               !call GetAndSetTime                                                                
 
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
@@ -1292,6 +1269,9 @@ contains
            ! ------------------------------------------------------------------------
            call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
                 waterstate_inst,canopystate_inst,frictionvel_inst)
+
+           ! Set the FATES global time and date variables
+           !call GetAndSetTime
 
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
@@ -2432,5 +2412,62 @@ contains
 
    
  end subroutine hlm_bounds_to_fates_bounds
+
+ ! ======================================================================================
+
+ subroutine GetAndSetTime()
+
+   ! CLM MODULES
+   use clm_time_manager  , only : get_days_per_year, &
+                                  get_curr_date,     &
+                                  get_ref_date,      &
+                                  timemgr_datediff,  &
+
+   ! FATES MODULES
+   use FatesInterfaceMod     , only : SetFatesTime
+
+   ! LOCAL VARIABLES
+   integer  :: yr                       ! year (0, ...)
+   integer  :: mon                      ! month (1, ..., 12)
+   integer  :: day                      ! day of month (1, ..., 31)
+   integer  :: sec                      ! seconds of the day
+   integer  :: current_year             
+   integer  :: current_month
+   integer  :: current_day
+   integer  :: current_tod
+   integer  :: current_date
+   integer  :: jan01_curr_year
+   integer  :: reference_date
+   integer  :: days_per_year
+   real(r8) :: model_day
+   real(r8) :: day_of_year
+
+   
+   ! Get the current date and determine the set the start of the current year
+   call get_curr_date(current_year,current_month,current_day,current_tod)
+   current_date = current_year*10000 + current_month*100 + current_day
+   jan01_curr_year = current_year*10000 + 100 + 1
+
+   ! Get the reference date components and compute the date
+   call get_ref_date(yr, mon, day, sec)
+   reference_date = yr*10000 + mon*100 + day
+
+   ! Get the defined number of days per year 
+   days_per_year = get_days_per_year()
+
+   ! Determine the model day
+   call timemgr_datediff(reference_date, sec, current_date, current_tod, model_day)
+
+   ! Determine the current DOY
+   call timemgr_datediff(jan01_curr_year,0,current_date,sec,day_of_year)
+   
+   ! Set the FATES global time variables
+   call SetFatesTime(current_year, current_month, &
+                     current_day, current_tod, &
+                     current_date, reference_date, &
+                     model_day, floor(day_of_year), &
+                     days_per_year, 1.0_r8/dble(days_per_year))
+
+ end subroutine GetAndSetTime
 
 end module CLMFatesInterfaceMod
