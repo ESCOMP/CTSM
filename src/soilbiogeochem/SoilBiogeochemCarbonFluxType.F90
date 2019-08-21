@@ -176,6 +176,8 @@ contains
         call this%Ksoil%InitDM                  (ndecomp_pools*nlevdecomp,begc,endc)
         call this%Xdiagsoil%InitDM              (ndecomp_pools*nlevdecomp,begc,endc)
         call this%matrix_Cinput%InitV(ndecomp_pools*nlevdecomp,begc,endc)
+     else
+        allocate(this%tri_ma_vr(1,1)); this%tri_ma_vr(:,:) = nan
      end if
      if ( use_fates ) then
         ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
