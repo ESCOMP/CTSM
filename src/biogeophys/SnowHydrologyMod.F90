@@ -47,6 +47,8 @@ module SnowHydrologyMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SnowHydrology_readnl       ! Read namelist
   public :: HandleNewSnow              ! Handle new snow falling on the ground
+  public :: UpdateQuantitiesForNewSnow ! Update various snow-related quantities to account for new snow
+  public :: UpdateState_AddNewSnow     ! Update h2osno_no_layers or h2osoi_ice based on new snow
   public :: SnowWater                  ! Change of snow mass and the snow water onto soil
   public :: SnowCompaction             ! Change in snow layer thickness due to compaction
   public :: CombineSnowLayers          ! Combine snow layers less than a min thickness
@@ -63,7 +65,6 @@ module SnowHydrologyMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: BulkDiag_NewSnowDiagnostics ! Update various snow-related diagnostic quantities to account for new snow
-  private :: UpdateState_AddNewSnow ! Update h2osno_no_layers or h2osoi_ice based on new snow
   private :: BuildFilter_ThawedWetlandThinSnowpack ! Build a column-level filter of thawed wetland columns with a thin snowpack
   private :: UpdateState_RemoveSnowFromThawedWetlands ! For bulk or one tracer: remove snow from thawed wetlands, for state variables
   private :: Bulk_RemoveSnowFromThawedWetlands ! Remove snow from thawed wetlands, for bulk-only quantities
@@ -253,7 +254,7 @@ contains
     ! Calculation of snow layer initialization if the snow accumulation exceeds 10 mm.
     !
     ! !ARGUMENTS:
-    type(bounds_type)      , intent(in)    :: bounds     
+    type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
     integer                , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
     class(snow_cover_fraction_base_type), intent(in) :: scf_method
@@ -264,11 +265,8 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: i     ! index of water tracer or bulk
-    real(r8) :: dtime ! land model time step (sec)
     type(filter_col_type) :: thawed_wetland_thin_snowpack_filterc ! column filter: thawed wetland columns with a thin (no-layer) snow pack
     type(filter_col_type) :: snowpack_initialized_filterc         ! column filter: columns where an explicit snow pack is initialized
-    real(r8) :: bifall(bounds%begc:bounds%endc)                   ! bulk density of newly fallen dry snow [kg/m3]
-    real(r8) :: h2osno_total(bounds%begc:bounds%endc)             ! total snow water (mm H2O)
     !-----------------------------------------------------------------------
 
     associate( &
@@ -280,52 +278,12 @@ contains
          b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
          )
 
-    ! Get time step
-    dtime = get_step_size()
-
     ! ------------------------------------------------------------------------
     ! Update various snow-related quantities to account for new snow
     ! ------------------------------------------------------------------------
 
-    call NewSnowBulkDensity(bounds, num_nolakec, filter_nolakec, &
-         atm2lnd_inst, bifall(bounds%begc:bounds%endc))
-
-    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
-         caller = 'HandleNewSnow', &
-         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
-
-    call BulkDiag_NewSnowDiagnostics(bounds, num_nolakec, filter_nolakec, &
-         ! Inputs
-         scf_method          = scf_method, &
-         dtime               = dtime, &
-         urbpoi              = col%urbpoi(begc:endc), &
-         snl                 = col%snl(begc:endc), &
-         bifall              = bifall(begc:endc), &
-         h2osno_total        = h2osno_total(begc:endc), &
-         h2osoi_ice          = b_waterstate_inst%h2osoi_ice_col(begc:endc,:), &
-         h2osoi_liq          = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
-         qflx_snow_grnd      = b_waterflux_inst%qflx_snow_grnd_col(begc:endc), &
-         qflx_snow_drain     = b_waterflux_inst%qflx_snow_drain_col(begc:endc), &
-         ! Outputs
-         dz                  = col%dz(begc:endc,:), &
-         int_snow            = b_waterstate_inst%int_snow_col(begc:endc), &
-         swe_old             = b_waterdiagnostic_inst%swe_old_col(begc:endc,:), &
-         frac_sno            = b_waterdiagnostic_inst%frac_sno_col(begc:endc), &
-         frac_sno_eff        = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
-         snow_depth          = b_waterdiagnostic_inst%snow_depth_col(begc:endc))
-
-    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
-       associate(w => water_inst%bulk_and_tracers(i))
-       call UpdateState_AddNewSnow(bounds, num_nolakec, filter_nolakec, &
-            ! Inputs
-            dtime            = dtime, &
-            snl              = col%snl(begc:endc), &
-            qflx_snow_grnd   = w%waterflux_inst%qflx_snow_grnd_col(begc:endc), &
-            ! Outputs
-            h2osno_no_layers = w%waterstate_inst%h2osno_no_layers_col(begc:endc), &
-            h2osoi_ice       = w%waterstate_inst%h2osoi_ice_col(begc:endc,:))
-       end associate
-    end do
+    call UpdateQuantitiesForNewSnow(bounds, num_nolakec, filter_nolakec, &
+         scf_method, atm2lnd_inst, water_inst)
 
     ! ------------------------------------------------------------------------
     ! Remove snow from thawed wetlands
@@ -365,9 +323,9 @@ contains
 
     call BuildFilter_SnowpackInitialized(bounds, num_nolakec, filter_nolakec, &
          ! Inputs
-         snl        = col%snl(begc:endc), &
-         frac_sno   = b_waterdiagnostic_inst%frac_sno_col(begc:endc), &
-         snow_depth = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
+         snl          = col%snl(begc:endc), &
+         frac_sno_eff = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+         snow_depth   = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
          ! Outputs
          snowpack_initialized_filterc = snowpack_initialized_filterc)
 
@@ -406,28 +364,104 @@ contains
   end subroutine HandleNewSnow
 
   !-----------------------------------------------------------------------
-  subroutine BulkDiag_NewSnowDiagnostics(bounds, num_nolakec, filter_nolakec, &
+  subroutine UpdateQuantitiesForNewSnow(bounds, num_c, filter_c, &
+       scf_method, atm2lnd_inst, water_inst)
+    !
+    ! !DESCRIPTION:
+    ! Update various snow-related quantities to account for new snow
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)      , intent(in)    :: bounds
+    integer                , intent(in)    :: num_c          ! number of column points in column filter
+    integer                , intent(in)    :: filter_c(:)    ! column filter
+    class(snow_cover_fraction_base_type), intent(in) :: scf_method
+    type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
+    type(water_type)       , intent(inout) :: water_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: i     ! index of water tracer or bulk
+    real(r8) :: dtime ! land model time step (sec)
+    real(r8) :: bifall(bounds%begc:bounds%endc)                   ! bulk density of newly fallen dry snow [kg/m3]
+    real(r8) :: h2osno_total(bounds%begc:bounds%endc)             ! total snow water (mm H2O)
+
+    character(len=*), parameter :: subname = 'UpdateQuantitiesForNewSnow'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc, &
+
+         b_waterflux_inst       => water_inst%waterfluxbulk_inst, &
+         b_waterstate_inst      => water_inst%waterstatebulk_inst, &
+         b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
+         )
+
+    ! Get time step
+    dtime = get_step_size()
+
+    call NewSnowBulkDensity(bounds, num_c, filter_c, &
+         atm2lnd_inst, bifall(bounds%begc:bounds%endc))
+
+    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_c, filter_c, &
+         caller = 'HandleNewSnow', &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+
+    call BulkDiag_NewSnowDiagnostics(bounds, num_c, filter_c, &
+         ! Inputs
+         scf_method          = scf_method, &
+         dtime               = dtime, &
+         lun_itype_col       = col%lun_itype(begc:endc), &
+         urbpoi              = col%urbpoi(begc:endc), &
+         snl                 = col%snl(begc:endc), &
+         bifall              = bifall(begc:endc), &
+         h2osno_total        = h2osno_total(begc:endc), &
+         h2osoi_ice          = b_waterstate_inst%h2osoi_ice_col(begc:endc,:), &
+         h2osoi_liq          = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+         qflx_snow_grnd      = b_waterflux_inst%qflx_snow_grnd_col(begc:endc), &
+         qflx_snow_drain     = b_waterflux_inst%qflx_snow_drain_col(begc:endc), &
+         ! Outputs
+         dz                  = col%dz(begc:endc,:), &
+         int_snow            = b_waterstate_inst%int_snow_col(begc:endc), &
+         swe_old             = b_waterdiagnostic_inst%swe_old_col(begc:endc,:), &
+         frac_sno            = b_waterdiagnostic_inst%frac_sno_col(begc:endc), &
+         frac_sno_eff        = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+         snow_depth          = b_waterdiagnostic_inst%snow_depth_col(begc:endc))
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call UpdateState_AddNewSnow(bounds, num_c, filter_c, &
+            ! Inputs
+            dtime            = dtime, &
+            snl              = col%snl(begc:endc), &
+            qflx_snow_grnd   = w%waterflux_inst%qflx_snow_grnd_col(begc:endc), &
+            ! Outputs
+            h2osno_no_layers = w%waterstate_inst%h2osno_no_layers_col(begc:endc), &
+            h2osoi_ice       = w%waterstate_inst%h2osoi_ice_col(begc:endc,:))
+       end associate
+    end do
+
+    end associate
+
+  end subroutine UpdateQuantitiesForNewSnow
+
+  !-----------------------------------------------------------------------
+  subroutine BulkDiag_NewSnowDiagnostics(bounds, num_c, filter_c, &
        scf_method, &
-       dtime, urbpoi, snl, bifall, h2osno_total, h2osoi_ice, h2osoi_liq, &
+       dtime, lun_itype_col, urbpoi, snl, bifall, h2osno_total, h2osoi_ice, h2osoi_liq, &
        qflx_snow_grnd, qflx_snow_drain, &
        dz, int_snow, swe_old, frac_sno, frac_sno_eff, snow_depth)
     !
     ! !DESCRIPTION:
     ! Update various snow-related diagnostic quantities to account for new snow
     !
-    ! We pass in the entire waterstatebulk instance because we need to call a method on
-    ! this instance. Note that we operate on individual components of this instance, too,
-    ! but we do not pass them in explicitly because it can be confusing and error-prone to
-    ! have a single array accessible in two different ways in a subroutine (via the array
-    ! argument and via an instance).
-    !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_nolakec
-    integer, intent(in) :: filter_nolakec(:)
+    integer, intent(in) :: num_c
+    integer, intent(in) :: filter_c(:)
 
     class(snow_cover_fraction_base_type), intent(in) :: scf_method
     real(r8)                  , intent(in)    :: dtime                           ! land model time step (sec)
+    integer                   , intent(in)    :: lun_itype_col( bounds%begc: )   ! landunit type for each column
     logical                   , intent(in)    :: urbpoi( bounds%begc: )          ! true=>urban point
     integer                   , intent(in)    :: snl( bounds%begc: )             ! negative number of snow layers
     real(r8)                  , intent(in)    :: bifall( bounds%begc: )          ! bulk density of newly fallen dry snow [kg/m3]
@@ -455,6 +489,7 @@ contains
     character(len=*), parameter :: subname = 'BulkDiag_NewSnowDiagnostics'
     !-----------------------------------------------------------------------
 
+    SHR_ASSERT_FL((ubound(lun_itype_col, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(urbpoi, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(bifall, 1) == bounds%endc), sourcefile, __LINE__)
@@ -475,8 +510,8 @@ contains
          endc => bounds%endc  &
          )
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
+    do fc = 1, num_c
+       c = filter_c(fc)
        
        ! Use Alta relationship, Anderson(1976); LaChapelle(1961),
        ! U.S.Department of Agriculture Forest Service, Project F,
@@ -503,20 +538,22 @@ contains
        snowmelt(c) = qflx_snow_drain(c) * dtime
     end do
 
-    call scf_method%UpdateSnowDepthAndFrac(bounds, num_nolakec, filter_nolakec, &
+    call scf_method%UpdateSnowDepthAndFrac(bounds, num_c, filter_c, &
          ! Inputs
-         urbpoi       = urbpoi(begc:endc), &
-         h2osno_total = h2osno_total(begc:endc), &
-         snowmelt     = snowmelt(begc:endc), &
-         int_snow     = int_snow(begc:endc), &
-         newsnow      = newsnow(begc:endc), &
-         bifall       = bifall(begc:endc), &
+         lun_itype_col = lun_itype_col(begc:endc), &
+         urbpoi        = urbpoi(begc:endc), &
+         h2osno_total  = h2osno_total(begc:endc), &
+         snowmelt      = snowmelt(begc:endc), &
+         int_snow      = int_snow(begc:endc), &
+         newsnow       = newsnow(begc:endc), &
+         bifall        = bifall(begc:endc), &
          ! Outputs
-         snow_depth   = snow_depth(begc:endc), &
-         frac_sno     = frac_sno(begc:endc))
+         snow_depth    = snow_depth(begc:endc), &
+         frac_sno      = frac_sno(begc:endc), &
+         frac_sno_eff  = frac_sno_eff(begc:endc))
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
+    do fc = 1, num_c
+       c = filter_c(fc)
        if (h2osno_total(c) == 0._r8 .and. newsnow(c) > 0._r8) then
           ! Snow pack started at 0, then adding new snow; reset int_snow prior to
           ! adding newsnow
@@ -524,7 +561,7 @@ contains
        end if
     end do
 
-    call scf_method%AddNewsnowToIntsnow(bounds, num_nolakec, filter_nolakec, &
+    call scf_method%AddNewsnowToIntsnow(bounds, num_c, filter_c, &
          ! Inputs
          newsnow      = newsnow(begc:endc), &
          h2osno_total = h2osno_total(begc:endc), &
@@ -532,24 +569,13 @@ contains
          ! Outputs
          int_snow     = int_snow(begc:endc))
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
+    do fc = 1, num_c
+       c = filter_c(fc)
 
        ! update change in snow depth
        if (snl(c) < 0) then
           dz_snowf = (snow_depth(c) - temp_snow_depth(c)) / dtime
           dz(c,snl(c)+1) = dz(c,snl(c)+1)+dz_snowf*dtime
-       end if
-
-       ! set frac_sno_eff variable
-       if (.not. urbpoi(c)) then
-          if (use_subgrid_fluxes) then 
-             frac_sno_eff(c) = frac_sno(c)
-          else
-             frac_sno_eff(c) = 1._r8
-          end if
-       else
-          frac_sno_eff(c) = 1._r8
        end if
 
     end do
@@ -559,7 +585,7 @@ contains
   end subroutine BulkDiag_NewSnowDiagnostics
 
   !-----------------------------------------------------------------------
-  subroutine UpdateState_AddNewSnow(bounds, num_nolakec, filter_nolakec, &
+  subroutine UpdateState_AddNewSnow(bounds, num_c, filter_c, &
        dtime, snl, qflx_snow_grnd, &
        h2osno_no_layers, h2osoi_ice)
     !
@@ -568,8 +594,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_nolakec
-    integer, intent(in) :: filter_nolakec(:)
+    integer, intent(in) :: num_c
+    integer, intent(in) :: filter_c(:)
 
     real(r8) , intent(in)    :: dtime                                    ! land model time step (sec)
     integer  , intent(in)    :: snl( bounds%begc: )                      ! negative number of snow layers
@@ -588,8 +614,8 @@ contains
     SHR_ASSERT_FL((ubound(h2osno_no_layers, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osoi_ice, 1) == bounds%endc), sourcefile, __LINE__)
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
+    do fc = 1, num_c
+       c = filter_c(fc)
 
        if (snl(c) == 0) then
           h2osno_no_layers(c) = h2osno_no_layers(c) + (qflx_snow_grnd(c) * dtime)
@@ -714,7 +740,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BuildFilter_SnowpackInitialized(bounds, num_nolakec, filter_nolakec, &
-       snl, frac_sno, snow_depth, snowpack_initialized_filterc)
+       snl, frac_sno_eff, snow_depth, snowpack_initialized_filterc)
     !
     ! !DESCRIPTION:
     ! Build a column-level filter of columns where an explicit snow pack needs to be initialized
@@ -725,7 +751,7 @@ contains
     integer, intent(in) :: filter_nolakec(:)
 
     integer               , intent(in)  :: snl( bounds%begc: )          ! negative number of snow layers
-    real(r8)              , intent(in)  :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+    real(r8)              , intent(in)  :: frac_sno_eff( bounds%begc: ) ! fraction of ground covered by snow (0 to 1)
     real(r8)              , intent(in)  :: snow_depth( bounds%begc: )   ! snow height (m)
     type(filter_col_type) , intent(out) :: snowpack_initialized_filterc ! column filter: columns where an explicit snow pack is initialized
     !
@@ -737,14 +763,14 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
 
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
 
        ! When the snow accumulation exceeds 10 mm, initialize snow layer
-       if (snl(c) == 0 .and. frac_sno(c)*snow_depth(c) >= 0.01_r8) then
+       if (snl(c) == 0 .and. frac_sno_eff(c)*snow_depth(c) >= 0.01_r8) then
           snowpack_initialized(c) = .true.
        else
           snowpack_initialized(c) = .false.
@@ -805,11 +831,6 @@ contains
     ! This routine just operates on bulk-only quantities; state variables are handled in
     ! UpdateState_InitializeSnowPack.
     !
-    ! We pass in the entire waterdiagnosticbulk instance because we need to call a method
-    ! on this instance. Note that we operate on individual components of this instance,
-    ! too, but we do not pass them in explicitly because it can be confusing and
-    ! error-prone to have a single array accessible in two different ways in a subroutine
-    ! (via the array argument and via an instance).
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     type(filter_col_type), intent(in) :: snowpack_initialized_filterc ! column filter: columns where an explicit snow pack is initialized
@@ -1337,10 +1358,10 @@ contains
 
                 if (imelt(c,j) == 1) then
                    l = col%landunit(c)
-                   ! For consistency with other uses of use_subgrid_fluxes (e.g., in
-                   ! CanopyHydrologyMod), we apply this code over all landunits other than
-                   ! lake and urban. (In CanopyHydrologyMod, the uses of
-                   ! use_subgrid_fluxes are in a nolake filter, and check .not. urbpoi.)
+                   ! For consistency with other uses of use_subgrid_fluxes, we apply this
+                   ! code over all landunits other than lake and urban. (Elsewhere, the
+                   ! uses of use_subgrid_fluxes are in a nolake filter, and check
+                   ! .not. urbpoi.)
                    if(use_subgrid_fluxes .and. (.not. lakpoi(l) .and. .not. urbpoi(l))) then
                       ! first term is delta mass over mass
                       ddz3 = max(0._r8,min(1._r8,(swe_old(c,j) - wx)/wx))
