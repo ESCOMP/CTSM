@@ -37,6 +37,13 @@
     </phase>
   </test>
 
+  <test name="ERS_D_Lm3.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-ciso_monthly_matrixcn_spinup">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>---</issue>
+    </phase>
+  </test>
+
   <test name="SMS.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop">
     <phase name="RUN">
       <status>FAIL</status>
