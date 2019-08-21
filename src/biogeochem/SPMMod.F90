@@ -484,10 +484,10 @@ if(.not. list_ready)then
    i_a=1
    i_b=1
    i_ab=1
-   Aindex(1:A%NE)    = (A%CI-1)*A%SM+A%RI
-   Bindex(1:B%NE)    = (B%CI-1)*B%SM+B%RI
-   Aindex(A%NE+1)    = A%SM*A%SM+1
-   Bindex(B%NE+1)    = B%SM*B%SM+1
+   Aindex(1:A%NE)    = (A%CI(1:A%NE)-1)*A%SM + A%RI(1:A%NE)
+   Bindex(1:B%NE)    = (B%CI(1:B%NE)-1)*B%SM + B%RI(1:B%NE)
+   Aindex(A%NE+1)    = A%SM*A%SM + 1
+   Bindex(B%NE+1)    = B%SM*B%SM + 1
 
    do while (i_a .le. A%NE .or. i_b .le. B%NE)
       if(Aindex(i_a) .lt. Bindex(i_b))then
@@ -638,9 +638,9 @@ if(.not. list_ready)then
    i_b=1
    i_c=1
    i_abc=1
-   Aindex(1:A%NE)    = (A%CI-1)*A%SM+A%RI
-   Bindex(1:B%NE)    = (B%CI-1)*B%SM+B%RI
-   Cindex(1:C%NE)    = (C%CI-1)*C%SM+C%RI
+   Aindex(1:A%NE)    = (A%CI(1:A%NE)-1)*A%SM+A%RI(1:A%NE)
+   Bindex(1:B%NE)    = (B%CI(1:B%NE)-1)*B%SM+B%RI(1:B%NE)
+   Cindex(1:C%NE)    = (C%CI(1:C%NE)-1)*C%SM+C%RI(1:C%NE)
    Aindex(A%NE+1)    = A%SM*A%SM+1
    Bindex(B%NE+1)    = B%SM*B%SM+1
    Cindex(C%NE+1)    = C%SM*C%SM+1
