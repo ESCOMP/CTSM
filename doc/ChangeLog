@@ -1,4 +1,126 @@
 ===============================================================
+Tag name:  ctsm1.0.dev058
+Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
+Date:  Thu Aug 22 10:02:49 MDT 2019
+One-line Summary: Soil texture interpolation bug-fix
+
+Purpose of changes
+------------------
+
+ When assigning soil texture values from dataset soil levels to model
+ soil levels, we should be comparing zsoi (NOT zisoi) in the model with
+ zisoi on the file, i.e. we should be asking whether the node
+ center (NOT interface) of a given model level falls between two
+ interface depths on the file.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #772
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+ Unexpected failure of test
+ SMS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.hobart_nag.clm-tracer_consistency
+ Bill Sacks did some follow-up testing and concluded that this may be a
+ compiler-specific issue, so he changed the test from "nag" to "intel"
+ and generated the new test's corresponding baseline
+
+Code reviewed by: @billsacks
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: not clm45
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+      based on the assumption that shifting soil texture assignments by
+      one level in model soil levels below the top-most level should not
+      generate climate-changing differences.
+
+Detailed list of changes
+------------------------
+ 1. Changed zisoi to zsoi as described in the Purpose section above.
+    This caused the larger than roundoff changes. Before the fix some
+    model soil levels were getting assigned soil textures from a deeper
+    soil level in the dataset than they should.
+ 2. In the same section of code I completed the if-block to address all
+    zsoi vs. zisoifl comparisons. This ensures explicit assignment of
+    soil textures for all model soil levels and avoids leaving some
+    model soil levels with the texture assignment of the previous model
+    soil level.
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull/788)
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev057
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Aug 20 13:17:39 MDT 2019
