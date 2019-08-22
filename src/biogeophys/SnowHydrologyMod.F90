@@ -693,7 +693,7 @@ contains
     integer                , intent(in)    :: num_c          ! number of column points in column filter
     integer                , intent(in)    :: filter_c(:)    ! column filter
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
-    type(temperature_type) , intent(in)    :: temperature_inst
+    type(temperature_type) , intent(inout) :: temperature_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
     type(water_type)       , intent(inout) :: water_inst
 
