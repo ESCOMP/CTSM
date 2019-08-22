@@ -46,8 +46,8 @@ module SnowHydrologyMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SnowHydrology_readnl       ! Read namelist
-  public :: HandleNewSnow              ! Handle new snow falling on the ground
   public :: UpdateQuantitiesForNewSnow ! Update various snow-related quantities to account for new snow
+  public :: RemoveSnowFromThawedWetlands ! Remove snow from thawed wetlands
   public :: InitializeExplicitSnowPack ! Initialize an explicit snow pack in columns where this is warranted based on snow depth
   public :: SnowWater                  ! Change of snow mass and the snow water onto soil
   public :: SnowCompaction             ! Change in snow layer thickness due to compaction
@@ -66,7 +66,6 @@ module SnowHydrologyMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: BulkDiag_NewSnowDiagnostics ! Update various snow-related diagnostic quantities to account for new snow
   private :: UpdateState_AddNewSnow      ! Update h2osno_no_layers or h2osoi_ice based on new snow
-  private :: RemoveSnowFromThawedWetlands ! Remove snow from thawed wetlands
   private :: BuildFilter_ThawedWetlandThinSnowpack ! Build a column-level filter of thawed wetland columns with a thin snowpack
   private :: UpdateState_RemoveSnowFromThawedWetlands ! For bulk or one tracer: remove snow from thawed wetlands, for state variables
   private :: Bulk_RemoveSnowFromThawedWetlands ! Remove snow from thawed wetlands, for bulk-only quantities
@@ -244,42 +243,6 @@ contains
     end if
 
   end subroutine SnowHydrology_readnl
-
-  !-----------------------------------------------------------------------
-  subroutine HandleNewSnow(bounds, &
-       num_nolakec, filter_nolakec, &
-       scf_method, &
-       atm2lnd_inst, temperature_inst, &
-       aerosol_inst, water_inst)
-    !
-    ! !DESCRIPTION:
-    ! Calculation of snow layer initialization if the snow accumulation exceeds 10 mm.
-    !
-    ! !ARGUMENTS:
-    type(bounds_type)      , intent(in)    :: bounds
-    integer                , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
-    integer                , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
-    class(snow_cover_fraction_base_type), intent(in) :: scf_method
-    type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
-    type(temperature_type) , intent(inout) :: temperature_inst
-    type(aerosol_type)     , intent(inout) :: aerosol_inst
-    type(water_type)       , intent(inout) :: water_inst
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'HandleNewSnow'
-    !-----------------------------------------------------------------------
-
-    call UpdateQuantitiesForNewSnow(bounds, num_nolakec, filter_nolakec, &
-         scf_method, atm2lnd_inst, water_inst)
-
-    call RemoveSnowFromThawedWetlands(bounds, num_nolakec, filter_nolakec, &
-         temperature_inst, water_inst)
-
-    call InitializeExplicitSnowPack(bounds, num_nolakec, filter_nolakec, &
-         atm2lnd_inst, temperature_inst, aerosol_inst, water_inst)
-
-  end subroutine HandleNewSnow
 
   !-----------------------------------------------------------------------
   subroutine UpdateQuantitiesForNewSnow(bounds, num_c, filter_c, &
