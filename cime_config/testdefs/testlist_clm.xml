@@ -1668,17 +1668,10 @@
   <test name="SMS_D_Ld10" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/tracer_consistency">
     <machines>
 
-      <machine name="hobart" compiler="nag" category="aux_clm">
+      <machine name="hobart" compiler="intel" category="aux_clm">
         <options>
           <option name="wallclock">0:30:00</option>
           <option name="comment">Include a tracer consistency check in debug mode.</option>
-          <!-- There is a memory growth of about 12% over this 10-day
-               test, just with nag. This may be a real issue, or it may
-               be a compiler issue. For now, since there's a chance it's
-               just a compiler issue, we're allowing this level of
-               memory leak. See
-               https://github.com/ESCOMP/ctsm/issues/763 for details. -->
-          <option name="memleak_tolerance">0.3</option>
         </options>
       </machine>
 
