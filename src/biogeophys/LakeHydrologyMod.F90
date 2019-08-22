@@ -265,7 +265,7 @@ contains
        ! Currently, the water temperature for the precipitation is simply set
        ! as the surface air temperature
 
-       if (snl(c) == 0 .and. qflx_snow_grnd(c) > 0.0_r8 .and. snow_depth(c) >= 0.01_r8 + lsadz) then
+       if (snl(c) == 0 .and. snow_depth(c) >= 0.01_r8 + lsadz) then
           snl(c) = -1
           dz(c,0) = snow_depth(c)                       ! meter
           z(c,0) = -0.5_r8*dz(c,0)
