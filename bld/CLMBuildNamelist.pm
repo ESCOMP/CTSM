@@ -1512,6 +1512,7 @@ sub process_namelist_inline_logic {
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_cnmatrix($opts,  $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: atm2lnd_inparm
@@ -3665,6 +3666,48 @@ sub setup_logic_fates {
               }
            }
         }
+    }
+}
+
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cnmatrix {
+    #
+    # Set some default options related to the CN Matrix options
+    #
+    my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+    my @matrixlist = ( "use_matrixcn", "use_soil_matrixcn", "is_outmatrix", "isspinup" );
+    foreach my $var ( @matrixlist ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var
+                , 'use_fates'=>$nl_flags->{'use_fates'}, 'bgc_mode'=>$nl_flags->{'bgc_mode'}
+                , 'phys'=>$nl_flags->{'phys'} );
+    }
+    # Matrix items can't be on for SP mode
+    if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->fatal_error("$var can NOT be on for SP mode" );
+          }
+       }
+    # Matrix items can't be on for FATES
+    } elsif ( $nl_flags->{'bgc_mode'} eq "fates" ) {
+       foreach my $var ( @matrixlist ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->fatal_error("$var can NOT be on with FATES" );
+          }
+       }
+    # Otherwise for CN or BGC mode
+    } else {
+      # If both matrixcn and soil_matrix are off
+      if ( ! &value_is_true($nl->get_value("use_matrixcn")) && ! &value_is_true($nl->get_value("use_soil_matrixcn")) ) {
+         foreach my $var ( "is_outmatrix", "isspinup" ) {
+            if ( &value_is_true($nl->get_value($var)) ) {
+                $log->fatal_error("$var can NOT be on when both use_matrixcn and use_soil_matrixcn are off" );
+            }
+         }
+      }
     }
 }
 
