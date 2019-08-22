@@ -1,13 +1,13 @@
 ===============================================================
 Tag name:  ctsm1.0.dev058
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
-Date:  Wed Aug 21 14:45:49 MDT 2019
+Date:  Thu Aug 22 10:02:49 MDT 2019
 One-line Summary: Soil texture interpolation bug-fix
 
 Purpose of changes
 ------------------
 
- When assigning soil texture values from data-set soil levels to model
+ When assigning soil texture values from dataset soil levels to model
  soil levels, we should be comparing zsoi (NOT zisoi) in the model with
  zisoi on the file, i.e. we should be asking whether the node
  center (NOT interface) of a given model level falls between two
@@ -53,7 +53,12 @@ NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
 
-Changes to tests or testing: none
+Changes to tests or testing:
+ Unexpected failure of test
+ SMS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.hobart_nag.clm-tracer_consistency
+ Bill Sacks did some follow-up testing and concluded that this may be a
+ compiler-specific issue, so he changed the test from "nag" to "intel"
+ and generated the new test's corresponding baseline
 
 Code reviewed by: @billsacks
 
