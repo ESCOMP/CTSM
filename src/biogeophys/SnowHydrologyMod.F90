@@ -66,6 +66,7 @@ module SnowHydrologyMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: BulkDiag_NewSnowDiagnostics ! Update various snow-related diagnostic quantities to account for new snow
   private :: UpdateState_AddNewSnow      ! Update h2osno_no_layers or h2osoi_ice based on new snow
+  private :: RemoveSnowFromThawedWetlands ! Remove snow from thawed wetlands
   private :: BuildFilter_ThawedWetlandThinSnowpack ! Build a column-level filter of thawed wetland columns with a thin snowpack
   private :: UpdateState_RemoveSnowFromThawedWetlands ! For bulk or one tracer: remove snow from thawed wetlands, for state variables
   private :: Bulk_RemoveSnowFromThawedWetlands ! Remove snow from thawed wetlands, for bulk-only quantities
@@ -265,66 +266,18 @@ contains
     type(water_type)       , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: i     ! index of water tracer or bulk
-    type(filter_col_type) :: thawed_wetland_thin_snowpack_filterc ! column filter: thawed wetland columns with a thin (no-layer) snow pack
+
+    character(len=*), parameter :: subname = 'HandleNewSnow'
     !-----------------------------------------------------------------------
-
-    associate( &
-         begc => bounds%begc, &
-         endc => bounds%endc, &
-
-         b_waterflux_inst       => water_inst%waterfluxbulk_inst, &
-         b_waterstate_inst      => water_inst%waterstatebulk_inst, &
-         b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
-         )
-
-    ! ------------------------------------------------------------------------
-    ! Update various snow-related quantities to account for new snow
-    ! ------------------------------------------------------------------------
 
     call UpdateQuantitiesForNewSnow(bounds, num_nolakec, filter_nolakec, &
          scf_method, atm2lnd_inst, water_inst)
 
-    ! ------------------------------------------------------------------------
-    ! Remove snow from thawed wetlands
-    !
-    ! BUG(wjs, 2019-06-05, ESCOMP/ctsm#735) It seems like the intended behavior here is to
-    ! zero out the entire snow pack. Currently, however, this only zeros out a very thin
-    ! (zero-layer) snow pack. For now, I'm adding an snl==0 conditional to make this
-    ! behavior explicit; long-term, we'd like to change this to actually zero out the
-    ! whole snow pack. (At that time, this code block should probably be moved to a more
-    ! appropriate home, as noted in comments in issue #735.)
-    ! ------------------------------------------------------------------------
-
-    call BuildFilter_ThawedWetlandThinSnowpack(bounds, num_nolakec, filter_nolakec, &
-         ! Inputs
-         t_grnd        = temperature_inst%t_grnd_col(begc:endc), &
-         lun_itype_col = col%lun_itype(begc:endc), &
-         snl           = col%snl(begc:endc), &
-         ! Outputs
-         thawed_wetland_thin_snowpack_filterc = thawed_wetland_thin_snowpack_filterc)
-
-    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
-       associate(w => water_inst%bulk_and_tracers(i))
-       call UpdateState_RemoveSnowFromThawedWetlands(bounds, thawed_wetland_thin_snowpack_filterc, &
-            ! Outputs
-            h2osno_no_layers = w%waterstate_inst%h2osno_no_layers_col(begc:endc))
-       end associate
-    end do
-
-    call Bulk_RemoveSnowFromThawedWetlands(bounds, thawed_wetland_thin_snowpack_filterc, &
-         ! Outputs
-         snow_depth = b_waterdiagnostic_inst%snow_depth_col(begc:endc))
-
-    ! ------------------------------------------------------------------------
-    ! Initialize an explicit snow pack in columns where this is warranted based on snow
-    ! depth
-    ! ------------------------------------------------------------------------
+    call RemoveSnowFromThawedWetlands(bounds, num_nolakec, filter_nolakec, &
+         temperature_inst, water_inst)
 
     call InitializeExplicitSnowPack(bounds, num_nolakec, filter_nolakec, &
          atm2lnd_inst, temperature_inst, aerosol_inst, water_inst)
-
-    end associate
 
   end subroutine HandleNewSnow
 
@@ -592,6 +545,66 @@ contains
     end do
 
   end subroutine UpdateState_AddNewSnow
+
+  !-----------------------------------------------------------------------
+  subroutine RemoveSnowFromThawedWetlands(bounds, num_nolakec, filter_nolakec, &
+       temperature_inst, water_inst)
+    !
+    ! !DESCRIPTION:
+    ! Remove snow from thawed wetlands
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_nolakec
+    integer, intent(in) :: filter_nolakec(:)
+
+    type(temperature_type) , intent(in)    :: temperature_inst
+    type(water_type)       , intent(inout) :: water_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: i     ! index of water tracer or bulk
+    type(filter_col_type) :: thawed_wetland_thin_snowpack_filterc ! column filter: thawed wetland columns with a thin (no-layer) snow pack
+
+    character(len=*), parameter :: subname = 'RemoveSnowFromThawedWetlands'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc, &
+
+         b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
+         )
+
+    ! BUG(wjs, 2019-06-05, ESCOMP/ctsm#735) It seems like the intended behavior here is to
+    ! zero out the entire snow pack. Currently, however, this only zeros out a very thin
+    ! (zero-layer) snow pack. For now, I'm adding an snl==0 conditional to make this
+    ! behavior explicit; long-term, we'd like to change this to actually zero out the
+    ! whole snow pack. (At that time, this snow removal should probably be done from a
+    ! more appropriate point of the driver loop, as noted in comments in issue #735.)
+
+    call BuildFilter_ThawedWetlandThinSnowpack(bounds, num_nolakec, filter_nolakec, &
+         ! Inputs
+         t_grnd        = temperature_inst%t_grnd_col(begc:endc), &
+         lun_itype_col = col%lun_itype(begc:endc), &
+         snl           = col%snl(begc:endc), &
+         ! Outputs
+         thawed_wetland_thin_snowpack_filterc = thawed_wetland_thin_snowpack_filterc)
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call UpdateState_RemoveSnowFromThawedWetlands(bounds, thawed_wetland_thin_snowpack_filterc, &
+            ! Outputs
+            h2osno_no_layers = w%waterstate_inst%h2osno_no_layers_col(begc:endc))
+       end associate
+    end do
+
+    call Bulk_RemoveSnowFromThawedWetlands(bounds, thawed_wetland_thin_snowpack_filterc, &
+         ! Outputs
+         snow_depth = b_waterdiagnostic_inst%snow_depth_col(begc:endc))
+
+    end associate
+
+  end subroutine RemoveSnowFromThawedWetlands
 
   !-----------------------------------------------------------------------
   subroutine BuildFilter_ThawedWetlandThinSnowpack(bounds, num_nolakec, filter_nolakec, &
