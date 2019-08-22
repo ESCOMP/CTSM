@@ -681,7 +681,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitializeExplicitSnowPack(bounds, num_c, filter_c, &
-       atm2lnd_inst, temperature_inst, aerosol_inst, water_inst)
+       atm2lnd_inst, temperature_inst, aerosol_inst, water_inst, &
+       additional_thickness)
     !
     ! !DESCRIPTION:
     ! Initialize an explicit snow pack in columns where this is warranted based on snow
@@ -695,6 +696,14 @@ contains
     type(temperature_type) , intent(in)    :: temperature_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
     type(water_type)       , intent(inout) :: water_inst
+
+    ! Normally an explicit snow pack is initiated when snow depth exceeds 10 mm. However,
+    ! in some cases (currently, for lakes), we don't initiate an explicit snow pack until
+    ! the snow depth is somewhat greater. This is controlled by this
+    ! 'additional_thickness' parameter: A snow pack is initiated when the snow depth
+    ! exceeds the standard depth + additional_thickness.
+    real(r8), intent(in) :: additional_thickness
+
     !
     ! !LOCAL VARIABLES:
     integer  :: i     ! index of water tracer or bulk
@@ -712,9 +721,10 @@ contains
 
     call BuildFilter_SnowpackInitialized(bounds, num_c, filter_c, &
          ! Inputs
-         snl          = col%snl(begc:endc), &
-         frac_sno_eff = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
-         snow_depth   = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
+         additional_thickness = additional_thickness, &
+         snl                  = col%snl(begc:endc), &
+         frac_sno_eff         = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+         snow_depth           = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
          ! Outputs
          snowpack_initialized_filterc = snowpack_initialized_filterc)
 
@@ -753,7 +763,8 @@ contains
   end subroutine InitializeExplicitSnowPack
 
   !-----------------------------------------------------------------------
-  subroutine BuildFilter_SnowpackInitialized(bounds, num_nolakec, filter_nolakec, &
+  subroutine BuildFilter_SnowpackInitialized(bounds, num_c, filter_c, &
+       additional_thickness, &
        snl, frac_sno_eff, snow_depth, snowpack_initialized_filterc)
     !
     ! !DESCRIPTION:
@@ -761,8 +772,15 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: num_nolakec
-    integer, intent(in) :: filter_nolakec(:)
+    integer, intent(in) :: num_c
+    integer, intent(in) :: filter_c(:)
+
+    ! Normally an explicit snow pack is initiated when snow depth exceeds 10 mm. However,
+    ! in some cases (currently, for lakes), we don't initiate an explicit snow pack until
+    ! the snow depth is somewhat greater. This is controlled by this
+    ! 'additional_thickness' parameter: A snow pack is initiated when the snow depth
+    ! exceeds the standard depth + additional_thickness.
+    real(r8), intent(in) :: additional_thickness
 
     integer               , intent(in)  :: snl( bounds%begc: )          ! negative number of snow layers
     real(r8)              , intent(in)  :: frac_sno_eff( bounds%begc: ) ! fraction of ground covered by snow (0 to 1)
@@ -780,11 +798,11 @@ contains
     SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
 
-    do fc = 1, num_nolakec
-       c = filter_nolakec(fc)
+    do fc = 1, num_c
+       c = filter_c(fc)
 
        ! When the snow accumulation exceeds 10 mm, initialize snow layer
-       if (snl(c) == 0 .and. frac_sno_eff(c)*snow_depth(c) >= 0.01_r8) then
+       if (snl(c) == 0 .and. frac_sno_eff(c)*snow_depth(c) >= (0.01_r8 + additional_thickness)) then
           snowpack_initialized(c) = .true.
        else
           snowpack_initialized(c) = .false.
@@ -793,8 +811,8 @@ contains
 
     snowpack_initialized_filterc = col_filter_from_filter_and_logical_array( &
          bounds = bounds, &
-         num_orig = num_nolakec, &
-         filter_orig = filter_nolakec, &
+         num_orig = num_c, &
+         filter_orig = filter_c, &
          logical_col = snowpack_initialized(bounds%begc:bounds%endc))
 
   end subroutine BuildFilter_SnowpackInitialized
