@@ -48,7 +48,7 @@ module SnowHydrologyMod
   public :: SnowHydrology_readnl       ! Read namelist
   public :: HandleNewSnow              ! Handle new snow falling on the ground
   public :: UpdateQuantitiesForNewSnow ! Update various snow-related quantities to account for new snow
-  public :: UpdateState_AddNewSnow     ! Update h2osno_no_layers or h2osoi_ice based on new snow
+  public :: InitializeExplicitSnowPack ! Initialize an explicit snow pack in columns where this is warranted based on snow depth
   public :: SnowWater                  ! Change of snow mass and the snow water onto soil
   public :: SnowCompaction             ! Change in snow layer thickness due to compaction
   public :: CombineSnowLayers          ! Combine snow layers less than a min thickness
@@ -65,6 +65,7 @@ module SnowHydrologyMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: BulkDiag_NewSnowDiagnostics ! Update various snow-related diagnostic quantities to account for new snow
+  private :: UpdateState_AddNewSnow      ! Update h2osno_no_layers or h2osoi_ice based on new snow
   private :: BuildFilter_ThawedWetlandThinSnowpack ! Build a column-level filter of thawed wetland columns with a thin snowpack
   private :: UpdateState_RemoveSnowFromThawedWetlands ! For bulk or one tracer: remove snow from thawed wetlands, for state variables
   private :: Bulk_RemoveSnowFromThawedWetlands ! Remove snow from thawed wetlands, for bulk-only quantities
@@ -266,7 +267,6 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: i     ! index of water tracer or bulk
     type(filter_col_type) :: thawed_wetland_thin_snowpack_filterc ! column filter: thawed wetland columns with a thin (no-layer) snow pack
-    type(filter_col_type) :: snowpack_initialized_filterc         ! column filter: columns where an explicit snow pack is initialized
     !-----------------------------------------------------------------------
 
     associate( &
@@ -321,43 +321,8 @@ contains
     ! depth
     ! ------------------------------------------------------------------------
 
-    call BuildFilter_SnowpackInitialized(bounds, num_nolakec, filter_nolakec, &
-         ! Inputs
-         snl          = col%snl(begc:endc), &
-         frac_sno_eff = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
-         snow_depth   = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
-         ! Outputs
-         snowpack_initialized_filterc = snowpack_initialized_filterc)
-
-    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
-       associate(w => water_inst%bulk_and_tracers(i))
-       call UpdateState_InitializeSnowPack(bounds, snowpack_initialized_filterc, &
-            ! Outputs
-            h2osno_no_layers     = w%waterstate_inst%h2osno_no_layers_col(begc:endc), &
-            h2osoi_ice           = w%waterstate_inst%h2osoi_ice_col(begc:endc,:), &
-            h2osoi_liq           = w%waterstate_inst%h2osoi_liq_col(begc:endc,:))
-       end associate
-    end do
-
-    call Bulk_InitializeSnowPack(bounds, snowpack_initialized_filterc, &
-         ! Inputs
-         forc_t      = atm2lnd_inst%forc_t_downscaled_col(begc:endc), &
-         snow_depth  = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
-         ! Outputs
-         snl         = col%snl(begc:endc), &
-         zi          = col%zi(begc:endc,:), &
-         dz          = col%dz(begc:endc,:), &
-         z           = col%z(begc:endc,:), &
-         t_soisno    = temperature_inst%t_soisno_col(begc:endc,:), &
-         frac_iceold = b_waterdiagnostic_inst%frac_iceold_col(begc:endc,:))
-
-    ! intitialize SNICAR variables for fresh snow:
-    call aerosol_inst%ResetFilter( &
-         num_c    = snowpack_initialized_filterc%num, &
-         filter_c = snowpack_initialized_filterc%indices)
-    call b_waterdiagnostic_inst%ResetBulkFilter( &
-         num_c    = snowpack_initialized_filterc%num, &
-         filter_c = snowpack_initialized_filterc%indices)
+    call InitializeExplicitSnowPack(bounds, num_nolakec, filter_nolakec, &
+         atm2lnd_inst, temperature_inst, aerosol_inst, water_inst)
 
     end associate
 
@@ -737,6 +702,79 @@ contains
     end do
 
   end subroutine Bulk_RemoveSnowFromThawedWetlands
+
+  !-----------------------------------------------------------------------
+  subroutine InitializeExplicitSnowPack(bounds, num_c, filter_c, &
+       atm2lnd_inst, temperature_inst, aerosol_inst, water_inst)
+    !
+    ! !DESCRIPTION:
+    ! Initialize an explicit snow pack in columns where this is warranted based on snow
+    ! depth
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)      , intent(in)    :: bounds
+    integer                , intent(in)    :: num_c          ! number of column points in column filter
+    integer                , intent(in)    :: filter_c(:)    ! column filter
+    type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
+    type(temperature_type) , intent(in)    :: temperature_inst
+    type(aerosol_type)     , intent(inout) :: aerosol_inst
+    type(water_type)       , intent(inout) :: water_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: i     ! index of water tracer or bulk
+    type(filter_col_type) :: snowpack_initialized_filterc         ! column filter: columns where an explicit snow pack is initialized
+
+    character(len=*), parameter :: subname = 'InitializeExplicitSnowPack'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc, &
+
+         b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
+         )
+
+    call BuildFilter_SnowpackInitialized(bounds, num_c, filter_c, &
+         ! Inputs
+         snl          = col%snl(begc:endc), &
+         frac_sno_eff = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+         snow_depth   = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
+         ! Outputs
+         snowpack_initialized_filterc = snowpack_initialized_filterc)
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call UpdateState_InitializeSnowPack(bounds, snowpack_initialized_filterc, &
+            ! Outputs
+            h2osno_no_layers     = w%waterstate_inst%h2osno_no_layers_col(begc:endc), &
+            h2osoi_ice           = w%waterstate_inst%h2osoi_ice_col(begc:endc,:), &
+            h2osoi_liq           = w%waterstate_inst%h2osoi_liq_col(begc:endc,:))
+       end associate
+    end do
+
+    call Bulk_InitializeSnowPack(bounds, snowpack_initialized_filterc, &
+         ! Inputs
+         forc_t      = atm2lnd_inst%forc_t_downscaled_col(begc:endc), &
+         snow_depth  = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
+         ! Outputs
+         snl         = col%snl(begc:endc), &
+         zi          = col%zi(begc:endc,:), &
+         dz          = col%dz(begc:endc,:), &
+         z           = col%z(begc:endc,:), &
+         t_soisno    = temperature_inst%t_soisno_col(begc:endc,:), &
+         frac_iceold = b_waterdiagnostic_inst%frac_iceold_col(begc:endc,:))
+
+    ! intitialize SNICAR variables for fresh snow:
+    call aerosol_inst%ResetFilter( &
+         num_c    = snowpack_initialized_filterc%num, &
+         filter_c = snowpack_initialized_filterc%indices)
+    call b_waterdiagnostic_inst%ResetBulkFilter( &
+         num_c    = snowpack_initialized_filterc%num, &
+         filter_c = snowpack_initialized_filterc%indices)
+
+    end associate
+
+  end subroutine InitializeExplicitSnowPack
 
   !-----------------------------------------------------------------------
   subroutine BuildFilter_SnowpackInitialized(bounds, num_nolakec, filter_nolakec, &
