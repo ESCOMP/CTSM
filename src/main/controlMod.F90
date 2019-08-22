@@ -298,6 +298,13 @@ contains
     runtyp(nsrContinue + 1) = 'restart'
     runtyp(nsrBranch   + 1) = 'branch '
 
+    if(use_fates)then
+       use_matrixcn = .false.
+       use_soil_matrixcn = .false.
+       is_outmatrix = .false.
+       isspinup = .false.
+    end if
+
     ! Set clumps per procoessor
 
 #if (defined _OPENMP)
@@ -515,12 +522,6 @@ contains
 
     endif   ! end of if-masterproc if-block
 
-    if(use_fates)then
-       use_matrixcn = .false.
-       use_soil_matrixcn = .false.    ! true => use cn matrix  
-       is_outmatrix = .false.     !.false.              ! true => use acc spinup
-       isspinup = .false.
-    end if
     ! ----------------------------------------------------------------------
     ! Read in other namelists for other modules
     ! ----------------------------------------------------------------------
