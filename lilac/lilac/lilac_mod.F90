@@ -346,7 +346,7 @@ module lilac_mod
         !clock = ESMF_ClockCreate(timeStep=timeStep, startTime=startTime, stopTime=stopTime, rc=rc) 
         !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_TimeSet(StartTime, yy=2000, mm=1, dd=1 , s=0, calendar=Calendar, rc=rc)
-        call ESMF_TimeSet(StopTime , yy=2000, mm=1, dd=10, s=0, calendar=Calendar, rc=rc)
+        call ESMF_TimeSet(StopTime , yy=2000, mm=03, dd=01, s=0, calendar=Calendar, rc=rc)
         call ESMF_TimeIntervalSet(TimeStep, s=3600, rc=rc)
         clock = ESMF_ClockCreate(name='lilac_drv_EClock', TimeStep=TimeStep, startTime=StartTime, RefTime=StartTime, stopTime=stopTime, rc=rc)
 

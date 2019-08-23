@@ -55,7 +55,7 @@ program demo_lilac_driver
     !endc       = 13968
 
     start_time = 1
-    end_time   = 10
+    end_time   = 50
     itime_step = 1
 
     seed_val   = 0
