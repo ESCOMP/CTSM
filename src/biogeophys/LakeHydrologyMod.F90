@@ -84,7 +84,6 @@ contains
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater
     use SnowHydrologyMod, only : ZeroEmptySnowLayers, BuildSnowFilter, SnowCapping
     use SnowHydrologyMod, only : DivideSnowLayers
-    use LakeCon         , only : lsadz
     use TopoMod         , only : topo_type
     use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
     !
@@ -198,7 +197,6 @@ contains
          qflx_dew_grnd_col    =>  b_waterflux_inst%qflx_dew_grnd_col      , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
          qflx_dew_snow_col    =>  b_waterflux_inst%qflx_dew_snow_col      , & ! Output: [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
          qflx_sub_snow_col    =>  b_waterflux_inst%qflx_sub_snow_col      , & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
-         qflx_snow_grnd       =>  b_waterflux_inst%qflx_snow_grnd_col     , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
          qflx_evap_tot_col    =>  b_waterflux_inst%qflx_evap_tot_col      , & ! Output: [real(r8) (:)   ]  pft quantity averaged to the column (assuming one pft)
          qflx_snwcp_ice       =>  b_waterflux_inst%qflx_snwcp_ice_col     , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
          qflx_snwcp_discarded_ice => b_waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Input: [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
@@ -258,8 +256,7 @@ contains
          scf_method, atm2lnd_inst, water_inst)
 
     call InitializeExplicitSnowPack(bounds, num_lakec, filter_lakec, &
-         atm2lnd_inst, temperature_inst, aerosol_inst, water_inst, &
-         additional_thickness = lsadz)
+         atm2lnd_inst, temperature_inst, aerosol_inst, water_inst)
 
     ! TODO(wjs, 2019-08-01) Eventually move this down, merging this with later tracer
     ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this

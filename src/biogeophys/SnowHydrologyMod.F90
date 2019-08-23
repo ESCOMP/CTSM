@@ -38,6 +38,7 @@ module SnowHydrologyMod
   use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
   use clm_time_manager, only : get_step_size, get_nstep
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
+  use LakeCon         , only : lsadz
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -681,8 +682,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitializeExplicitSnowPack(bounds, num_c, filter_c, &
-       atm2lnd_inst, temperature_inst, aerosol_inst, water_inst, &
-       additional_thickness)
+       atm2lnd_inst, temperature_inst, aerosol_inst, water_inst)
     !
     ! !DESCRIPTION:
     ! Initialize an explicit snow pack in columns where this is warranted based on snow
@@ -696,14 +696,6 @@ contains
     type(temperature_type) , intent(inout) :: temperature_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
     type(water_type)       , intent(inout) :: water_inst
-
-    ! Normally an explicit snow pack is initiated when snow depth exceeds 10 mm. However,
-    ! in some cases (currently, for lakes), we don't initiate an explicit snow pack until
-    ! the snow depth is somewhat greater. This is controlled by this
-    ! 'additional_thickness' parameter: A snow pack is initiated when the snow depth
-    ! exceeds the standard depth + additional_thickness.
-    real(r8), intent(in) :: additional_thickness
-
     !
     ! !LOCAL VARIABLES:
     integer  :: i     ! index of water tracer or bulk
@@ -716,15 +708,17 @@ contains
          begc => bounds%begc, &
          endc => bounds%endc, &
 
-         b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
+         b_waterflux_inst       => water_inst%waterfluxbulk_inst, &
+         b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst  &
          )
 
     call BuildFilter_SnowpackInitialized(bounds, num_c, filter_c, &
          ! Inputs
-         additional_thickness = additional_thickness, &
          snl                  = col%snl(begc:endc), &
+         lun_itype_col        = col%lun_itype(begc:endc), &
          frac_sno_eff         = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
          snow_depth           = b_waterdiagnostic_inst%snow_depth_col(begc:endc), &
+         qflx_snow_grnd       = b_waterflux_inst%qflx_snow_grnd_col(begc:endc), &
          ! Outputs
          snowpack_initialized_filterc = snowpack_initialized_filterc)
 
@@ -764,8 +758,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BuildFilter_SnowpackInitialized(bounds, num_c, filter_c, &
-       additional_thickness, &
-       snl, frac_sno_eff, snow_depth, snowpack_initialized_filterc)
+       snl, lun_itype_col, frac_sno_eff, snow_depth, qflx_snow_grnd, &
+       snowpack_initialized_filterc)
     !
     ! !DESCRIPTION:
     ! Build a column-level filter of columns where an explicit snow pack needs to be initialized
@@ -775,17 +769,12 @@ contains
     integer, intent(in) :: num_c
     integer, intent(in) :: filter_c(:)
 
-    ! Normally an explicit snow pack is initiated when snow depth exceeds 10 mm. However,
-    ! in some cases (currently, for lakes), we don't initiate an explicit snow pack until
-    ! the snow depth is somewhat greater. This is controlled by this
-    ! 'additional_thickness' parameter: A snow pack is initiated when the snow depth
-    ! exceeds the standard depth + additional_thickness.
-    real(r8), intent(in) :: additional_thickness
-
-    integer               , intent(in)  :: snl( bounds%begc: )          ! negative number of snow layers
-    real(r8)              , intent(in)  :: frac_sno_eff( bounds%begc: ) ! fraction of ground covered by snow (0 to 1)
-    real(r8)              , intent(in)  :: snow_depth( bounds%begc: )   ! snow height (m)
-    type(filter_col_type) , intent(out) :: snowpack_initialized_filterc ! column filter: columns where an explicit snow pack is initialized
+    integer               , intent(in)  :: snl( bounds%begc: )            ! negative number of snow layers
+    integer               , intent(in)  :: lun_itype_col( bounds%begc: )  ! landunit type for each column
+    real(r8)              , intent(in)  :: frac_sno_eff( bounds%begc: )   ! fraction of ground covered by snow (0 to 1)
+    real(r8)              , intent(in)  :: snow_depth( bounds%begc: )     ! snow height (m)
+    real(r8)              , intent(in)  :: qflx_snow_grnd( bounds%begc: ) ! snow on ground after interception (mm H2O/s)
+    type(filter_col_type) , intent(out) :: snowpack_initialized_filterc   ! column filter: columns where an explicit snow pack is initialized
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
@@ -795,18 +784,30 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(lun_itype_col, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snow_grnd, 1) == bounds%endc), sourcefile, __LINE__)
 
     do fc = 1, num_c
        c = filter_c(fc)
 
-       ! When the snow accumulation exceeds 10 mm, initialize snow layer
-       if (snl(c) == 0 .and. frac_sno_eff(c)*snow_depth(c) >= (0.01_r8 + additional_thickness)) then
-          snowpack_initialized(c) = .true.
+       if (lun_itype_col(c) == istdlak) then
+          ! NOTE(wjs, 2019-08-23) Note two differences from the standard case: (1)
+          ! addition of lsadz (see notes in LakeCon.F90, where this is defined, for
+          ! details); (2) inclusion of a qflx_snow_grnd(c) > 0 criteria. I'm not sure why
+          ! (2) is needed here and not for other landunits, but I'm keeping it here to
+          ! maintain answers as before.
+          snowpack_initialized(c) = ( &
+               snl(c) == 0 .and. &
+               frac_sno_eff(c)*snow_depth(c) >= (0.01_r8 + lsadz) .and. &
+               qflx_snow_grnd(c) > 0.0_r8)
        else
-          snowpack_initialized(c) = .false.
+          snowpack_initialized(c) = ( &
+               snl(c) == 0 .and. &
+               frac_sno_eff(c)*snow_depth(c) >= 0.01_r8)
        end if
+
     end do
 
     snowpack_initialized_filterc = col_filter_from_filter_and_logical_array( &
@@ -1475,9 +1476,6 @@ contains
     ! then it is combined with a neighboring element.  The subroutine
     ! clm\_combo.f90 then executes the combination of mass and energy.
     !
-    ! !USES:
-    use LakeCon          , only : lsadz
-    !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(inout) :: num_snowc       ! number of column snow points in column filter
@@ -1839,7 +1837,6 @@ contains
     !
     ! !USES:
     use clm_varcon,  only : tfrz
-    use LakeCon   ,  only : lsadz
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds

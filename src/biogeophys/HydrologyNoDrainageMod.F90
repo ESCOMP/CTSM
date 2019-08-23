@@ -125,8 +125,7 @@ contains
          temperature_inst, water_inst)
 
     call InitializeExplicitSnowPack(bounds, num_nolakec, filter_nolakec, &
-         atm2lnd_inst, temperature_inst, aerosol_inst, water_inst, &
-         additional_thickness = 0._r8)
+         atm2lnd_inst, temperature_inst, aerosol_inst, water_inst)
 
   end subroutine HandleNewSnow
 
