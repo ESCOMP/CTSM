@@ -1022,7 +1022,7 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <stream_year_last_soilm   >1997</stream_year_last_soilm>
 <model_year_align_soilm   >1997</model_year_align_soilm>
 
-<stream_fldfilename_soilm hgrid="0.9x1.25">/project/tss/swensosc/MIPs/LS3MIP/LFMIP-pdLC-SST.H2OSOI.natveg.1980-2014.MONS_climo.nc</stream_fldfilename_soilm>
+<stream_fldfilename_soilm hgrid="0.9x1.25">/project/tss/swensosc/MIPdata/LS3MIP/LFMIP-pdLC-SST.H2OSOI.natveg.1980-2014.MONS_climo.nc</stream_fldfilename_soilm>
 
 <soilm_mapalgo>none</soilm_mapalgo>
 <soilm_tintalgo>linear</soilm_tintalgo>

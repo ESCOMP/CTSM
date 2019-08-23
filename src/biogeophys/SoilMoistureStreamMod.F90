@@ -301,7 +301,7 @@ contains
             enddo
          endif      
       end do
-
+      deallocate (g_to_ig)
     end associate
 
   end subroutine PrescribedSoilMoistureInterp
