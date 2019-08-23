@@ -350,8 +350,6 @@ contains
     gsize = lni * lnj * lnk
     call mct_gsMap_init(gsMap_lnd2Dsoi_gdc2glo, gindex, mpicom, comp_id, lsize, gsize)
 
-    deallocate(gindex)
-
     ! Diagnostic output
 
     if (masterproc) then
@@ -366,6 +364,8 @@ contains
        write(iulog,*) '  lnd gsmap glo num of segs      = ',mct_gsMap_ngseg(gsMap_lnd2Dsoi_gdc2glo)
        write(iulog,*)
     end if
+
+    deallocate(gindex)
 
     call shr_sys_flush(iulog)
 

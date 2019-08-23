@@ -83,7 +83,6 @@ contains
     integer            :: nml_error                  ! namelist i/o error flag
     type(mct_ggrid)    :: dom_clm                    ! domain information 
     character(len=CL)  :: stream_fldfilename_soilm   ! ustar stream filename to read
-    character(len=CL)  :: soilm_mapalgo = 'none'     ! Mapping alogrithm
     character(len=CL)  :: soilm_tintalgo = 'linear'  ! Time interpolation alogrithm
 
     character(*), parameter    :: subName = "('soil_moisture_init')"
@@ -98,7 +97,6 @@ contains
          stream_year_first_soilm,    &
          stream_year_last_soilm,     &
          model_year_align_soilm,     &
-         soilm_mapalgo,              &
          soilm_tintalgo,            &
          stream_fldfilename_soilm
 
@@ -129,7 +127,6 @@ contains
     call shr_mpi_bcast(stream_year_last_soilm, mpicom)
     call shr_mpi_bcast(model_year_align_soilm, mpicom)
     call shr_mpi_bcast(stream_fldfilename_soilm, mpicom)
-    call shr_mpi_bcast(soilm_mapalgo, mpicom)
     call shr_mpi_bcast(soilm_tintalgo, mpicom)
 
     if (masterproc) then
@@ -140,7 +137,6 @@ contains
        write(iulog,*) '  stream_year_last_soilm   = ',stream_year_last_soilm   
        write(iulog,*) '  model_year_align_soilm   = ',model_year_align_soilm   
        write(iulog,*) '  stream_fldfilename_soilm = ',trim(stream_fldfilename_soilm)
-       write(iulog,*) '  soilm_mapalgo = ',trim(soilm_mapalgo)
        write(iulog,*) '  soilm_tintalgo = ',trim(soilm_tintalgo)
 
     endif
@@ -178,7 +174,7 @@ contains
          fldListFile=fldList,                          &
          fldListModel=fldList,                         &
          fillalgo='none',                              &
-         mapalgo=soilm_mapalgo,                        &
+         mapalgo='none',                               &
          tintalgo=soilm_tintalgo,                      &
          calendar=get_calendar(),                      &
          dtlimit = 15._r8,                             &

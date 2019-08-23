@@ -68,6 +68,16 @@
       <option name="comment"  >Include a test of this scientifically-supported compset, at a scientifically-supported resolution</option>
     </options>
   </test>
+  <test name="ERP_D_Ld3" grid="f09_g17" compset="I2000Clm50SpGs" testmods="clm/prescribed">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="cheyenne" compiler="intel" category="prealpha"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Include a test of prescribed soil-moisture, has to be at f09, should be 2000 and for SP</option>
+    </options>
+  </test>
   <test name="ERI_D_Ld9_P48x1" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/reduceOutput">
     <machines>
       <machine name="hobart" compiler="nag" category="aux_clm"/>
@@ -1655,13 +1665,20 @@
       </machine>
     </machines>
   </test>
-  <test name="SMS_D_Ln1" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/tracer_consistency">
+  <test name="SMS_D_Ld10" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/tracer_consistency">
     <machines>
 
       <machine name="hobart" compiler="nag" category="aux_clm">
         <options>
-          <option name="wallclock">0:10</option>
-          <option name="comment">Include a short tracer consistency check in debug mode. For now (while we are still working on getting the tracer consistency check to pass across a whole timestep) a single timestep test is sufficient. Eventually we want to expand this test and add some other, similar tests: see https://github.com/ESCOMP/ctsm/issues/495.</option>
+          <option name="wallclock">0:30:00</option>
+          <option name="comment">Include a tracer consistency check in debug mode.</option>
+          <!-- There is a memory growth of about 12% over this 10-day
+               test, just with nag. This may be a real issue, or it may
+               be a compiler issue. For now, since there's a chance it's
+               just a compiler issue, we're allowing this level of
+               memory leak. See
+               https://github.com/ESCOMP/ctsm/issues/763 for details. -->
+          <option name="memleak_tolerance">0.2</option>
         </options>
       </machine>
 
