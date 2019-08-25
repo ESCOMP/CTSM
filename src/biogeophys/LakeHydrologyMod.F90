@@ -80,11 +80,10 @@ contains
     use clm_varcon      , only : denh2o, denice, spval, hfus, tfrz, cpliq, cpice
     use clm_varctl      , only : iulog
     use clm_time_manager, only : get_step_size
-    use SnowHydrologyMod, only : UpdateQuantitiesForNewSnow
+    use SnowHydrologyMod, only : UpdateQuantitiesForNewSnow, InitializeExplicitSnowPack
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater
     use SnowHydrologyMod, only : ZeroEmptySnowLayers, BuildSnowFilter, SnowCapping
     use SnowHydrologyMod, only : DivideSnowLayers
-    use LakeCon         , only : lsadz
     use TopoMod         , only : topo_type
     use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
     !
@@ -156,7 +155,6 @@ contains
          
          forc_rain            =>  b_wateratm2lnd_inst%forc_rain_downscaled_col , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                        
          forc_snow            =>  b_wateratm2lnd_inst%forc_snow_downscaled_col , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                        
-         forc_t               =>  atm2lnd_inst%forc_t_downscaled_col    , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)        
          qflx_floodg          =>  b_wateratm2lnd_inst%forc_flood_grc           , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM   
          
          watsat               =>  soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)
@@ -199,7 +197,6 @@ contains
          qflx_dew_grnd_col    =>  b_waterflux_inst%qflx_dew_grnd_col      , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
          qflx_dew_snow_col    =>  b_waterflux_inst%qflx_dew_snow_col      , & ! Output: [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
          qflx_sub_snow_col    =>  b_waterflux_inst%qflx_sub_snow_col      , & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
-         qflx_snow_grnd       =>  b_waterflux_inst%qflx_snow_grnd_col     , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
          qflx_evap_tot_col    =>  b_waterflux_inst%qflx_evap_tot_col      , & ! Output: [real(r8) (:)   ]  pft quantity averaged to the column (assuming one pft)
          qflx_snwcp_ice       =>  b_waterflux_inst%qflx_snwcp_ice_col     , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
          qflx_snwcp_discarded_ice => b_waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Input: [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
@@ -258,6 +255,9 @@ contains
     call UpdateQuantitiesForNewSnow(bounds, num_lakec, filter_lakec, &
          scf_method, atm2lnd_inst, water_inst)
 
+    call InitializeExplicitSnowPack(bounds, num_lakec, filter_lakec, &
+         atm2lnd_inst, temperature_inst, aerosol_inst, water_inst)
+
     ! TODO(wjs, 2019-08-01) Eventually move this down, merging this with later tracer
     ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
     ! module, remember to also remove 'use perf_mod' at the top.
@@ -266,31 +266,6 @@ contains
        call water_inst%TracerConsistencyCheck(bounds, 'after initial snow stuff in LakeHydrology')
        call t_stopf("tracer_consistency_check")
     end if
-    do fc = 1, num_lakec
-       c = filter_lakec(fc)
-
-       ! When the snow accumulation exceeds 40 mm, initialize snow layer
-       ! Currently, the water temperature for the precipitation is simply set
-       ! as the surface air temperature
-
-       if (snl(c) == 0 .and. qflx_snow_grnd(c) > 0.0_r8 .and. snow_depth(c) >= 0.01_r8 + lsadz) then
-          snl(c) = -1
-          dz(c,0) = snow_depth(c)                       ! meter
-          z(c,0) = -0.5_r8*dz(c,0)
-          zi(c,-1) = -dz(c,0)
-          t_soisno(c,0) = min(tfrz, forc_t(c))      ! K
-          h2osoi_ice(c,0) = h2osno_no_layers(c)     ! kg/m2
-          h2osoi_liq(c,0) = 0._r8                   ! kg/m2
-          h2osno_no_layers(c) = 0._r8
-          frac_iceold(c,0) = 1._r8
-
-          ! intitialize SNICAR variables for fresh snow:
-          call aerosol_inst%Reset(column=c)
-          call b_waterdiagnostic_inst%ResetBulk(column=c)
-
-       end if
-
-    end do
 
     ! Calculate sublimation and dew, adapted from HydrologyLake and Biogeophysics2.
 
