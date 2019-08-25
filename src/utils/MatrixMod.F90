@@ -73,8 +73,9 @@ subroutine inverse(a,c,n)
   !
   do k=1, n-1
      do i=k+1,n
-        if ( aa(k,k) .eq. 0.0_r8 )then
-           call endrun( subname//"::ERROR: a diagonal element of the input array is zero" )
+        if ( aa(k,k) == 0.0_r8 )then
+           call endrun( subname//" ERROR: A diagonal element of the input matrix is zero" )
+           return
         else
            coeff=aa(i,k)/aa(k,k)
         end if
@@ -121,8 +122,8 @@ subroutine inverse(a,c,n)
       do j=n,i+1,-1
         x(i)=x(i)-U(i,j)*x(j)
       end do
-      if ( aa(k,k) .eq. 0.0_r8 )then
-         call endrun( subname//"::ERROR: a diagonal element of array U is zero" )
+      if ( u(i,i) == 0.0_r8 )then
+         ! This is already being trapped for by checking the diagonals above
       else
          x(i) = x(i)/u(i,i)
       end if

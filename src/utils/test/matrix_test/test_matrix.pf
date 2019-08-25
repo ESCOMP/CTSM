@@ -5,6 +5,7 @@ module test_matrix
   use pfunit_mod
   use MatrixMod
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestUtils, only : endrun_msg
 
   implicit none
 
@@ -100,5 +101,20 @@ contains
     @assertEqual( this%identity, result)
 
   end subroutine arb_upper_tri_matrix_multiplies_to_identity
+
+  @Test
+  subroutine error_zero_on_diagonal(this)
+    class(TestMatrix), intent(inout) :: this
+    real(r8) :: data(ndims,ndims)
+    real(r8) :: result(ndims,ndims)
+    character(len=:), allocatable :: expected_msg
+
+    data = this%identity
+    data(1,1) = 0.0_r8
+    call inverse( data, result, ndims )
+    expected_msg = endrun_msg( &
+         'inverse ERROR: A diagonal element of the input matrix is zero')
+    @assertExceptionRaised(expected_msg)
+  end subroutine error_zero_on_diagonal
 
 end module test_matrix
