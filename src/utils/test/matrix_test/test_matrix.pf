@@ -72,4 +72,33 @@ contains
 
   end subroutine scalar_multiplication_of_identity
 
+  @Test
+  subroutine arb_upper_tri_matrix_multiplies_to_identity(this)
+    use shr_const_mod, only : SHR_CONST_PI
+    class(TestMatrix), intent(inout) :: this
+    real(r8) :: data(ndims,ndims)
+    real(r8) :: calcInverse(ndims,ndims)
+    real(r8) :: result(ndims,ndims)
+    real(r8) :: rando
+    integer  :: i, j
+    intrinsic :: random_number
+
+    ! Fill an arbitrary upper triangular matrix, with non-zero diagonal
+    data = this%identity
+    do i = 1, ndims
+       call random_number(rando)
+       data(i,i) = real(i,r8) + rando
+       if ( i < ndims ) then
+          do j = i+1, ndims
+             call random_number(rando)
+             data(i,j) = real(i+j,r8) + rando
+          end do
+       end if
+    end do
+    call inverse( data, calcInverse, ndims )
+    result = matmul( data, calcInverse )
+    @assertEqual( this%identity, result)
+
+  end subroutine arb_upper_tri_matrix_multiplies_to_identity
+
 end module test_matrix
