@@ -53,12 +53,22 @@ subroutine inverse(a,c,n)
   integer i, j, k      ! Indices
   character(len=*), parameter :: subname = 'inverse'
 
+  !
   ! Verify input matrix sizes
+  !
   SHR_ASSERT((size(a,1) == n), errMsg(subname, __LINE__))
   SHR_ASSERT((size(a,2) == n), errMsg(subname, __LINE__))
   SHR_ASSERT((size(c,1) == n), errMsg(subname, __LINE__))
   SHR_ASSERT((size(c,2) == n), errMsg(subname, __LINE__))
-
+  !
+  ! Check that diagonals of input matrix aren't zero
+  !
+  do k=1,n
+     if ( a(k,k) == 0.0_r8 )then
+        call endrun( subname//" ERROR: A diagonal element of the input matrix is zero" )
+        return
+     end if
+  end do
   !
   ! step 0: initialization for matrices L and U and b
   ! Fortran 90/95 aloows such operations on matrices
@@ -73,12 +83,8 @@ subroutine inverse(a,c,n)
   !
   do k=1, n-1
      do i=k+1,n
-        if ( aa(k,k) == 0.0_r8 )then
-           call endrun( subname//" ERROR: A diagonal element of the input matrix is zero" )
-           return
-        else
-           coeff=aa(i,k)/aa(k,k)
-        end if
+        ! Already verifieid that divisor isn't zero
+        coeff=aa(i,k)/aa(k,k)
         L(i,k) = coeff
         do j=k+1,n
            aa(i,j) = aa(i,j)-coeff*aa(k,j)
@@ -122,11 +128,8 @@ subroutine inverse(a,c,n)
       do j=n,i+1,-1
         x(i)=x(i)-U(i,j)*x(j)
       end do
-      if ( u(i,i) == 0.0_r8 )then
-         ! This is already being trapped for by checking the diagonals above
-      else
-         x(i) = x(i)/u(i,i)
-      end if
+      ! Already verifieid that divisor isn't zero
+      x(i) = x(i)/u(i,i)
     end do
     ! Step 3c: fill the solutions x(n) into column k of C
     do i=1,n
