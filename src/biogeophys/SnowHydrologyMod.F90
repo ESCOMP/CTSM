@@ -24,6 +24,7 @@ module SnowHydrologyMod
   use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd
   use clm_varctl      , only : iulog, use_subgrid_fluxes
   use clm_varcon      , only : namec, h2osno_max, hfus, denice, rpi, spval, tfrz
+  use clm_varcon, only: dzmin, dzmax_l, dzmax_u
   use atm2lndType     , only : atm2lnd_type
   use AerosolMod      , only : aerosol_type
   use TemperatureType , only : temperature_type
@@ -100,20 +101,6 @@ module SnowHydrologyMod
   integer, parameter, public :: LoTmpDnsSlater2017            = 2    ! For temperature below -15C use equation from Slater 2017
   integer, parameter, public :: LoTmpDnsTruncatedAnderson1976 = 1    ! Truncate low temp. snow density from the Anderson-1976 version at -15C
 
-  ! Definition of snow pack vertical structure
-  ! Hardcoded maximum of 12 snowlayers, this is checked elsewhere (controlMod.F90)
-  ! The bottom layer has no limit on thickness, hence the last element of the dzmax_*
-  ! arrays is 'huge'.
-  real(r8), parameter :: dzmin(12) = &       ! minimum of top snow layer
-               (/ 0.010_r8, 0.015_r8, 0.025_r8, 0.055_r8, 0.115_r8, 0.235_r8, &
-                  0.475_r8, 0.955_r8, 1.915_r8, 3.835_r8, 7.675_r8, 15.355_r8 /)
-  real(r8), parameter :: dzmax_l(12) = &     ! maximum thickness of layer when no layers beneath
-               (/ 0.03_r8, 0.07_r8, 0.18_r8, 0.41_r8, 0.88_r8, 1.83_r8, &
-                  3.74_r8, 7.57_r8, 15.24_r8, 30.59_r8, 61.3_r8, huge(1._r8)  /)
-  real(r8), parameter :: dzmax_u(12) = &     ! maximum thickness of layer when layers beneath
-               (/ 0.02_r8, 0.05_r8, 0.11_r8, 0.23_r8, 0.47_r8, 0.95_r8, &
-                  1.91_r8, 3.83_r8, 7.67_r8, 15.35_r8, 30.71_r8, huge(1._r8)  /)
-
   !
   ! !PRIVATE DATA MEMBERS:
 
@@ -123,6 +110,7 @@ module SnowHydrologyMod
   ! If true, the density of new snow depends on wind speed, and there is also
   ! wind-dependent snow compaction
   logical  :: wind_dependent_snow_density                      ! If snow density depends on wind or not
+  real(r8) :: dzmin_1, dzmax_l_1, dzmax_u_1  ! namelist-defined top snow layer information
   integer  :: overburden_compaction_method = -1
   integer  :: new_snow_density            = LoTmpDnsSlater2017 ! Snow density type
   real(r8) :: upplim_destruct_metamorph   = 100.0_r8           ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
@@ -187,11 +175,15 @@ contains
          wind_dependent_snow_density, snow_overburden_compaction_method, &
          lotmp_snowdensity_method, upplim_destruct_metamorph, &
          overburden_compress_Tfactor, min_wind_snowcompact, &
-         reset_snow, reset_snow_glc, reset_snow_glc_ela
+         reset_snow, reset_snow_glc, reset_snow_glc_ela, dzmin_1, dzmax_l_1, &
+         dzmax_u_1
 
     ! Initialize options to default values, in case they are not specified in the namelist
     wind_dependent_snow_density = .false.
     snow_overburden_compaction_method = ' '
+    dzmin_1 = 0.01_r8
+    dzmax_l_1 = 0.03_r8
+    dzmax_u_1 = 0.02_r8
 
     if (masterproc) then
        unitn = getavu()
@@ -218,6 +210,9 @@ contains
     call shr_mpi_bcast (reset_snow                 , mpicom)
     call shr_mpi_bcast (reset_snow_glc             , mpicom)
     call shr_mpi_bcast (reset_snow_glc_ela         , mpicom)
+    call shr_mpi_bcast (dzmin_1, mpicom)
+    call shr_mpi_bcast (dzmax_l_1, mpicom)
+    call shr_mpi_bcast (dzmax_u_1, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -240,6 +235,19 @@ contains
        overburden_compaction_method = OverburdenCompactionMethodVionnet2012
     else
        call endrun(msg="ERROR bad snow_overburden_compaction_method name"// &
+            errMsg(sourcefile, __LINE__))
+    end if
+
+    if (dzmin_1 < 0.01_r8) then
+       call endrun(msg="ERROR dzmin_1 cannot be less than 0.01"// &
+            errMsg(sourcefile, __LINE__))
+    end if
+    if (dzmax_l_1 < 0.03_r8) then
+       call endrun(msg="ERROR dzmax_l_1 cannot be less than 0.03"// &
+            errMsg(sourcefile, __LINE__))
+    end if
+    if (dzmax_u_1 < 0.02_r8) then
+       call endrun(msg="ERROR dzmax_2_1 cannot be less than 0.02"// &
             errMsg(sourcefile, __LINE__))
     end if
 
@@ -800,12 +808,12 @@ contains
           ! maintain answers as before.
           snowpack_initialized(c) = ( &
                snl(c) == 0 .and. &
-               frac_sno_eff(c)*snow_depth(c) >= (0.01_r8 + lsadz) .and. &
+               frac_sno_eff(c)*snow_depth(c) >= (dzmin(1) + lsadz) .and. &
                qflx_snow_grnd(c) > 0.0_r8)
        else
           snowpack_initialized(c) = ( &
                snl(c) == 0 .and. &
-               frac_sno_eff(c)*snow_depth(c) >= 0.01_r8)
+               frac_sno_eff(c)*snow_depth(c) >= dzmin(1))
        end if
 
     end do
@@ -1496,7 +1504,7 @@ contains
     real(r8):: h2osno_total(bounds%begc:bounds%endc) ! total snow water (mm H2O)
     real(r8):: zwice(bounds%begc:bounds%endc)   ! total ice mass in snow
     real(r8):: zwliq (bounds%begc:bounds%endc)  ! total liquid water in snow
-    real(r8):: dzminloc(size(dzmin))            ! minimum of top snow layer (local)
+    real(r8):: dzminloc(nlevsno)  ! minimum of top snow layer (local)
     real(r8):: dtime                            !land model time step (sec)
 
     !-----------------------------------------------------------------------
@@ -1680,8 +1688,8 @@ contains
        c = filter_snowc(fc)
        l = col%landunit(c)
        if (snow_depth(c) > 0._r8) then
-          if ((ltype(l) == istdlak .and. snow_depth(c) < 0.01_r8 + lsadz ) .or. &
-               ((ltype(l) /= istdlak) .and. ((frac_sno_eff(c)*snow_depth(c) < 0.01_r8)  &
+          if ((ltype(l) == istdlak .and. snow_depth(c) < dzmin(1) + lsadz ) .or. &
+               ((ltype(l) /= istdlak) .and. ((frac_sno_eff(c)*snow_depth(c) < dzmin(1))  &
                .or. (h2osno_total(c)/(frac_sno_eff(c)*snow_depth(c)) < 50._r8)))) then
 
              snl(c) = 0
@@ -2233,6 +2241,26 @@ contains
          z   => col%z,     & ! Output: [real(r8) (:,:) ]  layer depth (m) (-nlevsno+1:nlevgrnd)
          zi  => col%zi     & ! Output: [real(r8) (:,:) ]  interface level below a "z" level (m) (-nlevsno+0:nlevgrnd)
     )
+
+    ! These three variables determine the vertical structure of the snow pack:
+    ! dzmin: minimum of top snow layer
+    ! dzmax_l: maximum thickness of layer when no layers beneath
+    ! dzmax_u: maximum thickness of layer when layers beneath
+    dzmin(1) = dzmin_1  ! set in the namelist with default or user-defined value
+    dzmax_l(1) = dzmax_l_1  ! same comment
+    dzmax_u(1) = dzmax_u_1  ! same comment
+    do j = 2, nlevsno
+       dzmin(j) = dzmax_u(j-1) * 0.5_r8
+       if (dzmin(j) <= dzmin(j-1)) then
+          dzmin(j) = (dzmin(j-1) + dzmax_u(j-1)) * 0.5_r8
+       end if
+       dzmax_u(j) = 2._r8 * dzmax_u(j-1) + 0.01_r8
+       if (j == 2) then
+          dzmax_l(j) = dzmax_u(j) + dzmax_l(j-1) - 0.01_r8
+       else
+          dzmax_l(j) = dzmax_u(j) + dzmax_l(j-1)
+       end if
+    end do
 
     loop_columns: do c = bounds%begc,bounds%endc
        l = col%landunit(c)
