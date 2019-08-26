@@ -298,13 +298,15 @@ contains
 
     if (glc_present) then
        ! from land-ice (glc) - no elevation classes 
-       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask'               )
-       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask_coupled_fluxes')
+       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask'               ) ! mask of where cism is running
+       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask_coupled_fluxes') ! 
        
        ! from land-ice (glc) - fields for all glc->lnd elevation classes (1:glc_nec) plus bare land (index 0)
        call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_ice_covered_elev', ungridded_lbound=1, ungridded_ubound=glc_nec+1)
        call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_topo_elev'       , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
-       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flgg_hflx_elev'     , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
+
+       !current not used - but could be used in the future
+       !call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flgg_hflx_elev'     , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
     end if
 
     ! Now advertise import fields
