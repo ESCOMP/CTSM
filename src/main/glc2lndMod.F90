@@ -310,10 +310,10 @@ contains
     class(glc2lnd_type), intent(inout) :: this
     type(bounds_type)  , intent(in)    :: bounds
     logical  , intent(in) :: glc_present                              ! true if running with a non-stub glc model
-    real(r8) , intent(in) :: frac_grc(bounds%begg:,:)               ! ice-covered field for each elevation class
-    real(r8) , intent(in) :: topo_grc(bounds%begg:,:)               ! topo field for each elevation class
-    real(r8) , intent(in) :: hflx_grc(bounds%begg:,:)               ! heat flux field for each elevation class
-    real(r8) , intent(in) :: icemask_grc(bounds%begg: )               ! icemask field
+    real(r8) , intent(in) :: frac_grc(bounds%begg:,0:)                ! ice-covered field for each elevation class
+    real(r8) , intent(in) :: topo_grc(bounds%begg:,0:)                ! topo field for each elevation class
+    real(r8) , intent(in) :: hflx_grc(bounds%begg:,0:)                ! heat flux field for each elevation class
+    real(r8) , intent(in) :: icemask_grc(bounds%begg:)                ! icemask field
     real(r8) , intent(in) :: icemask_coupled_fluxes_grc(bounds%begg:) ! icemask_coupled_fluxes field
     !
     ! !LOCAL VARIABLES:

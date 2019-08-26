@@ -42,7 +42,7 @@ module clm_driver
   use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
   use CanopyHydrologyMod     , only : CanopyInterceptionAndThroughfall
   use SnowHydrologyMod       , only : HandleNewSnow
-  use SurfaceWaterMod        , only : FracH2oSfc
+  use SurfaceWaterMod        , only : UpdateFracH2oSfc
   use LakeHydrologyMod       , only : LakeHydrology
   use SoilWaterMovementMod   , only : use_aquifer_layer
   !
@@ -424,13 +424,9 @@ contains
             water_inst)
 
        if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after downscale_forcings')
-             call t_stopf("tracer_consistency_check")
-          end if
+          call t_startf("tracer_consistency_check")
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after downscale_forcings')
+          call t_stopf("tracer_consistency_check")
        end if
 
        ! Update filters that depend on variables set in clm_drv_init
@@ -460,13 +456,9 @@ contains
        end if
 
        if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after CalcAndWithdrawIrrigationFluxes')
-             call t_stopf("tracer_consistency_check")
-          end if
+          call t_startf("tracer_consistency_check")
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after CalcAndWithdrawIrrigationFluxes')
+          call t_stopf("tracer_consistency_check")
        end if
 
        ! ============================================================================
@@ -485,29 +477,22 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             patch, col, canopystate_inst, atm2lnd_inst, water_inst)
 
-       ! TODO(wjs, 2019-05-16) Remove this temporary check. We'll instead have one after
-       ! FracH2oSfc.
-       if (water_inst%DoConsistencyCheck()) then
-          ! BUG(wjs, 2018-09-05, ESCOMP/ctsm#498) Eventually do tracer consistency checks
-          ! every time step
-          if (get_nstep() == 0) then
-             call t_startf("tracer_consistency_check")
-             call water_inst%TracerConsistencyCheck(bounds_clump, 'after CanopyInterceptionAndThroughfall')
-             call t_stopf("tracer_consistency_check")
-          end if
-       end if
-
        call HandleNewSnow(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            scf_method, &
             atm2lnd_inst, temperature_inst, &
-            aerosol_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterfluxbulk_inst)
+            aerosol_inst, water_inst)
 
        ! update surface water fraction (this may modify frac_sno)
-       call FracH2oSfc(bounds_clump, &
-            filter(nc)%num_nolakec, filter(nc)%nolakec, &
-            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst)
+       call UpdateFracH2oSfc(bounds_clump, &
+            filter(nc)%num_soilc, filter(nc)%soilc, &
+            water_inst)
+
+       if (water_inst%DoConsistencyCheck()) then
+          call t_startf("tracer_consistency_check")
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after FracH2oSfc')
+          call t_stopf("tracer_consistency_check")
+       end if
 
        call t_stopf('hydro1')
 
@@ -789,7 +774,7 @@ contains
             water_inst%waterdiagnosticbulk_inst, soilhydrology_inst, &
             saturated_excess_runoff_inst, &
             infiltration_excess_runoff_inst, &
-            aerosol_inst, canopystate_inst, soil_water_retention_curve, topo_inst)
+            aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst)
 
        ! The following needs to be done after HydrologyNoDrainage (because it needs
        ! waterfluxbulk_inst%qflx_snwcp_ice_col), but before HydrologyDrainage (because
@@ -829,9 +814,8 @@ contains
             filter(nc)%num_lakep, filter(nc)%lakep,                                          &
             filter(nc)%num_lakesnowc, filter(nc)%lakesnowc,                                  &
             filter(nc)%num_lakenosnowc, filter(nc)%lakenosnowc,                              &
-            atm2lnd_inst, temperature_inst, soilstate_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, water_inst%waterbalancebulk_inst, &
-            water_inst%waterfluxbulk_inst, water_inst%wateratm2lndbulk_inst, &
+            scf_method, water_inst, &
+            atm2lnd_inst, temperature_inst, soilstate_inst, &
             energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
 
        !  Calculate column-integrated aerosol masses, and
@@ -1145,6 +1129,19 @@ contains
     ! Determine gridcell averaged properties to send to atm
     ! ============================================================================
 
+    ! BUG(wjs, 2019-07-12, ESCOMP/ctsm#762) Remove this block once above code is fully tracerized
+    ! We need this call here so that tracer values are consistent with bulk in lnd2atm;
+    ! without it, we get an error in CheckSnowConsistency.
+    if (water_inst%DoConsistencyCheck()) then
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1,nclumps
+          call get_clump_bounds(nc, bounds_clump)
+          call water_inst%ResetCheckedTracers(bounds_clump)
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after pre-lnd2atm reset')
+       end do
+       !$OMP END PARALLEL DO
+    end if
+
     call t_startf('lnd2atm')
     ! COMPILER_BUG(wjs, 2016-02-24, pgi 15.10) In principle, we should be able to make
     ! this function call inline in the CanopyFluxes argument list. However, with pgi
@@ -1291,6 +1288,19 @@ contains
        end if
        call t_stopf('clm_drv_io')
 
+    end if
+
+    ! BUG(wjs, 2019-07-12, ESCOMP/ctsm#762) Remove this block once above code is fully tracerized
+    ! (I'm not sure if we need this in addition to the call before lnd2atm, but it
+    ! doesn't hurt to have this extra call to ResetCheckedTracers for now.)
+    if (water_inst%DoConsistencyCheck()) then
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1,nclumps
+          call get_clump_bounds(nc, bounds_clump)
+          call water_inst%ResetCheckedTracers(bounds_clump)
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after end-of-loop reset')
+       end do
+       !$OMP END PARALLEL DO
     end if
 
   end subroutine clm_drv

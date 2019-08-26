@@ -187,14 +187,12 @@ contains
 
     ! Dry Deposition velocities from land - ALSO initialize drydep here
     call seq_drydep_readnl("drv_flds_in", drydep_nflds)
-    if (n_drydep .ne. drydep_nflds) call shr_sys_abort('ERROR: drydep field count mismatch')
-    if (n_drydep > 0) then
+    if (drydep_nflds > 0) then
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_ddvel', ungridded_lbound=1, ungridded_ubound=drydep_nflds)
     end if
     call seq_drydep_init( )
 
     ! MEGAN VOC emissions fluxes from land
-    megan_nflds=0
     call shr_megan_readnl('drv_flds_in', megan_nflds)
     if (shr_megan_mechcomps_n .ne. megan_nflds) call shr_sys_abort('ERROR: megan field count mismatch')
     if (shr_megan_mechcomps_n > 0) then
@@ -1233,6 +1231,7 @@ contains
 
        ! get field pointer
        if (present(ungridded_index)) then
+          write(cvalue,*) ungridded_index
           call ESMF_LogWrite(trim(subname)//": setting export for "//trim(fldname)//" index "//trim(cvalue), &
                ESMF_LOGMSG_INFO)
           call state_getfldptr(state, trim(fldname), fldptr2d=fldptr2d, rc=rc)
@@ -1249,24 +1248,13 @@ contains
 
        ! determine output array
        if (present(ungridded_index)) then
-          if (gridToFieldMap == 1) then
-             fldptr2d(:,ungridded_index) = 0._r8
-             do g = bounds%begg, bounds%endg
-                n = g - bounds%begg + 1
-                fldptr2d(n,ungridded_index) = input(g)
-             end do
-             if (present(minus)) then
-                fldptr2d(:,ungridded_index) = -fldptr2d(:,ungridded_index)
-             end if
-          else if (gridToFieldMap == 2) then
-             fldptr2d(ungridded_index,:) = 0._r8
-             do g = bounds%begg, bounds%endg
-                n = g - bounds%begg + 1
-                fldptr2d(ungridded_index,n) = input(g)
-             end do
-             if (present(minus)) then
-                fldptr2d(ungridded_index,:) = -fldptr2d(ungridded_index,:)
-             end if
+          fldptr2d(ungridded_index,:) = 0._r8
+          do g = bounds%begg, bounds%endg
+             n = g - bounds%begg + 1
+             fldptr2d(ungridded_index,n) = input(g)
+          end do
+          if (present(minus)) then
+             fldptr2d(ungridded_index,:) = -fldptr2d(ungridded_index,:)
           end if
        else
           fldptr1d(:) = 0._r8

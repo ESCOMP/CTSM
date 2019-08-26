@@ -1682,7 +1682,12 @@ sub process_namelist_inline_logic {
   #######################################################################
   # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
   #######################################################################
-  setup_logic_hydrology_switches($nl);
+  setup_logic_hydrology_switches($opts, $nl_flags, $definition, $defaults, $nl);
+
+  #######################################################################
+  # namelist group: scf_swenson_lawrence_2012_inparm                    #
+  #######################################################################
+  setup_logic_scf_SwensonLawrence2012($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: clm_initinterp_inparm #
@@ -2089,10 +2094,31 @@ sub setup_logic_soilstate {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct',
-              'structure'=>$nl_flags->{'structure'});
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
               'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
+
+  my $var1 = "soil_layerstruct_predefined";
+  my $var2 = "soil_layerstruct_userdefined";
+  my $var3 = "soil_layerstruct_userdefined_nlevsoi";
+  my $soil_layerstruct_predefined = $nl->get_value($var1);
+  my $soil_layerstruct_userdefined = $nl->get_value($var2);
+  my $soil_layerstruct_userdefined_nlevsoi = $nl->get_value($var3);
+
+  if (defined($soil_layerstruct_userdefined)) {
+    if (defined($soil_layerstruct_predefined)) {
+      $log->fatal_error("You have set both soil_layerstruct_userdefined and soil_layerstruct_predefined in your namelist; model cannot determine which to use");
+    }
+    if (not defined($soil_layerstruct_userdefined_nlevsoi)) {
+      $log->fatal_error("You have set soil_layerstruct_userdefined and NOT set soil_layerstruct_userdefined_nlevsoi in your namelist; both MUST be set");
+    }
+  } else {
+    if (defined($soil_layerstruct_userdefined_nlevsoi)) {
+      $log->fatal_error("You have set soil_layerstruct_userdefined_nlevsoi and NOT set soil_layerstruct_userdefined in your namelist; EITHER set both OR neither; in the latter case soil_layerstruct_predefined will be assigned a default value");
+    } else {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct_predefined',
+                  'structure'=>$nl_flags->{'structure'});
+    }
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -2720,16 +2746,22 @@ sub setup_logic_hydrology_switches {
   #
   # Check on Switches for hydrology
   #
-  my ($nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  my $subgrid    = $nl->get_value('subgridflag' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_subgrid_fluxes');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_cover_fraction_method');
+  my $subgrid    = $nl->get_value('use_subgrid_fluxes' );
   my $origflag   = $nl->get_value('origflag'    );
   my $h2osfcflag = $nl->get_value('h2osfcflag'  );
-  if ( $origflag == 1 && $subgrid == 1 ) {
-    $log->fatal_error("if origflag is ON, subgridflag can NOT also be on!");
+  my $scf_method = $nl->get_value('snow_cover_fraction_method');
+  if ( $origflag == 1 && &value_is_true($subgrid) ) {
+    $log->fatal_error("if origflag is ON, use_subgrid_fluxes can NOT also be on!");
   }
-  if ( $h2osfcflag == 1 && $subgrid != 1 ) {
-    $log->fatal_error("if h2osfcflag is ON, subgridflag can NOT be off!");
+  if ( $h2osfcflag == 1 && ! &value_is_true($subgrid) ) {
+    $log->fatal_error("if h2osfcflag is ON, use_subgrid_fluxes can NOT be off!");
+  }
+  if ( remove_leading_and_trailing_quotes($scf_method) eq 'NiuYang2007' && &value_is_true($subgrid) ) {
+     $log->fatal_error("snow_cover_fraction_method NiuYang2007 is incompatible with use_subgrid_fluxes");
   }
   # Test bad configurations
   my $lower   = $nl->get_value( 'lower_boundary_condition'  );
@@ -3498,8 +3530,6 @@ sub setup_logic_snowpack {
               'structure'=>$nl_flags->{'structure'});
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'h2osno_max',
               'structure'=>$nl_flags->{'structure'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'int_snow_max');
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_melt_glcmec');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'wind_dependent_snow_density');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_overburden_compaction_method');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lotmp_snowdensity_method');
@@ -3518,6 +3548,26 @@ sub setup_logic_snowpack {
      }
   } else {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'overburden_compress_tfactor');
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_scf_SwensonLawrence2012 {
+   # Options related to the SwensonLawrence2012 snow cover fraction method
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'int_snow_max');
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_melt_glcmec');
+  }
+  else {
+     if (defined($nl->get_value('int_snow_max'))) {
+        $log->fatal_error('int_snow_max is set, but only applies for snow_cover_fraction_method=SwensonLawrence2012');
+     }
+     if (defined($nl->get_value('n_melt_glcmec'))) {
+        $log->fatal_error('n_melt_glcmec is set, but only applies for snow_cover_fraction_method=SwensonLawrence2012');
+     }
   }
 }
 
@@ -3667,6 +3717,9 @@ sub write_output_files {
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
   push @groups, "clm_canopy_inparm";
+  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
+     push @groups, "scf_swenson_lawrence_2012_inparm";
+  }
 
   my $outfile;
   $outfile = "$opts->{'dir'}/lnd_in";
