@@ -107,8 +107,8 @@ module CLMFatesInterfaceMod
    use FatesHistoryInterfaceMod, only : fates_history_interface_type
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
-   use ChecksBalancesMod     , only : SummarizeNetFluxes, FATES_BGC_Carbon_BalanceCheck
    use EDTypesMod            , only : ed_patch_type
+   use EDTypesMod            , only : num_elements
    use FatesInterfaceMod     , only : hlm_numlevgrnd
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
@@ -123,7 +123,7 @@ module CLMFatesInterfaceMod
    use EDCanopyStructureMod  , only : canopy_summarization, update_hlm_dynamics
    use FatesPlantRespPhotosynthMod, only : FatesPlantRespPhotosynthDrive
    use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
-   use EDPhysiologyMod       , only : flux_into_litter_pools
+   use EDPhysiologyMod       , only : FluxIntoLitterPools
    use FatesPlantHydraulicsMod, only : hydraulics_drive
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
@@ -688,7 +688,7 @@ contains
       
       ! call subroutine to aggregate fates litter output fluxes and 
       ! package them for handing across interface
-      call flux_into_litter_pools(this%fates(nc)%nsites, &
+      call FluxIntoLitterPools(this%fates(nc)%nsites, &
             this%fates(nc)%sites,  &
             this%fates(nc)%bc_in,  &
             this%fates(nc)%bc_out)
@@ -709,11 +709,14 @@ contains
          nld_si = this%fates(nc)%bc_in(s)%nlevdecomp
 
          soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nld_si) = &
-               this%fates(nc)%bc_out(s)%FATES_c_to_litr_lab_c_col(1:nld_si)
+              this%fates(nc)%bc_out(s)%litt_flux_lab_c_si(1:nld_si)
+
          soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nld_si) = &
-               this%fates(nc)%bc_out(s)%FATES_c_to_litr_cel_c_col(1:nld_si)
+              this%fates(nc)%bc_out(s)%litt_flux_cel_c_si(1:nld_si)
+
          soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si) = &
-               this%fates(nc)%bc_out(s)%FATES_c_to_litr_lig_c_col(1:nld_si)
+              this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nld_si)
+
       end do
 
 
@@ -1226,11 +1229,12 @@ contains
            call get_clump_bounds(nc, bounds_clump)
 
            do s = 1,this%fates(nc)%nsites
-              call init_site_vars(this%fates(nc)%sites(s))
+              call init_site_vars(this%fates(nc)%sites(s),this%fates(nc)%bc_in(s) )
               call zero_site(this%fates(nc)%sites(s))
            end do
            
-           call set_site_properties(this%fates(nc)%nsites, this%fates(nc)%sites)
+           call set_site_properties(this%fates(nc)%nsites, &
+                                    this%fates(nc)%sites)
 
            ! ----------------------------------------------------------------------------
            ! Initialize Hydraulics Code if turned on
@@ -1301,7 +1305,7 @@ contains
         end if
      end do
      !$OMP END PARALLEL DO
-
+     
    end subroutine init_coldstart
 
    ! ======================================================================================
@@ -1878,30 +1882,13 @@ contains
          this%fates(nc)%bc_in(s)%tot_somc     = totsomc(c)
          this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
       end do
-
-      is_beg_day = is_beg_curr_day()
-      dtime = get_step_size()
-      nstep = get_nstep()
-
-      call SummarizeNetFluxes(this%fates(nc)%nsites,  &
-                             this%fates(nc)%sites,    &
-                             this%fates(nc)%bc_in,    &
-                             is_beg_day)
       
-
-      call FATES_BGC_Carbon_Balancecheck(this%fates(nc)%nsites,  &
-                                         this%fates(nc)%sites, &
-                                         this%fates(nc)%bc_in,  &
-                                         is_beg_day,            &
-                                         dtime, nstep)
-      
-
       ! Update history variables that track these variables
       call this%fates_hist%update_history_cbal(nc, &
-                               this%fates(nc)%nsites,  &
-                               this%fates(nc)%sites)
+            this%fates(nc)%nsites,  &
+            this%fates(nc)%sites,   &
+            this%fates(nc)%bc_in)
 
-      
     end associate
  end subroutine wrap_bgc_summary
 
@@ -1954,7 +1941,8 @@ contains
    use FatesIOVariableKindMod, only : site_fuel_r8, site_cwdsc_r8, site_scag_r8
    use FatesIOVariableKindMod, only : site_scagpft_r8, site_agepft_r8
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
-   use FatesIOVariableKindMod, only : site_height_r8
+   use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
+   use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -2075,151 +2063,29 @@ contains
                               default=trim(vdefault),                       &
                               set_lake=0._r8,set_urb=0._r8)
 
-        case(patch_ground_r8)
+        case(patch_ground_r8, patch_size_pft_r8)
+
            d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
            dim2name = this%fates_hist%dim_bounds(d_index)%name
            call hist_addfld2d(fname=trim(vname),units=trim(vunits),         & ! <--- addfld2d
                               type2d=trim(dim2name),                        & ! <--- type2d
                               avgflag=trim(vavgflag),long_name=trim(vlong), &
                               ptr_patch=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
+                              default=trim(vdefault))
            
-        case(patch_size_pft_r8)
+        case(site_ground_r8, site_size_pft_r8, site_size_r8, site_pft_r8, &
+             site_age_r8, site_height_r8, site_fuel_r8, site_cwdsc_r8, &
+             site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, & 
+             site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
+             site_elcwd_r8, site_elage_r8)
+
            d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
            dim2name = this%fates_hist%dim_bounds(d_index)%name
            call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
                               type2d=trim(dim2name),                        &
                               avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_patch=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_ground_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,      & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_size_pft_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,      & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_size_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_pft_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_age_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_height_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_fuel_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_cwdsc_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_can_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_cnlf_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_cnlfpft_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_scag_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_scagpft_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)
-        case(site_agepft_r8)
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
-           call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
-                              type2d=trim(dim2name),                        &
-                              avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
-                              default=trim(vdefault),                       &
-                              set_lake=0._r8,set_urb=0._r8)           
+                              ptr_col=this%fates_hist%hvars(ivar)%r82d,     & 
+                              default=trim(vdefault))
 
         case default
            write(iulog,*) 'A FATES iotype was created that was not registerred'
@@ -2257,6 +2123,27 @@ contains
        this%fates(nc)%bc_in(s)%z_sisl(1:nlevsoil)     = col%z(c,1:nlevsoil)
        this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp) = &
              dzsoi_decomp(1:nlevdecomp)
+
+       if (use_vertsoilc) then
+          do j=1,nlevsoil
+             this%fates(nc)%bc_in(s)%decomp_id(j) = j
+             ! Check to make sure that dz = dz_decomp_sisl when vertical soil dynamics
+             ! are active
+             if(abs(this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)-this%fates(nc)%bc_in(s)%dz_sisl(j))>1.e-10_r8)then
+                write(iulog,*) 'when vertical soil decomp dynamics are on'
+                write(iulog,*) 'fates assumes that the decomposition depths equal the soil depths'
+                write(iulog,*) 'layer: ',j
+                write(iulog,*) 'dz_decomp_sisl(j): ',this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)
+                write(iulog,*) 'dz_sisl(j): ',this%fates(nc)%bc_in(s)%dz_sisl(j)
+                call endrun(msg=errMsg(sourcefile, __LINE__))
+             end if
+          end do
+       else
+          do j=1,nlevsoil
+             this%fates(nc)%bc_in(s)%decomp_id(j) = 1
+          end do
+       end if
+
     end do
 
     return
@@ -2442,10 +2329,11 @@ contains
    use FatesIODimensionsMod, only : fates_bounds_type
    use FatesInterfaceMod, only : nlevsclass, nlevage
    use FatesInterfaceMod, only : nlevheight
-   use EDtypesMod, only : nfsc, ncwd
-   use EDtypesMod, only : nlevleaf, nclmax
+   use EDtypesMod,        only : nfsc
+   use FatesLitterMod,    only : ncwd
+   use EDtypesMod,        only : nlevleaf, nclmax
    use FatesInterfaceMod, only : numpft_fates => numpft
-   use clm_varpar, only : nlevgrnd
+   use clm_varpar,        only : nlevgrnd
 
    implicit none
 
@@ -2502,6 +2390,19 @@ contains
    
    fates%cnlfpft_begin = 1
    fates%cnlfpft_end = nlevleaf * nclmax * numpft_fates
+
+   fates%elem_begin = 1
+   fates%elem_end   = num_elements
+   
+   fates%elpft_begin = 1
+   fates%elpft_end   = num_elements * numpft_fates
+
+   fates%elcwd_begin = 1
+   fates%elcwd_end   = num_elements * ncwd
+
+   fates%elage_begin = 1
+   fates%elage_end   = num_elements * nlevage
+
    
  end subroutine hlm_bounds_to_fates_bounds
 
