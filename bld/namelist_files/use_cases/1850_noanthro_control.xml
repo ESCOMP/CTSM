@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<use_case_desc>Simulate current conditions without ANY anthropogenic influnces</use_case_desc>
+
+<sim_year>PtVg</sim_year>
+
+<sim_year_range>constant</sim_year_range>
+
+<irrigate>.false.</irrigate>
+
+<stream_year_first_ndep phys="clm4_0" bgc="cn"   >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_0" bgc="cn"   >1850</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm4_0" bgc="cndv" >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_0" bgc="cndv" >1850</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm4_5" use_cn=".true." >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_5" use_cn=".true." >1850</stream_year_last_ndep>
+
+<stream_year_first_ndep phys="clm5_0" use_cn=".true." >1850</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm5_0" use_cn=".true." >1850</stream_year_last_ndep>
+
+<ndep_taxmode            phys="clm5_0" use_cn=".true." >cycle</ndep_taxmode>
+<ndep_varlist            phys="clm5_0" use_cn=".true." >NDEP_month</ndep_varlist>
+
+<stream_year_first_popdens phys="clm4_0" cnfireson=".true." >1925</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm4_0" cnfireson=".true." >1925</stream_year_last_popdens>
+
+<stream_year_first_popdens phys="clm4_5" cnfireson=".true." >1925</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm4_5" cnfireson=".true." >1925</stream_year_last_popdens>
+
+<stream_year_first_popdens phys="clm5_0" cnfireson=".true." >1925</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm5_0" cnfireson=".true." >1925</stream_year_last_popdens>
+
+<!-- zero population density file -->
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true."
+>lnd/clm2/firedata/clmforc.no_anthro_zero_hdm_1x1_simyr1925_181113.nc</stream_fldfilename_popdens>
+<popdensmapalgo use_cn=".true.">nn</popdensmapalgo>
+
+<stream_year_first_urbantv phys="clm5_0"  >1850</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm5_0"  >1850</stream_year_last_urbantv>
+
+<!-- Turn calculation of human stress indices all the way off to save some CPU -->
+<calc_human_stress_indices     >NONE</calc_human_stress_indices>
+
+<!-- Turn off URBAN heating and A/C, and turn off harvesting of forests -->
+<urban_hac                     >OFF</urban_hac>
+<do_harvest                    >.false.</do_harvest>
+
+<!-- Set contants having to do with fire due to human influences to zero (human ignition counts, and crop fires -->
+<pot_hmn_ign_counts_alpha      >0.0</pot_hmn_ign_counts_alpha>
+<cropfire_a1                   >0.0</cropfire_a1>
+
+</namelist_defaults>

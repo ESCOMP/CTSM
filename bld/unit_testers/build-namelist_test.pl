@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 943;
+my $ntests = 820;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 597;
+   $ntests += 498;
 }
 plan( tests=>$ntests );
 
@@ -195,7 +195,7 @@ print "==================================================\n";
 $cfiles->copyfiles( "default", $mode );
 &cleanup();
 # Simple test -- run all the list options
-foreach my $options ( "clm_demand", "rcp",      "res", 
+foreach my $options ( "clm_demand", "ssp_rcp",      "res", 
                       "sim_year",   "use_case" ) {
    &make_env_run();
    eval{ system( "$bldnml -${options} list > $tempfile 2>&1 " ); };
@@ -218,7 +218,7 @@ print "==================================================\n";
 
 # Exercise a bunch of options
 my $options = "-co2_ppmv 250 ";
-   $options .= " -res 0.9x1.25 -rcp 2.6 -envxml_dir .";
+   $options .= " -res 0.9x1.25 -ssp_rcp SSP1-2.6 -envxml_dir .";
 
    &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
@@ -269,12 +269,12 @@ $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 
 print "\n===============================================================================\n";
-print "Test irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
+print "Test irrig, verbose, clm_demand, ssp_rcp, test, sim_year, use_case, l_ncpl\n";
 print "=================================================================================\n";
 
-# irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
+# irrig, verbose, clm_demand, ssp_rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
+foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
@@ -283,7 +283,7 @@ foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6",
                      ) {
    my $file = $startfile;
    &make_env_run();
-   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+   eval{ system( "$bldnml -res 0.9x1.25 -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
    $cfiles->shownmldiff( "default", $mode );
@@ -311,16 +311,17 @@ print "==============================================================\n";
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 foreach my $options ( 
-                      "-bgc bgc -use_case 1850-2100_rcp2.6_transient -namelist '&a start_ymd=20100101/'",
-                      "-bgc sp  -use_case 1850-2100_rcp4.5_transient -namelist '&a start_ymd=18501223/'",
-                      "-bgc bgc -use_case 1850-2100_rcp6_transient -namelist '&a start_ymd=20701029/'",
+                      "-bgc bgc -use_case 1850-2100_SSP1-2.6_transient -namelist '&a start_ymd=20100101/'",
+                      "-bgc sp  -use_case 1850-2100_SSP2-4.5_transient -namelist '&a start_ymd=18501223/'",
+                      "-bgc bgc -use_case 1850-2100_SSP3-7.0_transient -namelist '&a start_ymd=20701029/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
-                      "-bgc cn  -use_case 1850-2100_rcp8.5_transient -namelist '&a start_ymd=19201023/'",
+                      "-bgc cn  -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19201023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
+                      "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
                      ) {
    my $file = $startfile;
    &make_env_run();
-   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+   eval{ system( "$bldnml -res 0.9x1.25 -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
    $cfiles->shownmldiff( "default", $mode );
@@ -386,6 +387,21 @@ my %failtest = (
                                      namelst=>"use_crop=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
+                                   },
+     "reseed without CN"         =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"reseed_dead_plants=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "dribble_crphrv w/o CN"     =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "dribble_crphrv w/o crop"   =>{ options=>" -envxml_dir . -bgc cn -no-crop",
+                                     namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
                                    },
      "CNDV with flanduse_timeseries"         =>{ options=>" -envxml_dir .",
                                      namelst=>"flanduse_timeseries='my_flanduse_timeseries_file.nc'",
@@ -848,6 +864,16 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
+     "noanthro_w_crop"            =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -crop -use_case 1850_noanthro_control",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "noanthro_w_irrig"           =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control",
+                                     namelst=>"irrigate=T",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
      "spdotransconflict"          =>{ options=>"-envxml_dir . -bgc sp -use_case 20thC_transient",
                                      namelst=>"do_transient_pfts=T,do_transient_crops=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1053,11 +1079,17 @@ foreach my $res ( @resolutions ) {
              $res eq "ne4np4"      ||
              $res eq "2.5x3.33"    ||
              $res eq "0.23x0.31"   ||
+             $res eq "0.47x0.63"   ||
              $res eq "94x192"      ||
              $res eq "8x16"        ||
              $res eq "32x64"       ||
              $res eq "128x256"     ||
+             $res eq "360x720cru"  ||
              $res eq "512x1024" ) {
+      next;
+   # Resolutions not supported on release branch
+   } elsif ( $res eq "ne120np4"    ||
+             $res eq "conus_30_x8" ) {
       next;
    }
 
@@ -1086,7 +1118,7 @@ print "==================================================\n";
 
 $mode = "-phys clm4_5";
 system( "../configure -s $mode" );
-my @resolutions = ( "4x5", "10x15", "ne30np4", "ne120np4", "ne16np4", "1.9x2.5", "0.9x1.25" );
+my @resolutions = ( "4x5", "10x15", "ne30np4", "ne16np4", "1.9x2.5", "0.9x1.25" );
 my @regional;
 my $nlbgcmode = "bgc";
 my $mode = "clm45-$nlbgcmode";
@@ -1173,7 +1205,7 @@ print "==================================================\n";
 # Check for crop resolutions
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
-my @crop_res = ( "1x1_numaIA", "1x1_smallvilleIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne30np4", "ne120np4" );
+my @crop_res = ( "1x1_numaIA", "1x1_smallvilleIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne30np4" );
 foreach my $res ( @crop_res ) {
    $options = "-bgc bgc -crop -res $res -envxml_dir .";
    &make_env_run();
@@ -1209,10 +1241,10 @@ print "==================================================\n";
 $mode = "-phys clm4_5";
 system( "../configure -s $mode" );
 my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" );
-my @use_cases = ( "1850-2100_rcp2.6_transient",
-                  "1850-2100_rcp4.5_transient",
-                  "1850-2100_rcp6_transient",
-                  "1850-2100_rcp8.5_transient",
+my @use_cases = ( "1850-2100_SSP1-2.6_transient",
+                  "1850-2100_SSP2-4.5_transient",
+                  "1850-2100_SSP3-7.0_transient",
+                  "1850-2100_SSP5-8.5_transient",
                   "1850_control",
                   "2000_control",
                   "2010_control",
@@ -1239,7 +1271,7 @@ foreach my $res ( @glc_res ) {
 # Transient 20th Century simulations
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
-my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne120np4", "10x15" );
+my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 10;
 foreach my $res ( @tran_res ) {
@@ -1259,11 +1291,12 @@ foreach my $res ( @tran_res ) {
    }
    &cleanup();
 }
-# Transient rcp scenarios
+# Transient ssp_rcp scenarios that work
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
-my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
-foreach my $usecase ( "1850_control", "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient", "1850-2100_rcp6_transient", "1850-2100_rcp8.5_transient" ) {
+my @tran_res = ( "0.9x1.25", "1.9x2.5", "10x15" );
+foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient",
+                      "1850-2100_SSP2-4.5_transient" ) {
    foreach my $res ( @tran_res ) {
       $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
       &make_env_run();
@@ -1282,6 +1315,16 @@ foreach my $usecase ( "1850_control", "1850-2100_rcp2.6_transient", "1850-2100_r
       &cleanup();
    }
 }
+# The SSP's that fail...
+my $res = "0.9x1.25";
+foreach my $usecase ( "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transient", "1850-2100_SSP1-1.9_transient",
+                      "1850-2100_SSP4-6.0_transient" ) {
+      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
+      &make_env_run();
+      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+      isnt( $?, 0, $usecase );
+      system( "cat $tempfile" );
+}
 
 print "\n==================================================\n";
 print "Test clm4.5/clm5.0 resolutions \n";
@@ -1294,7 +1337,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
                      "-bgc sp -envxml_dir . -vichydro", "-bgc bgc -dynamic_vegetation", "-bgc bgc -clm_demand flanduse_timeseries -sim_year 1850-2000",
                      "-bgc bgc -envxml_dir . -namelist '&a use_c13=.true.,use_c14=.true.,use_c14_bombspike=.true./'" );
   foreach my $clmopts ( @clmoptions ) {
-     my @clmres = ( "ne120np4", "10x15", "0.9x1.25", "1.9x2.5" );
+     my @clmres = ( "10x15", "0.9x1.25", "1.9x2.5" );
      foreach my $res ( @clmres ) {
         $options = "-res $res -envxml_dir . ";
         &make_env_run( );
@@ -1315,7 +1358,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
   my @clmoptions = ( "-bgc bgc -envxml_dir .", 
                      "-bgc sp -envxml_dir .", );
   foreach my $clmopts ( @clmoptions ) {
-     my @clmres = ( "ne16np4", "360x720cru" );
+     my @clmres = ( "ne16np4" );
      foreach my $res ( @clmres ) {
         $options = "-res $res -envxml_dir . ";
         &make_env_run( );

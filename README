@@ -121,6 +121,10 @@ tools/ncl_scripts  ------------ Directory of NCL and perl scripts to do various
                                 tasks. Most notably to plot perturbation error growth
                                 testing and to extract regional information from
                                 global datasets for single-point/regional simulations.
+tools/contrib ----------------- Miscellansous useful scripts for pre and post processing
+                                as well as case management of CTSM. These scripts are
+                                contributed by users and may not be as well tested or
+                                supported as other tools.
 
 
 =============================================================================================

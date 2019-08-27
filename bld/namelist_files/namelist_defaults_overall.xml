@@ -13,14 +13,26 @@ determine default values for namelists.
 -->
 
 <!-- Default CLM start-type -->
-<clm_start_type phys="clm4_5"                   >startup</clm_start_type>
-<clm_start_type phys="clm5_0"                   >startup</clm_start_type>
+<clm_start_type phys="clm4_5" sim_year="1850"   >startup</clm_start_type>
+<clm_start_type phys="clm5_0" sim_year="1850"   >startup</clm_start_type>
+<clm_start_type phys="clm4_5" sim_year="2000"   >startup</clm_start_type>
+<clm_start_type phys="clm5_0" sim_year="2000"   >startup</clm_start_type>
+<clm_start_type phys="clm4_5"                   >arb_ic</clm_start_type>
+<clm_start_type phys="clm5_0"                   >arb_ic</clm_start_type>
 <clm_start_type phys="clm5_0" use_cndv=".true." >arb_ic</clm_start_type>
 <clm_start_type phys="clm4_5" use_cndv=".true." >arb_ic</clm_start_type>
 <clm_start_type phys="clm5_0" use_fates=".true.">arb_ic</clm_start_type>
 <clm_start_type phys="clm4_5" use_fates=".true.">arb_ic</clm_start_type>
 <clm_start_type phys="clm4_0"                   >arb_ic</clm_start_type>
 <clm_start_type bgc_spinup="on"                 >cold</clm_start_type> <!-- CLM 4.5 -->
+
+<clm_start_type sim_year_range="1850-2100">arb_ic</clm_start_type>
+
+
+<!-- For transient cases, turn on demand to set flanduse_timeseries -->
+<clm_demand sim_year_range="1850-2000">flanduse_timeseries</clm_demand>
+<clm_demand sim_year_range="1850-2100">flanduse_timeseries</clm_demand>
+
 
 <!-- Default location of {csmdata} -->
 <csmdata>/fs/cgd/csm/inputdata</csmdata>
@@ -52,7 +64,7 @@ determine default values for namelists.
 <note mode="ext_cesm"   >0</note>
 
 <!-- Default representative concentration pathway for future scenarios -->
-<rcp>-999.9</rcp>
+<ssp_rcp>hist</ssp_rcp>
 
 <!-- Default irrigation -->
 <irrig>.false.</irrig>

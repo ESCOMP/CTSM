@@ -71,7 +71,7 @@ Testing:
 Summary of Answer changes:
 -------------------------
 
-Baseline version for comparison:
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
 
 Changes answers relative to baseline:
 
@@ -84,6 +84,9 @@ Changes answers relative to baseline:
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
 
   URL for LMWG diagnostics output for new climate:
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+  (This will likely be true if the LII tests failed)
 
 Detailed list of changes:
 ------------------------

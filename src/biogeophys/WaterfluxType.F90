@@ -432,7 +432,7 @@ contains
     this%qflx_ev_snow_patch(begp:endp) = spval
     call hist_addfld1d (fname='QSNOEVAP', units='mm/s',  &
          avgflag='A', long_name='evaporation from snow', &
-         ptr_patch=this%qflx_tran_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
+         ptr_patch=this%qflx_ev_snow_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
     this%qflx_snowindunload_patch(begp:endp) = spval
     call hist_addfld1d (fname='QSNO_WINDUNLOAD', units='mm/s',  &

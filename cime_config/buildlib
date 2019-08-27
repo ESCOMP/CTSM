@@ -81,6 +81,7 @@ def _main_func():
                          os.path.join(lnd_root,"src","fates","biogeophys"),
                          os.path.join(lnd_root,"src","fates","biogeochem"),
                          os.path.join(lnd_root,"src","fates","fire"),
+                         os.path.join(lnd_root,"src","fates","parteh"),
                          os.path.join(lnd_root,"src","utils"),
                          os.path.join(lnd_root,"src","cpl")]
                 with open(filepath_file, "w") as filepath:
