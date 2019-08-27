@@ -197,7 +197,7 @@ module CLMFatesInterfaceMod
    ! developer will at least question its usage (RGK)
    private :: hlm_bounds_to_fates_bounds
 
-   ! ThGetAndSetFatesTimeis function is used to get the current time from the CIME 
+   ! The GetAndSetFatesTimeis function is used to get the current time from the CIME 
    ! time procedures and then set to the fates global time variables during restart, 
    ! init_coldstart, and dynamics_driv function calls
    private :: GetAndSetTime
@@ -1152,9 +1152,6 @@ contains
                                                                 this%fates(nc)%sites, &
                                                                 this%fates(nc)%bc_out)
                     
-               ! Set the FATES global time and date variables
-               !call GetAndSetTime                                                                
-
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
                ! ------------------------------------------------------------------------
@@ -1195,6 +1192,10 @@ contains
      integer :: j
      integer :: s
      integer :: c
+
+
+     ! Set the FATES global time and date variables
+     call GetAndSetTime                                                                
 
      nclumps = get_proc_clumps()
 
