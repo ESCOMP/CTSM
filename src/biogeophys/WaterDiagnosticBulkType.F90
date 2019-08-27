@@ -60,7 +60,7 @@ module WaterDiagnosticBulkType
 
      ! Fractions
      real(r8), pointer :: frac_sno_col           (:)   ! col fraction of ground covered by snow (0 to 1)
-     real(r8), pointer :: frac_sno_eff_col       (:)   ! col fraction of ground covered by snow (0 to 1)
+     real(r8), pointer :: frac_sno_eff_col       (:)   ! col fraction of ground covered by snow (0 to 1) (note: this can be 1 even if there is no snow, but should be ignored in the no-snow case)
      real(r8), pointer :: frac_iceold_col        (:,:) ! col fraction of ice relative to the tot water (new) (-nlevsno+1:nlevgrnd) 
      real(r8), pointer :: frac_h2osfc_col        (:)   ! col fractional area with surface water greater than zero
      real(r8), pointer :: frac_h2osfc_nosnow_col (:)   ! col fractional area with surface water greater than zero (if no snow present)
