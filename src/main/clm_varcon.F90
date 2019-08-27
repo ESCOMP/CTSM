@@ -122,11 +122,13 @@ module clm_varcon
 
   real(r8) :: thk_bedrock = 3.0_r8  ! thermal conductivity of 'typical' saturated granitic rock 
                                     ! (Clauser and Huenges, 1995)(W/m/K)
-  real(r8) :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000) !scs
+  real(r8) :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
   real(r8), parameter :: zmin_bedrock = 0.4_r8 ! minimum soil depth [m]
 
   real(r8), parameter :: aquifer_water_baseline = 5000._r8 ! baseline value for water in the unconfined aquifer [mm]
+    real(r8), parameter :: c_to_b = 2.0_r8         ! conversion between mass carbon and total biomass (g biomass /g C)
 
+  
   !!! C13
   real(r8), parameter :: preind_atm_del13c = -6.0   ! preindustrial value for atmospheric del13C
   real(r8), parameter :: preind_atm_ratio = SHR_CONST_PDB + (preind_atm_del13c * SHR_CONST_PDB)/1000.0  ! 13C/12C

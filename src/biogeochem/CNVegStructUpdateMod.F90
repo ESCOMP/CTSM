@@ -42,7 +42,8 @@ contains
     use pftconMod        , only : ntrp_corn, nirrig_trp_corn
     use pftconMod        , only : nsugarcane, nirrig_sugarcane
     use pftconMod        , only : pftcon
-    use clm_varctl       , only : spinup_state
+    use clm_varctl       , only : spinup_state, use_biomass_heat_storage
+    use clm_varcon       , only : c_to_b
     use clm_time_manager , only : get_rad_step_size
     !
     ! !ARGUMENTS:
@@ -97,7 +98,9 @@ contains
          dwood              =>  pftcon%dwood                            , & ! Input:  density of wood (gC/m^3)                          
          ztopmx             =>  pftcon%ztopmx                           , & ! Input:
          laimx              =>  pftcon%laimx                            , & ! Input:
-         
+         nstem              =>  pftcon%nstem                            , & ! Input:  Tree number density (#ind/m2)
+         fbw                =>  pftcon%fbw                              , & ! Input:  Fraction of fresh biomass that is water        
+       
          allom2             =>  dgv_ecophyscon%allom2                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
          allom3             =>  dgv_ecophyscon%allom3                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
 
@@ -110,6 +113,7 @@ contains
 
          leafc              =>  cnveg_carbonstate_inst%leafc_patch      , & ! Input:  [real(r8) (:) ] (gC/m2) leaf C                                    
          deadstemc          =>  cnveg_carbonstate_inst%deadstemc_patch  , & ! Input:  [real(r8) (:) ] (gC/m2) dead stem C                               
+         livestemc          =>  cnveg_carbonstate_inst%livestemc_patch  , & ! Input:  [real(r8) (:) ] (gC/m2) live stem C
 
          farea_burned       =>  cnveg_state_inst%farea_burned_col       , & ! Input:  [real(r8) (:) ] F. Li and S. Levis                                 
          htmx               =>  cnveg_state_inst%htmx_patch             , & ! Output: [real(r8) (:) ] max hgt attained by a crop during yr (m)          
@@ -120,6 +124,8 @@ contains
          ! *** Key Output from CN***
          tlai               =>  canopystate_inst%tlai_patch             , & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow      
          tsai               =>  canopystate_inst%tsai_patch             , & ! Output: [real(r8) (:) ] one-sided stem area index, no burying by snow      
+         stem_biomass       => canopystate_inst%stem_biomass_patch      , & ! Output: [real(r8) (:) ] Aboveground stem biomass  (kg/m**2)
+         leaf_biomass       => canopystate_inst%leaf_biomass_patch      , & ! Output: [real(r8) (:) ] Aboveground leave biomass (kg/m**2)   
          htop               =>  canopystate_inst%htop_patch             , & ! Output: [real(r8) (:) ] canopy top (m)                                     
          hbot               =>  canopystate_inst%hbot_patch             , & ! Output: [real(r8) (:) ] canopy bottom (m)                                  
          elai               =>  canopystate_inst%elai_patch             , & ! Output: [real(r8) (:) ] one-sided leaf area index with burying by snow    
@@ -205,13 +211,27 @@ contains
                   !correct height calculation if doing accelerated spinup
                   if (spinup_state == 2) then
                     htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper * taper)/ &
-                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
+                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
                   else
                     htop(p) = ((3._r8 * deadstemc(p) * taper * taper)/ &
-                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
+                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
                   end if
 
                endif
+
+               ! calculate vegetation physiological parameters used in biomass heat storage
+               if (use_biomass_heat_storage) then
+                  ! Assumes fbw the same for leaves and stems
+                  leaf_biomass(p) = max(0.0025_r8,leafc(p)) &
+                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
+
+                  stem_biomass(p) = (deadstemc(p) + livestemc(p)) &
+                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
+                  
+                  if (spinup_state == 2) then
+                     stem_biomass(p) = 10._r8 * stem_biomass(p)
+                  end if
+               end if
 
                ! Peter Thornton, 5/3/2004
                ! Adding test to keep htop from getting too close to forcing height for windspeed

@@ -23,7 +23,7 @@ module readParamsMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine readParameters (nutrient_competition_method, photosyns_inst, canopyflux_inst)
+  subroutine readParameters (nutrient_competition_method, photosyns_inst)
     !
     ! ! USES:
     use CNSharedParamsMod                 , only : CNParamsReadShared
@@ -43,11 +43,9 @@ contains
     use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
     use clm_varctl,                         only : NLFilename_in
     use PhotosynthesisMod                 , only : photosyns_type
-    use CanopyFluxesMod                   , only : canopyflux_type
     !
     ! !ARGUMENTS:
     type(photosyns_type)                   , intent(in) :: photosyns_inst
-    type(canopyflux_type)                     , intent(in) :: canopyflux_inst
     class(nutrient_competition_method_type), intent(in) :: nutrient_competition_method
     !
     ! !LOCAL VARIABLES:
@@ -99,8 +97,6 @@ contains
     ! Biogeophysics
     !
     call photosyns_inst%ReadParams( ncid )
-    call canopyflux_inst%ReadParams( ncid )
-
 
     !
     call ncd_pio_closefile(ncid)
