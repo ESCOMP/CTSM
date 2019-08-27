@@ -257,7 +257,7 @@ contains
          ulrad(p)  = 0._r8
          hs_canopy(p) = 0._r8
          eflx_sh_stem(p) = 0._r8
- 
+
          ur(p)    = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
          dth(p)   = thm(p)-t_grnd(c)
          dqh(p)   = forc_q(c) - qg(c)
@@ -312,6 +312,8 @@ contains
 
             num_iter(p) = iter
          end do
+
+         num_iter(p) = iter
 
       end do ! end stability iteration
 

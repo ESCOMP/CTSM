@@ -101,7 +101,6 @@ contains
     call photosyns_inst%ReadParams( ncid )
     call canopyflux_inst%ReadParams( ncid )
 
-
     !
     call ncd_pio_closefile(ncid)
 

@@ -38,6 +38,7 @@ module initGridCellsMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private set_landunit_veg_compete
+  private set_landunit_veg_noncompete
   private set_landunit_wet_lake
   private set_landunit_ice_mec
   private set_landunit_crop_noncompete
@@ -62,7 +63,7 @@ contains
     use subgridWeightsMod , only : compute_higher_order_weights
     use landunit_varcon   , only : istsoil, istwet, istdlak, istice_mec
     use landunit_varcon   , only : isturb_tbd, isturb_hd, isturb_md, istcrop
-    use clm_varctl        , only : use_fates
+    use clm_varctl        , only : use_fates,use_individual_pft_soil_column
     use shr_const_mod     , only : SHR_CONST_PI
     !
     ! !ARGUMENTS:
@@ -73,6 +74,7 @@ contains
     integer :: nclumps              ! number of clumps on this processor
     type(bounds_type) :: bounds_proc
     type(bounds_type) :: bounds_clump
+
     !------------------------------------------------------------------------
 
     ! Notes about how this routine is arranged, and its implications for the arrangement
@@ -132,11 +134,17 @@ contains
        li = bounds_clump%begl-1
        ci = bounds_clump%begc-1
        pi = bounds_clump%begp-1
+        
 
        ! Determine naturally vegetated landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
-          call set_landunit_veg_compete(               &
-               ltype=istsoil, gi=gdc, li=li, ci=ci, pi=pi)
+          if(use_individual_pft_soil_column) then
+                call set_landunit_veg_noncompete(       &
+                     ltype=istsoil, gi=gdc, li=li, ci=ci, pi=pi)
+          else       
+                call set_landunit_veg_compete(               &
+                     ltype=istsoil, gi=gdc, li=li, ci=ci, pi=pi)
+          end if
        end do
 
        ! Determine crop landunit
@@ -246,7 +254,7 @@ contains
     ! Set decomposition properties
 
     call subgrid_get_info_natveg(gi, &
-          npatches=npatches, ncols=ncols, nlunits=nlunits)
+          npatches=npatches, ncols=ncols, nlunits=nlunits, sesc=.FALSE.)
     wtlunit2gcell = wt_lunit(gi, ltype)
 
     nlunits_added = 0
@@ -274,6 +282,70 @@ contains
     SHR_ASSERT(npatches_added == npatches, errMsg(sourcefile, __LINE__))
 
   end subroutine set_landunit_veg_compete
+
+  !------------------------------------------------------------------------
+  subroutine set_landunit_veg_noncompete (ltype, gi, li, ci, pi)
+    !
+    ! !DESCRIPTION: 
+    ! Initialize vegetated landunit without competition (called if sesc switch
+    ! is true)
+    !
+    ! !USES
+    use clm_instur, only : wt_lunit, wt_nat_patch
+    use subgridMod, only : subgrid_get_info_natveg, natveg_patch_exists
+    use clm_varpar, only : numpft, maxpatch_pft, natpft_lb, natpft_ub
+    !
+    ! !ARGUMENTS:
+    integer , intent(in)    :: ltype             ! landunit type
+    integer , intent(in)    :: gi                ! gridcell index
+    integer , intent(inout) :: li                ! landunit index
+    integer , intent(inout) :: ci                ! column index
+    integer , intent(inout) :: pi                ! patch index
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: m                                ! index
+    integer  :: npatches                         ! number of patches in landunit
+    integer  :: ncols
+    integer  :: nlunits
+    integer  :: npatches_added                   ! number of patches actually added
+    integer  :: ncols_added                      ! number of columns actually added
+    integer  :: nlunits_added                    ! number of landunits actually added
+    real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
+    !------------------------------------------------------------------------
+
+    ! Set decomposition properties
+
+    call subgrid_get_info_natveg(gi, &
+          npatches=npatches, ncols=ncols, nlunits=nlunits, sesc=.TRUE.)
+    wtlunit2gcell = wt_lunit(gi, ltype)
+
+    nlunits_added = 0
+    ncols_added = 0
+    npatches_added = 0
+
+    if (nlunits > 0) then
+       call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
+       nlunits_added = nlunits_added + 1
+       
+
+       do m = natpft_lb,natpft_ub
+          if (natveg_patch_exists(gi, m)) then
+             ! Assume one column for each vegetation patch
+             call add_column(ci=ci, li=li, ctype=1, wtlunit=wt_nat_patch(gi,m))
+             ncols_added = ncols_added + 1
+
+             call add_patch(pi=pi, ci=ci, ptype=m, wtcol=1.0_r8)
+             npatches_added = npatches_added + 1
+          end if
+       end do
+    end if
+
+    SHR_ASSERT(nlunits_added == nlunits, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(ncols_added == ncols, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(npatches_added == npatches, errMsg(sourcefile, __LINE__))
+
+  end subroutine set_landunit_veg_noncompete
+
   
   !------------------------------------------------------------------------
   subroutine set_landunit_wet_lake (ltype, gi, li, ci, pi)
