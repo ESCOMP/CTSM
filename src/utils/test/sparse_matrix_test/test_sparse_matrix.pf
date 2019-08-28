@@ -1,0 +1,29 @@
+module test_sparse_matrix
+
+  ! Tests of Sparse Matrix Multiply module
+
+  use pfunit_mod
+  use SPMMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestUtils, only : endrun_msg
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestSparseMatrix
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestSparseMatrix
+
+contains
+
+  subroutine setUp(this)
+    class(TestSparseMatrix), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestSparseMatrix), intent(inout) :: this
+  end subroutine tearDown
+
+end module test_sparse_matrix
