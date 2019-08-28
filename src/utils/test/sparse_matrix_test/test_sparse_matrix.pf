@@ -11,19 +11,69 @@ module test_sparse_matrix
 
   @TestCase
   type, extends(TestCase) :: TestSparseMatrix
+     type(sparse_matrix_type) :: SM_identity
+     type(diag_matrix_type)   :: DM_identity
+     type(vector_type)        :: V_identity
+     integer                  :: num_unit
+     integer, allocatable     :: filter_u(:)
    contains
      procedure :: setUp
      procedure :: tearDown
   end type TestSparseMatrix
 
+  integer, parameter :: ndims = 10
+  integer, parameter :: begu = 1, endu = 2
+
 contains
 
   subroutine setUp(this)
     class(TestSparseMatrix), intent(inout) :: this
+
+    integer :: i
+    real(r8) :: Mdiag(begu:endu,ndims)
+
+    this%num_unit = endu - begu + 1
+    allocate( this%filter_u(this%num_unit) )
+    do i = begu, endu
+       this%filter_u(i) = i
+    end do
+    call this%SM_identity%InitSM( ndims, begu, endu )
+    call this%SM_identity%SetValueA_diag( this%num_unit,this%filter_u, 1.0_r8 )
+    call this%DM_identity%InitDM( ndims, begu, endu )
+    Mdiag = 1.0_r8
+    call this%DM_identity%SetValueDM(begu,endu,this%num_unit,this%filter_u,Mdiag)
+    call this%V_identity%InitV( ndims, begu, endu )
+    call this%V_identity%SetValueV_scaler( this%num_unit,this%filter_u, 1.0_r8 )
   end subroutine setUp
 
   subroutine tearDown(this)
     class(TestSparseMatrix), intent(inout) :: this
+
+    call this%V_identity%ReleaseV( )
+    deallocate( this%filter_u )
   end subroutine tearDown
+
+  @Test
+  subroutine SM_Identity_times_ArbDiagMatrix_is_self( this )
+    use shr_const_mod, only: SHR_CONST_PI
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(diag_matrix_type) :: Kmatrix
+    real(r8) :: Mdiag(ndims)
+    integer :: i
+
+    ! Set up an arbitrary diagonal matrix
+    call Kmatrix%InitDM( ndims, begu, endu )
+    do i = 1, ndims
+      Mdiag(i) = real(i,r8)*SHR_CONST_PI
+    end do
+    call Kmatrix%SetValueDM( begu, endu, this%num_unit,this%filter_u, Mdiag )
+    ! Multiply by the identity matrix already stored
+    call this%SM_identity%SPMM_AK( this%num_unit,this%filter_u, Kmatrix )
+    ! Result (now stored in identity matrix) should now be the same
+    @assertEqual( Kmatrix%DM, this%SM_identity%M(:,:this%SM_identity%NE) )
+
+  end subroutine SM_Identity_times_ArbDiagMatrix_is_self
+
 
 end module test_sparse_matrix
