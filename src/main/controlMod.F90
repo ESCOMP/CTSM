@@ -129,7 +129,6 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
     integer :: dtime                ! Integer time-step
-    integer :: override_nsrest      ! If want to override the startup type sent from driver
     logical :: use_init_interp      ! Apply initInterp to the file given by finidat
     !------------------------------------------------------------------------
 
@@ -202,7 +201,7 @@ contains
 
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, &
-         create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
+         create_crop_landunit, nsegspc, co2_ppmv, &
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
@@ -301,8 +300,6 @@ contains
     clump_pproc = 1
 #endif
 
-    override_nsrest = nsrest
-
     use_init_interp = .false.
 
     if (masterproc) then
@@ -355,17 +352,6 @@ contains
              hist_nhtfrq(i) = nint(-hist_nhtfrq(i)*SHR_CONST_CDAY/(24._r8*dtime))
           endif
        end do
-
-       ! Override start-type (can only override to branch (3)  and only 
-       ! if the driver is a startup type
-       if ( override_nsrest /= nsrest )then
-           if ( override_nsrest /= nsrBranch .and. nsrest /= nsrStartup )then
-              call endrun(msg= ' ERROR: can ONLY override clm start-type ' // &
-                   'to branch type and ONLY if driver is a startup type'// &
-                   errMsg(sourcefile, __LINE__))
-           end if
-           call clm_varctl_set( nsrest_in=override_nsrest )
-       end if
 
        if (maxpatch_glcmec <= 0) then
           call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &

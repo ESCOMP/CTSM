@@ -624,12 +624,6 @@ baseline proportion of nitrogen allocated for electron transport (J)
 Time step (seconds)
 </entry>
 
-<entry id="override_nsrest" type="integer"  category="clm_restart" 
-       group="clm_inparm" valid_values="3">
-Override the start type from the driver: it can only be
-set to 3 meaning branch.
-</entry>
-
 <entry id="use_fates" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the FATES model

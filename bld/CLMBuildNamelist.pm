@@ -1834,19 +1834,6 @@ sub setup_logic_start_type {
   my $var = "start_type";
   my $drv_start_type = $nl->get_value($var);
   my $my_start_type  = $nl_flags->{'clm_start_type'};
-  my $nsrest         = $nl->get_value('override_nsrest');
-
-  if ( defined($nsrest) ) {
-    if ( $nsrest == 0 ) { $my_start_type = "startup";  }
-    if ( $nsrest == 1 ) { $my_start_type = "continue"; }
-    if ( $nsrest == 3 ) { $my_start_type = "branch";   }
-    if ( "$my_start_type" eq "$drv_start_type" ) {
-      $log->fatal_error("no need to set override_nsrest to same as start_type.");
-    }
-    if ( "$drv_start_type" !~ /startup/ ) {
-      $log->fatal_error("can NOT set override_nsrest if driver is NOT a startup type.");
-    }
-  }
 
   if ( $my_start_type =~ /branch/ ) {
     if (not defined $nl->get_value('nrevsn')) {
