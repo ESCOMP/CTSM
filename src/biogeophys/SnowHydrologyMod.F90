@@ -970,6 +970,8 @@ contains
     real(r8) :: vol_ice(bounds%begc:bounds%endc,-nlevsno+1:0)      ! partial volume of ice lens in layer
     real(r8) :: eff_porosity(bounds%begc:bounds%endc,-nlevsno+1:0) ! effective porosity = porosity - vol_ice
     real(r8) :: mss_liqice(bounds%begc:bounds%endc,-nlevsno+1:0)   ! mass of liquid+ice in a layer
+    real(r8) :: h2osoi_ice_orig                                    ! h2osoi_ice at this point before state update
+    real(r8) :: h2osoi_liq_orig                                    ! h2osoi_liq at this point before state update
     !-----------------------------------------------------------------------
 
     associate( &
@@ -1017,26 +1019,49 @@ contains
        c = filter_snowc(fc)
        l=col%landunit(c)
 
+       h2osoi_ice_orig = h2osoi_ice(c,snl(c)+1)
        wgdif = h2osoi_ice(c,snl(c)+1) &
             + frac_sno_eff(c) * (qflx_dew_snow(c) - qflx_sub_snow(c)) * dtime
        h2osoi_ice(c,snl(c)+1) = wgdif
-       if (wgdif < 0._r8) then
+
+       ! Truncate small remainders of h2osoi_ice (which could be positive or negative) to
+       ! zero, then make sure we haven't ended up with significantly negative h2osoi_ice.
+       if (abs(h2osoi_ice(c,snl(c)+1)) < 1.e-13_r8 * h2osoi_ice_orig) then
           h2osoi_ice(c,snl(c)+1) = 0._r8
-          h2osoi_liq(c,snl(c)+1) = h2osoi_liq(c,snl(c)+1) + wgdif
        end if
+       if (h2osoi_ice(c,snl(c)+1) < 0._r8) then
+          write(iulog,*) "ERROR: At start of SnowWater, h2osoi_ice has gone significantly negative"
+          write(iulog,*) "c, snl(c) = ", c, snl(c)
+          write(iulog,*) "h2osoi_ice_orig     = ", h2osoi_ice_orig
+          write(iulog,*) "h2osoi_ice          = ", h2osoi_ice(c,snl(c)+1)
+          write(iulog,*) "frac_sno_eff        = ", frac_sno_eff(c)
+          write(iulog,*) "qflx_dew_snow*dtime = ", qflx_dew_snow(c)*dtime
+          write(iulog,*) "qflx_sub_snow*dtime = ", qflx_sub_snow(c)*dtime
+          call endrun("At start of SnowWater, h2osoi_ice has gone significantly negative")
+       end if
+
+       h2osoi_liq_orig = h2osoi_liq(c,snl(c)+1)
        h2osoi_liq(c,snl(c)+1) = h2osoi_liq(c,snl(c)+1) +  &
             frac_sno_eff(c) * (qflx_liq_grnd(c) + qflx_dew_grnd(c) &
             - qflx_evap_grnd(c)) * dtime
 
-       ! if negative, reduce deeper layer's liquid water content sequentially
-       if(h2osoi_liq(c,snl(c)+1) < 0._r8) then
-          do j = snl(c)+1, 1
-             wgdif=h2osoi_liq(c,j)
-             if (wgdif >= 0._r8) exit
-             h2osoi_liq(c,j) = 0._r8
-             h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + wgdif
-          enddo
+       ! Truncate small remainders of h2osoi_liq (which could be positive or negative) to
+       ! zero, then make sure we haven't ended up with significantly negative h2osoi_liq.
+       if (abs(h2osoi_liq(c,snl(c)+1)) < 1.e-13_r8 * h2osoi_liq_orig) then
+          h2osoi_liq(c,snl(c)+1) = 0._r8
        end if
+       if (h2osoi_liq(c,snl(c)+1) < 0._r8) then
+          write(iulog,*) "ERROR: At start of SnowWater, h2osoi_liq has gone significantly negative"
+          write(iulog,*) "c, snl(c) = ", c, snl(c)
+          write(iulog,*) "h2osoi_liq_orig      = ", h2osoi_liq_orig
+          write(iulog,*) "h2osoi_liq           = ", h2osoi_liq(c,snl(c)+1)
+          write(iulog,*) "frac_sno_eff         = ", frac_sno_eff(c)
+          write(iulog,*) "qflx_liq_grnd*dtime  = ", qflx_liq_grnd(c)*dtime
+          write(iulog,*) "qflx_dew_grnd*dtime  = ", qflx_dew_grnd(c)*dtime
+          write(iulog,*) "qflx_evap_grnd*dtime = ", qflx_evap_grnd(c)*dtime
+          call endrun("At start of SnowWater, h2osoi_liq has gone significantly negative")
+       end if
+
     end do
 
     ! Porosity and partial volume
