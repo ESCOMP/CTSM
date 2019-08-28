@@ -112,8 +112,8 @@ contains
     integer  , intent(in)    :: ub                 ! upper bound of data
     integer  , intent(in)    :: lev_lb             ! lower bound of level dimension of data
     integer  , intent(in)    :: lev(lb:)           ! for each point, which level to work on
-    real(r8) , intent(in)    :: data_baseline(lb:, lev_lb:) ! baseline version of data, used to define "relatively close to 0"
-    real(r8) , intent(inout) :: data(lb:, lev_lb:)          ! data to operate on
+    real(r8) , intent(in)    :: data_baseline(lb:) ! baseline version of data, used to define "relatively close to 0" (note that this is only 1-d, giving baselines for the appropriate level for each point)
+    real(r8) , intent(inout) :: data(lb:, lev_lb:) ! data to operate on
     !
     ! !LOCAL VARIABLES:
     integer :: fn  ! index into filter
@@ -125,11 +125,10 @@ contains
     SHR_ASSERT_FL((ubound(lev, 1) == ub), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(data_baseline, 1) == ub), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(data, 1) == ub), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(data_baseline, 2) == ubound(data, 2)), sourcefile, __LINE__)
 
     do fn = 1, num_f
        n = filter_f(fn)
-       if (abs(data(n, lev(n))) < rel_epsilon * abs(data_baseline(n, lev(n)))) then
+       if (abs(data(n, lev(n))) < rel_epsilon * abs(data_baseline(n))) then
           data(n, lev(n)) = 0._r8
        end if
     end do

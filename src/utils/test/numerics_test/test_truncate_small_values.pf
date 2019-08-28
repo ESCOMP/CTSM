@@ -129,7 +129,7 @@ contains
   @Test
   subroutine tsvol_truncates_correct_points(this)
     class(TestTSV), intent(inout) :: this
-    real(r8) :: data_baseline(3,1)
+    real(r8) :: data_baseline(3)
     real(r8) :: data(3,1)
     real(r8) :: data_saved(3,1)
     integer :: num_f
@@ -139,7 +139,7 @@ contains
     call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
 
     ! point 2 should be truncated, others should not be truncated
-    data_baseline(:,1) = [1._r8, 1._r8, 1._r8]
+    data_baseline(:) = [1._r8, 1._r8, 1._r8]
     data(:,1) = [0.5_r8, 1.e-16_r8, -1._r8]
     data_saved = data
 
@@ -164,7 +164,7 @@ contains
     ! Make sure we're just relying on relative rather than absolute magnitudes by
     ! confirming that it can truncate a value with large magnitude.
     class(TestTSV), intent(inout) :: this
-    real(r8) :: data_baseline(1,1)
+    real(r8) :: data_baseline(1)
     real(r8) :: data(1,1)
     integer :: num_f
     integer, allocatable :: filter_f(:)
@@ -172,7 +172,7 @@ contains
     call setup_single_veg_patch(pft_type = 1)
     call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
 
-    data_baseline(1,1) = 1.e30_r8
+    data_baseline(1) = 1.e30_r8
     data(1,1) = 1.e10_r8
 
     call truncate_small_values_one_lev( &
@@ -193,7 +193,7 @@ contains
     ! Make sure we're just relying on relative rather than absolute magnitudes by
     ! confirming that it does not truncate a value with small magnitude.
     class(TestTSV), intent(inout) :: this
-    real(r8) :: data_baseline(1,1)
+    real(r8) :: data_baseline(1)
     real(r8) :: data(1,1)
     integer :: num_f
     integer, allocatable :: filter_f(:)
@@ -201,7 +201,7 @@ contains
     call setup_single_veg_patch(pft_type = 1)
     call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
 
-    data_baseline(1,1) = 1.e-30_r8
+    data_baseline(1) = 1.e-30_r8
     data(1,1) = 1.e-31_r8
 
     call truncate_small_values_one_lev( &
@@ -228,7 +228,7 @@ contains
     class(TestTSV), intent(inout) :: this
     ! Note that, to make sure the code handles non-1 level lower bound, we start level at
     ! 11 rather than 1
-    real(r8) :: data_baseline(3, 11:12)
+    real(r8) :: data_baseline(3)
     real(r8) :: data(3, 11:12)
     real(r8) :: data_saved(3, 11:12)
     integer  :: lev(3)
@@ -240,7 +240,7 @@ contains
 
     ! All points are small enough to be truncated, but truncation should only happen at
     ! the specified levels.
-    data_baseline(:,:) = 1._r8
+    data_baseline(:) = 1._r8
     data(:, 11) = [1.e-16_r8, 2.e-16_r8, 3.e-16_r8]
     data(:, 12) = [4.e-16_r8, 5.e-16_r8, 6.e-16_r8]
     data_saved = data
