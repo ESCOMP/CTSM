@@ -161,6 +161,7 @@ OPTIONS
      -dynamic_vegetation      Toggle for dynamic vegetation model. (default is off)
                               (can ONLY be turned on when BGC type is 'cn' or 'bgc')
                               This turns on the namelist variable: use_cndv
+                              (Deprecated, this will be removed)
      -fire_emis               Produce a fire_emis_nl namelist that will go into the
                               "drv_flds_in" file for the driver to pass fire emissions to the atm.
                               (Note: buildnml copies the file for use by the driver)
@@ -1250,6 +1251,8 @@ sub setup_cmdl_dynamic_vegetation {
         my @valid_values   = $definition->get_valid_values( $var );
         $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
      }
+     $log->warning("The use_cndv=T option is deprecated. We do NOT recommend using it." . 
+                   " It's known to have issues and it's not calibrated.");
   }
 }
 #-------------------------------------------------------------------------------
