@@ -113,7 +113,7 @@ contains
     use column_varcon        , only : icol_shadewall
     use clm_varctl           , only : use_cn
     use clm_varpar           , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
-    use clm_time_manager     , only : get_step_size, get_nstep
+    use clm_time_manager     , only : get_step_size_real, get_nstep
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, ZeroEmptySnowLayers, BuildSnowFilter 
     use SoilHydrologyMod     , only : CLMVICMap, SetSoilWaterFractions, SetFloodc
@@ -224,7 +224,7 @@ contains
 
       ! Determine step size
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Determine initial snow/no-snow filters (will be modified possibly by
       ! routines CombineSnowLayers and DivideSnowLayers below

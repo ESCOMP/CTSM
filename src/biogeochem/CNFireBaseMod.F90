@@ -314,7 +314,7 @@ contains
    ! seconds_per_year is the number of seconds in a year.
    !
    ! !USES:
-   use clm_time_manager     , only: get_step_size,get_days_per_year,get_curr_date
+   use clm_time_manager     , only: get_step_size_real,get_days_per_year,get_curr_date
    use clm_varpar           , only: max_patch_per_col
    use clm_varctl           , only: use_cndv, spinup_state
    use clm_varcon           , only: secspday
@@ -563,7 +563,7 @@ contains
 
      ! Get model step size
      ! calculate burned area fraction per sec
-     dt = real( get_step_size(), r8 )
+     dt = get_step_size_real()
 
      dayspyr = get_days_per_year()
      !

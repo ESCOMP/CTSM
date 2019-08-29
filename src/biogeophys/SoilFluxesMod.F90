@@ -45,7 +45,7 @@ contains
     ! Update surface fluxes based on the new ground temperature
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use clm_varcon       , only : hvap, cpair, grav, vkc, tfrz, sb 
     use landunit_varcon  , only : istsoil, istcrop
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
@@ -166,7 +166,7 @@ contains
 
       ! Get step size
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       call t_startf('bgp2_loop_1')
       do fc = 1,num_nolakec

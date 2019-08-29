@@ -36,7 +36,7 @@ module SnowHydrologyMod
   use TopoMod, only : topo_type
   use ColumnType      , only : column_type, col
   use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
-  use clm_time_manager, only : get_step_size, get_nstep
+  use clm_time_manager, only : get_step_size_real, get_nstep
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
   !
   ! !PUBLIC TYPES:
@@ -397,7 +397,7 @@ contains
          )
 
     ! Get time step
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     call NewSnowBulkDensity(bounds, num_c, filter_c, &
          atm2lnd_inst, bifall(bounds%begc:bounds%endc))
@@ -975,7 +975,7 @@ contains
 
     ! Determine model time step
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! Renew the mass of ice lens (h2osoi_ice) and liquid (h2osoi_liq) in the
     ! surface snow layer resulting from sublimation (frost) / evaporation (condense)
@@ -1294,7 +1294,7 @@ contains
 
     ! Get time step
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! Begin calculation - note that the following column loops are only invoked if snl(c) < 0
 
@@ -1505,7 +1505,7 @@ contains
 
     ! Determine model time step
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! Check the mass of ice lens of snow, when the total is less than a small value,
     ! combine it with the underlying neighbor.
@@ -2343,7 +2343,7 @@ contains
     )
 
     ! Determine model time step
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! Initialize capping fluxes for all columns in domain (lake or non-lake)
     do fc = 1, num_initc

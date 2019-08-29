@@ -976,7 +976,7 @@ contains
     ! !USES:
     use clm_varcon        , only : rgas, tfrz, spval
     use GridcellType      , only : grc
-    use clm_time_manager  , only : get_step_size, is_near_local_noon
+    use clm_time_manager  , only : get_step_size_real, is_near_local_noon
     use clm_varctl     , only : cnallocate_carbon_only
     use clm_varctl     , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use pftconMod      , only : nbrdlf_dcd_tmp_shrub, npcropmin
@@ -1233,7 +1233,7 @@ contains
 
       ! Determine seconds of current time step
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Activation energy, from:
       ! Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
@@ -2443,7 +2443,7 @@ contains
     ! !USES:
     use clm_varcon        , only : rgas, tfrz, rpi, spval
     use GridcellType      , only : grc
-    use clm_time_manager  , only : get_step_size, is_near_local_noon
+    use clm_time_manager  , only : get_step_size_real, is_near_local_noon
     use clm_varctl        , only : cnallocate_carbon_only
     use clm_varctl        , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use clm_varpar        , only : nlevsoi
@@ -2787,7 +2787,7 @@ contains
 
       ! Determine seconds off current time step
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Activation energy, from:
       ! Bernacchi et al (2001) Plant, Cell and Environment 24:253-259

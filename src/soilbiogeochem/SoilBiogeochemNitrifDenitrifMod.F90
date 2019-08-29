@@ -193,7 +193,7 @@ contains
     !  calculate nitrification and denitrification rates
     !
     ! !USES:
-    use clm_time_manager  , only : get_curr_date, get_step_size
+    use clm_time_manager  , only : get_curr_date
     use CNSharedParamsMod , only : anoxia_wtsat, CNParamsShareInst
     !
     ! !ARGUMENTS:

@@ -548,7 +548,7 @@ contains
      ! written by C. Koven based on original CLM4 decomposition cascade by P. Thornton
      !
      ! !USES:
-     use clm_time_manager, only : get_step_size
+     use clm_time_manager, only : get_step_size_real
      use clm_varcon      , only : secspday
      use clm_varpar      , only : i_cwd
      !
@@ -626,7 +626,7 @@ contains
        mino2lim = CNParamsShareInst%mino2lim
 
        ! set time steps
-       dt = real( get_step_size(), r8 )
+       dt = get_step_size_real()
        dtd = dt/secspday
 
        ! set initial base rates for decomposition mass loss (1/day)

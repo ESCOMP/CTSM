@@ -202,7 +202,7 @@ contains
 !
 ! !USES:
     use shr_kind_mod    , only : r8 => shr_kind_r8
-    use clm_time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size_real
     use clm_varcon      , only : rair, pstd, cpair, sb, hcv_roof, hcv_roof_enhanced, &
                                  hcv_floor, hcv_floor_enhanced, hcv_sunw, hcv_shdw, &
                                  em_roof_int, em_floor_int, em_sunw_int, em_shdw_int, &
@@ -334,7 +334,7 @@ contains
 
     ! Get step size
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! 1. Save t_* at previous time step
     ! 2. Set convective heat transfer coefficients (Bueno et al. 2012, GMD).

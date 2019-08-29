@@ -79,7 +79,7 @@ contains
     ! !USES:
     use clm_varcon      , only : denh2o, denice, spval, hfus, tfrz, cpliq, cpice
     use clm_varctl      , only : iulog
-    use clm_time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size_real
     use SnowHydrologyMod, only : UpdateQuantitiesForNewSnow
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater
     use SnowHydrologyMod, only : ZeroEmptySnowLayers, BuildSnowFilter, SnowCapping
@@ -235,7 +235,7 @@ contains
     end if
 
     ! Determine step size
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! Compute "summed" (really just copies here) fluxes onto "ground" (really the lake
     ! surface here), for bulk water and each tracer. (Subroutine name mimics the one in
