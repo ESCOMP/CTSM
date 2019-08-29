@@ -89,7 +89,6 @@ module  PhotosynthesisMod
      real(r8), allocatable, private :: kmax               (:,:)
      real(r8), allocatable, private :: psi50              (:,:)
      real(r8), allocatable, private :: ck                 (:,:)
-     real(r8), allocatable, public  :: psi_soil_ref       (:)
      real(r8), allocatable, private :: lmr_intercept_atkin(:)
   contains
      procedure, private :: allocParams
@@ -618,7 +617,6 @@ contains
     allocate( this%kmax        (0:mxpft,nvegwcs) )  ; this%kmax(:,:)       = nan
     allocate( this%psi50       (0:mxpft,nvegwcs) )  ; this%psi50(:,:)      = nan
     allocate( this%ck          (0:mxpft,nvegwcs) )  ; this%ck(:,:)         = nan
-    allocate( this%psi_soil_ref(0:mxpft) )          ; this%psi_soil_ref(:) = nan
 
     if ( use_hydrstress .and. nvegwcs /= 4 )then
        call endrun(msg='Error:: the Plant Hydraulics Stress methodology is for the spacA function is hardcoded for nvegwcs==4' &
@@ -657,10 +655,6 @@ contains
     call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%krmax=temp1d
-    tString = "psi_soil_ref"
-    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%psi_soil_ref=temp1d
     tString = "lmr_intercept_atkin"
     call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
