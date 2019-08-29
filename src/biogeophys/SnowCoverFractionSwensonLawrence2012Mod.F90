@@ -140,7 +140,14 @@ contains
 
           if (newsnow(c) > 0._r8) then
              ! Update fsca by new snow event, add to previous fsca
-             frac_sno(c) = 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
+
+             ! The form in Swenson & Lawrence 2012 (eqn. 3) is:
+             ! 1._r8 - (1._r8 - tanh(this%accum_factor * newsnow(c))) * (1._r8 - frac_sno(c))
+             !
+             ! This form is algebraically equivalent, but simpler and less prone to
+             ! roundoff errors (see https://github.com/ESCOMP/ctsm/issues/784)
+             frac_sno(c) = frac_sno(c) + tanh(this%accum_factor * newsnow(c)) * (1._r8 - frac_sno(c))
+
           end if
        end if
     end do
