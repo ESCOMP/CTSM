@@ -49,7 +49,6 @@ program demo_lilac_driver
 
     ! real atmosphere:
     begc       = 1
-    !endc       = 10
     endc       = 6912/4
     !endc       = 13824
     !endc       = 13968
@@ -70,7 +69,7 @@ program demo_lilac_driver
     allocate ( rand1                   (begc:endc) ) ; call random_number (rand1)
     allocate ( rand2                   (begc:endc) ) ; call random_number (rand2)
 
-    !allocating these values of default for now!
+    !allocating these values from atmosphere for now!
     allocate ( atm2lnd%Sa_z       (begc:endc) ) ; atm2lnd%Sa_z       (:) =  30.0
     allocate ( atm2lnd%Sa_topo    (begc:endc) ) ; atm2lnd%Sa_topo    (:) =  10.0
     allocate ( atm2lnd%Sa_u       (begc:endc) ) ; atm2lnd%Sa_u       (:) =  20.0

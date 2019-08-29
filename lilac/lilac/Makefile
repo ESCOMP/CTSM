@@ -40,7 +40,7 @@ TRACEBACK_FLAGS   =    -g -traceback -debug all -check all
 # -----------------------------------------------------------------------------
 #EXTRA_LIBS       =    $(EXTRA_LIBS) -I/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nothreads/nuopc/pio/pio2
 EXTRA_LIBS        =   -L/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf/c1a1l1/lib -lcsm_share -L/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nothreads/nuopc/lib -lpiof -lpioc -lgptl -lmct -lmpeu -mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L/glade/u/home/dunlap/ESMF-INSTALL/intel19/8.0.0bs32/lib/libO/Linux.intel.64.mpt.default -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib -L/glade/u/home/dunlap/YAML-INSTALL/lib  -Wl,-rpath,/glade/u/home/dunlap/ESMF-INSTALL/intel19/8.0.0bs32/lib/libO/Linux.intel.64.mpt.default  -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -Wl,-rpath,/glade/u/home/dunlap/YAML-INSTALL/lib -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf -lyaml-cpp  -cxxlib
-MORE_LIBSi        =   -I/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nuopc/nuopc/esmf/c1a1l1/csm_share/ -L/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nuopc/nuopc/esmf/c1a1l1/csm_share/
+MORE_LIBS        =   -I/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nuopc/nuopc/esmf/c1a1l1/csm_share/ -L/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nuopc/nuopc/esmf/c1a1l1/csm_share/     -I/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf/clm/obj/ -I//glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf/c1a1l1/csm_share/
 # -----------------------------------------------------------------------------
 
 
