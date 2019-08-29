@@ -167,7 +167,7 @@ OPTIONS
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36]
                               (default is 0) (standard option with land-ice model is 10)
      -help [or -h]            Print usage to STDOUT.
-     -light_res <value>       Resolution of lightning dataset to use for CN fire (hcru or T62)
+     -light_res <value>       Resolution of lightning dataset to use for CN fire (360x720 or 94x192)
      -ignore_ic_date          Ignore the date on the initial condition files
                               when determining what input initial condition file to use.
      -ignore_ic_year          Ignore just the year part of the date on the initial condition files
