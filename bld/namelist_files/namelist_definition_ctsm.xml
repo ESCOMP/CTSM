@@ -955,6 +955,12 @@ Turn on extra output for the matrix solution
 Turn on semi-analytic spinup solution for the CN/Soil matrix
 </entry>
 
+<entry id="nyr_forcing" type="integer" category="bgc"
+       group="clm_inparm" valid_values="" value="1">
+Number of years to average the storage capacitance over for the soil Matrix solution during spinup
+Normally should be the same as the number of years the atmospheric forcing is run over
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
 <!-- ========================================================================================  -->

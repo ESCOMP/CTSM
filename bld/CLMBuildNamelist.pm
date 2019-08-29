@@ -3700,14 +3700,37 @@ sub setup_logic_cnmatrix {
        }
     # Otherwise for CN or BGC mode
     } else {
-      # If both matrixcn and soil_matrix are off
+      # If both matrixcn and soil_matrix are off outmatrix can't be on
       if ( ! &value_is_true($nl->get_value("use_matrixcn")) && ! &value_is_true($nl->get_value("use_soil_matrixcn")) ) {
-         foreach my $var ( "is_outmatrix", "isspinup" ) {
-            if ( &value_is_true($nl->get_value($var)) ) {
-                $log->fatal_error("$var can NOT be on when both use_matrixcn and use_soil_matrixcn are off" );
-            }
+         my $var = "is_outmatrix";
+         if ( &value_is_true($nl->get_value($var)) ) {
+            $log->fatal_error("$var can NOT be on when both use_matrixcn and use_soil_matrixcn are off" );
          }
       }
+      # If soil_matrix is off ispspinup can't be on
+      if ( ! &value_is_true($nl->get_value("use_soil_matrixcn")) ) {
+         my $var = "isspinup";
+         if ( &value_is_true($nl->get_value($var)) ) {
+            $log->fatal_error("$var can NOT be on when use_soil_matrixcn is off" );
+         }
+      }
+    }
+    # if soil matrix is on and spinup is on, set nyr_forcing
+    my $var = "nyr_forcing";
+    my $spinup;
+    if ( &value_is_true($nl->get_value("isspinup") ) ) {
+       $spinup = ".true.";
+    } else {
+       $spinup = ".false.";
+    }
+    if ( &value_is_true($nl->get_value("use_soil_matrixcn")) && &value_is_true($nl->get_value("isspinup")) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 , 'phys'=>$nl_flags->{'phys'}, 'isspinup'=>$spinup );
+    } else {
+       my $val = $nl->get_value($var);
+       if ( defined($val) ) {
+          $log->fatal_error("$var can NOT be set when use_soil_matrixcn and isspsinup are off" );
+       }
     }
 }
 

@@ -138,7 +138,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 940;
+my $ntests = 942;
 if ( defined($opts{'compare'}) ) {
    $ntests += 594;
 }
@@ -777,12 +777,22 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "soilmatrixWOBGC"           =>{ options=>"-envxml_dir . -bgc sp",
-                                     namelst=>"use_soil_matrixcn=.true.",
+                                     namelst=>"use_soil_matrixcn=T",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      phys=>"clm5_0",
                                    },
      "outmatrixWOmatrix"         =>{ options=>"-envxml_dir . -bgc bgc",
-                                     namelst=>"use_soil_matrixcn=.false.,use_matrixcn=.false.,is_outmatrix=.true.",
+                                     namelst=>"use_soil_matrixcn=.false.,use_matrixcn=F,is_outmatrix=T",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "spinupWOsoilmatrix"         =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"use_soil_matrixcn=F,use_matrixcn=T,isspinup=T",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "nyrforceWOspinup"          =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"use_soil_matrixcn=.true.,use_matrixcn=.false.,isspinup=F,nyr_forcing=20",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      phys=>"clm5_0",
                                    },

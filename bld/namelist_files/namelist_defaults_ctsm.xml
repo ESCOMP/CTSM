@@ -480,8 +480,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_soil_matrixcn                                   bgc_mode="sp"    >.false.</use_soil_matrixcn>
 <use_soil_matrixcn                                   bgc_mode="fates" >.false.</use_soil_matrixcn>
 
-<is_outmatrix >.false.</is_outmatrix>
-<isspinup     >.false.</isspinup>
+<is_outmatrix                   >.false.</is_outmatrix>
+<isspinup                       >.false.</isspinup>
+<nyr_forcing                    >1</nyr_forcing>
+<nyr_forcing  isspinup=".true." >20</nyr_forcing>
 
 <!--
 
