@@ -1437,6 +1437,8 @@ contains
                  +(t_veg(p)-tl_ini(p))*cp_veg(p)/dtime
             
             t_stem(p) =  t_stem(p) + dt_stem(p)
+         else
+            dt_stem(p) = 0._r8
          endif
 
          delt    = wtal(p)*t_grnd(c)-wtl0(p)*t_veg(p)-wta0(p)*thm(p)-wtstem0(p)*t_stem(p)
