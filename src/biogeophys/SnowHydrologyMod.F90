@@ -39,6 +39,7 @@ module SnowHydrologyMod
   use clm_time_manager, only : get_step_size, get_nstep
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
   use LakeCon         , only : lsadz
+  use NumericsMod     , only : truncate_small_values_one_lev
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -965,11 +966,13 @@ contains
     real(r8) :: qout_dst3   (bounds%begc:bounds%endc)              ! flux of dust species 3 out of layer [kg]
     real(r8) :: qin_dst4    (bounds%begc:bounds%endc)              ! flux of dust species 4 into   layer [kg]
     real(r8) :: qout_dst4   (bounds%begc:bounds%endc)              ! flux of dust species 4 out of layer [kg]
-    real(r8) :: wgdif                                              ! ice mass after minus sublimation
     real(r8) :: vol_liq(bounds%begc:bounds%endc,-nlevsno+1:0)      ! partial volume of liquid water in layer
     real(r8) :: vol_ice(bounds%begc:bounds%endc,-nlevsno+1:0)      ! partial volume of ice lens in layer
     real(r8) :: eff_porosity(bounds%begc:bounds%endc,-nlevsno+1:0) ! effective porosity = porosity - vol_ice
     real(r8) :: mss_liqice(bounds%begc:bounds%endc,-nlevsno+1:0)   ! mass of liquid+ice in a layer
+    integer  :: lev_top(bounds%begc:bounds%endc)                   ! index of the top snow level
+    real(r8) :: h2osoi_ice_top_orig(bounds%begc:bounds%endc)       ! h2osoi_ice in top snow layer before state update
+    real(r8) :: h2osoi_liq_top_orig(bounds%begc:bounds%endc)       ! h2osoi_liq in top snow layer before state update
     !-----------------------------------------------------------------------
 
     associate( &
@@ -1017,27 +1020,69 @@ contains
        c = filter_snowc(fc)
        l=col%landunit(c)
 
-       wgdif = h2osoi_ice(c,snl(c)+1) &
+       lev_top(c) = snl(c)+1
+       h2osoi_ice_top_orig(c) = h2osoi_ice(c,lev_top(c))
+       h2osoi_liq_top_orig(c) = h2osoi_liq(c,lev_top(c))
+
+       h2osoi_ice(c,lev_top(c)) = h2osoi_ice(c,lev_top(c)) &
             + frac_sno_eff(c) * (qflx_dew_snow(c) - qflx_sub_snow(c)) * dtime
-       h2osoi_ice(c,snl(c)+1) = wgdif
-       if (wgdif < 0._r8) then
-          h2osoi_ice(c,snl(c)+1) = 0._r8
-          h2osoi_liq(c,snl(c)+1) = h2osoi_liq(c,snl(c)+1) + wgdif
-       end if
-       h2osoi_liq(c,snl(c)+1) = h2osoi_liq(c,snl(c)+1) +  &
+
+       h2osoi_liq(c,lev_top(c)) = h2osoi_liq(c,lev_top(c)) +  &
             frac_sno_eff(c) * (qflx_liq_grnd(c) + qflx_dew_grnd(c) &
             - qflx_evap_grnd(c)) * dtime
-
-       ! if negative, reduce deeper layer's liquid water content sequentially
-       if(h2osoi_liq(c,snl(c)+1) < 0._r8) then
-          do j = snl(c)+1, 1
-             wgdif=h2osoi_liq(c,j)
-             if (wgdif >= 0._r8) exit
-             h2osoi_liq(c,j) = 0._r8
-             h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + wgdif
-          enddo
-       end if
     end do
+
+    ! If states were supposed to go to 0 but instead ended up near-0 (positive or
+    ! negative), truncate to exactly 0.
+    call truncate_small_values_one_lev( &
+         num_f = num_snowc, &
+         filter_f = filter_snowc, &
+         lb = bounds%begc, &
+         ub = bounds%endc, &
+         lev_lb = -nlevsno+1, &
+         lev = lev_top(bounds%begc:bounds%endc), &
+         data_baseline = h2osoi_ice_top_orig(bounds%begc:bounds%endc), &
+         data = h2osoi_ice(bounds%begc:bounds%endc, :))
+    call truncate_small_values_one_lev( &
+         num_f = num_snowc, &
+         filter_f = filter_snowc, &
+         lb = bounds%begc, &
+         ub = bounds%endc, &
+         lev_lb = -nlevsno+1, &
+         lev = lev_top(bounds%begc:bounds%endc), &
+         data_baseline = h2osoi_liq_top_orig(bounds%begc:bounds%endc), &
+         data = h2osoi_liq(bounds%begc:bounds%endc, :))
+
+    ! Make sure that we don't have any negative residuals - i.e., that we didn't try to
+    ! remove more ice or liquid than was initially present.
+    do fc = 1, num_snowc
+       c = filter_snowc(fc)
+
+       if (h2osoi_ice(c,lev_top(c)) < 0._r8) then
+          write(iulog,*) "ERROR: At start of SnowWater, h2osoi_ice has gone significantly negative"
+          write(iulog,*) "c, lev_top(c) = ", c, lev_top(c)
+          write(iulog,*) "h2osoi_ice_top_orig = ", h2osoi_ice_top_orig(c)
+          write(iulog,*) "h2osoi_ice          = ", h2osoi_ice(c,lev_top(c))
+          write(iulog,*) "frac_sno_eff        = ", frac_sno_eff(c)
+          write(iulog,*) "qflx_dew_snow*dtime = ", qflx_dew_snow(c)*dtime
+          write(iulog,*) "qflx_sub_snow*dtime = ", qflx_sub_snow(c)*dtime
+          call endrun("At start of SnowWater, h2osoi_ice has gone significantly negative")
+       end if
+
+       if (h2osoi_liq(c,lev_top(c)) < 0._r8) then
+          write(iulog,*) "ERROR: At start of SnowWater, h2osoi_liq has gone significantly negative"
+          write(iulog,*) "c, lev_top(c) = ", c, lev_top(c)
+          write(iulog,*) "h2osoi_liq_top_orig  = ", h2osoi_liq_top_orig(c)
+          write(iulog,*) "h2osoi_liq           = ", h2osoi_liq(c,lev_top(c))
+          write(iulog,*) "frac_sno_eff         = ", frac_sno_eff(c)
+          write(iulog,*) "qflx_liq_grnd*dtime  = ", qflx_liq_grnd(c)*dtime
+          write(iulog,*) "qflx_dew_grnd*dtime  = ", qflx_dew_grnd(c)*dtime
+          write(iulog,*) "qflx_evap_grnd*dtime = ", qflx_evap_grnd(c)*dtime
+          call endrun("At start of SnowWater, h2osoi_liq has gone significantly negative")
+       end if
+
+    end do
+
 
     ! Porosity and partial volume
 
