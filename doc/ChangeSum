@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev060    sacks 08/29/2019 In SnowWater, truncate small h2osoi residuals
   ctsm1.0.dev059    sacks 08/24/2019 Continue adding water tracers to LakeHydrology
   ctsm1.0.dev058   slevis 08/22/2019 Soil texture interpolation bug-fix
   ctsm1.0.dev057    sacks 08/20/2019 Fix frac_sno bugs
