@@ -352,6 +352,14 @@ contains
        qflx_sub_snow_col(c)  = qflx_sub_snow(p)
     enddo
 
+    ! BUG(wjs, 2019-07-12, ESCOMP/ctsm#762) This is needed so that we can test the
+    ! tracerization of the following snow stuff without having tracerized all of the above
+    ! code. Remove this block once code before this point is fully tracerized.
+    if (water_inst%DoConsistencyCheck()) then
+       call water_inst%ResetCheckedTracers(bounds)
+       call water_inst%TracerConsistencyCheck(bounds, 'before main snow code in LakeHydrology')
+    end if
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Determine initial snow/no-snow filters (will be modified possibly by
     ! routines CombineSnowLayers and DivideSnowLayers below)
