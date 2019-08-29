@@ -13,7 +13,6 @@ Namelist items that are not regularly tested or used. Some aren't even implement
     CNratio_floating
     all_active
     allowlakeprod
-    anoxia_wtsat
     carbon_resp_opt
     ch4offline
     downreg_opt

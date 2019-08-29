@@ -2825,13 +2825,6 @@ sub setup_logic_methane {
         $log->fatal_error("lake_decomp_fact set without allowlakeprod=.true.");
       }
     }
-    my $anoxia = $nl->get_value('anoxia');
-    if ( ! defined($anoxia) ||
-         (defined($anoxia) && ! &value_is_true($anoxia)) ) {
-      if ( defined($nl->get_value('anoxia_wtsat')) ) {
-        $log->fatal_error("anoxia_wtsat set without anoxia=.true.");
-      }
-    }
     my $pftspec_rootprof = $nl->get_value('pftspecific_rootingprofile');
     if ( ! defined($pftspec_rootprof) ||
          (defined($pftspec_rootprof) && &value_is_true($pftspec_rootprof) ) ) {
@@ -2840,7 +2833,7 @@ sub setup_logic_methane {
       }
     }
   } else {
-    my @vars = ( "allowlakeprod", "anoxia", "anoxia_wtsat", "pftspecific_rootingprofile" );
+    my @vars = ( "allowlakeprod", "anoxia", "pftspecific_rootingprofile" );
     foreach my $var ( @vars ) {
       if ( defined($nl->get_value($var)) ) {
         $log->fatal_error("$var set without methane model configuration on (use_lch4)");

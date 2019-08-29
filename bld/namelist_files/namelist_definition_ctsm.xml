@@ -1997,14 +1997,6 @@ E-folding depth over which decomposition is slowed with depth in all soils.
 If TRUE, reduce heterotrophic respiration according to available oxygen predicted by CH4 submodel.
 </entry>
 
-<entry id="anoxia_wtsat" type="logical" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
-If TRUE, weight calculation of oxygen limitation by the inundated fraction and diagnostic saturated column gas
-concentration profile calculated in the CH4 submodel. Only applies if anoxia = TRUE.
-(EXPERIMENTAL AND NOT FUNCTIONAL!)
-(deprecated -- will be removed)
-</entry>
-
 <entry id="froz_q10" type="real" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 separate q10 for frozen soil respiration rates.  default to same as above zero rates
