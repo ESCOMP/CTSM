@@ -147,7 +147,7 @@ module atmos_cap
            !call ESMF_FieldFill(field, dataFillScheme = "sincos" , rc=rc)
            !call ESMF_FieldFill(field, dataFillScheme = "const"  , const1=real(n, ESMF_KIND_R8), rc=rc)
            !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-           if (myid == 0 .and debug > 0) then
+           if (myid == 0 .and. debug > 0) then
                print *, "***************************************************"
                print *, "Here we are printing field!"
                print *, "creating field for a2c:"
@@ -208,7 +208,7 @@ module atmos_cap
           call ESMF_FieldBundleAdd(c2a_fb, (/field/), rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-          if (myid == 0 .and debug > 0) then
+          if (myid == 0 .and. debug > 0) then
              print *, "creating field for c2a:"
              print *, n
              print *, trim(c2a_fldlist(n)%stdname)
