@@ -32,6 +32,7 @@ Module HydrologyNoDrainageMod
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use TopoMod, only : topo_type
+  use perf_mod          , only : t_startf, t_stopf
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -285,6 +286,15 @@ contains
 
       call SnowWater(bounds, num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
            atm2lnd_inst, b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst, aerosol_inst)
+
+      ! TODO(wjs, 2019-08-30) Eventually move this down, merging this with later tracer
+      ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
+      ! module, remember to also remove 'use perf_mod' at the top.
+      if (water_inst%DoConsistencyCheck()) then
+         call t_startf("tracer_consistency_check")
+         call water_inst%TracerConsistencyCheck(bounds, 'HydrologyNoDrainage: after SnowWater')
+         call t_stopf("tracer_consistency_check")
+      end if
 
       ! mapping soilmoist from CLM to VIC layers for runoff calculations
       if (use_vichydro) then
