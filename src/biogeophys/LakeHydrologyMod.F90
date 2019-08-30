@@ -371,7 +371,7 @@ contains
 
     call SnowWater(bounds, &
          num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
-         atm2lnd_inst, b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst, aerosol_inst)
+         atm2lnd_inst, aerosol_inst, water_inst)
 
     ! TODO(wjs, 2019-08-30) Eventually move this down, merging this with later tracer
     ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
