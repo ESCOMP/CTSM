@@ -74,6 +74,7 @@ module SnowHydrologyMod
   private :: BuildFilter_SnowpackInitialized ! Build a column-level filter of columns where an explicit snow pack needs to be initialized
   private :: UpdateState_InitializeSnowPack ! For bulk or one tracer: initialize water state variables for columns in which an explicit snow pack is being newly initialized
   private :: Bulk_InitializeSnowPack ! Initialize an explicit snow pack in columns where this is warranted based on snow depth, for bulk-only quantities
+  private :: UpdateState_TopLayerFluxes ! Update top layer of snow pack with various fluxes into and out of the top layer
   private :: Combo                  ! Returns the combined variables: dz, t, wliq, wice.
   private :: MassWeightedSnowRadius ! Mass weighted snow grain size
   !
@@ -943,6 +944,7 @@ contains
     type(water_type)      , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
+    integer  :: i                                                  ! index of water tracer or bulk
     integer  :: g                                                  ! gridcell loop index
     integer  :: c, j, fc, l                                        ! do loop/array indices
     real(r8) :: dtime                                              ! land model time step (sec)
@@ -968,9 +970,6 @@ contains
     real(r8) :: vol_ice(bounds%begc:bounds%endc,-nlevsno+1:0)      ! partial volume of ice lens in layer
     real(r8) :: eff_porosity(bounds%begc:bounds%endc,-nlevsno+1:0) ! effective porosity = porosity - vol_ice
     real(r8) :: mss_liqice(bounds%begc:bounds%endc,-nlevsno+1:0)   ! mass of liquid+ice in a layer
-    integer  :: lev_top(bounds%begc:bounds%endc)                   ! index of the top snow level
-    real(r8) :: h2osoi_ice_top_orig(bounds%begc:bounds%endc)       ! h2osoi_ice in top snow layer before state update
-    real(r8) :: h2osoi_liq_top_orig(bounds%begc:bounds%endc)       ! h2osoi_liq in top snow layer before state update
     !-----------------------------------------------------------------------
 
     ! FIXME(wjs, 2019-08-30) When I'm done, there should be a single associate statement,
@@ -1019,76 +1018,30 @@ contains
 
     dtime = get_step_size()
 
-    ! Renew the mass of ice lens (h2osoi_ice) and liquid (h2osoi_liq) in the
-    ! surface snow layer resulting from sublimation (frost) / evaporation (condense)
-
-    do fc = 1,num_snowc
-       c = filter_snowc(fc)
-       l=col%landunit(c)
-
-       lev_top(c) = snl(c)+1
-       h2osoi_ice_top_orig(c) = h2osoi_ice(c,lev_top(c))
-       h2osoi_liq_top_orig(c) = h2osoi_liq(c,lev_top(c))
-
-       h2osoi_ice(c,lev_top(c)) = h2osoi_ice(c,lev_top(c)) &
-            + frac_sno_eff(c) * (qflx_dew_snow(c) - qflx_sub_snow(c)) * dtime
-
-       h2osoi_liq(c,lev_top(c)) = h2osoi_liq(c,lev_top(c)) +  &
-            frac_sno_eff(c) * (qflx_liq_grnd(c) + qflx_dew_grnd(c) &
-            - qflx_evap_grnd(c)) * dtime
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call UpdateState_TopLayerFluxes(bounds, num_snowc, filter_snowc, &
+            ! Inputs
+            name           = water_inst%GetBulkOrTracerName(i), &
+            dtime          = dtime, &
+            snl            = col%snl(begc:endc), &
+            frac_sno_eff   = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+            qflx_dew_snow  = w%waterflux_inst%qflx_dew_snow_col(begc:endc), &
+            qflx_sub_snow  = w%waterflux_inst%qflx_sub_snow_col(begc:endc), &
+            qflx_liq_grnd  = w%waterflux_inst%qflx_liq_grnd_col(begc:endc), &
+            qflx_dew_grnd  = w%waterflux_inst%qflx_dew_grnd_col(begc:endc), &
+            qflx_evap_grnd = w%waterflux_inst%qflx_evap_grnd_col(begc:endc), &
+            ! Outputs
+            h2osoi_ice     = w%waterstate_inst%h2osoi_ice_col(begc:endc,:), &
+            h2osoi_liq     = w%waterstate_inst%h2osoi_liq_col(begc:endc,:))
+       end associate
     end do
 
-    ! If states were supposed to go to 0 but instead ended up near-0 (positive or
-    ! negative), truncate to exactly 0.
-    call truncate_small_values_one_lev( &
-         num_f = num_snowc, &
-         filter_f = filter_snowc, &
-         lb = bounds%begc, &
-         ub = bounds%endc, &
-         lev_lb = -nlevsno+1, &
-         lev = lev_top(bounds%begc:bounds%endc), &
-         data_baseline = h2osoi_ice_top_orig(bounds%begc:bounds%endc), &
-         data = h2osoi_ice(bounds%begc:bounds%endc, :))
-    call truncate_small_values_one_lev( &
-         num_f = num_snowc, &
-         filter_f = filter_snowc, &
-         lb = bounds%begc, &
-         ub = bounds%endc, &
-         lev_lb = -nlevsno+1, &
-         lev = lev_top(bounds%begc:bounds%endc), &
-         data_baseline = h2osoi_liq_top_orig(bounds%begc:bounds%endc), &
-         data = h2osoi_liq(bounds%begc:bounds%endc, :))
-
-    ! Make sure that we don't have any negative residuals - i.e., that we didn't try to
-    ! remove more ice or liquid than was initially present.
-    do fc = 1, num_snowc
-       c = filter_snowc(fc)
-
-       if (h2osoi_ice(c,lev_top(c)) < 0._r8) then
-          write(iulog,*) "ERROR: At start of SnowWater, h2osoi_ice has gone significantly negative"
-          write(iulog,*) "c, lev_top(c) = ", c, lev_top(c)
-          write(iulog,*) "h2osoi_ice_top_orig = ", h2osoi_ice_top_orig(c)
-          write(iulog,*) "h2osoi_ice          = ", h2osoi_ice(c,lev_top(c))
-          write(iulog,*) "frac_sno_eff        = ", frac_sno_eff(c)
-          write(iulog,*) "qflx_dew_snow*dtime = ", qflx_dew_snow(c)*dtime
-          write(iulog,*) "qflx_sub_snow*dtime = ", qflx_sub_snow(c)*dtime
-          call endrun("At start of SnowWater, h2osoi_ice has gone significantly negative")
-       end if
-
-       if (h2osoi_liq(c,lev_top(c)) < 0._r8) then
-          write(iulog,*) "ERROR: At start of SnowWater, h2osoi_liq has gone significantly negative"
-          write(iulog,*) "c, lev_top(c) = ", c, lev_top(c)
-          write(iulog,*) "h2osoi_liq_top_orig  = ", h2osoi_liq_top_orig(c)
-          write(iulog,*) "h2osoi_liq           = ", h2osoi_liq(c,lev_top(c))
-          write(iulog,*) "frac_sno_eff         = ", frac_sno_eff(c)
-          write(iulog,*) "qflx_liq_grnd*dtime  = ", qflx_liq_grnd(c)*dtime
-          write(iulog,*) "qflx_dew_grnd*dtime  = ", qflx_dew_grnd(c)*dtime
-          write(iulog,*) "qflx_evap_grnd*dtime = ", qflx_evap_grnd(c)*dtime
-          call endrun("At start of SnowWater, h2osoi_liq has gone significantly negative")
-       end if
-
-    end do
-
+    ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
+    ! of it, once all of SnowWater is tracerized.
+    if (water_inst%DoConsistencyCheck()) then
+       call water_inst%TracerConsistencyCheck(bounds, 'In the middle of SnowWater')
+    end if
 
     ! Porosity and partial volume
 
@@ -1303,6 +1256,127 @@ contains
 
     end associate
   end subroutine SnowWater
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateState_TopLayerFluxes(bounds, num_snowc, filter_snowc, &
+       name, dtime, snl, frac_sno_eff, &
+       qflx_dew_snow, qflx_sub_snow, qflx_liq_grnd, qflx_dew_grnd, qflx_evap_grnd, &
+       h2osoi_ice, h2osoi_liq)
+    !
+    ! !DESCRIPTION:
+    ! Update top layer of snow pack with various fluxes into and out of the top layer,
+    ! for bulk or one tracer.
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+
+    character(len=*) , intent(in) :: name                           ! Name of bulk or this tracer (for output in case there's an error)
+    real(r8)         , intent(in) :: dtime                          ! land model time step (sec)
+    integer          , intent(in) :: snl( bounds%begc: )            ! negative number of snow layers
+    real(r8)         , intent(in) :: frac_sno_eff( bounds%begc: )   ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8)         , intent(in) :: qflx_dew_snow( bounds%begc: )  ! surface dew added to snow pack (mm H2O /s)
+    real(r8)         , intent(in) :: qflx_sub_snow( bounds%begc: )  ! sublimation rate from snow pack (mm H2O /s)
+    real(r8)         , intent(in) :: qflx_liq_grnd( bounds%begc: )  ! liquid on ground after interception (mm H2O/s)
+    real(r8)         , intent(in) :: qflx_dew_grnd( bounds%begc: )  ! ground surface dew formation (mm H2O /s)
+    real(r8)         , intent(in) :: qflx_evap_grnd( bounds%begc: ) ! ground surface evaporation rate (mm H2O/s)
+
+    real(r8) , intent(inout) :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
+    real(r8) , intent(inout) :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer  :: lev_top(bounds%begc:bounds%endc)                   ! index of the top snow level
+    real(r8) :: h2osoi_ice_top_orig(bounds%begc:bounds%endc)       ! h2osoi_ice in top snow layer before state update
+    real(r8) :: h2osoi_liq_top_orig(bounds%begc:bounds%endc)       ! h2osoi_liq in top snow layer before state update
+
+    character(len=*), parameter :: subname = 'UpdateState_TopLayerFluxes'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_dew_snow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_sub_snow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_liq_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_dew_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_evap_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
+
+    ! Renew the mass of ice lens (h2osoi_ice) and liquid (h2osoi_liq) in the
+    ! surface snow layer resulting from sublimation (frost) / evaporation (condense)
+
+    do fc = 1,num_snowc
+       c = filter_snowc(fc)
+
+       lev_top(c) = snl(c)+1
+       h2osoi_ice_top_orig(c) = h2osoi_ice(c,lev_top(c))
+       h2osoi_liq_top_orig(c) = h2osoi_liq(c,lev_top(c))
+
+       h2osoi_ice(c,lev_top(c)) = h2osoi_ice(c,lev_top(c)) &
+            + frac_sno_eff(c) * (qflx_dew_snow(c) - qflx_sub_snow(c)) * dtime
+
+       h2osoi_liq(c,lev_top(c)) = h2osoi_liq(c,lev_top(c)) +  &
+            frac_sno_eff(c) * (qflx_liq_grnd(c) + qflx_dew_grnd(c) &
+            - qflx_evap_grnd(c)) * dtime
+    end do
+
+    ! If states were supposed to go to 0 but instead ended up near-0 (positive or
+    ! negative), truncate to exactly 0.
+    call truncate_small_values_one_lev( &
+         num_f = num_snowc, &
+         filter_f = filter_snowc, &
+         lb = bounds%begc, &
+         ub = bounds%endc, &
+         lev_lb = -nlevsno+1, &
+         lev = lev_top(bounds%begc:bounds%endc), &
+         data_baseline = h2osoi_ice_top_orig(bounds%begc:bounds%endc), &
+         data = h2osoi_ice(bounds%begc:bounds%endc, :))
+    call truncate_small_values_one_lev( &
+         num_f = num_snowc, &
+         filter_f = filter_snowc, &
+         lb = bounds%begc, &
+         ub = bounds%endc, &
+         lev_lb = -nlevsno+1, &
+         lev = lev_top(bounds%begc:bounds%endc), &
+         data_baseline = h2osoi_liq_top_orig(bounds%begc:bounds%endc), &
+         data = h2osoi_liq(bounds%begc:bounds%endc, :))
+
+    ! Make sure that we don't have any negative residuals - i.e., that we didn't try to
+    ! remove more ice or liquid than was initially present.
+    do fc = 1, num_snowc
+       c = filter_snowc(fc)
+
+       if (h2osoi_ice(c,lev_top(c)) < 0._r8) then
+          write(iulog,*) "ERROR: In UpdateState_TopLayerFluxes, h2osoi_ice has gone significantly negative"
+          write(iulog,*) "Bulk/tracer name = ", name
+          write(iulog,*) "c, lev_top(c) = ", c, lev_top(c)
+          write(iulog,*) "h2osoi_ice_top_orig = ", h2osoi_ice_top_orig(c)
+          write(iulog,*) "h2osoi_ice          = ", h2osoi_ice(c,lev_top(c))
+          write(iulog,*) "frac_sno_eff        = ", frac_sno_eff(c)
+          write(iulog,*) "qflx_dew_snow*dtime = ", qflx_dew_snow(c)*dtime
+          write(iulog,*) "qflx_sub_snow*dtime = ", qflx_sub_snow(c)*dtime
+          call endrun("In UpdateState_TopLayerFluxes, h2osoi_ice has gone significantly negative")
+       end if
+
+       if (h2osoi_liq(c,lev_top(c)) < 0._r8) then
+          write(iulog,*) "ERROR: In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative"
+          write(iulog,*) "Bulk/tracer name = ", name
+          write(iulog,*) "c, lev_top(c) = ", c, lev_top(c)
+          write(iulog,*) "h2osoi_liq_top_orig  = ", h2osoi_liq_top_orig(c)
+          write(iulog,*) "h2osoi_liq           = ", h2osoi_liq(c,lev_top(c))
+          write(iulog,*) "frac_sno_eff         = ", frac_sno_eff(c)
+          write(iulog,*) "qflx_liq_grnd*dtime  = ", qflx_liq_grnd(c)*dtime
+          write(iulog,*) "qflx_dew_grnd*dtime  = ", qflx_dew_grnd(c)*dtime
+          write(iulog,*) "qflx_evap_grnd*dtime = ", qflx_evap_grnd(c)*dtime
+          call endrun("In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative")
+       end if
+
+    end do
+
+  end subroutine UpdateState_TopLayerFluxes
+
 
   !-----------------------------------------------------------------------
   subroutine SnowCompaction(bounds, num_snowc, filter_snowc, &
