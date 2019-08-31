@@ -224,6 +224,8 @@ contains
     !  initialize rate constants and decomposition pathways for the BGC model originally implemented in CLM-CN
     !  written by C. Koven based on original CLM4 decomposition cascade by P. Thornton
     !
+    ! !USES:
+    use SoilBiogeochemDecompCascadeConType, only : i_atm
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
@@ -250,7 +252,6 @@ contains
     integer :: i_soil2
     integer :: i_soil3
     integer :: i_soil4
-    integer :: i_atm
     integer :: i_l1s1
     integer :: i_l2s2
     integer :: i_l3s3
@@ -439,7 +440,6 @@ contains
       is_cellulose(i_soil4) = .false.
       is_lignin(i_soil4) = .false.
 
-      i_atm = 0  !! for terminal pools (i.e. 100% respiration)
       floating_cn_ratio_decomp_pools(i_atm) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_atm) = 'atmosphere'
       decomp_cascade_con%decomp_pool_name_history(i_atm) = 'atmosphere'
