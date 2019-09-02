@@ -3538,6 +3538,48 @@ sub setup_logic_snowpack {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow_glc');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow_glc_ela');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmin_1');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmin_2');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_l_1');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_l_2');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_u_1');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_u_2');
+
+  my $dzmin1 = $nl->get_value('snow_dzmin_1');
+  my $dzmin2 = $nl->get_value('snow_dzmin_2');
+  my $dzmax_l1 = $nl->get_value('snow_dzmax_l_1');
+  my $dzmax_l2 = $nl->get_value('snow_dzmax_l_2');
+  my $dzmax_u1 = $nl->get_value('snow_dzmax_u_1');
+  my $dzmax_u2 = $nl->get_value('snow_dzmax_u_2');
+
+  if ($dzmin1 != 0.01 || $dzmin2 != 0.015 || $dzmax_u1 != 0.02 || $dzmax_u2 != 0.05 || $dzmax_l1 != 0.03 || $dzmax_l2 != 0.07) {
+     $log->warning("Setting any of the following namelist variables to NON DEFAULT values remains untested as of Sep 1, 2019: snow_dzmin_1 & 2, snow_dzmax_u_1 & 2, snow_dzmax_l_1 & 2." );
+     $log->warning("Leave these variables unspecified in user_nl_clm in order to use the default values." );
+  }
+  if ($dzmin1 <= 0.0 || $dzmin2 <= 0.0 || $dzmax_u1 <= 0.0 || $dzmax_u2 <= 0.0 || $dzmax_l1 <= 0.0 || $dzmax_l2 <= 0.0) {
+     $log->fatal_error('One or more of the snow_dzmin_* and/or snow_dzmax_* were set incorrectly to be <= 0');
+  }
+  if ($dzmin2 <= $dzmin1) {
+     $log->fatal_error('snow_dzmin_2 was set incorrectly to be <= snow_dzmin_1');
+  }
+  if ($dzmax_l2 <= $dzmax_l1) {
+     $log->fatal_error('snow_dzmax_l_2 was set incorrectly to be <= snow_dzmax_l_1');
+  }
+  if ($dzmax_u2 <= $dzmax_u1) {
+     $log->fatal_error('snow_dzmax_u_2 was set incorrectly to be <= snow_dzmax_u_1');
+  }
+  if ($dzmin1 >= $dzmax_u1) {
+     $log->fatal_error('snow_dzmin_1 was set incorrectly to be >= snow_dzmax_u_1');
+  }
+  if ($dzmin2 >= $dzmax_u2) {
+     $log->fatal_error('snow_dzmin_2 was set incorrectly to be >= snow_dzmax_u_2');
+  }
+  if ($dzmax_u1 >= $dzmax_l1) {
+     $log->fatal_error('snow_dzmax_u_1 was set incorrectly to be >= snow_dzmax_l_1');
+  }
+  if ($dzmax_u2 >= $dzmax_l2) {
+     $log->fatal_error('snow_dzmax_u_2 was set incorrectly to be >= snow_dzmax_l_2');
+  }
 
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_overburden_compaction_method')) eq 'Vionnet2012') {
      # overburden_compress_tfactor isn't used if we're using the Vionnet2012

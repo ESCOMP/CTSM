@@ -2454,6 +2454,33 @@ Changes in this value should possibly be accompanied by changes in:
   glc_snow_persistence_max_days > 0.
 </entry>
 
+<entry id="snow_dzmin_1" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Min snow thickness of layer 1
+</entry>
+<entry id="snow_dzmin_2" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Min snow thickness of layer 2
+</entry>
+
+<entry id="snow_dzmax_l_1" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 1 when no layers beneath
+</entry>
+<entry id="snow_dzmax_l_2" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 2 when no layers beneath
+</entry>
+
+<entry id="snow_dzmax_u_1" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 1 when layers beneath
+</entry>
+<entry id="snow_dzmax_u_2" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 2 when layers beneath
+</entry>
+
 <entry id="int_snow_max" type="real" category="clm_physics"
        group="scf_swenson_lawrence_2012_inparm" valid_values="" >
 Limit applied to integrated snowfall when determining changes in snow-covered fraction during melt

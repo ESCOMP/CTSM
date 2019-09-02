@@ -24,7 +24,6 @@ module SnowHydrologyMod
   use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd
   use clm_varctl      , only : iulog, use_subgrid_fluxes
   use clm_varcon      , only : namec, h2osno_max, hfus, denice, rpi, spval, tfrz
-  use clm_varcon, only: dzmin, dzmax_l, dzmax_u
   use atm2lndType     , only : atm2lnd_type
   use AerosolMod      , only : aerosol_type
   use TemperatureType , only : temperature_type
@@ -110,7 +109,17 @@ module SnowHydrologyMod
   ! If true, the density of new snow depends on wind speed, and there is also
   ! wind-dependent snow compaction
   logical  :: wind_dependent_snow_density                      ! If snow density depends on wind or not
-  real(r8) :: dzmin_1, dzmax_l_1, dzmax_u_1  ! namelist-defined top snow layer information
+  real(r8) :: snow_dzmin_1, snow_dzmax_l_1, snow_dzmax_u_1  ! namelist-defined top snow layer information
+  real(r8) :: snow_dzmin_2, snow_dzmax_l_2, snow_dzmax_u_2  ! namelist-defined 2nd snow layer information
+  real(r8), private, allocatable :: dzmin(:)  !min snow thickness of layer
+  real(r8), private, allocatable :: dzmax_l(:)  !max snow thickness of layer when no layers beneath
+  real(r8), private, allocatable :: dzmax_u(:)  !max snow thickness of layer when layers beneath
+
+  ! FOR TEMPORARY TESTING. DELETE WHEN DONE. slevis diag
+  real(r8), private, allocatable :: dzmin_orig(:)
+  real(r8), private, allocatable :: dzmax_l_orig(:)
+  real(r8), private, allocatable :: dzmax_u_orig(:)
+
   integer  :: overburden_compaction_method = -1
   integer  :: new_snow_density            = LoTmpDnsSlater2017 ! Snow density type
   real(r8) :: upplim_destruct_metamorph   = 100.0_r8           ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
@@ -158,6 +167,7 @@ contains
     use shr_nl_mod     , only : shr_nl_find_group_name
     use spmdMod        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
+    use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
@@ -175,15 +185,19 @@ contains
          wind_dependent_snow_density, snow_overburden_compaction_method, &
          lotmp_snowdensity_method, upplim_destruct_metamorph, &
          overburden_compress_Tfactor, min_wind_snowcompact, &
-         reset_snow, reset_snow_glc, reset_snow_glc_ela, dzmin_1, dzmax_l_1, &
-         dzmax_u_1
+         reset_snow, reset_snow_glc, reset_snow_glc_ela, &
+         snow_dzmin_1, snow_dzmax_l_1, snow_dzmax_u_1, &
+         snow_dzmin_2, snow_dzmax_l_2, snow_dzmax_u_2
 
     ! Initialize options to default values, in case they are not specified in the namelist
     wind_dependent_snow_density = .false.
     snow_overburden_compaction_method = ' '
-    dzmin_1 = 0.01_r8
-    dzmax_l_1 = 0.03_r8
-    dzmax_u_1 = 0.02_r8
+    snow_dzmin_1 = nan
+    snow_dzmin_2 = nan
+    snow_dzmax_l_1 = nan
+    snow_dzmax_l_2 = nan
+    snow_dzmax_u_1 = nan
+    snow_dzmax_u_2 = nan
 
     if (masterproc) then
        unitn = getavu()
@@ -210,9 +224,12 @@ contains
     call shr_mpi_bcast (reset_snow                 , mpicom)
     call shr_mpi_bcast (reset_snow_glc             , mpicom)
     call shr_mpi_bcast (reset_snow_glc_ela         , mpicom)
-    call shr_mpi_bcast (dzmin_1, mpicom)
-    call shr_mpi_bcast (dzmax_l_1, mpicom)
-    call shr_mpi_bcast (dzmax_u_1, mpicom)
+    call shr_mpi_bcast (snow_dzmin_1, mpicom)
+    call shr_mpi_bcast (snow_dzmin_2, mpicom)
+    call shr_mpi_bcast (snow_dzmax_l_1, mpicom)
+    call shr_mpi_bcast (snow_dzmax_l_2, mpicom)
+    call shr_mpi_bcast (snow_dzmax_u_1, mpicom)
+    call shr_mpi_bcast (snow_dzmax_u_2, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -235,19 +252,6 @@ contains
        overburden_compaction_method = OverburdenCompactionMethodVionnet2012
     else
        call endrun(msg="ERROR bad snow_overburden_compaction_method name"// &
-            errMsg(sourcefile, __LINE__))
-    end if
-
-    if (dzmin_1 < 0.01_r8) then
-       call endrun(msg="ERROR dzmin_1 cannot be less than 0.01"// &
-            errMsg(sourcefile, __LINE__))
-    end if
-    if (dzmax_l_1 < 0.03_r8) then
-       call endrun(msg="ERROR dzmax_l_1 cannot be less than 0.03"// &
-            errMsg(sourcefile, __LINE__))
-    end if
-    if (dzmax_u_1 < 0.02_r8) then
-       call endrun(msg="ERROR dzmax_2_1 cannot be less than 0.02"// &
             errMsg(sourcefile, __LINE__))
     end if
 
@@ -1504,7 +1508,7 @@ contains
     real(r8):: h2osno_total(bounds%begc:bounds%endc) ! total snow water (mm H2O)
     real(r8):: zwice(bounds%begc:bounds%endc)   ! total ice mass in snow
     real(r8):: zwliq (bounds%begc:bounds%endc)  ! total liquid water in snow
-    real(r8):: dzminloc(nlevsno)  ! minimum of top snow layer (local)
+    real(r8):: dzminloc(nlevsno)  ! minimum thickness of snow layer (local)
     real(r8):: dtime                            !land model time step (sec)
 
     !-----------------------------------------------------------------------
@@ -2222,6 +2226,7 @@ contains
     !
     ! !USES:
     use clm_varcon         , only : spval
+    use spmdMod, only : masterproc
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
@@ -2242,25 +2247,96 @@ contains
          zi  => col%zi     & ! Output: [real(r8) (:,:) ]  interface level below a "z" level (m) (-nlevsno+0:nlevgrnd)
     )
 
+    allocate(dzmin(1:nlevsno))
+    allocate(dzmax_l(1:nlevsno))
+    allocate(dzmax_u(1:nlevsno))
+
+    ! FOR TEMPORARY TESTING. DELETE WHEN DONE. slevis diag
+    allocate(dzmin_orig(1:nlevsno))
+    allocate(dzmax_l_orig(1:nlevsno))
+    allocate(dzmax_u_orig(1:nlevsno))
+
     ! These three variables determine the vertical structure of the snow pack:
-    ! dzmin: minimum of top snow layer
-    ! dzmax_l: maximum thickness of layer when no layers beneath
-    ! dzmax_u: maximum thickness of layer when layers beneath
-    dzmin(1) = dzmin_1  ! set in the namelist with default or user-defined value
-    dzmax_l(1) = dzmax_l_1  ! same comment
-    dzmax_u(1) = dzmax_u_1  ! same comment
-    do j = 2, nlevsno
+    ! dzmin: minimum snow thickness of layer
+    ! dzmax_l: maximum snow thickness of layer when no layers beneath
+    ! dzmax_u: maximum snow thickness of layer when layers beneath
+    dzmin(1) = snow_dzmin_1  ! default or user-defined value from namelist
+    dzmax_l(1) = snow_dzmax_l_1  ! same comment
+    dzmax_u(1) = snow_dzmax_u_1  ! same comment
+    dzmin(2) = snow_dzmin_2  ! default or user-defined value from namelist
+    dzmax_l(2) = snow_dzmax_l_2  ! same comment
+    dzmax_u(2) = snow_dzmax_u_2  ! same comment
+    do j = 3, nlevsno
        dzmin(j) = dzmax_u(j-1) * 0.5_r8
-       if (dzmin(j) <= dzmin(j-1)) then
-          dzmin(j) = (dzmin(j-1) + dzmax_u(j-1)) * 0.5_r8
-       end if
        dzmax_u(j) = 2._r8 * dzmax_u(j-1) + 0.01_r8
-       if (j == 2) then
-          dzmax_l(j) = dzmax_u(j) + dzmax_l(j-1) - 0.01_r8
-       else
-          dzmax_l(j) = dzmax_u(j) + dzmax_l(j-1)
+       dzmax_l(j) = dzmax_u(j) + dzmax_l(j-1)
+       ! error checks
+       if (dzmin(j) <= dzmin(j-1)) then
+          write(iulog,*) 'ERROR at snow layer j =', j, ' because dzmin(j) =', dzmin(j), ' and dzmin(j-1) =', dzmin(j-1)
+          call endrun(msg="ERROR dzmin(j) cannot be <= dzmin(j-1)"// &
+               errMsg(sourcefile, __LINE__))
+       end if
+       if (dzmax_u(j) <= dzmax_u(j-1)) then
+          write(iulog,*) 'ERROR at snow layer j =', j, ' because dzmax_u(j) =', dzmax_u(j), ' and dzmax_u(j-1) =', dzmax_u(j-1)
+          call endrun(msg="ERROR dzmax_u(j) cannot be <= dzmax_u(j-1)"// &
+               errMsg(sourcefile, __LINE__))
+       end if
+       if (dzmax_l(j) <= dzmax_l(j-1)) then
+          write(iulog,*) 'ERROR at snow layer j =', j, ' because dzmax_l(j) =', dzmax_l(j), ' and dzmax_l(j-1) =', dzmax_l(j-1)
+          call endrun(msg="ERROR dzmax_l(j) cannot be <= dzmax_l(j-1)"// &
+               errMsg(sourcefile, __LINE__))
+       end if
+       if (dzmin(j) >= dzmax_u(j)) then
+          write(iulog,*) 'ERROR at snow layer j =', j, ' because dzmin(j) =', dzmin(j), ' and dzmax_u(j) =', dzmax_u(j)
+          call endrun(msg="ERROR dzmin(j) cannot be >= dzmax_u(j)"// &
+               errMsg(sourcefile, __LINE__))
+       end if
+       if (dzmax_u(j) >= dzmax_l(j)) then
+          write(iulog,*) 'ERROR at snow layer j =', j, ' because dzmax_u(j) =', dzmax_u(j), ' and dzmax_l(j) =', dzmax_l(j)
+          call endrun(msg="ERROR dzmax_u(j) cannot be >= dzmax_l(j)"// &
+               errMsg(sourcefile, __LINE__))
        end if
     end do
+    if (nlevsno >= 12) then  ! max nlevsno is 12
+       dzmax_u(nlevsno) = huge(1._r8)  ! the original code set layer 12 to huge
+       dzmax_l(nlevsno) = huge(1._r8)  ! same comment
+    end if
+
+    if (masterproc) then
+       write(iulog,*) 'dzmin =', dzmin
+       write(iulog,*) 'dzmax_l =', dzmax_l
+       write(iulog,*) 'dzmax_u =', dzmax_u
+    end if
+
+    ! BEGIN TEMPORARY TESTING. DELETE WHEN DONE. slevis diag
+    dzmin_orig = (/ 0.01_r8, 0.015_r8, 0.025_r8, 0.055_r8, 0.115_r8, 0.235_r8, &
+                  0.475_r8, 0.955_r8, 1.915_r8, 3.835_r8, 7.675_r8, 15.355_r8 /)
+    if (maxval(abs(dzmin(1:nlevsno) - dzmin_orig(1:nlevsno))) > 1.e-13_r8) then
+       write(iulog,*) 'dzmin_orig =', dzmin_orig
+       call endrun(msg="ERROR dzmin_orig /= dzmin"// &
+               errMsg(sourcefile, __LINE__))
+    else
+       dzmin(1:nlevsno) = dzmin_orig(1:nlevsno)
+    end if
+    dzmax_u_orig = (/ 0.02_r8, 0.05_r8, 0.11_r8, 0.23_r8, 0.47_r8, 0.95_r8, &
+                  1.91_r8, 3.83_r8, 7.67_r8, 15.35_r8, 30.71_r8, huge(1._r8) /)
+    if (maxval(abs(dzmax_u(1:nlevsno) - dzmax_u_orig(1:nlevsno))) > 1.e-13_r8) then
+       write(iulog,*) 'dzmax_u_orig =', dzmax_u_orig
+       call endrun(msg="ERROR dzmax_u_orig /= dzmax_u"// &
+               errMsg(sourcefile, __LINE__))
+    else
+       dzmax_u(1:nlevsno) = dzmax_u_orig(1:nlevsno)
+    end if
+    dzmax_l_orig = (/ 0.03_r8, 0.07_r8, 0.18_r8, 0.41_r8, 0.88_r8, 1.83_r8, &
+                  3.74_r8, 7.57_r8, 15.24_r8, 30.59_r8, 61.30_r8, huge(1._r8) /)
+    if (maxval(abs(dzmax_l(1:nlevsno) - dzmax_l_orig(1:nlevsno))) > 1.e-13_r8) then
+       write(iulog,*) 'dzmax_l_orig =', dzmax_l_orig
+       call endrun(msg="ERROR dzmax_l_orig /= dzmax_l"// &
+               errMsg(sourcefile, __LINE__))
+    else
+       dzmax_l(1:nlevsno) = dzmax_l_orig(1:nlevsno)
+    end if
+    ! END TEMPORARY TESTING slevis diag
 
     loop_columns: do c = bounds%begc,bounds%endc
        l = col%landunit(c)

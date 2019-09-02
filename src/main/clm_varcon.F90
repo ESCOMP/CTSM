@@ -213,9 +213,6 @@ module clm_varcon
   ! The values for the following arrays are set in routine iniTimeConst
   !------------------------------------------------------------------
 
-  real(r8), public, allocatable :: dzmin(:)  !min of top snow layer
-  real(r8), public, allocatable :: dzmax_l(:)  !max snow thickness of layer when no layers beneath
-  real(r8), public, allocatable :: dzmax_u(:)  !max snow thickness of layer when layers beneath
   real(r8), public, allocatable :: zlak(:)         !lake z  (layers)
   real(r8), public, allocatable :: dzlak(:)        !lake dz (thickness)
   real(r8), public, allocatable :: zsoi(:)         !soil z  (layers)
@@ -269,7 +266,7 @@ contains
     ! MUST be called  after clm_varpar_init.
     !
     ! !USES:
-    use clm_varpar, only: nlevsno, nlevgrnd, nlevlak, nlevdecomp_full, nlevsoifl, nlayer
+    use clm_varpar, only: nlevgrnd, nlevlak, nlevdecomp_full, nlevsoifl, nlayer
     !
     ! !ARGUMENTS:
     implicit none
@@ -279,9 +276,6 @@ contains
     !   Created by E. Kluzek
 !------------------------------------------------------------------------------
 
-    allocate( dzmin(1:nlevsno                ))
-    allocate( dzmax_l(1:nlevsno              ))
-    allocate( dzmax_u(1:nlevsno              ))
     allocate( zlak(1:nlevlak                 ))
     allocate( dzlak(1:nlevlak                ))
     allocate( zsoi(1:nlevgrnd                ))
