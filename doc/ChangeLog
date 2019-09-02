@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev061
 Originator(s):  erik (Erik Kluzek)
-Date: Sat Aug 31 21:38:33 MDT 2019
+Date: Sun Sep  1 22:37:07 MDT 2019
 One-line Summary: Simple b4b fixes: new params file, remove override_nsrest/anoxia_wtsat, DV deprecated
 
 Purpose of changes
@@ -81,6 +81,9 @@ CTSM testing: regular
 
     cheyenne ---- OK
     hobart ------ OK
+
+An additional fail is ERP_P36x2_D_Ld5.f10_f10_musgs.I2000Clm50Cn.cheyenne_gnu.clm-default, because
+of #798. Because it's an issue with cime, I'm not marking it as an expected error.
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
 
