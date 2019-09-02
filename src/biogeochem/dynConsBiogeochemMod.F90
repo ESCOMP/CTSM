@@ -60,7 +60,7 @@ contains
     use landunit_varcon    , only : istsoil, istcrop
     use clm_varpar         , only : nlevdecomp
     use clm_varcon         , only : c13ratio, c14ratio, c3_r2, c4_r2
-    use clm_time_manager   , only : get_step_size
+    use clm_time_manager   , only : get_step_size_real
     use dynPriorWeightsMod , only : prior_weights_type
     use dynPatchStateUpdaterMod, only : patch_state_updater_type
     !
@@ -310,7 +310,7 @@ contains
     endif
     
     ! Get time step
-    dt = real( get_step_size(), r8 )
+    dt = get_step_size_real()
 
     patch_initiating = patch_state_updater%patch_initiating(bounds)
 

@@ -12,7 +12,7 @@ module GlacierSurfaceMassBalanceMod
   use clm_varcon     , only : secspday
   use clm_varpar     , only : nlevgrnd
   use clm_varctl     , only : glc_snow_persistence_max_days
-  use clm_time_manager, only : get_step_size
+  use clm_time_manager, only : get_step_size_real
   use landunit_varcon, only : istice_mec
   use ColumnType     , only : col                
   use LandunitType   , only : lun
@@ -112,7 +112,7 @@ contains
          qflx_glcice_melt => waterfluxbulk_inst%qflx_glcice_melt_col       & ! Output: [real(r8) (:)   ] ice melt (positive definite) (mm H2O/s)
          )
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     do fc = 1, num_do_smb_c
        c = filter_do_smb_c(fc)

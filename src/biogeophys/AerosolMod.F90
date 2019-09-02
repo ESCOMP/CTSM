@@ -8,7 +8,7 @@ module AerosolMod
   use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
   use decompMod        , only : bounds_type
   use clm_varpar       , only : nlevsno, nlevgrnd 
-  use clm_time_manager , only : get_step_size
+  use clm_time_manager , only : get_step_size_real
   use atm2lndType      , only : atm2lnd_type
   use WaterFluxBulkType    , only : waterfluxbulk_type
   use WaterStateBulkType   , only : waterstatebulk_type
@@ -603,7 +603,7 @@ contains
          mss_cnc_dst4  => aerosol_inst%mss_cnc_dst4_col       & ! Output: [real(r8) (:,:) ]  mass concentration of dust species 4 (col,lyr) [kg/kg]
          )
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       do fc = 1, num_on
          c = filter_on(fc)
@@ -803,7 +803,7 @@ contains
       ! is in the top layer after deposition, and is not immediately
       ! washed out before radiative calculations are done
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       do fc = 1, num_snowc
          c = filter_snowc(fc)
