@@ -161,13 +161,14 @@ OPTIONS
      -dynamic_vegetation      Toggle for dynamic vegetation model. (default is off)
                               (can ONLY be turned on when BGC type is 'cn' or 'bgc')
                               This turns on the namelist variable: use_cndv
+                              (Deprecated, this will be removed)
      -fire_emis               Produce a fire_emis_nl namelist that will go into the
                               "drv_flds_in" file for the driver to pass fire emissions to the atm.
                               (Note: buildnml copies the file for use by the driver)
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36]
                               (default is 0) (standard option with land-ice model is 10)
      -help [or -h]            Print usage to STDOUT.
-     -light_res <value>       Resolution of lightning dataset to use for CN fire (hcru or T62)
+     -light_res <value>       Resolution of lightning dataset to use for CN fire (360x720 or 94x192)
      -ignore_ic_date          Ignore the date on the initial condition files
                               when determining what input initial condition file to use.
      -ignore_ic_year          Ignore just the year part of the date on the initial condition files
@@ -1250,6 +1251,8 @@ sub setup_cmdl_dynamic_vegetation {
         my @valid_values   = $definition->get_valid_values( $var );
         $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
      }
+     $log->warning("The use_cndv=T option is deprecated. We do NOT recommend using it." . 
+                   " It's known to have issues and it's not calibrated.");
   }
 }
 #-------------------------------------------------------------------------------
@@ -1834,19 +1837,6 @@ sub setup_logic_start_type {
   my $var = "start_type";
   my $drv_start_type = $nl->get_value($var);
   my $my_start_type  = $nl_flags->{'clm_start_type'};
-  my $nsrest         = $nl->get_value('override_nsrest');
-
-  if ( defined($nsrest) ) {
-    if ( $nsrest == 0 ) { $my_start_type = "startup";  }
-    if ( $nsrest == 1 ) { $my_start_type = "continue"; }
-    if ( $nsrest == 3 ) { $my_start_type = "branch";   }
-    if ( "$my_start_type" eq "$drv_start_type" ) {
-      $log->fatal_error("no need to set override_nsrest to same as start_type.");
-    }
-    if ( "$drv_start_type" !~ /startup/ ) {
-      $log->fatal_error("can NOT set override_nsrest if driver is NOT a startup type.");
-    }
-  }
 
   if ( $my_start_type =~ /branch/ ) {
     if (not defined $nl->get_value('nrevsn')) {
@@ -2838,13 +2828,6 @@ sub setup_logic_methane {
         $log->fatal_error("lake_decomp_fact set without allowlakeprod=.true.");
       }
     }
-    my $anoxia = $nl->get_value('anoxia');
-    if ( ! defined($anoxia) ||
-         (defined($anoxia) && ! &value_is_true($anoxia)) ) {
-      if ( defined($nl->get_value('anoxia_wtsat')) ) {
-        $log->fatal_error("anoxia_wtsat set without anoxia=.true.");
-      }
-    }
     my $pftspec_rootprof = $nl->get_value('pftspecific_rootingprofile');
     if ( ! defined($pftspec_rootprof) ||
          (defined($pftspec_rootprof) && &value_is_true($pftspec_rootprof) ) ) {
@@ -2853,7 +2836,7 @@ sub setup_logic_methane {
       }
     }
   } else {
-    my @vars = ( "allowlakeprod", "anoxia", "anoxia_wtsat", "pftspecific_rootingprofile" );
+    my @vars = ( "allowlakeprod", "anoxia", "pftspecific_rootingprofile" );
     foreach my $var ( @vars ) {
       if ( defined($nl->get_value($var)) ) {
         $log->fatal_error("$var set without methane model configuration on (use_lch4)");

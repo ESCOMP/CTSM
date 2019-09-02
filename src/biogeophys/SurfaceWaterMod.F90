@@ -12,7 +12,7 @@ module SurfaceWaterMod
   use shr_spfn_mod                , only : erf => shr_spfn_erf
   use clm_varcon                  , only : denh2o, denice, roverg, wimp, tfrz, pc, mu, rpi
   use clm_varpar                  , only : nlevsno, nlevgrnd
-  use clm_time_manager            , only : get_step_size
+  use clm_time_manager            , only : get_step_size_real
   use column_varcon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
   use decompMod                   , only : bounds_type
   use ColumnType                  , only : col
@@ -85,7 +85,7 @@ contains
          b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
          )
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! ------------------------------------------------------------------------
     ! Update diagnostics for bulk water
@@ -354,7 +354,7 @@ contains
          h2osfcflag       =>    soilhydrology_inst%h2osfcflag         & ! Input:  integer
          )
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     call QflxH2osfcSurf(bounds, num_hydrologyc, filter_hydrologyc, &
          h2osfcflag = h2osfcflag, &
@@ -438,7 +438,7 @@ contains
     SHR_ASSERT_ALL((ubound(topo_slope) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(qflx_h2osfc_surf) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
@@ -504,7 +504,7 @@ contains
     SHR_ASSERT_ALL((ubound(qinmax) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(qflx_h2osfc_drain) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)

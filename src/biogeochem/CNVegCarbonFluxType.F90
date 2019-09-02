@@ -3994,7 +3994,7 @@ contains
     ! Perform patch and column-level carbon summary calculations
     !
     ! !USES:
-    use clm_time_manager                   , only: get_step_size
+    use clm_time_manager                   , only: get_step_size_real
     use clm_varcon                         , only: secspday
     use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
     use subgridAveMod                      , only: p2c, c2g
@@ -4031,7 +4031,7 @@ contains
 
     ! calculate patch-level summary carbon fluxes and states
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     do fp = 1,num_soilp
        p = filter_soilp(fp)
