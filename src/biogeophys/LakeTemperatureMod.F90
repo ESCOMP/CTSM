@@ -115,7 +115,7 @@ contains
     use QSatMod            , only : QSat
     use TridiagonalMod     , only : Tridiagonal
     use clm_varpar         , only : nlevlak, nlevgrnd, nlevsno
-    use clm_time_manager   , only : get_step_size
+    use clm_time_manager   , only : get_step_size_real
     use clm_varcon         , only : hfus, cpliq, cpice, tkwat, tkice, denice
     use clm_varcon         , only : vkc, grav, denh2o, tfrz, cnfac
     use clm_varctl         , only : iulog, use_lch4
@@ -268,7 +268,7 @@ contains
     ! 1!) Initialization
     ! Determine step size
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! Initialize constants
     cwat = cpliq*denh2o ! water heat capacity per unit volume
@@ -1266,7 +1266,7 @@ contains
      ! Errors will be trapped at the end of LakeTemperature.
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
+     use clm_time_manager , only : get_step_size_real
      use clm_varcon       , only : tfrz, hfus, denh2o, denice, cpliq, cpice
      use clm_varpar       , only : nlevsno, nlevgrnd, nlevlak
      !
@@ -1329,7 +1329,7 @@ contains
 
        ! Get step size
 
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        ! Initialization
 

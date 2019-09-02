@@ -18,9 +18,9 @@
     <desc lnd="CLM50[%SP][%SP-VIC][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
     <desc option="CN"              >CN: Carbon Nitrogen model</desc>
-    <desc option="CNDV"            >CNDV: CN with Dynamic Vegetation</desc>
+    <desc option="CNDV"            >CNDV: CN with Dynamic Vegetation (deprecated)</desc>
     <desc option="CN-CROP"         >CN with prognostic crop:</desc>
-    <desc option="CNDV-CROP"       >CNDV with prognostic crop:</desc>
+    <desc option="CNDV-CROP"       >CNDV with prognostic crop: (deprecated)</desc>
 
     <desc option="SP-VIC"          >Satellite phenology with VIC hydrology:</desc>
     <desc option="BGC"             >BGC (vert. resol. CN and methane):</desc>

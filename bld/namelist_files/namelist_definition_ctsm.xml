@@ -624,12 +624,6 @@ baseline proportion of nitrogen allocated for electron transport (J)
 Time step (seconds)
 </entry>
 
-<entry id="override_nsrest" type="integer"  category="clm_restart" 
-       group="clm_inparm" valid_values="3">
-Override the start type from the driver: it can only be
-set to 3 meaning branch.
-</entry>
-
 <entry id="use_fates" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the FATES model
@@ -2001,14 +1995,6 @@ E-folding depth over which decomposition is slowed with depth in all soils.
 <entry id="anoxia" type="logical" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 If TRUE, reduce heterotrophic respiration according to available oxygen predicted by CH4 submodel.
-</entry>
-
-<entry id="anoxia_wtsat" type="logical" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
-If TRUE, weight calculation of oxygen limitation by the inundated fraction and diagnostic saturated column gas
-concentration profile calculated in the CH4 submodel. Only applies if anoxia = TRUE.
-(EXPERIMENTAL AND NOT FUNCTIONAL!)
-(deprecated -- will be removed)
 </entry>
 
 <entry id="froz_q10" type="real" category="clm_vertcn"
