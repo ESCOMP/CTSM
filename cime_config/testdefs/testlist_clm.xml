@@ -1750,7 +1750,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="edison" compiler="intel" category="fates"/>
-      <machine name="hobart" compiler="nag" category="fates"/>
+      <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1785,7 +1785,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="edison" compiler="intel" category="fates"/>
-      <machine name="hobart" compiler="nag" category="fates"/>
+      <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1803,7 +1803,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="edison" compiler="intel" category="fates"/>
-      <machine name="hobart" compiler="nag" category="fates"/>
+      <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
