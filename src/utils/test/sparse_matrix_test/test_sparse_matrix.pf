@@ -75,5 +75,25 @@ contains
 
   end subroutine SM_Identity_times_ArbDiagMatrix_is_self
 
+  @Test
+  subroutine V_Identity_times_ArbVector_plus_self__is_twice_self( this )
+    use shr_const_mod, only: SHR_CONST_PI
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(vector_type) :: vector
+    real(r8) :: Mdiag(begu:endu,ndims)
+    integer :: i
+
+    call vector%InitV( ndims, begu, endu )
+    do i = 1, ndims
+       Mdiag(:,i) = real(i*10,r8)
+    end do
+    call vector%SetValueV( begu, endu, this%num_unit,this%filter_u, Mdiag(begu:endu,:) )
+    ! Multiply by the identity matrix already stored
+    call vector%SPMM_AX( this%num_unit,this%filter_u, this%SM_identity )
+    ! Result (now stored in vector)
+    @assertEqual( vector%V, Mdiag*2.0_r8 )
+
+  end subroutine V_Identity_times_ArbVector_plus_self__is_twice_self
 
 end module test_sparse_matrix
