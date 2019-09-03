@@ -1,4 +1,110 @@
 ===============================================================
+Tag name:  ctsm1.0.dev061
+Originator(s):  erik (Erik Kluzek)
+Date: Sun Sep  1 22:37:07 MDT 2019
+One-line Summary: Simple b4b fixes: new params file, remove override_nsrest/anoxia_wtsat, DV deprecated
+
+Purpose of changes
+------------------
+
+New clm5 paramsfile that has the bad date of 631 changed to 701. Along with some simple bit for
+bit changes. Removing some problematic options. Making Dynamic Vegetation a deprecated option 
+that requires you to use -ignore_warnings with it.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):  #463 #79 #97 #98 #104 #122 #173 #794 #795 #796
+
+   Fixes #463 bad date on params file that didn't allow using ESMF library with Crop
+   Fixes #79 correct documentation of qflx_evap_tot
+   Fixes #97 remove override_nsrest
+   Fixes #98 add warning when using single instance of a startup file for multi-instance cases
+   Fixes #104 use get_step_size_real when putting into a real variable
+   Fixes #122 decomp pool arrays should not start at 0 but 1
+   Fixes #173 remove psi_soil_ref as not used
+   Fixes #794 remove anoxia_wtsat
+   Fixes #795 Correct documentation of -light_res
+   Fixes #796 Deprecate Dynamic Vegetation
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Remove namelist items
+   Remove namelist items:  anoxia_wtsat, override_nsrest
+   Turning dynamic Vegetation on, now displays a warning, and requires using -ignore_warnings in CLM_BLDNML_OPTS
+
+Changes made to namelist defaults (e.g., changed parameter values): New paramdata files
+
+Changes to the datasets (e.g., parameter, surface or initial files): 
+   clm5 paramdata file has correct date for crop of 701 (rather than incorrect 631)
+   clm5 and clm4_5 paramdata file removed an unused variable
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: DV tests removed or changed
+
+Code reviewed by: self
+
+CTSM testing: regular
+
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (compare shows changes becausse of paramdata files)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+
+An additional fail is ERP_P36x2_D_Ld5.f10_f10_musgs.I2000Clm50Cn.cheyenne_gnu.clm-default, because
+of #798. Because it's an issue with cime, I'm not marking it as an expected error.
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #797
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #797 -- Simple b4b fixes: new params file, remove override_nsrest/anoxia_wtsat, DV deprecated 
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev060
 Originator(s):  sacks (Bill Sacks)
 Date:  Thu Aug 29 11:18:20 MDT 2019

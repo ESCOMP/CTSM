@@ -218,7 +218,7 @@ contains
     !
     ! !USES:
     use shr_const_mod      , only : SHR_CONST_RGAS
-    use clm_time_manager   , only : get_step_size, get_prev_date,is_end_curr_day
+    use clm_time_manager   , only : get_step_size_real, get_prev_date,is_end_curr_day
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
     use clm_varcon         , only : c14ratio
@@ -566,7 +566,7 @@ contains
 
       ! Determine step size
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       is_end_day = is_end_curr_day()
 
       ! Make a local copy of the exposedvegp filter. With the current implementation,

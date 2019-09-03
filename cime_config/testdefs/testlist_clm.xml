@@ -682,14 +682,6 @@
       <option name="comment"  >cism is not answer preserving across processor changes, but short test length should be ok.</option>
     </options>
   </test>
-  <test name="ERP_P180x2_D_Ld5" grid="f19_g17" compset="I2000Clm50BgcDvCrop" testmods="clm/crop">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="ERP_P180x2_D_Ld5" grid="f19_g17" compset="I2000Clm50Sp" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -698,12 +690,13 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_P72x2_Lm25" grid="f10_f10_musgs" compset="I2000Clm50BgcDvCrop" testmods="clm/monthly">
+  <test name="ERP_P72x2_Lm25" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/monthly">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
+      <option name="comment"  >threaded ERP test for crop just over 2-years</option>
     </options>
   </test>
   <test name="ERP_P36x2_D_Ld5" grid="f10_f10_musgs" compset="I1850Clm45BgcCrop" testmods="clm/crop">
@@ -722,14 +715,6 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="ERP_P36x2_Lm25" grid="f10_f10_musgs" compset="I2000Clm50BgcDvCrop" testmods="clm/monthly">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:20:00</option>
     </options>
   </test>
   <test name="ERP_P72x2_Ly3" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/irrig_o3_reduceOutput">
@@ -942,13 +927,14 @@
       <option name="comment"  >tests mid-year restart, with the restart file being written after more than 2 years, which Sam Levis says is important for testing crop restarts</option>
     </options>
   </test>
-  <test name="ERS_Ly20_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcDvCropQianGs" testmods="clm/cropMonthOutput">
+  <test name="ERS_Ly20_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianGs" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">01:40:00</option>
+      <option name="wallclock"     >01:40:00</option>
       <option name="tput_tolerance">0.5</option>
+      <option name="comment"       >20 year single point tests with BGC-Crop (Crop keeps a 20 year running mean)</option>
     </options>
   </test>
   <test name="ERS_Ly3" grid="f10_f10_musgs" compset="I1850Clm50BgcCropCmip6" testmods="clm/basic">
@@ -1439,12 +1425,13 @@
       <option name="wallclock">01:40:00</option>
     </options>
   </test>
-  <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcDvCropQianGs" testmods="clm/cropMonthOutput">
+  <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcDvCropQianGs" testmods="clm/ignor_warn_cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
+      <option name="comment"  >Single point 3-year test with DV"</option>
     </options>
   </test>
   <test name="SMS_P48x1_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50Cn" testmods="clm/default">

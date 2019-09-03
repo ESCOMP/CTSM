@@ -6,7 +6,7 @@ module SoilBiogeochemNStateUpdate1Mod
   !
   ! !USES:
   use shr_kind_mod                       , only: r8 => shr_kind_r8
-  use clm_time_manager                   , only : get_step_size
+  use clm_time_manager                   , only : get_step_size_real
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use clm_varctl                         , only : iulog, use_nitrif_denitrif, use_crop
@@ -61,7 +61,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       do j = 1, nlevdecomp
          do fc = 1,num_soilc
