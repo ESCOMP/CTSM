@@ -913,7 +913,7 @@ contains
                 ! Others
                 call eval_fluxes_storage(flux_avail_mg, 'closed', tempr_ave, windspeed_ave, 0.0_r8, &
                      volat_coef_barns_closed, volat_coef_stores, tan_fract_excr, fluxes_nitr(:,2), fluxes_tan(:,2), &
-                     size(fluxes_nitr, 2), status)
+                     size(fluxes_nitr, 1), status)
                 if (status /=0) then 
                    write(iulog, *) 'status = ', status
                    call endrun(msg='eval_fluxes_storage failed for other livestock')
