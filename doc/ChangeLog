@@ -1,4 +1,116 @@
 ===============================================================
+Tag name:  ctsm1.0.dev062
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Sep  3 16:04:28 MDT 2019
+One-line Summary: Move hobart tests to izumi
+
+Purpose of changes
+------------------
+
+Move all hobart testing to izumi.
+
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include github issue ID):
+- Recurrence of ESCOMP/ctsm#174 (ne30 case fails on hobart_nag due to floating overflow)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Testing should now be run on izumi, not hobart
+
+Changes to tests or testing:
+- All hobart tests moved to izumi
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- not run
+    izumi ------- pass
+
+  Also ran prealpha and prebeta tests that I moved from hobart to izumi. These passed except:
+  - ERP_D_Ld5.ne30_g16.I1850Clm50BgcCrop.izumi_nag.clm-default (#174)
+  - ERP_Ld5.f19_g17.I2000Clm50SpRtmFl.izumi_pgi.clm-default
+  - SMS_D_Ld1.f19_g17.I1850Clm45Cn.izumi_pgi.clm-default
+
+  The last two failed with errors like:
+
+    i011.unified.ucar.edu.44619hfi_userinit: mmap of status page (dabbad0008040000) failed: Operation not permitted
+
+  I wonder if the issue is that multi-node pgi cases don't work on izumi?
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: cime5.8.3_chint17-04 -> cime5.8.3_chint17-05
+  Minor change on izumi to allow using run_sys_tests
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev061
 Originator(s):  erik (Erik Kluzek)
 Date: Sun Sep  1 22:37:07 MDT 2019
