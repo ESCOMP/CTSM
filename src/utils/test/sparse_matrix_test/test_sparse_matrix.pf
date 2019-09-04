@@ -93,7 +93,43 @@ contains
     call vector%SPMM_AX( this%num_unit,this%filter_u, this%SM_identity )
     ! Result (now stored in vector)
     @assertEqual( vector%V, Mdiag*2.0_r8 )
+    call vector%ReleaseV()
 
   end subroutine V_Identity_times_ArbVector_plus_self__is_twice_self
+
+  @Test
+  subroutine SM_ArbTriMatrix_plus_self_is_twice_self( this )
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(sparse_matrix_type) :: ArbSMatrix, ArbSMatrix2
+    integer, parameter :: NonZero = ndims + ndims - 1 + ndims - 2
+    real(r8) :: M(NonZero)
+    integer :: i, band, nz, band_size
+    integer :: Iindex(NonZero), Jindex(NonZero)
+
+    ! Set up an arbitrary upper tri-diagonal matrix (3 bands)
+    nz = 0
+    band_size = ndims
+    do band = 1, 3
+      do i = 1, band_size
+        nz = nz + 1
+        M(nz) = real(i*100 + band,r8)
+        Iindex(nz) = i + band - 1
+        Jindex(nz) = i
+      end do
+      band_size = band_size - 1
+    end do
+    @assertEqual(nz,NonZero)
+    call ArbSMatrix%InitSM( ndims, begu, endu )
+    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,M,Iindex,Jindex,NonZero)
+    ! Second matrix is identical
+    call ArbSMatrix2%InitSM( ndims, begu, endu )
+    call ArbSMatrix2%SetValueSM(begu,endu,this%num_unit,this%filter_u,M,Iindex,Jindex,NonZero)
+
+    call ArbSmatrix%SPMP_B_ACC(this%num_unit,this%filter_u,ArbSmatrix2)
+    ! Result should now be twice the original
+    @assertEqual( ArbSmatrix%M(:,:ArbSmatrix%NE), 2.0_r8*ArbSmatrix2%M(:,:ArbSmatrix2%NE) )
+
+  end subroutine SM_ArbTriMatrix_plus_self_is_twice_self
 
 end module test_sparse_matrix
