@@ -436,7 +436,7 @@ contains
             avgflag='A', long_name='Resistant manure nitrogen, grazing', &
             ptr_col=this%man_r_grz_col, default=fanpools_default)
 
-       this%man_u_grz_col(begc:endc) = spval
+       this%man_u_app_col(begc:endc) = spval
        call hist_addfld1d (fname='MAN_U_APP', units='gN/m^2', &
             avgflag='A', long_name='Unavailable manure nitrogen, application', &
             ptr_col=this%man_u_app_col, default=fanpools_default)
@@ -990,8 +990,30 @@ contains
        this%totsomn_col(i)     = value_column
        this%totsomn_1m_col(i)  = value_column
        this%totlitn_1m_col(i)  = value_column
+       this%fan_totn_col(i)    = value_column
+       if (use_fan) then
+          this%tan_g1_col(i)   = value_column
+          this%tan_g2_col(i)   = value_column
+          this%tan_g3_col(i)   = value_column
+          this%tan_s0_col(i)   = value_column
+          this%tan_s1_col(i)   = value_column
+          this%tan_s2_col(i)   = value_column
+          this%tan_s3_col(i)   = value_column
+          this%tan_f1_col(i)   = value_column
+          this%tan_f2_col(i)   = value_column
+          this%tan_f3_col(i)   = value_column
+          this%tan_f4_col(i)   = value_column
+          this%fert_u1_col(i)  = value_column
+          this%fert_u2_col(i)  = value_column
+          this%man_u_grz_col(i) = value_column
+          this%man_a_grz_col(i) = value_column
+          this%man_r_grz_col(i) = value_column
+          this%man_u_app_col(i) = value_column
+          this%man_a_app_col(i) = value_column
+          this%man_r_app_col(i) = value_column
+       end if
     end do
-
+    
     do j = 1,nlevdecomp_full
        do fi = 1,num_column
           i = filter_column(fi)
