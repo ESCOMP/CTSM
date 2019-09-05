@@ -42,7 +42,7 @@ module FanStreamMod
   integer :: model_year_align_fan = ispval       ! align stream_year_firstndep2 with 
   character(len=CL)  :: stream_fldFileName_fan
   character(len=CL)  :: fan_mapalgo = 'bilinear'
-     
+  logical :: crop_manure_per_crop
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !==============================================================================
@@ -51,20 +51,24 @@ contains
 
   !==============================================================================
 
-  subroutine set_bcast_fanstream_pars(str_yr_first, str_yr_last, mdl_yr_align, mapalgo, str_filename)
+  subroutine set_bcast_fanstream_pars(str_yr_first, str_yr_last, mdl_yr_align, mapalgo, str_filename, crop_man_is_percrop)
     integer, intent(in) :: str_yr_first, str_yr_last, mdl_yr_align
+    ! whether manure_sgrz and manure_ngrz are per crop or land area:
+    logical, intent(in) :: crop_man_is_percrop 
     character(len=*), intent(in) :: str_filename, mapalgo
 
     stream_year_first_fan = str_yr_first
     stream_year_last_fan = str_yr_last
     model_year_align_fan = mdl_yr_align
     stream_fldFileName_fan = str_filename
+    crop_manure_per_crop = crop_man_is_percrop
     fan_mapalgo = mapalgo
 
     call shr_mpi_bcast(stream_year_first_fan, mpicom)
     call shr_mpi_bcast(stream_year_last_fan, mpicom)
     call shr_mpi_bcast(model_year_align_fan, mpicom)
     call shr_mpi_bcast(stream_fldFileName_fan, mpicom)
+    call shr_mpi_bcast(crop_manure_per_crop, mpicom)
     call shr_mpi_bcast(fan_mapalgo, mpicom)
     
   end subroutine set_bcast_fanstream_pars
@@ -95,6 +99,7 @@ contains
    character(*), parameter :: shr_strdata_unset = 'NOT_SET'
    character(*), parameter :: subName = "('fanstream_init')"
    character(*), parameter :: F00 = "('(fanstream_init) ',4a)"
+   character(len=80) :: streamvar
    !-----------------------------------------------------------------------
 
    if (stream_year_first_fan == ispval) then
@@ -147,6 +152,12 @@ contains
 
    ! Manure N from seasonally grazing livestock
    !
+   if (crop_manure_per_crop) then
+      streamvar = 'manure_sgrz_crop'
+   else
+      streamvar = 'manure_sgrz'
+   end if
+
    call shr_strdata_create(sdat_sgrz,name="clmfansgrz",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
@@ -166,8 +177,8 @@ contains
         domMaskName='mask',                         &
         filePath='',                                &
         filename=(/trim(stream_fldFileName_fan)/),&
-        fldListFile='manure_sgrz',                 &
-        fldListModel='manure_sgrz',                &
+        fldListFile=streamvar,                    &
+        fldListModel=streamvar,                   &
         fillalgo='none',                            &
         mapalgo=fan_mapalgo,                       &
         calendar=get_calendar(),                    &
@@ -179,6 +190,12 @@ contains
 
    ! Manure N from non-grazing livestock
    !
+   if (crop_manure_per_crop) then
+      streamvar = 'manure_ngrz_crop'
+   else
+      streamvar = 'manure_ngrz'
+   end if
+
    call shr_strdata_create(sdat_ngrz,name="clmfanngrz",    &
         pio_subsystem=pio_subsystem,                & 
         pio_iotype=shr_pio_getiotype(inst_name),    &
@@ -198,8 +215,8 @@ contains
         domMaskName='mask',                         &
         filePath='',                                &
         filename=(/trim(stream_fldFileName_fan)/),&
-        fldListFile='manure_ngrz',                  &
-        fldListModel='manure_ngrz',                 &
+        fldListFile=streamvar,                  &
+        fldListModel=streamvar,                 &
         fillalgo='none',                            &
         mapalgo=fan_mapalgo,                       &
         calendar=get_calendar(),                    &

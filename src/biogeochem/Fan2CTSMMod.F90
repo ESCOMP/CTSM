@@ -112,6 +112,10 @@ module Fan2CTSMMod
   ! Fan coupling to soil BGC. Can be set on separately for crop and other columns.
   logical :: fan_to_bgc_crop = .false.
   logical :: fan_to_bgc_veg = .false.
+
+  ! Whether manure N in mixed/landless systems (manure_sgrz and manure_ngrz streams) is
+  ! defined per crop or land area:
+  logical :: crop_man_is4crop_area = .true.
   
 contains
 
@@ -158,9 +162,9 @@ contains
        end if
        call relavu(unitn)
     end if
-
-    call set_bcast_fanstream_pars(stream_year_first_fan,  stream_year_last_fan, &
-         model_year_align_fan, fan_mapalgo, stream_fldFileName_fan)
+    
+    call set_bcast_fanstream_pars(stream_year_first_fan, stream_year_last_fan, &
+         model_year_align_fan, fan_mapalgo, stream_fldFileName_fan, crop_man_is4crop_area)
 
     call shr_mpi_bcast(fan_to_bgc_crop, mpicom)
     call shr_mpi_bcast(fan_to_bgc_veg, mpicom)
@@ -796,7 +800,7 @@ contains
     integer                  , intent(in)    :: filter_soilc(:) ! filter for soil columns
 
     integer :: begg, endg, g, l, c, il, counter, col_grass, status, p
-    real(r8) :: flux_avail_rum, flux_avail_mg, flux_grazing
+    real(r8) :: flux_avail_rum, flux_avail_mg, flux_grazing, invscale
     real(r8) :: tempr_ave, windspeed_ave ! windspeed and temperature averaged over agricultural patches
     real(r8) :: tempr_barns, tempr_stores, vent_barns, flux_grass_crop, tempr_min_10day, &
          flux_grass_graze, flux_grass_spread, flux_grass_spread_tan, flux_grass_crop_tan
@@ -858,20 +862,26 @@ contains
                    call endrun('column not in soilfilter')
                 end if
 
-                n_manure_mixed_col(c) = (ndep_ngrz_grc(g) + ndep_sgrz_grc(g)) * kg_to_g / lun%wtgcell(l)
-                
+                if (crop_man_is4crop_area) then
+                   invscale = 1.0_r8
+                else
+                   invscale = 1.0_r8 / lun%wtgcell(l)
+                end if
+
+                n_manure_mixed_col(c) = (ndep_ngrz_grc(g) + ndep_sgrz_grc(g)) * kg_to_g * invscale
+
                 tempr_min_10day = temperature_inst%t_a10min_patch(col%patchi(c))
                 if (tempr_min_10day > tempr_min_grazing) then
                    ! fraction of animals grazing -> allocate some manure to grasslands before barns
-                   flux_grazing = max_grazing_fract * ndep_sgrz_grc(g) * kg_to_g / lun%wtgcell(l)
-                   flux_avail_rum = (ndep_sgrz_grc(g)*(1.0_r8 - max_grazing_fract)) * kg_to_g / lun%wtgcell(l)
+                   flux_grazing = max_grazing_fract * ndep_sgrz_grc(g) * kg_to_g * invscale
+                   flux_avail_rum = (ndep_sgrz_grc(g)*(1.0_r8 - max_grazing_fract)) * kg_to_g * invscale
                    grz_fract(c) = max_grazing_fract
                 else
                    flux_grazing = 0.0_r8
-                   flux_avail_rum = ndep_sgrz_grc(g) * kg_to_g / lun%wtgcell(l)
+                   flux_avail_rum = ndep_sgrz_grc(g) * kg_to_g * invscale
                    grz_fract(c) = 0.0_r8
                 end if
-                flux_avail_mg = ndep_ngrz_grc(g) * kg_to_g / lun%wtgcell(l)
+                flux_avail_mg = ndep_ngrz_grc(g) * kg_to_g * invscale
                 flux_grass_graze = flux_grass_graze + flux_grazing*col%wtgcell(c)
 
                 if (flux_avail_rum > 1e12 .or. flux_avail_mg > 1e12 .or. isnan(flux_avail_mg) .or. isnan(flux_avail_rum)) then
