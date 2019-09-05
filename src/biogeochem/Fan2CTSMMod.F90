@@ -703,10 +703,11 @@ contains
               + sum(ns%man_a_app_col(soilc)) + sum(ns%man_r_app_col(soilc))
          
       case('fluxes_manure')
-         total = sum(nf%man_n_grz_col(soilc)) + sum(nf%man_n_appl_col(soilc)) 
+         total = sum(nf%man_n_grz_col(soilc)) + sum(nf%man_n_barns_col(soilc)) 
          total = total - sum(nf%nh3_man_app_col(soilc)) &
               - sum(nf%nh3_grz_col(soilc)) - sum(nf%manure_nh4_runoff_col(soilc))
          total = total - sum(nf%manure_no3_prod_col(soilc)) - sum(nf%manure_nh4_to_soil_col(soilc))
+         total = total - sum(nf%man_n_transf_col(soilc)) - sum(nf%nh3_stores_col(soilc)) - sum(nf%nh3_barns_col(soilc))
          
       case('pools_fertilizer')
          total = sum(ns%tan_f1_col((soilc))) + sum(ns%tan_f2_col((soilc))) + sum(ns%tan_f3_col(soilc)) &
