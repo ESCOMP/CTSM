@@ -8,18 +8,19 @@ module Fan2CTSMMod
   ! internal parameters are set in FanMod.
   !
   ! FAN is implemented on column level. Synthetic fertilizer application is taken from the
-  ! CLM crop model and remains in crop columns. Manure N is read from a separate stream,
-  ! which distinguishes pastoral and mixed/landless livestock systems. Manure in pastures
-  ! is allocated to the native soil column. The mixed/landless systems are associated with
-  ! crop columns, however, some N may be transferred to the native column due to manure
-  ! spreading or seasonal grazing. 
+  ! CLM crop model and remains in crop columns. Manure N is read from a stream (by
+  ! fanStreamMod) which distinguishes pastoral and mixed/landless livestock
+  ! systems. Manure in pastures is allocated to the native soil column. The mixed/landless
+  ! systems are associated with crop columns, however, some N may be transferred to the
+  ! native column due to manure spreading or seasonal grazing.
   !
   ! Within FAN, the nitrogen is distributed to several pools which represent different
   ! types of input (manures, fertilizers) and different "age" (time since
-  ! fertilizer/manure application). The pools of same type but different age are called
-  ! age classes in the FAN description paper. The model includes 4 slurry (manure) age
-  ! classes, 3 grazing manure age classes, 2 urea age classes, 3 age classes for ammonium
-  ! produced from urea, and 1 age class for non-urea NH4 fertilizer N.
+  ! fertilizer/manure application). The age determines properties like pH. The pools of
+  ! same type but different age are called age classes in the FAN description paper. The
+  ! model includes 4 slurry (manure) age classes, 3 grazing manure age classes, 2 urea age
+  ! classes, 3 age classes for ammonium produced from urea, and 1 age class for non-urea
+  ! NH4 fertilizer N.
   
   use FanMod
   use shr_kind_mod, only : r8 => shr_kind_r8, CL => shr_kind_cl
@@ -66,8 +67,9 @@ module Fan2CTSMMod
 
   ! Active layer thickness used by FAN. This is assumed to match the topmost CLM layer. If
   ! this is not the case, handling of the soil moisture becomes inconsistent. 
-  real(r8), parameter :: dz_layer_fert = 0.02_r8 ! m
-  real(r8), parameter :: dz_layer_grz = 0.02_r8  ! m
+  real(r8), parameter :: dz_layer_fert = 0.02_r8 ! m, fertilizer
+  real(r8), parameter :: dz_layer_grz = 0.02_r8  ! m, grazing
+  real(r8), parameter :: dz_layer_slr = 0.02_r8  ! m, slurry
 
   ! Manure N composition
   real(r8) :: fract_tan = 0.6_r8 ! fraction of total ammoniacal nitrogen
@@ -112,6 +114,10 @@ module Fan2CTSMMod
   ! Fan coupling to soil BGC. Can be set on separately for crop and other columns.
   logical :: fan_to_bgc_crop = .false.
   logical :: fan_to_bgc_veg = .false.
+
+  ! Whether manure N in mixed/landless systems (manure_sgrz and manure_ngrz streams) is
+  ! defined per crop or land area:
+  logical :: crop_man_is4crop_area = .true.
   
 contains
 
@@ -158,9 +164,9 @@ contains
        end if
        call relavu(unitn)
     end if
-
-    call set_bcast_fanstream_pars(stream_year_first_fan,  stream_year_last_fan, &
-         model_year_align_fan, fan_mapalgo, stream_fldFileName_fan)
+    
+    call set_bcast_fanstream_pars(stream_year_first_fan, stream_year_last_fan, &
+         model_year_align_fan, fan_mapalgo, stream_fldFileName_fan, crop_man_is4crop_area)
 
     call shr_mpi_bcast(fan_to_bgc_crop, mpicom)
     call shr_mpi_bcast(fan_to_bgc_veg, mpicom)
@@ -415,7 +421,7 @@ contains
        orgpools(ind_avail) = man_a_grz(c)
        orgpools(ind_resist) = man_r_grz(c)
        orgpools(ind_unavail) = man_u_grz(c)
-       call update_org_n(ndep_org, tg, soilpsi, orgpools, dt, tanprod, soilflux_org, size(orgpools), status)
+       call update_org_n(ndep_org, tg, soilpsi, orgpools, dt, dz_layer_grz, tanprod, soilflux_org, size(orgpools), status)
        man_a_grz(c) = orgpools(ind_avail)
        man_r_grz(c) = orgpools(ind_resist) 
        man_u_grz(c) = orgpools(ind_unavail)
@@ -480,7 +486,7 @@ contains
        orgpools(ind_avail) = man_a_app(c)
        orgpools(ind_resist) = man_r_app(c)
        orgpools(ind_unavail) = man_u_app(c)
-       call update_org_n(ndep_org, tg, soilpsi, orgpools, dt, tanprod, soilflux_org, size(orgpools), status)
+       call update_org_n(ndep_org, tg, soilpsi, orgpools, dt, dz_layer_slr, tanprod, soilflux_org, size(orgpools), status)
        man_a_app(c) = orgpools(ind_avail)
        man_r_app(c) = orgpools(ind_resist)
        man_u_app(c) = orgpools(ind_unavail)
@@ -508,7 +514,7 @@ contains
                runoff_m_s, tandep, sum(tanprod), bsw, depth_slurry, &
                poolranges_slr, tanpools(1:num_cls_slr), Hconc_slr, &
                fluxes(1:num_fluxes, 1:num_cls_slr), &
-               n_residual, dt / num_substeps, num_cls_slr, num_fluxes, status)
+               n_residual, dt / num_substeps, dz_layer_slr, num_cls_slr, num_fluxes, status)
           if (status /= 0) then
              write(iulog, *) 'status = ', status, tanpools(1:num_cls_slr), &
                   & tg, ratm, 'th', theta, &
@@ -562,7 +568,7 @@ contains
        call update_urea(tg, theta, thetasat, infiltr_m_s, evap_m_s, watertend, &
             runoff_m_s, fert_urea, bsw, ureapools,  fluxes(1:num_fluxes,1:num_cls_urea), &
             urea_resid, poolranges_fert(1:num_cls_urea), &
-            dt, num_cls_urea, num_fluxes, status)
+            dt, dz_layer_fert, num_cls_urea, num_fluxes, status)
        if (status /= 0) then
           call endrun(msg='Bad status after update_urea for fertilizer')
        end if
@@ -796,7 +802,7 @@ contains
     integer                  , intent(in)    :: filter_soilc(:) ! filter for soil columns
 
     integer :: begg, endg, g, l, c, il, counter, col_grass, status, p
-    real(r8) :: flux_avail_rum, flux_avail_mg, flux_grazing
+    real(r8) :: flux_avail_rum, flux_avail_mg, flux_grazing, invscale
     real(r8) :: tempr_ave, windspeed_ave ! windspeed and temperature averaged over agricultural patches
     real(r8) :: tempr_barns, tempr_stores, vent_barns, flux_grass_crop, tempr_min_10day, &
          flux_grass_graze, flux_grass_spread, flux_grass_spread_tan, flux_grass_crop_tan
@@ -858,20 +864,26 @@ contains
                    call endrun('column not in soilfilter')
                 end if
 
-                n_manure_mixed_col(c) = (ndep_ngrz_grc(g) + ndep_sgrz_grc(g)) * kg_to_g / lun%wtgcell(l)
-                
+                if (crop_man_is4crop_area) then
+                   invscale = 1.0_r8
+                else
+                   invscale = 1.0_r8 / lun%wtgcell(l)
+                end if
+
+                n_manure_mixed_col(c) = (ndep_ngrz_grc(g) + ndep_sgrz_grc(g)) * kg_to_g * invscale
+
                 tempr_min_10day = temperature_inst%t_a10min_patch(col%patchi(c))
                 if (tempr_min_10day > tempr_min_grazing) then
                    ! fraction of animals grazing -> allocate some manure to grasslands before barns
-                   flux_grazing = max_grazing_fract * ndep_sgrz_grc(g) * kg_to_g / lun%wtgcell(l)
-                   flux_avail_rum = (ndep_sgrz_grc(g)*(1.0_r8 - max_grazing_fract)) * kg_to_g / lun%wtgcell(l)
+                   flux_grazing = max_grazing_fract * ndep_sgrz_grc(g) * kg_to_g * invscale
+                   flux_avail_rum = (ndep_sgrz_grc(g)*(1.0_r8 - max_grazing_fract)) * kg_to_g * invscale
                    grz_fract(c) = max_grazing_fract
                 else
                    flux_grazing = 0.0_r8
-                   flux_avail_rum = ndep_sgrz_grc(g) * kg_to_g / lun%wtgcell(l)
+                   flux_avail_rum = ndep_sgrz_grc(g) * kg_to_g * invscale
                    grz_fract(c) = 0.0_r8
                 end if
-                flux_avail_mg = ndep_ngrz_grc(g) * kg_to_g / lun%wtgcell(l)
+                flux_avail_mg = ndep_ngrz_grc(g) * kg_to_g * invscale
                 flux_grass_graze = flux_grass_graze + flux_grazing*col%wtgcell(c)
 
                 if (flux_avail_rum > 1e12 .or. flux_avail_mg > 1e12 .or. isnan(flux_avail_mg) .or. isnan(flux_avail_rum)) then
@@ -913,7 +925,7 @@ contains
                 ! Others
                 call eval_fluxes_storage(flux_avail_mg, 'closed', tempr_ave, windspeed_ave, 0.0_r8, &
                      volat_coef_barns_closed, volat_coef_stores, tan_fract_excr, fluxes_nitr(:,2), fluxes_tan(:,2), &
-                     size(fluxes_nitr, 2), status)
+                     size(fluxes_nitr, 1), status)
                 if (status /=0) then 
                    write(iulog, *) 'status = ', status
                    call endrun(msg='eval_fluxes_storage failed for other livestock')
