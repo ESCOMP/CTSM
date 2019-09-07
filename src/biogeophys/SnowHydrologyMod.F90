@@ -1034,12 +1034,6 @@ contains
        end associate
     end do
 
-    ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
-    ! of it, once all of SnowWater is tracerized.
-    if (water_inst%DoConsistencyCheck()) then
-       call water_inst%TracerConsistencyCheck(bounds, 'In the middle of SnowWater')
-    end if
-
     call BulkFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
          ! Inputs
          snl                   = col%snl(begc:endc), &
@@ -1049,6 +1043,12 @@ contains
          h2osoi_liq            = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
          ! Outputs
          qflx_snow_percolation = b_waterflux_inst%qflx_snow_percolation_col(begc:endc,:))
+
+    ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
+    ! of it, once all of SnowWater is tracerized.
+    if (water_inst%DoConsistencyCheck()) then
+       call water_inst%TracerConsistencyCheck(bounds, 'In the middle of SnowWater')
+    end if
 
     ! Adjust h2osoi_liq based on qflx_snow_percolation flux
     do j = -nlevsno+1, 0
