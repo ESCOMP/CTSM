@@ -90,6 +90,7 @@ module WaterFluxType
      real(r8), pointer :: qflx_h2osfc_to_ice_col   (:)   ! col conversion of h2osfc to ice
      real(r8), pointer :: qflx_snow_h2osfc_col     (:)   ! col snow falling on surface water
      real(r8), pointer :: qflx_too_small_h2osfc_to_soil_col(:) ! col h2osfc transferred to soil if h2osfc is below some threshold (mm H2O /s)
+     real(r8), pointer :: qflx_snow_percolation_col(:,:) ! col liquid percolation out of the bottom of snow layer j (mm H2O /s)
 
      ! Dynamic land cover change
      real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux
@@ -326,6 +327,11 @@ contains
     call AllocateVar1d(var = this%qflx_too_small_h2osfc_to_soil_col, name = 'qflx_too_small_h2osfc_to_soil_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+
+    call AllocateVar2d(var = this%qflx_snow_percolation_col, name = 'qflx_snow_percolation_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         dim2beg = -nlevsno+1, dim2end = 0)
 
     call AllocateVar1d(var = this%qflx_liq_dynbal_grc, name = 'qflx_liq_dynbal_grc', &
          container = tracer_vars, &
