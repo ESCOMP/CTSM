@@ -25,6 +25,7 @@ module WaterTracerUtils
   public :: AllocateVar1d
   public :: AllocateVar2d
   public :: CalcTracerFromBulk
+  public :: CalcTracerFromBulkMasked
   public :: CalcTracerFromBulkFixedRatio
   public :: CompareBulkToTracer
   public :: SetTracerToBulkTimesRatio
@@ -177,6 +178,55 @@ contains
     end do
 
   end subroutine CalcTracerFromBulk
+
+  !-----------------------------------------------------------------------
+  subroutine CalcTracerFromBulkMasked(lb, num_pts, filter_pts, mask_array, &
+       bulk_source, bulk_val, tracer_source, tracer_val)
+    !
+    ! !DESCRIPTION:
+    ! Same as CalcTracerFromBulk, but only do the calculations within a mask array
+    !
+    ! See documentation in CalcTracerFromBulk for details
+    !
+    ! !ARGUMENTS:
+    integer  , intent(in)    :: lb                 ! lower bound for arrays
+    integer  , intent(in)    :: num_pts            ! number of points in the filter
+    integer  , intent(in)    :: filter_pts(:)      ! filter in which tracer_val should be updated
+    logical  , intent(in)    :: mask_array(:)      ! true where we should do the calculations
+    real(r8) , intent(in)    :: bulk_source(lb:)   ! values of the source for this variable, for bulk
+    real(r8) , intent(in)    :: bulk_val(lb:)      ! values of the variable of interest, for bulk
+    real(r8) , intent(in)    :: tracer_source(lb:) ! values of the source for this variable, for the tracer
+    real(r8) , intent(inout) :: tracer_val(lb:)    ! output values of the variable of interest, for the tracer
+    !
+    ! !LOCAL VARIABLES:
+    integer :: num
+    integer :: fn, n
+
+    character(len=*), parameter :: subname = 'CalcTracerFromBulkMasked'
+    !-----------------------------------------------------------------------
+
+    num = size(bulk_val)
+    SHR_ASSERT((size(bulk_source) == num), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((size(tracer_source) == num), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((size(tracer_val) == num), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((size(mask_array) == num), errMsg(sourcefile, __LINE__))
+
+    do fn = 1, num_pts
+       n = filter_pts(fn)
+
+       if (mask_array(n)) then
+          call CalcTracerFromBulk1Pt( &
+               caller        = subname, &
+               n             = n, &
+               bulk_source   = bulk_source(n), &
+               bulk_val      = bulk_val(n), &
+               tracer_source = tracer_source(n), &
+               tracer_val    = tracer_val(n))
+       end if
+    end do
+
+  end subroutine CalcTracerFromBulkMasked
+
 
   !-----------------------------------------------------------------------
   subroutine CalcTracerFromBulk1Pt(caller, n, bulk_source, bulk_val, tracer_source, tracer_val)
