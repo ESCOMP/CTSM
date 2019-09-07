@@ -2316,8 +2316,8 @@ contains
        dzmax_u(j) = 2._r8 * dzmax_u(j-1) + 0.01_r8
        dzmax_l(j) = dzmax_u(j) + dzmax_l(j-1)
        if (j == nlevsno) then
-          dzmax_u(j) = huge(1._r8)  ! The original code set layer 12 to huge...
-          dzmax_l(j) = huge(1._r8)  ! ...now we set the bottom layer to huge
+          dzmax_u(j) = huge(1._r8)
+          dzmax_l(j) = huge(1._r8)
        end if
     end do
 
@@ -2386,7 +2386,7 @@ contains
        call endrun(msg="ERROR dzmax_l_orig /= dzmax_l"// &
                errMsg(sourcefile, __LINE__))
     else
-       dzmax_l(1:nlevsno) = dzmax_l_orig(1:nlevsno)
+       dzmax_l(1:nlevsno-1) = dzmax_l_orig(1:nlevsno-1)
     end if
     ! END TEMPORARY TESTING slevis diag
 
