@@ -2377,7 +2377,7 @@ contains
        call endrun(msg="ERROR dzmax_u_orig /= dzmax_u"// &
                errMsg(sourcefile, __LINE__))
     else
-       dzmax_u(1:nlevsno) = dzmax_u_orig(1:nlevsno)
+       dzmax_u(1:nlevsno-1) = dzmax_u_orig(1:nlevsno-1)
     end if
     dzmax_l_orig = (/ 0.03_r8, 0.07_r8, 0.18_r8, 0.41_r8, 0.88_r8, 1.83_r8, &
                   3.74_r8, 7.57_r8, 15.24_r8, 30.59_r8, 61.30_r8, huge(1._r8) /)

@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev064
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
-Date:  Fri Sep  6 23:52:03 MDT 2019
+Date:  Sat Sep  7 17:19:17 MDT 2019
 One-line Summary: User defined top-two snow layers
 
 Purpose of changes
@@ -40,9 +40,9 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm5_0
 
-[x] ctsm5_0-nwp
+[ ] ctsm5_0-nwp
 
-[x] clm4_5
+[ ] clm4_5
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -56,7 +56,7 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
 
 Changes made to namelist defaults (e.g., changed parameter values):
  Introduced default values for the new parameters so as to maintain
- bit-for-bit same answers in cases with nlevsno = 12
+ bit-for-bit same answers
 
 Changes to the datasets (e.g., parameter, surface or initial files): none
 
@@ -74,18 +74,6 @@ Code reviewed by: @billsacks
 
 
 CTSM testing:
-
-[... Remove before making master tag.  Available test levels:
-
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CTSM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
-
-... ]
 
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
@@ -119,20 +107,17 @@ Answer changes
 Changes answers relative to baseline:
 
   Summarize any changes to answers, i.e.,
-    - what code configurations: nlevsno < 12
+    - what code configurations: all
     - what platforms/compilers: all
-    - nature of change: roundoff for nlevsno = 12; larger than roundoff/same climate for nlevsno < 12
+    - nature of change: roundoff
 
    If bitwise differences were observed, how did you show they were no worse
    than roundoff?
- For snow layers < nlevsno, I introduced temporary code to overwrite
- dzmin(j), dzmax_l(j), and dzmax_u(j) with their original values when
- different by less than 1e-13 from their original values; this resulted
- in bit-for-bit same answers when nlevsno = 12. For nlevsno < 12 we get
- differences > roundoff because I now set
- dzmax_l(nlevsno) = dzmax_u(nlevsno) = huge(1._r8) which differs
- significantly from their original values. Overwriting these with their
- original values also returns bit-for-bit same answers.
+ Introduced temporary code to overwrite dzmin(j), dzmax_l(j), and
+ dzmax_u(j) with their original values when different by less than
+ 1e-13 from their original values for all but the bottom snow layer.
+ The bottom layer was left as dzmax_l = dzmax_u(j) = huge(1._8), i.e.
+ the new value. The test resulted in bit-for-bit same answers.
 
 Detailed list of changes
 ------------------------
