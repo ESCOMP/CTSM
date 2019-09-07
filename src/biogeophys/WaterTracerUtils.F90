@@ -29,6 +29,9 @@ module WaterTracerUtils
   public :: CompareBulkToTracer
   public :: SetTracerToBulkTimesRatio
 
+  ! !PUBLIC MEMBER FUNCTIONS:
+  private :: CalcTracerFromBulk1Pt
+
   ! !PRIVATE MEMBER DATA:
   
   character(len=*), parameter, private :: sourcefile = &
@@ -164,45 +167,75 @@ contains
     do fn = 1, num_pts
        n = filter_pts(fn)
 
-       if (bulk_source(n) /= 0._r8) then
-          ! Standard case
-          tracer_val(n) = bulk_val(n) * (tracer_source(n) / bulk_source(n))
-       else if (bulk_val(n) == 0._r8 .and. tracer_source(n) == 0._r8) then
-          ! This is acceptable: bulk_source, bulk_val and tracer_source are all 0
-          tracer_val(n) = 0._r8
-       else if (bulk_val(n) /= 0._r8) then
-          write(iulog,*) subname//' ERROR: Non-zero bulk val despite zero bulk source:'
-          write(iulog,*) 'bulk_val = ', bulk_val(n)
-          write(iulog,*) 'at n = ', n
-          write(iulog,*) 'This would lead to an indeterminate tracer val.'
-          call endrun(msg=subname//': Non-zero bulk val despite zero bulk source', &
-               additional_msg=errMsg(sourcefile, __LINE__))
-       else if (tracer_source(n) /= 0._r8) then
-          ! NOTE(wjs, 2018-09-28) To avoid this error, we might need code elsewhere that
-          ! sets tracer state variables to 0 if the corresponding bulk state variable is 0
-          ! and the tracer state is originally near 0 (within roundoff) - in order deal
-          ! with roundoff issues arising during state updates. (There's a bit of
-          ! discussion of this point in https://github.com/ESCOMP/ctsm/issues/487.)
-          write(iulog,*) subname//' ERROR: Non-zero tracer source despite zero bulk source:'
-          write(iulog,*) 'tracer_source = ', tracer_source(n)
-          write(iulog,*) 'at n = ', n
-          write(iulog,*) 'This would lead to an indeterminate tracer val.'
-          call endrun(msg=subname//': Non-zero tracer source despite zero bulk source', &
-               additional_msg=errMsg(sourcefile, __LINE__))
-       else
-          write(iulog,*) subname//' ERROR: unhandled condition; we should never get here.'
-          write(iulog,*) 'This indicates a programming error in this subroutine.'
-          write(iulog,*) 'bulk_val = ', bulk_val(n)
-          write(iulog,*) 'bulk_source = ', bulk_source(n)
-          write(iulog,*) 'tracer_source = ', tracer_source(n)
-          write(iulog,*) 'at n = ', n
-          call endrun(msg=subname//': unhandled condition; we should never get here', &
-               additional_msg=errMsg(sourcefile, __LINE__))
-       end if
+       call CalcTracerFromBulk1Pt( &
+            caller        = subname, &
+            n             = n, &
+            bulk_source   = bulk_source(n), &
+            bulk_val      = bulk_val(n), &
+            tracer_source = tracer_source(n), &
+            tracer_val    = tracer_val(n))
     end do
 
   end subroutine CalcTracerFromBulk
 
+  !-----------------------------------------------------------------------
+  subroutine CalcTracerFromBulk1Pt(caller, n, bulk_source, bulk_val, tracer_source, tracer_val)
+    !
+    ! !DESCRIPTION:
+    ! For a single point: Calculate a tracer variable from a corresponding bulk variable
+    ! when the ratio of the tracer to the bulk should be based on the ratio in some
+    ! 'source' variable.
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: caller ! name of caller (just used for error messages)
+    integer , intent(in)  :: n             ! index of point (just used for error messages)
+    real(r8), intent(in)  :: bulk_source   ! value of the source for this variable, for bulk
+    real(r8), intent(in)  :: bulk_val      ! value of the variable of interest, for bulk
+    real(r8), intent(in)  :: tracer_source ! value of the source for this variable, for the tracer
+    real(r8), intent(out) :: tracer_val    ! output value of the variable of interest, for the tracer
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'CalcTracerFromBulk1Pt'
+    !-----------------------------------------------------------------------
+
+    if (bulk_source /= 0._r8) then
+       ! Standard case
+       tracer_val = bulk_val * (tracer_source / bulk_source)
+    else if (bulk_val == 0._r8 .and. tracer_source == 0._r8) then
+       ! This is acceptable: bulk_source, bulk_val and tracer_source are all 0
+       tracer_val = 0._r8
+    else if (bulk_val /= 0._r8) then
+       write(iulog,*) caller//' ERROR: Non-zero bulk val despite zero bulk source:'
+       write(iulog,*) 'bulk_val = ', bulk_val
+       write(iulog,*) 'at n = ', n
+       write(iulog,*) 'This would lead to an indeterminate tracer val.'
+       call endrun(msg=caller//': Non-zero bulk val despite zero bulk source', &
+            additional_msg=errMsg(sourcefile, __LINE__))
+    else if (tracer_source /= 0._r8) then
+       ! NOTE(wjs, 2018-09-28) To avoid this error, we might need code elsewhere that
+       ! sets tracer state variables to 0 if the corresponding bulk state variable is 0
+       ! and the tracer state is originally near 0 (within roundoff) - in order deal
+       ! with roundoff issues arising during state updates. (There's a bit of
+       ! discussion of this point in https://github.com/ESCOMP/ctsm/issues/487.)
+       write(iulog,*) caller//' ERROR: Non-zero tracer source despite zero bulk source:'
+       write(iulog,*) 'tracer_source = ', tracer_source
+       write(iulog,*) 'at n = ', n
+       write(iulog,*) 'This would lead to an indeterminate tracer val.'
+       call endrun(msg=caller//': Non-zero tracer source despite zero bulk source', &
+            additional_msg=errMsg(sourcefile, __LINE__))
+    else
+       write(iulog,*) caller//' ERROR: unhandled condition; we should never get here.'
+       write(iulog,*) 'This indicates a programming error in this subroutine.'
+       write(iulog,*) 'bulk_val = ', bulk_val
+       write(iulog,*) 'bulk_source = ', bulk_source
+       write(iulog,*) 'tracer_source = ', tracer_source
+       write(iulog,*) 'at n = ', n
+       call endrun(msg=caller//': unhandled condition; we should never get here', &
+            additional_msg=errMsg(sourcefile, __LINE__))
+    end if
+
+  end subroutine CalcTracerFromBulk1Pt
 
   !-----------------------------------------------------------------------
   subroutine CalcTracerFromBulkFixedRatio(bulk, ratio, tracer)
