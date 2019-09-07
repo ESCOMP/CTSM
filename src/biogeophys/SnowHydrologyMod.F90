@@ -116,11 +116,6 @@ module SnowHydrologyMod
   real(r8), private, allocatable :: dzmax_l(:)  !max snow thickness of layer when no layers beneath
   real(r8), private, allocatable :: dzmax_u(:)  !max snow thickness of layer when layers beneath
 
-  ! FOR TEMPORARY TESTING. DELETE WHEN DONE. slevis diag
-  real(r8), private, allocatable :: dzmin_orig(:)
-  real(r8), private, allocatable :: dzmax_l_orig(:)
-  real(r8), private, allocatable :: dzmax_u_orig(:)
-
   integer  :: overburden_compaction_method = -1
   integer  :: new_snow_density            = LoTmpDnsSlater2017 ! Snow density type
   real(r8) :: upplim_destruct_metamorph   = 100.0_r8           ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
@@ -2296,11 +2291,6 @@ contains
     allocate(dzmax_l(1:nlevsno))
     allocate(dzmax_u(1:nlevsno))
 
-    ! FOR TEMPORARY TESTING. DELETE WHEN DONE. slevis diag
-    allocate(dzmin_orig(1:nlevsno))
-    allocate(dzmax_l_orig(1:nlevsno))
-    allocate(dzmax_u_orig(1:nlevsno))
-
     ! These three variables determine the vertical structure of the snow pack:
     ! dzmin: minimum snow thickness of layer
     ! dzmax_l: maximum snow thickness of layer when no layers beneath
@@ -2359,36 +2349,6 @@ contains
        write(iulog,*) 'dzmax_l =', dzmax_l
        write(iulog,*) 'dzmax_u =', dzmax_u
     end if
-
-    ! BEGIN TEMPORARY TESTING. DELETE WHEN DONE. slevis diag
-    dzmin_orig = (/ 0.01_r8, 0.015_r8, 0.025_r8, 0.055_r8, 0.115_r8, 0.235_r8, &
-                  0.475_r8, 0.955_r8, 1.915_r8, 3.835_r8, 7.675_r8, 15.355_r8 /)
-    if (maxval(abs(dzmin(1:nlevsno) - dzmin_orig(1:nlevsno))) > 1.e-13_r8) then
-       write(iulog,*) 'dzmin_orig =', dzmin_orig
-       call endrun(msg="ERROR dzmin_orig /= dzmin"// &
-               errMsg(sourcefile, __LINE__))
-    else
-       dzmin(1:nlevsno) = dzmin_orig(1:nlevsno)
-    end if
-    dzmax_u_orig = (/ 0.02_r8, 0.05_r8, 0.11_r8, 0.23_r8, 0.47_r8, 0.95_r8, &
-                  1.91_r8, 3.83_r8, 7.67_r8, 15.35_r8, 30.71_r8, huge(1._r8) /)
-    if (maxval(abs(dzmax_u(1:nlevsno-1) - dzmax_u_orig(1:nlevsno-1))) > 1.e-13_r8) then
-       write(iulog,*) 'dzmax_u_orig =', dzmax_u_orig
-       call endrun(msg="ERROR dzmax_u_orig /= dzmax_u"// &
-               errMsg(sourcefile, __LINE__))
-    else
-       dzmax_u(1:nlevsno-1) = dzmax_u_orig(1:nlevsno-1)
-    end if
-    dzmax_l_orig = (/ 0.03_r8, 0.07_r8, 0.18_r8, 0.41_r8, 0.88_r8, 1.83_r8, &
-                  3.74_r8, 7.57_r8, 15.24_r8, 30.59_r8, 61.30_r8, huge(1._r8) /)
-    if (maxval(abs(dzmax_l(1:nlevsno-1) - dzmax_l_orig(1:nlevsno-1))) > 1.e-13_r8) then
-       write(iulog,*) 'dzmax_l_orig =', dzmax_l_orig
-       call endrun(msg="ERROR dzmax_l_orig /= dzmax_l"// &
-               errMsg(sourcefile, __LINE__))
-    else
-       dzmax_l(1:nlevsno-1) = dzmax_l_orig(1:nlevsno-1)
-    end if
-    ! END TEMPORARY TESTING slevis diag
 
     loop_columns: do c = bounds%begc,bounds%endc
        l = col%landunit(c)
