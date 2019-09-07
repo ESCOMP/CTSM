@@ -3536,7 +3536,7 @@ sub setup_logic_snowpack {
   my $dzmax_u2 = $nl->get_value('snow_dzmax_u_2');
 
   if ($dzmin1 != 0.01 || $dzmin2 != 0.015 || $dzmax_u1 != 0.02 || $dzmax_u2 != 0.05 || $dzmax_l1 != 0.03 || $dzmax_l2 != 0.07) {
-     $log->warning("Setting any of the following namelist variables to NON DEFAULT values remains untested as of Sep 1, 2019: snow_dzmin_1 & 2, snow_dzmax_u_1 & 2, snow_dzmax_l_1 & 2." );
+     $log->warning("Setting any of the following namelist variables to NON DEFAULT values remains untested as of Sep 6, 2019: snow_dzmin_1 & 2, snow_dzmax_u_1 & 2, snow_dzmax_l_1 & 2." );
      $log->warning("Leave these variables unspecified in user_nl_clm in order to use the default values." );
   }
   if ($dzmin1 <= 0.0 || $dzmin2 <= 0.0 || $dzmax_u1 <= 0.0 || $dzmax_u2 <= 0.0 || $dzmax_l1 <= 0.0 || $dzmax_l2 <= 0.0) {

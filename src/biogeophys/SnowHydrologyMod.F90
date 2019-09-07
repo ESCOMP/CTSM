@@ -2315,7 +2315,14 @@ contains
        dzmin(j) = dzmax_u(j-1) * 0.5_r8
        dzmax_u(j) = 2._r8 * dzmax_u(j-1) + 0.01_r8
        dzmax_l(j) = dzmax_u(j) + dzmax_l(j-1)
-       ! error checks
+       if (j == nlevsno) then
+          dzmax_u(j) = huge(1._r8)  ! The original code set layer 12 to huge...
+          dzmax_l(j) = huge(1._r8)  ! ...now we set the bottom layer to huge
+       end if
+    end do
+
+    ! Error check loops
+    do j = 2, nlevsno
        if (dzmin(j) <= dzmin(j-1)) then
           write(iulog,*) 'ERROR at snow layer j =', j, ' because dzmin(j) =', dzmin(j), ' and dzmin(j-1) =', dzmin(j-1)
           call endrun(msg="ERROR dzmin(j) cannot be <= dzmin(j-1)"// &
@@ -2331,21 +2338,21 @@ contains
           call endrun(msg="ERROR dzmax_l(j) cannot be <= dzmax_l(j-1)"// &
                errMsg(sourcefile, __LINE__))
        end if
+    end do
+    do j = 1, nlevsno
        if (dzmin(j) >= dzmax_u(j)) then
           write(iulog,*) 'ERROR at snow layer j =', j, ' because dzmin(j) =', dzmin(j), ' and dzmax_u(j) =', dzmax_u(j)
           call endrun(msg="ERROR dzmin(j) cannot be >= dzmax_u(j)"// &
                errMsg(sourcefile, __LINE__))
        end if
+    end do
+    do j = 1, nlevsno-1
        if (dzmax_u(j) >= dzmax_l(j)) then
           write(iulog,*) 'ERROR at snow layer j =', j, ' because dzmax_u(j) =', dzmax_u(j), ' and dzmax_l(j) =', dzmax_l(j)
           call endrun(msg="ERROR dzmax_u(j) cannot be >= dzmax_l(j)"// &
                errMsg(sourcefile, __LINE__))
        end if
     end do
-    if (nlevsno >= 12) then  ! max nlevsno is 12
-       dzmax_u(nlevsno) = huge(1._r8)  ! the original code set layer 12 to huge
-       dzmax_l(nlevsno) = huge(1._r8)  ! same comment
-    end if
 
     if (masterproc) then
        write(iulog,*) 'dzmin =', dzmin
@@ -2365,7 +2372,7 @@ contains
     end if
     dzmax_u_orig = (/ 0.02_r8, 0.05_r8, 0.11_r8, 0.23_r8, 0.47_r8, 0.95_r8, &
                   1.91_r8, 3.83_r8, 7.67_r8, 15.35_r8, 30.71_r8, huge(1._r8) /)
-    if (maxval(abs(dzmax_u(1:nlevsno) - dzmax_u_orig(1:nlevsno))) > 1.e-13_r8) then
+    if (maxval(abs(dzmax_u(1:nlevsno-1) - dzmax_u_orig(1:nlevsno-1))) > 1.e-13_r8) then
        write(iulog,*) 'dzmax_u_orig =', dzmax_u_orig
        call endrun(msg="ERROR dzmax_u_orig /= dzmax_u"// &
                errMsg(sourcefile, __LINE__))
@@ -2374,7 +2381,7 @@ contains
     end if
     dzmax_l_orig = (/ 0.03_r8, 0.07_r8, 0.18_r8, 0.41_r8, 0.88_r8, 1.83_r8, &
                   3.74_r8, 7.57_r8, 15.24_r8, 30.59_r8, 61.30_r8, huge(1._r8) /)
-    if (maxval(abs(dzmax_l(1:nlevsno) - dzmax_l_orig(1:nlevsno))) > 1.e-13_r8) then
+    if (maxval(abs(dzmax_l(1:nlevsno-1) - dzmax_l_orig(1:nlevsno-1))) > 1.e-13_r8) then
        write(iulog,*) 'dzmax_l_orig =', dzmax_l_orig
        call endrun(msg="ERROR dzmax_l_orig /= dzmax_l"// &
                errMsg(sourcefile, __LINE__))
