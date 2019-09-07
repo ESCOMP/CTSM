@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev064   slevis 09/06/2019 User defined top-two snow layers
   ctsm1.0.dev063     erik 09/05/2019 Two answer changing fixes (fire, DWT_SLASH) and fix for urban streams for Clm45
   ctsm1.0.dev062    sacks 09/03/2019 Move hobart tests to izumi
   ctsm1.0.dev061     erik 09/01/2019 Simple b4b fixes: new params file, remove override_nsrest/anoxia_wtsat, DV deprecated
