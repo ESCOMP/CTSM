@@ -24,7 +24,54 @@ module test_sparse_matrix
   integer, parameter :: ndims = 10
   integer, parameter :: begu = 1, endu = 2
 
+  integer, parameter :: NonZero = ndims + ndims - 1 + ndims - 2
+  type :: arb_band_sparse_matrix_setup
+     real(r8) :: M(NonZero)
+     integer :: Iindex(NonZero)
+     integer :: Jindex(NonZero)
+  contains
+     procedure :: createArbBandMatrix
+     procedure :: createArbBandMatrix2
+  end type arb_band_sparse_matrix_setup
+
 contains
+
+  subroutine  createArbBandMatrix( this )
+    class(arb_band_sparse_matrix_setup), intent(inout) :: this
+
+    integer :: i, band, nz, band_size
+    ! Set up an arbitrary upper tri-diagonal matrix (3 bands)
+    ! This isn't right...
+    nz = 0
+    band_size = ndims
+    do band = 1, 3
+      do i = 1, band_size
+        nz = nz + 1
+        this%M(nz) = real(i*100 + band,r8)
+        this%Iindex(nz) = i + band - 1
+        this%Jindex(nz) = i
+      end do
+      band_size = band_size - 1
+    end do
+    @assertEqual(nz,NonZero)
+  end subroutine createArbBandMatrix
+
+  subroutine  createArbBandMatrix2( this )
+    class(arb_band_sparse_matrix_setup), intent(inout) :: this
+
+    integer :: i, j, band, nz
+    ! Set up an arbitrary upper tri-diagonal matrix (3 bands)
+    nz = 0
+    do j = 1, ndims
+      do i = j, min(ndims,j+2)
+        nz = nz + 1
+        this%M(nz) = real(i*100 + j,r8)
+        this%Iindex(nz) = i
+        this%Jindex(nz) = j
+      end do
+    end do
+    @assertEqual(nz,NonZero)
+  end subroutine createArbBandMatrix2
 
   subroutine setUp(this)
     class(TestSparseMatrix), intent(inout) :: this
@@ -76,6 +123,40 @@ contains
   end subroutine SM_Identity_times_ArbDiagMatrix_is_self
 
   @Test
+  subroutine SM_Identity_times_ArbMatrix_is_self( this )
+    use shr_const_mod, only: SHR_CONST_PI
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(diag_matrix_type) :: Kidentity
+    type(sparse_matrix_type) :: ArbSMatrix, ArbSMatrix2
+    real(r8) :: Mdiag(ndims)
+    integer :: i
+    type(arb_band_sparse_matrix_setup) :: MatrixSetup
+
+    call MatrixSetup%createArbBandMatrix2( )
+    call ArbSMatrix%InitSM( ndims, begu, endu )
+    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u, &
+                               MatrixSetup%M,MatrixSetup%Iindex,MatrixSetup%Jindex,NonZero)
+    call ArbSMatrix2%InitSM( ndims, begu, endu )
+    call ArbSMatrix2%SetValueSM(begu,endu,this%num_unit,this%filter_u, &
+                               MatrixSetup%M,MatrixSetup%Iindex,MatrixSetup%Jindex,NonZero)
+
+    ! Set up a identity diagonal matrix
+    call Kidentity%InitDM( ndims, begu, endu )
+    do i = 1, ndims
+      Mdiag(i) = 1.0_r8
+    end do
+    call Kidentity%SetValueDM( begu, endu, this%num_unit,this%filter_u, Mdiag )
+    ! Multiply diagonal identity by the arbitrary matrix created, result should be self
+    call ArbSMatrix%SPMM_AK( this%num_unit,this%filter_u, Kidentity )
+    @assertEqual( NonZero, ArbSMatrix%NE )
+    @assertEqual( ArbSMatrix%M(:,:NonZero), ArbSMatrix2%M(:,:NonZero) )
+    @assertEqual( ArbSMatrix%RI(:NonZero), ArbSMatrix2%RI(:NonZero) )
+    @assertEqual( ArbSMatrix%CI(:NonZero), ArbSMatrix2%CI(:NonZero) )
+
+  end subroutine SM_Identity_times_ArbMatrix_is_self
+
+  @Test
   subroutine V_Identity_times_ArbVector_plus_self__is_twice_self( this )
     use shr_const_mod, only: SHR_CONST_PI
     class(TestSparseMatrix), intent(inout) :: this
@@ -102,29 +183,16 @@ contains
     class(TestSparseMatrix), intent(inout) :: this
 
     type(sparse_matrix_type) :: ArbSMatrix, ArbSMatrix2
-    integer, parameter :: NonZero = ndims + ndims - 1 + ndims - 2
-    real(r8) :: M(NonZero)
-    integer :: i, band, nz, band_size
-    integer :: Iindex(NonZero), Jindex(NonZero)
+    type(arb_band_sparse_matrix_setup) :: MatrixSetup
 
-    ! Set up an arbitrary upper tri-diagonal matrix (3 bands)
-    nz = 0
-    band_size = ndims
-    do band = 1, 3
-      do i = 1, band_size
-        nz = nz + 1
-        M(nz) = real(i*100 + band,r8)
-        Iindex(nz) = i + band - 1
-        Jindex(nz) = i
-      end do
-      band_size = band_size - 1
-    end do
-    @assertEqual(nz,NonZero)
+    call MatrixSetup%createArbBandMatrix2( )
     call ArbSMatrix%InitSM( ndims, begu, endu )
-    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,M,Iindex,Jindex,NonZero)
+    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u, &
+                               MatrixSetup%M,MatrixSetup%Iindex,MatrixSetup%Jindex,NonZero)
     ! Second matrix is identical
     call ArbSMatrix2%InitSM( ndims, begu, endu )
-    call ArbSMatrix2%SetValueSM(begu,endu,this%num_unit,this%filter_u,M,Iindex,Jindex,NonZero)
+    call ArbSMatrix2%SetValueSM(begu,endu,this%num_unit,this%filter_u, &
+                               MatrixSetup%M,MatrixSetup%Iindex,MatrixSetup%Jindex,NonZero)
 
     call ArbSmatrix%SPMP_B_ACC(this%num_unit,this%filter_u,ArbSmatrix2)
     ! Result should now be twice the original
@@ -137,33 +205,20 @@ contains
     class(TestSparseMatrix), intent(inout) :: this
 
     type(sparse_matrix_type) :: ArbSMatrix, ArbSMatrix2
-    integer, parameter :: NonZero = ndims + ndims - 1 + ndims - 2
-    real(r8) :: M(NonZero)
-    integer :: i, band, nz, band_size
-    integer :: Iindex(NonZero), Jindex(NonZero)
+    type(arb_band_sparse_matrix_setup) :: MatrixSetup
     integer :: list_A(NonZero), list_B(NonZero)
     integer :: RI(2*NonZero), CI(2*NonZero) 
     integer :: NonZero_AB
     logical :: list_ready = .false.
 
-    ! Set up an arbitrary upper tri-diagonal matrix (3 bands)
-    nz = 0
-    band_size = ndims
-    do band = 1, 3
-      do i = 1, band_size
-        nz = nz + 1
-        M(nz) = real(i*100 + band,r8)
-        Iindex(nz) = i + band - 1
-        Jindex(nz) = i
-      end do
-      band_size = band_size - 1
-    end do
-    @assertEqual(nz,NonZero)
+    call MatrixSetup%createArbBandMatrix2( )
     call ArbSMatrix%InitSM( ndims, begu, endu )
-    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,M,Iindex,Jindex,NonZero)
+    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                               MatrixSetup%Iindex,MatrixSetup%Jindex,NonZero)
     ! Second matrix is identical
     call ArbSMatrix2%InitSM( ndims, begu, endu )
-    call ArbSMatrix2%SetValueSM(begu,endu,this%num_unit,this%filter_u,M,Iindex,Jindex,NonZero)
+    call ArbSMatrix2%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                               MatrixSetup%Iindex,MatrixSetup%Jindex,NonZero)
 
     list_ready = .false.
     call this%SM_identity%SPMP_AB(this%num_unit,this%filter_u,ArbSmatrix,ArbSmatrix2,list_ready,list_A,list_B, &
@@ -182,36 +237,25 @@ contains
     class(TestSparseMatrix), intent(inout) :: this
 
     type(sparse_matrix_type) :: ArbSMatrix, ArbSMatrix2, ArbSMatrix3
-    integer, parameter :: NonZero = ndims + ndims - 1 + ndims - 2
-    real(r8) :: M(NonZero)
-    integer :: i, band, nz, band_size
-    integer :: Iindex(NonZero), Jindex(NonZero)
+    type(arb_band_sparse_matrix_setup) :: MatrixSetup
     integer :: list_A(NonZero), list_B(NonZero), list_C(NonZero)
     integer :: RI(3*NonZero), CI(3*NonZero) 
     integer :: NonZero_ABC
     logical :: list_ready = .false.
 
-    ! Set up an arbitrary upper tri-diagonal matrix (3 bands)
-    nz = 0
-    band_size = ndims
-    do band = 1, 3
-      do i = 1, band_size
-        nz = nz + 1
-        M(nz) = real(i*100 + band,r8)
-        Iindex(nz) = i + band - 1
-        Jindex(nz) = i
-      end do
-      band_size = band_size - 1
-    end do
-    @assertEqual(nz,NonZero)
+
+    call MatrixSetup%createArbBandMatrix2( )
     call ArbSMatrix%InitSM( ndims, begu, endu )
-    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,M,Iindex,Jindex,NonZero)
+    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                                MatrixSetup%Iindex,MatrixSetup%Jindex,NonZero)
     ! Second matrix is identical
     call ArbSMatrix2%InitSM( ndims, begu, endu )
-    call ArbSMatrix2%SetValueSM(begu,endu,this%num_unit,this%filter_u,M,Iindex,Jindex,NonZero)
+    call ArbSMatrix2%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                                MatrixSetup%Iindex,MatrixSetup%Jindex,NonZero)
     ! Third matrix is identical
     call ArbSMatrix3%InitSM( ndims, begu, endu )
-    call ArbSMatrix3%SetValueSM(begu,endu,this%num_unit,this%filter_u,M,Iindex,Jindex,NonZero)
+    call ArbSMatrix3%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                                MatrixSetup%Iindex,MatrixSetup%Jindex,NonZero)
 
     list_ready = .false.
     call this%SM_identity%SPMP_ABC( this%num_unit,this%filter_u,ArbSMatrix,ArbSMatrix2,ArbSMatrix3, &
