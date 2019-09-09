@@ -2440,6 +2440,33 @@ Changes in this value should possibly be accompanied by changes in:
   glc_snow_persistence_max_days > 0.
 </entry>
 
+<entry id="snow_dzmin_1" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Min snow thickness of layer 1 (top snow layer); values other than the default 0.01 have not been tested as of Sep 6, 2019
+</entry>
+<entry id="snow_dzmin_2" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Min snow thickness of layer 2; values other than the default 0.015 have not been tested as of Sep 6, 2019; snow_dzmin of remaining layers is generated with the following recursive formula: dzmin(j) = dzmax_u(j-1) * 0.5_r8
+</entry>
+
+<entry id="snow_dzmax_l_1" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 1 (top snow layer) when no layers beneath; values other than the default 0.03 have not been tested as of Sep 6, 2019
+</entry>
+<entry id="snow_dzmax_l_2" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 2 when no layers beneath; values other than the default 0.07 have not been tested as of Sep 6, 2019; snow_dzmax_l of remaining layers is generated with the following recursive formula: dzmax_l(j) = dzmax_u(j) + dzmax_l(j-1)
+</entry>
+
+<entry id="snow_dzmax_u_1" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 1 (top snow layer) when layers beneath; values other than the default 0.02 have not been tested as of Sep 6, 2019
+</entry>
+<entry id="snow_dzmax_u_2" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 2 when layers beneath; values other than the default 0.05 have not been tested as of Sep 6, 2019; snow_dzmax_u of remaining layers is generated with the following recursive formula: dzmax_u(j) = 2._r8 * dzmax_u(j-1) + 0.01_r8
+</entry>
+
 <entry id="int_snow_max" type="real" category="clm_physics"
        group="scf_swenson_lawrence_2012_inparm" valid_values="" >
 Limit applied to integrated snowfall when determining changes in snow-covered fraction during melt
