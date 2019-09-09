@@ -91,7 +91,7 @@ contains
     ! Computes column-level burned area 
     !
     ! !USES:
-    use clm_time_manager     , only: get_step_size, get_days_per_year, get_curr_date, get_nstep
+    use clm_time_manager     , only: get_step_size_real, get_days_per_year, get_curr_date, get_nstep
     use clm_varpar           , only: max_patch_per_col
     use clm_varcon           , only: secspday, secsphr
     use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
@@ -243,7 +243,7 @@ contains
      call get_curr_date (kyr, kmo, kda, mcsec)
      dayspyr = get_days_per_year()
      ! Get model step size
-     dt      = real( get_step_size(), r8 )
+     dt      = get_step_size_real()
      !
      ! On first time-step, just set area burned to zero and exit
      !
@@ -644,7 +644,7 @@ contains
    ! seconds_per_year is the number of seconds in a year.
    !
    ! !USES:
-   use clm_time_manager     , only: get_step_size,get_days_per_year,get_curr_date
+   use clm_time_manager     , only: get_step_size_real,get_days_per_year,get_curr_date
    use clm_varpar           , only: max_patch_per_col
    use clm_varctl           , only: use_cndv
    use clm_varcon           , only: secspday
@@ -890,7 +890,7 @@ contains
 
      ! Get model step size
      ! calculate burned area fraction per sec
-     dt = real( get_step_size(), r8 )
+     dt = get_step_size_real()
 
      dayspyr = get_days_per_year()
      !

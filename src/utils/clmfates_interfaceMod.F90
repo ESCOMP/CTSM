@@ -82,7 +82,7 @@ module CLMFatesInterfaceMod
                                   get_ref_date,      &
                                   timemgr_datediff,  &
                                   is_beg_curr_day,   &
-                                  get_step_size,     &
+                                  get_step_size_real,&
                                   get_nstep
    use spmdMod           , only : masterproc
    use decompMod         , only : get_proc_bounds,   &
@@ -1683,7 +1683,7 @@ contains
          end do
       end do
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       
       ! Call photosynthesis
       
@@ -1748,7 +1748,7 @@ contains
     end do
 
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
     call  AccumulateFluxes_ED(this%fates(nc)%nsites,  &
                                this%fates(nc)%sites, &
                                this%fates(nc)%bc_in,  &
@@ -1882,7 +1882,7 @@ contains
       end do
 
       is_beg_day = is_beg_curr_day()
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       nstep = get_nstep()
 
       call SummarizeNetFluxes(this%fates(nc)%nsites,  &
@@ -2375,7 +2375,7 @@ contains
    if ( .not.use_fates_planthydro ) return
 
 
-   dtime = get_step_size()
+   dtime = get_step_size_real()
 
    ! Prepare Input Boundary Conditions
    ! ------------------------------------------------------------------------------------

@@ -1026,7 +1026,7 @@ contains
     !   I am aware.
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size, get_nstep
+    use clm_time_manager , only : get_step_size_real, get_nstep
     use clm_varpar       , only : nlevsno
     use clm_varcon       , only : spval
     use shr_const_mod    , only : SHR_CONST_RHOICE, SHR_CONST_PI
@@ -1097,7 +1097,7 @@ contains
   
 
       ! set timestep and step interval
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! loop over columns that have at least one snow layer
       do fc = 1, num_snowc

@@ -19,6 +19,10 @@ Module HydrologyNoDrainageMod
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use IrrigationMod, only : irrigation_type
+  use SnowHydrologyMod     , only : UpdateQuantitiesForNewSnow, RemoveSnowFromThawedWetlands, InitializeExplicitSnowPack
+  use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
+  use SnowHydrologyMod     , only : SnowWater, ZeroEmptySnowLayers, BuildSnowFilter 
+  use SnowCoverFractionBaseMod , only : snow_cover_fraction_base_type
   use WaterType , only : water_type
   use Wateratm2lndBulkType, only : wateratm2lndbulk_type
   use WaterFluxBulkType     , only : waterfluxbulk_type
@@ -35,7 +39,8 @@ Module HydrologyNoDrainageMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: CalcAndWithdrawIrrigationFluxes  ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
-  public  :: HydrologyNoDrainage    ! Calculates soil/snow hydrology without drainage
+  public  :: HandleNewSnow                    ! Handle new snow falling on the ground
+  public  :: HydrologyNoDrainage              ! Calculates soil/snow hydrology without drainage
   !-----------------------------------------------------------------------
 
 contains
@@ -89,6 +94,42 @@ contains
   end subroutine CalcAndWithdrawIrrigationFluxes
 
   !-----------------------------------------------------------------------
+  subroutine HandleNewSnow(bounds, &
+       num_nolakec, filter_nolakec, &
+       scf_method, &
+       atm2lnd_inst, temperature_inst, &
+       aerosol_inst, water_inst)
+    !
+    ! !DESCRIPTION:
+    ! Handle new snow falling on the ground
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)      , intent(in)    :: bounds
+    integer                , intent(in)    :: num_nolakec          ! number of column non-lake points in column filter
+    integer                , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
+    class(snow_cover_fraction_base_type), intent(in) :: scf_method
+    type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
+    type(temperature_type) , intent(inout) :: temperature_inst
+    type(aerosol_type)     , intent(inout) :: aerosol_inst
+    type(water_type)       , intent(inout) :: water_inst
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'HandleNewSnow'
+    !-----------------------------------------------------------------------
+
+    call UpdateQuantitiesForNewSnow(bounds, num_nolakec, filter_nolakec, &
+         scf_method, atm2lnd_inst, water_inst)
+
+    call RemoveSnowFromThawedWetlands(bounds, num_nolakec, filter_nolakec, &
+         temperature_inst, water_inst)
+
+    call InitializeExplicitSnowPack(bounds, num_nolakec, filter_nolakec, &
+         atm2lnd_inst, temperature_inst, aerosol_inst, water_inst)
+
+  end subroutine HandleNewSnow
+
+  !-----------------------------------------------------------------------
   subroutine HydrologyNoDrainage(bounds, &
        num_nolakec, filter_nolakec, &
        num_hydrologyc, filter_hydrologyc, &
@@ -113,9 +154,7 @@ contains
     use column_varcon        , only : icol_shadewall
     use clm_varctl           , only : use_cn
     use clm_varpar           , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
-    use clm_time_manager     , only : get_step_size, get_nstep
-    use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
-    use SnowHydrologyMod     , only : SnowWater, ZeroEmptySnowLayers, BuildSnowFilter 
+    use clm_time_manager     , only : get_step_size_real, get_nstep
     use SoilHydrologyMod     , only : CLMVICMap, SetSoilWaterFractions, SetFloodc
     use SoilHydrologyMod     , only : SetQflxInputs, RouteInfiltrationExcess
     use SoilHydrologyMod     , only : Infiltration, TotalSurfaceRunoff
@@ -123,7 +162,6 @@ contains
     use SoilHydrologyMod     , only : WaterTable, PerchedWaterTable
     use SoilHydrologyMod     , only : ThetaBasedWaterTable, RenewCondensation
     use SoilWaterMovementMod , only : SoilWater
-    use SnowCoverFractionBaseMod , only : snow_cover_fraction_base_type
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use SoilWaterMovementMod , only : use_aquifer_layer
     use SoilWaterPlantSinkMod , only : Compute_EffecRootFrac_And_VertTranSink
@@ -224,7 +262,7 @@ contains
 
       ! Determine step size
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Determine initial snow/no-snow filters (will be modified possibly by
       ! routines CombineSnowLayers and DivideSnowLayers below

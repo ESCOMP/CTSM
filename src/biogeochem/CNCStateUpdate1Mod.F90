@@ -7,7 +7,7 @@ module CNCStateUpdate1Mod
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp
-  use clm_time_manager                   , only : get_step_size, get_step_size_real
+  use clm_time_manager                   , only : get_step_size_real
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use pftconMod                          , only : npcropmin, nc3crop, pftcon
   use abortutils                         , only : endrun
@@ -123,7 +123,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
 
 
@@ -185,7 +185,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       ! Below is the input into the soil biogeochemistry model
 

@@ -158,6 +158,7 @@ contains
     integer            :: begp, endp
     integer            :: begc, endc
     integer            :: begg, endg
+    integer :: found  ! flag that equals 0 if not found and 1 if found
     !-----------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
@@ -366,25 +367,46 @@ contains
        else
 
           do lev = 1,nlevgrnd
+             ! Top-most model soil level corresponds to dataset's top-most soil
+             ! level regardless of corresponding depths
              if (lev .eq. 1) then
                 clay = clay3d(g,1)
                 sand = sand3d(g,1)
                 om_frac = organic3d(g,1)/organic_max
              else if (lev <= nlevsoi) then
-                do j = 1,nlevsoifl-1
-                   ! NOTE(wjs, 2019-08-01) It appears that the code currently doesn't set
-                   ! clay, sand and om_frac explicitly under some conditions. It probably
-                   ! should. My understanding is that currently things work okay, though,
-                   ! because clay, sand and om_frac will remain set at their previous
-                   ! values, which is probably reasonable enough. See also
-                   ! <https://github.com/ESCOMP/ctsm/pull/771#discussion_r309509596>.
-                   if (zisoi(lev) > zisoifl(j) .AND. zisoi(lev) <= zisoifl(j+1)) then
-                      clay = clay3d(g,j+1)
-                      sand = sand3d(g,j+1)
-                      om_frac = organic3d(g,j+1)/organic_max
-                   endif
-                end do
-             else
+                found = 0  ! reset value
+                if (zsoi(lev) <= zisoifl(1)) then
+                   ! Search above the dataset's range of zisoifl depths
+                   clay = clay3d(g,1)
+                   sand = sand3d(g,1)
+                   om_frac = organic3d(g,1)/organic_max
+                   found = 1
+                else if (zsoi(lev) > zisoifl(nlevsoifl)) then
+                   ! Search below the dataset's range of zisoifl depths
+                   clay = clay3d(g,nlevsoifl)
+                   sand = sand3d(g,nlevsoifl)
+                   om_frac = organic3d(g,nlevsoifl)/organic_max
+                   found = 1
+                else
+                   ! For remaining model soil levels, search within dataset's
+                   ! range of zisoifl values. Look for model node depths
+                   ! that are between the dataset's interface depths.
+                   do j = 1,nlevsoifl-1
+                      if (zsoi(lev) > zisoifl(j) .AND. zsoi(lev) <= zisoifl(j+1)) then
+                         clay = clay3d(g,j+1)
+                         sand = sand3d(g,j+1)
+                         om_frac = organic3d(g,j+1)/organic_max
+                         found = 1
+                      endif
+                      if (found == 1) exit  ! no need to stay in the loop
+                   end do
+                end if
+                ! If not found, then something's wrong
+                if (found == 0) then
+                   write(iulog,*) 'For model soil level =', lev
+                   call endrun(msg="ERROR finding a soil dataset depth to interpolate the model depth to"//errmsg(sourcefile, __LINE__))
+                end if
+             else  ! if lev > nlevsoi
                 clay = clay3d(g,nlevsoifl)
                 sand = sand3d(g,nlevsoifl)
                 om_frac = 0._r8
