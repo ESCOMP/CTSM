@@ -319,6 +319,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <h2osno_max phys="clm5_0" structure="fast"    >5000.0</h2osno_max>
 <h2osno_max phys="clm4_5"                     >1000.0</h2osno_max>
 
+<snow_dzmin_1>0.010d00</snow_dzmin_1>
+<snow_dzmin_2>0.015d00</snow_dzmin_2>
+<snow_dzmax_l_1>0.03d00</snow_dzmax_l_1>
+<snow_dzmax_l_2>0.07d00</snow_dzmax_l_2>
+<snow_dzmax_u_1>0.02d00</snow_dzmax_u_1>
+<snow_dzmax_u_2>0.05d00</snow_dzmax_u_2>
+
 <int_snow_max phys="clm5_0">2000.</int_snow_max>
 <!-- For clm4_5, make this effectively unlimited -->
 <int_snow_max phys="clm4_5">1.e30</int_snow_max>
