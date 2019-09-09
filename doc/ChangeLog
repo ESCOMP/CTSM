@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev064
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
-Date:  Sat Sep  7 17:19:17 MDT 2019
+Date:  Mon Sep  9 13:14:51 MDT 2019
 One-line Summary: User defined top-two snow layers
 
 Purpose of changes
@@ -18,10 +18,11 @@ Purpose of changes
 
  where the right-hand-side variables get namelist-defined values and the
  model calculates dzmin and dzmax_* for the remaining snow layers using
- recursive formulas. The calculation is intended to match the hardcoded
- values, except for the bottom snow layer when nlevsno < 12. The bottom
- layer now always gets dzmax_* = huge(1._r8). The formulas appear in a
- document titled "A firn model for CLM" that has been linked to #729.
+ recursive formulas. The calculation is intended to match the previously
+ hardcoded values, except for the bottom snow layer when nlevsno < 12.
+ The bottom layer now always gets dzmax_* = huge(1._r8). The formulas
+ appear in a document titled "A firn model for CLM" that is linked to
+ #729.
 
 
 Bugs fixed or introduced
@@ -56,7 +57,7 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
 
 Changes made to namelist defaults (e.g., changed parameter values):
  Introduced default values for the new parameters so as to maintain
- bit-for-bit same answers
+ same answers to within roundoff
 
 Changes to the datasets (e.g., parameter, surface or initial files): none
 
@@ -95,8 +96,8 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- 
-    izumi ------- 
+    cheyenne ---- OK
+    izumi ------- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
