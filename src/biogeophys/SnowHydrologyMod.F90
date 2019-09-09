@@ -47,6 +47,7 @@ module SnowHydrologyMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
+  public :: SnowHydrologyClean         ! Deallocate variables for unit testing
   public :: SnowHydrology_readnl       ! Read namelist
   public :: UpdateQuantitiesForNewSnow ! Update various snow-related quantities to account for new snow
   public :: RemoveSnowFromThawedWetlands ! Remove snow from thawed wetlands
@@ -3012,7 +3013,29 @@ contains
     if (present(set_reset_snow_glc_ela)) then
        reset_snow_glc_ela = set_reset_snow_glc_ela
     end if
+    snow_dzmin_1 = 0.010_r8  ! The same default values specified in...
+    snow_dzmin_2 = 0.015_r8  ! /bld/namelist_files/namelist_defaults_ctsm.xml
+    snow_dzmax_l_1 = 0.03_r8  ! and used when alternate values do not
+    snow_dzmax_l_2 = 0.07_r8  ! get set in
+    snow_dzmax_u_1 = 0.02_r8  ! user_nl_clm
+    snow_dzmax_u_2 = 0.05_r8
 
   end subroutine SnowHydrologySetControlForTesting
+
+  !-----------------------------------------------------------------------
+  subroutine SnowHydrologyClean()
+    !
+    ! !DESCRIPTION:
+    ! Deallocate memory
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'Clean'
+    !-----------------------------------------------------------------------
+
+     deallocate(dzmin)
+     deallocate(dzmax_l)
+     deallocate(dzmax_u)
+
+  end subroutine SnowHydrologyClean
 
 end module SnowHydrologyMod
