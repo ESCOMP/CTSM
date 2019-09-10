@@ -16,6 +16,7 @@ module SPMMod
   use shr_kind_mod                   , only : r8 => shr_kind_r8
   use decompMod                      , only : bounds_type
   use clm_varctl                     , only : iulog
+  use abortutils                     , only : endrun
   implicit none
   private
 
@@ -36,6 +37,7 @@ module SPMMod
   contains
     
     procedure, public :: InitSM         ! subroutine to initilize sparse matrix type
+    procedure, public :: ReleaseSM      ! subroutine to deallocate the sparse matrix type data
     procedure, public :: SetValueSM     ! subroutine to set values in sparse matrix of any shape
     procedure, public :: SetValueA      ! subroutine to set off-diagonal values in sparse matrix of A
     procedure, public :: SetValueA_diag ! subroutine to set diagonal values in sparse matrix of A
@@ -59,6 +61,7 @@ module SPMMod
   contains
 
     procedure, public :: InitDM           ! subroutine to initialize diagonal matrix type
+    procedure, public :: ReleaseDM        ! subroutine to deallocate the diagonal matrix
     procedure, public :: SetValueDM       ! subroutine to set values in diagonal matrix
 
   end type diag_matrix_type
@@ -83,6 +86,9 @@ module SPMMod
 
   end type vector_type
 
+  integer,  parameter :: empty_int  = -9999
+  real(r8), parameter :: empty_real = -9999._r8
+
 contains
 
 
@@ -97,6 +103,15 @@ integer,intent(in) :: begu
 integer,intent(in) :: endu
 integer,optional,intent(in) :: maxsm
 
+if ( associated(this%M) )then
+   call endrun( "ERROR: Sparse Matrix was already allocated" )
+end if
+if ( associated(this%RI) )then
+   call endrun( "ERROR: Sparse Matrix was already allocated" )
+end if
+if ( associated(this%CI) )then
+   call endrun( "ERROR: Sparse Matrix was already allocated" )
+end if
 this%SM = SM_in
 this%begu = begu
 this%endu = endu
@@ -107,13 +122,30 @@ else
 end if
 allocate(this%RI(1:SM_in*SM_in))
 allocate(this%CI(1:SM_in*SM_in))
-this%M(:,:) = -9999._r8
-this%RI(:) = -9999
-this%CI(:) = -9999
-this%NE    = -9999
+this%M(:,:) = empty_real
+this%RI(:) = empty_int
+this%CI(:) = empty_int
+this%NE    = empty_int
 
 end subroutine InitSM
 
+  ! ========================================================================
+
+  subroutine ReleaseSM(this)
+  
+  ! Release the Sparse Matrix data
+  
+     class(sparse_matrix_type) :: this
+  
+     this%SM   = empty_int
+     this%begu = empty_int
+     this%endu = empty_int
+     deallocate(this%M)
+     deallocate(this%RI)
+     deallocate(this%CI)
+  end subroutine ReleaseSM
+
+  ! ========================================================================
 
 subroutine SetValueSM(this,begu,endu,num_unit,filter_u,M,I,J,NE_in)
 
@@ -129,9 +161,13 @@ integer,intent(in) :: filter_u(:)
 real(r8),dimension(:,:),intent(in) :: M(begu:endu,1:NE_in)
 integer ,dimension(:),intent(in) :: I(1:NE_in)
 integer ,dimension(:),intent(in) :: J(1:NE_in)
+character(len=*),parameter :: subname = 'SetValueSM'
 
 integer k,u,fu
 
+if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
+   call endrun( subname//"ERROR: Sparse Matrix was NOT already allocated" )
+end if
 do k = 1,NE_in
    do fu = 1,num_unit
       u = filter_u(fu)  
@@ -158,7 +194,11 @@ real(r8),intent(in) :: scaler
 integer,intent(in) :: num_unit
 integer,intent(in) :: filter_u(:)
 integer i,u,fu
+character(len=*),parameter :: subname = 'SetValueA_diag'
 
+if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
+   call endrun( subname//"ERROR: Sparse Matrix was NOT already allocated" )
+end if
 do i=1,this%SM
    do fu=1,num_unit
       u = filter_u(fu)
@@ -199,10 +239,16 @@ integer ,dimension(:),intent(inout),optional :: CI_A(1:NE_NON+this%SM)
 integer i,j,k,fu,u
 logical list_ready
 type(sparse_matrix_type) :: A_diag, A_nondiag
+character(len=*),parameter :: subname = 'SetValueA'
+
 list_ready = .false.
 
+if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
+   call endrun( subname//"ERROR: Sparse Matrix was NOT already allocated" )
+end if
 if(init_ready .and. .not. (present(list) .and. present(RI_A) .and. present(CI_A)))then
    write(iulog,*) "Error: initialization is ready, but at least one of list, RI_A or CI_A is not presented"
+   call endrun( subname//"ERROR: required optional arguments were NOT sent in" )
 end if
  
 if(Init_ready)then
@@ -252,14 +298,31 @@ integer,intent(in) :: SM_in
 integer,intent(in) :: begu
 integer,intent(in) :: endu
 
+if ( associated(this%DM) )then
+   call endrun( "ERROR: Diagonal Matrix was already allocated" )
+end if
 this%SM = SM_in
 allocate(this%DM(begu:endu,1:SM_in))
-this%DM(:,:) = -9999._r8
+this%DM(:,:) = empty_real
 this%begu = begu
 this%endu = endu
 
 end subroutine InitDM
 
+  !-----------------------------------------------------------------------
+  subroutine ReleaseDM(this)
+
+    ! Release the Diagonal Matrix data
+
+    class(diag_matrix_type) :: this
+
+    this%SM   = empty_int
+    this%begu = empty_int
+    this%endu = empty_int
+    deallocate(this%DM)
+  end subroutine ReleaseDM
+
+  !-----------------------------------------------------------------------
 
 subroutine SetValueDM(this,begu,endu,num_unit,filter_u,M)
 
@@ -272,8 +335,13 @@ integer,intent(in) :: endu
 real(r8),dimension(:),intent(in) :: M(begu:endu,1:this%SM)
 integer,intent(in) :: num_unit
 integer,intent(in) :: filter_u(:)
+character(len=*),parameter :: subname = 'SetValueDM'
 
 integer i,fu,u
+
+if ( .not. associated(this%DM) )then
+   call endrun( subname//"ERROR: Diagonal matrix was NOT already allocated" )
+end if
 do i = 1,this%SM
    do fu = 1,num_unit
       u = filter_u(fu)
@@ -293,10 +361,14 @@ class(vector_type) :: this
 integer,intent(in) :: SV_in
 integer,intent(in) :: begu
 integer,intent(in) :: endu
+character(len=*),parameter :: subname = 'InitV'
 
+if ( associated(this%V) )then
+   call endrun( "ERROR: Vector was already allocated" )
+end if
 this%SV = SV_in
 allocate(this%V(begu:endu,1:SV_in))
-this%V(:,:) = -9999._r8
+this%V(:,:) = empty_real
 this%begu = begu
 this%endu = endu
 
@@ -324,7 +396,11 @@ integer,intent(in) :: num_unit
 integer,intent(in) :: filter_u(:)
 
 integer i,fu,u
+character(len=*),parameter :: subname = 'SetValueV_scaler'
 
+if ( .not. associated(this%V) )then
+   call endrun( subname//"ERROR: Vector was NOT already allocated" )
+end if
 do i=1,this%SV
    do fu = 1,num_unit
       u = filter_u(fu)
@@ -348,7 +424,11 @@ integer,intent(in) :: num_unit
 integer,intent(in) :: filter_u(:)
 
 integer i,fu,u
+character(len=*),parameter :: subname = 'SetValueV'
 
+if ( .not. associated(this%V) )then
+   call endrun( subname//"ERROR: Vector was NOT already allocated" )
+end if
 do i=1,this%SV
    do fu = 1,num_unit
       u = filter_u(fu)
