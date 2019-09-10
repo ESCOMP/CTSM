@@ -11,7 +11,7 @@ module CNVegCarbonStateType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use pftconMod	     , only : noveg, npcropmin, pftcon
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
-  use clm_varctl     , only : iulog, use_cndv, use_crop, use_fan
+  use clm_varctl     , only : iulog, use_cndv, use_crop
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc 
@@ -36,8 +36,6 @@ module CNVegCarbonStateType
      real(r8), pointer :: grainc_xfer_patch        (:) ! (gC/m2) grain C transfer (crop model)
      real(r8), pointer :: leafc_patch              (:) ! (gC/m2) leaf C
      real(r8), pointer :: leafc_storage_patch      (:) ! (gC/m2) leaf C storage
-     real(r8), pointer :: leafc_manure_patch       (:) ! (gC/m2) leaf C eaten by cows
-     real(r8), pointer :: deadstemc_manure_patch   (:) ! (gC/m2) dead stem C eaten by cows
      real(r8), pointer :: leafc_xfer_patch         (:) ! (gC/m2) leaf C transfer
      real(r8), pointer :: leafc_storage_xfer_acc_patch   (:) ! (gC/m2) Accmulated leaf C transfer
      real(r8), pointer :: storage_cdemand_patch          (:) ! (gC/m2)       C use from the C storage pool 
@@ -69,7 +67,6 @@ module CNVegCarbonStateType
      real(r8), pointer :: deadstemc_col            (:) ! (gC/m2) column-level deadstemc (fire)
      real(r8), pointer :: fuelc_col                (:) ! fuel load outside cropland
      real(r8), pointer :: fuelc_crop_col           (:) ! fuel load for cropland
-     real(r8), pointer :: total_leafc_col          (:) ! (gC/m2) total C at column-level
      real(r8), pointer :: cropseedc_deficit_patch  (:) ! (gC/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
 
      ! pools for dynamic landcover
@@ -219,10 +216,6 @@ contains
     begg = bounds%begg; endg = bounds%endg
 
     allocate(this%leafc_patch              (begp:endp)) ; this%leafc_patch              (:) = nan
-    if ( use_fan ) then
-       allocate(this%leafc_manure_patch    (begp:endp)) ; this%leafc_manure_patch       (:) = nan
-       allocate(this%deadstemc_manure_patch(begp:endp)) ; this%deadstemc_manure_patch   (:) = nan
-    end if
     allocate(this%leafc_storage_patch      (begp:endp)) ; this%leafc_storage_patch      (:) = nan
     allocate(this%leafc_xfer_patch         (begp:endp)) ; this%leafc_xfer_patch         (:) = nan
     allocate(this%leafc_storage_xfer_acc_patch (begp:endp)) ; this%leafc_storage_xfer_acc_patch (:) = nan
@@ -263,9 +256,6 @@ contains
     allocate(this%deadstemc_col            (begc:endc)) ; this%deadstemc_col            (:) = nan
     allocate(this%fuelc_col                (begc:endc)) ; this%fuelc_col                (:) = nan
     allocate(this%fuelc_crop_col           (begc:endc)) ; this%fuelc_crop_col           (:) = nan
-    if ( use_fan ) then
-       allocate(this%total_leafc_col       (begc:endc)) ; this%total_leafc_col          (:) = nan
-    end if
 
     allocate(this%totvegc_patch            (begp:endp)) ; this%totvegc_patch            (:) = nan
     allocate(this%totvegc_col              (begc:endc)) ; this%totvegc_col              (:) = nan
@@ -1003,9 +993,6 @@ contains
           this%totecosysc_col(c) = 0._r8
           this%totc_p2c_col(c)   = 0._r8
           this%totc_col(c)       = 0._r8
-          if ( use_fan ) then
-             this%total_leafc_col(c)= 0._r8
-          end if
        end if
     end do
 
@@ -2247,11 +2234,6 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='seedc_g', xtype=ncd_double,  &
             dim1name='gridcell', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%seedc_grc) 
-       if ( use_fan ) then
-          call restartvar(ncid=ncid, flag=flag, varname='total_leafc', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=this%total_leafc_col) 
-       end if
     end if
 
     !--------------------------------
@@ -2351,14 +2333,6 @@ contains
        end if
     end do
 
-    if ( use_fan ) then
-       do fi = 1,num_patch
-          i  = filter_patch(fi)
-          this%leafc_manure_patch(i)    = value_patch
-          this%deadstemc_manure_patch(i)= value_patch
-       end do
-    end if
-
     do fi = 1,num_column
        i  = filter_column(fi)
        this%rootc_col(i)                = value_column
@@ -2371,13 +2345,6 @@ contains
        this%totc_col(i)                 = value_column
        this%totecosysc_col(i)           = value_column
     end do
-
-    if ( use_fan ) then
-       do fi = 1,num_column
-          i  = filter_column(fi)
-          this%total_leafc_col(i)       = value_column
-       end do
-    end if
 
   end subroutine SetValues
 

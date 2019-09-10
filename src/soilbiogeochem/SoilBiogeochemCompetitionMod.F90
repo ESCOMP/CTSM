@@ -174,7 +174,7 @@ contains
                                          soilbiogeochem_nitrogenflux_inst,canopystate_inst)
     !
     ! !USES:
-    use clm_varctl       , only: cnallocate_carbon_only, iulog, use_fan
+    use clm_varctl       , only: cnallocate_carbon_only, iulog
     use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
     use clm_varcon       , only: nitrif_n2o_loss_frac
     use CNSharedParamsMod, only: use_fun
@@ -234,7 +234,6 @@ contains
     real(r8) :: residual_smin_no3(bounds%begc:bounds%endc)
     real(r8) :: residual_plant_ndemand(bounds%begc:bounds%endc)
     real(r8) :: sminn_to_plant_new(bounds%begc:bounds%endc)
-    real(r8) :: smin_nh4_vr_factor                                    ! factor to reduce smin_nh4_nr if use_fan is true
     !-----------------------------------------------------------------------
 
     associate(                                                                                           &

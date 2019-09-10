@@ -431,7 +431,8 @@ contains
        tanpools(3) = ns%tan_g3_col(c)
 
        ph_soil = atm2lnd_inst%forc_soilph_grc(g)
-       if (ph_soil < 3.0) then
+       if (ph_soil < 0.1) then
+          ! Missing values in the pH, eg. Antarctica.
           ph_soil = 6.5_r8
           def_ph_count = def_ph_count + 1
        end if
@@ -640,8 +641,6 @@ contains
     end do
 
     if (do_balance_checks) then
-       call balance_check('Storage', nstored_old, &
-            get_total_n(ns, nf, 'pools_storage'), get_total_n(ns, nf, 'fluxes_storage'))
        call balance_check('Manure', nsoilman_old, &
             get_total_n(ns, nf, 'pools_manure'), get_total_n(ns, nf, 'fluxes_manure'))
        call balance_check('Fertilizer', nsoilfert_old, &
