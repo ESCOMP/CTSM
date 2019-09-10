@@ -12,11 +12,12 @@ module lnd2atmType
   use decompMod     , only : bounds_type
   use clm_varpar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon    , only : spval
-  use clm_varctl    , only : iulog, use_lch4
+  use clm_varctl    , only : iulog, use_lch4, use_fan
   use shr_megan_mod , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod,only : shr_fire_emis_mechcomps_n
   use seq_drydep_mod, only : n_drydep, drydep_method, DD_XLND
   use shr_fan_mod,    only : shr_fan_to_atm
+  
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -156,6 +157,9 @@ contains
     allocate(this%flux_ch4_grc       (begg:endg))            ; this%flux_ch4_grc       (:)   =ival
 
     if (shr_fan_to_atm) then
+       if (.not. use_fan) then
+          call endrun(msg="ERROR fan_to_atm is on but use_fan is off")
+       end if
        allocate(this%flux_nh3_grc       (begg:endg))            ; this%flux_nh3_grc       (:)   =ival
     end if
     if (shr_megan_mechcomps_n>0) then
