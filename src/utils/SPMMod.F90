@@ -247,13 +247,13 @@ integer,intent(in) :: endu
 integer ,intent(in) :: NE_NON
 integer,intent(in) :: num_unit
 integer,intent(in) :: filter_u(:)
-real(r8),dimension(:),intent(in) :: M(begu:endu,1:NE_NON)
-integer ,dimension(:),intent(in) :: AI(1:NE_NON)
-integer ,dimension(:),intent(in) :: AJ(1:NE_NON)
+real(r8),dimension(:),intent(in) :: M(:,:)
+integer ,dimension(:),intent(in) :: AI(:)
+integer ,dimension(:),intent(in) :: AJ(:)
 logical ,intent(inout) :: Init_ready !True: diagnoal of A has been set to -1,this%RI, this%CI, this%NE and list has been set up
-integer ,dimension(:),intent(inout),optional :: list(1:NE_NON)
-integer ,dimension(:),intent(inout),optional :: RI_A(1:NE_NON+this%SM)
-integer ,dimension(:),intent(inout),optional :: CI_A(1:NE_NON+this%SM)
+integer ,dimension(:),intent(inout),optional :: list(:)
+integer ,dimension(:),intent(inout),optional :: RI_A(:)
+integer ,dimension(:),intent(inout),optional :: CI_A(:)
 
 integer i,j,k,fu,u
 logical list_ready
@@ -268,6 +268,21 @@ end if
 if(init_ready .and. .not. (present(list) .and. present(RI_A) .and. present(CI_A)))then
    write(iulog,*) "Error: initialization is ready, but at least one of list, RI_A or CI_A is not presented"
    call endrun( subname//"ERROR: required optional arguments were NOT sent in" )
+end if
+SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((lbound(M,1) == begu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M,1) == endu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M,2) >= NE_NON), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(AI,1) >= NE_NON), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(AJ,1) >= NE_NON), sourcefile, __LINE__)
+if ( present(list) )then
+   SHR_ASSERT_FL((ubound(list,1) >= NE_NON), sourcefile, __LINE__)
+end if
+if ( present(RI_A) )then
+   SHR_ASSERT_FL((ubound(RI_A,1) >= NE_NON+this%SM), sourcefile, __LINE__)
+end if
+if ( present(CI_A) )then
+   SHR_ASSERT_FL((ubound(CI_A,1) >= NE_NON+this%SM), sourcefile, __LINE__)
 end if
  
 if(Init_ready)then
@@ -351,7 +366,7 @@ subroutine SetValueDM(this,begu,endu,num_unit,filter_u,M)
 class(diag_matrix_type) :: this
 integer,intent(in) :: begu
 integer,intent(in) :: endu
-real(r8),dimension(:),intent(in) :: M(begu:endu,1:this%SM)
+real(r8),dimension(:),intent(in) :: M(:,:)
 integer,intent(in) :: num_unit
 integer,intent(in) :: filter_u(:)
 character(len=*),parameter :: subname = 'SetValueDM'
@@ -361,6 +376,10 @@ integer i,fu,u
 if ( .not. associated(this%DM) )then
    call endrun( subname//"ERROR: Diagonal matrix was NOT already allocated" )
 end if
+SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((lbound(M,1)        == begu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M,1)        == endu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M,2)        >= this%SM), sourcefile, __LINE__)
 do i = 1,this%SM
    do fu = 1,num_unit
       u = filter_u(fu)
@@ -420,6 +439,7 @@ character(len=*),parameter :: subname = 'SetValueV_scaler'
 if ( .not. associated(this%V) )then
    call endrun( subname//"ERROR: Vector was NOT already allocated" )
 end if
+SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 do i=1,this%SV
    do fu = 1,num_unit
       u = filter_u(fu)
@@ -438,7 +458,7 @@ subroutine SetValueV(this,begu,endu,num_unit,filter_u,M)
 integer,intent(in) :: begu
 integer,intent(in) :: endu
 class(vector_type) :: this
-real(r8),dimension(:,:),intent(in) :: M(begu:endu,1:this%SV)
+real(r8),dimension(:,:),intent(in) :: M(:,:)
 integer,intent(in) :: num_unit
 integer,intent(in) :: filter_u(:)
 
@@ -448,6 +468,10 @@ character(len=*),parameter :: subname = 'SetValueV'
 if ( .not. associated(this%V) )then
    call endrun( subname//"ERROR: Vector was NOT already allocated" )
 end if
+SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((lbound(M,1)        == begu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M,1)        == endu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M,2)        >= this%SV), sourcefile, __LINE__)
 do i=1,this%SV
    do fu = 1,num_unit
       u = filter_u(fu)
@@ -472,6 +496,7 @@ integer,intent(in) :: filter_u(:)
 
 integer i,fu,u
 
+SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 do i=1,this%NE
    do fu = 1,num_unit
       u = filter_u(fu)
@@ -497,6 +522,7 @@ integer,intent(in) :: filter_u(:)
 integer i,fu,u
 real(r8),dimension(:,:) :: V(this%begu:this%endu,1:this%SV)
 
+SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 do i=1,this%SV
    do fu = 1, num_unit
       u = filter_u(fu)
@@ -528,6 +554,7 @@ integer,intent(in) :: filter_u(:)
 
 integer i,fu,u
 
+SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 this%NE=A%NE
 this%RI=A%RI
 this%CI=A%CI
@@ -578,6 +605,7 @@ integer i,fu,u
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(NE_AB) .and. present(RI_AB) .and. present(CI_AB)))then
    write(iulog,*) "error in SPMP_AB: list_ready is True, but at least one of list_A, list_B, NE_AB, RI_AB and CI_AB are not presented"
 end if
+SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 
 if(.not. list_ready)then
    i_a=1
