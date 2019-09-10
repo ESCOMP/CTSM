@@ -10,7 +10,7 @@ module CNProductsMod
   use shr_log_mod             , only : errMsg => shr_log_errMsg
   use decompMod               , only : bounds_type
   use abortutils              , only : endrun
-  use clm_time_manager        , only : get_step_size
+  use clm_time_manager        , only : get_step_size_real
   use SpeciesBaseType         , only : species_base_type
   use PatchType               , only : patch
   !
@@ -501,7 +501,7 @@ contains
     end do
 
     ! set time steps
-    dt = real( get_step_size(), r8 )
+    dt = get_step_size_real()
 
     ! update product state variables
     do g = bounds%begg, bounds%endg

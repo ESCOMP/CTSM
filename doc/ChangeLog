@@ -1,4 +1,474 @@
 ===============================================================
+Tag name:  ctsm1.0.dev064
+Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
+Date:  Mon Sep  9 13:14:51 MDT 2019
+One-line Summary: User defined top-two snow layers
+
+Purpose of changes
+------------------
+
+ Instead of hardcoding, we now set:
+
+ dzmin(1) = snow_dzmin_1
+ dzmax_l(1) = snow_dzmax_l_1
+ dzmax_u(1) = snow_dzmax_u_1
+ dzmin(2) = snow_dzmin_2
+ dzmax_l(2) = snow_dzmax_l_2
+ dzmax_u(2) = snow_dzmax_u_2
+
+ where the right-hand-side variables get namelist-defined values and the
+ model calculates dzmin and dzmax_* for the remaining snow layers using
+ recursive formulas. The calculation is intended to match the previously
+ hardcoded values, except for the bottom snow layer when nlevsno < 12.
+ The bottom layer now always gets dzmax_* = huge(1._r8). The formulas
+ appear in a document titled "A firn model for CLM" that is linked to
+ #729.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #729
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist parameters for specifying the top-two snow layers:
+ snow_dzmin_1, snow_dzmax_l_1, snow_dzmax_u_1
+ snow_dzmin_2, snow_dzmax_l_2, snow_dzmax_u_2
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ Introduced default values for the new parameters so as to maintain
+ same answers to within roundoff
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: @billsacks
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change: roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+ Introduced temporary code to overwrite dzmin(j), dzmax_l(j), and
+ dzmax_u(j) with their original values when different by less than
+ 1e-13 from their original values for all but the bottom snow layer.
+ The bottom layer was left as dzmax_l = dzmax_u(j) = huge(1._8), i.e.
+ the new value. The test resulted in bit-for-bit same answers.
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/792
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev063
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Sep  5 21:28:02 MDT 2019
+One-line Summary: Two answer changing fixes (fire, DWT_SLASH) and fix for urban streams for Clm45
+
+Purpose of changes
+------------------
+
+Fire bug fix and DWT_SLASH change and fix urban stream years for clm4_5.
+The latitude used in an expression for Bgc-Fire model Li2016 (used in Clm50)
+had latitude in degrees rather than in radians as it should have been. The
+term is used for ignition and the cosine was being taken in degrees rather 
+than radians, hence the spatial pattern for ignition with latitude was incorrect.
+
+The history field DWT_SLASH_CFLUX was being calculated on the column, but 
+really should have been a patch level variable. In the same way other fields
+were handled we made DWT_SLASH_CFLUX a grid-cell variable, and added
+DWT_SLASH_CFLUX_PATCH on the patch level that could be added to output. The same
+is true of the C13_ and C14_ versions of it.
+
+Clm45 was setting urbantv to year 2000, rather than 1850 or historical as it should
+have. The urbantv file for Clm45 doesn't actually change, so this doesn't actually
+make a difference. But, it does make the namelist look wrong.
+
+Note, that SP cases, Vic cases and Fates cases do NOT change answers. Or if fire is
+off, or certain single-point cases. Some cold-start cases don't seem to be sensitive
+to it either.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #175, #787, #780
+  fixes #175 urban stream years for clm4_5
+  fixes #787 DWT_SLASH field
+  fixes #780 Bug in CN Fire Li 2016 which used latitude in degrees rather than radians
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): Defaults for urbantv for clm4_5
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self, @olywon
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (62 compare fail due to namelist changes)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm50Bgc and some Clm45Bgc cases
+    - what platforms/compilers: All
+    - nature of change: similar climate (but fire ignition pattern changes by latitude)
+        DWT_SLASH_* history fields change because moved to gridcell quantity (so change is relatively minor)
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: 
+           oleson/clm50_cesm20R_2deg_GSWP3V1_issue780_hist (for the fire change)
+
+   URL for LMWG diagnostics output used to validate new climate:
+http://webext.cgd.ucar.edu/I20TR/clm50_cesm20R_2deg_GSWP3V1_issue780_hist/lnd/clm50_cesm20R_2deg_GSWP3V1_issue780_hist.1995_2014-clm50_cesm20R_2deg_GSWP3V1_hist.1995_2014/setsIndex.html
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #802
+(https://github.com/ESCOMP/ctsm/pull)
+   #802 -- Three answer changing fixes (fire, DWT_SLASH, urban streams for clm4_5)
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev062
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Sep  3 16:04:28 MDT 2019
+One-line Summary: Move hobart tests to izumi
+
+Purpose of changes
+------------------
+
+Move all hobart testing to izumi.
+
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include github issue ID):
+- Recurrence of ESCOMP/ctsm#174 (ne30 case fails on hobart_nag due to floating overflow)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Testing should now be run on izumi, not hobart
+
+Changes to tests or testing:
+- All hobart tests moved to izumi
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- not run
+    izumi ------- pass
+
+  Also ran prealpha and prebeta tests that I moved from hobart to izumi. These passed except:
+  - ERP_D_Ld5.ne30_g16.I1850Clm50BgcCrop.izumi_nag.clm-default (#174)
+  - ERP_Ld5.f19_g17.I2000Clm50SpRtmFl.izumi_pgi.clm-default
+  - SMS_D_Ld1.f19_g17.I1850Clm45Cn.izumi_pgi.clm-default
+
+  The last two failed with errors like:
+
+    i011.unified.ucar.edu.44619hfi_userinit: mmap of status page (dabbad0008040000) failed: Operation not permitted
+
+  I wonder if the issue is that multi-node pgi cases don't work on izumi?
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: cime5.8.3_chint17-04 -> cime5.8.3_chint17-05
+  Minor change on izumi to allow using run_sys_tests
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev061
+Originator(s):  erik (Erik Kluzek)
+Date: Sun Sep  1 22:37:07 MDT 2019
+One-line Summary: Simple b4b fixes: new params file, remove override_nsrest/anoxia_wtsat, DV deprecated
+
+Purpose of changes
+------------------
+
+New clm5 paramsfile that has the bad date of 631 changed to 701. Along with some simple bit for
+bit changes. Removing some problematic options. Making Dynamic Vegetation a deprecated option 
+that requires you to use -ignore_warnings with it.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):  #463 #79 #97 #98 #104 #122 #173 #794 #795 #796
+
+   Fixes #463 bad date on params file that didn't allow using ESMF library with Crop
+   Fixes #79 correct documentation of qflx_evap_tot
+   Fixes #97 remove override_nsrest
+   Fixes #98 add warning when using single instance of a startup file for multi-instance cases
+   Fixes #104 use get_step_size_real when putting into a real variable
+   Fixes #122 decomp pool arrays should not start at 0 but 1
+   Fixes #173 remove psi_soil_ref as not used
+   Fixes #794 remove anoxia_wtsat
+   Fixes #795 Correct documentation of -light_res
+   Fixes #796 Deprecate Dynamic Vegetation
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Remove namelist items
+   Remove namelist items:  anoxia_wtsat, override_nsrest
+   Turning dynamic Vegetation on, now displays a warning, and requires using -ignore_warnings in CLM_BLDNML_OPTS
+
+Changes made to namelist defaults (e.g., changed parameter values): New paramdata files
+
+Changes to the datasets (e.g., parameter, surface or initial files): 
+   clm5 paramdata file has correct date for crop of 701 (rather than incorrect 631)
+   clm5 and clm4_5 paramdata file removed an unused variable
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: DV tests removed or changed
+
+Code reviewed by: self
+
+CTSM testing: regular
+
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (compare shows changes becausse of paramdata files)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+
+An additional fail is ERP_P36x2_D_Ld5.f10_f10_musgs.I2000Clm50Cn.cheyenne_gnu.clm-default, because
+of #798. Because it's an issue with cime, I'm not marking it as an expected error.
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #797
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #797 -- Simple b4b fixes: new params file, remove override_nsrest/anoxia_wtsat, DV deprecated 
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev060
 Originator(s):  sacks (Bill Sacks)
 Date:  Thu Aug 29 11:18:20 MDT 2019

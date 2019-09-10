@@ -909,7 +909,7 @@ contains
     !
     ! !USES 
     use accumulMod       , only : init_accum_field
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     !
     ! !ARGUMENTS:
@@ -921,7 +921,7 @@ contains
     integer, parameter :: not_used = huge(1)
     !---------------------------------------------------------------------
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     call init_accum_field(name='BTRANAV', units='-', &
          desc='average over an hour of btran', accum_type='timeavg', accum_period=nint(3600._r8/dtime), &

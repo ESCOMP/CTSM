@@ -196,7 +196,7 @@ module LunaMod
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size, is_end_curr_day
+    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
     use clm_varpar            , only : nlevsoi, mxpft
     use perf_mod              , only : t_startf, t_stopf
     use clm_varctl            , only : use_cn
@@ -312,7 +312,7 @@ module LunaMod
     !set timestep
 
     !Initialize enzyme decay Q10
-    dtime        =  get_step_size()
+    dtime        =  get_step_size_real()
 
     is_end_day   =  is_end_curr_day()
     fnps         =  0.15_r8
@@ -500,7 +500,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size, is_end_curr_day
+    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
     implicit none
     
       ! !ARGUMENTS:
@@ -554,7 +554,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
     !set timestep
 
     !Initialize enzyme decay Q10
-    dtime        =  get_step_size()
+    dtime        =  get_step_size_real()
     is_end_day   =  is_end_curr_day()
     do f  =  1,fn
       p  =  filterp(f)
@@ -628,7 +628,7 @@ subroutine Acc24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns_i
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size
+    use clm_time_manager      , only : get_step_size_real
     implicit none
     
     ! !ARGUMENTS:
@@ -676,7 +676,7 @@ subroutine Acc24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns_i
     !set timestep
 
     !Initialize enzyme decay Q10
-    dtime        =  get_step_size()
+    dtime        =  get_step_size_real()
     do f  =  1,fn
       p  =  filterp(f)
       ft =  patch%itype(p)
@@ -727,7 +727,7 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size, is_end_curr_day
+    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
     implicit none
     
     ! !ARGUMENTS:
@@ -765,7 +765,7 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
     !set timestep
 
     !Initialize enzyme decay Q10
-    dtime        =  get_step_size()
+    dtime        =  get_step_size_real()
     is_end_day   =  is_end_curr_day()
     do f  =  1,fn
       p  =  filterp(f)
