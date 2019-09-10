@@ -993,9 +993,6 @@ contains
           this%totecosysc_col(c) = 0._r8
           this%totc_p2c_col(c)   = 0._r8
           this%totc_col(c)       = 0._r8
-          if ( use_fan ) then
-             this%total_leafc_col(c)= 0._r8
-          end if
        end if
     end do
 
