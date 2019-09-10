@@ -192,7 +192,7 @@ contains
     integer  , intent(in)    :: lb                 ! lower bound for arrays
     integer  , intent(in)    :: num_pts            ! number of points in the filter
     integer  , intent(in)    :: filter_pts(:)      ! filter in which tracer_val should be updated
-    logical  , intent(in)    :: mask_array(:)      ! true where we should do the calculations
+    logical  , intent(in)    :: mask_array(lb:)    ! true where we should do the calculations
     real(r8) , intent(in)    :: bulk_source(lb:)   ! values of the source for this variable, for bulk
     real(r8) , intent(in)    :: bulk_val(lb:)      ! values of the variable of interest, for bulk
     real(r8) , intent(in)    :: tracer_source(lb:) ! values of the source for this variable, for the tracer

@@ -41,6 +41,7 @@ module SnowHydrologyMod
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
   use LakeCon         , only : lsadz
   use NumericsMod     , only : truncate_small_values_one_lev
+  use WaterTracerUtils, only : CalcTracerFromBulkMasked
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -77,6 +78,7 @@ module SnowHydrologyMod
   private :: Bulk_InitializeSnowPack ! Initialize an explicit snow pack in columns where this is warranted based on snow depth, for bulk-only quantities
   private :: UpdateState_TopLayerFluxes ! Update top layer of snow pack with various fluxes into and out of the top layer
   private :: BulkFlux_SnowPercolation ! Calculate liquid percolation through the snow pack, for bulk water
+  private :: TracerFlux_SnowPercolation ! Calculate liquid percolation through the snow pack, for one tracer
   private :: Combo                  ! Returns the combined variables: dz, t, wliq, wice.
   private :: MassWeightedSnowRadius ! Mass weighted snow grain size
   !
@@ -1044,6 +1046,19 @@ contains
          ! Outputs
          qflx_snow_percolation = b_waterflux_inst%qflx_snow_percolation_col(begc:endc,:))
 
+     do i = water_inst%tracers_beg, water_inst%tracers_end
+        associate(w => water_inst%bulk_and_tracers(i))
+        call TracerFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
+             ! Inputs
+             snl                        = col%snl(begc:endc), &
+             bulk_h2osoi_liq            = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+             bulk_qflx_snow_percolation = b_waterflux_inst%qflx_snow_percolation_col(begc:endc,:), &
+             trac_h2osoi_liq            = w%waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+             ! Outputs
+             trac_qflx_snow_percolation = w%waterflux_inst%qflx_snow_percolation_col(begc:endc,:))
+        end associate
+     end do
+
     ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
     ! of it, once all of SnowWater is tracerized.
     if (water_inst%DoConsistencyCheck()) then
@@ -1447,6 +1462,74 @@ contains
     end do
 
   end subroutine BulkFlux_SnowPercolation
+
+  !-----------------------------------------------------------------------
+  subroutine TracerFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
+       snl, bulk_h2osoi_liq, bulk_qflx_snow_percolation, trac_h2osoi_liq, &
+       trac_qflx_snow_percolation)
+    !
+    ! !DESCRIPTION:
+    ! Calculate liquid percolation through the snow pack, for one tracer
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+
+    ! For description of arguments, see comments in BulkFlux_SnowPercolation. Here,
+    ! bulk_* variables refer to bulk water and trac_* variables refer to the given water
+    ! tracer.
+    integer  , intent(in)    :: snl( bounds%begc: )
+    real(r8) , intent(in)    :: bulk_h2osoi_liq( bounds%begc: , -nlevsno+1: )
+    real(r8) , intent(in)    :: bulk_qflx_snow_percolation( bounds%begc: , -nlevsno+1: )
+    real(r8) , intent(in)    :: trac_h2osoi_liq( bounds%begc: , -nlevsno+1: )
+    real(r8) , intent(inout) :: trac_qflx_snow_percolation( bounds%begc: , -nlevsno+1: )
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: j
+    logical :: snow_layer_exists(bounds%begc:bounds%endc)  ! Whether the current snow layer exists in each column
+
+    character(len=*), parameter :: subname = 'TracerFlux_SnowPercolation'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bulk_h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bulk_qflx_snow_percolation, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(trac_h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(trac_qflx_snow_percolation, 1) == bounds%endc), sourcefile, __LINE__)
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc  &
+         )
+
+    do j = -nlevsno+1, 0
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          if (j >= snl(c)+1) then
+             snow_layer_exists(c) = .true.
+          else
+             snow_layer_exists(c) = .false.
+          end if
+       end do
+
+       call CalcTracerFromBulkMasked( &
+            lb            = begc, &
+            num_pts       = num_snowc, &
+            filter_pts    = filter_snowc, &
+            mask_array    = snow_layer_exists(begc:endc), &
+            bulk_source   = bulk_h2osoi_liq(begc:endc, j), &
+            bulk_val      = bulk_qflx_snow_percolation(begc:endc, j), &
+            tracer_source = trac_h2osoi_liq(begc:endc, j), &
+            tracer_val    = trac_qflx_snow_percolation(begc:endc, j))
+
+    end do
+
+    end associate
+
+  end subroutine TracerFlux_SnowPercolation
+
 
   !-----------------------------------------------------------------------
   subroutine SnowCompaction(bounds, num_snowc, filter_snowc, &
