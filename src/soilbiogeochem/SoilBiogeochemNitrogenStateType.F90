@@ -1050,9 +1050,6 @@ contains
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, num_allc, filter_allc)
     !
-    ! !USES:
-    use clm_time_manager    , only : get_curr_date
-    !
     ! !ARGUMENTS:
     class (soilbiogeochem_nitrogenstate_type) :: this
     type(bounds_type) , intent(in) :: bounds  
@@ -1063,14 +1060,7 @@ contains
     integer  :: c,j,k,l     ! indices
     integer  :: fc          ! lake filter indices
     real(r8) :: maxdepth    ! depth to integrate soil variables
-    ! !LOCAL VARIABLES:
-    integer kyr             ! current year
-    integer kmo             ! month of year  (1, ..., 12)
-    integer kda             ! day of month   (1, ..., 31)
-    integer mcsec           ! seconds of day (0, ..., seconds/day)
     !-----------------------------------------------------------------------
-
-   call get_curr_date (kyr, kmo, kda, mcsec)
 
    ! vertically integrate NO3 NH4 N2O pools
    if (use_nitrif_denitrif) then
@@ -1089,7 +1079,6 @@ contains
             this%smin_nh4_col(c) = &
                  this%smin_nh4_col(c) + &
                  this%smin_nh4_vr_col(c,j) * dzsoi_decomp(j)
-
          end do 
       end do
 
