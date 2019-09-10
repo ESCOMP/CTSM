@@ -1,5 +1,7 @@
 module SPMMod
 
+#include "shr_assert.h"
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -89,6 +91,9 @@ module SPMMod
   integer,  parameter :: empty_int  = -9999
   real(r8), parameter :: empty_real = -9999._r8
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
 
@@ -158,9 +163,9 @@ integer,intent(in) :: endu
 integer,intent(in) :: NE_in
 integer,intent(in) :: num_unit
 integer,intent(in) :: filter_u(:)
-real(r8),dimension(:,:),intent(in) :: M(begu:endu,1:NE_in)
-integer ,dimension(:),intent(in) :: I(1:NE_in)
-integer ,dimension(:),intent(in) :: J(1:NE_in)
+real(r8),dimension(:,:),intent(in) :: M(:,:)
+integer ,dimension(:),intent(in) :: I(:)
+integer ,dimension(:),intent(in) :: J(:)
 character(len=*),parameter :: subname = 'SetValueSM'
 
 integer k,u,fu
@@ -168,6 +173,14 @@ integer k,u,fu
 if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
    call endrun( subname//"ERROR: Sparse Matrix was NOT already allocated" )
 end if
+SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M, 2) >= NE_in), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(I, 1) >= NE_in), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(J, 1) >= NE_in), sourcefile, __LINE__)
+SHR_ASSERT_FL((lbound(M, 1) == begu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M, 1) == endu), sourcefile, __LINE__)
+SHR_ASSERT_FL((lbound(M, 1) == this%begu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M, 1) == this%endu), sourcefile, __LINE__)
 do k = 1,NE_in
    do fu = 1,num_unit
       u = filter_u(fu)  
@@ -199,6 +212,12 @@ character(len=*),parameter :: subname = 'SetValueA_diag'
 if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
    call endrun( subname//"ERROR: Sparse Matrix was NOT already allocated" )
 end if
+SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((lbound(this%M,1) == this%begu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(this%M,1) == this%endu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(this%M,2) >= this%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(this%RI,1) >= this%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(this%CI,1) >= this%SM), sourcefile, __LINE__)
 do i=1,this%SM
    do fu=1,num_unit
       u = filter_u(fu)
