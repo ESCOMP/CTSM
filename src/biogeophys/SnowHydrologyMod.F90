@@ -1046,6 +1046,7 @@ contains
 
     call BulkFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
          ! Inputs
+         dtime                 = dtime, &
          snl                   = col%snl(begc:endc), &
          dz                    = col%dz(begc:endc,:), &
          frac_sno_eff          = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
@@ -1081,11 +1082,11 @@ contains
 
              ! For layers below the top layer, add percolation from layer above
              if (j >= snl(c)+2) then
-                h2osoi_liq(c,j) = h2osoi_liq(c,j) + qflx_snow_percolation(c,j-1)
+                h2osoi_liq(c,j) = h2osoi_liq(c,j) + qflx_snow_percolation(c,j-1) * dtime
              end if
 
              ! Subtract percolation out of this layer
-             h2osoi_liq(c,j) = h2osoi_liq(c,j) - qflx_snow_percolation(c,j)
+             h2osoi_liq(c,j) = h2osoi_liq(c,j) - qflx_snow_percolation(c,j) * dtime
           end if
        end do
     end do
@@ -1115,15 +1116,15 @@ contains
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
 
-             mss_bcphi(c,j) = mss_bcphi(c,j) + qin_bc_phi(c)
-             mss_bcpho(c,j) = mss_bcpho(c,j) + qin_bc_pho(c)
-             mss_ocphi(c,j) = mss_ocphi(c,j) + qin_oc_phi(c)
-             mss_ocpho(c,j) = mss_ocpho(c,j) + qin_oc_pho(c)
+             mss_bcphi(c,j) = mss_bcphi(c,j) + qin_bc_phi(c) * dtime
+             mss_bcpho(c,j) = mss_bcpho(c,j) + qin_bc_pho(c) * dtime
+             mss_ocphi(c,j) = mss_ocphi(c,j) + qin_oc_phi(c) * dtime
+             mss_ocpho(c,j) = mss_ocpho(c,j) + qin_oc_pho(c) * dtime
 
-             mss_dst1(c,j)  = mss_dst1(c,j) + qin_dst1(c)
-             mss_dst2(c,j)  = mss_dst2(c,j) + qin_dst2(c)
-             mss_dst3(c,j)  = mss_dst3(c,j) + qin_dst3(c)
-             mss_dst4(c,j)  = mss_dst4(c,j) + qin_dst4(c)
+             mss_dst1(c,j)  = mss_dst1(c,j) + qin_dst1(c) * dtime
+             mss_dst2(c,j)  = mss_dst2(c,j) + qin_dst2(c) * dtime
+             mss_dst3(c,j)  = mss_dst3(c,j) + qin_dst3(c) * dtime
+             mss_dst4(c,j)  = mss_dst4(c,j) + qin_dst4(c) * dtime
 
              ! mass of ice+water: in extremely rare circumstances, this can
              ! be zero, even though there is a snow layer defined. In
@@ -1141,7 +1142,7 @@ contains
              if (qout_bc_phi(c) > mss_bcphi(c,j)) then
                 qout_bc_phi(c) = mss_bcphi(c,j)
              endif
-             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c)
+             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c) * dtime
              qin_bc_phi(c) = qout_bc_phi(c)
 
              ! BCPHO:
@@ -1150,7 +1151,7 @@ contains
              if (qout_bc_pho(c) > mss_bcpho(c,j)) then
                 qout_bc_pho(c) = mss_bcpho(c,j)
              endif
-             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c)
+             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c) * dtime
              qin_bc_pho(c) = qout_bc_pho(c)
 
              ! OCPHI:
@@ -1159,7 +1160,7 @@ contains
              if (qout_oc_phi(c) > mss_ocphi(c,j)) then
                 qout_oc_phi(c) = mss_ocphi(c,j)
              endif
-             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c)
+             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c) * dtime
              qin_oc_phi(c) = qout_oc_phi(c)
 
              ! OCPHO:
@@ -1168,7 +1169,7 @@ contains
              if (qout_oc_pho(c) > mss_ocpho(c,j)) then
                 qout_oc_pho(c) = mss_ocpho(c,j)
              endif
-             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c)
+             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c) * dtime
              qin_oc_pho(c) = qout_oc_pho(c)
 
              ! DUST 1:
@@ -1177,7 +1178,7 @@ contains
              if (qout_dst1(c) > mss_dst1(c,j)) then
                 qout_dst1(c) = mss_dst1(c,j)
              endif
-             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c)
+             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c) * dtime
              qin_dst1(c) = qout_dst1(c)
 
              ! DUST 2:
@@ -1186,7 +1187,7 @@ contains
              if (qout_dst2(c) > mss_dst2(c,j)) then
                 qout_dst2(c) = mss_dst2(c,j)
              endif
-             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c)
+             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c) * dtime
              qin_dst2(c) = qout_dst2(c)
 
              ! DUST 3:
@@ -1195,7 +1196,7 @@ contains
              if (qout_dst3(c) > mss_dst3(c,j)) then
                 qout_dst3(c) = mss_dst3(c,j)
              endif
-             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c)
+             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c) * dtime
              qin_dst3(c) = qout_dst3(c)
 
              ! DUST 4:
@@ -1204,7 +1205,7 @@ contains
              if (qout_dst4(c) > mss_dst4(c,j)) then
                 qout_dst4(c) = mss_dst4(c,j)
              endif
-             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c)
+             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c) * dtime
              qin_dst4(c) = qout_dst4(c)
 
           end if
@@ -1234,9 +1235,9 @@ contains
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        ! qflx_snow_percolation from snow bottom
-       qflx_snow_drain(c) = qflx_snow_drain(c) + (qflx_snow_percolation(c,0) / dtime)
+       qflx_snow_drain(c) = qflx_snow_drain(c) + qflx_snow_percolation(c,0)
 
-       qflx_rain_plus_snomelt(c) = (qflx_snow_percolation(c,0) / dtime) &
+       qflx_rain_plus_snomelt(c) = qflx_snow_percolation(c,0) &
             + (1.0_r8 - frac_sno_eff(c)) * qflx_liq_grnd(c)
        int_snow(c) = int_snow(c) + frac_sno_eff(c) &
                      * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_liq_grnd(c)) * dtime
@@ -1382,7 +1383,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BulkFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
-       snl, dz, frac_sno_eff, h2osoi_ice, h2osoi_liq, &
+       dtime, snl, dz, frac_sno_eff, h2osoi_ice, h2osoi_liq, &
        qflx_snow_percolation)
     !
     ! !DESCRIPTION:
@@ -1396,6 +1397,7 @@ contains
     integer, intent(in) :: num_snowc
     integer, intent(in) :: filter_snowc(:)
 
+    real(r8) , intent(in)    :: dtime                                    ! land model time step (sec)
     integer  , intent(in)    :: snl( bounds%begc: )                      ! negative number of snow layers
     real(r8) , intent(in)    :: dz( bounds%begc: , -nlevsno+1: )         ! layer depth (m)
     real(r8) , intent(in)    :: frac_sno_eff( bounds%begc: )             ! eff. fraction of ground covered by snow (0 to 1)
@@ -1464,7 +1466,7 @@ contains
                 qflx_snow_percolation(c,j) = max(0._r8,(vol_liq(c,j) &
                      - ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
              end if
-             qflx_snow_percolation(c,j) = qflx_snow_percolation(c,j)*1000._r8
+             qflx_snow_percolation(c,j) = (qflx_snow_percolation(c,j)*1000._r8)/dtime
           end if
        end do
     end do
