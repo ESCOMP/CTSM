@@ -24,6 +24,15 @@ module test_sparse_matrix
   integer, parameter :: ndims = 10
   integer, parameter :: begu = 1, endu = 2
 
+  integer, parameter :: NonZeroDiagPlus1 = ndims + 1
+  type :: arb_diagplus1_sparse_matrix_setup
+     real(r8) :: M(begu:endu,NonZeroDiagPlus1)
+     integer :: Iindex(NonZeroDiagPlus1)
+     integer :: Jindex(NonZeroDiagPlus1)
+  contains
+     procedure :: createArbDiagPlus1Matrix
+  end type arb_diagplus1_sparse_matrix_setup
+
   integer, parameter :: NonZeroBiBand = ndims + ndims - 1
   type :: arb_2band_sparse_matrix_setup
      real(r8) :: M(begu:endu,NonZeroBiBand)
@@ -54,6 +63,27 @@ module test_sparse_matrix
      procedure :: createArbUpTriMatrix
   end type tri_nodiag_sparse_matrix_setup
 contains
+
+  subroutine  createArbDiagPlus1Matrix( this )
+    class(arb_diagplus1_sparse_matrix_setup), intent(inout) :: this
+
+    integer :: i, j, nz
+    ! Set up an arbitrary diagonal matrix with the upper corner
+    nz = 0
+    do i = 1, ndims
+        nz = nz + 1
+        this%M(:,nz) = real(i*100 + i,r8)
+        this%Iindex(nz) = i
+        this%Jindex(nz) = i
+        if ( i == 1 )then
+           nz = nz + 1
+           this%M(:,nz) = real(i*100 + ndims,r8)
+           this%Iindex(nz) = ndims
+           this%Jindex(nz) = i
+        end if
+    end do
+    @assertEqual(nz,NonZeroDiagPlus1)
+  end subroutine createArbDiagPlus1Matrix
 
   subroutine  createArb2BandMatrix( this )
     class(arb_2band_sparse_matrix_setup), intent(inout) :: this
@@ -243,44 +273,79 @@ contains
   end subroutine SM_symetrical_matrix_times_three
 
 
+! This test fails...
+! @Test
+! By commenting out above, the test is compiled, but not run
+  subroutine SM_symetrical_matrixPlus1_times_one( this )
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(sparse_matrix_type) :: SymBand
+    real(r8) :: Mexpect(ndims)
+    type(arb_diagplus1_sparse_matrix_setup) :: MatrixSetup
+    integer :: i
+
+    ! Set up a symetrical banded matrix
+    call MatrixSetup%createArbDiagPlus1Matrix( )
+    ! Set all non-zero elements to one
+    MatrixSetup%M = 1.0_r8
+    call SymBand%InitSM( ndims, begu, endu )
+    call SymBand%SetValueSM(begu,endu,this%num_unit,this%filter_u, &
+                               MatrixSetup%M,MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroDiagPlus1)
+    @assertEqual( SymBand%NE, NonZeroDiagPlus1 )
+    ! Multiply it by the identity vector
+    @assertEqual( this%V_identity%SV, ndims )
+    call this%V_identity%SPMM_AX( this%num_unit,this%filter_u, SymBand )
+    ! Make sure results in expected output
+    Mexpect          = 1.0_r8
+    Mexpect(1)       = 2.0_r8
+    
+    print *, "Should be all 1 and first 2"
+    print *, 'M = ', this%V_identity%V(1,:ndims)
+    do i = begu, endu
+       @assertEqual( Mexpect, this%V_identity%V(i,:ndims) )
+    end do
+    call SymBand%ReleaseSM( )
+  end subroutine SM_symetrical_matrixPlus1_times_one
+
 ! This test fails for both bi-diagonal and tri-diagonal matrices
 ! this indicates a problem with the SPMM_AX method for some matrices
 ! @Test
-! subroutine SM_symetrical_matrix_times_one( this )
-!   class(TestSparseMatrix), intent(inout) :: this
+! By commenting out above, the test is compiled, but not run
+  subroutine SM_symetrical_matrix_times_one( this )
+    class(TestSparseMatrix), intent(inout) :: this
 
-!   type(sparse_matrix_type) :: SymBand
-!   real(r8) :: Mexpect(ndims)
-!   type(arb_2band_sparse_matrix_setup) :: MatrixSetup
-!   integer :: i
+    type(sparse_matrix_type) :: SymBand
+    real(r8) :: Mexpect(ndims)
+    type(arb_2band_sparse_matrix_setup) :: MatrixSetup
+    integer :: i
 
-!   ! Set up a symetrical banded matrix
-!   call MatrixSetup%createArb2BandMatrix( )
-!   ! Set all non-zero elements to one
-!   MatrixSetup%M = 1.0_r8
-!   call SymBand%InitSM( ndims, begu, endu )
-!   call SymBand%SetValueSM(begu,endu,this%num_unit,this%filter_u, &
-!                              MatrixSetup%M,MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroBiBand)
-!   @assertEqual( SymBand%NE, NonZeroBiBand )
-!   ! Multiply it by the identity vector
-!   print *, "V = ", this%V_identity%V(1,:)
-!   print *, "M  = ", SymBand%M(1,1:NonZeroBiBand)
-!   print *, "RI = ", SymBand%RI(1:NonZeroBiBand)
-!   print *, "CI = ", SymBand%CI(1:NonZeroBiBand)
-!   @assertEqual( this%V_identity%SV, ndims )
-!   call this%V_identity%SPMM_AX( this%num_unit,this%filter_u, SymBand )
-!   ! Make sure results in expected output
-!   Mexpect          = 2.0_r8
-!   Mexpect(ndims)   = 1.0_r8
-!   
-!   print *, "V result = ", ndims, this%V_identity%V(1,:ndims)
-!   print *, "Should be all 2 and last 1.0"
-!   do i = begu, endu
-!      @assertEqual( Mexpect, this%V_identity%V(i,:ndims) )
-!   end do
-!   call SymBand%ReleaseSM( )
+    ! Set up a symetrical banded matrix
+    call MatrixSetup%createArb2BandMatrix( )
+    ! Set all non-zero elements to one
+    MatrixSetup%M = 1.0_r8
+    call SymBand%InitSM( ndims, begu, endu )
+    call SymBand%SetValueSM(begu,endu,this%num_unit,this%filter_u, &
+                               MatrixSetup%M,MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroBiBand)
+    @assertEqual( SymBand%NE, NonZeroBiBand )
+    ! Multiply it by the identity vector
+    print *, "V = ", this%V_identity%V(1,:)
+    print *, "M  = ", SymBand%M(1,1:NonZeroBiBand)
+    print *, "RI = ", SymBand%RI(1:NonZeroBiBand)
+    print *, "CI = ", SymBand%CI(1:NonZeroBiBand)
+    @assertEqual( this%V_identity%SV, ndims )
+    call this%V_identity%SPMM_AX( this%num_unit,this%filter_u, SymBand )
+    ! Make sure results in expected output
+    Mexpect          = 2.0_r8
+    Mexpect(ndims)   = 1.0_r8
+    
+    print *, "V result = ", ndims, this%V_identity%V(1,:ndims)
+    print *, "Should be all 2 and last 1.0"
+    do i = begu, endu
+       @assertEqual( Mexpect, this%V_identity%V(i,:ndims) )
+    end do
+    call SymBand%ReleaseSM( )
 
-! end subroutine SM_symetrical_matrix_times_one
+  end subroutine SM_symetrical_matrix_times_one
 
   @Test
   subroutine SM_Identity_times_ArbMatrix_is_self( this )
