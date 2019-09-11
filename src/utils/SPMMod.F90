@@ -523,6 +523,12 @@ integer i,fu,u
 real(r8),dimension(:,:) :: V(this%begu:this%endu,1:this%SV)
 
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(this%V,2)   == this%SV), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SV            <= A%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(this%V,2)   == this%SV), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(A%M,2)      >= A%NE), sourcefile, __LINE__)
+SHR_ASSERT_FL((maxval(A%RI)       <= this%SV), sourcefile, __LINE__)
+SHR_ASSERT_FL((maxval(A%CI)       <= this%SV), sourcefile, __LINE__)
 do i=1,this%SV
    do fu = 1, num_unit
       u = filter_u(fu)
