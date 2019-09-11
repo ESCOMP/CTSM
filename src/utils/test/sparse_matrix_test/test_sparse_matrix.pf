@@ -33,7 +33,15 @@ module test_sparse_matrix
      procedure :: createArbBandMatrix
      procedure :: createArbBandMatrix2
   end type arb_band_sparse_matrix_setup
-
+  integer, parameter :: NonZeroTriNoDiag = ndims*ndims*0.5 - ndims*0.5
+  type :: tri_nodiag_sparse_matrix_setup
+     real(r8) :: M(NonZeroTriNoDiag)
+     integer :: Iindex(NonZeroTriNoDiag)
+     integer :: Jindex(NonZeroTriNoDiag)
+  contains
+     procedure :: createArbLoTriMatrix
+     procedure :: createArbHiTriMatrix
+  end type tri_nodiag_sparse_matrix_setup
 contains
 
   subroutine  createArbBandMatrix( this )
@@ -72,6 +80,40 @@ contains
     end do
     @assertEqual(nz,NonZero)
   end subroutine createArbBandMatrix2
+
+  subroutine  createArbLoTriMatrix( this )
+    class(tri_nodiag_sparse_matrix_setup), intent(inout) :: this
+
+    integer :: i, nz
+    ! Set up an arbitrary lower triagional matrix without the diagonal
+    nz = 0
+    do j = 2, ndims
+      do i = 1, j-1
+        nz = nz + 1
+        this%M(nz) = real(j*100 + i,r8)
+        this%Iindex(nz) = i
+        this%Jindex(nz) = j
+      end do
+    end do
+    @assertEqual(nz,NonZeroTriNoDiag)
+  end subroutine createArbLoTriMatrix
+
+  subroutine  createArbUpTriMatrix( this )
+    class(tri_nodiag_sparse_matrix_setup), intent(inout) :: this
+
+    integer :: i, nz
+    ! Set up an arbitrary upper triagional matrix without the diagonal
+    nz = 0
+    do j = 1, ndims-1
+      do i = j+1, ndims
+        nz = nz + 1
+        this%M(nz) = real(j*1000 + i*10,r8)
+        this%Iindex(nz) = i
+        this%Jindex(nz) = j
+      end do
+    end do
+    @assertEqual(nz,NonZeroTriNoDiag)
+  end subroutine createArbUpTriMatrix
 
   subroutine setUp(this)
     class(TestSparseMatrix), intent(inout) :: this
@@ -268,5 +310,50 @@ contains
     @assertEqual( this%SM_identity%M(:,:ArbSmatrix%NE), 3.0_r8*ArbSmatrix2%M(:,:ArbSmatrix2%NE) )
 
   end subroutine SM_ArbTriMatrix_plus_self_twice_is_thrice_self_wSPMP_AB
+
+  @Test
+  subroutine SM_lower_plus_upper_plus_diag_equal_filled( this )
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(sparse_matrix_type) :: ArbSMatrixLo, ArbSMatrixHi, ArbSMatrixDiag
+    type(tri_nodiag_sparse_matrix_setup) :: MatrixSetupLo, MatrixSetupHi
+    integer :: list_A(NonZeroTriNoDiag), list_B(NonZeroTriNoDiag), list_C(ndims)
+    integer :: RI(ndims*ndims), CI(ndims*ndims) 
+    integer :: one(ndims*ndims)
+    integer :: NonZero_ABC
+    integer :: i
+    logical :: list_ready = .false.
+
+
+    ! Lower tridiagonal matrix without the diagonal
+    call MatrixSetupLo%createArbLoTriMatrix( )
+    call ArbSMatrixLo%InitSM( ndims, begu, endu )
+    MatrixSetupLo%M = 1.0_r8   ! Set all elements to one
+    call ArbSMatrixLo%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetupLo%M, &
+                                MatrixSetupLo%Iindex,MatrixSetupLo%Jindex,NonZeroTriNoDiag)
+    ! Upper tridiagonal matrix without the diagonal
+    call MatrixSetupHi%createArUpTriMatrix( )
+    call ArbSMatrixHi%InitSM( ndims, begu, endu )
+    MatrixSetupHi%M = 1.0_r8   ! Set all elements to one
+    call ArbSMatrixHi%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetupLo%M, &
+                                MatrixSetupLo%Iindex,MatrixSetupLo%Jindex,NonZeroTriNoDiag)
+    ! Third matrix used is the diagonal identity matrix
+    call ArbSMatrixDiag%InitSM( ndims, begu, endu )
+    call ArbSMatrixDiag%SetValueA_diag(this%num_unit,this%filter_u, 1.0_r8 )
+    ! Sum them all together
+    list_ready = .false.
+    call this%SM_identity%SPMP_ABC( this%num_unit,this%filter_u,ArbSMatrixLo,ArbSMatrixHi,ArbSMatrixDiag, &
+                                   list_ready,list_A,list_B,list_C,NonZero_ABC,RI,CI)
+    @assertTrue( list_ready )
+    call this%SM_identity%SPMP_ABC( this%num_unit,this%filter_u,ArbSMatrix,ArbSMatrix2,ArbSMatrix3, &
+                                   list_ready,list_A,list_B,list_C,NonZero_ABC,RI,CI)
+    @assertEqual(NonZero_ABC, ndims*ndims)
+    ! Result should have all elements filled in and equal to one
+    one = 1.0_r8
+    do i = begu, endu
+       @assertEqual( this%SM_identity%M(i,:), one )
+    end do
+
+  end subroutine SM_lower_plus_upper_plus_diag_equal_filled
 
 end module test_sparse_matrix
