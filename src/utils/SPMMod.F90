@@ -775,6 +775,10 @@ character(len=*),parameter :: subname = 'SPMP_ABC'
 ! In this case they all need to be presented. Otherwise, use 'list_ready = .false.' to get those information
 ! for the first time call this subroutine.
 
+SHR_ASSERT_FL((this%SM            > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((A%NE               > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((B%NE               > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((C%NE               > 0), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%SM            == B%SM), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%SM            == C%SM), sourcefile, __LINE__)
