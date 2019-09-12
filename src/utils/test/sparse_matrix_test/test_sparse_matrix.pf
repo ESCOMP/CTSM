@@ -560,4 +560,18 @@ contains
     @assertExceptionRaised(expected_msg)
   end subroutine check_alloc_first_setvalueA_diag
 
+  @Test
+  subroutine check_alloc_twice(this)
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(sparse_matrix_type) :: SMatrix
+    character(len=:), allocatable :: expected_msg
+
+    call SMatrix%InitSM( ndims, begu, endu )
+    call SMatrix%InitSM( ndims, begu, endu )
+    expected_msg = endrun_msg( &
+         'InitSM ERROR: Sparse Matrix was already allocated' )
+    @assertExceptionRaised(expected_msg)
+  end subroutine check_alloc_twice
+
 end module test_sparse_matrix
