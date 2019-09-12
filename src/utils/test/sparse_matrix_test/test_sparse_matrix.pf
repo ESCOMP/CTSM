@@ -561,6 +561,42 @@ contains
   end subroutine check_alloc_first_setvalueA_diag
 
   @Test
+  subroutine check_alloc_first_setvalueA(this)
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(tri_nodiag_sparse_matrix_setup) :: MatrixSetup
+    type(sparse_matrix_type) :: SMatrix
+    character(len=:), allocatable :: expected_msg
+    integer :: NE_NON
+    logical :: Init_Ready = .false.
+
+    call SMatrix%SetValueA(begu,endu,this%num_unit,this%filter_u, MatrixSetup%M, MatrixSetup%Iindex, MatrixSetup%Jindex, &
+                           NE_NON,Init_ready)
+    expected_msg = endrun_msg( &
+         'SetValueA ERROR: Sparse Matrix was NOT already allocated')
+    @assertExceptionRaised(expected_msg)
+  end subroutine check_alloc_first_setvalueA
+
+  @Test
+  subroutine check_opt_arg_sent_setvalueA(this)
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(tri_nodiag_sparse_matrix_setup) :: MatrixSetup
+    type(sparse_matrix_type) :: SMatrix
+    character(len=:), allocatable :: expected_msg
+    integer :: NE_NON
+    logical :: Init_Ready = .true.
+
+    call MatrixSetup%createArbLoTriMatrix( )
+    call SMatrix%InitSM( ndims, begu, endu )
+    call SMatrix%SetValueA(begu,endu,this%num_unit,this%filter_u, MatrixSetup%M, MatrixSetup%Iindex, MatrixSetup%Jindex, &
+                           NE_NON,Init_ready)
+    expected_msg = endrun_msg( &
+         'SetValueA ERROR: required optional arguments were NOT sent in' )
+    @assertExceptionRaised(expected_msg)
+  end subroutine check_opt_arg_sent_setvalueA
+
+  @Test
   subroutine check_alloc_twice(this)
     class(TestSparseMatrix), intent(inout) :: this
 
