@@ -50,7 +50,6 @@ module test_sparse_matrix
   contains
      procedure :: createArbBandMatrix
      procedure :: createArbBandMatrix2
-     procedure :: createArbBandMatrix3
   end type arb_band_sparse_matrix_setup
 
   integer, parameter :: NonZeroTriNoDiag = ndims*ndims*0.5 - ndims*0.5
@@ -107,7 +106,6 @@ contains
 
     integer :: i, band, nz, band_size
     ! Set up an arbitrary upper tri-diagonal matrix (3 bands)
-    ! This isn't right...
     nz = 0
     band_size = ndims
     do band = 1, 3
@@ -172,23 +170,6 @@ contains
     end do
     @assertEqual(nz,NonZeroTriNoDiag)
   end subroutine createArbUpTriMatrix
-
-  subroutine  createArbBandMatrix3( this )
-    class(arb_band_sparse_matrix_setup), intent(inout) :: this
-
-    integer :: i, j, band, nz
-    ! Set up an arbitrary upper tri-diagonal matrix (3 bands)
-    nz = 0
-    do j = 1, ndims
-      do i = j, min(ndims,j+2)
-        nz = nz + 1
-        this%M(:,nz) = real(i*100 + j,r8)
-        this%Iindex(nz) = j
-        this%Jindex(nz) = i
-      end do
-    end do
-    @assertEqual(nz,NonZeroTriBand)
-  end subroutine createArbBandMatrix3
 
   subroutine setUp(this)
     class(TestSparseMatrix), intent(inout) :: this
@@ -333,6 +314,38 @@ contains
     call SymBand%ReleaseSM( )
 
   end subroutine SM_symetrical_2matrix_times_one
+
+  @Test
+  subroutine SM_symetrical_3matrix_times_one( this )
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(sparse_matrix_type) :: SymBand
+    real(r8) :: Mexpect(ndims)
+    type(arb_band_sparse_matrix_setup) :: MatrixSetup
+    integer :: i
+
+    ! Set up a symetrical banded matrix
+    call MatrixSetup%createArbBandMatrix( )
+    ! Set all non-zero elements to one
+    MatrixSetup%M = 1.0_r8
+    call SymBand%InitSM( ndims, begu, endu )
+    call SymBand%SetValueSM(begu,endu,this%num_unit,this%filter_u, &
+                               MatrixSetup%M,MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    @assertEqual( SymBand%NE, NonZeroTriBand )
+    ! Multiply it by the identity vector
+    @assertEqual( this%V_identity%SV, ndims )
+    call this%V_identity%SPMM_AX( this%num_unit,this%filter_u, SymBand )
+    ! Make sure results in expected output (remember identity diagonal is added to final result)
+    Mexpect          = 4.0_r8
+    Mexpect(2)       = 3.0_r8
+    Mexpect(1)       = 2.0_r8    ! SHOULD THIS BE THE FIRST OR LAST?
+    
+    do i = begu, endu
+       @assertEqual( Mexpect, this%V_identity%V(i,:ndims) )
+    end do
+    call SymBand%ReleaseSM( )
+
+  end subroutine SM_symetrical_3matrix_times_one
 
   @Test
   subroutine SM_Identity_times_ArbMatrix_is_self( this )
