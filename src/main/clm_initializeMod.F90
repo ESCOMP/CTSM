@@ -22,8 +22,9 @@ module clm_initializeMod
   use ColumnType      , only : col           ! instance          
   use PatchType       , only : patch         ! instance            
   use reweightMod     , only : reweight_wrapup
-  use filterMod       , only : allocFilters, filter
+  use filterMod       , only : allocFilters, filter, filter_inactive_and_active
   use FatesInterfaceMod, only : set_fates_global_elements
+  use dynSubgridControlMod, only: dynSubgridControl_init, get_reset_dynbal_baselines
 
   use clm_instMod       
   ! 
@@ -56,7 +57,6 @@ contains
     use initGridCellsMod , only: initGridCells
     use ch4varcon        , only: ch4conrd
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
-    use dynSubgridControlMod, only: dynSubgridControl_init
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
@@ -275,6 +275,7 @@ contains
     use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
     use DaylengthMod          , only : InitDaylength
     use dynSubgridDriverMod   , only : dynSubgrid_init
+    use dynConsBiogeophysMod  , only : dyn_hwcontent_set_baselines
     use fileutils             , only : getfil
     use initInterpMod         , only : initInterp
     use subgridWeightsMod     , only : init_subgrid_weights_mod
@@ -447,6 +448,30 @@ contains
     call t_stopf('init_dyn_subgrid')
 
     ! ------------------------------------------------------------------------
+    ! Initialize baseline water and energy states needed for dynamic subgrid operation
+    !
+    ! This will be overwritten by the restart file, but needs to be done for a cold start
+    ! case.
+    !
+    ! BACKWARDS_COMPATIBILITY(wjs, 2019-03-05) dyn_hwcontent_set_baselines is called again
+    ! later in initialization if reset_dynbal_baselines is set. I think we could just have
+    ! a single call in that location (adding some logic to also do the call if we're doing
+    ! a cold start) once we can assume that all finidat files have the necessary restart
+    ! fields on them. But for now, having the extra call here handles the case where the
+    ! relevant restart fields are missing from an old finidat file.
+    ! ------------------------------------------------------------------------
+
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+
+       call dyn_hwcontent_set_baselines(bounds_clump, &
+            filter_inactive_and_active(nc)%num_icemecc, &
+            filter_inactive_and_active(nc)%icemecc, &
+            urbanparams_inst, soilstate_inst, waterstate_inst, temperature_inst)
+    end do
+
+    ! ------------------------------------------------------------------------
     ! Initialize modules (after time-manager initialization in most cases)
     ! ------------------------------------------------------------------------
 
@@ -554,6 +579,38 @@ contains
        ! (to be compatible with routines still using finidat)
        finidat = trim(finidat_interp_dest)
 
+    end if
+
+    ! ------------------------------------------------------------------------
+    ! If requested, reset dynbal baselines
+    !
+    ! This needs to happen after reading the restart file (including after reading the
+    ! interpolated restart file, if applicable).
+    ! ------------------------------------------------------------------------
+
+    if (get_reset_dynbal_baselines()) then
+       if (nsrest == nsrStartup) then
+          if (masterproc) then
+             write(iulog,*) ' '
+             write(iulog,*) 'Resetting dynbal baselines'
+             write(iulog,*) ' '
+          end if
+
+          !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+          do nc = 1,nclumps
+             call get_clump_bounds(nc, bounds_clump)
+
+             call dyn_hwcontent_set_baselines(bounds_clump, &
+                  filter_inactive_and_active(nc)%num_icemecc, &
+                  filter_inactive_and_active(nc)%icemecc, &
+                  urbanparams_inst, soilstate_inst, waterstate_inst, temperature_inst)
+          end do
+       else if (nsrest == nsrBranch) then
+          call endrun(msg='ERROR clm_initializeMod: '//&
+               'Cannot set reset_dynbal_baselines in a branch run')
+       end if
+       ! nsrContinue not explicitly handled: it's okay for reset_dynbal_baselines to
+       ! remain set in a continue run, but it has no effect
     end if
 
     ! ------------------------------------------------------------------------

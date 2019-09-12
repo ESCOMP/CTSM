@@ -60,6 +60,13 @@ module WaterstateType
                                                         ! When FATES is coupled in with plant hydraulics turned on, this storage
                                                         ! term is set to non-zero. (kg/m2 H2O)
 
+
+     ! For the following dynbal baseline variables: positive values are subtracted to
+     ! avoid counting liquid water content of "virtual" states; negative values are added
+     ! to account for missing states in the model.
+     real(r8), pointer :: dynbal_baseline_liq_col(:)   ! baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
+     real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (mm H2O)
+
      real(r8), pointer :: snw_rds_col            (:,:) ! col snow grain radius (col,lyr)    [m^-6, microns]
      real(r8), pointer :: snw_rds_top_col        (:)   ! col snow grain radius (top layer)  [m^-6, microns]
      real(r8), pointer :: h2osno_top_col         (:)   ! col top-layer mass of snow  [kg]
@@ -203,6 +210,9 @@ contains
     allocate(this%tws_grc                (begg:endg))                     ; this%tws_grc                (:)   = nan
 
     allocate(this%total_plant_stored_h2o_col(begc:endc))                  ; this%total_plant_stored_h2o_col(:) = nan
+
+    allocate(this%dynbal_baseline_liq_col(begc:endc))                     ; this%dynbal_baseline_liq_col(:)   = nan
+    allocate(this%dynbal_baseline_ice_col(begc:endc))                     ; this%dynbal_baseline_ice_col(:)   = nan
 
     allocate(this%snw_rds_col            (begc:endc,-nlevsno+1:0))        ; this%snw_rds_col            (:,:) = nan
     allocate(this%snw_rds_top_col        (begc:endc))                     ; this%snw_rds_top_col        (:)   = nan
@@ -859,6 +869,12 @@ contains
          end do
       end do
 
+
+      ! Initialize dynbal_baseline_liq_col and dynbal_baseline_ice_col: for some columns,
+      ! these are set elsewhere in initialization, but we need them to be 0 for columns
+      ! for which they are not explicitly set.
+      this%dynbal_baseline_liq_col(bounds%begc:bounds%endc) = 0._r8
+      this%dynbal_baseline_ice_col(bounds%begc:bounds%endc) = 0._r8
     end associate
 
   end subroutine InitCold
@@ -963,6 +979,22 @@ contains
             dim1name='pft', long_name='10-day mean boundary layer relatie humidity', units='unitless', &
             interpinic_flag='interp', readvar=readvar, data=this%rh10_af_patch)
     endif
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname='DYNBAL_BASELINE_LIQ', &
+         xtype=ncd_double, &
+         dim1name='column', &
+         long_name="baseline liquid water mass subtracted from each column's total water calculation", &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_liq_col)
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname='DYNBAL_BASELINE_ICE', &
+         xtype=ncd_double, &
+         dim1name='column', &
+         long_name="baseline ice mass subtracted from each column's total ice calculation", &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
 
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then

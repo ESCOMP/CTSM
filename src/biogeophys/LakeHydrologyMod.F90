@@ -624,7 +624,9 @@ contains
       ! Determine ending water balance and volumetric soil water
 
       call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-           waterstate_inst, endwb(bounds%begc:bounds%endc))
+           waterstate_inst, &
+           subtract_dynbal_baselines = .false., &
+           water_mass = endwb(bounds%begc:bounds%endc))
 
       do j = 1, nlevgrnd
          do fc = 1, num_lakec

@@ -2620,6 +2620,13 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
 
 <!-- =========================================  -->
+<!-- Defaults for dynamic subgrid               -->
+<!-- (some other defaults for dynamic subgrid   -->
+<!-- are set in the BuildNamelist code)         -->
+<!-- =========================================  -->
+<reset_dynbal_baselines>.false.</reset_dynbal_baselines>
+
+<!-- =========================================  -->
 <!-- Defaults for init_interp                   -->
 <!-- =========================================  -->
 

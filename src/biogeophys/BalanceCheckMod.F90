@@ -150,10 +150,14 @@ contains
     end do
 
     call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-         soilhydrology_inst, waterstate_inst, begwb(bounds%begc:bounds%endc))
+         soilhydrology_inst, waterstate_inst, &
+         subtract_dynbal_baselines = .false., &
+         water_mass = begwb(bounds%begc:bounds%endc))
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-         waterstate_inst, begwb(bounds%begc:bounds%endc))
+         waterstate_inst, &
+         subtract_dynbal_baselines = .false., &
+         water_mass = begwb(bounds%begc:bounds%endc))
 
     end associate 
 
