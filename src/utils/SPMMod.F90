@@ -180,7 +180,7 @@ if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. ass
    call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
    return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 2) >= NE_in), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(I, 1) >= NE_in), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(J, 1) >= NE_in), sourcefile, __LINE__)
@@ -224,7 +224,7 @@ if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. ass
    call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
    return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(this%M,1) == this%begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(this%M,1) == this%endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(this%M,2) >= this%SM), sourcefile, __LINE__)
@@ -283,7 +283,7 @@ if(init_ready .and. .not. (present(list) .and. present(RI_A) .and. present(CI_A)
    call endrun( subname//" ERROR: required optional arguments were NOT sent in" )
    return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M,1) == begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,1) == endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,2) >= NE_NON), sourcefile, __LINE__)
@@ -393,7 +393,7 @@ if ( .not. associated(this%DM) )then
    call endrun( subname//" ERROR: Diagonal matrix was NOT already allocated" )
    return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M,1)        == begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,1)        == endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,2)        >= this%SM), sourcefile, __LINE__)
@@ -461,7 +461,7 @@ if ( .not. associated(this%V) )then
    call endrun( subname//" ERROR: Vector was NOT already allocated" )
    return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 do i=1,this%SV
    do fu = 1,num_unit
       u = filter_u(fu)
@@ -491,7 +491,7 @@ if ( .not. associated(this%V) )then
    call endrun( subname//" ERROR: Vector was NOT already allocated" )
    return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M,1)        == begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,1)        == endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,2)        >= this%SV), sourcefile, __LINE__)
@@ -519,7 +519,7 @@ integer,intent(in) :: filter_u(:)
 
 integer i,fu,u
 
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%SM            == K%SM), sourcefile, __LINE__)
 do i=1,this%NE
    do fu = 1,num_unit
@@ -546,7 +546,7 @@ integer,intent(in) :: filter_u(:)
 integer i,fu,u
 real(r8),dimension(:,:) :: V(this%begu:this%endu,1:this%SV)
 
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(this%V,2)   == this%SV), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%SV            <= A%SM), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(this%V,2)   == this%SV), sourcefile, __LINE__)
@@ -584,7 +584,7 @@ integer,intent(in) :: filter_u(:)
 
 integer i,fu,u
 
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%NE            == A%NE), sourcefile, __LINE__)
 SHR_ASSERT_ALL_FL((this%RI        == A%RI), sourcefile, __LINE__)
@@ -642,7 +642,7 @@ if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(N
    call endrun( subname//" ERROR: missing required optional arguments" )
    return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((A%NE               > 0), sourcefile, __LINE__)
 SHR_ASSERT_FL((B%NE               > 0), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%SM            > 0), sourcefile, __LINE__)
