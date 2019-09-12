@@ -622,6 +622,34 @@ contains
   end subroutine check_opt_arg_sent_SPMP_AB
 
   @Test
+  subroutine check_opt_arg_sent_SPMP_ABC(this)
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(tri_nodiag_sparse_matrix_setup) :: MatrixSetup
+    type(sparse_matrix_type) :: SMatrix, SMatrix2, SMatrix3, SMatrix4
+    character(len=:), allocatable :: expected_msg
+    logical :: list_Ready = .true.
+
+    call MatrixSetup%createArbLoTriMatrix( )
+    call SMatrix%InitSM( ndims, begu, endu )
+    call SMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                             MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    call SMatrix2%InitSM( ndims, begu, endu )
+    call SMatrix2%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                             MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    call SMatrix3%InitSM( ndims, begu, endu )
+    call SMatrix3%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                             MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    call SMatrix4%InitSM( ndims, begu, endu )
+    call SMatrix4%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                             MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    call SMatrix%SPMP_ABC(this%num_unit,this%filter_u, SMatrix2, SMatrix3, SMatrix4, list_ready )
+    expected_msg = endrun_msg( &
+         'SPMP_ABC ERROR: missing required optional arguments' )
+    @assertExceptionRaised(expected_msg)
+  end subroutine check_opt_arg_sent_SPMP_ABC
+
+  @Test
   subroutine check_alloc_twice(this)
     class(TestSparseMatrix), intent(inout) :: this
 
