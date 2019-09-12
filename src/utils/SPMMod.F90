@@ -107,20 +107,23 @@ integer,intent(in) :: SM_in
 integer,intent(in) :: begu
 integer,intent(in) :: endu
 integer,optional,intent(in) :: maxsm
+character(len=*),parameter :: subname = 'InitSM'
 
 if ( associated(this%M) )then
-   call endrun( "ERROR: Sparse Matrix was already allocated" )
+   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
 end if
 if ( associated(this%RI) )then
-   call endrun( "ERROR: Sparse Matrix was already allocated" )
+   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
 end if
 if ( associated(this%CI) )then
-   call endrun( "ERROR: Sparse Matrix was already allocated" )
+   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
 end if
 this%SM = SM_in
 this%begu = begu
 this%endu = endu
 if(present(maxsm))then
+   SHR_ASSERT_FL((maxsm >= 1), sourcefile, __LINE__)
+   SHR_ASSERT_FL((maxsm <= SM_in*SM_in), sourcefile, __LINE__)
    allocate(this%M(begu:endu,1:maxsm))
 else
    allocate(this%M(begu:endu,1:SM_in*SM_in))
@@ -181,6 +184,10 @@ SHR_ASSERT_FL((lbound(M, 1) == begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 1) == endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M, 1) == this%begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 1) == this%endu), sourcefile, __LINE__)
+SHR_ASSERT_FL((maxval(I) <= NE_in), sourcefile, __LINE__)
+SHR_ASSERT_FL((minval(I) >= 1), sourcefile, __LINE__)
+SHR_ASSERT_FL((maxval(J) <= NE_in), sourcefile, __LINE__)
+SHR_ASSERT_FL((minval(J) >= 1), sourcefile, __LINE__)
 do k = 1,NE_in
    do fu = 1,num_unit
       u = filter_u(fu)  
@@ -419,6 +426,9 @@ subroutine ReleaseV(this)
 
 class(vector_type) :: this
 deallocate(this%V)
+this%begu = empty_int
+this%endu = empty_int
+this%SV = empty_int
 
 end subroutine ReleaseV
 
@@ -497,6 +507,7 @@ integer,intent(in) :: filter_u(:)
 integer i,fu,u
 
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == K%SM), sourcefile, __LINE__)
 do i=1,this%NE
    do fu = 1,num_unit
       u = filter_u(fu)
@@ -561,6 +572,10 @@ integer,intent(in) :: filter_u(:)
 integer i,fu,u
 
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%NE            == A%NE), sourcefile, __LINE__)
+SHR_ASSERT_ALL_FL((this%RI        == A%RI), sourcefile, __LINE__)
+SHR_ASSERT_ALL_FL((this%CI        == A%CI), sourcefile, __LINE__)
 this%NE=A%NE
 this%RI=A%RI
 this%CI=A%CI
@@ -603,6 +618,7 @@ integer,dimension(:) :: ABindex(this%SM*this%SM)
 
 integer i_a,i_b,i_ab
 integer i,fu,u
+character(len=*),parameter :: subname = 'SPMP_AB'
 
 ! 'list_ready = .true.' means list_A, list_B, NE_AB, RI_AB, and CI_AB have been memorized before.
 ! In this case they all need to be presented. Otherwise, use 'list_ready = .false.' to get those information
@@ -610,8 +626,11 @@ integer i,fu,u
 
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(NE_AB) .and. present(RI_AB) .and. present(CI_AB)))then
    write(iulog,*) "error in SPMP_AB: list_ready is True, but at least one of list_A, list_B, NE_AB, RI_AB and CI_AB are not presented"
+   call endrun( subname//"ERROR: missing required optional arguments" )
 end if
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == B%SM), sourcefile, __LINE__)
 
 if(.not. list_ready)then
    i_a=1
@@ -720,49 +739,76 @@ integer,dimension(:),intent(in),optional :: filter_actunit_A
 integer,dimension(:),intent(in),optional :: filter_actunit_B
 integer,dimension(:),intent(in),optional :: filter_actunit_C
 
-integer,dimension(1:A%NE),intent(inout),optional :: list_A
-integer,dimension(1:B%NE),intent(inout),optional :: list_B
-integer,dimension(1:C%NE),intent(inout),optional :: list_C
+integer,intent(inout),optional :: list_A(:)
+integer,intent(inout),optional :: list_B(:)
+integer,intent(inout),optional :: list_C(:)
 integer,intent(inout),optional :: NE_ABC
-integer,dimension(1:A%NE+B%NE+C%NE),intent(inout),optional :: RI_ABC
-integer,dimension(1:A%NE+B%NE+C%NE),intent(inout),optional :: CI_ABC
+integer,intent(inout),optional :: RI_ABC(:)
+integer,intent(inout),optional :: CI_ABC(:)
 
+! Local data
 integer,dimension(:) :: Aindex(A%NE+1),Bindex(B%NE+1),Cindex(C%NE+1)
 integer,dimension(:) :: ABCindex(this%SM*this%SM)
 
 integer i_a,i_b,i_c,i_abc
 integer i,fu,u
+character(len=*),parameter :: subname = 'SPMP_ABC'
 
 ! 'list_ready = .true.' means list_A, list_B, list_C, NE_ABC, RI_ABC, and CI_ABC have been memorized before.
 ! In this case they all need to be presented. Otherwise, use 'list_ready = .false.' to get those information
 ! for the first time call this subroutine.
 
+SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == B%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == C%SM), sourcefile, __LINE__)
+if( present(list_A) )then
+   SHR_ASSERT_FL((size(list_A)    >= A%NE), sourcefile, __LINE__)
+end if
+if( present(list_B) )then
+   SHR_ASSERT_FL((size(list_B)    >= B%NE), sourcefile, __LINE__)
+end if
+if( present(list_C) )then
+   SHR_ASSERT_FL((size(list_C)    >= C%NE), sourcefile, __LINE__)
+end if
+if( present(RI_ABC) )then
+   SHR_ASSERT_FL((size(RI_ABC)    >= A%NE+B%NE+C%NE), sourcefile, __LINE__)
+end if
+if( present(CI_ABC) )then
+   SHR_ASSERT_FL((size(CI_ABC)    >= A%NE+B%NE+C%NE), sourcefile, __LINE__)
+end if
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(list_C) .and. present(NE_ABC) .and. present(RI_ABC) .and. present(CI_ABC)))then
    write(iulog,*) "error in SPMP_ABC: list_ready is True, but at least one of list_A, list_B, list_C, NE_ABC, RI_ABC and CI_ABC are not presented",&
               present(list_A),present(list_B),present(list_C),present(NE_ABC),present(RI_ABC),present(CI_ABC)
+   call endrun( subname//"ERROR: missing required optional arguments" )
 end if
 if(present(num_actunit_A))then
    if(num_actunit_A .eq. 0)then
       write(iulog,*) "error: num_actunit_A cannot be set to 0"
+      call endrun( subname//"ERROR: bad value for num_actunit_A" )
    end if
    if(.not. present(filter_actunit_A))then
       write(iulog,*) "error: num_actunit_A is presented but filter_actunit_A is missing"
+      call endrun( subname//"ERROR: missing required optional arguments" )
    end if
 end if
 if(present(num_actunit_B))then
    if(num_actunit_B .eq. 0)then
       write(iulog,*) "error: num_actunit_B cannot be set to 0"
+      call endrun( subname//"ERROR: bad value for num_actunit_B" )
    end if
    if(.not. present(filter_actunit_B))then
       write(iulog,*) "error: num_actunit_B is presented but filter_actunit_B is missing"
+      call endrun( subname//"ERROR: missing required optional arguments" )
    end if
 end if
 if(present(num_actunit_C))then
    if(num_actunit_C .eq. 0)then
       write(iulog,*) "error: num_actunit_C cannot be set to 0"
+      call endrun( subname//"ERROR: bad value for num_actunit_C" )
    end if
    if(.not. present(filter_actunit_C))then
       write(iulog,*) "error: num_actunit_C is presented but filter_actunit_C is missing"
+      call endrun( subname//"ERROR: missing required optional arguments" )
    end if
 end if
 
