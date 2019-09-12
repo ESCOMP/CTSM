@@ -643,6 +643,9 @@ if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(N
    return
 end if
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((A%NE               > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((B%NE               > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            > 0), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%SM            == B%SM), sourcefile, __LINE__)
 
