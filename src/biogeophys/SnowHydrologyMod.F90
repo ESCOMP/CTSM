@@ -1068,12 +1068,6 @@ contains
         end associate
      end do
 
-    ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
-    ! of it, once all of SnowWater is tracerized.
-    if (water_inst%DoConsistencyCheck()) then
-       call water_inst%TracerConsistencyCheck(bounds, 'In the middle of SnowWater')
-    end if
-
     ! Adjust h2osoi_liq based on qflx_snow_percolation flux
     do j = -nlevsno+1, 0
        do fc = 1, num_snowc
@@ -1090,6 +1084,12 @@ contains
           end if
        end do
     end do
+
+    ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
+    ! of it, once all of SnowWater is tracerized.
+    if (water_inst%DoConsistencyCheck()) then
+       call water_inst%TracerConsistencyCheck(bounds, 'In the middle of SnowWater')
+    end if
 
     ! Compute aerosol fluxes through snowpack:
     ! 1) compute aerosol mass in each layer
