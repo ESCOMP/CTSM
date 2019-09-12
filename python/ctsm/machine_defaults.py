@@ -43,7 +43,7 @@ MACHINE_DEFAULTS = {
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
                 queue='regular',
-                walltime='06:00:00',
+                walltime='11:50:00',
                 extra_args='',
                 # The following assumes a single node, with a single mpi proc; we may want
                 # to add more flexibility in the future, making the node / proc counts
@@ -52,6 +52,18 @@ MACHINE_DEFAULTS = {
                 '-l select=1:ncpus=36:mpiprocs=1 -r n -l inception=login')
             }),
     'hobart': MachineDefaults(
+        job_launcher_type=JOB_LAUNCHER_QSUB,
+        scratch_dir=os.path.join(os.path.sep, 'scratch', 'cluster', get_user()),
+        baseline_dir=os.path.join(os.path.sep, 'fs', 'cgd', 'csm', 'ccsm_baselines'),
+        account_required=False,
+        job_launcher_defaults={
+            JOB_LAUNCHER_QSUB: QsubDefaults(
+                queue='medium',
+                walltime='04:00:00',
+                extra_args='',
+                required_args='-l nodes=1:ppn=48 -r n')
+        }),
+    'izumi': MachineDefaults(
         job_launcher_type=JOB_LAUNCHER_QSUB,
         scratch_dir=os.path.join(os.path.sep, 'scratch', 'cluster', get_user()),
         baseline_dir=os.path.join(os.path.sep, 'fs', 'cgd', 'csm', 'ccsm_baselines'),

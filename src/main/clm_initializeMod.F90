@@ -275,7 +275,7 @@ contains
     use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
     use clm_varctl            , only : use_crop, ndep_from_cpl
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
-    use clm_time_manager      , only : get_step_size, get_curr_calday
+    use clm_time_manager      , only : get_step_size_real, get_curr_calday
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
     use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
@@ -374,7 +374,7 @@ contains
     calday = get_curr_calday()
     call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
     caldaym1 = get_curr_calday(offset=-int(dtime))
     call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
 

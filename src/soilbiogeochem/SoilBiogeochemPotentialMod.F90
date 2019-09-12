@@ -73,7 +73,8 @@ contains
        cn_decomp_pools, p_decomp_cpool_loss, pmnf_decomp_cascade)
     !
     ! !USES:
-    use shr_log_mod, only : errMsg => shr_log_errMsg
+    use shr_log_mod                       , only : errMsg => shr_log_errMsg
+    use SoilBiogeochemDecompCascadeConType, only : i_atm
     !
     ! !ARGUMENT:
     type(bounds_type)                       , intent(in)    :: bounds   
@@ -94,7 +95,6 @@ contains
     integer :: begc,endc                                    !bounds 
     real(r8):: immob(bounds%begc:bounds%endc,1:nlevdecomp)  !potential N immobilization
     real(r8):: ratio                                        !temporary variable
-    integer, parameter :: i_atm = 0 !TODO - this appears in two places - move it to 1
     !-----------------------------------------------------------------------
    
     begc = bounds%begc; endc = bounds%endc

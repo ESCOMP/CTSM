@@ -196,7 +196,7 @@ contains
     use clm_varctl            , only : downreg_opt
     use clm_varctl            , only : CN_residual_opt
     use clm_varctl            , only : CN_partition_opt
-    use clm_time_manager       , only : get_step_size
+    use clm_time_manager       , only : get_step_size_real
     use CNVegStateType        , only : cnveg_state_type
     use CropType              , only : crop_type
     use CanopyStateType        , only : canopystate_type
@@ -401,7 +401,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       ! patch loop to distribute the available N between the competing patches
       ! on the basis of relative demand, and allocate C and N to new growth and storage
@@ -1193,7 +1193,7 @@ contains
     use clm_varctl             , only : use_c13, use_c14
     use clm_varctl             , only : nscalar_opt, plant_ndemand_opt, substrate_term_opt, temp_scalar_opt
     use clm_varpar             , only : nlevdecomp
-    use clm_time_manager       , only : get_step_size
+    use clm_time_manager       , only : get_step_size_real
     use CanopyStateType        , only : canopystate_type
     use PhotosynthesisMod      , only : photosyns_type
     use CropType               , only : crop_type
@@ -1368,7 +1368,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       ! set number of days to recover negative cpool
       dayscrecover = params_inst%dayscrecover     ! loop over patches to assess the total plant N demand

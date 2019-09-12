@@ -192,6 +192,8 @@ def buildnml(case, caseroot, compname):
             clm_startfile = "%s.clm2%s.r.%s-%s.nc"%(run_refcase,inst_string,run_refdate,run_reftod)
             if not os.path.exists(os.path.join(rundir, clm_startfile)):
                 clm_startfile = "%s.clm2.r.%s-%s.nc"%(run_refcase,run_refdate,run_reftod)
+                logger.warning( "WARNING: the start file being used for a multi-instance case is a single instance: "+clm_startfile )
+
             clm_icfile = "%s = \'%s\'"%(startfile_type, clm_startfile)
         else:
             clm_icfile = ""

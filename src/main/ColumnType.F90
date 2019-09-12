@@ -51,7 +51,6 @@ module ColumnType
      ! topography
      ! TODO(wjs, 2016-04-05) Probably move these things into topoMod
      real(r8), pointer :: micro_sigma          (:)   ! microtopography pdf sigma (m)
-     real(r8), pointer :: n_melt               (:)   ! SCA shape parameter
      real(r8), pointer :: topo_slope           (:)   ! gridcell topographic slope
      real(r8), pointer :: topo_std             (:)   ! gridcell elevation standard deviation
 
@@ -129,7 +128,6 @@ contains
     allocate(this%nbedrock   (begc:endc))                     ; this%nbedrock   (:)   = ispval  
     allocate(this%levgrnd_class(begc:endc,nlevgrnd))           ; this%levgrnd_class(:,:) = ispval
     allocate(this%micro_sigma (begc:endc))                     ; this%micro_sigma (:)   = nan
-    allocate(this%n_melt      (begc:endc))                     ; this%n_melt      (:)   = nan 
     allocate(this%topo_slope  (begc:endc))                     ; this%topo_slope  (:)   = nan
     allocate(this%topo_std    (begc:endc))                     ; this%topo_std    (:)   = nan
 
@@ -165,7 +163,6 @@ contains
     deallocate(this%dz_lake    )
     deallocate(this%z_lake     )
     deallocate(this%micro_sigma)
-    deallocate(this%n_melt     )
     deallocate(this%topo_slope )
     deallocate(this%topo_std   )
     deallocate(this%nbedrock   )

@@ -18,7 +18,7 @@ module controlMod
   use spmdMod                          , only: masterproc, mpicom
   use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
   use decompMod                        , only: clump_pproc
-  use clm_varcon                       , only: h2osno_max, int_snow_max, n_melt_glcmec
+  use clm_varcon                       , only: h2osno_max
   use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
   use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen 
@@ -39,7 +39,7 @@ module controlMod
   use UrbanParamsType                  , only: UrbanReadNML
   use HumanIndexMod                    , only: HumanIndexReadNML
   use CNPrecisionControlMod            , only: CNPrecisionControlReadNML
-  use CNSharedParamsMod                , only: anoxia_wtsat, use_fun
+  use CNSharedParamsMod                , only: use_fun
   use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
@@ -129,7 +129,6 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
     integer :: dtime                ! Integer time-step
-    integer :: override_nsrest      ! If want to override the startup type sent from driver
     logical :: use_init_interp      ! Apply initInterp to the file given by finidat
     !------------------------------------------------------------------------
 
@@ -186,7 +185,7 @@ contains
          perchroot, perchroot_alt
 
     namelist /clm_inparm / &
-         anoxia, anoxia_wtsat, use_fun
+         anoxia, use_fun
 
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
@@ -196,14 +195,15 @@ contains
     namelist /clm_inparm/ &    
          maxpatch_glcmec, glc_do_dynglacier, &
          glc_snow_persistence_max_days, &
-         nlevsno, h2osno_max, int_snow_max, n_melt_glcmec
+         nlevsno, h2osno_max
 
     ! Other options
 
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, &
-         create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
-         albice, soil_layerstruct, subgridflag, &
+         create_crop_landunit, nsegspc, co2_ppmv, &
+         albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
+         soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero
     
@@ -302,8 +302,6 @@ contains
     clump_pproc = 1
 #endif
 
-    override_nsrest = nsrest
-
     use_init_interp = .false.
 
     if (masterproc) then
@@ -356,17 +354,6 @@ contains
              hist_nhtfrq(i) = nint(-hist_nhtfrq(i)*SHR_CONST_CDAY/(24._r8*dtime))
           endif
        end do
-
-       ! Override start-type (can only override to branch (3)  and only 
-       ! if the driver is a startup type
-       if ( override_nsrest /= nsrest )then
-           if ( override_nsrest /= nsrBranch .and. nsrest /= nsrStartup )then
-              call endrun(msg= ' ERROR: can ONLY override clm start-type ' // &
-                   'to branch type and ONLY if driver is a startup type'// &
-                   errMsg(sourcefile, __LINE__))
-           end if
-           call clm_varctl_set( nsrest_in=override_nsrest )
-       end if
 
        if (maxpatch_glcmec <= 0) then
           call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &
@@ -495,7 +482,7 @@ contains
           end if
        end if
 
-       ! If nlevsno, h2osno_max, int_snow_max or n_melt_glcmec are equal to their junk
+       ! If nlevsno or h2osno_max are equal to their junk
        ! default value, then they were not specified by the user namelist and we generate
        ! an error message. Also check nlevsno for bounds.
        if (nlevsno < 3 .or. nlevsno > 12)  then
@@ -506,16 +493,6 @@ contains
        if (h2osno_max <= 0.0_r8) then
           write(iulog,*)'ERROR: h2osno_max = ',h2osno_max,' is not supported, must be greater than 0.0.'
           call endrun(msg=' ERROR: invalid value for h2osno_max in CLM namelist. '//&
-               errMsg(sourcefile, __LINE__))
-       endif
-       if (int_snow_max <= 0.0_r8) then
-          write(iulog,*)'ERROR: int_snow_max = ',int_snow_max,' is not supported, must be greater than 0.0.'
-          call endrun(msg=' ERROR: invalid value for int_snow_max in CLM namelist. '//&
-               errMsg(sourcefile, __LINE__))
-       endif
-       if (n_melt_glcmec <= 0.0_r8) then
-          write(iulog,*)'ERROR: n_melt_glcmec = ',n_melt_glcmec,' is not supported, must be greater than 0.0.'
-          call endrun(msg=' ERROR: invalid value for n_melt_glcmec in CLM namelist. '//&
                errMsg(sourcefile, __LINE__))
        endif
 
@@ -799,7 +776,6 @@ contains
     call mpi_bcast (perchroot_alt, 1, MPI_LOGICAL, 0, mpicom, ier)
     if (use_lch4) then
        call mpi_bcast (anoxia, 1, MPI_LOGICAL, 0, mpicom, ier)
-       call mpi_bcast (anoxia_wtsat, 1, MPI_LOGICAL, 0, mpicom, ier)
     end if
 
     ! lakes
@@ -809,20 +785,21 @@ contains
 
     ! physics variables
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (subgridflag , 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_subgrid_fluxes , 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (snow_cover_fraction_method , len(snow_cover_fraction_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (wrtdia, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (scmlat, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (scmlon, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (co2_ppmv, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (albice, 2, MPI_REAL8,0, mpicom, ier)
-    call mpi_bcast (soil_layerstruct,len(soil_layerstruct), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (soil_layerstruct_predefined,len(soil_layerstruct_predefined), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (soil_layerstruct_userdefined,size(soil_layerstruct_userdefined), MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast (soil_layerstruct_userdefined_nlevsoi, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (h2osno_max, 1, MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (int_snow_max, 1, MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (n_melt_glcmec, 1, MPI_REAL8, 0, mpicom, ier)
 
     ! glacier_mec variables
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -995,9 +972,6 @@ contains
 
     write(iulog,*) '   Number of snow layers =', nlevsno
     write(iulog,*) '   Max snow depth (mm) =', h2osno_max
-    write(iulog,*) '   Limit applied to integrated snowfall when determining changes in'
-    write(iulog,*) '       snow-covered fraction during melt (mm) =', int_snow_max
-    write(iulog,*) '   SCA shape parameter for glc_mec columns (n_melt_glcmec) =', n_melt_glcmec
 
     write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
     if (glc_do_dynglacier) then
@@ -1032,7 +1006,9 @@ contains
     end if
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
-    write(iulog,*) '   soil layer structure = ', soil_layerstruct
+    write(iulog,*) '   pre-defined soil layer structure = ', soil_layerstruct_predefined
+    write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
+    write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi
     write(iulog,*) '   plant hydraulic stress = ', use_hydrstress
     write(iulog,*) '   dynamic roots          = ', use_dynroot
     if (nsrest == nsrContinue) then
@@ -1051,7 +1027,6 @@ contains
     write(iulog,*) ' perchroot (plant water stress based on time-integrated active layer only) = ',perchroot
     if (use_lch4) then
        write(iulog,*) ' anoxia (applied to soil decomposition)             = ',anoxia
-       write(iulog,*) ' anoxia_wtsat (weight anoxia by inundated fraction) = ',anoxia_wtsat
     end if
     ! Lakes
     write(iulog,*)

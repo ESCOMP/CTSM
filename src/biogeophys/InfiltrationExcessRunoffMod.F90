@@ -13,7 +13,6 @@ module InfiltrationExcessRunoffMod
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog, use_vichydro
   use clm_varcon       , only : spval, e_ice
-  use clm_time_manager , only : get_step_size
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType    , only : soilstate_type
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type

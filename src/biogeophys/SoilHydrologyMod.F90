@@ -16,7 +16,7 @@ module SoilHydrologyMod
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon     , only : icol_road_imperv
   use landunit_varcon   , only : istsoil, istcrop
-  use clm_time_manager  , only : get_step_size
+  use clm_time_manager  , only : get_step_size_real
   use EnergyFluxType    , only : energyflux_type
   use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use SoilHydrologyType , only : soilhydrology_type  
@@ -460,7 +460,7 @@ contains
           h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col        & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
           )
 
-     dtime = get_step_size()
+     dtime = get_step_size_real()
 
      ! ------------------------------------------------------------------------
      ! Set qflx_surf for hydrologically-active columns
@@ -539,7 +539,7 @@ contains
          qflx_evap_grnd   =>    waterfluxbulk_inst%qflx_evap_grnd_col     & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]    
          )
 
-     dtime = get_step_size()
+     dtime = get_step_size_real()
 
      do fc = 1, num_urbanc
         c = filter_urbanc(fc)
@@ -659,7 +659,7 @@ contains
 
        ! Get time step
 
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        ! Convert layer thicknesses from m to mm
 
@@ -994,7 +994,7 @@ contains
 
        ! Get time step
 
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        ! Convert layer thicknesses from m to mm
 
@@ -1737,7 +1737,7 @@ contains
 
        ! Get time step
 
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        ! Compute ice fraction in each layer
 
@@ -2034,7 +2034,7 @@ contains
 
        ! Get time step
 
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        ! Convert layer thicknesses from m to mm
 
@@ -2286,7 +2286,7 @@ contains
 
        ! Get time step
 
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
@@ -2385,7 +2385,7 @@ contains
           zwt                =>    soilhydrology_inst%zwt_col              & ! Input:  [real(r8) (:)   ] water table depth (m)                             
           )
 
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        do j = 1, nlevsoi
           do fc = 1, num_soilc
@@ -2482,7 +2482,7 @@ contains
           h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col          & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
           )
 
-     dtime = get_step_size()
+     dtime = get_step_size_real()
 
      do j = 1, nlevsoi
         do fc = 1, num_soilc

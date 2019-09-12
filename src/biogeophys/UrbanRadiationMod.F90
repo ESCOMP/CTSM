@@ -61,7 +61,7 @@ contains
     use clm_varcon          , only : spval, sb, tfrz
     use column_varcon       , only : icol_road_perv, icol_road_imperv
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager    , only : get_step_size
+    use clm_time_manager    , only : get_step_size_real
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds    
@@ -246,7 +246,7 @@ contains
               urbanparams_inst)
       end if
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Determine variables needed for history output and communication with atm
       ! Loop over urban patches in clump
