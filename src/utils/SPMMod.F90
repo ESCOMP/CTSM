@@ -111,12 +111,15 @@ character(len=*),parameter :: subname = 'InitSM'
 
 if ( associated(this%M) )then
    call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
+   return
 end if
 if ( associated(this%RI) )then
    call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
+   return
 end if
 if ( associated(this%CI) )then
    call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
+   return
 end if
 this%SM = SM_in
 this%begu = begu
@@ -174,7 +177,8 @@ character(len=*),parameter :: subname = 'SetValueSM'
 integer k,u,fu
 
 if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
-   call endrun( subname//"ERROR: Sparse Matrix was NOT already allocated" )
+   call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
+   return
 end if
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 2) >= NE_in), sourcefile, __LINE__)
@@ -217,7 +221,8 @@ integer i,u,fu
 character(len=*),parameter :: subname = 'SetValueA_diag'
 
 if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
-   call endrun( subname//"ERROR: Sparse Matrix was NOT already allocated" )
+   call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
+   return
 end if
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(this%M,1) == this%begu), sourcefile, __LINE__)
@@ -270,11 +275,13 @@ character(len=*),parameter :: subname = 'SetValueA'
 list_ready = .false.
 
 if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
-   call endrun( subname//"ERROR: Sparse Matrix was NOT already allocated" )
+   call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
+   return
 end if
 if(init_ready .and. .not. (present(list) .and. present(RI_A) .and. present(CI_A)))then
    write(iulog,*) "Error: initialization is ready, but at least one of list, RI_A or CI_A is not presented"
-   call endrun( subname//"ERROR: required optional arguments were NOT sent in" )
+   call endrun( subname//" ERROR: required optional arguments were NOT sent in" )
+   return
 end if
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M,1) == begu), sourcefile, __LINE__)
@@ -338,9 +345,11 @@ class(diag_matrix_type) :: this
 integer,intent(in) :: SM_in
 integer,intent(in) :: begu
 integer,intent(in) :: endu
+character(len=*),parameter :: subname = 'InitDM'
 
 if ( associated(this%DM) )then
-   call endrun( "ERROR: Diagonal Matrix was already allocated" )
+   call endrun( subname//" ERROR: Diagonal Matrix was already allocated" )
+   return
 end if
 this%SM = SM_in
 allocate(this%DM(begu:endu,1:SM_in))
@@ -381,7 +390,8 @@ character(len=*),parameter :: subname = 'SetValueDM'
 integer i,fu,u
 
 if ( .not. associated(this%DM) )then
-   call endrun( subname//"ERROR: Diagonal matrix was NOT already allocated" )
+   call endrun( subname//" ERROR: Diagonal matrix was NOT already allocated" )
+   return
 end if
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M,1)        == begu), sourcefile, __LINE__)
@@ -409,7 +419,8 @@ integer,intent(in) :: endu
 character(len=*),parameter :: subname = 'InitV'
 
 if ( associated(this%V) )then
-   call endrun( "ERROR: Vector was already allocated" )
+   call endrun( subname//" ERROR: Vector was already allocated" )
+   return
 end if
 this%SV = SV_in
 allocate(this%V(begu:endu,1:SV_in))
@@ -447,7 +458,8 @@ integer i,fu,u
 character(len=*),parameter :: subname = 'SetValueV_scaler'
 
 if ( .not. associated(this%V) )then
-   call endrun( subname//"ERROR: Vector was NOT already allocated" )
+   call endrun( subname//" ERROR: Vector was NOT already allocated" )
+   return
 end if
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 do i=1,this%SV
@@ -476,7 +488,8 @@ integer i,fu,u
 character(len=*),parameter :: subname = 'SetValueV'
 
 if ( .not. associated(this%V) )then
-   call endrun( subname//"ERROR: Vector was NOT already allocated" )
+   call endrun( subname//" ERROR: Vector was NOT already allocated" )
+   return
 end if
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M,1)        == begu), sourcefile, __LINE__)
@@ -626,7 +639,8 @@ character(len=*),parameter :: subname = 'SPMP_AB'
 
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(NE_AB) .and. present(RI_AB) .and. present(CI_AB)))then
    write(iulog,*) "error in SPMP_AB: list_ready is True, but at least one of list_A, list_B, NE_AB, RI_AB and CI_AB are not presented"
-   call endrun( subname//"ERROR: missing required optional arguments" )
+   call endrun( subname//" ERROR: missing required optional arguments" )
+   return
 end if
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
@@ -779,36 +793,43 @@ end if
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(list_C) .and. present(NE_ABC) .and. present(RI_ABC) .and. present(CI_ABC)))then
    write(iulog,*) "error in SPMP_ABC: list_ready is True, but at least one of list_A, list_B, list_C, NE_ABC, RI_ABC and CI_ABC are not presented",&
               present(list_A),present(list_B),present(list_C),present(NE_ABC),present(RI_ABC),present(CI_ABC)
-   call endrun( subname//"ERROR: missing required optional arguments" )
+   call endrun( subname//" ERROR: missing required optional arguments" )
+   return
 end if
 if(present(num_actunit_A))then
    if(num_actunit_A .eq. 0)then
       write(iulog,*) "error: num_actunit_A cannot be set to 0"
-      call endrun( subname//"ERROR: bad value for num_actunit_A" )
+      call endrun( subname//" ERROR: bad value for num_actunit_A" )
+      return
    end if
    if(.not. present(filter_actunit_A))then
       write(iulog,*) "error: num_actunit_A is presented but filter_actunit_A is missing"
-      call endrun( subname//"ERROR: missing required optional arguments" )
+      call endrun( subname//" ERROR: missing required optional arguments" )
+      return
    end if
 end if
 if(present(num_actunit_B))then
    if(num_actunit_B .eq. 0)then
       write(iulog,*) "error: num_actunit_B cannot be set to 0"
-      call endrun( subname//"ERROR: bad value for num_actunit_B" )
+      call endrun( subname//" ERROR: bad value for num_actunit_B" )
+      return
    end if
    if(.not. present(filter_actunit_B))then
       write(iulog,*) "error: num_actunit_B is presented but filter_actunit_B is missing"
-      call endrun( subname//"ERROR: missing required optional arguments" )
+      call endrun( subname//" ERROR: missing required optional arguments" )
+      return
    end if
 end if
 if(present(num_actunit_C))then
    if(num_actunit_C .eq. 0)then
       write(iulog,*) "error: num_actunit_C cannot be set to 0"
-      call endrun( subname//"ERROR: bad value for num_actunit_C" )
+      call endrun( subname//" ERROR: bad value for num_actunit_C" )
+      return
    end if
    if(.not. present(filter_actunit_C))then
       write(iulog,*) "error: num_actunit_C is presented but filter_actunit_C is missing"
-      call endrun( subname//"ERROR: missing required optional arguments" )
+      call endrun( subname//" ERROR: missing required optional arguments" )
+      return
    end if
 end if
 

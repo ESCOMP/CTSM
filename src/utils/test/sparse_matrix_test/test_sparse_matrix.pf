@@ -547,4 +547,17 @@ contains
 
   end subroutine SM_lower_plus_upper_plus_diag_equal_filled
 
+  @Test
+  subroutine check_alloc_first_setvalueA_diag(this)
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(sparse_matrix_type) :: SMatrix
+    character(len=:), allocatable :: expected_msg
+
+    call SMatrix%SetValueA_diag(this%num_unit,this%filter_u, 1.0_r8 )
+    expected_msg = endrun_msg( &
+         'SetValueA_diag ERROR: Sparse Matrix was NOT already allocated')
+    @assertExceptionRaised(expected_msg)
+  end subroutine check_alloc_first_setvalueA_diag
+
 end module test_sparse_matrix
