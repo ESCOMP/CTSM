@@ -158,14 +158,14 @@ subroutine SetValueSM(this,begu,endu,num_unit,filter_u,M,I,J,NE_in)
 ! The information of active landunit/gridcell/column/patch is used to save computational cost.
 
 class(sparse_matrix_type) :: this
-integer,intent(in) :: begu
-integer,intent(in) :: endu
-integer,intent(in) :: NE_in
-integer,intent(in) :: num_unit
-integer,intent(in) :: filter_u(:)
-real(r8),dimension(:,:),intent(in) :: M(:,:)
-integer ,dimension(:),intent(in) :: I(:)
-integer ,dimension(:),intent(in) :: J(:)
+integer ,intent(in) :: begu
+integer ,intent(in) :: endu
+integer ,intent(in) :: NE_in
+integer ,intent(in) :: num_unit
+integer ,intent(in) :: filter_u(:)
+real(r8),intent(in) :: M(begu:,1:)
+integer ,intent(in) :: I(:)
+integer ,intent(in) :: J(:)
 character(len=*),parameter :: subname = 'SetValueSM'
 
 integer k,u,fu
@@ -242,18 +242,18 @@ subroutine SetValueA(this,begu,endu,num_unit,filter_u,M,AI,AJ,NE_NON,Init_ready,
 ! since these indices are usualy time-independent.
 
 class(sparse_matrix_type) :: this
-integer,intent(in) :: begu
-integer,intent(in) :: endu
+integer ,intent(in) :: begu
+integer ,intent(in) :: endu
 integer ,intent(in) :: NE_NON
-integer,intent(in) :: num_unit
-integer,intent(in) :: filter_u(:)
-real(r8),dimension(:),intent(in) :: M(:,:)
-integer ,dimension(:),intent(in) :: AI(:)
-integer ,dimension(:),intent(in) :: AJ(:)
+integer ,intent(in) :: num_unit
+integer ,intent(in) :: filter_u(:)
+real(r8),intent(in) :: M(begu:,1:)
+integer ,intent(in) :: AI(:)
+integer ,intent(in) :: AJ(:)
 logical ,intent(inout) :: Init_ready !True: diagnoal of A has been set to -1,this%RI, this%CI, this%NE and list has been set up
-integer ,dimension(:),intent(inout),optional :: list(:)
-integer ,dimension(:),intent(inout),optional :: RI_A(:)
-integer ,dimension(:),intent(inout),optional :: CI_A(:)
+integer ,intent(inout),optional :: list(:)
+integer ,intent(inout),optional :: RI_A(:)
+integer ,intent(inout),optional :: CI_A(:)
 
 integer i,j,k,fu,u
 logical list_ready
@@ -317,6 +317,8 @@ else
    if(present(CI_A))CI_A(1:this%NE) = this%CI(1:this%NE)
    
    Init_ready = .true.
+   call A_diag%ReleaseSM()
+   call A_nondiag%ReleaseSM()
 end if
 
 end subroutine SetValueA
@@ -364,11 +366,11 @@ subroutine SetValueDM(this,begu,endu,num_unit,filter_u,M)
 ! The information of active landunit/gridcell/column/patch is used to save computational cost.
 
 class(diag_matrix_type) :: this
-integer,intent(in) :: begu
-integer,intent(in) :: endu
-real(r8),dimension(:),intent(in) :: M(:,:)
-integer,intent(in) :: num_unit
-integer,intent(in) :: filter_u(:)
+integer ,intent(in) :: begu
+integer ,intent(in) :: endu
+real(r8),intent(in) :: M(begu:,1:)
+integer ,intent(in) :: num_unit
+integer ,intent(in) :: filter_u(:)
 character(len=*),parameter :: subname = 'SetValueDM'
 
 integer i,fu,u
@@ -455,12 +457,12 @@ subroutine SetValueV(this,begu,endu,num_unit,filter_u,M)
 ! Set the vector values by giving the values in a right order.
 ! The information of active landunit/gridcell/column/patch is used to save computational cost.
 
-integer,intent(in) :: begu
-integer,intent(in) :: endu
-class(vector_type) :: this
-real(r8),dimension(:,:),intent(in) :: M(:,:)
-integer,intent(in) :: num_unit
-integer,intent(in) :: filter_u(:)
+integer ,intent(in) :: begu
+integer ,intent(in) :: endu
+class(vector_type)  :: this
+real(r8),intent(in) :: M(begu:,1:)
+integer ,intent(in) :: num_unit
+integer ,intent(in) :: filter_u(:)
 
 integer i,fu,u
 character(len=*),parameter :: subname = 'SetValueV'
@@ -520,7 +522,7 @@ integer,intent(in) :: num_unit
 integer,intent(in) :: filter_u(:)
 
 integer i,fu,u
-real(r8),dimension(:,:) :: V(this%begu:this%endu,1:this%SV)
+real(r8) :: V(this%begu:this%endu,1:this%SV)
 
 SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(this%V,2)   == this%SV), sourcefile, __LINE__)
