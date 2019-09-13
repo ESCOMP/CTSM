@@ -1074,12 +1074,6 @@ contains
          ! Outputs
          dz         = col%dz(begc:endc,:))
 
-    ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
-    ! of it, once all of SnowWater is tracerized.
-    if (water_inst%DoConsistencyCheck()) then
-       call water_inst%TracerConsistencyCheck(bounds, 'In the middle of SnowWater')
-    end if
-
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        ! qflx_snow_percolation from snow bottom
@@ -1090,6 +1084,12 @@ contains
        int_snow(c) = int_snow(c) + frac_sno_eff(c) &
                      * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_liq_grnd(c)) * dtime
     end do
+
+    ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
+    ! of it, once all of SnowWater is tracerized.
+    if (water_inst%DoConsistencyCheck()) then
+       call water_inst%TracerConsistencyCheck(bounds, 'In the middle of SnowWater')
+    end if
 
     do fc = 1, num_nosnowc
        c = filter_nosnowc(fc)
