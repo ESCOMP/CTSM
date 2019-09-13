@@ -80,6 +80,7 @@ module SnowHydrologyMod
   private :: UpdateState_TopLayerFluxes ! Update top layer of snow pack with various fluxes into and out of the top layer
   private :: BulkFlux_SnowPercolation ! Calculate liquid percolation through the snow pack, for bulk water
   private :: TracerFlux_SnowPercolation ! Calculate liquid percolation through the snow pack, for one tracer
+  private :: UpdateState_SnowPercolation ! Update h2osoi_liq for snow percolation, for bulk or one tracer
   private :: Combo                  ! Returns the combined variables: dz, t, wliq, wice.
   private :: MassWeightedSnowRadius ! Mass weighted snow grain size
   !
@@ -1055,34 +1056,29 @@ contains
          ! Outputs
          qflx_snow_percolation = b_waterflux_inst%qflx_snow_percolation_col(begc:endc,:))
 
-     do i = water_inst%tracers_beg, water_inst%tracers_end
-        associate(w => water_inst%bulk_and_tracers(i))
-        call TracerFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
-             ! Inputs
-             snl                        = col%snl(begc:endc), &
-             bulk_h2osoi_liq            = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
-             bulk_qflx_snow_percolation = b_waterflux_inst%qflx_snow_percolation_col(begc:endc,:), &
-             trac_h2osoi_liq            = w%waterstate_inst%h2osoi_liq_col(begc:endc,:), &
-             ! Outputs
-             trac_qflx_snow_percolation = w%waterflux_inst%qflx_snow_percolation_col(begc:endc,:))
-        end associate
-     end do
+    do i = water_inst%tracers_beg, water_inst%tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call TracerFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
+            ! Inputs
+            snl                        = col%snl(begc:endc), &
+            bulk_h2osoi_liq            = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+            bulk_qflx_snow_percolation = b_waterflux_inst%qflx_snow_percolation_col(begc:endc,:), &
+            trac_h2osoi_liq            = w%waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+            ! Outputs
+            trac_qflx_snow_percolation = w%waterflux_inst%qflx_snow_percolation_col(begc:endc,:))
+       end associate
+    end do
 
-    ! Adjust h2osoi_liq based on qflx_snow_percolation flux
-    do j = -nlevsno+1, 0
-       do fc = 1, num_snowc
-          c = filter_snowc(fc)
-          if (j >= snl(c)+1) then
-
-             ! For layers below the top layer, add percolation from layer above
-             if (j >= snl(c)+2) then
-                h2osoi_liq(c,j) = h2osoi_liq(c,j) + qflx_snow_percolation(c,j-1) * dtime
-             end if
-
-             ! Subtract percolation out of this layer
-             h2osoi_liq(c,j) = h2osoi_liq(c,j) - qflx_snow_percolation(c,j) * dtime
-          end if
-       end do
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call UpdateState_SnowPercolation(bounds, num_snowc, filter_snowc, &
+            ! Inputs
+            dtime                 = dtime, &
+            snl                   = col%snl(begc:endc), &
+            qflx_snow_percolation = w%waterflux_inst%qflx_snow_percolation_col(begc:endc,:), &
+            ! Outputs
+            h2osoi_liq            = w%waterstate_inst%h2osoi_liq_col(begc:endc,:))
+       end associate
     end do
 
     ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
@@ -1539,6 +1535,52 @@ contains
     end associate
 
   end subroutine TracerFlux_SnowPercolation
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateState_SnowPercolation(bounds, num_snowc, filter_snowc, &
+       dtime, snl, qflx_snow_percolation, h2osoi_liq)
+    !
+    ! !DESCRIPTION:
+    ! Update h2osoi_liq for snow percolation, for bulk or one tracer
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+
+    real(r8) , intent(in)    :: dtime                                    ! land model time step (sec)
+    integer  , intent(in)    :: snl( bounds%begc: )                      ! negative number of snow layers
+    real(r8) , intent(in)    :: qflx_snow_percolation( bounds%begc: , -nlevsno+1: ) ! liquid percolation out of the bottom of snow layer j (mm H2O /s)
+    real(r8) , intent(inout) :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: j
+
+    character(len=*), parameter :: subname = 'UpdateState_SnowPercolation'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snow_percolation, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do j = -nlevsno+1, 0
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          if (j >= snl(c)+1) then
+
+             ! For layers below the top layer, add percolation from layer above
+             if (j >= snl(c)+2) then
+                h2osoi_liq(c,j) = h2osoi_liq(c,j) + qflx_snow_percolation(c,j-1) * dtime
+             end if
+
+             ! Subtract percolation out of this layer
+             h2osoi_liq(c,j) = h2osoi_liq(c,j) - qflx_snow_percolation(c,j) * dtime
+          end if
+       end do
+    end do
+
+  end subroutine UpdateState_SnowPercolation
 
 
   !-----------------------------------------------------------------------
