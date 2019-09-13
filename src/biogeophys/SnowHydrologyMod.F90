@@ -82,6 +82,7 @@ module SnowHydrologyMod
   private :: TracerFlux_SnowPercolation ! Calculate liquid percolation through the snow pack, for one tracer
   private :: UpdateState_SnowPercolation ! Update h2osoi_liq for snow percolation, for bulk or one tracer
   private :: CalcAndApplyAerosolFluxes ! Calculate and apply fluxes of aerosols through the snow pack
+  private :: PostPercolation_AdjustLayerThicknesses ! Adjust layer thickness for any water+ice content changes after percolation through the snow pack
   private :: Combo                  ! Returns the combined variables: dz, t, wliq, wice.
   private :: MassWeightedSnowRadius ! Mass weighted snow grain size
   !
@@ -1065,26 +1066,19 @@ contains
          ! Outputs
          aerosol_inst          = aerosol_inst)
 
+    call PostPercolation_AdjustLayerThicknesses(bounds, num_snowc, filter_snowc, &
+         ! Inputs
+         snl        = col%snl(begc:endc), &
+         h2osoi_ice = b_waterstate_inst%h2osoi_ice_col(begc:endc,:), &
+         h2osoi_liq = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+         ! Outputs
+         dz         = col%dz(begc:endc,:))
+
     ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
     ! of it, once all of SnowWater is tracerized.
     if (water_inst%DoConsistencyCheck()) then
        call water_inst%TracerConsistencyCheck(bounds, 'In the middle of SnowWater')
     end if
-
-    ! Adjust layer thickness for any water+ice content changes in excess of previous
-    ! layer thickness. Strictly speaking, only necessary for top snow layer, but doing
-    ! it for all snow layers will catch problems with older initial files.
-    ! Layer interfaces (zi) and node depths (z) do not need adjustment here because they
-    ! are adjusted in CombineSnowLayers and are not used up to that point.
-
-    do j = -nlevsno+1, 0
-       do fc = 1, num_snowc
-          c = filter_snowc(fc)
-          if (j >= snl(c)+1) then
-             dz(c,j) = max(dz(c,j),h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice)
-          end if
-       end do
-    end do
 
     do fc = 1, num_snowc
        c = filter_snowc(fc)
@@ -1628,6 +1622,47 @@ contains
 
   end subroutine CalcAndApplyAerosolFluxes
 
+  !-----------------------------------------------------------------------
+  subroutine PostPercolation_AdjustLayerThicknesses(bounds, num_snowc, filter_snowc, &
+       snl, h2osoi_ice, h2osoi_liq, dz)
+    !
+    ! !DESCRIPTION:
+    ! Adjust layer thickness for any water+ice content changes after percolation through
+    ! the snow pack
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+
+    integer  , intent(in)    :: snl( bounds%begc: )                      ! negative number of snow layers
+    real(r8) , intent(in)    :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
+    real(r8) , intent(in)    :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
+    real(r8) , intent(inout) :: dz( bounds%begc: , -nlevsno+1: )         ! layer depth (m)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: j
+
+    character(len=*), parameter :: subname = 'PostPercolation_AdjustLayerThicknesses'
+    !-----------------------------------------------------------------------
+
+    ! Adjust layer thickness for any water+ice content changes in excess of previous
+    ! layer thickness. Strictly speaking, only necessary for top snow layer, but doing
+    ! it for all snow layers will catch problems with older initial files.
+    ! Layer interfaces (zi) and node depths (z) do not need adjustment here because they
+    ! are adjusted in CombineSnowLayers and are not used up to that point.
+
+    do j = -nlevsno+1, 0
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          if (j >= snl(c)+1) then
+             dz(c,j) = max(dz(c,j),h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice)
+          end if
+       end do
+    end do
+
+  end subroutine PostPercolation_AdjustLayerThicknesses
 
   !-----------------------------------------------------------------------
   subroutine SnowCompaction(bounds, num_snowc, filter_snowc, &
