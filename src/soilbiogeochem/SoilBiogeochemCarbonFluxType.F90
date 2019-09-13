@@ -877,7 +877,6 @@ contains
        end associate
 
     ! total heterotrophic respiration (HR)
-    if(.not. use_soil_matrixcn)then
        do fc = 1,num_soilc
           c = filter_soilc(fc)
        
@@ -886,7 +885,6 @@ contains
                this%somhr_col(c)
        
        end do
-    end if
 
   end subroutine Summary
 

@@ -1083,19 +1083,17 @@ contains
            ! carbon fluxes
            do l = 1, ndecomp_pools
               if ( is_litter(l) ) then
-                 if(.not. use_soil_matrixcn)then
-                    m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * &
+                 m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * &
                       cmb_cmplt_fact(lit_fp)
-                 else ! matrix is the same for C and N; so we only update once.
+                 if(use_soil_matrixcn)then! matrix is the same for C and N in the fire.
                     matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) &
                      - f * cmb_cmplt_fact(lit_fp) * dt
                  end if
               end if
               if ( is_cwd(l) ) then
-                 if(.not. use_soil_matrixcn)then
-                    m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * &
+                 m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * &
                       (f-baf_crop(c)) * cmb_cmplt_fact(cwd_fp)
-                 else
+                 if(use_soil_matrixcn)then
                     matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) &
                      - (f-baf_crop(c)) * cmb_cmplt_fact(cwd_fp) * dt
                  end if

@@ -519,7 +519,7 @@ contains
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
                   cs_veg%frootc_patch(p)          = 0._r8
                else
-                 if(cs_veg%frootc_patch(p) /= 0)then
+                 if(cs_veg%frootc_patch(p) .gt. 0)then
                     cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph) = 1._r8 / dt + cf_veg%cpool_to_frootc_patch(p) / cs_veg%frootc_patch(p)
                  end if
                end if !not use_matrixcn

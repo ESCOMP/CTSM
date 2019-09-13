@@ -1366,7 +1366,7 @@ contains
     use pftconMod              , only : ntmp_soybean, nirrig_tmp_soybean
     use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
     use clm_varcon             , only : secspday, dzsoi_decomp
-    use clm_varctl             , only : use_c13, use_c14
+    use clm_varctl             , only : use_c13, use_c14, use_matrixcn
     use clm_varctl             , only : nscalar_opt, plant_ndemand_opt, substrate_term_opt, temp_scalar_opt
     use clm_varpar             , only : nlevdecomp
     use clm_time_manager       , only : get_step_size
@@ -1606,6 +1606,7 @@ contains
          else if (ivt(p) >= npcropmin) then
             if (croplive(p)) mr = mr + livestem_mr(p) + grain_mr(p)
          end if     ! carbon flux available for allocation
+         if(mr <-1.e-15 .and. use_matrixcn)mr = 0
          availc(p) = gpp(p) - mr
 
          ! new code added for isotope calculations, 7/1/05, PET

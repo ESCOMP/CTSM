@@ -4897,7 +4897,7 @@ contains
 
 
     ! vertically integrate column-level carbon fire losses
-    if(.not. use_soil_matrixcn)then
+!    if(.not. use_soil_matrixcn)then
        do l = 1, ndecomp_pools
           do j = 1,nlevdecomp
              do fc = 1,num_soilc
@@ -4908,7 +4908,7 @@ contains
              end do
           end do
        end do
-    end if !not use_soil_matrixcn
+!    end if !not use_soil_matrixcn
 
     do fc = 1,num_soilc
        c = filter_soilc(fc)
