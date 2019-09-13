@@ -263,6 +263,12 @@ module clm_varctl
   logical, public :: use_soil_moisture_streams = .false. ! true => use prescribed soil moisture stream
 
   !----------------------------------------------------------
+  ! prescribed soil moisture streams switch 
+  !----------------------------------------------------------
+
+  logical, public :: use_soil_moisture_streams = .false. ! true => use prescribed soil moisture stream
+
+  !----------------------------------------------------------
   ! lai streams switch for Sat. Phenology
   !----------------------------------------------------------
 

@@ -362,6 +362,9 @@ program mksurfdat
     if ( outnc_3dglc )then
        write(6,*)'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
     end if
+    if ( outnc_3dglc )then
+       write(6,*)'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
+    end if
     if ( all_urban )then
        write(6,*) 'Output ALL data in file as 100% urban'
     end if
@@ -893,6 +896,20 @@ program mksurfdat
 
        call check_ret(nf_inq_varid(ncid, 'TOPO_GLC_MEC', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, topoglcmec), subname)
+
+       if ( outnc_3dglc )then
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_icesheet), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_gic), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_icesheet), subname)
+       end if
 
        if ( outnc_3dglc )then
           call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)

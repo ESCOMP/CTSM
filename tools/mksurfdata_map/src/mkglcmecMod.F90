@@ -146,11 +146,13 @@ subroutine mkglcmec(ldomain, mapfname, &
 ! variables in an arbitrary way.
 !
 ! !USES:
+  use shr_sys_mod, only : shr_sys_abort
   use mkdomainMod, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkutilsMod, only : slightly_below, slightly_above
   use mkncdio
+  use mkvarctl  , only : outnc_3dglc
 !
 ! !ARGUMENTS:
   implicit none

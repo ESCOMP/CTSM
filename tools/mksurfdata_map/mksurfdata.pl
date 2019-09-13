@@ -367,6 +367,11 @@ EOF
  outnc_vic = .true.
 EOF
   }
+  if ( $opts{'glc'} ) {
+    print $fh <<"EOF";
+ outnc_3dglc = .true.
+EOF
+  }
   if ( $opts{'3dglc'} ) {
     print $fh <<"EOF";
  outnc_3dglc = .true.
