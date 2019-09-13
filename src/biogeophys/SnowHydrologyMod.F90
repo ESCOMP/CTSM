@@ -26,7 +26,7 @@ module SnowHydrologyMod
   use clm_varcon      , only : namec, h2osno_max, hfus, denh2o, denice, rpi, spval, tfrz, wimp, ssi
   use clm_varcon      , only : cpice, cpliq
   use atm2lndType     , only : atm2lnd_type
-  use AerosolMod      , only : aerosol_type
+  use AerosolMod      , only : aerosol_type, AerosolFluxes
   use TemperatureType , only : temperature_type
   use WaterType       , only : water_type
   use WaterFluxBulkType   , only : waterfluxbulk_type
@@ -81,6 +81,7 @@ module SnowHydrologyMod
   private :: BulkFlux_SnowPercolation ! Calculate liquid percolation through the snow pack, for bulk water
   private :: TracerFlux_SnowPercolation ! Calculate liquid percolation through the snow pack, for one tracer
   private :: UpdateState_SnowPercolation ! Update h2osoi_liq for snow percolation, for bulk or one tracer
+  private :: CalcAndApplyAerosolFluxes ! Calculate and apply fluxes of aerosols through the snow pack
   private :: Combo                  ! Returns the combined variables: dz, t, wliq, wice.
   private :: MassWeightedSnowRadius ! Mass weighted snow grain size
   !
@@ -942,9 +943,6 @@ contains
     ! uses a filter for columns containing snow which must be constructed prior
     ! to being called.
     !
-    ! !USES:
-    use AerosolMod        , only : AerosolFluxes
-    !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds
     integer               , intent(in)    :: num_snowc         ! number of snow points in column filter
@@ -960,23 +958,6 @@ contains
     integer  :: g                                                  ! gridcell loop index
     integer  :: c, j, fc, l                                        ! do loop/array indices
     real(r8) :: dtime                                              ! land model time step (sec)
-    real(r8) :: qin_bc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic BC into   layer [kg]
-    real(r8) :: qout_bc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic BC out of layer [kg]
-    real(r8) :: qin_bc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic BC into   layer [kg]
-    real(r8) :: qout_bc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic BC out of layer [kg]
-    real(r8) :: qin_oc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic OC into   layer [kg]
-    real(r8) :: qout_oc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic OC out of layer [kg]
-    real(r8) :: qin_oc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic OC into   layer [kg]
-    real(r8) :: qout_oc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic OC out of layer [kg]
-    real(r8) :: qin_dst1    (bounds%begc:bounds%endc)              ! flux of dust species 1 into   layer [kg]
-    real(r8) :: qout_dst1   (bounds%begc:bounds%endc)              ! flux of dust species 1 out of layer [kg]
-    real(r8) :: qin_dst2    (bounds%begc:bounds%endc)              ! flux of dust species 2 into   layer [kg]
-    real(r8) :: qout_dst2   (bounds%begc:bounds%endc)              ! flux of dust species 2 out of layer [kg]
-    real(r8) :: qin_dst3    (bounds%begc:bounds%endc)              ! flux of dust species 3 into   layer [kg]
-    real(r8) :: qout_dst3   (bounds%begc:bounds%endc)              ! flux of dust species 3 out of layer [kg]
-    real(r8) :: qin_dst4    (bounds%begc:bounds%endc)              ! flux of dust species 4 into   layer [kg]
-    real(r8) :: qout_dst4   (bounds%begc:bounds%endc)              ! flux of dust species 4 out of layer [kg]
-    real(r8) :: mss_liqice(bounds%begc:bounds%endc,-nlevsno+1:0)   ! mass of liquid+ice in a layer
     !-----------------------------------------------------------------------
 
     ! FIXME(wjs, 2019-08-30) When I'm done, there should be a single associate statement,
@@ -1009,14 +990,6 @@ contains
          qflx_rain_plus_snomelt => b_waterflux_inst%qflx_rain_plus_snomelt_col , & ! Output: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
          snow_depth     => b_waterdiagnostic_inst%snow_depth_col    , & ! Output: [real(r8) (:)   ] snow height (m)
 
-         mss_bcphi      => aerosol_inst%mss_bcphi_col        , & ! Output: [real(r8) (:,:) ] hydrophillic BC mass in snow (col,lyr) [kg]
-         mss_bcpho      => aerosol_inst%mss_bcpho_col        , & ! Output: [real(r8) (:,:) ] hydrophobic  BC mass in snow (col,lyr) [kg]
-         mss_ocphi      => aerosol_inst%mss_ocphi_col        , & ! Output: [real(r8) (:,:) ] hydrophillic OC mass in snow (col,lyr) [kg]
-         mss_ocpho      => aerosol_inst%mss_ocpho_col        , & ! Output: [real(r8) (:,:) ] hydrophobic  OC mass in snow (col,lyr) [kg]
-         mss_dst1       => aerosol_inst%mss_dst1_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 1 in snow (col,lyr) [kg]
-         mss_dst2       => aerosol_inst%mss_dst2_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 2 in snow (col,lyr) [kg]
-         mss_dst3       => aerosol_inst%mss_dst3_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 3 in snow (col,lyr) [kg]
-         mss_dst4       => aerosol_inst%mss_dst4_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 4 in snow (col,lyr) [kg]
 
          begc           => bounds%begc                       , &
          endc           => bounds%endc                         &
@@ -1081,137 +1054,22 @@ contains
        end associate
     end do
 
+    call CalcAndApplyAerosolFluxes(bounds, num_snowc, filter_snowc, &
+         ! Inputs
+         dtime                 = dtime, &
+         snl                   = col%snl(begc:endc), &
+         h2osoi_ice            = b_waterstate_inst%h2osoi_ice_col(begc:endc,:), &
+         h2osoi_liq            = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+         qflx_snow_percolation = b_waterflux_inst%qflx_snow_percolation_col(begc:endc,:), &
+         atm2lnd_inst          = atm2lnd_inst, &
+         ! Outputs
+         aerosol_inst          = aerosol_inst)
+
     ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
     ! of it, once all of SnowWater is tracerized.
     if (water_inst%DoConsistencyCheck()) then
        call water_inst%TracerConsistencyCheck(bounds, 'In the middle of SnowWater')
     end if
-
-    ! Compute aerosol fluxes through snowpack:
-    ! 1) compute aerosol mass in each layer
-    ! 2) add aerosol mass flux from above layer to mass of this layer
-    ! 3) qout_xxx is mass flux of aerosol species xxx out bottom of
-    !    layer in water flow, proportional to (current) concentration
-    !    of aerosol in layer multiplied by a scavenging ratio.
-    ! 4) update mass of aerosol in top layer, accordingly
-    ! 5) update mass concentration of aerosol accordingly
-
-    do c = bounds%begc,bounds%endc
-       qin_bc_phi (c) = 0._r8
-       qin_bc_pho (c) = 0._r8
-       qin_oc_phi (c) = 0._r8
-       qin_oc_pho (c) = 0._r8
-       qin_dst1   (c) = 0._r8
-       qin_dst2   (c) = 0._r8
-       qin_dst3   (c) = 0._r8
-       qin_dst4   (c) = 0._r8
-    end do
-
-    do j = -nlevsno+1, 0
-       do fc = 1, num_snowc
-          c = filter_snowc(fc)
-          if (j >= snl(c)+1) then
-
-             mss_bcphi(c,j) = mss_bcphi(c,j) + qin_bc_phi(c) * dtime
-             mss_bcpho(c,j) = mss_bcpho(c,j) + qin_bc_pho(c) * dtime
-             mss_ocphi(c,j) = mss_ocphi(c,j) + qin_oc_phi(c) * dtime
-             mss_ocpho(c,j) = mss_ocpho(c,j) + qin_oc_pho(c) * dtime
-
-             mss_dst1(c,j)  = mss_dst1(c,j) + qin_dst1(c) * dtime
-             mss_dst2(c,j)  = mss_dst2(c,j) + qin_dst2(c) * dtime
-             mss_dst3(c,j)  = mss_dst3(c,j) + qin_dst3(c) * dtime
-             mss_dst4(c,j)  = mss_dst4(c,j) + qin_dst4(c) * dtime
-
-             ! mass of ice+water: in extremely rare circumstances, this can
-             ! be zero, even though there is a snow layer defined. In
-             ! this case, set the mass to a very small value to
-             ! prevent division by zero.
-
-             mss_liqice(c,j) = h2osoi_liq(c,j)+h2osoi_ice(c,j)
-             if (mss_liqice(c,j) < 1E-30_r8) then
-                mss_liqice(c,j) = 1E-30_r8
-             endif
-
-             ! BCPHI:
-             ! 1. flux with meltwater:
-             qout_bc_phi(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_bcphi*(mss_bcphi(c,j)/mss_liqice(c,j))
-             if (qout_bc_phi(c) > mss_bcphi(c,j)) then
-                qout_bc_phi(c) = mss_bcphi(c,j)
-             endif
-             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c) * dtime
-             qin_bc_phi(c) = qout_bc_phi(c)
-
-             ! BCPHO:
-             ! 1. flux with meltwater:
-             qout_bc_pho(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_bcpho*(mss_bcpho(c,j)/mss_liqice(c,j))
-             if (qout_bc_pho(c) > mss_bcpho(c,j)) then
-                qout_bc_pho(c) = mss_bcpho(c,j)
-             endif
-             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c) * dtime
-             qin_bc_pho(c) = qout_bc_pho(c)
-
-             ! OCPHI:
-             ! 1. flux with meltwater:
-             qout_oc_phi(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_ocphi*(mss_ocphi(c,j)/mss_liqice(c,j))
-             if (qout_oc_phi(c) > mss_ocphi(c,j)) then
-                qout_oc_phi(c) = mss_ocphi(c,j)
-             endif
-             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c) * dtime
-             qin_oc_phi(c) = qout_oc_phi(c)
-
-             ! OCPHO:
-             ! 1. flux with meltwater:
-             qout_oc_pho(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_ocpho*(mss_ocpho(c,j)/mss_liqice(c,j))
-             if (qout_oc_pho(c) > mss_ocpho(c,j)) then
-                qout_oc_pho(c) = mss_ocpho(c,j)
-             endif
-             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c) * dtime
-             qin_oc_pho(c) = qout_oc_pho(c)
-
-             ! DUST 1:
-             ! 1. flux with meltwater:
-             qout_dst1(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst1*(mss_dst1(c,j)/mss_liqice(c,j))
-             if (qout_dst1(c) > mss_dst1(c,j)) then
-                qout_dst1(c) = mss_dst1(c,j)
-             endif
-             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c) * dtime
-             qin_dst1(c) = qout_dst1(c)
-
-             ! DUST 2:
-             ! 1. flux with meltwater:
-             qout_dst2(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst2*(mss_dst2(c,j)/mss_liqice(c,j))
-             if (qout_dst2(c) > mss_dst2(c,j)) then
-                qout_dst2(c) = mss_dst2(c,j)
-             endif
-             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c) * dtime
-             qin_dst2(c) = qout_dst2(c)
-
-             ! DUST 3:
-             ! 1. flux with meltwater:
-             qout_dst3(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst3*(mss_dst3(c,j)/mss_liqice(c,j))
-             if (qout_dst3(c) > mss_dst3(c,j)) then
-                qout_dst3(c) = mss_dst3(c,j)
-             endif
-             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c) * dtime
-             qin_dst3(c) = qout_dst3(c)
-
-             ! DUST 4:
-             ! 1. flux with meltwater:
-             qout_dst4(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst4*(mss_dst4(c,j)/mss_liqice(c,j))
-             if (qout_dst4(c) > mss_dst4(c,j)) then
-                qout_dst4(c) = mss_dst4(c,j)
-             endif
-             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c) * dtime
-             qin_dst4(c) = qout_dst4(c)
-
-          end if
-       end do
-    end do
-
-    ! Compute aerosol fluxes through snowpack and aerosol deposition fluxes into top layere
-
-    call AerosolFluxes(bounds, num_snowc, filter_snowc, &
-         atm2lnd_inst, aerosol_inst)
 
     ! Adjust layer thickness for any water+ice content changes in excess of previous
     ! layer thickness. Strictly speaking, only necessary for top snow layer, but doing
@@ -1581,6 +1439,194 @@ contains
     end do
 
   end subroutine UpdateState_SnowPercolation
+
+  !-----------------------------------------------------------------------
+  subroutine CalcAndApplyAerosolFluxes(bounds, num_snowc, filter_snowc, &
+       dtime, snl, h2osoi_ice, h2osoi_liq, qflx_snow_percolation, atm2lnd_inst, &
+       aerosol_inst)
+    !
+    ! !DESCRIPTION:
+    ! Calculate and apply fluxes of aerosols through the snow pack
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+
+    real(r8)           , intent(in)    :: dtime                                               ! land model time step (sec)
+    integer            , intent(in)    :: snl( bounds%begc: )                                 ! negative number of snow layers
+    real(r8)           , intent(in)    :: h2osoi_ice( bounds%begc: , -nlevsno+1: )            ! ice lens (kg/m2)
+    real(r8)           , intent(in)    :: h2osoi_liq( bounds%begc: , -nlevsno+1: )            ! liquid water (kg/m2)
+    real(r8)           , intent(in)    :: qflx_snow_percolation( bounds%begc: , -nlevsno+1: ) ! liquid percolation out of the bottom of snow layer j (mm H2O /s)
+    type(atm2lnd_type) , intent(in)    :: atm2lnd_inst
+    type(aerosol_type) , intent(inout) :: aerosol_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: j
+    real(r8) :: mss_liqice                                         ! mass of liquid+ice in a layer
+    real(r8) :: qin_bc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic BC into   layer [kg]
+    real(r8) :: qout_bc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic BC out of layer [kg]
+    real(r8) :: qin_bc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic BC into   layer [kg]
+    real(r8) :: qout_bc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic BC out of layer [kg]
+    real(r8) :: qin_oc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic OC into   layer [kg]
+    real(r8) :: qout_oc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic OC out of layer [kg]
+    real(r8) :: qin_oc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic OC into   layer [kg]
+    real(r8) :: qout_oc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic OC out of layer [kg]
+    real(r8) :: qin_dst1    (bounds%begc:bounds%endc)              ! flux of dust species 1 into   layer [kg]
+    real(r8) :: qout_dst1   (bounds%begc:bounds%endc)              ! flux of dust species 1 out of layer [kg]
+    real(r8) :: qin_dst2    (bounds%begc:bounds%endc)              ! flux of dust species 2 into   layer [kg]
+    real(r8) :: qout_dst2   (bounds%begc:bounds%endc)              ! flux of dust species 2 out of layer [kg]
+    real(r8) :: qin_dst3    (bounds%begc:bounds%endc)              ! flux of dust species 3 into   layer [kg]
+    real(r8) :: qout_dst3   (bounds%begc:bounds%endc)              ! flux of dust species 3 out of layer [kg]
+    real(r8) :: qin_dst4    (bounds%begc:bounds%endc)              ! flux of dust species 4 into   layer [kg]
+    real(r8) :: qout_dst4   (bounds%begc:bounds%endc)              ! flux of dust species 4 out of layer [kg]
+
+    character(len=*), parameter :: subname = 'CalcAndApplyAerosolFluxes'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         mss_bcphi      => aerosol_inst%mss_bcphi_col        , & ! Output: [real(r8) (:,:) ] hydrophillic BC mass in snow (col,lyr) [kg]
+         mss_bcpho      => aerosol_inst%mss_bcpho_col        , & ! Output: [real(r8) (:,:) ] hydrophobic  BC mass in snow (col,lyr) [kg]
+         mss_ocphi      => aerosol_inst%mss_ocphi_col        , & ! Output: [real(r8) (:,:) ] hydrophillic OC mass in snow (col,lyr) [kg]
+         mss_ocpho      => aerosol_inst%mss_ocpho_col        , & ! Output: [real(r8) (:,:) ] hydrophobic  OC mass in snow (col,lyr) [kg]
+         mss_dst1       => aerosol_inst%mss_dst1_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 1 in snow (col,lyr) [kg]
+         mss_dst2       => aerosol_inst%mss_dst2_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 2 in snow (col,lyr) [kg]
+         mss_dst3       => aerosol_inst%mss_dst3_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 3 in snow (col,lyr) [kg]
+         mss_dst4       => aerosol_inst%mss_dst4_col           & ! Output: [real(r8) (:,:) ] mass of dust species 4 in snow (col,lyr) [kg]
+         )
+
+    ! Compute aerosol fluxes through snowpack:
+    ! 1) compute aerosol mass in each layer
+    ! 2) add aerosol mass flux from above layer to mass of this layer
+    ! 3) qout_xxx is mass flux of aerosol species xxx out bottom of
+    !    layer in water flow, proportional to (current) concentration
+    !    of aerosol in layer multiplied by a scavenging ratio.
+    ! 4) update mass of aerosol in top layer, accordingly
+    ! 5) update mass concentration of aerosol accordingly
+
+    do fc = 1, num_snowc
+       c = filter_snowc(fc)
+
+       qin_bc_phi (c) = 0._r8
+       qin_bc_pho (c) = 0._r8
+       qin_oc_phi (c) = 0._r8
+       qin_oc_pho (c) = 0._r8
+       qin_dst1   (c) = 0._r8
+       qin_dst2   (c) = 0._r8
+       qin_dst3   (c) = 0._r8
+       qin_dst4   (c) = 0._r8
+    end do
+
+    do j = -nlevsno+1, 0
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          if (j >= snl(c)+1) then
+
+             mss_bcphi(c,j) = mss_bcphi(c,j) + qin_bc_phi(c) * dtime
+             mss_bcpho(c,j) = mss_bcpho(c,j) + qin_bc_pho(c) * dtime
+             mss_ocphi(c,j) = mss_ocphi(c,j) + qin_oc_phi(c) * dtime
+             mss_ocpho(c,j) = mss_ocpho(c,j) + qin_oc_pho(c) * dtime
+
+             mss_dst1(c,j)  = mss_dst1(c,j) + qin_dst1(c) * dtime
+             mss_dst2(c,j)  = mss_dst2(c,j) + qin_dst2(c) * dtime
+             mss_dst3(c,j)  = mss_dst3(c,j) + qin_dst3(c) * dtime
+             mss_dst4(c,j)  = mss_dst4(c,j) + qin_dst4(c) * dtime
+
+             ! mass of ice+water: in extremely rare circumstances, this can
+             ! be zero, even though there is a snow layer defined. In
+             ! this case, set the mass to a very small value to
+             ! prevent division by zero.
+
+             mss_liqice = h2osoi_liq(c,j)+h2osoi_ice(c,j)
+             if (mss_liqice < 1E-30_r8) then
+                mss_liqice = 1E-30_r8
+             endif
+
+             ! BCPHI:
+             ! 1. flux with meltwater:
+             qout_bc_phi(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_bcphi*(mss_bcphi(c,j)/mss_liqice)
+             if (qout_bc_phi(c) > mss_bcphi(c,j)) then
+                qout_bc_phi(c) = mss_bcphi(c,j)
+             endif
+             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c) * dtime
+             qin_bc_phi(c) = qout_bc_phi(c)
+
+             ! BCPHO:
+             ! 1. flux with meltwater:
+             qout_bc_pho(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_bcpho*(mss_bcpho(c,j)/mss_liqice)
+             if (qout_bc_pho(c) > mss_bcpho(c,j)) then
+                qout_bc_pho(c) = mss_bcpho(c,j)
+             endif
+             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c) * dtime
+             qin_bc_pho(c) = qout_bc_pho(c)
+
+             ! OCPHI:
+             ! 1. flux with meltwater:
+             qout_oc_phi(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_ocphi*(mss_ocphi(c,j)/mss_liqice)
+             if (qout_oc_phi(c) > mss_ocphi(c,j)) then
+                qout_oc_phi(c) = mss_ocphi(c,j)
+             endif
+             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c) * dtime
+             qin_oc_phi(c) = qout_oc_phi(c)
+
+             ! OCPHO:
+             ! 1. flux with meltwater:
+             qout_oc_pho(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_ocpho*(mss_ocpho(c,j)/mss_liqice)
+             if (qout_oc_pho(c) > mss_ocpho(c,j)) then
+                qout_oc_pho(c) = mss_ocpho(c,j)
+             endif
+             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c) * dtime
+             qin_oc_pho(c) = qout_oc_pho(c)
+
+             ! DUST 1:
+             ! 1. flux with meltwater:
+             qout_dst1(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst1*(mss_dst1(c,j)/mss_liqice)
+             if (qout_dst1(c) > mss_dst1(c,j)) then
+                qout_dst1(c) = mss_dst1(c,j)
+             endif
+             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c) * dtime
+             qin_dst1(c) = qout_dst1(c)
+
+             ! DUST 2:
+             ! 1. flux with meltwater:
+             qout_dst2(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst2*(mss_dst2(c,j)/mss_liqice)
+             if (qout_dst2(c) > mss_dst2(c,j)) then
+                qout_dst2(c) = mss_dst2(c,j)
+             endif
+             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c) * dtime
+             qin_dst2(c) = qout_dst2(c)
+
+             ! DUST 3:
+             ! 1. flux with meltwater:
+             qout_dst3(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst3*(mss_dst3(c,j)/mss_liqice)
+             if (qout_dst3(c) > mss_dst3(c,j)) then
+                qout_dst3(c) = mss_dst3(c,j)
+             endif
+             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c) * dtime
+             qin_dst3(c) = qout_dst3(c)
+
+             ! DUST 4:
+             ! 1. flux with meltwater:
+             qout_dst4(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst4*(mss_dst4(c,j)/mss_liqice)
+             if (qout_dst4(c) > mss_dst4(c,j)) then
+                qout_dst4(c) = mss_dst4(c,j)
+             endif
+             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c) * dtime
+             qin_dst4(c) = qout_dst4(c)
+
+          end if
+       end do
+    end do
+
+    ! Compute aerosol fluxes through snowpack and aerosol deposition fluxes into top layer
+
+    call AerosolFluxes(bounds, num_snowc, filter_snowc, &
+         atm2lnd_inst, aerosol_inst)
+
+    end associate
+
+  end subroutine CalcAndApplyAerosolFluxes
 
 
   !-----------------------------------------------------------------------
