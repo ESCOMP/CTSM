@@ -45,6 +45,7 @@ module CNVegMatrixMod
   use clm_varctl                     , only : isspinup, is_outmatrix, nyr_forcing
   use clm_varctl                     , only : use_c13, use_c14 
   use SPMMod                         , only : sparse_matrix_type,diag_matrix_type,vector_type
+  use MatrixMod                      , only : inverse
   !
   implicit none
   private
@@ -143,7 +144,7 @@ contains
      real(r8):: dt        ! time step (seconds)
      real(r8):: secspyear ! time step (seconds)
  
-    associate(                          &                                                                        
+    associate(                          &
      ivt                   => patch%itype                                       , & ! Input:  [integer  (:) ]  patch vegetation type
      cf13_veg              => c13_cnveg_carbonflux_inst                         , & ! In
      cf14_veg              => c14_cnveg_carbonflux_inst                         , & ! In
@@ -347,8 +348,10 @@ contains
                     ! In/Output: [real(r8) (:) ] (gC/m2/year) C turnover from grain
     matrix_cturnover_grainst_acc     => cnveg_carbonstate_inst%matrix_cturnover_grainst_acc_patch     , & 
                     ! In/Output: [real(r8) (:) ] (gC/m2/year) C turnover from grain storage
-    matrix_cturnover_grainxf_acc     => cnveg_carbonstate_inst%matrix_cturnover_grainxf_acc_patch     , & 
+    matrix_cturnover_grainxf_acc     => cnveg_carbonstate_inst%matrix_cturnover_grainxf_acc_patch       &
                     ! In/Output: [real(r8) (:) ] (gC/m2/year) C turnover from grain transfer
+    )
+    associate(                          &
 
   ! Variables matrix_nalloc_*_acc, matrix_ntransfer_*_acc, and matrix_nturnover_*_acc are used to calculate the N capacity as the N steady state estimates in spin up.
   ! These variables are all state variables, saving accumulated N transfers during the calendar year.
@@ -544,7 +547,9 @@ contains
     grainn0             => cnveg_nitrogenstate_inst%grainn0_patch             , & ! In/Output: [real(r8) (:) ] (gN/m2) grain N at begin of this year
     grainn0_storage     => cnveg_nitrogenstate_inst%grainn0_storage_patch     , & ! In/Output: [real(r8) (:) ] (gN/m2) grain storage N at begin of this year
     grainn0_xfer        => cnveg_nitrogenstate_inst%grainn0_xfer_patch        , & ! In/Output: [real(r8) (:) ] (gN/m2) grain transfer N at begin of this year
-    retransn0           => cnveg_nitrogenstate_inst%retransn0_patch           , & ! In/Output: [real(r8) (:) ] (gN/m2) plant retranslocated N at begin of this year
+    retransn0           => cnveg_nitrogenstate_inst%retransn0_patch             & ! In/Output: [real(r8) (:) ] (gN/m2) plant retranslocated N at begin of this year
+    )
+    associate(                          &
 
   ! Following variables save the C and N transfer rate of different processes at current time step. 
   ! Eg. ph: phenology, gm: gap mortality (including harvest), fi: fire.
@@ -850,8 +855,10 @@ contains
                           ! Input: [integer (:)] Index of fire related N transfer from live stem to dead stem pool
     ilivecroot_to_ideadcroot_fin      => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_fi    , & 
                           ! Input: [integer (:)] Index of fire related N transfer from live coarse root pool to dead coarse root pool
-    iretransn_to_iout_fin             => cnveg_nitrogenflux_inst%iretransn_to_iout_fi           , & 
+    iretransn_to_iout_fin             => cnveg_nitrogenflux_inst%iretransn_to_iout_fi              &
                           ! Input: [integer (:)] Index of fire related N transfer from retranslocated N pool to outside of vegetation pools
+    )
+    associate(                          &
  
   ! Sparse matrix type of A*K 
     AKphvegc                            => cnveg_carbonflux_inst%AKphvegc           , & ! Aph*Kph for C cycle in sparse matrix format
@@ -2469,82 +2476,10 @@ contains
       call vegmatrixc14_input%ReleaseV()
       call vegmatrixn_input%ReleaseV()
     
-   end associate 
+   end associate
+   end associate
+   end associate
+   end associate
  end subroutine CNVegMatrix
-
- subroutine inverse(a,c,n)
-!============================================================
-! c(n,n) - inverse matrix of A
-! comments ...
-! the original matrix a(n,n) will be destroyed 
-! during the calculation
-!===========================================================
-implicit none 
-integer,intent(in) :: n
-real(r8),intent(in)  :: a(n,n)
-real(r8),intent(out) :: c(n,n)
-real(r8) :: L(n,n), U(n,n), aa(n,n), b(n), d(n), x(n)
-real(r8) :: coeff
-integer i, j, k
-
-! step 0: initialization for matrices L and U and b
-! Fortran 90/95 aloows such operations on matrices
-L=0.0
-U=0.0
-b=0.0
-
-aa=a
-
-! step 1: forward elimination
-do k=1, n-1
-   do i=k+1,n
-      coeff=aa(i,k)/aa(k,k)
-      L(i,k) = coeff
-      do j=k+1,n
-         aa(i,j) = aa(i,j)-coeff*aa(k,j)
-      end do
-   end do
-end do
-
-! Step 2: prepare L and U matrices 
-! L matrix is a matrix of the elimination coefficient
-! + the diagonal elements are 1.0
-do i=1,n
-  L(i,i) = 1.0
-end do
-! U matrix is the upper triangular part of A
-do j=1,n
-  do i=1,j
-    U(i,j) = aa(i,j)
-  end do
-end do
-
-! Step 3: compute columns of the inverse matrix C
-do k=1,n
-  b(k)=1.0
-  d(1) = b(1)
-! Step 3a: Solve Ld=b using the forward substitution
-  do i=2,n
-    d(i)=b(i)
-    do j=1,i-1
-      d(i) = d(i) - L(i,j)*d(j)
-    end do
-  end do
-! Step 3b: Solve Ux=d using the back substitution
-  x(n)=d(n)/U(n,n)
-  do i = n-1,1,-1
-    x(i) = d(i)
-    do j=n,i+1,-1
-      x(i)=x(i)-U(i,j)*x(j)
-    end do
-    x(i) = x(i)/u(i,i)
-  end do
-! Step 3c: fill the solutions x(n) into column k of C
-  do i=1,n
-    c(i,k) = x(i)
-  end do
-  b(k)=0.0
-end do
-end subroutine inverse
 
 end module CNVegMatrixMod

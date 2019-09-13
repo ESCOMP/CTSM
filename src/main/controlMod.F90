@@ -193,7 +193,7 @@ contains
 
     ! CN Matrix solution
     namelist /clm_inparm / &
-         use_matrixcn, use_soil_matrixcn, is_outmatrix
+         use_matrixcn, use_soil_matrixcn, is_outmatrix, isspinup, nyr_forcing
 
     ! lake_melt_icealb is of dimension numrad
 
@@ -297,6 +297,14 @@ contains
     runtyp(nsrStartup  + 1) = 'initial'
     runtyp(nsrContinue + 1) = 'restart'
     runtyp(nsrBranch   + 1) = 'branch '
+
+    if(use_fates)then
+       use_matrixcn = .false.
+       use_soil_matrixcn = .false.
+       is_outmatrix = .false.
+       isspinup = .false.
+    end if
+    nyr_forcing = 10
 
     ! Set clumps per procoessor
 
@@ -515,11 +523,6 @@ contains
 
     endif   ! end of if-masterproc if-block
 
-    if(use_fates)then
-       use_matrixcn = .false.
-       use_soil_matrixcn = .false.    ! true => use cn matrix  
-       is_outmatrix = .false.     !.false.              ! true => use acc spinup
-    end if
     ! ----------------------------------------------------------------------
     ! Read in other namelists for other modules
     ! ----------------------------------------------------------------------
@@ -773,6 +776,8 @@ contains
     call mpi_bcast (use_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_soil_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (is_outmatrix, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (isspinup, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (nyr_forcing, 1, MPI_INTEGER, 0, mpicom, ier)
 
     if (use_cn .and. use_vertsoilc) then
        ! vertical soil mixing variables

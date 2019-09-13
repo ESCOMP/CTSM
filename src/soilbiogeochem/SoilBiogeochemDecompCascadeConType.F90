@@ -230,8 +230,8 @@ contains
      decomp_cascade_con%n_all_entries = AKallsoil%NE
      allocate(decomp_cascade_con%all_i(1:decomp_cascade_con%n_all_entries))
      allocate(decomp_cascade_con%all_j(1:decomp_cascade_con%n_all_entries))
-     decomp_cascade_con%all_i = AKallsoil%RI
-     decomp_cascade_con%all_j = AKallsoil%CI
+     decomp_cascade_con%all_i(:) = AKallsoil%RI(1:decomp_cascade_con%n_all_entries)
+     decomp_cascade_con%all_j(:) = AKallsoil%CI(1:decomp_cascade_con%n_all_entries)
 
      allocate(decomp_cascade_con%list_Asoilc    (1:(ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp))
      allocate(decomp_cascade_con%list_Asoiln    (1:(ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp))

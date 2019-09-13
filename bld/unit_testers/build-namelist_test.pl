@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 927;
+my $ntests = 942;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 588;
+   $ntests += 594;
 }
 plan( tests=>$ntests );
 
@@ -297,6 +297,8 @@ foreach my $options ( "-configuration nwp",
                       "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
+                      "-namelist '&a use_matrixcn=F,use_soil_matrixcn=F,is_outmatrix=F,isspinup=F/' -bgc sp",
+                      "-namelist '&a use_matrixcn=T,use_soil_matrixcn=T,is_outmatrix=T,isspinup=T/' -bgc bgc -crop",
                       "-envxml_dir . -infile myuser_nl_clm", 
                       "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
                       "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
@@ -768,6 +770,41 @@ my %failtest = (
                                      namelst=>"glc_do_dynglacier=.false.",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      phys=>"clm4_5",
+                                   },
+     "matrixWOBGC"               =>{ options=>"-envxml_dir . -bgc sp",
+                                     namelst=>"use_matrixcn=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "soilmatrixWOBGC"           =>{ options=>"-envxml_dir . -bgc sp",
+                                     namelst=>"use_soil_matrixcn=T",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "outmatrixWOmatrix"         =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"use_soil_matrixcn=.false.,use_matrixcn=F,is_outmatrix=T",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "spinupWOsoilmatrix"         =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"use_soil_matrixcn=F,use_matrixcn=T,isspinup=T",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "nyrforceWOspinup"          =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"use_soil_matrixcn=.true.,use_matrixcn=.false.,isspinup=F,nyr_forcing=20",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "fatesWuse_cnmatrix"        =>{ options=>"-envxml_dir . -bgc fates",
+                                     namelst=>"use_matrixcn=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "fatesWuse_soilcnmatrix"    =>{ options=>"-envxml_dir . -bgc fates",
+                                     namelst=>"use_soil_matrixcn=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
                                    },
      "useFATESContradict"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates=.false.",
