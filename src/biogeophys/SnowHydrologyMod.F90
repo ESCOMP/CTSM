@@ -1079,12 +1079,6 @@ contains
        end associate
     end do
 
-    ! FIXME(wjs, 2019-08-30) This is temporary. I'll move it down then eventually get rid
-    ! of it, once all of SnowWater is tracerized.
-    if (water_inst%DoConsistencyCheck()) then
-       call water_inst%TracerConsistencyCheck(bounds, 'In the middle of SnowWater')
-    end if
-
     end associate
   end subroutine SnowWater
 

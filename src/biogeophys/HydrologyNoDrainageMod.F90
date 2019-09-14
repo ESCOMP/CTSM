@@ -292,8 +292,7 @@ contains
       ! module, remember to also remove 'use perf_mod' at the top.
       if (water_inst%DoConsistencyCheck()) then
          call t_startf("tracer_consistency_check")
-         ! FIXME(wjs, 2019-08-30) Uncomment this once SnowWater is tracerized
-         ! call water_inst%TracerConsistencyCheck(bounds, 'HydrologyNoDrainage: after SnowWater')
+         call water_inst%TracerConsistencyCheck(bounds, 'HydrologyNoDrainage: after SnowWater')
          call t_stopf("tracer_consistency_check")
       end if
 
