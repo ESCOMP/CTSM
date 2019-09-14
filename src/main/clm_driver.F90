@@ -768,9 +768,7 @@ contains
             filter(nc)%num_nosnowc, filter(nc)%nosnowc,                      &
             clm_fates,                                                         &
             atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst,   &
-            water_inst%wateratm2lndbulk_inst, &
-            water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
-            water_inst%waterdiagnosticbulk_inst, soilhydrology_inst, &
+            water_inst, soilhydrology_inst, &
             saturated_excess_runoff_inst, &
             infiltration_excess_runoff_inst, &
             aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst)

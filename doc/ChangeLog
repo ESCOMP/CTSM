@@ -1,4 +1,265 @@
 ===============================================================
+Tag name:  ctsm1.0.dev065
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Sep 14 12:52:42 MDT 2019
+One-line Summary: Add water tracers to SnowWater
+
+Purpose of changes
+------------------
+
+Update water tracer terms in SnowWater. As I have done elsewhere, this
+has involved splitting each piece of SnowWater into its own subroutine,
+which operates either on bulk, tracers, or bulk + tracers.
+
+This is supported by calls to ResetCheckedTracers prior to the call to
+SnowWater, since some intervening code is not yet tracerized.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#776 (Implement water tracers for SnowWater)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+    ok means tests pass, baselines fail as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+      Roundoff level: answer changes just arise because I have made
+      qflx_snow_percolation_col a true flux, with units of
+      per-unit-time; this involved dividing by dtime, and later
+      multiplying by dtime when it is applied to states. Previously, the
+      corresponding variable (qout / qin) was not per-unit-time.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   I ran comparisons against a version off of master that had the
+   minimal changes to exhibit these roundoff-level changes. Diffs for
+   this are below. My branch is bit-for-bit with this version.
+
+        diff --git a/src/biogeophys/SnowHydrologyMod.F90 b/src/biogeophys/SnowHydrologyMod.F90
+        index cad47e28..0abcc49f 100644
+        --- a/src/biogeophys/SnowHydrologyMod.F90
+        +++ b/src/biogeophys/SnowHydrologyMod.F90
+        @@ -1140,17 +1140,17 @@ subroutine SnowWater(bounds, &
+                   c = filter_snowc(fc)
+                   if (j >= snl(c)+1) then
+         
+        -             h2osoi_liq(c,j) = h2osoi_liq(c,j) + qin(c)
+        +             h2osoi_liq(c,j) = h2osoi_liq(c,j) + qin(c)*dtime
+         
+        -             mss_bcphi(c,j) = mss_bcphi(c,j) + qin_bc_phi(c)
+        -             mss_bcpho(c,j) = mss_bcpho(c,j) + qin_bc_pho(c)
+        -             mss_ocphi(c,j) = mss_ocphi(c,j) + qin_oc_phi(c)
+        -             mss_ocpho(c,j) = mss_ocpho(c,j) + qin_oc_pho(c)
+        +             mss_bcphi(c,j) = mss_bcphi(c,j) + qin_bc_phi(c)*dtime
+        +             mss_bcpho(c,j) = mss_bcpho(c,j) + qin_bc_pho(c)*dtime
+        +             mss_ocphi(c,j) = mss_ocphi(c,j) + qin_oc_phi(c)*dtime
+        +             mss_ocpho(c,j) = mss_ocpho(c,j) + qin_oc_pho(c)*dtime
+         
+        -             mss_dst1(c,j)  = mss_dst1(c,j) + qin_dst1(c)
+        -             mss_dst2(c,j)  = mss_dst2(c,j) + qin_dst2(c)
+        -             mss_dst3(c,j)  = mss_dst3(c,j) + qin_dst3(c)
+        -             mss_dst4(c,j)  = mss_dst4(c,j) + qin_dst4(c)
+        +             mss_dst1(c,j)  = mss_dst1(c,j) + qin_dst1(c)*dtime
+        +             mss_dst2(c,j)  = mss_dst2(c,j) + qin_dst2(c)*dtime
+        +             mss_dst3(c,j)  = mss_dst3(c,j) + qin_dst3(c)*dtime
+        +             mss_dst4(c,j)  = mss_dst4(c,j) + qin_dst4(c)*dtime
+         
+                      if (j <= -1) then
+                         ! No runoff over snow surface, just ponding on surface
+        @@ -1167,8 +1167,8 @@ subroutine SnowWater(bounds, &
+                         qout(c) = max(0._r8,(vol_liq(c,j) &
+                              - ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
+                      end if
+        -             qout(c) = qout(c)*1000._r8
+        -             h2osoi_liq(c,j) = h2osoi_liq(c,j) - qout(c)
+        +             qout(c) = (qout(c)*1000._r8)/dtime
+        +             h2osoi_liq(c,j) = h2osoi_liq(c,j) - qout(c)*dtime
+                      qin(c) = qout(c)
+         
+                      ! mass of ice+water: in extremely rare circumstances, this can
+        @@ -1187,7 +1187,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_bc_phi(c) > mss_bcphi(c,j)) then
+                         qout_bc_phi(c) = mss_bcphi(c,j)
+                      endif
+        -             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c)
+        +             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c)*dtime
+                      qin_bc_phi(c) = qout_bc_phi(c)
+         
+                      ! BCPHO:
+        @@ -1196,7 +1196,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_bc_pho(c) > mss_bcpho(c,j)) then
+                         qout_bc_pho(c) = mss_bcpho(c,j)
+                      endif
+        -             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c)
+        +             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c)*dtime
+                      qin_bc_pho(c) = qout_bc_pho(c)
+         
+                      ! OCPHI:
+        @@ -1205,7 +1205,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_oc_phi(c) > mss_ocphi(c,j)) then
+                         qout_oc_phi(c) = mss_ocphi(c,j)
+                      endif
+        -             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c)
+        +             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c)*dtime
+                      qin_oc_phi(c) = qout_oc_phi(c)
+         
+                      ! OCPHO:
+        @@ -1214,7 +1214,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_oc_pho(c) > mss_ocpho(c,j)) then
+                         qout_oc_pho(c) = mss_ocpho(c,j)
+                      endif
+        -             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c)
+        +             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c)*dtime
+                      qin_oc_pho(c) = qout_oc_pho(c)
+         
+                      ! DUST 1:
+        @@ -1223,7 +1223,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_dst1(c) > mss_dst1(c,j)) then
+                         qout_dst1(c) = mss_dst1(c,j)
+                      endif
+        -             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c)
+        +             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c)*dtime
+                      qin_dst1(c) = qout_dst1(c)
+         
+                      ! DUST 2:
+        @@ -1232,7 +1232,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_dst2(c) > mss_dst2(c,j)) then
+                         qout_dst2(c) = mss_dst2(c,j)
+                      endif
+        -             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c)
+        +             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c)*dtime
+                      qin_dst2(c) = qout_dst2(c)
+         
+                      ! DUST 3:
+        @@ -1241,7 +1241,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_dst3(c) > mss_dst3(c,j)) then
+                         qout_dst3(c) = mss_dst3(c,j)
+                      endif
+        -             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c)
+        +             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c)*dtime
+                      qin_dst3(c) = qout_dst3(c)
+         
+                      ! DUST 4:
+        @@ -1250,7 +1250,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_dst4(c) > mss_dst4(c,j)) then
+                         qout_dst4(c) = mss_dst4(c,j)
+                      endif
+        -             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c)
+        +             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c)*dtime
+                      qin_dst4(c) = qout_dst4(c)
+         
+                   end if
+        @@ -1280,9 +1280,9 @@ subroutine SnowWater(bounds, &
+             do fc = 1, num_snowc
+                c = filter_snowc(fc)
+                ! Qout from snow bottom
+        -       qflx_snow_drain(c) = qflx_snow_drain(c) + (qout(c) / dtime)
+        +       qflx_snow_drain(c) = qflx_snow_drain(c) + qout(c)
+         
+        -       qflx_rain_plus_snomelt(c) = (qout(c) / dtime) &
+        +       qflx_rain_plus_snomelt(c) = qout(c) &
+                     + (1.0_r8 - frac_sno_eff(c)) * qflx_liq_grnd(c)
+                int_snow(c) = int_snow(c) + frac_sno_eff(c) &
+                              * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_liq_grnd(c)) * dtime
+
+
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev064
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
 Date:  Mon Sep  9 13:14:51 MDT 2019

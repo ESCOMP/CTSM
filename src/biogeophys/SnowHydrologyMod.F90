@@ -23,9 +23,10 @@ module SnowHydrologyMod
   use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
   use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd
   use clm_varctl      , only : iulog, use_subgrid_fluxes
-  use clm_varcon      , only : namec, h2osno_max, hfus, denice, rpi, spval, tfrz
+  use clm_varcon      , only : namec, h2osno_max, hfus, denh2o, denice, rpi, spval, tfrz, wimp, ssi
+  use clm_varcon      , only : cpice, cpliq
   use atm2lndType     , only : atm2lnd_type
-  use AerosolMod      , only : aerosol_type
+  use AerosolMod      , only : aerosol_type, AerosolFluxes
   use TemperatureType , only : temperature_type
   use WaterType       , only : water_type
   use WaterFluxBulkType   , only : waterfluxbulk_type
@@ -40,6 +41,7 @@ module SnowHydrologyMod
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
   use LakeCon         , only : lsadz
   use NumericsMod     , only : truncate_small_values_one_lev
+  use WaterTracerUtils, only : CalcTracerFromBulkMasked
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -75,6 +77,14 @@ module SnowHydrologyMod
   private :: BuildFilter_SnowpackInitialized ! Build a column-level filter of columns where an explicit snow pack needs to be initialized
   private :: UpdateState_InitializeSnowPack ! For bulk or one tracer: initialize water state variables for columns in which an explicit snow pack is being newly initialized
   private :: Bulk_InitializeSnowPack ! Initialize an explicit snow pack in columns where this is warranted based on snow depth, for bulk-only quantities
+  private :: UpdateState_TopLayerFluxes ! Update top layer of snow pack with various fluxes into and out of the top layer
+  private :: BulkFlux_SnowPercolation ! Calculate liquid percolation through the snow pack, for bulk water
+  private :: TracerFlux_SnowPercolation ! Calculate liquid percolation through the snow pack, for one tracer
+  private :: UpdateState_SnowPercolation ! Update h2osoi_liq for snow percolation, for bulk or one tracer
+  private :: CalcAndApplyAerosolFluxes ! Calculate and apply fluxes of aerosols through the snow pack
+  private :: PostPercolation_AdjustLayerThicknesses ! Adjust layer thickness for any water+ice content changes after percolation through the snow pack
+  private :: BulkDiag_SnowWaterAccumulatedSnow ! Update int_snow, and reset accumulated snow when no snow present
+  private :: SumFlux_AddSnowPercolation ! Calculate summed fluxes accounting for qflx_snow_percolation and similar fluxes
   private :: Combo                  ! Returns the combined variables: dz, t, wliq, wice.
   private :: MassWeightedSnowRadius ! Mass weighted snow grain size
   !
@@ -922,7 +932,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SnowWater(bounds, &
        num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
-       atm2lnd_inst, waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, aerosol_inst)
+       atm2lnd_inst, aerosol_inst, water_inst)
     !
     ! !DESCRIPTION:
     ! Evaluate the change of snow mass and the snow water onto soil.
@@ -936,10 +946,6 @@ contains
     ! uses a filter for columns containing snow which must be constructed prior
     ! to being called.
     !
-    ! !USES:
-    use clm_varcon        , only : denh2o, denice, wimp, ssi
-    use AerosolMod        , only : AerosolFluxes
-    !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds
     integer               , intent(in)    :: num_snowc         ! number of snow points in column filter
@@ -947,86 +953,187 @@ contains
     integer               , intent(in)    :: num_nosnowc       ! number of non-snow points in column filter
     integer               , intent(in)    :: filter_nosnowc(:) ! column filter for non-snow points
     type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst
-    type(waterfluxbulk_type)  , intent(inout) :: waterfluxbulk_inst
-    type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
-    type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
     type(aerosol_type)    , intent(inout) :: aerosol_inst
+    type(water_type)      , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
+    integer  :: i                                                  ! index of water tracer or bulk
     integer  :: g                                                  ! gridcell loop index
     integer  :: c, j, fc, l                                        ! do loop/array indices
     real(r8) :: dtime                                              ! land model time step (sec)
-    real(r8) :: qin(bounds%begc:bounds%endc)                       ! water flow into the element (mm/s)
-    real(r8) :: qout(bounds%begc:bounds%endc)                      ! water flow out of the elmement (mm/s)
-    real(r8) :: qin_bc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic BC into   layer [kg]
-    real(r8) :: qout_bc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic BC out of layer [kg]
-    real(r8) :: qin_bc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic BC into   layer [kg]
-    real(r8) :: qout_bc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic BC out of layer [kg]
-    real(r8) :: qin_oc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic OC into   layer [kg]
-    real(r8) :: qout_oc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic OC out of layer [kg]
-    real(r8) :: qin_oc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic OC into   layer [kg]
-    real(r8) :: qout_oc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic OC out of layer [kg]
-    real(r8) :: qin_dst1    (bounds%begc:bounds%endc)              ! flux of dust species 1 into   layer [kg]
-    real(r8) :: qout_dst1   (bounds%begc:bounds%endc)              ! flux of dust species 1 out of layer [kg]
-    real(r8) :: qin_dst2    (bounds%begc:bounds%endc)              ! flux of dust species 2 into   layer [kg]
-    real(r8) :: qout_dst2   (bounds%begc:bounds%endc)              ! flux of dust species 2 out of layer [kg]
-    real(r8) :: qin_dst3    (bounds%begc:bounds%endc)              ! flux of dust species 3 into   layer [kg]
-    real(r8) :: qout_dst3   (bounds%begc:bounds%endc)              ! flux of dust species 3 out of layer [kg]
-    real(r8) :: qin_dst4    (bounds%begc:bounds%endc)              ! flux of dust species 4 into   layer [kg]
-    real(r8) :: qout_dst4   (bounds%begc:bounds%endc)              ! flux of dust species 4 out of layer [kg]
-    real(r8) :: vol_liq(bounds%begc:bounds%endc,-nlevsno+1:0)      ! partial volume of liquid water in layer
-    real(r8) :: vol_ice(bounds%begc:bounds%endc,-nlevsno+1:0)      ! partial volume of ice lens in layer
-    real(r8) :: eff_porosity(bounds%begc:bounds%endc,-nlevsno+1:0) ! effective porosity = porosity - vol_ice
-    real(r8) :: mss_liqice(bounds%begc:bounds%endc,-nlevsno+1:0)   ! mass of liquid+ice in a layer
-    integer  :: lev_top(bounds%begc:bounds%endc)                   ! index of the top snow level
-    real(r8) :: h2osoi_ice_top_orig(bounds%begc:bounds%endc)       ! h2osoi_ice in top snow layer before state update
-    real(r8) :: h2osoi_liq_top_orig(bounds%begc:bounds%endc)       ! h2osoi_liq in top snow layer before state update
     !-----------------------------------------------------------------------
 
     associate( &
-         dz             => col%dz                            , & ! Input:  [real(r8) (:,:) ] layer depth (m)
-         snl            => col%snl                           , & ! Input:  [integer  (:)   ] number of snow layers
+         begc => bounds%begc, &
+         endc => bounds%endc, &
 
-         frac_sno_eff   => waterdiagnosticbulk_inst%frac_sno_eff_col  , & ! Input:  [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)
-         frac_sno       => waterdiagnosticbulk_inst%frac_sno_col      , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
-         h2osno_no_layers => waterstatebulk_inst%h2osno_no_layers_col , & ! Output: [real(r8) (:)   ]  snow that is not resolved into layers (kg/m2)
-         int_snow       => waterstatebulk_inst%int_snow_col      , & ! Output: [real(r8) (:)   ] integrated snowfall [mm]
-         h2osoi_ice     => waterstatebulk_inst%h2osoi_ice_col    , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)
-         h2osoi_liq     => waterstatebulk_inst%h2osoi_liq_col    , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
-
-         qflx_snomelt   => waterfluxbulk_inst%qflx_snomelt_col   , & ! Input:  [real(r8) (:)   ] snow melt (mm H2O /s)
-         qflx_liq_grnd  => waterfluxbulk_inst%qflx_liq_grnd_col  , & ! Input:  [real(r8) (:)   ] liquid on ground after interception (mm H2O/s) [+]
-         qflx_sub_snow  => waterfluxbulk_inst%qflx_sub_snow_col  , & ! Input:  [real(r8) (:)   ] sublimation rate from snow pack (mm H2O /s) [+]
-         qflx_dew_snow  => waterfluxbulk_inst%qflx_dew_snow_col  , & ! Input:  [real(r8) (:)   ] surface dew added to snow pack (mm H2O /s) [+]
-         qflx_evap_grnd => waterfluxbulk_inst%qflx_evap_grnd_col , & ! Input:  [real(r8) (:)   ] ground surface evaporation rate (mm H2O/s) [+]
-         qflx_dew_grnd  => waterfluxbulk_inst%qflx_dew_grnd_col  , & ! Input:  [real(r8) (:)   ] ground surface dew formation (mm H2O /s) [+]
-         qflx_snow_drain => waterfluxbulk_inst%qflx_snow_drain_col,& ! Output: [real(r8) (:)   ] net snow melt
-         qflx_rain_plus_snomelt => waterfluxbulk_inst%qflx_rain_plus_snomelt_col , & ! Output: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
-         snow_depth     => waterdiagnosticbulk_inst%snow_depth_col    , & ! Output: [real(r8) (:)   ] snow height (m)
-
-         mss_bcphi      => aerosol_inst%mss_bcphi_col        , & ! Output: [real(r8) (:,:) ] hydrophillic BC mass in snow (col,lyr) [kg]
-         mss_bcpho      => aerosol_inst%mss_bcpho_col        , & ! Output: [real(r8) (:,:) ] hydrophobic  BC mass in snow (col,lyr) [kg]
-         mss_ocphi      => aerosol_inst%mss_ocphi_col        , & ! Output: [real(r8) (:,:) ] hydrophillic OC mass in snow (col,lyr) [kg]
-         mss_ocpho      => aerosol_inst%mss_ocpho_col        , & ! Output: [real(r8) (:,:) ] hydrophobic  OC mass in snow (col,lyr) [kg]
-         mss_dst1       => aerosol_inst%mss_dst1_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 1 in snow (col,lyr) [kg]
-         mss_dst2       => aerosol_inst%mss_dst2_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 2 in snow (col,lyr) [kg]
-         mss_dst3       => aerosol_inst%mss_dst3_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 3 in snow (col,lyr) [kg]
-         mss_dst4       => aerosol_inst%mss_dst4_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 4 in snow (col,lyr) [kg]
-
-         begc           => bounds%begc                       , &
-         endc           => bounds%endc                         &
-    )
+         b_waterflux_inst       => water_inst%waterfluxbulk_inst, &
+         b_waterstate_inst      => water_inst%waterstatebulk_inst, &
+         b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
+         )
 
     ! Determine model time step
 
     dtime = get_step_size_real()
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call UpdateState_TopLayerFluxes(bounds, num_snowc, filter_snowc, &
+            ! Inputs
+            name           = water_inst%GetBulkOrTracerName(i), &
+            dtime          = dtime, &
+            snl            = col%snl(begc:endc), &
+            frac_sno_eff   = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+            qflx_dew_snow  = w%waterflux_inst%qflx_dew_snow_col(begc:endc), &
+            qflx_sub_snow  = w%waterflux_inst%qflx_sub_snow_col(begc:endc), &
+            qflx_liq_grnd  = w%waterflux_inst%qflx_liq_grnd_col(begc:endc), &
+            qflx_dew_grnd  = w%waterflux_inst%qflx_dew_grnd_col(begc:endc), &
+            qflx_evap_grnd = w%waterflux_inst%qflx_evap_grnd_col(begc:endc), &
+            ! Outputs
+            h2osoi_ice     = w%waterstate_inst%h2osoi_ice_col(begc:endc,:), &
+            h2osoi_liq     = w%waterstate_inst%h2osoi_liq_col(begc:endc,:))
+       end associate
+    end do
+
+    call BulkFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
+         ! Inputs
+         dtime                 = dtime, &
+         snl                   = col%snl(begc:endc), &
+         dz                    = col%dz(begc:endc,:), &
+         frac_sno_eff          = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+         h2osoi_ice            = b_waterstate_inst%h2osoi_ice_col(begc:endc,:), &
+         h2osoi_liq            = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+         ! Outputs
+         qflx_snow_percolation = b_waterflux_inst%qflx_snow_percolation_col(begc:endc,:))
+
+    do i = water_inst%tracers_beg, water_inst%tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call TracerFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
+            ! Inputs
+            snl                        = col%snl(begc:endc), &
+            bulk_h2osoi_liq            = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+            bulk_qflx_snow_percolation = b_waterflux_inst%qflx_snow_percolation_col(begc:endc,:), &
+            trac_h2osoi_liq            = w%waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+            ! Outputs
+            trac_qflx_snow_percolation = w%waterflux_inst%qflx_snow_percolation_col(begc:endc,:))
+       end associate
+    end do
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call UpdateState_SnowPercolation(bounds, num_snowc, filter_snowc, &
+            ! Inputs
+            dtime                 = dtime, &
+            snl                   = col%snl(begc:endc), &
+            qflx_snow_percolation = w%waterflux_inst%qflx_snow_percolation_col(begc:endc,:), &
+            ! Outputs
+            h2osoi_liq            = w%waterstate_inst%h2osoi_liq_col(begc:endc,:))
+       end associate
+    end do
+
+    call CalcAndApplyAerosolFluxes(bounds, num_snowc, filter_snowc, &
+         ! Inputs
+         dtime                 = dtime, &
+         snl                   = col%snl(begc:endc), &
+         h2osoi_ice            = b_waterstate_inst%h2osoi_ice_col(begc:endc,:), &
+         h2osoi_liq            = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+         qflx_snow_percolation = b_waterflux_inst%qflx_snow_percolation_col(begc:endc,:), &
+         atm2lnd_inst          = atm2lnd_inst, &
+         ! Outputs
+         aerosol_inst          = aerosol_inst)
+
+    call PostPercolation_AdjustLayerThicknesses(bounds, num_snowc, filter_snowc, &
+         ! Inputs
+         snl        = col%snl(begc:endc), &
+         h2osoi_ice = b_waterstate_inst%h2osoi_ice_col(begc:endc,:), &
+         h2osoi_liq = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
+         ! Outputs
+         dz         = col%dz(begc:endc,:))
+
+    call BulkDiag_SnowWaterAccumulatedSnow(bounds, &
+         num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
+         ! Inputs
+         dtime            = dtime, &
+         frac_sno_eff     = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+         qflx_dew_snow    = b_waterflux_inst%qflx_dew_snow_col(begc:endc), &
+         qflx_dew_grnd    = b_waterflux_inst%qflx_dew_grnd_col(begc:endc), &
+         qflx_liq_grnd    = b_waterflux_inst%qflx_liq_grnd_col(begc:endc), &
+         h2osno_no_layers = b_waterstate_inst%h2osno_no_layers_col(begc:endc), &
+         ! Outputs
+         int_snow         = b_waterstate_inst%int_snow_col(begc:endc), &
+         frac_sno         = b_waterdiagnostic_inst%frac_sno_col(begc:endc), &
+         snow_depth       = b_waterdiagnostic_inst%snow_depth_col(begc:endc))
+         
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call SumFlux_AddSnowPercolation(bounds, &
+            num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
+            ! Inputs
+            frac_sno_eff                 = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
+            qflx_snow_percolation_bottom = w%waterflux_inst%qflx_snow_percolation_col(begc:endc, 0), &
+            qflx_liq_grnd                = w%waterflux_inst%qflx_liq_grnd_col(begc:endc), &
+            qflx_snomelt                 = w%waterflux_inst%qflx_snomelt_col(begc:endc), &
+            ! Outputs
+            qflx_snow_drain              = w%waterflux_inst%qflx_snow_drain_col(begc:endc), &
+            qflx_rain_plus_snomelt       = w%waterflux_inst%qflx_rain_plus_snomelt_col(begc:endc))
+       end associate
+    end do
+
+    end associate
+  end subroutine SnowWater
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateState_TopLayerFluxes(bounds, num_snowc, filter_snowc, &
+       name, dtime, snl, frac_sno_eff, &
+       qflx_dew_snow, qflx_sub_snow, qflx_liq_grnd, qflx_dew_grnd, qflx_evap_grnd, &
+       h2osoi_ice, h2osoi_liq)
+    !
+    ! !DESCRIPTION:
+    ! Update top layer of snow pack with various fluxes into and out of the top layer,
+    ! for bulk or one tracer.
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+
+    character(len=*) , intent(in) :: name                           ! Name of bulk or this tracer (for output in case there's an error)
+    real(r8)         , intent(in) :: dtime                          ! land model time step (sec)
+    integer          , intent(in) :: snl( bounds%begc: )            ! negative number of snow layers
+    real(r8)         , intent(in) :: frac_sno_eff( bounds%begc: )   ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8)         , intent(in) :: qflx_dew_snow( bounds%begc: )  ! surface dew added to snow pack (mm H2O /s)
+    real(r8)         , intent(in) :: qflx_sub_snow( bounds%begc: )  ! sublimation rate from snow pack (mm H2O /s)
+    real(r8)         , intent(in) :: qflx_liq_grnd( bounds%begc: )  ! liquid on ground after interception (mm H2O/s)
+    real(r8)         , intent(in) :: qflx_dew_grnd( bounds%begc: )  ! ground surface dew formation (mm H2O /s)
+    real(r8)         , intent(in) :: qflx_evap_grnd( bounds%begc: ) ! ground surface evaporation rate (mm H2O/s)
+
+    real(r8) , intent(inout) :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
+    real(r8) , intent(inout) :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer  :: lev_top(bounds%begc:bounds%endc)                   ! index of the top snow level
+    real(r8) :: h2osoi_ice_top_orig(bounds%begc:bounds%endc)       ! h2osoi_ice in top snow layer before state update
+    real(r8) :: h2osoi_liq_top_orig(bounds%begc:bounds%endc)       ! h2osoi_liq in top snow layer before state update
+
+    character(len=*), parameter :: subname = 'UpdateState_TopLayerFluxes'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_dew_snow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_sub_snow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_liq_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_dew_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_evap_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
 
     ! Renew the mass of ice lens (h2osoi_ice) and liquid (h2osoi_liq) in the
     ! surface snow layer resulting from sublimation (frost) / evaporation (condense)
 
     do fc = 1,num_snowc
        c = filter_snowc(fc)
-       l=col%landunit(c)
 
        lev_top(c) = snl(c)+1
        h2osoi_ice_top_orig(c) = h2osoi_ice(c,lev_top(c))
@@ -1067,18 +1174,20 @@ contains
        c = filter_snowc(fc)
 
        if (h2osoi_ice(c,lev_top(c)) < 0._r8) then
-          write(iulog,*) "ERROR: At start of SnowWater, h2osoi_ice has gone significantly negative"
+          write(iulog,*) "ERROR: In UpdateState_TopLayerFluxes, h2osoi_ice has gone significantly negative"
+          write(iulog,*) "Bulk/tracer name = ", name
           write(iulog,*) "c, lev_top(c) = ", c, lev_top(c)
           write(iulog,*) "h2osoi_ice_top_orig = ", h2osoi_ice_top_orig(c)
           write(iulog,*) "h2osoi_ice          = ", h2osoi_ice(c,lev_top(c))
           write(iulog,*) "frac_sno_eff        = ", frac_sno_eff(c)
           write(iulog,*) "qflx_dew_snow*dtime = ", qflx_dew_snow(c)*dtime
           write(iulog,*) "qflx_sub_snow*dtime = ", qflx_sub_snow(c)*dtime
-          call endrun("At start of SnowWater, h2osoi_ice has gone significantly negative")
+          call endrun("In UpdateState_TopLayerFluxes, h2osoi_ice has gone significantly negative")
        end if
 
        if (h2osoi_liq(c,lev_top(c)) < 0._r8) then
-          write(iulog,*) "ERROR: At start of SnowWater, h2osoi_liq has gone significantly negative"
+          write(iulog,*) "ERROR: In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative"
+          write(iulog,*) "Bulk/tracer name = ", name
           write(iulog,*) "c, lev_top(c) = ", c, lev_top(c)
           write(iulog,*) "h2osoi_liq_top_orig  = ", h2osoi_liq_top_orig(c)
           write(iulog,*) "h2osoi_liq           = ", h2osoi_liq(c,lev_top(c))
@@ -1086,11 +1195,54 @@ contains
           write(iulog,*) "qflx_liq_grnd*dtime  = ", qflx_liq_grnd(c)*dtime
           write(iulog,*) "qflx_dew_grnd*dtime  = ", qflx_dew_grnd(c)*dtime
           write(iulog,*) "qflx_evap_grnd*dtime = ", qflx_evap_grnd(c)*dtime
-          call endrun("At start of SnowWater, h2osoi_liq has gone significantly negative")
+          call endrun("In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative")
        end if
 
     end do
 
+  end subroutine UpdateState_TopLayerFluxes
+
+  !-----------------------------------------------------------------------
+  subroutine BulkFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
+       dtime, snl, dz, frac_sno_eff, h2osoi_ice, h2osoi_liq, &
+       qflx_snow_percolation)
+    !
+    ! !DESCRIPTION:
+    ! Calculate liquid percolation through the snow pack, for bulk water
+    !
+    ! qflx_snow_percolation(c,j) gives the percolation out of the bottom of layer j, into
+    ! the top of layer j+1.
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+
+    real(r8) , intent(in)    :: dtime                                    ! land model time step (sec)
+    integer  , intent(in)    :: snl( bounds%begc: )                      ! negative number of snow layers
+    real(r8) , intent(in)    :: dz( bounds%begc: , -nlevsno+1: )         ! layer depth (m)
+    real(r8) , intent(in)    :: frac_sno_eff( bounds%begc: )             ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(in)    :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
+    real(r8) , intent(in)    :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
+
+    real(r8) , intent(inout) :: qflx_snow_percolation( bounds%begc: , -nlevsno+1: ) ! liquid percolation out of the bottom of snow layer j (mm H2O /s)
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c
+    integer  :: j
+    real(r8) :: vol_liq(bounds%begc:bounds%endc,-nlevsno+1:0)      ! partial volume of liquid water in layer
+    real(r8) :: vol_ice(bounds%begc:bounds%endc,-nlevsno+1:0)      ! partial volume of ice lens in layer
+    real(r8) :: eff_porosity(bounds%begc:bounds%endc,-nlevsno+1:0) ! effective porosity = porosity - vol_ice
+
+    character(len=*), parameter :: subname = 'BulkFlux_SnowPercolation'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(dz, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snow_percolation, 1) == bounds%endc), sourcefile, __LINE__)
 
     ! Porosity and partial volume
 
@@ -1106,15 +1258,212 @@ contains
        end do
     end do
 
+    ! Calculate qflx_snow_percolation from each layer; only valid for j >= snl(c)+1
+    !
     ! Capillary forces within snow are usually two or more orders of magnitude
     ! less than those of gravity. Only gravity terms are considered.
-    ! the genernal expression for water flow is "K * ss**3", however,
+    ! The general expression for water flow is "K * ss**3", however,
     ! no effective parameterization for "K".  Thus, a very simple consideration
     ! (not physically based) is introduced:
     ! when the liquid water of layer exceeds the layer's holding
     ! capacity, the excess meltwater adds to the underlying neighbor layer.
 
-    ! Also compute aerosol fluxes through snowpack in this loop:
+    do j = -nlevsno+1, 0
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          if (j >= snl(c)+1) then
+             if (j <= -1) then
+                ! No runoff over snow surface, just ponding on surface
+                if (eff_porosity(c,j) < wimp .OR. eff_porosity(c,j+1) < wimp) then
+                   qflx_snow_percolation(c,j) = 0._r8
+                else
+                   ! dz must be scaled by frac_sno to obtain gridcell average value
+                   qflx_snow_percolation(c,j) = max(0._r8,(vol_liq(c,j) &
+                        - ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
+                   qflx_snow_percolation(c,j) = min(qflx_snow_percolation(c,j),(1._r8-vol_ice(c,j+1) &
+                        - vol_liq(c,j+1))*dz(c,j+1)*frac_sno_eff(c))
+                end if
+             else
+                qflx_snow_percolation(c,j) = max(0._r8,(vol_liq(c,j) &
+                     - ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
+             end if
+             qflx_snow_percolation(c,j) = (qflx_snow_percolation(c,j)*1000._r8)/dtime
+          end if
+       end do
+    end do
+
+  end subroutine BulkFlux_SnowPercolation
+
+  !-----------------------------------------------------------------------
+  subroutine TracerFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
+       snl, bulk_h2osoi_liq, bulk_qflx_snow_percolation, trac_h2osoi_liq, &
+       trac_qflx_snow_percolation)
+    !
+    ! !DESCRIPTION:
+    ! Calculate liquid percolation through the snow pack, for one tracer
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+
+    ! For description of arguments, see comments in BulkFlux_SnowPercolation. Here,
+    ! bulk_* variables refer to bulk water and trac_* variables refer to the given water
+    ! tracer.
+    integer  , intent(in)    :: snl( bounds%begc: )
+    real(r8) , intent(in)    :: bulk_h2osoi_liq( bounds%begc: , -nlevsno+1: )
+    real(r8) , intent(in)    :: bulk_qflx_snow_percolation( bounds%begc: , -nlevsno+1: )
+    real(r8) , intent(in)    :: trac_h2osoi_liq( bounds%begc: , -nlevsno+1: )
+    real(r8) , intent(inout) :: trac_qflx_snow_percolation( bounds%begc: , -nlevsno+1: )
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: j
+    logical :: snow_layer_exists(bounds%begc:bounds%endc)  ! Whether the current snow layer exists in each column
+
+    character(len=*), parameter :: subname = 'TracerFlux_SnowPercolation'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bulk_h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bulk_qflx_snow_percolation, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(trac_h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(trac_qflx_snow_percolation, 1) == bounds%endc), sourcefile, __LINE__)
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc  &
+         )
+
+    do j = -nlevsno+1, 0
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          if (j >= snl(c)+1) then
+             snow_layer_exists(c) = .true.
+          else
+             snow_layer_exists(c) = .false.
+          end if
+       end do
+
+       call CalcTracerFromBulkMasked( &
+            lb            = begc, &
+            num_pts       = num_snowc, &
+            filter_pts    = filter_snowc, &
+            mask_array    = snow_layer_exists(begc:endc), &
+            bulk_source   = bulk_h2osoi_liq(begc:endc, j), &
+            bulk_val      = bulk_qflx_snow_percolation(begc:endc, j), &
+            tracer_source = trac_h2osoi_liq(begc:endc, j), &
+            tracer_val    = trac_qflx_snow_percolation(begc:endc, j))
+
+    end do
+
+    end associate
+
+  end subroutine TracerFlux_SnowPercolation
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateState_SnowPercolation(bounds, num_snowc, filter_snowc, &
+       dtime, snl, qflx_snow_percolation, h2osoi_liq)
+    !
+    ! !DESCRIPTION:
+    ! Update h2osoi_liq for snow percolation, for bulk or one tracer
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+
+    real(r8) , intent(in)    :: dtime                                    ! land model time step (sec)
+    integer  , intent(in)    :: snl( bounds%begc: )                      ! negative number of snow layers
+    real(r8) , intent(in)    :: qflx_snow_percolation( bounds%begc: , -nlevsno+1: ) ! liquid percolation out of the bottom of snow layer j (mm H2O /s)
+    real(r8) , intent(inout) :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: j
+
+    character(len=*), parameter :: subname = 'UpdateState_SnowPercolation'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snow_percolation, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do j = -nlevsno+1, 0
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          if (j >= snl(c)+1) then
+
+             ! For layers below the top layer, add percolation from layer above
+             if (j >= snl(c)+2) then
+                h2osoi_liq(c,j) = h2osoi_liq(c,j) + qflx_snow_percolation(c,j-1) * dtime
+             end if
+
+             ! Subtract percolation out of this layer
+             h2osoi_liq(c,j) = h2osoi_liq(c,j) - qflx_snow_percolation(c,j) * dtime
+          end if
+       end do
+    end do
+
+  end subroutine UpdateState_SnowPercolation
+
+  !-----------------------------------------------------------------------
+  subroutine CalcAndApplyAerosolFluxes(bounds, num_snowc, filter_snowc, &
+       dtime, snl, h2osoi_ice, h2osoi_liq, qflx_snow_percolation, atm2lnd_inst, &
+       aerosol_inst)
+    !
+    ! !DESCRIPTION:
+    ! Calculate and apply fluxes of aerosols through the snow pack
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+
+    real(r8)           , intent(in)    :: dtime                                               ! land model time step (sec)
+    integer            , intent(in)    :: snl( bounds%begc: )                                 ! negative number of snow layers
+    real(r8)           , intent(in)    :: h2osoi_ice( bounds%begc: , -nlevsno+1: )            ! ice lens (kg/m2)
+    real(r8)           , intent(in)    :: h2osoi_liq( bounds%begc: , -nlevsno+1: )            ! liquid water (kg/m2)
+    real(r8)           , intent(in)    :: qflx_snow_percolation( bounds%begc: , -nlevsno+1: ) ! liquid percolation out of the bottom of snow layer j (mm H2O /s)
+    type(atm2lnd_type) , intent(in)    :: atm2lnd_inst
+    type(aerosol_type) , intent(inout) :: aerosol_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: j
+    real(r8) :: mss_liqice                                         ! mass of liquid+ice in a layer
+    real(r8) :: qin_bc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic BC into   layer [kg]
+    real(r8) :: qout_bc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic BC out of layer [kg]
+    real(r8) :: qin_bc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic BC into   layer [kg]
+    real(r8) :: qout_bc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic BC out of layer [kg]
+    real(r8) :: qin_oc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic OC into   layer [kg]
+    real(r8) :: qout_oc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic OC out of layer [kg]
+    real(r8) :: qin_oc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic OC into   layer [kg]
+    real(r8) :: qout_oc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic OC out of layer [kg]
+    real(r8) :: qin_dst1    (bounds%begc:bounds%endc)              ! flux of dust species 1 into   layer [kg]
+    real(r8) :: qout_dst1   (bounds%begc:bounds%endc)              ! flux of dust species 1 out of layer [kg]
+    real(r8) :: qin_dst2    (bounds%begc:bounds%endc)              ! flux of dust species 2 into   layer [kg]
+    real(r8) :: qout_dst2   (bounds%begc:bounds%endc)              ! flux of dust species 2 out of layer [kg]
+    real(r8) :: qin_dst3    (bounds%begc:bounds%endc)              ! flux of dust species 3 into   layer [kg]
+    real(r8) :: qout_dst3   (bounds%begc:bounds%endc)              ! flux of dust species 3 out of layer [kg]
+    real(r8) :: qin_dst4    (bounds%begc:bounds%endc)              ! flux of dust species 4 into   layer [kg]
+    real(r8) :: qout_dst4   (bounds%begc:bounds%endc)              ! flux of dust species 4 out of layer [kg]
+
+    character(len=*), parameter :: subname = 'CalcAndApplyAerosolFluxes'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         mss_bcphi      => aerosol_inst%mss_bcphi_col        , & ! Output: [real(r8) (:,:) ] hydrophillic BC mass in snow (col,lyr) [kg]
+         mss_bcpho      => aerosol_inst%mss_bcpho_col        , & ! Output: [real(r8) (:,:) ] hydrophobic  BC mass in snow (col,lyr) [kg]
+         mss_ocphi      => aerosol_inst%mss_ocphi_col        , & ! Output: [real(r8) (:,:) ] hydrophillic OC mass in snow (col,lyr) [kg]
+         mss_ocpho      => aerosol_inst%mss_ocpho_col        , & ! Output: [real(r8) (:,:) ] hydrophobic  OC mass in snow (col,lyr) [kg]
+         mss_dst1       => aerosol_inst%mss_dst1_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 1 in snow (col,lyr) [kg]
+         mss_dst2       => aerosol_inst%mss_dst2_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 2 in snow (col,lyr) [kg]
+         mss_dst3       => aerosol_inst%mss_dst3_col         , & ! Output: [real(r8) (:,:) ] mass of dust species 3 in snow (col,lyr) [kg]
+         mss_dst4       => aerosol_inst%mss_dst4_col           & ! Output: [real(r8) (:,:) ] mass of dust species 4 in snow (col,lyr) [kg]
+         )
+
+    ! Compute aerosol fluxes through snowpack:
     ! 1) compute aerosol mass in each layer
     ! 2) add aerosol mass flux from above layer to mass of this layer
     ! 3) qout_xxx is mass flux of aerosol species xxx out bottom of
@@ -1123,8 +1472,9 @@ contains
     ! 4) update mass of aerosol in top layer, accordingly
     ! 5) update mass concentration of aerosol accordingly
 
-    do c = bounds%begc,bounds%endc
-       qin(c)         = 0._r8
+    do fc = 1, num_snowc
+       c = filter_snowc(fc)
+
        qin_bc_phi (c) = 0._r8
        qin_bc_pho (c) = 0._r8
        qin_oc_phi (c) = 0._r8
@@ -1140,127 +1490,135 @@ contains
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
 
-             h2osoi_liq(c,j) = h2osoi_liq(c,j) + qin(c)
+             mss_bcphi(c,j) = mss_bcphi(c,j) + qin_bc_phi(c) * dtime
+             mss_bcpho(c,j) = mss_bcpho(c,j) + qin_bc_pho(c) * dtime
+             mss_ocphi(c,j) = mss_ocphi(c,j) + qin_oc_phi(c) * dtime
+             mss_ocpho(c,j) = mss_ocpho(c,j) + qin_oc_pho(c) * dtime
 
-             mss_bcphi(c,j) = mss_bcphi(c,j) + qin_bc_phi(c)
-             mss_bcpho(c,j) = mss_bcpho(c,j) + qin_bc_pho(c)
-             mss_ocphi(c,j) = mss_ocphi(c,j) + qin_oc_phi(c)
-             mss_ocpho(c,j) = mss_ocpho(c,j) + qin_oc_pho(c)
-
-             mss_dst1(c,j)  = mss_dst1(c,j) + qin_dst1(c)
-             mss_dst2(c,j)  = mss_dst2(c,j) + qin_dst2(c)
-             mss_dst3(c,j)  = mss_dst3(c,j) + qin_dst3(c)
-             mss_dst4(c,j)  = mss_dst4(c,j) + qin_dst4(c)
-
-             if (j <= -1) then
-                ! No runoff over snow surface, just ponding on surface
-                if (eff_porosity(c,j) < wimp .OR. eff_porosity(c,j+1) < wimp) then
-                   qout(c) = 0._r8
-                else
-                   ! dz must be scaled by frac_sno to obtain gridcell average value
-                   qout(c) = max(0._r8,(vol_liq(c,j) &
-                        - ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
-                   qout(c) = min(qout(c),(1._r8-vol_ice(c,j+1) &
-                        - vol_liq(c,j+1))*dz(c,j+1)*frac_sno_eff(c))
-                end if
-             else
-                qout(c) = max(0._r8,(vol_liq(c,j) &
-                     - ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
-             end if
-             qout(c) = qout(c)*1000._r8
-             h2osoi_liq(c,j) = h2osoi_liq(c,j) - qout(c)
-             qin(c) = qout(c)
+             mss_dst1(c,j)  = mss_dst1(c,j) + qin_dst1(c) * dtime
+             mss_dst2(c,j)  = mss_dst2(c,j) + qin_dst2(c) * dtime
+             mss_dst3(c,j)  = mss_dst3(c,j) + qin_dst3(c) * dtime
+             mss_dst4(c,j)  = mss_dst4(c,j) + qin_dst4(c) * dtime
 
              ! mass of ice+water: in extremely rare circumstances, this can
              ! be zero, even though there is a snow layer defined. In
              ! this case, set the mass to a very small value to
              ! prevent division by zero.
 
-             mss_liqice(c,j) = h2osoi_liq(c,j)+h2osoi_ice(c,j)
-             if (mss_liqice(c,j) < 1E-30_r8) then
-                mss_liqice(c,j) = 1E-30_r8
+             mss_liqice = h2osoi_liq(c,j)+h2osoi_ice(c,j)
+             if (mss_liqice < 1E-30_r8) then
+                mss_liqice = 1E-30_r8
              endif
 
              ! BCPHI:
              ! 1. flux with meltwater:
-             qout_bc_phi(c) = qout(c)*scvng_fct_mlt_bcphi*(mss_bcphi(c,j)/mss_liqice(c,j))
+             qout_bc_phi(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_bcphi*(mss_bcphi(c,j)/mss_liqice)
              if (qout_bc_phi(c) > mss_bcphi(c,j)) then
                 qout_bc_phi(c) = mss_bcphi(c,j)
              endif
-             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c)
+             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c) * dtime
              qin_bc_phi(c) = qout_bc_phi(c)
 
              ! BCPHO:
              ! 1. flux with meltwater:
-             qout_bc_pho(c) = qout(c)*scvng_fct_mlt_bcpho*(mss_bcpho(c,j)/mss_liqice(c,j))
+             qout_bc_pho(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_bcpho*(mss_bcpho(c,j)/mss_liqice)
              if (qout_bc_pho(c) > mss_bcpho(c,j)) then
                 qout_bc_pho(c) = mss_bcpho(c,j)
              endif
-             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c)
+             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c) * dtime
              qin_bc_pho(c) = qout_bc_pho(c)
 
              ! OCPHI:
              ! 1. flux with meltwater:
-             qout_oc_phi(c) = qout(c)*scvng_fct_mlt_ocphi*(mss_ocphi(c,j)/mss_liqice(c,j))
+             qout_oc_phi(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_ocphi*(mss_ocphi(c,j)/mss_liqice)
              if (qout_oc_phi(c) > mss_ocphi(c,j)) then
                 qout_oc_phi(c) = mss_ocphi(c,j)
              endif
-             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c)
+             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c) * dtime
              qin_oc_phi(c) = qout_oc_phi(c)
 
              ! OCPHO:
              ! 1. flux with meltwater:
-             qout_oc_pho(c) = qout(c)*scvng_fct_mlt_ocpho*(mss_ocpho(c,j)/mss_liqice(c,j))
+             qout_oc_pho(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_ocpho*(mss_ocpho(c,j)/mss_liqice)
              if (qout_oc_pho(c) > mss_ocpho(c,j)) then
                 qout_oc_pho(c) = mss_ocpho(c,j)
              endif
-             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c)
+             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c) * dtime
              qin_oc_pho(c) = qout_oc_pho(c)
 
              ! DUST 1:
              ! 1. flux with meltwater:
-             qout_dst1(c) = qout(c)*scvng_fct_mlt_dst1*(mss_dst1(c,j)/mss_liqice(c,j))
+             qout_dst1(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst1*(mss_dst1(c,j)/mss_liqice)
              if (qout_dst1(c) > mss_dst1(c,j)) then
                 qout_dst1(c) = mss_dst1(c,j)
              endif
-             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c)
+             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c) * dtime
              qin_dst1(c) = qout_dst1(c)
 
              ! DUST 2:
              ! 1. flux with meltwater:
-             qout_dst2(c) = qout(c)*scvng_fct_mlt_dst2*(mss_dst2(c,j)/mss_liqice(c,j))
+             qout_dst2(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst2*(mss_dst2(c,j)/mss_liqice)
              if (qout_dst2(c) > mss_dst2(c,j)) then
                 qout_dst2(c) = mss_dst2(c,j)
              endif
-             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c)
+             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c) * dtime
              qin_dst2(c) = qout_dst2(c)
 
              ! DUST 3:
              ! 1. flux with meltwater:
-             qout_dst3(c) = qout(c)*scvng_fct_mlt_dst3*(mss_dst3(c,j)/mss_liqice(c,j))
+             qout_dst3(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst3*(mss_dst3(c,j)/mss_liqice)
              if (qout_dst3(c) > mss_dst3(c,j)) then
                 qout_dst3(c) = mss_dst3(c,j)
              endif
-             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c)
+             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c) * dtime
              qin_dst3(c) = qout_dst3(c)
 
              ! DUST 4:
              ! 1. flux with meltwater:
-             qout_dst4(c) = qout(c)*scvng_fct_mlt_dst4*(mss_dst4(c,j)/mss_liqice(c,j))
+             qout_dst4(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst4*(mss_dst4(c,j)/mss_liqice)
              if (qout_dst4(c) > mss_dst4(c,j)) then
                 qout_dst4(c) = mss_dst4(c,j)
              endif
-             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c)
+             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c) * dtime
              qin_dst4(c) = qout_dst4(c)
 
           end if
        end do
     end do
 
-    ! Compute aerosol fluxes through snowpack and aerosol deposition fluxes into top layere
+    ! Compute aerosol fluxes through snowpack and aerosol deposition fluxes into top layer
 
     call AerosolFluxes(bounds, num_snowc, filter_snowc, &
          atm2lnd_inst, aerosol_inst)
+
+    end associate
+
+  end subroutine CalcAndApplyAerosolFluxes
+
+  !-----------------------------------------------------------------------
+  subroutine PostPercolation_AdjustLayerThicknesses(bounds, num_snowc, filter_snowc, &
+       snl, h2osoi_ice, h2osoi_liq, dz)
+    !
+    ! !DESCRIPTION:
+    ! Adjust layer thickness for any water+ice content changes after percolation through
+    ! the snow pack
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+
+    integer  , intent(in)    :: snl( bounds%begc: )                      ! negative number of snow layers
+    real(r8) , intent(in)    :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
+    real(r8) , intent(in)    :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
+    real(r8) , intent(inout) :: dz( bounds%begc: , -nlevsno+1: )         ! layer depth (m)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: j
+
+    character(len=*), parameter :: subname = 'PostPercolation_AdjustLayerThicknesses'
+    !-----------------------------------------------------------------------
 
     ! Adjust layer thickness for any water+ice content changes in excess of previous
     ! layer thickness. Strictly speaking, only necessary for top snow layer, but doing
@@ -1277,22 +1635,60 @@ contains
        end do
     end do
 
+  end subroutine PostPercolation_AdjustLayerThicknesses
+
+  !-----------------------------------------------------------------------
+  subroutine BulkDiag_SnowWaterAccumulatedSnow(bounds, &
+       num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
+       dtime, frac_sno_eff, qflx_dew_snow, qflx_dew_grnd, qflx_liq_grnd, h2osno_no_layers, &
+       int_snow, frac_sno, snow_depth)
+    !
+    ! !DESCRIPTION:
+    ! Update int_snow, and reset accumulated snow when no snow present
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+    integer, intent(in) :: num_nosnowc
+    integer, intent(in) :: filter_nosnowc(:)
+
+    real(r8) , intent(in)    :: dtime                            ! land model time step (sec)
+    real(r8) , intent(in)    :: frac_sno_eff( bounds%begc: )     ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(in)    :: qflx_dew_snow( bounds%begc: )    ! surface dew added to snow pack (mm H2O /s)
+    real(r8) , intent(in)    :: qflx_dew_grnd( bounds%begc: )    ! ground surface dew formation (mm H2O /s)
+    real(r8) , intent(in)    :: qflx_liq_grnd( bounds%begc: )    ! liquid on ground after interception (mm H2O/s)
+    real(r8) , intent(in)    :: h2osno_no_layers( bounds%begc: ) ! snow that is not resolved into layers (kg/m2)
+
+    real(r8) , intent(inout) :: int_snow( bounds%begc: )         ! integrated snowfall (mm H2O)
+    real(r8) , intent(inout) :: frac_sno( bounds%begc: )         ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: snow_depth( bounds%begc: )       ! snow height (m)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'BulkDiag_SnowWaterAccumulatedSnow'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_dew_snow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_dew_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_liq_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osno_no_layers, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(int_snow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
+
     do fc = 1, num_snowc
        c = filter_snowc(fc)
-       ! Qout from snow bottom
-       qflx_snow_drain(c) = qflx_snow_drain(c) + (qout(c) / dtime)
 
-       qflx_rain_plus_snomelt(c) = (qout(c) / dtime) &
-            + (1.0_r8 - frac_sno_eff(c)) * qflx_liq_grnd(c)
        int_snow(c) = int_snow(c) + frac_sno_eff(c) &
-                     * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_liq_grnd(c)) * dtime
+            * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_liq_grnd(c)) * dtime
     end do
 
     do fc = 1, num_nosnowc
        c = filter_nosnowc(fc)
-       qflx_snow_drain(c) = qflx_snomelt(c)
 
-       qflx_rain_plus_snomelt(c) = qflx_liq_grnd(c) + qflx_snomelt(c)
        ! reset accumulated snow when no snow present
        if (h2osno_no_layers(c) <= 0._r8) then
           int_snow(c) = 0._r8
@@ -1301,8 +1697,61 @@ contains
        end if
     end do
 
-    end associate
-  end subroutine SnowWater
+  end subroutine BulkDiag_SnowWaterAccumulatedSnow
+
+  !-----------------------------------------------------------------------
+  subroutine SumFlux_AddSnowPercolation(bounds, &
+       num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
+       frac_sno_eff, qflx_snow_percolation_bottom, qflx_liq_grnd, qflx_snomelt, &
+       qflx_snow_drain, qflx_rain_plus_snomelt)
+    !
+    ! !DESCRIPTION:
+    ! Calculate summed fluxes accounting for qflx_snow_percolation and similar fluxes
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_snowc
+    integer, intent(in) :: filter_snowc(:)
+    integer, intent(in) :: num_nosnowc
+    integer, intent(in) :: filter_nosnowc(:)
+
+    real(r8) , intent(in)    :: frac_sno_eff( bounds%begc: )                 ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(in)    :: qflx_snow_percolation_bottom( bounds%begc: ) ! liquid percolation out of the bottom of the snow pack (mm H2O /s)
+    real(r8) , intent(in)    :: qflx_liq_grnd( bounds%begc: )                ! liquid on ground after interception (mm H2O/s)
+    real(r8) , intent(in)    :: qflx_snomelt( bounds%begc: )                 ! snow melt (mm H2O /s)
+
+    real(r8) , intent(inout) :: qflx_snow_drain( bounds%begc: )              ! drainage from snow pack from previous time step (mm H2O/s)
+    real(r8) , intent(inout) :: qflx_rain_plus_snomelt( bounds%begc: )       ! rain plus snow melt falling on the soil (mm/s)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'SumFlux_AddSnowPercolation'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snow_percolation_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_liq_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snomelt, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snow_drain, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_rain_plus_snomelt, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do fc = 1, num_snowc
+       c = filter_snowc(fc)
+
+       qflx_snow_drain(c) = qflx_snow_drain(c) + qflx_snow_percolation_bottom(c)
+       qflx_rain_plus_snomelt(c) = qflx_snow_percolation_bottom(c) &
+            + (1.0_r8 - frac_sno_eff(c)) * qflx_liq_grnd(c)
+    end do
+
+    do fc = 1, num_nosnowc
+       c = filter_nosnowc(fc)
+
+       qflx_snow_drain(c) = qflx_snomelt(c)
+       qflx_rain_plus_snomelt(c) = qflx_liq_grnd(c) + qflx_snomelt(c)
+    end do
+
+  end subroutine SumFlux_AddSnowPercolation
 
   !-----------------------------------------------------------------------
   subroutine SnowCompaction(bounds, num_snowc, filter_snowc, &
@@ -1317,9 +1766,6 @@ contains
     ! two are from SNTHERM.89 and SNTHERM.99 (1991, 1999). The contribution
     ! due to melt metamorphism is simply taken as a ratio of snow ice
     ! fraction after the melting versus before the melting.
-    !
-    ! !USES:
-    use clm_varcon      , only : denice, denh2o, tfrz, rpi
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in) :: bounds
@@ -1888,9 +2334,6 @@ contains
     ! !DESCRIPTION:
     ! Subdivides snow layers if they exceed their prescribed maximum thickness.
     !
-    ! !USES:
-    use clm_varcon,  only : tfrz
-    !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: num_snowc       ! number of column snow points in column filter
@@ -2265,10 +2708,7 @@ contains
     ! !DESCRIPTION:
     ! Initialize snow layer depth from specified total depth.
     !
-    ! !USES:
-    use clm_varcon         , only : spval
     use spmdMod, only : masterproc
-    !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
     real(r8)               , intent(in)    :: snow_depth(bounds%begc:)
@@ -2659,9 +3099,6 @@ contains
     ! The return value is placed in bifall. Only columns within the given filter are set:
     ! all other columns remain at their original values.
     !
-    ! !USES:
-    use clm_varcon,  only : tfrz
-    !
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in)    :: bounds
     integer            , intent(in)    :: num_c                ! number of columns in filterc
@@ -2764,9 +3201,6 @@ contains
     ! Preconditions (required to avoid divide by 0):
     ! - dz > 0
     ! - bi > 0
-    !
-    ! !USES:
-    use clm_varcon, only : denh2o
     !
     ! !ARGUMENTS:
     real(r8) :: compaction_rate ! function result
@@ -2876,9 +3310,6 @@ contains
     ! The combined temperature is based on the equation:
     ! the sum of the enthalpies of the two elements =
     ! that of the combined element.
-    !
-    ! !USES:
-    use clm_varcon,  only : cpice, cpliq, tfrz, hfus
     !
     ! !ARGUMENTS:
     implicit none
