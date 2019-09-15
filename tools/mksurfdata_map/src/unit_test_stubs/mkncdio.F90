@@ -23,6 +23,8 @@ module mkncdio
   public :: ncd_defvar
   public :: ncd_def_spatial_var
 
+  public :: get_dim_lengths
+
   public :: check_ret
   public :: convert_latlon
 
@@ -67,6 +69,15 @@ contains
     character(len=*) , optional, intent(in) :: lev1name  ! name of first level (or time) dimension
     character(len=*) , optional, intent(in) :: lev2name  ! name of second level (or time) dimension
   end subroutine ncd_def_spatial_var
+
+  subroutine get_dim_lengths(ncid, varname, ndims, dim_lengths)
+    integer         , intent(in) :: ncid           ! netcdf id of an open netcdf file
+    character(len=*), intent(in) :: varname        ! name of variable of interest
+    integer         , intent(out):: ndims          ! number of dimensions of variable
+    integer         , intent(out):: dim_lengths(:) ! lengths of dimensions of variable
+
+    dim_lengths = 0
+  end subroutine get_dim_lengths
 
   integer function nf_open(filename, mode, ncid)
     character(len=*), intent(in) :: filename
