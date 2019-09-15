@@ -1,0 +1,25 @@
+module test_pft_override
+  
+  ! Tests of mkpftMod: pft_override functions
+
+  use pfunit_mod
+
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use mkpftMod
+
+  implicit none
+  save
+
+contains
+
+  @Test
+  subroutine test_runmkpftInit
+    logical :: zero_out, all_veg
+
+    zero_out = .false.
+    all_veg  = .false.
+    call mkpftInit( zero_out, all_veg )
+
+  end subroutine test_runmkpftInit
+
+end module test_pft_override
