@@ -20,9 +20,16 @@ module mkncdio
   public :: nf_get_var_int
   public :: nf_get_vara_double
   public :: nf_get_att_double
+  public :: ncd_defvar
+  public :: ncd_def_spatial_var
 
   public :: check_ret
   public :: convert_latlon
+
+  interface nf_get_var_double
+     module procedure nf_get_var_double_1d
+     module procedure nf_get_var_double_2d
+  end interface nf_get_var_double
 
   interface nf_get_vara_double
      module procedure nf_get_vara_double_2d
@@ -33,6 +40,34 @@ module mkncdio
   integer, parameter, public :: nf_max_name = 64
 
 contains
+
+!-----------------------------------------------------------------------
+  subroutine ncd_defvar(ncid, varname, xtype, &
+       dim1name, dim2name, &
+       long_name, units )
+!
+    implicit none
+    integer         , intent(in)  :: ncid                    ! input unit
+    character(len=*), intent(in)  :: varname                 ! variable name
+    integer         , intent(in)  :: xtype                   ! external type
+    character(len=*), intent(in), optional :: dim1name       ! dimension name
+    character(len=*), intent(in), optional :: dim2name       ! dimension name
+    character(len=*), intent(in), optional :: long_name      ! attribute
+    character(len=*), intent(in), optional :: units          ! attribute
+!
+  end subroutine ncd_defvar
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_def_spatial_var(ncid, varname, xtype, long_name, units, lev1name, lev2name)
+    integer          , intent(in) :: ncid      ! input unit
+    character(len=*) , intent(in) :: varname   ! variable name
+    integer          , intent(in) :: xtype     ! external type
+    character(len=*) , intent(in) :: long_name ! attribute
+    character(len=*) , intent(in) :: units     ! attribute
+    character(len=*) , optional, intent(in) :: lev1name  ! name of first level (or time) dimension
+    character(len=*) , optional, intent(in) :: lev2name  ! name of second level (or time) dimension
+  end subroutine ncd_def_spatial_var
+
   integer function nf_open(filename, mode, ncid)
     character(len=*), intent(in) :: filename
     integer, intent(in) :: mode
@@ -109,14 +144,23 @@ contains
     nf_inq_vardimid = 0
   end function nf_inq_vardimid
 
-  integer function nf_get_var_double(ncid, vid, data)
+  integer function nf_get_var_double_1d(ncid, vid, data)
     integer, intent(in) :: ncid
     integer, intent(in) :: vid
     real(r8), intent(out) :: data(:)
 
     data(:) = 0._r8
-    nf_get_var_double = 0
-  end function nf_get_var_double
+    nf_get_var_double_1d = 0
+  end function nf_get_var_double_1d
+
+  integer function nf_get_var_double_2d(ncid, vid, data)
+    integer, intent(in) :: ncid
+    integer, intent(in) :: vid
+    real(r8), intent(out) :: data(:,:)
+
+    data(:,:) = 0._r8
+    nf_get_var_double_2d = 0
+  end function nf_get_var_double_2d
 
   integer function nf_get_var_int(ncid, vid, data)
     integer, intent(in) :: ncid
@@ -145,6 +189,7 @@ contains
     real(r8), intent(out) :: attval
 
     attval = 0._r8
+    nf_get_att_double = 0
   end function nf_get_att_double
 
   subroutine check_ret(ret, calling, varexists)
