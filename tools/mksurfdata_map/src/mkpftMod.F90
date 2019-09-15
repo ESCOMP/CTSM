@@ -47,9 +47,9 @@ module mkpftMod
 !
 ! !PRIVATE DATA MEMBERS:
 !
-  logical, private :: zero_out      = .false. ! Flag to zero out PFT
-  logical, private :: use_input_pft = .false. ! Flag to override PFT with input values
-  integer, private :: nzero                   ! index of first zero fraction
+  logical, private           :: zero_out      = .false. ! Flag to zero out PFT
+  logical, public, protected :: use_input_pft = .false. ! Flag to override PFT with input values
+  integer, private           :: nzero                   ! index of first zero fraction
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
@@ -96,6 +96,7 @@ subroutine mkpftInit( zero_out_l, all_veg )
      if ( maxpft < numpft ) then
         write(6,*) subname//'number PFT is > max allowed!'
         call abort()
+        return
      end if
      write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero-1)
      write(6,*) 'With PFT index      : ', pft_idx(0:nzero-1)
@@ -106,6 +107,7 @@ subroutine mkpftInit( zero_out_l, all_veg )
   if ( zero_out_l .and. all_veg )then
      write(6,*) subname//'zeroing out vegetation and setting vegetation to 100% is a contradiction!'
      call abort()
+     return
   end if
 
   ! Copy local zero out to module data version
@@ -138,6 +140,7 @@ subroutine mkpftInit( zero_out_l, all_veg )
   if (cft_ub /= numpft) then
      write(6,*) 'CFT_UB set up incorrectly: cft_ub, numpft = ', cft_ub, numpft
      call abort()
+     return
   end if
 
 end subroutine mkpftInit
@@ -860,6 +863,7 @@ subroutine mkpft_check_oride( )
     write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero-1)
     write(6,*) 'With PFT index      : ', pft_idx(0:nzero-1)
     call abort()
+    return
   else
     use_input_pft = .true.
     nzero = 0
@@ -874,20 +878,24 @@ subroutine mkpft_check_oride( )
       if ( pft_frc(i) < 0.0_r8 .or. pft_frc(i) > hndrd )then
          write(6,*) subname//'PFT fraction is out of range: pft_frc=', pft_frc(i)
          call abort()
+         return
       else if ( pft_frc(i) > 0.0_r8 .and. pft_idx(i) == -1 )then
          write(6,*) subname//'PFT fraction > zero, but index NOT set: pft_idx=', pft_idx(i)
          call abort()
+         return
       end if
       ! PFT index out of range
       if ( pft_idx(i) < 0 .or. pft_idx(i) > numpft )then
          write(6,*) subname//'PFT index is out of range: ', pft_idx(i)
          call abort()
+         return
       end if
       ! Make sure index values NOT used twice
       do j = 0, i-1
          if ( pft_idx(i) == pft_idx(j) )then
             write(6,*) subname//'Same PFT index is used twice: ', pft_idx(i)
             call abort()
+            return
          end if
       end do
     end do
@@ -896,6 +904,7 @@ subroutine mkpft_check_oride( )
       if ( pft_frc(i) /= 0.0_r8 .or. pft_idx(i) /= -1 )then
          write(6,*) subname//'After PFT fraction is zeroed out, fraction is non zero, or index set'
          call abort()
+         return
       end if
     end do
   end if
