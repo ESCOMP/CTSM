@@ -17,9 +17,36 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
-    all_veg  = .false.
     call mkpftInit( zero_out, all_veg )
+    @assertFalse(  use_input_pft )
+    @assertFalse( all_veg )
 
   end subroutine test_runmkpftInit
+
+  @Test
+  subroutine test_runmkpftInitZero
+    use mkpftMod, only : use_input_pft
+    logical :: zero_out, all_veg
+
+    zero_out = .true.
+    call mkpftInit( zero_out, all_veg )
+    @assertFalse(  use_input_pft )
+    @assertFalse( all_veg )
+
+  end subroutine test_runmkpftInitZero
+
+  @Test
+  subroutine test_runmkpftInitPftORide
+    use mkpftMod, only : use_input_pft
+    logical :: zero_out, all_veg
+
+    zero_out = .false.
+    pft_idx(0) = 1
+    pft_frc(0) = 100._r8
+    call mkpftInit( zero_out, all_veg )
+    @assertTrue(  use_input_pft )
+    @assertTrue( all_veg )
+
+  end subroutine test_runmkpftInitPftORide
 
 end module test_pft_override
