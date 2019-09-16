@@ -6,6 +6,7 @@ module test_pft_override
 
   use shr_kind_mod, only : r8 => shr_kind_r8
   use mkpftMod
+  use mkvarctl, only: numpft
 
   implicit none
   save
@@ -48,5 +49,36 @@ contains
     @assertTrue( all_veg )
 
   end subroutine test_runmkpftInitPftORide
+
+
+  @Test
+  subroutine test_runmkpftInitPftORideCrop
+    use mkpftMod, only : use_input_pft
+    logical :: zero_out, all_veg
+
+    zero_out = .false.
+    numpft = 78
+    pft_idx(0) = 17
+    pft_frc(0) = 100._r8
+    call mkpftInit( zero_out, all_veg )
+    @assertTrue(  use_input_pft )
+    @assertTrue( all_veg )
+
+  end subroutine test_runmkpftInitPftORideCrop
+
+  @Test
+  subroutine test_runmkpftInitBad
+    use mkpftMod, only : use_input_pft
+    logical :: zero_out, all_veg
+    character(len=:), allocatable :: expected_msg
+
+    zero_out = .true.
+    numpft = 78
+    pft_idx(0) = 17
+    pft_frc(0) = 100._r8
+    call mkpftInit( zero_out, all_veg )
+    @assertExceptionRaised( "ABORTED:" )
+
+  end subroutine test_runmkpftInitBad
 
 end module test_pft_override
