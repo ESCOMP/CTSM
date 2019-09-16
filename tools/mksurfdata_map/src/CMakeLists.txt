@@ -31,6 +31,7 @@ list(APPEND mksurfdat_sources
   mkvarpar.F90
   shr_const_mod.F90
   shr_sys_mod.F90
+  unit_test_stubs/abort.F90
   unit_test_stubs/mkncdio.F90)
 add_library(mksurfdat ${mksurfdat_sources})
 
