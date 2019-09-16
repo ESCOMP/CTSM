@@ -2992,7 +2992,7 @@ contains
              call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
           end if
 
-          ! Correct the top layer aerosol mass to account for snow capping.
+          ! Correct the bottom layer aerosol mass to account for snow capping.
           ! This approach conserves the aerosol mass concentration but not aerosol mass. 
           frac_adjust = (mss_snow_bottom_lyr - mss_snwcp_tot) / mss_snow_bottom_lyr
           mss_bcphi(c,0)   = mss_bcphi(c,0) * frac_adjust 
