@@ -9,8 +9,8 @@ module TotalWaterAndHeatMod
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use decompMod          , only : bounds_type
-  use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus, aquifer_water_baseline
-  use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb
+  use clm_varcon         , only : cpice, cpliq, denh2o, denice, tfrz, hfus, aquifer_water_baseline
+  use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb, nlevlak
   use ColumnType         , only : col
   use LandunitType       , only : lun
   use subgridAveMod      , only : p2c
@@ -19,6 +19,7 @@ module TotalWaterAndHeatMod
   use UrbanParamsType    , only : urbanparams_type
   use SoilStateType      , only : soilstate_type
   use TemperatureType    , only : temperature_type
+  use LakeStateType      , only : lakestate_type
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice_mec
@@ -76,7 +77,6 @@ module TotalWaterAndHeatMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: AccumulateLiquidWaterHeat ! For use by ComputeHeat* routines: accumulate quantities that we need to count for liquid water, for a single column
-  private :: AccumulateLiquidWaterHeatLake ! same as above but able to read in 2D lake temperature
   private :: TempToHeat                ! For use by ComputeHeat* routines: convert temperature to heat content
 
   character(len=*), parameter, private :: sourcefile = &
@@ -135,7 +135,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-       waterstate_inst, &
+       waterstate_inst, lakestate_inst, &
        subtract_dynbal_baselines, &
        water_mass)
     !
@@ -147,6 +147,7 @@ contains
     integer                  , intent(in)    :: num_lakec                  ! number of column lake points in column filter
     integer                  , intent(in)    :: filter_lakec(:)            ! column filter for lake points
     type(waterstate_type)    , intent(in)    :: waterstate_inst
+    type(lakestate_type)    , intent(in)    :: lakestate_inst
 
     ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When we can accept answer changes to methane,
     ! remove this argument, always assuming it's true.
@@ -169,6 +170,7 @@ contains
          num_lakec = num_lakec, &
          filter_lakec = filter_lakec, &
          waterstate_inst = waterstate_inst, &
+         lakestate_inst = lakestate_inst, &         
          subtract_dynbal_baselines = subtract_dynbal_baselines, &
          liquid_mass = liquid_mass(bounds%begc:bounds%endc), &
          ice_mass = ice_mass(bounds%begc:bounds%endc))
@@ -384,7 +386,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ComputeLiqIceMassLake(bounds, num_lakec, filter_lakec, &
-       waterstate_inst, &
+       waterstate_inst, lakestate_inst,&
        subtract_dynbal_baselines, &
        liquid_mass, ice_mass)
     !
@@ -399,6 +401,8 @@ contains
     integer               , intent(in)    :: num_lakec                   ! number of column lake points in column filter
     integer               , intent(in)    :: filter_lakec(:)             ! column filter for lake points
     type(waterstate_type) , intent(in)    :: waterstate_inst
+    type(lakestate_type)  , intent(in)    :: lakestate_inst
+
 
     ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When we can accept answer changes to methane,
     ! remove this argument, always assuming it's true.
@@ -408,8 +412,10 @@ contains
     real(r8)              , intent(inout) :: ice_mass( bounds%begc: )    ! computed ice mass (kg m-2)
     !
     ! !LOCAL VARIABLES:
-    integer :: c, j, fc                  ! indices
-
+    integer  :: c, j, fc               ! indices
+    real(r8) :: h2olak_liq(bounds%begc:bounds%endc,1:nlevlak) ! liquid water content of lake layer [kg/m²]
+    real(r8) :: h2olak_ice(bounds%begc:bounds%endc,1:nlevlak) ! ice water content of lake layer [kg/m²]
+    
     character(len=*), parameter :: subname = 'ComputeLiqIceMassLake'
     !-----------------------------------------------------------------------
 
@@ -418,10 +424,11 @@ contains
 
     associate( &
          snl          =>    col%snl                        , & ! Input:  [integer  (:)   ]  negative number of snow layers
-         
+         dz_lake      =>    col%dz_lake                    , & ! Input:  [real(r8) (:,:) ]  lake depth (m)
          h2osno       =>    waterstate_inst%h2osno_col     , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
-         h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col,  & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
+         h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
+         lake_icefrac =>    lakestate_inst%lake_icefrac_col, & ! Input:  [real(r8) (:,:) ]  lake  ice fraction
          dynbal_baseline_liq    => waterstate_inst%dynbal_baseline_liq_col, & ! Input:  [real(r8) (:)   ]  baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
          dynbal_baseline_ice    => waterstate_inst%dynbal_baseline_ice_col  & ! Input:  [real(r8) (:)   ]  baseline ice content subtracted from each column's total ice calculation (mm H2O)
          )
@@ -448,6 +455,19 @@ contains
        end if
     end do
 
+    ! Lake water content 
+    do j = 1, nlevlak
+       do fc = 1, num_lakec
+          c = filter_lakec(fc)
+          ! calculate lake liq and ice content per lake layer first
+          h2olak_liq(c,j) = dz_lake(c,j) * denh2o * (1 - lake_icefrac(c,j))
+          h2olak_ice(c,j) = dz_lake(c,j) * denice * lake_icefrac(c,j)
+          
+          liquid_mass(c) = liquid_mass(c) + h2olak_liq(c,j)
+          ice_mass(c) = ice_mass(c) + h2olak_ice(c,j)
+       end do
+    end do
+    
     ! Soil water content of the soil under the lake
     do j = 1, nlevgrnd
        do fc = 1, num_lakec
@@ -811,8 +831,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ComputeHeatLake(bounds, num_lakec, filter_lakec, &
-       soilstate_inst, temperature_inst, waterstate_inst, &
-       heat, heat_liquid, cv_liquid, heat_lake)
+       soilstate_inst, temperature_inst, waterstate_inst, lakestate_inst, &
+       heat, heat_liquid, cv_liquid)
     !
     ! !DESCRIPTION:
     ! Compute total heat content for all lake columns
@@ -827,10 +847,6 @@ contains
      
 
 
-    ! REMOVE THIS when done developing
-    use clm_varctl          , only : iulog
-
-
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)  :: bounds
     integer                  , intent(in)  :: num_lakec
@@ -838,11 +854,12 @@ contains
     type(soilstate_type)     , intent(in)  :: soilstate_inst
     type(temperature_type)   , intent(in)  :: temperature_inst
     type(waterstate_type)    , intent(in)  :: waterstate_inst
+    type(lakestate_type)     , intent(in)  :: lakestate_inst
+
 
     real(r8) , intent(inout) :: heat( bounds%begc: )        ! sum of heat content for all columns [J/m^2]
     real(r8) , intent(inout) :: heat_liquid( bounds%begc: ) ! sum of heat content for all columns: liquid water, excluding latent heat [J/m^2]
     real(r8) , intent(inout) :: cv_liquid( bounds%begc: )   ! sum of liquid heat capacity for all columns [J/(m^2 K)]
-    real(r8) , intent(inout) :: heat_lake( bounds%begc: )   ! heat content of the lake water in column [J/m^2]
 
     !
     ! !LOCAL VARIABLES:
@@ -852,8 +869,9 @@ contains
     real(r8) :: heat_dry_mass(bounds%begc:bounds%endc) ! sum of heat content: dry mass [J/m^2]
     real(r8) :: heat_ice(bounds%begc:bounds%endc)      ! sum of heat content: ice [J/m^2]
     real(r8) :: latent_heat_liquid(bounds%begc:bounds%endc) ! sum of latent heat content of liquid water [J/m^2]
-    real(r8) :: latent_heat_liquid_lake(bounds%begc:bounds%endc) ! sum of latent heat content of liquid water of lake itself [J/m^2]
-
+    real(r8) :: h2olak_liq(bounds%begc:bounds%endc,1:nlevlak) ! liquid water content of lake layer [kg/m²]
+    real(r8) :: h2olak_ice(bounds%begc:bounds%endc,1:nlevlak) ! ice water content of lake layer [kg/m²]
+    
     character(len=*), parameter :: subname = 'ComputeHeatLake'
     !-----------------------------------------------------------------------
 
@@ -864,16 +882,16 @@ contains
     associate( &
          snl          => col%snl, & ! number of snow layers
          dz           => col%dz, &  ! layer depth (m)
-         lakedepth    => col%lakedepth, & ! lake depth (m)
+         dz_lake      => col%dz_lake, & ! lake layer depth (m)
          watsat       => soilstate_inst%watsat_col, & ! volumetric soil water at saturation (porosity)
          csol         => soilstate_inst%csol_col, & ! heat capacity, soil solids (J/m**3/Kelvin)
          t_lake       => temperature_inst%t_lake_col,  & ! lake temperature (K)
          t_soisno     => temperature_inst%t_soisno_col, & ! soil temperature (Kelvin)
-         lake_heat    => temperature_inst%lake_heat, & ! total heat of lake water (J/m²)
          dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Input:  [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
          h2osoi_liq   => waterstate_inst%h2osoi_liq_col, & ! liquid water (kg/m2)
          h2osoi_ice   => waterstate_inst%h2osoi_ice_col, & ! frozen water (kg/m2)
-         h2osno       => waterstate_inst%h2osno_col & ! snow water (mm H2O)
+         h2osno       => waterstate_inst%h2osno_col, & ! snow water (mm H2O)
+         lake_icefrac => lakestate_inst%lake_icefrac_col & ! Input:  [real(r8) (:,:) ]  lake  ice fraction
          )
 
     do fc = 1, num_lakec
@@ -930,21 +948,27 @@ contains
     ! TODO(wjs, 2017-03-11) Include heat content of water in lakes, once we include
     ! lake water as an explicit water state (https://github.com/ESCOMP/ctsm/issues/200)
 
-    ! calculate heat content of lake itself
-    !set condition on heat_lake when is present (optional argument)? 
-    do fc = 1, num_lakec
-          c = filter_lakec(fc)
-          call AccumulateLiquidWaterHeatLake( &
-               temp = t_lake(c,:), &
-               h2o = lakedepth(c)*1000, &
-               cv_liquid = cv_liquid(c), &
-               heat_liquid = heat_lake(c), &
-               latent_heat_liquid = latent_heat_liquid_lake(c))
-    end do
+    ! calculate heat content of lake itself  
+    do j = 1, nlevlak
+        do fc = 1, num_lakec
+            c = filter_lakec(fc)
+           ! liquid heat 
+           h2olak_liq(c,j) = dz_lake(c,j) * denh2o * (1 - lake_icefrac(c,j))
+           call AccumulateLiquidWaterHeat( &
+                temp = t_lake(c,j), &
+                h2o = h2olak_liq(c,j), &
+                cv_liquid = cv_liquid(c), &
+                heat_liquid = heat_liquid(c), &
+                latent_heat_liquid = latent_heat_liquid(c))
+            ! ice heat
+            h2olak_ice(c,j) = dz_lake(c,j) * denice * lake_icefrac(c,j)      
+            heat_ice(c) = heat_ice(c) + & 
+                TempToHeat(temp=t_lake(c,j), cv = (h2olak_ice(c,j) * cpice))
+        end do
+    end do 
 
     ! write(iulog,*) 'lake heat (J/m^2)', heat_lake(c)+latent_heat_liquid(c)
 
-! Add lake heat here if wanted to incorporate
     do fc = 1, num_lakec
        c = filter_lakec(fc)
        heat(c) = heat_dry_mass(c) + heat_ice(c) + heat_liquid(c) + latent_heat_liquid(c)
@@ -1129,47 +1153,6 @@ contains
     heat_liquid = heat_liquid + TempToHeat(temp = temp, cv = cv)
     latent_heat_liquid = latent_heat_liquid + h2o*hfus
   end subroutine AccumulateLiquidWaterHeat
-
-! Repeating same module, quick fix to account for 2D temperature field of lake temp. (to be removed)
-  !-----------------------------------------------------------------------
-  subroutine AccumulateLiquidWaterHeatLake(temp, h2o, &
-       heat_liquid, latent_heat_liquid, cv_liquid)
-    !
-    ! !DESCRIPTION:
-    ! In the course of accumulating heat contents: Accumulate quantities that we need to
-    ! count for liquid water, for a single column
-    
-    use clm_varpar     ,only : nlevlak 
-!
-    ! !ARGUMENTS:
-    real(r8), intent(in) :: temp(:)  ! temperature [K]
-    real(r8), intent(in) :: h2o   ! water mass [kg/m^2]
-
-    real(r8), intent(inout) :: heat_liquid        ! accumulated total heat content of liquid water for this column, excluding latent heat [J/m^2]
-    real(r8), intent(inout) :: latent_heat_liquid ! accumulated total latent heat content of liquid water for this column [J/m^2]
-    real(r8), intent(inout), optional :: cv_liquid ! accumulated total liquid heat capacity for this column [J/(m^2 K)]
-    !
-    ! !LOCAL VARIABLES:
-    real(r8) :: cv  ! heat capacity [J/(m^2 K)]
-    integer  :: j   ! do loop index
-    character(len=*), parameter :: subname = 'AccumulateLiquidWaterHeatLake'
-    !-----------------------------------------------------------------------
-
-    cv = h2o*cpliq
-    if (present(cv_liquid)) then
-       cv_liquid = cv_liquid + cv
-    end if
-    
-    ! loop over lake levels
-    do j = 1,nlevlak
-        heat_liquid = heat_liquid + TempToHeat(temp = temp(j), cv = cv)
-    end do
-    
-    ! this would assume the whole lake unfrozen? 
-    latent_heat_liquid = latent_heat_liquid + h2o*hfus 
-    
-
-  end subroutine AccumulateLiquidWaterHeatLake
 
 
   !-----------------------------------------------------------------------

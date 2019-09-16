@@ -19,6 +19,7 @@ module BalanceCheckMod
   use SolarAbsorbedType  , only : solarabs_type
   use SoilHydrologyType  , only : soilhydrology_type  
   use WaterstateType     , only : waterstate_type
+  use LakestateType      , only : lakestate_type
   use WaterfluxType      , only : waterflux_type
   use IrrigationMod      , only : irrigation_type
   use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
@@ -115,7 +116,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst, waterstate_inst)
+       soilhydrology_inst, waterstate_inst, lakestate_inst)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step
@@ -126,6 +127,7 @@ contains
     integer                   , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
     integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
+    type(lakestate_type)      , intent(in)    :: lakestate_inst
     type(soilhydrology_type)  , intent(inout) :: soilhydrology_inst
     type(waterstate_type)     , intent(inout) :: waterstate_inst
     !
@@ -155,7 +157,7 @@ contains
          water_mass = begwb(bounds%begc:bounds%endc))
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-         waterstate_inst, &
+         waterstate_inst, lakestate_inst, &
          subtract_dynbal_baselines = .false., &
          water_mass = begwb(bounds%begc:bounds%endc))
 
