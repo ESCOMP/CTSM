@@ -87,6 +87,27 @@ contains
 
   end subroutine test_runmkpftInitPftORideCrop
 
+
+  @Test
+  subroutine test_runmkpftInitPftORideAll(this)
+    class(TestMkPFT), intent(inout) :: this
+    logical :: zero_out, all_veg
+    integer :: i
+
+    zero_out = .false.
+    numpft = 16
+    do i = 0, numpft
+       pft_idx(i) = i
+       pft_frc(i) = 1.0_r8
+    end do
+    pft_frc(numpft) = 100._r8 - sum(pft_frc(0:numpft-1))
+    @assertEqual( 100.0_r8, sum(pft_frc) )
+    call mkpftInit( zero_out, all_veg )
+    @assertTrue(  use_input_pft )
+    @assertTrue( all_veg )
+
+  end subroutine test_runmkpftInitPftORideAll
+
   @Test
   subroutine test_runmkpftInitBadZeroNInput(this)
     class(TestMkPFT), intent(inout) :: this
