@@ -1,5 +1,6 @@
 set (pfunit_sources
-  test_pft_override.pf)
+  test_pftrun.pf
+  test_pftInit.pf)
 
 create_pFUnit_test(mkpftMod test_mkpft_exe
   "${pfunit_sources}" "")
