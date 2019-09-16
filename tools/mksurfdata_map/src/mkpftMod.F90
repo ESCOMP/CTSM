@@ -362,7 +362,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
 
   ns_o = ldomain%ns
 
-  if ( .not. use_input_pft ) then
+  if ( .not. (zero_out .or. use_input_pft) ) then
      ! Obtain input grid info, read PCT_PFT
 
      call domain_read(tdomain,fpft)
@@ -747,8 +747,8 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
   else
      deallocate(pctpft_o)
   end if
-  call domain_clean(tdomain) 
   if ( .not. zero_out .and. .not. use_input_pft ) then
+     call domain_clean(tdomain) 
      call gridmap_clean(tgridmap)
   end if
 
