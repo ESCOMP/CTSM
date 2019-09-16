@@ -20,6 +20,7 @@ module dynConsBiogeophysMod
   use WaterFluxType           , only : waterflux_type
   use WaterStateBulkType      , only : waterstatebulk_type
   use WaterStateType          , only : waterstate_type
+  use LakestateType    , only  : lakestate_type
   use WaterDiagnosticType     , only : waterdiagnostic_type
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
   use WaterBalanceType        , only : waterbalance_type
@@ -334,7 +335,7 @@ contains
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, &
-       water_inst, temperature_inst)
+       water_inst, temperature_inst, lakestate_inst)
     !
     ! !DESCRIPTION:
     ! Compute grid cell-level heat and water content before land cover change
@@ -350,7 +351,9 @@ contains
     type(urbanparams_type)   , intent(in)    :: urbanparams_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
     type(water_type)         , intent(inout) :: water_inst
+    type(lakestate_type)     , intent(in)    :: lakestate_inst
     type(temperature_type)   , intent(inout) :: temperature_inst
+
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -369,6 +372,7 @@ contains
             num_lakec, filter_lakec, &
             bulk_or_tracer%waterstate_inst, &
             bulk_or_tracer%waterdiagnostic_inst, &
+            lakestate_inst, &
             liquid_mass = bulk_or_tracer%waterbalance_inst%liq1_grc(begg:endg), &
             ice_mass = bulk_or_tracer%waterbalance_inst%ice1_grc(begg:endg))
        end associate
@@ -380,6 +384,7 @@ contains
          urbanparams_inst, soilstate_inst, &
          temperature_inst, &
          water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
+         lakestate_inst, &
          heat_grc = temperature_inst%heat1_grc(begg:endg), &
          liquid_water_temp_grc = temperature_inst%liquid_water_temp1_grc(begg:endg))
 
@@ -393,7 +398,7 @@ contains
        num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, &
        water_inst, &
-       temperature_inst, energyflux_inst)
+       temperature_inst, energyflux_inst, lakestate_inst)
     !
     ! !DESCRIPTION:
     ! Compute grid cell-level heat and water content and dynbal fluxes after land cover change
@@ -409,6 +414,7 @@ contains
     type(urbanparams_type)   , intent(in)    :: urbanparams_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
     type(water_type)         , intent(inout) :: water_inst
+    type(lakestate_type)     , intent(in)    :: lakestate_inst
     type(temperature_type)   , intent(inout) :: temperature_inst
     type(energyflux_type)    , intent(inout) :: energyflux_inst
     !
@@ -433,6 +439,7 @@ contains
             bulk_or_tracer%waterdiagnostic_inst, &
             bulk_or_tracer%waterbalance_inst, &
             bulk_or_tracer%waterflux_inst, &
+            lakestate_inst, &
             delta_liq = this_delta_liq(begg:endg))
        if (i == water_inst%i_bulk) then
           delta_liq_bulk(begg:endg) = this_delta_liq(begg:endg)
@@ -446,6 +453,7 @@ contains
          urbanparams_inst, soilstate_inst, &
          temperature_inst, &
          water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
+         lakestate_inst, &
          heat_grc = temperature_inst%heat2_grc(begg:endg), &
          liquid_water_temp_grc = temperature_inst%liquid_water_temp2_grc(begg:endg))
 
@@ -549,7 +557,7 @@ contains
   subroutine dyn_water_content(bounds, &
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
-       waterstate_inst, waterdiagnostic_inst, &
+       waterstate_inst, waterdiagnostic_inst, lakestate_inst, &
        liquid_mass, ice_mass)
     !
     ! !DESCRIPTION:
@@ -563,6 +571,7 @@ contains
     integer                     , intent(in)  :: filter_lakec(:)
     class(waterstate_type)      , intent(in)  :: waterstate_inst
     class(waterdiagnostic_type) , intent(in)  :: waterdiagnostic_inst
+    type(lakestate_type)    , intent(in)     :: lakestate_inst
     real(r8)                    , intent(out) :: liquid_mass( bounds%begg: ) ! kg m-2
     real(r8)                    , intent(out) :: ice_mass( bounds%begg: )    ! kg m-2
     !
@@ -584,6 +593,7 @@ contains
 
     call ComputeLiqIceMassLake(bounds, num_lakec, filter_lakec, &
          waterstate_inst, &
+         lakestate_inst, &
          subtract_dynbal_baselines = .true., &
          liquid_mass = liquid_mass_col(bounds%begc:bounds%endc), &
          ice_mass = ice_mass_col(bounds%begc:bounds%endc))
@@ -608,7 +618,7 @@ contains
        num_nolakec, filter_nolakec, &
        num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, &
-       temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+       temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, lakestate_inst, &
        heat_grc, liquid_water_temp_grc)
 
     ! !DESCRIPTION:
@@ -631,6 +641,7 @@ contains
     type(temperature_type)   , intent(in)  :: temperature_inst
     type(waterstatebulk_type)    , intent(in)  :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(in)  :: waterdiagnosticbulk_inst
+    type(lakestate_type)     , intent(in)  :: lakestate_inst
 
     real(r8)                 , intent(out) :: heat_grc( bounds%begg: ) ! total heat content for each grid cell [J/m^2]
     real(r8)                 , intent(out) :: liquid_water_temp_grc( bounds%begg: ) ! weighted average liquid water temperature for each grid cell (K)
@@ -660,11 +671,10 @@ contains
          cv_liquid = cv_liquid_col(bounds%begc:bounds%endc))
 
     call ComputeHeatLake(bounds, num_lakec, filter_lakec, &
-         soilstate_inst, temperature_inst, waterstatebulk_inst, &
+         soilstate_inst, temperature_inst, waterstatebulk_inst, lakestate_inst, &
          heat = heat_col(bounds%begc:bounds%endc), &
          heat_liquid = heat_liquid_col(bounds%begc:bounds%endc), &
-         cv_liquid = cv_liquid_col(bounds%begc:bounds%endc), &
-         heat_lake = heat_lake_col(bounds%begc:bounds%endc))
+         cv_liquid = cv_liquid_col(bounds%begc:bounds%endc))
 
     call c2g(bounds, &
          carr = heat_col(bounds%begc:bounds%endc), &
