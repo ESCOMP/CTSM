@@ -20,6 +20,9 @@ module test_pftrun
     character(len=12) :: fpft
     type(domain_type) :: ldomain
     integer :: ndiag
+    real(r8), allocatable  :: expected(:)
+    real(r8) :: expected_cft(2)
+    real(r8) :: expected_pft(0:14)
     type(pct_pft_type), allocatable :: pctnatpft(:)     ! % of grid cell that is nat veg, and breakdown into PFTs
     real(r8), allocatable  :: pctlnd_pft(:)             ! PFT data: % of gridcell for PFTs
     type(pct_pft_type), allocatable :: pctcft(:)        ! % of grid cell that is crop, and breakdown into CFTs
@@ -45,6 +48,10 @@ contains
     allocate(  this%pctnatpft(ns_o) )
     allocate(  this%pctlnd_pft(ns_o) )
     allocate(  this%pctcft(ns_o) )
+    allocate(  this%expected(ns_o) )
+    this%expected = 0.0_r8
+    this%expected_cft = 0.0_r8
+    this%expected_pft = 0.0_r8
   end subroutine setUp
 
   subroutine tearDown(this)
@@ -53,6 +60,7 @@ contains
     deallocate(  this%pctnatpft )
     deallocate(  this%pctlnd_pft )
     deallocate(  this%pctcft )
+    deallocate(  this%expected )
     call domain_clean( this%ldomain )
 
   end subroutine tearDown
@@ -61,6 +69,7 @@ contains
   subroutine test_runmkpftZero(this)
     class(TestMkPFTRun), intent(inout) :: this
     logical :: zero_out, all_veg
+    integer :: n
 
     zero_out = .true.
     call mkpftInit( zero_out, all_veg )
@@ -68,6 +77,11 @@ contains
     @assertFalse( all_veg )
     call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, allow_no_crops=.false., &
      pctlnd_o=this%pctlnd_pft, pctnatpft_o=this%pctnatpft, pctcft_o=this%pctcft)
+    this%expected = 100.0_r8
+    @assertEqual( this%expected, this%pctlnd_pft )
+    do n = 1, this%ldomain%ns
+       @assertEqual( this%pctnatpft(n)%get_pct_l2g(), 0.0_r8 )
+    end do
 
   end subroutine test_runmkpftZero
 
@@ -75,6 +89,7 @@ contains
   subroutine test_runmkpftPftORide(this)
     class(TestMkPFTRun), intent(inout) :: this
     logical :: zero_out, all_veg
+    integer :: n
 
     zero_out = .false.
     pft_idx(0) = 1
@@ -84,6 +99,11 @@ contains
     @assertTrue( all_veg )
     call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, allow_no_crops=.false., &
      pctlnd_o=this%pctlnd_pft, pctnatpft_o=this%pctnatpft, pctcft_o=this%pctcft)
+    this%expected = 100.0_r8
+    @assertEqual( this%expected, this%pctlnd_pft )
+    do n = 1, this%ldomain%ns
+       @assertEqual( this%pctnatpft(n)%get_pct_l2g(), 100.0_r8 )
+    end do
 
   end subroutine test_runmkpftPftORide
 
