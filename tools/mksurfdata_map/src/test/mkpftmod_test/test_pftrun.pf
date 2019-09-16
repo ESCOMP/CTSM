@@ -1,0 +1,62 @@
+module test_pftrun
+  
+  ! Tests of mkpftMod: pft_override functions
+
+  use pfunit_mod
+
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use mkpftMod
+  use mkvarctl, only: numpft
+  use mkpftConstantsMod, only: maxpft
+
+  implicit none
+  save
+
+  @TestCase
+  type, extends(TestCase) :: TestMkPFTRun
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestMkPFTRun
+
+contains
+
+  subroutine setUp(this)
+    class(TestMkPFTRun), intent(inout) :: this
+    numpft = 16
+    pft_idx(0:maxpft) = -1
+    pft_frc(0:maxpft) = 0.0_r8
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestMkPFTRun), intent(inout) :: this
+
+  end subroutine tearDown
+
+  @Test
+  subroutine test_runmkpftZero(this)
+    class(TestMkPFTRun), intent(inout) :: this
+    logical :: zero_out, all_veg
+
+    zero_out = .true.
+    call mkpftInit( zero_out, all_veg )
+    @assertFalse(  use_input_pft )
+    @assertFalse( all_veg )
+
+  end subroutine test_runmkpftZero
+
+  @Test
+  subroutine test_runmkpftPftORide(this)
+    class(TestMkPFTRun), intent(inout) :: this
+    logical :: zero_out, all_veg
+
+    zero_out = .false.
+    pft_idx(0) = 1
+    pft_frc(0) = 100._r8
+    call mkpftInit( zero_out, all_veg )
+    @assertTrue(  use_input_pft )
+    @assertTrue( all_veg )
+
+  end subroutine test_runmkpftPftORide
+
+end module test_pftrun

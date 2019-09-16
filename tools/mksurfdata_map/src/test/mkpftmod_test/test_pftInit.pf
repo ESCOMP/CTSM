@@ -1,4 +1,4 @@
-module test_pft_override
+module test_pftInit
   
   ! Tests of mkpftMod: pft_override functions
 
@@ -218,4 +218,4 @@ contains
   end subroutine test_runmkpftInitBadFrcAfterZero
 
 
-end module test_pft_override
+end module test_pftInit
