@@ -7,14 +7,35 @@ module test_pft_override
   use shr_kind_mod, only : r8 => shr_kind_r8
   use mkpftMod
   use mkvarctl, only: numpft
+  use mkpftConstantsMod, only: maxpft
 
   implicit none
   save
 
+  @TestCase
+  type, extends(TestCase) :: TestMkPFT
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestMkPFT
+
 contains
 
+  subroutine setUp(this)
+    class(TestMkPFT), intent(inout) :: this
+    numpft = 16
+    pft_idx(0:maxpft) = -1
+    pft_frc(0:maxpft) = 0.0_r8
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestMkPFT), intent(inout) :: this
+
+  end subroutine tearDown
+
   @Test
-  subroutine test_runmkpftInit
+  subroutine test_runmkpftInit(this)
+    class(TestMkPFT), intent(inout) :: this
     logical :: zero_out, all_veg
 
     zero_out = .false.
@@ -25,8 +46,8 @@ contains
   end subroutine test_runmkpftInit
 
   @Test
-  subroutine test_runmkpftInitZero
-    use mkpftMod, only : use_input_pft
+  subroutine test_runmkpftInitZero(this)
+    class(TestMkPFT), intent(inout) :: this
     logical :: zero_out, all_veg
 
     zero_out = .true.
@@ -37,8 +58,8 @@ contains
   end subroutine test_runmkpftInitZero
 
   @Test
-  subroutine test_runmkpftInitPftORide
-    use mkpftMod, only : use_input_pft
+  subroutine test_runmkpftInitPftORide(this)
+    class(TestMkPFT), intent(inout) :: this
     logical :: zero_out, all_veg
 
     zero_out = .false.
@@ -52,8 +73,8 @@ contains
 
 
   @Test
-  subroutine test_runmkpftInitPftORideCrop
-    use mkpftMod, only : use_input_pft
+  subroutine test_runmkpftInitPftORideCrop(this)
+    class(TestMkPFT), intent(inout) :: this
     logical :: zero_out, all_veg
 
     zero_out = .false.
@@ -67,10 +88,9 @@ contains
   end subroutine test_runmkpftInitPftORideCrop
 
   @Test
-  subroutine test_runmkpftInitBadZeroNInput
-    use mkpftMod, only : use_input_pft
+  subroutine test_runmkpftInitBadZeroNInput(this)
+    class(TestMkPFT), intent(inout) :: this
     logical :: zero_out, all_veg
-    character(len=:), allocatable :: expected_msg
 
     zero_out = .true.
     numpft = 78
@@ -82,10 +102,9 @@ contains
   end subroutine test_runmkpftInitBadZeroNInput
 
   @Test
-  subroutine test_runmkpftInitBadNotSum
-    use mkpftMod, only : use_input_pft
+  subroutine test_runmkpftInitBadNotSum(this)
+    class(TestMkPFT), intent(inout) :: this
     logical :: zero_out, all_veg
-    character(len=:), allocatable :: expected_msg
 
     zero_out = .false.
     numpft = 78
@@ -97,10 +116,9 @@ contains
   end subroutine test_runmkpftInitBadNotSum
 
   @Test
-  subroutine test_runmkpftInitBadPFTOutRange
-    use mkpftMod, only : use_input_pft
+  subroutine test_runmkpftInitBadPFTOutRange(this)
+    class(TestMkPFT), intent(inout) :: this
     logical :: zero_out, all_veg
-    character(len=:), allocatable :: expected_msg
 
     zero_out = .false.
     numpft = 16
@@ -110,6 +128,73 @@ contains
     @assertExceptionRaised( "ABORTED:" )
 
   end subroutine test_runmkpftInitBadPFTOutRange
+
+  @Test
+  subroutine test_runmkpftInitBadPFTBadVals(this)
+    class(TestMkPFT), intent(inout) :: this
+    logical :: zero_out, all_veg
+
+    zero_out = .false.
+    numpft = 78
+    pft_idx(0:1) = (/ 17, 18 /)
+    pft_frc(0:1) = (/ 101._r8, -1._r8 /)
+    call mkpftInit( zero_out, all_veg )
+    @assertExceptionRaised( "ABORTED:" )
+
+  end subroutine test_runmkpftInitBadPFTBadVals
+
+  @Test
+  subroutine test_runmkpftInitBadnumpft(this)
+    class(TestMkPFT), intent(inout) :: this
+    logical :: zero_out, all_veg
+
+    zero_out = .false.
+    numpft = 79
+    call mkpftInit( zero_out, all_veg )
+    @assertExceptionRaised( "ABORTED:" )
+
+  end subroutine test_runmkpftInitBadnumpft
+
+  @Test
+  subroutine test_runmkpftInitBadFrcNotIdx(this)
+    class(TestMkPFT), intent(inout) :: this
+    logical :: zero_out, all_veg
+
+    zero_out = .false.
+    numpft = 78
+    pft_idx(0)   = 17
+    pft_frc(0:1) =  (/ 99._r8, 1._r8 /)
+    call mkpftInit( zero_out, all_veg )
+    @assertExceptionRaised( "ABORTED:" )
+
+  end subroutine test_runmkpftInitBadFrcNotIdx
+
+  @Test
+  subroutine test_runmkpftInitBadIdxTwice(this)
+    class(TestMkPFT), intent(inout) :: this
+    logical :: zero_out, all_veg
+
+    zero_out = .false.
+    numpft = 78
+    pft_idx(0:1) = (/ 17, 17 /)
+    pft_frc(0:1) =  (/ 99._r8, 1._r8 /)
+    call mkpftInit( zero_out, all_veg )
+    @assertExceptionRaised( "ABORTED:" )
+
+  end subroutine test_runmkpftInitBadIdxTwice
+
+  @Test
+  subroutine test_runmkpftInitBadFrcAfterZero(this)
+    class(TestMkPFT), intent(inout) :: this
+    logical :: zero_out, all_veg
+
+    zero_out = .false.
+    numpft = 78
+    pft_idx(0:2) = (/ 17, -1, 18 /)
+    pft_frc(0:2) =  (/ 99._r8, 0.0_r8, 1._r8 /)
+    call mkpftInit( zero_out, all_veg )
+    @assertExceptionRaised( "ABORTED:" )
+  end subroutine test_runmkpftInitBadFrcAfterZero
 
 
 end module test_pft_override

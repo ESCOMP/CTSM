@@ -91,15 +91,15 @@ subroutine mkpftInit( zero_out_l, all_veg )
   character(len=32) :: subname = 'mkpftMod::mkpftInit() '
 !-----------------------------------------------------------------------
   write (6, '(a, a, a)') "In ", trim(subname), "..."
+  if ( maxpft < numpft ) then
+     write(6,*) subname//'number PFT is > max allowed!'
+     call abort()
+     return
+  end if
   call mkpft_check_oride( )
   if ( use_input_pft ) then
-     if ( maxpft < numpft ) then
-        write(6,*) subname//'number PFT is > max allowed!'
-        call abort()
-        return
-     end if
-     write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero-1)
-     write(6,*) 'With PFT index      : ', pft_idx(0:nzero-1)
+     write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero)
+     write(6,*) 'With PFT index      : ', pft_idx(0:nzero)
   end if
 
   all_veg = use_input_pft
@@ -860,21 +860,21 @@ subroutine mkpft_check_oride( )
     use_input_pft = .false.
   else if ( abs(sumpft - hndrd) > 1.e-6 )then
     write(6, '(a, a, f15.12)') trim(subname), 'Sum of PFT fraction is NOT equal to 100% =', sumpft
-    write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero-1)
-    write(6,*) 'With PFT index      : ', pft_idx(0:nzero-1)
+    write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero)
+    write(6,*) 'With PFT index      : ', pft_idx(0:nzero)
     call abort()
     return
   else
     use_input_pft = .true.
-    nzero = 0
+    nzero = numpft
     do i = 0, numpft
        if ( pft_frc(i) == 0.0_r8 )then
-          nzero = i
+          nzero = i-1
           exit
        end if
     end do
     ! PFT fraction IS used, and sum is OK, now check details
-    do i = 0, nzero -1
+    do i = 0, nzero
       if ( pft_frc(i) < 0.0_r8 .or. pft_frc(i) > hndrd )then
          write(6,*) subname//'PFT fraction is out of range: pft_frc=', pft_frc(i)
          call abort()
@@ -900,7 +900,7 @@ subroutine mkpft_check_oride( )
       end do
     end do
     ! Make sure the rest of the fraction is zero and index are not set as well
-    do i = nzero, numpft
+    do i = nzero+1, numpft
       if ( pft_frc(i) /= 0.0_r8 .or. pft_idx(i) /= -1 )then
          write(6,*) subname//'After PFT fraction is zeroed out, fraction is non zero, or index set'
          call abort()
