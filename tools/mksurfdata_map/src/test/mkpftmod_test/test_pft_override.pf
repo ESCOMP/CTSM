@@ -67,7 +67,7 @@ contains
   end subroutine test_runmkpftInitPftORideCrop
 
   @Test
-  subroutine test_runmkpftInitBad
+  subroutine test_runmkpftInitBadZeroNInput
     use mkpftMod, only : use_input_pft
     logical :: zero_out, all_veg
     character(len=:), allocatable :: expected_msg
@@ -79,6 +79,37 @@ contains
     call mkpftInit( zero_out, all_veg )
     @assertExceptionRaised( "ABORTED:" )
 
-  end subroutine test_runmkpftInitBad
+  end subroutine test_runmkpftInitBadZeroNInput
+
+  @Test
+  subroutine test_runmkpftInitBadNotSum
+    use mkpftMod, only : use_input_pft
+    logical :: zero_out, all_veg
+    character(len=:), allocatable :: expected_msg
+
+    zero_out = .false.
+    numpft = 78
+    pft_idx(0) = 17
+    pft_frc(0) = 99._r8
+    call mkpftInit( zero_out, all_veg )
+    @assertExceptionRaised( "ABORTED:" )
+
+  end subroutine test_runmkpftInitBadNotSum
+
+  @Test
+  subroutine test_runmkpftInitBadPFTOutRange
+    use mkpftMod, only : use_input_pft
+    logical :: zero_out, all_veg
+    character(len=:), allocatable :: expected_msg
+
+    zero_out = .false.
+    numpft = 16
+    pft_idx(0) = 17
+    pft_frc(0) = 100._r8
+    call mkpftInit( zero_out, all_veg )
+    @assertExceptionRaised( "ABORTED:" )
+
+  end subroutine test_runmkpftInitBadPFTOutRange
+
 
 end module test_pft_override
