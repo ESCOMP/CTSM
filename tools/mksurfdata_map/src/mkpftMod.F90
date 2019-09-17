@@ -50,6 +50,16 @@ module mkpftMod
   logical, private           :: zero_out      = .false. ! Flag to zero out PFT
   logical, public, protected :: use_input_pft = .false. ! Flag to override PFT with input values
   integer, private           :: nzero                   ! index of first zero fraction
+
+  type, public :: pft_oride
+     real(r8) :: crop                    ! Percent covered by crops
+     real(r8) :: natveg                  ! Percent covered by natural vegetation
+     real(r8), allocatable :: natpft(:)  ! Percent of each natural PFT within the natural veg landunit
+     real(r8), allocatable :: cft(:)     ! Percent of each crop CFT within the crop landunit
+   contains
+     procedure, public :: InitZeroOut      ! Initialize the PFT override object to zero out all vegetation
+     procedure, public :: InitAllPFTIndex  ! Initialize the PFT override object with PFT indeces for all veg and crop types
+  end type pft_oride
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
@@ -1031,6 +1041,64 @@ subroutine mkpftAtt( ncid, dynlanduse, xtype )
   end if
 
 end subroutine mkpftAtt
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: InitZeroOut
+!
+! !INTERFACE:
+subroutine InitZeroOut( this )
+!
+! !DESCRIPTION:
+! Initialize a pft_oride object with vegetation that's zeroed out
+!
+! !USES:
+  use mkvarpar, only : noveg
+! !ARGUMENTS:
+  implicit none
+  class(pft_oride), intent(inout) :: this
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+  this%crop  = 0.0_r8
+  this%natveg = 0.0_r8
+  allocate( this%natpft(noveg:num_natpft) )
+  allocate( this%cft(1:num_cft) )
+  this%natpft        = 0.0_r8
+  this%natpft(noveg) = 100.0_r8
+  this%cft           = 0.0_r8
+  this%cft(1)        = 100.0_r8
+end subroutine InitZeroOut
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: InitZeroOut
+!
+! !INTERFACE:
+subroutine InitAllPFTIndex( this )
+!
+! !DESCRIPTION:
+! Initialize a pft_oride object with vegetation that's zeroed out
+!
+! !ARGUMENTS:
+  implicit none
+  class(pft_oride), intent(inout) :: this
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+   call this%InitZeroOut()
+
+end subroutine InitAllPFTIndex
 
 !-----------------------------------------------------------------------
 
