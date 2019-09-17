@@ -357,8 +357,8 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         call check_ret(nf_inq_dimlen (ncid, dimid, ncft_i), subname)
         numpft_i = natpft_i + ncft_i
      else
-        call check_ret(nf_inq_dimid  (ncid, 'pft', dimid), subname)
-        call check_ret(nf_inq_dimlen (ncid, dimid, numpft_i), subname)
+        write(6,*) subname//' ERROR: PCT_PFT field on the the file so it is in the old format, which is no longer supported'
+        call abort()
      end if
 
      ! Check if the number of pfts on the input matches the expected number. A mismatch
@@ -419,15 +419,6 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         call check_ret(nf_inq_varid (ncid, 'PCT_NAT_PFT', varid), subname)
         call check_ret(nf_get_var_double (ncid, varid, pct_nat_pft_i), subname)
 
-     ! Read in from the old format with PCT_PFT alone
-     else
-        allocate(pctpft_i(ns_i,0:(numpft_i-1)), &
-                 pctpft_o(ns_o,0:(numpft_i-1)), &
-                 stat=ier)
-        if (ier/=0) call abort()
-
-        call check_ret(nf_inq_varid (ncid, 'PCT_PFT', varid), subname)
-        call check_ret(nf_get_var_double (ncid, varid, pctpft_i), subname)
      end if
 
      call check_ret(nf_close(ncid), subname)
@@ -520,18 +511,6 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         end do
      ! Old format with just PCTPFT
      else
-        do m = 0, numpft_i - 1
-           call gridmap_areaave(tgridmap, pctpft_i(:,m), pctpft_o(:,m), nodata=0._r8)
-           do no = 1,ns_o
-              if (pctlnd_o(no) < 1.0e-6) then
-                 if (m == 0) then
-                    pctpft_o(no,m) = 100._r8
-                 else
-                    pctpft_o(no,m) = 0._r8
-                 endif
-              end if
-           enddo
-        enddo
      end if
 
   end if
