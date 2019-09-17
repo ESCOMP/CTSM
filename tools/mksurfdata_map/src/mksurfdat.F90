@@ -93,7 +93,6 @@ program mksurfdat
     type(pct_pft_type), allocatable :: pctnatpft_max(:) ! % of grid cell maximum PFTs of the time series
     type(pct_pft_type), allocatable :: pctcft(:)        ! % of grid cell that is crop, and breakdown into CFTs
     type(pct_pft_type), allocatable :: pctcft_max(:)    ! % of grid cell maximum CFTs of the time series
-    type(pct_pft_type), allocatable :: pctcft_saved(:)  ! version of pctcft saved from the initial call to mkpft
     real(r8), pointer      :: harvest1D(:)       ! harvest 1D data: normalized harvesting
     real(r8), pointer      :: harvest2D(:,:)     ! harvest 1D data: normalized harvesting
     real(r8), allocatable  :: pctgla(:)          ! percent of grid cell that is glacier  
@@ -432,7 +431,6 @@ program mksurfdat
                pctnatpft_max(ns_o)                , &
                pctcft(ns_o)                       , &
                pctcft_max(ns_o)                   , &
-               pctcft_saved(ns_o)                 , &
                pctgla(ns_o)                       , & 
                pctlak(ns_o)                       , & 
                pctwet(ns_o)                       , & 
@@ -561,8 +559,7 @@ program mksurfdat
     ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
 
     call mkpft(ldomain, mapfname=map_fpft, fpft=mksrf_fvegtyp, &
-         ndiag=ndiag, allow_no_crops=.false., &
-         pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
+         ndiag=ndiag, pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
 
     ! Create harvesting data at model resolution
     call mkharvest_init( ns_o, spval, harvdata, mksrf_fhrvtyp )
@@ -571,10 +568,6 @@ program mksurfdat
        call mkharvest( ldomain, mapfname=map_fharvest, datfname=mksrf_fhrvtyp, &
                        ndiag=ndiag, harvdata=harvdata )
     end if
-
-    ! Save the version of pctcft before any corrections are made. In particular, we want
-    ! to save the version before remove_small_cover is called.
-    pctcft_saved = pctcft
 
     ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
 
@@ -1143,9 +1136,7 @@ program mksurfdat
           ! Create pctpft data at model resolution
           
           call mkpft(ldomain, mapfname=map_fpft, fpft=fname, &
-               ndiag=ndiag, allow_no_crops=.false., &
-               pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft, &
-               pctcft_o_saved=pctcft_saved)
+               ndiag=ndiag, pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft )
 
           ! Create harvesting data at model resolution
 

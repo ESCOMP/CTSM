@@ -75,7 +75,7 @@ contains
     call mkpftInit( zero_out, all_veg )
     @assertFalse(  use_input_pft )
     @assertFalse( all_veg )
-    call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, allow_no_crops=.false., &
+    call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, &
      pctlnd_o=this%pctlnd_pft, pctnatpft_o=this%pctnatpft, pctcft_o=this%pctcft)
     this%expected = 100.0_r8
     @assertEqual( this%expected, this%pctlnd_pft )
@@ -105,7 +105,7 @@ contains
     call mkpftInit( zero_out, all_veg )
     @assertTrue(  use_input_pft )
     @assertTrue( all_veg )
-    call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, allow_no_crops=.false., &
+    call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, &
      pctlnd_o=this%pctlnd_pft, pctnatpft_o=this%pctnatpft, pctcft_o=this%pctcft)
     this%expected = 100.0_r8
     @assertEqual( this%expected, this%pctlnd_pft )
@@ -139,7 +139,7 @@ contains
     call mkpftInit( zero_out, all_veg )
     @assertTrue(  use_input_pft )
     @assertTrue( all_veg )
-    call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, allow_no_crops=.false., &
+    call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, &
      pctlnd_o=this%pctlnd_pft, pctnatpft_o=this%pctnatpft, pctcft_o=this%pctcft)
     this%expected = 100.0_r8
     @assertEqual( this%expected, this%pctlnd_pft )
@@ -174,7 +174,7 @@ contains
     call mkpftInit( zero_out, all_veg )
     @assertTrue(  use_input_pft )
     @assertTrue( all_veg )
-    call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, allow_no_crops=.false., &
+    call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, &
      pctlnd_o=this%pctlnd_pft, pctnatpft_o=this%pctnatpft, pctcft_o=this%pctcft)
     this%expected = 100.0_r8
     @assertEqual( this%expected, this%pctlnd_pft )

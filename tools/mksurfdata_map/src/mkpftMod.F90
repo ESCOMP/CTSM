@@ -151,9 +151,8 @@ end subroutine mkpftInit
 ! !IROUTINE: mkpft
 !
 ! !INTERFACE:
-subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
-     pctlnd_o, pctnatpft_o, pctcft_o, &
-     pctcft_o_saved)
+subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
+     pctlnd_o, pctnatpft_o, pctcft_o)
 !
 ! !DESCRIPTION:
 ! Make PFT data
@@ -167,14 +166,6 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
 !
 ! Upon return from this routine, the % cover of the natural veg + crop landunits is
 ! generally 100% everywhere; this will be normalized later to account for special landunits.
-!
-! If allow_no_crops is true, then we allow the input dataset to have no prognostic crop
-! information (i.e., only contain information about the "standard" PFTs). In this case,
-! pctcft_o_saved MUST be given. If the input dataset is found to not have information
-! about the prognostic crops, then we take the generic c3 crop cover from the input
-! dataset to specify the crop landunit area, and we take the individual crop breakdown
-! from pctcft_o_saved (which will generally have come from some other input dataset that
-! DID contain prognostic crop information).
 !
 ! !USES:
   use mkdomainMod, only : domain_type, domain_clean, domain_read
@@ -192,13 +183,9 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
   character(len=*)  , intent(in) :: mapfname              ! input mapping file name
   character(len=*)  , intent(in) :: fpft                  ! input pft dataset file name
   integer           , intent(in) :: ndiag                 ! unit number for diag out
-  logical           , intent(in) :: allow_no_crops        ! if it's okay to not have prognostic crops in the input file
   real(r8)          , intent(out):: pctlnd_o(:)           ! output grid:%land/gridcell
   type(pct_pft_type), intent(out):: pctnatpft_o(:)        ! natural PFT cover
   type(pct_pft_type), intent(out):: pctcft_o(:)           ! crop (CFT) cover
-
-! saved crop cover information, in case the input dataset does not contain information about prognostic crops
-  type(pct_pft_type), intent(in), optional :: pctcft_o_saved(:)
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
@@ -239,7 +226,6 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
   integer  :: ndims                           ! number of dimensions for a variable on the file
   integer  :: dimlens(3)                      ! dimension lengths for a variable on the file
   integer  :: ier                             ! error status
-  logical  :: missing_crops                   ! if we need prognostic crop info, but the input dataset is missing this crop info
   real(r8) :: relerr = 0.0001_r8              ! max error: sum overlap wts ne 1
   logical  :: oldformat                       ! if input file is in the old format or not (based on what variables exist)
 
@@ -251,16 +237,6 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
   write (6, '(a, a, a)') "In ", trim(subname), "..."
   write (6,*) 'Attempting to make PFTs .....'
   call shr_sys_flush(6)
-
-  if (allow_no_crops) then
-     if (.not. present(pctcft_o_saved)) then
-        write(6,*) subname, ' ERROR: when allow_no_crops is true, pctcft_o_saved must be given'
-        call abort()
-     end if
-  end if
-
-  ! Start by assuming the input dataset is NOT missing crop info
-  missing_crops = .false.
 
   ! -----------------------------------------------------------------
   ! Set the vegetation types
@@ -386,22 +362,12 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
      end if
 
      ! Check if the number of pfts on the input matches the expected number. A mismatch
-     ! is okay in the case that the input has the standard number of pfts (i.e., no
-     ! prognostic crop info), if allow_no_crops is true. Otherwise, a mismatch is an error.
+     ! is okay if the input raw dataset has prognostic crops and the output does not.
      if (numpft_i .ne. numpft+1) then
         if (numpft_i .eq. numstdpft+1) then
-           if (allow_no_crops) then
-              write(6,*) subname//': using non-crop input file for a surface dataset with crops'
-              write(6,*) "(this is okay: we'll use the saved crop breakdown from the non-transient input file)"
-              missing_crops = .true.
-           else
-              write(6,*) subname//' ERROR: trying to use non-crop input file'
-              write(6,*) 'for a surface dataset with crops, but allow_no_crops is false'
-              write(6,*) "(This can happen if you're trying to use a non-crop input file"
-              write(6,*) "for the surface dataset itself: a non-crop input file is only"
-              write(6,*) "allowed for the transient PFT information.)"
-              call abort()
-           end if
+           write(6,*) subname//' ERROR: trying to use non-crop input file'
+           write(6,*) 'for a surface dataset with crops.'
+           call abort()
         else if (numpft_i > numstdpft+1 .and. numpft_i == maxpft+1 .and. .not. oldformat) then
            write(6,*) subname//' WARNING: using a crop input raw dataset for a non-crop output surface dataset'
         else
@@ -635,12 +601,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
 
   ! Convert % pft as % of grid cell to % pft on the landunit and % of landunit on the
   ! grid cell
-  if (missing_crops) then
-     do no = 1,ns_o
-        call convert_from_p2g(pct_p2g=pctpft_o(no,:), pctcft_saved=pctcft_o_saved(no), &
-             pctnatpft=pctnatpft_o(no), pctcft=pctcft_o(no))
-     end do
-  else if ( .not. oldformat ) then
+  if ( .not. oldformat ) then
      do no = 1,ns_o
         pctnatpft_o(no) = pct_pft_type( pct_nat_pft_o(no,:), pctnatveg_o(no), first_pft_index=natpft_lb )
         pctcft_o(no)    = pct_pft_type( pct_cft_o(no,:),     pctcrop_o(no),   first_pft_index=cft_lb    )
