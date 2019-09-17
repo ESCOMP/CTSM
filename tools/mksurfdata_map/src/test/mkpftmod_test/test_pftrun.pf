@@ -81,6 +81,13 @@ contains
     @assertEqual( this%expected, this%pctlnd_pft )
     do n = 1, this%ldomain%ns
        @assertEqual( this%pctnatpft(n)%get_pct_l2g(), 0.0_r8 )
+       @assertEqual( this%pctcft(n)%get_pct_l2g(), 0.0_r8 )
+       this%expected_pft = 0.0_r8
+       this%expected_pft(0) = 100.0_r8
+       this%expected_cft = 0.0_r8
+       this%expected_cft(1) = 100.0_r8
+       @assertEqual( this%pctnatpft(n)%get_pct_p2l(), this%expected_pft )
+       @assertEqual( this%pctcft(n)%get_pct_p2l(), this%expected_cft )
     end do
 
   end subroutine test_runmkpftZero
@@ -90,9 +97,10 @@ contains
     class(TestMkPFTRun), intent(inout) :: this
     logical :: zero_out, all_veg
     integer :: n
+    integer, parameter :: pftidx = 1
 
     zero_out = .false.
-    pft_idx(0) = 1
+    pft_idx(0) = pftidx
     pft_frc(0) = 100._r8
     call mkpftInit( zero_out, all_veg )
     @assertTrue(  use_input_pft )
@@ -103,6 +111,13 @@ contains
     @assertEqual( this%expected, this%pctlnd_pft )
     do n = 1, this%ldomain%ns
        @assertEqual( this%pctnatpft(n)%get_pct_l2g(), 100.0_r8 )
+       @assertEqual( this%pctcft(n)%get_pct_l2g(), 0.0_r8 )
+       this%expected_pft = 0.0_r8
+       this%expected_pft(pftidx) = 100.0_r8
+       this%expected_cft = 0.0_r8
+       this%expected_cft(1) = 100.0_r8
+       @assertEqual( this%pctnatpft(n)%get_pct_p2l(), this%expected_pft )
+       @assertEqual( this%pctcft(n)%get_pct_p2l(), this%expected_cft )
     end do
 
   end subroutine test_runmkpftPftORide
