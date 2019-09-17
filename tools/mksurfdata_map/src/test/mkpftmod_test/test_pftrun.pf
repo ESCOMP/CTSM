@@ -122,4 +122,38 @@ contains
 
   end subroutine test_runmkpftPftORide
 
+
+  @Test
+  subroutine test_runmkpftPftORideWCrop(this)
+    use mkvarpar, only: numstdpft, numstdcft
+    class(TestMkPFTRun), intent(inout) :: this
+    logical :: zero_out, all_veg
+    integer :: n
+    integer, parameter :: pftidx = 1, cftidx = 15
+
+    zero_out = .false.
+    @assertLessThan( pftidx, numstdpft-numstdcft+1 )
+    @assertGreaterThan( cftidx, numstdpft-numstdcft )
+    pft_idx(0:1) = (/ pftidx, cftidx /)
+    pft_frc(0:1) = (/ 50.0_r8, 50.0_r8 /)
+    call mkpftInit( zero_out, all_veg )
+    @assertTrue(  use_input_pft )
+    @assertTrue( all_veg )
+    call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, allow_no_crops=.false., &
+     pctlnd_o=this%pctlnd_pft, pctnatpft_o=this%pctnatpft, pctcft_o=this%pctcft)
+    this%expected = 100.0_r8
+    @assertEqual( this%expected, this%pctlnd_pft )
+    do n = 1, this%ldomain%ns
+       @assertEqual( this%pctnatpft(n)%get_pct_l2g(), 50.0_r8 )
+       @assertEqual( this%pctcft(n)%get_pct_l2g(), 50.0_r8 )
+       this%expected_pft = 0.0_r8
+       this%expected_pft(pftidx) = 100.0_r8
+       this%expected_cft = 0.0_r8
+       this%expected_cft(numstdpft-cftidx) = 100.0_r8
+       @assertEqual( this%pctnatpft(n)%get_pct_p2l(), this%expected_pft )
+       @assertEqual( this%pctcft(n)%get_pct_p2l(), this%expected_cft )
+    end do
+
+  end subroutine test_runmkpftPftORideWCrop
+
 end module test_pftrun
