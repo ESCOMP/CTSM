@@ -7,6 +7,8 @@ module test_pft_oride
   use shr_kind_mod, only : r8 => shr_kind_r8
   use mkpftMod
   use mkvarctl, only : numpft
+  use mkvarpar, only : numstdpft
+  use mkpftConstantsMod, only : c3cropindex
 
   implicit none
   save
@@ -19,14 +21,17 @@ module test_pft_oride
      procedure :: tearDown
   end type TestPFTORide
 
+  logical :: zero_out, all_veg
+
 contains
 
   subroutine setUp(this)
     class(TestPFTORide), intent(inout) :: this
-    logical :: zero_out, all_veg
 
+    pft_idx(:) = -1
+    pft_frc(:) = 0.0_r8
     zero_out = .false.
-    numpft = 16
+    numpft = numstdpft
     call mkpftInit( zero_out, all_veg )
     this%pftoverride = pft_oride( )
   end subroutine setUp
@@ -42,12 +47,48 @@ contains
   subroutine test_runmkpftZero(this)
     class(TestPFTORide), intent(inout) :: this
 
+    call mkpftInit( zero_out, all_veg )
     call this%pftoverride%InitZeroOut()
-    @assertEqual( this%pftoverride%crop,   0.0_r8 )
-    @assertEqual( this%pftoverride%natveg, 0.0_r8 )
-    @assertEqual( sum(this%pftoverride%cft),   100.0_r8 )
-    @assertEqual( sum(this%pftoverride%natpft), 100.0_r8 )
+    @assertEqual(   0.0_r8, this%pftoverride%crop   )
+    @assertEqual(   0.0_r8, this%pftoverride%natveg )
+    @assertEqual( 100.0_r8, sum(this%pftoverride%cft))
+    @assertEqual( 100.0_r8, sum(this%pftoverride%natpft))
 
   end subroutine test_runmkpftZero
+
+  @Test
+  subroutine test_runSetpft(this)
+    class(TestPFTORide), intent(inout) :: this
+    integer, parameter :: pftidx = 1
+
+    pft_idx(0) = pftidx
+    pft_frc(0) = 100.0_r8
+    call mkpftInit( zero_out, all_veg )
+    call this%pftoverride%InitAllPFTIndex()
+    @assertEqual( 0.0_r8,   this%pftoverride%crop )
+    @assertEqual( 100.0_r8, this%pftoverride%natveg )
+    @assertEqual( 100.0_r8, sum(this%pftoverride%cft) )
+    @assertEqual( 100.0_r8, sum(this%pftoverride%natpft) )
+    @assertEqual( 100.0_r8, this%pftoverride%natpft(pftidx) )
+
+  end subroutine test_runSetpft
+
+  @Test
+  subroutine test_runSetCrop(this)
+    class(TestPFTORide), intent(inout) :: this
+    integer :: cftidx
+
+    cftidx = c3cropindex
+    pft_idx(0) = cftidx
+    pft_frc(0) = 100.0_r8
+    call mkpftInit( zero_out, all_veg )
+    call this%pftoverride%InitAllPFTIndex()
+    @assertEqual( 100.0_r8,   this%pftoverride%crop )
+    @assertEqual(   0.0_r8, this%pftoverride%natveg )
+    @assertEqual( 100.0_r8, sum(this%pftoverride%cft) )
+    @assertEqual( 100.0_r8, sum(this%pftoverride%natpft) )
+    @assertEqual( 100.0_r8, this%pftoverride%cft(numpft-cftidx) )
+
+  end subroutine test_runSetCrop
 
 end module test_pft_oride

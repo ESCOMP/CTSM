@@ -7,6 +7,7 @@ module test_pftInit
   use shr_kind_mod, only : r8 => shr_kind_r8
   use mkpftMod
   use mkvarctl, only: numpft
+  use mkvarpar, only: numstdpft
   use mkpftConstantsMod, only: maxpft
 
   implicit none
@@ -23,7 +24,7 @@ contains
 
   subroutine setUp(this)
     class(TestMkPFT), intent(inout) :: this
-    numpft = 16
+    numpft = numstdpft
     pft_idx(0:maxpft) = -1
     pft_frc(0:maxpft) = 0.0_r8
   end subroutine setUp
@@ -78,7 +79,7 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
-    numpft = 78
+    numpft = maxpft
     pft_idx(0) = 17
     pft_frc(0) = 100._r8
     call mkpftInit( zero_out, all_veg )
@@ -95,7 +96,7 @@ contains
     integer :: i
 
     zero_out = .false.
-    numpft = 16
+    numpft = numstdpft
     do i = 0, numpft
        pft_idx(i) = i
        pft_frc(i) = 1.0_r8
@@ -114,8 +115,8 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .true.
-    numpft = 78
-    pft_idx(0) = 17
+    numpft = maxpft
+    pft_idx(0) = numstdpft+1
     pft_frc(0) = 100._r8
     call mkpftInit( zero_out, all_veg )
     @assertExceptionRaised( "ABORTED:" )
@@ -128,8 +129,8 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
-    numpft = 78
-    pft_idx(0) = 17
+    numpft = maxpft
+    pft_idx(0) = numstdpft+1
     pft_frc(0) = 99._r8
     call mkpftInit( zero_out, all_veg )
     @assertExceptionRaised( "ABORTED:" )
@@ -142,8 +143,8 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
-    numpft = 16
-    pft_idx(0) = 17
+    numpft = numstdpft
+    pft_idx(0) = numstdpft+1
     pft_frc(0) = 100._r8
     call mkpftInit( zero_out, all_veg )
     @assertExceptionRaised( "ABORTED:" )
@@ -156,8 +157,8 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
-    numpft = 78
-    pft_idx(0:1) = (/ 17, 18 /)
+    numpft = maxpft
+    pft_idx(0:1) = (/ numstdpft+1, numstdpft+2 /)
     pft_frc(0:1) = (/ 101._r8, -1._r8 /)
     call mkpftInit( zero_out, all_veg )
     @assertExceptionRaised( "ABORTED:" )
@@ -182,8 +183,8 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
-    numpft = 78
-    pft_idx(0)   = 17
+    numpft = maxpft
+    pft_idx(0)   = numstdpft+1
     pft_frc(0:1) =  (/ 99._r8, 1._r8 /)
     call mkpftInit( zero_out, all_veg )
     @assertExceptionRaised( "ABORTED:" )
@@ -196,7 +197,7 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
-    numpft = 78
+    numpft = maxpft
     pft_idx(0:1) = (/ 17, 17 /)
     pft_frc(0:1) =  (/ 99._r8, 1._r8 /)
     call mkpftInit( zero_out, all_veg )
@@ -210,7 +211,7 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
-    numpft = 78
+    numpft = maxpft
     pft_idx(0:2) = (/ 17, -1, 18 /)
     pft_frc(0:2) =  (/ 99._r8, 0.0_r8, 1._r8 /)
     call mkpftInit( zero_out, all_veg )

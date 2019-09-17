@@ -7,7 +7,8 @@ module test_pftrun
   use shr_kind_mod, only : r8 => shr_kind_r8
   use mkpftMod
   use mkvarctl, only: numpft
-  use mkpftConstantsMod, only: maxpft
+  use mkvarpar, only: numstdpft
+  use mkpftConstantsMod, only: maxpft, c3cropindex, c3irrcropindex
   use mkpctPftTypeMod    , only : pct_pft_type
   use mkdomainMod        , only : domain_type, for_test_create_domain, domain_clean
 
@@ -37,7 +38,7 @@ contains
     class(TestMkPFTRun), intent(inout) :: this
     integer :: ns_o
 
-    numpft = 16
+    numpft = numstdpft
     pft_idx(0:maxpft) = -1
     pft_frc(0:maxpft) = 0.0_r8
     this%ndiag = 6
@@ -129,8 +130,10 @@ contains
     class(TestMkPFTRun), intent(inout) :: this
     logical :: zero_out, all_veg
     integer :: n
-    integer, parameter :: pftidx = 1, cftidx = 15
+    integer :: cftidx
+    integer, parameter :: pftidx = 1
 
+    cftidx = c3cropindex
     zero_out = .false.
     @assertLessThan( pftidx, numstdpft-numstdcft+1 )
     @assertGreaterThan( cftidx, numstdpft-numstdcft )
@@ -162,8 +165,11 @@ contains
     class(TestMkPFTRun), intent(inout) :: this
     logical :: zero_out, all_veg
     integer :: n
-    integer, parameter :: pftidx = 1, pftidx2 = 2, cftidx = 15, cftidx2 = 16
+    integer :: cftidx, cftidx2
+    integer, parameter :: pftidx = 1, pftidx2 = 2
 
+    cftidx = c3cropindex
+    cftidx2 = c3irrcropindex
     zero_out = .false.
     @assertLessThan( pftidx, numstdpft-numstdcft+1 )
     @assertLessThan( pftidx2, numstdpft-numstdcft+1 )
