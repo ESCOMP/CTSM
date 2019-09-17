@@ -59,7 +59,12 @@ module mkpftMod
    contains
      procedure, public :: InitZeroOut      ! Initialize the PFT override object to zero out all vegetation
      procedure, public :: InitAllPFTIndex  ! Initialize the PFT override object with PFT indeces for all veg and crop types
+     procedure, public :: Clean            ! Clean up a PFT Override object
   end type pft_oride
+
+  interface pft_oride
+     module procedure :: constructor  ! PFT Overide object constructor
+  end interface pft_oride
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
@@ -1045,6 +1050,33 @@ end subroutine mkpftAtt
 !-----------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: constructor
+!
+! !INTERFACE:
+function constructor( ) result(this)
+!
+! !DESCRIPTION:
+! Construct a new PFT override object
+!
+! !USES:
+  use mkvarpar, only : noveg
+! !ARGUMENTS:
+  implicit none
+  type(pft_oride) :: this
+!EOP
+  this%crop   = -1.0_r8
+  this%natveg = -1.0_r8
+  allocate( this%natpft(noveg:num_natpft) )
+  allocate( this%cft(1:num_cft) )
+  this%natpft(:) = -1.0_r8
+  this%cft(:)    = -1.0_r8
+  call this%InitZeroOut()
+end function constructor
+
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: InitZeroOut
 !
 ! !INTERFACE:
@@ -1058,17 +1090,10 @@ subroutine InitZeroOut( this )
 ! !ARGUMENTS:
   implicit none
   class(pft_oride), intent(inout) :: this
-!
-! !REVISION HISTORY:
-! Author: Erik Kluzek
-!
-!
-! !LOCAL VARIABLES:
 !EOP
-  this%crop  = 0.0_r8
-  this%natveg = 0.0_r8
-  allocate( this%natpft(noveg:num_natpft) )
-  allocate( this%cft(1:num_cft) )
+  this%crop          = 0.0_r8
+  this%natveg        = 0.0_r8
+
   this%natpft        = 0.0_r8
   this%natpft(noveg) = 100.0_r8
   this%cft           = 0.0_r8
@@ -1089,16 +1114,31 @@ subroutine InitAllPFTIndex( this )
 ! !ARGUMENTS:
   implicit none
   class(pft_oride), intent(inout) :: this
-!
-! !REVISION HISTORY:
-! Author: Erik Kluzek
-!
-!
-! !LOCAL VARIABLES:
 !EOP
-   call this%InitZeroOut()
 
 end subroutine InitAllPFTIndex
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: clean
+!
+! !INTERFACE:
+subroutine Clean( this )
+!
+! !DESCRIPTION:
+! Clean up a PFT Oride object
+!
+! !ARGUMENTS:
+  implicit none
+  class(pft_oride), intent(inout) :: this
+!EOP
+  this%crop   = -1.0_r8
+  this%natveg = -1.0_r8
+  deallocate( this%natpft )
+  deallocate( this%cft    )
+
+end subroutine Clean
 
 !-----------------------------------------------------------------------
 
