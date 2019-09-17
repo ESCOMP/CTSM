@@ -8,7 +8,7 @@ module test_pft_oride
   use mkpftMod
   use mkvarctl, only : numpft
   use mkvarpar, only : numstdpft
-  use mkpftConstantsMod, only : c3cropindex
+  use mkpftConstantsMod, only : c3cropindex, c3irrcropindex
 
   implicit none
   save
@@ -47,6 +47,7 @@ contains
   subroutine test_runmkpftZero(this)
     class(TestPFTORide), intent(inout) :: this
 
+    zero_out = .true.
     call mkpftInit( zero_out, all_veg )
     call this%pftoverride%InitZeroOut()
     @assertEqual(   0.0_r8, this%pftoverride%crop   )
@@ -63,6 +64,7 @@ contains
 
     pft_idx(0) = pftidx
     pft_frc(0) = 100.0_r8
+    zero_out = .false.
     call mkpftInit( zero_out, all_veg )
     call this%pftoverride%InitAllPFTIndex()
     @assertEqual( 0.0_r8,   this%pftoverride%crop )
@@ -81,6 +83,7 @@ contains
     cftidx = c3cropindex
     pft_idx(0) = cftidx
     pft_frc(0) = 100.0_r8
+    zero_out = .false.
     call mkpftInit( zero_out, all_veg )
     call this%pftoverride%InitAllPFTIndex()
     @assertEqual( 100.0_r8,   this%pftoverride%crop )
@@ -90,5 +93,30 @@ contains
     @assertEqual( 100.0_r8, this%pftoverride%cft(numpft-cftidx) )
 
   end subroutine test_runSetCrop
+
+  @Test
+  subroutine test_runSetMix(this)
+    class(TestPFTORide), intent(inout) :: this
+    integer :: cftidx, cftidx2, pftidx2
+    integer, parameter :: pftidx = 1
+
+    zero_out = .false.
+    pftidx2 = c3cropindex-1
+    cftidx = c3cropindex
+    cftidx2 = c3irrcropindex
+    pft_idx(0:3) = (/ pftidx,  pftidx2, cftidx,  cftidx2 /)
+    pft_frc(0:3) = (/ 25.0_r8, 25.0_r8, 25.0_r8, 25.0_r8  /)
+    call mkpftInit( zero_out, all_veg )
+    call this%pftoverride%InitAllPFTIndex()
+    @assertEqual(  50.0_r8,   this%pftoverride%crop )
+    @assertEqual(  50.0_r8, this%pftoverride%natveg )
+    @assertEqual( 100.0_r8, sum(this%pftoverride%cft) )
+    @assertEqual( 100.0_r8, sum(this%pftoverride%natpft) )
+    @assertEqual(  50.0_r8, this%pftoverride%natpft(pftidx) )
+    @assertEqual(  50.0_r8, this%pftoverride%natpft(pftidx2) )
+    @assertEqual(  50.0_r8, this%pftoverride%cft(1) )
+    @assertEqual(  50.0_r8, this%pftoverride%cft(2) )
+
+  end subroutine test_runSetMix
 
 end module test_pft_oride
