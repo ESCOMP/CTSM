@@ -15,6 +15,7 @@ module mkpftMod
 !!USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
+  use mkvarpar    , only : noveg
   use mkvarctl    , only : numpft
   use mkdomainMod , only : domain_checksame
   use mkpftConstantsMod
@@ -1058,8 +1059,6 @@ function constructor( ) result(this)
 ! !DESCRIPTION:
 ! Construct a new PFT override object
 !
-! !USES:
-  use mkvarpar, only : noveg
 ! !ARGUMENTS:
   implicit none
   type(pft_oride) :: this
@@ -1085,8 +1084,6 @@ subroutine InitZeroOut( this )
 ! !DESCRIPTION:
 ! Initialize a pft_oride object with vegetation that's zeroed out
 !
-! !USES:
-  use mkvarpar, only : noveg
 ! !ARGUMENTS:
   implicit none
   class(pft_oride), intent(inout) :: this
@@ -1115,6 +1112,37 @@ subroutine InitAllPFTIndex( this )
   implicit none
   class(pft_oride), intent(inout) :: this
 !EOP
+  integer :: m, i                  ! Indices
+  real(r8) :: croptot              ! Total of crop
+  real(r8) :: natvegtot            ! Total of natural vegetation
+
+  croptot     = 0.0_r8
+  natvegtot   = 0.0_r8
+  this%natpft = 0.0_r8
+  this%cft    = 0.0_r8
+  do m = noveg, nzero
+    i = pft_idx(m)
+    if ( i <= num_natpft )then
+      this%natpft(i) = pft_frc(m)
+      natvegtot = natvegtot + pft_frc(m)
+    else
+      this%cft(i-num_natpft) = pft_frc(m)
+      croptot = croptot + pft_frc(m)
+    end if
+  end do
+  this%crop   = croptot
+  this%natveg = natvegtot
+  ! Renormalize
+  if ( natvegtot > 0.0_r8 )then
+    this%natpft = 100.0_r8 * this%natpft / natvegtot
+  else
+    this%natpft(noveg) = 100.0_r8
+  end if 
+  if (croptot > 0.0_r8 )then
+    this%cft = 100.0_r8 * this%cft / croptot
+  else
+    this%cft(1) = 100.0_r8
+  end if 
 
 end subroutine InitAllPFTIndex
 
