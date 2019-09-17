@@ -1,0 +1,53 @@
+module test_pft_oride
+  
+  ! Tests of mkpftMod: pft_override functions
+
+  use pfunit_mod
+
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use mkpftMod
+  use mkvarctl, only : numpft
+
+  implicit none
+  save
+
+  @TestCase
+  type, extends(TestCase) :: TestPFTORide
+     type(pft_oride) :: pftoverride
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestPFTORide
+
+contains
+
+  subroutine setUp(this)
+    class(TestPFTORide), intent(inout) :: this
+    logical :: zero_out, all_veg
+
+    zero_out = .false.
+    numpft = 16
+    call mkpftInit( zero_out, all_veg )
+    this%pftoverride = pft_oride( )
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestPFTORide), intent(inout) :: this
+
+    call this%pftoverride%Clean()
+
+  end subroutine tearDown
+
+  @Test
+  subroutine test_runmkpftZero(this)
+    class(TestPFTORide), intent(inout) :: this
+
+    call this%pftoverride%InitZeroOut()
+    @assertEqual( this%pftoverride%crop,   0.0_r8 )
+    @assertEqual( this%pftoverride%natveg, 0.0_r8 )
+    @assertEqual( sum(this%pftoverride%cft),   100.0_r8 )
+    @assertEqual( sum(this%pftoverride%natpft), 100.0_r8 )
+
+  end subroutine test_runmkpftZero
+
+end module test_pft_oride
