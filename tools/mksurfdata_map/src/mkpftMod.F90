@@ -48,11 +48,11 @@ module mkpftMod
 !
 ! !PRIVATE DATA MEMBERS:
 !
-  logical, private           :: zero_out      = .false. ! Flag to zero out PFT
   logical, public, protected :: use_input_pft = .false. ! Flag to override PFT with input values
+  logical, public, protected :: all_veg       = .false. ! Flag to override all areas with vegetated PFT's
   integer, private           :: nzero                   ! index of first zero fraction
 
-  type, public :: pft_oride
+  type, public :: pft_oride              ! Public only for unit testing
      real(r8) :: crop                    ! Percent covered by crops
      real(r8) :: natveg                  ! Percent covered by natural vegetation
      real(r8), allocatable :: natpft(:)  ! Percent of each natural PFT within the natural veg landunit
@@ -68,6 +68,8 @@ module mkpftMod
   end interface pft_oride
 
   type(pft_oride), private :: pft_override     ! Module instance of PFT override object
+                                               ! Used for both zeroing out PFT's as well
+                                               ! as setting specified PFT's over the gridcell
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
@@ -83,7 +85,7 @@ contains
 ! !IROUTINE: mkpftInit
 !
 ! !INTERFACE:
-subroutine mkpftInit( zero_out_l, all_veg )
+subroutine mkpftInit( zero_out_l, all_veg_l )
 !
 ! !DESCRIPTION:
 ! Initialize of Make PFT data
@@ -92,9 +94,9 @@ subroutine mkpftInit( zero_out_l, all_veg )
 !
 ! !ARGUMENTS:
   implicit none
-  logical, intent(IN)  :: zero_out_l ! If veg should be zero'ed out
-  logical, intent(OUT) :: all_veg    ! If should zero out other fractions so that
-                                     ! all land-cover is vegetation
+  logical, intent(IN) :: zero_out_l ! If veg should be zero'ed out
+  logical, intent(IN) :: all_veg_l  ! If should zero out other fractions so that
+                                    ! all land-cover is vegetation
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
@@ -121,21 +123,34 @@ subroutine mkpftInit( zero_out_l, all_veg )
      write(6,*) subname//'Problem setting pft override settings'
      return
   end if
+  if ( zero_out_l .and. use_input_pft )then
+     write(6,*) subname//"trying to both zero out all PFT's as well as set them to specific values"
+     call abort()
+     return
+  end if
+  ! If zeroing out, set use_input_pft to true so the pft_override will be used
+  if( zero_out_l )then
+     nzero = 0
+     pft_frc(0) = 0.0_r8
+     pft_idx(0) = noveg
+     use_input_pft = .true.
+  end if
   if ( use_input_pft ) then
      write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero)
      write(6,*) 'With PFT index      : ', pft_idx(0:nzero)
   end if
-
-  all_veg = use_input_pft
+  all_veg = all_veg_l
+  if ( all_veg .and. .not. use_input_pft )then
+     write(6,*) subname//'if all_veg is set to true then specified PFT indices must be provided (i.e. pft_frc and pft_idx)'
+     call abort()
+     return
+  end if
 
   if ( zero_out_l .and. all_veg )then
      write(6,*) subname//'zeroing out vegetation and setting vegetation to 100% is a contradiction!'
      call abort()
      return
   end if
-
-  ! Copy local zero out to module data version
-  zero_out = zero_out_l
 
   ! Determine number of PFTs on the natural vegetation landunit, and number of CFTs on
   ! the crop landunit. 
@@ -170,7 +185,7 @@ subroutine mkpftInit( zero_out_l, all_veg )
   ! Set the PFT override values if applicable
   !
   pft_override = pft_oride()
-  if( zero_out )then
+  if( zero_out_l )then
      call pft_override%InitZeroOut()
   else if ( use_input_pft ) then
      call pft_override%InitAllPFTIndex()
@@ -373,7 +388,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
 
   ns_o = ldomain%ns
 
-  if ( .not. (zero_out .or. use_input_pft) ) then
+  if ( .not. use_input_pft ) then
      ! Obtain input grid info, read PCT_PFT
 
      call domain_read(tdomain,fpft)
@@ -491,25 +506,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
 
   ! Determine pctpft_o on output grid
 
-  if ( zero_out ) then
-
-     pctpft_o(:,:)  = 0._r8
-     pctlnd_o(:)    = 100._r8
-     pctnatveg_o(:) = 0._r8
-     pctcrop_o(:)   = 0._r8
-     pct_nat_pft_o(:,:) =   0._r8
-     pct_nat_pft_o(:,0) = 100._r8
-     pct_cft_o(:,:)     =   0._r8
-     pct_cft_o(:,1)     = 100._r8
-
-  else if ( use_input_pft ) then
-
-     call mkpft_check_oride( error_happened )
-     if ( error_happened )then
-        write(6,*) subname//'Problem setting pft override settings'
-        call abort()
-        return
-     end if
+  if ( use_input_pft ) then
 
      do no = 1,ns_o
         pctlnd_o(no)    = 100._r8
@@ -577,44 +574,42 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   ! Also correct sums so that if they differ slightly from 100, they are corrected to
   ! equal 100 more exactly.
 
-  if ( .not. zero_out )then
-     do no = 1,ns_o
-        wst_sum = 0.
-        do m = 0, num_natpft
-           wst_sum = wst_sum + pct_nat_pft_o(no,m)
-        enddo
-        if (abs(wst_sum-100._r8) > relerr) then
-           write (6,*) subname//'error: nat pft = ', &
-                (pct_nat_pft_o(no,m), m = 0, num_natpft), &
-                ' do not sum to 100. at no = ',no,' but to ', wst_sum
-           stop
-        end if
+  do no = 1,ns_o
+     wst_sum = 0.
+     do m = 0, num_natpft
+        wst_sum = wst_sum + pct_nat_pft_o(no,m)
+     enddo
+     if (abs(wst_sum-100._r8) > relerr) then
+        write (6,*) subname//'error: nat pft = ', &
+             (pct_nat_pft_o(no,m), m = 0, num_natpft), &
+             ' do not sum to 100. at no = ',no,' but to ', wst_sum
+        stop
+     end if
 
-        ! Correct sum so that if it differs slightly from 100, it is corrected to equal
-        ! 100 more exactly
-        do m = 1, num_natpft
-           pct_nat_pft_o(no,m) = pct_nat_pft_o(no,m) * 100._r8 / wst_sum
-        end do
-
-        wst_sum = 0.
-        do m = 1, num_cft
-           wst_sum = wst_sum + pct_cft_o(no,m)
-        enddo
-        if (abs(wst_sum-100._r8) > relerr) then
-           write (6,*) subname//'error: crop cft = ', &
-                (pct_cft_o(no,m), m = 1, num_cft), &
-                ' do not sum to 100. at no = ',no,' but to ', wst_sum
-           stop
-        end if
-
-        ! Correct sum so that if it differs slightly from 100, it is corrected to equal
-        ! 100 more exactly
-        do m = 1, num_cft
-           pct_cft_o(no,m) = pct_cft_o(no,m) * 100._r8 / wst_sum
-        end do
-
+     ! Correct sum so that if it differs slightly from 100, it is corrected to equal
+     ! 100 more exactly
+     do m = 1, num_natpft
+        pct_nat_pft_o(no,m) = pct_nat_pft_o(no,m) * 100._r8 / wst_sum
      end do
-  end if
+
+     wst_sum = 0.
+     do m = 1, num_cft
+        wst_sum = wst_sum + pct_cft_o(no,m)
+     enddo
+     if (abs(wst_sum-100._r8) > relerr) then
+        write (6,*) subname//'error: crop cft = ', &
+             (pct_cft_o(no,m), m = 1, num_cft), &
+             ' do not sum to 100. at no = ',no,' but to ', wst_sum
+        stop
+     end if
+
+     ! Correct sum so that if it differs slightly from 100, it is corrected to equal
+     ! 100 more exactly
+     do m = 1, num_cft
+        pct_cft_o(no,m) = pct_cft_o(no,m) * 100._r8 / wst_sum
+     end do
+
+  end do
 
   ! Convert % pft as % of grid cell to % pft on the landunit and % of landunit on the
   ! grid cell
@@ -628,7 +623,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   ! Compare global areas on input and output grids
   ! -----------------------------------------------------------------
 
-  if ( .not. (zero_out .or. use_input_pft) ) then
+  if ( .not. use_input_pft ) then
 
      ! Convert to pctpft over grid if using new format
      do ni = 1, ns_i
@@ -706,7 +701,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   deallocate(pct_cft_o)
   deallocate(pct_nat_pft_i)
   deallocate(pct_nat_pft_o)
-  if ( .not. zero_out .and. .not. use_input_pft ) then
+  if ( .not. use_input_pft ) then
      call domain_clean(tdomain) 
      call gridmap_clean(tgridmap)
   end if
@@ -947,10 +942,6 @@ subroutine mkpftAtt( ncid, dynlanduse, xtype )
      str = 'TRUE'
      call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
           'pft_override', len_trim(str), trim(str)), subname)
-  else if ( zero_out )then
-     str = 'TRUE'
-     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
-          'zero_out_pft_override', len_trim(str), trim(str)), subname)
   else
      str = get_filename(mksrf_fvegtyp)
      call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &

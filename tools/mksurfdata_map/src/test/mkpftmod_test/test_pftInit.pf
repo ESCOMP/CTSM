@@ -7,7 +7,7 @@ module test_pftInit
   use shr_kind_mod, only : r8 => shr_kind_r8
   use mkpftMod
   use mkvarctl, only: numpft
-  use mkvarpar, only: numstdpft
+  use mkvarpar, only: numstdpft, noveg
   use mkpftConstantsMod, only: maxpft
 
   implicit none
@@ -40,9 +40,9 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
+    all_veg = .false.
     call mkpftInit( zero_out, all_veg )
     @assertFalse(  use_input_pft )
-    @assertFalse( all_veg )
 
   end subroutine test_runmkpftInit
 
@@ -52,9 +52,11 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .true.
+    all_veg = .false.
     call mkpftInit( zero_out, all_veg )
-    @assertFalse(  use_input_pft )
-    @assertFalse( all_veg )
+    @assertTrue(  use_input_pft )
+    @assertEqual(  pft_idx(0), noveg )
+    @assertEqual(  pft_frc(0), 0.0_r8 )
 
   end subroutine test_runmkpftInitZero
 
@@ -66,9 +68,9 @@ contains
     zero_out = .false.
     pft_idx(0) = 1
     pft_frc(0) = 100._r8
+    all_veg = .true.
     call mkpftInit( zero_out, all_veg )
     @assertTrue(  use_input_pft )
-    @assertTrue( all_veg )
 
   end subroutine test_runmkpftInitPftORide
 
@@ -82,9 +84,9 @@ contains
     numpft = maxpft
     pft_idx(0) = 17
     pft_frc(0) = 100._r8
+    all_veg = .true.
     call mkpftInit( zero_out, all_veg )
     @assertTrue(  use_input_pft )
-    @assertTrue( all_veg )
 
   end subroutine test_runmkpftInitPftORideCrop
 
@@ -103,9 +105,9 @@ contains
     end do
     pft_frc(numpft) = 100._r8 - sum(pft_frc(0:numpft-1))
     @assertEqual( 100.0_r8, sum(pft_frc) )
+    all_veg = .true.
     call mkpftInit( zero_out, all_veg )
     @assertTrue(  use_input_pft )
-    @assertTrue( all_veg )
 
   end subroutine test_runmkpftInitPftORideAll
 
@@ -118,6 +120,7 @@ contains
     numpft = maxpft
     pft_idx(0) = numstdpft+1
     pft_frc(0) = 100._r8
+    all_veg = .true.
     call mkpftInit( zero_out, all_veg )
     @assertExceptionRaised( "ABORTED:" )
 
@@ -129,6 +132,7 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
+    all_veg = .true.
     numpft = maxpft
     pft_idx(0) = numstdpft+1
     pft_frc(0) = 99._r8
@@ -143,6 +147,7 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
+    all_veg = .true.
     numpft = numstdpft
     pft_idx(0) = numstdpft+1
     pft_frc(0) = 100._r8
@@ -157,6 +162,7 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
+    all_veg = .true.
     numpft = maxpft
     pft_idx(0:1) = (/ numstdpft+1, numstdpft+2 /)
     pft_frc(0:1) = (/ 101._r8, -1._r8 /)
@@ -171,6 +177,7 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
+    all_veg = .true.
     numpft = 79
     call mkpftInit( zero_out, all_veg )
     @assertExceptionRaised( "ABORTED:" )
@@ -183,6 +190,7 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
+    all_veg = .true.
     numpft = maxpft
     pft_idx(0)   = numstdpft+1
     pft_frc(0:1) =  (/ 99._r8, 1._r8 /)
@@ -197,6 +205,7 @@ contains
     logical :: zero_out, all_veg
 
     zero_out = .false.
+    all_veg = .true.
     numpft = maxpft
     pft_idx(0:1) = (/ 17, 17 /)
     pft_frc(0:1) =  (/ 99._r8, 1._r8 /)
@@ -212,6 +221,7 @@ contains
 
     zero_out = .false.
     numpft = maxpft
+    all_veg = .true.
     pft_idx(0:2) = (/ 17, -1, 18 /)
     pft_frc(0:2) =  (/ 99._r8, 0.0_r8, 1._r8 /)
     call mkpftInit( zero_out, all_veg )

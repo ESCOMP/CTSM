@@ -21,7 +21,7 @@ module test_pft_oride
      procedure :: tearDown
   end type TestPFTORide
 
-  logical :: zero_out, all_veg
+  logical :: zero_out, all_veg_l
 
 contains
 
@@ -32,7 +32,8 @@ contains
     pft_frc(:) = 0.0_r8
     zero_out = .false.
     numpft = numstdpft
-    call mkpftInit( zero_out, all_veg )
+    all_veg_l = .false.
+    call mkpftInit( zero_out, all_veg_l )
     this%pftoverride = pft_oride( )
   end subroutine setUp
 
@@ -48,7 +49,8 @@ contains
     class(TestPFTORide), intent(inout) :: this
 
     zero_out = .true.
-    call mkpftInit( zero_out, all_veg )
+    all_veg_l = .false.
+    call mkpftInit( zero_out, all_veg_l )
     call this%pftoverride%InitZeroOut()
     @assertEqual(   0.0_r8, this%pftoverride%crop   )
     @assertEqual(   0.0_r8, this%pftoverride%natveg )
@@ -65,7 +67,8 @@ contains
     pft_idx(0) = pftidx
     pft_frc(0) = 100.0_r8
     zero_out = .false.
-    call mkpftInit( zero_out, all_veg )
+    all_veg_l  = .true.
+    call mkpftInit( zero_out, all_veg_l )
     call this%pftoverride%InitAllPFTIndex()
     @assertEqual( 0.0_r8,   this%pftoverride%crop )
     @assertEqual( 100.0_r8, this%pftoverride%natveg )
@@ -84,7 +87,8 @@ contains
     pft_idx(0) = cftidx
     pft_frc(0) = 100.0_r8
     zero_out = .false.
-    call mkpftInit( zero_out, all_veg )
+    all_veg_l  = .true.
+    call mkpftInit( zero_out, all_veg_l )
     call this%pftoverride%InitAllPFTIndex()
     @assertEqual( 100.0_r8,   this%pftoverride%crop )
     @assertEqual(   0.0_r8, this%pftoverride%natveg )
@@ -106,7 +110,8 @@ contains
     cftidx2 = c3irrcropindex
     pft_idx(0:3) = (/ pftidx,  pftidx2, cftidx,  cftidx2 /)
     pft_frc(0:3) = (/ 25.0_r8, 25.0_r8, 25.0_r8, 25.0_r8  /)
-    call mkpftInit( zero_out, all_veg )
+    all_veg_l  = .true.
+    call mkpftInit( zero_out, all_veg_l )
     call this%pftoverride%InitAllPFTIndex()
     @assertEqual(  50.0_r8,   this%pftoverride%crop )
     @assertEqual(  50.0_r8, this%pftoverride%natveg )
