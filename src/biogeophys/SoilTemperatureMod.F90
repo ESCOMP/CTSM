@@ -118,10 +118,7 @@ module SoilTemperatureMod
 contains
 
   !-----------------------------------------------------------------------
-!KO  subroutine SoilTemperature(bounds, num_urbanl, filter_urbanl, num_nolakec, filter_nolakec, &
-!KO
   subroutine SoilTemperature(bounds, num_urbanl, filter_urbanl, num_urbanc, filter_urbanc, num_nolakec, filter_nolakec, &
-!KO
        atm2lnd_inst, urbanparams_inst, canopystate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,&
        solarabs_inst, soilstate_inst, energyflux_inst,  temperature_inst, urbantv_inst)
     !
@@ -161,10 +158,8 @@ contains
     integer                , intent(in)    :: filter_nolakec(:)                  ! column filter for non-lake points
     integer                , intent(in)    :: num_urbanl                         ! number of urban landunits in clump
     integer                , intent(in)    :: filter_urbanl(:)                   ! urban landunit filter
-!KO
     integer                , intent(in)    :: num_urbanc                         ! number of urban columns in clump
     integer                , intent(in)    :: filter_urbanc(:)                   ! urban column filter
-!KO
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(urbanparams_type) , intent(in)    :: urbanparams_inst
     type(urbantv_type)     , intent(in)    :: urbantv_inst
@@ -441,42 +436,7 @@ contains
       do j = -nlevsno+1,nlevgrnd
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
-!KO            l = col%landunit(c)
-!KO            if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
-!KO                 .or. col%itype(c) == icol_roof) .and. j <= nlevurb) then
-!KO
-!KO               if (j >= snl(c)+1) then
-!KO                  if (j <= nlevurb-1) then
-!KO                     fn1(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
-!KO                  else if (j == nlevurb) then
-!KO                     ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
-!KO                     if ( IsSimpleBuildTemp() )then
-!KO                       ! the bottom "soil" layer and the equations are derived assuming a prescribed internal
-!KO                       ! building temperature. (See Oleson urban notes of 6/18/03).
-!KO                       ! Note new formulation for fn, this will be used below in net energey flux computations
-!KO                       fn1(c,j) = tk(c,j) * (t_building(l) - t_soisno(c,j))/(zi(c,j) - z(c,j))
-!KO                       fn(c,j)  = tk(c,j) * (t_building(l) - tssbef(c,j))/(zi(c,j) - z(c,j))
-
-!KO                     else
-!KO                        ! the bottom "soil" layer and the equations are derived assuming a prognostic inner
-!KO                        ! surface temperature.
-!KO                        if (ctype(c) == icol_sunwall) then
-!KO                          fn1(c,j) = tk(c,j) * (t_sunw_inner(l) - t_soisno(c,j))/(zi(c,j) - z(c,j))
-!KO                          fn(c,j)  = tk(c,j) * (t_sunw_inner(l) - tssbef(c,j))/(zi(c,j) - z(c,j))
-!KO                        else if (ctype(c) == icol_shadewall) then
-!KO                          fn1(c,j) = tk(c,j) * (t_shdw_inner(l) - t_soisno(c,j))/(zi(c,j) - z(c,j))
-!KO                          fn(c,j)  = tk(c,j) * (t_shdw_inner(l) - tssbef(c,j))/(zi(c,j) - z(c,j))
-!KO                        else if (ctype(c) == icol_roof) then
-!KO                          fn1(c,j) = tk(c,j) * (t_roof_inner(l) - t_soisno(c,j))/(zi(c,j) - z(c,j))
-!KO                          fn(c,j)  = tk(c,j) * (t_roof_inner(l) - tssbef(c,j))/(zi(c,j) - z(c,j))
-!KO                        end if
-!KO                     end if
-!KO                  end if
-!KO               end if
-!KO            else if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-!KO
             if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-!KO
                  .and. col%itype(c) /= icol_roof) then
                if (j >= snl(c)+1) then
                   if (j <= nlevgrnd-1) then
@@ -489,7 +449,6 @@ contains
          end do
       end do
 
-!KO
 ! Do this for sunwall, shadewall, roof but for -nlevsno+1,nlevurb
       do j = -nlevsno+1,nlevurb
          do fc = 1,num_urbanc
@@ -528,7 +487,6 @@ contains
             end if
          end do
       end do
-!KO
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
@@ -718,9 +676,6 @@ contains
          )
 
       ! Thermal conductivity of soil from Farouki (1981)
-!KO      ! Urban values are from Masson et al. 2002, Evaluation of the Town Energy Balance (TEB)
-!KO      ! scheme with direct measurements from dry districts in two cities, J. Appl. Meteorol.,
-!KO      ! 41, 1011-1026.
 
       do j = -nlevsno+1,nlevgrnd
          do fc = 1, num_nolakec
@@ -729,19 +684,8 @@ contains
             ! Only examine levels from 1->nlevgrnd
             if (j >= 1) then    
                l = col%landunit(c)
-!KO               if ((col%itype(c) == icol_sunwall .OR. col%itype(c) == icol_shadewall) .and. j <= nlevurb) then
-!KO                  thk(c,j) = tk_wall(l,j)
-!KO               else if (col%itype(c) == icol_roof .and. j <= nlevurb) then
-!KO                  thk(c,j) = tk_roof(l,j)
-!KO               else if (col%itype(c) == icol_road_imperv .and. j >= 1 .and. j <= nlev_improad(l)) then
-!KO                  thk(c,j) = tk_improad(l,j)
-!KO               else if (lun%itype(l) /= istwet .AND. lun%itype(l) /= istice_mec &
-!KO
-!KO                  .AND. col%itype(c) /= icol_sunwall .AND. col%itype(c) /= icol_shadewall .AND. &
-!KO                  col%itype(c) /= icol_roof) then
-!KO 
-               !KO This will include pervious road for all nlevgrnd layers and impervious road for j > nlev_improad
-!KO
+
+               ! This will include pervious road for all nlevgrnd layers and impervious road for j > nlev_improad
                if ((lun%itype(l) /= istwet .and. lun%itype(l) /= istice_mec &
                   .and. col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall .and. &
                   col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
@@ -801,31 +745,14 @@ contains
 
          end do
       end do
-!KO
 
       ! Thermal conductivity at the layer interface
 
       do j = -nlevsno+1,nlevgrnd
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
-!KO            if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
-!KO               .or. col%itype(c) == icol_roof) .and. j <= nlevurb) then
-!KO               if (j >= snl(c)+1 .AND. j <= nlevurb-1) then
-!KO                  tk(c,j) = thk(c,j)*thk(c,j+1)*(z(c,j+1)-z(c,j)) &
-!KO                       /(thk(c,j)*(z(c,j+1)-zi(c,j))+thk(c,j+1)*(zi(c,j)-z(c,j)))
-!KO               else if (j == nlevurb) then
-
-!KO                  ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
-!KO                  ! the bottom "soil" layer and the equations are derived assuming a prescribed internal
-!KO                  ! building temperature. (See Oleson urban notes of 6/18/03).
-!KO                  tk(c,j) = thk(c,j)
-!KO               end if
-!KO            else if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-!KO                 .and. col%itype(c) /= icol_roof) then
-!KO
             if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
                .and. col%itype(c) /= icol_roof) then
-!KO
                if (j >= snl(c)+1 .AND. j <= nlevgrnd-1) then
                   tk(c,j) = thk(c,j)*thk(c,j+1)*(z(c,j+1)-z(c,j)) &
                        /(thk(c,j)*(z(c,j+1)-zi(c,j))+thk(c,j+1)*(zi(c,j)-z(c,j)))
@@ -836,7 +763,6 @@ contains
          end do
       end do
 
-!KO
       do j = -nlevsno+1,nlevurb
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
@@ -855,7 +781,6 @@ contains
             end if
          end do
       end do
-!KO
 
       ! calculate thermal conductivity of h2osfc
       do fc = 1, num_nolakec
@@ -866,23 +791,11 @@ contains
       enddo
 
       ! Soil heat capacity, from de Vires (1963)
-!KO      ! Urban values are from Masson et al. 2002, Evaluation of the Town Energy Balance (TEB)
-!KO      ! scheme with direct measurements from dry districts in two cities, J. Appl. Meteorol.,
-!KO      ! 41, 1011-1026.
 
       do j = 1, nlevgrnd
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             l = col%landunit(c)
-!           if ((col%itype(c) == icol_sunwall .OR. col%itype(c) == icol_shadewall) .and. j <= nlevurb) then
-!              cv(c,j) = cv_wall(l,j) * dz(c,j)
-!           else if (col%itype(c) == icol_roof .and. j <= nlevurb) then
-!              cv(c,j) = cv_roof(l,j) * dz(c,j)
-!           else if (col%itype(c) == icol_road_imperv .and. j >= 1 .and. j <= nlev_improad(l)) then
-!              cv(c,j) = cv_improad(l,j) * dz(c,j)
-!           else if (lun%itype(l) /= istwet .AND. lun%itype(l) /= istice_mec &
-!                .AND. col%itype(c) /= icol_sunwall .AND. col%itype(c) /= icol_shadewall .AND. &
-!                col%itype(c) /= icol_roof) then
             if ((lun%itype(l) /= istwet .and. lun%itype(l) /= istice_mec &
                .and. col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall .and. &
                col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
@@ -904,7 +817,6 @@ contains
          enddo
       end do
 
-!KO
       do j = 1, nlevurb
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
@@ -925,7 +837,6 @@ contains
             end if
           end do
       end do
-!KO
 
       ! Snow heat capacity
 
@@ -1326,14 +1237,8 @@ contains
             l = col%landunit(c)
             supercool(c,j) = 0.0_r8
             ! add in urban condition if-block
-!KO            if ((col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-!KO                 .and. col%itype(c) /= icol_roof) .or. ( j <= nlevurb)) then
-!KO
             if ((col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
                  .and. col%itype(c) /= icol_roof)) then
-!KO
-
-
 
                if (h2osoi_ice(c,j) > 0. .AND. t_soisno(c,j) > tfrz) then
                   imelt(c,j) = 1
@@ -1374,7 +1279,6 @@ contains
          end do
       enddo
 
-!KO
       do j = 1,nlevurb
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
@@ -1412,18 +1316,13 @@ contains
 
          end do
       enddo
-!KO
 
       do j = -nlevsno+1,nlevgrnd       ! all layers
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
 
-!KO            if ((col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-!KO                 .and. col%itype(c) /= icol_roof) .or. ( j <= nlevurb)) then
-!KO
             if ((col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
                  .and. col%itype(c) /= icol_roof)) then
-!KO
 
                if (j >= snl(c)+1) then
 
@@ -1570,7 +1469,6 @@ contains
          end do   ! end of column-loop
       enddo   ! end of level-loop
 
-!KO
       do j = -nlevsno+1,nlevurb
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
@@ -1721,7 +1619,6 @@ contains
 
          end do   ! end of column-loop
       enddo   ! end of level-loop
-!KO
 
       ! Needed for history file output
 
@@ -2059,41 +1956,8 @@ contains
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             l = col%landunit(c)
-!           if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
-!                .or. col%itype(c) == icol_roof) .and. j <= nlevurb) then
-!              if (j >= col%snl(c)+1) then
-!                 if (j == col%snl(c)+1) then
-!                    fact(c,j) = dtime/cv(c,j)
-!                    fn(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
-!                 else if (j <= nlevurb-1) then
-!                    fact(c,j) = dtime/cv(c,j)
-!                    fn(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
-!                    dzm     = (z(c,j)-z(c,j-1))
-!                 else if (j == nlevurb) then
-!                    fact(c,j) = dtime/cv(c,j)
-!                    if ( IsSimpleBuildTemp() )then
-!                      ! the bottom "soil" layer and the equations are derived assuming a prescribed internal
-!                      ! building temperature. (See Oleson urban notes of 6/18/03).
-!                      fn(c,j) = tk(c,j) * (t_building(l) - cnfac*t_soisno(c,j))/(zi(c,j) - z(c,j))
-!                    else
-!                       ! the bottom "soil" layer and the equations are derived assuming a prognostic inner
-!                       ! surface temperature.
-!                       if (ctype(c) == icol_sunwall) then
-!                          fn(c,j) = tk(c,j) * (t_sunw_inner(l) - cnfac*t_soisno(c,j))/(zi(c,j) - z(c,j))
-!                       else if (ctype(c) == icol_shadewall) then
-!                          fn(c,j) = tk(c,j) * (t_shdw_inner(l) - cnfac*t_soisno(c,j))/(zi(c,j) - z(c,j))
-!                       else if (ctype(c) == icol_roof) then
-!                          fn(c,j) = tk(c,j) * (t_roof_inner(l) - cnfac*t_soisno(c,j))/(zi(c,j) - z(c,j))
-!                       end if
-!                    end if
-!                 end if
-!              end if
-!KO            else if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-!KO                 .and. col%itype(c) /= icol_roof) then
-!KO
             if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
                .and. col%itype(c) /= icol_roof) then
-!KO
                if (j >= col%snl(c)+1) then
                   if (j == col%snl(c)+1) then
                      fact(c,j) = dtime/cv(c,j) * dz(c,j) / (0.5_r8*(z(c,j)-zi(c,j-1)+capr*(z(c,j+1)-zi(c,j-1))))
@@ -2110,7 +1974,7 @@ contains
             end if
          end do
       end do
-!KO
+
       do j = -nlevsno+1,nlevurb
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
@@ -2147,7 +2011,6 @@ contains
             end if
          end do
       end do
-!KO
 
     end associate
 

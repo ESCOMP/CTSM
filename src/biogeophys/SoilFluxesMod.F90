@@ -378,12 +378,8 @@ contains
             c = patch%column(p)
 
 ! Do this for perv and imperv road for -nlevsno+1,nlevgrnd
-!KO            if ((col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-!KO                 .and. col%itype(c) /= icol_roof) .or. ( j <= nlevurb)) then
-!KO
             if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
                  .and. col%itype(c) /= icol_roof) then
-!KO
                ! area weight heat absorbed by snow layers
                if (j >= col%snl(c)+1 .and. j < 1) errsoi_patch(p) = errsoi_patch(p) &
                     - frac_sno_eff(c)*(t_soisno(c,j)-tssbef(c,j))/fact(c,j)
@@ -392,7 +388,7 @@ contains
             end if
          end do
       end do
-!KO
+
 ! Do this for sunwall, shadewall, roof but for -nlevsno+1,nlevurb
       do j = -nlevsno+1,nlevurb
          do fp = 1,num_urbanp
@@ -409,7 +405,7 @@ contains
             end if
          end do
       end do
-!KO
+
       call t_stopf('bgp2_loop_3')
       call t_startf('bgp2_loop_4')
 

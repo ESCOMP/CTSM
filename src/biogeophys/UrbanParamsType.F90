@@ -122,11 +122,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
-!KO    use clm_varpar      , only : nlevcan, nlevcan, numrad, nlevgrnd, nlevurb
-!KO    use clm_varpar      , only : nlevsoi, nlevgrnd
-!KO
     use clm_varpar      , only : numrad, nlevurb
-!KO
     use clm_varctl      , only : use_vancouver, use_mexicocity
     use clm_varcon      , only : vkc
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
@@ -198,7 +194,6 @@ contains
 
     do l = bounds%begl,bounds%endl
 
-!KO       ! "0" refers to urban wall/roof surface and "nlevsoi" refers to urban wall/roof bottom
        if (lun%urbpoi(l)) then
 
           g = lun%gridcell(l)

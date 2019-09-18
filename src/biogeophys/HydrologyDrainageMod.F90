@@ -151,19 +151,13 @@ contains
       do j = 1, nlevgrnd
          do fc = 1, num_nolakec
             c = filter_nolakec(fc)
-!KO            if ((ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
-!KO                 .or. ctype(c) == icol_roof) .and. j > nlevurb) then
-!KO
             if (ctype(c) /= icol_sunwall .and. ctype(c) /= icol_shadewall &
                  .and. ctype(c) /= icol_roof) then
-!KO
-!KO            else
                h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
             end if
          end do
       end do
 
-!KO
       do j = 1, nlevurb
          do fc = 1, num_urbanc
             c = filter_urbanc(fc)
@@ -173,7 +167,6 @@ contains
             end if
          end do
       end do
-!KO
 
       call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
            waterstatebulk_inst, waterdiagnosticbulk_inst, &
