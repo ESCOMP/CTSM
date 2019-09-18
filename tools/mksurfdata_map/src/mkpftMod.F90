@@ -66,6 +66,8 @@ module mkpftMod
   interface pft_oride
      module procedure :: constructor  ! PFT Overide object constructor
   end interface pft_oride
+
+  type(pft_oride), private :: pft_override     ! Module instance of PFT override object
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
@@ -112,7 +114,11 @@ subroutine mkpftInit( zero_out_l, all_veg )
      call abort()
      return
   end if
-  call mkpft_check_oride( )
+  nzero = -1
+  if ( mkpft_check_oride( ) )then
+     write(6,*) subname//'Problem setting pft override settings'
+     return
+  end if
   if ( use_input_pft ) then
      write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero)
      write(6,*) 'With PFT index      : ', pft_idx(0:nzero)
@@ -157,6 +163,16 @@ subroutine mkpftInit( zero_out_l, all_veg )
      write(6,*) 'CFT_UB set up incorrectly: cft_ub, numpft = ', cft_ub, numpft
      call abort()
      return
+  end if
+  !
+  ! Set the PFT override values if applicable
+  !
+  pft_override = pft_oride()
+  if( zero_out )then
+     call pft_override%InitZeroOut()
+  end if
+  if ( use_input_pft ) then
+     call pft_override%InitAllPFTIndex()
   end if
 
 end subroutine mkpftInit
@@ -346,6 +362,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   else
      write(6,*) subname//': parameter numpft is NOT set to a known value (should be 16 or more) =',numpft
      call abort()
+     return
   end if
 
   ! -----------------------------------------------------------------
@@ -375,6 +392,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
      else
         write(6,*) subname//' ERROR: PCT_PFT field on the the file so it is in the old format, which is no longer supported'
         call abort()
+        return
      end if
 
      ! Check if the number of pfts on the input matches the expected number. A mismatch
@@ -384,12 +402,14 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
            write(6,*) subname//' ERROR: trying to use non-crop input file'
            write(6,*) 'for a surface dataset with crops.'
            call abort()
+           return
         else if (numpft_i > numstdpft+1 .and. numpft_i == maxpft+1 .and. .not. oldformat) then
            write(6,*) subname//' WARNING: using a crop input raw dataset for a non-crop output surface dataset'
         else
            write(6,*) subname//': parameter numpft+1= ',numpft+1, &
                 'does not equal input dataset numpft= ',numpft_i
            call abort()
+           return
         end if
      endif
 
@@ -406,7 +426,10 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
                  pct_nat_pft_i(ns_i,0:num_natpft), &
                  pct_nat_pft_o(ns_o,0:num_natpft), &
                  stat=ier)
-        if (ier/=0) call abort()
+        if (ier/=0)then
+            call abort()
+            return
+        end if
 
         call check_ret(nf_inq_varid (ncid, 'PCT_NATVEG', varid), subname)
         call check_ret(nf_get_var_double (ncid, varid, pctnatveg_i), subname)
@@ -431,6 +454,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         else
            write(6,*) subname//': ERROR: dimensions for PCT_CROP are NOT what is expected'
            call abort()
+           return
         end if
         call check_ret(nf_inq_varid (ncid, 'PCT_NAT_PFT', varid), subname)
         call check_ret(nf_get_var_double (ncid, varid, pct_nat_pft_i), subname)
@@ -444,7 +468,10 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
      ns_i = 1
      numpft_i = numpft+1
      allocate(pctpft_o(ns_o,0:numpft), stat=ier)
-     if (ier/=0) call abort()
+     if (ier/=0)then
+        call abort()
+        return
+     end if
   end if
 
   ! Determine pctpft_o on output grid
@@ -462,7 +489,11 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
 
   else if ( use_input_pft ) then
 
-     call mkpft_check_oride( )
+     if ( mkpft_check_oride( ) )then
+        write(6,*) subname//'Problem setting pft override settings'
+        call abort()
+        return
+     end if
 
      ! set PFT based on input pft_frc and pft_idx
      pctpft_o(:,:) = 0._r8
@@ -622,7 +653,10 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
                  pctnatpft_i(ns_i),             &
                  pctcft_i(ns_i),                &
                  stat=ier)
-        if (ier/=0) call abort()
+        if (ier/=0)then
+            call abort()
+            return
+        end if
         do ni = 1, ns_i
            pctnatpft_i(ni) = pct_pft_type( pct_nat_pft_i(ni,:), pctnatveg_i(ni), first_pft_index=natpft_lb )
            pctcft_i(ni)    = pct_pft_type( pct_cft_i(ni,:),     pctcrop_i(ni),   first_pft_index=cft_lb    )
@@ -764,6 +798,7 @@ subroutine mkpft_parse_oride( string )
   if ( rc /= 0 )then
      write(6,*) subname//'Trouble finding pft_frac start end tags'
      call abort()
+     return
   end if
   num_elms = shr_string_countChar( substring, ",", rc )
   read(substring,*) pft_frc(0:num_elms)
@@ -771,10 +806,12 @@ subroutine mkpft_parse_oride( string )
   if ( rc /= 0 )then
      write(6,*) subname//'Trouble finding pft_index start end tags'
      call abort()
+     return
   end if
   if ( num_elms /= shr_string_countChar( substring, ",", rc ) )then
      write(6,*) subname//'number of elements different between frc and idx fields'
      call abort()
+     return
   end if
   read(substring,*) pft_idx(0:num_elms)
 !-----------------------------------------------------------------------
@@ -789,14 +826,14 @@ end subroutine mkpft_parse_oride
 ! !IROUTINE: mkpft_check_oride
 !
 ! !INTERFACE:
-subroutine mkpft_check_oride( )
+function  mkpft_check_oride( ) result(error_happened)
 !
 ! !DESCRIPTION:
 ! Check that the pft override values are valid
 ! !USES:
-!
-! !ARGUMENTS:
   implicit none
+! !ARGUMENTS:
+  logical :: error_happened ! Result, true if there was a problem
 !
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
@@ -810,6 +847,7 @@ subroutine mkpft_check_oride( )
   character(len=32) :: subname = 'mkpftMod::mkpft_check_oride() '
 !-----------------------------------------------------------------------
 
+  error_happened = .false.
   sumpft = sum(pft_frc)
   if (          sumpft == 0.0 )then
     ! PFT fraction is NOT used
@@ -818,6 +856,7 @@ subroutine mkpft_check_oride( )
     write(6, '(a, a, f15.12)') trim(subname), 'Sum of PFT fraction is NOT equal to 100% =', sumpft
     write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero)
     write(6,*) 'With PFT index      : ', pft_idx(0:nzero)
+    error_happened = .true.
     call abort()
     return
   else
@@ -833,16 +872,19 @@ subroutine mkpft_check_oride( )
     do i = 0, nzero
       if ( pft_frc(i) < 0.0_r8 .or. pft_frc(i) > hndrd )then
          write(6,*) subname//'PFT fraction is out of range: pft_frc=', pft_frc(i)
+         error_happened = .true.
          call abort()
          return
       else if ( pft_frc(i) > 0.0_r8 .and. pft_idx(i) == -1 )then
          write(6,*) subname//'PFT fraction > zero, but index NOT set: pft_idx=', pft_idx(i)
+         error_happened = .true.
          call abort()
          return
       end if
       ! PFT index out of range
       if ( pft_idx(i) < 0 .or. pft_idx(i) > numpft )then
          write(6,*) subname//'PFT index is out of range: ', pft_idx(i)
+         error_happened = .true.
          call abort()
          return
       end if
@@ -850,6 +892,7 @@ subroutine mkpft_check_oride( )
       do j = 0, i-1
          if ( pft_idx(i) == pft_idx(j) )then
             write(6,*) subname//'Same PFT index is used twice: ', pft_idx(i)
+            error_happened = .true.
             call abort()
             return
          end if
@@ -859,13 +902,14 @@ subroutine mkpft_check_oride( )
     do i = nzero+1, numpft
       if ( pft_frc(i) /= 0.0_r8 .or. pft_idx(i) /= -1 )then
          write(6,*) subname//'After PFT fraction is zeroed out, fraction is non zero, or index set'
+         error_happened = .true.
          call abort()
          return
       end if
     end do
   end if
 
-end subroutine mkpft_check_oride
+end function mkpft_check_oride
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1063,8 +1107,20 @@ function constructor( ) result(this)
   implicit none
   type(pft_oride) :: this
 !EOP
+  character(len=32) :: subname = 'mkpftMod::constructor() '
+
   this%crop   = -1.0_r8
   this%natveg = -1.0_r8
+  if ( num_natpft < 0 )then
+     write(6,*) subname//'num_natpft is NOT set = ', num_natpft
+     call abort()
+     return
+  end if
+  if ( num_cft < 0 )then
+     write(6,*) subname//'num_cft is NOT set = ', num_cft
+     call abort()
+     return
+  end if
   allocate( this%natpft(noveg:num_natpft) )
   allocate( this%cft(1:num_cft) )
   this%natpft(:) = -1.0_r8
@@ -1115,6 +1171,7 @@ subroutine InitAllPFTIndex( this )
   integer :: m, i                  ! Indices
   real(r8) :: croptot              ! Total of crop
   real(r8) :: natvegtot            ! Total of natural vegetation
+  character(len=32) :: subname = 'mkpftMod::coInitAllPFTIndex() '
 
   croptot     = 0.0_r8
   natvegtot   = 0.0_r8
@@ -1122,7 +1179,11 @@ subroutine InitAllPFTIndex( this )
   this%cft    = 0.0_r8
   do m = noveg, nzero
     i = pft_idx(m)
-    if ( i <= num_natpft )then
+    if ( (i < noveg) .or. (i > numpft) )then
+      write(6,*)  subname//'PFT index is out of valid range'
+      call abort()
+      return
+    else if ( i <= num_natpft )then
       this%natpft(i) = pft_frc(m)
       natvegtot = natvegtot + pft_frc(m)
     else
