@@ -348,6 +348,9 @@ contains
     ! !LOCAL VARIABLES:
     integer :: c, j, fc  ! indices
     logical :: has_h2o   ! whether this point potentially has water to add
+!KO
+    integer  :: nlev     ! greater of nlevgrnd and nlevurb
+!KO
 
     character(len=*), parameter :: subname = 'AccumulateSoilLiqIceMassNonLake'
     !-----------------------------------------------------------------------
@@ -360,7 +363,13 @@ contains
          h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col   & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
          )
 
-    do j = 1, nlevgrnd
+!KO
+    nlev = max0(nlevgrnd,nlevurb)
+!KO
+!KO    do j = 1, nlevgrnd
+!KO
+    do j = 1, nlev
+!KO
        do fc = 1, num_c
           c = filter_c(fc)
           if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
@@ -372,7 +381,12 @@ contains
                 has_h2o = .false.
              end if
           else
-             has_h2o = .true.
+!KO             has_h2o = .true.
+!KO
+             if (j <= nlevgrnd) then
+                has_h2o = .true.
+             end if
+!KO
           end if
 
           if (has_h2o) then
@@ -719,6 +733,9 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fc
     integer :: l, c, j
+!KO
+    integer  :: nlev     ! greater of nlevgrnd and nlevurb
+!KO
     logical  :: has_h2o  ! whether this point potentially has water to add
 
     real(r8) :: soil_heat_liquid(bounds%begc:bounds%endc)        ! sum of heat content: liquid water in soil, excluding latent heat [J/m^2]
@@ -755,7 +772,11 @@ contains
        soil_latent_heat_liquid(c) = 0._r8
     end do
 
-    do j = 1, nlevgrnd
+!KO
+    nlev = max0(nlevgrnd,nlevurb)
+    do j = 1, nlev
+!KO
+!KO    do j = 1, nlevgrnd
        do fc = 1, num_c
           c = filter_c(fc)
           l = col%landunit(c)
@@ -777,17 +798,23 @@ contains
              end if
 
           else
-             has_h2o = .true.
+!KO
+             if (j <= nlevgrnd) then
+!KO
+                has_h2o = .true.
 
-             if (col%itype(c) == icol_road_imperv .and. j <= nlev_improad(l)) then
-                soil_heat_dry_mass(c) = soil_heat_dry_mass(c) + &
-                     TempToHeat(temp = t_soisno(c,j), cv = (cv_improad(l,j) * dz(c,j)))
-             else if (lun%itype(l) /= istwet .and. lun%itype(l) /= istice_mec) then
-                ! Note that this also includes impervious roads below nlev_improad (where
-                ! we have soil)
-                soil_heat_dry_mass(c) = soil_heat_dry_mass(c) + &
-                     TempToHeat(temp = t_soisno(c,j), cv = (csol(c,j)*(1-watsat(c,j))*dz(c,j)))
+                if (col%itype(c) == icol_road_imperv .and. j <= nlev_improad(l)) then
+                   soil_heat_dry_mass(c) = soil_heat_dry_mass(c) + &
+                        TempToHeat(temp = t_soisno(c,j), cv = (cv_improad(l,j) * dz(c,j)))
+                else if (lun%itype(l) /= istwet .and. lun%itype(l) /= istice_mec) then
+                   ! Note that this also includes impervious roads below nlev_improad (where
+                   ! we have soil)
+                   soil_heat_dry_mass(c) = soil_heat_dry_mass(c) + &
+                        TempToHeat(temp = t_soisno(c,j), cv = (csol(c,j)*(1-watsat(c,j))*dz(c,j)))
+                end if
+!KO
              end if
+!KO
           end if
 
           if (has_h2o) then
