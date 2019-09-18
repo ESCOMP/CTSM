@@ -388,7 +388,7 @@ contains
 
       ! Snow capping
       call SnowCapping(bounds, num_nolakec, filter_nolakec, num_snowc, filter_snowc, &
-           aerosol_inst, b_waterflux_inst, b_waterstate_inst, topo_inst)
+           topo_inst, aerosol_inst, water_inst)
 
       ! TODO(wjs, 2019-09-16) Eventually move this down, merging this with later tracer
       ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this

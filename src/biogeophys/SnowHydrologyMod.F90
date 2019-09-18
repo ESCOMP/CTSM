@@ -2870,7 +2870,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SnowCapping(bounds, num_initc, filter_initc, num_snowc, filter_snowc, &
-       aerosol_inst, waterfluxbulk_inst, waterstatebulk_inst, topo_inst )
+       topo_inst, aerosol_inst, water_inst )
     !
     ! !DESCRIPTION:
     ! Removes mass from bottom snow layer for columns that exceed the maximum snow depth.
@@ -2886,10 +2886,9 @@ contains
     integer                , intent(in)    :: filter_initc(:) ! column filter for points that need to be initialized
     integer                , intent(in)    :: num_snowc       ! number of column snow points in column filter
     integer                , intent(in)    :: filter_snowc(:) ! column filter for snow points
+    class(topo_type)       , intent(in)    :: topo_inst
     type(aerosol_type)     , intent(inout) :: aerosol_inst
-    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst 
-    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
-    class(topo_type)   , intent(in)    :: topo_inst
+    type(water_type)       , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
     real(r8)   :: dtime                            ! land model time step (sec)
@@ -2909,13 +2908,24 @@ contains
     real(r8), parameter :: min_snow_to_keep = 1.e-9  ! fraction of bottom snow layer to keep with capping
 
     !-----------------------------------------------------------------------
+
+    ! FIXME(wjs, 2019-09-17) When I'm done, I should be able to merge these two associate
+    ! blocks into one
     associate( &
-        qflx_snwcp_ice     => waterfluxbulk_inst%qflx_snwcp_ice_col   , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
-        qflx_snwcp_liq     => waterfluxbulk_inst%qflx_snwcp_liq_col   , & ! Output: [real(r8) (:)   ]  excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
-        qflx_snwcp_discarded_ice => waterfluxbulk_inst%qflx_snwcp_discarded_ice_col, & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
-        qflx_snwcp_discarded_liq => waterfluxbulk_inst%qflx_snwcp_discarded_liq_col, & ! Output: [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
-        h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col      , & ! In/Out: [real(r8) (:,:) ] ice lens (kg/m2)                       
-        h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col      , & ! In/Out: [real(r8) (:,:) ] liquid water (kg/m2)                   
+         begc => bounds%begc, &
+         endc => bounds%endc, &
+
+         b_waterflux_inst  => water_inst%waterfluxbulk_inst, &
+         b_waterstate_inst => water_inst%waterstatebulk_inst &
+         )
+
+    associate( &
+        qflx_snwcp_ice     => b_waterflux_inst%qflx_snwcp_ice_col   , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
+        qflx_snwcp_liq     => b_waterflux_inst%qflx_snwcp_liq_col   , & ! Output: [real(r8) (:)   ]  excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
+        qflx_snwcp_discarded_ice => b_waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
+        qflx_snwcp_discarded_liq => b_waterflux_inst%qflx_snwcp_discarded_liq_col, & ! Output: [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
+        h2osoi_ice         => b_waterstate_inst%h2osoi_ice_col      , & ! In/Out: [real(r8) (:,:) ] ice lens (kg/m2)                       
+        h2osoi_liq         => b_waterstate_inst%h2osoi_liq_col      , & ! In/Out: [real(r8) (:,:) ] liquid water (kg/m2)                   
         mss_bcphi          => aerosol_inst%mss_bcphi_col          , & ! In/Out: [real(r8) (:,:) ] hydrophilic BC mass in snow (col,lyr) [kg]
         mss_bcpho          => aerosol_inst%mss_bcpho_col          , & ! In/Out: [real(r8) (:,:) ] hydrophobic BC mass in snow (col,lyr) [kg]
         mss_ocphi          => aerosol_inst%mss_ocphi_col          , & ! In/Out: [real(r8) (:,:) ] hydrophilic OC mass in snow (col,lyr) [kg]
@@ -2940,7 +2950,7 @@ contains
        qflx_snwcp_discarded_liq(c) = 0.0_r8
     end do
 
-    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_snowc, filter_snowc, &
+    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_snowc, filter_snowc, &
          caller = 'SnowCapping', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
@@ -3007,6 +3017,7 @@ contains
 
     end do loop_columns
 
+    end associate
     end associate
   end subroutine SnowCapping
 
