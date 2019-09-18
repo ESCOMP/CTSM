@@ -405,7 +405,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
            write(6,*) 'for a surface dataset with crops.'
            call abort()
            return
-        else if (numpft_i > numstdpft+1 .and. numpft_i == maxpft+1 .and. .not. oldformat) then
+        else if (numpft_i > numstdpft+1 .and. numpft_i == maxpft+1) then
            write(6,*) subname//' WARNING: using a crop input raw dataset for a non-crop output surface dataset'
         else
            write(6,*) subname//': parameter numpft+1= ',numpft+1, &
@@ -418,55 +418,51 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
 
      ! If file is in the new format, expect the following variables: 
      !      PCT_NATVEG, PCT_CROP, PCT_NAT_PFT, PCT_CFT
-     if ( .not. oldformat )then
-        allocate(pctnatveg_i(ns_i), &
-                 pctnatveg_o(ns_o), &
-                 pctcrop_i(ns_i),   &
-                 pctcrop_o(ns_o),   &
-                 pct_cft_i(ns_i,1:num_cft), &
-                 pct_cft_o(ns_o,1:num_cft), &
-                 pct_nat_pft_i(ns_i,0:num_natpft), &
-                 pct_nat_pft_o(ns_o,0:num_natpft), &
-                 stat=ier)
-        if (ier/=0)then
-            call abort()
-            return
-        end if
-
-        call check_ret(nf_inq_varid (ncid, 'PCT_NATVEG', varid), subname)
-        call check_ret(nf_get_var_double (ncid, varid, pctnatveg_i), subname)
-        call check_ret(nf_inq_varid (ncid, 'PCT_CROP', varid), subname)
-        call check_ret(nf_get_var_double (ncid, varid, pctcrop_i), subname)
-        call check_ret(nf_inq_varid (ncid, 'PCT_CFT', varid), subname)
-        call get_dim_lengths(ncid, 'PCT_CFT', ndims, dimlens(:) )
-        if (      ndims == 3 .and. dimlens(1)*dimlens(2) == ns_i .and. dimlens(3) == num_cft )then
-           call check_ret(nf_get_var_double (ncid, varid, pct_cft_i), subname)
-        else if ( ndims == 3 .and. dimlens(1)*dimlens(2) == ns_i .and. dimlens(3) > num_cft )then
-           ! Read in the whole array: then sum the rainfed and irrigated
-           ! seperately
-           allocate( temp_i(ns_i,dimlens(3)) )
-           call check_ret(nf_get_var_double (ncid, varid, temp_i), subname)
-           do n = 1, num_cft
-              pct_cft_i(:,n) = 0.0_r8
-              do m = n, dimlens(3), 2
-                 pct_cft_i(:,n) = pct_cft_i(:,n) + temp_i(:,m)
-              end do
-           end do
-           deallocate( temp_i )
-        else
-           write(6,*) subname//': ERROR: dimensions for PCT_CROP are NOT what is expected'
-           call abort()
-           return
-        end if
-        call check_ret(nf_inq_varid (ncid, 'PCT_NAT_PFT', varid), subname)
-        call check_ret(nf_get_var_double (ncid, varid, pct_nat_pft_i), subname)
-
+     allocate(pctnatveg_i(ns_i), &
+              pctnatveg_o(ns_o), &
+              pctcrop_i(ns_i),   &
+              pctcrop_o(ns_o),   &
+              pct_cft_i(ns_i,1:num_cft), &
+              pct_cft_o(ns_o,1:num_cft), &
+              pct_nat_pft_i(ns_i,0:num_natpft), &
+              pct_nat_pft_o(ns_o,0:num_natpft), &
+              stat=ier)
+     if (ier/=0)then
+         call abort()
+         return
      end if
+
+     call check_ret(nf_inq_varid (ncid, 'PCT_NATVEG', varid), subname)
+     call check_ret(nf_get_var_double (ncid, varid, pctnatveg_i), subname)
+     call check_ret(nf_inq_varid (ncid, 'PCT_CROP', varid), subname)
+     call check_ret(nf_get_var_double (ncid, varid, pctcrop_i), subname)
+     call check_ret(nf_inq_varid (ncid, 'PCT_CFT', varid), subname)
+     call get_dim_lengths(ncid, 'PCT_CFT', ndims, dimlens(:) )
+     if (      ndims == 3 .and. dimlens(1)*dimlens(2) == ns_i .and. dimlens(3) == num_cft )then
+        call check_ret(nf_get_var_double (ncid, varid, pct_cft_i), subname)
+     else if ( ndims == 3 .and. dimlens(1)*dimlens(2) == ns_i .and. dimlens(3) > num_cft )then
+        ! Read in the whole array: then sum the rainfed and irrigated
+        ! seperately
+        allocate( temp_i(ns_i,dimlens(3)) )
+        call check_ret(nf_get_var_double (ncid, varid, temp_i), subname)
+        do n = 1, num_cft
+           pct_cft_i(:,n) = 0.0_r8
+           do m = n, dimlens(3), 2
+              pct_cft_i(:,n) = pct_cft_i(:,n) + temp_i(:,m)
+           end do
+        end do
+        deallocate( temp_i )
+     else
+        write(6,*) subname//': ERROR: dimensions for PCT_CROP are NOT what is expected'
+        call abort()
+        return
+     end if
+     call check_ret(nf_inq_varid (ncid, 'PCT_NAT_PFT', varid), subname)
+     call check_ret(nf_get_var_double (ncid, varid, pct_nat_pft_i), subname)
 
      call check_ret(nf_close(ncid), subname)
 
   else
-     oldformat = .false.
      ns_i = 1
      numpft_i = numpft+1
      allocate(pctnatveg_i(ns_i), &
@@ -545,39 +541,35 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
      end do
 
      ! New format with extra variables on input
-     if ( .not. oldformat ) then
-        call gridmap_areaave(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8)
-        call gridmap_areaave(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8)
+     call gridmap_areaave(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8)
+     call gridmap_areaave(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8)
 
-        do m = 0, num_natpft
-           call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), pct_nat_pft_o(:,m), &
-                nodata=0._r8,src_wt=pctnatveg_i*0.01_r8,dst_wt=pctnatveg_o*0.01_r8)
-           do no = 1,ns_o
-              if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
-                 if (m == 0) then
-                    pct_nat_pft_o(no,m) = 100._r8
-                 else
-                    pct_nat_pft_o(no,m) = 0._r8
-                 endif
-              end if
-           enddo
-        end do
-        do m = 1, num_cft
-           call gridmap_areaave_scs(tgridmap, pct_cft_i(:,m), pct_cft_o(:,m), &
-                nodata=0._r8,src_wt=pctcrop_i*0.01_r8,dst_wt=pctcrop_o*0.01_r8)
-           do no = 1,ns_o
-              if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
-                 if (m == 1) then
-                    pct_cft_o(no,m) = 100._r8
-                 else
-                    pct_cft_o(no,m) = 0._r8
-                 endif
-              end if
-           enddo
-        end do
-     ! Old format with just PCTPFT
-     else
-     end if
+     do m = 0, num_natpft
+        call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), pct_nat_pft_o(:,m), &
+             nodata=0._r8,src_wt=pctnatveg_i*0.01_r8,dst_wt=pctnatveg_o*0.01_r8)
+        do no = 1,ns_o
+           if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
+              if (m == 0) then
+                 pct_nat_pft_o(no,m) = 100._r8
+              else
+                 pct_nat_pft_o(no,m) = 0._r8
+              endif
+           end if
+        enddo
+     end do
+     do m = 1, num_cft
+        call gridmap_areaave_scs(tgridmap, pct_cft_i(:,m), pct_cft_o(:,m), &
+             nodata=0._r8,src_wt=pctcrop_i*0.01_r8,dst_wt=pctcrop_o*0.01_r8)
+        do no = 1,ns_o
+           if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
+              if (m == 1) then
+                 pct_cft_o(no,m) = 100._r8
+              else
+                 pct_cft_o(no,m) = 0._r8
+              endif
+           end if
+        enddo
+     end do
 
   end if
 
@@ -585,7 +577,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   ! Also correct sums so that if they differ slightly from 100, they are corrected to
   ! equal 100 more exactly.
 
-  if ( (.not. zero_out) .and. (.not. oldformat) ) then
+  if ( .not. zero_out )then
      do no = 1,ns_o
         wst_sum = 0.
         do m = 0, num_natpft
@@ -626,15 +618,10 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
 
   ! Convert % pft as % of grid cell to % pft on the landunit and % of landunit on the
   ! grid cell
-  if ( .not. oldformat ) then
-     do no = 1,ns_o
-        pctnatpft_o(no) = pct_pft_type( pct_nat_pft_o(no,:), pctnatveg_o(no), first_pft_index=natpft_lb )
-        pctcft_o(no)    = pct_pft_type( pct_cft_o(no,:),     pctcrop_o(no),   first_pft_index=cft_lb    )
-     end do
-  else
-     write(6,*) "oldformat and should NOT be"
-     call abort()
-  end if
+  do no = 1,ns_o
+     pctnatpft_o(no) = pct_pft_type( pct_nat_pft_o(no,:), pctnatveg_o(no), first_pft_index=natpft_lb )
+     pctcft_o(no)    = pct_pft_type( pct_cft_o(no,:),     pctcrop_o(no),   first_pft_index=cft_lb    )
+  end do
 
   ! -----------------------------------------------------------------
   ! Error check
@@ -644,17 +631,15 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   if ( .not. (zero_out .or. use_input_pft) ) then
 
      ! Convert to pctpft over grid if using new format
-     if ( .not. oldformat ) then
-        do ni = 1, ns_i
-           pctnatpft_i(ni) = pct_pft_type( pct_nat_pft_i(ni,:), pctnatveg_i(ni), first_pft_index=natpft_lb )
-           pctcft_i(ni)    = pct_pft_type( pct_cft_i(ni,:),     pctcrop_i(ni),   first_pft_index=cft_lb    )
-        end do
+     do ni = 1, ns_i
+        pctnatpft_i(ni) = pct_pft_type( pct_nat_pft_i(ni,:), pctnatveg_i(ni), first_pft_index=natpft_lb )
+        pctcft_i(ni)    = pct_pft_type( pct_cft_i(ni,:),     pctcrop_i(ni),   first_pft_index=cft_lb    )
+     end do
 
-        do no = 1,ns_o
-           pctpft_o(no,natpft_lb:natpft_ub) = pctnatpft_o(no)%get_pct_p2g()
-           pctpft_o(no,cft_lb:cft_ub)       = pctcft_o(no)%get_pct_p2g()
-        end do
-     end if
+     do no = 1,ns_o
+        pctpft_o(no,natpft_lb:natpft_ub) = pctnatpft_o(no)%get_pct_p2g()
+        pctpft_o(no,cft_lb:cft_ub)       = pctcft_o(no)%get_pct_p2g()
+     end do
      allocate(gpft_i(0:numpft_i-1))
      allocate(gpft_o(0:numpft_i-1))
 
