@@ -929,7 +929,7 @@ contains
     call t_stopf('NUpdate3')
     if(use_matrixcn)then
        call t_startf('CNVMatrix')
-       call CNVegMatrix(bounds,num_soilp,filter_soilp,num_actfirep,filter_actfirep,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst,&
+       call CNVegMatrix(bounds,num_soilp,filter_soilp(1:num_soilp),num_actfirep,filter_actfirep,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst,&
                          cnveg_carbonflux_inst,  cnveg_nitrogenflux_inst,cnveg_state_inst,soilbiogeochem_nitrogenflux_inst,&
                          c13_cnveg_carbonstate_inst,c14_cnveg_carbonstate_inst,c13_cnveg_carbonflux_inst,&
                          c14_cnveg_carbonflux_inst)
@@ -938,7 +938,7 @@ contains
 
     if(use_soil_matrixcn)then
        call t_startf('CNSoilMatrix')
-       call CNSoilMatrix(bounds,num_soilc, filter_soilc, num_actfirec, filter_actfirec, &
+       call CNSoilMatrix(bounds,num_soilc, filter_soilc(1:num_soilc), num_actfirec, filter_actfirec, &
        cnveg_carbonflux_inst,soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
        cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst, &

@@ -108,15 +108,15 @@ integer,intent(in) :: begu
 integer,intent(in) :: endu
 integer,optional,intent(in) :: maxsm
 
-if ( associated(this%M) )then
-   call endrun( "ERROR: Sparse Matrix was already allocated" )
-end if
-if ( associated(this%RI) )then
-   call endrun( "ERROR: Sparse Matrix was already allocated" )
-end if
-if ( associated(this%CI) )then
-   call endrun( "ERROR: Sparse Matrix was already allocated" )
-end if
+!if ( associated(this%M) )then
+!   call endrun( "ERROR: Sparse Matrix was already allocated" )
+!end if
+!if ( associated(this%RI) )then
+!   call endrun( "ERROR: Sparse Matrix was already allocated" )
+!end if
+!if ( associated(this%CI) )then
+!   call endrun( "ERROR: Sparse Matrix was already allocated" )
+!end if
 this%SM = SM_in
 this%begu = begu
 this%endu = endu
@@ -179,8 +179,8 @@ SHR_ASSERT_FL((ubound(I, 1) >= NE_in), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(J, 1) >= NE_in), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M, 1) == begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 1) == endu), sourcefile, __LINE__)
-SHR_ASSERT_FL((lbound(M, 1) == this%begu), sourcefile, __LINE__)
-SHR_ASSERT_FL((ubound(M, 1) == this%endu), sourcefile, __LINE__)
+!SHR_ASSERT_FL((lbound(M, 1) == this%begu), sourcefile, __LINE__)
+!SHR_ASSERT_FL((ubound(M, 1) == this%endu), sourcefile, __LINE__)
 do k = 1,NE_in
    do fu = 1,num_unit
       u = filter_u(fu)  
@@ -404,7 +404,7 @@ integer,intent(in) :: endu
 character(len=*),parameter :: subname = 'InitV'
 
 if ( associated(this%V) )then
-   call endrun( "ERROR: Vector was already allocated" )
+!   call endrun( "ERROR: Vector was already allocated" )
 end if
 this%SV = SV_in
 allocate(this%V(begu:endu,1:SV_in))

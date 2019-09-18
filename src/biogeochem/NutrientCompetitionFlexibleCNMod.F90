@@ -430,6 +430,7 @@ contains
          iretransn_to_ideadcrootst    => cnveg_nitrogenflux_inst%iretransn_to_ideadcrootst_ph      , & ! Transfer index (from retranslocation pool to dead coarse root storage pool)
          iretransn_to_igrain          => cnveg_nitrogenflux_inst%iretransn_to_igrain_ph            , & ! Transfer index (from retranslocation pool to grain pool)
          iretransn_to_igrainst        => cnveg_nitrogenflux_inst%iretransn_to_igrainst_ph          , & ! Transfer index (from retranslocation pool to grain storage pool)
+         iretransn_to_iout            => cnveg_nitrogenflux_inst%iretransn_to_iout_ph              , & ! Transfer index (from retranslocation pool to external)
          ileaf_to_iretransn           => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph             , & ! Transfer index (from leaf pool to retranslocation pools)
          ifroot_to_iretransn          => cnveg_nitrogenflux_inst%ifroot_to_iretransn_ph            , & ! Transfer index (from fine root pool to retranslocation pools)
          ilivestem_to_iretransn       => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           & ! Transfer index (from live stem pool to retranslocation pools)
@@ -1254,6 +1255,10 @@ contains
                   matrix_nalloc(p,igrain_st  ) = npool_to_grainn_storage(p)     / npool_to_veg 
                end if
                matrix_Ninput(p) = npool_to_veg - retransn_to_npool(p)
+            else
+               if(retransn(p) .ne. 0)then
+                  matrix_nphtransfer(p,iretransn_to_iout) = matrix_nphtransfer(p,iretransn_to_iout) + retransn_to_npool(p)/retransn(p)
+               end if
             end if
             
             if(retransn(p) .ne. 0)then

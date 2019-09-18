@@ -747,7 +747,7 @@ contains
              end do
           end do
        end do
-       call this%matrix_Cinput%SetValueV_scaler(num_column,filter_column,value_column)
+       call this%matrix_Cinput%SetValueV_scaler(num_column,filter_column(1:num_column),value_column)
        if(.not. use_vertsoilc)then
           do k = 1,decomp_cascade_con%Ntri_setup
              do fi = 1,num_column
