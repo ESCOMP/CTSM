@@ -154,7 +154,7 @@ subroutine mkpftInit( zero_out_l, all_veg )
   ! these are set up so that they always span 0:numpft, so that there is a 1:1
   ! correspondence between an element in a full 0:numpft array and an element with the
   ! same index in either a natpft array or a cft array.
-  natpft_lb = 0
+  natpft_lb = noveg
   natpft_ub = num_natpft
   cft_lb    = num_natpft+1
   cft_ub    = cft_lb + num_cft - 1
@@ -466,14 +466,31 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
      call check_ret(nf_close(ncid), subname)
 
   else
-     oldformat = .true.
+     oldformat = .false.
      ns_i = 1
      numpft_i = numpft+1
-     allocate(pctpft_o(ns_o,0:numpft), stat=ier)
+     allocate(pctnatveg_i(ns_i), &
+              pctnatveg_o(ns_o), &
+              pctcrop_i(ns_i),   &
+              pctcrop_o(ns_o),   &
+              pct_cft_i(ns_i,1:num_cft), &
+              pct_cft_o(ns_o,1:num_cft), &
+              pct_nat_pft_i(ns_i,0:num_natpft), &
+              pct_nat_pft_o(ns_o,0:num_natpft), &
+              stat=ier)
      if (ier/=0)then
         call abort()
         return
      end if
+  end if
+  allocate(pctpft_i(ns_i,0:(numpft_i-1)), &
+     pctpft_o(ns_o,0:(numpft_i-1)), &
+     pctnatpft_i(ns_i),             &
+     pctcft_i(ns_i),                &
+     stat=ier)
+  if (ier/=0)then
+     call abort()
+     return
   end if
 
   ! Determine pctpft_o on output grid
@@ -498,15 +515,14 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         return
      end if
 
-     ! set PFT based on input pft_frc and pft_idx
-     pctpft_o(:,:) = 0._r8
-     pctlnd_o(:)   = 100._r8
-     do m = 0, numpft
-        ! Once reach a PFT where fraction goes to zero -- exit
-        if ( pft_frc(m) .eq. 0.0_r8 ) exit
-        do no = 1,ns_o
-           pctpft_o(no,pft_idx(m)) = pft_frc(m)
-        end do
+     do no = 1,ns_o
+        pctlnd_o(no)    = 100._r8
+        pctnatveg_o(no) = pft_override%natveg
+        pctcrop_o(no)   = pft_override%crop
+        pct_nat_pft_o(no,noveg:num_natpft) = pft_override%natpft(noveg:num_natpft)
+        pct_cft_o(no,1:num_cft)            = pft_override%cft(1:num_cft)
+        pctpft_o(no,natpft_lb:natpft_ub)   = pct_nat_pft_o(no,0:num_natpft)
+        pctpft_o(no,cft_lb:cft_ub)         = pct_cft_o(no,1:num_cft)
      end do
 
   else
@@ -569,27 +585,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   ! Also correct sums so that if they differ slightly from 100, they are corrected to
   ! equal 100 more exactly.
 
-  if ( (.not. zero_out) .and. oldformat) then
-     do no = 1,ns_o
-        wst_sum = 0.
-        do m = 0, numpft_i - 1
-           wst_sum = wst_sum + pctpft_o(no,m)
-        enddo
-        if (abs(wst_sum-100._r8) > relerr) then
-           write (6,*) subname//'error: pft = ', &
-                (pctpft_o(no,m), m = 0, numpft_i-1), &
-                ' do not sum to 100. at no = ',no,' but to ', wst_sum
-           stop
-        end if
-
-        ! Correct sum so that if it differs slightly from 100, it is corrected to equal
-        ! 100 more exactly
-        do m = 0, numpft_i - 1
-           pctpft_o(no,m) = pctpft_o(no,m) * 100._r8 / wst_sum
-        end do
-
-     end do
-  else if ( (.not. zero_out) .and. (.not. oldformat) ) then
+  if ( (.not. zero_out) .and. (.not. oldformat) ) then
      do no = 1,ns_o
         wst_sum = 0.
         do m = 0, num_natpft
@@ -636,10 +632,8 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         pctcft_o(no)    = pct_pft_type( pct_cft_o(no,:),     pctcrop_o(no),   first_pft_index=cft_lb    )
      end do
   else
-     do no = 1,ns_o
-        call convert_from_p2g(pct_p2g=pctpft_o(no,:), &
-             pctnatpft=pctnatpft_o(no), pctcft=pctcft_o(no))
-     end do
+     write(6,*) "oldformat and should NOT be"
+     call abort()
   end if
 
   ! -----------------------------------------------------------------
@@ -651,15 +645,6 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
 
      ! Convert to pctpft over grid if using new format
      if ( .not. oldformat ) then
-        allocate(pctpft_i(ns_i,0:(numpft_i-1)), &
-                 pctpft_o(ns_o,0:(numpft_i-1)), &
-                 pctnatpft_i(ns_i),             &
-                 pctcft_i(ns_i),                &
-                 stat=ier)
-        if (ier/=0)then
-            call abort()
-            return
-        end if
         do ni = 1, ns_i
            pctnatpft_i(ni) = pct_pft_type( pct_nat_pft_i(ni,:), pctnatveg_i(ni), first_pft_index=natpft_lb )
            pctcft_i(ni)    = pct_pft_type( pct_cft_i(ni,:),     pctcrop_i(ni),   first_pft_index=cft_lb    )
@@ -719,27 +704,23 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
      call shr_sys_flush(ndiag)
 
      deallocate(gpft_i, gpft_o)
-     if ( .not. oldformat ) then
-        deallocate(pctpft_o)
-     end if
 
   end if
+  deallocate( pctnatpft_i )
+  deallocate( pctcft_i    )
+  deallocate(pctpft_o)
 
 
   ! Deallocate dynamic memory
 
-  if ( .not. oldformat ) then
-     deallocate(pctnatveg_i)
-     deallocate(pctnatveg_o)
-     deallocate(pctcrop_i)
-     deallocate(pctcrop_o)
-     deallocate(pct_cft_i)
-     deallocate(pct_cft_o)
-     deallocate(pct_nat_pft_i)
-     deallocate(pct_nat_pft_o)
-  else
-     deallocate(pctpft_o)
-  end if
+  deallocate(pctnatveg_i)
+  deallocate(pctnatveg_o)
+  deallocate(pctcrop_i)
+  deallocate(pctcrop_o)
+  deallocate(pct_cft_i)
+  deallocate(pct_cft_o)
+  deallocate(pct_nat_pft_i)
+  deallocate(pct_nat_pft_o)
   if ( .not. zero_out .and. .not. use_input_pft ) then
      call domain_clean(tdomain) 
      call gridmap_clean(tgridmap)
