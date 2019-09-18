@@ -69,13 +69,14 @@ contains
   @Test
   subroutine test_runmkpftZero(this)
     class(TestMkPFTRun), intent(inout) :: this
-    logical :: zero_out, all_veg
+    logical :: zero_out, all_veg_l
     integer :: n
 
     zero_out = .true.
-    call mkpftInit( zero_out, all_veg )
-    @assertFalse(  use_input_pft )
-    @assertFalse( all_veg )
+    all_veg_l = .false.
+    call mkpftInit( zero_out, all_veg_l )
+    @assertTrue(  use_input_pft )
+    @assertFalse(  all_veg )
     call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, &
      pctlnd_o=this%pctlnd_pft, pctnatpft_o=this%pctnatpft, pctcft_o=this%pctcft)
     this%expected = 100.0_r8
@@ -96,16 +97,17 @@ contains
   @Test
   subroutine test_runmkpftPftORide(this)
     class(TestMkPFTRun), intent(inout) :: this
-    logical :: zero_out, all_veg
+    logical :: zero_out, all_veg_l
     integer :: n
     integer, parameter :: pftidx = 1
 
     zero_out = .false.
+    all_veg_l = .true.
     pft_idx(0) = pftidx
     pft_frc(0) = 100._r8
-    call mkpftInit( zero_out, all_veg )
+    call mkpftInit( zero_out, all_veg_l )
     @assertTrue(  use_input_pft )
-    @assertTrue( all_veg )
+    @assertTrue(  all_veg )
     call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, &
      pctlnd_o=this%pctlnd_pft, pctnatpft_o=this%pctnatpft, pctcft_o=this%pctcft)
     this%expected = 100.0_r8
@@ -128,20 +130,21 @@ contains
   subroutine test_runmkpftPftORideWCrop(this)
     use mkvarpar, only: numstdpft, numstdcft
     class(TestMkPFTRun), intent(inout) :: this
-    logical :: zero_out, all_veg
+    logical :: zero_out, all_veg_l
     integer :: n
     integer :: cftidx
     integer, parameter :: pftidx = 1
 
     cftidx = c3cropindex
     zero_out = .false.
+    all_veg_l = .true.
     @assertLessThan( pftidx, numstdpft-numstdcft+1 )
     @assertGreaterThan( cftidx, numstdpft-numstdcft )
     pft_idx(0:1) = (/ pftidx, cftidx /)
     pft_frc(0:1) = (/ 50.0_r8, 50.0_r8 /)
-    call mkpftInit( zero_out, all_veg )
+    call mkpftInit( zero_out, all_veg_l )
     @assertTrue(  use_input_pft )
-    @assertTrue( all_veg )
+    @assertTrue(  all_veg )
     call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, &
      pctlnd_o=this%pctlnd_pft, pctnatpft_o=this%pctnatpft, pctcft_o=this%pctcft)
     this%expected = 100.0_r8
@@ -163,7 +166,7 @@ contains
   subroutine test_runmkpft4PftORideWCrop(this)
     use mkvarpar, only: numstdpft, numstdcft
     class(TestMkPFTRun), intent(inout) :: this
-    logical :: zero_out, all_veg
+    logical :: zero_out, all_veg_l
     integer :: n
     integer :: cftidx, cftidx2
     integer, parameter :: pftidx = 1, pftidx2 = 2
@@ -171,15 +174,16 @@ contains
     cftidx = c3cropindex
     cftidx2 = c3irrcropindex
     zero_out = .false.
+    all_veg_l = .true.
     @assertLessThan( pftidx, numstdpft-numstdcft+1 )
     @assertLessThan( pftidx2, numstdpft-numstdcft+1 )
     @assertGreaterThan( cftidx, numstdpft-numstdcft )
     @assertGreaterThan( cftidx2, numstdpft-numstdcft )
     pft_idx(0:3) = (/ pftidx, pftidx2, cftidx, cftidx2  /)
     pft_frc(0:3) = (/ 25.0_r8, 25.0_r8, 25.0_r8, 25.0_r8 /)
-    call mkpftInit( zero_out, all_veg )
+    call mkpftInit( zero_out, all_veg_l )
     @assertTrue(  use_input_pft )
-    @assertTrue( all_veg )
+    @assertTrue(  all_veg )
     call mkpft(this%ldomain, this%mapfname, this%fpft, this%ndiag, &
      pctlnd_o=this%pctlnd_pft, pctnatpft_o=this%pctnatpft, pctcft_o=this%pctcft)
     this%expected = 100.0_r8

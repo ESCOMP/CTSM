@@ -180,6 +180,7 @@ program mksurfdat
          soil_fmax,                &
          soil_clay,                &
          pft_idx,                  &
+         all_veg,                  &
          pft_frc,                  &
          all_urban,                &
          no_inlandwet,             &
@@ -287,6 +288,7 @@ program mksurfdat
     ! Optional settings to change values for entire area
     ! ======================================
     !    all_urban --------- If entire area is urban
+    !    all_veg ----------- If entire area is to be vegetated (pft_idx and pft_frc then required)
     !    no_inlandwet ------ If wetland should be set to 0% over land
     !    soil_color -------- If you want to change the soil_color to this value everywhere
     !    soil_clay --------- If you want to change the soil_clay % to this value everywhere
@@ -310,6 +312,7 @@ program mksurfdat
     outnc_vic         = .false.
     outnc_3dglc       = .false.
     all_urban         = .false.
+    all_veg           = .false.
     no_inlandwet      = .true.
 
     ! default value for bug work around
