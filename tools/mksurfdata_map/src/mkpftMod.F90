@@ -107,6 +107,7 @@ subroutine mkpftInit( zero_out_l, all_veg )
 !EOP
   real(r8), parameter :: hndrd = 100.0_r8  ! A hundred percent
   character(len=32) :: subname = 'mkpftMod::mkpftInit() '
+  logical :: error_happened    ! If an error was triggered so should return
 !-----------------------------------------------------------------------
   write (6, '(a, a, a)') "In ", trim(subname), "..."
   if ( maxpft < numpft ) then
@@ -115,7 +116,8 @@ subroutine mkpftInit( zero_out_l, all_veg )
      return
   end if
   nzero = -1
-  if ( mkpft_check_oride( ) )then
+  call mkpft_check_oride( error_happened )
+  if ( error_happened )then
      write(6,*) subname//'Problem setting pft override settings'
      return
   end if
@@ -170,8 +172,7 @@ subroutine mkpftInit( zero_out_l, all_veg )
   pft_override = pft_oride()
   if( zero_out )then
      call pft_override%InitZeroOut()
-  end if
-  if ( use_input_pft ) then
+  else if ( use_input_pft ) then
      call pft_override%InitAllPFTIndex()
   end if
 
@@ -260,6 +261,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   integer  :: ier                             ! error status
   real(r8) :: relerr = 0.0001_r8              ! max error: sum overlap wts ne 1
   logical  :: oldformat                       ! if input file is in the old format or not (based on what variables exist)
+  logical :: error_happened                   ! If an error was triggered so should return
 
   character(len=35)  veg(0:maxpft)            ! vegetation types
   character(len=32) :: subname = 'mkpftMod::mkpft()'
@@ -489,7 +491,8 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
 
   else if ( use_input_pft ) then
 
-     if ( mkpft_check_oride( ) )then
+     call mkpft_check_oride( error_happened )
+     if ( error_happened )then
         write(6,*) subname//'Problem setting pft override settings'
         call abort()
         return
@@ -826,14 +829,14 @@ end subroutine mkpft_parse_oride
 ! !IROUTINE: mkpft_check_oride
 !
 ! !INTERFACE:
-function  mkpft_check_oride( ) result(error_happened)
+subroutine  mkpft_check_oride( error_happened )
 !
 ! !DESCRIPTION:
 ! Check that the pft override values are valid
 ! !USES:
   implicit none
 ! !ARGUMENTS:
-  logical :: error_happened ! Result, true if there was a problem
+  logical, intent(out) :: error_happened ! Result, true if there was a problem
 !
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
@@ -909,7 +912,7 @@ function  mkpft_check_oride( ) result(error_happened)
     end do
   end if
 
-end function mkpft_check_oride
+end subroutine mkpft_check_oride
 
 !-----------------------------------------------------------------------
 !BOP
