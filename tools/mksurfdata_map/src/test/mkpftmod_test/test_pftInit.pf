@@ -127,6 +127,18 @@ contains
   end subroutine test_runmkpftInitBadZeroNInput
 
   @Test
+  subroutine test_runmkpftInitBadAllVeg(this)
+    class(TestMkPFT), intent(inout) :: this
+    logical :: zero_out, all_veg
+
+    zero_out = .false.
+    all_veg = .true.
+    call mkpftInit( zero_out, all_veg )
+    @assertExceptionRaised( "ABORTED:" )
+
+  end subroutine test_runmkpftInitBadAllVeg
+
+  @Test
   subroutine test_runmkpftInitBadNotSum(this)
     class(TestMkPFT), intent(inout) :: this
     logical :: zero_out, all_veg
