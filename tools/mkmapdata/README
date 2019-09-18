@@ -12,7 +12,7 @@ two versions, one with mpiuni and one with mpi. Both versions
 also need to be built with NetCDF rather than the default
 IO version.
 
-Currently uses: ESMF7.0.0
+Currently uses: ESMF7.1.0r
 
 Do the following for help with the different options to the script...
 
@@ -44,7 +44,7 @@ and --src_type UGRID.
    http://www.earthsystemmodeling.org/
 
 You may need more than one version to do everything above. On cheyenne
-we use ESMF7.0.0.
+we use ESMF7.1.0r.
 
 The version of NetCDF used with ESMF needs to be version 4.1 or higher
 and compiled with the NetCDF4 file format enabled (with HDF5 compression).

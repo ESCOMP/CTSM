@@ -1041,6 +1041,15 @@
       <option name="comment"  >Include one LVG debug test (exact configuration is not very important). Note that the LVG test will fail if there is any 1-d output, or output separated by glacier elevation classes (e.g., the various *_FORC fields), so this includes a testmod that turns off any 1-d output.</option>
     </options>
   </test>
+  <test name="LCISO_Lm13" grid="f10_f10_musgs" compset="IHistClm50BgcCrop" testmods="clm/ciso_monthly">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment"  >Make sure Carbon isotopes on and off with land-use change, does NOT change answers. To verify for landuse change must go beyond a year boundary, because of #404 we can't use a December start, so need to run for beyond the year boundary.</option>
+    </options>
+  </test>
   <test name="NCK_Ld1" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="prealpha"/>
@@ -1653,6 +1662,42 @@
         <options>
           <option name="wallclock">0:10</option>
           <option name="comment">Include a short tracer consistency check in debug mode. For now (while we are still working on getting the tracer consistency check to pass across a whole timestep) a single timestep test is sufficient. Eventually we want to expand this test and add some other, similar tests: see https://github.com/ESCOMP/ctsm/issues/495.</option>
+        </options>
+      </machine>
+
+    </machines>
+  </test>
+  <test name="ERP_P36x2_D_Ld5" grid="f10_f10_musgs" compset="I2000Ctsm50NwpSpGswpGs" testmods="clm/default">
+    <machines>
+
+      <machine name="cheyenne" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">0:30</option>
+          <option name="comment">Include a debug ERP test of the NWP configuration.</option>
+        </options>
+      </machine>
+
+    </machines>
+  </test>
+  <test name="SMS_Ld1" grid="nldas2_rnldas2_mnldas2" compset="I2000Ctsm50NwpSpNldasGs" testmods="clm/default">
+    <machines>
+
+      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+        <options>
+          <option name="wallclock">0:30</option>
+          <option name="comment">Include a short smoke test covering the nldas2 grid and the I2000Ctsm50NwpSpNldasGs compset, which uses NLDAS datm forcing.</option>
+        </options>
+      </machine>
+
+    </machines>
+  </test>
+  <test name="SMS_Ld1" grid="nldas2_rnldas2_mnldas2" compset="I2000Ctsm50NwpSpNldasRsGs" testmods="clm/default">
+    <machines>
+
+      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+        <options>
+          <option name="wallclock">0:30</option>
+          <option name="comment">Include a short smoke test covering the nldas2 grid and the I2000Ctsm50NwpSpNldasRsGs compset, which uses NLDAS datm forcing.</option>
         </options>
       </machine>
 

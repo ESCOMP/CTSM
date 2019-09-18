@@ -15,7 +15,7 @@
   <!-- Descriptions of all the different valid configurations for different model versions -->
   <description modifier_mode="1">
     <desc lnd="CLM45[%SP][%SP-VIC][%CN][%CNDV][%CN-CROP][%CNDV-CROP][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
-    <desc lnd="CLM50[%SP][%SP-VIC][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK]">clm5.0:</desc>
+    <desc lnd="CLM50[%SP][%SP-VIC][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP]">clm5.0:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
     <desc option="CN"              >CN: Carbon Nitrogen model</desc>
     <desc option="CNDV"            >CNDV: CN with Dynamic Vegetation</desc>
@@ -30,6 +30,8 @@
     <desc option="BGCDV-CROP"      >BGC (vert. resol. CN and methane) with dynamic vegetation and prognostic crop:</desc>
     <desc option="BGC-CROP-CMIP6DECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 DECK experiments:</desc>
     <desc option="BGC-CROP-CMIP6WACCMDECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 WACCM DECK experiments:</desc>
+
+    <desc option="NWP-SP"          >NWP configuration with satellite phenology:</desc>
   </description>
 
   <entry id="COMP_LND">
@@ -78,6 +80,38 @@
     <desc>Overall physics version to use.
     This sets the default values for many different namelist options.
     This is typically set by the compset.</desc>
+  </entry>
+
+  <entry id="CLM_CONFIGURATION">
+    <type>char</type>
+    <valid_values>clm,nwp</valid_values>
+    <default_value>clm</default_value>
+    <values>
+      <value compset="_CLM[^_]*%NWP">nwp</value>
+    </values>
+    <group>run_component_clm</group>
+    <file>env_run.xml</file>
+    <desc>Sets CLM default namelist options related to model configuration.
+    clm: Configuration used for climate applications (CLM)
+    nwp: Configuration used for numerical weather prediction applications
+    </desc>
+  </entry>
+
+  <entry id="CLM_STRUCTURE">
+    <type>char</type>
+    <valid_values>standard,fast</valid_values>
+    <default_value>standard</default_value>
+    <values>
+      <value compset="_CLM[^_]*%NWP">fast</value>
+    </values>
+    <group>run_component_clm</group>
+    <file>env_run.xml</file>
+    <desc>Sets CLM default namelist options related to model structure.
+    standard: Standard model structure, allowing for more subgrid heterogeneity,
+    deeper soil, etc., at the cost of slower speeds.
+    fast: Simplified model structure, achieving faster speeds at the cost of less
+    subgrid heterogeneity, shallower soil, etc.
+    </desc>
   </entry>
 
   <entry id="CLM_NML_USE_CASE">

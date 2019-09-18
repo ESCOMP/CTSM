@@ -25,7 +25,8 @@ class JobLauncherQsub(JobLauncherBase):
         qsub_process = subprocess.Popen(self._qsub_command(stdout_path, stderr_path),
                                         stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
+                                        stderr=subprocess.PIPE,
+                                        universal_newlines=True)
         (out, err) = qsub_process.communicate(' '.join(command))
         if err:
             logger.info('qsub ERROR:\n%s', err)
