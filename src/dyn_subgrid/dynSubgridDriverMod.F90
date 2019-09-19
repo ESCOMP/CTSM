@@ -145,6 +145,9 @@ contains
        call dyncrop_interp(bounds_proc, crop_inst)
     end if
 
+    if (get_do_transient_lakes()) then
+       call dynlake_interp(bounds_proc)
+    end if
     ! (We don't bother calling dynHarvest_interp, because the harvest information isn't
     ! needed until the run loop. Harvest has nothing to do with subgrid weights, and in
     ! some respects doesn't even really belong in this module at all.)
