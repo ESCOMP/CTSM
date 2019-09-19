@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 927;
+my $ntests = 946;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 588;
+   $ntests += 600;
 }
 plan( tests=>$ntests );
 
@@ -298,6 +298,7 @@ foreach my $options ( "-configuration nwp",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
+                      "-fan on -bgc bgc -crop", "-fan atm -bgc cn -crop", "-fan soil -bgc bgc -crop ", "-fan full -bgc bgc -crop",
                       "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
                       "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
                      ) {
@@ -400,6 +401,21 @@ my %failtest = (
                                    },
      "both l_ncpl and dtime"     =>{ options=>"-l_ncpl 24 -envxml_dir .",
                                      namelst=>"dtime=1800",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "bad_fan_mode"              =>{ options=>" -envxml_dir . -fan zztop",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "fan_wo_crop"               =>{ options=>" -envxml_dir . -fan on -bgc bgc",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "fan_w_fates"               =>{ options=>" -envxml_dir . -fan on -bgc fates",
+                                     namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },

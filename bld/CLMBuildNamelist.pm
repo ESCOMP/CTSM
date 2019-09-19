@@ -2999,15 +2999,15 @@ sub setup_logic_fan {
        $log->fatal_error("fan_mode not one of atm, soil, full, on, off\n" );
    }
 
-   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fan',
-	       'fan_mode'=>$fan_mode );
-
-   $nl_flags->{'use_fan'} = $nl->get_value('use_fan');
-   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_nh3_to_atm',
-	       'fan_mode'=>$fan_mode);
-   $nl_flags->{'fan_nh3_to_atm'} = $nl->get_value('fan_nh3_to_atm');
-
    if ( !($fan_mode eq 'off') ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fan',
+	          'fan_mode'=>$fan_mode );
+
+       $nl_flags->{'use_fan'} = $nl->get_value('use_fan');
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_nh3_to_atm',
+	          'fan_mode'=>$fan_mode);
+       $nl_flags->{'fan_nh3_to_atm'} = $nl->get_value('fan_nh3_to_atm');
+
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_mapalgo');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_fan', 
 		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
@@ -3027,14 +3027,15 @@ sub setup_logic_fan {
 		   'fan_mode'=>$fan_mode);
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nh4_ads_coef',
 		   'fan_mode'=>$fan_mode);
-
+   } else {
+       $nl_flags->{'use_fan'} = ".false.";
    }
    
    if ( &value_is_true( $nl_flags->{'use_ed'} ) && &value_is_true( $nl_flags->{'use_fan'} ) ) {
-       fatal_error("Cannot turn use_fan on when use_ed is on\n" );
+       $log->fatal_error("Cannot turn use_fan on when use_ed is on\n" );
    }
    if ( !&value_is_true( $nl_flags->{'use_crop'} ) && &value_is_true( $nl_flags->{'use_fan'} ) ) {
-       fatal_error("Cannot turn use_fan on when use_crop is off\n" );
+       $log->fatal_error("Cannot turn use_fan on when use_crop is off\n" );
    }
 }
 
@@ -3884,7 +3885,9 @@ sub write_output_files {
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
   push @groups, "clm_canopy_inparm";
-  push @groups, "fan_nml";
+  if ( &value_is_true($nl_flags->{'use_fan'}) ) {
+    push @groups, "fan_nml";
+  }
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";
   }
@@ -3895,8 +3898,10 @@ sub write_output_files {
   $log->verbose_message("Writing clm namelist to $outfile");
 
   # Drydep, fire-emission or MEGAN namelist for driver
-  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm fan_inparm);
-  print "GROUPS: @groups \n";
+  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm);
+  if ( &value_is_true($nl_flags->{'use_fan'}) ) {
+    push @groups, "fan_inparm";
+  }
   $outfile = "$opts->{'dir'}/drv_flds_in";
   $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
   $log->verbose_message("Writing @groups namelists to $outfile");
@@ -3982,7 +3987,6 @@ sub add_default {
 
   # check whether the variable has a value in the namelist object -- if so then skip to end
   my $val = $nl->get_variable_value($group, $var);
-  print "ifdef $var $val\n";
 
   if (! defined $val) {
     # Look for a specified value in the options hash
