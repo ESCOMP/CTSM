@@ -486,7 +486,9 @@ contains
        call dyn_hwcontent_set_baselines(bounds_clump, &
             filter_inactive_and_active(nc)%num_icemecc, &
             filter_inactive_and_active(nc)%icemecc, &
-            urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
+            filter_inactive_and_active(nc)%num_lakec, &
+            filter_inactive_and_active(nc)%lakec, &
+            urbanparams_inst, soilstate_inst, lakestate_inst, water_inst, temperature_inst)
     end do
 
     ! ------------------------------------------------------------------------
@@ -624,7 +626,10 @@ contains
              call dyn_hwcontent_set_baselines(bounds_clump, &
                   filter_inactive_and_active(nc)%num_icemecc, &
                   filter_inactive_and_active(nc)%icemecc, &
-                  urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
+                  filter_inactive_and_active(nc)%num_lakec, &
+                  filter_inactive_and_active(nc)%lakec, &
+                  urbanparams_inst, soilstate_inst, lakestate_inst, &
+                  water_inst, temperature_inst)
           end do
        else if (nsrest == nsrBranch) then
           call endrun(msg='ERROR clm_initializeMod: '//&
