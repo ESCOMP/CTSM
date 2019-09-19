@@ -1015,7 +1015,7 @@ contains
     end do
    
     if(use_soil_matrixcn)then
-       call this%matrix_Ninput%SetValueV_scaler(num_column,filter_column,value_column)
+       call this%matrix_Ninput%SetValueV_scaler(num_column,filter_column(1:num_column),value_column)
     end if
 
     do k = 1, ndecomp_pools

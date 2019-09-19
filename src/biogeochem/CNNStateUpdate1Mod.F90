@@ -130,21 +130,32 @@ contains
       do j = 1, nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
+            if (.not. use_soil_matrixcn) then ! to be consistent with C
+               nf_soil%decomp_npools_sourcesink_col(c,j,i_met_lit) = &
+                    nf_veg%phenology_n_to_litr_met_n_col(c,j) * dt
 
-            nf_soil%decomp_npools_sourcesink_col(c,j,i_met_lit) = &
-                 nf_veg%phenology_n_to_litr_met_n_col(c,j) * dt
+               nf_soil%decomp_npools_sourcesink_col(c,j,i_cel_lit) = &
+                    nf_veg%phenology_n_to_litr_cel_n_col(c,j) * dt
 
-            nf_soil%decomp_npools_sourcesink_col(c,j,i_cel_lit) = &
-                 nf_veg%phenology_n_to_litr_cel_n_col(c,j) * dt
-
-            nf_soil%decomp_npools_sourcesink_col(c,j,i_lig_lit) = &
-                 nf_veg%phenology_n_to_litr_lig_n_col(c,j) * dt
+               nf_soil%decomp_npools_sourcesink_col(c,j,i_lig_lit) = &
+                    nf_veg%phenology_n_to_litr_lig_n_col(c,j) * dt
 
             ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
             ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
             ! time step, but to be safe, I'm explicitly setting it to zero here.
-            nf_soil%decomp_npools_sourcesink_col(c,j,i_cwd) = 0._r8
+               nf_soil%decomp_npools_sourcesink_col(c,j,i_cwd) = 0._r8
 
+            else
+               nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
+                    nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + nf_veg%phenology_n_to_litr_met_n_col(c,j) *dt
+
+               nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
+                    nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) + nf_veg%phenology_n_to_litr_cel_n_col(c,j) *dt
+
+               nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
+                    nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + nf_veg%phenology_n_to_litr_lig_n_col(c,j) *dt
+
+            end if
          end do
       end do
 
@@ -233,9 +244,12 @@ contains
             ns_veg%frootn_patch(p)          = ns_veg%frootn_patch(p)         + nf_veg%npool_to_frootn_patch(p)*dt
             ns_veg%frootn_storage_patch(p)  = ns_veg%frootn_storage_patch(p) + nf_veg%npool_to_frootn_storage_patch(p)*dt
          else
-            if(ns_veg%retransn_patch(p) .ne. 0)then
-               nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) = nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) + nf_veg%free_retransn_to_npool_patch(p) / ns_veg%retransn_patch(p)
+            if(ns_veg%retransn_patch(p) .eq. 0)then
+               ns_veg%retransn_patch(p) = 1.e-7
+               nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) = nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) + 1./dt
             end if
+            nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) = nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) &
+                  + nf_veg%free_retransn_to_npool_patch(p) / ns_veg%retransn_patch(p)
          end if
 
          if (woody(ivt(p)) == 1._r8) then

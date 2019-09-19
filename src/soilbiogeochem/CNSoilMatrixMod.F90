@@ -93,7 +93,7 @@ contains
     real(r8),dimension(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools) :: cn_decomp_pools
     integer :: Ntrans
     integer tranlist_a
-    integer j_decomp,j_lev
+    integer j_decomp,j_lev,ilev,idecomp
     integer,dimension(:) :: kfire_i(1:ndecomp_pools_vr)
     integer,dimension(:) :: kfire_j(1:ndecomp_pools_vr)
     real(r8),dimension(:,:) :: Cinter_old(bounds%begc:bounds%endc,1:ndecomp_pools_vr)
@@ -129,6 +129,8 @@ contains
     is_litter                     => decomp_cascade_con%is_litter                         ,&!Input:[logical(:)]TRUE => pool is a litter pool
 
     hr                         => soilbiogeochem_carbonflux_inst%hr_col                   ,&!Output:[real(r8)(:)]heterotrophic respiration
+    trcr_ctendency             => soilbiogeochem_carbonflux_inst%decomp_cpools_transport_tendency_col,&
+    trcr_ntendency             => soilbiogeochem_nitrogenflux_inst%decomp_npools_transport_tendency_col,&
     m_decomp_cpools_to_fire    => cnveg_carbonflux_inst%m_decomp_cpools_to_fire_col       ,&!Output:[real(r8)(:,:)]vertically-integrated decomposing C fire loss
     tri_ma_vr                  => soilbiogeochem_carbonflux_inst%tri_ma_vr                ,&!Input:[real(r8)(:,:)]vertical C transfer rate in sparse matrix format (gC*m3)/(gC*m3*step))
     matrix_decomp_fire_k       => soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col ,&!Input:[real(r8)(:,:)]decomposition rate due to fire (gC*m3)/(gC*m3*step))
@@ -243,16 +245,6 @@ contains
 
       ! Update the turnover rate matrix K with N limitation (fpi_vr)
       call t_startf('CN Soil matrix-assign matrix-in')
-      do i = 1,ndecomp_pools
-         if(is_litter(i))then
-            do j = 1, nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
-                  Ksoil%DM(c,(i-1)*nlevdecomp+j)   = Ksoil%DM(c,(i-1)*nlevdecomp+j) * fpi_vr(c,j) 
-               end do
-            end do
-         end if
-      end do
 
       call t_stopf('CN Soil matrix-assign matrix-in')
 
@@ -375,6 +367,16 @@ contains
 
       ! Update soil C pool size: X(matrix_Cinter) = X(matrix_Cinter) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter)
       ! Update soil N pool size: X(matrix_Ninter) = X(matrix_Ninter) + (A*K + AVsoil + AKfiresoil) * X(matrix_Ninter)
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
+         do i=1,AVsoil%NE
+            ilev = mod(AVsoil%RI(i)-1,nlevdecomp)+1
+            idecomp = (AVsoil%RI(i) - ilev)/nlevdecomp + 1
+            trcr_ctendency(c,ilev,idecomp) = trcr_ctendency(c,ilev,idecomp) + AVsoil%M(c,i)*matrix_Cinter%V(c,AVsoil%CI(i)) / dt
+            trcr_ntendency(c,ilev,idecomp) = trcr_ntendency(c,ilev,idecomp) + AVsoil%M(c,i)*matrix_Ninter%V(c,AVsoil%CI(i)) / dt
+         end do
+      end do
+     
       call matrix_Cinter%SPMM_AX(num_soilc,filter_soilc,AKallsoilc)
       call matrix_Ninter%SPMM_AX(num_soilc,filter_soilc,AKallsoiln)
 
@@ -421,29 +423,6 @@ contains
       ! Adjust heterotrophic respiration and fire flux because the pool size updating order is different between default and matrix code, balance error will occur
       ! while sudden big changes happen in C pool, eg. crop harvest and fire.
       call t_stopf('CN Soil matrix-matrix mult2-lev2')
-      do i=1,ndecomp_pools
-         do j=1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               hr(c) = hr(c) - (matrix_Cinter%V(c,j+(i-1)*nlevdecomp)-Cinter_old(c,j+(i-1)*nlevdecomp)&
-                             -  matrix_Cinput%V(c,j+(i-1)*nlevdecomp))*dzsoi_decomp(j) / dt
-            end do
-         end do
-      end do
-
-
-      if(num_actfirec .ne. 0)then
-         do i=1,ndecomp_pools
-            do j=1,nlevdecomp
-               do fc = 1,num_actfirec
-                  c = filter_actfirec(fc)
-                  fire_delta = AKfiresoil%M(c,j+(i-1)*nlevdecomp)*Cinter_old(c,j+(i-1)*nlevdecomp)*dzsoi_decomp(j) / dt 
-                  m_decomp_cpools_to_fire(c,i) = m_decomp_cpools_to_fire(c,i) - fire_delta
-                  hr(c) = hr(c) + fire_delta
-               end do
-            end do
-         end do
-      end if
 
       call t_startf('CN Soil matrix-assign back')
 

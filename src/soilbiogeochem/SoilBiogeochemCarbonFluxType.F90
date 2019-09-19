@@ -747,7 +747,7 @@ contains
              end do
           end do
        end do
-       call this%matrix_Cinput%SetValueV_scaler(num_column,filter_column,value_column)
+       call this%matrix_Cinput%SetValueV_scaler(num_column,filter_column(1:num_column),value_column)
        if(.not. use_vertsoilc)then
           do k = 1,decomp_cascade_con%Ntri_setup
              do fi = 1,num_column
@@ -879,7 +879,6 @@ contains
        end associate
 
     ! total heterotrophic respiration (HR)
-    if(.not. use_soil_matrixcn)then
        do fc = 1,num_soilc
           c = filter_soilc(fc)
        
@@ -888,7 +887,6 @@ contains
                this%somhr_col(c)
        
        end do
-    end if
 
   end subroutine Summary
 

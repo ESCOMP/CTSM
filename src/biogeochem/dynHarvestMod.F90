@@ -335,7 +335,8 @@ contains
          ilivecrootxf_to_iout_gmn            =>    cnveg_nitrogenflux_inst%ilivecrootxf_to_iout_gm                , &
          ideadcroot_to_iout_gmn              =>    cnveg_nitrogenflux_inst%ideadcroot_to_iout_gm                  , &
          ideadcrootst_to_iout_gmn            =>    cnveg_nitrogenflux_inst%ideadcrootst_to_iout_gm                , &
-         ideadcrootxf_to_iout_gmn            =>    cnveg_nitrogenflux_inst%ideadcrootxf_to_iout_gm                 &
+         ideadcrootxf_to_iout_gmn            =>    cnveg_nitrogenflux_inst%ideadcrootxf_to_iout_gm                , &
+         iretransn_to_iout_gmn               =>    cnveg_nitrogenflux_inst%iretransn_to_iout_gm                     &
          )
 
       dtime = get_step_size_real()
@@ -457,6 +458,7 @@ contains
                cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn)    = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn)    + m
                cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     + m
                cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iretransn_to_iout_gmn)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iretransn_to_iout_gmn)     + m
 
          ! storage pools
 	       cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileafst_to_iout_gmn)         = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileafst_to_iout_gmn)         + m

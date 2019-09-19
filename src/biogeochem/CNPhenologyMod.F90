@@ -1600,10 +1600,14 @@ contains
                   if(leafc_storage(p) .gt. 0)then
                      matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) &
                                                             + leafc_storage_to_xfer(p) / leafc_storage(p) 
+                  else
+                     leafc_storage_to_xfer(p) = 0
                   end if
                   if(frootc_storage(p) .gt. 0)then
                      matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) &
                                                             + frootc_storage_to_xfer(p) / frootc_storage(p)
+                  else
+                     frootc_storage_to_xfer(p) = 0   
                   end if
                 if (woody(ivt(p)) == 1.0_r8) then
                     matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + bgtr(p) 
@@ -2808,9 +2812,13 @@ contains
                if (use_matrixcn) then
                   if(leafc(p) .gt. 0)then
                      matrix_phtransfer(p,ileaf_to_iout_phc)  = leafc_to_litter(p) / leafc(p)
+                  else
+                     leafc_to_litter(p) = 0
                   end if
                   if(frootc(p) .gt. 0)then
                      matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
+                  else
+                     frootc_to_litter(p) = 0
                   end if
                end if ! use_matrixcn
                ! this assumes that offset_counter == dt for crops
@@ -2830,12 +2838,20 @@ contains
                   if(use_matrixcn)then
                      if(grainc(p) .gt. 0)then
                         matrix_phtransfer(p,igrain_to_iout_phc)  = (grainc_to_seed(p) + grainc_to_food(p)) / grainc(p)
+                     else
+                        grainc_to_seed(p) = 0
+                        grainc_to_food(p) = 0
                      end if
                      if(grainn(p) .gt. 0)then
                         matrix_nphtransfer(p,igrain_to_iout_phn) = (grainn_to_seed(p) + grainn_to_food(p)) / grainn(p)
+                     else
+                        grainn_to_seed(p) = 0
+                        grainn_to_food(p) = 0
                      end if
                      if(livestemc(p) .gt. 0)then
                         matrix_phtransfer(p,ilivestem_to_iout_phc) = livestemc_to_litter(p) / livestemc(p)
+                     else
+                        livestemc_to_litter(p) = 0
                      end if
                   end if ! use_matrixcn
                end if
@@ -2847,9 +2863,13 @@ contains
                if (use_matrixcn) then
                   if(leafc(p) .gt. 0)then
                      matrix_phtransfer(p,ileaf_to_iout_phc)  = leafc_to_litter(p) / leafc(p)
+                  else
+                     leafc_to_litter(p) = 0
                   end if
                   if(frootc(p) .gt. 0)then
                      matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
+                  else
+                     frootc_to_litter(p) = 0
                   end if
                end if !use_matrixcn
             end if
@@ -2860,6 +2880,8 @@ contains
                   if (use_matrixcn) then
                      if(leafc(p) .gt. 0)then
                         matrix_phtransfer(p,ileaf_to_iout_phc) = leafc_to_litter(p) / leafc(p)
+                     else
+                        leafc_to_litter(p) = 0
                      end if
                   end if !use_matrixcn 
                endif
@@ -2868,6 +2890,8 @@ contains
                   if (use_matrixcn) then
                      if(frootc(p) .gt. 0)then
                         matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
+                     else
+                        frootc_to_litter(p) = 0
                      end if
                   end if !use_matrixcn
                endif
@@ -2892,6 +2916,9 @@ contains
                   if(leafn(p) .gt. 0)then
                       matrix_nphtransfer(p,ileaf_to_iout_phn)       = (leafn_to_litter(p)) / leafn(p)
                       matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p)) / leafn(p)
+                  else
+                      leafn_to_litter(p)   = 0
+                      leafn_to_retransn(p) = 0
                   end if
                end if !use_matrixcn
                
@@ -2916,6 +2943,9 @@ contains
                   if(leafn(p) .gt. 0)then
                       matrix_nphtransfer(p,ileaf_to_iout_phn)       = (leafn_to_litter(p))/ leafn(p)
                       matrix_nphtransfer(p,ileaf_to_iretransn_phn)   = (leafn_to_retransn(p))/ leafn(p)
+                  else
+                      leafn_to_litter(p)   = 0
+                      leafn_to_retransn(p) = 0
                   end if
                end if !use_matrixcn
             end if    
@@ -2925,6 +2955,8 @@ contains
             if (use_matrixcn) then   
                if(frootn(p) .gt. 0)then
                   matrix_nphtransfer(p,ifroot_to_iout_phn)  = frootn_to_litter(p) / frootn(p)
+               else
+                  frootn_to_litter(p) = 0
                end if
             end if !use_matrixcn
             
@@ -2941,6 +2973,9 @@ contains
                   if(leafn(p) .gt. 0)then
                       matrix_nphtransfer(p,ileaf_to_iout_phn)  = (leafn_to_litter(p))/ leafn(p)
                       matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
+                  else
+                      leafn_to_litter(p)   = 0
+                      leafn_to_retransn(p) = 0
                   end if
                end if !use_matrixcn
                if (frootc(p) == 0.0_r8) then    
@@ -2951,6 +2986,8 @@ contains
                if (use_matrixcn) then   
                   if(frootn(p) .gt. 0)then
                      matrix_nphtransfer(p,ifroot_to_iout_phn)  = frootn_to_litter(p) / frootn(p)
+                  else
+                     frootn_to_litter(p) = 0
                   end if
                end if !use_matrixcn
             end if  
@@ -3160,6 +3197,9 @@ contains
                   if(leafn(p) .gt. 0)then
                      matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p))/ leafn(p)
                      matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
+                  else
+                     leafn_to_litter(p)   = 0
+                     leafn_to_retransn(p) = 0
                   end if
                end if !use_matrixcn
                if (frootc(p) == 0.0_r8) then    
@@ -3307,6 +3347,8 @@ contains
                if (use_matrixcn)then 
                   if (livestemn(p) .gt. 0.0_r8) then
                      matrix_nphtransfer(p,ilivestem_to_ideadstem_phn) = livestemn_to_deadstemn(p) / livestemn(p)
+                  else
+                     livestemn_to_deadstemn(p) = 0
                   end if
                end if
             end if    
@@ -3349,9 +3391,13 @@ contains
             if(use_matrixcn)then
                if(livecrootn(p) .gt. 0.0_r8) then
                   matrix_nphtransfer(p,ilivecroot_to_iretransn_phn) = livecrootn_to_retransn(p) / livecrootn(p)
+               else
+                  livecrootn_to_retransn(p) = 0
                end if
                if(livestemn(p) .gt. 0.0_r8) then
                   matrix_nphtransfer(p,ilivestem_to_iretransn_phn)  = livestemn_to_retransn(p) / livestemn(p)
+               else
+                  livestemn_to_retransn(p)  = 0
                end if
             end if !use_matrixcn
 
@@ -3487,7 +3533,6 @@ contains
                if ( pi <=  col%npatches(c) ) then
                   p = col%patchi(c) + pi - 1
                   if (patch%active(p)) then
-
                      ! leaf litter carbon fluxes
                      phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
                           + leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
