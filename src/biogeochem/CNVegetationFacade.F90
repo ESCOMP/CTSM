@@ -703,12 +703,12 @@ contains
     if (use_c13) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
             this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, &
-            soilbiogeochem_carbonstate_inst)
+            c13_soilbiogeochem_carbonstate_inst)
     end if
     if (use_c14) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
             this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, &
-            soilbiogeochem_carbonstate_inst)
+            c14_soilbiogeochem_carbonstate_inst)
     end if
     call NStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &

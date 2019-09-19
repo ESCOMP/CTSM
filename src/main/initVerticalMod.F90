@@ -17,7 +17,8 @@ module initVerticalMod
   use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb 
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
-  use clm_varctl        , only : use_bedrock, soil_layerstruct
+  use clm_varctl        , only : use_bedrock, rundef
+  use clm_varctl        , only : soil_layerstruct_predefined, soil_layerstruct_userdefined
   use clm_varctl        , only : use_fates
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
@@ -38,6 +39,7 @@ module initVerticalMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: initVertical
+
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ReadNL
   private :: hasBedrock  ! true if the given column type includes bedrock layers
@@ -107,7 +109,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
-    use clm_varcon, only : zmin_bedrock, n_melt_glcmec
+    use clm_varcon, only : zmin_bedrock
     !
     ! !ARGUMENTS:
     type(bounds_type)   , intent(in)    :: bounds
@@ -130,6 +132,7 @@ contains
     integer               :: ier               ! error status
     real(r8)              :: scalez = 0.025_r8 ! Soil layer thickness discretization (m)
     real(r8)              :: thick_equal = 0.2
+    character(len=20)     :: calc_method       ! soil layer calculation method
     real(r8) ,pointer     :: zbedrock_in(:)   ! read in - z_bedrock
     real(r8) ,pointer     :: lakedepth_in(:)   ! read in - lakedepth 
     real(r8), allocatable :: zurb_wall(:,:)    ! wall (layer node depth)
@@ -162,6 +165,8 @@ contains
     integer, parameter :: LEVGRND_CLASS_STANDARD        = 1
     integer, parameter :: LEVGRND_CLASS_DEEP_BEDROCK    = 2
     integer, parameter :: LEVGRND_CLASS_SHALLOW_BEDROCK = 3
+
+    character(len=*), parameter :: subname = 'initVertical'
     !------------------------------------------------------------------------
 
     begc = bounds%begc; endc= bounds%endc
@@ -184,10 +189,52 @@ contains
     ! Soil layers and interfaces (assumed same for all non-lake patches)
     ! "0" refers to soil surface and "nlevsoi" refers to the bottom of model soil
 
-    if ( soil_layerstruct == '10SL_3.5m' ) then 
+    if (soil_layerstruct_predefined == '10SL_3.5m' .or. soil_layerstruct_predefined == '23SL_3.5m') then
+       calc_method = 'node-based'  ! node-based followed by error check
+       if (soil_layerstruct_userdefined(1) /= rundef) then
+          write(iulog,*) subname//' ERROR: Both soil_layerstruct_predefined and soil_layer_userdefined have values'
+          call shr_sys_abort(subname//' ERROR: Cannot decide how to set the soil layer structure')
+       end if
+    ! thickness-based (part 1) and error check
+    else if (soil_layerstruct_predefined == '49SL_10m' .or. &
+             soil_layerstruct_predefined == '20SL_8.5m' .or. &
+             soil_layerstruct_predefined == '4SL_2m') then
+       calc_method = 'thickness-based'
+       if (soil_layerstruct_userdefined(1) /= rundef) then
+          write(iulog,*) subname//' ERROR: Both soil_layerstruct_predefined and soil_layer_userdefined have values'
+          call shr_sys_abort(subname//' ERROR: Cannot decide how to set the soil layer structure')
+       end if
+    ! thickness-based (part 2) and error check
+    else if (soil_layerstruct_userdefined(1) /= rundef) then
+       calc_method = 'thickness-based'
+       if (soil_layerstruct_predefined /= 'UNSET') then
+          write(iulog,*) subname//' ERROR: Both soil_layerstruct_predefined and soil_layer_userdefined have values'
+          call shr_sys_abort(subname//' ERROR: Cannot decide how to set the soil layer structure')
+       end if
+    else  ! error check
+       write(iulog,*) subname//' ERROR: Unrecognized pre-defined and user-defined soil layer structures: ', trim(soil_layerstruct_predefined), soil_layerstruct_userdefined
+       call endrun(subname//' ERROR: Unrecognized soil layer structure')
+    end if
+
+    if (calc_method == 'node-based') then
        do j = 1, nlevgrnd
           zsoi(j) = scalez*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
        enddo
+
+       if (soil_layerstruct_predefined == '23SL_3.5m') then
+       ! Soil layer structure that starts with standard exponential,
+       ! then has several evenly spaced layers and finishes off exponential.
+       ! This allows the upper soil to behave as standard, but then continues
+       ! with higher resolution to a deeper depth, so that, e.g., permafrost
+       ! dynamics are not lost due to an inability to resolve temperature,
+       ! moisture, and biogeochemical dynamics at the base of the active layer
+          do j = toplev_equalspace + 1, toplev_equalspace + nlev_equalspace
+             zsoi(j) = zsoi(j-1) + thick_equal
+          enddo
+          do j = toplev_equalspace + nlev_equalspace + 1, nlevgrnd
+             zsoi(j) = scalez * (exp(0.5_r8 * (j - nlev_equalspace - 0.5_r8)) - 1._r8) + nlev_equalspace * thick_equal
+          enddo
+       end if  ! soil_layerstruct_predefined == '23SL_3.5m'
 
        dzsoi(1) = 0.5_r8*(zsoi(1)+zsoi(2))             !thickness b/n two interfaces
        do j = 2,nlevgrnd-1
@@ -201,51 +248,46 @@ contains
        enddo
        zisoi(nlevgrnd) = zsoi(nlevgrnd) + 0.5_r8*dzsoi(nlevgrnd)
 
-    else if ( soil_layerstruct == '23SL_3.5m' )then
-       ! Soil layer structure that starts with standard exponential
-       ! and then has several evenly spaced layers, then finishes off exponential. 
-       ! this allows the upper soil to behave as standard, but then continues 
-       ! with higher resolution to a deeper depth, so that, for example, permafrost
-       ! dynamics are not lost due to an inability to resolve temperature, moisture, 
-       ! and biogeochemical dynamics at the base of the active layer
-       do j = 1, toplev_equalspace
-          zsoi(j) = scalez*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
-       enddo
-
-       do j = toplev_equalspace+1,toplev_equalspace + nlev_equalspace
-          zsoi(j) = zsoi(j-1) + thick_equal
-       enddo
-
-       do j = toplev_equalspace + nlev_equalspace +1, nlevgrnd
-          zsoi(j) = scalez*(exp(0.5_r8*((j - nlev_equalspace)-0.5_r8))-1._r8) + nlev_equalspace * thick_equal
-       enddo
-
-       dzsoi(1) = 0.5_r8*(zsoi(1)+zsoi(2))             !thickness b/n two interfaces
-       do j = 2,nlevgrnd-1
-          dzsoi(j)= 0.5_r8*(zsoi(j+1)-zsoi(j-1))
-       enddo
-       dzsoi(nlevgrnd) = zsoi(nlevgrnd)-zsoi(nlevgrnd-1)
-
-       zisoi(0) = 0._r8
-       do j = 1, nlevgrnd-1
-       zisoi(j) = 0.5_r8*(zsoi(j)+zsoi(j+1))         !interface depths
-       enddo
-       zisoi(nlevgrnd) = zsoi(nlevgrnd) + 0.5_r8*dzsoi(nlevgrnd)
-
-    else if ( soil_layerstruct == '49SL_10m' ) then
-       !scs: 10 meter soil column, nlevsoi set to 49 in clm_varpar
-       do j = 1,10
-          dzsoi(j)= 1.e-2_r8     !10mm layers
-       enddo
-       do j = 11,19
-          dzsoi(j)= 1.e-1_r8     !100 mm layers
-       enddo
-       do j = 20,nlevsoi+1       !300 mm layers
-          dzsoi(j)= 3.e-1_r8
-       enddo
-       do j = nlevsoi+2,nlevgrnd !10 meter bedrock layers
-          dzsoi(j)= 10._r8
-       enddo
+    else if (calc_method == 'thickness-based') then
+       if (soil_layerstruct_userdefined(1) /= rundef) then
+          do j = 1, nlevgrnd
+             ! read dzsoi from user-entered namelist vector
+             dzsoi(j) = soil_layerstruct_userdefined(j)
+          end do
+       else if (soil_layerstruct_predefined == '49SL_10m') then
+          !scs: 10 meter soil column, nlevsoi set to 49 in clm_varpar
+          do j = 1, 10
+             dzsoi(j) = 1.e-2_r8     ! 10-mm layers
+          enddo
+          do j = 11, 19
+             dzsoi(j) = 1.e-1_r8     ! 100-mm layers
+          enddo
+          do j = 20, nlevsoi+1       ! 300-mm layers
+             dzsoi(j) = 3.e-1_r8
+          enddo
+          do j = nlevsoi+2,nlevgrnd  ! 10-m bedrock layers
+             dzsoi(j) = 10._r8
+          enddo
+       else if (soil_layerstruct_predefined == '20SL_8.5m') then
+          do j = 1, 4  ! linear increase in layer thickness of...
+             dzsoi(j) = j * 0.02_r8                     ! ...2 cm each layer
+          enddo
+          do j = 5, 13
+             dzsoi(j) = dzsoi(4) + (j - 4) * 0.04_r8    ! ...4 cm each layer
+          enddo
+          do j = 14, nlevsoi
+             dzsoi(j) = dzsoi(13) + (j - 13) * 0.10_r8  ! ...10 cm each layer
+          enddo
+          do j = nlevsoi + 1, nlevgrnd  ! bedrock layers
+             dzsoi(j) = dzsoi(nlevsoi) + (((j - nlevsoi) * 25._r8)**1.5_r8) / 100._r8
+          enddo
+       else if (soil_layerstruct_predefined == '4SL_2m') then
+          dzsoi(1) = 0.1_r8
+          dzsoi(2) = 0.3_r8
+          dzsoi(3) = 0.6_r8
+          dzsoi(4) = 1.0_r8
+          dzsoi(5) = 1.0_r8
+       end if  ! thickness-based options
        
        zisoi(0) = 0._r8
        do j = 1,nlevgrnd
@@ -256,36 +298,17 @@ contains
           zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
        enddo
 
-    else if ( soil_layerstruct == '20SL_8.5m' ) then
-       do j = 1,4
-          dzsoi(j)= j*0.02_r8          ! linear increase in layer thickness of 2cm each layer
-       enddo
-       do j = 5,13
-          dzsoi(j)= dzsoi(4)+(j-4)*0.04_r8      ! linear increase in layer thickness of 2cm each layer
-       enddo
-       do j = 14,nlevsoi       
-          dzsoi(j)= dzsoi(13)+(j-13)*0.10_r8     ! linear increase in layer thickness of 2cm each layer
-       enddo
-       do j = nlevsoi+1,nlevgrnd !bedrock layers
-          dzsoi(j)= dzsoi(nlevsoi)+(((j-nlevsoi)*25._r8)**1.5_r8)/100._r8  ! bedrock layers
-       enddo
-       
-       zisoi(0) = 0._r8
-       do j = 1,nlevgrnd
-          zisoi(j)= sum(dzsoi(1:j))
-       enddo
-       
-       do j = 1, nlevgrnd
-          zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
-       enddo
-    end if
+    else  ! error check
+       write(iulog,*) subname//' ERROR: Unrecognized calc_method: ', trim(calc_method)
+       call endrun(subname//' ERROR: Unrecognized calc_method')
+    end if  ! calc_method is node-based or thickness-based
 
     ! define a vertical grid spacing such that it is the normal dzsoi if
     ! nlevdecomp =nlevgrnd, or else 1 meter
     if (use_vertsoilc) then
        dzsoi_decomp = dzsoi            !thickness b/n two interfaces
     else
-       dzsoi_decomp(1) = 1.
+       dzsoi_decomp(1) = 1._r8
     end if
 
     if (masterproc) then
@@ -708,21 +731,7 @@ contains
     !-----------------------------------------------
 
     do c = begc,endc
-       l = col%landunit(c)
-       g = col%gridcell(c)
-
-       if (lun%itype(l)==istice_mec .and. glc_behavior%allow_multiple_columns_grc(g)) then
-          ! ice_mec columns already account for subgrid topographic variability through
-          ! their use of multiple elevation classes; thus, to avoid double-accounting for
-          ! topographic variability in these columns, we ignore topo_std and use a fixed
-          ! value of n_melt.
-          col%n_melt(c) = n_melt_glcmec
-       else
-          col%n_melt(c) = 200.0/max(10.0_r8, col%topo_std(c))
-       end if
-
        ! microtopographic parameter, units are meters (try smooth function of slope)
-
        slopebeta = 3._r8
        slopemax = 0.4_r8
        slope0 = slopemax**(-1._r8/slopebeta)

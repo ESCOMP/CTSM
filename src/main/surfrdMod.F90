@@ -15,7 +15,7 @@ module surfrdMod
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog, scmlat, scmlon, single_column
   use clm_varctl      , only : use_cndv, use_crop
-  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_nat_pfts, collapse_crop_var
+  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
   use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid, ncd_inqdlen
   use pio
@@ -285,10 +285,14 @@ contains
     !    o real % abundance PFTs (as a percent of vegetated area)
     !
     ! !USES:
-    use clm_varctl  , only : create_crop_landunit
+    use clm_varctl  , only : create_crop_landunit, collapse_urban, &
+                             toosmall_soil, toosmall_crop, toosmall_glacier, &
+                             toosmall_lake, toosmall_wetland, toosmall_urban, &
+                             n_dom_landunits
     use fileutils   , only : getfil
     use domainMod   , only : domain_type, domain_init, domain_clean
     use clm_instur  , only : wt_lunit, topo_glc_mec
+    use landunit_varcon, only: max_lunit, istsoil, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     integer,          intent(in) :: begg, endg, actual_numcft      
@@ -299,6 +303,7 @@ contains
     type(var_desc_t)  :: vardesc              ! pio variable descriptor
     type(domain_type) :: surfdata_domain      ! local domain associated with surface dataset
     character(len=256):: locfn                ! local file name
+    integer, parameter :: n_dom_urban = 1     ! # of dominant urban landunits
     integer           :: n                    ! loop indices
     integer           :: ni,nj,ns             ! domain sizes
     character(len=16) :: lon_var, lat_var     ! names of lat/lon on dataset
@@ -405,6 +410,35 @@ contains
     call ncd_pio_closefile(ncid)
 
     call check_sums_equal_1(wt_lunit, begg, 'wt_lunit', subname)
+
+    ! if collapse_urban = .true.
+    ! collapse urban landunits to the dominant urban landunit
+
+    if (collapse_urban) then
+       call collapse_to_dominant(wt_lunit(begg:endg,isturb_MIN:isturb_MAX), isturb_MIN, isturb_MAX, begg, endg, n_dom_urban)
+    end if
+
+    ! Select N dominant landunits
+    ! ---------------------------
+    ! n_dom_landunits set by user in namelist
+    ! Call resembles the surfrd_veg_all call to the same subr that selects
+    ! n_dom_pfts (also set by the user in the namelist)
+
+    call collapse_to_dominant(wt_lunit(begg:endg,:), istsoil, max_lunit, &
+                              begg, endg, n_dom_landunits)
+
+    ! Remove landunits using thresholds set by user in namelist
+    ! ---------------------------------------------------------
+    ! Thresholds are set in the namelist parameters toosmall_* in units of %.
+    ! TODO Remove corresponding thresholds from the mksurfdat tool
+    !      Found 2 such cases (had expected to encounter one per landunit):
+    !         mkurbanparCommonMod.F90 MIN_DENS = 0.1 and
+    !         mksurfdat.F90 toosmallPFT = 1.e-10
+
+    call collapse_individual_lunits(wt_lunit, begg, endg, toosmall_soil, &
+                                    toosmall_crop, toosmall_glacier, & 
+                                    toosmall_lake, toosmall_wetland, &
+                                    toosmall_urban)
 
     if ( masterproc )then
        write(iulog,*) 'Successfully read surface boundary data'
@@ -877,14 +911,14 @@ contains
     !                 variable to 0 where is_pft_known_to_model = .false.?
     call collapse_crop_var(fert_cft(begg:endg,:), cft_size, begg, endg)
 
-    ! Call collapse_nat_pfts: enhance ctsm performance with fewer active pfts
+    ! Call collapse_to_dominant: enhance ctsm performance with fewer active pfts
     ! Collapsing to the top N dominant pfts (n_dom_pfts set in namelist).
     ! - Bare ground could be up to 1 patch before collapsing.
     ! - Pfts could be up to 14 before collapsing if create_crop_landunit = .T.
     ! - Pfts could be up to 16 before collapsing if create_crop_landunit = .F.
-    ! The call to collapse_nat_pfts also appears in subroutine dynpft_interp
-    call collapse_nat_pfts(wt_nat_patch(begg:endg,:), natpft_size, &
-                           begg, endg, n_dom_pfts)
+    ! TODO Add the same call to subroutine dynpft_interp for transient runs
+    call collapse_to_dominant(wt_nat_patch(begg:endg,:), natpft_lb, natpft_ub, &
+                              begg, endg, n_dom_pfts)
   end subroutine surfrd_veg_all
 
   !-----------------------------------------------------------------------

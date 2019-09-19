@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 906;
+my $ntests = 927;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 579;
+   $ntests += 588;
 }
 plan( tests=>$ntests );
 
@@ -165,7 +165,7 @@ my $mode = "-phys $phys";
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
 my $real_par_file = "user_nl_clm_real_parameters";
-my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -glc_nec 10 -no-note -output_reals $real_par_file";
+my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -configuration clm -structure standard -glc_nec 10 -no-note -output_reals $real_par_file";
 if ( $opts{'test'} ) {
    $bldnml .= " -test";
 }
@@ -287,12 +287,14 @@ $mode = "-phys $phys";
 &make_config_cache($phys);
 
 print "\n===============================================================================\n";
-print "Test irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
+print "Test configuration, structure, irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
 print "=================================================================================\n";
 
-# irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
+# configuration, structure, irrigate, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
+foreach my $options ( "-configuration nwp",
+                      "-structure fast",
+                      "-namelist '&a irrigate=.true./'", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
@@ -406,22 +408,22 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     "clm50CNDVwtransient"       =>{ options=>" -envxml_dir . -use_case 20thC_transient -dynamic_vegetation -res 10x15",
+     "clm50CNDVwtransient"       =>{ options=>" -envxml_dir . -use_case 20thC_transient -dynamic_vegetation -res 10x15 -ignore_warnings",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "CNDV with flanduse_timeseries - clm4_5"=>{ options=>"-bgc bgc -dynamic_vegetation -envxml_dir .",
+     "CNDV with flanduse_timeseries - clm4_5"=>{ options=>"-bgc bgc -dynamic_vegetation -envxml_dir . -ignore_warnings",
                                      namelst=>"flanduse_timeseries='my_flanduse_timeseries_file.nc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     "use_cndv=T without bldnml op"=>{ options=>"-bgc cn -envxml_dir .",
+     "use_cndv=T without bldnml op"=>{ options=>"-bgc cn -envxml_dir . -ignore_warnings",
                                      namelst=>"use_cndv=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     "use_cndv=F with dyn_veg op"=>{ options=>"-bgc cn -dynamic_vegetation -envxml_dir .",
+     "use_cndv=F with dyn_veg op"=>{ options=>"-bgc cn -dynamic_vegetation -envxml_dir . -ignore_warnings",
                                      namelst=>"use_cndv=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
@@ -435,6 +437,51 @@ my %failtest = (
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
+                                   },
+     "toosmall soil w trans"     =>{ options=>"-envxml_dir .",
+                                     namelst=>"toosmall_soil=10, dyn_transient_pfts=T",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "toosmall lake w trans"     =>{ options=>"-envxml_dir .",
+                                     namelst=>"toosmall_lake=10, dyn_transient_pfts=T",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "toosmall crop w trans"     =>{ options=>"-bgc bgc -crop -envxml_dir .",
+                                     namelst=>"toosmall_crop=10, dyn_transient_pfts=T",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "toosmall wetl w trans"     =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"toosmall_wetland=10, dyn_transient_pfts=T",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "toosmall glc  w trans"     =>{ options=>"-bgc sp  -envxml_dir .",
+                                     namelst=>"toosmall_glacier=10, dyn_transient_pfts=T", 
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "toosmall urban w trans"    =>{ options=>"-bgc sp  -envxml_dir .",
+                                     namelst=>"toosmall_urban=10, dyn_transient_pfts=T",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "collapse_urban w trans"    =>{ options=>"-bgc sp  -envxml_dir .",
+                                     namelst=>"collapse_urban=T, dyn_transient_crops=T",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "n_dom_landunits w trans"    =>{ options=>"-bgc sp  -envxml_dir .",
+                                     namelst=>"n_dom_landunits=2, dyn_transient_crops=T",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "n_dom_pfts w trans"         =>{ options=>"-bgc sp  -envxml_dir .",
+                                     namelst=>"n_dom_pfts=2, dyn_transient_crops=T",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
                                    },
      "baset_map without crop"    =>{ options=>"-bgc bgc -envxml_dir . -no-crop",
                                      namelst=>"baset_mapping='constant'",
@@ -1221,7 +1268,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", "-bgc bgc -envxml_dir . -light_res 360x720",
-                     "-bgc sp -envxml_dir . -vichydro", "-bgc bgc -dynamic_vegetation", "-bgc bgc -clm_demand flanduse_timeseries -sim_year 1850-2000",
+                     "-bgc sp -envxml_dir . -vichydro", "-bgc bgc -dynamic_vegetation -ignore_warnings", "-bgc bgc -clm_demand flanduse_timeseries -sim_year 1850-2000",
                      "-bgc bgc -envxml_dir . -namelist '&a use_c13=.true.,use_c14=.true.,use_c14_bombspike=.true./'" );
   foreach my $clmopts ( @clmoptions ) {
      my @clmres = ( "ne120np4", "10x15", "0.9x1.25", "1.9x2.5" );

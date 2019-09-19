@@ -355,7 +355,7 @@ contains
     ! initialized, and after pftcon file is read in.
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size
+    use clm_time_manager, only: get_step_size_real
     use clm_varctl      , only: use_crop
     use clm_varcon      , only: secspday
     !
@@ -366,7 +366,7 @@ contains
     !
     ! Get time-step and what fraction of a day it is
     !
-    dt      = real( get_step_size(), r8 )
+    dt      = get_step_size_real()
     fracday = dt/secspday
 
     ! set constants for CNSeasonDecidPhenology 

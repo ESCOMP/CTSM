@@ -129,7 +129,7 @@ contains
     !
     ! !USES:
     use clm_varcon      , only: secspday
-    use clm_time_manager, only: get_step_size
+    use clm_time_manager, only: get_step_size_real
     use clm_varctl      , only: iulog, cnallocate_carbon_only_set
     use shr_infnan_mod  , only: nan => shr_infnan_nan, assignment(=)
     !
@@ -142,7 +142,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! set time steps
-    dt = real( get_step_size(), r8 )
+    dt = get_step_size_real()
 
     ! set space-and-time parameters from parameter file
     bdnr = params_inst%bdnr * (dt/secspday)
