@@ -980,6 +980,7 @@ contains
 
     ! Subtract baselines set in initialization
     !
+    !
     ! NOTE(wjs, 2019-03-01) I haven't given enough thought to how (if at all) we should
     ! correct for heat_liquid and cv_liquid, which are used to determine the weighted
     ! average liquid water temperature. For example, if we're subtracting out a baseline
@@ -1008,13 +1009,21 @@ contains
     ! !DESCRIPTION:
     ! Accumulate heat of lake water in lake columns. 
     !
-    ! Adds to any existing values in heat, heat_liquid and cv_liquid.
-    ! HERE EXPLANATIONS about not adding heat_liquid and cv_liquid should come. 
-    ! where this routine differs from AccumulateLiqIceMassLake !!
-    !
-    ! Note: Changes to this routine should generally be accompanied by similar changes to
-    ! AccumulateLiqIceMassLake
-    !
+    ! This module differs from AccumulateSoilHeatNonLake in the sense that for lake heat
+    ! the average heat_liquid and cv_liquid are not calculated. This because the 
+    ! lake water is virtual (there will never by a change in lake water content) 
+    ! and thus it should not be taken into the average column temperature when adjusting the change in 
+    ! heat content of the grid cell for the change in water content. 
+    ! Now, for lake grid cells, this is only done for the water content of the 
+    ! soil under the lake and the snow on the lake. 
+    ! 
+    ! Some minor concerns with this approach: 
+    ! In a rare case, lake water can have some changes in water content in time, 
+    ! when experiencing phase changes: If a lake was completely liquid in initialization,
+    ! but then partially froze and then grew / shrank, some dynbal fluxes would be generated:
+    ! equal and opposite dynbal liquid and ice terms. In this case, it would be appropriate to 
+    ! take the lake temperature along in determining the total heat which is corrected for delta liq. 
+    
     ! !ARGUMENTS:
     type(bounds_type)         , intent(in)    :: bounds
     integer                   , intent(in)    :: num_c                       ! number of column points in column filter (should not include lake points; can be a subset of the no-lake filter)
