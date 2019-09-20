@@ -41,7 +41,7 @@ module SnowHydrologyMod
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
   use LakeCon         , only : lsadz
   use NumericsMod     , only : truncate_small_values_one_lev
-  use WaterTracerUtils, only : CalcTracerFromBulkMasked
+  use WaterTracerUtils, only : CalcTracerFromBulk, CalcTracerFromBulkMasked
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -85,6 +85,11 @@ module SnowHydrologyMod
   private :: PostPercolation_AdjustLayerThicknesses ! Adjust layer thickness for any water+ice content changes after percolation through the snow pack
   private :: BulkDiag_SnowWaterAccumulatedSnow ! Update int_snow, and reset accumulated snow when no snow present
   private :: SumFlux_AddSnowPercolation ! Calculate summed fluxes accounting for qflx_snow_percolation and similar fluxes
+  private :: InitFlux_SnowCapping ! Initialize snow capping fluxes to 0
+  private :: BulkFlux_SnowCappingFluxes ! Calculate snow capping fluxes and related terms for bulk water
+  private :: TracerFlux_SnowCappingFluxes ! Calculate snow capping fluxes and related terms for one tracer
+  private :: UpdateState_RemoveSnowCappingFluxes ! Remove snow capping fluxes from h2osoi_ice and h2osoi_liq
+  private :: SnowCappingUpdateDzAndAerosols ! Following snow capping, adjust dz and aerosol masses in bottom snow layer
   private :: Combo                  ! Returns the combined variables: dz, t, wliq, wice.
   private :: MassWeightedSnowRadius ! Mass weighted snow grain size
   !
@@ -2881,7 +2886,7 @@ contains
     ! variable)
     !
     ! !ARGUMENTS:
-    type(bounds_type)      , intent(in)    :: bounds          
+    type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: num_initc       ! number of column points that need to be initialized
     integer                , intent(in)    :: filter_initc(:) ! column filter for points that need to be initialized
     integer                , intent(in)    :: num_snowc       ! number of column snow points in column filter
@@ -2891,26 +2896,15 @@ contains
     type(water_type)       , intent(inout) :: water_inst
     !
     ! !LOCAL VARIABLES:
+    integer    :: i                                ! index of water tracer or bulk
     real(r8)   :: dtime                            ! land model time step (sec)
-    real(r8)   :: mss_snwcp_tot                    ! total snow capping mass [kg/m2] 
-    real(r8)   :: mss_snow_bottom_lyr              ! total snow mass (ice+liquid) in bottom layer [kg/m2]
-    real(r8)   :: snwcp_flux_ice                   ! snow capping flux (ice) [kg/m2]
-    real(r8)   :: snwcp_flux_liq                   ! snow capping flux (liquid) [kg/m2]
-    real(r8)   :: icefrac                          ! fraction of ice mass w.r.t. total mass [unitless]
-    real(r8)   :: frac_adjust                      ! fraction of mass remaining after capping
-    real(r8)   :: rho                              ! partial density of ice (not scaled with frac_sno) [kg/m3]
-    integer    :: fc, c                            ! counters
     real(r8)   :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water (mm H2O)
-    real(r8)   :: h2osno_excess(bounds%begc:bounds%endc) ! excess snow that needs to be capped [mm H2O]
-    logical    :: apply_runoff(bounds%begc:bounds%endc)  ! for columns with capping, whether the capping flux should be sent to runoff
-    ! Always keep at least this fraction of the bottom snow layer when doing snow capping
-    ! This needs to be slightly greater than 0 to avoid roundoff problems
-    real(r8), parameter :: min_snow_to_keep = 1.e-9  ! fraction of bottom snow layer to keep with capping
+    real(r8)   :: rho_orig_bottom(bounds%begc:bounds%endc) ! partial density of ice in bottom snow layer, before updates (not scaled with frac_sno) [kg/m3]
+    real(r8)   :: frac_adjust(bounds%begc:bounds%endc) ! fraction of mass remaining after capping
+    type(filter_col_type) :: snow_capping_filterc ! column filter: columns undergoing snow capping
 
     !-----------------------------------------------------------------------
 
-    ! FIXME(wjs, 2019-09-17) When I'm done, I should be able to merge these two associate
-    ! blocks into one
     associate( &
          begc => bounds%begc, &
          endc => bounds%endc, &
@@ -2919,29 +2913,123 @@ contains
          b_waterstate_inst => water_inst%waterstatebulk_inst &
          )
 
-    associate( &
-        qflx_snwcp_ice     => b_waterflux_inst%qflx_snwcp_ice_col   , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
-        qflx_snwcp_liq     => b_waterflux_inst%qflx_snwcp_liq_col   , & ! Output: [real(r8) (:)   ]  excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
-        qflx_snwcp_discarded_ice => b_waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
-        qflx_snwcp_discarded_liq => b_waterflux_inst%qflx_snwcp_discarded_liq_col, & ! Output: [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
-        h2osoi_ice         => b_waterstate_inst%h2osoi_ice_col      , & ! In/Out: [real(r8) (:,:) ] ice lens (kg/m2)                       
-        h2osoi_liq         => b_waterstate_inst%h2osoi_liq_col      , & ! In/Out: [real(r8) (:,:) ] liquid water (kg/m2)                   
-        mss_bcphi          => aerosol_inst%mss_bcphi_col          , & ! In/Out: [real(r8) (:,:) ] hydrophilic BC mass in snow (col,lyr) [kg]
-        mss_bcpho          => aerosol_inst%mss_bcpho_col          , & ! In/Out: [real(r8) (:,:) ] hydrophobic BC mass in snow (col,lyr) [kg]
-        mss_ocphi          => aerosol_inst%mss_ocphi_col          , & ! In/Out: [real(r8) (:,:) ] hydrophilic OC mass in snow (col,lyr) [kg]
-        mss_ocpho          => aerosol_inst%mss_ocpho_col          , & ! In/Out: [real(r8) (:,:) ] hydrophobic OC mass in snow (col,lyr) [kg]
-        mss_dst1           => aerosol_inst%mss_dst1_col           , & ! In/Out: [real(r8) (:,:) ] dust species 1 mass in snow (col,lyr) [kg]
-        mss_dst2           => aerosol_inst%mss_dst2_col           , & ! In/Out: [real(r8) (:,:) ] dust species 2 mass in snow (col,lyr) [kg]
-        mss_dst3           => aerosol_inst%mss_dst3_col           , & ! In/Out: [real(r8) (:,:) ] dust species 3 mass in snow (col,lyr) [kg]
-        mss_dst4           => aerosol_inst%mss_dst4_col           , & ! In/Out: [real(r8) (:,:) ] dust species 4 mass in snow (col,lyr) [kg]
-        topo               => topo_inst%topo_col                  , & ! Input : [real(r8) (:)   ] column surface height (m)
-        dz                 => col%dz                                & ! In/Out: [real(r8) (:,:) ] layer depth (m)
-    )
-
     ! Determine model time step
     dtime = get_step_size_real()
 
-    ! Initialize capping fluxes for all columns in domain (lake or non-lake)
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call InitFlux_SnowCapping(bounds, num_initc, filter_initc, &
+            ! Outputs
+            qflx_snwcp_ice           = w%waterflux_inst%qflx_snwcp_ice_col(begc:endc), &
+            qflx_snwcp_liq           = w%waterflux_inst%qflx_snwcp_liq_col(begc:endc), &
+            qflx_snwcp_discarded_ice = w%waterflux_inst%qflx_snwcp_discarded_ice_col(begc:endc), &
+            qflx_snwcp_discarded_liq = w%waterflux_inst%qflx_snwcp_discarded_liq_col(begc:endc))
+       end associate
+    end do
+
+    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_snowc, filter_snowc, &
+         caller = 'SnowCapping', &
+         h2osno_total = h2osno_total(begc:endc))
+
+    call BulkFlux_SnowCappingFluxes(bounds, num_snowc, filter_snowc, &
+         ! Inputs
+         dtime                    = dtime, &
+         dz_bottom                = col%dz(begc:endc, 0), &
+         topo                     = topo_inst%topo_col(begc:endc), &
+         h2osno_total             = h2osno_total(begc:endc), &
+         h2osoi_ice_bottom        = b_waterstate_inst%h2osoi_ice_col(begc:endc, 0), &
+         h2osoi_liq_bottom        = b_waterstate_inst%h2osoi_liq_col(begc:endc, 0), &
+         ! Outputs
+         snow_capping_filterc     = snow_capping_filterc, &
+         rho_orig_bottom          = rho_orig_bottom(begc:endc), &
+         frac_adjust              = frac_adjust(begc:endc), &
+         qflx_snwcp_ice           = b_waterflux_inst%qflx_snwcp_ice_col(begc:endc), &
+         qflx_snwcp_liq           = b_waterflux_inst%qflx_snwcp_liq_col(begc:endc), &
+         qflx_snwcp_discarded_ice = b_waterflux_inst%qflx_snwcp_discarded_ice_col(begc:endc), &
+         qflx_snwcp_discarded_liq = b_waterflux_inst%qflx_snwcp_discarded_liq_col(begc:endc))
+
+    do i = water_inst%tracers_beg, water_inst%tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call TracerFlux_SnowCappingFluxes(bounds, snow_capping_filterc, &
+            ! Inputs
+            bulk_h2osoi_ice_bottom        = b_waterstate_inst%h2osoi_ice_col(begc:endc, 0), &
+            bulk_h2osoi_liq_bottom        = b_waterstate_inst%h2osoi_liq_col(begc:endc, 0), &
+            bulk_qflx_snwcp_ice           = b_waterflux_inst%qflx_snwcp_ice_col(begc:endc), &
+            bulk_qflx_snwcp_liq           = b_waterflux_inst%qflx_snwcp_liq_col(begc:endc), &
+            bulk_qflx_snwcp_discarded_ice = b_waterflux_inst%qflx_snwcp_discarded_ice_col(begc:endc), &
+            bulk_qflx_snwcp_discarded_liq = b_waterflux_inst%qflx_snwcp_discarded_liq_col(begc:endc), &
+            trac_h2osoi_ice_bottom        = w%waterstate_inst%h2osoi_ice_col(begc:endc, 0), &
+            trac_h2osoi_liq_bottom        = w%waterstate_inst%h2osoi_liq_col(begc:endc, 0), &
+            ! Outputs
+            trac_qflx_snwcp_ice           = w%waterflux_inst%qflx_snwcp_ice_col(begc:endc), &
+            trac_qflx_snwcp_liq           = w%waterflux_inst%qflx_snwcp_liq_col(begc:endc), &
+            trac_qflx_snwcp_discarded_ice = w%waterflux_inst%qflx_snwcp_discarded_ice_col(begc:endc), &
+            trac_qflx_snwcp_discarded_liq = w%waterflux_inst%qflx_snwcp_discarded_liq_col(begc:endc))
+       end associate
+    end do
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(w => water_inst%bulk_and_tracers(i))
+       call UpdateState_RemoveSnowCappingFluxes(bounds, snow_capping_filterc, &
+            ! Inputs
+            dtime                    = dtime, &
+            qflx_snwcp_ice           = w%waterflux_inst%qflx_snwcp_ice_col(begc:endc), &
+            qflx_snwcp_liq           = w%waterflux_inst%qflx_snwcp_liq_col(begc:endc), &
+            qflx_snwcp_discarded_ice = w%waterflux_inst%qflx_snwcp_discarded_ice_col(begc:endc), &
+            qflx_snwcp_discarded_liq = w%waterflux_inst%qflx_snwcp_discarded_liq_col(begc:endc), &
+            ! Outputs
+            h2osoi_ice_bottom        = w%waterstate_inst%h2osoi_ice_col(begc:endc, 0), &
+            h2osoi_liq_bottom        = w%waterstate_inst%h2osoi_liq_col(begc:endc, 0))
+       end associate
+    end do
+
+    call SnowCappingUpdateDzAndAerosols(bounds, snow_capping_filterc, &
+         ! Inputs
+         rho_orig_bottom   = rho_orig_bottom(begc:endc), &
+         h2osoi_ice_bottom = b_waterstate_inst%h2osoi_ice_col(begc:endc, 0), &
+         frac_adjust       = frac_adjust(begc:endc), &
+         ! Outputs
+         dz_bottom         = col%dz(begc:endc, 0), &
+         mss_bcphi_bottom  = aerosol_inst%mss_bcphi_col(begc:endc, 0), &
+         mss_bcpho_bottom  = aerosol_inst%mss_bcpho_col(begc:endc, 0), &
+         mss_ocphi_bottom  = aerosol_inst%mss_ocphi_col(begc:endc, 0), &
+         mss_ocpho_bottom  = aerosol_inst%mss_ocpho_col(begc:endc, 0), &
+         mss_dst1_bottom   = aerosol_inst%mss_dst1_col(begc:endc, 0), &
+         mss_dst2_bottom   = aerosol_inst%mss_dst2_col(begc:endc, 0), &
+         mss_dst3_bottom   = aerosol_inst%mss_dst3_col(begc:endc, 0), &
+         mss_dst4_bottom   = aerosol_inst%mss_dst4_col(begc:endc, 0))
+
+    end associate
+  end subroutine SnowCapping
+
+  !-----------------------------------------------------------------------
+  subroutine InitFlux_SnowCapping(bounds, num_initc, filter_initc, &
+       qflx_snwcp_ice, qflx_snwcp_liq, qflx_snwcp_discarded_ice, qflx_snwcp_discarded_liq)
+    !
+    ! !DESCRIPTION:
+    ! Initialize snow capping fluxes to 0
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)      , intent(in)    :: bounds
+    integer                , intent(in)    :: num_initc       ! number of column points that need to be initialized
+    integer                , intent(in)    :: filter_initc(:) ! column filter for points that need to be initialized
+
+    real(r8), intent(inout) :: qflx_snwcp_ice( bounds%begc: ) ! excess solid h2o due to snow capping (outgoing) (mm H2O /s)
+    real(r8), intent(inout) :: qflx_snwcp_liq( bounds%begc: ) ! excess liquid h2o due to snow capping (outgoing) (mm H2O /s)
+    real(r8), intent(inout) :: qflx_snwcp_discarded_ice( bounds%begc: ) ! excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s)
+    real(r8), intent(inout) :: qflx_snwcp_discarded_liq( bounds%begc: ) ! excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'InitFlux_SnowCapping'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(qflx_snwcp_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snwcp_liq, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snwcp_discarded_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snwcp_discarded_liq, 1) == bounds%endc), sourcefile, __LINE__)
+
     do fc = 1, num_initc
        c = filter_initc(fc)
        qflx_snwcp_ice(c) = 0.0_r8
@@ -2950,9 +3038,69 @@ contains
        qflx_snwcp_discarded_liq(c) = 0.0_r8
     end do
 
-    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_snowc, filter_snowc, &
-         caller = 'SnowCapping', &
-         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+  end subroutine InitFlux_SnowCapping
+
+  !-----------------------------------------------------------------------
+  subroutine BulkFlux_SnowCappingFluxes(bounds, num_snowc, filter_snowc, &
+       dtime, dz_bottom, topo, h2osno_total, h2osoi_ice_bottom, h2osoi_liq_bottom, &
+       snow_capping_filterc, rho_orig_bottom, frac_adjust, &
+       qflx_snwcp_ice, qflx_snwcp_liq, qflx_snwcp_discarded_ice, qflx_snwcp_discarded_liq)
+    !
+    ! !DESCRIPTION:
+    ! Calculate snow capping fluxes and related terms for bulk water
+    !
+    ! The output arrays are set within the points given by snow_capping_filterc (which is
+    ! a subset of the snowc filter); elsewhere, they are left at their original values
+    !
+    ! !ARGUMENTS:
+    type(bounds_type) , intent(in) :: bounds
+    integer           , intent(in) :: num_snowc       ! number of column snow points in column filter
+    integer           , intent(in) :: filter_snowc(:) ! column filter for snow points
+
+    real(r8) , intent(in) :: dtime                             ! land model time step (sec)
+    real(r8) , intent(in) :: dz_bottom( bounds%begc: )         ! layer depth of bottom snow layer (m)
+    real(r8) , intent(in) :: topo( bounds%begc: )              ! column surface height (m)
+    real(r8) , intent(in) :: h2osno_total( bounds%begc: )      ! total snow water (mm H2O)
+    real(r8) , intent(in) :: h2osoi_ice_bottom( bounds%begc: ) ! ice lens in bottom snow layer (kg/m2)
+    real(r8) , intent(in) :: h2osoi_liq_bottom( bounds%begc: ) ! liquid water in bottom snow layer (kg/m2)
+
+    type(filter_col_type) , intent(out)   :: snow_capping_filterc                     ! column filter: columns undergoing snow capping
+    real(r8)              , intent(inout) :: rho_orig_bottom( bounds%begc: )          ! partial density of ice in bottom snow layer, before updates (not scaled with frac_sno) (kg/m3)
+    real(r8)              , intent(inout) :: frac_adjust( bounds%begc: )              ! fraction of mass remaining after capping
+    real(r8)              , intent(inout) :: qflx_snwcp_ice( bounds%begc: )           ! excess solid h2o due to snow capping (outgoing) (mm H2O /s)
+    real(r8)              , intent(inout) :: qflx_snwcp_liq( bounds%begc: )           ! excess liquid h2o due to snow capping (outgoing) (mm H2O /s)
+    real(r8)              , intent(inout) :: qflx_snwcp_discarded_ice( bounds%begc: ) ! excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s)
+    real(r8)              , intent(inout) :: qflx_snwcp_discarded_liq( bounds%begc: ) ! excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s)
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c
+    real(r8) :: mss_snwcp_tot                               ! total snow capping mass [kg/m2] 
+    real(r8) :: mss_snow_bottom_lyr                         ! total snow mass (ice+liquid) in bottom layer [kg/m2]
+    real(r8) :: snwcp_flux_ice                              ! snow capping flux (ice) [kg/m2]
+    real(r8) :: snwcp_flux_liq                              ! snow capping flux (liquid) [kg/m2]
+    real(r8) :: icefrac                                     ! fraction of ice mass w.r.t. total mass [unitless]
+    real(r8) :: h2osno_excess(bounds%begc:bounds%endc)      ! excess snow that needs to be capped [mm H2O]
+    logical  :: apply_runoff(bounds%begc:bounds%endc)       ! for columns with capping, whether the capping flux should be sent to runoff
+    logical  :: column_has_capping(bounds%begc:bounds%endc) ! true for columns with snow capping
+
+    ! Always keep at least this fraction of the bottom snow layer when doing snow capping
+    ! This needs to be slightly greater than 0 to avoid roundoff problems
+    real(r8), parameter :: min_snow_to_keep = 1.e-9  ! fraction of bottom snow layer to keep with capping
+
+    character(len=*), parameter :: subname = 'BulkFlux_SnowCappingFluxes'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(dz_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(topo, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_ice_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_liq_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(rho_orig_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_adjust, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snwcp_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snwcp_liq, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snwcp_discarded_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snwcp_discarded_liq, 1) == bounds%endc), sourcefile, __LINE__)
 
     call SnowCappingExcess(bounds, num_snowc, filter_snowc, &
          h2osno = h2osno_total(bounds%begc:bounds%endc), &
@@ -2960,66 +3108,46 @@ contains
          h2osno_excess = h2osno_excess(bounds%begc:bounds%endc), &
          apply_runoff = apply_runoff(bounds%begc:bounds%endc))
 
-    loop_columns: do fc = 1, num_snowc
+    do fc = 1, num_snowc
        c = filter_snowc(fc)
-
        if (h2osno_excess(c) > 0._r8) then
-          mss_snow_bottom_lyr = h2osoi_ice(c,0) + h2osoi_liq(c,0) 
-          mss_snwcp_tot = min(h2osno_excess(c), mss_snow_bottom_lyr * (1._r8 - min_snow_to_keep)) ! Can't remove more mass than available
+          column_has_capping(c) = .true.
+       else
+          column_has_capping(c) = .false.
+       end if
+    end do
 
-          ! Ratio of snow/liquid in bottom layer determines partitioning of runoff fluxes
-          icefrac = h2osoi_ice(c,0) / mss_snow_bottom_lyr
-          snwcp_flux_ice = mss_snwcp_tot/dtime * icefrac
-          snwcp_flux_liq = mss_snwcp_tot/dtime * (1._r8 - icefrac)
-          if (apply_runoff(c)) then
-             qflx_snwcp_ice(c) = snwcp_flux_ice
-             qflx_snwcp_liq(c) = snwcp_flux_liq
-          else
-             qflx_snwcp_discarded_ice(c) = snwcp_flux_ice
-             qflx_snwcp_discarded_liq(c) = snwcp_flux_liq
-          end if
+    snow_capping_filterc = col_filter_from_filter_and_logical_array( &
+         bounds = bounds, &
+         num_orig = num_snowc, &
+         filter_orig = filter_snowc, &
+         logical_col = column_has_capping(bounds%begc:bounds%endc))
 
-          rho = h2osoi_ice(c,0) / dz(c,0) ! ice only
+    do fc = 1, snow_capping_filterc%num
+       c = snow_capping_filterc%indices(fc)
 
-          ! Adjust water content
-          h2osoi_ice(c,0) = h2osoi_ice(c,0) - snwcp_flux_ice*dtime
-          h2osoi_liq(c,0) = h2osoi_liq(c,0) - snwcp_flux_liq*dtime
+       rho_orig_bottom(c) = h2osoi_ice_bottom(c) / dz_bottom(c) ! ice only
 
-          ! Scale dz such that ice density (or: pore space) is conserved
-          !
-          ! Avoid scaling dz for very low ice densities. This can occur, in principle, if
-          ! the layer is mostly liquid water. Furthermore, this check is critical in the
-          ! unlikely event that rho is 0, which can happen if the layer is entirely liquid
-          ! water.
-          if (rho > 1.0_r8) then
-            dz(c,0) = h2osoi_ice(c,0) / rho 
-          end if
+       mss_snow_bottom_lyr = h2osoi_ice_bottom(c) + h2osoi_liq_bottom(c) 
+       mss_snwcp_tot = min(h2osno_excess(c), mss_snow_bottom_lyr * (1._r8 - min_snow_to_keep)) ! Can't remove more mass than available
 
-          ! Check that water capacity is still positive
-          if (h2osoi_ice(c,0) < 0._r8 .or. h2osoi_liq(c,0) < 0._r8 ) then
-             write(iulog,*)'ERROR: capping procedure failed (negative mass remaining) c = ',c
-             write(iulog,*)'h2osoi_ice = ', h2osoi_ice(c,0), ' h2osoi_liq = ', h2osoi_liq(c,0)
-             call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
-          end if
-
-          ! Correct the bottom layer aerosol mass to account for snow capping.
-          ! This approach conserves the aerosol mass concentration but not aerosol mass. 
-          frac_adjust = (mss_snow_bottom_lyr - mss_snwcp_tot) / mss_snow_bottom_lyr
-          mss_bcphi(c,0)   = mss_bcphi(c,0) * frac_adjust 
-          mss_bcpho(c,0)   = mss_bcpho(c,0) * frac_adjust
-          mss_ocphi(c,0)   = mss_ocphi(c,0) * frac_adjust
-          mss_ocpho(c,0)   = mss_ocpho(c,0) * frac_adjust
-          mss_dst1(c,0)    = mss_dst1(c,0) * frac_adjust
-          mss_dst2(c,0)    = mss_dst2(c,0) * frac_adjust
-          mss_dst3(c,0)    = mss_dst3(c,0) * frac_adjust
-          mss_dst4(c,0)    = mss_dst4(c,0) * frac_adjust
+       ! Ratio of snow/liquid in bottom layer determines partitioning of runoff fluxes
+       icefrac = h2osoi_ice_bottom(c) / mss_snow_bottom_lyr
+       snwcp_flux_ice = mss_snwcp_tot/dtime * icefrac
+       snwcp_flux_liq = mss_snwcp_tot/dtime * (1._r8 - icefrac)
+       if (apply_runoff(c)) then
+          qflx_snwcp_ice(c) = snwcp_flux_ice
+          qflx_snwcp_liq(c) = snwcp_flux_liq
+       else
+          qflx_snwcp_discarded_ice(c) = snwcp_flux_ice
+          qflx_snwcp_discarded_liq(c) = snwcp_flux_liq
        end if
 
-    end do loop_columns
+       frac_adjust(c) = (mss_snow_bottom_lyr - mss_snwcp_tot) / mss_snow_bottom_lyr
 
-    end associate
-    end associate
-  end subroutine SnowCapping
+    end do
+
+  end subroutine BulkFlux_SnowCappingFluxes
 
   !-----------------------------------------------------------------------
   subroutine SnowCappingExcess(bounds, num_snowc, filter_snowc, &
@@ -3031,7 +3159,7 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds          
+    type(bounds_type), intent(in) :: bounds
     integer  , intent(in)  :: num_snowc                     ! number of column snow points in column filter
     integer  , intent(in)  :: filter_snowc(:)               ! column filter for snow points
     real(r8) , intent(in)  :: h2osno( bounds%begc: )        ! snow water (mm H2O)
@@ -3100,6 +3228,222 @@ contains
     end if
 
   end subroutine SnowCappingExcess
+
+  !-----------------------------------------------------------------------
+  subroutine TracerFlux_SnowCappingFluxes(bounds, snow_capping_filterc, &
+       bulk_h2osoi_ice_bottom, bulk_h2osoi_liq_bottom, &
+       bulk_qflx_snwcp_ice, bulk_qflx_snwcp_liq, bulk_qflx_snwcp_discarded_ice, bulk_qflx_snwcp_discarded_liq, &
+       trac_h2osoi_ice_bottom, trac_h2osoi_liq_bottom, &
+       trac_qflx_snwcp_ice, trac_qflx_snwcp_liq, trac_qflx_snwcp_discarded_ice, trac_qflx_snwcp_discarded_liq)
+    !
+    ! !DESCRIPTION:
+    ! Calculate snow capping fluxes and related terms for one tracer
+    !
+    ! !ARGUMENTS:
+    !
+    type(bounds_type)     , intent(in) :: bounds
+    type(filter_col_type) , intent(in) :: snow_capping_filterc ! column filter: columns undergoing snow capping
+    
+    ! For description of arguments, see comments in BulkFlux_SnowCappingFluxes. Here,
+    ! bulk_* variables refer to bulk water and trac_* variables refer to the given water
+    ! tracer.
+    real(r8), intent(in) :: bulk_h2osoi_ice_bottom( bounds%begc: )
+    real(r8), intent(in) :: bulk_h2osoi_liq_bottom( bounds%begc: )
+    real(r8), intent(in) :: bulk_qflx_snwcp_ice( bounds%begc: )
+    real(r8), intent(in) :: bulk_qflx_snwcp_liq( bounds%begc: )
+    real(r8), intent(in) :: bulk_qflx_snwcp_discarded_ice( bounds%begc: )
+    real(r8), intent(in) :: bulk_qflx_snwcp_discarded_liq( bounds%begc: )
+    real(r8), intent(in) :: trac_h2osoi_ice_bottom( bounds%begc: )
+    real(r8), intent(in) :: trac_h2osoi_liq_bottom( bounds%begc: )
+    real(r8), intent(inout) :: trac_qflx_snwcp_ice( bounds%begc: )
+    real(r8), intent(inout) :: trac_qflx_snwcp_liq( bounds%begc: )
+    real(r8), intent(inout) :: trac_qflx_snwcp_discarded_ice( bounds%begc: )
+    real(r8), intent(inout) :: trac_qflx_snwcp_discarded_liq( bounds%begc: )
+
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'TracerFlux_SnowCappingFluxes'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(bulk_h2osoi_ice_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bulk_h2osoi_liq_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bulk_qflx_snwcp_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bulk_qflx_snwcp_liq, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bulk_qflx_snwcp_discarded_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(bulk_qflx_snwcp_discarded_liq, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(trac_h2osoi_ice_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(trac_h2osoi_liq_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(trac_qflx_snwcp_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(trac_qflx_snwcp_liq, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(trac_qflx_snwcp_discarded_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(trac_qflx_snwcp_discarded_liq, 1) == bounds%endc), sourcefile, __LINE__)
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc  &
+         )
+
+    call CalcTracerFromBulk( &
+         lb            = begc, &
+         num_pts       = snow_capping_filterc%num, &
+         filter_pts    = snow_capping_filterc%indices, &
+         bulk_source   = bulk_h2osoi_ice_bottom(begc:endc), &
+         bulk_val      = bulk_qflx_snwcp_ice(begc:endc), &
+         tracer_source = trac_h2osoi_ice_bottom(begc:endc), &
+         tracer_val    = trac_qflx_snwcp_ice(begc:endc))
+
+    call CalcTracerFromBulk( &
+         lb            = begc, &
+         num_pts       = snow_capping_filterc%num, &
+         filter_pts    = snow_capping_filterc%indices, &
+         bulk_source   = bulk_h2osoi_liq_bottom(begc:endc), &
+         bulk_val      = bulk_qflx_snwcp_liq(begc:endc), &
+         tracer_source = trac_h2osoi_liq_bottom(begc:endc), &
+         tracer_val    = trac_qflx_snwcp_liq(begc:endc))
+
+    call CalcTracerFromBulk( &
+         lb            = begc, &
+         num_pts       = snow_capping_filterc%num, &
+         filter_pts    = snow_capping_filterc%indices, &
+         bulk_source   = bulk_h2osoi_ice_bottom(begc:endc), &
+         bulk_val      = bulk_qflx_snwcp_discarded_ice(begc:endc), &
+         tracer_source = trac_h2osoi_ice_bottom(begc:endc), &
+         tracer_val    = trac_qflx_snwcp_discarded_ice(begc:endc))
+
+    call CalcTracerFromBulk( &
+         lb            = begc, &
+         num_pts       = snow_capping_filterc%num, &
+         filter_pts    = snow_capping_filterc%indices, &
+         bulk_source   = bulk_h2osoi_liq_bottom(begc:endc), &
+         bulk_val      = bulk_qflx_snwcp_discarded_liq(begc:endc), &
+         tracer_source = trac_h2osoi_liq_bottom(begc:endc), &
+         tracer_val    = trac_qflx_snwcp_discarded_liq(begc:endc))
+
+    end associate
+
+  end subroutine TracerFlux_SnowCappingFluxes
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateState_RemoveSnowCappingFluxes(bounds, snow_capping_filterc, &
+       dtime, qflx_snwcp_ice, qflx_snwcp_liq, qflx_snwcp_discarded_ice, qflx_snwcp_discarded_liq, &
+       h2osoi_ice_bottom, h2osoi_liq_bottom)
+    !
+    ! !DESCRIPTION:
+    ! Remove snow capping fluxes from h2osoi_ice and h2osoi_liq
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)     , intent(in) :: bounds
+    type(filter_col_type) , intent(in) :: snow_capping_filterc ! column filter: columns undergoing snow capping
+
+    real(r8) , intent(in)    :: dtime                                    ! land model time step (sec)
+    real(r8) , intent(in)    :: qflx_snwcp_ice( bounds%begc: )           ! excess solid h2o due to snow capping (outgoing) (mm H2O /s)
+    real(r8) , intent(in)    :: qflx_snwcp_liq( bounds%begc: )           ! excess liquid h2o due to snow capping (outgoing) (mm H2O /s)
+    real(r8) , intent(in)    :: qflx_snwcp_discarded_ice( bounds%begc: ) ! excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s)
+    real(r8) , intent(in)    :: qflx_snwcp_discarded_liq( bounds%begc: ) ! excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s)
+    real(r8) , intent(inout) :: h2osoi_ice_bottom( bounds%begc: )        ! ice lens in bottom snow layer (kg/m2)
+    real(r8) , intent(inout) :: h2osoi_liq_bottom( bounds%begc: )        ! liquid water in bottom snow layer (kg/m2)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'UpdateState_RemoveSnowCappingFluxes'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(qflx_snwcp_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snwcp_liq, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snwcp_discarded_ice, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_snwcp_discarded_liq, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do fc = 1, snow_capping_filterc%num
+       c = snow_capping_filterc%indices(fc)
+
+       h2osoi_ice_bottom(c) = h2osoi_ice_bottom(c) - (qflx_snwcp_ice(c) + qflx_snwcp_discarded_ice(c))*dtime
+       h2osoi_liq_bottom(c) = h2osoi_liq_bottom(c) - (qflx_snwcp_liq(c) + qflx_snwcp_discarded_liq(c))*dtime
+
+       ! Check that water capacity is still positive
+       if (h2osoi_ice_bottom(c) < 0._r8 .or. h2osoi_liq_bottom(c) < 0._r8 ) then
+          write(iulog,*)'ERROR: capping procedure failed (negative mass remaining) c = ',c
+          write(iulog,*)'h2osoi_ice_bottom = ', h2osoi_ice_bottom(c), ' h2osoi_liq_bottom = ', h2osoi_liq_bottom(c)
+          call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+       end if
+
+    end do
+
+  end subroutine UpdateState_RemoveSnowCappingFluxes
+
+  !-----------------------------------------------------------------------
+  subroutine SnowCappingUpdateDzAndAerosols(bounds, snow_capping_filterc, &
+       rho_orig_bottom, h2osoi_ice_bottom, frac_adjust, dz_bottom, &
+       mss_bcphi_bottom, mss_bcpho_bottom, mss_ocphi_bottom, mss_ocpho_bottom, &
+       mss_dst1_bottom, mss_dst2_bottom, mss_dst3_bottom, mss_dst4_bottom)
+    !
+    ! !DESCRIPTION:
+    ! Following snow capping, adjust dz and aerosol masses in bottom snow layer
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)     , intent(in) :: bounds
+    type(filter_col_type) , intent(in) :: snow_capping_filterc ! column filter: columns undergoing snow capping
+
+    real(r8) , intent(in)    :: rho_orig_bottom( bounds%begc: )   ! partial density of ice in bottom snow layer, before updates (not scaled with frac_sno) (kg/m3)
+    real(r8) , intent(in)    :: h2osoi_ice_bottom( bounds%begc: ) ! ice lens in bottom snow layer (kg/m2)
+    real(r8) , intent(in)    :: frac_adjust( bounds%begc: )       ! fraction of mass remaining after capping
+    real(r8) , intent(inout) :: dz_bottom( bounds%begc: )         ! layer depth of bottom snow layer (m)
+    real(r8) , intent(inout) :: mss_bcphi_bottom( bounds%begc: )  ! hydrophilic BC mass in snow, bottom layer (kg)
+    real(r8) , intent(inout) :: mss_bcpho_bottom( bounds%begc: )  ! hydrophobic BC mass in snow, bottom layer (kg)
+    real(r8) , intent(inout) :: mss_ocphi_bottom( bounds%begc: )  ! hydrophilic OC mass in snow, bottom layer (kg)
+    real(r8) , intent(inout) :: mss_ocpho_bottom( bounds%begc: )  ! hydrophobic OC mass in snow, bottom layer (kg)
+    real(r8) , intent(inout) :: mss_dst1_bottom( bounds%begc: )   ! dust species 1 mass in snow, bottom layer (kg)
+    real(r8) , intent(inout) :: mss_dst2_bottom( bounds%begc: )   ! dust species 2 mass in snow, bottom layer (kg)
+    real(r8) , intent(inout) :: mss_dst3_bottom( bounds%begc: )   ! dust species 3 mass in snow, bottom layer (kg)
+    real(r8) , intent(inout) :: mss_dst4_bottom( bounds%begc: )   ! dust species 4 mass in snow, bottom layer (kg)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'SnowCappingUpdateDzAndAerosols'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL((ubound(rho_orig_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(h2osoi_ice_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_adjust, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(dz_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(mss_bcphi_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(mss_bcpho_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(mss_ocphi_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(mss_ocpho_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(mss_dst1_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(mss_dst2_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(mss_dst3_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(mss_dst4_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+
+    do fc = 1, snow_capping_filterc%num
+       c = snow_capping_filterc%indices(fc)
+
+       ! Scale dz such that ice density (or: pore space) is conserved
+       !
+       ! Avoid scaling dz for very low ice densities. This can occur, in principle, if
+       ! the layer is mostly liquid water. Furthermore, this check is critical in the
+       ! unlikely event that rho is 0, which can happen if the layer is entirely liquid
+       ! water.
+       if (rho_orig_bottom(c) > 1.0_r8) then
+          dz_bottom(c) = h2osoi_ice_bottom(c) / rho_orig_bottom(c)
+       end if
+
+       ! Correct the bottom layer aerosol mass to account for snow capping.
+       ! This approach conserves the aerosol mass concentration but not aerosol mass.
+       mss_bcphi_bottom(c) = mss_bcphi_bottom(c) * frac_adjust(c)
+       mss_bcpho_bottom(c) = mss_bcpho_bottom(c) * frac_adjust(c)
+       mss_ocphi_bottom(c) = mss_ocphi_bottom(c) * frac_adjust(c)
+       mss_ocpho_bottom(c) = mss_ocpho_bottom(c) * frac_adjust(c)
+       mss_dst1_bottom(c)  = mss_dst1_bottom(c) * frac_adjust(c)
+       mss_dst2_bottom(c)  = mss_dst2_bottom(c) * frac_adjust(c)
+       mss_dst3_bottom(c)  = mss_dst3_bottom(c) * frac_adjust(c)
+       mss_dst4_bottom(c)  = mss_dst4_bottom(c) * frac_adjust(c)
+
+    end do
+
+  end subroutine SnowCappingUpdateDzAndAerosols
+
 
   !-----------------------------------------------------------------------
   subroutine NewSnowBulkDensity(bounds, num_c, filter_c, atm2lnd_inst, bifall)
