@@ -373,17 +373,17 @@ contains
          num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
          atm2lnd_inst, aerosol_inst, water_inst)
 
-    ! TODO(wjs, 2019-08-30) Eventually move this down, merging this with later tracer
+    call SnowCapping(bounds, num_lakec, filter_lakec, num_shlakesnowc, filter_shlakesnowc, &
+         topo_inst, aerosol_inst, water_inst)
+
+    ! TODO(wjs, 2019-09-16) Eventually move this down, merging this with later tracer
     ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
     ! module, remember to also remove 'use perf_mod' at the top.
     if (water_inst%DoConsistencyCheck()) then
        call t_startf("tracer_consistency_check")
-       call water_inst%TracerConsistencyCheck(bounds, 'LakeHydrology: after SnowWater')
+       call water_inst%TracerConsistencyCheck(bounds, 'LakeHydrology: after SnowCapping')
        call t_stopf("tracer_consistency_check")
     end if
-
-    call SnowCapping(bounds, num_lakec, filter_lakec, num_shlakesnowc, filter_shlakesnowc, &
-         aerosol_inst, b_waterflux_inst, b_waterstate_inst, topo_inst)
 
     ! Determine soil hydrology
     ! Here this consists only of making sure that soil is saturated even as it melts and
