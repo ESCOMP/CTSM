@@ -14,6 +14,7 @@ module WaterStateType
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
   use clm_varctl     , only : use_bedrock, iulog
+  use clm_varctl     , only : use_fates_planthydro
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
   use clm_varcon     , only : spval, namec
   use LandunitType   , only : lun                
@@ -346,7 +347,11 @@ contains
                   if (j > nbedrock) then
                      this%h2osoi_vol_col(c,j) = 0.0_r8
                   else
-                     this%h2osoi_vol_col(c,j) = 0.15_r8 * ratio
+                     if(use_fates_planthydro) then
+                         this%h2osoi_vol_col(c,j) = 0.75_r8*watsat_col(c,j)
+                     else
+                         this%h2osoi_vol_col(c,j) = 0.15_r8
+                     end if
                   endif
                end do
             else if (lun%urbpoi(l)) then
