@@ -976,7 +976,7 @@ contains
     
     ! Lake water heat content
     call AccumulateHeatLake(bounds, num_lakec, filter_lakec, temperature_inst, lakestate_inst, &
-       heat, heat_liquid, cv_liquid)
+       heat)
 
     ! Subtract baselines set in initialization
     !
@@ -1003,12 +1003,14 @@ contains
   !-----------------------------------------------------------------------
   subroutine AccumulateHeatLake(bounds, num_c, filter_c, &
         temperature_inst, lakestate_inst, &
-       heat, heat_liquid, cv_liquid)
+       heat)
     !
     ! !DESCRIPTION:
     ! Accumulate heat of lake water in lake columns. 
     !
     ! Adds to any existing values in heat, heat_liquid and cv_liquid.
+    ! HERE EXPLANATIONS about not adding heat_liquid and cv_liquid should come. 
+    ! where this routine differs from AccumulateLiqIceMassLake !!
     !
     ! Note: Changes to this routine should generally be accompanied by similar changes to
     ! AccumulateLiqIceMassLake
@@ -1020,9 +1022,7 @@ contains
     type(temperature_type)    , intent(in)    :: temperature_inst
     type(lakestate_type)      , intent(in)    :: lakestate_inst
     real(r8)                  , intent(inout) :: heat( bounds%begc: )        ! accumulated heat content [J/m^2]
-    real(r8)                  , intent(inout) :: heat_liquid( bounds%begc: ) ! accumulated heat content: liquid water, excluding latent heat [J/m^2]
-    real(r8)                  , intent(inout) :: cv_liquid( bounds%begc: )   ! accumulated liquid water heat capacity [J/(m^2 K)]
-    !
+
     ! !LOCAL VARIABLES:
     integer :: fc
     integer :: l, c, j
@@ -1031,14 +1031,12 @@ contains
     real(r8) :: lake_heat_liquid(bounds%begc:bounds%endc)        ! sum of heat content: liquid water in lake, excluding latent heat [J/m^2]
     real(r8) :: lake_heat_ice(bounds%begc:bounds%endc)           ! sum of heat content: ice in lake [J/m^2]
     real(r8) :: lake_latent_heat_liquid(bounds%begc:bounds%endc) ! sum of heat content: latent heat of liquid water in lake [J/m^2]
-
+    real(r8) :: cv_liquid( bounds%begc:bounds%endc )   ! dummy argument to use AccumulateLiquidWaterHeat - not used
  
     character(len=*), parameter :: subname = 'AccumulateHeatLake'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(heat) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(heat_liquid) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cv_liquid) == [bounds%endc]), errMsg(sourcefile, __LINE__))
 
     associate( &
          dz_lake      => col%dz_lake, &  ! lake layer depth (m)
@@ -1077,7 +1075,6 @@ contains
    ! add ice heat and liquid heat together (look at this part)
     do fc = 1, num_c
        c = filter_c(fc)
-       heat_liquid(c) = heat_liquid(c) + lake_heat_liquid(c)
        heat(c) = heat(c) + lake_heat_ice(c) + &
             lake_heat_liquid(c) + lake_latent_heat_liquid(c)
     end do
@@ -1115,6 +1112,8 @@ contains
     ! Eventually, if we begin to explicitly account for the temperature / heat content of
     ! liquid and ice runoff in CLM, then this routine should be reworked to use the true
     ! heat contents of both liquid and ice runoff.
+    !
+    ! ADD HERE NOTES ABOUT LAKES!!! lake water not accounted. because baselines 
     !
     ! Sign convention: delta_liq and delta_heat are positive if the post-landcover change
     ! value is greater than the pre-landcover change value.

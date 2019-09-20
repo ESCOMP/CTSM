@@ -251,9 +251,7 @@ contains
     real(r8) :: soil_heat_liquid_col(bounds%begc:bounds%endc) ! unused; just needed for AccumulateSoilHeatNonLake interface
     real(r8) :: soil_cv_liquid_col(bounds%begc:bounds%endc)   ! unused; just needed for AccumulateSoilHeatNonLake interface
     real(r8) :: lake_heat_col(bounds%begc:bounds%endc)        ! lake heat content [J/m^2]
-    real(r8) :: lake_heat_liquid_col(bounds%begc:bounds%endc) ! unused; just needed for AccumulateSoilHeatNonLake interface
-    real(r8) :: lake_cv_liquid_col(bounds%begc:bounds%endc)   ! unused; just needed for AccumulateSoilHeatNonLake interface
-
+  
     character(len=*), parameter :: subname = 'dyn_heat_content_set_baselines'
     !-----------------------------------------------------------------------
 
@@ -266,9 +264,7 @@ contains
     soil_cv_liquid_col(bounds%begc:bounds%endc) = 0._r8
 
     lake_heat_col(bounds%begc:bounds%endc) = 0._r8
-    lake_heat_liquid_col(bounds%begc:bounds%endc) = 0._r8
-    lake_cv_liquid_col(bounds%begc:bounds%endc) = 0._r8
-    
+      
     call AccumulateSoilHeatNonLake(bounds, &
          natveg_and_glc_filterc%num, natveg_and_glc_filterc%indices, &
          urbanparams_inst, soilstate_inst, temperature_inst, waterstatebulk_inst, &
@@ -299,7 +295,7 @@ contains
     ! Set baselines for lake columns
     call AccumulateHeatLake(bounds, num_lakec, filter_lakec, &
         temperature_inst, lakestate_inst, &
-        heat = lake_heat_col, heat_liquid = lake_heat_liquid_col, cv_liquid = lake_cv_liquid_col)
+        heat = lake_heat_col)
     
     do fc = 1, num_lakec
        c = filter_lakec(fc)
