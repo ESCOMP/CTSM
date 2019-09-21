@@ -1046,6 +1046,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <stream_year_first_fan   sim_year="1000" >2010</stream_year_first_fan>
 <stream_year_last_fan    sim_year="1000" >2010</stream_year_last_fan>
 
+<model_year_align_fan                    >2010</model_year_align_fan>
+
 <stream_year_first_fan   sim_year="constant" sim_year_range="1000-1002" >2010</stream_year_first_fan>
 <stream_year_last_fan    sim_year="constant" sim_year_range="1000-1002" >2010</stream_year_last_fan>
 
@@ -1061,7 +1063,7 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <stream_year_first_fan   sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_first_fan>
 <stream_year_last_fan    sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_last_fan>
 
-<stream_fldfilename_fan>nitrogen.nc</stream_fldfilename_fan>
+<stream_fldfilename_fan>lnd/clm2/paramdata/FAN_nitrogen_soilph_fv1.9x2.5_simyr2010_c20190905.nc</stream_fldfilename_fan>
 
 <fan_mapalgo                               >bilinear</fan_mapalgo>
 

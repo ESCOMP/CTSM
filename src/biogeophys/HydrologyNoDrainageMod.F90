@@ -345,7 +345,7 @@ contains
       
       if ( use_fan ) then 
          ! save the h2osoi_liq in top layer before evaluating the soilwater movement
-         call store_tsl_moisture(waterstatebulk_inst, filter_hydrologyc, num_hydrologyc) 
+         call store_tsl_moisture(b_waterstate_inst, filter_hydrologyc, num_hydrologyc) 
       end if
 
       if ( use_fates ) then
@@ -358,7 +358,7 @@ contains
 
       if ( use_fan ) then 
          ! use the saved value to calculate the tendency
-         call eval_tsl_moist_tend(waterstatebulk_inst , filter_hydrologyc, num_hydrologyc)
+         call eval_tsl_moist_tend(b_waterstate_inst , filter_hydrologyc, num_hydrologyc)
       end if
 
       if (use_vichydro) then

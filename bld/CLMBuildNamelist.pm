@@ -3014,10 +3014,10 @@ sub setup_logic_fan {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_fan', 
 		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
        # Set align year, if first and last years are different
-       if ( $nl->get_value('stream_year_first_fan') != $nl->get_value('stream_year_last_fan') ) {
+       #if ( $nl->get_value('stream_year_first_fan') != $nl->get_value('stream_year_last_fan') ) {
 	   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_fan', 
 		   'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
-       }
+       #}
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_fan');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fan_to_bgc_crop',
 		   'fan_mode'=>$fan_mode);
