@@ -109,18 +109,18 @@ integer,intent(in) :: endu
 integer,optional,intent(in) :: maxsm
 character(len=*),parameter :: subname = 'InitSM'
 
-!if ( associated(this%M) )then
-!   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
-!   return
-!end if
-!if ( associated(this%RI) )then
-!   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
-!   return
-!end if
-!if ( associated(this%CI) )then
-!   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
-!   return
-!end if
+if ( associated(this%M) )then
+   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
+   return
+end if
+if ( associated(this%RI) )then
+   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
+   return
+end if
+if ( associated(this%CI) )then
+   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
+   return
+end if
 this%SM = SM_in
 this%begu = begu
 this%endu = endu
@@ -188,9 +188,9 @@ SHR_ASSERT_FL((lbound(M, 1) == begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 1) == endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M, 1) == this%begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 1) == this%endu), sourcefile, __LINE__)
-SHR_ASSERT_FL((maxval(I) <= NE_in), sourcefile, __LINE__)
+SHR_ASSERT_FL((maxval(I) <= this%SM), sourcefile, __LINE__)
 SHR_ASSERT_FL((minval(I) >= 1), sourcefile, __LINE__)
-SHR_ASSERT_FL((maxval(J) <= NE_in), sourcefile, __LINE__)
+SHR_ASSERT_FL((maxval(J) <= this%SM), sourcefile, __LINE__)
 SHR_ASSERT_FL((minval(J) >= 1), sourcefile, __LINE__)
 do k = 1,NE_in
    do fu = 1,num_unit
@@ -316,6 +316,8 @@ if(Init_ready)then
    this%RI(1:this%NE) = RI_A(1:this%NE)
    this%CI(1:this%NE) = CI_A(1:this%NE)
 else
+   if ( associated(A_diag%M)    ) call A_diag%ReleaseSM()
+   if ( associated(A_nondiag%M) ) call A_nondiag%ReleaseSM()
    call A_diag%InitSM(this%SM,begu,endu)
    call A_nondiag%InitSM(this%SM,begu,endu)
 
@@ -421,8 +423,8 @@ integer,intent(in) :: endu
 character(len=*),parameter :: subname = 'InitV'
 
 if ( associated(this%V) )then
-!  call endrun( subname//" ERROR: Vector was already allocated" )
-!  return
+  call endrun( subname//" ERROR: Vector was already allocated" )
+  return
 end if
 this%SV = SV_in
 allocate(this%V(begu:endu,1:SV_in))
@@ -794,10 +796,10 @@ if( present(list_C) )then
    SHR_ASSERT_FL((size(list_C)    >= C%NE), sourcefile, __LINE__)
 end if
 if( present(RI_ABC) )then
-   SHR_ASSERT_FL((size(RI_ABC)    >= A%NE+B%NE+C%NE), sourcefile, __LINE__)
+   SHR_ASSERT_FL((size(RI_ABC)    <= A%NE+B%NE+C%NE), sourcefile, __LINE__)
 end if
 if( present(CI_ABC) )then
-   SHR_ASSERT_FL((size(CI_ABC)    >= A%NE+B%NE+C%NE), sourcefile, __LINE__)
+   SHR_ASSERT_FL((size(CI_ABC)    <= A%NE+B%NE+C%NE), sourcefile, __LINE__)
 end if
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(list_C) .and. present(NE_ABC) .and. present(RI_ABC) .and. present(CI_ABC)))then
    write(iulog,*) "error in SPMP_ABC: list_ready is True, but at least one of list_A, list_B, list_C, NE_ABC, RI_ABC and CI_ABC are not presented",&
