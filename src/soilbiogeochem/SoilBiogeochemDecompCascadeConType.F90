@@ -209,21 +209,25 @@ contains
 
      num_soilc = 1
      filter_c(1:1) = 1
+     if ( associated(AK%M) ) call AK%ReleaseSM()
      call AK%InitSM(ndecomp_pools*nlevdecomp,1,1)
      call AK%SetValueA(1,1,num_soilc,filter_c(1:num_soilc),SM,decomp_cascade_con%A_i,decomp_cascade_con%A_j,decomp_cascade_con%Ntrans_setup,init_readyAK)
      allocate(decomp_cascade_con%list_AK_AKVfire(1:AK%NE))
      allocate(decomp_cascade_con%list_AK_AKV    (1:AK%NE))
 
+     if ( associated(AV%M) ) call AV%ReleaseSM()
      call AV%InitSM(ndecomp_pools*nlevdecomp,1,1)
      call AV%SetValueSM(1,1,num_soilc,filter_c(1:num_soilc),TRI,decomp_cascade_con%tri_i,decomp_cascade_con%tri_j,decomp_cascade_con%Ntri_setup)
      allocate(decomp_cascade_con%list_V_AKVfire (1:AV%NE))
      allocate(decomp_cascade_con%list_V_AKV     (1:AV%NE))
      
+     if ( associated(AKfire%M) ) call AKfire%ReleaseSM()
      call AKfire%InitSM(ndecomp_pools*nlevdecomp,1,1)
      call AKfire%SetValueA_diag(num_soilc,filter_c(1:num_soilc),1._r8)
      allocate(decomp_cascade_con%list_fire_AKVfire(1:AKfire%NE))
    
      list_ready = .false.
+     if ( associated(AKallsoil%M) ) call AKallsoil%ReleaseSM()
      call AKallsoil%InitSM(ndecomp_pools*nlevdecomp,1,1)
      call AKallsoil%SPMP_ABC(num_soilc,filter_c(1:num_soilc),AK,AV,AKfire,list_ready)
 
