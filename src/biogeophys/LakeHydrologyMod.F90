@@ -385,6 +385,31 @@ contains
        call t_stopf("tracer_consistency_check")
     end if
 
+    ! Natural compaction and metamorphosis.
+
+    call SnowCompaction(bounds, num_shlakesnowc, filter_shlakesnowc, &
+         scf_method, &
+         temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, atm2lnd_inst)
+
+    ! Combine thin snow elements
+
+    call CombineSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
+         aerosol_inst, temperature_inst, b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst)
+
+    ! Divide thick snow elements
+
+    call DivideSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
+         aerosol_inst, temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, is_lake=.true.)
+
+    ! Set empty snow layers to zero
+    call ZeroEmptySnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
+         col, b_waterstate_inst, temperature_inst)
+
+    ! Recompute h2osno_total for possible updates in the above snow routines
+    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+         caller = 'LakeHydrology-2', &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+
     ! Determine soil hydrology
     ! Here this consists only of making sure that soil is saturated even as it melts and
     ! pore space opens up. Conversely, if excess ice is melting and the liquid water exceeds the
@@ -424,31 +449,6 @@ contains
        end do
     end do
 !!!!!!!!!!
-
-    ! Natural compaction and metamorphosis.
-
-    call SnowCompaction(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         scf_method, &
-         temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, atm2lnd_inst)
-
-    ! Combine thin snow elements
-
-    call CombineSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         aerosol_inst, temperature_inst, b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst)
-
-    ! Divide thick snow elements
-
-    call DivideSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         aerosol_inst, temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, is_lake=.true.)
-
-    ! Set empty snow layers to zero
-    call ZeroEmptySnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         col, b_waterstate_inst, temperature_inst)
-
-    ! Recompute h2osno_total for possible updates in the above snow routines
-    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
-         caller = 'LakeHydrology-2', &
-         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     ! Check for single completely unfrozen snow layer over lake.  Modeling this ponding is unnecessary and
     ! can cause instability after the timestep when melt is completed, as the temperature after melt can be
