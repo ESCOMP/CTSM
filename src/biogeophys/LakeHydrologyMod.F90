@@ -382,19 +382,19 @@ contains
          scf_method, &
          temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, atm2lnd_inst)
 
+    ! Combine thin snow elements
+
+    call CombineSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
+         aerosol_inst, temperature_inst, b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst)
+
     ! TODO(wjs, 2019-09-16) Eventually move this down, merging this with later tracer
     ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
     ! module, remember to also remove 'use perf_mod' at the top.
     if (water_inst%DoConsistencyCheck()) then
        call t_startf("tracer_consistency_check")
-       call water_inst%TracerConsistencyCheck(bounds, 'LakeHydrology: after SnowCapping')
+       call water_inst%TracerConsistencyCheck(bounds, 'LakeHydrology: after CombineSnowLayers')
        call t_stopf("tracer_consistency_check")
     end if
-
-    ! Combine thin snow elements
-
-    call CombineSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         aerosol_inst, temperature_inst, b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst)
 
     ! Divide thick snow elements
 
