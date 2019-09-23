@@ -397,7 +397,7 @@ contains
 
       ! Combine thin snow elements
       call CombineSnowLayers(bounds, num_snowc, filter_snowc, &
-           aerosol_inst, temperature_inst, b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst)
+           aerosol_inst, temperature_inst, water_inst)
 
       ! TODO(wjs, 2019-09-16) Eventually move this down, merging this with later tracer
       ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
