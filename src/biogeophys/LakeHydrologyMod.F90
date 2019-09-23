@@ -376,6 +376,12 @@ contains
     call SnowCapping(bounds, num_lakec, filter_lakec, num_shlakesnowc, filter_shlakesnowc, &
          topo_inst, aerosol_inst, water_inst)
 
+    ! Natural compaction and metamorphosis.
+
+    call SnowCompaction(bounds, num_shlakesnowc, filter_shlakesnowc, &
+         scf_method, &
+         temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, atm2lnd_inst)
+
     ! TODO(wjs, 2019-09-16) Eventually move this down, merging this with later tracer
     ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
     ! module, remember to also remove 'use perf_mod' at the top.
@@ -384,12 +390,6 @@ contains
        call water_inst%TracerConsistencyCheck(bounds, 'LakeHydrology: after SnowCapping')
        call t_stopf("tracer_consistency_check")
     end if
-
-    ! Natural compaction and metamorphosis.
-
-    call SnowCompaction(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         scf_method, &
-         temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, atm2lnd_inst)
 
     ! Combine thin snow elements
 
