@@ -2103,23 +2103,13 @@ contains
                 ! would be more thorough to do so.
              end if
 
-             if (ltype(l) == istsoil .or. urbpoi(l) .or. ltype(l) == istcrop) then
-                if (j == 0) then
-                   qflx_sl_top_soil(c) = (h2osoi_liq(c,j) + h2osoi_ice(c,j))/dtime
-                end if
+             if (j == 0) then
+                qflx_sl_top_soil(c) = (h2osoi_liq(c,j) + h2osoi_ice(c,j))/dtime
              end if
 
              ! shift all elements above this down one.
              if (j > snl(c)+1 .and. snl(c) < -1) then
                 do i = j, snl(c)+2, -1
-                   ! If the layer closest to the surface is less than 0.1 mm and the ltype is not
-                   ! urban, soil or crop, the h2osoi_liq and h2osoi_ice associated with this layer is sent
-                   ! to qflx_qrgwl later on in the code.  To keep track of this for the snow balance
-                   ! error check, we add this to qflx_sl_top_soil here
-                   if (ltype(l) /= istsoil .and. ltype(l) /= istcrop .and. .not. urbpoi(l) .and. i == 0) then
-                      qflx_sl_top_soil(c) = (h2osoi_liq(c,i) + h2osoi_ice(c,i))/dtime
-                   end if
-
                    t_soisno(c,i)   = t_soisno(c,i-1)
                    h2osoi_liq(c,i) = h2osoi_liq(c,i-1)
                    h2osoi_ice(c,i) = h2osoi_ice(c,i-1)
