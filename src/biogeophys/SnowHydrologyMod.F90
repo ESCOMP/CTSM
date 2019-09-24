@@ -2140,9 +2140,16 @@ contains
              ! shift all elements above this down one.
              if (j > snl(c)+1 .and. snl(c) < -1) then
                 do i = j, snl(c)+2, -1
+                   do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                      associate(w => water_inst%bulk_and_tracers(wi))
+
+                      w%waterstate_inst%h2osoi_liq_col(c,i) = w%waterstate_inst%h2osoi_liq_col(c,i-1)
+                      w%waterstate_inst%h2osoi_ice_col(c,i) = w%waterstate_inst%h2osoi_ice_col(c,i-1)
+
+                      end associate
+                   end do
+
                    t_soisno(c,i)   = t_soisno(c,i-1)
-                   h2osoi_liq(c,i) = h2osoi_liq(c,i-1)
-                   h2osoi_ice(c,i) = h2osoi_ice(c,i-1)
 
                    mss_bcphi(c,i)   = mss_bcphi(c,i-1)
                    mss_bcpho(c,i)   = mss_bcpho(c,i-1)
