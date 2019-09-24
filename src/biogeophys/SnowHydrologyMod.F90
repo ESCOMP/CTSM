@@ -1992,6 +1992,7 @@ contains
     integer :: c, fc                            ! column indices
     integer :: i,k                              ! loop indices
     integer :: j,l                              ! node indices
+    integer :: wi                               ! index of water tracer or bulk
     integer :: msn_old(bounds%begc:bounds%endc) ! number of top snow layer
     integer :: mssi(bounds%begc:bounds%endc)    ! node index
     integer :: neibor                           ! adjacent node selected for combination
@@ -2003,8 +2004,12 @@ contains
 
     !-----------------------------------------------------------------------
 
+    ! In contrast to most routines, this one operates on a mix of bulk-only quantities
+    ! and bulk-and-tracer quantities. Plain variable names like h2osoi_liq refer to bulk
+    ! quantities. Where bulk-and-tracer quantities are referenced, they are referred to
+    ! like w%waterstate_inst%h2osoi_liq_col.
+
     associate( &
-         b_waterflux_inst       => water_inst%waterfluxbulk_inst, &
          b_waterstate_inst      => water_inst%waterstatebulk_inst, &
          b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
          )
@@ -2032,8 +2037,6 @@ contains
          h2osoi_ice       => b_waterstate_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)
          h2osoi_liq       => b_waterstate_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
          snw_rds          => b_waterdiagnostic_inst%snw_rds_col         , & ! Output: [real(r8) (:,:) ] effective snow grain radius (col,lyr) [microns, m^-6]
-
-         qflx_sl_top_soil => b_waterflux_inst%qflx_sl_top_soil_col , & ! Output: [real(r8) (:)   ] liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
 
          snl              => col%snl                             , & ! Output: [integer  (:)   ] number of snow layers
          dz               => col%dz                              , & ! Output: [real(r8) (:,:) ] layer depth (m)
@@ -2065,7 +2068,14 @@ contains
        c = filter_snowc(fc)
 
        msn_old(c) = snl(c)
-       qflx_sl_top_soil(c) = 0._r8
+
+       do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+          associate(w => water_inst%bulk_and_tracers(wi))
+
+          w%waterflux_inst%qflx_sl_top_soil_col(c) = 0._r8
+
+          end associate
+       end do
     end do
 
     ! The following loop is NOT VECTORIZED
@@ -2080,8 +2090,20 @@ contains
                 ! Note that, for landunits other than soil, crop and urban, the above
                 ! conditional prevents us from trying to transfer the bottom snow layer's
                 ! water content to the soil, since there is no soil to receive ti.
-                h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
-                h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
+
+                do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                   associate(w => water_inst%bulk_and_tracers(wi))
+
+                   w%waterstate_inst%h2osoi_liq_col(c,j+1) = &
+                        w%waterstate_inst%h2osoi_liq_col(c,j+1) + &
+                        w%waterstate_inst%h2osoi_liq_col(c,j)
+
+                   w%waterstate_inst%h2osoi_ice_col(c,j+1) = &
+                        w%waterstate_inst%h2osoi_ice_col(c,j+1) + &
+                        w%waterstate_inst%h2osoi_ice_col(c,j)
+
+                   end associate
+                end do
              end if
 
              if (j < 0) then
@@ -2104,7 +2126,15 @@ contains
              end if
 
              if (j == 0) then
-                qflx_sl_top_soil(c) = (h2osoi_liq(c,j) + h2osoi_ice(c,j))/dtime
+
+                do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                   associate(w => water_inst%bulk_and_tracers(wi))
+
+                   w%waterflux_inst%qflx_sl_top_soil_col(c) = &
+                        (w%waterstate_inst%h2osoi_liq_col(c,j) + w%waterstate_inst%h2osoi_ice_col(c,j))/dtime
+
+                   end associate
+                end do
              end if
 
              ! shift all elements above this down one.
