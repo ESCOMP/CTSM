@@ -2076,36 +2076,15 @@ contains
        do j = msn_old(c)+1,0
           ! use 0.01 to avoid runaway ice buildup
           if (h2osoi_ice(c,j) <= .01_r8) then
-             if (ltype(l) == istsoil .or. urbpoi(l) .or. ltype(l) == istcrop) then
+             if (j < 0 .or. (ltype(l) == istsoil .or. urbpoi(l) .or. ltype(l) == istcrop)) then
+                ! Note that, for landunits other than soil, crop and urban, the above
+                ! conditional prevents us from trying to transfer the bottom snow layer's
+                ! water content to the soil, since there is no soil to receive ti.
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
+             end if
 
-                if (j == 0) then
-                   qflx_sl_top_soil(c) = (h2osoi_liq(c,j) + h2osoi_ice(c,j))/dtime
-                end if
-
-                if (j /= 0) dz(c,j+1) = dz(c,j+1) + dz(c,j)
-
-                ! NOTE: Temperature, and similarly snw_rds, of the
-                ! underlying snow layer are NOT adjusted in this case.
-                ! Because the layer being eliminated has a small mass,
-                ! this should not make a large difference, but it
-                ! would be more thorough to do so.
-                if (j /= 0) then
-                   mss_bcphi(c,j+1) = mss_bcphi(c,j+1)  + mss_bcphi(c,j)
-                   mss_bcpho(c,j+1) = mss_bcpho(c,j+1)  + mss_bcpho(c,j)
-                   mss_ocphi(c,j+1) = mss_ocphi(c,j+1)  + mss_ocphi(c,j)
-                   mss_ocpho(c,j+1) = mss_ocpho(c,j+1)  + mss_ocpho(c,j)
-                   mss_dst1(c,j+1)  = mss_dst1(c,j+1)   + mss_dst1(c,j)
-                   mss_dst2(c,j+1)  = mss_dst2(c,j+1)   + mss_dst2(c,j)
-                   mss_dst3(c,j+1)  = mss_dst3(c,j+1)   + mss_dst3(c,j)
-                   mss_dst4(c,j+1)  = mss_dst4(c,j+1)   + mss_dst4(c,j)
-                end if
-
-             else if (ltype(l) /= istsoil .and. .not. urbpoi(l) .and. ltype(l) /= istcrop .and. j /= 0) then
-
-                h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
-                h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
+             if (j < 0) then
                 dz(c,j+1) = dz(c,j+1) + dz(c,j)
 
                 mss_bcphi(c,j+1) = mss_bcphi(c,j+1)  + mss_bcphi(c,j)
@@ -2117,6 +2096,17 @@ contains
                 mss_dst3(c,j+1)  = mss_dst3(c,j+1)   + mss_dst3(c,j)
                 mss_dst4(c,j+1)  = mss_dst4(c,j+1)   + mss_dst4(c,j)
 
+                ! NOTE: Temperature, and similarly snw_rds, of the
+                ! underlying snow layer are NOT adjusted in this case.
+                ! Because the layer being eliminated has a small mass,
+                ! this should not make a large difference, but it
+                ! would be more thorough to do so.
+             end if
+
+             if (ltype(l) == istsoil .or. urbpoi(l) .or. ltype(l) == istcrop) then
+                if (j == 0) then
+                   qflx_sl_top_soil(c) = (h2osoi_liq(c,j) + h2osoi_ice(c,j))/dtime
+                end if
              end if
 
              ! shift all elements above this down one.
