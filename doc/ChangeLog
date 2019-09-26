@@ -50,11 +50,15 @@ Changes to tests or testing: None
 Code reviewed by: self
 
 
-CTSM testing: None!
+CTSM testing: doc (no standard testing done)
 
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
   build-namelist tests:
+
+    cheyenne - PASS
+
+  src unit-tests:
 
     cheyenne - PASS
 
