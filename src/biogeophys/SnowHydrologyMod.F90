@@ -2399,7 +2399,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine DivideSnowLayers(bounds, num_snowc, filter_snowc, &
-        aerosol_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, is_lake)
+        aerosol_inst, temperature_inst, water_inst, is_lake)
     !
     ! !DESCRIPTION:
     ! Subdivides snow layers if they exceed their prescribed maximum thickness.
@@ -2410,8 +2410,7 @@ contains
     integer                , intent(in)    :: filter_snowc(:) ! column filter for snow points
     type(aerosol_type)     , intent(inout) :: aerosol_inst
     type(temperature_type) , intent(inout) :: temperature_inst
-    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
-    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
+    type(water_type)       , intent(inout) :: water_inst
     logical                , intent(in)    :: is_lake  !TODO - this should be examined and removed in the future
     !
     ! !LOCAL VARIABLES:
@@ -2451,13 +2450,25 @@ contains
     real(r8) :: offset ! temporary
     !-----------------------------------------------------------------------
 
+    ! In contrast to most routines, this one operates on a mix of bulk-only quantities
+    ! and bulk-and-tracer quantities. Plain variable names like h2osoi_liq refer to bulk
+    ! quantities. Where bulk-and-tracer quantities are referenced, they are referred to
+    ! like w%waterstate_inst%h2osoi_liq_col.
+
+    associate( &
+         b_waterstate_inst      => water_inst%waterstatebulk_inst, &
+         b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
+         )
+
     associate( &
          t_soisno   => temperature_inst%t_soisno_col    , & ! Output: [real(r8) (:,:) ] soil temperature (Kelvin)
 
-         h2osoi_ice => waterstatebulk_inst%h2osoi_ice_col   , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)
-         h2osoi_liq => waterstatebulk_inst%h2osoi_liq_col   , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
-         frac_sno   => waterdiagnosticbulk_inst%frac_sno_eff_col , & ! Output: [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
-         snw_rds    => waterdiagnosticbulk_inst%snw_rds_col      , & ! Output: [real(r8) (:,:) ] effective snow grain radius (col,lyr) [microns, m^-6]
+         ! FIXME(wjs, 2019-09-26) Rename the following two to have 'bulk' in their names,
+         ! or remove them if they aren't needed anymore.
+         h2osoi_ice => b_waterstate_inst%h2osoi_ice_col   , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)
+         h2osoi_liq => b_waterstate_inst%h2osoi_liq_col   , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
+         frac_sno   => b_waterdiagnostic_inst%frac_sno_eff_col , & ! Output: [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         snw_rds    => b_waterdiagnostic_inst%snw_rds_col      , & ! Output: [real(r8) (:,:) ] effective snow grain radius (col,lyr) [microns, m^-6]
 
          mss_bcphi  => aerosol_inst%mss_bcphi_col       , & ! Output: [real(r8) (:,:) ] hydrophilic BC mass in snow (col,lyr) [kg]
          mss_bcpho  => aerosol_inst%mss_bcpho_col       , & ! Output: [real(r8) (:,:) ] hydrophobic BC mass in snow (col,lyr) [kg]
@@ -2719,6 +2730,7 @@ contains
        end do
     end do
 
+    end associate
     end associate
   end subroutine DivideSnowLayers
 

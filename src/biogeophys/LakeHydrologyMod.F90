@@ -390,7 +390,7 @@ contains
     ! Divide thick snow elements
 
     call DivideSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         aerosol_inst, temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, is_lake=.true.)
+         aerosol_inst, temperature_inst, water_inst, is_lake=.true.)
 
     ! TODO(wjs, 2019-09-16) Eventually move this down, merging this with later tracer
     ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
