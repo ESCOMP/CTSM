@@ -1,13 +1,16 @@
 ===============================================================
 Tag name:  ctsm1.0.dev067
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Thu Sep 26 14:36:16 MDT 2019
+Date: Thu Sep 26 15:02:39 MDT 2019
 One-line Summary: Add config_archive.xml to CTSM cime_config -- no testing
 
 Purpose of changes
 ------------------
 
-Add config_archive.xml to cime_config for CTSM. No testing done.
+Add config_archive.xml to cime_config for CTSM. Update the CODE_OF_CONDUCT
+to the August/2019 UCAR version.
+
+No testing done. 
 
 Bugs fixed or introduced
 ------------------------
