@@ -2238,13 +2238,6 @@ contains
                         w%waterstate_inst%h2osoi_liq_col(c,1) + zwliq(wi,c)
                 end if
 
-                ! FIXME(wjs, 2019-09-26) I think I should be able to remove this, since it
-                ! should be handled by ZeroEmptySnowLayers. If removing it changes
-                ! answers, then try doing it for lakes, too.
-                if (ltype(l) /= istdlak) then
-                   w%waterstate_inst%h2osoi_liq_col(c,0) = 0.0_r8
-                end if
-
                 end associate
              end do
 
