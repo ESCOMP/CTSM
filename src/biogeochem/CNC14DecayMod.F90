@@ -5,7 +5,7 @@ module CNC14DecayMod
   !
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
-  use clm_time_manager                   , only : get_step_size, get_days_per_year
+  use clm_time_manager                   , only : get_step_size_real, get_days_per_year
   use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
   use clm_varcon                         , only : secspday
   use clm_varctl                         , only : spinup_state
@@ -86,7 +86,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
       days_per_year = get_days_per_year()
 
       half_life = 5730._r8 * secspday * days_per_year

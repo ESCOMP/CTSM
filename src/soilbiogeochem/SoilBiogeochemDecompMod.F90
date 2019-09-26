@@ -73,6 +73,7 @@ contains
        cn_decomp_pools, p_decomp_cpool_loss, pmnf_decomp_cascade)
     !
     ! !USES:
+    use SoilBiogeochemDecompCascadeConType, only : i_atm
     !
     ! !ARGUMENT:
     type(bounds_type)                       , intent(in)    :: bounds   
@@ -91,7 +92,6 @@ contains
     integer :: c,j,k,l,m                                    ! indices
     integer :: fc                                           ! lake filter column index
     integer :: begc,endc                                    ! bounds 
-    integer, parameter :: i_atm = 0 !TODO - this appears in two places - move it to 1
     !  For methane code
     real(r8):: hrsum(bounds%begc:bounds%endc,1:nlevdecomp)  ! sum of HR (gC/m2/s) 
     !-----------------------------------------------------------------------

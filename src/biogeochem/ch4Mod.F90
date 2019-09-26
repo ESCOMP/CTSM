@@ -16,7 +16,7 @@ module ch4Mod
   use clm_varcon                     , only : denh2o, denice, tfrz, grav, spval, rgas, grlnd
   use clm_varcon                     , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
   use landunit_varcon                , only : istsoil, istcrop, istdlak
-  use clm_time_manager               , only : get_step_size, get_nstep
+  use clm_time_manager               , only : get_step_size_real, get_nstep
   use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4
   use abortutils                     , only : endrun
   use decompMod                      , only : bounds_type
@@ -1788,7 +1788,7 @@ contains
       qflxlagd          = params_inst%qflxlagd
       highlatfact       = params_inst%highlatfact
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       nstep = get_nstep()
       dtime_ch4 = dtime
       redoxlags = redoxlag*secspday ! days --> s
@@ -2390,7 +2390,7 @@ contains
          co2_decomp_depth => ch4_inst%co2_decomp_depth_sat_col   ! Output: [real(r8) (:,:)]  CO2 production during decomposition in each soil layer (nlevsoi) (mol/m3/s)
       endif
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       q10ch4           = params_inst%q10ch4
       q10ch4base       = params_inst%q10ch4base
@@ -2615,7 +2615,7 @@ contains
     ! Oxidation will be limited by available oxygen in ch4_tran.
     
     ! !USES:
-    use clm_time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size_real
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in) :: bounds    
@@ -2690,7 +2690,7 @@ contains
       endif
 
       ! Get land model time step
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Set oxidation parameters
       vmax_ch4_oxid   = params_inst%vmax_ch4_oxid
@@ -2772,7 +2772,7 @@ contains
 
     ! !USES:
     use clm_varcon       , only : rpi
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use pftconMod        , only : nc3_arctic_grass, nc3_nonarctic_grass, nc4_grass, noveg, pftcon
     use ch4varcon        , only : transpirationloss, use_aereoxid_prog
     !
@@ -2878,7 +2878,7 @@ contains
          ch4_prod_depth   =>  ch4_inst%ch4_prod_depth_sat_col   ! Input:  [real(r8) (:,:)]  production of CH4 in each soil layer (nlevsoi) (mol/m3/s)
       endif
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Set aerenchyma parameters
       aereoxid           = params_inst%aereoxid
@@ -3023,7 +3023,7 @@ contains
     ! Bubbles are released to the water table surface in ch4_tran.
 
     ! !USES:
-    use clm_time_manager   , only : get_step_size
+    use clm_time_manager   , only : get_step_size_real
     use LakeCon           
     !
     ! !ARGUMENTS:
@@ -3099,7 +3099,7 @@ contains
       endif
 
       ! Get land model time step
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       vgc_max = params_inst%vgc_max
 
       bubble_f = 0.57_r8 ! CH4 content in gas bubbles (Kellner et al. 2006)
@@ -3168,7 +3168,7 @@ contains
     ! Then CH4 diffusive flux is calculated and consistency is checked.
 
     ! !USES:
-    use clm_time_manager   , only : get_step_size, get_nstep
+    use clm_time_manager   , only : get_step_size_real, get_nstep
     use TridiagonalMod     , only : Tridiagonal
     use ch4varcon          , only : ch4frzout, use_aereoxid_prog
     !
@@ -3325,7 +3325,7 @@ contains
       endif
 
       ! Get land model time step
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       nstep = get_nstep()
 
       ! Set transport parameters
@@ -4031,7 +4031,7 @@ contains
     ! !DESCRIPTION: Annual mean fields.
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size, get_days_per_year, get_nstep
+    use clm_time_manager, only: get_step_size_real, get_days_per_year, get_nstep
     use clm_varcon      , only: secspday
     !
     ! !ARGUMENTS:
@@ -4072,7 +4072,7 @@ contains
          )
 
       ! set time steps
-      dt = real(get_step_size(), r8)
+      dt = get_step_size_real()
       secsperyear = real( get_days_per_year() * secspday, r8)
 
       do fc = 1,num_methc

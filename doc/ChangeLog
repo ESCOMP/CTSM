@@ -1,4 +1,1071 @@
 ===============================================================
+Tag name:  ctsm1.0.dev066
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Sep 20 09:07:23 MDT 2019
+One-line Summary: Add water tracers to SnowCapping
+
+Purpose of changes
+------------------
+
+Update water tracer terms in SnowCapping. As I have done elsewhere, this
+has involved splitting each piece of SnowCapping into its own subroutine,
+which operates either on bulk, tracers, or bulk + tracers.
+
+This is supported by calls to ResetCheckedTracers prior to the call to
+SnowCapping, since some intervening code is not yet tracerized.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#777 (Implement water tracers for SnowCapping)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+   Small increase in total runtime of PFS test, but the relevant timing
+   section, hydro_without_drainage, took slightly *less* time compared
+   with the last tag.
+
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    izumi ------- pass
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev065
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Sep 14 12:52:42 MDT 2019
+One-line Summary: Add water tracers to SnowWater
+
+Purpose of changes
+------------------
+
+Update water tracer terms in SnowWater. As I have done elsewhere, this
+has involved splitting each piece of SnowWater into its own subroutine,
+which operates either on bulk, tracers, or bulk + tracers.
+
+This is supported by calls to ResetCheckedTracers prior to the call to
+SnowWater, since some intervening code is not yet tracerized.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#776 (Implement water tracers for SnowWater)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+    ok means tests pass, baselines fail as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+      Roundoff level: answer changes just arise because I have made
+      qflx_snow_percolation_col a true flux, with units of
+      per-unit-time; this involved dividing by dtime, and later
+      multiplying by dtime when it is applied to states. Previously, the
+      corresponding variable (qout / qin) was not per-unit-time.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   I ran comparisons against a version off of master that had the
+   minimal changes to exhibit these roundoff-level changes. Diffs for
+   this are below. My branch is bit-for-bit with this version.
+
+        diff --git a/src/biogeophys/SnowHydrologyMod.F90 b/src/biogeophys/SnowHydrologyMod.F90
+        index cad47e28..0abcc49f 100644
+        --- a/src/biogeophys/SnowHydrologyMod.F90
+        +++ b/src/biogeophys/SnowHydrologyMod.F90
+        @@ -1140,17 +1140,17 @@ subroutine SnowWater(bounds, &
+                   c = filter_snowc(fc)
+                   if (j >= snl(c)+1) then
+         
+        -             h2osoi_liq(c,j) = h2osoi_liq(c,j) + qin(c)
+        +             h2osoi_liq(c,j) = h2osoi_liq(c,j) + qin(c)*dtime
+         
+        -             mss_bcphi(c,j) = mss_bcphi(c,j) + qin_bc_phi(c)
+        -             mss_bcpho(c,j) = mss_bcpho(c,j) + qin_bc_pho(c)
+        -             mss_ocphi(c,j) = mss_ocphi(c,j) + qin_oc_phi(c)
+        -             mss_ocpho(c,j) = mss_ocpho(c,j) + qin_oc_pho(c)
+        +             mss_bcphi(c,j) = mss_bcphi(c,j) + qin_bc_phi(c)*dtime
+        +             mss_bcpho(c,j) = mss_bcpho(c,j) + qin_bc_pho(c)*dtime
+        +             mss_ocphi(c,j) = mss_ocphi(c,j) + qin_oc_phi(c)*dtime
+        +             mss_ocpho(c,j) = mss_ocpho(c,j) + qin_oc_pho(c)*dtime
+         
+        -             mss_dst1(c,j)  = mss_dst1(c,j) + qin_dst1(c)
+        -             mss_dst2(c,j)  = mss_dst2(c,j) + qin_dst2(c)
+        -             mss_dst3(c,j)  = mss_dst3(c,j) + qin_dst3(c)
+        -             mss_dst4(c,j)  = mss_dst4(c,j) + qin_dst4(c)
+        +             mss_dst1(c,j)  = mss_dst1(c,j) + qin_dst1(c)*dtime
+        +             mss_dst2(c,j)  = mss_dst2(c,j) + qin_dst2(c)*dtime
+        +             mss_dst3(c,j)  = mss_dst3(c,j) + qin_dst3(c)*dtime
+        +             mss_dst4(c,j)  = mss_dst4(c,j) + qin_dst4(c)*dtime
+         
+                      if (j <= -1) then
+                         ! No runoff over snow surface, just ponding on surface
+        @@ -1167,8 +1167,8 @@ subroutine SnowWater(bounds, &
+                         qout(c) = max(0._r8,(vol_liq(c,j) &
+                              - ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
+                      end if
+        -             qout(c) = qout(c)*1000._r8
+        -             h2osoi_liq(c,j) = h2osoi_liq(c,j) - qout(c)
+        +             qout(c) = (qout(c)*1000._r8)/dtime
+        +             h2osoi_liq(c,j) = h2osoi_liq(c,j) - qout(c)*dtime
+                      qin(c) = qout(c)
+         
+                      ! mass of ice+water: in extremely rare circumstances, this can
+        @@ -1187,7 +1187,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_bc_phi(c) > mss_bcphi(c,j)) then
+                         qout_bc_phi(c) = mss_bcphi(c,j)
+                      endif
+        -             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c)
+        +             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c)*dtime
+                      qin_bc_phi(c) = qout_bc_phi(c)
+         
+                      ! BCPHO:
+        @@ -1196,7 +1196,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_bc_pho(c) > mss_bcpho(c,j)) then
+                         qout_bc_pho(c) = mss_bcpho(c,j)
+                      endif
+        -             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c)
+        +             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c)*dtime
+                      qin_bc_pho(c) = qout_bc_pho(c)
+         
+                      ! OCPHI:
+        @@ -1205,7 +1205,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_oc_phi(c) > mss_ocphi(c,j)) then
+                         qout_oc_phi(c) = mss_ocphi(c,j)
+                      endif
+        -             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c)
+        +             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c)*dtime
+                      qin_oc_phi(c) = qout_oc_phi(c)
+         
+                      ! OCPHO:
+        @@ -1214,7 +1214,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_oc_pho(c) > mss_ocpho(c,j)) then
+                         qout_oc_pho(c) = mss_ocpho(c,j)
+                      endif
+        -             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c)
+        +             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c)*dtime
+                      qin_oc_pho(c) = qout_oc_pho(c)
+         
+                      ! DUST 1:
+        @@ -1223,7 +1223,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_dst1(c) > mss_dst1(c,j)) then
+                         qout_dst1(c) = mss_dst1(c,j)
+                      endif
+        -             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c)
+        +             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c)*dtime
+                      qin_dst1(c) = qout_dst1(c)
+         
+                      ! DUST 2:
+        @@ -1232,7 +1232,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_dst2(c) > mss_dst2(c,j)) then
+                         qout_dst2(c) = mss_dst2(c,j)
+                      endif
+        -             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c)
+        +             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c)*dtime
+                      qin_dst2(c) = qout_dst2(c)
+         
+                      ! DUST 3:
+        @@ -1241,7 +1241,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_dst3(c) > mss_dst3(c,j)) then
+                         qout_dst3(c) = mss_dst3(c,j)
+                      endif
+        -             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c)
+        +             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c)*dtime
+                      qin_dst3(c) = qout_dst3(c)
+         
+                      ! DUST 4:
+        @@ -1250,7 +1250,7 @@ subroutine SnowWater(bounds, &
+                      if (qout_dst4(c) > mss_dst4(c,j)) then
+                         qout_dst4(c) = mss_dst4(c,j)
+                      endif
+        -             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c)
+        +             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c)*dtime
+                      qin_dst4(c) = qout_dst4(c)
+         
+                   end if
+        @@ -1280,9 +1280,9 @@ subroutine SnowWater(bounds, &
+             do fc = 1, num_snowc
+                c = filter_snowc(fc)
+                ! Qout from snow bottom
+        -       qflx_snow_drain(c) = qflx_snow_drain(c) + (qout(c) / dtime)
+        +       qflx_snow_drain(c) = qflx_snow_drain(c) + qout(c)
+         
+        -       qflx_rain_plus_snomelt(c) = (qout(c) / dtime) &
+        +       qflx_rain_plus_snomelt(c) = qout(c) &
+                     + (1.0_r8 - frac_sno_eff(c)) * qflx_liq_grnd(c)
+                int_snow(c) = int_snow(c) + frac_sno_eff(c) &
+                              * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_liq_grnd(c)) * dtime
+
+
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev064
+Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
+Date:  Mon Sep  9 13:14:51 MDT 2019
+One-line Summary: User defined top-two snow layers
+
+Purpose of changes
+------------------
+
+ Instead of hardcoding, we now set:
+
+ dzmin(1) = snow_dzmin_1
+ dzmax_l(1) = snow_dzmax_l_1
+ dzmax_u(1) = snow_dzmax_u_1
+ dzmin(2) = snow_dzmin_2
+ dzmax_l(2) = snow_dzmax_l_2
+ dzmax_u(2) = snow_dzmax_u_2
+
+ where the right-hand-side variables get namelist-defined values and the
+ model calculates dzmin and dzmax_* for the remaining snow layers using
+ recursive formulas. The calculation is intended to match the previously
+ hardcoded values, except for the bottom snow layer when nlevsno < 12.
+ The bottom layer now always gets dzmax_* = huge(1._r8). The formulas
+ appear in a document titled "A firn model for CLM" that is linked to
+ #729.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #729
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist parameters for specifying the top-two snow layers:
+ snow_dzmin_1, snow_dzmax_l_1, snow_dzmax_u_1
+ snow_dzmin_2, snow_dzmax_l_2, snow_dzmax_u_2
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ Introduced default values for the new parameters so as to maintain
+ same answers to within roundoff
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: @billsacks
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change: roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+ Introduced temporary code to overwrite dzmin(j), dzmax_l(j), and
+ dzmax_u(j) with their original values when different by less than
+ 1e-13 from their original values for all but the bottom snow layer.
+ The bottom layer was left as dzmax_l = dzmax_u(j) = huge(1._8), i.e.
+ the new value. The test resulted in bit-for-bit same answers.
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/792
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev063
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Sep  5 21:28:02 MDT 2019
+One-line Summary: Two answer changing fixes (fire, DWT_SLASH) and fix for urban streams for Clm45
+
+Purpose of changes
+------------------
+
+Fire bug fix and DWT_SLASH change and fix urban stream years for clm4_5.
+The latitude used in an expression for Bgc-Fire model Li2016 (used in Clm50)
+had latitude in degrees rather than in radians as it should have been. The
+term is used for ignition and the cosine was being taken in degrees rather 
+than radians, hence the spatial pattern for ignition with latitude was incorrect.
+
+The history field DWT_SLASH_CFLUX was being calculated on the column, but 
+really should have been a patch level variable. In the same way other fields
+were handled we made DWT_SLASH_CFLUX a grid-cell variable, and added
+DWT_SLASH_CFLUX_PATCH on the patch level that could be added to output. The same
+is true of the C13_ and C14_ versions of it.
+
+Clm45 was setting urbantv to year 2000, rather than 1850 or historical as it should
+have. The urbantv file for Clm45 doesn't actually change, so this doesn't actually
+make a difference. But, it does make the namelist look wrong.
+
+Note, that SP cases, Vic cases and Fates cases do NOT change answers. Or if fire is
+off, or certain single-point cases. Some cold-start cases don't seem to be sensitive
+to it either.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #175, #787, #780
+  fixes #175 urban stream years for clm4_5
+  fixes #787 DWT_SLASH field
+  fixes #780 Bug in CN Fire Li 2016 which used latitude in degrees rather than radians
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): Defaults for urbantv for clm4_5
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self, @olywon
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (62 compare fail due to namelist changes)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm50Bgc and some Clm45Bgc cases
+    - what platforms/compilers: All
+    - nature of change: similar climate (but fire ignition pattern changes by latitude)
+        DWT_SLASH_* history fields change because moved to gridcell quantity (so change is relatively minor)
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: 
+           oleson/clm50_cesm20R_2deg_GSWP3V1_issue780_hist (for the fire change)
+
+   URL for LMWG diagnostics output used to validate new climate:
+http://webext.cgd.ucar.edu/I20TR/clm50_cesm20R_2deg_GSWP3V1_issue780_hist/lnd/clm50_cesm20R_2deg_GSWP3V1_issue780_hist.1995_2014-clm50_cesm20R_2deg_GSWP3V1_hist.1995_2014/setsIndex.html
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #802
+(https://github.com/ESCOMP/ctsm/pull)
+   #802 -- Three answer changing fixes (fire, DWT_SLASH, urban streams for clm4_5)
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev062
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Sep  3 16:04:28 MDT 2019
+One-line Summary: Move hobart tests to izumi
+
+Purpose of changes
+------------------
+
+Move all hobart testing to izumi.
+
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include github issue ID):
+- Recurrence of ESCOMP/ctsm#174 (ne30 case fails on hobart_nag due to floating overflow)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Testing should now be run on izumi, not hobart
+
+Changes to tests or testing:
+- All hobart tests moved to izumi
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- not run
+    izumi ------- pass
+
+  Also ran prealpha and prebeta tests that I moved from hobart to izumi. These passed except:
+  - ERP_D_Ld5.ne30_g16.I1850Clm50BgcCrop.izumi_nag.clm-default (#174)
+  - ERP_Ld5.f19_g17.I2000Clm50SpRtmFl.izumi_pgi.clm-default
+  - SMS_D_Ld1.f19_g17.I1850Clm45Cn.izumi_pgi.clm-default
+
+  The last two failed with errors like:
+
+    i011.unified.ucar.edu.44619hfi_userinit: mmap of status page (dabbad0008040000) failed: Operation not permitted
+
+  I wonder if the issue is that multi-node pgi cases don't work on izumi?
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: cime5.8.3_chint17-04 -> cime5.8.3_chint17-05
+  Minor change on izumi to allow using run_sys_tests
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev061
+Originator(s):  erik (Erik Kluzek)
+Date: Sun Sep  1 22:37:07 MDT 2019
+One-line Summary: Simple b4b fixes: new params file, remove override_nsrest/anoxia_wtsat, DV deprecated
+
+Purpose of changes
+------------------
+
+New clm5 paramsfile that has the bad date of 631 changed to 701. Along with some simple bit for
+bit changes. Removing some problematic options. Making Dynamic Vegetation a deprecated option 
+that requires you to use -ignore_warnings with it.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):  #463 #79 #97 #98 #104 #122 #173 #794 #795 #796
+
+   Fixes #463 bad date on params file that didn't allow using ESMF library with Crop
+   Fixes #79 correct documentation of qflx_evap_tot
+   Fixes #97 remove override_nsrest
+   Fixes #98 add warning when using single instance of a startup file for multi-instance cases
+   Fixes #104 use get_step_size_real when putting into a real variable
+   Fixes #122 decomp pool arrays should not start at 0 but 1
+   Fixes #173 remove psi_soil_ref as not used
+   Fixes #794 remove anoxia_wtsat
+   Fixes #795 Correct documentation of -light_res
+   Fixes #796 Deprecate Dynamic Vegetation
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Remove namelist items
+   Remove namelist items:  anoxia_wtsat, override_nsrest
+   Turning dynamic Vegetation on, now displays a warning, and requires using -ignore_warnings in CLM_BLDNML_OPTS
+
+Changes made to namelist defaults (e.g., changed parameter values): New paramdata files
+
+Changes to the datasets (e.g., parameter, surface or initial files): 
+   clm5 paramdata file has correct date for crop of 701 (rather than incorrect 631)
+   clm5 and clm4_5 paramdata file removed an unused variable
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: DV tests removed or changed
+
+Code reviewed by: self
+
+CTSM testing: regular
+
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (compare shows changes becausse of paramdata files)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    hobart ------ OK
+
+An additional fail is ERP_P36x2_D_Ld5.f10_f10_musgs.I2000Clm50Cn.cheyenne_gnu.clm-default, because
+of #798. Because it's an issue with cime, I'm not marking it as an expected error.
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #797
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #797 -- Simple b4b fixes: new params file, remove override_nsrest/anoxia_wtsat, DV deprecated 
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev060
+Originator(s):  sacks (Bill Sacks)
+Date:  Thu Aug 29 11:18:20 MDT 2019
+One-line Summary: In SnowWater, truncate small h2osoi residuals
+
+Purpose of changes
+------------------
+
+Previously, in the handling of sublimation and evaporation from the snow
+pack, if these fluxes led to negative h2osoi_ice or h2osoi_liq, these
+negative values would be passed down the snow pack until they found a
+layer with a large enough positive state to absorb them. This logic was
+going to be a challenge for adding water tracers.
+
+I have done some tests to verify that these negative values never exceed
+roundoff-level in either an absolute or relative sense (with tolerance
+of 1.e-13). Specifically, I ran the full aux_clm test suite with the
+diffs below and verified that the endrun calls were never triggered.
+
+So here, I simplify this logic: After truncating any near-zero states to
+exactly zero, I check to confirm that the states are never negative. I
+then removed the code that passed these negative values down the snow
+pack: if they are only roundoff-level negative, then it seems safe to
+just throw them away rather than trying to handle them.
+
+Here were the diffs used to verify that the negative values are never
+greater than roundoff-level; these endrun calls were never triggered in
+a run of the full aux_clm test suite:
+
+    diff --git a/src/biogeophys/SnowHydrologyMod.F90 b/src/biogeophys/SnowHydrologyMod.F90
+    index 3dd555cc..07776123 100644
+    --- a/src/biogeophys/SnowHydrologyMod.F90
+    +++ b/src/biogeophys/SnowHydrologyMod.F90
+    @@ -970,6 +970,8 @@ subroutine SnowWater(bounds, &
+         real(r8) :: vol_ice(bounds%begc:bounds%endc,-nlevsno+1:0)      ! partial volume of ice lens in layer
+         real(r8) :: eff_porosity(bounds%begc:bounds%endc,-nlevsno+1:0) ! effective porosity = porosity - vol_ice
+         real(r8) :: mss_liqice(bounds%begc:bounds%endc,-nlevsno+1:0)   ! mass of liquid+ice in a layer
+    +    real(r8) :: h2osoi_ice_orig
+    +    real(r8) :: h2osoi_liq_orig
+         !-----------------------------------------------------------------------
+
+         associate( &
+    @@ -1017,10 +1019,23 @@ subroutine SnowWater(bounds, &
+            c = filter_snowc(fc)
+            l=col%landunit(c)
+
+    +       h2osoi_ice_orig = h2osoi_ice(c,snl(c)+1)
+    +       h2osoi_liq_orig = h2osoi_liq(c,snl(c)+1)
+    +
+            wgdif = h2osoi_ice(c,snl(c)+1) &
+                 + frac_sno_eff(c) * (qflx_dew_snow(c) - qflx_sub_snow(c)) * dtime
+            h2osoi_ice(c,snl(c)+1) = wgdif
+            if (wgdif < 0._r8) then
+    +          if (wgdif < -1.e-13_r8) then
+    +             write(iulog,*) 'WJS: big abs wgdif ice: ', c, wgdif, h2osoi_ice_orig
+    +             call endrun('WJS: big abs wgdif ice')
+    +          end if
+    +          if (h2osoi_ice_orig > 0._r8) then
+    +             if (abs(wgdif / h2osoi_ice_orig) > 1.e-13_r8) then
+    +                write(iulog,*) 'WJS: big rel wgdif ice: ', c, wgdif, h2osoi_ice_orig
+    +                call endrun('WJS: big rel wgdif ice')
+    +             end if
+    +          end if
+               h2osoi_ice(c,snl(c)+1) = 0._r8
+               h2osoi_liq(c,snl(c)+1) = h2osoi_liq(c,snl(c)+1) + wgdif
+            end if
+    @@ -1030,6 +1045,16 @@ subroutine SnowWater(bounds, &
+
+            ! if negative, reduce deeper layer's liquid water content sequentially
+            if(h2osoi_liq(c,snl(c)+1) < 0._r8) then
+    +          if (h2osoi_liq(c,snl(c)+1) < -1.e-13_r8) then
+    +             write(iulog,*) 'WJS: big abs wgdif liq: ', c, h2osoi_liq(c,snl(c)+1), h2osoi_liq_orig
+    +             call endrun('WJS: big abs wgdif liq')
+    +          end if
+    +          if (h2osoi_liq_orig > 0._r8) then
+    +             if (abs(h2osoi_liq(c,snl(c)+1) / h2osoi_liq_orig) > 1.e-13_r8) then
+    +                write(iulog,*) 'WJS: big rel wgdif liq: ', c, h2osoi_liq(c,snl(c)+1), h2osoi_liq_orig
+    +                call endrun('WJS: big rel wgdif liq')
+    +             end if
+    +          end if
+               do j = snl(c)+1, 1
+                  wgdif=h2osoi_liq(c,j)
+                  if (wgdif >= 0._r8) exit
+
+Bugs fixed or introduced
+------------------------
+
+None
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- It's possible that the extra error checks I have added (to ensure we
+  don't have greater-than-roundoff-level negative residuals) will be
+  triggered in rare circumstances in a production run, even though they
+  were never triggered in the test suite.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+Although there was a very small increase in total lnd run time, the
+timing of hydro_without_drainage actually decreased slightly in the PFS
+test relative to the last tag.
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- It's possible that the extra error checks I have added (to ensure we
+  don't have greater-than-roundoff-level negative residuals) will be
+  triggered in rare circumstances in a production run, even though they
+  were never triggered in the test suite.
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    hobart ------ ok
+
+    ok means tests passed, some answer changes as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: potentially all, though only show up in
+      a few tests
+    - what platforms/compilers: potentially all, though only show up in
+      a few tests
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+      First, I did some preliminary analyses as documented above, to
+      ensure that any negative residuals were no greater than roundoff.
+
+      Second, note that the use of truncate_small_values can only
+      introduce roundoff-level changes (by truncating values that are
+      roundoff-level different from zero to exactly zero).
+
+      Third, only a few tests showed answer changes, and these were only
+      in limited fields, and were fairly small RMS differences:
+
+         ERP_Ly3_P72x2.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-cropMonthOutput
+         ERS_Ly3.f10_f10_musgs.I1850Clm50BgcCropCmip6.cheyenne_intel.clm-basic
+         ERS_Ly3_P72x2.f10_f10_musgs.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput
+         ERS_Ly5_P144x1.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-cropMonthOutput
+
+      I actually expected more tests to show differences, but most tests
+      were bit-for-bit. I'm guessing this is because the code added a
+      roundoff-level term to a larger term, and this ended up not
+      changing the larger term.
+
+      Finally, as an extra precaution, I ran the test suite twice, on
+      two different implementations of the truncation: the final one
+      (which uses truncate_small_values), and one in which I did the
+      truncation using custom, inline code (commit 0d21ccb5). These two
+      were bit-for-bit with each other, giving me more confidence that I
+      didn't make a mistake with either implementation.
+
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev059
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Aug 24 15:14:06 MDT 2019

@@ -71,7 +71,7 @@ contains
     use FrictionVelocityMod , only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
     use QSatMod             , only : QSat
     use clm_varpar          , only : maxpatch_urb, nlevurb, nlevgrnd
-    use clm_time_manager    , only : get_step_size, get_nstep, is_near_local_noon
+    use clm_time_manager    , only : get_step_size_real, get_nstep, is_near_local_noon
     use HumanIndexMod       , only : all_human_stress_indices, fast_human_stress_indices, &
                                      Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                      swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
@@ -321,7 +321,7 @@ contains
       zii(begl:endl)  = 1000._r8          ! Should be set to the same values as in Biogeophysics1Mod
 
       ! Get current date
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Compute canyontop wind using Masson (2000)
 

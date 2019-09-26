@@ -79,7 +79,7 @@ contains
     ! !USES:
     use clm_varcon      , only : denh2o, denice, spval, hfus, tfrz, cpliq, cpice
     use clm_varctl      , only : iulog
-    use clm_time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size_real
     use SnowHydrologyMod, only : UpdateQuantitiesForNewSnow, InitializeExplicitSnowPack
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater
     use SnowHydrologyMod, only : ZeroEmptySnowLayers, BuildSnowFilter, SnowCapping
@@ -232,7 +232,7 @@ contains
     end if
 
     ! Determine step size
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! Compute "summed" (really just copies here) fluxes onto "ground" (really the lake
     ! surface here), for bulk water and each tracer. (Subroutine name mimics the one in
@@ -352,6 +352,14 @@ contains
        qflx_sub_snow_col(c)  = qflx_sub_snow(p)
     enddo
 
+    ! BUG(wjs, 2019-07-12, ESCOMP/ctsm#762) This is needed so that we can test the
+    ! tracerization of the following snow stuff without having tracerized all of the above
+    ! code. Remove this block once code before this point is fully tracerized.
+    if (water_inst%DoConsistencyCheck()) then
+       call water_inst%ResetCheckedTracers(bounds)
+       call water_inst%TracerConsistencyCheck(bounds, 'before main snow code in LakeHydrology')
+    end if
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Determine initial snow/no-snow filters (will be modified possibly by
     ! routines CombineSnowLayers and DivideSnowLayers below)
@@ -363,10 +371,19 @@ contains
 
     call SnowWater(bounds, &
          num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
-         atm2lnd_inst, b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst, aerosol_inst)
+         atm2lnd_inst, aerosol_inst, water_inst)
 
     call SnowCapping(bounds, num_lakec, filter_lakec, num_shlakesnowc, filter_shlakesnowc, &
-         aerosol_inst, b_waterflux_inst, b_waterstate_inst, topo_inst)
+         topo_inst, aerosol_inst, water_inst)
+
+    ! TODO(wjs, 2019-09-16) Eventually move this down, merging this with later tracer
+    ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
+    ! module, remember to also remove 'use perf_mod' at the top.
+    if (water_inst%DoConsistencyCheck()) then
+       call t_startf("tracer_consistency_check")
+       call water_inst%TracerConsistencyCheck(bounds, 'LakeHydrology: after SnowCapping')
+       call t_stopf("tracer_consistency_check")
+    end if
 
     ! Determine soil hydrology
     ! Here this consists only of making sure that soil is saturated even as it melts and
