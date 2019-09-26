@@ -90,6 +90,10 @@ contains
 
   end subroutine doCall3pt
 
+  ! ------------------------------------------------------------------------
+  ! Tests of CalcTracerFromBulk
+  ! ------------------------------------------------------------------------
+
   @Test
   subroutine basic(this)
     class(TestCalc), intent(inout) :: this
@@ -170,5 +174,41 @@ contains
     expected_msg = endrun_msg('CalcTracerFromBulk: Non-zero tracer source despite zero bulk source')
     @assertExceptionRaised(expected_msg)
   end subroutine bulkSource0_tracerSourceNon0_bulkVal0_aborts
+
+  ! ------------------------------------------------------------------------
+  ! Tests of CalcTracerFromBulkMasked
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine masked_basic(this)
+    ! A basic test of the masked version, ensuring that only points within the mask are
+    ! adjusted
+    class(TestCalc), intent(inout) :: this
+    integer :: num_pts
+    integer, allocatable :: filter_pts(:)
+    real(r8) :: tracer_vals(3)
+    real(r8) :: tracer_vals_orig(3)
+
+    tracer_vals(:) = [-1._r8, -2._r8, -3._r8]
+    tracer_vals_orig(:) = tracer_vals(:)
+    call filter_from_range(1, 3, num_pts, filter_pts)
+
+    call CalcTracerFromBulkMasked( &
+         lb = 1, &
+         num_pts = num_pts, &
+         filter_pts = filter_pts, &
+         mask_array = [.false., .true., .false.], &
+         bulk_source = [bulk_source_other, 300._r8, bulk_source_other], &
+         bulk_val = [bulk_val_other, 30._r8, bulk_val_other], &
+         tracer_source = [tracer_source_other, 60._r8, tracer_source_other], &
+         tracer_val = tracer_vals)
+
+    ! Make sure that values 1 and 3 were NOT set
+    @assertEqual(tracer_vals_orig(1), tracer_vals(1))
+    @assertEqual(tracer_vals_orig(3), tracer_vals(3))
+
+    ! Make sure that value 2 WAS set
+    @assertEqual(6._r8, tracer_vals(2))
+  end subroutine masked_basic
 
 end module test_calc_tracer_from_bulk

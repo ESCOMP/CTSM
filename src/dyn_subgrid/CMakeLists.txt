@@ -16,8 +16,10 @@ list(APPEND clm_sources "${clm_genf90_sources}")
 list(APPEND clm_sources
   dynColumnStateUpdaterMod.F90
   dynColumnTemplateMod.F90
+  dynConsBiogeophysMod.F90
   dynPatchStateUpdaterMod.F90
   dynPriorWeightsMod.F90
+  dynSubgridControlMod.F90
   dynTimeInfoMod.F90
   dynLandunitAreaMod.F90
   dynInitColumnsMod.F90

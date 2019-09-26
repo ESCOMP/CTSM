@@ -408,7 +408,7 @@ contains
     !
     ! !USES:
     use clm_varctl      , only : fsurdat
-    use clm_time_manager, only : get_curr_date, get_step_size, get_nstep
+    use clm_time_manager, only : get_curr_date, get_step_size_real, get_nstep
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  
@@ -427,7 +427,7 @@ contains
          (/31,28,31,30,31,30,31,31,30,31,30,31/) !days per month
     !-----------------------------------------------------------------------
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     call get_curr_date(kyr, kmo, kda, ksec, offset=int(dtime))
 

@@ -54,7 +54,7 @@ contains
     use clm_varcon       , only : denh2o, denice
     use clm_varctl       , only : use_vichydro
     use clm_varpar       , only : nlevgrnd, nlevurb
-    use clm_time_manager , only : get_step_size, get_nstep
+    use clm_time_manager , only : get_step_size_real, get_nstep
     use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, LateralFlowPowerLaw
     use SoilWaterMovementMod , only : use_aquifer_layer
     !
@@ -121,7 +121,7 @@ contains
 
       ! Determine time step and step size
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       if (use_vichydro) then
          call CLMVICMap(bounds, num_hydrologyc, filter_hydrologyc, &
@@ -160,7 +160,9 @@ contains
       end do
 
       call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-           waterstatebulk_inst, waterdiagnosticbulk_inst, endwb(bounds%begc:bounds%endc))
+           waterstatebulk_inst, waterdiagnosticbulk_inst, &
+           subtract_dynbal_baselines = .false., &
+           water_mass = endwb(bounds%begc:bounds%endc))
 
       ! Determine wetland and land ice hydrology (must be placed here
       ! since need snow updated from CombineSnowLayers)

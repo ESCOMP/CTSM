@@ -50,6 +50,12 @@ module SaturatedExcessRunoffMod
      procedure, private, nopass :: ComputeFsatTopmodel
      procedure, private, nopass :: ComputeFsatVic
   end type saturated_excess_runoff_type
+  public :: readParams
+
+  type, private :: params_type
+     real(r8) :: fff  ! Decay factor for fractional saturated area (1/m)
+  end type params_type
+  type(params_type), private ::  params_inst
 
   ! !PRIVATE DATA MEMBERS:
 
@@ -168,6 +174,26 @@ contains
     end if
 
   end subroutine InitCold
+
+  !-----------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_SaturatedExcessRunoff'
+    !--------------------------------------------------------------------
+
+    ! Decay factor for fractional saturated area (1/m)
+    call readNcdioScalar(ncid, 'fff', subname, params_inst%fff)
+
+  end subroutine readParams
 
   ! ========================================================================
   ! Science routines
@@ -325,12 +351,11 @@ contains
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
-       fff = 0.5_r8
        if (frost_table(c) > zwt_perched(c) .and. frost_table(c) <= zwt(c)) then
           ! use perched water table to determine fsat (if present)
-          fsat(c) = wtfact(c) * exp(-0.5_r8*fff*zwt_perched(c))
+          fsat(c) = wtfact(c) * exp(-0.5_r8*params_inst%fff*zwt_perched(c))
        else
-          fsat(c) = wtfact(c) * exp(-0.5_r8*fff*zwt(c))
+          fsat(c) = wtfact(c) * exp(-0.5_r8*params_inst%fff*zwt(c))
        end if
     end do
 
