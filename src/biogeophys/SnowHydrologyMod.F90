@@ -1997,8 +1997,8 @@ contains
     integer :: mssi(bounds%begc:bounds%endc)    ! node index
     integer :: neibor                           ! adjacent node selected for combination
     real(r8):: h2osno_total(bounds%begc:bounds%endc) ! total snow water (mm H2O)
-    real(r8):: zwice(bounds%begc:bounds%endc)   ! total ice mass in snow
-    real(r8):: zwliq (bounds%begc:bounds%endc)  ! total liquid water in snow
+    real(r8):: zwice(water_inst%bulk_and_tracers_beg:water_inst%bulk_and_tracers_end, bounds%begc:bounds%endc)  ! total ice mass in snow, for bulk and each tracer
+    real(r8):: zwliq(water_inst%bulk_and_tracers_beg:water_inst%bulk_and_tracers_end, bounds%begc:bounds%endc)  ! total liquid water in snow, for bulk and each tracer
     real(r8):: dzminloc(nlevsno)  ! minimum thickness of snow layer (local)
     real(r8):: dtime                            !land model time step (sec)
 
@@ -2033,10 +2033,14 @@ contains
          frac_sno_eff     => b_waterdiagnostic_inst%frac_sno_eff_col    , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
          snow_depth       => b_waterdiagnostic_inst%snow_depth_col      , & ! Output: [real(r8) (:)   ] snow height (m)
          int_snow         => b_waterstate_inst%int_snow_col        , & ! Output:  [real(r8) (:)   ] integrated snowfall [mm]
-         h2osno_no_layers => b_waterstate_inst%h2osno_no_layers_col, & ! Output: [real(r8) (:)   ]  snow that is not resolved into layers (kg/m2)
-         h2osoi_ice       => b_waterstate_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)
-         h2osoi_liq       => b_waterstate_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
          snw_rds          => b_waterdiagnostic_inst%snw_rds_col         , & ! Output: [real(r8) (:,:) ] effective snow grain radius (col,lyr) [microns, m^-6]
+
+         ! The following associates, with suffix _bulk, refer to bulk water. This is to
+         ! distinguish them from references in this routine like
+         ! w%waterstate_inst%h2osoi_ice_col, which refer to the current bulk or tracer.
+         h2osno_no_layers_bulk => b_waterstate_inst%h2osno_no_layers_col, & ! Output: [real(r8) (:)   ]  snow that is not resolved into layers (kg/m2)
+         h2osoi_ice_bulk  => b_waterstate_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)
+         h2osoi_liq_bulk  => b_waterstate_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
 
          snl              => col%snl                             , & ! Output: [integer  (:)   ] number of snow layers
          dz               => col%dz                              , & ! Output: [real(r8) (:,:) ] layer depth (m)
@@ -2085,7 +2089,7 @@ contains
        l = col%landunit(c)
        do j = msn_old(c)+1,0
           ! use 0.01 to avoid runaway ice buildup
-          if (h2osoi_ice(c,j) <= .01_r8) then
+          if (h2osoi_ice_bulk(c,j) <= .01_r8) then
              if (j < 0 .or. (ltype(l) == istsoil .or. urbpoi(l) .or. ltype(l) == istcrop)) then
                 ! Note that, for landunits other than soil, crop and urban, the above
                 ! conditional prevents us from trying to transfer the bottom snow layer's
@@ -2172,20 +2176,31 @@ contains
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        snow_depth(c) = 0._r8
-       zwice(c)  = 0._r8
-       zwliq(c)  = 0._r8
        ! See note in the following loop regarding why we are setting h2osno_total inline
        ! rather than relying on CalculateTotalH2osno.
        h2osno_total(c) = 0._r8
+
+       do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+          zwice(wi,c)  = 0._r8
+          zwliq(wi,c)  = 0._r8
+       end do
+
     end do
 
     do j = -nlevsno+1,0
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
+             do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                associate(w => water_inst%bulk_and_tracers(wi))
+
+                zwice(wi,c)  = zwice(wi,c) + w%waterstate_inst%h2osoi_ice_col(c,j)
+                zwliq(wi,c)  = zwliq(wi,c) + w%waterstate_inst%h2osoi_liq_col(c,j)
+
+                end associate
+             end do
+
              snow_depth(c) = snow_depth(c) + dz(c,j)
-             zwice(c)  = zwice(c) + h2osoi_ice(c,j)
-             zwliq(c)  = zwliq(c) + h2osoi_liq(c,j)
              ! We generally compute h2osno_total with CalculateTotalH2osno. Here we
              ! calculate it inline for two reasons: (1) we're calculating other related
              ! variables here anyway; and (2) the consistency checks invoked by
@@ -2193,7 +2208,7 @@ contains
              ! haven't yet zeroed out layers that just disappeared. Because of (2), if we
              ! wanted to use that routine to calculate h2osno_total here, we would need
              ! to first call ZeroEmptySnowLayers.
-             h2osno_total(c) = h2osno_total(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
+             h2osno_total(c) = h2osno_total(c) + h2osoi_ice_bulk(c,j) + h2osoi_liq_bulk(c,j)
           end if
        end do
     end do
@@ -2209,9 +2224,32 @@ contains
                ((ltype(l) /= istdlak) .and. ((frac_sno_eff(c)*snow_depth(c) < dzmin(1))  &
                .or. (h2osno_total(c)/(frac_sno_eff(c)*snow_depth(c)) < 50._r8)))) then
 
+
+             do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                associate(w => water_inst%bulk_and_tracers(wi))
+
+                ! The explicit snow pack is disappearing. Transfer ice to
+                ! h2osno_no_layers and (for soil landunits) transfer liquid water from
+                ! snow pack to layer 1 (soil).
+
+                w%waterstate_inst%h2osno_no_layers_col(c) = zwice(wi,c)
+                if (ltype(l) == istsoil .or. urbpoi(l) .or. ltype(l) == istcrop) then
+                   w%waterstate_inst%h2osoi_liq_col(c,1) = &
+                        w%waterstate_inst%h2osoi_liq_col(c,1) + zwliq(wi,c)
+                end if
+
+                ! FIXME(wjs, 2019-09-26) I think I should be able to remove this, since it
+                ! should be handled by ZeroEmptySnowLayers. If removing it changes
+                ! answers, then try doing it for lakes, too.
+                if (ltype(l) /= istdlak) then
+                   w%waterstate_inst%h2osoi_liq_col(c,0) = 0.0_r8
+                end if
+
+                end associate
+             end do
+
              snl(c) = 0
-             h2osno_no_layers(c) = zwice(c)
-             h2osno_total(c) = h2osno_no_layers(c)
+             h2osno_total(c) = h2osno_no_layers_bulk(c)
 
              mss_bcphi(c,:) = 0._r8
              mss_bcpho(c,:) = 0._r8
@@ -2222,18 +2260,10 @@ contains
              mss_dst3(c,:)  = 0._r8
              mss_dst4(c,:)  = 0._r8
 
-             if (h2osno_no_layers(c) <= 0._r8) snow_depth(c) = 0._r8
-             ! this is where water is transfered from layer 0 (snow) to layer 1 (soil)
-             if (ltype(l) == istsoil .or. urbpoi(l) .or. ltype(l) == istcrop) then
-                h2osoi_liq(c,0) = 0.0_r8
-                h2osoi_liq(c,1) = h2osoi_liq(c,1) + zwliq(c)
+             if (h2osno_no_layers_bulk(c) <= 0._r8) then
+                snow_depth(c) = 0._r8
              end if
-             if (ltype(l) == istwet) then
-                h2osoi_liq(c,0) = 0.0_r8
-             endif
-             if (ltype(l)==istice_mec) then
-                h2osoi_liq(c,0) = 0.0_r8
-             endif
+
           endif
        end if
        if (h2osno_total(c) <= 0._r8) then
@@ -2259,7 +2289,7 @@ contains
 
           do i = msn_old(c)+1,0
              if ((frac_sno_eff(c)*dz(c,i) < dzminloc(mssi(c))) .or. &
-                  ((h2osoi_ice(c,i) + h2osoi_liq(c,i))/(frac_sno_eff(c)*dz(c,i)) < 50._r8)) then
+                  ((h2osoi_ice_bulk(c,i) + h2osoi_liq_bulk(c,i))/(frac_sno_eff(c)*dz(c,i)) < 50._r8)) then
                 if (i == snl(c)+1) then
                    ! If top node is removed, combine with bottom neighbor.
                    neibor = i + 1
@@ -2293,20 +2323,40 @@ contains
                 mss_dst4(c,j)=mss_dst4(c,j)+mss_dst4(c,l)
 
                 ! mass-weighted combination of effective grain size:
-                snw_rds(c,j) = (snw_rds(c,j)*(h2osoi_liq(c,j)+h2osoi_ice(c,j)) + &
-                     snw_rds(c,l)*(h2osoi_liq(c,l)+h2osoi_ice(c,l))) / &
-                     (h2osoi_liq(c,j)+h2osoi_ice(c,j)+h2osoi_liq(c,l)+h2osoi_ice(c,l))
+                snw_rds(c,j) = (snw_rds(c,j)*(h2osoi_liq_bulk(c,j)+h2osoi_ice_bulk(c,j)) + &
+                     snw_rds(c,l)*(h2osoi_liq_bulk(c,l)+h2osoi_ice_bulk(c,l))) / &
+                     (h2osoi_liq_bulk(c,j)+h2osoi_ice_bulk(c,j)+h2osoi_liq_bulk(c,l)+h2osoi_ice_bulk(c,l))
 
-                call Combo (dz(c,j), h2osoi_liq(c,j), h2osoi_ice(c,j), &
-                     t_soisno(c,j), dz(c,l), h2osoi_liq(c,l), h2osoi_ice(c,l), t_soisno(c,l) )
+                call Combo (dz(c,j), h2osoi_liq_bulk(c,j), h2osoi_ice_bulk(c,j), &
+                     t_soisno(c,j), dz(c,l), h2osoi_liq_bulk(c,l), h2osoi_ice_bulk(c,l), t_soisno(c,l) )
+
+                ! Bulk already combined in Combo; here we just need to loop over tracers
+                ! and do a similar combination for them.
+                do wi = water_inst%tracers_beg, water_inst%tracers_end
+                   associate(w => water_inst%bulk_and_tracers(wi))
+
+                   w%waterstate_inst%h2osoi_ice_col(c,j) = &
+                        w%waterstate_inst%h2osoi_ice_col(c,j) + w%waterstate_inst%h2osoi_ice_col(c,l)
+                   w%waterstate_inst%h2osoi_liq_col(c,j) = &
+                        w%waterstate_inst%h2osoi_liq_col(c,j) + w%waterstate_inst%h2osoi_liq_col(c,l)
+
+                   end associate
+                end do
 
                 ! Now shift all elements above this down one.
                 if (j-1 > snl(c)+1) then
 
                    do k = j-1, snl(c)+2, -1
+                      do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                         associate(w => water_inst%bulk_and_tracers(wi))
+
+                         w%waterstate_inst%h2osoi_ice_col(c,k) = w%waterstate_inst%h2osoi_ice_col(c,k-1)
+                         w%waterstate_inst%h2osoi_liq_col(c,k) = w%waterstate_inst%h2osoi_liq_col(c,k-1)
+
+                         end associate
+                      end do
+
                       t_soisno(c,k) = t_soisno(c,k-1)
-                      h2osoi_ice(c,k) = h2osoi_ice(c,k-1)
-                      h2osoi_liq(c,k) = h2osoi_liq(c,k-1)
 
                       mss_bcphi(c,k) = mss_bcphi(c,k-1)
                       mss_bcpho(c,k) = mss_bcpho(c,k-1)
@@ -3676,7 +3726,6 @@ contains
     end if
 
   end subroutine WindDriftCompaction
-
 
   !-----------------------------------------------------------------------
   subroutine Combo(dz,  wliq,  wice, t, dz2, wliq2, wice2, t2)
