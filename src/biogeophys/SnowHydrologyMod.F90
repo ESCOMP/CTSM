@@ -2415,14 +2415,16 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: j, c, fc, k                              ! indices
+    integer  :: wi                                       ! index of water tracer or bulk
+    integer  :: i_bulk                                   ! index of bulk water
     real(r8) :: drr                                      ! thickness of the combined [m]
     integer  :: msno                                     ! number of snow layer 1 (top) to msno (bottom)
     real(r8) :: dzsno(bounds%begc:bounds%endc,nlevsno)   ! Snow layer thickness [m]
-    real(r8) :: swice(bounds%begc:bounds%endc,nlevsno)   ! Partial volume of ice [m3/m3]
-    real(r8) :: swliq(bounds%begc:bounds%endc,nlevsno)   ! Partial volume of liquid water [m3/m3]
+    real(r8) :: swice(water_inst%bulk_and_tracers_beg:water_inst%bulk_and_tracers_end, bounds%begc:bounds%endc, nlevsno) ! Partial volume of ice, for bulk and each tracer [m3/m3]
+    real(r8) :: swliq(water_inst%bulk_and_tracers_beg:water_inst%bulk_and_tracers_end, bounds%begc:bounds%endc, nlevsno) ! Partial volume of liquid water, for bulk and each tracer [m3/m3]
     real(r8) :: tsno(bounds%begc:bounds%endc ,nlevsno)   ! Nodel temperature [K]
-    real(r8) :: zwice                                    ! temporary
-    real(r8) :: zwliq                                    ! temporary
+    real(r8) :: zwice(water_inst%bulk_and_tracers_beg:water_inst%bulk_and_tracers_end) ! temporary
+    real(r8) :: zwliq(water_inst%bulk_and_tracers_beg:water_inst%bulk_and_tracers_end) ! temporary
     real(r8) :: propor                                   ! temporary
     real(r8) :: dtdz                                     ! temporary
     ! temporary variables mimicking the structure of other layer division variables
@@ -2445,8 +2447,8 @@ contains
     real(r8) :: rds(bounds%begc:bounds%endc,nlevsno)
     ! Variables for consistency check
     real(r8) :: dztot(bounds%begc:bounds%endc)
-    real(r8) :: snwicetot(bounds%begc:bounds%endc)
-    real(r8) :: snwliqtot(bounds%begc:bounds%endc)
+    real(r8) :: snwicetot(water_inst%bulk_and_tracers_beg:water_inst%bulk_and_tracers_end, bounds%begc:bounds%endc)
+    real(r8) :: snwliqtot(water_inst%bulk_and_tracers_beg:water_inst%bulk_and_tracers_end, bounds%begc:bounds%endc)
     real(r8) :: offset ! temporary
     !-----------------------------------------------------------------------
 
@@ -2456,17 +2458,13 @@ contains
     ! like w%waterstate_inst%h2osoi_liq_col.
 
     associate( &
-         b_waterstate_inst      => water_inst%waterstatebulk_inst, &
-         b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
+         b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst, &
+         i_bulk                 => water_inst%i_bulk &
          )
 
     associate( &
          t_soisno   => temperature_inst%t_soisno_col    , & ! Output: [real(r8) (:,:) ] soil temperature (Kelvin)
 
-         ! FIXME(wjs, 2019-09-26) Rename the following two to have 'bulk' in their names,
-         ! or remove them if they aren't needed anymore.
-         h2osoi_ice => b_waterstate_inst%h2osoi_ice_col   , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)
-         h2osoi_liq => b_waterstate_inst%h2osoi_liq_col   , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
          frac_sno   => b_waterdiagnostic_inst%frac_sno_eff_col , & ! Output: [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
          snw_rds    => b_waterdiagnostic_inst%snw_rds_col      , & ! Output: [real(r8) (:,:) ] effective snow grain radius (col,lyr) [microns, m^-6]
 
@@ -2493,14 +2491,24 @@ contains
 
              if (j == -nlevsno+1) then
                 dztot(c) = 0._r8
-                snwicetot(c) = 0._r8
-                snwliqtot(c) = 0._r8
+
+                do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                   snwicetot(wi,c) = 0._r8
+                   snwliqtot(wi,c) = 0._r8
+                end do
              end if
 
              if (j >= snl(c)+1) then
                 dztot(c) = dztot(c) + dz(c,j)
-                snwicetot(c) = snwicetot(c) + h2osoi_ice(c,j)
-                snwliqtot(c) = snwliqtot(c) + h2osoi_liq(c,j)
+
+                do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                   associate(w => water_inst%bulk_and_tracers(wi))
+
+                   snwicetot(wi,c) = snwicetot(wi,c) + w%waterstate_inst%h2osoi_ice_col(c,j)
+                   snwliqtot(wi,c) = snwliqtot(wi,c) + w%waterstate_inst%h2osoi_liq_col(c,j)
+
+                   end associate
+                end do
              end if
           end do
        end do
@@ -2518,8 +2526,16 @@ contains
              else
                 dzsno(c,j) = frac_sno(c)*dz(c,j+snl(c))
              end if
-             swice(c,j) = h2osoi_ice(c,j+snl(c))
-             swliq(c,j) = h2osoi_liq(c,j+snl(c))
+
+             do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                associate(w => water_inst%bulk_and_tracers(wi))
+
+                swice(wi,c,j) = w%waterstate_inst%h2osoi_ice_col(c,j+snl(c))
+                swliq(wi,c,j) = w%waterstate_inst%h2osoi_liq_col(c,j+snl(c))
+
+                end associate
+             end do
+
              tsno(c,j)  = t_soisno(c,j+snl(c))
 
              mbc_phi(c,j) = mss_bcphi(c,j+snl(c))
@@ -2562,10 +2578,13 @@ contains
                 msno = msno + 1
                 dzsno(c,k)     = dzsno(c,k) / 2.0_r8
                 dzsno(c,k+1)   = dzsno(c,k)
-                swice(c,k)     = swice(c,k) / 2.0_r8
-                swice(c,k+1)   = swice(c,k)
-                swliq(c,k)     = swliq(c,k) / 2.0_r8
-                swliq(c,k+1)   = swliq(c,k)
+
+                do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                   swice(wi,c,k)     = swice(wi,c,k) / 2.0_r8
+                   swice(wi,c,k+1)   = swice(wi,c,k)
+                   swliq(wi,c,k)     = swliq(wi,c,k) / 2.0_r8
+                   swliq(wi,c,k+1)   = swliq(wi,c,k)
+                end do
 
                 if (k == 1) then
                    ! special case
@@ -2618,8 +2637,10 @@ contains
                 drr      = dzsno(c,k) - dzmax_u(k) - offset
 
                 propor   = drr/dzsno(c,k)
-                zwice    = propor*swice(c,k)
-                zwliq    = propor*swliq(c,k)
+                do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                   zwice(wi) = propor*swice(wi,c,k)
+                   zwliq(wi) = propor*swliq(wi,c,k)
+                end do
                 zmbc_phi = propor*mbc_phi(c,k)
                 zmbc_pho = propor*mbc_pho(c,k)
                 zmoc_phi = propor*moc_phi(c,k)
@@ -2630,8 +2651,10 @@ contains
                 zmdst4   = propor*mdst4(c,k)
 
                 propor         = (dzmax_u(k)+offset)/dzsno(c,k)
-                swice(c,k)     = propor*swice(c,k)
-                swliq(c,k)     = propor*swliq(c,k)
+                do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                   swice(wi,c,k) = propor*swice(wi,c,k)
+                   swliq(wi,c,k) = propor*swliq(wi,c,k)
+                end do
                 mbc_phi(c,k)   = propor*mbc_phi(c,k)
                 mbc_pho(c,k)   = propor*mbc_pho(c,k)
                 moc_phi(c,k)   = propor*moc_phi(c,k)
@@ -2655,10 +2678,17 @@ contains
 
                 ! Mass-weighted combination of radius
                 rds(c,k+1) = MassWeightedSnowRadius( rds(c,k), rds(c,k+1), &
-                     (swliq(c,k+1)+swice(c,k+1)), (zwliq+zwice) )
+                     (swliq(i_bulk,c,k+1)+swice(i_bulk,c,k+1)), (zwliq(i_bulk)+zwice(i_bulk)) )
 
-                call Combo (dzsno(c,k+1), swliq(c,k+1), swice(c,k+1), tsno(c,k+1), drr, &
-                     zwliq, zwice, tsno(c,k))
+                call Combo (dzsno(c,k+1), swliq(i_bulk,c,k+1), swice(i_bulk,c,k+1), tsno(c,k+1), drr, &
+                     zwliq(i_bulk), zwice(i_bulk), tsno(c,k))
+
+                ! Bulk already combined in Combo; here we just need to loop over tracers
+                ! and do a similar combination for them
+                do wi = water_inst%tracers_beg, water_inst%tracers_end
+                   swliq(wi,c,k+1) = swliq(wi,c,k+1) + zwliq(wi)
+                   swice(wi,c,k+1) = swice(wi,c,k+1) + zwice(wi)
+                end do
              end if
           end if
           k = k+1
@@ -2677,8 +2707,16 @@ contains
              else
                 dz(c,j) = dzsno(c,j-snl(c))/frac_sno(c)
              end if
-             h2osoi_ice(c,j) = swice(c,j-snl(c))
-             h2osoi_liq(c,j) = swliq(c,j-snl(c))
+
+             do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                associate(w => water_inst%bulk_and_tracers(wi))
+
+                w%waterstate_inst%h2osoi_ice_col(c,j) = swice(wi,c,j-snl(c))
+                w%waterstate_inst%h2osoi_liq_col(c,j) = swliq(wi,c,j-snl(c))
+
+                end associate
+             end do
+
              t_soisno(c,j)   = tsno(c,j-snl(c))
              mss_bcphi(c,j)   = mbc_phi(c,j-snl(c))
              mss_bcpho(c,j)   = mbc_pho(c,j-snl(c))
@@ -2702,17 +2740,31 @@ contains
 
              if (j >= snl(c)+1) then
                 dztot(c) = dztot(c) - dz(c,j)
-                snwicetot(c) = snwicetot(c) - h2osoi_ice(c,j)
-                snwliqtot(c) = snwliqtot(c) - h2osoi_liq(c,j)
+
+                do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                   associate(w => water_inst%bulk_and_tracers(wi))
+
+                   snwicetot(wi,c) = snwicetot(wi,c) - w%waterstate_inst%h2osoi_ice_col(c,j)
+                   snwliqtot(wi,c) = snwliqtot(wi,c) - w%waterstate_inst%h2osoi_liq_col(c,j)
+
+                   end associate
+                end do
              end if
 
              if (j == 0) then
-                if ( abs(dztot(c)) > 1.e-10_r8 .or. abs(snwicetot(c)) > 1.e-7_r8 .or. &
-                     abs(snwliqtot(c)) > 1.e-7_r8 ) then
+                if ( abs(dztot(c)) > 1.e-10_r8) then
                    write(iulog,*)'Inconsistency in SnowDivision_Lake! c, remainders', &
-                        'dztot, snwicetot, snwliqtot = ',c,dztot(c),snwicetot(c),snwliqtot(c)
+                        'dztot = ',c,dztot(c)
                    call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
                 end if
+
+                do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                   if ( abs(snwicetot(wi,c)) > 1.e-7_r8 .or. abs(snwliqtot(wi,c)) > 1.e-7_r8 ) then
+                      write(iulog,*)'Inconsistency in SnowDivision_Lake! wi, c, remainders', &
+                           'snwicetot, snwliqtot = ',wi,c,snwicetot(wi,c),snwliqtot(wi,c)
+                      call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                   end if
+                end do
              end if
           end do
        end do
