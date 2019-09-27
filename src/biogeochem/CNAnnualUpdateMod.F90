@@ -28,7 +28,7 @@ contains
     ! On the radiation time step, update annual summation variables
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size, get_days_per_year
+    use clm_time_manager, only: get_step_size_real, get_days_per_year
     use clm_varcon      , only: secspday
     use SubgridAveMod   , only: p2c
     !
@@ -50,7 +50,7 @@ contains
     type(filter_col_type) :: filter_endofyear_c
     !-----------------------------------------------------------------------
 
-    dt = real( get_step_size(), r8 )
+    dt = get_step_size_real()
     secspyear = get_days_per_year() * secspday
 
     do fc = 1,num_soilc
