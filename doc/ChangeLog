@@ -1,4 +1,90 @@
 ===============================================================
+Tag name:  ctsm1.0.dev067
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Sep 26 15:02:39 MDT 2019
+One-line Summary: Add config_archive.xml to CTSM cime_config -- no testing
+
+Purpose of changes
+------------------
+
+Add config_archive.xml to cime_config for CTSM. Update the CODE_OF_CONDUCT
+to the August/2019 UCAR version.
+
+No testing done. 
+
+Bugs fixed or introduced
+------------------------
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self
+
+
+CTSM testing: doc (no standard testing done)
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  src unit-tests:
+
+    cheyenne - PASS
+
+  regular tests (aux_clm): None
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No!
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): None
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev066
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Sep 20 09:07:23 MDT 2019
