@@ -2005,7 +2005,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! In contrast to most routines, this one operates on a mix of bulk-only quantities
-    ! and bulk-and-tracer quantities. Plain variable names like h2osoi_liq refer to bulk
+    ! and bulk-and-tracer quantities. Variable names like h2osoi_liq_bulk refer to bulk
     ! quantities. Where bulk-and-tracer quantities are referenced, they are referred to
     ! like w%waterstate_inst%h2osoi_liq_col.
 
@@ -2452,10 +2452,9 @@ contains
     real(r8) :: offset ! temporary
     !-----------------------------------------------------------------------
 
-    ! In contrast to most routines, this one operates on a mix of bulk-only quantities
-    ! and bulk-and-tracer quantities. Plain variable names like h2osoi_liq refer to bulk
-    ! quantities. Where bulk-and-tracer quantities are referenced, they are referred to
-    ! like w%waterstate_inst%h2osoi_liq_col.
+    ! In contrast to most routines, this one operates on a mix of bulk-only quantities and
+    ! bulk-and-tracer quantities. Where bulk-and-tracer quantities are referenced, they
+    ! are referred to like w%waterstate_inst%h2osoi_liq_col.
 
     associate( &
          b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst, &
@@ -2788,7 +2787,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ZeroEmptySnowLayers(bounds, num_snowc, filter_snowc, &
-       col, waterstatebulk_inst, temperature_inst)
+       col, water_inst, temperature_inst)
     !
     ! !DESCRIPTION:
     ! Set empty snow layers to zero
@@ -2798,23 +2797,26 @@ contains
     integer                   , intent(in)    :: num_snowc       ! number of column snow points in column filter
     integer                   , intent(in)    :: filter_snowc(:) ! column filter for snow points
     type(column_type)         , intent(inout) :: col
-    type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
+    type(water_type)          , intent(inout) :: water_inst
     type(temperature_type)    , intent(inout) :: temperature_inst
     !
     ! !LOCAL VARIABLES:
     integer :: j
     integer :: fc, c
+    integer :: wi                                       ! index of water tracer or bulk
 
     character(len=*), parameter :: subname = 'ZeroEmptySnowLayers'
     !-----------------------------------------------------------------------
+
+    ! In contrast to most routines, this one operates on a mix of bulk-only quantities and
+    ! bulk-and-tracer quantities. Where bulk-and-tracer quantities are referenced, they
+    ! are referred to like w%waterstate_inst%h2osoi_liq_col.
 
     associate( &
          snl                => col%snl                                , & ! Input:  [integer  (:)   ]  number of snow layers
          z                  => col%z                                  , & ! Output: [real(r8) (:,:) ]  layer depth  (m)
          dz                 => col%dz                                 , & ! Output: [real(r8) (:,:) ]  layer thickness depth (m)
          zi                 => col%zi                                 , & ! Output: [real(r8) (:,:) ]  interface depth (m)
-         h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col     , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)
-         h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col     , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)
          t_soisno           => temperature_inst%t_soisno_col            & ! Output: [real(r8) (:,:) ]  soil temperature (Kelvin)
          )
 
@@ -2822,8 +2824,12 @@ contains
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j <= snl(c) .and. snl(c) > -nlevsno) then
-             h2osoi_ice(c,j) = 0._r8
-             h2osoi_liq(c,j) = 0._r8
+             do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+                associate(w => water_inst%bulk_and_tracers(wi))
+                w%waterstate_inst%h2osoi_ice_col(c,j) = 0._r8
+                w%waterstate_inst%h2osoi_liq_col(c,j) = 0._r8
+                end associate
+             end do
              t_soisno(c,j)  = 0._r8
              dz(c,j)    = 0._r8
              z(c,j)     = 0._r8
