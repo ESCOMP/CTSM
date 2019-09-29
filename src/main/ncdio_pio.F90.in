@@ -1391,13 +1391,9 @@ contains
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 #if ({DIMS}==0)
        start(1) = 1  ; count(1) = 1
-       if (present(nt)) then
-          start(1) = nt
-          temp(1) = data
-          status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
-       else
-          status = pio_put_var(ncid, varid, data)
-       endif
+       if (present(nt)) start(1) = nt
+       temp(1) = data
+       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
 #elif ({DIMS}==1)
        start(1) = 1 ; count(1) = size(data)
        start(2) = 1 ; count(2) = 1
@@ -1685,7 +1681,7 @@ contains
 #elif ({ITYPE}==TYPEINT)
        call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=ispval)
 #elif ({ITYPE}==TYPEDOUBLE)
-       call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+       call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=spval)
 #endif
     else
 
@@ -1903,9 +1899,9 @@ contains
        end if
 #else
        if (present(switchdim)) then
-          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status)
+          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status, fillval=spval)
        else
-          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=spval)
        end if
        if ( present(cnvrtnan2fill) )then
           do j = lb2,ub2

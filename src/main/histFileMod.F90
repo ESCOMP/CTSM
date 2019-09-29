@@ -13,20 +13,20 @@ module histFileMod
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog, use_vertsoilc, use_fates
-  use clm_varcon     , only : spval, ispval, dzsoi_decomp
+  use clm_varcon     , only : spval, ispval, dzsoi_decomp 
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
   use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type
   use GetGlobalValuesMod , only : GetGlobalIndex
-  use GridcellType   , only : grc
-  use LandunitType   , only : lun
-  use ColumnType     , only : col
-  use PatchType      , only : patch
+  use GridcellType   , only : grc                
+  use LandunitType   , only : lun                
+  use ColumnType     , only : col                
+  use PatchType      , only : patch                
   use EDTypesMod     , only : nclmax
   use EDTypesMod     , only : nlevleaf
   use FatesInterfaceMod , only : nlevsclass, nlevage
   use EDTypesMod     , only : nfsc, ncwd
   use FatesInterfaceMod , only : maxveg_fates => numpft
-  use ncdio_pio
+  use ncdio_pio 
 
   !
   implicit none
@@ -160,7 +160,7 @@ module histFileMod
   private :: hfields_write             ! Write a variable to a history tape
   private :: hfields_1dinfo            ! Define/output 1d subgrid info if appropriate
   private :: hist_update_hbuf_field_1d ! Updates history buffer for specific field and tape
-  private :: hist_update_hbuf_field_2d ! Updates history buffer for specific field and tape
+  private :: hist_update_hbuf_field_2d ! Updates history buffer for specific field and tape 
   private :: hist_set_snow_field_2d    ! Set values in history field dimensioned by levsno
   private :: list_index                ! Find index of field in exclude list
   private :: set_hist_filename         ! Determine history dataset filenames
@@ -196,7 +196,7 @@ module histFileMod
      integer :: end1d_out                      ! on-node 1d hbuf pointer end index
      integer :: num1d_out                      ! size of hbuf first dimension (all nodes)
      integer :: num2d                          ! size of hbuf second dimension (e.g. number of vertical levels)
-     integer :: hpindex                        ! history pointer index
+     integer :: hpindex                        ! history pointer index 
      character(len=scale_type_strlen) :: p2c_scale_type       ! scale factor when averaging patch to column
      character(len=scale_type_strlen) :: c2l_scale_type       ! scale factor when averaging column to landunit
      character(len=scale_type_strlen) :: l2g_scale_type       ! scale factor when averaging landunit to gridcell
@@ -352,7 +352,7 @@ contains
     integer :: numl         ! total number of landunits across all processors
     integer :: numc         ! total number of columns across all processors
     integer :: nump         ! total number of pfts across all processors
-    type(bounds_type) :: bounds
+    type(bounds_type) :: bounds                  
     character(len=*),parameter :: subname = 'masterlist_addfld'
     !------------------------------------------------------------------------
 
@@ -673,7 +673,7 @@ contains
     fexcl(:,8)  = hist_fexcl8(:)
     fexcl(:,9)  = hist_fexcl9(:)
     fexcl(:,10) = hist_fexcl10(:)
-
+ 
 
     ! First ensure contents of fincl and fexcl are valid names
 
@@ -853,7 +853,7 @@ contains
   logical function is_mapping_upto_subgrid( type1d, type1d_out ) result ( mapping)
     !
     ! !DESCRIPTION:
-    !
+    ! 
     ! Return true if this field will be mapped into a higher subgrid level
     ! If false it will be output on it's native grid
     !
@@ -909,7 +909,7 @@ contains
     integer :: beg1d_out,end1d_out  ! history output per-proc 1d beginning and ending indices
     integer :: beg1d,end1d          ! beginning and ending indices for this field (assume already set)
     integer :: num1d_out            ! history output 1d size
-    type(bounds_type) :: bounds
+    type(bounds_type) :: bounds     
     character(len=*),parameter :: subname = 'htape_addfld'
     !-----------------------------------------------------------------------
 
@@ -1012,7 +1012,7 @@ contains
     ! Fields native bounds
     beg1d = masterlist(f)%field%beg1d
     end1d = masterlist(f)%field%end1d
-
+    
     ! Alloccate and initialize history buffer and related info
 
     num2d = tape(t)%hlist(n)%field%num2d
@@ -1050,7 +1050,7 @@ contains
     ! into its history buffer for appropriate tapes.
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds
+    type(bounds_type), intent(in) :: bounds   
     !
     ! !LOCAL VARIABLES:
     integer :: t                   ! tape index
@@ -1064,7 +1064,7 @@ contains
 !$OMP PARALLEL DO PRIVATE (f, num2d)
        do f = 1,tape(t)%nflds
           num2d = tape(t)%hlist(f)%field%num2d
-          if ( num2d == 1) then
+          if ( num2d == 1) then   
              call hist_update_hbuf_field_1d (t, f, bounds)
           else
              call hist_update_hbuf_field_2d (t, f, bounds, num2d)
@@ -1092,7 +1092,7 @@ contains
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
     integer, intent(in) :: f            ! field index
-    type(bounds_type), intent(in) :: bounds
+    type(bounds_type), intent(in) :: bounds         
     !
     ! !LOCAL VARIABLES:
     integer  :: hpindex                 ! history pointer index
@@ -1306,7 +1306,7 @@ contains
           if ( end1d .eq. ubound(field,1) ) then
              k_offset = 0
           else
-             k_offset = 1 - beg1d
+             k_offset = 1 - beg1d 
           endif
           do k = beg1d,end1d
              valid = .true.
@@ -1386,7 +1386,7 @@ contains
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
     integer, intent(in) :: f            ! field index
-    type(bounds_type), intent(in) :: bounds
+    type(bounds_type), intent(in) :: bounds         
     integer, intent(in) :: num2d        ! size of second dimension
     !
     ! !LOCAL VARIABLES:
@@ -1409,7 +1409,7 @@ contains
     integer , pointer :: nacs(:,:)      ! accumulation counter
     real(r8), pointer :: field(:,:)     ! clm 2d pointer field
     logical           :: field_allocated! whether 'field' was allocated here
-    logical , pointer :: active(:)      ! flag saying whether each point is active (used for type1d = landunit/column/pft)
+    logical , pointer :: active(:)      ! flag saying whether each point is active (used for type1d = landunit/column/pft) 
                                         !(this refers to a point being active, NOT a history field being active)
     real(r8), allocatable :: field_gcell(:,:) ! gridcell level field (used if mapping to gridcell is done)
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
@@ -1709,7 +1709,7 @@ contains
   subroutine hist_set_snow_field_2d (field_out, field_in, no_snow_behavior, type1d, beg1d, end1d)
     !
     ! !DESCRIPTION:
-    ! Set values in history field dimensioned by levsno.
+    ! Set values in history field dimensioned by levsno. 
     !
     ! This routine handles what to do when a given snow layer doesn't exist for a given
     ! point, based on the no_snow_behavior argument. Options are:
@@ -1779,7 +1779,7 @@ contains
 
        num_snow_layers = abs(snl(c))
        num_nonexistent_layers = num_levels - num_snow_layers
-
+      
        ! Fill output field appropriately for each layer
        ! When only a subset of snow layers exist, it is the LAST num_snow_layers that exist
        ! Levels are rearranged such that the top snow layer (surface layer) becomes level 1, etc.
@@ -1790,7 +1790,7 @@ contains
        do level = (num_levels-num_nonexistent_layers), 1, -1
           field_out(point, level) = field_in(point, level+num_nonexistent_layers)
        end do
-
+          
     end do
 
     end associate
@@ -1942,7 +1942,7 @@ contains
     else
        lnfid => nfid(t)
     endif
-
+    
     ! BUG(wjs, 2014-10-20, bugz 1730) Workaround for
     ! http://bugs.cgd.ucar.edu/show_bug.cgi?id=1730
     ! - 1-d hist files have problems with pnetcdf. A better workaround in terms of
@@ -2055,7 +2055,7 @@ contains
     call ncd_defdim(lnfid, 'string_length', hist_dim_name_length, strlen_dimid)
     call ncd_defdim(lnfid, 'scale_type_string_length', scale_type_strlen, dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
-
+    
     if(use_fates)then
        call ncd_defdim(lnfid, 'fates_levscag', nlevsclass * nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levscls', nlevsclass, dimid)
@@ -2106,7 +2106,7 @@ contains
 
     character(len=*), parameter :: subname = 'htape_add_ltype_metadata'
     !-----------------------------------------------------------------------
-
+    
     do ltype = 1, max_lunit
        attname = att_prefix // landunit_names(ltype)
        call ncd_putatt(lnfid, ncd_global, attname, ltype)
@@ -2157,7 +2157,7 @@ contains
 
     character(len=*), parameter :: subname = 'htape_add_natpft_metadata'
     !-----------------------------------------------------------------------
-
+    
     do ptype = natpft_lb, natpft_ub
        ptype_1_indexing = ptype + (1 - natpft_lb)
        attname = att_prefix // pftname(ptype)
@@ -2187,7 +2187,7 @@ contains
 
     character(len=*), parameter :: subname = 'htape_add_cft_metadata'
     !-----------------------------------------------------------------------
-
+    
     do ptype = cft_lb, cft_ub
        ptype_1_indexing = ptype + (1 - cft_lb)
        attname = att_prefix // pftname(ptype)
@@ -2215,11 +2215,11 @@ contains
     !
     ! !ARGUMENTS:
     integer           , intent(in) :: t    ! tape index
-    type(bounds_type) , intent(in) :: bounds
-    real(r8)          , intent(in) :: watsat_col( bounds%begc:,1: )
-    real(r8)          , intent(in) :: sucsat_col( bounds%begc:,1: )
-    real(r8)          , intent(in) :: bsw_col( bounds%begc:,1: )
-    real(r8)          , intent(in) :: hksat_col( bounds%begc:,1: )
+    type(bounds_type) , intent(in) :: bounds           
+    real(r8)          , intent(in) :: watsat_col( bounds%begc:,1: ) 
+    real(r8)          , intent(in) :: sucsat_col( bounds%begc:,1: ) 
+    real(r8)          , intent(in) :: bsw_col( bounds%begc:,1: ) 
+    real(r8)          , intent(in) :: hksat_col( bounds%begc:,1: ) 
     character(len=*)  , intent(in) :: mode ! 'define' or 'write'
     !
     ! !LOCAL VARIABLES:
@@ -2435,7 +2435,7 @@ contains
                 l = col%landunit(c)
                 if (lun%lakpoi(l)) then
                    ! Field indices MUST match varnamesl array order above!
-                   if (ifld ==1) histil(c,lev) = col%z_lake(c,lev)
+                   if (ifld ==1) histil(c,lev) = col%z_lake(c,lev) 
                    if (ifld ==2) histil(c,lev) = col%dz_lake(c,lev)
                 end if
              end do
@@ -2546,9 +2546,9 @@ contains
                long_name='coordinate lake levels', units='m', ncid=nfid(t))
           call ncd_defvar(varname='levdcmp', xtype=tape(t)%ncprec, dim1name='levdcmp', &
                long_name='coordinate soil levels', units='m', ncid=nfid(t))
-
+      
           if(use_fates)then
-
+             
              call ncd_defvar(varname='fates_levscls', xtype=tape(t)%ncprec, dim1name='fates_levscls', &
                   long_name='FATES diameter size class lower bound', units='cm', ncid=nfid(t))
              call ncd_defvar(varname='fates_scmap_levscag', xtype=ncd_int, dim1name='fates_levscag', &
@@ -2632,7 +2632,7 @@ contains
        dim1id(1) = time_dimid
        str = 'days since ' // basedate // " " // basesec
        call ncd_defvar(nfid(t), 'time', tape(t)%ncprec, 1, dim1id, varid, &
-            long_name='time',units=str)
+            long_name='time',units=str) 
        cal = get_calendar()
        if (      trim(cal) == NO_LEAP_C   )then
           caldesc = "noleap"
@@ -2653,7 +2653,7 @@ contains
        else
           sec_hist_nhtfrq = hist_nhtfrq(t)
        end if
-
+   
        dtime = get_step_size()
        if (sec_hist_nhtfrq == 0) then !month
           time_period_freq = 'month_1'
@@ -3021,7 +3021,7 @@ contains
     integer , pointer :: ilarr(:)        ! temporary
     integer , pointer :: iparr(:)        ! temporary
     type(file_desc_t), pointer :: ncid            ! netcdf file
-    type(bounds_type) :: bounds
+    type(bounds_type) :: bounds          
     character(len=*),parameter :: subname = 'hfields_1dinfo'
 !-----------------------------------------------------------------------
 
@@ -3342,11 +3342,11 @@ contains
     ! !ARGUMENTS:
     logical, intent(in) :: rstwr    ! true => write restart file this step
     logical, intent(in) :: nlend    ! true => end of run on this step
-    type(bounds_type) , intent(in) :: bounds
-    real(r8)          , intent(in) :: watsat_col( bounds%begc:,1: )
-    real(r8)          , intent(in) :: sucsat_col( bounds%begc:,1: )
-    real(r8)          , intent(in) :: bsw_col( bounds%begc:,1: )
-    real(r8)          , intent(in) :: hksat_col( bounds%begc:,1: )
+    type(bounds_type) , intent(in) :: bounds           
+    real(r8)          , intent(in) :: watsat_col( bounds%begc:,1: ) 
+    real(r8)          , intent(in) :: sucsat_col( bounds%begc:,1: ) 
+    real(r8)          , intent(in) :: bsw_col( bounds%begc:,1: ) 
+    real(r8)          , intent(in) :: hksat_col( bounds%begc:,1: ) 
     !
     ! !LOCAL VARIABLES:
     integer :: t                          ! tape index
@@ -3530,8 +3530,8 @@ contains
        endif
     end do
 
-    ! Reset number of time samples to zero if file is full
-
+    ! Reset number of time samples to zero if file is full 
+    
     do t = 1, ntapes
        if (.not. history_tape_in_use(t)) then
           cycle
@@ -3541,7 +3541,7 @@ contains
           tape(t)%ntimes = 0
        end if
     end do
-
+    
   end subroutine hist_htapes_wrapup
 
   !-----------------------------------------------------------------------
@@ -3563,7 +3563,7 @@ contains
     use pio
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in)    :: bounds
+    type(bounds_type), intent(in)    :: bounds  
     type(file_desc_t), intent(inout) :: ncid     ! netcdf file
     character(len=*) , intent(in)    :: flag     !'read' or 'write'
     character(len=*) , intent(in), optional :: rdate    ! restart file time stamp for name
@@ -3693,7 +3693,7 @@ contains
        ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
 
        ! max_nflds is the maximum number of fields on any tape
-       ! max_flds is the maximum number possible number of fields
+       ! max_flds is the maximum number possible number of fields 
 
        max_nflds = max_nFields()
 
@@ -3726,7 +3726,7 @@ contains
                 num2d          =  tape(t)%hlist(f)%field%num2d
                 nacs           => tape(t)%hlist(f)%nacs
                 hbuf           => tape(t)%hlist(f)%hbuf
-
+               
                 if (type1d_out == grlnd) then
                    if (ldomain%isgrid2d) then
                       dim1name = 'lon'      ; dim2name = 'lat'
@@ -3736,10 +3736,10 @@ contains
                 else
                    dim1name = type1d_out ; dim2name = 'undefined'
                 endif
-
+                   
                 if (dim2name == 'undefined') then
                    if (num2d == 1) then
-                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=ncd_double, &
+                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=ncd_double, & 
                            dim1name=dim1name, &
                            long_name=trim(long_name), units=trim(units))
                       call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
@@ -3781,9 +3781,9 @@ contains
           call ncd_defdim( ncid_hist(t), 'avgflag_len'  , avgflag_strlen, dimid)
           call ncd_defdim( ncid_hist(t), 'scalar'       , 1           , dimid)
           call ncd_defdim( ncid_hist(t), 'max_chars'    , max_chars   , dimid)
-          call ncd_defdim( ncid_hist(t), 'max_nflds'    , max_nflds   ,  dimid)
-          call ncd_defdim( ncid_hist(t), 'max_flds'     , max_flds    , dimid)
-
+          call ncd_defdim( ncid_hist(t), 'max_nflds'    , max_nflds   ,  dimid)   
+          call ncd_defdim( ncid_hist(t), 'max_flds'     , max_flds    , dimid)   
+       
           call ncd_defvar(ncid=ncid_hist(t), varname='nhtfrq', xtype=ncd_int, &
                long_name="Frequency of history writes",               &
                comment="Namelist item", &
@@ -3823,7 +3823,7 @@ contains
           call ncd_defvar(ncid=ncid_hist(t), varname='begtime', xtype=ncd_double, &
                long_name="Beginning time", units="time units",     &
                dim1name='scalar')
-
+   
           call ncd_defvar(ncid=ncid_hist(t), varname='num2d', xtype=ncd_int, &
                long_name="Size of second dimension", units="unitless",     &
                dim1name='max_nflds' )
@@ -3865,7 +3865,7 @@ contains
 
           call ncd_enddef(ncid_hist(t))
 
-       end do   ! end of ntapes loop
+       end do   ! end of ntapes loop   
 
        RETURN
 
@@ -3889,7 +3889,7 @@ contains
           call ncd_io('locfnh',  my_locfnh,  'write', ncid, nt=t)
           call ncd_io('locfnhr', my_locfnhr, 'write', ncid, nt=t)
        end do
-
+       
        fincl(:,1)  = hist_fincl1(:)
        fincl(:,2)  = hist_fincl2(:)
        fincl(:,3)  = hist_fincl3(:)
@@ -3938,7 +3938,7 @@ contains
           itemp(:) = 0
           do f=1,tape(t)%nflds
              itemp(f) = tape(t)%hlist(f)%field%num2d
-          end do
+          end do 
           call ncd_io(varname='num2d', data=itemp(:), ncid=ncid_hist(t), flag='write')
 
           itemp(:) = 0
@@ -3981,7 +3981,7 @@ contains
           call ncd_io('l2g_scale_type', l2g_scale_type, 'write', ncid_hist(t))
           deallocate(tname,tlongname,tunits,tmpstr,tavgflag)
           deallocate(p2c_scale_type, c2l_scale_type, l2g_scale_type)
-       enddo
+       enddo       
        deallocate(itemp)
 
     !
@@ -4035,7 +4035,7 @@ contains
        end if
 
        ! Determine necessary indices - the following is needed if model decomposition is different on restart
-
+  
        start(1)=1
 
        if ( is_restart() )then
@@ -4050,7 +4050,7 @@ contains
              if ( t == 1 )then
 
                 call ncd_inqdlen(ncid_hist(1),dimid,max_nflds,name='max_nflds')
-
+   
                 allocate(itemp(max_nflds))
              end if
 
@@ -4233,7 +4233,7 @@ contains
           hist_fexcl10(:) = fexcl(:,10)
 
        end if
-
+       
        if ( allocated(itemp) ) deallocate(itemp)
 
     end if
@@ -4244,8 +4244,8 @@ contains
     ! so that subsequent time samples are added until the file is full.
     ! A new history file is used on a branch run.
     !======================================================================
-
-    if (flag == 'write') then
+    
+    if (flag == 'write') then     
 
        do t = 1,ntapes
           if (.not. history_tape_in_use(t)) then
@@ -4272,7 +4272,7 @@ contains
                       write(iulog,*) trim(subname),' ERROR: allocation'
                       call endrun(msg=errMsg(sourcefile, __LINE__))
                    end if
-
+                
                    hbuf1d(beg1d_out:end1d_out) = hbuf(beg1d_out:end1d_out,1)
                    nacs1d(beg1d_out:end1d_out) = nacs(beg1d_out:end1d_out,1)
 
@@ -4296,9 +4296,9 @@ contains
 
           call ncd_pio_closefile(ncid_hist(t))
 
-       end do   ! end of ntapes loop
+       end do   ! end of ntapes loop   
 
-    else if (flag == 'read') then
+    else if (flag == 'read') then 
 
        ! Read history restart information if history files are not full
 
@@ -4319,7 +4319,7 @@ contains
                 end1d_out  =  tape(t)%hlist(f)%field%end1d_out
                 nacs       => tape(t)%hlist(f)%nacs
                 hbuf       => tape(t)%hlist(f)%hbuf
-
+                
                 if (num2d == 1) then
                    allocate(hbuf1d(beg1d_out:end1d_out), &
                         nacs1d(beg1d_out:end1d_out), stat=status)
@@ -4327,15 +4327,15 @@ contains
                       write(iulog,*) trim(subname),' ERROR: allocation'
                       call endrun(msg=errMsg(sourcefile, __LINE__))
                    end if
-
+                   
                    call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name), &
                         dim1name=type1d_out, data=hbuf1d)
                    call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name_acc), &
                         dim1name=type1d_out, data=nacs1d)
-
+                   
                    hbuf(beg1d_out:end1d_out,1) = hbuf1d(beg1d_out:end1d_out)
                    nacs(beg1d_out:end1d_out,1) = nacs1d(beg1d_out:end1d_out)
-
+                   
                    deallocate(hbuf1d)
                    deallocate(nacs1d)
                 else
@@ -4347,13 +4347,13 @@ contains
              end do
 
           end if
-
+             
           call ncd_pio_closefile(ncid_hist(t))
-
+             
        end do
-
+       
     end if
-
+    
   end subroutine hist_restart_ncd
 
   !-----------------------------------------------------------------------
@@ -4375,7 +4375,7 @@ contains
     end do
     return
   end function max_nFields
-
+  
   !-----------------------------------------------------------------------
   character(len=max_namlen) function getname (inname)
     !
@@ -4572,7 +4572,7 @@ contains
     character(len=scale_type_strlen) :: scale_type_p2c ! scale type for subgrid averaging of pfts to column
     character(len=scale_type_strlen) :: scale_type_c2l ! scale type for subgrid averaging of columns to landunits
     character(len=scale_type_strlen) :: scale_type_l2g ! scale type for subgrid averaging of landunits to gridcells
-    type(bounds_type):: bounds         ! boudns
+    type(bounds_type):: bounds         ! boudns 
     character(len=16):: l_default      ! local version of 'default'
     character(len=*),parameter :: subname = 'hist_addfld1d'
 !------------------------------------------------------------------------
@@ -4798,13 +4798,13 @@ contains
     character(len=scale_type_strlen) :: scale_type_p2c ! scale type for subgrid averaging of pfts to column
     character(len=scale_type_strlen) :: scale_type_c2l ! scale type for subgrid averaging of columns to landunits
     character(len=scale_type_strlen) :: scale_type_l2g ! scale type for subgrid averaging of landunits to gridcells
-    type(bounds_type):: bounds
+    type(bounds_type):: bounds          
     character(len=16):: l_default      ! local version of 'default'
     character(len=*),parameter :: subname = 'hist_addfld2d'
 !------------------------------------------------------------------------
 
     call get_proc_bounds(bounds)
-
+    
     ! Error-check no_snow_behavior optional argument: It should be present if and only if
     ! type2d is 'levsno', and its value should be one of the public no_snow_* parameters
     ! defined above.
@@ -4883,7 +4883,7 @@ contains
     case ('levsno')
        num2d = nlevsno
     case ('nlevcan')
-        num2d = nlevcan
+        num2d = nlevcan 
     case ('nvegwcs')
         num2d = nvegwcs
     case default
@@ -5184,12 +5184,12 @@ contains
 
   subroutine strip_null(str)
     character(len=*), intent(inout) :: str
-    integer :: i
+    integer :: i	
     do i=1,len(str)
        if(ichar(str(i:i))==0) str(i:i)=' '
     end do
   end subroutine strip_null
-
+  
   !------------------------------------------------------------------------
   subroutine hist_do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, rstwr, nlend)
     !
@@ -5209,7 +5209,7 @@ contains
     logical, intent(out) :: if_stop             !true => last time step of run
     logical, intent(out) :: if_disphist(ntapes) !true => save and dispose history file
     logical, intent(in)  :: rstwr
-    logical, intent(in)  :: nlend
+    logical, intent(in)  :: nlend	
     !
     ! !LOCAL VARIABLES:
     integer :: t                   ! history tape index
@@ -5219,26 +5219,26 @@ contains
 
     rest_now = .false.
     stop_now = .false.
-
+    
     if (nlend) stop_now = .true.
     if (rstwr) rest_now = .true.
-
+    
     if_stop = stop_now
-
+    
     if (stop_now) then
        ! End of run -  dispose all history files
-
+       
        if_disphist(1:ntapes) = .true.
-
+       
     else if (rest_now) then
        ! Restart - dispose all history files
-
+       
        do t = 1,ntapes
           if_disphist(t) = .true.
        end do
     else
        ! Dispose
-
+       
        if_disphist(1:ntapes) = .false.
        do t = 1,ntapes
           if (hist_ntimes(t) ==  hist_mfilt(t)) then
@@ -5246,7 +5246,7 @@ contains
           endif
        end do
     endif
-
+    
   end subroutine hist_do_disp
 
   !-----------------------------------------------------------------------
@@ -5286,3 +5286,4 @@ contains
 
 
 end module histFileMod
+
