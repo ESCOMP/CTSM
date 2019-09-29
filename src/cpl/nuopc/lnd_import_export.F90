@@ -25,7 +25,6 @@ module lnd_import_export
   use shr_fire_emis_mod     , only : shr_fire_emis_readnl, shr_fire_emis_mechcomps_n
   use shr_carma_mod         , only : shr_carma_readnl
   use shr_ndep_mod          , only : shr_ndep_readnl
-  use glc_elevclass_mod     , only : glc_elevclass_init
   use lnd_shr_methods       , only : chkerr
 
   implicit none
@@ -133,9 +132,6 @@ contains
     if (glc_nec < 1) then
        call shr_sys_abort('ERROR: In CLM4.5 and later, glc_nec must be at least 1.')
     end if
-
-    ! Initialize glc_elevclass module
-    call glc_elevclass_init(glc_nec)
 
     !--------------------------------
     ! Advertise export fields
