@@ -27,14 +27,14 @@ module SPMMod
   !sparse matrix is in COO format, Both row index and column index should be in ascending order. 
   !Row index should change faster than Column index to ensure SPMP_AB work properly.
  
-     real(r8), pointer :: M(:,:)        ! non-zero entries in sparse matrix (unit,sparse matrix index)
-     integer , pointer :: RI(:)         ! Row index
-     integer , pointer :: CI(:)         ! Column index
-     integer NE                         ! Number of nonzero entries
-     integer SM                         ! Size of matrix, eg. for nxn matrix, SM=n
-     integer num_unit                   ! number of active unit, such as patch, col, or gridcell
-     integer begu                       ! begin index of unit in current process
-     integer endu                       ! end index of unit in current process
+     real(r8), pointer :: M(:,:) => null() ! non-zero entries in sparse matrix (unit,sparse matrix index)
+     integer , pointer :: RI(:) => null()  ! Row index
+     integer , pointer :: CI(:) => null()  ! Column index
+     integer NE                            ! Number of nonzero entries
+     integer SM                            ! Size of matrix, eg. for nxn matrix, SM=n
+     integer num_unit                      ! number of active unit, such as patch, col, or gridcell
+     integer begu                          ! begin index of unit in current process
+     integer endu                          ! end index of unit in current process
   
   contains
     
@@ -54,11 +54,11 @@ module SPMMod
   
   !diagnoal matrix only store diagnoal entries
 
-     real(r8), pointer :: DM(:,:)         ! entries in diagonal matrix (unit,diagonal matrix index)
-     integer SM                           ! Size of matrix, eg. for nxn matrix, SM=n
-     integer num_unit                     ! number of active unit, such as patch, col, or gridcell
-     integer begu                         ! begin index of unit in current process
-     integer endu                         ! end index of unit in current process
+     real(r8), pointer :: DM(:,:) => null() ! entries in diagonal matrix (unit,diagonal matrix index)
+     integer SM                             ! Size of matrix, eg. for nxn matrix, SM=n
+     integer num_unit                       ! number of active unit, such as patch, col, or gridcell
+     integer begu                           ! begin index of unit in current process
+     integer endu                           ! end index of unit in current process
   
   contains
 
@@ -72,11 +72,11 @@ module SPMMod
   
   !vector 
 
-     real(r8), pointer :: V(:,:)          ! entries in vector (unit,vector index)
-     integer SV                           ! Size of vector
-     integer num_unit                     ! number of active unit, such as patch, col, or gridcell
-     integer begu                         ! begin index of unit in current process
-     integer endu                         ! end index of unit in current process
+     real(r8), pointer :: V(:,:) => null() ! entries in vector (unit,vector index)
+     integer SV                            ! Size of vector
+     integer num_unit                      ! number of active unit, such as patch, col, or gridcell
+     integer begu                          ! begin index of unit in current process
+     integer endu                          ! end index of unit in current process
 
   contains 
   
@@ -151,9 +151,18 @@ end subroutine InitSM
      this%SM   = empty_int
      this%begu = empty_int
      this%endu = empty_int
-     deallocate(this%M)
-     deallocate(this%RI)
-     deallocate(this%CI)
+     if ( associated(this%M) )then
+        deallocate(this%M)
+     end if
+     if ( associated(this%RI) )then
+        deallocate(this%RI)
+     end if
+     if ( associated(this%CI) )then
+        deallocate(this%CI)
+     end if
+     this%M => null()
+     this%RI=> null()
+     this%CI=> null()
   end subroutine ReleaseSM
 
   ! ========================================================================
@@ -373,7 +382,10 @@ end subroutine InitDM
     this%SM   = empty_int
     this%begu = empty_int
     this%endu = empty_int
-    deallocate(this%DM)
+    if ( associated(this%DM) )then
+       deallocate(this%DM)
+    end if
+    this%DM => null()
   end subroutine ReleaseDM
 
   !-----------------------------------------------------------------------
@@ -440,7 +452,10 @@ subroutine ReleaseV(this)
 ! Deallocate vector type
 
 class(vector_type) :: this
-deallocate(this%V)
+if ( associated(this%V) )then
+   deallocate(this%V)
+end if
+this%V => null()
 this%begu = empty_int
 this%endu = empty_int
 this%SV = empty_int
