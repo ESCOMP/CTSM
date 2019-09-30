@@ -376,6 +376,8 @@ contains
           else
              if (j <= nlevgrnd) then
                 has_h2o = .true.
+             else
+                has_h2o = .false.
              end if
           end if
 

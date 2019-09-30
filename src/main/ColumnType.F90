@@ -20,7 +20,7 @@ module ColumnType
   !
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
+  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevurb
   use clm_varcon     , only : spval, ispval
   use shr_sys_mod    , only : shr_sys_abort
   use clm_varctl     , only : iulog
@@ -116,9 +116,9 @@ contains
 
     ! The following is set in initVerticalMod
     allocate(this%snl         (begc:endc))                     ; this%snl         (:)   = ispval  !* cannot be averaged up
-    allocate(this%dz          (begc:endc,-nlevsno+1:nlevgrnd)) ; this%dz          (:,:) = nan
-    allocate(this%z           (begc:endc,-nlevsno+1:nlevgrnd)) ; this%z           (:,:) = nan
-    allocate(this%zi          (begc:endc,-nlevsno+0:nlevgrnd)) ; this%zi          (:,:) = nan
+    allocate(this%dz          (begc:endc,-nlevsno+1:max0(nlevgrnd,nlevurb))) ; this%dz          (:,:) = nan
+    allocate(this%z           (begc:endc,-nlevsno+1:max0(nlevgrnd,nlevurb))) ; this%z           (:,:) = nan
+    allocate(this%zi          (begc:endc,-nlevsno+0:max0(nlevgrnd,nlevurb))) ; this%zi          (:,:) = nan
     allocate(this%zii         (begc:endc))                     ; this%zii         (:)   = nan
     allocate(this%lakedepth   (begc:endc))                     ; this%lakedepth   (:)   = spval  
     allocate(this%dz_lake     (begc:endc,nlevlak))             ; this%dz_lake     (:,:) = nan

@@ -7,7 +7,7 @@ module SoilStateType
   use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varpar      , only : nlevsoi, nlevgrnd, nlevlak, nlayer, nlevsno
+  use clm_varpar      , only : nlevsoi, nlevgrnd, nlevlak, nlayer, nlevsno, nlevurb
   use clm_varcon      , only : spval
   use clm_varctl      , only : use_hydrstress, use_cn, use_lch4, use_dynroot
   use clm_varctl      , only : iulog, hist_wrtch4diag
@@ -129,40 +129,40 @@ contains
     allocate(this%cellorg_col          (begc:endc,nlevsoi))             ; this%cellorg_col          (:,:) = nan 
     allocate(this%cellsand_col         (begc:endc,nlevsoi))             ; this%cellsand_col         (:,:) = nan 
     allocate(this%cellclay_col         (begc:endc,nlevsoi))             ; this%cellclay_col         (:,:) = nan 
-    allocate(this%bd_col               (begc:endc,nlevgrnd))            ; this%bd_col               (:,:) = nan
+    allocate(this%bd_col               (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%bd_col               (:,:) = nan
 
-    allocate(this%hksat_col            (begc:endc,nlevgrnd))            ; this%hksat_col            (:,:) = spval
-    allocate(this%hksat_min_col        (begc:endc,nlevgrnd))            ; this%hksat_min_col        (:,:) = spval
-    allocate(this%hk_l_col             (begc:endc,nlevgrnd))            ; this%hk_l_col             (:,:) = nan   
-    allocate(this%smp_l_col            (begc:endc,nlevgrnd))            ; this%smp_l_col            (:,:) = nan   
+    allocate(this%hksat_col            (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%hksat_col            (:,:) = spval
+    allocate(this%hksat_min_col        (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%hksat_min_col        (:,:) = spval
+    allocate(this%hk_l_col             (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%hk_l_col             (:,:) = nan   
+    allocate(this%smp_l_col            (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%smp_l_col            (:,:) = nan   
     allocate(this%smpmin_col           (begc:endc))                     ; this%smpmin_col           (:)   = nan
 
-    allocate(this%bsw_col              (begc:endc,nlevgrnd))            ; this%bsw_col              (:,:) = nan
-    allocate(this%watsat_col           (begc:endc,nlevgrnd))            ; this%watsat_col           (:,:) = nan
-    allocate(this%watdry_col           (begc:endc,nlevgrnd))            ; this%watdry_col           (:,:) = spval
-    allocate(this%watopt_col           (begc:endc,nlevgrnd))            ; this%watopt_col           (:,:) = spval
-    allocate(this%watfc_col            (begc:endc,nlevgrnd))            ; this%watfc_col            (:,:) = nan
-    allocate(this%sucsat_col           (begc:endc,nlevgrnd))            ; this%sucsat_col           (:,:) = spval
+    allocate(this%bsw_col              (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%bsw_col              (:,:) = nan
+    allocate(this%watsat_col           (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%watsat_col           (:,:) = nan
+    allocate(this%watdry_col           (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%watdry_col           (:,:) = spval
+    allocate(this%watopt_col           (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%watopt_col           (:,:) = spval
+    allocate(this%watfc_col            (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%watfc_col            (:,:) = nan
+    allocate(this%sucsat_col           (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%sucsat_col           (:,:) = spval
     allocate(this%dsl_col              (begc:endc))                     ; this%dsl_col         (:)   = spval!nan   
     allocate(this%soilresis_col        (begc:endc))                     ; this%soilresis_col         (:)   = spval!nan   
     allocate(this%soilbeta_col         (begc:endc))                     ; this%soilbeta_col         (:)   = nan   
     allocate(this%soilalpha_col        (begc:endc))                     ; this%soilalpha_col        (:)   = nan
     allocate(this%soilalpha_u_col      (begc:endc))                     ; this%soilalpha_u_col      (:)   = nan
-    allocate(this%soilpsi_col          (begc:endc,nlevgrnd))            ; this%soilpsi_col          (:,:) = nan
+    allocate(this%soilpsi_col          (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%soilpsi_col          (:,:) = nan
     allocate(this%wtfact_col           (begc:endc))                     ; this%wtfact_col           (:)   = nan
     allocate(this%porosity_col         (begc:endc,nlayer))              ; this%porosity_col         (:,:) = spval
-    allocate(this%eff_porosity_col     (begc:endc,nlevgrnd))            ; this%eff_porosity_col     (:,:) = spval
+    allocate(this%eff_porosity_col     (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%eff_porosity_col     (:,:) = spval
     allocate(this%gwc_thr_col          (begc:endc))                     ; this%gwc_thr_col          (:)   = nan
 
-    allocate(this%thk_col              (begc:endc,-nlevsno+1:nlevgrnd)) ; this%thk_col              (:,:) = nan
-    allocate(this%tkmg_col             (begc:endc,nlevgrnd))            ; this%tkmg_col             (:,:) = nan
-    allocate(this%tkdry_col            (begc:endc,nlevgrnd))            ; this%tkdry_col            (:,:) = nan
-    allocate(this%tksatu_col           (begc:endc,nlevgrnd))            ; this%tksatu_col           (:,:) = nan
-    allocate(this%csol_col             (begc:endc,nlevgrnd))            ; this%csol_col             (:,:) = nan
+    allocate(this%thk_col              (begc:endc,-nlevsno+1:max0(nlevgrnd,nlevurb))) ; this%thk_col              (:,:) = nan
+    allocate(this%tkmg_col             (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%tkmg_col             (:,:) = nan
+    allocate(this%tkdry_col            (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%tkdry_col            (:,:) = nan
+    allocate(this%tksatu_col           (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%tksatu_col           (:,:) = nan
+    allocate(this%csol_col             (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%csol_col             (:,:) = nan
 
     allocate(this%rootr_patch          (begp:endp,1:nlevgrnd))          ; this%rootr_patch          (:,:) = nan
     allocate(this%root_depth_patch     (begp:endp))                     ; this%root_depth_patch     (:)   = nan
-    allocate(this%rootr_col            (begc:endc,nlevgrnd))            ; this%rootr_col            (:,:) = nan
+    allocate(this%rootr_col            (begc:endc,max0(nlevgrnd,nlevurb)))            ; this%rootr_col            (:,:) = nan
     allocate(this%rootr_road_perv_col  (begc:endc,1:nlevgrnd))          ; this%rootr_road_perv_col  (:,:) = nan
     allocate(this%rootfr_patch         (begp:endp,1:nlevgrnd))          ; this%rootfr_patch         (:,:) = nan
     allocate(this%crootfr_patch        (begp:endp,1:nlevgrnd))          ; this%crootfr_patch        (:,:) = nan

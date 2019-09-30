@@ -302,7 +302,7 @@ contains
 !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(&
     clandunit         => col%landunit                      , & ! Input:  [integer (:)]  column's landunit

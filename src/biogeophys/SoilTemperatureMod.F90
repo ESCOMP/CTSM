@@ -28,6 +28,7 @@ module SoilTemperatureMod
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use PatchType         , only : patch                
+  use clm_varpar        , only : nlevurb
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -178,10 +179,10 @@ contains
     integer  :: fl                                                       ! urban filtered landunit indices
     integer  :: jtop(bounds%begc:bounds%endc)                            ! top level at each column
     real(r8) :: dtime                                                    ! land model time step (sec)
-    real(r8) :: cv (bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)         ! heat capacity [J/(m2 K)]
-    real(r8) :: tk (bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)         ! thermal conductivity [W/(m K)]
-    real(r8) :: fn (bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)         ! heat diffusion through the layer interface [W/m2]
-    real(r8) :: fn1(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)         ! heat diffusion through the layer interface [W/m2]
+    real(r8) :: cv (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))         ! heat capacity [J/(m2 K)]
+    real(r8) :: tk (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))         ! thermal conductivity [W/(m K)]
+    real(r8) :: fn (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))         ! heat diffusion through the layer interface [W/m2]
+    real(r8) :: fn1(bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))         ! heat diffusion through the layer interface [W/m2]
     real(r8) :: dzm                                                      ! used in computing tridiagonal matrix
     real(r8) :: dzp                                                      ! used in computing tridiagonal matrix
     real(r8) :: sabg_lyr_col(bounds%begc:bounds%endc,-nlevsno+1:1)       ! absorbed solar radiation (col,lyr) [W/m2]
@@ -192,9 +193,9 @@ contains
     real(r8) :: fn_h2osfc(bounds%begc:bounds%endc)                       ! heat diffusion through standing-water/soil interface [W/m2]
     real(r8) :: dz_h2osfc(bounds%begc:bounds%endc)                       ! height of standing surface water [m]
     integer, parameter :: nband=5
-    real(r8) :: bmatrix(bounds%begc:bounds%endc,nband,-nlevsno:nlevgrnd) ! banded matrix for numerical solution of temperature
-    real(r8) :: tvector(bounds%begc:bounds%endc,-nlevsno:nlevgrnd)       ! initial temperature solution [Kelvin]
-    real(r8) :: rvector(bounds%begc:bounds%endc,-nlevsno:nlevgrnd)       ! RHS vector for numerical solution of temperature
+    real(r8) :: bmatrix(bounds%begc:bounds%endc,nband,-nlevsno:max0(nlevgrnd,nlevurb)) ! banded matrix for numerical solution of temperature
+    real(r8) :: tvector(bounds%begc:bounds%endc,-nlevsno:max0(nlevgrnd,nlevurb))       ! initial temperature solution [Kelvin]
+    real(r8) :: rvector(bounds%begc:bounds%endc,-nlevsno:max0(nlevgrnd,nlevurb))       ! RHS vector for numerical solution of temperature
     real(r8) :: tk_h2osfc(bounds%begc:bounds%endc)                       ! thermal conductivity of h2osfc [W/(m K)] [col]
     real(r8) :: dhsdT(bounds%begc:bounds%endc)                           ! temperature derivative of "hs" [col]
     real(r8) :: hs_soil(bounds%begc:bounds%endc)                         ! heat flux on soil [W/m2]
@@ -401,15 +402,14 @@ contains
          tvector(c,0) = t_h2osfc(c)
 
          ! soil layers; top layer will have one offset and one extra coefficient
-         tvector(c,1:nlevgrnd) = t_soisno(c,1:nlevgrnd)
+         tvector(c,1:max0(nlevgrnd,nlevurb)) = t_soisno(c,1:max0(nlevgrnd,nlevurb))
 
       enddo
 
       call t_startf( 'SoilTempBandDiag')
 
       ! Solve the system
-
-      call BandDiagonal(bounds, -nlevsno, nlevgrnd, jtop(begc:endc), jbot(begc:endc), &
+      call BandDiagonal(bounds, -nlevsno, max0(nlevgrnd,nlevurb), jtop(begc:endc), jbot(begc:endc), &
            num_nolakec, filter_nolakec, nband, bmatrix(begc:endc, :, :), &
            rvector(begc:endc, :), tvector(begc:endc, :))
       call t_stopf( 'SoilTempBandDiag')
@@ -421,7 +421,7 @@ contains
          do j = snl(c)+1, 0
             t_soisno(c,j) = tvector(c,j-1) !snow layers
          end do
-         t_soisno(c,1:nlevgrnd)   = tvector(c,1:nlevgrnd)  !soil layers
+         t_soisno(c,1:max0(nlevgrnd,nlevurb))   = tvector(c,1:max0(nlevgrnd,nlevurb))  !soil layers
 
          if (frac_h2osfc(c) == 0._r8) then
             t_h2osfc(c)=t_soisno(c,1)
@@ -639,8 +639,8 @@ contains
     call t_startf( 'SoilThermProp' )
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(cv)        == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)        == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(cv)        == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)        == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
 
     associate(                                                 & 
@@ -1117,14 +1117,14 @@ contains
     real(r8) :: dtime                              !land model time step (sec)
     real(r8) :: heatr                              !energy residual or loss after melting or freezing
     real(r8) :: temp1                              !temporary variables [kg/m2]
-    real(r8) :: hm(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)    !energy residual [W/m2]
-    real(r8) :: xm(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)    !melting or freezing within a time step [kg/m2]
-    real(r8) :: wmass0(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)!initial mass of ice and liquid (kg/m2)
-    real(r8) :: wice0 (bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)!initial mass of ice (kg/m2)
-    real(r8) :: wliq0 (bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)!initial mass of liquid (kg/m2)
-    real(r8) :: supercool(bounds%begc:bounds%endc,nlevgrnd)        !supercooled water in soil (kg/m2) 
+    real(r8) :: hm(bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))    !energy residual [W/m2]
+    real(r8) :: xm(bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))    !melting or freezing within a time step [kg/m2]
+    real(r8) :: wmass0(bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))!initial mass of ice and liquid (kg/m2)
+    real(r8) :: wice0 (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))!initial mass of ice (kg/m2)
+    real(r8) :: wliq0 (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))!initial mass of liquid (kg/m2)
+    real(r8) :: supercool(bounds%begc:bounds%endc,max0(nlevgrnd,nlevurb))        !supercooled water in soil (kg/m2) 
     real(r8) :: propor                             !proportionality constant (-)
-    real(r8) :: tinc(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)  !t(n+1)-t(n) (K)
+    real(r8) :: tinc(bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))  !t(n+1)-t(n) (K)
     real(r8) :: smp                                !frozen water potential (mm)
     !-----------------------------------------------------------------------
 
@@ -1284,7 +1284,7 @@ contains
             c = filter_nolakec(fc)
             l = col%landunit(c)
 
-            if (col%itype(c) == icol_roof) then
+            if (col%itype(c) == icol_roof .or. col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
 
                if (h2osoi_ice(c,j) > 0. .AND. t_soisno(c,j) > tfrz) then
                   imelt(c,j) = 1
@@ -1473,7 +1473,7 @@ contains
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
 
-            if (col%itype(c) == icol_roof) then
+            if (col%itype(c) == icol_roof .or. col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
 
                if (j >= snl(c)+1) then
 
@@ -1930,10 +1930,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)   == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cv)   == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)   == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)   == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(cv)   == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact) == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)   == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(&
          zi         => col%zi                          , & ! Input: [real(r8) (:,:) ] interface level below a "z" level (m)
@@ -2065,11 +2065,11 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: j,c                                                     ! indices
     integer  :: fc                                                      ! lake filtered column indices
-    real(r8) :: rt (bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)        ! "r" vector for tridiagonal solution
+    real(r8) :: rt (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))        ! "r" vector for tridiagonal solution
     real(r8) :: fn_h2osfc(bounds%begc:bounds%endc)                      ! heat diffusion through standing-water/soil interface [W/m2]
     real(r8) :: rt_snow(bounds%begc:bounds%endc,-nlevsno:-1)            ! RHS vector corresponding to snow layers
     real(r8) :: rt_ssw(bounds%begc:bounds%endc,1)                       ! RHS vector corresponding to standing surface water
-    real(r8) :: rt_soil(bounds%begc:bounds%endc,1:nlevgrnd)             ! RHS vector corresponding to soil layer
+    real(r8) :: rt_soil(bounds%begc:bounds%endc,1:max0(nlevgrnd,nlevurb))             ! RHS vector corresponding to soil layer
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -2079,13 +2079,13 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rvector)      == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rvector)      == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(                                              &
          t_soisno     => temperature_inst%t_soisno_col    , & ! Input: [real(r8) (:,:) ]  soil temperature (Kelvin)      
@@ -2145,7 +2145,7 @@ contains
          c = filter_nolakec(fc)
          rvector(c, -nlevsno:-1) = rt_snow(c, -nlevsno:-1)
          rvector(c, 0         )  = rt_ssw(c, 1          )
-         rvector(c, 1:nlevgrnd)  = rt_soil(c, 1:nlevgrnd )
+         rvector(c, 1:max0(nlevgrnd,nlevurb))  = rt_soil(c, 1:max0(nlevgrnd,nlevurb) )
       end do
 
     end associate
@@ -2184,9 +2184,9 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
 
@@ -2262,9 +2262,9 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
 
@@ -2339,9 +2339,9 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
 
     associate(        &
@@ -2422,9 +2422,9 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
 
@@ -2504,9 +2504,9 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
 
     associate(       &
@@ -2586,7 +2586,7 @@ contains
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc,1/)),         errMsg(sourcefile, __LINE__))
 
@@ -2647,14 +2647,14 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_h2osfc)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(&
          begc     => bounds%begc  , & ! Input:  [integer ] beginning column index
@@ -2750,13 +2750,13 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(                                      &
          begc =>    bounds%begc                   , & ! Input:  [integer ] beginning column index
@@ -2833,12 +2833,12 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(                                      &
          z        => col%z                          & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -2925,13 +2925,13 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(                                              &
          z            => col%z                              & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -3012,13 +3012,13 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(       &
          z  => col%z & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -3097,13 +3097,13 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_h2osfc)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     !
     ! surface water  -----------------------------------------------------------------
@@ -3162,14 +3162,14 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: j,c                                                            ! indices
     integer  :: fc                                                             ! lake filtered column indices
-    real(r8) :: at (bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)               ! "a" vector for tridiagonal matrix
-    real(r8) :: bt (bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)               ! "b" vector for tridiagonal matrix
-    real(r8) :: ct (bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)               ! "c" vector for tridiagonal matrix
+    real(r8) :: at (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))               ! "a" vector for tridiagonal matrix
+    real(r8) :: bt (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))               ! "b" vector for tridiagonal matrix
+    real(r8) :: ct (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))               ! "c" vector for tridiagonal matrix
     real(r8) :: dzm                                                            ! used in computing tridiagonal matrix
     real(r8) :: dzp                                                            ! used in computing tridiagonal matrix
     real(r8) :: bmatrix_snow(bounds%begc:bounds%endc,nband,-nlevsno:-1      )  ! block-diagonal matrix for snow layers
     real(r8) :: bmatrix_ssw(bounds%begc:bounds%endc,nband,       0:0       )   ! block-diagonal matrix for standing surface water
-    real(r8) :: bmatrix_soil(bounds%begc:bounds%endc,nband,       1:nlevgrnd)  ! block-diagonal matrix for soil layers
+    real(r8) :: bmatrix_soil(bounds%begc:bounds%endc,nband,       1:max0(nlevgrnd,nlevurb))  ! block-diagonal matrix for soil layers
     real(r8) :: bmatrix_snow_soil(bounds%begc:bounds%endc,nband,-1:-1)         ! off-diagonal matrix for snow-soil interaction
     real(r8) :: bmatrix_ssw_soil(bounds%begc:bounds%endc,nband, 0:0 )          ! off-diagonal matrix for standing surface water-soil interaction
     real(r8) :: bmatrix_soil_snow(bounds%begc:bounds%endc,nband, 1:1 )         ! off-diagonal matrix for soil-snow interaction
@@ -3178,12 +3178,12 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)     == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)        == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)        == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc) == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)      == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)      == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)  == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc) == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(                                              &
          z            => col%z                            , & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -3336,12 +3336,12 @@ contains
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(bmatrix_snow)        == (/bounds%endc, nband, -1/)),       errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_ssw)         == (/bounds%endc, nband, 0/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)        == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)        == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)),       errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_ssw_soil)    == (/bounds%endc, nband, 0/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_ssw)    == (/bounds%endc, nband, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix)             == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix)             == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     ! Assemble the full matrix
 
@@ -3365,8 +3365,8 @@ contains
 
        ! Soil
        bmatrix(c,2:3,1           )  = bmatrix_soil(c,2:3,1           )
-       bmatrix(c,2:4,2:nlevgrnd-1)  = bmatrix_soil(c,2:4,2:nlevgrnd-1)
-       bmatrix(c,3:4,nlevgrnd    )  = bmatrix_soil(c,3:4,nlevgrnd    )
+       bmatrix(c,2:4,2:max0(nlevgrnd,nlevurb)-1)  = bmatrix_soil(c,2:4,2:max0(nlevgrnd,nlevurb)-1)
+       bmatrix(c,3:4,max0(nlevgrnd,nlevurb)    )  = bmatrix_soil(c,3:4,max0(nlevgrnd,nlevurb)    )
 
        ! Soil-Snow
        bmatrix(c,5,1)  = bmatrix_soil_snow(c,5,1)
@@ -3405,8 +3405,8 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),             errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),   errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),   errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),   errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),   errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),             errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)),  errMsg(sourcefile, __LINE__))
 
@@ -3462,8 +3462,8 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3521,8 +3521,8 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),            errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3600,8 +3600,8 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),            errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3677,8 +3677,8 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),            errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3743,8 +3743,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3793,8 +3793,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3847,8 +3847,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3914,8 +3914,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3981,8 +3981,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(&
@@ -4051,13 +4051,13 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_h2osfc)    == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(                                           &
          begc        => bounds%begc                    , & ! Input:  [integer ] beginning column index
@@ -4135,12 +4135,12 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
          begc =>    bounds%begc                   , & ! Input:  [integer ] beginning column index
@@ -4203,11 +4203,11 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(               &
          zi   =>    col%zi , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m)
@@ -4296,12 +4296,12 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(       &
          z => col%z  & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -4393,12 +4393,12 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
 
     associate(       &
          z  => col%z & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -4479,8 +4479,8 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)              == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)              == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow) == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
 
@@ -4534,8 +4534,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)        == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
 
@@ -4590,8 +4590,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
 
     associate(           &
@@ -4657,8 +4657,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
 
@@ -4729,8 +4729,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
 
@@ -4802,9 +4802,9 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_ssw)   == (/bounds%endc, nband, 0/)), errMsg(sourcefile, __LINE__))
@@ -4858,9 +4858,9 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)           == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)            == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)           == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_ssw_soil)   == (/bounds%endc, nband, 0/)), errMsg(sourcefile, __LINE__))
@@ -4912,7 +4912,7 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(tk_h2osfc)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)             == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_h2osfc)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_ssw) == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))

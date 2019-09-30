@@ -480,11 +480,21 @@ contains
              col%z(c,1:nlevgrnd)  = zsoi(1:nlevgrnd)
              col%zi(c,0:nlevgrnd) = zisoi(0:nlevgrnd)
              col%dz(c,1:nlevgrnd) = dzsoi(1:nlevgrnd)
+             if (nlevgrnd < nlevurb) then
+                col%z(c,nlevgrnd+1:nlevurb)  = spval
+                col%zi(c,nlevgrnd+1:nlevurb) = spval
+                col%dz(c,nlevgrnd+1:nlevurb) = spval
+             end if
           end if
        else if (lun%itype(l) /= istdlak) then
           col%z(c,1:nlevgrnd)  = zsoi(1:nlevgrnd)
           col%zi(c,0:nlevgrnd) = zisoi(0:nlevgrnd)
           col%dz(c,1:nlevgrnd) = dzsoi(1:nlevgrnd)
+          if (nlevgrnd < nlevurb) then
+             col%z(c,nlevgrnd+1:nlevurb)  = spval
+             col%zi(c,nlevgrnd+1:nlevurb) = spval
+             col%dz(c,nlevgrnd+1:nlevurb) = spval
+          end if
        end if
     end do
 
