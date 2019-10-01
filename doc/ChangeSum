@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev068    sacks 09/30/2019 Add water tracers to CombineSnowLayers, DivideSnowLayers, ZeroEmptySnowLayers
   ctsm1.0.dev067     erik 09/26/2019 Add config_archive.xml to CTSM cime_config -- no testing
   ctsm1.0.dev066    sacks 09/20/2019 Add water tracers to SnowCapping
   ctsm1.0.dev065    sacks 09/14/2019 Add water tracers to SnowWater
