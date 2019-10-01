@@ -1,4 +1,126 @@
 ===============================================================
+Tag name:  ctsm1.0.dev068
+Originator(s):  sacks (Bill Sacks)
+Date:  Mon Sep 30 09:57:04 MDT 2019
+One-line Summary: Add water tracers to CombineSnowLayers, DivideSnowLayers, ZeroEmptySnowLayers
+
+Purpose of changes
+------------------
+
+Add water tracers to CombineSnowLayers, DivideSnowLayers and
+ZeroEmptySnowLayers. This completes the tracerization of the core snow
+code: most or all of the code in SnowHydrologyMod is now tracerized.
+
+In contrast to most routines that I have tracerized, the tracerization
+of these routines is done by embedding loops over tracers inside
+existing code structures, rather than splitting out separate routines
+that operate on bulk or tracer quantities. This is because (1) it didn't
+make sense to introduce explicit fluxes for the state updates done here,
+so we didn't have the extra need of having separate routines for flux
+calculations vs. state updates; (2) the state updates were embedded in
+loops over levels and conditionals in a way that would have been awkward
+and messy to try to separately update bulk-and-tracer quantities
+(h2osoi_liq, h2osoi_ice, etc.) from bulk-only quantities (dz, etc.).
+
+Also, a bit of reordering of LakeHydrologyMod in order to keep the snow
+code more together.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#778 (Implement water tracers for combining and
+  dividing snow layers)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none 
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: I don't think so
+   Based on the changes introduced, I expect *very* small increases in
+   runtime of the modified routines (which would show up in the
+   hydro_without_drainage timer), even for cases without water tracers,
+   but I wouldn't expect this to have a significant impact. From PFS
+   test, and specifically looking at the timing of
+   hydro_without_drainage in that test, I see a possible small increase
+   (a few percent) in the timing of that section, though the differences
+   are within typical machine variability, so don't seem necessarily
+   significant.
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    izumi ------- pass
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev067
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Thu Sep 26 15:02:39 MDT 2019
