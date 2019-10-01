@@ -516,12 +516,12 @@ contains
     call ncd_defdim(ncid , namep      , nump           ,  dimid)
     call ncd_defdim(ncid , nameCohort , numCohort      ,  dimid)
 
-    call ncd_defdim(ncid , 'levgrnd' , nlevgrnd       ,  dimid)
+    call ncd_defdim(ncid , 'levgrnd' , max0(nlevgrnd,nlevurb)       ,  dimid)
     call ncd_defdim(ncid , 'levurb'  , nlevurb        ,  dimid)
     call ncd_defdim(ncid , 'levlak'  , nlevlak        ,  dimid)
     call ncd_defdim(ncid , 'levsno'  , nlevsno        ,  dimid)
     call ncd_defdim(ncid , 'levsno1' , nlevsno+1      ,  dimid)
-    call ncd_defdim(ncid , 'levtot'  , nlevsno+nlevgrnd, dimid)
+    call ncd_defdim(ncid , 'levtot'  , nlevsno+max0(nlevgrnd,nlevurb), dimid)
     call ncd_defdim(ncid , 'numrad'  , numrad         ,  dimid)
     call ncd_defdim(ncid , 'levcan'  , nlevcan        ,  dimid)
     if ( use_hydrstress ) then
@@ -717,7 +717,7 @@ contains
     msg = 'You can deal with this mismatch by rerunning with ' // &
          'use_init_interp = .true. in user_nl_clm'
     call check_dim(ncid, 'levsno'  , nlevsno, msg=msg)
-    call check_dim(ncid, 'levgrnd' , nlevgrnd, msg=msg)
+    call check_dim(ncid, 'levgrnd' , max0(nlevgrnd,nlevurb), msg=msg)
     call check_dim(ncid, 'levurb'  , nlevurb)
     call check_dim(ncid, 'levlak'  , nlevlak) 
 

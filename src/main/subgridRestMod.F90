@@ -12,7 +12,7 @@ module subgridRestMod
   use domainMod          , only : ldomain
   use clm_time_manager   , only : get_curr_date
   use clm_varcon         , only : nameg, namel, namec, namep
-  use clm_varpar         , only : nlevsno, nlevgrnd
+  use clm_varpar         , only : nlevsno, nlevgrnd, nlevurb
   use pio                , only : file_desc_t
   use ncdio_pio          , only : ncd_int, ncd_double
   use GetGlobalValuesMod , only : GetGlobalIndex
@@ -308,8 +308,8 @@ contains
          long_name='class in which each layer falls', units=' ',                    &
          interpinic_flag='skip', readvar=readvar, data=col%levgrnd_class)
 
-    allocate(temp2d_r(bounds%begc:bounds%endc, 1:nlevgrnd))
-    temp2d_r(bounds%begc:bounds%endc, 1:nlevgrnd) = col%z(bounds%begc:bounds%endc, 1:nlevgrnd)
+    allocate(temp2d_r(bounds%begc:bounds%endc, 1:max0(nlevgrnd,nlevurb)))
+    temp2d_r(bounds%begc:bounds%endc, 1:max0(nlevgrnd,nlevurb)) = col%z(bounds%begc:bounds%endc, 1:max0(nlevgrnd,nlevurb))
     call restartvar(ncid=ncid, flag=flag, varname='COL_Z', xtype=ncd_double,  & 
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='layer depth, excluding snow layers', units='m', &
@@ -413,10 +413,10 @@ contains
          long_name='pft active flag (1=active, 0=inactive)', units='',            &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    allocate(temp2d_i(bounds%begp:bounds%endp, 1:nlevgrnd))
+    allocate(temp2d_i(bounds%begp:bounds%endp, 1:max0(nlevgrnd,nlevurb)))
     do p=bounds%begp,bounds%endp
        c = patch%column(p)
-       temp2d_i(p, 1:nlevgrnd) = col%levgrnd_class(c, 1:nlevgrnd)
+       temp2d_i(p, 1:max0(nlevgrnd,nlevurb)) = col%levgrnd_class(c, 1:max0(nlevgrnd,nlevurb))
     end do
     call restartvar(ncid=ncid, flag=flag, varname='LEVGRND_CLASS_p', xtype=ncd_int, &
          dim1name='pft', dim2name='levgrnd', switchdim=.true., &
@@ -424,10 +424,10 @@ contains
          interpinic_flag='skip', readvar=readvar, data=temp2d_i)
     deallocate(temp2d_i)
 
-    allocate(temp2d_r(bounds%begp:bounds%endp, 1:nlevgrnd))
+    allocate(temp2d_r(bounds%begp:bounds%endp, 1:max0(nlevgrnd,nlevurb)))
     do p=bounds%begp,bounds%endp
        c = patch%column(p)
-       temp2d_r(p, 1:nlevgrnd) = col%z(c, 1:nlevgrnd)
+       temp2d_r(p, 1:max0(nlevgrnd,nlevurb)) = col%z(c, 1:max0(nlevgrnd,nlevurb))
     end do
     call restartvar(ncid=ncid, flag=flag, varname='COL_Z_p', xtype=ncd_double, &
          dim1name='pft', dim2name='levgrnd', switchdim=.true., &

@@ -797,6 +797,8 @@ contains
                    soil_heat_dry_mass(c) = soil_heat_dry_mass(c) + &
                         TempToHeat(temp = t_soisno(c,j), cv = (csol(c,j)*(1-watsat(c,j))*dz(c,j)))
                 end if
+             else
+                has_h2o = .false.
              end if
           end if
 

@@ -446,7 +446,7 @@ contains
       !--------------------------------------------
 
       do c = bounds%begc, bounds%endc
-         do j = 1,nlevgrnd
+         do j = 1,max0(nlevgrnd,nlevurb)
             if (this%h2osoi_vol_col(c,j) /= spval) then
                if (t_soisno_col(c,j) <= tfrz) then
                   this%h2osoi_ice_col(c,j) = col%dz(c,j)*denice*this%h2osoi_vol_col(c,j) ! ratio already applied

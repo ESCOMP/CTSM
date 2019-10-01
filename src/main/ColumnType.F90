@@ -125,7 +125,7 @@ contains
     allocate(this%z_lake      (begc:endc,nlevlak))             ; this%z_lake      (:,:) = nan
 
     allocate(this%nbedrock   (begc:endc))                     ; this%nbedrock   (:)   = ispval  
-    allocate(this%levgrnd_class(begc:endc,nlevgrnd))           ; this%levgrnd_class(:,:) = ispval
+    allocate(this%levgrnd_class(begc:endc,max0(nlevgrnd,nlevurb)))           ; this%levgrnd_class(:,:) = ispval
     allocate(this%micro_sigma (begc:endc))                     ; this%micro_sigma (:)   = nan
     allocate(this%n_melt      (begc:endc))                     ; this%n_melt      (:)   = nan 
     allocate(this%topo_slope  (begc:endc))                     ; this%topo_slope  (:)   = nan

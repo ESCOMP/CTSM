@@ -683,9 +683,9 @@ contains
           if (col%nbedrock(c) < nlevsoi) then
              col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = LEVGRND_CLASS_SHALLOW_BEDROCK
           end if
-          col%levgrnd_class(c, (nlevsoi + 1) : nlevgrnd) = LEVGRND_CLASS_DEEP_BEDROCK
+          col%levgrnd_class(c, (nlevsoi + 1) : max0(nlevgrnd,nlevurb)) = LEVGRND_CLASS_DEEP_BEDROCK
        else
-          col%levgrnd_class(c, 1:nlevgrnd) = LEVGRND_CLASS_STANDARD
+          col%levgrnd_class(c, 1:max0(nlevgrnd,nlevurb)) = LEVGRND_CLASS_STANDARD
        end if
     end do
 
