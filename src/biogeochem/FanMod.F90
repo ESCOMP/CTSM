@@ -21,6 +21,7 @@ module FanMod
   use shr_const_mod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use QSatMod                         , only : QSat
+  use shr_infnan_mod                  , only : isnan => shr_infnan_isnan
 #endif
   implicit none
   
@@ -206,7 +207,7 @@ contains
     real(r8), parameter :: rmax = 1.16e-6_r8   ! Maximum rate of nitrification, s-1
     real(r8), parameter :: tmax = 313.0       ! Maximm temperature of microbial activity, K
     real(r8), parameter :: topt = 301.0       ! Optimal temperature of microbial acticity, K
-    real(r8), parameter :: asg  = 2.4_8        ! a_sigma, empirical factor
+    real(r8), parameter :: asg  = 2.4_r8       ! a_sigma, empirical factor
     real(r8), parameter :: wmr_crit = 0.12_r8  ! Critical water content, g/g
     real(r8), parameter :: smrf_b = 2          ! Parameter in soil moisture response function
 
@@ -655,6 +656,7 @@ contains
     real(r8), intent(in) :: watertend ! time derivative of theta*dz
     real(r8), intent(in) :: runoff    ! surface runoff flux, m/s
     real(r8), intent(in) :: tandep    ! TAN input flux, gN/m2/s
+    integer, intent(in) :: numpools
     real(r8), intent(in) :: tanprod(numpools)   ! flux of TAN produced (from urea/organic n) in the column
     real(r8), intent(in) :: water_init ! Initial water volume in the affected patch, m
     real(r8), intent(in) :: bsw
@@ -662,7 +664,6 @@ contains
     real(r8), intent(in) :: Hconc(numpools)       ! H+ concentration, mol/l (npools)
     real(r8), intent(in) :: dz_layer ! thickness of the volatilization layer, m
     real(r8), intent(inout) :: tanpools(numpools) ! TAN pools gN/m2 (npools)
-    integer, intent(in) :: numpools
     integer, intent(in) :: size_fluxes
     real(r8), intent(out) :: fluxes(size_fluxes,numpools) ! TAN fluxes, gN/m2/s (type of flux, pool)
     real(r8), intent(out) :: residual     ! "over-aged" TAN produced during the step, gN/m.
@@ -794,9 +795,9 @@ contains
   subroutine update_pools(tanpools, fluxes, dt, np, nf, fixed)
     ! Update tan pools using the fluxes and an ad-hoc scheme against negative TAN masses.
     implicit none
+    integer, intent(in) :: np, nf
     real(r8), intent(inout) :: tanpools(np), fluxes(nf,np)
     real(r8), intent(in) :: dt
-    integer, intent(in) :: np, nf
     logical, intent(out), optional :: fixed
 
     integer :: ip
@@ -1170,11 +1171,11 @@ contains
      & flux_direct, flux_direct_tan, flux_barn, flux_store, flux_resid, flux_resid_tan, &
      & volat_target_barns, volat_target_stores, volat_coef_barns, volat_coef_stores, tan_fract_excr, nn)
 
-    real(8), intent(in), dimension(nn) :: manure_excr, tempr_outside, windspeed, fract_direct
-    real(8), intent(out), dimension(nn) :: flux_barn, flux_store, flux_direct, flux_resid, &
-         & flux_direct_tan, flux_resid_tan
-    real(8), intent(in) :: volat_target_barns, volat_target_stores, volat_coef_barns, volat_coef_stores, tan_fract_excr
     integer, intent(in) :: nn
+    real(r8), intent(in), dimension(nn) :: manure_excr, tempr_outside, windspeed, fract_direct
+    real(r8), intent(out), dimension(nn) :: flux_barn, flux_store, flux_direct, flux_resid, &
+         & flux_direct_tan, flux_resid_tan
+    real(r8), intent(in) :: volat_target_barns, volat_target_stores, volat_coef_barns, volat_coef_stores, tan_fract_excr
 
     integer :: ii, status
     real(r8) :: fluxes_nitr(4), fluxes_tan(4)
