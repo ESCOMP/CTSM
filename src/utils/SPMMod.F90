@@ -40,6 +40,7 @@ module SPMMod
     
     procedure, public :: InitSM         ! subroutine to initilize sparse matrix type
     procedure, public :: ReleaseSM      ! subroutine to deallocate the sparse matrix type data
+    procedure, public :: IsAllocSM      ! return true if the sparse matrix type is allocated (InitSM was called)
     procedure, public :: SetValueSM     ! subroutine to set values in sparse matrix of any shape
     procedure, public :: SetValueA      ! subroutine to set off-diagonal values in sparse matrix of A
     procedure, public :: SetValueA_diag ! subroutine to set diagonal values in sparse matrix of A
@@ -64,6 +65,7 @@ module SPMMod
 
     procedure, public :: InitDM           ! subroutine to initialize diagonal matrix type
     procedure, public :: ReleaseDM        ! subroutine to deallocate the diagonal matrix
+    procedure, public :: IsAllocDM        ! return true if the diagonal matrix is allocated (InitDM was called)
     procedure, public :: SetValueDM       ! subroutine to set values in diagonal matrix
 
   end type diag_matrix_type
@@ -82,6 +84,7 @@ module SPMMod
   
     procedure, public :: InitV            ! subroutine to initialize vector type
     procedure, public :: ReleaseV         ! subroutine to deallocate veector type
+    procedure, public :: IsAllocV         ! return true if the vector is allocated (InitV was called)
     procedure, public :: SetValueV        ! subroutine to set values in vector
     procedure, public :: SetValueV_scaler ! subroutine to set a constant value to a vector
     procedure, public :: SPMM_AX          ! subroutine to calculate multiplication X(vector)=A(sparse matrix)*X(vector)
@@ -109,15 +112,7 @@ integer,intent(in) :: endu
 integer,optional,intent(in) :: maxsm
 character(len=*),parameter :: subname = 'InitSM'
 
-if ( associated(this%M) )then
-   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
-   return
-end if
-if ( associated(this%RI) )then
-   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
-   return
-end if
-if ( associated(this%CI) )then
+if ( this%IsAllocSM() )then
    call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
    return
 end if
@@ -167,6 +162,22 @@ end subroutine InitSM
 
   ! ========================================================================
 
+  logical function IsAllocSM(this)
+  
+  ! Check if the Sparse Matrix has been allocated (InitSM was called on it)
+  
+     class(sparse_matrix_type) :: this
+
+     if ( associated(this%M) .or. associated(this%RI) .or. associated(this%CI) )then
+        IsAllocSM = .true.
+     else
+        IsAllocSM = .false.
+     end if
+
+  end function IsAllocSM
+  
+  ! ========================================================================
+
 subroutine SetValueSM(this,begu,endu,num_unit,filter_u,M,I,J,NE_in)
 
 ! Set sparse matrix values by giving all non-zero values and the corresponding row and column indices.
@@ -185,7 +196,7 @@ character(len=*),parameter :: subname = 'SetValueSM'
 
 integer k,u,fu
 
-if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
+if ( .not. this%IsAllocSM() )then
    call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
    return
 end if
@@ -195,8 +206,15 @@ SHR_ASSERT_FL((ubound(I, 1) >= NE_in), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(J, 1) >= NE_in), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M, 1) == begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 1) == endu), sourcefile, __LINE__)
+#ifndef _OPENMP
+! Without OpenMP array sizes will be identical
 SHR_ASSERT_FL((lbound(M, 1) == this%begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 1) == this%endu), sourcefile, __LINE__)
+#else
+! With OpenMP the allocated array sizes might be larger than the input ones
+SHR_ASSERT_FL((lbound(M, 1) >= this%begu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M, 1) <= this%endu), sourcefile, __LINE__)
+#endif
 SHR_ASSERT_FL((maxval(I) <= this%SM), sourcefile, __LINE__)
 SHR_ASSERT_FL((minval(I) >= 1), sourcefile, __LINE__)
 SHR_ASSERT_FL((maxval(J) <= this%SM), sourcefile, __LINE__)
@@ -229,7 +247,7 @@ integer,intent(in) :: filter_u(:)
 integer i,u,fu
 character(len=*),parameter :: subname = 'SetValueA_diag'
 
-if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
+if ( .not. this%IsAllocSM() )then
    call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
    return
 end if
@@ -283,7 +301,7 @@ character(len=*),parameter :: subname = 'SetValueA'
 
 list_ready = .false.
 
-if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
+if ( .not. this%IsAllocSM() )then
    call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
    return
 end if
@@ -325,8 +343,8 @@ if(Init_ready)then
    this%RI(1:this%NE) = RI_A(1:this%NE)
    this%CI(1:this%NE) = CI_A(1:this%NE)
 else
-   if ( associated(A_diag%M)    ) call A_diag%ReleaseSM()
-   if ( associated(A_nondiag%M) ) call A_nondiag%ReleaseSM()
+   if ( A_diag%IsAllocSM()    ) call A_diag%ReleaseSM()
+   if ( A_nondiag%IsAllocSM() ) call A_nondiag%ReleaseSM()
    call A_diag%InitSM(this%SM,begu,endu)
    call A_nondiag%InitSM(this%SM,begu,endu)
 
@@ -360,7 +378,7 @@ integer,intent(in) :: begu
 integer,intent(in) :: endu
 character(len=*),parameter :: subname = 'InitDM'
 
-if ( associated(this%DM) )then
+if ( this%IsAllocDM() )then
    call endrun( subname//" ERROR: Diagonal Matrix was already allocated" )
    return
 end if
@@ -389,6 +407,21 @@ end subroutine InitDM
   end subroutine ReleaseDM
 
   !-----------------------------------------------------------------------
+  logical function IsAllocDM(this)
+
+    ! Check if the Diagonal Matrix is allocated (InitDM was called)
+
+    class(diag_matrix_type) :: this
+
+    if ( associated(this%DM) )then
+       IsAllocDM = .true.
+    else
+       IsAllocDM = .false.
+    end if
+
+  end function IsAllocDM
+
+  !-----------------------------------------------------------------------
 
 subroutine SetValueDM(this,begu,endu,num_unit,filter_u,M)
 
@@ -405,7 +438,7 @@ character(len=*),parameter :: subname = 'SetValueDM'
 
 integer i,fu,u
 
-if ( .not. associated(this%DM) )then
+if ( .not. this%IsAllocDM() )then
    call endrun( subname//" ERROR: Diagonal matrix was NOT already allocated" )
    return
 end if
@@ -434,7 +467,7 @@ integer,intent(in) :: begu
 integer,intent(in) :: endu
 character(len=*),parameter :: subname = 'InitV'
 
-if ( associated(this%V) )then
+if ( this%IsAllocV() )then
   call endrun( subname//" ERROR: Vector was already allocated" )
   return
 end if
@@ -462,6 +495,21 @@ this%SV = empty_int
 
 end subroutine ReleaseV
 
+  ! ========================================================================
+
+  logical function IsAllocV(this)
+  
+  ! Check if the Vector has been allocated (InitV was called on it)
+  
+     class(vector_type) :: this
+
+     if ( associated(this%V) )then
+        IsAllocV = .true.
+     else
+        IsAllocV = .false.
+     end if
+
+  end function IsAllocV
 
 subroutine SetValueV_scaler(this,num_unit,filter_u,scaler)
 
@@ -476,7 +524,7 @@ integer,intent(in) :: filter_u(:)
 integer i,fu,u
 character(len=*),parameter :: subname = 'SetValueV_scaler'
 
-if ( .not. associated(this%V) )then
+if ( .not. this%IsAllocV() )then
    call endrun( subname//" ERROR: Vector was NOT already allocated" )
    return
 end if
@@ -506,7 +554,7 @@ integer ,intent(in) :: filter_u(:)
 integer i,fu,u
 character(len=*),parameter :: subname = 'SetValueV'
 
-if ( .not. associated(this%V) )then
+if ( .not. this%IsAllocV() )then
    call endrun( subname//" ERROR: Vector was NOT already allocated" )
    return
 end if
