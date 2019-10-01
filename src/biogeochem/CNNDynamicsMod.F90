@@ -134,9 +134,21 @@ contains
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
        waterstatebulk_inst, soilstate_inst, temperature_inst, &
        waterfluxbulk_inst, frictionvel_inst)
+    !
+    ! !DESCRIPTION:
+    ! On the radiation time step, update the nitrogen deposition rate from
+    ! atmospheric forcing and if enabled, call FAN to evaluate NH3 volatilization from
+    ! fertilizers and manure.
+    !
+    ! For now it is assumed that all the atmospheric N deposition goes to the soil mineral
+    ! N pool.  This could be updated later to divide the inputs between mineral N absorbed
+    ! directly into the canopy and mineral N entering the soil pool.
+    !
+    ! !USES:
     use CNSharedParamsMod    , only: use_fun
     use clm_time_manager     , only: get_step_size, get_curr_date, get_curr_calday, get_nstep
-
+    !
+    ! !LOCAL VARIABLES:
     use clm_varpar           , only: max_patch_per_col
     use LandunitType         , only: lun
     use shr_sys_mod          , only : shr_sys_flush
