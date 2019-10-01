@@ -292,13 +292,17 @@ contains
   
 
     if (use_crop) then
+       call t_startf('CNNFert')
        call CNNFert(bounds, num_soilc,filter_soilc, &
             cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst)
+       call t_stopf('CNNFert')
 
        if (.not. use_fun) then  ! if FUN is active, then soy fixation handled by FUN
+          call t_startf('CNSoyfix')
           call  CNSoyfix (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
                waterdiagnosticbulk_inst, crop_inst, cnveg_state_inst, cnveg_nitrogenflux_inst , &
                soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
+          call t_stopf('CNSoyfix')
        end if
     end if
 

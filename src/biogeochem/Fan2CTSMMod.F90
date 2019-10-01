@@ -645,7 +645,6 @@ contains
             get_total_n(ns, nf, 'pools_manure'), get_total_n(ns, nf, 'fluxes_manure'))
        call balance_check('Fertilizer', nsoilfert_old, &
             get_total_n(ns, nf, 'pools_fertilizer'), get_total_n(ns, nf, 'fluxes_fertilizer'))
-       write(iulog, *) 'SoilPH check:', soilph_min, soilph_max, def_ph_count
     end if
 
     call update_summary(ns, nf, filter_soilc, num_soilc)
@@ -654,26 +653,6 @@ contains
 
   contains
 
-    subroutine debug_balance(ns, nf, oldn, columns)
-      type(soilbiogeochem_nitrogenstate_type), intent(in) :: ns
-      type(soilbiogeochem_nitrogenflux_type), intent(in) :: nf
-      real(r8) :: oldn(:)
-      integer :: columns(:)
-
-      real(r8) :: newn(size(oldn))
-
-      newn = ns%fan_totn_col
-      
-    
-      print *, 'FAN SUMMARY', columns
-      print *, 'old total:', sum(oldn(columns))
-      print *, 'new total:', sum(newn(columns))
-      print *, 'delta:', sum(oldn(columns)) - sum(newn(columns))
-      print *, 'new flux:', (sum(nf%fan_totnin_col(columns)) - sum(nf%fan_totnout_col(columns)))*dt
-      
-    end subroutine debug_balance
-      
-    
     real(r8) function get_total_n(ns, nf, which) result(total)
       type(soilbiogeochem_nitrogenstate_type), intent(in) :: ns
       type(soilbiogeochem_nitrogenflux_type), intent(in) :: nf
@@ -738,7 +717,6 @@ contains
       
       diff = total_new - total_old
       accflux = flux*dt
-      write(iulog, *) 'Balance check:', label, diff, accflux
       
     end subroutine balance_check
     
@@ -960,6 +938,7 @@ contains
           if (tan_manure_spread_col(col_grass) > 1) then
              write(iulog, *) 'bad tan_manure col_grass before adding', n_manure_spread_col(col_grass), &
                   tan_manure_spread_col(col_grass)
+             call endrun(msg="ERROR bad tan")
           end if
           n_manure_spread_col(col_grass) = n_manure_spread_col(col_grass) &
                + flux_grass_spread / col%wtgcell(col_grass)
@@ -968,6 +947,7 @@ contains
           n_manure_graze_col(col_grass) = n_manure_graze_col(col_grass) + flux_grass_graze / col%wtgcell(col_grass)
           if (tan_manure_spread_col(col_grass) > 1) then
              write(iulog, *) 'bad tan_manure col_grass', flux_grass_spread_tan, col%wtgcell(col_grass)
+             call endrun(msg="ERROR bad tan")
           end if
        else if (flux_grass_spread > 0) then
           continue

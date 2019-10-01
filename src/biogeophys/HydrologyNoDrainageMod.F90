@@ -344,8 +344,10 @@ contains
            filter_hydrologyc, soilstate_inst, canopystate_inst, b_waterflux_inst, energyflux_inst)
       
       if ( use_fan ) then 
+         call t_startf("store_tsl_moisture")
          ! save the h2osoi_liq in top layer before evaluating the soilwater movement
          call store_tsl_moisture(b_waterstate_inst, filter_hydrologyc, num_hydrologyc) 
+         call t_stopf("store_tsl_moisture")
       end if
 
       if ( use_fates ) then
@@ -357,8 +359,10 @@ contains
            canopystate_inst, energyflux_inst, soil_water_retention_curve)
 
       if ( use_fan ) then 
+         call t_startf("eval_tsl_moist_tend")
          ! use the saved value to calculate the tendency
          call eval_tsl_moist_tend(b_waterstate_inst , filter_hydrologyc, num_hydrologyc)
+         call t_stopf("eval_tsl_moist_tend")
       end if
 
       if (use_vichydro) then
