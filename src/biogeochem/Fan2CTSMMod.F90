@@ -122,6 +122,9 @@ module Fan2CTSMMod
 contains
 
   subroutine fan_readnml(NLFilename)
+    !
+    ! Read FAN namelist and set the module variables according to it. 
+    ! 
     use spmdMod        , only : masterproc, mpicom
     use fileutils      , only : getavu, relavu, opnfil
     use clm_varctl     , only : use_fan
@@ -202,7 +205,11 @@ contains
     use clm_varcon, only : spval, ispval
     use decompMod, only : bounds_type
     use subgridAveMod, only: p2c
-    
+    !
+    ! Evaluate the N fluxes and update the state of the FAN pools. Uses the fertilization
+    ! flux determined in CropPhenology; the manure inputs come from the FAN stream. The
+    ! CLM soil N pools are not changed here but in fan_to_sminn.
+    ! 
     type(bounds_type)        , intent(in)    :: bounds  
     integer                  , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                  , intent(in)    :: filter_soilc(:) ! filter for soil columns
@@ -1010,6 +1017,10 @@ contains
   !************************************************************************************
   
   subroutine fan_to_sminn(filter_soilc, num_soilc, sbgc_nf)
+    !
+    ! Collect the FAN fluxes into totals which are either passed to the CLM N cycle
+    ! (depending on the fan_to_bgc_ switches) or used diagnostically.
+    !
     use ColumnType, only : col
     use LandunitType   , only: lun
     use landunit_varcon, only : istcrop, istsoil

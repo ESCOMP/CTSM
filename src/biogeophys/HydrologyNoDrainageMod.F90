@@ -731,6 +731,8 @@ contains
     ! used for diagnosing the downwards moisture flux within FAN.
 
     subroutine store_tsl_moisture(waterstatebulk_inst, filter, num_fc)
+      ! Store the soil water within topmost layer before evaluating soil moisture
+      ! transport.
       type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
       integer, intent(in) :: filter(:)
       integer, intent(in) :: num_fc
@@ -745,6 +747,8 @@ contains
     end subroutine store_tsl_moisture
 
     subroutine eval_tsl_moist_tend(waterstatebulk_inst, filter, num_fc)
+      ! Evaluate the time derivative of soil liquid water due to percolation as required
+      ! in FAN.
       type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
       integer, intent(in) :: filter(:)
       integer, intent(in) :: num_fc
