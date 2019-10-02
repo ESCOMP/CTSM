@@ -680,11 +680,11 @@ contains
        end do
        call state_getimport(importState, 'Sg_icemask'               ,  bounds, icemask_grc, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_getimport(importState, 'Sg_icemask_coupled_fluxes',  bounds, icemask_grc, rc=rc)
+       call state_getimport(importState, 'Sg_icemask_coupled_fluxes',  bounds, icemask_coupled_fluxes_grc, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        call glc2lnd_inst%set_glc2lnd_fields_nuopc( bounds, glc_present, &
-            frac_grc, topo_grc, hflx_grc, icemask_grc, icemask_coupled_fluxes_grc)
+            frac_grc, topo_grc, hflx_grc, icemask_grc, icemask_coupled_fluxes_grc )
     end if
 
     !--------------------------
@@ -812,8 +812,7 @@ contains
     call state_setexport(exportState, 'Sl_t', bounds, input=lnd2atm_inst%t_rad_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Sl_snowh', bounds, &
-         input=waterlnd2atmbulk_inst%h2osno_grc, rc=rc)
+    call state_setexport(exportState, 'Sl_snowh', bounds, input=waterlnd2atmbulk_inst%h2osno_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_setexport(exportState, 'Sl_avsdr', bounds, input=lnd2atm_inst%albd_grc(bounds%begg:,1), rc=rc)
