@@ -293,7 +293,7 @@ contains
 
     if (use_crop) then
        call t_startf('CNNFert')
-       call CNNFert(bounds, num_soilc,filter_soilc, &
+       call CNNFert(bounds, num_soilc,filter_soilc, num_pcropp, filter_pcropp, &
             cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst)
        call t_stopf('CNNFert')
 

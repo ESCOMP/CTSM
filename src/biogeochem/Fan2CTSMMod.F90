@@ -112,8 +112,8 @@ module Fan2CTSMMod
   real(r8) :: fract_spread_grass = 1.0_r8
   
   ! Fan coupling to soil BGC. Can be set on separately for crop and other columns.
-  logical :: fan_to_bgc_crop = .false.
-  logical :: fan_to_bgc_veg = .false.
+  logical, public :: fan_to_bgc_crop = .false.
+  logical, public :: fan_to_bgc_veg = .false.
 
   ! Whether manure N in mixed/landless systems (manure_sgrz and manure_ngrz streams) is
   ! defined per crop or land area:
@@ -290,7 +290,7 @@ contains
     nf%man_tan_appl_col(bounds%begc:bounds%endc) = 0.0
 
     call p2c(bounds, num_soilc, filter_soilc, &
-         cnv_nf%fert_patch(bounds%begp:bounds%endp), &
+         cnv_nf%synthfert_patch(bounds%begp:bounds%endp), &
          nf%fert_n_appl_col(bounds%begc:bounds%endc))
 
     nf%man_n_appl_col(bounds%begc:bounds%endc) = 0.0_r8
@@ -359,7 +359,7 @@ contains
        if (.not. col%active(c) .or. col%wtgcell(c) < 1e-15) cycle
 
        if (nf%man_n_appl_col(c) > 1e12 .or. ngrz(c) > 1e12) then
-          write(iulog, *) c, nf%man_n_appl_col(c), ngrz(c), cnv_nf%fert_patch(col%patchi(c):col%patchf(c)), &
+          write(iulog, *) c, nf%man_n_appl_col(c), ngrz(c), cnv_nf%synthfert_patch(col%patchi(c):col%patchf(c)), &
                cnv_nf%manure_patch(col%patchi(c):col%patchf(c))
           call endrun('nf%man_n_appl_col(c) is spval')
        end if
@@ -1009,14 +1009,14 @@ contains
        
        nf%fan_totnin_col(c) = fluxin
        nf%fan_totnout_col(c) = fluxout
-       
+       nf%manure_n_total_col(c) = nf%man_n_grz_col(c) + nf%man_n_barns_col(c)
     end do
     
   end subroutine update_summary
 
   !************************************************************************************
   
-  subroutine fan_to_sminn(filter_soilc, num_soilc, sbgc_nf)
+  subroutine fan_to_sminn(bounds, filter_soilc, num_soilc, sbgc_nf, nfertilization_patch)
     !
     ! Collect the FAN fluxes into totals which are either passed to the CLM N cycle
     ! (depending on the fan_to_bgc_ switches) or used diagnostically.
@@ -1024,26 +1024,41 @@ contains
     use ColumnType, only : col
     use LandunitType   , only: lun
     use landunit_varcon, only : istcrop, istsoil
-    
+
+    type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: filter_soilc(:)
     integer, intent(in) :: num_soilc
     type(soilbiogeochem_nitrogenflux_type), intent(inout) :: sbgc_nf
-
-    integer :: c, fc
-    real(r8) :: fan_nflux
-
+    ! patch level fertilizer application + manure production 
+    real(r8), intent(inout) :: nfertilization_patch(bounds%begp:) 
+    
+    integer :: c, fc, p
+    real(r8) :: flux_manure, flux_fert, manure_prod
+    logical :: included
+    
     if (.not. (fan_to_bgc_veg .or. fan_to_bgc_crop)) return
     
     do fc = 1, num_soilc
        c = filter_soilc(fc)
-       fan_nflux &
-            = sbgc_nf%fert_no3_prod_col(c) + sbgc_nf%fert_nh4_to_soil_col(c) &
-            + sbgc_nf%manure_no3_prod_col(c) + sbgc_nf%manure_nh4_to_soil_col(c)
-       if (lun%itype(col%landunit(c)) == istcrop .and. fan_to_bgc_crop) then
-          sbgc_nf%fert_to_sminn_col(c) = fan_nflux
-       else if (lun%itype(col%landunit(c)) == istsoil .and. fan_to_bgc_veg) then
-          sbgc_nf%fert_to_sminn_col(c) = fan_nflux
+       flux_manure = sbgc_nf%manure_no3_prod_col(c) + sbgc_nf%manure_nh4_to_soil_col(c)
+       flux_fert = sbgc_nf%fert_no3_prod_col(c) + sbgc_nf%fert_nh4_to_soil_col(c)
+       manure_prod = sbgc_nf%man_n_barns_col(c) + sbgc_nf%man_n_grz_col(c)
+       
+       included = (lun%itype(col%landunit(c)) == istcrop .and. fan_to_bgc_crop) &
+             .or. (lun%itype(col%landunit(c)) == istsoil .and. fan_to_bgc_veg)
+       
+       if (included) then
+          sbgc_nf%fert_to_sminn_col(c) = flux_fert + flux_manure
+          sbgc_nf%manure_n_to_sminn_col(c) = flux_manure
+          sbgc_nf%fert_n_to_sminn_col(c) = flux_fert
+          do p = col%patchi(c), col%patchf(c)
+             ! NFERTILIZATION gets the fertilizer applied + all manure N produced in the
+             ! column. Note that if fract_spread_grass > 0 then some of this N might be
+             ! still moved to the native veg. column.
+             nfertilization_patch(p) = manure_prod + sbgc_nf%fert_n_appl_col(c)
+          end do
        end if
+       
     end do
     
   end subroutine fan_to_sminn

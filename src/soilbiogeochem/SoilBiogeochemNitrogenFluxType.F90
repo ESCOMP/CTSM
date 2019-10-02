@@ -53,6 +53,10 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: nh3_total_col                              (:)   ! Total NH3 emission from agriculture, gN/m2/s
      real(r8), pointer :: fan_totnout_col                            (:)   ! Total input N into FAN pools, gN/m2/s
      real(r8), pointer :: fan_totnin_col                             (:)   ! Total output N from FAN pools, gN/m2/s
+
+     real(r8), pointer :: manure_n_to_sminn_col                      (:)   ! Manure N from FAN pools to soil mineral pools, gN/m2/s
+     real(r8), pointer :: fert_n_to_sminn_col                        (:)   ! Fertilizer N from FAN pools to soil mineral pools, gN/m2/s
+     real(r8), pointer :: manure_n_total_col                         (:)   ! Total manure N produced, gN/m2/s
      
      ! decomposition fluxes
      real(r8), pointer :: decomp_cascade_ntransfer_vr_col           (:,:,:) ! col vert-res transfer of N from donor to receiver pool along decomp. cascade (gN/m3/s)
@@ -232,8 +236,12 @@ contains
        allocate(this%fert_nh4_to_soil_col           (begc:endc))                   ; this%fert_nh4_to_soil_col       (:)   = spval
        allocate(this%manure_nh4_runoff_col          (begc:endc))                   ; this%manure_nh4_runoff_col      (:)   = spval
        allocate(this%fert_nh4_runoff_col            (begc:endc))                   ; this%fert_nh4_runoff_col        (:)   = spval
+
+       allocate(this%manure_n_to_sminn_col          (begc:endc))                   ; this%manure_n_to_sminn_col      (:)   = spval
+       allocate(this%fert_n_to_sminn_col            (begc:endc))                   ; this%fert_n_to_sminn_col        (:)   = spval
+       allocate(this%manure_n_total_col             (begc:endc))                   ; this%manure_n_total_col         (:)   = spval
     end if
-    ! Allocate FAN summary fluxes even if FAN is off and set them to 0.
+    ! Allocate the FAN summary fluxes even if FAN is off and set them to 0.
     allocate(this%fan_totnin_col                    (begc:endc))                   ; this%fan_totnin_col             (:)   = spval
     allocate(this%fan_totnout_col                   (begc:endc))                   ; this%fan_totnout_col            (:)   = spval
     
@@ -479,6 +487,21 @@ contains
        call hist_addfld1d( fname='FERT_NH4_RUNOFF', units='gN/m^2/s', &
             avgflag='A', long_name='NH4 (and urea) in surface runoff, fertilizer', &
             ptr_col=this%fert_nh4_runoff_col)
+
+       this%fert_n_to_sminn_col(begc:endc) = spval
+       call hist_addfld1d( fname='FERT_N_TO_SMINN', units='gN/m^2/s', &
+            avgflag='A', long_name='Fertilizer NH4, NO3 and urea-N from FAN to soil mineral pools', &
+            ptr_col=this%fert_n_to_sminn_col)
+
+       this%manure_n_to_sminn_col(begc:endc) = spval
+       call hist_addfld1d( fname='MANURE_N_TO_SMINN', units='gN/m^2/s', &
+            avgflag='A', long_name='Manure NH4 and NO3 from FAN to soil mineral pools', &
+            ptr_col=this%manure_n_to_sminn_col)
+
+       this%manure_n_total_col(begc:endc) = spval
+       call hist_addfld1d( fname='MANURE_N_TOTAL', units='gN/m^2/s', &
+            avgflag='A', long_name='Total manure N produced', &
+            ptr_col=this%manure_n_total_col)
     end if
 
     this%fan_totnin_col(begc:endc) = spval
@@ -1187,7 +1210,9 @@ contains
           this%fert_nh4_to_soil_col(i)   = value_column
           this%manure_nh4_runoff_col(i)  = value_column
           this%fert_nh4_runoff_col(i)    = value_column
-          
+          this%manure_n_to_sminn_col(i)  = value_column
+          this%manure_n_total_col(i)     = value_column
+          this%fert_n_to_sminn_col(i)    = value_column
        end do
     end if
 

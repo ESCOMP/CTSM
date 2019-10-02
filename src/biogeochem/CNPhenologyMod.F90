@@ -1535,7 +1535,7 @@ contains
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch     , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer                           
          crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch, & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
          cphase            =>    crop_inst%cphase_patch                        , & ! Output: [real(r8) (:)]   phenology phase
-         fert              =>    cnveg_nitrogenflux_inst%fert_patch            , & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 
+         synthfert         =>    cnveg_nitrogenflux_inst%synthfert_patch       , & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 
          manure            =>    cnveg_nitrogenflux_inst%manure_patch            & ! Output: [real(r8) (:) ]  (gN/m2/s) manure applied each timestep 
          )
 
@@ -1952,10 +1952,10 @@ contains
                   onset_counter(p) = dt
                   fert_counter(p)  = ndays_on * secspday
                   if (ndays_on .gt. 0) then
-                     fert(p) = fertnitro(p) / fert_counter(p)
+                     synthfert(p) = fertnitro(p) / fert_counter(p)
                      manure(p) = (manunitro(ivt(p)) * 1000._r8) / fert_counter(p)
                   else
-                     fert(p) = 0._r8
+                     synthfert(p) = 0._r8
                      manure(p) = 0._r8
                   end if
                else
@@ -2014,7 +2014,7 @@ contains
             ! assumes that onset of phase 2 took one time step only
 
               if (fert_counter(p) <= 0._r8) then
-                 fert(p) = 0._r8
+                 synthfert(p) = 0._r8
                  manure(p) = 0._r8
               else ! continue same fert application every timestep
                  fert_counter(p) = fert_counter(p) - dtrad
