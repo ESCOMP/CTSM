@@ -687,11 +687,11 @@ logical,intent(inout)                   :: list_ready
 integer,intent(in) :: num_unit
 integer,intent(in) :: filter_u(:)
 
-integer,dimension(1:A%NE),intent(inout),optional :: list_A
-integer,dimension(1:B%NE),intent(inout),optional :: list_B
+integer,intent(inout),optional :: list_A(:)
+integer,intent(inout),optional :: list_B(:)
 integer,intent(inout),optional :: NE_AB
-integer,dimension(1:A%NE+B%NE),intent(inout),optional :: RI_AB
-integer,dimension(1:A%NE+B%NE),intent(inout),optional :: CI_AB
+integer,intent(inout),optional :: RI_AB(:)
+integer,intent(inout),optional :: CI_AB(:)
 
 integer,dimension(:) :: Aindex(A%NE+1),Bindex(B%NE+1)
 integer,dimension(:) :: ABindex(this%SM*this%SM)
@@ -704,6 +704,18 @@ character(len=*),parameter :: subname = 'SPMP_AB'
 ! In this case they all need to be presented. Otherwise, use 'list_ready = .false.' to get those information
 ! for the first time call this subroutine.
 
+if ( present(list_A) )then
+   SHR_ASSERT_FL((ubound(list_A,1) >= A%NE), sourcefile, __LINE__)
+end if
+if ( present(list_B) )then
+   SHR_ASSERT_FL((ubound(list_B,1) >= B%NE), sourcefile, __LINE__)
+end if
+if ( present(RI_AB) )then
+   SHR_ASSERT_FL((ubound(RI_AB,1) >= A%NE+B%NE), sourcefile, __LINE__)
+end if
+if ( present(CI_AB) )then
+   SHR_ASSERT_FL((ubound(CI_AB,1) >= A%NE+B%NE), sourcefile, __LINE__)
+end if
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(NE_AB) .and. present(RI_AB) .and. present(CI_AB)))then
    write(iulog,*) "error in SPMP_AB: list_ready is True, but at least one of list_A, list_B, NE_AB, RI_AB and CI_AB are not presented"
    call endrun( subname//" ERROR: missing required optional arguments" )
