@@ -15,7 +15,6 @@ module histFileMod
   use clm_varctl     , only : iulog, use_vertsoilc, use_fates
   use clm_varcon     , only : spval, ispval, dzsoi_decomp 
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
-  use clm_varpar     , only : nlevurb
   use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type
   use GetGlobalValuesMod , only : GetGlobalIndex
   use GridcellType   , only : grc                
@@ -1885,7 +1884,7 @@ contains
     ! wrapper calls to define the history file contents.
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad, nlevcan, nvegwcs,nlevsoi
+    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevmaxurbgrnd, numrad, nlevcan, nvegwcs,nlevsoi
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
     use landunit_varcon , only : max_lunit
     use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
@@ -2032,6 +2031,7 @@ contains
     if (nlevurb > 0) then
        call ncd_defdim(lnfid, 'levurb' , nlevurb, dimid)
     end if
+    call ncd_defdim(lnfid, 'levmaxurbgrnd' , nlevmaxurbgrnd, dimid)
     call ncd_defdim(lnfid, 'levlak' , nlevlak, dimid)
     call ncd_defdim(lnfid, 'numrad' , numrad , dimid)
     call ncd_defdim(lnfid, 'levsno' , nlevsno , dimid)
@@ -2210,7 +2210,7 @@ contains
     !
     ! !USES:
     use subgridAveMod  , only : c2g
-    use clm_varpar     , only : nlevgrnd ,nlevlak
+    use clm_varpar     , only : nlevgrnd ,nlevlak, nlevmaxurbgrnd
     use shr_string_mod , only : shr_string_listAppend
     use domainMod      , only : ldomain
     !
@@ -2252,10 +2252,10 @@ contains
                                                       /)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     !-------------------------------------------------------------------------------
     !***      Non-time varying 3D fields                    ***
@@ -3338,7 +3338,7 @@ contains
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
     use clm_varcon      , only : secspday
     use perf_mod        , only : t_startf, t_stopf
-    use clm_varpar      , only : nlevgrnd
+    use clm_varpar      , only : nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     logical, intent(in) :: rstwr    ! true => write restart file this step
@@ -3371,10 +3371,10 @@ contains
     character(len=*),parameter :: subname = 'hist_htapes_wrapup'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     ! get current step
 

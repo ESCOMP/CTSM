@@ -10,7 +10,7 @@ module TotalWaterAndHeatMod
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use decompMod          , only : bounds_type
   use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus
-  use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb
+  use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd
   use ColumnType         , only : col
   use LandunitType       , only : lun
   use subgridAveMod      , only : p2c
@@ -361,8 +361,7 @@ contains
          h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col   & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
          )
 
-    nlev = max0(nlevgrnd,nlevurb)
-    do j = 1, nlev
+    do j = 1, nlevmaxurbgrnd
        do fc = 1, num_c
           c = filter_c(fc)
           if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
@@ -762,8 +761,7 @@ contains
        soil_latent_heat_liquid(c) = 0._r8
     end do
 
-    nlev = max0(nlevgrnd,nlevurb)
-    do j = 1, nlev
+    do j = 1, nlevmaxurbgrnd
        do fc = 1, num_c
           c = filter_c(fc)
           l = col%landunit(c)

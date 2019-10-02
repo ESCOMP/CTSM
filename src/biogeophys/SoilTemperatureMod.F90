@@ -28,7 +28,6 @@ module SoilTemperatureMod
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use PatchType         , only : patch                
-  use clm_varpar        , only : nlevurb
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -144,7 +143,7 @@ contains
     !
     ! !USES:
     use clm_time_manager         , only : get_step_size
-    use clm_varpar               , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar               , only : nlevsno, nlevgrnd, nlevurb, nlevmaxurbgrnd
     use clm_varctl               , only : iulog
     use clm_varcon               , only : cnfac, cpice, cpliq, denh2o
     use landunit_varcon          , only : istsoil, istcrop
@@ -179,10 +178,10 @@ contains
     integer  :: fl                                                       ! urban filtered landunit indices
     integer  :: jtop(bounds%begc:bounds%endc)                            ! top level at each column
     real(r8) :: dtime                                                    ! land model time step (sec)
-    real(r8) :: cv (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))         ! heat capacity [J/(m2 K)]
-    real(r8) :: tk (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))         ! thermal conductivity [W/(m K)]
-    real(r8) :: fn (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))         ! heat diffusion through the layer interface [W/m2]
-    real(r8) :: fn1(bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))         ! heat diffusion through the layer interface [W/m2]
+    real(r8) :: cv (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)         ! heat capacity [J/(m2 K)]
+    real(r8) :: tk (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)         ! thermal conductivity [W/(m K)]
+    real(r8) :: fn (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)         ! heat diffusion through the layer interface [W/m2]
+    real(r8) :: fn1(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)         ! heat diffusion through the layer interface [W/m2]
     real(r8) :: dzm                                                      ! used in computing tridiagonal matrix
     real(r8) :: dzp                                                      ! used in computing tridiagonal matrix
     real(r8) :: sabg_lyr_col(bounds%begc:bounds%endc,-nlevsno+1:1)       ! absorbed solar radiation (col,lyr) [W/m2]
@@ -193,9 +192,9 @@ contains
     real(r8) :: fn_h2osfc(bounds%begc:bounds%endc)                       ! heat diffusion through standing-water/soil interface [W/m2]
     real(r8) :: dz_h2osfc(bounds%begc:bounds%endc)                       ! height of standing surface water [m]
     integer, parameter :: nband=5
-    real(r8) :: bmatrix(bounds%begc:bounds%endc,nband,-nlevsno:max0(nlevgrnd,nlevurb)) ! banded matrix for numerical solution of temperature
-    real(r8) :: tvector(bounds%begc:bounds%endc,-nlevsno:max0(nlevgrnd,nlevurb))       ! initial temperature solution [Kelvin]
-    real(r8) :: rvector(bounds%begc:bounds%endc,-nlevsno:max0(nlevgrnd,nlevurb))       ! RHS vector for numerical solution of temperature
+    real(r8) :: bmatrix(bounds%begc:bounds%endc,nband,-nlevsno:nlevmaxurbgrnd) ! banded matrix for numerical solution of temperature
+    real(r8) :: tvector(bounds%begc:bounds%endc,-nlevsno:nlevmaxurbgrnd)       ! initial temperature solution [Kelvin]
+    real(r8) :: rvector(bounds%begc:bounds%endc,-nlevsno:nlevmaxurbgrnd)       ! RHS vector for numerical solution of temperature
     real(r8) :: tk_h2osfc(bounds%begc:bounds%endc)                       ! thermal conductivity of h2osfc [W/(m K)] [col]
     real(r8) :: dhsdT(bounds%begc:bounds%endc)                           ! temperature derivative of "hs" [col]
     real(r8) :: hs_soil(bounds%begc:bounds%endc)                         ! heat flux on soil [W/m2]
@@ -402,14 +401,14 @@ contains
          tvector(c,0) = t_h2osfc(c)
 
          ! soil layers; top layer will have one offset and one extra coefficient
-         tvector(c,1:max0(nlevgrnd,nlevurb)) = t_soisno(c,1:max0(nlevgrnd,nlevurb))
+         tvector(c,1:nlevmaxurbgrnd) = t_soisno(c,1:nlevmaxurbgrnd)
 
       enddo
 
       call t_startf( 'SoilTempBandDiag')
 
       ! Solve the system
-      call BandDiagonal(bounds, -nlevsno, max0(nlevgrnd,nlevurb), jtop(begc:endc), jbot(begc:endc), &
+      call BandDiagonal(bounds, -nlevsno, nlevmaxurbgrnd, jtop(begc:endc), jbot(begc:endc), &
            num_nolakec, filter_nolakec, nband, bmatrix(begc:endc, :, :), &
            rvector(begc:endc, :), tvector(begc:endc, :))
       call t_stopf( 'SoilTempBandDiag')
@@ -421,7 +420,7 @@ contains
          do j = snl(c)+1, 0
             t_soisno(c,j) = tvector(c,j-1) !snow layers
          end do
-         t_soisno(c,1:max0(nlevgrnd,nlevurb))   = tvector(c,1:max0(nlevgrnd,nlevurb))  !soil layers
+         t_soisno(c,1:nlevmaxurbgrnd)   = tvector(c,1:nlevmaxurbgrnd)  !soil layers
 
          if (frac_h2osfc(c) == 0._r8) then
             t_h2osfc(c)=t_soisno(c,1)
@@ -607,7 +606,7 @@ contains
     ! flux from the interface to the node j+1.
     !
     ! !USES:
-    use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi
+    use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi, nlevmaxurbgrnd
     use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
     use landunit_varcon , only : istice_mec, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
@@ -639,8 +638,8 @@ contains
     call t_startf( 'SoilThermProp' )
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(cv)        == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)        == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(cv)        == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)        == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
 
     associate(                                                 & 
@@ -1093,7 +1092,7 @@ contains
     !
     ! !USES:
     use clm_time_manager , only : get_step_size
-    use clm_varpar       , only : nlevsno, nlevgrnd,nlevurb
+    use clm_varpar       , only : nlevsno, nlevgrnd, nlevurb, nlevmaxurbgrnd
     use clm_varctl       , only : iulog
     use clm_varcon       , only : tfrz, hfus, grav
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
@@ -1117,14 +1116,14 @@ contains
     real(r8) :: dtime                              !land model time step (sec)
     real(r8) :: heatr                              !energy residual or loss after melting or freezing
     real(r8) :: temp1                              !temporary variables [kg/m2]
-    real(r8) :: hm(bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))    !energy residual [W/m2]
-    real(r8) :: xm(bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))    !melting or freezing within a time step [kg/m2]
-    real(r8) :: wmass0(bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))!initial mass of ice and liquid (kg/m2)
-    real(r8) :: wice0 (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))!initial mass of ice (kg/m2)
-    real(r8) :: wliq0 (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))!initial mass of liquid (kg/m2)
-    real(r8) :: supercool(bounds%begc:bounds%endc,max0(nlevgrnd,nlevurb))        !supercooled water in soil (kg/m2) 
+    real(r8) :: hm(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)    !energy residual [W/m2]
+    real(r8) :: xm(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)    !melting or freezing within a time step [kg/m2]
+    real(r8) :: wmass0(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)!initial mass of ice and liquid (kg/m2)
+    real(r8) :: wice0 (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)!initial mass of ice (kg/m2)
+    real(r8) :: wliq0 (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)!initial mass of liquid (kg/m2)
+    real(r8) :: supercool(bounds%begc:bounds%endc,nlevmaxurbgrnd)        !supercooled water in soil (kg/m2) 
     real(r8) :: propor                             !proportionality constant (-)
-    real(r8) :: tinc(bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))  !t(n+1)-t(n) (K)
+    real(r8) :: tinc(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)  !t(n+1)-t(n) (K)
     real(r8) :: smp                                !frozen water potential (mm)
     !-----------------------------------------------------------------------
 
@@ -1907,7 +1906,7 @@ contains
     ! !USES:
     use clm_varcon     , only : capr, cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb, nlevmaxurbgrnd
     use UrbanParamsType, only : IsSimpleBuildTemp
     !
     ! !ARGUMENTS:
@@ -1930,10 +1929,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)   == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cv)   == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact) == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)   == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)   == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(cv)   == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact) == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)   == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(&
          zi         => col%zi                          , & ! Input: [real(r8) (:,:) ] interface level below a "z" level (m)
@@ -2038,7 +2037,7 @@ contains
     ! !USES:
     use clm_varcon      , only : cnfac, cpliq
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2065,11 +2064,11 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: j,c                                                     ! indices
     integer  :: fc                                                      ! lake filtered column indices
-    real(r8) :: rt (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))        ! "r" vector for tridiagonal solution
+    real(r8) :: rt (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)        ! "r" vector for tridiagonal solution
     real(r8) :: fn_h2osfc(bounds%begc:bounds%endc)                      ! heat diffusion through standing-water/soil interface [W/m2]
     real(r8) :: rt_snow(bounds%begc:bounds%endc,-nlevsno:-1)            ! RHS vector corresponding to snow layers
     real(r8) :: rt_ssw(bounds%begc:bounds%endc,1)                       ! RHS vector corresponding to standing surface water
-    real(r8) :: rt_soil(bounds%begc:bounds%endc,1:max0(nlevgrnd,nlevurb))             ! RHS vector corresponding to soil layer
+    real(r8) :: rt_soil(bounds%begc:bounds%endc,1:nlevmaxurbgrnd)             ! RHS vector corresponding to soil layer
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -2079,13 +2078,13 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rvector)      == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rvector)      == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(                                              &
          t_soisno     => temperature_inst%t_soisno_col    , & ! Input: [real(r8) (:,:) ]  soil temperature (Kelvin)      
@@ -2145,7 +2144,7 @@ contains
          c = filter_nolakec(fc)
          rvector(c, -nlevsno:-1) = rt_snow(c, -nlevsno:-1)
          rvector(c, 0         )  = rt_ssw(c, 1          )
-         rvector(c, 1:max0(nlevgrnd,nlevurb))  = rt_soil(c, 1:max0(nlevgrnd,nlevurb) )
+         rvector(c, 1:nlevmaxurbgrnd)  = rt_soil(c, 1:nlevmaxurbgrnd )
       end do
 
     end associate
@@ -2161,7 +2160,7 @@ contains
     ! Sets up RHS vector corresponding to snow layers.
     !
     ! !USES:
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2184,9 +2183,9 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
 
@@ -2234,7 +2233,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2262,9 +2261,9 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
 
@@ -2309,7 +2308,7 @@ contains
     ! !USES:
     use clm_varcon      , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2339,9 +2338,9 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
 
     associate(        &
@@ -2391,7 +2390,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_road_perv, icol_road_imperv
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2422,9 +2421,9 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
 
@@ -2476,7 +2475,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2504,9 +2503,9 @@ contains
     SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
 
     associate(       &
@@ -2555,7 +2554,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2586,7 +2585,7 @@ contains
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc,1/)),         errMsg(sourcefile, __LINE__))
 
@@ -2621,7 +2620,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2647,14 +2646,14 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_h2osfc)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(&
          begc     => bounds%begc  , & ! Input:  [integer ] beginning column index
@@ -2721,7 +2720,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2750,13 +2749,13 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(                                      &
          begc =>    bounds%begc                   , & ! Input:  [integer ] beginning column index
@@ -2805,7 +2804,7 @@ contains
     ! !USES:
     use clm_varcon      , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevurb, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2833,12 +2832,12 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(                                      &
          z        => col%z                          & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -2896,7 +2895,7 @@ contains
     ! !USES:
     use clm_varcon      , only : cnfac
     use column_varcon  , only : icol_road_perv, icol_road_imperv
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevgrnd, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2925,13 +2924,13 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(                                              &
          z            => col%z                              & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -2983,7 +2982,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevgrnd, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3012,13 +3011,13 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(       &
          z  => col%z & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -3068,7 +3067,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3097,13 +3096,13 @@ contains
     SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_h2osfc)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     !
     ! surface water  -----------------------------------------------------------------
@@ -3141,7 +3140,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3162,14 +3161,14 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: j,c                                                            ! indices
     integer  :: fc                                                             ! lake filtered column indices
-    real(r8) :: at (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))               ! "a" vector for tridiagonal matrix
-    real(r8) :: bt (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))               ! "b" vector for tridiagonal matrix
-    real(r8) :: ct (bounds%begc:bounds%endc,-nlevsno+1:max0(nlevgrnd,nlevurb))               ! "c" vector for tridiagonal matrix
+    real(r8) :: at (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)               ! "a" vector for tridiagonal matrix
+    real(r8) :: bt (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)               ! "b" vector for tridiagonal matrix
+    real(r8) :: ct (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)               ! "c" vector for tridiagonal matrix
     real(r8) :: dzm                                                            ! used in computing tridiagonal matrix
     real(r8) :: dzp                                                            ! used in computing tridiagonal matrix
     real(r8) :: bmatrix_snow(bounds%begc:bounds%endc,nband,-nlevsno:-1      )  ! block-diagonal matrix for snow layers
     real(r8) :: bmatrix_ssw(bounds%begc:bounds%endc,nband,       0:0       )   ! block-diagonal matrix for standing surface water
-    real(r8) :: bmatrix_soil(bounds%begc:bounds%endc,nband,       1:max0(nlevgrnd,nlevurb))  ! block-diagonal matrix for soil layers
+    real(r8) :: bmatrix_soil(bounds%begc:bounds%endc,nband,       1:nlevmaxurbgrnd)  ! block-diagonal matrix for soil layers
     real(r8) :: bmatrix_snow_soil(bounds%begc:bounds%endc,nband,-1:-1)         ! off-diagonal matrix for snow-soil interaction
     real(r8) :: bmatrix_ssw_soil(bounds%begc:bounds%endc,nband, 0:0 )          ! off-diagonal matrix for standing surface water-soil interaction
     real(r8) :: bmatrix_soil_snow(bounds%begc:bounds%endc,nband, 1:1 )         ! off-diagonal matrix for soil-snow interaction
@@ -3178,12 +3177,12 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)     == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)        == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)        == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc) == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)      == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)      == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)  == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc) == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix)   == (/bounds%endc, nband, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(                                              &
          z            => col%z                            , & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -3311,7 +3310,7 @@ contains
     ! !USES:
     use clm_varcon      , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3336,12 +3335,12 @@ contains
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(bmatrix_snow)        == (/bounds%endc, nband, -1/)),       errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_ssw)         == (/bounds%endc, nband, 0/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)        == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)        == (/bounds%endc, nband, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)),       errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_ssw_soil)    == (/bounds%endc, nband, 0/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_ssw)    == (/bounds%endc, nband, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix)             == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix)             == (/bounds%endc, nband, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     ! Assemble the full matrix
 
@@ -3365,8 +3364,8 @@ contains
 
        ! Soil
        bmatrix(c,2:3,1           )  = bmatrix_soil(c,2:3,1           )
-       bmatrix(c,2:4,2:max0(nlevgrnd,nlevurb)-1)  = bmatrix_soil(c,2:4,2:max0(nlevgrnd,nlevurb)-1)
-       bmatrix(c,3:4,max0(nlevgrnd,nlevurb)    )  = bmatrix_soil(c,3:4,max0(nlevgrnd,nlevurb)    )
+       bmatrix(c,2:4,2:nlevmaxurbgrnd-1)  = bmatrix_soil(c,2:4,2:nlevmaxurbgrnd-1)
+       bmatrix(c,3:4,nlevmaxurbgrnd    )  = bmatrix_soil(c,3:4,nlevmaxurbgrnd    )
 
        ! Soil-Snow
        bmatrix(c,5,1)  = bmatrix_soil_snow(c,5,1)
@@ -3388,7 +3387,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3405,8 +3404,8 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),             errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),   errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),   errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevmaxurbgrnd/)),   errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevmaxurbgrnd/)),   errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),             errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)),  errMsg(sourcefile, __LINE__))
 
@@ -3446,7 +3445,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3462,8 +3461,8 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3499,7 +3498,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevurb, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3521,8 +3520,8 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),            errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3578,7 +3577,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_road_perv, icol_road_imperv
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevgrnd, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3600,8 +3599,8 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),            errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3655,7 +3654,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevgrnd, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3677,8 +3676,8 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),            errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3730,7 +3729,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
 
     implicit none
     type(bounds_type), intent(in) :: bounds                               ! bounds
@@ -3743,8 +3742,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3779,7 +3778,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3793,8 +3792,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3827,7 +3826,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevurb, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3847,8 +3846,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3894,7 +3893,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_road_perv, icol_road_imperv
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevgrnd, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3914,8 +3913,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
@@ -3961,7 +3960,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevgrnd, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -3981,8 +3980,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevmaxurbgrnd/)),  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
 
     associate(&
@@ -4025,7 +4024,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4051,13 +4050,13 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_h2osfc)    == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(                                           &
          begc        => bounds%begc                    , & ! Input:  [integer ] beginning column index
@@ -4116,7 +4115,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4135,12 +4134,12 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(& 
          begc =>    bounds%begc                   , & ! Input:  [integer ] beginning column index
@@ -4179,7 +4178,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevurb, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4203,11 +4202,11 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(               &
          zi   =>    col%zi , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m)
@@ -4271,7 +4270,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_road_perv, icol_road_imperv
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevgrnd, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4296,12 +4295,12 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(       &
          z => col%z  & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -4368,7 +4367,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevgrnd, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4393,12 +4392,12 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevmaxurbgrnd/)),        errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(       &
          z  => col%z & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -4464,7 +4463,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4479,8 +4478,8 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)              == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)              == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow) == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
 
@@ -4519,7 +4518,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4534,8 +4533,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)        == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
 
@@ -4570,7 +4569,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevurb, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4590,8 +4589,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
 
     associate(           &
@@ -4636,7 +4635,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_road_imperv, icol_road_perv
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4657,8 +4656,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
 
@@ -4708,7 +4707,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4729,8 +4728,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_sno_eff)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
 
@@ -4777,7 +4776,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4802,9 +4801,9 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_ssw)   == (/bounds%endc, nband, 0/)), errMsg(sourcefile, __LINE__))
@@ -4835,7 +4834,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4858,9 +4857,9 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(tk_h2osfc)           == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(c_h2osfc)            == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)           == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_ssw_soil)   == (/bounds%endc, nband, 0/)), errMsg(sourcefile, __LINE__))
@@ -4890,7 +4889,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -4912,7 +4911,7 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL((ubound(tk_h2osfc)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)             == (/bounds%endc, max0(nlevgrnd,nlevurb)/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fact)             == (/bounds%endc, nlevmaxurbgrnd/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dz_h2osfc)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(frac_h2osfc)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(bmatrix_soil_ssw) == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))

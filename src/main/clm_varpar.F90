@@ -29,6 +29,7 @@ module clm_varpar
   integer, public    :: nlevgrnd              ! number of ground layers 
                                               ! (includes lower layers that are hydrologically inactive)
   integer, public    :: nlevurb               ! number of urban layers
+  integer, public    :: nlevmaxurbgrnd        ! maximum of the number of ground and urban layers
   integer, public    :: nlevlak               ! number of lake layers
   integer, public    :: nlevdecomp            ! number of biogeochemically active soil layers
   integer, public    :: nlevdecomp_full       ! number of biogeochemical layers 
@@ -162,6 +163,7 @@ contains
        write(iulog,*) subname//' ERROR: Unrecognized soil layer structure: ', trim(soil_layerstruct)
        call shr_sys_abort(subname//' ERROR: Unrecognized soil layer structure')
     endif
+    nlevmaxurbgrnd = max0(nlevurb,nlevgrnd)
     if ( masterproc ) write(iulog, *) 'soil_layerstruct varpar ',soil_layerstruct,nlevsoi,nlevgrnd
 
     if (use_vichydro) then

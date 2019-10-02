@@ -96,7 +96,7 @@ contains
     use ncdio_pio           , only : file_desc_t, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
     use ncdio_pio           , only : ncd_pio_openfile, ncd_pio_closefile, ncd_inqdlen
     use clm_varpar          , only : numrad
-    use clm_varpar          , only : nlevsoi, nlevgrnd, nlevlak, nlevsoifl, nlayer, nlayert, nlevurb, nlevsno
+    use clm_varpar          , only : nlevsoi, nlevgrnd, nlevlak, nlevsoifl, nlayer, nlayert, nlevmaxurbgrnd, nlevsno
     use clm_varcon          , only : zsoi, dzsoi, zisoi, spval
     use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
@@ -361,7 +361,7 @@ contains
        else if (lun%urbpoi(l) .and. (col%itype(c) /= icol_road_perv) .and. (col%itype(c) /= icol_road_imperv) )then
 
           ! Urban Roof, sunwall, shadewall properties set to special value
-          do lev = 1,max0(nlevgrnd,nlevurb)
+          do lev = 1,nlevmaxurbgrnd
              soilstate_inst%watsat_col(c,lev) = spval
              soilstate_inst%watfc_col(c,lev)  = spval
              soilstate_inst%bsw_col(c,lev)    = spval
@@ -377,7 +377,7 @@ contains
              end if
           end do
 
-          do lev = 1,max0(nlevgrnd,nlevurb)
+          do lev = 1,nlevmaxurbgrnd
              soilstate_inst%tkmg_col(c,lev)   = spval
              soilstate_inst%tksatu_col(c,lev) = spval
              soilstate_inst%tkdry_col(c,lev)  = spval

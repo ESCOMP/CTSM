@@ -14,7 +14,7 @@ module WaterStateType
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN
   use clm_varctl     , only : use_bedrock, iulog
-  use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
+  use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -115,15 +115,15 @@ contains
     call AllocateVar2d(var = this%h2osoi_vol_col, name = 'h2osoi_vol_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
-         dim2beg = 1, dim2end = max0(nlevgrnd,nlevurb))
+         dim2beg = 1, dim2end = nlevmaxurbgrnd)
     call AllocateVar2d(var = this%h2osoi_ice_col, name = 'h2osoi_ice_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
-         dim2beg = -nlevsno+1, dim2end = max0(nlevgrnd,nlevurb))
+         dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
     call AllocateVar2d(var = this%h2osoi_liq_col, name = 'h2osoi_liq_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
-         dim2beg = -nlevsno+1, dim2end = max0(nlevgrnd,nlevurb))
+         dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
     call AllocateVar1d(var = this%snocan_patch, name = 'snocan_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
@@ -307,8 +307,8 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(h2osno_input_col)     == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(watsat_col)           == (/bounds%endc,max0(nlevgrnd,nlevurb)/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno_col)         == (/bounds%endc,max0(nlevgrnd,nlevurb)/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(watsat_col)           == (/bounds%endc,nlevmaxurbgrnd/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno_col)         == (/bounds%endc,nlevmaxurbgrnd/)) , errMsg(sourcefile, __LINE__))
 
     ratio = this%info%get_ratio()
 
@@ -446,7 +446,7 @@ contains
       !--------------------------------------------
 
       do c = bounds%begc, bounds%endc
-         do j = 1,max0(nlevgrnd,nlevurb)
+         do j = 1,nlevmaxurbgrnd
             if (this%h2osoi_vol_col(c,j) /= spval) then
                if (t_soisno_col(c,j) <= tfrz) then
                   this%h2osoi_ice_col(c,j) = col%dz(c,j)*denice*this%h2osoi_vol_col(c,j) ! ratio already applied
@@ -530,7 +530,7 @@ contains
     real(r8) :: totwat       ! total soil water (mm)
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc,max0(nlevgrnd,nlevurb)/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc,nlevmaxurbgrnd/)) , errMsg(sourcefile, __LINE__))
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('H2OSFC'), &

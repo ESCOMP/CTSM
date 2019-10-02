@@ -80,7 +80,7 @@ contains
     use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
     use column_varcon      , only : icol_road_imperv, icol_road_perv
     use landunit_varcon    , only : istice_mec, istwet, istsoil, istdlak, istcrop, istdlak
-    use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, nlevsoi
+    use clm_varpar         , only : nlevgrnd, nlevurb, nlevmaxurbgrnd, nlevsno, nlevsoi
     use clm_varctl         , only : use_fates
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
     
@@ -110,7 +110,6 @@ contains
     integer  :: j            ! soil/snow level index
     integer  :: fp           ! lake filter patch index
     integer  :: fc           ! lake filter column index
-    integer  :: nlev         ! greater of nlevgrnd and nlevurb
     real(r8) :: qred         ! soil surface relative humidity
     real(r8) :: avmuir       ! ir inverse optical depth per unit leaf area
     real(r8) :: eg           ! water vapor pressure at temperature T [pa]
@@ -231,8 +230,7 @@ contains
          end do
       end do
 
-      nlev = max0(nlevgrnd,nlevurb)
-      do j = -nlevsno+1, nlev
+      do j = -nlevsno+1, nlevmaxurbgrnd
          do fc = 1,num_urbanc
             c = filter_urbanc(fc)
             if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &

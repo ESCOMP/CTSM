@@ -13,7 +13,7 @@ module WaterStateBulkType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
-  use clm_varpar     , only : nlevgrnd, nlevsno, nlevurb 
+  use clm_varpar     , only : nlevmaxurbgrnd, nlevsno
   use clm_varcon     , only : spval
   use WaterStateType , only : waterstate_type
   use WaterInfoBaseType, only : water_info_base_type
@@ -212,7 +212,7 @@ contains
     logical  :: readvar
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc,max0(nlevgrnd,nlevurb)/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc,nlevmaxurbgrnd/)) , errMsg(sourcefile, __LINE__))
 
     call this%restart (bounds, ncid, flag=flag, &
          watsat_col=watsat_col(bounds%begc:bounds%endc,:)) 

@@ -484,7 +484,7 @@ contains
     use clm_varctl           , only : caseid, ctitle, version, username, hostname, fsurdat
     use clm_varctl           , only : conventions, source
     use dynSubgridControlMod , only : get_flanduse_timeseries
-    use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevurb, nlevcan
+    use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevurb, nlevmaxurbgrnd, nlevcan
     use clm_varpar           , only : maxpatch_glcmec, nvegwcs
     use decompMod            , only : get_proc_global
     !
@@ -516,12 +516,13 @@ contains
     call ncd_defdim(ncid , namep      , nump           ,  dimid)
     call ncd_defdim(ncid , nameCohort , numCohort      ,  dimid)
 
-    call ncd_defdim(ncid , 'levgrnd' , max0(nlevgrnd,nlevurb)       ,  dimid)
+    call ncd_defdim(ncid , 'levgrnd' , nlevgrnd       ,  dimid)
     call ncd_defdim(ncid , 'levurb'  , nlevurb        ,  dimid)
+    call ncd_defdim(ncid , 'levmaxurbgrnd' , nlevmaxurbgrnd       ,  dimid)
     call ncd_defdim(ncid , 'levlak'  , nlevlak        ,  dimid)
     call ncd_defdim(ncid , 'levsno'  , nlevsno        ,  dimid)
     call ncd_defdim(ncid , 'levsno1' , nlevsno+1      ,  dimid)
-    call ncd_defdim(ncid , 'levtot'  , nlevsno+max0(nlevgrnd,nlevurb), dimid)
+    call ncd_defdim(ncid , 'levtot'  , nlevsno+nlevmaxurbgrnd, dimid)
     call ncd_defdim(ncid , 'numrad'  , numrad         ,  dimid)
     call ncd_defdim(ncid , 'levcan'  , nlevcan        ,  dimid)
     if ( use_hydrstress ) then
@@ -679,7 +680,7 @@ contains
     !
     ! !USES:
     use decompMod,  only : get_proc_global
-    use clm_varpar, only : nlevsno, nlevlak, nlevgrnd, nlevurb
+    use clm_varpar, only : nlevsno, nlevlak, nlevgrnd, nlevurb, nlevmaxurbgrnd
     use clm_varctl, only : single_column, nsrest, nsrStartup
     !
     ! !ARGUMENTS:
@@ -717,8 +718,9 @@ contains
     msg = 'You can deal with this mismatch by rerunning with ' // &
          'use_init_interp = .true. in user_nl_clm'
     call check_dim(ncid, 'levsno'  , nlevsno, msg=msg)
-    call check_dim(ncid, 'levgrnd' , max0(nlevgrnd,nlevurb), msg=msg)
+    call check_dim(ncid, 'levgrnd' , nlevgrnd, msg=msg)
     call check_dim(ncid, 'levurb'  , nlevurb)
+    call check_dim(ncid, 'levmaxurbgrnd' , nlevmaxurbgrnd, msg=msg)
     call check_dim(ncid, 'levlak'  , nlevlak) 
 
   end subroutine restFile_dimcheck

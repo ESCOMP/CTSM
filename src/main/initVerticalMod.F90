@@ -14,7 +14,7 @@ module initVerticalMod
   use spmdMod           , only : masterproc
   use clm_varpar        , only : nlevsno, nlevgrnd, nlevlak
   use clm_varpar        , only : toplev_equalspace, nlev_equalspace
-  use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb 
+  use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb, nlevmaxurbgrnd
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
   use clm_varctl        , only : use_bedrock, soil_layerstruct
@@ -683,9 +683,9 @@ contains
           if (col%nbedrock(c) < nlevsoi) then
              col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = LEVGRND_CLASS_SHALLOW_BEDROCK
           end if
-          col%levgrnd_class(c, (nlevsoi + 1) : max0(nlevgrnd,nlevurb)) = LEVGRND_CLASS_DEEP_BEDROCK
+          col%levgrnd_class(c, (nlevsoi + 1) : nlevmaxurbgrnd) = LEVGRND_CLASS_DEEP_BEDROCK
        else
-          col%levgrnd_class(c, 1:max0(nlevgrnd,nlevurb)) = LEVGRND_CLASS_STANDARD
+          col%levgrnd_class(c, 1:nlevmaxurbgrnd) = LEVGRND_CLASS_STANDARD
        end if
     end do
 
