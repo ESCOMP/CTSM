@@ -1291,7 +1291,6 @@ contains
        else
           idata1d(1) = 0
        end if
-!       status = pio_put_var(ncid, varid, start(1:1), count(1:1), idata1d)
        status = pio_put_var(ncid, varid, idata1d)
        deallocate(idata1d)
 #elif ({DIMS}==1)
