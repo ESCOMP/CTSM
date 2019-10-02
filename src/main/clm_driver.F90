@@ -489,7 +489,7 @@ contains
 
        if (water_inst%DoConsistencyCheck()) then
           call t_startf("tracer_consistency_check")
-          call water_inst%TracerConsistencyCheck(bounds_clump, 'after FracH2oSfc')
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after first stage of hydrology')
           call t_stopf("tracer_consistency_check")
        end if
 
@@ -555,6 +555,14 @@ contains
             water_inst%waterfluxbulk_inst, water_inst%wateratm2lndbulk_inst,  &
             energyflux_inst, temperature_inst)
        call t_stopf('bgp1')
+
+       ! TODO(wjs, 2019-10-02) I'd like to keep moving this down until it is below
+       ! LakeFluxes... I'll probably leave it in place there.
+       if (water_inst%DoConsistencyCheck()) then
+          call t_startf("tracer_consistency_check")
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after CanopyTemperature')
+          call t_stopf("tracer_consistency_check")
+       end if
 
        ! ============================================================================
        ! Determine fluxes
