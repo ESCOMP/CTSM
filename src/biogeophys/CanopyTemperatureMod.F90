@@ -342,6 +342,8 @@ contains
          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
             call QSat(t_soisno(c,snl(c)+1), forc_pbot(c), eg, degdT, qsatg, qsatgdT)
+
+            ! FIXME(wjs, 2019-10-01) delete the following block, which should never be invoked
             if (qsatg > forc_q(c) .and. forc_q(c) > qsatg) then
                qsatg = forc_q(c)
                qsatgdT = 0._r8
@@ -366,10 +368,13 @@ contains
             endif
 
             call QSat(t_h2osfc(c), forc_pbot(c), eg, degdT, qsatg, qsatgdT)
+
+            ! FIXME(wjs, 2019-10-01) delete the following block, which should never be invoked
             if (qsatg > forc_q(c) .and. forc_q(c) > qsatg) then
                qsatg = forc_q(c)
                qsatgdT = 0._r8
             end if
+
             qg_h2osfc(c) = qsatg
             dqgdT(c) = dqgdT(c) + frac_h2osfc(c) * qsatgdT
 
