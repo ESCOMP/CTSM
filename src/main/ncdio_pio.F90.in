@@ -1291,7 +1291,8 @@ contains
        else
           idata1d(1) = 0
        end if
-       status = pio_put_var(ncid, varid, start(1:1), count(1:1), idata1d)
+!       status = pio_put_var(ncid, varid, start(1:1), count(1:1), idata1d)
+       status = pio_put_var(ncid, varid, idata1d)
        deallocate(idata1d)
 #elif ({DIMS}==1)
        start(1) = 1 ; count(1) = size(data)
@@ -1393,7 +1394,7 @@ contains
        start(1) = 1  ; count(1) = 1
        if (present(nt)) start(1) = nt
        temp(1) = data
-       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
+       status = pio_put_var(ncid, varid, temp)
 #elif ({DIMS}==1)
        start(1) = 1 ; count(1) = size(data)
        start(2) = 1 ; count(2) = 1
