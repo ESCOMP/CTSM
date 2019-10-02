@@ -479,7 +479,7 @@ contains
      use clm_varcon       , only : spval
      use landunit_varcon  , only : istsoil, istcrop 
      use clm_varctl       , only : use_subgrid_fluxes, use_snicar_frc, iulog, use_SSRE
-     use clm_time_manager , only : get_step_size, is_near_local_noon
+     use clm_time_manager , only : get_step_size_real, is_near_local_noon
      use SnowSnicarMod    , only : DO_SNO_OC
      use abortutils       , only : endrun
      !
@@ -641,8 +641,7 @@ contains
           )
 
        ! Determine seconds off current time step
-
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        ! Initialize fluxes
 

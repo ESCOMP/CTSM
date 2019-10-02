@@ -1,5 +1,4 @@
 <components version="2.0">
-
   <comp_archive_spec compname="clm" compclass="lnd">
     <rest_file_extension>r</rest_file_extension>
     <rest_file_extension>rh\d?</rest_file_extension>
@@ -22,5 +21,4 @@
       <tfile disposition="ignore">anothercasename.clm2.i.1976-01-01-00000.nc</tfile>
     </test_file_names>
   </comp_archive_spec>
-
 </components>

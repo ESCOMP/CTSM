@@ -39,7 +39,7 @@ module controlMod
   use UrbanParamsType                  , only: UrbanReadNML
   use HumanIndexMod                    , only: HumanIndexReadNML
   use CNPrecisionControlMod            , only: CNPrecisionControlReadNML
-  use CNSharedParamsMod                , only: anoxia_wtsat, use_fun
+  use CNSharedParamsMod                , only: use_fun
   use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
@@ -129,7 +129,6 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
     integer :: dtime                ! Integer time-step
-    integer :: override_nsrest      ! If want to override the startup type sent from driver
     logical :: use_init_interp      ! Apply initInterp to the file given by finidat
     !------------------------------------------------------------------------
 
@@ -186,7 +185,7 @@ contains
          perchroot, perchroot_alt
 
     namelist /clm_inparm / &
-         anoxia, anoxia_wtsat, use_fun
+         anoxia, use_fun
 
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
@@ -202,7 +201,7 @@ contains
 
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, &
-         create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
+         create_crop_landunit, nsegspc, co2_ppmv, &
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
@@ -301,8 +300,6 @@ contains
     clump_pproc = 1
 #endif
 
-    override_nsrest = nsrest
-
     use_init_interp = .false.
 
     if (masterproc) then
@@ -355,17 +352,6 @@ contains
              hist_nhtfrq(i) = nint(-hist_nhtfrq(i)*SHR_CONST_CDAY/(24._r8*dtime))
           endif
        end do
-
-       ! Override start-type (can only override to branch (3)  and only 
-       ! if the driver is a startup type
-       if ( override_nsrest /= nsrest )then
-           if ( override_nsrest /= nsrBranch .and. nsrest /= nsrStartup )then
-              call endrun(msg= ' ERROR: can ONLY override clm start-type ' // &
-                   'to branch type and ONLY if driver is a startup type'// &
-                   errMsg(sourcefile, __LINE__))
-           end if
-           call clm_varctl_set( nsrest_in=override_nsrest )
-       end if
 
        if (maxpatch_glcmec <= 0) then
           call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &
@@ -786,7 +772,6 @@ contains
     call mpi_bcast (perchroot_alt, 1, MPI_LOGICAL, 0, mpicom, ier)
     if (use_lch4) then
        call mpi_bcast (anoxia, 1, MPI_LOGICAL, 0, mpicom, ier)
-       call mpi_bcast (anoxia_wtsat, 1, MPI_LOGICAL, 0, mpicom, ier)
     end if
 
     ! lakes
@@ -1038,7 +1023,6 @@ contains
     write(iulog,*) ' perchroot (plant water stress based on time-integrated active layer only) = ',perchroot
     if (use_lch4) then
        write(iulog,*) ' anoxia (applied to soil decomposition)             = ',anoxia
-       write(iulog,*) ' anoxia_wtsat (weight anoxia by inundated fraction) = ',anoxia_wtsat
     end if
     ! Lakes
     write(iulog,*)

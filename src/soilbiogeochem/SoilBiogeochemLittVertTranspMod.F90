@@ -101,7 +101,7 @@ contains
     ! Initial code by C. Koven and W. Riley
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use clm_varpar       , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
     use clm_varcon       , only : zsoi, dzsoi_decomp, zisoi
     use TridiagonalMod   , only : Tridiagonal
@@ -177,7 +177,7 @@ contains
       cryoturb_diffusion_k       = params_inst%cryoturb_diffusion_k 
       max_altdepth_cryoturbation = params_inst%max_altdepth_cryoturbation 
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ntype = 2
       if ( use_c13 ) then
