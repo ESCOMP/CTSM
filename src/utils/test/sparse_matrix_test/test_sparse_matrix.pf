@@ -463,6 +463,27 @@ contains
   end subroutine SM_ArbTriMatrix_plus_self_is_twice_self_wSPMP_AB
 
   @Test
+  subroutine SM_ArbTriMatrix_IdxIsEquiv( this )
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(sparse_matrix_type) :: ArbSMatrix, ArbSMatrix2
+    type(arb_band_sparse_matrix_setup) :: MatrixSetup
+
+    call MatrixSetup%createArbBandMatrix2( )
+    call ArbSMatrix%InitSM( ndims, begu, endu )
+    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                                MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    ! Second matrix has identical indices, but different values
+    call ArbSMatrix2%InitSM( ndims, begu, endu )
+    MatrixSetup%M(:,:) = 1.12345_r8
+    call ArbSMatrix2%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                                MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+
+    @assertTrue( ArbSMatrix%IsEquivIdxSM( ArbSMatrix2 )  )
+
+  end subroutine SM_ArbTriMatrix_IdxIsEquiv
+
+  @Test
   subroutine SM_ArbTriMatrix_plus_self_twice_is_thrice_self_wSPMP_AB( this )
     class(TestSparseMatrix), intent(inout) :: this
 

@@ -41,6 +41,7 @@ module SPMMod
     procedure, public :: InitSM         ! subroutine to initilize sparse matrix type
     procedure, public :: ReleaseSM      ! subroutine to deallocate the sparse matrix type data
     procedure, public :: IsAllocSM      ! return true if the sparse matrix type is allocated (InitSM was called)
+    procedure, public :: IsEquivIdxSM   ! return true if the sparse matrix indices are the same for the two sparce matrices
     procedure, public :: SetValueSM     ! subroutine to set values in sparse matrix of any shape
     procedure, public :: SetValueA      ! subroutine to set off-diagonal values in sparse matrix of A
     procedure, public :: SetValueA_diag ! subroutine to set diagonal values in sparse matrix of A
@@ -175,6 +176,45 @@ end subroutine InitSM
      end if
 
   end function IsAllocSM
+  
+
+  ! ========================================================================
+
+  logical function IsEquivIdxSM(this, A)
+  
+  ! Check if the Sparse Matrix indices are eqiuivalent
+  
+     class(sparse_matrix_type) :: this
+     type(sparse_matrix_type), intent(in)  :: A   ! Sparse matrix indices to compare to
+     character(len=*),parameter :: subname = 'IsEquivIdxSM'
+
+     ! Start checking easy critera and return if can determine status for sure,
+     ! keep checking harder things until everything has been checked for
+     if ( this%SM /= A%SM )then
+        IsEquivIdxSM = .false.
+        return
+     end if
+     if ( this%NE == A%NE )then
+         ! If NE is the same and the row and column indices are identical -- the
+         ! indices of the two arrays are identical
+         if ( all(this%RI(:this%NE) == A%RI(:this%NE)) .and. all(this%CI(:this%NE) == A%CI(:this%NE)) )then
+            IsEquivIdxSM = .true.
+            return
+         else
+            ! This needs more checking! The order could be different
+            IsEquivIdxSM = .false.
+            return
+         end if
+     else
+        ! This needs more checking! There could be some zerod entries in
+        ! non-zero positions
+        IsEquivIdxSM = .false.
+        return
+     end if
+     call endrun( subname//" ERROR: it should NOT be possible to reach this point" )
+     return
+
+  end function IsEquivIdxSM
   
   ! ========================================================================
 
