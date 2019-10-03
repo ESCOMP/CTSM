@@ -486,7 +486,7 @@ contains
     ! Adds to any existing values in liquid_mass and ice_mass.
     !
     ! Note: Changes to this routine should generally be accompanied by similar changes to
-    ! AccumulateSoilHeatLake
+    ! AccumulateHeatLake
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
@@ -497,9 +497,9 @@ contains
     real(r8)               , intent(inout) :: ice_mass( bounds%begc: )    ! accumulated ice mass (kg m-2)
     !
     ! !LOCAL VARIABLES:
-    integer :: c, j, fc  ! indices
-    real(r8) :: h2olak_liq(bounds%begc:bounds%endc,1:nlevlak) ! liquid water content of lake layer [kg/m²]
-    real(r8) :: h2olak_ice(bounds%begc:bounds%endc,1:nlevlak) ! ice water content of lake layer [kg/m²]
+    integer :: c, j, fc    ! indices
+    real(r8) :: h2olak_liq ! liquid water content of lake layer [kg/m²]
+    real(r8) :: h2olak_ice ! ice water content of lake layer [kg/m²]
    
     character(len=*), parameter :: subname = 'AccumulateLiqIceMassLake'
     !-----------------------------------------------------------------------
@@ -517,11 +517,11 @@ contains
        do fc = 1, num_c
           c = filter_c(fc)
           ! calculate lake liq and ice content per lake layer first
-          h2olak_liq(c,j) = dz_lake(c,j) * denh2o * (1 - lake_icefrac(c,j))
-          h2olak_ice(c,j) = dz_lake(c,j) * denice * lake_icefrac(c,j)
+          h2olak_liq = dz_lake(c,j) * denh2o * (1 - lake_icefrac(c,j))
+          h2olak_ice = dz_lake(c,j) * denice * lake_icefrac(c,j)
           
-          liquid_mass(c) = liquid_mass(c) + h2olak_liq(c,j)
-          ice_mass(c) = ice_mass(c) + h2olak_ice(c,j)
+          liquid_mass(c) = liquid_mass(c) + h2olak_liq
+          ice_mass(c) = ice_mass(c) + h2olak_ice
        end do
     end do     
          
@@ -726,6 +726,11 @@ contains
     ! trying to account for the temperature of these baselines at all. This amounts to
     ! assuming that the baselines that we add / subtract are at the average temperature
     ! of the real liquid water in the column.
+    
+    ! This is different for lakes: there the virtual lake water's temperature is excluded
+    ! to avoid having it dominating the average temperature calculation 
+    ! see note at top of the AccumulateHeatLake subroutine. 
+    
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
        heat(c) = heat(c) - dynbal_baseline_heat(c)
@@ -975,6 +980,7 @@ contains
     end do
     
     ! Lake water heat content
+    ! Note that we do NOT accumulate heat_liquid and cv_liquid in this call. See the comments at the top of AccumulateHeatLake for rationale.
     call AccumulateHeatLake(bounds, num_lakec, filter_lakec, temperature_inst, lakestate_inst, &
        heat)
 
@@ -1009,16 +1015,24 @@ contains
     ! !DESCRIPTION:
     ! Accumulate heat of lake water in lake columns. 
     !
-    ! This module differs from AccumulateSoilHeatNonLake in the sense that for lake heat
-    ! the average heat_liquid and cv_liquid are not calculated. This because the 
-    ! lake water is virtual (there will never by a change in lake water content) 
-    ! and thus it should not be taken into the average column temperature when adjusting the change in 
+    ! This subroutine differs from AccumulateSoilHeatNonLake in the sense that for lake heat
+    ! the average heat_liquid and cv_liquid are not accumulated. This is because these
+    ! terms are currently only used to calculate the implicit temperature of the dynbal liquid flux.
+    ! Because the lake water is virtual (there will never be a change in lake water content,
+    ! it should not be taken into the average column temperature when adjusting the change in 
     ! heat content of the grid cell for the change in water content. 
     ! Now, for lake grid cells, this is only done for the water content of the 
-    ! soil under the lake and the snow on the lake. 
+    ! soil under the lake and the snow on the lake. Since the virtual lake water doesn't generally 
+    ! contribute to the dynbal liquid flux, its temperature shouldn't contribute 
+    ! to the implicit temperature of the dynbal liquid flux. (If we allowed it
+    ! to contribute, the lake's temperature could dominate the average temperature calculation,
+    ! since there is so much lake water relative to other water in the grid cell.)
+    !
+    ! We are adopting a different approach in the lake and non-lake columns. 
+    ! For the choices made in a non-lake column, see comment at bottom of ComputeHeatNonLake subroutine 
     ! 
     ! Some minor concerns with this approach: 
-    ! In a rare case, lake water can have some changes in water content in time, 
+    ! In some cases, lake water can have some changes in water content in time, 
     ! when experiencing phase changes: If a lake was completely liquid in initialization,
     ! but then partially froze and then grew / shrank, some dynbal fluxes would be generated:
     ! equal and opposite dynbal liquid and ice terms. In this case, it would be appropriate to 
@@ -1035,12 +1049,11 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fc
     integer :: l, c, j
-    real(r8) :: h2olak_liq(bounds%begc:bounds%endc,1:nlevlak) ! liquid water content of lake layer [kg/m²]
-    real(r8) :: h2olak_ice(bounds%begc:bounds%endc,1:nlevlak) ! ice water content of lake layer [kg/m²]
+    real(r8) :: h2olak_liq                                       ! liquid water content of lake layer [kg/m²]
+    real(r8) :: h2olak_ice                                       ! ice water content of lake layer [kg/m²]
     real(r8) :: lake_heat_liquid(bounds%begc:bounds%endc)        ! sum of heat content: liquid water in lake, excluding latent heat [J/m^2]
     real(r8) :: lake_heat_ice(bounds%begc:bounds%endc)           ! sum of heat content: ice in lake [J/m^2]
     real(r8) :: lake_latent_heat_liquid(bounds%begc:bounds%endc) ! sum of heat content: latent heat of liquid water in lake [J/m^2]
-    real(r8) :: cv_liquid( bounds%begc:bounds%endc )   ! dummy argument to use AccumulateLiquidWaterHeat - not used
  
     character(len=*), parameter :: subname = 'AccumulateHeatLake'
     !-----------------------------------------------------------------------
@@ -1067,17 +1080,16 @@ contains
         do fc = 1, num_c
             c = filter_c(fc)
            ! liquid heat 
-           h2olak_liq(c,j) = dz_lake(c,j) * denh2o * (1 - lake_icefrac(c,j))
+           h2olak_liq = dz_lake(c,j) * denh2o * (1 - lake_icefrac(c,j))
            call AccumulateLiquidWaterHeat( &
                 temp = t_lake(c,j), &
-                h2o = h2olak_liq(c,j), &
-                cv_liquid = cv_liquid(c), &
+                h2o = h2olak_liq, &
                 heat_liquid = lake_heat_liquid(c), &
                 latent_heat_liquid = lake_latent_heat_liquid(c))
             ! ice heat
-            h2olak_ice(c,j) = dz_lake(c,j) * denice * lake_icefrac(c,j)      
+            h2olak_ice = dz_lake(c,j) * denice * lake_icefrac(c,j)      
             lake_heat_ice(c) = lake_heat_ice(c) + & 
-                TempToHeat(temp=t_lake(c,j), cv = (h2olak_ice(c,j) * cpice))
+                TempToHeat(temp=t_lake(c,j), cv = (h2olak_ice * cpice))
         end do
     end do 
 
