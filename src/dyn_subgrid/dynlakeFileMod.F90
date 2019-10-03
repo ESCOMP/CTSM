@@ -36,7 +36,7 @@ module dynlakeFileMod
   ! Names of variables on file
   character(len=*), parameter :: lake_varname = 'PCT_LAKE'
    
-   ! TO DO:  account for lake depth? 
+
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
