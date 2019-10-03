@@ -287,15 +287,7 @@ contains
           write(iulog,*) 'ERROR: do_harvest currently does not work with use_fates'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
-    end if
-
-    if (dyn_subgrid_control_inst%do_transient_lakes) then
-       if (use_fates) then
-          write(iulog,*) 'ERROR: do_transient_lakes currently does not work with use_fates'
-          call endrun(msg=errMsg(sourcefile, __LINE__))
-       end if
-    end if
-    
+    end if    
     
   end subroutine check_namelist_consistency
 
