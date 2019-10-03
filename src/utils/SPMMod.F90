@@ -871,10 +871,10 @@ if( present(list_C) )then
    SHR_ASSERT_FL((size(list_C)    >= C%NE), sourcefile, __LINE__)
 end if
 if( present(RI_ABC) )then
-   SHR_ASSERT_FL((size(RI_ABC)    <= A%NE+B%NE+C%NE), sourcefile, __LINE__)
+   SHR_ASSERT_FL((size(RI_ABC)    >= A%NE+B%NE+C%NE), sourcefile, __LINE__)
 end if
 if( present(CI_ABC) )then
-   SHR_ASSERT_FL((size(CI_ABC)    <= A%NE+B%NE+C%NE), sourcefile, __LINE__)
+   SHR_ASSERT_FL((size(CI_ABC)    >= A%NE+B%NE+C%NE), sourcefile, __LINE__)
 end if
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(list_C) .and. present(NE_ABC) .and. present(RI_ABC) .and. present(CI_ABC)))then
    write(iulog,*) "error in SPMP_ABC: list_ready is True, but at least one of list_A, list_B, list_C, NE_ABC, RI_ABC and CI_ABC are not presented",&

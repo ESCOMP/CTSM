@@ -167,7 +167,7 @@ contains
         call this%AVsoil%InitSM                 (ndecomp_pools*nlevdecomp,begc,endc,decomp_cascade_con%Ntri_setup)
         call this%AKfiresoil%InitSM             (ndecomp_pools*nlevdecomp,begc,endc,ndecomp_pools*nlevdecomp)
         call this%AKallsoilc%InitSM             (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+decomp_cascade_con%Ntri_setup+nlevdecomp)
-        this%NE_AKallsoilc = Ntrans+decomp_cascade_con%Ntri_setup+nlevdecomp
+        this%NE_AKallsoilc = Ntrans+ndecomp_pools*nlevdecomp+decomp_cascade_con%Ntri_setup+ndecomp_pools*nlevdecomp
         allocate(this%RI_AKallsoilc(1:this%NE_AKallsoilc)); this%RI_AKallsoilc(1:this%NE_AKallsoilc)=-9999
         allocate(this%CI_AKallsoilc(1:this%NE_AKallsoilc)); this%CI_AKallsoilc(1:this%NE_AKallsoilc)=-9999
         Ntrans_diag = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp+ndecomp_pools_vr
