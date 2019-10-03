@@ -221,7 +221,7 @@ contains
 
   !--------------------------------------------------------------------------------
   subroutine normalize_unfrozen_rootfr(bounds, ubj, fn, filterp, &
-       canopystate_inst, soilstate_inst, temperature_inst, rootfr_unf)
+       active_layer_inst, soilstate_inst, temperature_inst, rootfr_unf)
     !
     ! !DESCRIPTIONS
     ! normalize root fraction for total unfrozen depth 
@@ -231,7 +231,7 @@ contains
     use shr_log_mod     , only : errMsg => shr_log_errMsg
     use clm_varcon      , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment 
     use decompMod       , only : bounds_type
-    use CanopyStateType , only : canopystate_type
+    use ActiveLayerMod  , only : active_layer_type
     use EnergyFluxType  , only : energyflux_type
     use TemperatureType , only : temperature_type
     use SoilStateType   , only : soilstate_type
@@ -244,7 +244,7 @@ contains
     integer                , intent(in)    :: ubj                                        !ubinning level indices
     integer                , intent(in)    :: fn                                         !filter dimension
     integer                , intent(in)    :: filterp(:)                                 !filter
-    type(canopystate_type) , intent(in)    :: canopystate_inst
+    type(active_layer_type), intent(in)    :: active_layer_inst
     type(soilstate_type)   , intent(in)    :: soilstate_inst
     type(temperature_type) , intent(in)    :: temperature_inst
     real(r8)               , intent(inout) :: rootfr_unf(bounds%begp:bounds%endp, 1:ubj) !normalized root fraction in unfrozen layers
@@ -259,8 +259,8 @@ contains
 
          t_soisno             => temperature_inst%t_soisno_col             , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)                    
 
-         altmax_lastyear_indx => canopystate_inst%altmax_lastyear_indx_col , & ! Input:  [real(r8) (:)   ]  prior year maximum annual depth of thaw                               
-         altmax_indx          => canopystate_inst%altmax_indx_col            & ! Input:  [real(r8) (:)   ]  maximum annual depth of thaw                                          
+         altmax_lastyear_indx => active_layer_inst%altmax_lastyear_indx_col , & ! Input:  [real(r8) (:)   ]  prior year maximum annual depth of thaw                               
+         altmax_indx          => active_layer_inst%altmax_indx_col            & ! Input:  [real(r8) (:)   ]  maximum annual depth of thaw                                          
          )
 
       ! main calculation loop  
@@ -443,7 +443,7 @@ contains
 
   !--------------------------------------------------------------------------------
   subroutine calc_root_moist_stress(bounds, nlevgrnd, fn, filterp, &
-       canopystate_inst, energyflux_inst,  soilstate_inst, temperature_inst, &
+       active_layer_inst, energyflux_inst,  soilstate_inst, temperature_inst, &
        waterstatebulk_inst, waterdiagnosticbulk_inst, soil_water_retention_curve)
     !
     ! DESCRIPTIONS
@@ -454,7 +454,7 @@ contains
     use shr_log_mod     , only : errMsg => shr_log_errMsg
     use clm_varcon      , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment 
     use decompMod       , only : bounds_type
-    use CanopyStateType , only : canopystate_type
+    use ActiveLayerMod  , only : active_layer_type
     use EnergyFluxType  , only : energyflux_type
     use TemperatureType , only : temperature_type
     use SoilStateType   , only : soilstate_type
@@ -469,7 +469,7 @@ contains
     integer                , intent(in)    :: nlevgrnd
     integer                , intent(in)    :: fn
     integer                , intent(in)    :: filterp(:)
-    type(canopystate_type) , intent(in)    :: canopystate_inst
+    type(active_layer_type), intent(in)    :: active_layer_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     type(temperature_type) , intent(in)    :: temperature_inst
@@ -492,7 +492,7 @@ contains
          ubj = nlevgrnd,                    &
          fn = fn,                           &
          filterp = filterp,                 &
-         canopystate_inst=canopystate_inst, &
+         active_layer_inst=active_layer_inst, &
          soilstate_inst=soilstate_inst,     &
          temperature_inst=temperature_inst, & 
          rootfr_unf=rootfr_unf(bounds%begp:bounds%endp,1:nlevgrnd))

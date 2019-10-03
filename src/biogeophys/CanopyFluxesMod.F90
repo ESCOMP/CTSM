@@ -19,6 +19,7 @@ module CanopyFluxesMod
   use clm_varcon            , only : namep 
   use pftconMod             , only : pftcon
   use decompMod             , only : bounds_type
+  use ActiveLayerMod        , only : active_layer_type
   use PhotosynthesisMod     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
   use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
   use EDBtranMod            , only : btran_ed
@@ -181,7 +182,7 @@ contains
 
   !------------------------------------------------------------------------------
   subroutine CanopyFluxes(bounds,  num_exposedvegp, filter_exposedvegp,                  &
-       clm_fates, nc, atm2lnd_inst, canopystate_inst,                                    &
+       clm_fates, nc, active_layer_inst, atm2lnd_inst, canopystate_inst,                 &
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst,   &
        temperature_inst, waterfluxbulk_inst, waterstatebulk_inst,                        &
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, ch4_inst, ozone_inst,            &
@@ -238,6 +239,7 @@ contains
     integer                                , intent(in)            :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
     type(hlm_fates_interface_type)         , intent(inout)         :: clm_fates
     integer                                , intent(in)            :: nc ! clump index
+    type(active_layer_type)                , intent(in)            :: active_layer_inst
     type(atm2lnd_type)                     , intent(in)            :: atm2lnd_inst
     type(canopystate_type)                 , intent(inout)         :: canopystate_inst
     type(energyflux_type)                  , intent(inout)         :: energyflux_inst
@@ -699,7 +701,7 @@ contains
             nlevgrnd = nlevgrnd,               &
             fn = fn,                           &
             filterp = filterp,                 &
-            canopystate_inst=canopystate_inst, &
+            active_layer_inst=active_layer_inst, &
             energyflux_inst=energyflux_inst,   &
             soilstate_inst=soilstate_inst,     &
             temperature_inst=temperature_inst, &

@@ -23,6 +23,7 @@ module EDBGCDynMod
   use SoilHydrologyType               , only : soilhydrology_type
   use TemperatureType                 , only : temperature_type
   use WaterFluxBulkType                   , only : waterfluxbulk_type
+  use ActiveLayerMod                  , only : active_layer_type
   use atm2lndType                     , only : atm2lnd_type
   use SoilStateType                   , only : soilstate_type
   use ch4Mod                          , only : ch4_type
@@ -47,7 +48,7 @@ contains
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
        c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst,            &
        c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst,            &
-       atm2lnd_inst, waterfluxbulk_inst,                                      &
+       active_layer_inst, atm2lnd_inst, waterfluxbulk_inst,                                &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst)
     !
     ! !DESCRIPTION:
@@ -101,7 +102,8 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
-    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst 
+    type(active_layer_type)                 , intent(in)    :: active_layer_inst
+    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
     type(waterfluxbulk_type)                    , intent(in)    :: waterfluxbulk_inst
     type(canopystate_type)                  , intent(in)    :: canopystate_inst
     type(soilstate_type)                    , intent(in)    :: soilstate_inst
@@ -241,7 +243,7 @@ contains
     call t_startf('SoilBiogeochemLittVertTransp')
 
     call SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,            &
-         canopystate_inst, soilbiogeochem_state_inst,                             &
+         active_layer_inst, soilbiogeochem_state_inst,                            &
          soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,         &
          c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
          c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &

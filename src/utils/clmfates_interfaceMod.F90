@@ -39,6 +39,7 @@ module CLMFatesInterfaceMod
    use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
    use WaterFluxBulkType     , only : waterfluxbulk_type
    use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
+   use ActiveLayerMod    , only : active_layer_type
    use CanopyStateType   , only : canopystate_type
    use TemperatureType   , only : temperature_type
    use EnergyFluxType    , only : energyflux_type
@@ -536,6 +537,7 @@ contains
 
    subroutine dynamics_driv(this, nc, bounds_clump,      &
          atm2lnd_inst, soilstate_inst, temperature_inst, &
+         active_layer_inst, &
          waterstatebulk_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
          frictionvel_inst )
     
@@ -550,6 +552,7 @@ contains
       type(atm2lnd_type)      , intent(in)           :: atm2lnd_inst
       type(soilstate_type)    , intent(in)           :: soilstate_inst
       type(temperature_type)  , intent(in)           :: temperature_inst
+      type(active_layer_type) , intent(in)           :: active_layer_inst
       integer                 , intent(in)           :: nc
       type(waterstatebulk_type)   , intent(inout)        :: waterstatebulk_inst
       type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
@@ -617,7 +620,7 @@ contains
          this%fates(nc)%bc_in(s)%t_veg24_si = &
                temperature_inst%t_veg24_patch(col%patchi(c))
 
-         this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = canopystate_inst%altmax_lastyear_indx_col(c)
+         this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = active_layer_inst%altmax_lastyear_indx_col(c)
 
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
             p = ifp+col%patchi(c)

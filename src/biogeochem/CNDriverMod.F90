@@ -39,6 +39,7 @@ module CNDriverMod
   use ch4Mod                          , only : ch4_type
   use EnergyFluxType                  , only : energyflux_type
   use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
+  use ActiveLayerMod                  , only : active_layer_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -91,6 +92,7 @@ contains
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst,            &
        soilbiogeochem_state_inst,                                                          &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
+       active_layer_inst,                                                                  &
        atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,    &
        wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst,            &
        dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,                   &
@@ -167,6 +169,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(active_layer_type)                 , intent(in)    :: active_layer_inst
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)                   , intent(in)    :: waterdiagnosticbulk_inst
@@ -317,7 +320,7 @@ contains
 
     ! calculate vertical profiles for distributing soil and litter C and N (previously subroutine decomp_vertprofiles called from CNDecompAlloc)
     call SoilBiogeochemVerticalProfile(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         canopystate_inst, soilstate_inst,soilbiogeochem_state_inst)
+         active_layer_inst, soilstate_inst,soilbiogeochem_state_inst)
 
     ! calculate nitrification and denitrification rates (previously subroutine nitrif_denitrif called from CNDecompAlloc)
     if (use_nitrif_denitrif) then 
@@ -587,7 +590,7 @@ contains
     call t_startf('SoilBiogeochemLittVertTransp')
 
     call SoilBiogeochemLittVertTransp(bounds, num_soilc, filter_soilc,            &
-         canopystate_inst, soilbiogeochem_state_inst,                             &
+         active_layer_inst, soilbiogeochem_state_inst,                             &
          soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,         &
          c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst, &
          c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst, &
