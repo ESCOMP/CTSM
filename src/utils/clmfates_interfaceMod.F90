@@ -965,6 +965,9 @@ contains
       ! I think that is it...
       ! ---------------------------------------------------------------------------------
 
+      ! Set the FATES global time and date variables
+      call GetAndSetTime 
+
       if(.not.initialized) then
 
          initialized=.true.
@@ -1270,9 +1273,6 @@ contains
            ! ------------------------------------------------------------------------
            call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
                 waterstate_inst,canopystate_inst,frictionvel_inst)
-
-           ! Set the FATES global time and date variables
-           !call GetAndSetTime
 
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
