@@ -9,14 +9,12 @@ module WaterBalanceType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
-  use clm_varctl     , only : iulog
-  use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
+  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
   use clm_varcon     , only : spval
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
   use WaterInfoBaseType, only : water_info_base_type
+  use WaterTracerContainerType, only : water_tracer_container_type
+  use WaterTracerUtils, only : AllocateVar1d
   !
   implicit none
   save
@@ -33,6 +31,8 @@ module WaterBalanceType
      real(r8), pointer :: ice1_grc               (:)   ! grc initial gridcell total h2o ice content
      real(r8), pointer :: ice2_grc               (:)   ! grc post land cover change total ice content
 
+     real(r8), pointer :: snow_sources_col         (:)   ! col snow sources (mm H2O/s)
+     real(r8), pointer :: snow_sinks_col           (:)   ! col snow sinks (mm H2O/s)
 
      ! Balance Checks
 
@@ -58,59 +58,76 @@ module WaterBalanceType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, info)
+  subroutine Init(this, bounds, info, tracer_vars)
 
-    class(waterbalance_type)            :: this
+    class(waterbalance_type), intent(inout) :: this
     type(bounds_type) , intent(in)    :: bounds  
     class(water_info_base_type), intent(in), target :: info
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
 
     this%info => info
 
-    call this%InitAllocate(bounds) 
+    call this%InitAllocate(bounds, tracer_vars)
 
     call this%InitHistory(bounds)
 
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds)
+  subroutine InitAllocate(this, bounds, tracer_vars)
     !
     ! !DESCRIPTION:
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    class(waterbalance_type) :: this
+    class(waterbalance_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds  
+    type(water_tracer_container_type), intent(inout) :: tracer_vars
     !
     ! !LOCAL VARIABLES:
-    integer :: begp, endp
-    integer :: begc, endc
-    integer :: begl, endl
-    integer :: begg, endg
     !------------------------------------------------------------------------
 
-    begp = bounds%begp; endp= bounds%endp
-    begc = bounds%begc; endc= bounds%endc
-    begl = bounds%begl; endl= bounds%endl
-    begg = bounds%begg; endg= bounds%endg
+    call AllocateVar1d(var = this%h2osno_old_col, name = 'h2osno_old_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%liq1_grc, name = 'liq1_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+    call AllocateVar1d(var = this%liq2_grc, name = 'liq2_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+    call AllocateVar1d(var = this%ice1_grc, name = 'ice1_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+    call AllocateVar1d(var = this%ice2_grc, name = 'ice2_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
 
-    allocate(this%h2osno_old_col         (begc:endc))                     ; this%h2osno_old_col         (:)   = nan   
-    allocate(this%liq1_grc               (begg:endg))                     ; this%liq1_grc               (:)   = nan
-    allocate(this%liq2_grc               (begg:endg))                     ; this%liq2_grc               (:)   = nan
-    allocate(this%ice1_grc               (begg:endg))                     ; this%ice1_grc               (:)   = nan
-    allocate(this%ice2_grc               (begg:endg))                     ; this%ice2_grc               (:)   = nan
+    call AllocateVar1d(var = this%snow_sources_col, name = 'snow_sources_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%snow_sinks_col, name = 'snow_sinks_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
+    call AllocateVar1d(var = this%begwb_col, name = 'begwb_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%endwb_col, name = 'endwb_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%errh2o_patch, name = 'errh2o_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%errh2o_col, name = 'errh2o_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%errh2osno_col, name = 'errh2osno_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
-
-
-    allocate(this%begwb_col              (begc:endc))                     ; this%begwb_col              (:)   = nan
-    allocate(this%endwb_col              (begc:endc))                     ; this%endwb_col              (:)   = nan
-    allocate(this%errh2o_patch           (begp:endp))                     ; this%errh2o_patch           (:)   = nan
-    allocate(this%errh2o_col             (begc:endc))                     ; this%errh2o_col             (:)   = nan
-    allocate(this%errh2osno_col          (begc:endc))                     ; this%errh2osno_col          (:)   = nan
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -120,27 +137,43 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl     , only : use_lch4
-    use clm_varctl     , only : hist_wrtch4diag
-    use clm_varpar     , only : nlevsno, nlevsoi
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
+    use histFileMod    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
-    class(waterbalance_type) :: this
+    class(waterbalance_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
-    real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
+
+    ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at any
+    ! given time step but only if there is at least one snow layer (for all landunits 
+    ! except lakes).  Also note that monthly average files of snow_sources and snow_sinks
+    ! sinks must be weighted by number of days in the month to diagnose, for example, an 
+    ! annual value of the change in h2osno. 
+
+    this%snow_sources_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOW_SOURCES'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow sources (liquid water)'), &
+         ptr_col=this%snow_sources_col, c2l_scale_type='urbanf')
+
+    this%snow_sinks_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOW_SINKS'),  &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('snow sinks (liquid water)'), &
+         ptr_col=this%snow_sinks_col, c2l_scale_type='urbanf')
 
     this%liq1_grc(begg:endg) = spval
     call hist_addfld1d ( &
@@ -191,8 +224,5 @@ contains
          long_name=this%info%lname('imbalance in snow depth (liquid water)'), &
          ptr_col=this%errh2osno_col, c2l_scale_type='urbanf')
   end subroutine InitHistory
-
-  !-----------------------------------------------------------------------
-
 
 end module WaterBalanceType

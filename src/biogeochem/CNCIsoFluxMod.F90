@@ -7,7 +7,7 @@ module CNCIsoFluxMod
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
-  use clm_varpar                         , only : max_patch_per_col, maxpatch_pft
+  use clm_varpar                         , only : max_patch_per_col, maxsoil_patches
   use abortutils                         , only : endrun
   use pftconMod                          , only : pftcon
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
@@ -1319,7 +1319,7 @@ contains
           )
           
        do j = 1, nlevdecomp
-          do pi = 1,maxpatch_pft
+          do pi = 1,maxsoil_patches
              do fc = 1,num_soilc
                 c = filter_soilc(fc)
 
@@ -1460,7 +1460,7 @@ contains
           )
 
        do j = 1, nlevdecomp
-          do pi = 1,maxpatch_pft
+          do pi = 1,maxsoil_patches
              do fc = 1,num_soilc
                 c = filter_soilc(fc)
                 
@@ -1532,7 +1532,7 @@ contains
           end do
        end do
 
-       do pi = 1,maxpatch_pft
+       do pi = 1,maxsoil_patches
           do fc = 1,num_soilc
              c = filter_soilc(fc)
              if (pi <=  col%npatches(c)) then

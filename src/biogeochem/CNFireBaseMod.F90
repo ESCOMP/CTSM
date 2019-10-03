@@ -37,6 +37,7 @@ module CNFireBaseMod
   use EnergyFluxType                     , only : energyflux_type
   use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
   use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType                     , only : wateratm2lndbulk_type
   use GridcellType                       , only : grc
   use ColumnType                         , only : col
   use PatchType                          , only : patch
@@ -263,7 +264,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, &
+       atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, &
+       waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
        cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
@@ -282,6 +284,7 @@ contains
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
     type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
     type(waterdiagnosticbulk_type)                 , intent(in)    :: waterdiagnosticbulk_inst
+    type(wateratm2lndbulk_type)                 , intent(in)    :: wateratm2lndbulk_inst
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
@@ -311,7 +314,7 @@ contains
    ! seconds_per_year is the number of seconds in a year.
    !
    ! !USES:
-   use clm_time_manager     , only: get_step_size,get_days_per_year,get_curr_date
+   use clm_time_manager     , only: get_step_size_real,get_days_per_year,get_curr_date
    use clm_varpar           , only: max_patch_per_col
    use clm_varctl           , only: use_cndv, spinup_state
    use clm_varcon           , only: secspday
@@ -560,7 +563,7 @@ contains
 
      ! Get model step size
      ! calculate burned area fraction per sec
-     dt = real( get_step_size(), r8 )
+     dt = get_step_size_real()
 
      dayspyr = get_days_per_year()
      !

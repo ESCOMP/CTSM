@@ -36,6 +36,7 @@ module CNFireLi2014Mod
   use EnergyFluxType                     , only : energyflux_type
   use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
   use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType                     , only : wateratm2lndbulk_type
   use GridcellType                       , only : grc                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
@@ -84,13 +85,13 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, &
-       cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
+       wateratm2lndbulk_inst, cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
     ! Computes column-level burned area 
     !
     ! !USES:
-    use clm_time_manager     , only: get_step_size, get_days_per_year, get_curr_date, get_nstep
+    use clm_time_manager     , only: get_step_size_real, get_days_per_year, get_curr_date, get_nstep
     use clm_varpar           , only: max_patch_per_col
     use clm_varcon           , only: secspday, secsphr
     use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
@@ -108,6 +109,7 @@ contains
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
     type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
     type(waterdiagnosticbulk_type)                 , intent(in)    :: waterdiagnosticbulk_inst
+    type(wateratm2lndbulk_type)                 , intent(in)    :: wateratm2lndbulk_inst
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
@@ -170,13 +172,13 @@ contains
          
          is_cwd             => decomp_cascade_con%is_cwd                       , & ! Input:  [logical  (:)     ]  TRUE => pool is a cwd pool                         
 
-         forc_rh            => atm2lnd_inst%forc_rh_grc                        , & ! Input:  [real(r8) (:)     ]  relative humidity                                 
+         forc_rh            => wateratm2lndbulk_inst%forc_rh_grc                        , & ! Input:  [real(r8) (:)     ]  relative humidity                                 
          forc_wind          => atm2lnd_inst%forc_wind_grc                      , & ! Input:  [real(r8) (:)     ]  atmospheric wind speed (m/s)                       
          forc_t             => atm2lnd_inst%forc_t_downscaled_col              , & ! Input:  [real(r8) (:)     ]  downscaled atmospheric temperature (Kelvin)                  
-         forc_rain          => atm2lnd_inst%forc_rain_downscaled_col           , & ! Input:  [real(r8) (:)     ]  downscaled rain                                              
-         forc_snow          => atm2lnd_inst%forc_snow_downscaled_col           , & ! Input:  [real(r8) (:)     ]  downscaled snow                                              
-         prec60             => atm2lnd_inst%prec60_patch                       , & ! Input:  [real(r8) (:)     ]  60-day running mean of tot. precipitation         
-         prec10             => atm2lnd_inst%prec10_patch                       , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation         
+         forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col           , & ! Input:  [real(r8) (:)     ]  downscaled rain                                              
+         forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col           , & ! Input:  [real(r8) (:)     ]  downscaled snow                                              
+         prec60             => wateratm2lndbulk_inst%prec60_patch                       , & ! Input:  [real(r8) (:)     ]  60-day running mean of tot. precipitation         
+         prec10             => wateratm2lndbulk_inst%prec10_patch                       , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation         
         
          dwt_smoothed       => cnveg_state_inst%dwt_smoothed_patch             , & ! Input:  [real(r8) (:)     ]  change in patch weight (-1 to 1) on the gridcell, smoothed over the year
          cropf_col          => cnveg_state_inst%cropf_col                      , & ! Input:  [real(r8) (:)     ]  cropland fraction in veg column                   
@@ -241,7 +243,7 @@ contains
      call get_curr_date (kyr, kmo, kda, mcsec)
      dayspyr = get_days_per_year()
      ! Get model step size
-     dt      = real( get_step_size(), r8 )
+     dt      = get_step_size_real()
      !
      ! On first time-step, just set area burned to zero and exit
      !
@@ -642,7 +644,7 @@ contains
    ! seconds_per_year is the number of seconds in a year.
    !
    ! !USES:
-   use clm_time_manager     , only: get_step_size,get_days_per_year,get_curr_date
+   use clm_time_manager     , only: get_step_size_real,get_days_per_year,get_curr_date
    use clm_varpar           , only: max_patch_per_col
    use clm_varctl           , only: use_cndv
    use clm_varcon           , only: secspday
@@ -888,7 +890,7 @@ contains
 
      ! Get model step size
      ! calculate burned area fraction per sec
-     dt = real( get_step_size(), r8 )
+     dt = get_step_size_real()
 
      dayspyr = get_days_per_year()
      !

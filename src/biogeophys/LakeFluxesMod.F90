@@ -16,6 +16,7 @@ module LakeFluxesMod
   use SolarAbsorbedType    , only : solarabs_type
   use TemperatureType      , only : temperature_type
   use WaterFluxBulkType        , only : waterfluxbulk_type
+  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
   use WaterStateBulkType       , only : waterstatebulk_type
   use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
   use HumanIndexMod        , only : humanindex_type
@@ -30,14 +31,46 @@ module LakeFluxesMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: LakeFluxes
+  public :: readParams
+
+  type, private :: params_type
+      real(r8) :: a_coef  ! Drag coefficient under less dense canopy (unitless)
+      real(r8) :: a_exp  ! Drag exponent under less dense canopy (unitless)
+      real(r8) :: zsno  ! Momentum roughness length for snow (m)
+  end type params_type
+  type(params_type), private ::  params_inst
   !-----------------------------------------------------------------------
 
 contains
 
+ subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_LakeFluxes'
+    !--------------------------------------------------------------------
+
+    ! Drag coefficient under less dense canopy (unitless)
+    call readNcdioScalar(ncid, 'a_coef', subname, params_inst%a_coef)
+    ! Drag exponent under less dense canopy (unitless)
+    call readNcdioScalar(ncid, 'a_exp', subname, params_inst%a_exp)
+    ! Momentum roughness length for snow (m)
+    call readNcdioScalar(ncid, 'zsno', subname, params_inst%zsno)
+
+  end subroutine readParams
+
   !-----------------------------------------------------------------------
   subroutine LakeFluxes(bounds, num_lakec, filter_lakec, num_lakep, filter_lakep, &
        atm2lnd_inst, solarabs_inst, frictionvel_inst, temperature_inst, &
-       energyflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, lakestate_inst, &
+       energyflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+       waterfluxbulk_inst, wateratm2lndbulk_inst, lakestate_inst, &
        humanindex_inst) 
     !
     ! !DESCRIPTION:
@@ -49,14 +82,15 @@ contains
     ! !USES:
     use clm_varpar          , only : nlevlak
     use clm_varcon          , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, tkair
-    use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval, zsno
+    use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval
     use clm_varctl          , only : use_lch4
     use LakeCon             , only : betavis, z0frzlake, tdmax, emg_lake
     use LakeCon             , only : lake_use_old_fcrit_minz0
     use LakeCon             , only : minz0lake, cur0, cus, curm, fcrit
     use QSatMod             , only : QSat
     use FrictionVelocityMod , only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
-    use HumanIndexMod       , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
+    use HumanIndexMod       , only : all_human_stress_indices, fast_human_stress_indices, &
+                                     Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                      swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                      SwampCoolEff, KtoC, VaporPres
     !
@@ -73,6 +107,7 @@ contains
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type)   , intent(inout) :: wateratm2lndbulk_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     type(lakestate_type)   , intent(inout) :: lakestate_inst
     type(humanindex_type)  , intent(inout) :: humanindex_inst
@@ -163,11 +198,11 @@ contains
          forc_t           =>    atm2lnd_inst%forc_t_downscaled_col     , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)                  
          forc_pbot        =>    atm2lnd_inst%forc_pbot_downscaled_col  , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                         
          forc_th          =>    atm2lnd_inst%forc_th_downscaled_col    , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (Kelvin)        
-         forc_q           =>    atm2lnd_inst%forc_q_downscaled_col     , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)             
+         forc_q           =>    wateratm2lndbulk_inst%forc_q_downscaled_col     , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)             
          forc_rho         =>    atm2lnd_inst%forc_rho_downscaled_col   , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                 
          forc_lwrad       =>    atm2lnd_inst%forc_lwrad_downscaled_col , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)   
-         forc_snow        =>    atm2lnd_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                                  
-         forc_rain        =>    atm2lnd_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                                  
+         forc_snow        =>    wateratm2lndbulk_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                                  
+         forc_rain        =>    wateratm2lndbulk_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                                  
          forc_u           =>    atm2lnd_inst%forc_u_grc                , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in east direction (m/s)    
          forc_v           =>    atm2lnd_inst%forc_v_grc                , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in north direction (m/s)   
          
@@ -218,7 +253,6 @@ contains
 
          qflx_evap_soi    =>    waterfluxbulk_inst%qflx_evap_soi_patch     , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)          
          qflx_evap_tot    =>    waterfluxbulk_inst%qflx_evap_tot_patch     , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
-         qflx_prec_grnd   =>    waterfluxbulk_inst%qflx_prec_grnd_patch    , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
 
          t_veg            =>    temperature_inst%t_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation temperature (Kelvin)                   
          t_ref2m          =>    temperature_inst%t_ref2m_patch         , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (Kelvin)       
@@ -289,11 +323,11 @@ contains
             z0hg(p) = max(z0hg(p), minz0lake)
          else if (snl(c) == 0) then    ! frozen lake with ice
             z0mg(p) = z0frzlake
-            z0hg(p) = z0mg(p)/exp(0.13_r8 * (ust_lake(c)*z0mg(p)/1.5e-5_r8)**0.45_r8) ! Consistent with BareGroundFluxes
+            z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
             z0qg(p) = z0hg(p)
          else                          ! use roughness over snow as in Biogeophysics1
-            z0mg(p) = zsno
-            z0hg(p) = z0mg(p)/exp(0.13_r8 * (ust_lake(c)*z0mg(p)/1.5e-5_r8)**0.45_r8) ! Consistent with BareGroundFluxes
+            z0mg(p) = params_inst%zsno
+            z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp)  ! Consistent with BareGroundFluxes
             z0qg(p) = z0hg(p)
          end if
 
@@ -508,11 +542,11 @@ contains
             else if (snl(c) == 0) then
                ! in case it was above freezing and now below freezing
                z0mg(p) = z0frzlake
-               z0hg(p) = z0mg(p)/exp(0.13_r8 * (ustar(p)*z0mg(p)/1.5e-5_r8)**0.45_r8) ! Consistent with BareGroundFluxes
+               z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
                z0qg(p) = z0hg(p)
             else ! Snow layers
                ! z0mg won't have changed
-               z0hg(p) = z0mg(p)/exp(0.13_r8 * (ustar(p)*z0mg(p)/1.5e-5_r8)**0.45_r8) ! Consistent with BareGroundFluxes
+               z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
                z0qg(p) = z0hg(p)
             end if
 
@@ -610,20 +644,22 @@ contains
 
          ! Human Heat Stress
   
-         if ( calc_human_stress_indices )then
+         if ( all_human_stress_indices .or. fast_human_stress_indices )then
             call KtoC(t_ref2m(p), tc_ref2m(p))
             call VaporPres(rh_ref2m(p), e_ref2m, vap_ref2m(p))
-            call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), &
-                          q_ref2m(p), teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
             call Wet_BulbS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p))
             call HeatIndex(tc_ref2m(p), rh_ref2m(p), nws_hi_ref2m(p))
             call AppTemp(tc_ref2m(p), vap_ref2m(p), u10_clm(p), appar_temp_ref2m(p))
             call swbgt(tc_ref2m(p), vap_ref2m(p), swbgt_ref2m(p))
             call hmdex(tc_ref2m(p), vap_ref2m(p), humidex_ref2m(p))
-            call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
             call dis_coiS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p), discomf_index_ref2mS(p))
-            call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
-            call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            if ( all_human_stress_indices ) then
+               call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), &
+                             q_ref2m(p), teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
+               call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
+               call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
+               call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            end if
          end if
 
 
@@ -659,7 +695,6 @@ contains
          c = patch%column(p)
          t_veg(p) = forc_t(c)
          eflx_lwrad_net(p)  = eflx_lwrad_out(p) - forc_lwrad(c)
-         qflx_prec_grnd(p) = forc_rain(c) + forc_snow(c)
          t_skin_patch(p) = t_veg(p)         
       end do
 

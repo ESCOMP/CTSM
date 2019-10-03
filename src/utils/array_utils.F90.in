@@ -4,14 +4,17 @@ module array_utils
   ! !DESCRIPTION:
   ! This module contains routines for working with arrays.
   !
-  ! NOTE(wjs, 2015-10-21) These routines could be moved to csm_share. However, I'm not
-  ! sure if these routines will stick around for long, since they are just here to work
-  ! around the fact that we don't specify -Mallocatable=03 with pgi (which in turn is
-  ! because that flag led to bugs with pgi14).
+  ! NOTES
+  ! Subroutines transpose_wrapper_* and pack_wrapper could be moved to csm_share
+  ! if they stick around for long; they are just here to work around the fact
+  ! that we don't specify -Mallocatable=03 with pgi (which in turn is because
+  ! that flag led to bugs with pgi14).
   !
   ! !USES:
-
+#include "shr_assert.h"
   use shr_kind_mod, only : r8 => shr_kind_r8, i4=>shr_kind_i4
+  use abortutils  , only : endrun
+  use shr_log_mod  , only : errMsg => shr_log_errMsg
 
   implicit none
   private
@@ -19,8 +22,9 @@ module array_utils
 
   ! Public routines
 
-  public :: transpose_wrapper ! wrap the intrinsic transpose function, first allocating the destination array
-  public :: pack_wrapper      ! wrap the intrinsic pack function, first allocating the destination array
+  public :: find_k_max_indices ! returns the indices of the maximum k values in data, in sorted order
+  public :: transpose_wrapper  ! wrap the intrinsic transpose function, first allocating the destination array
+  public :: pack_wrapper       ! wrap the intrinsic pack function, first allocating the destination array
 
   interface transpose_wrapper
      !TYPE int,double
@@ -28,6 +32,67 @@ module array_utils
   end interface transpose_wrapper
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine find_k_max_indices(data, lb, k, max_indices)
+    !
+    ! !DESCRIPTION:
+    ! Returns the indices of the maximum k values in data, in sorted order (so the first
+    ! index will be the largest, the second index will be the second largest, etc.)
+    !
+    ! The output array (max_indices) should be of size k
+    !
+    ! Speed estimate: O(n*k) (where n is the size of the input array)
+    !
+    ! !ARGUMENTS:
+    integer  , intent(in)  :: lb ! lower bound of data array
+    real(r8) , intent(in)  :: data(lb:)
+    integer  , intent(in)  :: k  ! number of max indices to find
+    integer  , intent(out) :: max_indices(:)
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: max_vals(k)
+    integer :: i, j
+    integer :: insertion_location
+
+    character(len=*), parameter :: subname = 'find_k_max_indices'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT((size(max_indices) == k), errMsg(subname, __LINE__))
+
+    if (k < 1 .or. k > size(data)) then
+       call endrun(subname//': must have 1 <= k <= size(data)')
+    end if
+
+    max_indices(:) = lb - 1
+    max_vals(:) = -huge(1._r8)
+
+    do i = lbound(data,1), ubound(data,1)
+       ! Determine where (if anywhere) data(i) should go in max_vals, relative to the
+       ! values we've seen so far. Note that max_vals will be arranged in sorted order,
+       ! with the largest value first.
+       insertion_location = -1
+       do j = 1, k
+          if (data(i) > max_vals(j)) then
+             insertion_location = j
+             exit
+          end if
+       end do
+
+       if (insertion_location > 0) then
+          ! Shift lower values right by one (note that the k'th value will be dropped)
+          do j = k-1, insertion_location, -1
+             max_indices(j+1) = max_indices(j)
+             max_vals(j+1) = max_vals(j)
+          end do
+
+          max_indices(insertion_location) = i
+          max_vals(insertion_location) = data(i)
+       end if
+    end do
+
+  end subroutine find_k_max_indices
+
 
   !-----------------------------------------------------------------------
   !TYPE int,double

@@ -15,6 +15,7 @@ module mksoilMod
   use shr_kind_mod, only : r8 => shr_kind_r8, r4=>shr_kind_r4
   use shr_sys_mod , only : shr_sys_flush
   use mkdomainMod , only : domain_checksame
+  use mksoilUtilsMod, only : mkrank, dominant_soil_color
   implicit none
 
   SAVE
@@ -43,7 +44,6 @@ module mksoilMod
 ! !PRIVATE DATA MEMBERS:
 !
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: mkrank
   private :: mksoiltexInit  ! Soil texture Initialization
   private :: mksoilcolInit  ! Soil color Initialization
   private :: mksoilfmaxInit ! Soil fmax Initialization
@@ -597,21 +597,15 @@ subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
 !EOP
   type(gridmap_type)    :: tgridmap
   type(domain_type)    :: tdomain          ! local domain
-  integer, parameter :: num=2               ! set soil mapunit number
-  integer  :: wsti(num)                     ! index to 1st and 2nd largest wst
-  real(r8), allocatable :: wst(:,:)         ! overlap weights, by surface type
   real(r8), allocatable :: gast_i(:)        ! global area, by surface type
   real(r8), allocatable :: gast_o(:)        ! global area, by surface type
   integer , allocatable :: soil_color_i(:)  ! input grid: BATS soil color
-  integer , allocatable :: color(:)         ! 0: none; 1: some
-  real(r8) :: wt                            ! map overlap weight
   real(r8) :: sum_fldi                      ! global sum of dummy input fld
   real(r8) :: sum_fldo                      ! global sum of dummy output fld
   character(len=35), allocatable :: col(:)  ! name of each color
-  integer  :: k,l,n,m,ni,no,ns_i,ns_o       ! indices
+  integer  :: k,l,m,ni,no,ns_i,ns_o       ! indices
   integer  :: ncid,dimid,varid              ! input netCDF id's
   integer  :: ier                           ! error status
-  integer  :: miss = 99999                  ! missing data indicator
   real(r8) :: relerr = 0.00001              ! max error: sum overlap wts ne 1
   character(len=32) :: subname = 'mksoilcol'
 !-----------------------------------------------------------------------
@@ -703,62 +697,14 @@ subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
 
      call domain_checksame( tdomain, ldomain, tgridmap )
 
-     ! find area of overlap for each soil color for each no
+     ! Determine dominant soil color for each output cell
 
-     allocate(wst(0:nsoicol,ns_o))
-     wst(0:nsoicol,:) = 0
-     allocate(color(ns_o))
-     color(:) = 0
-     
-     ! TODO: need to do a loop to determine
-     ! the maximum number of over lap cells throughout the grid 
-     ! first get an array that is novr(ns_o) and fill this in - then set
-     ! maxovr - to max(novr) - then allocate the array wst to be size of
-     ! maxovr,ns_o or 0:nsoilcol,ns_o
-
-     do n = 1,tgridmap%ns
-        ni = tgridmap%src_indx(n)
-        no = tgridmap%dst_indx(n)
-        wt = tgridmap%wovr(n)
-        k  = soil_color_i(ni) * tdomain%mask(ni)
-        wst(k,no) = wst(k,no) + wt
-        if (k>0 .and. wst(k,no)>0.) then
-           color(no) = 1
-           wst(0,no) = 0.0
-        end if
-     enddo
-
-     soil_color_o(:) = 0
-     do no = 1,ns_o
-
-        ! Rank non-zero weights by color type. wsti(1) is the most extensive
-        ! color type. 
-
-        if (color(no) == 1) then
-           call mkrank (nsoicol, wst(0:nsoicol,no), miss, wsti, num)
-           soil_color_o(no) = wsti(1)
-        end if
-
-        ! If land but no color, set color to 15 (in older dataset generic 
-        ! soil color 4)
-        
-        if (nsoicol == 8) then
-           if (soil_color_o(no)==0) soil_color_o(no) = 4
-        else if (nsoicol == 20) then
-           if (soil_color_o(no)==0) soil_color_o(no) = 15
-        end if
-        
-        ! Error checks
-
-        if (soil_color_o(no) < 0 .or. soil_color_o(no) > nsoicol) then
-           write (6,*) 'MKSOILCOL error: land model soil color = ', &
-                soil_color_o(no),' is not valid for lon,lat = ',no
-           call abort()
-        end if
-
-     enddo
-     deallocate (wst)
-     deallocate (color)
+     call dominant_soil_color( &
+          tgridmap = tgridmap, &
+          mask_i = tdomain%mask, &
+          soil_color_i = soil_color_i, &
+          nsoicol = nsoicol, &
+          soil_color_o = soil_color_o)
 
      ! Global sum of output field 
 
@@ -982,96 +928,6 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
   write(6,*)
 
 end subroutine mkorganic
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: mkrank
-!
-! !INTERFACE:
-subroutine mkrank (n, a, miss, iv, num)
-!
-! !DESCRIPTION:
-! Return indices of largest [num] values in array [a]. Private method
-! only used for soil color and soil texture.
-!
-! !USES:
-!
-! !ARGUMENTS:
-  implicit none
-  integer , intent(in) :: n        !array length
-  real(r8), intent(in) :: a(0:n)   !array to be ranked
-  integer , intent(in) :: miss     !missing data value
-  integer , intent(in) :: num      !number of largest values requested
-  integer , intent(out):: iv(num)  !index to [num] largest values in array [a]
-!
-! !CALLED FROM:
-! subroutine mksoilcol 
-! subroutine mksoiltex
-!
-! !REVISION HISTORY:
-! Author: Gordon Bonan
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-  real(r8) a_max       !maximum value in array
-  integer i            !array index
-  real(r8) delmax      !tolerance for finding if larger value
-  integer m            !do loop index
-  integer k            !do loop index
-  logical exclude      !true if data value has already been chosen
-!-----------------------------------------------------------------------
-
-  delmax = 1.e-06
-
-  ! Find index of largest non-zero number
-
-  iv(1) = miss
-  a_max = -9999.
-
-  do i = 0, n
-     if (a(i)>0. .and. (a(i)-a_max)>delmax) then
-        a_max = a(i)
-        iv(1)  = i
-     end if
-  end do
-
-  ! iv(1) = miss indicates no values > 0. this is an error
-
-  if (iv(1) == miss) then
-     write (6,*) 'MKRANK error: iv(1) = missing'
-     call abort()
-  end if
-
-  ! Find indices of the next [num]-1 largest non-zero number.
-  ! iv(m) = miss if there are no more values > 0
-
-  do m = 2, num
-     iv(m) = miss
-     a_max = -9999.
-     do i = 0, n
-
-        ! exclude if data value has already been chosen
-
-        exclude = .false.
-        do k = 1, m-1
-           if (i == iv(k)) exclude = .true.
-        end do
-
-        ! if not already chosen, see if it is the largest of
-        ! the remaining values
-
-        if (.not. exclude) then
-           if (a(i)>0. .and. (a(i)-a_max)>delmax) then
-              a_max = a(i)
-              iv(m)  = i
-           end if
-        end if
-     end do
-  end do
-
-end subroutine mkrank
 
 !-----------------------------------------------------------------------
 !BOP

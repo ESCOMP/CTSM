@@ -10,7 +10,6 @@ module SoilWaterMovementMod
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_sys_mod         , only : shr_sys_flush
-  use clm_instMod    , only : clm_fates
  
   !
   implicit none
@@ -262,7 +261,7 @@ contains
     !------------------------------------------------------------------------------
 
     associate(                                                         &
-      wa                 =>    soilhydrology_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
+      wa                 =>    waterstatebulk_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
       dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)    
       h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
       h2osoi_vol         =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
@@ -460,7 +459,7 @@ contains
     use clm_varcon                 , only : wimp,grav,hfus,tfrz
     use clm_varcon                 , only : e_ice,denh2o, denice
     use clm_varpar                 , only : nlevsoi, max_patch_per_col, nlevgrnd
-    use clm_time_manager           , only : get_step_size, get_nstep
+    use clm_time_manager           , only : get_step_size_real, get_nstep
     use column_varcon              , only : icol_roof, icol_road_imperv
     use clm_varctl                 , only : use_flexibleCN, use_hydrstress
     use TridiagonalMod             , only : Tridiagonal
@@ -582,7 +581,7 @@ contains
       ! Get time step
       
       nstep = get_nstep()
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
 
       ! Because the depths in this routine are in mm, use local
@@ -1048,7 +1047,7 @@ contains
     use clm_varctl           , only : iulog, use_hydrstress
     use clm_varcon           , only : denh2o, denice
     use clm_varpar           , only : nlevsoi
-    use clm_time_manager     , only : get_step_size, get_nstep
+    use clm_time_manager     , only : get_step_size_real, get_nstep
     use SoilStateType        , only : soilstate_type
     use SoilHydrologyType    , only : soilhydrology_type
     use TemperatureType      , only : temperature_type
@@ -1163,7 +1162,7 @@ contains
       ! Get time step
 
       nstep = get_nstep()
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! main spatial loop
       do fc = 1, num_hydrologyc
@@ -2012,7 +2011,7 @@ contains
     use shr_const_mod        , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
     use abortutils           , only : endrun
     use decompMod            , only : bounds_type
-    use clm_time_manager     , only : get_step_size
+    use clm_time_manager     , only : get_step_size_real
     use clm_varpar           , only : nlevsoi
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use SoilStateType        , only : soilstate_type
@@ -2057,7 +2056,7 @@ contains
 
     associate(&
          qcharge           =>    soilhydrology_inst%qcharge_col     , & ! Input:  [real(r8) (:)   ]  aquifer recharge rate (mm/s)                      
-         wa                => soilhydrology_inst%wa_col             , & ! Input:  [real(r8) (:)   ]  water in the unconfined aquifer (mm)              
+         wa                => waterstatebulk_inst%wa_col             , & ! Input:  [real(r8) (:)   ]  water in the unconfined aquifer (mm)              
          zwt               =>    soilhydrology_inst%zwt_col         , & ! Input:  [real(r8) (:)   ]  water table depth (m)                             
          sucsat            =>    soilstate_inst%sucsat_col          , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)                       
          watsat            =>    soilstate_inst%watsat_col          , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)  
@@ -2069,7 +2068,7 @@ contains
 
       ! Get time step
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! compute flux of water to aquifer
       do fc = 1, num_hydrologyc

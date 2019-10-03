@@ -15,7 +15,7 @@ module SoilBiogeochemDecompCascadeCNMod
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
-  use CNSharedParamsMod                  , only : CNParamsShareInst, anoxia_wtsat, nlev_soildecomp_standard 
+  use CNSharedParamsMod                  , only : CNParamsShareInst, nlev_soildecomp_standard 
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
@@ -224,6 +224,8 @@ contains
     !  initialize rate constants and decomposition pathways for the BGC model originally implemented in CLM-CN
     !  written by C. Koven based on original CLM4 decomposition cascade by P. Thornton
     !
+    ! !USES:
+    use SoilBiogeochemDecompCascadeConType, only : i_atm
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
@@ -250,7 +252,6 @@ contains
     integer :: i_soil2
     integer :: i_soil3
     integer :: i_soil4
-    integer :: i_atm
     integer :: i_l1s1
     integer :: i_l2s2
     integer :: i_l3s3
@@ -439,7 +440,6 @@ contains
       is_cellulose(i_soil4) = .false.
       is_lignin(i_soil4) = .false.
 
-      i_atm = 0  !! for terminal pools (i.e. 100% respiration)
       floating_cn_ratio_decomp_pools(i_atm) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_atm) = 'atmosphere'
       decomp_cascade_con%decomp_pool_name_history(i_atm) = 'atmosphere'
@@ -548,7 +548,7 @@ contains
      ! written by C. Koven based on original CLM4 decomposition cascade by P. Thornton
      !
      ! !USES:
-     use clm_time_manager, only : get_step_size
+     use clm_time_manager, only : get_step_size_real
      use clm_varcon      , only : secspday
      use clm_varpar      , only : i_cwd
      !
@@ -626,7 +626,7 @@ contains
        mino2lim = CNParamsShareInst%mino2lim
 
        ! set time steps
-       dt = real( get_step_size(), r8 )
+       dt = get_step_size_real()
        dtd = dt/secspday
 
        ! set initial base rates for decomposition mass loss (1/day)
@@ -770,17 +770,6 @@ contains
           end do
 
           if (use_lch4) then
-             if (anoxia_wtsat) then ! Adjust for saturated fraction if unfrozen.
-                do fc = 1,num_soilc
-                   c = filter_soilc(fc)
-                   if (alt_indx(c) >= nlev_soildecomp_standard .and. t_soisno(c,1) > SHR_CONST_TKFRZ) then
-                      w_scalar(c,1) = w_scalar(c,1)*(1._r8 - finundated(c)) + finundated(c)
-                   end if
-                end do
-             end if
-          end if
-
-          if (use_lch4) then
              ! Calculate ANOXIA
              if (anoxia) then
                 ! Check for anoxia w/o LCH4 now done in controlMod.
@@ -791,13 +780,7 @@ contains
 
                       if (j==1) o_scalar(c,:) = 0._r8
 
-                      if (.not. anoxia_wtsat) then
-                         o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * max(o2stress_unsat(c,j), mino2lim)
-                      else
-                         o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * &
-                              (max(o2stress_unsat(c,j), mino2lim)*(1._r8 - finundated(c)) + &
-                              max(o2stress_sat(c,j), mino2lim)*finundated(c) )
-                      end if
+                      o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * max(o2stress_unsat(c,j), mino2lim)
                    end do
                 end do
              else
@@ -852,11 +835,6 @@ contains
                 else
                    w_scalar(c,j) = 0._r8
                 end if
-                if (use_lch4) then
-                   if (anoxia_wtsat .and. t_soisno(c,j) > SHR_CONST_TKFRZ) then ! wet area will have w_scalar of 1 if unfrozen
-                      w_scalar(c,j) = w_scalar(c,j)*(1._r8 - finundated(c)) + finundated(c)
-                   end if
-                end if
              end do
           end do
 
@@ -871,12 +849,7 @@ contains
                 do fc = 1,num_soilc
                    c = filter_soilc(fc)
 
-                   if (.not. anoxia_wtsat) then
-                      o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
-                   else
-                      o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim) * (1._r8 - finundated(c)) + &
-                           max(o2stress_sat(c,j), mino2lim) * finundated(c)
-                   end if
+                   o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
                 end do
              end do
           else

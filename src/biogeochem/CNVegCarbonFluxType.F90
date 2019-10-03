@@ -263,7 +263,8 @@ module CNVegCarbonFluxType
      real(r8), pointer :: dwt_conv_cflux_dribbled_grc               (:)     ! (gC/m2/s) dwt_conv_cflux_grc dribbled evenly throughout the year
      real(r8), pointer :: dwt_wood_productc_gain_patch              (:)     ! (gC/m2/s) addition to wood product pools from landcover change; although this is a patch-level flux, it is expressed per unit GRIDCELL area
      real(r8), pointer :: dwt_crop_productc_gain_patch              (:)     ! (gC/m2/s) addition to crop product pools from landcover change; although this is a patch-level flux, it is expressed per unit GRIDCELL area
-     real(r8), pointer :: dwt_slash_cflux_col                       (:)     ! (gC/m2/s) conversion slash flux due to landcover change
+     real(r8), pointer :: dwt_slash_cflux_patch                     (:)     ! (gC/m2/s) conversion slash flux due to landcover change
+     real(r8), pointer :: dwt_slash_cflux_grc                       (:)     ! (gC/m2/s) dwt_slash_cflux_patch summed to the gridcell-level
      real(r8), pointer :: dwt_frootc_to_litr_met_c_col              (:,:)   ! (gC/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_frootc_to_litr_cel_c_col              (:,:)   ! (gC/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_frootc_to_litr_lig_c_col              (:,:)   ! (gC/m3/s) fine root to litter due to landcover change
@@ -629,7 +630,8 @@ contains
     allocate(this%harvest_c_to_litr_lig_c_col       (begc:endc,1:nlevdecomp_full)); this%harvest_c_to_litr_lig_c_col  (:,:)=nan
     allocate(this%harvest_c_to_cwdc_col             (begc:endc,1:nlevdecomp_full)); this%harvest_c_to_cwdc_col        (:,:)=nan
 
-    allocate(this%dwt_slash_cflux_col               (begc:endc))                  ; this%dwt_slash_cflux_col (:) =nan
+    allocate(this%dwt_slash_cflux_patch             (begp:endp))                  ; this%dwt_slash_cflux_patch        (:) =nan
+    allocate(this%dwt_slash_cflux_grc               (begg:endg))                  ; this%dwt_slash_cflux_grc          (:) =nan
     allocate(this%dwt_frootc_to_litr_met_c_col      (begc:endc,1:nlevdecomp_full)); this%dwt_frootc_to_litr_met_c_col (:,:)=nan
     allocate(this%dwt_frootc_to_litr_cel_c_col      (begc:endc,1:nlevdecomp_full)); this%dwt_frootc_to_litr_cel_c_col (:,:)=nan
     allocate(this%dwt_frootc_to_litr_lig_c_col      (begc:endc,1:nlevdecomp_full)); this%dwt_frootc_to_litr_lig_c_col (:,:)=nan
@@ -1695,17 +1697,17 @@ contains
         this%rr_patch(begp:endp) = spval
         call hist_addfld1d (fname='C13_RR', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 root respiration (fine root MR + total root GR)', &
-             ptr_patch=this%rr_patch)
+             ptr_patch=this%rr_patch, default='inactive')
 
         this%mr_patch(begp:endp) = spval
         call hist_addfld1d (fname='C13_MR', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 maintenance respiration', &
-             ptr_patch=this%mr_patch)
+             ptr_patch=this%mr_patch, default='inactive')
 
         this%gr_patch(begp:endp) = spval
         call hist_addfld1d (fname='C13_GR', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 total growth respiration', &
-             ptr_patch=this%gr_patch)
+             ptr_patch=this%gr_patch, default='inactive')
 
         this%ar_patch(begp:endp) = spval
         call hist_addfld1d (fname='C13_AR', units='gC13/m^2/s', &
@@ -1715,17 +1717,17 @@ contains
         this%npp_patch(begp:endp) = spval
         call hist_addfld1d (fname='C13_NPP', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 net primary production', &
-             ptr_patch=this%npp_patch)
+             ptr_patch=this%npp_patch, default='inactive')
 
         this%agnpp_patch(begp:endp) = spval
         call hist_addfld1d (fname='C13_AGNPP', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 aboveground NPP', &
-             ptr_patch=this%agnpp_patch)
+             ptr_patch=this%agnpp_patch, default='inactive')
 
         this%bgnpp_patch(begp:endp) = spval
         call hist_addfld1d (fname='C13_BGNPP', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 belowground NPP', &
-             ptr_patch=this%bgnpp_patch)
+             ptr_patch=this%bgnpp_patch, default='inactive')
 
         this%litfall_patch(begp:endp) = spval
         call hist_addfld1d (fname='C13_LITFALL', units='gC13/m^2/s', &
@@ -1735,7 +1737,7 @@ contains
         this%fire_closs_patch(begp:endp) = spval
         call hist_addfld1d (fname='C13_PFT_FIRE_CLOSS', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 total patch-level fire C loss', &
-             ptr_patch=this%fire_closs_patch)
+             ptr_patch=this%fire_closs_patch, default='inactive')
 
        this%m_leafc_to_litter_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_M_LEAFC_TO_LITTER', units='gC13/m^2/s', &
@@ -2010,12 +2012,12 @@ contains
        this%psnsun_to_cpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_PSNSUN_TO_CPOOL', units='gC13/m^2/s', &
             avgflag='A', long_name='C13 C fixation from sunlit canopy', &
-            ptr_patch=this%psnsun_to_cpool_patch)
+            ptr_patch=this%psnsun_to_cpool_patch, default='inactive')
 
        this%psnshade_to_cpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_PSNSHADE_TO_CPOOL', units='gC13/m^2/s', &
             avgflag='A', long_name='C13 C fixation from shaded canopy', &
-            ptr_patch=this%psnshade_to_cpool_patch)
+            ptr_patch=this%psnshade_to_cpool_patch, default='inactive')
 
        this%cpool_to_leafc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_CPOOL_TO_LEAFC', units='gC13/m^2/s', &
@@ -2518,12 +2520,12 @@ contains
        this%psnsun_to_cpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PSNSUN_TO_CPOOL', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 C fixation from sunlit canopy', &
-            ptr_patch=this%psnsun_to_cpool_patch)
+            ptr_patch=this%psnsun_to_cpool_patch, default='inactive')
 
        this%psnshade_to_cpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PSNSHADE_TO_CPOOL', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 C fixation from shaded canopy', &
-            ptr_patch=this%psnshade_to_cpool_patch)
+            ptr_patch=this%psnshade_to_cpool_patch, default='inactive')
 
        this%cpool_to_leafc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_CPOOL_TO_LEAFC', units='gC14/m^2/s', &
@@ -2748,17 +2750,17 @@ contains
        this%rr_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_RR', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 root respiration (fine root MR + total root GR)', &
-            ptr_patch=this%rr_patch)
+            ptr_patch=this%rr_patch, default='inactive')
 
        this%mr_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_MR', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 maintenance respiration', &
-            ptr_patch=this%mr_patch)
+            ptr_patch=this%mr_patch, default='inactive')
 
        this%gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_GR', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 total growth respiration', &
-            ptr_patch=this%gr_patch)
+            ptr_patch=this%gr_patch, default='inactive')
 
        this%ar_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_AR', units='gC14/m^2/s', &
@@ -2768,17 +2770,17 @@ contains
        this%npp_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_NPP', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 net primary production', &
-            ptr_patch=this%npp_patch)
+            ptr_patch=this%npp_patch, default='inactive')
 
        this%agnpp_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_AGNPP', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 aboveground NPP', &
-            ptr_patch=this%agnpp_patch)
+            ptr_patch=this%agnpp_patch, default='inactive')
 
        this%bgnpp_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_BGNPP', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 belowground NPP', &
-            ptr_patch=this%bgnpp_patch)
+            ptr_patch=this%bgnpp_patch, default='inactive')
 
        this%litfall_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LITFALL', units='gC14/m^2/s', &
@@ -2788,7 +2790,7 @@ contains
        this%fire_closs_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PFT_FIRE_CLOSS', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 total patch-level fire C loss', &
-            ptr_patch=this%fire_closs_patch)
+            ptr_patch=this%fire_closs_patch, default='inactive')
     endif
 
     !-------------------------------
@@ -2876,10 +2878,19 @@ contains
             '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
             ptr_patch=this%dwt_wood_productc_gain_patch, default='inactive')
 
-        this%dwt_slash_cflux_col(begc:endc) = spval
-        call hist_addfld1d (fname='DWT_SLASH_CFLUX', units='gC/m^2/s', &
-             avgflag='A', long_name='slash C flux to litter and CWD due to land use', &
-             ptr_col=this%dwt_slash_cflux_col)
+       this%dwt_slash_cflux_grc(begg:endg) = spval
+       call hist_addfld1d (fname='DWT_SLASH_CFLUX', units='gC/m^2/s', &
+            avgflag='A', &
+            long_name='slash C flux (to litter diagnostic only) (0 at all times except first timestep of year)', &
+            ptr_gcell=this%dwt_slash_cflux_grc)
+
+       this%dwt_slash_cflux_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DWT_SLASH_CFLUX_PATCH', units='gC/m^2/s', &
+            avgflag='A', &
+            long_name='patch-level slash C flux (to litter diagnostic only) ' // &
+            '(0 at all times except first timestep of year) ' // &
+            '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
+            ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        this%dwt_frootc_to_litr_met_c_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='DWT_FROOTC_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
@@ -3034,7 +3045,7 @@ contains
        call hist_addfld1d (fname='C13_DWT_CONV_CFLUX', units='gC13/m^2/s', &
             avgflag='A', long_name='C13 conversion C flux (immediate loss to atm) ' // &
             '(0 at all times except first timestep of year)', &
-            ptr_gcell=this%dwt_conv_cflux_grc)
+            ptr_gcell=this%dwt_conv_cflux_grc, default='inactive')
 
        this%dwt_conv_cflux_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DWT_CONV_CFLUX_PATCH', units='gC13/m^2/s', &
@@ -3048,12 +3059,21 @@ contains
        call hist_addfld1d (fname='C13_DWT_CONV_CFLUX_DRIBBLED', units='gC13/m^2/s', &
             avgflag='A', &
             long_name='C13 conversion C flux (immediate loss to atm), dribbled throughout the year', &
-            ptr_gcell=this%dwt_conv_cflux_dribbled_grc)
+            ptr_gcell=this%dwt_conv_cflux_dribbled_grc, default='inactive')
 
-       this%dwt_slash_cflux_col(begc:endc) = spval
-       call hist_addfld1d (fname='C13_DWT_SLASH_CFLUX', units='gC/m^2/s', &
-            avgflag='A', long_name='C13 slash C flux to litter and CWD due to land use', &
-            ptr_col=this%dwt_slash_cflux_col)
+       this%dwt_slash_cflux_grc(begg:endg) = spval
+       call hist_addfld1d (fname='C13_DWT_SLASH_CFLUX', units='gC13/m^2/s', &
+            avgflag='A', long_name='C13 slash C flux (to litter diagnostic only)' // &
+            '(0 at all times except first timestep of year)', &
+            ptr_gcell=this%dwt_slash_cflux_grc, default='inactive')
+
+       this%dwt_slash_cflux_patch(begp:endp) = spval
+       call hist_addfld1d (fname='C13_DWT_SLASH_CFLUX_PATCH', units='gC13/m^2/s', &
+            avgflag='A', &
+            long_name='patch-level C13 slash C flux (to litter diagnostic only) ' // &
+            '(0 at all times except first timestep of year) ' // &
+            '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
+            ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        this%dwt_frootc_to_litr_met_c_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='C13_DWT_FROOTC_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
@@ -3088,12 +3108,12 @@ contains
         this%sr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_SR', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 total soil respiration (HR + root resp)', &
-             ptr_col=this%sr_col)
+             ptr_col=this%sr_col, default='inactive')
 
         this%er_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_ER', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 total ecosystem respiration, autotrophic + heterotrophic', &
-             ptr_col=this%er_col)
+             ptr_col=this%er_col, default='inactive')
 
         this%litfire_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_LITFIRE', units='gC13/m^2/s', &
@@ -3113,17 +3133,24 @@ contains
         this%fire_closs_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_COL_FIRE_CLOSS', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 total column-level fire C loss', &
-             ptr_col=this%fire_closs_col)
+             ptr_col=this%fire_closs_col, default='inactive')
 
         this%nep_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_NEP', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 net ecosystem production, excludes fire flux, positive for sink', &
-             ptr_col=this%nep_col)
+             ptr_col=this%nep_col, default='inactive')
 
         this%nee_grc(begg:endg) = spval
         call hist_addfld1d (fname='C13_NEE', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 net ecosystem exchange of carbon, includes fire flux, positive for source', &
-             ptr_gcell=this%nee_grc)
+             ptr_gcell=this%nee_grc, default='inactive')
+
+        this%nbp_grc(begg:endg) = spval
+        call hist_addfld1d (fname='C13_NBP', units='gC13/m^2/s', &
+             avgflag='A', long_name='C13 net biome production, includes fire, landuse,'&
+             //' harvest and hrv_xsmrpool flux (latter smoothed over the year), positive for sink'&
+             //' (same as net carbon exchange between land and atmosphere)', &
+             ptr_gcell=this%nbp_grc)
 
     endif
 
@@ -3183,7 +3210,7 @@ contains
        call hist_addfld1d (fname='C14_DWT_CONV_CFLUX', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 conversion C flux (immediate loss to atm) ' // &
             '(0 at all times except first timestep of year)', &
-            ptr_gcell=this%dwt_conv_cflux_grc)
+            ptr_gcell=this%dwt_conv_cflux_grc, default='inactive')
 
        this%dwt_conv_cflux_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DWT_CONV_CFLUX_PATCH', units='gC14/m^2/s', &
@@ -3197,12 +3224,21 @@ contains
        call hist_addfld1d (fname='C14_DWT_CONV_CFLUX_DRIBBLED', units='gC14/m^2/s', &
             avgflag='A', &
             long_name='C14 conversion C flux (immediate loss to atm), dribbled throughout the year', &
-            ptr_gcell=this%dwt_conv_cflux_dribbled_grc)
+            ptr_gcell=this%dwt_conv_cflux_dribbled_grc, default='inactive')
 
-       this%dwt_slash_cflux_col(begc:endc) = spval
-       call hist_addfld1d (fname='C14_DWT_SLASH_CFLUX', units='gC/m^2/s', &
-            avgflag='A', long_name='C14 slash C flux to litter and CWD due to land use', &
-            ptr_col=this%dwt_slash_cflux_col)
+       this%dwt_slash_cflux_grc(begg:endg) = spval
+       call hist_addfld1d (fname='C14_DWT_SLASH_CFLUX', units='gC14/m^2/s', &
+            avgflag='A', long_name='C14 slash C flux (to litter diagnostic only)' // &
+            '(0 at all times except first timestep of year)', &
+            ptr_gcell=this%dwt_slash_cflux_grc, default='inactive')
+
+       this%dwt_slash_cflux_patch(begp:endp) = spval
+       call hist_addfld1d (fname='C14_DWT_SLASH_CFLUX_PATCH', units='gC14/m^2/s', &
+            avgflag='A', &
+            long_name='patch-level C14 slash C flux (to litter diagnostic only)' // &
+            '(0 at all times except first timestep of year) ' // &
+            '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
+            ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        this%dwt_frootc_to_litr_met_c_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='C14_DWT_FROOTC_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
@@ -3237,12 +3273,12 @@ contains
         this%sr_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_SR', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 total soil respiration (HR + root resp)', &
-             ptr_col=this%sr_col)
+             ptr_col=this%sr_col, default='inactive')
 
         this%er_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_ER', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 total ecosystem respiration, autotrophic + heterotrophic', &
-             ptr_col=this%er_col)
+             ptr_col=this%er_col, default='inactive')
 
         this%litfire_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_LITFIRE', units='gC14/m^2/s', &
@@ -3262,17 +3298,24 @@ contains
         this%fire_closs_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_COL_FIRE_CLOSS', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 total column-level fire C loss', &
-             ptr_col=this%fire_closs_col)
+             ptr_col=this%fire_closs_col, default='inactive')
 
         this%nep_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_NEP', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 net ecosystem production, excludes fire flux, positive for sink', &
-             ptr_col=this%nep_col)
+             ptr_col=this%nep_col, default='inactive')
 
         this%nee_grc(begg:endg) = spval
         call hist_addfld1d (fname='C14_NEE', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 net ecosystem exchange of carbon, includes fire flux, positive for source', &
-             ptr_gcell=this%nee_grc)
+             ptr_gcell=this%nee_grc, default='inactive')
+
+        this%nbp_grc(begg:endg) = spval
+        call hist_addfld1d (fname='C14_NBP', units='gC13/m^2/s', &
+             avgflag='A', long_name='C14 net biome production, includes fire, landuse,'&
+             //' harvest and hrv_xsmrpool flux (latter smoothed over the year), positive for sink'&
+             //' (same as net carbon exchange between land and atmosphere)', &
+             ptr_gcell=this%nbp_grc)
 
     endif
 
@@ -3350,7 +3393,6 @@ contains
        ! also initialize dynamic landcover fluxes so that they have
        ! real values on first timestep, prior to calling pftdyn_cnbal
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-          this%dwt_slash_cflux_col(c) = 0._r8
           do j = 1, nlevdecomp_full
              this%dwt_frootc_to_litr_met_c_col(c,j) = 0._r8
              this%dwt_frootc_to_litr_cel_c_col(c,j) = 0._r8
@@ -3951,10 +3993,7 @@ contains
        this%dwt_seedc_to_leaf_grc(g)        = 0._r8
        this%dwt_seedc_to_deadstem_grc(g)    = 0._r8
        this%dwt_conv_cflux_grc(g)           = 0._r8
-    end do
-
-    do c = bounds%begc,bounds%endc
-       this%dwt_slash_cflux_col(c)              = 0._r8
+       this%dwt_slash_cflux_grc(g)           = 0._r8
     end do
 
     do j = 1, nlevdecomp_full
@@ -3980,7 +4019,7 @@ contains
     ! Perform patch and column-level carbon summary calculations
     !
     ! !USES:
-    use clm_time_manager                   , only: get_step_size
+    use clm_time_manager                   , only: get_step_size_real
     use clm_varcon                         , only: secspday
     use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
     use subgridAveMod                      , only: p2c, c2g
@@ -4017,7 +4056,7 @@ contains
 
     ! calculate patch-level summary carbon fluxes and states
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     do fp = 1,num_soilp
        p = filter_soilp(fp)

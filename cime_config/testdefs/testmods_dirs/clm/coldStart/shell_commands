@@ -1,0 +1,3 @@
+#!/bin/bash
+./xmlchange CLM_FORCE_COLDSTART="on"
+

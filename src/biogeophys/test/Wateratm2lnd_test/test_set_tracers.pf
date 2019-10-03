@@ -1,0 +1,191 @@
+module test_set_tracers
+
+  ! Tests of Wateratm2lndType: routines that set tracers
+
+  use pfunit_mod
+  use Wateratm2lndType
+  use WaterInfoBulkType, only : water_info_bulk_type
+  use WaterInfoTracerType, only : water_info_tracer_type
+  use WaterTracerContainerType, only : water_tracer_container_type
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
+  use unittestSubgridMod, only : bounds, unittest_subgrid_teardown
+  use unittestFilterBuilderMod, only : filter_from_range
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestSetTracers
+     type(wateratm2lnd_type) :: wateratm2lnd_bulk
+     type(wateratm2lnd_type) :: wateratm2lnd_tracer
+     integer :: num_allc
+     integer, allocatable :: filter_allc(:)
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: setInputs1Col
+  end type TestSetTracers
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  ! ========================================================================
+  ! Helper routines
+  ! ========================================================================
+
+  subroutine setUp(this)
+    class(TestSetTracers), intent(inout) :: this
+    type(water_tracer_container_type) :: my_vars
+
+    call my_vars%init()
+
+    call setup_single_veg_patch(pft_type = 1)
+
+    call this%wateratm2lnd_bulk%Init( &
+         bounds = bounds, &
+         info = water_info_bulk_type(), &
+         tracer_vars = my_vars)
+
+    call this%wateratm2lnd_tracer%Init( &
+         bounds = bounds, &
+
+         info = water_info_tracer_type(&
+         tracer_name = 'foo', &
+         ratio = 0.456_r8, &
+         included_in_consistency_check = .false., &
+         communicated_with_coupler = .false.), &
+
+         tracer_vars = my_vars)
+
+    call filter_from_range(bounds%begc, bounds%endc, this%num_allc, this%filter_allc)
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestSetTracers), intent(inout) :: this
+
+    call this%wateratm2lnd_bulk%Clean()
+    call this%wateratm2lnd_tracer%Clean()
+    call unittest_subgrid_teardown()
+  end subroutine tearDown
+
+  subroutine setInputs1Col(this, &
+       bulk_rain_not_downscaled, bulk_snow_not_downscaled, &
+       tracer_rain_not_downscaled, tracer_snow_not_downscaled, &
+       bulk_rain_to_snow, bulk_snow_to_rain)
+    class(TestSetTracers), intent(inout) :: this
+    real(r8), intent(in) :: bulk_rain_not_downscaled
+    real(r8), intent(in) :: bulk_snow_not_downscaled
+    real(r8), intent(in) :: tracer_rain_not_downscaled
+    real(r8), intent(in) :: tracer_snow_not_downscaled
+    real(r8), intent(in) :: bulk_rain_to_snow
+    real(r8), intent(in) :: bulk_snow_to_rain
+
+    this%wateratm2lnd_bulk%forc_rain_not_downscaled_grc(bounds%begg) = bulk_rain_not_downscaled
+    this%wateratm2lnd_bulk%forc_snow_not_downscaled_grc(bounds%begg) = bulk_snow_not_downscaled
+    this%wateratm2lnd_tracer%forc_rain_not_downscaled_grc(bounds%begg) = tracer_rain_not_downscaled
+    this%wateratm2lnd_tracer%forc_snow_not_downscaled_grc(bounds%begg) = tracer_snow_not_downscaled
+    this%wateratm2lnd_bulk%rain_to_snow_conversion_col(bounds%begc) = bulk_rain_to_snow
+    this%wateratm2lnd_bulk%snow_to_rain_conversion_col(bounds%begc) = bulk_snow_to_rain
+
+    ! These aren't used for the unit tests here, but need to be set to something reasonable
+    this%wateratm2lnd_bulk%forc_q_not_downscaled_grc(bounds%begg) = 0._r8
+    this%wateratm2lnd_tracer%forc_q_not_downscaled_grc(bounds%begg) = 0._r8
+    this%wateratm2lnd_bulk%forc_q_downscaled_col(bounds%begc) = 0._r8
+
+  end subroutine setInputs1Col
+
+  ! ========================================================================
+  ! Begin tests
+  ! ========================================================================
+
+  @Test
+  subroutine downscaled_precip_noConversion(this)
+    ! Test downscaled rain and snow when there is no rain-snow conversion
+    class(TestSetTracers), intent(inout) :: this
+
+    call this%setInputs1Col( &
+         bulk_rain_not_downscaled = 10._r8, &
+         bulk_snow_not_downscaled = 90._r8, &
+         tracer_rain_not_downscaled = 10._r8, &
+         tracer_snow_not_downscaled = 9._r8, &
+         bulk_rain_to_snow = 0._r8, &
+         bulk_snow_to_rain = 0._r8)
+
+    call this%wateratm2lnd_tracer%SetDownscaledTracers(bounds, &
+         this%num_allc, this%filter_allc, &
+         this%wateratm2lnd_bulk)
+
+    @assertEqual(10._r8, this%wateratm2lnd_tracer%forc_rain_downscaled_col(bounds%begc))
+    @assertEqual(9._r8, this%wateratm2lnd_tracer%forc_snow_downscaled_col(bounds%begc))
+  end subroutine downscaled_precip_noConversion
+
+  @Test
+  subroutine downscaled_precip_snowToRain(this)
+    ! Test downscaled rain and snow when there is snow-to-rain conversion
+    class(TestSetTracers), intent(inout) :: this
+
+    call this%setInputs1Col( &
+         bulk_rain_not_downscaled = 10._r8, &
+         bulk_snow_not_downscaled = 90._r8, &
+         tracer_rain_not_downscaled = 10._r8, &
+         tracer_snow_not_downscaled = 9._r8, &
+         bulk_rain_to_snow = 0._r8, &
+         bulk_snow_to_rain = 40._r8)
+
+    call this%wateratm2lnd_tracer%SetDownscaledTracers(bounds, &
+         this%num_allc, this%filter_allc, &
+         this%wateratm2lnd_bulk)
+
+    ! A conversion of 40 in the bulk results with 4 for the tracer, since
+    ! tracer_snow/bulk_snow = 1/10
+    @assertEqual(14._r8, this%wateratm2lnd_tracer%forc_rain_downscaled_col(bounds%begc), tolerance=tol)
+    @assertEqual(5._r8, this%wateratm2lnd_tracer%forc_snow_downscaled_col(bounds%begc), tolerance=tol)
+  end subroutine downscaled_precip_snowToRain
+
+  @Test
+  subroutine downscaled_precip_rainToSnow(this)
+    ! Test downscaled rain and snow when there is rain-to-snow conversion
+    class(TestSetTracers), intent(inout) :: this
+
+    call this%setInputs1Col( &
+         bulk_rain_not_downscaled = 90._r8, &
+         bulk_snow_not_downscaled = 10._r8, &
+         tracer_rain_not_downscaled = 9._r8, &
+         tracer_snow_not_downscaled = 10._r8, &
+         bulk_rain_to_snow = 40._r8, &
+         bulk_snow_to_rain = 0._r8)
+
+    call this%wateratm2lnd_tracer%SetDownscaledTracers(bounds, &
+         this%num_allc, this%filter_allc, &
+         this%wateratm2lnd_bulk)
+
+    ! A conversion of 40 in the bulk results with 4 for the tracer, since
+    ! tracer_snow/bulk_snow = 1/10
+    @assertEqual(5._r8, this%wateratm2lnd_tracer%forc_rain_downscaled_col(bounds%begc), tolerance=tol)
+    @assertEqual(14._r8, this%wateratm2lnd_tracer%forc_snow_downscaled_col(bounds%begc), tolerance=tol)
+  end subroutine downscaled_precip_rainToSnow
+
+  @Test
+  subroutine downscaled_precip_rainToZero(this)
+    ! Test downscaled rain and snow when all rain is converted to snow
+    class(TestSetTracers), intent(inout) :: this
+
+    call this%setInputs1Col( &
+         bulk_rain_not_downscaled = 90._r8, &
+         bulk_snow_not_downscaled = 10._r8, &
+         tracer_rain_not_downscaled = 9._r8, &
+         tracer_snow_not_downscaled = 10._r8, &
+         bulk_rain_to_snow = 90._r8 - 1.e-14_r8, &
+         bulk_snow_to_rain = 0._r8)
+
+    call this%wateratm2lnd_tracer%SetDownscaledTracers(bounds, &
+         this%num_allc, this%filter_allc, &
+         this%wateratm2lnd_bulk)
+
+    ! tracer rain should end up EXACTLY 0 even if there are small roundoff errors in rain_to_snow
+    @assertEqual(0._r8, this%wateratm2lnd_tracer%forc_rain_downscaled_col(bounds%begc))
+    @assertEqual(19._r8, this%wateratm2lnd_tracer%forc_snow_downscaled_col(bounds%begc), tolerance=tol)
+  end subroutine downscaled_precip_rainToZero
+
+end module test_set_tracers

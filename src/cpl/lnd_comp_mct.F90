@@ -43,7 +43,8 @@ contains
     use shr_kind_mod     , only : shr_kind_cl
     use abortutils       , only : endrun
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, set_nextsw_cday
-    use clm_initializeMod, only : initialize1, initialize2, lnd2atm_inst, lnd2glc_inst
+    use clm_initializeMod, only : initialize1, initialize2
+    use clm_instMod      , only : water_inst, lnd2atm_inst, lnd2glc_inst
     use clm_varctl       , only : finidat,single_column, clm_varctl_set, iulog, noland
     use clm_varctl       , only : inst_index, inst_suffix, inst_name
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
@@ -248,7 +249,7 @@ contains
 
     ! Create land export state 
 
-    call lnd_export(bounds, lnd2atm_inst, lnd2glc_inst, l2x_l%rattr)
+    call lnd_export(bounds, water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, l2x_l%rattr)
 
     ! Fill in infodata settings
 
@@ -259,7 +260,7 @@ contains
 
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
     call set_nextsw_cday(nextsw_cday)
-    call lnd_handle_resume( infodata )
+    call lnd_handle_resume( cdata_l )
 
     ! Reset shr logging to original values
 
@@ -286,7 +287,7 @@ contains
     !
     ! !USES:
     use shr_kind_mod    ,  only : r8 => shr_kind_r8
-    use clm_initializeMod, only : lnd2atm_inst, atm2lnd_inst, lnd2glc_inst, glc2lnd_inst
+    use clm_instMod     ,  only : water_inst, lnd2atm_inst, atm2lnd_inst, lnd2glc_inst, glc2lnd_inst
     use clm_driver      ,  only : clm_drv
     use clm_time_manager,  only : get_curr_date, get_nstep, get_curr_calday, get_step_size
     use clm_time_manager,  only : advance_timestep, set_nextsw_cday,update_rad_dtime
@@ -377,7 +378,7 @@ contains
     dtime = get_step_size()
 
     ! Handle pause/resume signals from coupler
-    call lnd_handle_resume( infodata )
+    call lnd_handle_resume( cdata_l )
 
     write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync,mon_sync,day_sync,tod_sync
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
@@ -402,7 +403,8 @@ contains
          x2l = x2l_l%rattr, &
          glc_present = glc_present, &
          atm2lnd_inst = atm2lnd_inst, &
-         glc2lnd_inst = glc2lnd_inst)
+         glc2lnd_inst = glc2lnd_inst, &
+         wateratm2lndbulk_inst = water_inst%wateratm2lndbulk_inst)
     call t_stopf ('lc_lnd_import')
 
     ! Use infodata to set orbital values if updated mid-run
@@ -459,7 +461,7 @@ contains
        ! Create l2x_l export state - add river runoff input to l2x_l if appropriate
        
        call t_startf ('lc_lnd_export')
-       call lnd_export(bounds, lnd2atm_inst, lnd2glc_inst, l2x_l%rattr)
+       call lnd_export(bounds, water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, l2x_l%rattr)
        call t_stopf ('lc_lnd_export')
 
        ! Advance clm time step
@@ -661,35 +663,24 @@ contains
 
   !====================================================================================
 
-  subroutine lnd_handle_resume( infodata )
+  subroutine lnd_handle_resume( cdata_l )
     !
     ! !DESCRIPTION:
     ! Handle resume signals for Data Assimilation (DA)
     !
     ! !USES:
-    use shr_kind_mod     , only : shr_kind_cl
-    use seq_infodata_mod , only : seq_infodata_type, seq_infodata_GetData
     use clm_time_manager , only : update_DA_nstep
-    use seq_comm_mct     , only : num_inst_lnd
-    use clm_varctl       , only : iulog
-    use clm_varctl       , only : inst_index
+    use seq_cdata_mod    , only : seq_cdata, seq_cdata_setptrs
     implicit none
     ! !ARGUMENTS:
-    type(seq_infodata_type), intent(IN) :: infodata     ! CESM driver level info data
+    type(seq_cdata),            intent(inout) :: cdata_l          ! Input land-model driver data
     ! !LOCAL VARIABLES:
-    character(len=SHR_KIND_CL) :: lnd_resume(num_inst_lnd) ! land resume file (for data assimulation)
     logical :: resume_from_data_assim                      ! flag if we are resuming after data assimulation was done
     !---------------------------------------------------------------------------
 
-    call seq_infodata_GetData(infodata, lnd_resume=lnd_resume )
-    ! If lnd_resume is blank, restart file wasn't modified
-    if ( len_trim(lnd_resume(min(num_inst_lnd,inst_index))) == 0 )then
-       resume_from_data_assim = .false.
-    ! Otherwise restart was modified and we are resuming from data assimulation
-    else
-       resume_from_data_assim = .true.
-       write(iulog,*) 'resume_from_DA ', resume_from_data_assim
-    end if
+    ! Check to see if restart was modified and we are resuming from data
+    ! assimilation
+    call seq_cdata_setptrs(cdata_l, post_assimilation=resume_from_data_assim)
     if ( resume_from_data_assim ) call update_DA_nstep()
  
   end subroutine lnd_handle_resume

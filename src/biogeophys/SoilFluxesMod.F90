@@ -45,7 +45,7 @@ contains
     ! Update surface fluxes based on the new ground temperature
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use clm_varcon       , only : hvap, cpair, grav, vkc, tfrz, sb 
     use landunit_varcon  , only : istsoil, istcrop
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
@@ -132,7 +132,7 @@ contains
          qflx_evap_soi           => waterfluxbulk_inst%qflx_evap_soi_patch      , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
          qflx_evap_veg           => waterfluxbulk_inst%qflx_evap_veg_patch      , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)
          qflx_tran_veg           => waterfluxbulk_inst%qflx_tran_veg_patch      , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
-         qflx_evap_tot           => waterfluxbulk_inst%qflx_evap_tot_patch      , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+         qflx_evap_tot           => waterfluxbulk_inst%qflx_evap_tot_patch      , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
          qflx_evap_grnd          => waterfluxbulk_inst%qflx_evap_grnd_patch     , & ! Output: [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
          qflx_sub_snow           => waterfluxbulk_inst%qflx_sub_snow_patch      , & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
          qflx_dew_snow           => waterfluxbulk_inst%qflx_dew_snow_patch      , & ! Output: [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
@@ -167,7 +167,7 @@ contains
 
       ! Get step size
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       call t_startf('bgp2_loop_1')
       do fc = 1,num_nolakec

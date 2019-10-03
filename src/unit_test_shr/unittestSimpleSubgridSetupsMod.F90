@@ -21,7 +21,7 @@ module unittestSimpleSubgridSetupsMod
   ! Create a grid that has a single gridcell with a single vegetated patch
   public :: setup_single_veg_patch
 
-  ! Create a grid that has a single gridcell with N vegetated patches
+  ! Create a grid that has a single gridcell with N vegetated patches on one column
   public :: setup_n_veg_patches
 
   ! Create a grid that has a single gridcell with one landunit of a given type with N

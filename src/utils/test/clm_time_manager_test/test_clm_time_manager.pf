@@ -9,6 +9,7 @@ module test_clm_time_manager
   use unittestTimeManagerMod, only : &
        set_date => unittest_timemgr_set_curr_date, &
        set_nstep => unittest_timemgr_set_nstep
+  use unittestUtils  , only : endrun_msg
 
   implicit none
   save
@@ -219,5 +220,157 @@ contains
     @assertEqual( 1, get_nstep_since_startup_or_lastDA_restart_or_pause() )
 
   end subroutine check_DA_nstep
+
+  @Test
+  subroutine check_local_time(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    integer :: secs
+    real(r8) :: londeg
+    integer  :: expected
+
+    ! Check for local noon at Greenich
+    londeg = 0.0_r8
+    secs = 3600*12
+    call set_date(yr=2, mon=3, day=1, tod=secs)
+    expected = secs
+    @assertEqual( expected, get_local_time( londeg ) )
+    londeg = 360.0_r8
+    @assertEqual( expected, get_local_time( londeg ) )
+
+    ! Check for local noon on otherside of the world
+    secs = 0
+    londeg = 180.0_r8
+    call set_date(yr=2, mon=3, day=1, tod=secs )
+    @assertEqual( expected, get_local_time( londeg ) )
+    londeg = -180.0_r8
+    @assertEqual( expected, get_local_time( londeg ) )
+  end subroutine check_local_time
+
+  @Test
+  subroutine compare_local_time(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    integer :: secs
+    real(r8) :: londeg
+
+    londeg = 0.0_r8
+    do while ( londeg <= 360.0_r8 )
+       londeg = londeg + 0.1_r8
+       ! Start at 0 Z
+       secs = 0
+       call set_date(yr=1, mon=1, day=1, tod=secs)
+       do while ( .not. is_end_curr_year() )
+          @assertEqual( get_local_time( londeg, starttime=0 ), get_local_timestep_time( londeg ) )
+          call advance_timestep()
+       end do
+    end do
+
+  end subroutine compare_local_time
+
+  @Test
+  subroutine check_local_time_woffset(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    integer :: secs
+    real(r8) :: londeg
+    integer  :: expected
+
+    ! Check for local noon at Greenich for 1 time step ahead
+    londeg = 0.0_r8
+    secs = 3600*12 + dtime
+    call set_date(yr=2018, mon=9, day=3, tod=secs)
+    expected = secs - dtime
+    @assertEqual( expected, get_local_time( londeg, offset=-dtime ) )
+    londeg = 360.0_r8
+    @assertEqual( expected, get_local_time( londeg, offset=-dtime ) )
+  end subroutine check_local_time_woffset
+
+
+  @Test
+  subroutine check_near_local_noon(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    integer :: secs
+    real(r8) :: londeg
+
+    ! Check for local noon at Greenich will be true from 11 to 1pm
+    londeg = 0.0_r8
+    secs = 3600*11
+    call set_date(yr=2, mon=3, day=1, tod=secs)
+    @assertTrue(  is_near_local_noon( londeg, deltasec=3600 ) )
+    secs = 3600*12
+    call set_date(yr=2, mon=2, day=2, tod=secs)
+    @assertTrue(  is_near_local_noon( londeg, deltasec=3600 ) )
+    secs = 3600*13
+    call set_date(yr=2, mon=1, day=10, tod=secs)
+    @assertTrue(  is_near_local_noon( londeg, deltasec=3600 ) )
+
+    ! anything before or after will be False
+    secs =0
+    call set_date(yr=2, mon=2, day=19, tod=secs)
+    @assertFalse(  is_near_local_noon( londeg, deltasec=3600 ) )
+    secs = 3600*11 - 1
+    call set_date(yr=2, mon=4, day=23, tod=secs)
+    @assertFalse(  is_near_local_noon( londeg, deltasec=3600 ) )
+    secs = 3600*13 + 1
+    call set_date(yr=2, mon=6, day=30, tod=secs)
+    @assertFalse(  is_near_local_noon( londeg, deltasec=3600 ) )
+    secs = 3600*24 - 1
+    call set_date(yr=2, mon=12, day=31, tod=secs)
+    @assertFalse(  is_near_local_noon( londeg, deltasec=3600 ) )
+  end subroutine check_near_local_noon
+
+  @Test
+  subroutine bad_deltasec(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    character(len=256) :: expected_msg
+    real(r8) :: londeg
+    integer :: secs
+    logical :: check
+
+    londeg = 0.0_r8
+    secs = get_local_time( londeg )
+    secs = 3600*24 - 1
+    call set_date(yr=2, mon=12, day=31, tod=secs)
+    check = is_near_local_noon( londeg, deltasec=3600*12+1 )
+    expected_msg = endrun_msg( &
+          "ERROR: deltasec must be less than 12 hours" )
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine bad_deltasec
+
+  @Test
+  subroutine bad_neglontolocal_time(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    character(len=256) :: expected_msg
+    real(r8) :: londeg
+    integer :: secs
+
+    londeg = -200.0_r8
+    secs = get_local_time( londeg )
+    expected_msg = endrun_msg( &
+          "ERROR: londeg must be greater than -180" )
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine bad_neglontolocal_time
+
+  @Test
+  subroutine bad_hilontolocal_time(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    character(len=256) :: expected_msg
+    real(r8) :: londeg
+    integer :: secs
+
+    londeg = 400.0_r8
+    secs = get_local_time( londeg )
+    expected_msg = endrun_msg( &
+          "ERROR: londeg must be less than 360" )
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine bad_hilontolocal_time
 
 end module test_clm_time_manager

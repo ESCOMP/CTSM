@@ -27,6 +27,7 @@ module CanopyTemperatureMod
   use SoilStateType        , only : soilstate_type
   use TemperatureType      , only : temperature_type
   use WaterFluxBulkType        , only : waterfluxbulk_type
+  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
   use WaterStateBulkType       , only : waterstatebulk_type
   use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
   use LandunitType         , only : lun                
@@ -39,16 +40,46 @@ module CanopyTemperatureMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyTemperature  
+  public :: readParams
+
+  type, private :: params_type
+      real(r8) :: zsno  ! Momentum roughness length for snow (m)
+      real(r8) :: zlnd  ! Momentum roughness length for soil, glacier, wetland (m)
+  end type params_type
+  type(params_type), private ::  params_inst
   !------------------------------------------------------------------------------
 
 contains
+
+  !------------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_CanopyTemperature'
+    !--------------------------------------------------------------------
+
+    ! Momentum roughness length for snow (m)
+    call readNcdioScalar(ncid, 'zsno', subname, params_inst%zsno)
+    ! Momentum roughness length for soil, glacier, wetland (m)
+    call readNcdioScalar(ncid, 'zlnd', subname, params_inst%zlnd)
+
+   end subroutine readParams
 
   !------------------------------------------------------------------------------
   subroutine CanopyTemperature(bounds, &
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
        clm_fates, &
        atm2lnd_inst, canopystate_inst, soilstate_inst, frictionvel_inst, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, energyflux_inst, temperature_inst )
+       waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, &
+       wateratm2lndbulk_inst, energyflux_inst, temperature_inst )
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of leaf temperature
@@ -73,7 +104,7 @@ contains
     !
     ! !USES:
     use QSatMod            , only : QSat
-    use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, zlnd, zsno, tfrz, spval 
+    use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, tfrz, spval 
     use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
     use column_varcon      , only : icol_road_imperv, icol_road_perv
     use landunit_varcon    , only : istice_mec, istwet, istsoil, istdlak, istcrop, istdlak
@@ -96,6 +127,7 @@ contains
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type)   , intent(inout) :: wateratm2lndbulk_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(temperature_type) , intent(inout) :: temperature_inst
     !
@@ -139,7 +171,7 @@ contains
          forc_hgt_u       =>    atm2lnd_inst%forc_hgt_u_grc           , & ! Input:  [real(r8) (:)   ] observational height of wind [m]         
          forc_hgt_q       =>    atm2lnd_inst%forc_hgt_q_grc           , & ! Input:  [real(r8) (:)   ] observational height of specific humidity [m]
          forc_pbot        =>    atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ] atmospheric pressure (Pa)                
-         forc_q           =>    atm2lnd_inst%forc_q_downscaled_col    , & ! Input:  [real(r8) (:)   ] atmospheric specific humidity (kg/kg)    
+         forc_q           =>    wateratm2lndbulk_inst%forc_q_downscaled_col    , & ! Input:  [real(r8) (:)   ] atmospheric specific humidity (kg/kg)    
          forc_t           =>    atm2lnd_inst%forc_t_downscaled_col    , & ! Input:  [real(r8) (:)   ] atmospheric temperature (Kelvin)         
          forc_th          =>    atm2lnd_inst%forc_th_downscaled_col   , & ! Input:  [real(r8) (:)   ] atmospheric potential temperature (Kelvin)
 
@@ -381,9 +413,9 @@ contains
          ! underneath canopy, wetlands, etc.)
 
          if (frac_sno(c) > 0._r8) then
-            z0mg(c) = zsno
+            z0mg(c) = params_inst%zsno
          else
-            z0mg(c) = zlnd
+            z0mg(c) = params_inst%zlnd
          end if
          z0hg(c) = z0mg(c)            ! initial set only
          z0qg(c) = z0mg(c)            ! initial set only

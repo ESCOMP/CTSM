@@ -1,0 +1,65 @@
+!----------------------------------------------------------------------------------
+! Users should add all user specific namelist changes below in the form of 
+! namelist_var = new_namelist_value 
+!
+! EXCEPTIONS: 
+! Set use_cndv           by the compset you use and the CLM_BLDNML_OPTS -dynamic_vegetation setting
+! Set use_vichydro       by the compset you use and the CLM_BLDNML_OPTS -vichydro           setting
+! Set use_cn             by the compset you use and CLM_BLDNML_OPTS -bgc  setting
+! Set use_crop           by the compset you use and CLM_BLDNML_OPTS -crop setting
+! Set spinup_state       by the CLM_BLDNML_OPTS -bgc_spinup      setting
+! Set co2_ppmv           with CCSM_CO2_PPMV                      option
+! Set dtime              with L_NCPL                             option
+! Set fatmlndfrc         with LND_DOMAIN_PATH/LND_DOMAIN_FILE    options
+! Set finidat            with RUN_REFCASE/RUN_REFDATE/RUN_REFTOD options for hybrid or branch cases
+!                        (includes $inst_string for multi-ensemble cases)
+! Set maxpatch_glcmec    with GLC_NEC                            option
+! Set glc_do_dynglacier  with GLC_TWO_WAY_COUPLING               env variable
+!----------------------------------------------------------------------------------
+
+!----------------------------------------------------------------------------------
+! Settings from output_base
+!----------------------------------------------------------------------------------
+
+! h0 stream (monthly average, gridcell-level)
+! h0 stream ICE variables and other variables inactive by default (monthly average, gridcell-level)
+! Emon, Lmon, LIMon
+hist_mfilt(1) = 1
+hist_dov2xy(1) = .true.
+hist_nhtfrq(1) = 0
+hist_type1d_pertape(1) = ' '
+hist_fexcl1 += 'PCT_GLC_MEC','PCT_NAT_PFT'
+hist_fincl1 += 'EFLX_LH_TOT_ICE', 'FIRE_ICE', 'FLDS_ICE', 'FSH_ICE', 'FSNO_ICE', 'FSR_ICE', 'QFLX_SUB_SNOW_ICE', 'QRUNOFF_ICE', 'QSNOFRZ_ICE', 'QSNOMELT_ICE', 'RAIN_ICE', 'SNOW_ICE', 'SNOWICE_ICE', 'SNOWLIQ_ICE', 'SNOTXMASS_ICE', 'TG_ICE', 'TOPO_COL_ICE', 'TSA_ICE', 'TSOI_ICE'
+
+! h1 stream (monthly average, finest sub-grid)
+! Emon, Lmon 
+hist_mfilt(2) = 1
+hist_dov2xy(2) = .false.
+hist_nhtfrq(2) = 0
+hist_type1d_pertape(2) = ' '
+hist_fincl2 += 'TLAI', 'TSA','TREFMNAV','TREFMXAV', 'BTRANMN', 'Vcmx25Z', 'FSH', 'VEGWP', 'FCTR', 'FCEV', 'FGEV', 'FIRE', 'FSR', 'FIRA', 'FSA', 'GSSUNLN', 'GSSHALN', 'TSKIN'
+
+! h2 stream (monthly average, landunit-level)
+! Emon
+hist_mfilt(3) = 1
+hist_dov2xy(3) = .false.
+hist_nhtfrq(3) = 0
+hist_type1d_pertape(3) = 'LAND'
+hist_fincl3 += 'FSR', 'H2OSNO', 'Q2M', 'SNOWDP', 'TSA', 'TREFMNAV', 'TREFMXAV', 'TG', 'QRUNOFF', 'FSH', 'FIRE', 'FIRA', 'FGR', 'EFLX_LH_TOT', 'RH2M', 'TLAI', 'SOILWATER_10CM', 'TOTSOILLIQ', 'TOTSOILICE', 'U10', 'TSOI_10CM', 'QIRRIG_FROM_SURFACE', 'URBAN_HEAT', 'WASTEHEAT', 'TSKIN'
+
+! h3 stream (yearly average, gridcell-level)
+! Eyr
+hist_mfilt(4) = 1
+hist_dov2xy(4) = .true.
+hist_nhtfrq(4) = -8760
+hist_type1d_pertape(4) = ' '
+hist_fincl4 += 'PCT_GLC_MEC', 'QICE_FORC', 'TSRF_FORC', 'TOPO_FORC', 'PCT_NAT_PFT','PCT_LANDUNIT','FSNO_ICE'
+
+! h4 stream (yearly average, landunit-level)
+! Eyr landuse tiles
+! (No fields in base, but other usermods add to this stream)
+hist_mfilt(5) = 1
+hist_dov2xy(5) = .false.
+hist_nhtfrq(5) = -8760
+hist_type1d_pertape(5) = 'LAND'
+

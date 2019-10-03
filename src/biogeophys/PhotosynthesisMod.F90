@@ -80,11 +80,15 @@ module  PhotosynthesisMod
   ! !PUBLIC VARIABLES:
 
   type :: photo_params_type
+     real(r8) :: act25  ! Rubisco activity at 25 C (umol CO2/gRubisco/s)
+     real(r8) :: fnr  ! Mass ratio of total Rubisco molecular mass to nitrogen in Rubisco (gRubisco/gN in Rubisco)
+     real(r8) :: cp25_yr2000  ! CO2 compensation point at 25°C at present day O2 (mol/mol)
+     real(r8) :: kc25_coef  ! Michaelis-Menten const. at 25°C for CO2 (unitless)
+     real(r8) :: ko25_coef  ! Michaelis-Menten const. at 25°C for O2 (unitless)
      real(r8), allocatable, public  :: krmax              (:)
      real(r8), allocatable, private :: kmax               (:,:)
      real(r8), allocatable, private :: psi50              (:,:)
      real(r8), allocatable, private :: ck                 (:,:)
-     real(r8), allocatable, public  :: psi_soil_ref       (:)
      real(r8), allocatable, private :: lmr_intercept_atkin(:)
   contains
      procedure, private :: allocParams
@@ -405,41 +409,41 @@ contains
        this%c13_psnsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_PSNSUN', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C13 sunlit leaf photosynthesis', &
-            ptr_patch=this%c13_psnsun_patch)
+            ptr_patch=this%c13_psnsun_patch, default='inactive')
 
        this%c13_psnsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_PSNSHA', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C13 shaded leaf photosynthesis', &
-            ptr_patch=this%c13_psnsha_patch)
+            ptr_patch=this%c13_psnsha_patch, default='inactive')
     end if
 
     if ( use_c14 ) then
        this%c14_psnsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PSNSUN', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C14 sunlit leaf photosynthesis', &
-            ptr_patch=this%c14_psnsun_patch)
+            ptr_patch=this%c14_psnsun_patch, default='inactive')
 
        this%c14_psnsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PSNSHA', units='umolCO2/m^2/s', &
             avgflag='A', long_name='C14 shaded leaf photosynthesis', &
-            ptr_patch=this%c14_psnsha_patch)
+            ptr_patch=this%c14_psnsha_patch, default='inactive')
     end if
 
     if ( use_c13 ) then
        this%rc13_canair_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_CANAIR', units='proportion', &
             avgflag='A', long_name='C13/C(12+13) for canopy air', &
-            ptr_patch=this%rc13_canair_patch)
+            ptr_patch=this%rc13_canair_patch, default='inactive')
 
        this%rc13_psnsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_PSNSUN', units='proportion', &
             avgflag='A', long_name='C13/C(12+13) for sunlit photosynthesis', &
-            ptr_patch=this%rc13_psnsun_patch)
+            ptr_patch=this%rc13_psnsun_patch, default='inactive')
 
        this%rc13_psnsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_PSNSHA', units='proportion', &
             avgflag='A', long_name='C13/C(12+13) for shaded photosynthesis', &
-            ptr_patch=this%rc13_psnsha_patch)
+            ptr_patch=this%rc13_psnsha_patch, default='inactive')
     endif
 
     ! Canopy physiology
@@ -613,7 +617,6 @@ contains
     allocate( this%kmax        (0:mxpft,nvegwcs) )  ; this%kmax(:,:)       = nan
     allocate( this%psi50       (0:mxpft,nvegwcs) )  ; this%psi50(:,:)      = nan
     allocate( this%ck          (0:mxpft,nvegwcs) )  ; this%ck(:,:)         = nan
-    allocate( this%psi_soil_ref(0:mxpft) )          ; this%psi_soil_ref(:) = nan
 
     if ( use_hydrstress .and. nvegwcs /= 4 )then
        call endrun(msg='Error:: the Plant Hydraulics Stress methodology is for the spacA function is hardcoded for nvegwcs==4' &
@@ -627,6 +630,7 @@ contains
     !
     ! !USES:
     use ncdio_pio , only : file_desc_t,ncd_io
+    use paramUtilMod, only: readNcdioScalar
     implicit none
 
     ! !ARGUMENTS:
@@ -651,10 +655,6 @@ contains
     call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%krmax=temp1d
-    tString = "psi_soil_ref"
-    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%psi_soil_ref=temp1d
     tString = "lmr_intercept_atkin"
     call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -671,6 +671,19 @@ contains
     call ncd_io(varname=trim(tString),data=temp2d, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%ck=temp2d
+
+    ! read in the scalar parameters
+
+    ! Michaelis-Menten constant at 25°C for O2 (unitless)
+    call readNcdioScalar(ncid, 'ko25_coef', subname, params_inst%ko25_coef)
+    ! Michaelis-Menten constant at 25°C for CO2 (unitless)
+    call readNcdioScalar(ncid, 'kc25_coef', subname, params_inst%kc25_coef)
+    ! CO2 compensation point at 25°C at present day O2 levels
+    call readNcdioScalar(ncid, 'cp25_yr2000', subname, params_inst%cp25_yr2000)
+    ! Rubisco activity at 25 C (umol CO2/gRubisco/s)
+    call readNcdioScalar(ncid, 'act25', subname, params_inst%act25)
+    ! Mass ratio of total Rubisco molecular mass to nitrogen in Rubisco (gRubisco/gN(Rubisco))
+    call readNcdioScalar(ncid, 'fnr', subname, params_inst%fnr)
 
   end subroutine readParams
 
@@ -955,9 +968,9 @@ contains
     ! a multi-layer canopy
     !
     ! !USES:
-    use clm_varcon        , only : rgas, tfrz, spval, degpsec, isecspday
+    use clm_varcon        , only : rgas, tfrz, spval
     use GridcellType      , only : grc
-    use clm_time_manager  , only : get_curr_date, get_step_size
+    use clm_time_manager  , only : get_step_size_real, is_near_local_noon
     use clm_varctl     , only : cnallocate_carbon_only
     use clm_varctl     , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use pftconMod      , only : nbrdlf_dcd_tmp_shrub, npcropmin
@@ -1059,8 +1072,6 @@ contains
     real(r8) :: aquad,bquad,cquad ! terms for quadratic equations
     real(r8) :: r1,r2             ! roots of quadratic equation
     real(r8) :: ceair             ! vapor pressure of air, constrained (Pa)
-    real(r8) :: fnr               ! (gRubisco/gN in Rubisco)
-    real(r8) :: act25             ! (umol/mgRubisco/min) Rubisco activity at 25 C
     integer  :: niter             ! iteration loop index
     real(r8) :: nscaler           ! leaf nitrogen scaling coefficient
 
@@ -1101,11 +1112,8 @@ contains
     real(r8) :: total_lai                
     integer  :: nptreemax                
 
-    integer  :: local_secp1                     ! seconds into current date in local time
     real(r8) :: dtime                           ! land model time step (sec)
-    integer  :: year,month,day,secs             ! calendar info for current time step
     integer  :: g                               ! index
-    integer, parameter :: noonsec = isecspday / 2 ! seconds at local noon
     !------------------------------------------------------------------------------
 
     ! Temperature and soil water response functions
@@ -1219,15 +1227,7 @@ contains
 
       ! Determine seconds of current time step
 
-      dtime = get_step_size()
-      call get_curr_date (year, month, day, secs)
-
-      ! vcmax25 parameters, from CN
-
-      fnr = 7.16_r8
-      act25 = 3.6_r8   !umol/mgRubisco/min
-      ! Convert rubisco activity units from umol/mgRubisco/min -> umol/gRubisco/s
-      act25 = act25 * 1000.0_r8 / 60.0_r8
+      dtime = get_step_size_real()
 
       ! Activation energy, from:
       ! Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
@@ -1290,17 +1290,17 @@ contains
 
          ! kc, ko, cp, from: Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
          !
-         !       kc25 = 404.9 umol/mol
-         !       ko25 = 278.4 mmol/mol
-         !       cp25 = 42.75 umol/mol
+         !       kc25_coef = 404.9e-6 mol/mol
+         !       ko25_coef = 278.4e-3 mol/mol
+         !       cp25_yr2000 = 42.75e-6 mol/mol
          !
          ! Derive sco from cp and O2 using present-day O2 (0.209 mol/mol) and re-calculate
          ! cp to account for variation in O2 using cp = 0.5 O2 / sco
          !
 
-         kc25 = (404.9_r8 / 1.e06_r8) * forc_pbot(c)
-         ko25 = (278.4_r8 / 1.e03_r8) * forc_pbot(c)
-         sco  = 0.5_r8 * 0.209_r8 / (42.75_r8 / 1.e06_r8)
+         kc25 = params_inst%kc25_coef * forc_pbot(c)
+         ko25 = params_inst%ko25_coef * forc_pbot(c)
+         sco  = 0.5_r8 * 0.209_r8 / params_inst%cp25_yr2000
          cp25 = 0.5_r8 * oair(p) / sco
 
          kc(p) = kc25 * ft(t_veg(p), kcha)
@@ -1379,7 +1379,7 @@ contains
          ! Default
          if (vcmax_opt == 0) then                                                   
             ! vcmax25 at canopy top, as in CN but using lnc at top of the canopy
-            vcmax25top = lnc(p) * flnr(patch%itype(p)) * fnr * act25 * dayl_factor(p)
+            vcmax25top = lnc(p) * flnr(patch%itype(p)) * params_inst%fnr * params_inst%act25 * dayl_factor(p)
             if (.not. use_cn) then
                vcmax25top = vcmax25top * fnitr(patch%itype(p))
             else
@@ -1391,11 +1391,11 @@ contains
             nptreemax = 9  ! is this number correct? check later 
             if (patch%itype(p) >= nptreemax) then   ! if not tree 
                ! for shrubs and herbs 
-               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) + s_flnr(patch%itype(p)) * lnc(p) ) * fnr * act25 * &
+               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) + s_flnr(patch%itype(p)) * lnc(p) ) * params_inst%fnr * params_inst%act25 * &
                     dayl_factor(p)
             else
                ! if tree 
-               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) * exp(s_flnr(patch%itype(p)) * lnc(p)) ) * fnr * act25 * &
+               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) * exp(s_flnr(patch%itype(p)) * lnc(p)) ) * params_inst%fnr * params_inst%act25 * &
                     dayl_factor(p)
                ! for trees 
             end if     
@@ -1654,12 +1654,8 @@ contains
 
                if (an(p,iv) < 0._r8) gs_mol(p,iv) = bbb(p)
 
-               ! Get local noon sunlit and shaded stomatal conductance
-               local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-               local_secp1 = mod(local_secp1,isecspday)
-
                ! Use time period 1 hour before and 1 hour after local noon inclusive (11AM-1PM)
-               if (local_secp1 >= (isecspday/2 - 3600) .and. local_secp1 <= (isecspday/2 + 3600)) then
+               if ( is_near_local_noon( grc%londeg(g), deltasec=3600 ) )then
                   if (phase == 'sun') then
                      gs_mol_sun_ln(p,iv) = gs_mol(p,iv)
                   else if (phase == 'sha') then
@@ -2439,9 +2435,9 @@ contains
     ! method
     !
     ! !USES:
-    use clm_varcon        , only : rgas, tfrz, rpi, spval, degpsec, isecspday
+    use clm_varcon        , only : rgas, tfrz, rpi, spval
     use GridcellType      , only : grc
-    use clm_time_manager  , only : get_curr_date, get_step_size
+    use clm_time_manager  , only : get_step_size_real, is_near_local_noon
     use clm_varctl        , only : cnallocate_carbon_only
     use clm_varctl        , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use clm_varpar        , only : nlevsoi
@@ -2560,8 +2556,6 @@ contains
     real(r8) :: aquad,bquad,cquad ! terms for quadratic equations
     real(r8) :: r1,r2             ! roots of quadratic equation
     real(r8) :: ceair             ! vapor pressure of air, constrained (Pa)
-    real(r8) :: fnr               ! (gRubisco/gN in Rubisco)
-    real(r8) :: act25             ! (umol/mgRubisco/min) Rubisco activity at 25 C
     integer  :: iter1             ! number of iterations used, for record only
     integer  :: iter2             ! number of iterations used, for record only 
     real(r8) :: nscaler           ! leaf nitrogen scaling coefficient
@@ -2631,9 +2625,7 @@ contains
     real(r8) :: sum_nscaler
     real(r8) :: total_lai                
     integer  :: nptreemax                
-    integer  :: local_secp1                     ! seconds into current date in local time
     real(r8) :: dtime                           ! land model time step (sec)
-    integer  :: year,month,day,secs             ! calendar info for current time step
     integer  :: j,g                     ! index
     real(r8) :: rs_resis                ! combined soil-root resistance [s]
     real(r8) :: r_soil                  ! root spacing [m]
@@ -2653,7 +2645,6 @@ contains
     real(r8), parameter :: croot_lateral_length = 0.25_r8   ! specified lateral coarse root length [m]
     real(r8), parameter :: c_to_b = 2.0_r8           !(g biomass /g C)
 !Note that root density is for dry biomass not carbon. CLM provides root biomass as carbon. The conversion is 0.5 g C / g biomass
-    integer, parameter :: noonsec   = isecspday / 2 ! seconds at local noon
 
     !------------------------------------------------------------------------------
 
@@ -2790,15 +2781,7 @@ contains
 
       ! Determine seconds off current time step
 
-      dtime = get_step_size()
-      call get_curr_date (year, month, day, secs)
-
-      ! vcmax25 parameters, from CN
-
-      fnr = 7.16_r8
-      act25 = 3.6_r8   !umol/mgRubisco/min
-      ! Convert rubisco activity units from umol/mgRubisco/min -> umol/gRubisco/s
-      act25 = act25 * 1000.0_r8 / 60.0_r8
+      dtime = get_step_size_real()
 
       ! Activation energy, from:
       ! Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
@@ -2915,17 +2898,17 @@ contains
          end if
          ! kc, ko, cp, from: Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
          !
-         !       kc25 = 404.9 umol/mol
-         !       ko25 = 278.4 mmol/mol
-         !       cp25 = 42.75 umol/mol
+         !       kc25_coef = 404.9e-6 mol/mol
+         !       ko25_coef = 278.4e-3 mol/mol
+         !       cp25_yr2000 = 42.75e-6 mol/mol
          !
          ! Derive sco from cp and O2 using present-day O2 (0.209 mol/mol) and re-calculate
          ! cp to account for variation in O2 using cp = 0.5 O2 / sco
          !
 
-         kc25 = (404.9_r8 / 1.e06_r8) * forc_pbot(c)
-         ko25 = (278.4_r8 / 1.e03_r8) * forc_pbot(c)
-         sco  = 0.5_r8 * 0.209_r8 / (42.75_r8 / 1.e06_r8)
+         kc25 = params_inst%kc25_coef * forc_pbot(c)
+         ko25 = params_inst%ko25_coef * forc_pbot(c)
+         sco  = 0.5_r8 * 0.209_r8 / params_inst%cp25_yr2000
          cp25 = 0.5_r8 * oair(p) / sco
 
          kc(p) = kc25 * ft(t_veg(p), kcha)
@@ -3000,7 +2983,7 @@ contains
          ! Default
          if (vcmax_opt == 0) then                                                   
             ! vcmax25 at canopy top, as in CN but using lnc at top of the canopy
-            vcmax25top = lnc(p) * flnr(patch%itype(p)) * fnr * act25 * dayl_factor(p)
+            vcmax25top = lnc(p) * flnr(patch%itype(p)) * params_inst%fnr * params_inst%act25 * dayl_factor(p)
             if (.not. use_cn) then
                vcmax25top = vcmax25top * fnitr(patch%itype(p))
             else
@@ -3012,11 +2995,11 @@ contains
             nptreemax = 9  ! is this number correct? check later
             if (patch%itype(p) >= nptreemax) then   ! if not tree
                ! for shrubs and herbs
-               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) + s_flnr(patch%itype(p)) * lnc(p) ) * fnr * act25 * &
+               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) + s_flnr(patch%itype(p)) * lnc(p) ) * params_inst%fnr * params_inst%act25 * &
                     dayl_factor(p)
             else
                ! if tree
-               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) * exp(s_flnr(patch%itype(p)) * lnc(p)) ) * fnr * act25 * &
+               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) * exp(s_flnr(patch%itype(p)) * lnc(p)) ) * params_inst%fnr * params_inst%act25 * &
                     dayl_factor(p)
                ! for trees
             end if
@@ -3356,11 +3339,8 @@ contains
 
                if (an_sun(p,iv) < 0._r8) gs_mol_sun(p,iv) = max( bsun(p)*gsminsun, 1._r8 )
                if (an_sha(p,iv) < 0._r8) gs_mol_sha(p,iv) = max( bsha(p)*gsminsha, 1._r8 )
-               ! Get local noon sunlit and shaded stomatal conductance
-               local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-               local_secp1 = mod(local_secp1,isecspday)
                ! Use time period 1 hour before and 1 hour after local noon inclusive (11AM-1PM)
-               if (local_secp1 >= (isecspday/2 - 3600) .and. local_secp1 <= (isecspday/2 + 3600)) then
+               if ( is_near_local_noon( grc%londeg(g), deltasec=3600 ) )then
                   gs_mol_sun_ln(p,iv) = gs_mol_sun(p,iv)
                   gs_mol_sha_ln(p,iv) = gs_mol_sha(p,iv)
                else
