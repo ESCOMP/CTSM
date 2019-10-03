@@ -82,8 +82,8 @@ contains
 
     ! read data PCT_LAKE 
     !
-    ! Note: if you want to change transient crops so that they are interpolated, rather
-    ! than jumping to each year's value on Jan 1 of that year, simply change wtcrop and
+    ! Note: if you want to change transient lakes so that they are interpolated, rather
+    ! than jumping to each year's value on Jan 1 of that year, simply change wtlake and
     ! to be of type dyn_var_time_interp_type (rather than
     ! dyn_var_time_uninterp_type), and change the following constructors to construct
     ! variables of dyn_var_time_interp_type. That's all you need to do.
@@ -103,11 +103,11 @@ contains
     ! !DESCRIPTION:
     ! Get lake cover for model time, when needed.
     !
-    ! Sets col%wtlunit and lun%wtgcell for crop landunits.
+    ! Sets col%wtlunit and lun%wtgcell for lake landunits.
     !
-    ! Note that crop cover currently jumps to its new value at the start of the year.
+    ! Note that lake cover currently jumps to its new value at the start of the year.
     ! However, as mentioned above, this behavior can be changed to time interpolation
-    ! simply by making wtcrop and wtcft dyn_var_time_interp_type variables rather than
+    ! simply by making wtlake and wtcft dyn_var_time_interp_type variables rather than
     ! dyn_var_time_uninterp_type. 
     !
     ! !USES:
