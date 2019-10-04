@@ -632,18 +632,18 @@ contains
     if (.not. use_hydrstress) then
        call hist_addfld1d (fname='BTRAN', units='unitless',  &
             avgflag='A', long_name='transpiration beta factor', &
-            ptr_patch=this%btran_patch, set_lake=spval, set_urb=spval)
+            ptr_patch=this%btran_patch, l2g_scale_type='veg')
     end if
 
     this%btran_min_patch(begp:endp) = spval
     call hist_addfld1d (fname='BTRANMN', units='unitless',  &
          avgflag='A', long_name='daily minimum of transpiration beta factor', &
-         ptr_patch=this%btran_min_patch, set_lake=spval, set_urb=spval)
+         ptr_patch=this%btran_min_patch, l2g_scale_type='veg')
 
     this%btran2_patch(begp:endp) = spval
     call hist_addfld1d (fname='BTRAN2', units='unitless',  &
          avgflag='A', long_name='root zone soil wetness factor', &
-         ptr_patch=this%btran2_patch, set_lake=spval, set_urb=spval)
+         ptr_patch=this%btran2_patch, l2g_scale_type='veg')
 
     if (use_cn) then
        this%rresis_patch(begp:endp,:) = spval
