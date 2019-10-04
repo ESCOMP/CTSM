@@ -876,11 +876,6 @@ contains
          long_name='instantaneous daily minimum of transpiration wetness factor', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%btran_min_inst_patch) 
 
-    call restartvar(ncid=ncid, flag=flag, varname='eflx_grnd_lake', xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name='net heat flux into lake/snow surface, excluding light transmission', units='W/m^2', &
-         interpinic_flag='interp', readvar=readvar, data=this%eflx_grnd_lake_patch)
-
     call this%eflx_dynbal_dribbler%Restart(bounds, ncid, flag)
 
   end subroutine Restart
