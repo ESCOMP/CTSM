@@ -249,14 +249,14 @@ contains
        this%rootr_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='ROOTR', units='proportion', type2d='levgrnd', &
             avgflag='A', long_name='effective fraction of roots in each soil layer', &
-            ptr_patch=this%rootr_patch, default='inactive')
+            ptr_patch=this%rootr_patch, l2g_scale_type='veg', default='inactive')
     end if
 
     if (use_cn) then
        this%rootr_col(begc:endc,:) = spval
        call hist_addfld2d (fname='ROOTR_COLUMN', units='proportion', type2d='levgrnd', &
             avgflag='A', long_name='effective fraction of roots in each soil layer', &
-            ptr_col=this%rootr_col, default='inactive')
+            ptr_col=this%rootr_col, l2g_scale_type='veg', default='inactive')
        
     end if
 
