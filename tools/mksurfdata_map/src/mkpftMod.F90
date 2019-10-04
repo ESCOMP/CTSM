@@ -49,7 +49,7 @@ module mkpftMod
 ! !PRIVATE DATA MEMBERS:
 !
   logical, public, protected :: use_input_pft = .false. ! Flag to override PFT with input values
-  logical, public, protected :: all_veg       = .false. ! Flag to override all areas with vegetated PFT's
+  logical, public, protected :: presc_cover   = .false. ! Flag to prescribe vegetation coverage
   integer, private           :: nzero                   ! index of first zero fraction
 
   type, public :: pft_oride              ! Public only for unit testing
@@ -139,14 +139,13 @@ subroutine mkpftInit( zero_out_l, all_veg_l )
      write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero)
      write(6,*) 'With PFT index      : ', pft_idx(0:nzero)
   end if
-  all_veg = all_veg_l
-  if ( all_veg .and. .not. use_input_pft )then
+  if ( all_veg_l .and. .not. use_input_pft )then
      write(6,*) subname//'if all_veg is set to true then specified PFT indices must be provided (i.e. pft_frc and pft_idx)'
      call abort()
      return
   end if
 
-  if ( zero_out_l .and. all_veg )then
+  if ( zero_out_l .and. all_veg_l )then
      write(6,*) subname//'zeroing out vegetation and setting vegetation to 100% is a contradiction!'
      call abort()
      return
@@ -185,10 +184,23 @@ subroutine mkpftInit( zero_out_l, all_veg_l )
   ! Set the PFT override values if applicable
   !
   pft_override = pft_oride()
+  presc_cover = .false.
   if( zero_out_l )then
      call pft_override%InitZeroOut()
+     presc_cover = .true.
   else if ( use_input_pft ) then
      call pft_override%InitAllPFTIndex()
+     if ( .not. all_veg_l )then
+        if ( pft_override%crop <= 0.0 )then
+           write(6,*) "Warning: PFT/CFT's are being overridden, but no crop type is being asked for"
+        end if
+        if ( pft_override%natveg <= 0.0 )then
+           write(6,*) "Warning: PFT/CFT's are being overridden, but no natural vegetation type is being asked for"
+        end if
+        presc_cover = .false.
+     else
+        presc_cover = .true.
+     end if
   end if
 
 end subroutine mkpftInit
@@ -382,13 +394,12 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
      return
   end if
 
+  ns_o = ldomain%ns
+
   ! -----------------------------------------------------------------
   ! Read input PFT file
   ! -----------------------------------------------------------------
-
-  ns_o = ldomain%ns
-
-  if ( .not. use_input_pft ) then
+  if ( .not. presc_cover ) then
      ! Obtain input grid info, read PCT_PFT
 
      call domain_read(tdomain,fpft)
@@ -400,17 +411,16 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
      ! Check what variables exist to determine what format the file is in
      call check_ret(nf_inq_varid (ncid, 'PCT_PFT', varid), subname, varexists=oldformat)
 
-     if ( .not. oldformat ) then
-        call check_ret(nf_inq_dimid  (ncid, 'natpft', dimid), subname)
-        call check_ret(nf_inq_dimlen (ncid, dimid, natpft_i), subname)
-        call check_ret(nf_inq_dimid  (ncid, 'cft', dimid), subname)
-        call check_ret(nf_inq_dimlen (ncid, dimid, ncft_i), subname)
-        numpft_i = natpft_i + ncft_i
-     else
+     if ( oldformat ) then
         write(6,*) subname//' ERROR: PCT_PFT field on the the file so it is in the old format, which is no longer supported'
         call abort()
         return
      end if
+     call check_ret(nf_inq_dimid  (ncid, 'natpft', dimid), subname)
+     call check_ret(nf_inq_dimlen (ncid, dimid, natpft_i), subname)
+     call check_ret(nf_inq_dimid  (ncid, 'cft', dimid), subname)
+     call check_ret(nf_inq_dimlen (ncid, dimid, ncft_i), subname)
+     numpft_i = natpft_i + ncft_i
 
      ! Check if the number of pfts on the input matches the expected number. A mismatch
      ! is okay if the input raw dataset has prognostic crops and the output does not.
@@ -451,32 +461,38 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
      call check_ret(nf_get_var_double (ncid, varid, pctnatveg_i), subname)
      call check_ret(nf_inq_varid (ncid, 'PCT_CROP', varid), subname)
      call check_ret(nf_get_var_double (ncid, varid, pctcrop_i), subname)
-     call check_ret(nf_inq_varid (ncid, 'PCT_CFT', varid), subname)
-     call get_dim_lengths(ncid, 'PCT_CFT', ndims, dimlens(:) )
-     if (      ndims == 3 .and. dimlens(1)*dimlens(2) == ns_i .and. dimlens(3) == num_cft )then
-        call check_ret(nf_get_var_double (ncid, varid, pct_cft_i), subname)
-     else if ( ndims == 3 .and. dimlens(1)*dimlens(2) == ns_i .and. dimlens(3) > num_cft )then
-        ! Read in the whole array: then sum the rainfed and irrigated
-        ! seperately
-        allocate( temp_i(ns_i,dimlens(3)) )
-        call check_ret(nf_get_var_double (ncid, varid, temp_i), subname)
-        do n = 1, num_cft
-           pct_cft_i(:,n) = 0.0_r8
-           do m = n, dimlens(3), 2
-              pct_cft_i(:,n) = pct_cft_i(:,n) + temp_i(:,m)
+     if  ( .not. use_input_pft )then
+        call check_ret(nf_inq_varid (ncid, 'PCT_CFT', varid), subname)
+        call get_dim_lengths(ncid, 'PCT_CFT', ndims, dimlens(:) )
+        if (      ndims == 3 .and. dimlens(1)*dimlens(2) == ns_i .and. dimlens(3) == num_cft )then
+           call check_ret(nf_get_var_double (ncid, varid, pct_cft_i), subname)
+        else if ( ndims == 3 .and. dimlens(1)*dimlens(2) == ns_i .and. dimlens(3) > num_cft )then
+           ! Read in the whole array: then sum the rainfed and irrigated
+           ! seperately
+           allocate( temp_i(ns_i,dimlens(3)) )
+           call check_ret(nf_get_var_double (ncid, varid, temp_i), subname)
+           do n = 1, num_cft
+              pct_cft_i(:,n) = 0.0_r8
+              do m = n, dimlens(3), 2
+                 pct_cft_i(:,n) = pct_cft_i(:,n) + temp_i(:,m)
+              end do
            end do
-        end do
-        deallocate( temp_i )
+           deallocate( temp_i )
+        else
+           write(6,*) subname//': ERROR: dimensions for PCT_CROP are NOT what is expected'
+           call abort()
+           return
+        end if
+        call check_ret(nf_inq_varid (ncid, 'PCT_NAT_PFT', varid), subname)
+        call check_ret(nf_get_var_double (ncid, varid, pct_nat_pft_i), subname)
      else
-        write(6,*) subname//': ERROR: dimensions for PCT_CROP are NOT what is expected'
-        call abort()
-        return
      end if
-     call check_ret(nf_inq_varid (ncid, 'PCT_NAT_PFT', varid), subname)
-     call check_ret(nf_get_var_double (ncid, varid, pct_nat_pft_i), subname)
 
      call check_ret(nf_close(ncid), subname)
 
+  ! -----------------------------------------------------------------
+  ! Otherwise if vegetation is prescribed everywhere
+  ! -----------------------------------------------------------------
   else
      ns_i = 1
      numpft_i = numpft+1
@@ -506,18 +522,16 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
 
   ! Determine pctpft_o on output grid
 
-  if ( use_input_pft ) then
+  ! If total vegetation cover is prescribed from input...
+  if ( use_input_pft .and. presc_cover ) then
 
      do no = 1,ns_o
         pctlnd_o(no)    = 100._r8
         pctnatveg_o(no) = pft_override%natveg
         pctcrop_o(no)   = pft_override%crop
-        pct_nat_pft_o(no,noveg:num_natpft) = pft_override%natpft(noveg:num_natpft)
-        pct_cft_o(no,1:num_cft)            = pft_override%cft(1:num_cft)
-        pctpft_o(no,natpft_lb:natpft_ub)   = pct_nat_pft_o(no,0:num_natpft)
-        pctpft_o(no,cft_lb:cft_ub)         = pct_cft_o(no,1:num_cft)
      end do
 
+  ! otherewise if total cover isn't prescribed read it from the datasets
   else
 
      ! Compute pctlnd_o, pctpft_o
@@ -541,34 +555,80 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
      call gridmap_areaave(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8)
      call gridmap_areaave(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8)
 
-     do m = 0, num_natpft
-        call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), pct_nat_pft_o(:,m), &
-             nodata=0._r8,src_wt=pctnatveg_i*0.01_r8,dst_wt=pctnatveg_o*0.01_r8)
+     !
+     ! If specific PFT/CFT's are NOT prescribed set them from the input file
+     !
+     if ( .not. use_input_pft )then
+        do m = 0, num_natpft
+           call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), pct_nat_pft_o(:,m), &
+                nodata=0._r8,src_wt=pctnatveg_i*0.01_r8,dst_wt=pctnatveg_o*0.01_r8)
+           do no = 1,ns_o
+              if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
+                 if (m == 0) then
+                    pct_nat_pft_o(no,m) = 100._r8
+                 else
+                    pct_nat_pft_o(no,m) = 0._r8
+                 endif
+              end if
+           enddo
+        end do
+        do m = 1, num_cft
+           call gridmap_areaave_scs(tgridmap, pct_cft_i(:,m), pct_cft_o(:,m), &
+                nodata=0._r8,src_wt=pctcrop_i*0.01_r8,dst_wt=pctcrop_o*0.01_r8)
+           do no = 1,ns_o
+              if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
+                 if (m == 1) then
+                    pct_cft_o(no,m) = 100._r8
+                 else
+                    pct_cft_o(no,m) = 0._r8
+                 endif
+              end if
+           enddo
+        end do
+     ! Otherwise do some error checking to make sure specific veg types are given where nat-veg and crop is assigned
+     else
         do no = 1,ns_o
-           if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
-              if (m == 0) then
-                 pct_nat_pft_o(no,m) = 100._r8
-              else
-                 pct_nat_pft_o(no,m) = 0._r8
-              endif
+           if (pctlnd_o(no) > 1.0e-6 .and. pctnatveg_o(no) > 1.0e-6) then
+              if ( pft_override%natveg <= 0.0_r8 )then
+                 write(6,*) subname//': ERROR: no natural vegetation PFTs are being prescribed but there are natural '// &
+                                     'vegetation areas: provide at least one natural veg PFT'
+                 call abort()
+                 return
+              end if
            end if
-        enddo
-     end do
-     do m = 1, num_cft
-        call gridmap_areaave_scs(tgridmap, pct_cft_i(:,m), pct_cft_o(:,m), &
-             nodata=0._r8,src_wt=pctcrop_i*0.01_r8,dst_wt=pctcrop_o*0.01_r8)
-        do no = 1,ns_o
-           if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
-              if (m == 1) then
-                 pct_cft_o(no,m) = 100._r8
-              else
-                 pct_cft_o(no,m) = 0._r8
-              endif
+           if (pctlnd_o(no) > 1.0e-6 .and. pctcrop_o(no) > 1.0e-6) then
+              if ( pft_override%crop <= 0.0_r8 )then
+                 write(6,*) subname//': ERROR: no crop CFTs are being prescribed but there are crop areas: provide at least one CFT'
+                 call abort()
+                 return
+              end if
            end if
-        enddo
-     end do
-
+        end do
+     end if
   end if
+
+  !
+  ! If specific PFT/CFT's are prescribed set them directly
+  !
+  if ( use_input_pft )then
+     do no = 1,ns_o
+        if (pctlnd_o(no) > 1.0e-6 .and. pctnatveg_o(no) > 1.0e-6) then
+           pct_nat_pft_o(no,noveg:num_natpft) = pft_override%natpft(noveg:num_natpft)
+        else
+           pct_nat_pft_o(no,noveg)    = 100._r8
+           pct_nat_pft_o(no,noveg+1:) = 0._r8
+        end if
+        if (pctlnd_o(no) > 1.0e-6 .and. pctcrop_o(no) > 1.0e-6) then
+           pct_cft_o(no,1:num_cft) = pft_override%cft(1:num_cft)
+        else
+           pct_cft_o(no,1)  = 100._r8
+           pct_cft_o(no,2:) = 0._r8
+        end if
+        pctpft_o(no,natpft_lb:natpft_ub)   = pct_nat_pft_o(no,0:num_natpft)
+        pctpft_o(no,cft_lb:cft_ub)         = pct_cft_o(no,1:num_cft)
+     end do
+  end if
+
 
   ! Error check: percents should sum to 100 for land grid cells, within roundoff
   ! Also correct sums so that if they differ slightly from 100, they are corrected to
@@ -621,9 +681,13 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   ! -----------------------------------------------------------------
   ! Error check
   ! Compare global areas on input and output grids
+  ! Only when you aren't prescribing the vegetation coverage everywhere
+  ! If use_input_pft is set this will compare the global coverage of
+  ! the prescribed vegetation to the coverage of PFT/CFT's on the input
+  ! datasets.
   ! -----------------------------------------------------------------
 
-  if ( .not. use_input_pft ) then
+  if ( .not. presc_cover ) then
 
      ! Convert to pctpft over grid if using new format
      do ni = 1, ns_i
@@ -701,7 +765,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
   deallocate(pct_cft_o)
   deallocate(pct_nat_pft_i)
   deallocate(pct_nat_pft_o)
-  if ( .not. use_input_pft ) then
+  if ( .not. presc_cover ) then
      call domain_clean(tdomain) 
      call gridmap_clean(tgridmap)
   end if
