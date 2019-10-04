@@ -485,7 +485,6 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
         end if
         call check_ret(nf_inq_varid (ncid, 'PCT_NAT_PFT', varid), subname)
         call check_ret(nf_get_var_double (ncid, varid, pct_nat_pft_i), subname)
-     else
      end if
 
      call check_ret(nf_close(ncid), subname)
