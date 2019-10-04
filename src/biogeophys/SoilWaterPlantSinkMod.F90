@@ -291,8 +291,6 @@ contains
                                                                             ! exchange [mm H2O/s] [+ into root]
               rootr_col           => soilstate_inst%rootr_col           , & ! Input:  [real(r8) (:,:) ]
                                                                             ! effective fraction of roots in each soil layer
-              rootr_patch         => soilstate_inst%rootr_patch         , & ! Input:  [real(r8) (:,:) ]  
-                                                                            ! effective fraction of roots in each soil layer
               smp                 => soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix pot. [mm]
               frac_veg_nosno      => canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)  ] 
                                                                             ! fraction of vegetation not 

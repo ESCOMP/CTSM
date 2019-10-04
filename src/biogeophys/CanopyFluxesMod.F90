@@ -401,7 +401,6 @@ contains
     integer  :: filterc_tmp(bounds%endp-bounds%begp+1)   ! temporary variable
     integer  :: ft                                       ! plant functional type index
     real(r8) :: h2ocan                                   ! total canopy water (mm H2O)
-    real(r8) :: temprootr
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
     integer  :: iv
     logical  :: is_end_day                               ! is end of current day
@@ -479,7 +478,6 @@ contains
          watopt                 => soilstate_inst%watopt_col                    , & ! Input:  [real(r8) (:,:) ]  btran parameter for btran=1                      (constant)                                      
          eff_porosity           => soilstate_inst%eff_porosity_col              , & ! Output: [real(r8) (:,:) ]  effective soil porosity
          soilbeta               => soilstate_inst%soilbeta_col                  , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
-         rootr                  => soilstate_inst%rootr_patch                   , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer                      
 
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
          forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Input:  [real(r8) (:)   ]  observational height of wind at patch level [m]                          
