@@ -355,7 +355,7 @@ contains
              soilstate_inst%tkmg_col(c,lev)   = spval
              soilstate_inst%tksatu_col(c,lev) = spval
              soilstate_inst%tkdry_col(c,lev)  = spval
-             soilstate_inst%csol_col(c,lev)= spval
+             soilstate_inst%csol_col(c,lev)   = spval
           end do
 
        else if (lun%urbpoi(l) .and. (col%itype(c) /= icol_road_perv) .and. (col%itype(c) /= icol_road_imperv) )then
@@ -363,13 +363,6 @@ contains
           ! Urban Roof, sunwall, shadewall properties set to special value
           do lev = 1,nlevmaxurbgrnd
              soilstate_inst%watsat_col(c,lev) = spval
-             soilstate_inst%watfc_col(c,lev)  = spval
-             soilstate_inst%bsw_col(c,lev)    = spval
-             soilstate_inst%hksat_col(c,lev)  = spval
-             soilstate_inst%sucsat_col(c,lev) = spval
-             soilstate_inst%watdry_col(c,lev) = spval 
-             soilstate_inst%watopt_col(c,lev) = spval 
-             soilstate_inst%bd_col(c,lev) = spval 
              if (lev <= nlevsoi) then
                 soilstate_inst%cellsand_col(c,lev) = spval
                 soilstate_inst%cellclay_col(c,lev) = spval
@@ -377,7 +370,14 @@ contains
              end if
           end do
 
-          do lev = 1,nlevmaxurbgrnd
+          do lev = 1,nlevgrnd
+             soilstate_inst%watfc_col(c,lev)  = spval
+             soilstate_inst%bsw_col(c,lev)    = spval
+             soilstate_inst%hksat_col(c,lev)  = spval
+             soilstate_inst%sucsat_col(c,lev) = spval
+             soilstate_inst%watdry_col(c,lev) = spval 
+             soilstate_inst%watopt_col(c,lev) = spval 
+             soilstate_inst%bd_col(c,lev)     = spval 
              soilstate_inst%tkmg_col(c,lev)   = spval
              soilstate_inst%tksatu_col(c,lev) = spval
              soilstate_inst%tkdry_col(c,lev)  = spval
