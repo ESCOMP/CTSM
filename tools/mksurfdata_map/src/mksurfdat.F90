@@ -379,7 +379,7 @@ program mksurfdat
     ! Call module initialization routines
     !
     call mksoilInit( )
-    call mkpftInit( all_urban, all_veg )
+    call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
     allocate ( elevclass(nglcec+1) )
     call mkglcmecInit (elevclass)
     call mkurbanInit (mksrf_furban)
