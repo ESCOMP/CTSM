@@ -557,6 +557,7 @@ contains
         c = filter_soilc(fc)
         g = col%gridcell(c)
         hdmlf=this%forc_hdm(g)
+        nfire(c) = 0._r8
         if( cropf_col(c)  <  1.0 )then
            if (trotr1_col(c)+trotr2_col(c)>0.6_r8) then
               farea_burned(c)=min(1.0_r8,baf_crop(c)+baf_peatf(c))
