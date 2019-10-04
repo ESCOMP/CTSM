@@ -39,11 +39,11 @@ module SatellitePhenologyMod
   public :: SatellitePhenologyInit ! Dynamically allocate memory
   public :: interpMonthlyVeg       ! interpolate monthly vegetation data
   public :: readAnnualVegetation   ! Read in annual vegetation (needed for Dry-deposition)
+  public :: lai_interp             ! interpolates between two years of LAI data (when LAI streams are being used)
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: readMonthlyVegetation   ! read monthly vegetation data for two months
   private :: lai_init    ! position datasets for LAI
-  private :: lai_interp  ! interpolates between two years of LAI data
 
   ! !PRIVATE MEMBER DATA:
   type(shr_strdata_type) :: sdat_lai           ! LAI input data stream
@@ -331,10 +331,6 @@ contains
          hbot               => canopystate_inst%hbot_patch    ,          & ! Output: [real(r8) (:) ] canopy bottom (m)                           
          frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch & ! Output: [integer  (:) ] fraction of vegetation not covered by snow (0 OR 1) [-]
          )
-
-      if (use_lai_streams) then
-         call lai_interp(bounds, canopystate_inst)
-      endif
 
       do fp = 1, num_nolakep
          p = filter_nolakep(fp)
