@@ -566,7 +566,7 @@ program mksurfdat
 
     ! Create harvesting data at model resolution
     call mkharvest_init( ns_o, spval, harvdata, mksrf_fhrvtyp )
-    if ( .not. any(pft_frc > 0.0_r8 ) )then
+    if ( .not. all_veg )then
 
        call mkharvest( ldomain, mapfname=map_fharvest, datfname=mksrf_fhrvtyp, &
                        ndiag=ndiag, harvdata=harvdata )
@@ -1115,7 +1115,7 @@ program mksurfdat
           !
           ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
           !
-          if ( any(pft_frc > 0.0_r8 ) )then
+          if ( .not. all_veg )then
              fname = ' '
              fhrvname  = ' '
              call mkpft_parse_oride(string)
