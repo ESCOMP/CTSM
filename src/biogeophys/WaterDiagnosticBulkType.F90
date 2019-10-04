@@ -255,7 +255,7 @@ contains
          units='kg/m2', &
          avgflag='A', &
          long_name=this%info%lname('vertically summed soil liquid water (veg landunits only)'), &
-         ptr_col=this%h2osoi_liq_tot_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+         ptr_col=this%h2osoi_liq_tot_col, l2g_scale_type='veg')
 
     this%h2osoi_ice_tot_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -263,7 +263,7 @@ contains
          units='kg/m2', &
          avgflag='A', &
          long_name=this%info%lname('vertically summed soil cie (veg landunits only)'), &
-         ptr_col=this%h2osoi_ice_tot_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+         ptr_col=this%h2osoi_ice_tot_col, l2g_scale_type='veg')
 
     this%rh_ref2m_patch(begp:endp) = spval
     call hist_addfld1d ( &
