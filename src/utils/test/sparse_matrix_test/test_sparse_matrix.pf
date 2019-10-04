@@ -484,6 +484,29 @@ contains
   end subroutine SM_ArbTriMatrix_IdxIsEquiv
 
   @Test
+  subroutine SM_ArbMatrices_IdxIsDiff( this )
+    class(TestSparseMatrix), intent(inout) :: this
+
+    type(sparse_matrix_type) :: ArbSMatrix, ArbSMatrix2
+    type(arb_band_sparse_matrix_setup) :: MatrixSetup
+    type(arb_2band_sparse_matrix_setup) :: MatrixSetup2
+
+    ! First matrix is a tri-banded
+    call MatrixSetup%createArbBandMatrix2( )
+    call ArbSMatrix%InitSM( ndims, begu, endu )
+    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                                MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    ! Second matrix is bi-banded
+    call MatrixSetup2%createArb2BandMatrix( )
+    call ArbSMatrix2%InitSM( ndims, begu, endu )
+    call ArbSMatrix2%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup2%M, &
+                                MatrixSetup2%Iindex,MatrixSetup2%Jindex,NonZeroBiBand)
+
+    @assertFalse( ArbSMatrix%IsEquivIdxSM( ArbSMatrix2 )  )
+
+  end subroutine SM_ArbMatrices_IdxIsDiff
+
+  @Test
   subroutine SM_ArbTriMatrix_plus_self_twice_is_thrice_self_wSPMP_AB( this )
     class(TestSparseMatrix), intent(inout) :: this
 
