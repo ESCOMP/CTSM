@@ -2083,9 +2083,7 @@ sub error_if_set {
 sub setup_logic_pftsoilcolumn {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
-  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_individual_pft_soil_column');
-  }
 }
 
 #-------------------------------------------------------------------------------

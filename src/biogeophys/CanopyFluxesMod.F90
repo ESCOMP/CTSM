@@ -52,26 +52,6 @@ module CanopyFluxesMod
   ! !PUBLIC TYPES:
   implicit none
   ! 
-  ! !PUBLIC VARIABLES:
-
-  type :: canopyflux_params_type
-     real(r8), allocatable, public  :: dbh          (:)
-     real(r8), allocatable, public  :: fbw          (:)
-     real(r8), allocatable, public  :: nstem        (:)
-     real(r8), allocatable, public  :: rstem        (:)
-     real(r8), allocatable, public  :: wood_density (:)
-  contains
-     procedure, private :: allocParams
-  end type canopyflux_params_type
-  !
-  type(canopyflux_params_type), public, protected :: params_inst  ! params_inst is populated in readParamsMod 
-
-  type, public :: canopyflux_type
-   contains
-     procedure, public  :: ReadParams
-  end type canopyflux_type
-  !
-
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyFluxesReadNML     ! Read in namelist settings
   public :: CanopyFluxes            ! Calculate canopy fluxes
@@ -86,6 +66,7 @@ module CanopyFluxesMod
      real(r8) :: cv  ! Turbulent transfer coeff. between canopy surface and canopy air (m/s^(1/2))
   end type params_type
   type(params_type), private ::  params_inst
+
   !
   ! !PUBLIC DATA MEMBERS:
   ! true => btran is based only on unfrozen soil levels
@@ -96,7 +77,7 @@ module CanopyFluxesMod
   logical,  public :: perchroot_alt = .false.  
   !
   ! !PRIVATE DATA MEMBERS:
-  logical, private :: use_undercanopy_stability = .true.      ! use undercanopy stability term or not
+  logical, private :: use_undercanopy_stability = .false.      ! use undercanopy stability term or not
   integer, private :: itmax_canopy_fluxes = -1  ! max # of iterations used in subroutine CanopyFluxes
 
   character(len=*), parameter, private :: sourcefile = &
@@ -104,76 +85,6 @@ module CanopyFluxesMod
   !------------------------------------------------------------------------------
 
 contains
-
-  !-----------------------------------------------------------------------
-  subroutine allocParams ( this )
-    !
-    use shr_infnan_mod      , only : nan => shr_infnan_nan, assignment(=)
-    implicit none
-
-    ! !ARGUMENTS:
-    class(canopyflux_params_type) :: this
-    !
-    ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'allocParams'
-    !-----------------------------------------------------------------------
-
-    ! allocate parameters
-
-    allocate( this%dbh         (0:mxpft) )          ; this%dbh(:)          = nan
-    allocate( this%fbw         (0:mxpft) )          ; this%fbw(:)          = nan
-    allocate( this%nstem       (0:mxpft) )          ; this%nstem(:)        = nan
-    allocate( this%rstem       (0:mxpft) )          ; this%rstem(:)        = nan
-    allocate( this%wood_density(0:mxpft) )          ; this%wood_density(:) = nan
-
-  end subroutine allocParams
-
-  !-----------------------------------------------------------------------
-  subroutine readParams ( this, ncid )
-    !
-    ! !USES:
-    use ncdio_pio , only : file_desc_t,ncd_io
-    implicit none
-
-    ! !ARGUMENTS:
-    class(canopyflux_type) :: this
-    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-    !
-    ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'readParams'
-    character(len=100) :: errCode = '-Error reading in parameters file:'
-    logical            :: readv ! has variable been read in or not
-    real(r8)           :: temp1d(0:mxpft) ! temporary to read in parameter
-    character(len=100) :: tString ! temp. var for reading
-    !-----------------------------------------------------------------------
-
-    ! read in parameters
-
-
-    call params_inst%allocParams()
-
-    tString = "dbh"
-    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%dbh=temp1d
-    tString = "fbw"
-    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%fbw=temp1d
-    tString = "nstem"
-    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%nstem=temp1d
-    tString = "rstem"
-    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%rstem=temp1d
-    tString = "wood_density"
-    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%wood_density=temp1d
-
-  end subroutine readParams
 
   !------------------------------------------------------------------------
   subroutine CanopyFluxesReadNML(NLFilename)

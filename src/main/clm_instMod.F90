@@ -52,7 +52,6 @@ module clm_instMod
   use OzoneBaseMod                    , only : ozone_base_type
   use OzoneFactoryMod                 , only : create_and_init_ozone_type
   use PhotosynthesisMod               , only : photosyns_type
-  use CanopyFluxesMod                 , only : canopyflux_type
   use SoilHydrologyType               , only : soilhydrology_type
   use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
   use SoilStateType                   , only : soilstate_type
