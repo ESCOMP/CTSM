@@ -336,8 +336,8 @@ contains
     character(len=*), parameter :: subname = 'InitForTesting'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(relsat_wilting_point) == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(relsat_target) == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(relsat_wilting_point) == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(relsat_target) == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
 
     call this%InitAllocate(bounds)
     this%params = params
@@ -1023,9 +1023,9 @@ contains
     character(len=*), parameter :: subname = 'CalcBulkWithdrawals'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(qflx_sfc_irrig_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_gw_demand_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_gw_demand_bulk_col) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(qflx_sfc_irrig_bulk_patch) == [bounds%endp]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_gw_demand_bulk_patch) == [bounds%endp]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_gw_demand_bulk_col) == [bounds%endc]), sourcefile, __LINE__)
 
     associate( &
          begp => bounds%begp, &
@@ -1221,10 +1221,10 @@ contains
     character(len=*), parameter :: subname = 'CalcApplicationFluxes'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(qflx_sfc_irrig_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_sfc_irrig_bulk_col) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_gw_demand_bulk_patch) == [bounds%endp]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_gw_demand_bulk_col) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(qflx_sfc_irrig_bulk_patch) == [bounds%endp]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_sfc_irrig_bulk_col) == [bounds%endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_gw_demand_bulk_patch) == [bounds%endp]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_gw_demand_bulk_col) == [bounds%endc]), sourcefile, __LINE__)
 
     do fc = 1, num_soilc
        c = filter_soilc(fc)
@@ -1456,11 +1456,11 @@ contains
     !-----------------------------------------------------------------------
     
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(elai) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eff_porosity) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osoi_liq) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(volr) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(elai) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eff_porosity) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_liq) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(volr) == (/bounds%endg/)), sourcefile, __LINE__)
 
 
     ! Determine if irrigation is needed (over irrigated soil columns)
@@ -1698,9 +1698,9 @@ contains
     character(len=*), parameter :: subname = 'CalcDeficitVolrLimited'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(deficit) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(volr) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(deficit_volr_limited) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(deficit) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(volr) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(deficit_volr_limited) == (/bounds%endc/)), sourcefile, __LINE__)
 
     call c2g(bounds, &
          carr = deficit(bounds%begc:bounds%endc), &

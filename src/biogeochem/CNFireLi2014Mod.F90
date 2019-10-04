@@ -17,7 +17,6 @@ module CNFireLi2014Mod
   use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_const_mod                      , only : SHR_CONST_PI,SHR_CONST_TKFRZ
   use shr_infnan_mod                     , only : shr_infnan_isnan
-  use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog, spinup_state
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
   use clm_varcon                         , only : dzsoi_decomp
@@ -142,9 +141,9 @@ contains
     real(r8), pointer :: prec10_col(:)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(totlitc_col)           == (/bounds%endc/))                              , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col)  == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soi17cm_col)         == (/bounds%endc/))                              , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(totlitc_col)           == (/bounds%endc/))                              , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_vr_col)  == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soi17cm_col)         == (/bounds%endc/))                              , sourcefile, __LINE__)
 
     associate(                                                                      & 
          totlitc            => totlitc_col                                     , & ! Input:  [real(r8) (:)     ]  (gC/m2) total lit C (column-level mean)           
@@ -683,14 +682,14 @@ contains
    logical :: transient_landcover  ! whether this run has any prescribed transient landcover
    !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leaf_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(froot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(croot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(stem_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(totsomc_col)          == (/bounds%endc/))                               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_npools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(somc_fire_col)        == (/bounds%endc/))                               , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(froot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(croot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(stem_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(totsomc_col)          == (/bounds%endc/))                               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_npools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(somc_fire_col)        == (/bounds%endc/))                               , sourcefile, __LINE__)
 
    ! NOTE: VR      = Vertically Resolved
    !       conv.   = conversion

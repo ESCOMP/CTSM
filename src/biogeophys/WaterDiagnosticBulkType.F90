@@ -526,8 +526,8 @@ contains
     real(r8)           :: fmelt       ! snowbd/100
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(snow_depth_input_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osno_input_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(snow_depth_input_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osno_input_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     do c = bounds%begc,bounds%endc
        this%snow_depth_col(c)         = snow_depth_input_col(c)

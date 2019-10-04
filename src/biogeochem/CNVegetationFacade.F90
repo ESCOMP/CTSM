@@ -404,8 +404,8 @@ contains
     character(len=*), parameter :: subname = 'UpdateAccVars'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(t_a10_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_ref2m_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(t_a10_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_ref2m_patch) == (/bounds%endp/)), sourcefile, __LINE__)
 
     if (use_cndv) then
        call this%dgvs_inst%UpdateAccVars(bounds, &

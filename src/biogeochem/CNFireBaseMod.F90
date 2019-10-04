@@ -354,14 +354,14 @@ contains
    logical :: transient_landcover  ! whether this run has any prescribed transient landcover
    !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leaf_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(froot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(croot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(stem_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(totsomc_col)          == (/bounds%endc/))                               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_npools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(somc_fire_col)        == (/bounds%endc/))                               , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(froot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(croot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(stem_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(totsomc_col)          == (/bounds%endc/))                               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_npools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(somc_fire_col)        == (/bounds%endc/))                               , sourcefile, __LINE__)
 
    ! NOTE: VR      = Vertically Resolved
    !       conv.   = conversion

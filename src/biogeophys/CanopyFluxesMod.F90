@@ -409,8 +409,8 @@ contains
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(downreg_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(leafn_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(downreg_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(leafn_patch) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                               & 
          soilresis            => soilstate_inst%soilresis_col              , & ! Input:  [real(r8) (:)   ]  soil evaporative resistance

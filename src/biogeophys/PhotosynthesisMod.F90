@@ -1124,14 +1124,14 @@ contains
 
     ! Enforce expected array sizes
 
-    SHR_ASSERT_ALL((ubound(esat_tv)     == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(oair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rb)          == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(btran)       == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dayl_factor) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(leafn)       == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(esat_tv)     == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(oair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rb)          == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(btran)       == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dayl_factor) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(leafn)       == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                 &
          c3psn      => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3
@@ -1925,7 +1925,7 @@ contains
     real(r8) :: ci
     !------------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(downreg) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(downreg) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                  &
          forc_pbot   => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)
@@ -2656,17 +2656,17 @@ contains
 
     ! Enforce expected array sizes
 
-    SHR_ASSERT_ALL((ubound(esat_tv)     == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(oair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rb)          == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsun)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsha)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(btran)       == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dayl_factor) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qsatl)       == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qaf)         == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(esat_tv)     == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(oair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rb)          == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsun)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsha)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(btran)       == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dayl_factor) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qsatl)       == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qaf)         == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                 &
          k_soil_root  => soilstate_inst%k_soil_root_patch    , & ! Input:  [real(r8) (:,:) ]  soil-root interface conductance (mm/s)

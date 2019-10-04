@@ -75,7 +75,6 @@ contains
     !
     ! !USES
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
     use decompMod      , only : bounds_type
     use ColumnType     , only : col
     !
@@ -96,9 +95,9 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(watsat)     == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eff_por)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat)     == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eff_por)    == (/bounds%endc, ubj/)), sourcefile, __LINE__)
 
     !main calculation loop
     !it assumes the soil layers start from 1
@@ -124,7 +123,6 @@ contains
     ! !USES
     use shr_kind_mod   , only : r8 => shr_kind_r8
     use decompMod      , only : bounds_type
-    use shr_log_mod    , only : errMsg => shr_log_errMsg    
     use ColumnType     , only : col
     implicit none
     !
@@ -147,9 +145,9 @@ contains
     ubj = 0
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jtop)       == (/bounds%endc/))     , errMsg(sourcefile, __LINE__)) 
-    SHR_ASSERT_ALL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eff_por)    == (/bounds%endc,0/))   , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jtop)       == (/bounds%endc/))     , sourcefile, __LINE__) 
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eff_por)    == (/bounds%endc,0/))   , sourcefile, __LINE__)
 
     !main calculation loop
 
@@ -179,7 +177,6 @@ contains
     !
     ! !USES
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use shr_log_mod    , only : errMsg => shr_log_errMsg  
     use decompMod      , only : bounds_type
     use ColumnType     , only : col
     !
@@ -200,10 +197,10 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes  
-    SHR_ASSERT_ALL((ubound(jtop)         == (/bounds%endc/))     , errMsg(sourcefile, __LINE__)) 
-    SHR_ASSERT_ALL((ubound(h2osoi_liq)   == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eff_porosity) == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(vol_liq)      == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))  
+    SHR_ASSERT_ALL_FL((ubound(jtop)         == (/bounds%endc/))     , sourcefile, __LINE__) 
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_liq)   == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eff_porosity) == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(vol_liq)      == (/bounds%endc, ubj/)), sourcefile, __LINE__)  
 
     !main calculation loop
     do j = lbj, ubj
@@ -228,7 +225,6 @@ contains
     !
     ! !USES
     use shr_kind_mod    , only: r8 => shr_kind_r8
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
     use clm_varcon      , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment 
     use decompMod       , only : bounds_type
     use ActiveLayerMod  , only : active_layer_type
@@ -323,7 +319,6 @@ contains
     !
     ! USES
     use shr_kind_mod         , only : r8 => shr_kind_r8  
-    use shr_log_mod          , only : errMsg => shr_log_errMsg
     use decompMod            , only : bounds_type
     use clm_varcon           , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment
     use pftconMod            , only : pftcon
@@ -358,7 +353,7 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes   
-    SHR_ASSERT_ALL((ubound(rootfr_unf) == (/bounds%endp, nlevgrnd/)), errMsg(sourcefile, __LINE__))  
+    SHR_ASSERT_ALL_FL((ubound(rootfr_unf) == (/bounds%endp, nlevgrnd/)), sourcefile, __LINE__)  
 
     associate(                                                &
          smpso         => pftcon%smpso                      , & ! Input:  soil water potential at full stomatal opening (mm)                    
@@ -451,7 +446,6 @@ contains
     !
     ! USES
     use shr_kind_mod    , only : r8 => shr_kind_r8  
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
     use clm_varcon      , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment 
     use decompMod       , only : bounds_type
     use ActiveLayerMod  , only : active_layer_type

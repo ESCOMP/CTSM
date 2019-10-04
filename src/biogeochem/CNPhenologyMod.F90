@@ -283,8 +283,8 @@ contains
     integer                        , intent(in)    :: phase
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
 
     ! each of the following phenology type routines includes a filter
     ! to operate only on the relevant patches
@@ -2885,8 +2885,8 @@ contains
     integer :: fc,c,pi,p,j       ! indices
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
 
     associate(                                                                                & 
          leaf_prof                 => leaf_prof_patch                                       , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of leaves                         

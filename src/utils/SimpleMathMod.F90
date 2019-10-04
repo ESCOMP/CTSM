@@ -88,7 +88,6 @@ contains
   !
   !USES
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg  
   implicit none
   integer,  intent(in) :: lbj1         !left bound of dim 1
   integer,  intent(in) :: lbj2         !left bound of dim 2
@@ -106,7 +105,7 @@ contains
   real(r8) :: arr_sum(lbj1:ubj1)
 
   ! Enforce expected array sizes
-  SHR_ASSERT_ALL((ubound(arr2d_inout) == (/ubj1, ubj2/)),      errMsg(sourcefile, __LINE__))
+  SHR_ASSERT_ALL_FL((ubound(arr2d_inout) == (/ubj1, ubj2/)),      sourcefile, __LINE__)
   
 
   arr_sum(:) = 0._r8  
@@ -144,7 +143,6 @@ contains
   ! USES
   !
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg   
   implicit none
   integer,  intent(in) :: lbj1         !left bound of dim 1
   integer,  intent(in) :: lbj2         !left bound of dim 2
@@ -159,8 +157,8 @@ contains
   integer :: j, f, p
   
   ! Enforce expected array sizes
-  SHR_ASSERT_ALL((ubound(arr2d_inout) == (/ubj1, ubj2/)),      errMsg(sourcefile, __LINE__))
-  SHR_ASSERT_ALL((ubound(arr1d_in) == (/ubj1/)),            errMsg(sourcefile, __LINE__))
+  SHR_ASSERT_ALL_FL((ubound(arr2d_inout) == (/ubj1, ubj2/)),      sourcefile, __LINE__)
+  SHR_ASSERT_ALL_FL((ubound(arr1d_in) == (/ubj1/)),            sourcefile, __LINE__)
 
 
   do j = lbj2, ubj2
@@ -188,7 +186,6 @@ contains
   !
   use shr_kind_mod, only: r8 => shr_kind_r8
   use shr_assert_mod , only : shr_assert
-  use shr_log_mod    , only : errMsg => shr_log_errMsg  
   implicit none
   real(r8), intent(in) :: arr1d_in(:)     !scaling factor
   integer,  intent(in) :: which_dim        !which dimension is scaled
@@ -202,7 +199,7 @@ contains
   
   if(which_dim==1)then
     ! Enforce expected array sizes   
-    call shr_assert(sz1    == size(arr1d_in), errMsg(sourcefile, __LINE__))
+    call shr_assert(sz1    == size(arr1d_in), file=sourcefile, line=__LINE__)
     
     do j2 = 1, sz2
       do j1 = 1, sz1
@@ -213,7 +210,7 @@ contains
     enddo
   else
     ! Enforce expected array sizes   
-    call shr_assert(sz2    == size(arr1d_in), errMsg(sourcefile, __LINE__))  
+    call shr_assert(sz2    == size(arr1d_in), file=sourcefile, line=__LINE__)
 
     do j2 = 1, sz2
       do j1 = 1, sz1

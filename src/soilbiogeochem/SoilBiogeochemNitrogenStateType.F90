@@ -326,9 +326,9 @@ contains
     integer :: special_col   (bounds%endc-bounds%begc+1) ! special landunit filter - columns
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(decomp_cpools_col)    == (/bounds%endc,ndecomp_pools/)),                 errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_1m_col) == (/bounds%endc,ndecomp_pools/)),                 errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_col)    == (/bounds%endc,ndecomp_pools/)),                 sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_1m_col) == (/bounds%endc,ndecomp_pools/)),                 sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), sourcefile, __LINE__)
 
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)

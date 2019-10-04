@@ -2403,10 +2403,10 @@ contains
     integer  :: fp,fc           ! lake filter indices
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_cwdc_col)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_totlitc_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_totsomc_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_ctrunc_col)  == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_cwdc_col)    == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_totlitc_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_totsomc_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_ctrunc_col)  == (/bounds%endc/)), sourcefile, __LINE__)
 
     ! calculate patch -level summary of carbon state
 
@@ -2561,14 +2561,14 @@ contains
     begp = bounds%begp
     endp = bounds%endp
 
-    SHR_ASSERT_ALL((ubound(conv_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wood_product_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(crop_product_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_frootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_livecrootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_deadcrootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_leafc_seed) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_deadstemc_seed) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(conv_cflux) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wood_product_cflux) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(crop_product_cflux) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_frootc_to_litter) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_livecrootc_to_litter) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_deadcrootc_to_litter) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_leafc_seed) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_deadstemc_seed) == (/endp/)), sourcefile, __LINE__)
 
     old_weight_was_zero = patch_state_updater%old_weight_was_zero(bounds)
     patch_grew = patch_state_updater%patch_grew(bounds)
