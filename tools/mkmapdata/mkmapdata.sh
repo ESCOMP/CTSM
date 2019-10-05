@@ -343,10 +343,9 @@ case $hostname in
      REGRID_PROC=36
   fi
   esmfvers=7.1.0r
-  intelvers=17.0.1
-  module load esmf_libs/$esmfvers
+  intelvers=19.0.2
+  module purge
   module load intel/$intelvers
-  module load ncl
   module load nco
 
   if [ "$interactive" = "NO" ]; then
@@ -356,13 +355,18 @@ case $hostname in
      mpi=uni
      mpitype="mpiuni"
   fi
-  module load esmf-${esmfvers}-ncdfio-${mpi}-O
-  if [ -z "$ESMFBIN_PATH" ]; then
-     ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
-  fi
   if [ -z "$MPIEXEC" ]; then
      MPIEXEC="mpiexec_mpt -np $REGRID_PROC"
   fi
+
+  module load ncarenv/1.3
+  module load mpt/2.19
+  module load netcdf-mpi/4.6.1
+  module load pnetcdf/1.11.0
+  module load ncarcompilers/0.4.1
+  module load python/3.6.8
+  ncar_pylib
+  export PYTHONPATH="/glade/work/slevis/git_ocgis/ocgis/src/:/glade/work/slevis/git_esmf/esmf/src/addon/ESMPy/src/"
   ;;
 
   ## DAV
@@ -376,15 +380,12 @@ case $hostname in
   #intelvers=12.1.5
   module purge
   module load intel/$intelvers
-  module load ncl
   module load nco
   #module load impi
   module load mpich-slurm
   module load netcdf/4.3.3.1
   #module load netcdf/4.3.0
   module load ncarcompilers
-
-  module load esmf
 
   if [ "$interactive" = "NO" ]; then
      mpi=mpi
@@ -394,11 +395,6 @@ case $hostname in
      mpitype="mpiuni"
   fi
   export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib/gcc/x86_64-redhat-linux/4.4.7:/usr/lib64:/glade/apps/opt/usr/lib:/usr/lib:/glade/u/ssg/ys/opt/intel/12.1.0.233/composer_xe_2011_sp1.11.339/compiler/lib/intel64:/lib:/lib64"
-  module load esmf-${esmfvers}-ncdfio-${mpi}-O
-  if [ -z "$ESMFBIN_PATH" ]; then
-     ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
-  fi
-  echo "ESMFMKFILE: $ESMFMKFILE"
   echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
   if [ -z "$MPIEXEC" ]; then
@@ -414,13 +410,6 @@ case $hostname in
   ;;
 
 esac
-
-# Error checks
-if [ ! -d "$ESMFBIN_PATH" ]; then
-    echo "Path to ESMF binary directory does NOT exist: $ESMFBIN_PATH"
-    echo "Set the environment variable: ESMFBIN_PATH"
-    exit 1
-fi
 
 #----------------------------------------------------------------------
 # Generate the mapping files needed for surface dataset generation
@@ -446,17 +435,9 @@ if [ "$interactive" = "NO" ]; then
    mpirun=$MPIEXEC
    echo "Running in batch mode"
 else
-   mpirun=""
+   mpirun="mpirun -np 4"
 fi
   
-ESMF_REGRID="$ESMFBIN_PATH/ESMF_RegridWeightGen"
-if [ ! -x "$ESMF_REGRID" ]; then
-    echo "ESMF_RegridWeightGen does NOT exist in ESMF binary directory: $ESMFBIN_PATH\n"
-    echo "Upgrade to a newer version of ESMF with this utility included"
-    echo "Set the environment variable: ESMFBIN_PATH"
-    exit 1
-fi
-
 # Remove previous log files
 rm PET*.Log
 
@@ -509,14 +490,13 @@ until ((nfile>${#INGRID[*]})); do
       echo "Skipping creation of ${OUTFILE[nfile]} as fast mode is on so skipping large files in NetCDF4 format"
    else
 
-      cmd="$mpirun $ESMF_REGRID --ignore_unmapped -s ${INGRID[nfile]} "
-      cmd="$cmd -d $GRIDFILE -m conserve -w ${OUTFILE[nfile]}"
-      if [ $type = "regional" ]; then
-        cmd="$cmd --dst_regional"
-      fi
+      WD=/glade/work/slevis/ocgis_work/
+      CHUNKDIR=${WD}/chunking
+      rm -rf ${CHUNKDIR}
+      NCHUNKS_DST=20
+      CRWG="ocli chunked-rwg"
 
-      cmd="$cmd --src_type ${SRC_TYPE[nfile]} ${SRC_EXTRA_ARGS[nfile]} --dst_type $DST_TYPE $DST_EXTRA_ARGS"
-      cmd="$cmd $lrgfil"
+      cmd="$mpirun ${CRWG} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE}"
 
       runcmd $cmd
 
@@ -531,13 +511,6 @@ until ((nfile>${#INGRID[*]})); do
       runcmd "ncatted -a hostname,global,a,c,$HOST   -h ${OUTFILE[nfile]}"
       runcmd "ncatted -a logname,global,a,c,$LOGNAME -h ${OUTFILE[nfile]}"
 
-      # check for duplicate mapping weights
-      newfile="rmdups_${OUTFILE[nfile]}"
-      runcmd "rm -f $newfile"
-      runcmd "env MAPFILE=${OUTFILE[nfile]} NEWMAPFILE=$newfile ncl $dir/rmdups.ncl"
-      if [ -f "$newfile" ]; then
-         runcmd "mv $newfile ${OUTFILE[nfile]}"
-      fi
    fi
 
    nfile=nfile+1
