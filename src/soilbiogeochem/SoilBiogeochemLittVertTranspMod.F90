@@ -426,13 +426,22 @@ contains
                            b_tri(c,j) = - a_tri(c,j) - c_tri(c,j) + a_p_0
                            r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + a_p_0 * conc_trcr(c,j)
                            if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn)then                   
-                              do i = 1,ndecomp_pools-1
-                                 tri_ma_vr(c,j*3-4+(i-1)*(nlevdecomp*3-2)) = a_tri(c,j) / dzsoi_decomp(j) * (-dtime)
-                                 if(j .ne. nlevdecomp)then
-                                    tri_ma_vr(c,j*3  +(i-1)*(nlevdecomp*3-2)) = c_tri(c,j) / dzsoi_decomp(j) * (-dtime)
+                              if(j .le. col%nbedrock(c))then
+                                 do i = 1,ndecomp_pools-1
+                                    tri_ma_vr(c,j*3-4+(i-1)*(nlevdecomp*3-2)) = a_tri(c,j) / dzsoi_decomp(j) * (-dtime)
+                                    if(j .ne. nlevdecomp)then
+                                       tri_ma_vr(c,j*3  +(i-1)*(nlevdecomp*3-2)) = c_tri(c,j) / dzsoi_decomp(j) * (-dtime)
+                                    end if
+                                    tri_ma_vr(c,j*3-2+(i-1)*(nlevdecomp*3-2)) = (b_tri(c,j) - a_p_0) / dzsoi_decomp(j) * (-dtime)
+                                 end do
+                              else
+                                 if(j .eq. col%nbedrock(c) + 1 .and. j .ne. nlevdecomp .and. j .gt. 1)then
+                                    do i = 1,ndecomp_pools-1
+                                       tri_ma_vr(c,(j-1)*3-2+(i-1)*(nlevdecomp*3-2)) = tri_ma_vr(c,(j-1)*3-2+(i-1)*(nlevdecomp*3-2)) &
+                                                                                    + a_tri(c,j) / dzsoi_decomp(j-1)*(-dtime)
+                                    end do
                                  end if
-                                 tri_ma_vr(c,j*3-2+(i-1)*(nlevdecomp*3-2)) = (b_tri(c,j) - a_p_0) / dzsoi_decomp(j) * (-dtime)
-                              end do
+                              end if
                            end if
                         else ! j==nlevdecomp+1; 0 concentration gradient at bottom
                            a_tri(c,j) = -1._r8
@@ -519,7 +528,7 @@ contains
                        end if
                     end do
                   end do
-               end if ! soil_matrix
+               end if !not soil_matrix
             end do ! s (pool loop)
 
          else

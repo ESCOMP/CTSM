@@ -1826,7 +1826,7 @@ contains
                                                       * deadstemn_storage(p)
                matrix_nturnover_deadstemxf_acc(p)     = matrix_nturnover_deadstemxf_acc(p) &
                                                       + (matrix_nphturnover(p,ideadstem_xf)+matrix_ngmturnover(p,ideadstem_xf)+matrix_nfiturnover(p,ideadstem_xf)) & 
-                                                      * deadstemn_storage(p)
+                                                      * deadstemn_xfer(p)
                matrix_nturnover_livecroot_acc(p)      = matrix_nturnover_livecroot_acc(p) &
                                                       + (matrix_nphturnover(p,ilivecroot)+matrix_ngmturnover(p,ilivecroot)+matrix_nfiturnover(p,ilivecroot)) &
                                                       * livecrootn(p)

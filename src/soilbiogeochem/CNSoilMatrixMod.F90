@@ -547,6 +547,11 @@ contains
                soilmatrixn_cap(c,:,1) = -matmul(AKinvn(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ns_soil%in_nacc(c,1:ndecomp_pools_vr))
             end do
          
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               if(any(soilmatrixc_cap(c,:,1) .lt. 0))soilmatrixc_cap(c,:,1) = matrix_Cinter%V(c,:)
+               if(any(soilmatrixn_cap(c,:,1) .lt. 0))soilmatrixn_cap(c,:,1) = matrix_Ninter%V(c,:)
+            end do
             ! If spin up is on, the capacity replaces the pool size with capacity.
             ! Copy the capacity into a 3D variable, and be ready to write to history files.
             do i=1,ndecomp_pools
