@@ -1931,6 +1931,12 @@ sub setup_logic_start_type {
     if (not defined $nl->get_value('nrevsn')) {
       $log->fatal_error("nrevsn is required for a branch type.");
     }
+    if (defined $nl->get_value('use_init_interp')) {
+       if ( &value_is_true($nl->get_value('use_init_interp') ) ) {
+         # Always print this warning, but don't stop if it happens
+         print "\nWARNING: use_init_interp will NOT happen for a branch case.\n\n";
+       }
+    }
   } else {
     if (defined $nl->get_value('nrevsn')) {
       $log->fatal_error("nrevsn should ONLY be set for a branch type.");
