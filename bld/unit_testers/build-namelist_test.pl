@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 825;
+my $ntests = 829;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 501;
+   $ntests += 504;
 }
 plan( tests=>$ntests );
 
@@ -279,6 +279,7 @@ foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp S
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
                       "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
+                      "-clm_start_type branch -namelist '&a nrevsn=\"thing.nc\",use_init_interp=T/'",
                       "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
                      ) {
    my $file = $startfile;
