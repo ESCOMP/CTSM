@@ -1017,9 +1017,11 @@ contains
        call this%AKphvegn%InitSM  (nvegnpool,begp,endp,nnphtrans-nnphouttrans+nvegnpool)
        call this%AKgmvegn%InitSM  (nvegnpool,begp,endp,nngmtrans-nngmouttrans+nvegnpool)
        call this%AKfivegn%InitSM  (nvegnpool,begp,endp,nnfitrans-nnfiouttrans+nvegnpool)
-       call this%AKallvegn%InitSM (nvegnpool,begp,endp,nnphtrans-nnphouttrans+nnfitrans-nnfiouttrans+nvegnpool)
 
-       this%NE_AKallvegn = nnphtrans-nnphouttrans+nnfitrans-nnfiouttrans+nvegnpool
+       this%NE_AKallvegn = (nnphtrans-nnphouttrans+nvegnpool) + (nngmtrans-nngmouttrans+nvegnpool) + &
+                           nnfitrans-nnfiouttrans+nvegnpool
+
+       call this%AKallvegn%InitSM (nvegnpool,begp,endp,this%NE_AKallvegn)
 
        allocate(this%RI_AKallvegn                      (1:this%NE_AKallvegn))     ; this%RI_AKallvegn(:) = -9999
        allocate(this%CI_AKallvegn                      (1:this%NE_AKallvegn))     ; this%CI_AKallvegn(:) = -9999

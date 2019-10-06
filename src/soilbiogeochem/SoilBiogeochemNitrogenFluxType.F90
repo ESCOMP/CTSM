@@ -287,7 +287,7 @@ contains
        Ntrans = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
        call this%AKsoiln%InitSM                (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+ndecomp_pools*nlevdecomp)
        call this%AKallsoiln%InitSM             (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+decomp_cascade_con%Ntri_setup+nlevdecomp)
-        this%NE_AKallsoiln = Ntrans+decomp_cascade_con%Ntri_setup+nlevdecomp
+        this%NE_AKallsoiln = (Ntrans+nlevdecomp*ndecomp_pools) + (Ntrans+decomp_cascade_con%Ntri_setup + nlevdecomp) + (ndecomp_pools*nlevdecomp)
         allocate(this%RI_AKallsoiln(1:this%NE_AKallsoiln)); this%RI_AKallsoiln(1:this%NE_AKallsoiln)=-9999
         allocate(this%CI_AKallsoiln(1:this%NE_AKallsoiln)); this%CI_AKallsoiln(1:this%NE_AKallsoiln)=-9999
         Ntrans_diag = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp+ndecomp_pools_vr

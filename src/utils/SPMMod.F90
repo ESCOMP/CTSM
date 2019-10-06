@@ -27,19 +27,21 @@ module SPMMod
   !sparse matrix is in COO format, Both row index and column index should be in ascending order. 
   !Row index should change faster than Column index to ensure SPMP_AB work properly.
  
-     real(r8), pointer :: M(:,:)        ! non-zero entries in sparse matrix (unit,sparse matrix index)
-     integer , pointer :: RI(:)         ! Row index
-     integer , pointer :: CI(:)         ! Column index
-     integer NE                         ! Number of nonzero entries
-     integer SM                         ! Size of matrix, eg. for nxn matrix, SM=n
-     integer num_unit                   ! number of active unit, such as patch, col, or gridcell
-     integer begu                       ! begin index of unit in current process
-     integer endu                       ! end index of unit in current process
+     real(r8), pointer :: M(:,:) => null() ! non-zero entries in sparse matrix (unit,sparse matrix index)
+     integer , pointer :: RI(:) => null()  ! Row index
+     integer , pointer :: CI(:) => null()  ! Column index
+     integer NE                            ! Number of nonzero entries
+     integer SM                            ! Size of matrix, eg. for nxn matrix, SM=n
+     integer num_unit                      ! number of active unit, such as patch, col, or gridcell
+     integer begu                          ! begin index of unit in current process
+     integer endu                          ! end index of unit in current process
   
   contains
     
     procedure, public :: InitSM         ! subroutine to initilize sparse matrix type
     procedure, public :: ReleaseSM      ! subroutine to deallocate the sparse matrix type data
+    procedure, public :: IsAllocSM      ! return true if the sparse matrix type is allocated (InitSM was called)
+    procedure, public :: IsEquivIdxSM   ! return true if the sparse matrix indices are the same for the two sparce matrices
     procedure, public :: SetValueSM     ! subroutine to set values in sparse matrix of any shape
     procedure, public :: SetValueA      ! subroutine to set off-diagonal values in sparse matrix of A
     procedure, public :: SetValueA_diag ! subroutine to set diagonal values in sparse matrix of A
@@ -54,16 +56,17 @@ module SPMMod
   
   !diagnoal matrix only store diagnoal entries
 
-     real(r8), pointer :: DM(:,:)         ! entries in diagonal matrix (unit,diagonal matrix index)
-     integer SM                           ! Size of matrix, eg. for nxn matrix, SM=n
-     integer num_unit                     ! number of active unit, such as patch, col, or gridcell
-     integer begu                         ! begin index of unit in current process
-     integer endu                         ! end index of unit in current process
+     real(r8), pointer :: DM(:,:) => null() ! entries in diagonal matrix (unit,diagonal matrix index)
+     integer SM                             ! Size of matrix, eg. for nxn matrix, SM=n
+     integer num_unit                       ! number of active unit, such as patch, col, or gridcell
+     integer begu                           ! begin index of unit in current process
+     integer endu                           ! end index of unit in current process
   
   contains
 
     procedure, public :: InitDM           ! subroutine to initialize diagonal matrix type
     procedure, public :: ReleaseDM        ! subroutine to deallocate the diagonal matrix
+    procedure, public :: IsAllocDM        ! return true if the diagonal matrix is allocated (InitDM was called)
     procedure, public :: SetValueDM       ! subroutine to set values in diagonal matrix
 
   end type diag_matrix_type
@@ -72,16 +75,17 @@ module SPMMod
   
   !vector 
 
-     real(r8), pointer :: V(:,:)          ! entries in vector (unit,vector index)
-     integer SV                           ! Size of vector
-     integer num_unit                     ! number of active unit, such as patch, col, or gridcell
-     integer begu                         ! begin index of unit in current process
-     integer endu                         ! end index of unit in current process
+     real(r8), pointer :: V(:,:) => null() ! entries in vector (unit,vector index)
+     integer SV                            ! Size of vector
+     integer num_unit                      ! number of active unit, such as patch, col, or gridcell
+     integer begu                          ! begin index of unit in current process
+     integer endu                          ! end index of unit in current process
 
   contains 
   
     procedure, public :: InitV            ! subroutine to initialize vector type
     procedure, public :: ReleaseV         ! subroutine to deallocate veector type
+    procedure, public :: IsAllocV         ! return true if the vector is allocated (InitV was called)
     procedure, public :: SetValueV        ! subroutine to set values in vector
     procedure, public :: SetValueV_scaler ! subroutine to set a constant value to a vector
     procedure, public :: SPMM_AX          ! subroutine to calculate multiplication X(vector)=A(sparse matrix)*X(vector)
@@ -107,20 +111,18 @@ integer,intent(in) :: SM_in
 integer,intent(in) :: begu
 integer,intent(in) :: endu
 integer,optional,intent(in) :: maxsm
+character(len=*),parameter :: subname = 'InitSM'
 
-!if ( associated(this%M) )then
-!   call endrun( "ERROR: Sparse Matrix was already allocated" )
-!end if
-!if ( associated(this%RI) )then
-!   call endrun( "ERROR: Sparse Matrix was already allocated" )
-!end if
-!if ( associated(this%CI) )then
-!   call endrun( "ERROR: Sparse Matrix was already allocated" )
-!end if
+if ( this%IsAllocSM() )then
+   call endrun( subname//" ERROR: Sparse Matrix was already allocated" )
+   return
+end if
 this%SM = SM_in
 this%begu = begu
 this%endu = endu
 if(present(maxsm))then
+   SHR_ASSERT_FL((maxsm >= 1), sourcefile, __LINE__)
+   SHR_ASSERT_FL((maxsm <= SM_in*SM_in), sourcefile, __LINE__)
    allocate(this%M(begu:endu,1:maxsm))
 else
    allocate(this%M(begu:endu,1:SM_in*SM_in))
@@ -145,11 +147,75 @@ end subroutine InitSM
      this%SM   = empty_int
      this%begu = empty_int
      this%endu = empty_int
-     deallocate(this%M)
-     deallocate(this%RI)
-     deallocate(this%CI)
+     if ( associated(this%M) )then
+        deallocate(this%M)
+     end if
+     if ( associated(this%RI) )then
+        deallocate(this%RI)
+     end if
+     if ( associated(this%CI) )then
+        deallocate(this%CI)
+     end if
+     this%M => null()
+     this%RI=> null()
+     this%CI=> null()
   end subroutine ReleaseSM
 
+  ! ========================================================================
+
+  logical function IsAllocSM(this)
+  
+  ! Check if the Sparse Matrix has been allocated (InitSM was called on it)
+  
+     class(sparse_matrix_type) :: this
+
+     if ( associated(this%M) .or. associated(this%RI) .or. associated(this%CI) )then
+        IsAllocSM = .true.
+     else
+        IsAllocSM = .false.
+     end if
+
+  end function IsAllocSM
+  
+
+  ! ========================================================================
+
+  logical function IsEquivIdxSM(this, A)
+  
+  ! Check if the Sparse Matrix indices are eqiuivalent
+  
+     class(sparse_matrix_type) :: this
+     type(sparse_matrix_type), intent(in)  :: A   ! Sparse matrix indices to compare to
+     character(len=*),parameter :: subname = 'IsEquivIdxSM'
+
+     ! Start checking easy critera and return if can determine status for sure,
+     ! keep checking harder things until everything has been checked for
+     if ( this%SM /= A%SM )then
+        IsEquivIdxSM = .false.
+        return
+     end if
+     if ( this%NE == A%NE )then
+         ! If NE is the same and the row and column indices are identical -- the
+         ! indices of the two arrays are identical
+         if ( all(this%RI(:this%NE) == A%RI(:this%NE)) .and. all(this%CI(:this%NE) == A%CI(:this%NE)) )then
+            IsEquivIdxSM = .true.
+            return
+         else
+            ! This needs more checking! The order could be different
+            IsEquivIdxSM = .false.
+            return
+         end if
+     else
+        ! This needs more checking! There could be some zerod entries in
+        ! non-zero positions
+        IsEquivIdxSM = .false.
+        return
+     end if
+     call endrun( subname//" ERROR: it should NOT be possible to reach this point" )
+     return
+
+  end function IsEquivIdxSM
+  
   ! ========================================================================
 
 subroutine SetValueSM(this,begu,endu,num_unit,filter_u,M,I,J,NE_in)
@@ -170,17 +236,29 @@ character(len=*),parameter :: subname = 'SetValueSM'
 
 integer k,u,fu
 
-if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
-   call endrun( subname//"ERROR: Sparse Matrix was NOT already allocated" )
+if ( .not. this%IsAllocSM() )then
+   call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
+   return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 2) >= NE_in), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(I, 1) >= NE_in), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(J, 1) >= NE_in), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M, 1) == begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 1) == endu), sourcefile, __LINE__)
-!SHR_ASSERT_FL((lbound(M, 1) == this%begu), sourcefile, __LINE__)
-!SHR_ASSERT_FL((ubound(M, 1) == this%endu), sourcefile, __LINE__)
+#ifndef _OPENMP
+! Without OpenMP array sizes will be identical
+SHR_ASSERT_FL((lbound(M, 1) == this%begu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M, 1) == this%endu), sourcefile, __LINE__)
+#else
+! With OpenMP the allocated array sizes might be larger than the input ones
+SHR_ASSERT_FL((lbound(M, 1) >= this%begu), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(M, 1) <= this%endu), sourcefile, __LINE__)
+#endif
+SHR_ASSERT_FL((maxval(I) <= this%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((minval(I) >= 1), sourcefile, __LINE__)
+SHR_ASSERT_FL((maxval(J) <= this%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((minval(J) >= 1), sourcefile, __LINE__)
 do k = 1,NE_in
    do fu = 1,num_unit
       u = filter_u(fu)  
@@ -209,10 +287,11 @@ integer,intent(in) :: filter_u(:)
 integer i,u,fu
 character(len=*),parameter :: subname = 'SetValueA_diag'
 
-if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
-   call endrun( subname//"ERROR: Sparse Matrix was NOT already allocated" )
+if ( .not. this%IsAllocSM() )then
+   call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
+   return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(this%M,1) == this%begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(this%M,1) == this%endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(this%M,2) >= this%SM), sourcefile, __LINE__)
@@ -262,14 +341,16 @@ character(len=*),parameter :: subname = 'SetValueA'
 
 list_ready = .false.
 
-if ( (.not. associated(this%M)) .or. (.not. associated(this%RI)) .or. (.not. associated(this%CI)) )then
-   call endrun( subname//"ERROR: Sparse Matrix was NOT already allocated" )
+if ( .not. this%IsAllocSM() )then
+   call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
+   return
 end if
 if(init_ready .and. .not. (present(list) .and. present(RI_A) .and. present(CI_A)))then
    write(iulog,*) "Error: initialization is ready, but at least one of list, RI_A or CI_A is not presented"
-   call endrun( subname//"ERROR: required optional arguments were NOT sent in" )
+   call endrun( subname//" ERROR: required optional arguments were NOT sent in" )
+   return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M,1) == begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,1) == endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,2) >= NE_NON), sourcefile, __LINE__)
@@ -302,6 +383,8 @@ if(Init_ready)then
    this%RI(1:this%NE) = RI_A(1:this%NE)
    this%CI(1:this%NE) = CI_A(1:this%NE)
 else
+   if ( A_diag%IsAllocSM()    ) call A_diag%ReleaseSM()
+   if ( A_nondiag%IsAllocSM() ) call A_nondiag%ReleaseSM()
    call A_diag%InitSM(this%SM,begu,endu)
    call A_nondiag%InitSM(this%SM,begu,endu)
 
@@ -333,9 +416,11 @@ class(diag_matrix_type) :: this
 integer,intent(in) :: SM_in
 integer,intent(in) :: begu
 integer,intent(in) :: endu
+character(len=*),parameter :: subname = 'InitDM'
 
-if ( associated(this%DM) )then
-   call endrun( "ERROR: Diagonal Matrix was already allocated" )
+if ( this%IsAllocDM() )then
+   call endrun( subname//" ERROR: Diagonal Matrix was already allocated" )
+   return
 end if
 this%SM = SM_in
 allocate(this%DM(begu:endu,1:SM_in))
@@ -355,8 +440,26 @@ end subroutine InitDM
     this%SM   = empty_int
     this%begu = empty_int
     this%endu = empty_int
-    deallocate(this%DM)
+    if ( associated(this%DM) )then
+       deallocate(this%DM)
+    end if
+    this%DM => null()
   end subroutine ReleaseDM
+
+  !-----------------------------------------------------------------------
+  logical function IsAllocDM(this)
+
+    ! Check if the Diagonal Matrix is allocated (InitDM was called)
+
+    class(diag_matrix_type) :: this
+
+    if ( associated(this%DM) )then
+       IsAllocDM = .true.
+    else
+       IsAllocDM = .false.
+    end if
+
+  end function IsAllocDM
 
   !-----------------------------------------------------------------------
 
@@ -375,10 +478,11 @@ character(len=*),parameter :: subname = 'SetValueDM'
 
 integer i,fu,u
 
-if ( .not. associated(this%DM) )then
-   call endrun( subname//"ERROR: Diagonal matrix was NOT already allocated" )
+if ( .not. this%IsAllocDM() )then
+   call endrun( subname//" ERROR: Diagonal matrix was NOT already allocated" )
+   return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M,1)        == begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,1)        == endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,2)        >= this%SM), sourcefile, __LINE__)
@@ -403,8 +507,9 @@ integer,intent(in) :: begu
 integer,intent(in) :: endu
 character(len=*),parameter :: subname = 'InitV'
 
-if ( associated(this%V) )then
-!   call endrun( "ERROR: Vector was already allocated" )
+if ( this%IsAllocV() )then
+  call endrun( subname//" ERROR: Vector was already allocated" )
+  return
 end if
 this%SV = SV_in
 allocate(this%V(begu:endu,1:SV_in))
@@ -420,10 +525,31 @@ subroutine ReleaseV(this)
 ! Deallocate vector type
 
 class(vector_type) :: this
-deallocate(this%V)
+if ( associated(this%V) )then
+   deallocate(this%V)
+end if
+this%V => null()
+this%begu = empty_int
+this%endu = empty_int
+this%SV = empty_int
 
 end subroutine ReleaseV
 
+  ! ========================================================================
+
+  logical function IsAllocV(this)
+  
+  ! Check if the Vector has been allocated (InitV was called on it)
+  
+     class(vector_type) :: this
+
+     if ( associated(this%V) )then
+        IsAllocV = .true.
+     else
+        IsAllocV = .false.
+     end if
+
+  end function IsAllocV
 
 subroutine SetValueV_scaler(this,num_unit,filter_u,scaler)
 
@@ -438,10 +564,11 @@ integer,intent(in) :: filter_u(:)
 integer i,fu,u
 character(len=*),parameter :: subname = 'SetValueV_scaler'
 
-if ( .not. associated(this%V) )then
-   call endrun( subname//"ERROR: Vector was NOT already allocated" )
+if ( .not. this%IsAllocV() )then
+   call endrun( subname//" ERROR: Vector was NOT already allocated" )
+   return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 do i=1,this%SV
    do fu = 1,num_unit
       u = filter_u(fu)
@@ -467,10 +594,11 @@ integer ,intent(in) :: filter_u(:)
 integer i,fu,u
 character(len=*),parameter :: subname = 'SetValueV'
 
-if ( .not. associated(this%V) )then
-   call endrun( subname//"ERROR: Vector was NOT already allocated" )
+if ( .not. this%IsAllocV() )then
+   call endrun( subname//" ERROR: Vector was NOT already allocated" )
+   return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M,1)        == begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,1)        == endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M,2)        >= this%SV), sourcefile, __LINE__)
@@ -498,7 +626,8 @@ integer,intent(in) :: filter_u(:)
 
 integer i,fu,u
 
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == K%SM), sourcefile, __LINE__)
 do i=1,this%NE
    do fu = 1,num_unit
       u = filter_u(fu)
@@ -524,7 +653,7 @@ integer,intent(in) :: filter_u(:)
 integer i,fu,u
 real(r8) :: V(this%begu:this%endu,1:this%SV)
 
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(this%V,2)   == this%SV), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%SV            <= A%SM), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(this%V,2)   == this%SV), sourcefile, __LINE__)
@@ -562,7 +691,11 @@ integer,intent(in) :: filter_u(:)
 
 integer i,fu,u
 
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%NE            == A%NE), sourcefile, __LINE__)
+SHR_ASSERT_ALL_FL((this%RI        == A%RI), sourcefile, __LINE__)
+SHR_ASSERT_ALL_FL((this%CI        == A%CI), sourcefile, __LINE__)
 this%NE=A%NE
 this%RI=A%RI
 this%CI=A%CI
@@ -594,26 +727,46 @@ logical,intent(inout)                   :: list_ready
 integer,intent(in) :: num_unit
 integer,intent(in) :: filter_u(:)
 
-integer,dimension(1:A%NE),intent(inout),optional :: list_A
-integer,dimension(1:B%NE),intent(inout),optional :: list_B
+integer,intent(inout),optional :: list_A(:)
+integer,intent(inout),optional :: list_B(:)
 integer,intent(inout),optional :: NE_AB
-integer,dimension(1:A%NE+B%NE),intent(inout),optional :: RI_AB
-integer,dimension(1:A%NE+B%NE),intent(inout),optional :: CI_AB
+integer,intent(inout),optional :: RI_AB(:)
+integer,intent(inout),optional :: CI_AB(:)
 
 integer,dimension(:) :: Aindex(A%NE+1),Bindex(B%NE+1)
 integer,dimension(:) :: ABindex(this%SM*this%SM)
 
 integer i_a,i_b,i_ab
 integer i,fu,u
+character(len=*),parameter :: subname = 'SPMP_AB'
 
 ! 'list_ready = .true.' means list_A, list_B, NE_AB, RI_AB, and CI_AB have been memorized before.
 ! In this case they all need to be presented. Otherwise, use 'list_ready = .false.' to get those information
 ! for the first time call this subroutine.
 
+if ( present(list_A) )then
+   SHR_ASSERT_FL((ubound(list_A,1) >= A%NE), sourcefile, __LINE__)
+end if
+if ( present(list_B) )then
+   SHR_ASSERT_FL((ubound(list_B,1) >= B%NE), sourcefile, __LINE__)
+end if
+if ( present(RI_AB) )then
+   SHR_ASSERT_FL((ubound(RI_AB,1) >= A%NE+B%NE), sourcefile, __LINE__)
+end if
+if ( present(CI_AB) )then
+   SHR_ASSERT_FL((ubound(CI_AB,1) >= A%NE+B%NE), sourcefile, __LINE__)
+end if
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(NE_AB) .and. present(RI_AB) .and. present(CI_AB)))then
    write(iulog,*) "error in SPMP_AB: list_ready is True, but at least one of list_A, list_B, NE_AB, RI_AB and CI_AB are not presented"
+   call endrun( subname//" ERROR: missing required optional arguments" )
+   return
 end if
-SHR_ASSERT_FL((ubound(filter_u,1) == num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((ubound(filter_u,1) >= num_unit), sourcefile, __LINE__)
+SHR_ASSERT_FL((A%NE               > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((B%NE               > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == B%SM), sourcefile, __LINE__)
 
 if(.not. list_ready)then
    i_a=1
@@ -722,49 +875,87 @@ integer,dimension(:),intent(in),optional :: filter_actunit_A
 integer,dimension(:),intent(in),optional :: filter_actunit_B
 integer,dimension(:),intent(in),optional :: filter_actunit_C
 
-integer,dimension(1:A%NE),intent(inout),optional :: list_A
-integer,dimension(1:B%NE),intent(inout),optional :: list_B
-integer,dimension(1:C%NE),intent(inout),optional :: list_C
+integer,intent(inout),optional :: list_A(:)
+integer,intent(inout),optional :: list_B(:)
+integer,intent(inout),optional :: list_C(:)
 integer,intent(inout),optional :: NE_ABC
-integer,dimension(1:A%NE+B%NE+C%NE),intent(inout),optional :: RI_ABC
-integer,dimension(1:A%NE+B%NE+C%NE),intent(inout),optional :: CI_ABC
+integer,intent(inout),optional :: RI_ABC(:)
+integer,intent(inout),optional :: CI_ABC(:)
 
+! Local data
 integer,dimension(:) :: Aindex(A%NE+1),Bindex(B%NE+1),Cindex(C%NE+1)
 integer,dimension(:) :: ABCindex(this%SM*this%SM)
 
 integer i_a,i_b,i_c,i_abc
 integer i,fu,u
+character(len=*),parameter :: subname = 'SPMP_ABC'
 
 ! 'list_ready = .true.' means list_A, list_B, list_C, NE_ABC, RI_ABC, and CI_ABC have been memorized before.
 ! In this case they all need to be presented. Otherwise, use 'list_ready = .false.' to get those information
 ! for the first time call this subroutine.
 
+SHR_ASSERT_FL((this%SM            > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((A%NE               > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((B%NE               > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((C%NE               > 0), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == B%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((this%SM            == C%SM), sourcefile, __LINE__)
+if( present(list_A) )then
+   SHR_ASSERT_FL((size(list_A)    >= A%NE), sourcefile, __LINE__)
+end if
+if( present(list_B) )then
+   SHR_ASSERT_FL((size(list_B)    >= B%NE), sourcefile, __LINE__)
+end if
+if( present(list_C) )then
+   SHR_ASSERT_FL((size(list_C)    >= C%NE), sourcefile, __LINE__)
+end if
+if( present(RI_ABC) )then
+   SHR_ASSERT_FL((size(RI_ABC)    >= A%NE+B%NE+C%NE), sourcefile, __LINE__)
+end if
+if( present(CI_ABC) )then
+   SHR_ASSERT_FL((size(CI_ABC)    >= A%NE+B%NE+C%NE), sourcefile, __LINE__)
+end if
 if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(list_C) .and. present(NE_ABC) .and. present(RI_ABC) .and. present(CI_ABC)))then
    write(iulog,*) "error in SPMP_ABC: list_ready is True, but at least one of list_A, list_B, list_C, NE_ABC, RI_ABC and CI_ABC are not presented",&
               present(list_A),present(list_B),present(list_C),present(NE_ABC),present(RI_ABC),present(CI_ABC)
+   call endrun( subname//" ERROR: missing required optional arguments" )
+   return
 end if
 if(present(num_actunit_A))then
    if(num_actunit_A .eq. 0)then
       write(iulog,*) "error: num_actunit_A cannot be set to 0"
+      call endrun( subname//" ERROR: bad value for num_actunit_A" )
+      return
    end if
    if(.not. present(filter_actunit_A))then
       write(iulog,*) "error: num_actunit_A is presented but filter_actunit_A is missing"
+      call endrun( subname//" ERROR: missing required optional arguments" )
+      return
    end if
 end if
 if(present(num_actunit_B))then
    if(num_actunit_B .eq. 0)then
       write(iulog,*) "error: num_actunit_B cannot be set to 0"
+      call endrun( subname//" ERROR: bad value for num_actunit_B" )
+      return
    end if
    if(.not. present(filter_actunit_B))then
       write(iulog,*) "error: num_actunit_B is presented but filter_actunit_B is missing"
+      call endrun( subname//" ERROR: missing required optional arguments" )
+      return
    end if
 end if
 if(present(num_actunit_C))then
    if(num_actunit_C .eq. 0)then
       write(iulog,*) "error: num_actunit_C cannot be set to 0"
+      call endrun( subname//" ERROR: bad value for num_actunit_C" )
+      return
    end if
    if(.not. present(filter_actunit_C))then
       write(iulog,*) "error: num_actunit_C is presented but filter_actunit_C is missing"
+      call endrun( subname//" ERROR: missing required optional arguments" )
+      return
    end if
 end if
 
