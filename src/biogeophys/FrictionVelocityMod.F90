@@ -424,19 +424,19 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(displa)  == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(z0m)     == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(z0h)     == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(z0q)     == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(obu)     == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ur)      == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(um)      == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ustar)   == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(temp1)   == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(temp12m) == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(temp2)   == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(temp22m) == (/ubn/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fm)      == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(displa)  == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(z0m)     == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(z0h)     == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(z0q)     == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(obu)     == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ur)      == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(um)      == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ustar)   == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(temp1)   == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(temp12m) == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(temp2)   == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(temp22m) == (/ubn/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fm)      == (/ubn/)), sourcefile, __LINE__)
 
     associate(                                                   & 
          pfti             => lun%patchi                          , & ! Input:  [integer  (:) ] beginning pfti index for landunit         

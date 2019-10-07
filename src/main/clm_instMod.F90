@@ -31,6 +31,7 @@ module clm_instMod
   ! Definition of component types 
   !-----------------------------------------
 
+  use ActiveLayerMod                  , only : active_layer_type
   use AerosolMod                      , only : aerosol_type
   use CanopyStateType                 , only : canopystate_type
   use ch4Mod                          , only : ch4_type
@@ -96,6 +97,7 @@ module clm_instMod
   !-----------------------------------------
 
   ! Physics types 
+  type(active_layer_type), public         :: active_layer_inst
   type(aerosol_type), public              :: aerosol_inst
   type(canopystate_type), public          :: canopystate_inst
   type(energyflux_type), public           :: energyflux_inst
@@ -281,6 +283,8 @@ contains
          urbanparams_inst%em_improad(begl:endl), &
          urbanparams_inst%em_perroad(begl:endl), &
          IsSimpleBuildTemp(), IsProgBuildTemp() )
+
+    call active_layer_inst%Init(bounds)
 
     call canopystate_inst%Init(bounds)
 
@@ -489,6 +493,8 @@ contains
     type(bounds_type)                 :: bounds_clump
 
     !-----------------------------------------------------------------------
+
+    call active_layer_inst%restart (bounds, ncid, flag=flag)
 
     call atm2lnd_inst%restart (bounds, ncid, flag=flag)
 

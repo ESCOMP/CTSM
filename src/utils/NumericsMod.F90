@@ -7,7 +7,6 @@ module NumericsMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use shr_log_mod      , only : errMsg => shr_log_errMsg
 
   implicit none
   save
@@ -75,8 +74,8 @@ contains
     character(len=*), parameter :: subname = 'truncate_small_values'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(data_baseline) == (/ub/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(data) == (/ub/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(data_baseline) == (/ub/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(data) == (/ub/)), sourcefile, __LINE__)
 
     do fn = 1, num_f
        n = filter_f(fn)

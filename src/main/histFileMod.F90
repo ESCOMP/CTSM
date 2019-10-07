@@ -1118,7 +1118,7 @@ contains
     integer k_offset                    ! offset for mapping sliced subarray pointers when outputting variables in PFT/col vector form
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
 
     avgflag        =  tape(t)%hlist(f)%avgflag
     nacs           => tape(t)%hlist(f)%nacs
@@ -1139,8 +1139,8 @@ contains
 
     map2gcell = .false.
     if (type1d_out == nameg .or. type1d_out == grlnd) then
-       SHR_ASSERT(beg1d_out == bounds%begg, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endg, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begg, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endg, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1170,8 +1170,8 @@ contains
        end if
     end if
     if (type1d_out == namel ) then
-       SHR_ASSERT(beg1d_out == bounds%begl, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endl, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begl, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endl, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1194,8 +1194,8 @@ contains
        end if
     end if
     if (type1d_out == namec ) then
-       SHR_ASSERT(beg1d_out == bounds%begc, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endc, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begc, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endc, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1415,7 +1415,7 @@ contains
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
 
     avgflag             =  tape(t)%hlist(f)%avgflag
     nacs                => tape(t)%hlist(f)%nacs
@@ -1459,8 +1459,8 @@ contains
 
     map2gcell = .false.
     if (type1d_out == nameg .or. type1d_out == grlnd) then
-       SHR_ASSERT(beg1d_out == bounds%begg, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endg, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begg, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endg, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1489,8 +1489,8 @@ contains
           map2gcell = .true.
        end if
     else if ( type1d_out == namel )then
-       SHR_ASSERT(beg1d_out == bounds%begl, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endl, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begl, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endl, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1512,8 +1512,8 @@ contains
           map2gcell = .true.
        end if
     else if ( type1d_out == namec )then
-       SHR_ASSERT(beg1d_out == bounds%begc, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endc, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begc, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endc, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1741,9 +1741,9 @@ contains
     character(len=*), parameter :: subname = 'hist_set_snow_field_2d'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(field_out, 1) == end1d), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(field_in , 1) == end1d), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(field_out, 2) == ubound(field_in, 2)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(field_out, 1) == end1d), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(field_in , 1) == end1d), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(field_out, 2) == ubound(field_in, 2)), sourcefile, __LINE__)
 
     associate(&
     snl            => col%snl  &   ! Input: [integer (:)] number of snow layers (negative)
@@ -2251,10 +2251,10 @@ contains
                                                       /)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     !-------------------------------------------------------------------------------
     !***      Non-time varying 3D fields                    ***
@@ -3370,10 +3370,10 @@ contains
     character(len=*),parameter :: subname = 'hist_htapes_wrapup'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     ! get current step
 
