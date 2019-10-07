@@ -1053,27 +1053,24 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
 
+<!-- Only the CMIP6 Tier I Nitogen deposition files are available -->
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
->lnd/clm2/ndepdata/fndep_clm_SSP585_b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190211.nc</stream_fldfilename_ndep>
-<!-- We currently only have the Tier I Nitogen deposition files available -->
+>lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
->lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-2.6-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_SSP245_b.e21.BWSSP245cmip6.f09_g17.CMIP6-SSP2-4.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 
-<stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
-
-<!-- We currently only have the Tier I Nitogen deposition files available -->
 <stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
->lnd/clm2/ndepdata/fndep_clm_SSP585_b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190211.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
->lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-2.6-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_SSP245_b.e21.BWSSP245cmip6.f09_g17.CMIP6-SSP2-4.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
 
 <ndep_taxmode            phys="clm5_0" use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_0" use_cn=".true.">NDEP_month</ndep_varlist>
