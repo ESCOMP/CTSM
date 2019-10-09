@@ -490,14 +490,22 @@ contains
          call t_stopf('CN Soil matrix-spinup & output1.6')
         
          ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
-         call t_startf('CN Soil matrix-spinup & output2')
-         call AKXnacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoiln)
-         call t_stopf('CN Soil matrix-spinup & output2')
+         if ( AKXnacc%IsValuesSetSM() )then
+            call t_startf('CN Soil matrix-spinup & output2')
+            call AKXnacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoiln)
+            call t_stopf('CN Soil matrix-spinup & output2')
+         else
+            call AKXnacc%SetValueCopySM(num_soilc,filter_soilc,AKallsoiln)
+         end if
 
          ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
-         call t_startf('CN Soil matrix-spinup & output3')
-         call AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoilc)
-         call t_stopf('CN Soil matrix-spinup & output3')
+         if ( AKXcacc%IsValuesSetSM() )then
+            call t_startf('CN Soil matrix-spinup & output3')
+            call AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoilc)
+            call t_stopf('CN Soil matrix-spinup & output3')
+         else
+            call AKXcacc%SetValueCopySM(num_soilc,filter_soilc,AKallsoilc)
+         end if
 
 
          call t_startf('CN Soil matrix-calc. C capacity')

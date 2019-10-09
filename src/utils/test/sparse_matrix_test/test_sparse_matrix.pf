@@ -182,8 +182,14 @@ contains
     do i = begu, endu
        this%filter_u(i) = i
     end do
+    @assertFalse( this%SM_identity%IsAlloc() )
+    @assertFalse( this%SM_identity%IsValuesSetSM() )
     call this%SM_identity%InitSM( ndims, begu, endu )
+    @assertTrue( this%SM_identity%IsAlloc() )
+    @assertFalse( this%SM_identity%IsValuesSetSM() )
     call this%SM_identity%SetValueA_diag( this%num_unit,this%filter_u, 1.0_r8 )
+    @assertTrue( this%SM_identity%IsAlloc() )
+    @assertTrue( this%SM_identity%IsValuesSetSM() )
     call this%DM_identity%InitDM( ndims, begu, endu )
     Mdiag = 1.0_r8
     call this%DM_identity%SetValueDM(begu,endu,this%num_unit,this%filter_u,Mdiag)
