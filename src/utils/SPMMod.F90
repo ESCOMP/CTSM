@@ -44,6 +44,8 @@ module SPMMod
     procedure, public :: SetValueSM     ! subroutine to set values in sparse matrix of any shape
     procedure, public :: SetValueA      ! subroutine to set off-diagonal values in sparse matrix of A
     procedure, public :: SetValueA_diag ! subroutine to set diagonal values in sparse matrix of A
+    procedure, public :: SetValueCopySM ! subroutine to copy the input sparse matrix to the output
+    procedure, public :: IsValuesSetSM  ! return true if the values are set in the matrix
     procedure, public :: SPMM_AK        ! subroutine to calculate sparse matrix multiplication: A(sparse matrix) = A(sparse matrix) * K(diagonal matrix)
     procedure, public :: SPMP_AB        ! subroutine to calculate sparse matrix addition AB(sparse matrix) = A(sparse matrix) + B(sparse matrix)
     procedure, public :: SPMP_B_ACC     ! subroutine to calculate sparse matrix accumulation: B(sparse matrix) = B(sparse matrix) + A(sparse matrix)
@@ -366,6 +368,54 @@ end if
 
 end subroutine SetValueA
 
+
+  ! ========================================================================
+
+  subroutine SetValueCopySM(this, num_unit, filter_u, matrix)
+
+  ! Set the sparse matrix by copying from another sparse matrix
+
+     class(sparse_matrix_type) :: this
+     type(sparse_matrix_type), intent(in) :: matrix
+     character(len=*),parameter :: subname = 'CopyValueSM'
+
+     if ( .not. this%IsAllocSM() )then
+        call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
+        return
+     end if
+     if ( .not. matrix%IsValuesSetSM() )then
+        call endrun( subname//" ERROR: Sparse Matrix data sent in was NOT already set" )
+        return
+     end if
+     SHR_ASSERT_FL( (this%SM   == matrix%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL( (this%begu == matrix%begu), sourcefile, __LINE__)
+     SHR_ASSERT_FL( (this%endu == matrix%endu), sourcefile, __LINE__)
+     SHR_ASSERT_FL((maxval(matrix%RI) <= this%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL((minval(matrix%RI) >= 1), sourcefile, __LINE__)
+     SHR_ASSERT_FL((maxval(matrix%CI) <= this%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL((minval(matrix%CI) >= 1), sourcefile, __LINE__)
+     call this%SetValueSM( matrix%begu, matrix%endu, num_unit, filter_u, matrix%M, &
+                           matrix%RI, matrix%CI, matrix%NE)
+
+  end subroutine SetValueCopySM
+
+  ! ========================================================================
+
+  logical function IsValuesSetSM(this)
+
+  ! Check if the Sparse Matrix has it's data been set (One of the SetValue* subroutines was called on it)
+
+     class(sparse_matrix_type) :: this
+
+     if ( this%IsAllocSM() .or. this%NE == empty_int )then
+        IsValuesSetSM = .false.
+     else
+        IsValuesSetSM = .true.
+     end if
+
+  end function IsValuesSetSM
+
+  ! ========================================================================
 
 subroutine InitDM(this,SM_in,begu,endu)
 
