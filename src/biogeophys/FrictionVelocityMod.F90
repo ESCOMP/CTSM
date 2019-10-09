@@ -1,21 +1,26 @@
 module FrictionVelocityMod
 
-#include "shr_assert.h"
-
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Calculation of the friction velocity, relation for potential
   ! temperature and humidity profiles of surface boundary layer.
   !
   ! !USES:
+#include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   use clm_varcon   , only : spval
   use clm_varctl   , only : use_cn, use_luna
-  use LandunitType , only : lun                
+  use LandunitType , only : lun
   use ColumnType   , only : col
-  use PatchType    , only : patch                
+  use PatchType    , only : patch
+  use landunit_varcon, only : istsoil, istcrop, istice_mec, istwet
+  use ncdio_pio    , only : file_desc_t
+  use paramUtilMod , only : readNcdioScalar
+  use atm2lndType          , only : atm2lnd_type
+  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+  use CanopyStateType      , only : canopystate_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -23,6 +28,7 @@ module FrictionVelocityMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: FrictionVelReadNML     ! Read in the namelist for settings and parameters
+  public :: SetRoughnessLengthsAndForcHeightsNonLake  ! Set roughness lengths and forcing heights for non-lake points
   public :: FrictionVelocity       ! Calculate friction velocity
   public :: MoninObukIni           ! Initialization of the Monin-Obukhov length
   !
@@ -31,6 +37,11 @@ module FrictionVelocityMod
   private :: StabilityFunc2        ! Stability function for rib < 0.
 
   type, public :: frictionvel_type
+     private
+
+     ! Scalar parameters
+     real(r8) :: zsno = -999._r8  ! Momentum roughness length for snow (m)
+     real(r8) :: zlnd = -999._r8  ! Momentum roughness length for soil, glacier, wetland (m)
 
      ! Roughness length/resistance for friction velocity calculation
 
@@ -45,7 +56,6 @@ module FrictionVelocityMod
      real(r8), pointer, public :: rb1_patch        (:)   ! patch aerodynamical resistance (s/m) (for dry deposition of chemical tracers)
      real(r8), pointer, public :: rb10_patch       (:)   ! 10-day mean patch aerodynamical resistance (s/m) (for LUNA model)
      real(r8), pointer, public :: ram1_patch       (:)   ! patch aerodynamical resistance (s/m)
-     real(r8), pointer, public :: z0m_patch        (:)   ! patch momentum roughness length (m)
      real(r8), pointer, public :: z0mv_patch       (:)   ! patch roughness length over vegetation, momentum [m]
      real(r8), pointer, public :: z0hv_patch       (:)   ! patch roughness length over vegetation, sensible heat [m]
      real(r8), pointer, public :: z0qv_patch       (:)   ! patch roughness length over vegetation, latent heat [m]
@@ -56,37 +66,41 @@ module FrictionVelocityMod
    contains
 
      ! Public procedures
-     procedure, public  :: Init         
-     procedure, public  :: Restart      
+     procedure, public  :: Init
+     procedure, public  :: Restart
 
      ! Private procedures
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
+     procedure, private :: ReadParams
 
   end type frictionvel_type
 
   type, public :: frictionvel_parms_type
      real(r8) :: zetamaxstable            ! Max value zeta ("height" used in Monin-Obukhov theory) can go to under stable conditions
+
   end type frictionvel_parms_type
+
+  type(frictionvel_parms_type), public, protected :: frictionvel_parms_inst
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !------------------------------------------------------------------------------
 
-  type(frictionvel_parms_type), public, protected :: frictionvel_parms_inst
-
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, params_ncid)
 
     class(frictionvel_type) :: this
     type(bounds_type), intent(in) :: bounds  
+    type(file_desc_t),intent(inout) :: params_ncid   ! pio netCDF file id
 
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
     call this%InitCold(bounds)
+    call this%ReadParams(params_ncid)
 
   end subroutine Init
 
@@ -122,7 +136,6 @@ contains
     allocate(this%rb1_patch        (begp:endp)) ; this%rb1_patch        (:)   = nan
     allocate(this%rb10_patch       (begp:endp)) ; this%rb10_patch       (:)   = spval
     allocate(this%ram1_patch       (begp:endp)) ; this%ram1_patch       (:)   = nan
-    allocate(this%z0m_patch        (begp:endp)) ; this%z0m_patch        (:)   = nan
     allocate(this%z0mv_patch       (begp:endp)) ; this%z0mv_patch       (:)   = nan
     allocate(this%z0hv_patch       (begp:endp)) ; this%z0hv_patch       (:)   = nan
     allocate(this%z0qv_patch       (begp:endp)) ; this%z0qv_patch       (:)   = nan
@@ -209,13 +222,6 @@ contains
     end if
 
     if (use_cn) then
-       this%z0m_patch(begp:endp) = spval
-       call hist_addfld1d (fname='Z0M', units='m', &
-            avgflag='A', long_name='momentum roughness length', &
-            ptr_patch=this%z0m_patch, default='inactive')
-    end if
-
-    if (use_cn) then
        this%z0mv_patch(begp:endp) = spval
        call hist_addfld1d (fname='Z0MV', units='m', &
             avgflag='A', long_name='roughness length over vegetation, momentum', &
@@ -271,6 +277,24 @@ contains
     end do
    
   end subroutine InitCold
+
+  !------------------------------------------------------------------------------
+  subroutine ReadParams( this, params_ncid )
+    !
+    ! !ARGUMENTS:
+    class(frictionvel_type), intent(inout) :: this
+    type(file_desc_t),intent(inout) :: params_ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'ReadParams_FrictionVelocity'
+    !--------------------------------------------------------------------
+
+    ! Momentum roughness length for snow (m)
+    call readNcdioScalar(params_ncid, 'zsno', subname, this%zsno)
+    ! Momentum roughness length for soil, glacier, wetland (m)
+    call readNcdioScalar(params_ncid, 'zlnd', subname, this%zlnd)
+
+  end subroutine ReadParams
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
@@ -367,6 +391,111 @@ contains
     frictionvel_parms_inst%zetamaxstable = zetamaxstable
 
   end subroutine FrictionVelReadNML
+
+  !-----------------------------------------------------------------------
+  subroutine SetRoughnessLengthsAndForcHeightsNonLake(this, bounds, &
+       num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
+       atm2lnd_inst, waterdiagnosticbulk_inst, canopystate_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set roughness lengths and forcing heights for non-lake points
+    !
+    ! !ARGUMENTS:
+    class(frictionvel_type)        , intent(inout) :: this
+    type(bounds_type)              , intent(in)    :: bounds    
+    integer                        , intent(in)    :: num_nolakec       ! number of column non-lake points in column filter
+    integer                        , intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
+    integer                        , intent(in)    :: num_nolakep       ! number of column non-lake points in patch filter
+    integer                        , intent(in)    :: filter_nolakep(:) ! patch filter for non-lake points
+    type(atm2lnd_type)             , intent(in)    :: atm2lnd_inst
+    type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
+    type(canopystate_type)         , intent(in)    :: canopystate_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: fp, p
+    integer :: l, g
+
+    character(len=*), parameter :: subname = 'SetRoughnessLengthsAndForcHeightsNonLake'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         z0mv             =>    this%z0mv_patch                       , & ! Output: [real(r8) (:)   ] roughness length over vegetation, momentum [m]
+         z0hv             =>    this%z0hv_patch                       , & ! Output: [real(r8) (:)   ] roughness length over vegetation, sensible heat [m]
+         z0qv             =>    this%z0qv_patch                       , & ! Output: [real(r8) (:)   ] roughness length over vegetation, latent heat [m]
+         z0hg             =>    this%z0hg_col                         , & ! Output: [real(r8) (:)   ] roughness length over ground, sensible heat [m]
+         z0mg             =>    this%z0mg_col                         , & ! Output: [real(r8) (:)   ] roughness length over ground, momentum [m]
+         z0qg             =>    this%z0qg_col                         , & ! Output: [real(r8) (:)   ] roughness length over ground, latent heat [m]
+         forc_hgt_t_patch =>    this%forc_hgt_t_patch                 , & ! Output: [real(r8) (:)   ] observational height of temperature at patch level [m]
+         forc_hgt_q_patch =>    this%forc_hgt_q_patch                 , & ! Output: [real(r8) (:)   ] observational height of specific humidity at patch level [m]
+         forc_hgt_u_patch =>    this%forc_hgt_u_patch                 , & ! Output: [real(r8) (:)   ] observational height of wind at patch level [m]
+         z0m              =>    canopystate_inst%z0m_patch            , & ! Input: [real(r8) (:)   ] momentum roughness length (m)
+         displa           =>    canopystate_inst%displa_patch         , & ! Input: [real(r8) (:)   ] displacement height (m)
+
+         frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)   ] fraction of vegetation not covered by snow (0 OR 1) [-]
+         frac_sno         =>    waterdiagnosticbulk_inst%frac_sno_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         urbpoi           =>    lun%urbpoi                            , & ! Input:  [logical  (:)   ] true => landunit is an urban point
+         z_0_town         =>    lun%z_0_town                          , & ! Input:  [real(r8) (:)   ] momentum roughness length of urban landunit (m)
+         z_d_town         =>    lun%z_d_town                          , & ! Input:  [real(r8) (:)   ] displacement height of urban landunit (m)
+         forc_hgt_t       =>    atm2lnd_inst%forc_hgt_t_grc           , & ! Input:  [real(r8) (:)   ] observational height of temperature [m]
+         forc_hgt_u       =>    atm2lnd_inst%forc_hgt_u_grc           , & ! Input:  [real(r8) (:)   ] observational height of wind [m]
+         forc_hgt_q       =>    atm2lnd_inst%forc_hgt_q_grc             & ! Input:  [real(r8) (:)   ] observational height of specific humidity [m]
+         )
+
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+
+       ! Ground roughness lengths over non-lake columns (includes bare ground, ground
+       ! underneath canopy, wetlands, etc.)
+       if (frac_sno(c) > 0._r8) then
+          z0mg(c) = this%zsno
+       else
+          z0mg(c) = this%zlnd
+       end if
+       z0hg(c) = z0mg(c)            ! initial set only
+       z0qg(c) = z0mg(c)            ! initial set only
+    end do
+
+    do fp = 1,num_nolakep
+       p = filter_nolakep(fp)
+
+       ! Roughness lengths over vegetation
+       z0mv(p)   = z0m(p)
+       z0hv(p)   = z0mv(p)
+       z0qv(p)   = z0mv(p)
+    end do
+
+    ! Make forcing height a patch-level quantity that is the atmospheric forcing 
+    ! height plus each patch's z0m+displa
+    do fp = 1, num_nolakep
+       p = filter_nolakep(fp)
+       g = patch%gridcell(p)
+       l = patch%landunit(p)
+       c = patch%column(p)
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+          if (frac_veg_nosno(p) == 0) then
+             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
+             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c) + displa(p)
+             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c) + displa(p)
+          else
+             forc_hgt_u_patch(p) = forc_hgt_u(g) + z0m(p) + displa(p)
+             forc_hgt_t_patch(p) = forc_hgt_t(g) + z0m(p) + displa(p)
+             forc_hgt_q_patch(p) = forc_hgt_q(g) + z0m(p) + displa(p)
+          end if
+       else if (lun%itype(l) == istwet .or. lun%itype(l) == istice_mec) then
+          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c)
+          forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c)
+          forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c)
+       else if (urbpoi(l)) then
+          forc_hgt_u_patch(p) = forc_hgt_u(g) + z_0_town(l) + z_d_town(l)
+          forc_hgt_t_patch(p) = forc_hgt_t(g) + z_0_town(l) + z_d_town(l)
+          forc_hgt_q_patch(p) = forc_hgt_q(g) + z_0_town(l) + z_d_town(l)
+       end if
+    end do
+
+    end associate
+
+  end subroutine SetRoughnessLengthsAndForcHeightsNonLake
 
   !------------------------------------------------------------------------------
   subroutine FrictionVelocity(lbn, ubn, fn, filtern, &

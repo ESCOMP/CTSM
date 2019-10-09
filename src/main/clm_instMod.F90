@@ -305,7 +305,7 @@ contains
 
     call aerosol_inst%Init(bounds, NLFilename)
 
-    call frictionvel_inst%Init(bounds)
+    call frictionvel_inst%Init(bounds, params_ncid = params_ncid)
 
     call lakestate_inst%Init(bounds)
     call LakeConInit()
@@ -567,8 +567,7 @@ contains
 
        call clm_fates%restart(bounds, ncid, flag=flag,  &
             waterdiagnosticbulk_inst=water_inst%waterdiagnosticbulk_inst, &
-            canopystate_inst=canopystate_inst, &
-            frictionvel_inst=frictionvel_inst)
+            canopystate_inst=canopystate_inst)
 
     end if
 

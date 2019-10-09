@@ -38,6 +38,7 @@ module CanopyStateType
      real(r8) , pointer :: annlai_patch             (:,:) ! patch 12 months of monthly lai from input data set (for dry deposition of chemical tracers) 
      real(r8) , pointer :: htop_patch               (:)   ! patch canopy top (m)
      real(r8) , pointer :: hbot_patch               (:)   ! patch canopy bottom (m)
+     real(r8) , pointer :: z0m_patch                (:)   ! patch momentum roughness length (m)
      real(r8) , pointer :: displa_patch             (:)   ! patch displacement height (m)
      real(r8) , pointer :: fsun_patch               (:)   ! patch sunlit fraction of canopy         
      real(r8) , pointer :: fsun24_patch             (:)   ! patch 24hr average of sunlit fraction of canopy 
@@ -128,6 +129,7 @@ contains
     allocate(this%annlai_patch          (12,begp:endp))           ; this%annlai_patch             (:,:) = nan
     allocate(this%htop_patch               (begp:endp))           ; this%htop_patch               (:)   = nan
     allocate(this%hbot_patch               (begp:endp))           ; this%hbot_patch               (:)   = nan
+    allocate(this%z0m_patch                (begp:endp))           ; this%z0m_patch                (:)   = nan
     allocate(this%displa_patch             (begp:endp))           ; this%displa_patch             (:)   = nan
     allocate(this%fsun_patch               (begp:endp))           ; this%fsun_patch               (:)   = nan
     allocate(this%fsun24_patch             (begp:endp))           ; this%fsun24_patch             (:)   = nan
@@ -219,6 +221,11 @@ contains
     end if
 
     if (use_cn) then
+       this%z0m_patch(begp:endp) = spval
+       call hist_addfld1d (fname='Z0M', units='m', &
+            avgflag='A', long_name='momentum roughness length', &
+            ptr_patch=this%z0m_patch, default='inactive')
+
        this%alt_col(begc:endc) = spval
        call hist_addfld1d (fname='ALT', units='m', &
             avgflag='A', long_name='current active layer thickness', &

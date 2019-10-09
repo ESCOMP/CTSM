@@ -195,6 +195,9 @@ contains
          dz_lake          =>    col%dz_lake                            , & ! Input:  [real(r8) (:,:) ]  layer thickness for lake (m)                    
          lakedepth        =>    col%lakedepth                          , & ! Input:  [real(r8) (:)   ]  variable lake depth (m)                           
          
+         forc_hgt_t       =>    atm2lnd_inst%forc_hgt_t_grc            , & ! Input:  [real(r8) (:)   ]  observational height of temperature [m]
+         forc_hgt_u       =>    atm2lnd_inst%forc_hgt_u_grc            , & ! Input:  [real(r8) (:)   ]  observational height of wind [m]
+         forc_hgt_q       =>    atm2lnd_inst%forc_hgt_q_grc            , & ! Input:  [real(r8) (:)   ]  observational height of specific humidity [m]
          forc_t           =>    atm2lnd_inst%forc_t_downscaled_col     , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)                  
          forc_pbot        =>    atm2lnd_inst%forc_pbot_downscaled_col  , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                         
          forc_th          =>    atm2lnd_inst%forc_th_downscaled_col    , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (Kelvin)        
@@ -333,9 +336,9 @@ contains
 
          ! Surface temperature and fluxes
 
-         forc_hgt_u_patch(p) = forc_hgt_u_patch(p) + z0mg(p)
-         forc_hgt_t_patch(p) = forc_hgt_t_patch(p) + z0mg(p)
-         forc_hgt_q_patch(p) = forc_hgt_q_patch(p) + z0mg(p)
+         forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(p)
+         forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(p)
+         forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(p)
 
          ! Find top layer
          jtop(c) = snl(c) + 1

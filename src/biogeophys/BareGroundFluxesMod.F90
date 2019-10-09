@@ -248,6 +248,8 @@ contains
          qflx_ev_h2osfc         => waterfluxbulk_inst%qflx_ev_h2osfc_patch          , & ! Output: [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]                      
          qflx_evap_soi          => waterfluxbulk_inst%qflx_evap_soi_patch           , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)                              
          qflx_evap_tot          => waterfluxbulk_inst%qflx_evap_tot_patch           , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg                         
+         qflx_tran_veg          => waterfluxbulk_inst%qflx_tran_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
+         qflx_evap_veg          => waterfluxbulk_inst%qflx_evap_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)
 
          rssun                  => photosyns_inst%rssun_patch                   , & ! Output: [real(r8) (:)   ]  leaf sunlit stomatal resistance (s/m) (output from Photosynthesis)
          rssha                  => photosyns_inst%rssha_patch                   , & ! Output: [real(r8) (:)   ]  leaf shaded stomatal resistance (s/m) (output from Photosynthesis)
@@ -400,6 +402,8 @@ contains
          eflx_sh_h2osfc(p) = -raih*(thm(p)-t_h2osfc(c))
 
          ! water fluxes from soil
+         qflx_tran_veg(p)  = 0._r8
+         qflx_evap_veg(p)  = 0._r8
          qflx_evap_soi(p)  = -raiw*dqh(p)
          qflx_evap_tot(p)  = qflx_evap_soi(p)
 

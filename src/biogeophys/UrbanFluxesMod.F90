@@ -299,7 +299,6 @@ contains
          qflx_evap_soi       =>   waterfluxbulk_inst%qflx_evap_soi_patch        , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)          
          qflx_tran_veg       =>   waterfluxbulk_inst%qflx_tran_veg_patch        , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
          qflx_evap_veg       =>   waterfluxbulk_inst%qflx_evap_veg_patch        , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)    
-         qflx_evap_tot       =>   waterfluxbulk_inst%qflx_evap_tot_patch        , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
 
          begl                =>   bounds%begl                               , &
          endl                =>   bounds%endl                                 &
