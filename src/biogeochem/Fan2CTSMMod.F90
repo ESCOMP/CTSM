@@ -272,13 +272,13 @@ contains
     do_balance_checks = balance_check_freq > 0 .and. mod(get_nstep(), balance_check_freq) == 0
 
     associate(&
-         ngrz => soilbiogeochem_nitrogenflux_inst%man_n_grz_col, &
-         man_u_grz => soilbiogeochem_nitrogenstate_inst%man_u_grz_col, &
-         man_a_grz => soilbiogeochem_nitrogenstate_inst%man_a_grz_col, &
-         man_r_grz => soilbiogeochem_nitrogenstate_inst%man_r_grz_col, &
-         man_u_app => soilbiogeochem_nitrogenstate_inst%man_u_app_col, &
-         man_a_app => soilbiogeochem_nitrogenstate_inst%man_a_app_col, &
-         man_r_app => soilbiogeochem_nitrogenstate_inst%man_r_app_col, &
+         ngrz => soilbiogeochem_nitrogenflux_inst%manure_n_grz_col, &
+         man_u_grz => soilbiogeochem_nitrogenstate_inst%manure_u_grz_col, &
+         man_a_grz => soilbiogeochem_nitrogenstate_inst%manure_a_grz_col, &
+         man_r_grz => soilbiogeochem_nitrogenstate_inst%manure_r_grz_col, &
+         man_u_app => soilbiogeochem_nitrogenstate_inst%manure_u_app_col, &
+         man_a_app => soilbiogeochem_nitrogenstate_inst%manure_a_app_col, &
+         man_r_app => soilbiogeochem_nitrogenstate_inst%manure_r_app_col, &
          ns => soilbiogeochem_nitrogenstate_inst, &
          nf => soilbiogeochem_nitrogenflux_inst, &
          cnv_nf => cnveg_nitrogenflux_inst, &
@@ -286,14 +286,14 @@ contains
          rb1 => frictionvel_inst%rb1_patch)
 
     nf%fert_n_appl_col(bounds%begc:bounds%endc) = 0.0
-    nf%man_n_appl_col(bounds%begc:bounds%endc) = 0.0
-    nf%man_tan_appl_col(bounds%begc:bounds%endc) = 0.0
+    nf%manure_n_appl_col(bounds%begc:bounds%endc) = 0.0
+    nf%manure_tan_appl_col(bounds%begc:bounds%endc) = 0.0
 
     call p2c(bounds, num_soilc, filter_soilc, &
          cnv_nf%synthfert_patch(bounds%begp:bounds%endp), &
          nf%fert_n_appl_col(bounds%begc:bounds%endc))
 
-    nf%man_n_appl_col(bounds%begc:bounds%endc) = 0.0_r8
+    nf%manure_n_appl_col(bounds%begc:bounds%endc) = 0.0_r8
     
     if (do_balance_checks) then
        nstored_old = get_total_n(ns, nf, 'pools_storage')
@@ -316,8 +316,8 @@ contains
                 call endrun('bad ngrz 1')
              end if
           end if
-          if (nf%man_n_appl_col(c) > 0) then
-             write(iulog, *) nf%man_n_appl_col(c)
+          if (nf%manure_n_appl_col(c) > 0) then
+             write(iulog, *) nf%manure_n_appl_col(c)
              call endrun(msg='Found fertilizer in soil column')
           end if
        else
@@ -327,12 +327,12 @@ contains
 
     call handle_storage(bounds, temperature_inst, frictionvel_inst, dt, &
          atm2lnd_inst%forc_ndep_sgrz_grc, atm2lnd_inst%forc_ndep_ngrz_grc, &
-         ns%man_n_stored_col, ns%man_tan_stored_col, &
-         nf%man_n_appl_col, nf%man_tan_appl_col, &
-         nf%man_n_grz_col, nf%man_n_mix_col, &
+         ns%manure_n_stored_col, ns%manure_tan_stored_col, &
+         nf%manure_n_appl_col, nf%manure_tan_appl_col, &
+         nf%manure_n_grz_col, nf%manure_n_mix_col, &
          nf%nh3_stores_col, nf%nh3_barns_col, &
-         nf%man_n_transf_col, ns%fan_grz_fract_col, &
-         nf%man_n_barns_col, &
+         nf%manure_n_transf_col, ns%fan_grz_fract_col, &
+         nf%manure_n_barns_col, &
          fract_tan, &
          filter_soilc, num_soilc)
 
@@ -343,10 +343,10 @@ contains
        if (any(isnan(nf%nh3_barns_col))) then
           call endrun('nan nh3 barns')
        end if
-       if (any(isnan(nf%man_n_appl_col))) then
+       if (any(isnan(nf%manure_n_appl_col))) then
           call endrun('nan nh3 appl')
        end if
-       if (any(isnan(nf%man_n_mix_col))) then
+       if (any(isnan(nf%manure_n_mix_col))) then
           call endrun('nan nh3 appl')
        end if
     end if
@@ -358,10 +358,10 @@ contains
        if (.not. (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop)) cycle
        if (.not. col%active(c) .or. col%wtgcell(c) < 1e-15) cycle
 
-       if (nf%man_n_appl_col(c) > 1e12 .or. ngrz(c) > 1e12) then
-          write(iulog, *) c, nf%man_n_appl_col(c), ngrz(c), cnv_nf%synthfert_patch(col%patchi(c):col%patchf(c)), &
+       if (nf%manure_n_appl_col(c) > 1e12 .or. ngrz(c) > 1e12) then
+          write(iulog, *) c, nf%manure_n_appl_col(c), ngrz(c), cnv_nf%synthfert_patch(col%patchi(c):col%patchf(c)), &
                cnv_nf%manure_patch(col%patchi(c):col%patchf(c))
-          call endrun('nf%man_n_appl_col(c) is spval')
+          call endrun('nf%manure_n_appl_col(c) is spval')
        end if
 
        ! Find and average the atmospheric resistances Rb and Ra.
@@ -477,19 +477,19 @@ contains
 
        nf%nh3_grz_col(c) = fluxes_tmp(iflx_air)
        nf%manure_nh4_runoff_col(c) = fluxes_tmp(iflx_roff)
-       nf%manure_no3_prod_col(c) = fluxes_tmp(iflx_no3)
+       nf%manure_no3_to_soil_col(c) = fluxes_tmp(iflx_no3)
        nf%manure_nh4_to_soil_col(c) &
             = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + n_residual_total / dt + soilflux_org
 
        ! Manure application
 
-       org_n_tot = nf%man_n_appl_col(c) - nf%man_tan_appl_col(c)
+       org_n_tot = nf%manure_n_appl_col(c) - nf%manure_tan_appl_col(c)
        ! Use the the same fractionation of organic N as for grazing, after removing the
        ! "explicitly" calculated TAN.
        ndep_org(ind_avail) = org_n_tot * fract_avail
        ndep_org(ind_resist) = org_n_tot * fract_resist 
        ndep_org(ind_unavail) = org_n_tot * fract_unavail 
-       tandep = nf%man_tan_appl_col(c)
+       tandep = nf%manure_tan_appl_col(c)
 
        orgpools(ind_avail) = man_a_app(c)
        orgpools(ind_resist) = man_r_app(c)
@@ -513,7 +513,7 @@ contains
        do ind_substep = 1, num_substeps
           if (debug_fan .and. any(abs(tanpools(1:4)) > 1e12)) then
              write(iulog, *) ind_substep, tanpools(1:4), tandep, nf%fert_n_appl_col(c), &
-                  nf%man_n_appl_col(c), ns%man_n_stored_col(c), ns%man_tan_stored_col(c)
+                  nf%manure_n_appl_col(c), ns%manure_n_stored_col(c), ns%manure_tan_stored_col(c)
              call endrun('bad tanpools (manure app)')
           end if
 
@@ -539,9 +539,9 @@ contains
        ns%tan_s2_col(c) = tanpools(3)
        ns%tan_s3_col(c) = tanpools(4)
 
-       nf%nh3_man_app_col(c) = fluxes_tmp(iflx_air)
+       nf%nh3_manure_app_col(c) = fluxes_tmp(iflx_air)
        nf%manure_nh4_runoff_col(c) = nf%manure_nh4_runoff_col(c) + fluxes_tmp(iflx_roff)
-       nf%manure_no3_prod_col(c) = nf%manure_no3_prod_col(c) + fluxes_tmp(iflx_no3)
+       nf%manure_no3_to_soil_col(c) = nf%manure_no3_to_soil_col(c) + fluxes_tmp(iflx_no3)
        nf%manure_nh4_to_soil_col(c) &
             = nf%manure_nh4_to_soil_col(c) + fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) &
             + n_residual_total / dt + soilflux_org
@@ -563,7 +563,7 @@ contains
        
        fert_urea = fert_total * fract_urea * (1.0_r8 - fert_incorp_reduct)
        
-       ! Fertilizer nitrate goes straight to the no3_prod, incorporated or not.
+       ! Fertilizer nitrate goes straight to the no3_to_soil, incorporated or not.
        fert_no3 = fert_total * fract_no3
        fert_generic = fert_total * (1.0_r8 - fract_urea - fract_no3) * (1.0_r8 - fert_incorp_reduct)
        nf%otherfert_n_appl_col(c) = fert_total * (1.0_r8 - fract_urea) ! note here goes also the incorporated N
@@ -635,12 +635,12 @@ contains
 
        nf%nh3_fert_col(c) = fluxes_tmp(iflx_air)
        nf%fert_nh4_runoff_col(c) = fluxes_tmp(iflx_roff)
-       nf%fert_no3_prod_col(c) = fluxes_tmp(iflx_no3) + fert_no3
+       nf%fert_no3_to_soil_col(c) = fluxes_tmp(iflx_no3) + fert_no3
        nf%fert_nh4_to_soil_col(c) = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) + n_residual_total/dt + fert_inc_tan
 
        ! Total flux
        ! 
-       nf%nh3_total_col(c) = nf%nh3_fert_col(c) + nf%nh3_man_app_col(c) &
+       nf%nh3_total_col(c) = nf%nh3_fert_col(c) + nf%nh3_manure_app_col(c) &
             + nf%nh3_grz_col(c) + nf%nh3_stores_col(c) +  nf%nh3_barns_col(c)
        if (nf%nh3_total_col(c) < -1e15) then
           call endrun(msg='ERROR: FAN, negative total emission')
@@ -671,28 +671,28 @@ contains
         
       select case(which)
       case('pools_storage')
-         total = sum(ns%man_n_stored_col(soilc))
+         total = sum(ns%manure_n_stored_col(soilc))
          
       case('fluxes_storage')
-         total = sum(nf%man_n_mix_col(soilc))
+         total = sum(nf%manure_n_mix_col(soilc))
          total = total - sum(nf%nh3_stores_col(soilc))
-         total = total - sum(nf%nh3_barns_col(soilc)) - sum(nf%man_n_transf_col(soilc))
+         total = total - sum(nf%nh3_barns_col(soilc)) - sum(nf%manure_n_transf_col(soilc))
          
       case('pools_manure')
          total = total + sum(ns%tan_g1_col(soilc)) + sum(ns%tan_g2_col(soilc)) + sum(ns%tan_g3_col(soilc)) 
-         total = total + sum(ns%man_u_grz_col(soilc)) &
-              + sum(ns%man_a_grz_col(soilc)) + sum(ns%man_r_grz_col(soilc))
+         total = total + sum(ns%manure_u_grz_col(soilc)) &
+              + sum(ns%manure_a_grz_col(soilc)) + sum(ns%manure_r_grz_col(soilc))
          total = total + sum(ns%tan_s0_col(soilc)) &
               + sum(ns%tan_s1_col(soilc)) + sum(ns%tan_s2_col(soilc)) + sum(ns%tan_s3_col(soilc))
-         total = total + sum(ns%man_u_app_col(soilc)) &
-              + sum(ns%man_a_app_col(soilc)) + sum(ns%man_r_app_col(soilc))
+         total = total + sum(ns%manure_u_app_col(soilc)) &
+              + sum(ns%manure_a_app_col(soilc)) + sum(ns%manure_r_app_col(soilc))
          
       case('fluxes_manure')
-         total = sum(nf%man_n_grz_col(soilc)) + sum(nf%man_n_barns_col(soilc)) 
-         total = total - sum(nf%nh3_man_app_col(soilc)) &
+         total = sum(nf%manure_n_grz_col(soilc)) + sum(nf%manure_n_barns_col(soilc)) 
+         total = total - sum(nf%nh3_manure_app_col(soilc)) &
               - sum(nf%nh3_grz_col(soilc)) - sum(nf%manure_nh4_runoff_col(soilc))
-         total = total - sum(nf%manure_no3_prod_col(soilc)) - sum(nf%manure_nh4_to_soil_col(soilc))
-         total = total - sum(nf%man_n_transf_col(soilc)) - sum(nf%nh3_stores_col(soilc)) - sum(nf%nh3_barns_col(soilc))
+         total = total - sum(nf%manure_no3_to_soil_col(soilc)) - sum(nf%manure_nh4_to_soil_col(soilc))
+         total = total - sum(nf%manure_n_transf_col(soilc)) - sum(nf%nh3_stores_col(soilc)) - sum(nf%nh3_barns_col(soilc))
          
       case('pools_fertilizer')
          total = sum(ns%tan_f1_col((soilc))) + sum(ns%tan_f2_col((soilc))) + sum(ns%tan_f3_col(soilc)) &
@@ -702,7 +702,7 @@ contains
       case('fluxes_fertilizer')
          total = sum(nf%fert_n_appl_col(soilc))
          total = total - sum(nf%nh3_fert_col(soilc)) - sum(nf%fert_nh4_runoff_col(soilc))
-         total = total - sum(nf%fert_no3_prod_col(soilc)) - sum(nf%fert_nh4_to_soil_col(soilc))
+         total = total - sum(nf%fert_no3_to_soil_col(soilc)) - sum(nf%fert_nh4_to_soil_col(soilc))
          
       case default
          call endrun(msg='Bad argument to get_total_n')
@@ -942,23 +942,19 @@ contains
        end do ! landunit
 
        if (col_grass /= ispval) then
-          if (tan_manure_spread_col(col_grass) > 1) then
-             write(iulog, *) 'bad tan_manure col_grass before adding', n_manure_spread_col(col_grass), &
-                  tan_manure_spread_col(col_grass)
-             call endrun(msg="ERROR bad tan")
-          end if
           n_manure_spread_col(col_grass) = n_manure_spread_col(col_grass) &
                + flux_grass_spread / col%wtgcell(col_grass)
           tan_manure_spread_col(col_grass) = tan_manure_spread_col(col_grass) &
                + flux_grass_spread_tan / col%wtgcell(col_grass)
           n_manure_graze_col(col_grass) = n_manure_graze_col(col_grass) + flux_grass_graze / col%wtgcell(col_grass)
           if (tan_manure_spread_col(col_grass) > 1) then
-             write(iulog, *) 'bad tan_manure col_grass', flux_grass_spread_tan, col%wtgcell(col_grass)
-             call endrun(msg="ERROR bad tan")
+             ! In principle this could happen if col%wtgcell(col_grass) is very small.
+             write(iulog, *) 'Warning (FAN): suspicious manure N spread flux to natural vegetation column; flux, icol:', &
+                  flux_grass_spread_tan, col_grass
           end if
        else if (flux_grass_spread > 0) then
-          continue
-          !call endrun('Cannot spread manure')
+          ! There was no column that had a grass pft:
+          write(iulog, *) 'Warning (FAN): fract_spread_grass > 0 not possible in this cell:', g
        end if
 
     end do ! grid
@@ -984,32 +980,32 @@ contains
     do fc = 1, num_soilc
        c = filter_soilc(fc)
        total = ns%tan_g1_col(c) + ns%tan_g2_col(c) + ns%tan_g3_col(c)
-       total = total + ns%man_u_grz_col(c) + ns%man_a_grz_col(c) + ns%man_r_grz_col(c)
+       total = total + ns%manure_u_grz_col(c) + ns%manure_a_grz_col(c) + ns%manure_r_grz_col(c)
        total = total + ns%tan_s0_col(c) + ns%tan_s1_col(c) + ns%tan_s2_col(c) + ns%tan_s3_col(c)
-       total = total + ns%man_u_app_col(c) + ns%man_a_app_col(c) + ns%man_r_app_col(c)
+       total = total + ns%manure_u_app_col(c) + ns%manure_a_app_col(c) + ns%manure_r_app_col(c)
        total = total + ns%tan_f1_col(c) + ns%tan_f2_col(c) + ns%tan_f3_col(c) + ns%tan_f4_col(c)
        total = total + ns%fert_u1_col(c) + ns%fert_u2_col(c)
        ns%fan_totn_col(c) = total
        
        if (lun%itype(col%landunit(c)) == istcrop) then
-          ! no grazing, man_n_appl is from the same column and not counted as input
-          fluxin = nf%man_n_mix_col(c) + nf%fert_n_appl_col(c)
+          ! no grazing, manure_n_appl is from the same column and not counted as input
+          fluxin = nf%manure_n_mix_col(c) + nf%fert_n_appl_col(c)
        else
-          ! no barns or fertilization. man_n_appl is transferred from crop columns and not
+          ! no barns or fertilization. manure_n_appl is transferred from crop columns and not
           ! included in the other inputs.
-          fluxin = nf%man_n_grz_col(c) + nf%man_n_appl_col(c)
+          fluxin = nf%manure_n_grz_col(c) + nf%manure_n_appl_col(c)
        end if
 
-       flux_loss = nf%nh3_man_app_col(c) + nf%nh3_grz_col(c) + nf%manure_nh4_runoff_col(c) &
+       flux_loss = nf%nh3_manure_app_col(c) + nf%nh3_grz_col(c) + nf%manure_nh4_runoff_col(c) &
             + nf%nh3_stores_col(c) + nf%nh3_barns_col(c) &
             + nf%nh3_fert_col(c) + nf%fert_nh4_runoff_col(c)
-       fluxout = nf%fert_no3_prod_col(c) + nf%fert_nh4_to_soil_col(c) &
-            + nf%manure_no3_prod_col(c) + nf%manure_nh4_to_soil_col(c) &
-            + nf%man_n_transf_col(c) + flux_loss
+       fluxout = nf%fert_no3_to_soil_col(c) + nf%fert_nh4_to_soil_col(c) &
+            + nf%manure_no3_to_soil_col(c) + nf%manure_nh4_to_soil_col(c) &
+            + nf%manure_n_transf_col(c) + flux_loss
        
        nf%fan_totnin_col(c) = fluxin
        nf%fan_totnout_col(c) = fluxout
-       nf%manure_n_total_col(c) = nf%man_n_grz_col(c) + nf%man_n_barns_col(c)
+       nf%manure_n_total_col(c) = nf%manure_n_grz_col(c) + nf%manure_n_barns_col(c)
     end do
     
   end subroutine update_summary
@@ -1040,9 +1036,9 @@ contains
     
     do fc = 1, num_soilc
        c = filter_soilc(fc)
-       flux_manure = sbgc_nf%manure_no3_prod_col(c) + sbgc_nf%manure_nh4_to_soil_col(c)
-       flux_fert = sbgc_nf%fert_no3_prod_col(c) + sbgc_nf%fert_nh4_to_soil_col(c)
-       manure_prod = sbgc_nf%man_n_barns_col(c) + sbgc_nf%man_n_grz_col(c)
+       flux_manure = sbgc_nf%manure_no3_to_soil_col(c) + sbgc_nf%manure_nh4_to_soil_col(c)
+       flux_fert = sbgc_nf%fert_no3_to_soil_col(c) + sbgc_nf%fert_nh4_to_soil_col(c)
+       manure_prod = sbgc_nf%manure_n_barns_col(c) + sbgc_nf%manure_n_grz_col(c)
        
        included = (lun%itype(col%landunit(c)) == istcrop .and. fan_to_bgc_crop) &
              .or. (lun%itype(col%landunit(c)) == istsoil .and. fan_to_bgc_veg)
@@ -1050,7 +1046,7 @@ contains
        if (included) then
           sbgc_nf%fert_to_sminn_col(c) = flux_fert + flux_manure
           sbgc_nf%manure_n_to_sminn_col(c) = flux_manure
-          sbgc_nf%fert_n_to_sminn_col(c) = flux_fert
+          sbgc_nf%synthfert_n_to_sminn_col(c) = flux_fert
           do p = col%patchi(c), col%patchf(c)
              ! NFERTILIZATION gets the fertilizer applied + all manure N produced in the
              ! column. Note that if fract_spread_grass > 0 then some of this N might be
