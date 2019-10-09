@@ -305,7 +305,7 @@ contains
 
     call aerosol_inst%Init(bounds, NLFilename)
 
-    call frictionvel_inst%Init(bounds, params_ncid = params_ncid)
+    call frictionvel_inst%Init(bounds, NLFilename = NLFilename, params_ncid = params_ncid)
 
     call lakestate_inst%Init(bounds)
     call LakeConInit()

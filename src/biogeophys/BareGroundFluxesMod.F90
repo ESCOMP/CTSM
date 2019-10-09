@@ -80,14 +80,12 @@ contains
     use clm_varcon           , only : cpair, vkc, grav, denice, denh2o
     use clm_varctl           , only : use_lch4
     use landunit_varcon      , only : istsoil, istcrop
-    use FrictionVelocityMod  , only : FrictionVelocity, MoninObukIni
     use QSatMod              , only : QSat
     use SurfaceResistanceMod , only : do_soilevap_beta,do_soil_resistance_sl14
     use HumanIndexMod        , only : all_human_stress_indices, fast_human_stress_indices, &
                                       Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                       swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                       SwampCoolEff, KtoC, VaporPres
-    use FrictionVelocityMod  , only : frictionvel_parms_inst
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -236,7 +234,7 @@ contains
 
          forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Input:
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
-         zetamax                => frictionvel_parms_inst%zetamaxstable         , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
+         zetamax                => frictionvel_inst%zetamaxstable               , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          z0mg_col               => frictionvel_inst%z0mg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, momentum [m]                                        
          z0hg_col               => frictionvel_inst%z0hg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, sensible heat [m]                                   
          z0qg_col               => frictionvel_inst%z0qg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, latent heat [m]                                     
@@ -303,7 +301,7 @@ contains
 
          ! Initialize Monin-Obukhov length and wind speed
 
-         call MoninObukIni(ur(p), thv(c), dthv, zldis(p), z0mg_patch(p), um(p), obu(p))
+         call frictionvel_inst%MoninObukIni(ur(p), thv(c), dthv, zldis(p), z0mg_patch(p), um(p), obu(p))
 
       end do
 
@@ -313,11 +311,10 @@ contains
 
       do iter = 1, niters
 
-         call FrictionVelocity(begp, endp, num_noexposedvegp, filter_noexposedvegp, &
+         call frictionvel_inst%FrictionVelocity(begp, endp, num_noexposedvegp, filter_noexposedvegp, &
               displa(begp:endp), z0mg_patch(begp:endp), z0hg_patch(begp:endp), z0qg_patch(begp:endp), &
               obu(begp:endp), iter, ur(begp:endp), um(begp:endp), ustar(begp:endp), &
-              temp1(begp:endp), temp2(begp:endp), temp12m(begp:endp), temp22m(begp:endp), fm(begp:endp), &
-              frictionvel_inst)
+              temp1(begp:endp), temp2(begp:endp), temp12m(begp:endp), temp22m(begp:endp), fm(begp:endp))
 
          do f = 1, num_noexposedvegp
             p = filter_noexposedvegp(f)

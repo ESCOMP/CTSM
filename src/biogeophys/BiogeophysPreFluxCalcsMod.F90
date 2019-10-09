@@ -32,7 +32,6 @@ module BiogeophysPreFluxCalcsMod
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
   use WaterStateBulkType      , only : waterstatebulk_type
   use SurfaceResistanceMod    , only : calc_soilevap_resis
-  use FrictionVelocityMod     , only : SetRoughnessLengthsAndForcHeightsNonLake
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -88,8 +87,7 @@ contains
     call SetZ0mDisp(bounds, num_nolakep, filter_nolakep, &
          clm_fates, canopystate_inst)
 
-    ! FIXME(wjs, 2019-10-08) Make this object-oriented
-    call SetRoughnessLengthsAndForcHeightsNonLake(frictionvel_inst, bounds, &
+    call frictionvel_inst%SetRoughnessLengthsAndForcHeightsNonLake(bounds, &
          num_nolakec, filter_nolakec,                       &
          num_nolakep, filter_nolakep,                       &
          atm2lnd_inst, waterdiagnosticbulk_inst, canopystate_inst)

@@ -7,39 +7,32 @@ module FrictionVelocityMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_kind_mod , only : r8 => shr_kind_r8
-  use shr_log_mod  , only : errMsg => shr_log_errMsg
-  use decompMod    , only : bounds_type
-  use clm_varcon   , only : spval
-  use clm_varctl   , only : use_cn, use_luna
-  use LandunitType , only : lun
-  use ColumnType   , only : col
-  use PatchType    , only : patch
-  use landunit_varcon, only : istsoil, istcrop, istice_mec, istwet
-  use ncdio_pio    , only : file_desc_t
-  use paramUtilMod , only : readNcdioScalar
-  use atm2lndType          , only : atm2lnd_type
-  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
-  use CanopyStateType      , only : canopystate_type
+  use shr_kind_mod            , only : r8 => shr_kind_r8
+  use shr_log_mod             , only : errMsg => shr_log_errMsg
+  use shr_const_mod           , only : SHR_CONST_PI
+  use decompMod               , only : bounds_type
+  use clm_varcon              , only : spval
+  use clm_varctl              , only : use_cn, use_luna
+  use LandunitType            , only : lun
+  use ColumnType              , only : col
+  use PatchType               , only : patch
+  use landunit_varcon         , only : istsoil, istcrop, istice_mec, istwet
+  use ncdio_pio               , only : file_desc_t
+  use paramUtilMod            , only : readNcdioScalar
+  use atm2lndType             , only : atm2lnd_type
+  use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
+  use CanopyStateType         , only : canopystate_type
   !
   ! !PUBLIC TYPES:
   implicit none
+  private
   save
-  !
-  ! !PUBLIC MEMBER FUNCTIONS:
-  public :: FrictionVelReadNML     ! Read in the namelist for settings and parameters
-  public :: SetRoughnessLengthsAndForcHeightsNonLake  ! Set roughness lengths and forcing heights for non-lake points
-  public :: FrictionVelocity       ! Calculate friction velocity
-  public :: MoninObukIni           ! Initialization of the Monin-Obukhov length
-  !
-  ! !PRIVATE MEMBER FUNCTIONS:
-  private :: StabilityFunc1        ! Stability function for rib < 0.
-  private :: StabilityFunc2        ! Stability function for rib < 0.
 
   type, public :: frictionvel_type
      private
 
      ! Scalar parameters
+     real(r8), public :: zetamaxstable = -999._r8  ! Max value zeta ("height" used in Monin-Obukhov theory) can go to under stable conditions
      real(r8) :: zsno = -999._r8  ! Momentum roughness length for snow (m)
      real(r8) :: zlnd = -999._r8  ! Momentum roughness length for soil, glacier, wetland (m)
 
@@ -66,23 +59,22 @@ module FrictionVelocityMod
    contains
 
      ! Public procedures
-     procedure, public  :: Init
-     procedure, public  :: Restart
+     procedure, public :: Init
+     procedure, public :: Restart
+     procedure, public :: SetRoughnessLengthsAndForcHeightsNonLake  ! Set roughness lengths and forcing heights for non-lake points
+     procedure, public :: FrictionVelocity       ! Calculate friction velocity
+     procedure, public :: MoninObukIni           ! Initialization of the Monin-Obukhov length
 
      ! Private procedures
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
+     procedure, private :: ReadNamelist
      procedure, private :: ReadParams
+     procedure, private, nopass :: StabilityFunc1        ! Stability function for rib < 0.
+     procedure, private, nopass :: StabilityFunc2        ! Stability function for rib < 0.
 
   end type frictionvel_type
-
-  type, public :: frictionvel_parms_type
-     real(r8) :: zetamaxstable            ! Max value zeta ("height" used in Monin-Obukhov theory) can go to under stable conditions
-
-  end type frictionvel_parms_type
-
-  type(frictionvel_parms_type), public, protected :: frictionvel_parms_inst
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -91,15 +83,17 @@ module FrictionVelocityMod
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, params_ncid)
+  subroutine Init(this, bounds, NLFilename, params_ncid)
 
     class(frictionvel_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
+    character(len=*), intent(in) :: NLFilename  ! file name of namelist file
     type(file_desc_t),intent(inout) :: params_ncid   ! pio netCDF file id
 
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
     call this%InitCold(bounds)
+    call this%ReadNamelist(NLFilename)
     call this%ReadParams(params_ncid)
 
   end subroutine Init
@@ -332,7 +326,7 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine FrictionVelReadNML( NLFilename )
+  subroutine ReadNamelist( this, NLFilename )
     !
     ! !DESCRIPTION:
     ! Read the namelist for Friction Velocity
@@ -347,13 +341,14 @@ contains
     use abortutils     , only : endrun
     !
     ! !ARGUMENTS:
+    class(frictionvel_type), intent(inout) :: this
     character(len=*), intent(in) :: NLFilename ! Namelist filename
     !
     ! !LOCAL VARIABLES:
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: subname = 'FrictionVelocityReadNML'
+    character(len=*), parameter :: subname = 'FrictionVelocityReadNamelist'
     character(len=*), parameter :: nmlname = 'friction_velocity'
     !-----------------------------------------------------------------------
     real(r8) :: zetamaxstable
@@ -388,9 +383,10 @@ contains
        write(iulog,nml=friction_velocity)
        write(iulog,*) ' '
     end if
-    frictionvel_parms_inst%zetamaxstable = zetamaxstable
 
-  end subroutine FrictionVelReadNML
+    this%zetamaxstable = zetamaxstable
+
+  end subroutine ReadNamelist
 
   !-----------------------------------------------------------------------
   subroutine SetRoughnessLengthsAndForcHeightsNonLake(this, bounds, &
@@ -498,10 +494,10 @@ contains
   end subroutine SetRoughnessLengthsAndForcHeightsNonLake
 
   !------------------------------------------------------------------------------
-  subroutine FrictionVelocity(lbn, ubn, fn, filtern, &
+  subroutine FrictionVelocity(this, lbn, ubn, fn, filtern, &
        displa, z0m, z0h, z0q, &
        obu, iter, ur, um, ustar, &
-       temp1, temp2, temp12m, temp22m, fm, frictionvel_inst, landunit_index)
+       temp1, temp2, temp12m, temp22m, fm, landunit_index)
     !
     ! !DESCRIPTION:
     ! Calculation of the friction velocity, relation for potential
@@ -516,6 +512,7 @@ contains
     use clm_varctl, only : iulog
     !
     ! !ARGUMENTS:
+    class(frictionvel_type), intent(inout) :: this
     integer  , intent(in)    :: lbn, ubn                 ! pft/landunit array bounds
     integer  , intent(in)    :: fn                       ! number of filtered pft/landunit elements
     integer  , intent(in)    :: filtern(fn)              ! pft/landunit filter
@@ -533,7 +530,6 @@ contains
     real(r8) , intent(out)   :: temp2   ( lbn: )         ! relation for specific humidity profile [lbn:ubn]
     real(r8) , intent(out)   :: temp22m ( lbn: )         ! relation for specific humidity profile applied at 2-m [lbn:ubn]
     real(r8) , intent(inout) :: fm      ( lbn: )         ! diagnose 10m wind (DUST only) [lbn:ubn]
-    type(frictionvel_type) , intent(inout) :: frictionvel_inst
     logical  , intent(in), optional :: landunit_index   ! optional argument that defines landunit or pft level
     !
     ! !LOCAL VARIABLES:
@@ -571,14 +567,14 @@ contains
          pfti             => lun%patchi                          , & ! Input:  [integer  (:) ] beginning pfti index for landunit         
          pftf             => lun%patchf                          , & ! Input:  [integer  (:) ] final pft index for landunit              
          
-         forc_hgt_u_patch => frictionvel_inst%forc_hgt_u_patch , & ! Input:  [real(r8) (:) ] observational height of wind at pft level [m]
-         forc_hgt_t_patch => frictionvel_inst%forc_hgt_t_patch , & ! Input:  [real(r8) (:) ] observational height of temperature at pft level [m]
-         forc_hgt_q_patch => frictionvel_inst%forc_hgt_q_patch , & ! Input:  [real(r8) (:) ] observational height of specific humidity at pft level [m]
-         vds              => frictionvel_inst%vds_patch        , & ! Output: [real(r8) (:) ] dry deposition velocity term (m/s) (for SO4 NH4NO3)
-         u10              => frictionvel_inst%u10_patch        , & ! Output: [real(r8) (:) ] 10-m wind (m/s) (for dust model)        
-         u10_clm          => frictionvel_inst%u10_clm_patch    , & ! Output: [real(r8) (:) ] 10-m wind (m/s)                         
-         va               => frictionvel_inst%va_patch         , & ! Output: [real(r8) (:) ] atmospheric wind speed plus convective velocity (m/s)
-         fv               => frictionvel_inst%fv_patch           & ! Output: [real(r8) (:) ] friction velocity (m/s) (for dust model)
+         forc_hgt_u_patch => this%forc_hgt_u_patch , & ! Input:  [real(r8) (:) ] observational height of wind at pft level [m]
+         forc_hgt_t_patch => this%forc_hgt_t_patch , & ! Input:  [real(r8) (:) ] observational height of temperature at pft level [m]
+         forc_hgt_q_patch => this%forc_hgt_q_patch , & ! Input:  [real(r8) (:) ] observational height of specific humidity at pft level [m]
+         vds              => this%vds_patch        , & ! Output: [real(r8) (:) ] dry deposition velocity term (m/s) (for SO4 NH4NO3)
+         u10              => this%u10_patch        , & ! Output: [real(r8) (:) ] 10-m wind (m/s) (for dust model)        
+         u10_clm          => this%u10_clm_patch    , & ! Output: [real(r8) (:) ] 10-m wind (m/s)                         
+         va               => this%va_patch         , & ! Output: [real(r8) (:) ] atmospheric wind speed plus convective velocity (m/s)
+         fv               => this%fv_patch           & ! Output: [real(r8) (:) ] friction velocity (m/s) (for dust model)
          )
 
       ! Adjustment factors for unstable (moz < 0) or stable (moz > 0) conditions.
@@ -601,13 +597,13 @@ contains
          zeta(n) = zldis(n)/obu(n)
          if (zeta(n) < -zetam) then
             ustar(n) = vkc*um(n)/(log(-zetam*obu(n)/z0m(n))&
-                 - StabilityFunc1(-zetam) &
-                 + StabilityFunc1(z0m(n)/obu(n)) &
+                 - this%StabilityFunc1(-zetam) &
+                 + this%StabilityFunc1(z0m(n)/obu(n)) &
                  + 1.14_r8*((-zeta(n))**0.333_r8-(zetam)**0.333_r8))
          else if (zeta(n) < 0._r8) then
             ustar(n) = vkc*um(n)/(log(zldis(n)/z0m(n))&
-                 - StabilityFunc1(zeta(n))&
-                 + StabilityFunc1(z0m(n)/obu(n)))
+                 - this%StabilityFunc1(zeta(n))&
+                 + this%StabilityFunc1(z0m(n)/obu(n)))
          else if (zeta(n) <=  1._r8) then
             ustar(n) = vkc*um(n)/(log(zldis(n)/z0m(n)) + 5._r8*zeta(n) -5._r8*z0m(n)/obu(n))
          else
@@ -646,13 +642,13 @@ contains
                else
                   if (zeta(n) < -zetam) then
                      u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(-zetam*obu(n)/(10._r8+z0m(n)))      &
-                          - StabilityFunc1(-zetam)                              &
-                          + StabilityFunc1((10._r8+z0m(n))/obu(n))              &
+                          - this%StabilityFunc1(-zetam)                              &
+                          + this%StabilityFunc1((10._r8+z0m(n))/obu(n))              &
                           + 1.14_r8*((-zeta(n))**0.333_r8-(zetam)**0.333_r8)) )
                   else if (zeta(n) < 0._r8) then
                      u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n)))           &
-                          - StabilityFunc1(zeta(n))                             &
-                          + StabilityFunc1((10._r8+z0m(n))/obu(n))) )
+                          - this%StabilityFunc1(zeta(n))                             &
+                          + this%StabilityFunc1((10._r8+z0m(n))/obu(n))) )
                   else if (zeta(n) <=  1._r8) then
                      u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n)))           &
                           + 5._r8*zeta(n) - 5._r8*(10._r8+z0m(n))/obu(n)) )
@@ -671,13 +667,13 @@ contains
             else
                if (zeta(n) < -zetam) then
                   u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(-zetam*obu(n)/(10._r8+z0m(n)))         &
-                       - StabilityFunc1(-zetam)                                 &
-                       + StabilityFunc1((10._r8+z0m(n))/obu(n))                 &
+                       - this%StabilityFunc1(-zetam)                                 &
+                       + this%StabilityFunc1((10._r8+z0m(n))/obu(n))                 &
                        + 1.14_r8*((-zeta(n))**0.333_r8-(zetam)**0.333_r8)) )
                else if (zeta(n) < 0._r8) then
                   u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n)))              &
-                       - StabilityFunc1(zeta(n))                                &
-                       + StabilityFunc1((10._r8+z0m(n))/obu(n))) )
+                       - this%StabilityFunc1(zeta(n))                                &
+                       + this%StabilityFunc1((10._r8+z0m(n))/obu(n))) )
                else if (zeta(n) <=  1._r8) then
                   u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n)))              &
                        + 5._r8*zeta(n) - 5._r8*(10._r8+z0m(n))/obu(n)) )
@@ -700,13 +696,13 @@ contains
          zeta(n) = zldis(n)/obu(n)
          if (zeta(n) < -zetat) then
             temp1(n) = vkc/(log(-zetat*obu(n)/z0h(n))&
-                 - StabilityFunc2(-zetat) &
-                 + StabilityFunc2(z0h(n)/obu(n)) &
+                 - this%StabilityFunc2(-zetat) &
+                 + this%StabilityFunc2(z0h(n)/obu(n)) &
                  + 0.8_r8*((zetat)**(-0.333_r8)-(-zeta(n))**(-0.333_r8)))
          else if (zeta(n) < 0._r8) then
             temp1(n) = vkc/(log(zldis(n)/z0h(n)) &
-                 - StabilityFunc2(zeta(n)) &
-                 + StabilityFunc2(z0h(n)/obu(n)))
+                 - this%StabilityFunc2(zeta(n)) &
+                 + this%StabilityFunc2(z0h(n)/obu(n)))
          else if (zeta(n) <=  1._r8) then
             temp1(n) = vkc/(log(zldis(n)/z0h(n)) + 5._r8*zeta(n) - 5._r8*z0h(n)/obu(n))
          else
@@ -724,13 +720,13 @@ contains
                zeta(n) = zldis(n)/obu(n)
                if (zeta(n) < -zetat) then
                   temp2(n) = vkc/(log(-zetat*obu(n)/z0q(n)) &
-                       - StabilityFunc2(-zetat) &
-                       + StabilityFunc2(z0q(n)/obu(n)) &
+                       - this%StabilityFunc2(-zetat) &
+                       + this%StabilityFunc2(z0q(n)/obu(n)) &
                        + 0.8_r8*((zetat)**(-0.333_r8)-(-zeta(n))**(-0.333_r8)))
                else if (zeta(n) < 0._r8) then
                   temp2(n) = vkc/(log(zldis(n)/z0q(n)) &
-                       - StabilityFunc2(zeta(n)) &
-                       + StabilityFunc2(z0q(n)/obu(n)))
+                       - this%StabilityFunc2(zeta(n)) &
+                       + this%StabilityFunc2(z0q(n)/obu(n)))
                else if (zeta(n) <=  1._r8) then
                   temp2(n) = vkc/(log(zldis(n)/z0q(n)) + 5._r8*zeta(n)-5._r8*z0q(n)/obu(n))
                else
@@ -746,13 +742,13 @@ contains
                zeta(n) = zldis(n)/obu(n)
                if (zeta(n) < -zetat) then
                   temp2(n) = vkc/(log(-zetat*obu(n)/z0q(n)) &
-                       - StabilityFunc2(-zetat) &
-                       + StabilityFunc2(z0q(n)/obu(n)) &
+                       - this%StabilityFunc2(-zetat) &
+                       + this%StabilityFunc2(z0q(n)/obu(n)) &
                        + 0.8_r8*((zetat)**(-0.333_r8)-(-zeta(n))**(-0.333_r8)))
                else if (zeta(n) < 0._r8) then
                   temp2(n) = vkc/(log(zldis(n)/z0q(n)) &
-                       - StabilityFunc2(zeta(n)) &
-                       + StabilityFunc2(z0q(n)/obu(n)))
+                       - this%StabilityFunc2(zeta(n)) &
+                       + this%StabilityFunc2(z0q(n)/obu(n)))
                else if (zeta(n) <=  1._r8) then
                   temp2(n) = vkc/(log(zldis(n)/z0q(n)) + 5._r8*zeta(n)-5._r8*z0q(n)/obu(n))
                else
@@ -768,13 +764,13 @@ contains
          zeta(n) = zldis(n)/obu(n)
          if (zeta(n) < -zetat) then
             temp12m(n) = vkc/(log(-zetat*obu(n)/z0h(n))&
-                 - StabilityFunc2(-zetat) &
-                 + StabilityFunc2(z0h(n)/obu(n)) &
+                 - this%StabilityFunc2(-zetat) &
+                 + this%StabilityFunc2(z0h(n)/obu(n)) &
                  + 0.8_r8*((zetat)**(-0.333_r8)-(-zeta(n))**(-0.333_r8)))
          else if (zeta(n) < 0._r8) then
             temp12m(n) = vkc/(log(zldis(n)/z0h(n)) &
-                 - StabilityFunc2(zeta(n))  &
-                 + StabilityFunc2(z0h(n)/obu(n)))
+                 - this%StabilityFunc2(zeta(n))  &
+                 + this%StabilityFunc2(z0h(n)/obu(n)))
          else if (zeta(n) <=  1._r8) then
             temp12m(n) = vkc/(log(zldis(n)/z0h(n)) + 5._r8*zeta(n) - 5._r8*z0h(n)/obu(n))
          else
@@ -791,11 +787,11 @@ contains
             zeta(n) = zldis(n)/obu(n)
             if (zeta(n) < -zetat) then
                temp22m(n) = vkc/(log(-zetat*obu(n)/z0q(n)) - &
-                    StabilityFunc2(-zetat) + StabilityFunc2(z0q(n)/obu(n)) &
+                    this%StabilityFunc2(-zetat) + this%StabilityFunc2(z0q(n)/obu(n)) &
                     + 0.8_r8*((zetat)**(-0.333_r8)-(-zeta(n))**(-0.333_r8)))
             else if (zeta(n) < 0._r8) then
                temp22m(n) = vkc/(log(zldis(n)/z0q(n)) - &
-                    StabilityFunc2(zeta(n))+StabilityFunc2(z0q(n)/obu(n)))
+                    this%StabilityFunc2(zeta(n))+this%StabilityFunc2(z0q(n)/obu(n)))
             else if (zeta(n) <=  1._r8) then
                temp22m(n) = vkc/(log(zldis(n)/z0q(n)) + 5._r8*zeta(n)-5._r8*z0q(n)/obu(n))
             else
@@ -866,11 +862,7 @@ contains
     ! !DESCRIPTION:
     ! Stability function for rib < 0.
     !
-    ! !USES:
-    use shr_const_mod, only: SHR_CONST_PI
-    !
     ! !ARGUMENTS:
-    implicit none
     real(r8), intent(in) :: zeta  ! dimensionless height used in Monin-Obukhov theory
     !
     ! !LOCAL VARIABLES:
@@ -890,11 +882,7 @@ contains
     ! !DESCRIPTION:
     ! Stability function for rib < 0.
     !
-    ! !USES:
-    use shr_const_mod, only: SHR_CONST_PI
-    !
     ! !ARGUMENTS:
-    implicit none
     real(r8), intent(in) :: zeta  ! dimensionless height used in Monin-Obukhov theory
     !
     ! !LOCAL VARIABLES:
@@ -907,7 +895,7 @@ contains
   end function StabilityFunc2
 
   !-----------------------------------------------------------------------
-  subroutine MoninObukIni (ur, thv, dthv, zldis, z0m, um, obu)
+  subroutine MoninObukIni (this, ur, thv, dthv, zldis, z0m, um, obu)
     !
     ! !DESCRIPTION:
     ! Initialization of the Monin-Obukhov length.
@@ -920,7 +908,7 @@ contains
     use clm_varcon, only : grav
     !
     ! !ARGUMENTS:
-    implicit none
+    class(frictionvel_type), intent(in) :: this
     real(r8), intent(in)  :: ur    ! wind speed at reference height [m/s]
     real(r8), intent(in)  :: thv   ! virtual potential temperature (kelvin)
     real(r8), intent(in)  :: dthv  ! diff of vir. poten. temp. between ref. height and surface
@@ -950,7 +938,7 @@ contains
 
     if (rib >= 0._r8) then      ! neutral or stable
        zeta = rib*log(zldis/z0m)/(1._r8-5._r8*min(rib,0.19_r8))
-       zeta = min(frictionvel_parms_inst%zetamaxstable,max(zeta,0.01_r8 ))
+       zeta = min(this%zetamaxstable,max(zeta,0.01_r8 ))
     else                     ! unstable
        zeta=rib*log(zldis/z0m)
        zeta = max(-100._r8,min(zeta,-0.01_r8 ))
