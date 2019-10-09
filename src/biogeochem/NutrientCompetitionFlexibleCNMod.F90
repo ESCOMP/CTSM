@@ -1228,11 +1228,11 @@ contains
                                 ((c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)+ c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p))/ &
                                 (psnsun_to_cpool(p)+psnshade_to_cpool(p)))
            end if
-            npool_to_veg = npool_to_leafn(p) + npool_to_leafn_storage(p) \
-                         + npool_to_frootn(p) + npool_to_frootn_storage(p) \
-                         + npool_to_livestemn(p) + npool_to_livestemn_storage(p) \
-                         + npool_to_deadstemn(p) + npool_to_deadstemn_storage(p) \
-                         + npool_to_livecrootn(p) + npool_to_livecrootn_storage(p)  \
+            npool_to_veg = npool_to_leafn(p) + npool_to_leafn_storage(p) &
+                         + npool_to_frootn(p) + npool_to_frootn_storage(p) &
+                         + npool_to_livestemn(p) + npool_to_livestemn_storage(p) &
+                         + npool_to_deadstemn(p) + npool_to_deadstemn_storage(p) &
+                         + npool_to_livecrootn(p) + npool_to_livecrootn_storage(p)  &
                          + npool_to_deadcrootn(p) + npool_to_deadcrootn_storage(p)   
             if (ivt(p) >= npcropmin)then
                npool_to_veg = npool_to_veg + npool_to_grainn(p) + npool_to_grainn_storage(p)
