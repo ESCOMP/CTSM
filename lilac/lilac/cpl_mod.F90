@@ -8,6 +8,7 @@ module cpl_mod
     !-----------------------------------------------------------------------
     ! !USES
     use ESMF
+     use clm_varctl    ,  only : iulog
     implicit none
 
     include 'mpif.h'
@@ -26,7 +27,12 @@ module cpl_mod
     integer :: i, myid
     integer status(MPI_STATUS_SIZE)
 
-
+    character(len=128)                                    :: fldname
+    integer, parameter     :: begc = 1   !-- internal debug level
+    integer, parameter     :: endc = 3312/4/2/2   !-- internal debug level
+    character(*),parameter :: F01 = "('[cpl_mod] ',a,i5,2x,i5,2x,d21.14)"
+    character(*),parameter :: F02 =  "('[cpl_mod]',a,i5,2x,d26.19)"
+    integer, parameter                              :: debug = 1   !-- internaldebug level
     !======================================================================
      contains
     !======================================================================
@@ -111,7 +117,8 @@ module cpl_mod
         end if
 
 
-        call ESMF_FieldBundleRegridStore(import_fieldbundle, export_fieldbundle, routehandle=rh_atm2lnd, rc=rc)
+        call ESMF_FieldBundleRedistStore(import_fieldbundle, export_fieldbundle, routehandle=rh_atm2lnd, rc=rc)
+        !call ESMF_FieldBundleRegridStore(import_fieldbundle, export_fieldbundle, routehandle=rh_atm2lnd, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"cpl init finished!", ESMF_LOGMSG_INFO)
     end subroutine cpl_atm2lnd_init
@@ -136,7 +143,8 @@ module cpl_mod
         call ESMF_StateGet(exportState, "c2a_fb", export_fieldbundle, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-        call ESMF_FieldBundleRegridStore(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
+        call ESMF_FieldBundleRedistStore(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
+        !call ESMF_FieldBundleRegridStore(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//"cpl init finished!", ESMF_LOGMSG_INFO)
     end subroutine cpl_lnd2atm_init
@@ -155,6 +163,8 @@ module cpl_mod
         type (ESMF_FieldBundle )             :: import_fieldbundle, export_fieldbundle
         character(len=*        ) , parameter :: subname=trim(modname       ) //': [cpl_atm2lnd_run] '
 
+        real, pointer           :: fldptr1d(:)
+
         rc = ESMF_SUCCESS
         print *, "Running cpl_atm2lnd_run"
         call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
@@ -168,7 +178,11 @@ module cpl_mod
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//" got c2l fieldbundle!", ESMF_LOGMSG_INFO)
 
-        call ESMF_FieldBundleRegrid(import_fieldbundle, export_fieldbundle, routehandle=rh_atm2lnd, rc=rc)
+        !fldname = 'Sa_topo'
+        !call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
+
+        !call ESMF_FieldBundleRegrid(import_fieldbundle, export_fieldbundle, routehandle=rh_atm2lnd, rc=rc)
+        call ESMF_FieldBundleRedist(import_fieldbundle, export_fieldbundle, routehandle=rh_atm2lnd, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//" regridding fieldbundles from atmos to land!", ESMF_LOGMSG_INFO)
 
@@ -195,7 +209,8 @@ module cpl_mod
         call ESMF_StateGet(exportState, "c2a_fb", export_fieldbundle, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
-        call ESMF_FieldBundleRegrid(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
+        call ESMF_FieldBundleRedist(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
+        !call ESMF_FieldBundleRegrid(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_LogWrite(subname//" regridding fieldbundles  from land to atmos!", ESMF_LOGMSG_INFO)
 
@@ -249,8 +264,96 @@ module cpl_mod
     end subroutine cpl_lnd2atm_final
 
 
+     !===============================================================================
+
+  subroutine state_getfldptr(State, fldname, fldptr1d, fldptr2d, rc)
+
+    ! ----------------------------------------------
+    ! Get pointer to a state field
+    ! ----------------------------------------------
+
+    use ESMF , only : ESMF_State, ESMF_Field, ESMF_Mesh, ESMF_FieldStatus_Flag
+    use ESMF , only : ESMF_FieldBundle
+    use ESMF , only : ESMF_StateGet, ESMF_FieldGet, ESMF_MeshGet
+    use ESMF , only : ESMF_FIELDSTATUS_COMPLETE, ESMF_FAILURE
+    use ESMF                  , only : ESMF_FieldBundleGet
+
+    ! input/output variables
+    type(ESMF_State),             intent(in)    :: State
+    character(len=*),             intent(in)    :: fldname
+    real , pointer, optional , intent(out)   :: fldptr1d(:)
+    real , pointer, optional , intent(out)   :: fldptr2d(:,:)
+    integer,                      intent(out)   :: rc
+
+    ! local variables
+    type(ESMF_FieldStatus_Flag) :: status
+    type(ESMF_Field)            :: lfield
+    type(ESMF_Mesh)             :: lmesh
+    integer                     :: nnodes, nelements
+    character(len=*), parameter :: subname='(lnd_import_export:state_getfldptr)'
+
+    type(ESMF_StateItem_Flag)   :: itemFlag
+    type(ESMF_FieldBundle)      :: fieldBundle
+    logical                       :: isPresent
+    ! ----------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Determine if this field bundle exist....
+    ! TODO: combine the error checks....
 
 
+    call ESMF_StateGet(state, "c2l_fb", itemFlag, rc=rc)
+    !call ESMF_StateGet(State, itemName=trim(fldname), field=lfield, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+    ! Get the fieldbundle from state...
+    call ESMF_StateGet(state, "c2l_fb", fieldBundle, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+
+    call ESMF_FieldBundleGet(fieldBundle,fieldName=trim(fldname), field=lfield,  isPresent=isPresent, rc=rc)
+    !call ESMF_FieldBundleGet(fieldBundle,trim(fldname), lfield,  isPresent, rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+    call ESMF_FieldGet(lfield, status=status, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+    if (status /= ESMF_FIELDSTATUS_COMPLETE) then
+       call ESMF_LogWrite(trim(subname)//": ERROR data not allocated ", ESMF_LOGMSG_INFO, rc=rc)
+       rc = ESMF_FAILURE
+       return
+    else
+       call ESMF_FieldGet(lfield, mesh=lmesh, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+       call ESMF_MeshGet(lmesh, numOwnedNodes=nnodes, numOwnedElements=nelements, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+
+       if (nnodes == 0 .and. nelements == 0) then
+          call ESMF_LogWrite(trim(subname)//": no local nodes or elements ", ESMF_LOGMSG_INFO)
+          rc = ESMF_FAILURE
+          return
+       end if
+
+       if (present(fldptr1d)) then
+          call ESMF_FieldGet(lfield, farrayPtr=fldptr1d, rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+          if ( debug > 0)  then
+             write(iulog,F01)' in '//trim(subname)//'fldptr1d for '//trim(fldname)//' is  '
+          end if
+          !print *, "FLDPTR1D is"
+          !print *, FLDPTR1d
+       else if (present(fldptr2d)) then
+          call ESMF_FieldGet(lfield, farrayPtr=fldptr2d, rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+       else
+          !call shr_sys_abort("either fldptr1d or fldptr2d must be an input argument")
+       end if
+     endif  ! status
+
+
+  end subroutine state_getfldptr
 
 
 
