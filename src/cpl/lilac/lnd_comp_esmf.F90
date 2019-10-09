@@ -141,6 +141,7 @@ contains
         use mpi,             only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE
         use shr_pio_mod,     only : shr_pio_init1, shr_pio_init2
         use glc_elevclass_mod     , only : glc_elevclass_init
+        use shr_orb_mod      , only : shr_orb_params
         ! input/output variables
         type(ESMF_GridComp)          :: comp            ! CLM gridded component
         type(ESMF_State)             :: import_state    ! CLM import state
@@ -235,6 +236,7 @@ contains
          integer                 :: nlnd, nocn            ! local size ofarrays
          !integer                 :: g,n                   ! indices
          integer                 :: n                   ! indices
+         integer                 :: year, month, day
 
 
          integer                :: dtime          ! time step increment (sec)
@@ -346,9 +348,26 @@ contains
         !call shr_cal_date2ymd(ymd,year,month,day)
         !orb_cyear = orb_iyear + (year - orb_iyear_align)
 
-       ! call shr_orb_params(&
-       !      orb_cyear=2000, orb_eccen=orb_eccen, orb_obliq=orb_obliq, orb_mvelp=orb_mvelpp, &
-       !      orb_obliqr=obliqr, orb_lambm0=orb_lambm0, orb_mvelpp=orb_mvelpp, masterproc)
+        orb_cyear = 2000
+        call shr_orb_params(orb_cyear, eccen, obliqr, mvelpp, &
+            obliqr, lambm0, mvelpp, masterproc)
+
+        ! for now hard-coding:
+        !nextsw_cday =  1.02083333333333
+        !eccen       =  1.670366039276560E-002
+        !mvelpp      =  4.93745779048816
+        !lambm0      =  -3.247249566152933E-0020
+        !obliqr      =  0.409101122579779
+
+        !if ((debug >1) .and. (masterproc)) then
+        if (masterproc) then
+           write(iulog,*) 'shr_obs_params is setting these:', eccen
+           write(iulog,*) 'eccen is : ', eccen
+           write(iulog,*) 'mvelpp is : ', mvelpp
+
+           write(iulog,*) 'lambm0 is : ', lambm0
+           write(iulog,*) 'obliqr is : ', obliqr
+        end if
 
         !----------------------
         ! Consistency check on namelist filename	
@@ -537,11 +556,10 @@ contains
         call fldbundle_add( 'Faxa_snowc'  , c2l_fb,rc)   !12
         call fldbundle_add( 'Faxa_snowl'  , c2l_fb,rc)   !13
         call fldbundle_add( 'Faxa_swndr' , c2l_fb,rc)    !14
-        call fldbundle_add( 'Faxa_swndf' , c2l_fb,rc)    !15
-        call fldbundle_add( 'Faxa_swvdr' , c2l_fb,rc)    !16
+        call fldbundle_add( 'Faxa_swvdr' , c2l_fb,rc)    !15
+        call fldbundle_add( 'Faxa_swndf' , c2l_fb,rc)    !16
         call fldbundle_add( 'Faxa_swvdf' , c2l_fb,rc)    !17
         call ESMF_StateAdd(import_state, fieldbundleList = (/c2l_fb/), rc=rc)
-        !call ESMF_StateAdd(importState, fieldbundleList = (/c2l_fb/), rc=rc)
 
         ! Create export state
 
@@ -604,9 +622,11 @@ contains
 
 
         ! Set nextsw_cday
-        call ESMF_LogWrite(subname//"Setting nextsw cday......", ESMF_LOGMSG_INFO)
-        !call ESMF_LogWrite(subname//nextsw_cday, ESMF_LOGMSG_INFO)
         call set_nextsw_cday( nextsw_cday )
+
+        if (masterproc) then
+           write(iulog,*) 'TimeGet ... nextsw_cday is : ', nextsw_cday
+        end if
 
         ! Set Attributes
         call ESMF_LogWrite(subname//"setting attribute!", ESMF_LOGMSG_INFO)
@@ -618,9 +638,6 @@ contains
         call ESMF_AttributeSet(export_state, name="lnd_ny", value=ldomain%nj, rc=rc)
         if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
         call ESMF_LogWrite(subname//"setting attribute-lnd_ny!", ESMF_LOGMSG_INFO)
-
-
-
 
         call ESMF_LogWrite(subname//"State_SetScalar....!", ESMF_LOGMSG_INFO)
         !Set scalars in export state
@@ -663,6 +680,8 @@ contains
         call ESMF_AttributeSet(comp, "Name", "TBD", convention=convCIM, purpose=purpComp, rc=rc)
         call ESMF_AttributeSet(comp, "EmailAddress", TBD, convention=convCIM, purpose=purpComp, rc=rc)
         call ESMF_AttributeSet(comp, "ResponsiblePartyRole", "contact", convention=convCIM, purpose=purpComp, rc=rc)
+        ! adding this nextsw_cday
+        call ESMF_AttributeSet(comp, "nextsw_cday", nextsw_cday, convention=convCIM, purpose=purpComp, rc=rc)
 #endif
 
 
@@ -754,6 +773,8 @@ contains
         character(len=32)      :: rdate          ! date char string for restart file names
         integer                :: shrlogunit ! original log unit
         character(len=*),parameter  :: subname=trim(modName)//':[lnd_run] '
+
+        character(*),parameter :: F02 = "('[lnd_comp_esmf] ',d26.19)"
         !-------------------------------------------------------------------------------
 
 
@@ -776,10 +797,21 @@ contains
         ! Determine time of next atmospheric shortwave calculation
         !--------------------------------
 
+
         !call ESMF_AttributeGet(export_state, name="nextsw_cday", value=nextsw_cday, rc=rc)
         !if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
         !call set_nextsw_cday( nextsw_cday )
+
+        call State_GetScalar(import_state, &
+            flds_scalar_index_nextsw_cday, nextsw_cday, &
+             flds_scalar_name, flds_scalar_num, rc)
+        call set_nextsw_cday( nextsw_cday )
+
+        
+        if (masterproc) then
+           write(iulog,*) 'State_GetScalar ... nextsw_cday is : ', nextsw_cday
+        end if
 
         ! in nuopc it is like this......
         !call State_GetScalar(import_state, &
@@ -848,12 +880,23 @@ contains
 
            caldayp1 = get_curr_calday(offset=dtime)
 
+           nextsw_cday = caldayp1
+           if (masterproc) then
+               write(iulog,*) 'dtime : ', dtime
+               write(iulog,*) 'caldayp1 : ', caldayp1
+               write(iulog,*) 'nextsw_cday : ', nextsw_cday
+           end if
+           !nextsw_cday =  1.02083333333333
            if (nstep == 0) then
           doalb = .false.
            else if (nstep == 1) then
               doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
            else
               doalb = (nextsw_cday >= -0.5_r8)
+           end if
+
+           if (masterproc) then
+               write(iulog,*) 'doalb is: ', doalb
            end if
            call update_rad_dtime(doalb)
 
@@ -897,8 +940,26 @@ contains
 
            call t_startf ('shr_orb_decl')
            calday = get_curr_calday()
+
+           if (masterproc) then
+               write(iulog, *)'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+               write(iulog, *)'call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )'
+               write(iulog, *)'call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0,  obliqr, declinp1, eccf )'
+               write(iulog,*) 'calday is : ', calday
+               write(iulog,*) 'previous nextsw_cday is : ', nextsw_cday
+           end if
+
+           !nextsw_cday =  1.02083333333333
+
            call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
            call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
+
+           if (masterproc) then
+               write(iulog,*) 'hardwired nextsw_cday is : ', nextsw_cday
+               write(iulog,*) 'declin   is : ', declin
+               write(iulog,*) 'declinp1 is : ', declinp1
+           end if
+
            call t_stopf ('shr_orb_decl')
 
            call t_startf ('ctsm_run')
@@ -922,8 +983,8 @@ contains
 
            call t_startf ('lc_lnd_export')
 
-           !call export_fields(exportState, bounds, glc_present, rof_prognostic, &
-           !     water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
+           call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
+                water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
            !call export_fields(exportState, bounds, water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, rc)
            !if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
