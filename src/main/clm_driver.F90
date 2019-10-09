@@ -557,13 +557,6 @@ contains
             water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterstatebulk_inst)
 
-       ! FIXME(wjs, 2019-10-06) Remove this temporary check
-       if (water_inst%DoConsistencyCheck()) then
-          call t_startf("tracer_consistency_check")
-          call water_inst%TracerConsistencyCheck(bounds_clump, 'after calc_soilevap_resis')
-          call t_stopf("tracer_consistency_check")
-       end if
-
        call CalculateSurfaceHumidity(bounds_clump,                                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                       &
             atm2lnd_inst, temperature_inst, &
@@ -575,7 +568,7 @@ contains
        ! LakeFluxes... I'll probably leave it in place there.
        if (water_inst%DoConsistencyCheck()) then
           call t_startf("tracer_consistency_check")
-          call water_inst%TracerConsistencyCheck(bounds_clump, 'after CanopyTemperature')
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after CalculateSurfaceHumidity')
           call t_stopf("tracer_consistency_check")
        end if
 
