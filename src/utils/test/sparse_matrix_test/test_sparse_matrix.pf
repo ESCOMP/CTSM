@@ -182,13 +182,13 @@ contains
     do i = begu, endu
        this%filter_u(i) = i
     end do
-    @assertFalse( this%SM_identity%IsAlloc() )
+    @assertFalse( this%SM_identity%IsAllocSM() )
     @assertFalse( this%SM_identity%IsValuesSetSM() )
     call this%SM_identity%InitSM( ndims, begu, endu )
-    @assertTrue( this%SM_identity%IsAlloc() )
+    @assertTrue( this%SM_identity%IsAllocSM() )
     @assertFalse( this%SM_identity%IsValuesSetSM() )
     call this%SM_identity%SetValueA_diag( this%num_unit,this%filter_u, 1.0_r8 )
-    @assertTrue( this%SM_identity%IsAlloc() )
+    @assertTrue( this%SM_identity%IsAllocSM() )
     @assertTrue( this%SM_identity%IsValuesSetSM() )
     call this%DM_identity%InitDM( ndims, begu, endu )
     Mdiag = 1.0_r8
@@ -203,6 +203,8 @@ contains
     call this%V_identity%ReleaseV( )
     call this%SM_identity%ReleaseSM( )
     call this%DM_identity%ReleaseDM( )
+    @assertFalse( this%SM_identity%IsAllocSM() )
+    @assertFalse( this%SM_identity%IsValuesSetSM() )
     deallocate( this%filter_u )
   end subroutine tearDown
 
@@ -245,8 +247,10 @@ contains
     Mexpect       = 1.0_r8
     @assertEqual( Mexpect, MatrixSetup%M(1,:) )
     call SymBand%InitSM( ndims, begu, endu )
+    @assertTrue( SymBand%IsAllocSM() )
     call SymBand%SetValueSM(begu,endu,this%num_unit,this%filter_u, &
                                MatrixSetup%M,MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    @assertTrue( SymBand%IsValuesSetSM() )
     ! Multiply it by a diagonal matrix that is exactly three
     @assertEqual( this%DM_identity%SM, ndims )
     this%DM_identity%DM(begu:endu,:ndims) = 3.0_r8

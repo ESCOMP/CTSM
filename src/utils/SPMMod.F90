@@ -416,7 +416,9 @@ end subroutine SetValueA
   ! Set the sparse matrix by copying from another sparse matrix
 
      class(sparse_matrix_type) :: this
-     type(sparse_matrix_type), intent(in) :: matrix
+     type(sparse_matrix_type), intent(in) :: matrix   ! Sparse Matrix to copy
+     integer ,intent(in) :: num_unit
+     integer ,intent(in) :: filter_u(:)
      character(len=*),parameter :: subname = 'CopyValueSM'
 
      if ( .not. this%IsAllocSM() )then
@@ -447,7 +449,9 @@ end subroutine SetValueA
 
      class(sparse_matrix_type) :: this
 
-     if ( this%IsAllocSM() .or. this%NE == empty_int )then
+     if ( .not. this%IsAllocSM() )then
+        IsValuesSetSM = .false.
+     else if ( this%NE == empty_int )then
         IsValuesSetSM = .false.
      else
         IsValuesSetSM = .true.
