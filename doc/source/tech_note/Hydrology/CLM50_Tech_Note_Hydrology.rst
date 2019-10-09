@@ -620,9 +620,8 @@ organic components. The water content at saturation (i.e. porosity) is
    \theta_{sat,i} =(1-f_{om,i} )\theta_{sat,\min ,i} +f_{om,i} \theta_{sat,om}
 
 where :math:`f_{om,i}`  is the soil organic matter fraction,
-:math:`\theta_{sat,om} =0.9` (:ref:`Farouki 1981 <Farouki1981>`; 
-:ref:`Letts et al. 2000 <Lettsetal2000>`) is the
-porosity of organic matter and the porosity of the mineral soil
+:math:`\theta_{sat,om}` is the
+porosity of organic matter, and the porosity of the mineral soil
 :math:`\theta_{sat,\min ,i}`  is
 
 .. math::
@@ -637,7 +636,7 @@ The exponent :math:`B_{i}` is
 
    B_{i} =(1-f_{om,i} )B_{\min ,i} +f_{om,i} B_{om}
 
-where :math:`B_{om} = 2.7` \ (:ref:`Letts et al. 2000 <Lettsetal2000>`) and
+where :math:`B_{om}` is for organic matter and
 
 .. math::
    :label: 7.93
@@ -659,7 +658,7 @@ where the saturated soil matric potential (mm) is
 
    \psi _{sat,i} =(1-f_{om,i} )\psi _{sat,\min ,i} +f_{om,i} \psi _{sat,om}
 
-where :math:`\psi _{sat,om} = -10.3` \ mm (:ref:`Letts et al. 2000 <Lettsetal2000>`) is the
+where :math:`\psi _{sat,om}` \ is the
 saturated organic matter matric potential and the saturated mineral soil
 matric potential :math:`\psi _{sat,\min ,i}` \ is
 
@@ -722,6 +721,31 @@ as
    :label: 7.100
 
    k_{sat} \left[z_{h,\, i} \right]=f_{uncon,\, i} k_{sat,\, uncon} \left[z_{h,\, i} \right]+(1-f_{uncon,\, i} )k_{sat,\, om} \left[z_{h,\, i} \right].
+
+The soil organic matter properties implicitly account for the standard observed profile of organic matter
+properties as
+
+.. math::
+   :label: 1.101
+
+   \theta_{sat,om} = max(0.93 - 0.1\times z_{i} / zsapric, 0.83).
+
+.. math::
+   :label: 1.102
+
+   B_{om} = min(2.7 + 9.3\times z_{i} / zsapric, 12.0).
+
+.. math::
+   :label: 1.103
+
+   \psi_{sat,om} = min(10.3 - 0.2\times z_{i} / zsapric, 10.1).
+
+.. math::
+   :label: 1.104
+
+   k_{sat,om} = max(0.28 - 0.2799\times z_{i} / zsapric, k_{sat,\, \min } \left[z_{h,\, i} \right]).
+
+where :math:`zsapric =0.5` \m is the depth that organic matter takes on the characteristics of sapric peat.
 
 .. _Numerical Solution Hydrology:
 
