@@ -8,6 +8,7 @@ module atmos_cap
     use ESMF
     use lilac_utils , only : fld_list_type
     use spmdMod     , only : masterproc
+    use clm_varctl    ,  only : iulog
     implicit none
 
     include 'mpif.h'
@@ -25,6 +26,13 @@ module atmos_cap
     integer                                                       :: i, myid
     integer status(MPI_STATUS_SIZE)   ! Status of message
     integer, parameter                                            :: debug = 0        ! internal debug leve
+
+
+
+        character(len=128)                                    :: fldname
+        integer, parameter     :: begc = 1   !-- internal debug level
+        integer, parameter     :: endc = 3312/4/2/2   !-- internal debug level
+        character(*),parameter :: F02 =   "('[atmos_cap]',a,i5,2x,d26.19)"
 
     !========================================================================
     contains
@@ -98,7 +106,9 @@ module atmos_cap
             ! TODO: hard-coded mesh file name shoulb be corrected.
             ! For now this is our dummy mesh:
             !atmos_mesh_filepath  =   '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/T31_040122_ESMFmesh.nc'  !! Negin: This did not work.... 
-            atmos_mesh_filepath  =   '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc'
+            !atmos_mesh_filepath  =   '/gpfs/fs1/p/cesmdata/cseg/inputdata/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc'
+            atmos_mesh_filepath  =   '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
+
 
             atmos_mesh           = ESMF_MeshCreate(filename=trim(atmos_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
@@ -167,14 +177,18 @@ module atmos_cap
 
         enddo
 
+        fldname = 'Sa_topo'
+        do i=begc, endc
+            write (iulog,F02)'import: nstep, n, '//trim(fldname)//' = ',i, a2c_fldlist(2)%farrayptr1d(i)
+        enddo
+
 
         call ESMF_LogWrite(subname//"fieldbundleadd is finished .... !", ESMF_LOGMSG_INFO)
         print *, "!Fields to  Coupler (atmos to  land ) (a2c_fb) Field Bundle Created!"
 
         ! Add field bundle to state
         call ESMF_StateAdd(atm2lnd_a_state, (/a2c_fb/), rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
- 
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out 
         call ESMF_LogWrite(subname//"atm2lnd_a_state is filled with dummy_var field bundle!", ESMF_LOGMSG_INFO)
         print *, "!atm2lnd_a_state is filld with dummy_var field bundle!"
 
