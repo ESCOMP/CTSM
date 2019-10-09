@@ -6,17 +6,19 @@ module lilac_mod
 
     ! !USES
     use ESMF
-    use lilac_utils   , only  : fld_list_type, fldsMax, create_fldlists 
-    use lilac_utils   , only  : atm2lnd_data1d_type , lnd2atm_data1d_type
-    use lilac_utils   , only  : atm2lnd_data2d_type , lnd2atm_data2d_type
+    use lilac_utils   ,  only : fld_list_type, fldsMax, create_fldlists 
+    use lilac_utils   ,  only : atm2lnd_data1d_type , lnd2atm_data1d_type
+    use lilac_utils   ,  only : atm2lnd_data2d_type , lnd2atm_data2d_type
     use atmos_cap     ,  only :         atmos_register
     !use lnd_shr_methods
     use lnd_comp_esmf ,  only :         lnd_register
     use cpl_mod       ,  only :         cpl_atm2lnd_register , cpl_lnd2atm_register
 
-    use mpi,             only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
-    use shr_pio_mod,     only : shr_pio_init1, shr_pio_init2
+    use mpi           ,  only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
+    use shr_pio_mod   ,  only : shr_pio_init1, shr_pio_init2
 
+    use clm_varctl    ,  only : iulog
+    use spmdMod       ,  only : masterproc
     implicit none
 
     !TODO (NS,2019-08-07):
@@ -87,24 +89,29 @@ module lilac_mod
                                      e_month, e_day, e_hour, e_min
 
 
-        integer                    :: COMP_COMM
-        integer ::  ierr
-        integer                       :: ntasks,mytask ! mpicom size and rank
-
-        integer :: ncomps = 1      ! land only
-
-        integer                      ::  n
+        integer                                         :: COMP_COMM
+        integer                                         :: ierr
+        integer                                         :: ntasks,mytask ! mpicom size and rank
+        integer                                         :: ncomps = 1      ! land only
+        integer                                         :: n
+        integer                                         :: i
+        integer, parameter                              :: debug = 1   !-- internal debug level
         !!! above: https://github.com/yudong-tian/LIS-CLM4.5SP/blob/8cec515a628325c73058cfa466db63210cd562ac/pio-xlis-bld/xlis_main.F90
 
 
+        character(len=128)                                    :: fldname
+        integer, parameter     :: begc = 1   !-- internal debug level
+        integer, parameter     :: endc = 3312/4/2/2   !-- internal debug level
+        character(*),parameter :: F02 =   "('[lilac_mod]',a,i5,2x,d26.19)"
         !------------------------------------------------------------------------
         ! Initialize return code
         rc = ESMF_SUCCESS
 
-
-        print *,  "---------------------------------------"
-        print *,  "    Lilac Demo Application Start       "
-        print *,  "---------------------------------------"
+        if (masterproc) then
+            print *,  "---------------------------------------"
+            print *,  "    Lilac Demo Application Start       "
+            print *,  "---------------------------------------"
+        end if
 
         !-----------------------------------------------------------------------------
         ! Initiallize MPI
@@ -121,14 +128,14 @@ module lilac_mod
             call MPI_ABORT(MPI_COMM_WORLD, ierr)
         end if
 
-
-
         !
 
         call MPI_COMM_RANK(COMP_COMM, mytask, ierr)
         call MPI_COMM_SIZE(COMP_COMM, ntasks, ierr)
 
-        print *, "MPI initialization done ..., ntasks=", ntasks
+        if (masterproc) then
+            print *, "MPI initialization done ..., ntasks=", ntasks
+        end if
 
         !-----------------------------------------------------------------------------
         ! Initialize PIO
@@ -167,7 +174,10 @@ module lilac_mod
         ! Read in namelist file ...
         call ESMF_UtilIOUnitGet(unit=fileunit, rc=rc)     ! get an available Fortran unit number
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-        print *,  "---------------------------------------"
+
+        if (masterproc) then
+            print *,  "---------------------------------------"
+        end if
 
         open(fileunit, status="old", file="namelist_lilac",  action="read", iostat=rc)
 
@@ -202,7 +212,10 @@ module lilac_mod
         allocate (l2c_fldlist(fldsmax))
         allocate (c2l_fldlist(fldsmax))
 
-        print *, "creating empty field lists !"
+        if (masterproc) then
+            print *, "creating empty field lists !"
+        end if
+
         call ESMF_LogWrite(subname//"fielldlists are allocated!", ESMF_LOGMSG_INFO)
 
         ! create field lists  
@@ -223,6 +236,13 @@ module lilac_mod
 
         a2c_fldlist(1)%farrayptr1d   =>  atm2lnd1d%Sa_z
         a2c_fldlist(2)%farrayptr1d   =>  atm2lnd1d%Sa_topo
+
+        !if (masterproc .and. debug > 0) then
+        fldname = 'Sa_topo'
+        do i=begc, endc
+            write (iulog,F02)'import: nstep, n, '//trim(fldname)//' = ',i, a2c_fldlist(2)%farrayptr1d(i)
+        end do
+        !end if
         a2c_fldlist(3)%farrayptr1d   =>  atm2lnd1d%Sa_u
         a2c_fldlist(4)%farrayptr1d   =>  atm2lnd1d%Sa_v
         a2c_fldlist(5)%farrayptr1d   =>  atm2lnd1d%Sa_ptem
@@ -347,13 +367,14 @@ module lilac_mod
         !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
         call ESMF_TimeSet(StartTime, yy=2000, mm=1, dd=1 , s=0, calendar=Calendar, rc=rc)
         call ESMF_TimeSet(StopTime , yy=2000, mm=03, dd=01, s=0, calendar=Calendar, rc=rc)
-        call ESMF_TimeIntervalSet(TimeStep, s=3600, rc=rc)
+        !call ESMF_TimeIntervalSet(TimeStep, s=3600, rc=rc)
+        call ESMF_TimeIntervalSet(TimeStep, s=1800, rc=rc)
         clock = ESMF_ClockCreate(name='lilac_drv_EClock', TimeStep=TimeStep, startTime=StartTime, RefTime=StartTime, stopTime=stopTime, rc=rc)
 
         print *,  "---------------------------------------"
-        call ESMF_ClockPrint (clock, rc=rc)
+        !call ESMF_ClockPrint (clock, rc=rc)
         print *,  "======================================="
-        call ESMF_CalendarPrint ( calendar , rc=rc)
+        !call ESMF_CalendarPrint ( calendar , rc=rc)
         print *,  "---------------------------------------"
 
         ! ========================================================================
@@ -450,7 +471,7 @@ module lilac_mod
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
         print *, "Run Loop Start time"
-        call ESMF_ClockPrint(local_clock, options="currtime string", rc=rc)
+        !call ESMF_ClockPrint(local_clock, options="currtime string", rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
 
         !-------------------------------------------------------------------------

@@ -35,9 +35,9 @@ module lilac_utils
         real*8, pointer    :: Sa_pbot  (:)
         real*8, pointer    :: Sa_tbot  (:)
         real*8, pointer    :: Sa_shum  (:)
-       !real*8, pointer    :: Sa_methane  (:)
+        real*8, pointer    :: Sa_methane (:)
        ! from atm - fluxes
-        real*8, pointer    :: Faxa_lwdn  (:)
+        real*8, pointer    :: Faxa_lwdn   (:)
         real*8, pointer    :: Faxa_rainc  (:)
         real*8, pointer    :: Faxa_rainl  (:)
         real*8, pointer    :: Faxa_snowc  (:)
@@ -46,6 +46,8 @@ module lilac_utils
         real*8, pointer    :: Faxa_swvdr  (:)
         real*8, pointer    :: Faxa_swndf  (:)
         real*8, pointer    :: Faxa_swvdf  (:)
+
+        real*8, pointer    :: Faxa_bcph   (:)
     end type                  atm2lnd_data1d_type
 
 !
