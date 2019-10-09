@@ -1445,7 +1445,8 @@ contains
     use clm_varctl       , only : use_fertilizer
     use clm_varctl       , only : use_c13, use_c14
     use clm_varcon       , only : c13ratio, c14ratio
-    use LandunitType     , only: lun
+    use LandunitType     , only : lun
+    use Fan2CTSMMod      , only : fan_to_bgc_crop
 
     !
     ! !ARGUMENTS:
@@ -1953,7 +1954,12 @@ contains
                   fert_counter(p)  = ndays_on * secspday
                   if (ndays_on .gt. 0) then
                      synthfert(p) = fertnitro(p) / fert_counter(p)
-                     manure(p) = (manunitro(ivt(p)) * 1000._r8) / fert_counter(p)
+                     if (.not. fan_to_bgc_crop) then
+                        manure(p) = (manunitro(ivt(p)) * 1000._r8) / fert_counter(p)
+                     else
+                        ! CLM default manure not used; FAN determines the application.
+                        manure(p) = 0.0_r8
+                     end if
                   else
                      synthfert(p) = 0._r8
                      manure(p) = 0._r8
