@@ -22,8 +22,9 @@ program demo_lilac_driver
     ! modules
     use ESMF
     use lilac_mod
-    use lilac_utils, only   : atm2lnd_data1d_type , lnd2atm_data1d_type, atm2lnd_data2d_type, atm2lnd_data2d_type , this_clock
-
+    use lilac_utils , only : atm2lnd_data1d_type , lnd2atm_data1d_type, atm2lnd_data2d_type, atm2lnd_data2d_type , this_clock
+    use clm_varctl  , only : iulog
+    use spmdMod     , only : masterproc
     implicit none
 
     ! TO DO: change the name and the derived data types
@@ -44,17 +45,24 @@ program demo_lilac_driver
     integer                                               :: end_time                 !-- end_time      end time
     integer                                               :: curr_time                !-- cur_time      current time
     integer                                               :: itime_step               !-- itime_step    counter of time steps
+    integer                                               :: g,i,k                    !-- indices
+    integer, parameter                                    :: debug = 1                !-- internal debug level
 
+    character(len=128)                                    :: fldname
+
+    character(*),parameter                                :: F01 =   "(a,i4,d26.19)"
+    character(*),parameter                                :: F02 = "('[demo_driver]',a,i5,2x,d26.19)"
     !------------------------------------------------------------------------
 
     ! real atmosphere:
     begc       = 1
-    endc       = 6912/4
+    !endc       = 6912/4/2
+    endc        = 3312/4/2/2
     !endc       = 13824
     !endc       = 13968
 
     start_time = 1
-    end_time   = 50
+    end_time   = 5
     itime_step = 1
 
     seed_val   = 0
@@ -70,26 +78,39 @@ program demo_lilac_driver
     allocate ( rand2                   (begc:endc) ) ; call random_number (rand2)
 
     !allocating these values from atmosphere for now!
-    allocate ( atm2lnd%Sa_z       (begc:endc) ) ; atm2lnd%Sa_z       (:) =  30.0
-    allocate ( atm2lnd%Sa_topo    (begc:endc) ) ; atm2lnd%Sa_topo    (:) =  10.0
-    allocate ( atm2lnd%Sa_u       (begc:endc) ) ; atm2lnd%Sa_u       (:) =  20.0
-    allocate ( atm2lnd%Sa_v       (begc:endc) ) ; atm2lnd%Sa_v       (:) =  40.0
-    allocate ( atm2lnd%Sa_ptem    (begc:endc) ) ; atm2lnd%Sa_ptem    (:) =  280.0
-    allocate ( atm2lnd%Sa_pbot    (begc:endc) ) ; atm2lnd%Sa_pbot    (:) =  100100.0
-    allocate ( atm2lnd%Sa_tbot    (begc:endc) ) ; atm2lnd%Sa_tbot    (:) =  280.0
-    allocate ( atm2lnd%Sa_shum    (begc:endc) ) ; atm2lnd%Sa_shum    (:) =  0.0004
-    allocate ( atm2lnd%Faxa_lwdn  (begc:endc) ) ; atm2lnd%Faxa_lwdn  (:) =  200.0
-    allocate ( atm2lnd%Faxa_rainc (begc:endc) ) ; atm2lnd%Faxa_rainc (:) =  4.0e-8
-    allocate ( atm2lnd%Faxa_rainl (begc:endc) ) ; atm2lnd%Faxa_rainl (:) =  3.0e-8
-    allocate ( atm2lnd%Faxa_snowc (begc:endc) ) ; atm2lnd%Faxa_snowc (:) =  1.0e-8
-    allocate ( atm2lnd%Faxa_snowl (begc:endc) ) ; atm2lnd%Faxa_snowl (:) =  2.0e-8
-    allocate ( atm2lnd%Faxa_swndr (begc:endc) ) ; atm2lnd%Faxa_swndr (:) =  100.0
-    allocate ( atm2lnd%Faxa_swvdr (begc:endc) ) ; atm2lnd%Faxa_swvdr (:) =  90.0
-    allocate ( atm2lnd%Faxa_swndf (begc:endc) ) ; atm2lnd%Faxa_swndf (:) =  20.0
-    allocate ( atm2lnd%Faxa_swvdf (begc:endc) ) ; atm2lnd%Faxa_swvdf (:) =  40.0
+    allocate ( atm2lnd%Sa_z       (begc:endc) ) ; atm2lnd%Sa_z       (:) =  30.0d0
+    allocate ( atm2lnd%Sa_topo    (begc:endc) ) ; atm2lnd%Sa_topo    (:) =  10.0d0
+    allocate ( atm2lnd%Sa_u       (begc:endc) ) ; atm2lnd%Sa_u       (:) =  20.0d0
+    allocate ( atm2lnd%Sa_v       (begc:endc) ) ; atm2lnd%Sa_v       (:) =  40.0d0
+    allocate ( atm2lnd%Sa_ptem    (begc:endc) ) ; atm2lnd%Sa_ptem    (:) =  280.0d0
+    allocate ( atm2lnd%Sa_pbot    (begc:endc) ) ; atm2lnd%Sa_pbot    (:) =  100100.0d0
+    allocate ( atm2lnd%Sa_tbot    (begc:endc) ) ; atm2lnd%Sa_tbot    (:) =  280.0d0
+    allocate ( atm2lnd%Sa_shum    (begc:endc) ) ; atm2lnd%Sa_shum    (:) =  0.0004d0
+    allocate ( atm2lnd%Faxa_lwdn  (begc:endc) ) ; atm2lnd%Faxa_lwdn  (:) =  200.0d0
+    !allocate ( atm2lnd%Faxa_rainc (begc:endc) ) ; atm2lnd%Faxa_rainc (:) =  4.0d-8
+    allocate ( atm2lnd%Faxa_rainc (begc:endc) ) ; atm2lnd%Faxa_rainc (:) =  0.0d0
+    allocate ( atm2lnd%Faxa_rainl (begc:endc) ) ; atm2lnd%Faxa_rainl (:) =  3.0d-8
+    allocate ( atm2lnd%Faxa_snowc (begc:endc) ) ; atm2lnd%Faxa_snowc (:) =  1.0d-8
+    allocate ( atm2lnd%Faxa_snowl (begc:endc) ) ; atm2lnd%Faxa_snowl (:) =  2.0d-8
+    allocate ( atm2lnd%Faxa_swndr (begc:endc) ) ; atm2lnd%Faxa_swndr (:) =  100.0d0
+    allocate ( atm2lnd%Faxa_swvdr (begc:endc) ) ; atm2lnd%Faxa_swvdr (:) =  20.0d0
+    allocate ( atm2lnd%Faxa_swndf (begc:endc) ) ; atm2lnd%Faxa_swndf (:) =  20.0d0
+    allocate ( atm2lnd%Faxa_swvdf (begc:endc) ) ; atm2lnd%Faxa_swvdf (:) =  40.0d0
+
+
+    fldname = 'Sa_topo'
+    if (debug > 0) then
+        do i=begc, endc 
+            write (iulog,F02)'import: nstep, n, '//trim(fldname)//' = ',i, atm2lnd%Sa_topo(i)
+            !write (iulog,F01)'i =  ',i, atm2lnd%Sa_topo(i) 
+        enddo
+    end if
+    !allocate ( atm2lnd%Faxa_bcph  (begc:endc) )  ; atm2lnd%Faxa_bcph (:) =  0.0d0
 
     !endc       = 18048 ? should this be the size of the land or atmosphere???
 
+
+    !print *, atm2lnd%Sa_topo(1:100)
 
 
     allocate ( lnd2atm%Sl_lfrin (begc:endc) ) ; lnd2atm%Sl_lfrin (:) =  0
@@ -111,12 +132,12 @@ program demo_lilac_driver
 
     do curr_time = start_time, end_time
         if  (curr_time == start_time) then
-
             ! Initalization phase
-            print *,  "--------------------------"
-            print *,  " LILAC Initalization phase"
-            print *,  "--------------------------"
-
+            !if (masterproc) then
+                print *,  "--------------------------"
+                print *,  " LILAC Initalization phase"
+                print *,  "--------------------------"
+            !end if
             call lilac_init     ( atm2lnd1d = atm2lnd   ,   lnd2atm1d =  lnd2atm )
         else if (curr_time == end_time  ) then
             ! Finalization phase
