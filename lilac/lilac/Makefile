@@ -33,14 +33,22 @@ include $(ESMFMKFILE)
 #================================================================================
 # Temporarily hard-coded
 # TODO: Please fix this part.
-CTSM_BLD_DIR      =      /glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf
+CASE_NAME         =      why01-g
+#CASE_NAME         =      ctsm1.0.dev066_MCT_I2000Clm50SpRsGs_testing
+#CASE_NAME         =     ctsm1.0.dev066_MCT_I2000Clm50Sp_03
+#CASE_NAME         =     lilac_ctsm
+CTSM_BLD_DIR      =      /glade/scratch/negins/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/mct/esmf
 CTSM_INC          =    -I$(CTSM_BLD_DIR)/include
 CTSM_LIB          =    -L$(CTSM_BLD_DIR)/lib -lclm
-TRACEBACK_FLAGS   =    -g -traceback -debug all -check all
+#TRACEBACK_FLAGS   =    -g -traceback -debug all -check all -O2 -r8
+#TRACEBACK_FLAGS   =    -qno-opt-dynamic-align  -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source    -qopt-report -xCORE_AVX2 -no-fma  -O2 -debug minimal  -DLINUX  -DCESMCOUPLED   -DFORTRANUNDERSCORE -DCPRINTEL -DNDEBUG -DUSE_ESMF_LIB -DMCT_INTERFACE -DHAVE_MPI -DPIO1 -DHAVE_SLASHPROC -D_PNETCDF -DESMF_VERSION_MAJOR=8 -DESMF_VERSION_MINOR=0 -DATM_PRESENT -DICE_PRESENT -DLND_PRESENT -DOCN_PRESENT -DROF_PRESENT -DGLC_PRESENT -DWAV_PRESENT -DESP_PRESENT -free  -DUSE_CONTIGUOUS=contiguous
+#TRACEBACK_FLAGS  = -qno-opt-dynamic-align  -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source    -qopt-report -xCORE_AVX2 -no-fma  -O0 -g -check uninit -check bounds -check pointers -fpe0 -check noarg_temp_created -DLINUX  -DCESMCOUPLED   -DFORTRANUNDERSCORE -DCPRINTEL -DDEBUG -DUSE_ESMF_LIB -DPIO1 -DHAVE_SLASHPROC -D_PNETCDF -DESMF_VERSION_MAJOR=7 -DESMF_VERSION_MINOR=1 -DATM_PRESENT -DICE_PRESENT -DLND_PRESENT -DOCN_PRESENT -DROF_PRESENT -DGLC_PRESENT -DWAV_PRESENT -DESP_PRESENT -free  -DUSE_CONTIGUOUS=contiguous
+TRACEBACK_FLAGS  = -qno-opt-dynamic-align  -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source    -qopt-report -xCORE_AVX2 -no-fma  -O0 -g -check uninit -check bounds -check pointers -fpe0 -check noarg_temp_created -DLINUX  -DCESMCOUPLED   -DFORTRANUNDERSCORE -DCPRINTEL -DDEBUG -DUSE_ESMF_LIB -DMCT_INTERFACE -DHAVE_MPI -DPIO1 -DHAVE_SLASHPROC -D_PNETCDF -DESMF_VERSION_MAJOR=7 -DESMF_VERSION_MINOR=1 -DATM_PRESENT -DICE_PRESENT -DLND_PRESENT -DOCN_PRESENT -DROF_PRESENT -DGLC_PRESENT -DWAV_PRESENT -DESP_PRESENT -free  -DUSE_CONTIGUOUS=contiguous
+
 # -----------------------------------------------------------------------------
-#EXTRA_LIBS       =    $(EXTRA_LIBS) -I/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nothreads/nuopc/pio/pio2
-EXTRA_LIBS        =   -L/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf/c1a1l1/lib -lcsm_share -L/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nothreads/nuopc/lib -lpiof -lpioc -lgptl -lmct -lmpeu -mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L/glade/u/home/dunlap/ESMF-INSTALL/intel19/8.0.0bs32/lib/libO/Linux.intel.64.mpt.default -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib -L/glade/u/home/dunlap/YAML-INSTALL/lib  -Wl,-rpath,/glade/u/home/dunlap/ESMF-INSTALL/intel19/8.0.0bs32/lib/libO/Linux.intel.64.mpt.default  -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -Wl,-rpath,/glade/u/home/dunlap/YAML-INSTALL/lib -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf -lyaml-cpp  -cxxlib
-MORE_LIBS        =   -I/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nuopc/nuopc/esmf/c1a1l1/csm_share/ -L/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nuopc/nuopc/esmf/c1a1l1/csm_share/     -I/glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf/clm/obj/ -I//glade/scratch/negins/lilac_ctsm/bld/intel/mpt/nodebug/nothreads/nuopc/nuopc/esmf/c1a1l1/csm_share/
+#EXTRA_LIBS       =    $(EXTRA_LIBS) -I/glade/scratch/negins/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/nuopc/pio/pio2
+EXTRA_LIBS        =   -L/glade/scratch/negins/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/mct/esmf/c1a1l1i1o1r1g1w1i1e1/lib -lcsm_share -L/glade/scratch/negins/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/lib -lpio -lgptl -lmct -lmpeu -mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L/glade/u/home/dunlap/ESMF-INSTALL/intel19/8.0.0bs32/lib/libO/Linux.intel.64.mpt.default -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib -L/glade/u/home/dunlap/YAML-INSTALL/lib  -Wl,-rpath,/glade/u/home/dunlap/ESMF-INSTALL/intel19/8.0.0bs32/lib/libO/Linux.intel.64.mpt.default  -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -Wl,-rpath,/glade/u/home/dunlap/YAML-INSTALL/lib -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf -lyaml-cpp  -cxxlib
+MORE_LIBS        =   -I/glade/scratch/negins/$(CASE_NAME)/bld/intel/mpt/debug/mct/mct/esmf/c1a1l1i1o1r1g1w1i1e1/csm_share/ -L/glade/scratch/negins/$(CASE_NAME)/bld/intel/mpt/debug/mct/mct/esmf/c1a1l1i1o1r1g1w1i1e1/csm_share/     -I/glade/scratch/negins/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/mct/esmf/clm/obj/ -I//glade/scratch/negins/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/mct/esmf/c1a1l1i1o1r1g1w1i1e1/csm_share/
 # -----------------------------------------------------------------------------
 
 
@@ -83,7 +91,7 @@ atmos_cap.o: lilac_utils.o
 
 .PHONY: clean berzerk remake
 clean:
-	rm -f *.exe
+	rm -f *.exe *.o
 berzerk:
 	rm -f PET*.ESMF_LogFile job_name* *.o *.mod *.exe
 remake:
