@@ -2859,7 +2859,7 @@ contains
     real(r8)              :: minbound, maxbound ! helper variables
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(snow_depth)  == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(snow_depth)  == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          snl => col%snl,   & ! Output: [integer (:)    ]  number of snow layers
@@ -3310,10 +3310,10 @@ contains
     character(len=*), parameter :: subname = 'SnowCappingExcess'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osno) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(topo) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osno_excess) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(apply_runoff) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osno) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(topo) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osno_excess) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(apply_runoff) == (/bounds%endc/)), sourcefile, __LINE__)
 
     do fc = 1, num_snowc
        c = filter_snowc(fc)
@@ -3603,7 +3603,7 @@ contains
     character(len=*), parameter :: subname = 'NewSnowBulkDensity'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(bifall) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(bifall) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          forc_t      => atm2lnd_inst%forc_t_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)        
@@ -3854,7 +3854,7 @@ contains
     real(r8), intent(IN) :: zwtot        ! snow water total layer 1
     real(r8) :: mass_weighted_snowradius ! resulting bounded mass weighted snow radius
 
-    SHR_ASSERT( (swtot+zwtot > 0.0_r8), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL( (swtot+zwtot > 0.0_r8), sourcefile, __LINE__)
     mass_weighted_snowradius = (rds2*swtot + rds1*zwtot)/(swtot+zwtot)
 
     if (      mass_weighted_snowradius > snw_rds_max ) then

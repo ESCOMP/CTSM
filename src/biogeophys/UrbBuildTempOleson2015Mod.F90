@@ -8,7 +8,6 @@ module UrbBuildTempOleson2015Mod
   !
   ! !USES:
   use shr_kind_mod      , only : r8 => shr_kind_r8
-  use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use abortutils        , only : endrun
   use perf_mod          , only : t_startf, t_stopf
@@ -302,7 +301,7 @@ contains
 !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(&
     clandunit         => col%landunit                      , & ! Input:  [integer (:)]  column's landunit

@@ -173,8 +173,8 @@ contains
     num_source = size(data_source)
     num_dest = size(data_dest)
     num_snow_layers_source = this%num_snow_layers_source(index_dest)
-    SHR_ASSERT(num_snow_layers_source >= 0, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(num_snow_layers_source <= num_source, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(num_snow_layers_source >= 0, sourcefile, __LINE__)
+    SHR_ASSERT_FL(num_snow_layers_source <= num_source, sourcefile, __LINE__)
 
     if (num_dest >= num_source) then
        ! Copy all source layers to dest (even non-existent snow layers)

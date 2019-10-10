@@ -27,7 +27,6 @@ contains
     !
     ! !USES:
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
     use clm_varpar     , only : nlevurb
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_varctl     , only : iulog
@@ -53,12 +52,12 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jtop) == (/bounds%endc/)),      errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(a)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(b)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(r)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(u)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jtop) == (/bounds%endc/)),      sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(a)    == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(b)    == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c)    == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(r)    == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(u)    == (/bounds%endc, ubj/)), sourcefile, __LINE__)
 
     ! Solve the matrix
 

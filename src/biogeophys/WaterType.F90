@@ -311,10 +311,10 @@ contains
     begc = bounds%begc
     endc = bounds%endc
 
-    SHR_ASSERT_ALL((ubound(h2osno_col) == [endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(snow_depth_col) == [endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(watsat_col, 1) == endc), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno_col, 1) == endc), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osno_col) == [endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(snow_depth_col) == [endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col, 1) == endc), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno_col, 1) == endc), sourcefile, __LINE__)
 
     call this%SetupTracerInfo()
 
@@ -731,7 +731,7 @@ contains
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col, 1) == bounds%endc), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat_col, 1) == bounds%endc), sourcefile, __LINE__)
 
     call this%waterfluxbulk_inst%restartBulk (bounds, ncid, flag=flag)
 
@@ -771,8 +771,8 @@ contains
     character(len=*), parameter :: subname = 'GetBulkOrTracerName'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(i >= this%bulk_and_tracers_beg, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(i <= this%bulk_and_tracers_end, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(i >= this%bulk_and_tracers_beg, sourcefile, __LINE__)
+    SHR_ASSERT_FL(i <= this%bulk_and_tracers_end, sourcefile, __LINE__)
 
     name = this%bulk_and_tracers(i)%info%get_name()
 
@@ -797,8 +797,8 @@ contains
     character(len=*), parameter :: subname = 'IsIsotope'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(i >= this%tracers_beg, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(i <= this%tracers_end, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(i >= this%tracers_beg, sourcefile, __LINE__)
+    SHR_ASSERT_FL(i <= this%tracers_end, sourcefile, __LINE__)
 
     IsIsotope = this%bulk_and_tracers(i)%is_isotope
 
@@ -830,8 +830,8 @@ contains
     character(len=*), parameter :: subname = 'GetIsotopeInfo'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(i >= this%tracers_beg, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(i <= this%tracers_end, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(i >= this%tracers_beg, sourcefile, __LINE__)
+    SHR_ASSERT_FL(i <= this%tracers_end, sourcefile, __LINE__)
 
     select type(info => this%bulk_and_tracers(i)%info)
     type is(water_info_isotope_type)
@@ -919,11 +919,11 @@ contains
 
        if (tracer_info%is_included_in_consistency_check()) then
           num_vars = tracer_vars%get_num_vars()
-          SHR_ASSERT(num_vars == bulk_vars%get_num_vars(), errMsg(sourcefile, __LINE__))
+          SHR_ASSERT_FL(num_vars == bulk_vars%get_num_vars(), sourcefile, __LINE__)
 
           do var_num = 1, num_vars
              name = tracer_vars%get_description(var_num)
-             SHR_ASSERT(name == bulk_vars%get_description(var_num), errMsg(sourcefile, __LINE__))
+             SHR_ASSERT_FL(name == bulk_vars%get_description(var_num), sourcefile, __LINE__)
 
              call tracer_vars%get_bounds(var_num, bounds, begi, endi)
 
@@ -981,7 +981,7 @@ contains
 
        if (tracer_info%is_included_in_consistency_check()) then
           num_vars = tracer_vars%get_num_vars()
-          SHR_ASSERT(num_vars == bulk_vars%get_num_vars(), errMsg(sourcefile, __LINE__))
+          SHR_ASSERT_FL(num_vars == bulk_vars%get_num_vars(), sourcefile, __LINE__)
 
           do var_num = 1, num_vars
              SHR_ASSERT_FL(tracer_vars%get_description(var_num) == bulk_vars%get_description(var_num), sourcefile, __LINE__)

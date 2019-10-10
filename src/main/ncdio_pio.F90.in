@@ -1283,15 +1283,19 @@ contains
        if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 #if ({DIMS}==0)
-       start(1) = 1 ; count(1) = 1
-       if (present(nt)) start(1) = nt
        allocate(idata1d(1))
        if ( data )then
           idata1d(1) = 1
        else
           idata1d(1) = 0
        end if
-       status = pio_put_var(ncid, varid, start(1:1), count(1:1), idata1d)
+       if (present(nt)) then
+          start(1) = nt
+          count(1) = 1
+          status = pio_put_var(ncid, varid, start(1:1), count(1:1), idata1d)
+       else
+          status = pio_put_var(ncid, varid, idata1d)
+       end if
        deallocate(idata1d)
 #elif ({DIMS}==1)
        start(1) = 1 ; count(1) = size(data)
@@ -1390,10 +1394,14 @@ contains
        if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 #if ({DIMS}==0)
-       start(1) = 1  ; count(1) = 1
-       if (present(nt)) start(1) = nt
        temp(1) = data
-       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
+       if (present(nt)) then
+          start(1) = nt
+          count(1) = 1
+          status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
+       else
+          status = pio_put_var(ncid, varid, temp)
+       end if
 #elif ({DIMS}==1)
        start(1) = 1 ; count(1) = size(data)
        start(2) = 1 ; count(2) = 1

@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev070    sacks 10/09/2019 Fix for writing 0-d variables with PIO2
+  ctsm1.0.dev069    sacks 10/07/2019 Misc. code cleanup and minor bug fixes
   ctsm1.0.dev068    sacks 09/30/2019 Add water tracers to CombineSnowLayers, DivideSnowLayers, ZeroEmptySnowLayers
   ctsm1.0.dev067     erik 09/26/2019 Add config_archive.xml to CTSM cime_config -- no testing
   ctsm1.0.dev066    sacks 09/20/2019 Add water tracers to SnowCapping
