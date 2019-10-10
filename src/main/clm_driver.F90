@@ -556,20 +556,20 @@ contains
             water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterstatebulk_inst)
 
+       ! TODO(wjs, 2019-10-02) I'd like to keep moving this down until it is below
+       ! LakeFluxes... I'll probably leave it in place there.
+       if (water_inst%DoConsistencyCheck()) then
+          call t_startf("tracer_consistency_check")
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after BiogeophysPreFluxCalcs')
+          call t_stopf("tracer_consistency_check")
+       end if
+
        call CalculateSurfaceHumidity(bounds_clump,                                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                       &
             atm2lnd_inst, temperature_inst, &
             water_inst%waterstatebulk_inst, water_inst%wateratm2lndbulk_inst, &
             soilstate_inst, water_inst%waterdiagnosticbulk_inst)
        call t_stopf('bgp1')
-
-       ! TODO(wjs, 2019-10-02) I'd like to keep moving this down until it is below
-       ! LakeFluxes... I'll probably leave it in place there.
-       if (water_inst%DoConsistencyCheck()) then
-          call t_startf("tracer_consistency_check")
-          call water_inst%TracerConsistencyCheck(bounds_clump, 'after CalculateSurfaceHumidity')
-          call t_stopf("tracer_consistency_check")
-       end if
 
        ! ============================================================================
        ! Determine fluxes
