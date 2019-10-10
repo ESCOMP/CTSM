@@ -602,6 +602,36 @@ contains
   end subroutine SM_lower_plus_upper_plus_diag_equal_filled
 
   @Test
+  subroutine SM_SetValueCopySM_Is_Same( this )
+    class(TestSparseMatrix), intent(inout) :: this
+    type(sparse_matrix_type) :: ArbSMatrix
+    type(sparse_matrix_type) :: CopyMatrix
+    type(arb_band_sparse_matrix_setup) :: MatrixSetup
+
+    ! Create arbitrary matrix
+    call MatrixSetup%createArbBandMatrix2( )
+    call ArbSMatrix%InitSM( ndims, begu, endu )
+    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                                MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    ! Copy it
+    @assertFalse( CopyMatrix%IsAllocSM() )
+    call CopyMatrix%InitSM( ndims, begu, endu )
+    @assertTrue(  CopyMatrix%IsAllocSM() )
+    @assertFalse( CopyMatrix%IsValuesSetSM() )
+    call CopyMatrix%SetValueCopySM( this%num_unit,this%filter_u, ArbSMatrix )
+    @assertTrue( CopyMatrix%IsValuesSetSM() )
+    ! Test that it's the same
+    @assertEqual( CopyMatrix%begu, ArbSMatrix%begu )
+    @assertEqual( CopyMatrix%endu, ArbSMatrix%endu )
+    @assertEqual( CopyMatrix%SM,   ArbSMatrix%SM   )
+    @assertEqual( CopyMatrix%NE,   ArbSMatrix%NE   )
+    @assertEqual( CopyMatrix%M,    ArbSMatrix%M    )
+    @assertEqual( CopyMatrix%RI,   ArbSMatrix%RI   )
+    @assertEqual( CopyMatrix%CI,   ArbSMatrix%CI   )
+
+  end subroutine SM_SetValueCopySM_Is_Same
+
+  @Test
   subroutine check_alloc_first_setvalueA_diag(this)
     class(TestSparseMatrix), intent(inout) :: this
 

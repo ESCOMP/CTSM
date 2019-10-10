@@ -257,10 +257,10 @@ SHR_ASSERT_FL((ubound(M, 1) == this%endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M, 1) >= this%begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 1) <= this%endu), sourcefile, __LINE__)
 #endif
-SHR_ASSERT_FL((maxval(I) <= this%SM), sourcefile, __LINE__)
-SHR_ASSERT_FL((minval(I) >= 1), sourcefile, __LINE__)
-SHR_ASSERT_FL((maxval(J) <= this%SM), sourcefile, __LINE__)
-SHR_ASSERT_FL((minval(J) >= 1), sourcefile, __LINE__)
+SHR_ASSERT_FL((maxval(I(:this%NE)) <= this%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((minval(I(:this%NE)) >= 1), sourcefile, __LINE__)
+SHR_ASSERT_FL((maxval(J(:this%NE)) <= this%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((minval(J(:this%NE)) >= 1), sourcefile, __LINE__)
 do k = 1,NE_in
    do fu = 1,num_unit
       u = filter_u(fu)  
@@ -419,7 +419,7 @@ end subroutine SetValueA
      type(sparse_matrix_type), intent(in) :: matrix   ! Sparse Matrix to copy
      integer ,intent(in) :: num_unit
      integer ,intent(in) :: filter_u(:)
-     character(len=*),parameter :: subname = 'CopyValueSM'
+     character(len=*),parameter :: subname = 'SetValueCopySM'
 
      if ( .not. this%IsAllocSM() )then
         call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
@@ -432,10 +432,10 @@ end subroutine SetValueA
      SHR_ASSERT_FL( (this%SM   == matrix%SM), sourcefile, __LINE__)
      SHR_ASSERT_FL( (this%begu == matrix%begu), sourcefile, __LINE__)
      SHR_ASSERT_FL( (this%endu == matrix%endu), sourcefile, __LINE__)
-     SHR_ASSERT_FL((maxval(matrix%RI) <= this%SM), sourcefile, __LINE__)
-     SHR_ASSERT_FL((minval(matrix%RI) >= 1), sourcefile, __LINE__)
-     SHR_ASSERT_FL((maxval(matrix%CI) <= this%SM), sourcefile, __LINE__)
-     SHR_ASSERT_FL((minval(matrix%CI) >= 1), sourcefile, __LINE__)
+     SHR_ASSERT_FL((maxval(matrix%RI(:this%NE)) <= this%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL((minval(matrix%RI(:this%NE)) >= 1), sourcefile, __LINE__)
+     SHR_ASSERT_FL((maxval(matrix%CI(:this%NE)) <= this%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL((minval(matrix%CI(:this%NE)) >= 1), sourcefile, __LINE__)
      call this%SetValueSM( matrix%begu, matrix%endu, num_unit, filter_u, matrix%M, &
                            matrix%RI, matrix%CI, matrix%NE)
 
