@@ -97,7 +97,7 @@ module CNPhenologyMod
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
-  logical :: harvest_residue  = .true. !should leaf and stem residue be harvested?
+  logical :: harvest_residue  = .false. !should leaf and stem residue be harvested?
   !-----------------------------------------------------------------------
 
 contains
