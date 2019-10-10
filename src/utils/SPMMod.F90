@@ -750,9 +750,6 @@ SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%NE            == A%NE), sourcefile, __LINE__)
 SHR_ASSERT_ALL_FL((this%RI        == A%RI), sourcefile, __LINE__)
 SHR_ASSERT_ALL_FL((this%CI        == A%CI), sourcefile, __LINE__)
-this%NE=A%NE
-this%RI=A%RI
-this%CI=A%CI
 
 do i=1,A%NE
    do fu = 1, num_unit
