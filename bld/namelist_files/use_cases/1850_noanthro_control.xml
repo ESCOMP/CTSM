@@ -42,9 +42,6 @@
 <stream_year_first_urbantv phys="clm5_0"  >1850</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0"  >1850</stream_year_last_urbantv>
 
-<stream_year_first_urbantv phys="clm4_5"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5"  >1850</stream_year_last_urbantv>
-
 <!-- Turn calculation of human stress indices all the way off to save some CPU -->
 <calc_human_stress_indices     >NONE</calc_human_stress_indices>
 

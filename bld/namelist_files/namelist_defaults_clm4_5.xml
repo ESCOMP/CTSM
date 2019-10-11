@@ -1210,9 +1210,8 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <stream_year_last_urbantv  phys="clm5_0" sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
 <model_year_align_urbantv  phys="clm5_0" sim_year_range="1850-2100" >2015</model_year_align_urbantv>
 
-<stream_year_first_urbantv phys="clm4_5" sim_year_range="1850-2100" >2015</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm4_5" sim_year_range="1850-2100" >2015</model_year_align_urbantv>
+<stream_year_first_urbantv phys="clm4_5"  >2000</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm4_5"  >2000</stream_year_last_urbantv>
 
 <stream_year_first_urbantv phys="clm5_0" sim_year="2000" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="2000" >2000</stream_year_last_urbantv>
@@ -1223,26 +1222,11 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <stream_year_first_urbantv phys="clm5_0" sim_year="1000" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="1000" >2000</stream_year_last_urbantv>
 
-<stream_year_first_urbantv phys="clm4_5" sim_year="2000" >2000</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year="2000" >2000</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm4_5" sim_year="1850" >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year="1850" >1850</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm4_5" sim_year="1000" >2000</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year="1000" >2000</stream_year_last_urbantv>
-
 <stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_urbantv>
 
 <stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm4_5" sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm4_5" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_urbantv>
 
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 
