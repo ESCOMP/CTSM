@@ -62,7 +62,7 @@ program demo_lilac_driver
     !endc       = 13968
 
     start_time = 1
-    end_time   = 5
+    end_time   = 48
     itime_step = 1
 
     seed_val   = 0
@@ -93,7 +93,8 @@ program demo_lilac_driver
     allocate ( atm2lnd%Faxa_snowc (begc:endc) ) ; atm2lnd%Faxa_snowc (:) =  1.0d-8
     allocate ( atm2lnd%Faxa_snowl (begc:endc) ) ; atm2lnd%Faxa_snowl (:) =  2.0d-8
     allocate ( atm2lnd%Faxa_swndr (begc:endc) ) ; atm2lnd%Faxa_swndr (:) =  100.0d0
-    allocate ( atm2lnd%Faxa_swvdr (begc:endc) ) ; atm2lnd%Faxa_swvdr (:) =  20.0d0
+
+    allocate ( atm2lnd%Faxa_swvdr (begc:endc) ) ; atm2lnd%Faxa_swvdr (:) =  50.0d0
     allocate ( atm2lnd%Faxa_swndf (begc:endc) ) ; atm2lnd%Faxa_swndf (:) =  20.0d0
     allocate ( atm2lnd%Faxa_swvdf (begc:endc) ) ; atm2lnd%Faxa_swvdf (:) =  40.0d0
 
@@ -102,7 +103,6 @@ program demo_lilac_driver
     if (debug > 0) then
         do i=begc, endc 
             write (iulog,F02)'import: nstep, n, '//trim(fldname)//' = ',i, atm2lnd%Sa_topo(i)
-            !write (iulog,F01)'i =  ',i, atm2lnd%Sa_topo(i) 
         enddo
     end if
     !allocate ( atm2lnd%Faxa_bcph  (begc:endc) )  ; atm2lnd%Faxa_bcph (:) =  0.0d0
@@ -130,24 +130,33 @@ program demo_lilac_driver
     ! looping over imaginary time ....
     !------------------------------------------------------------------------
 
+    call lilac_init     ( atm2lnd1d = atm2lnd   ,   lnd2atm1d =  lnd2atm )
     do curr_time = start_time, end_time
-        if  (curr_time == start_time) then
-            ! Initalization phase
-            !if (masterproc) then
-                print *,  "--------------------------"
-                print *,  " LILAC Initalization phase"
-                print *,  "--------------------------"
-            !end if
-            call lilac_init     ( atm2lnd1d = atm2lnd   ,   lnd2atm1d =  lnd2atm )
-        else if (curr_time == end_time  ) then
-            ! Finalization phase
-            call lilac_final    ( )
-            call ESMF_Finalize  ( )
-        else
             call lilac_run      ( )
-        endif
-        itime_step = itime_step + 1
+           itime_step = itime_step + 1
     end do
+    call lilac_final    ( )
+    call ESMF_Finalize  ( )
+
+
+    !do curr_time = start_time, end_time
+    !    if  (curr_time == start_time) then
+    !        ! Initalization phase
+    !        !if (masterproc) then
+    !            print *,  "--------------------------"
+    !            print *,  " LILAC Initalization phase"
+    !            print *,  "--------------------------"
+    !        !end if
+    !        call lilac_init     ( atm2lnd1d = atm2lnd   ,   lnd2atm1d =  lnd2atm )
+    !    else if (curr_time == end_time  ) then
+    !        ! Finalization phase
+    !        call lilac_final    ( )
+    !        call ESMF_Finalize  ( )
+    !    else
+    !        call lilac_run      ( )
+    !   endif
+    !    itime_step = itime_step + 1
+    !end do
 
     print *,  "======================================="
     print *,  " ............. DONE ..................."

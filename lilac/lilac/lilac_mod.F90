@@ -255,6 +255,7 @@ module lilac_mod
         a2c_fldlist(11)%farrayptr1d  =>  atm2lnd1d%Faxa_rainl
         a2c_fldlist(12)%farrayptr1d  =>  atm2lnd1d%Faxa_snowc
         a2c_fldlist(13)%farrayptr1d  =>  atm2lnd1d%Faxa_snowl
+
         a2c_fldlist(14)%farrayptr1d  =>  atm2lnd1d%Faxa_swndr
         a2c_fldlist(15)%farrayptr1d  =>  atm2lnd1d%Faxa_swvdr
         a2c_fldlist(16)%farrayptr1d  =>  atm2lnd1d%Faxa_swndf
