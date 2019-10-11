@@ -73,6 +73,7 @@ module lnd_import_export
   integer, parameter     :: debug = 1        ! internal debug level
 
   character(*),parameter :: F01 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d21.14)"
+  character(*),parameter :: F02 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d26.19)"
   character(*),parameter :: u_FILE_u = &
        __FILE__
   character(*),parameter :: modname =  "[lnd_import_export]: "
@@ -729,6 +730,7 @@ contains
        wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
        wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
 
+
        if (forc_t > SHR_CONST_TKFRZ) then
           e = esatw(tdc(forc_t))
        else
@@ -1282,7 +1284,7 @@ contains
              n = g - bounds%begg + 1
              output(g) = fldptr1d(n)
              if (masterproc .and. debug > 0 .and. get_nstep() < 5) then
-                 write(iulog,F01)' n, g , fldptr1d(n) '//trim(fldname)//' = ',n, g, fldptr1d(n)
+                 write(iulog,F02)' n, g , fldptr1d(n) '//trim(fldname)//' = ',n, g, fldptr1d(n)
              end if 
           end do
        end if
@@ -1291,7 +1293,7 @@ contains
        if (masterproc .and. debug > 0 .and. get_nstep() < 5) then
           do g = bounds%begg,bounds%endg
              i = 1 + g - bounds%begg
-             write(iulog,F01)'import: nstep, n, '//trim(fldname)//' = ',get_nstep(),i,output(g)
+             write(iulog,F02)'import: nstep, n, '//trim(fldname)//' = ',get_nstep(),i,output(g)
           end do
        end if
 

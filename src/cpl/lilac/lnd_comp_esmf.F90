@@ -774,7 +774,7 @@ contains
         integer                :: shrlogunit ! original log unit
         character(len=*),parameter  :: subname=trim(modName)//':[lnd_run] '
 
-        character(*),parameter :: F02 = "('[lnd_comp_esmf] ',d26.19)"
+        character(*),parameter :: F02 = "('[lnd_comp_esmf] ',a, d26.19)"
         !-------------------------------------------------------------------------------
 
 
@@ -878,26 +878,39 @@ contains
            ! Determine doalb based on nextsw_cday sent from atm model
            !--------------------------------
 
+           calday = get_curr_calday()
            caldayp1 = get_curr_calday(offset=dtime)
 
-           nextsw_cday = caldayp1
-           if (masterproc) then
-               write(iulog,*) 'dtime : ', dtime
-               write(iulog,*) 'caldayp1 : ', caldayp1
-               write(iulog,*) 'nextsw_cday : ', nextsw_cday
-           end if
-           !nextsw_cday =  1.02083333333333
+           !TODO(NS): nextsw_cday should come directly from atmosphere! What
+           !should we do
+           ! For now I am setting nextsw_cday to be the same caldayp1
+
+
+           nextsw_cday = calday
            if (nstep == 0) then
-          doalb = .false.
+               doalb = .false.
+               nextsw_cday = caldayp1
            else if (nstep == 1) then
-              doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
-           else
+              !doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
+              doalb = .false.
+          else
               doalb = (nextsw_cday >= -0.5_r8)
            end if
 
            if (masterproc) then
                write(iulog,*) 'doalb is: ', doalb
            end if
+
+           if (masterproc) then
+               write(iulog,*) '------------  LILAC  ----------------'
+               write(iulog,*) 'nstep       : ', nstep
+               write(iulog,*) 'dtime       : ', dtime
+               write(iulog,*) 'calday      : ', calday
+               write(iulog,*) 'caldayp1    : ', caldayp1
+               write(iulog,*) 'nextsw_cday : ', nextsw_cday
+               write(iulog,*) '-------------------------------------'
+           end if
+
            call update_rad_dtime(doalb)
 
            !--------------------------------
@@ -941,23 +954,26 @@ contains
            call t_startf ('shr_orb_decl')
            calday = get_curr_calday()
 
-           if (masterproc) then
-               write(iulog, *)'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-               write(iulog, *)'call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )'
-               write(iulog, *)'call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0,  obliqr, declinp1, eccf )'
-               write(iulog,*) 'calday is : ', calday
-               write(iulog,*) 'previous nextsw_cday is : ', nextsw_cday
-           end if
-
-           !nextsw_cday =  1.02083333333333
 
            call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
            call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
 
+
            if (masterproc) then
-               write(iulog,*) 'hardwired nextsw_cday is : ', nextsw_cday
-               write(iulog,*) 'declin   is : ', declin
-               write(iulog,*) 'declinp1 is : ', declinp1
+               write(iulog,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+               write(iulog,*) 'call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, decl'
+               write(iulog,*) 'call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0,  obliqr, decl'
+               write(iulog,F02) 'calday is  :  ', calday
+               write(iulog,F02) 'eccen is   :  ', eccen
+               write(iulog,F02) 'mvelpp is  :  ', mvelpp
+               write(iulog,F02) 'lambm0 is  :  ', lambm0
+               write(iulog,F02) 'obliqr is  :  ', obliqr
+               write(iulog,F02) 'clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)'
+               write(iulog,*  ) 'doalb           :  ', doalb
+               write(iulog,F02) 'declin is       :  ', declin
+               write(iulog,F02) 'declinp1 is     :  ', declinp1
+               write(iulog,F02) 'rof_prognostic  :  ', rof_prognostic
+               write(iulog,*  ) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
            end if
 
            call t_stopf ('shr_orb_decl')
