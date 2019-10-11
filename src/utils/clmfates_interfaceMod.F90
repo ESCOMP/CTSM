@@ -32,6 +32,7 @@ module CLMFatesInterfaceMod
    !  use ed_driver_interface, only: 
    
    ! Used CLM Modules
+#include "shr_assert.h"
    use PatchType         , only : patch
    use shr_kind_mod      , only : r8 => shr_kind_r8
    use decompMod         , only : bounds_type
@@ -74,7 +75,6 @@ module CLMFatesInterfaceMod
    use SolarAbsorbedType , only : solarabs_type
    use SoilBiogeochemCarbonFluxType, only :  soilbiogeochem_carbonflux_type
    use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
-   use FrictionVelocityMod  , only : frictionvel_type
    use clm_time_manager  , only : is_restart
    use ncdio_pio         , only : file_desc_t, ncd_int, ncd_double
    use restUtilMod,        only : restartvar
@@ -538,8 +538,7 @@ contains
    subroutine dynamics_driv(this, nc, bounds_clump,      &
          atm2lnd_inst, soilstate_inst, temperature_inst, &
          active_layer_inst, &
-         waterstatebulk_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
-         frictionvel_inst )
+         waterstatebulk_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst)
     
       ! This wrapper is called daily from clm_driver
       ! This wrapper calls ed_driver, which is the daily dynamics component of FATES
@@ -559,7 +558,6 @@ contains
       type(wateratm2lndbulk_type)   , intent(inout)        :: wateratm2lndbulk_inst
       type(canopystate_type)  , intent(inout)        :: canopystate_inst
       type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
-      type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
 
       ! !LOCAL VARIABLES:
       integer  :: s                        ! site index
@@ -697,8 +695,7 @@ contains
       call this%wrap_update_hlmfates_dyn(nc,               &
                                          bounds_clump,     &
                                          waterdiagnosticbulk_inst,  &
-                                         canopystate_inst, &
-                                         frictionvel_inst)
+                                         canopystate_inst)
       
       ! ---------------------------------------------------------------------------------
       ! Part IV: 
@@ -720,7 +717,7 @@ contains
    ! ------------------------------------------------------------------------------------
 
    subroutine wrap_update_hlmfates_dyn(this, nc, bounds_clump,      &
-        waterdiagnosticbulk_inst, canopystate_inst, frictionvel_inst )
+        waterdiagnosticbulk_inst, canopystate_inst)
 
       ! ---------------------------------------------------------------------------------
       ! This routine handles the updating of vegetation canopy diagnostics, (such as lai)
@@ -734,7 +731,6 @@ contains
      integer                 , intent(in)           :: nc
      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
-     type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
      
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch 
@@ -749,7 +745,7 @@ contains
          esai => canopystate_inst%esai_patch , &
          htop => canopystate_inst%htop_patch , &
          hbot => canopystate_inst%hbot_patch , & 
-         z0m  => frictionvel_inst%z0m_patch  , & ! Output: [real(r8) (:)   ] momentum roughness length (m)      
+         z0m  => canopystate_inst%z0m_patch  , & ! Output: [real(r8) (:)   ] momentum roughness length (m)      
          displa => canopystate_inst%displa_patch, &
          dleaf_patch => canopystate_inst%dleaf_patch, &
          snow_depth => waterdiagnosticbulk_inst%snow_depth_col, &
@@ -873,7 +869,7 @@ contains
    ! ====================================================================================
 
    subroutine restart( this, bounds_proc, ncid, flag, waterdiagnosticbulk_inst, &
-                             canopystate_inst, frictionvel_inst )
+                             canopystate_inst)
 
       ! ---------------------------------------------------------------------------------
       ! The ability to restart the model is handled through three different types of calls
@@ -907,7 +903,6 @@ contains
       character(len=*)               , intent(in)    :: flag
       type(waterdiagnosticbulk_type)          , intent(inout) :: waterdiagnosticbulk_inst
       type(canopystate_type)         , intent(inout) :: canopystate_inst
-      type(frictionvel_type)         , intent(inout) :: frictionvel_inst
       
       ! Locals
       type(bounds_type) :: bounds_clump
@@ -1108,7 +1103,7 @@ contains
                ! Update diagnostics of FATES ecosystem structure used in HLM.
                ! ------------------------------------------------------------------------
                call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                     waterdiagnosticbulk_inst,canopystate_inst,frictionvel_inst)
+                     waterdiagnosticbulk_inst,canopystate_inst)
                
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
@@ -1130,7 +1125,7 @@ contains
    !=====================================================================================
 
    subroutine init_coldstart(this, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-        canopystate_inst, soilstate_inst, frictionvel_inst)
+        canopystate_inst, soilstate_inst)
 
 
      ! Arguments
@@ -1139,7 +1134,6 @@ contains
      type(waterdiagnosticbulk_type)          , intent(inout) :: waterdiagnosticbulk_inst
      type(canopystate_type)         , intent(inout) :: canopystate_inst
      type(soilstate_type)           , intent(inout) :: soilstate_inst
-     type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
 
      ! locals
      integer                                        :: nclumps
@@ -1220,7 +1214,7 @@ contains
            ! Update diagnostics of FATES ecosystem structure used in HLM.
            ! ------------------------------------------------------------------------
            call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                waterdiagnosticbulk_inst,canopystate_inst,frictionvel_inst)
+                waterdiagnosticbulk_inst,canopystate_inst)
 
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
@@ -1838,13 +1832,13 @@ contains
  ! ======================================================================================
 
 
- subroutine TransferZ0mDisp(this,bounds_clump,frictionvel_inst,canopystate_inst)
+ subroutine TransferZ0mDisp(this, bounds_clump, z0m_patch, displa_patch)
 
     ! Arguments
-    class(hlm_fates_interface_type), intent(inout) :: this
-    type(bounds_type),intent(in)                   :: bounds_clump
-    type(canopystate_type)  , intent(inout)        :: canopystate_inst
-    type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
+    class(hlm_fates_interface_type), intent(in) :: this
+    type(bounds_type),intent(in)                :: bounds_clump
+    real(r8), intent(inout) :: z0m_patch( bounds_clump%begp: )  ! patch momentum roughness length (m)
+    real(r8), intent(inout) :: displa_patch( bounds_clump%begp: )  ! patch displacement height (m)
 
     ! Locals
     integer :: ci   ! Current clump index
@@ -1853,18 +1847,21 @@ contains
     integer :: ifp  ! Fates patch index
     integer :: p    ! CLM patch index
 
+    SHR_ASSERT_FL((ubound(z0m_patch, 1) == bounds_clump%endp), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(displa_patch, 1) == bounds_clump%endp), sourcefile, __LINE__)
+
     ci = bounds_clump%clump_index
 
     do s = 1, this%fates(ci)%nsites
        c = this%f2hmap(ci)%fcolumn(s)
 
-       frictionvel_inst%z0m_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
-       canopystate_inst%displa_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
+       z0m_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
+       displa_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
 
        do ifp = 1, this%fates(ci)%sites(s)%youngest_patch%patchno
           p = ifp+col%patchi(c)
-          frictionvel_inst%z0m_patch(p) = this%fates(ci)%bc_out(s)%z0m_pa(ifp)
-          canopystate_inst%displa_patch(p) = this%fates(ci)%bc_out(s)%displa_pa(ifp)
+          z0m_patch(p) = this%fates(ci)%bc_out(s)%z0m_pa(ifp)
+          displa_patch(p) = this%fates(ci)%bc_out(s)%displa_pa(ifp)
        end do
     end do
 

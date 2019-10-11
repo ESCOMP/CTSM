@@ -572,7 +572,6 @@ contains
          qflx_infl         =>    waterfluxbulk_inst%qflx_infl_col       , & ! Input:  [real(r8) (:)   ]  infiltration (mm H2O /s)                          
 
          qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:,:) ]  vegetation/soil water exchange (mm H2O/s) (+ = to atm)
-         qflx_tran_veg_col =>    waterfluxbulk_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
          t_soisno          =>    temperature_inst%t_soisno_col        & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
          )
 

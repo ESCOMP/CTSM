@@ -27,7 +27,8 @@ module clm_driver
   use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
   use BalanceCheckMod        , only : BeginWaterBalance, BalanceCheck
   !
-  use CanopyTemperatureMod   , only : CanopyTemperature ! (formerly Biogeophysics1Mod)
+  use BiogeophysPreFluxCalcsMod  , only : BiogeophysPreFluxCalcs
+  use SurfaceHumidityMod     , only : CalculateSurfaceHumidity
   use UrbanTimeVarType       , only : urbantv_type
   use SoilTemperatureMod     , only : SoilTemperature
   use LakeTemperatureMod     , only : LakeTemperature
@@ -488,7 +489,7 @@ contains
 
        if (water_inst%DoConsistencyCheck()) then
           call t_startf("tracer_consistency_check")
-          call water_inst%TracerConsistencyCheck(bounds_clump, 'after FracH2oSfc')
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after first stage of hydrology')
           call t_stopf("tracer_consistency_check")
        end if
 
@@ -545,14 +546,29 @@ contains
        ! ============================================================================
 
        call t_startf('bgp1')
-       call CanopyTemperature(bounds_clump,                                   &
+
+       call BiogeophysPreFluxCalcs(bounds_clump,                                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                       &
             filter(nc)%num_nolakep, filter(nc)%nolakep,                       &
             clm_fates,                                                        &
-            atm2lnd_inst, canopystate_inst, soilstate_inst, frictionvel_inst, &
-            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterfluxbulk_inst, water_inst%wateratm2lndbulk_inst,  &
-            energyflux_inst, temperature_inst)
+            atm2lnd_inst, canopystate_inst, energyflux_inst, frictionvel_inst, &
+            soilstate_inst, temperature_inst, &
+            water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
+            water_inst%waterstatebulk_inst)
+
+       ! TODO(wjs, 2019-10-02) I'd like to keep moving this down until it is below
+       ! LakeFluxes... I'll probably leave it in place there.
+       if (water_inst%DoConsistencyCheck()) then
+          call t_startf("tracer_consistency_check")
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after BiogeophysPreFluxCalcs')
+          call t_stopf("tracer_consistency_check")
+       end if
+
+       call CalculateSurfaceHumidity(bounds_clump,                                   &
+            filter(nc)%num_nolakec, filter(nc)%nolakec,                       &
+            atm2lnd_inst, temperature_inst, &
+            water_inst%waterstatebulk_inst, water_inst%wateratm2lndbulk_inst, &
+            soilstate_inst, water_inst%waterdiagnosticbulk_inst)
        call t_stopf('bgp1')
 
        ! ============================================================================
@@ -965,8 +981,7 @@ contains
           call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
                water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst,&
-               frictionvel_inst)
+               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst)
           
           ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
           ! call to reweight_wrapup, if it's needed at all.
