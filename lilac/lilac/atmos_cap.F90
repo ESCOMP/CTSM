@@ -25,7 +25,7 @@ module atmos_cap
     integer                                                       :: mpierror, numprocs
     integer                                                       :: i, myid
     integer status(MPI_STATUS_SIZE)   ! Status of message
-    integer, parameter                                            :: debug = 0        ! internal debug leve
+    integer, parameter                                            :: debug = 1        ! internal debug leve
 
 
 
@@ -113,7 +113,7 @@ module atmos_cap
             atmos_mesh           = ESMF_MeshCreate(filename=trim(atmos_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
             call ESMF_LogWrite(subname//"Mesh for atmosphere is created!", ESMF_LOGMSG_INFO)
-            print *, "!Mesh for atmosphere is created!"
+            !print *, "!Mesh for atmosphere is created!"
 
         else
             !TODO: Fix how you want to create the grid here if mesh_switch is off
@@ -129,7 +129,7 @@ module atmos_cap
                   regDecomp=(/1,petcount/),&
                                     rc=rc)
             call ESMF_LogWrite(subname//"Grid for atmosphere is created!", ESMF_LOGMSG_INFO)
-            print *, "Grid for atmosphere is created!"
+            !print *, "Grid for atmosphere is created!"
         endif
 
         !-------------------------------------------------------------------------
@@ -163,8 +163,8 @@ module atmos_cap
                print *, "creating field for a2c:"
                print *, trim(a2c_fldlist(n)%stdname)
                print *, a2c_fldlist(n)%farrayptr1d
-               call ESMF_FieldPrint(field,  rc=rc)
-               if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+               !call ESMF_FieldPrint(field,  rc=rc)
+               !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
            end if
 
            !call ESMF_LogWrite(subname//"fieldget!", ESMF_LOGMSG_INFO)
@@ -177,11 +177,14 @@ module atmos_cap
 
         enddo
 
-        fldname = 'Sa_topo'
-        do i=begc, endc
-            write (iulog,F02)'import: nstep, n, '//trim(fldname)//' = ',i, a2c_fldlist(2)%farrayptr1d(i)
-        enddo
-
+        if (myid == 0 .and. debug > 0) then
+            do n = 1,a2c_fldlist_num
+                do i=begc, endc
+                    fldname = a2c_fldlist(n)%stdname
+                    write (iulog,F02)'import: nstep, n, '//trim(fldname)//' = ',i, a2c_fldlist(n)%farrayptr1d(i)
+                enddo
+            enddo
+        end if
 
         call ESMF_LogWrite(subname//"fieldbundleadd is finished .... !", ESMF_LOGMSG_INFO)
         print *, "!Fields to  Coupler (atmos to  land ) (a2c_fb) Field Bundle Created!"
