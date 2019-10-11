@@ -29,9 +29,6 @@
 <stream_year_first_popdens phys="clm5_0" cnfireson=".true." >1850</stream_year_first_popdens>
 <stream_year_last_popdens  phys="clm5_0" cnfireson=".true." >1850</stream_year_last_popdens>
 
-<stream_year_first_urbantv phys="clm4_5"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0"  >1850</stream_year_last_urbantv>
-
 <stream_year_first_urbantv phys="clm5_0"  >1850</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0"  >1850</stream_year_last_urbantv>
 
