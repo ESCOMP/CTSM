@@ -61,7 +61,7 @@ contains
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
     !
     ! !ARGUMENTS
-    integer, pointer, optional :: gindex_ocn(:)
+    integer, pointer, optional, intent(out) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
