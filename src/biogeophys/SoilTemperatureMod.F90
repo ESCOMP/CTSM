@@ -431,30 +431,12 @@ contains
 
       ! Melting or Freezing
 
-! Do this for perv and imperv road for -nlevsno+1,nlevgrnd
-      do j = -nlevsno+1,nlevgrnd
+      do j = -nlevsno+1,nlevmaxurbgrnd
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
-            if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-                 .and. col%itype(c) /= icol_roof) then
-               if (j >= snl(c)+1) then
-                  if (j <= nlevgrnd-1) then
-                     fn1(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
-                  else if (j == nlevgrnd) then
-                     fn1(c,j) = 0._r8
-                  end if
-               end if
-            end if
-         end do
-      end do
-
-! Do this for sunwall, shadewall, roof but for -nlevsno+1,nlevurb
-      do j = -nlevsno+1,nlevurb
-         do fc = 1,num_urbanc
-            c = filter_urbanc(fc)
             l = col%landunit(c)
-            if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
-                 .or. col%itype(c) == icol_roof) then
+            if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
+                 .or. col%itype(c) == icol_roof) .and. j <= nlevurb) then
                if (j >= snl(c)+1) then
                   if (j <= nlevurb-1) then
                      fn1(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
@@ -481,6 +463,15 @@ contains
                           fn(c,j)  = tk(c,j) * (t_roof_inner(l) - tssbef(c,j))/(zi(c,j) - z(c,j))
                         end if
                      end if
+                  end if
+               end if
+            else if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
+                 .and. col%itype(c) /= icol_roof) then
+               if (j >= snl(c)+1) then
+                  if (j <= nlevgrnd-1) then
+                     fn1(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
+                  else if (j == nlevgrnd) then
+                     fn1(c,j) = 0._r8
                   end if
                end if
             end if
@@ -747,26 +738,11 @@ contains
 
       ! Thermal conductivity at the layer interface
 
-      do j = -nlevsno+1,nlevgrnd
-         do fc = 1,num_nolakec
-            c = filter_nolakec(fc)
-            if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-               .and. col%itype(c) /= icol_roof) then
-               if (j >= snl(c)+1 .AND. j <= nlevgrnd-1) then
-                  tk(c,j) = thk(c,j)*thk(c,j+1)*(z(c,j+1)-z(c,j)) &
-                       /(thk(c,j)*(z(c,j+1)-zi(c,j))+thk(c,j+1)*(zi(c,j)-z(c,j)))
-               else if (j == nlevgrnd) then
-                  tk(c,j) = 0._r8
-               end if
-            end if
-         end do
-      end do
-
-      do j = -nlevsno+1,nlevurb
+      do j = -nlevsno+1,nlevmaxurbgrnd
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
-               .or. col%itype(c) == icol_roof)) then
+                 .or. col%itype(c) == icol_roof) .and. j <= nlevurb) then
                if (j >= snl(c)+1 .AND. j <= nlevurb-1) then
                   tk(c,j) = thk(c,j)*thk(c,j+1)*(z(c,j+1)-z(c,j)) &
                        /(thk(c,j)*(z(c,j+1)-zi(c,j))+thk(c,j+1)*(zi(c,j)-z(c,j)))
@@ -776,6 +752,14 @@ contains
                   ! the bottom "soil" layer and the equations are derived assuming a prescribed internal
                   ! building temperature. (See Oleson urban notes of 6/18/03).
                   tk(c,j) = thk(c,j)
+               end if
+            else if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
+                 .and. col%itype(c) /= icol_roof) then
+               if (j >= snl(c)+1 .AND. j <= nlevgrnd-1) then
+                  tk(c,j) = thk(c,j)*thk(c,j+1)*(z(c,j+1)-z(c,j)) &
+                       /(thk(c,j)*(z(c,j+1)-zi(c,j))+thk(c,j+1)*(zi(c,j)-z(c,j)))
+               else if (j == nlevgrnd) then
+                  tk(c,j) = 0._r8
                end if
             end if
          end do
@@ -1230,19 +1214,24 @@ contains
       enddo   ! end of level-loop
 
       !-- soil layers   --------------------------------------------------- 
-      do j = 1,nlevgrnd             
+
+      do j = 1,nlevmaxurbgrnd
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             l = col%landunit(c)
             supercool(c,j) = 0.0_r8
             ! add in urban condition if-block
             if ((col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-                 .and. col%itype(c) /= icol_roof)) then
+                 .and. col%itype(c) /= icol_roof .and. j <= nlevgrnd) .or. &
+                 (col%itype(c) == icol_sunwall .and. col%itype(c) == icol_shadewall &
+                 .and. col%itype(c) == icol_roof .and. j <= nlevurb)) then
+
+
 
                if (h2osoi_ice(c,j) > 0. .AND. t_soisno(c,j) > tfrz) then
                   imelt(c,j) = 1
                   !             tinc(c,j) = t_soisno(c,j) - tfrz 
-                  tinc(c,j) = tfrz - t_soisno(c,j) 
+                  tinc(c,j) = tfrz - t_soisno(c,j)
                   t_soisno(c,j) = tfrz
                endif
 
@@ -1259,7 +1248,7 @@ contains
                if (h2osoi_liq(c,j) > supercool(c,j) .AND. t_soisno(c,j) < tfrz) then
                   imelt(c,j) = 2
                   !             tinc(c,j) = t_soisno(c,j) - tfrz
-                  tinc(c,j) = tfrz - t_soisno(c,j) 
+                  tinc(c,j) = tfrz - t_soisno(c,j)
                   t_soisno(c,j) = tfrz
                endif
 
@@ -1278,50 +1267,14 @@ contains
          end do
       enddo
 
-      do j = 1,nlevurb
-         do fc = 1,num_nolakec
-            c = filter_nolakec(fc)
-            l = col%landunit(c)
-
-            if (col%itype(c) == icol_roof .or. col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
-
-               if (h2osoi_ice(c,j) > 0. .AND. t_soisno(c,j) > tfrz) then
-                  imelt(c,j) = 1
-                  !             tinc(c,j) = t_soisno(c,j) - tfrz 
-                  tinc(c,j) = tfrz - t_soisno(c,j) 
-                  t_soisno(c,j) = tfrz
-               endif
-
-               supercool(c,j) = 0.0_r8
-
-               if (h2osoi_liq(c,j) > supercool(c,j) .AND. t_soisno(c,j) < tfrz) then
-                  imelt(c,j) = 2
-                  !             tinc(c,j) = t_soisno(c,j) - tfrz
-                  tinc(c,j) = tfrz - t_soisno(c,j) 
-                  t_soisno(c,j) = tfrz
-               endif
-
-               ! If snow exists, but its thickness is less than the critical value (0.01 m)
-               if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8 .AND. j == 1) then
-                  if (t_soisno(c,j) > tfrz) then
-                     imelt(c,j) = 1
-                     !                tincc,j) = t_soisno(c,j) - tfrz
-                     tinc(c,j) = tfrz - t_soisno(c,j)
-                     t_soisno(c,j) = tfrz
-                  endif
-               endif
-
-            endif
-
-         end do
-      enddo
-
-      do j = -nlevsno+1,nlevgrnd       ! all layers
+      do j = -nlevsno+1,nlevmaxurbgrnd       ! all layers
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
 
             if ((col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-                 .and. col%itype(c) /= icol_roof)) then
+                 .and. col%itype(c) /= icol_roof .and. j <= nlevgrnd) .or. &
+                 (col%itype(c) == icol_sunwall .and. col%itype(c) == icol_shadewall &
+                 .and. col%itype(c) == icol_roof .and. j <= nlevurb)) then
 
                if (j >= snl(c)+1) then
 
@@ -1390,7 +1343,7 @@ contains
                            qflx_snomelt(c) = max(0._r8,(temp1-h2osno(c)))/dtime   ! kg/(m2 s)
                            ! no snow layers, so qflx_snomelt_lyr is not set
                            xmf(c) = hfus*qflx_snomelt(c)
-                           qflx_snow_drain(c) = qflx_snomelt(c) 
+                           qflx_snow_drain(c) = qflx_snomelt(c)
                         endif
                      endif
 
@@ -1442,158 +1395,7 @@ contains
                         end if
                      endif  ! end of heatr > 0 if-block
 
-                     if (j >= 1) then 
-                        xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
-                     else
-                        xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
-                     endif
-
-                     if (imelt(c,j) == 1 .AND. j < 1) then
-                        qflx_snomelt_lyr(c,j) = max(0._r8,(wice0(c,j)-h2osoi_ice(c,j)))/dtime
-                        qflx_snomelt(c)       = qflx_snomelt(c) + qflx_snomelt_lyr(c,j)
-                     endif
-
-                     ! layer freezing mass flux (positive):
-                     if (imelt(c,j) == 2 .AND. j < 1) then
-                        qflx_snofrz_lyr(c,j) = max(0._r8,(h2osoi_ice(c,j)-wice0(c,j)))/dtime
-                        qflx_snofrz(c)       = qflx_snofrz(c) + qflx_snofrz_lyr(c,j)
-                     endif
-
-                  endif
-
-               endif   ! end of snow layer if-block
-
-            endif
-
-         end do   ! end of column-loop
-      enddo   ! end of level-loop
-
-      do j = -nlevsno+1,nlevurb
-         do fc = 1,num_nolakec
-            c = filter_nolakec(fc)
-
-            if (col%itype(c) == icol_roof .or. col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
-
-               if (j >= snl(c)+1) then
-
-                  ! Calculate the energy surplus and loss for melting and freezing
-                  if (imelt(c,j) > 0) then
-
-                     ! added unique cases for this calculation,
-                     ! to account for absorbed solar radiation in each layer
-
-                     !==================================================================
-                     if (j == snl(c)+1) then ! top layer                   
-                        if(j > 0) then
-                           hm(c,j) = dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j)
-                        else
-                           hm(c,j) = frac_sno_eff(c)*(dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j))
-                        endif
-
-                        if ( j==1 .and. frac_h2osfc(c) /= 0.0_r8 ) then
-                           hm(c,j) = hm(c,j) - frac_h2osfc(c)*(dhsdT(c)*tinc(c,j))
-                        end if
-                     else if (j == 1) then
-                        hm(c,j) = (1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c)) &
-                             *dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j)
-                     else ! non-interfacial snow/soil layers                   
-                        if(j < 1) then
-                           hm(c,j) = - frac_sno_eff(c)*(tinc(c,j)/fact(c,j))
-                        else
-                           hm(c,j) = - tinc(c,j)/fact(c,j)
-                        endif
-                     endif
-                  endif
-
-                  ! These two errors were checked carefully (Y. Dai).  They result from the
-                  ! computed error of "Tridiagonal-Matrix" in subroutine "thermal".
-                  if (imelt(c,j) == 1 .AND. hm(c,j) < 0._r8) then
-                     hm(c,j) = 0._r8
-                     imelt(c,j) = 0
-                  endif
-                  if (imelt(c,j) == 2 .AND. hm(c,j) > 0._r8) then
-                     hm(c,j) = 0._r8
-                     imelt(c,j) = 0
-                  endif
-
-                  ! The rate of melting and freezing
-
-                  if (imelt(c,j) > 0 .and. abs(hm(c,j)) > 0._r8) then
-                     xm(c,j) = hm(c,j)*dtime/hfus                           ! kg/m2
-
-                     ! If snow exists, but its thickness is less than the critical value
-                     ! (1 cm). Note: more work is needed to determine how to tune the
-                     ! snow depth for this case
-                     if (j == 1) then
-                        if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8 .AND. xm(c,j) > 0._r8) then
-                           temp1 = h2osno(c)                           ! kg/m2
-                           h2osno(c) = max(0._r8,temp1-xm(c,j))
-                           propor = h2osno(c)/temp1
-                           snow_depth(c) = propor * snow_depth(c)
-                           heatr = hm(c,j) - hfus*(temp1-h2osno(c))/dtime   ! W/m2
-                           if (heatr > 0._r8) then
-                              xm(c,j) = heatr*dtime/hfus                    ! kg/m2
-                              hm(c,j) = heatr                               ! W/m2
-                           else
-                              xm(c,j) = 0._r8
-                              hm(c,j) = 0._r8
-                           endif
-                           qflx_snomelt(c) = max(0._r8,(temp1-h2osno(c)))/dtime   ! kg/(m2 s)
-                           ! no snow layers, so qflx_snomelt_lyr is not set
-                           xmf(c) = hfus*qflx_snomelt(c)
-                           qflx_snow_drain(c) = qflx_snomelt(c) 
-                        endif
-                     endif
-
-                     heatr = 0._r8
-                     if (xm(c,j) > 0._r8) then
-                        h2osoi_ice(c,j) = max(0._r8, wice0(c,j)-xm(c,j))
-                        heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
-                     else if (xm(c,j) < 0._r8) then
-                        if (j <= 0) then
-                           h2osoi_ice(c,j) = min(wmass0(c,j), wice0(c,j)-xm(c,j))  ! snow
-                        else
-                           if (wmass0(c,j) < supercool(c,j)) then
-                              h2osoi_ice(c,j) = 0._r8
-                           else
-                              h2osoi_ice(c,j) = min(wmass0(c,j) - supercool(c,j),wice0(c,j)-xm(c,j))
-                           endif
-                        endif
-                        heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
-                     endif
-
-                     h2osoi_liq(c,j) = max(0._r8,wmass0(c,j)-h2osoi_ice(c,j))
-
-                     if (abs(heatr) > 0._r8) then
-                        if (j == snl(c)+1) then
-
-                           if(j==1) then
-                              t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr &
-                                   /(1._r8-(1.0_r8 - frac_h2osfc(c))*fact(c,j)*dhsdT(c))
-                           else
-                              t_soisno(c,j) = t_soisno(c,j) + (fact(c,j)/frac_sno_eff(c))*heatr &
-                                   /(1._r8-fact(c,j)*dhsdT(c))
-
-                           endif
-
-                        else if (j == 1) then
-
-                           t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr &
-                                /(1._r8-(1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c))*fact(c,j)*dhsdT(c))
-                        else
-                           if(j > 0) then
-                              t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr
-                           else
-                              if(frac_sno_eff(c) > 0._r8) t_soisno(c,j) = t_soisno(c,j) + (fact(c,j)/frac_sno_eff(c))*heatr
-                           endif
-                        endif
-
-                        if (j <= 0) then    ! snow
-                           if (h2osoi_liq(c,j)*h2osoi_ice(c,j)>0._r8) t_soisno(c,j) = tfrz
-                        end if
-                     endif  ! end of heatr > 0 if-block
-
-                     if (j >= 1) then 
+                     if (j >= 1) then
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      else
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
@@ -1951,35 +1753,12 @@ contains
       ! tridiagonal matrix and set up vector r and vectors a, b, c that define tridiagonal
       ! matrix and solve system
 
-      do j = -nlevsno+1,nlevgrnd
+      do j = -nlevsno+1,nlevmaxurbgrnd
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             l = col%landunit(c)
-            if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-               .and. col%itype(c) /= icol_roof) then
-               if (j >= col%snl(c)+1) then
-                  if (j == col%snl(c)+1) then
-                     fact(c,j) = dtime/cv(c,j) * dz(c,j) / (0.5_r8*(z(c,j)-zi(c,j-1)+capr*(z(c,j+1)-zi(c,j-1))))
-                     fn(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
-                  else if (j <= nlevgrnd-1) then
-                     fact(c,j) = dtime/cv(c,j)
-                     fn(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
-                     dzm     = (z(c,j)-z(c,j-1))
-                  else if (j == nlevgrnd) then
-                     fact(c,j) = dtime/cv(c,j)
-                     fn(c,j) = eflx_bot(c)
-                  end if
-               end if
-            end if
-         end do
-      end do
-
-      do j = -nlevsno+1,nlevurb
-         do fc = 1,num_nolakec
-            c = filter_nolakec(fc)
-            l = col%landunit(c)
-            if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
-                 .or. col%itype(c) == icol_roof) then
+            if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
+                 .or. col%itype(c) == icol_roof) .and. j <= nlevurb) then
                if (j >= col%snl(c)+1) then
                   if (j == col%snl(c)+1) then
                      fact(c,j) = dtime/cv(c,j)
@@ -2005,6 +1784,21 @@ contains
                            fn(c,j) = tk(c,j) * (t_roof_inner(l) - cnfac*t_soisno(c,j))/(zi(c,j) - z(c,j))
                         end if
                      end if
+                  end if
+               end if
+            else if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
+                 .and. col%itype(c) /= icol_roof .and. j <= nlevgrnd) then
+               if (j >= col%snl(c)+1) then
+                  if (j == col%snl(c)+1) then
+                     fact(c,j) = dtime/cv(c,j) * dz(c,j) / (0.5_r8*(z(c,j)-zi(c,j-1)+capr*(z(c,j+1)-zi(c,j-1))))
+                     fn(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
+                  else if (j <= nlevgrnd-1) then
+                     fact(c,j) = dtime/cv(c,j)
+                     fn(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
+                     dzm     = (z(c,j)-z(c,j-1))
+                  else if (j == nlevgrnd) then
+                     fact(c,j) = dtime/cv(c,j)
+                     fn(c,j) = eflx_bot(c)
                   end if
                end if
             end if
