@@ -402,8 +402,8 @@ contains
     ! Call various wrapup routines at the end of setting glc2lnd fields
     !
     ! !ARGUMENTS:
-    class(glc2lnd_type), intent(in) :: this
-    type(bounds_type)  , intent(in) :: bounds
+    class(glc2lnd_type), intent(inout) :: this
+    type(bounds_type)  , intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
 
