@@ -31,6 +31,7 @@ module clm_instMod
   ! Definition of component types 
   !-----------------------------------------
 
+  use ActiveLayerMod                  , only : active_layer_type
   use AerosolMod                      , only : aerosol_type
   use CanopyStateType                 , only : canopystate_type
   use ch4Mod                          , only : ch4_type
@@ -96,6 +97,7 @@ module clm_instMod
   !-----------------------------------------
 
   ! Physics types 
+  type(active_layer_type), public         :: active_layer_inst
   type(aerosol_type), public              :: aerosol_inst
   type(canopystate_type), public          :: canopystate_inst
   type(energyflux_type), public           :: energyflux_inst
@@ -282,6 +284,8 @@ contains
          urbanparams_inst%em_perroad(begl:endl), &
          IsSimpleBuildTemp(), IsProgBuildTemp() )
 
+    call active_layer_inst%Init(bounds)
+
     call canopystate_inst%Init(bounds)
 
     call soilstate_inst%Init(bounds)
@@ -305,7 +309,7 @@ contains
 
     call aerosol_inst%Init(bounds, NLFilename)
 
-    call frictionvel_inst%Init(bounds)
+    call frictionvel_inst%Init(bounds, NLFilename = NLFilename, params_ncid = params_ncid)
 
     call lakestate_inst%Init(bounds)
     call LakeConInit()
@@ -490,6 +494,8 @@ contains
 
     !-----------------------------------------------------------------------
 
+    call active_layer_inst%restart (bounds, ncid, flag=flag)
+
     call atm2lnd_inst%restart (bounds, ncid, flag=flag)
 
     call canopystate_inst%restart (bounds, ncid, flag=flag)
@@ -567,8 +573,7 @@ contains
 
        call clm_fates%restart(bounds, ncid, flag=flag,  &
             waterdiagnosticbulk_inst=water_inst%waterdiagnosticbulk_inst, &
-            canopystate_inst=canopystate_inst, &
-            frictionvel_inst=frictionvel_inst)
+            canopystate_inst=canopystate_inst)
 
     end if
 

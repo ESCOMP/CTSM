@@ -27,7 +27,8 @@ module clm_driver
   use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
   use BalanceCheckMod        , only : BeginWaterBalance, BalanceCheck
   !
-  use CanopyTemperatureMod   , only : CanopyTemperature ! (formerly Biogeophysics1Mod)
+  use BiogeophysPreFluxCalcsMod  , only : BiogeophysPreFluxCalcs
+  use SurfaceHumidityMod     , only : CalculateSurfaceHumidity
   use UrbanTimeVarType       , only : urbantv_type
   use SoilTemperatureMod     , only : SoilTemperature
   use LakeTemperatureMod     , only : LakeTemperature
@@ -56,7 +57,6 @@ module clm_driver
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
-  use ActiveLayerMod         , only : alt_calc
   use ch4Mod                 , only : ch4, ch4_init_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
   use VOCEmissionMod         , only : VOCEmission
@@ -264,14 +264,14 @@ contains
        ! are valid over inactive as well as active points.
 
        call t_startf("decomp_vert")
-       call alt_calc(filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc, &
-            temperature_inst, canopystate_inst)
+       call active_layer_inst%alt_calc(filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc, &
+            temperature_inst)
 
        if (use_cn) then
           call SoilBiogeochemVerticalProfile(bounds_clump                                       , &
                filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc   , &
                filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp   , &
-               canopystate_inst, soilstate_inst, soilbiogeochem_state_inst)
+               active_layer_inst, soilstate_inst, soilbiogeochem_state_inst)
        end if
 
        call t_stopf("decomp_vert")
@@ -489,7 +489,7 @@ contains
 
        if (water_inst%DoConsistencyCheck()) then
           call t_startf("tracer_consistency_check")
-          call water_inst%TracerConsistencyCheck(bounds_clump, 'after FracH2oSfc')
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after first stage of hydrology')
           call t_stopf("tracer_consistency_check")
        end if
 
@@ -546,14 +546,29 @@ contains
        ! ============================================================================
 
        call t_startf('bgp1')
-       call CanopyTemperature(bounds_clump,                                   &
+
+       call BiogeophysPreFluxCalcs(bounds_clump,                                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                       &
             filter(nc)%num_nolakep, filter(nc)%nolakep,                       &
             clm_fates,                                                        &
-            atm2lnd_inst, canopystate_inst, soilstate_inst, frictionvel_inst, &
-            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterfluxbulk_inst, water_inst%wateratm2lndbulk_inst,  &
-            energyflux_inst, temperature_inst)
+            atm2lnd_inst, canopystate_inst, energyflux_inst, frictionvel_inst, &
+            soilstate_inst, temperature_inst, &
+            water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
+            water_inst%waterstatebulk_inst)
+
+       ! TODO(wjs, 2019-10-02) I'd like to keep moving this down until it is below
+       ! LakeFluxes... I'll probably leave it in place there.
+       if (water_inst%DoConsistencyCheck()) then
+          call t_startf("tracer_consistency_check")
+          call water_inst%TracerConsistencyCheck(bounds_clump, 'after BiogeophysPreFluxCalcs')
+          call t_stopf("tracer_consistency_check")
+       end if
+
+       call CalculateSurfaceHumidity(bounds_clump,                                   &
+            filter(nc)%num_nolakec, filter(nc)%nolakec,                       &
+            atm2lnd_inst, temperature_inst, &
+            water_inst%waterstatebulk_inst, water_inst%wateratm2lndbulk_inst, &
+            soilstate_inst, water_inst%waterdiagnosticbulk_inst)
        call t_stopf('bgp1')
 
        ! ============================================================================
@@ -601,7 +616,7 @@ contains
        call CanopyFluxes(bounds_clump,                                                      &
             filter(nc)%num_exposedvegp, filter(nc)%exposedvegp,                             &
             clm_fates,nc,                                                                   &
-            atm2lnd_inst, canopystate_inst,                                                 &
+            active_layer_inst, atm2lnd_inst, canopystate_inst,                              &
             energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst, &
             temperature_inst, water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst,          &
@@ -891,6 +906,7 @@ contains
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                soilbiogeochem_state_inst,                                               &
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
+               active_layer_inst, &
                atm2lnd_inst, water_inst%waterstatebulk_inst, &
                water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst,      &
                water_inst%wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
@@ -963,10 +979,9 @@ contains
           end if
 
           call clm_fates%dynamics_driv( nc, bounds_clump,                        &
-               atm2lnd_inst, soilstate_inst, temperature_inst,                   &
+               atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
                water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst,&
-               frictionvel_inst)
+               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst)
 
           ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
           ! call to reweight_wrapup, if it's needed at all.
@@ -988,7 +1003,7 @@ contains
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
                c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst,            &
                c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst,            &
-               atm2lnd_inst, water_inst%waterfluxbulk_inst,                                      &
+               active_layer_inst, atm2lnd_inst, water_inst%waterfluxbulk_inst,                     &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst)
 
           call EDBGCDynSummary(bounds_clump,                                             &

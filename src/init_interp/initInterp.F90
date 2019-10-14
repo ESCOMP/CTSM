@@ -1066,11 +1066,11 @@ contains
     real(r8), pointer   :: rbuf2do_levelsi(:,:) ! array on output horiz grid, but input levels
     ! --------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2di%get_vec_beg() == begi, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2di%get_vec_end() == endi, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2do%get_vec_beg() == bego, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2do%get_vec_end() == endo, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(sgridindex) == (/endo/)), sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2di%get_vec_beg() == begi, sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2di%get_vec_end() == endi, sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2do%get_vec_beg() == bego, sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2do%get_vec_end() == endo, sourcefile, __LINE__)
 
     multilevel_interpolator => interp_multilevel_container%find_interpolator( &
          lev_dimname = var2do%get_lev_dimname(), &

@@ -376,14 +376,39 @@ contains
     call SnowCapping(bounds, num_lakec, filter_lakec, num_shlakesnowc, filter_shlakesnowc, &
          topo_inst, aerosol_inst, water_inst)
 
+    ! Natural compaction and metamorphosis.
+
+    call SnowCompaction(bounds, num_shlakesnowc, filter_shlakesnowc, &
+         scf_method, &
+         temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, atm2lnd_inst)
+
+    ! Combine thin snow elements
+
+    call CombineSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
+         aerosol_inst, temperature_inst, water_inst)
+
+    ! Divide thick snow elements
+
+    call DivideSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
+         aerosol_inst, temperature_inst, water_inst, is_lake=.true.)
+
+    ! Set empty snow layers to zero
+    call ZeroEmptySnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
+         col, water_inst, temperature_inst)
+
     ! TODO(wjs, 2019-09-16) Eventually move this down, merging this with later tracer
     ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
     ! module, remember to also remove 'use perf_mod' at the top.
     if (water_inst%DoConsistencyCheck()) then
        call t_startf("tracer_consistency_check")
-       call water_inst%TracerConsistencyCheck(bounds, 'LakeHydrology: after SnowCapping')
+       call water_inst%TracerConsistencyCheck(bounds, 'LakeHydrology: after main snow code')
        call t_stopf("tracer_consistency_check")
     end if
+
+    ! Recompute h2osno_total for possible updates in the above snow routines
+    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+         caller = 'LakeHydrology-2', &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     ! Determine soil hydrology
     ! Here this consists only of making sure that soil is saturated even as it melts and
@@ -424,31 +449,6 @@ contains
        end do
     end do
 !!!!!!!!!!
-
-    ! Natural compaction and metamorphosis.
-
-    call SnowCompaction(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         scf_method, &
-         temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, atm2lnd_inst)
-
-    ! Combine thin snow elements
-
-    call CombineSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         aerosol_inst, temperature_inst, b_waterflux_inst, b_waterstate_inst, b_waterdiagnostic_inst)
-
-    ! Divide thick snow elements
-
-    call DivideSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         aerosol_inst, temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, is_lake=.true.)
-
-    ! Set empty snow layers to zero
-    call ZeroEmptySnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         col, b_waterstate_inst, temperature_inst)
-
-    ! Recompute h2osno_total for possible updates in the above snow routines
-    call b_waterstate_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
-         caller = 'LakeHydrology-2', &
-         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     ! Check for single completely unfrozen snow layer over lake.  Modeling this ponding is unnecessary and
     ! can cause instability after the timestep when melt is completed, as the temperature after melt can be
@@ -569,7 +569,7 @@ contains
 
     ! Set empty snow layers to zero
     call ZeroEmptySnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc, &
-         col, b_waterstate_inst, temperature_inst)
+         col, water_inst, temperature_inst)
 
     ! Build new snow filter
 

@@ -271,10 +271,10 @@ contains
     character(len=*), parameter :: subname = 'set_glc2lnd_fields_mct'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((ubound(x2l, 2) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(index_x2l_Sg_ice_covered) == (/maxpatch_glcmec/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(index_x2l_Sg_topo) == (/maxpatch_glcmec/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(index_x2l_Flgg_hflx) == (/maxpatch_glcmec/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((ubound(x2l, 2) == bounds%endg), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(index_x2l_Sg_ice_covered) == (/maxpatch_glcmec/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(index_x2l_Sg_topo) == (/maxpatch_glcmec/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(index_x2l_Flgg_hflx) == (/maxpatch_glcmec/)), sourcefile, __LINE__)
 
     if (glc_present) then
        do g = bounds%begg, bounds%endg
@@ -384,12 +384,12 @@ contains
     !-----------------------------------------------------------------------
 
     if (present(topo)) then
-       SHR_ASSERT_ALL((ubound(topo) == (/bounds%endg, maxpatch_glcmec/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL_FL((ubound(topo) == (/bounds%endg, maxpatch_glcmec/)), sourcefile, __LINE__)
        this%topo_grc(bounds%begg:bounds%endg, 0:maxpatch_glcmec) = topo(bounds%begg:bounds%endg, 0:maxpatch_glcmec)
     end if
 
     if (present(icemask)) then
-       SHR_ASSERT_ALL((ubound(icemask) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL_FL((ubound(icemask) == (/bounds%endg/)), sourcefile, __LINE__)
        this%icemask_grc(bounds%begg:bounds%endg) = icemask(bounds%begg:bounds%endg)
     end if
 
@@ -713,8 +713,8 @@ contains
     character(len=*), parameter :: subname = 'update_glc2lnd_topo'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(topo_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(needs_downscaling_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(topo_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(needs_downscaling_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     if (glc_do_dynglacier) then
        do c = bounds%begc, bounds%endc
