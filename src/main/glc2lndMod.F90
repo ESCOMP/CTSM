@@ -94,6 +94,9 @@ module glc2lndMod
      procedure, private :: InitHistory
      procedure, private :: InitCold
 
+     ! call various wrapup routines at the end of setting glc2lnd fields
+     procedure, private :: set_glc2lnd_fields_wrapup
+
      ! sanity-check icemask from GLC
      procedure, private :: check_glc2lnd_icemask
 
@@ -284,9 +287,7 @@ contains
           this%icemask_coupled_fluxes_grc(g)  = x2l(index_x2l_Sg_icemask_coupled_fluxes,g)
        end do
 
-       call this%check_glc2lnd_icemask(bounds)
-       call this%check_glc2lnd_icemask_coupled_fluxes(bounds)
-       call this%update_glc2lnd_dyn_runoff_routing(bounds)
+       call this%set_glc2lnd_fields_wrapup(bounds)
     else
        if (glc_do_dynglacier) then
           call endrun(' ERROR: With glc_present false (e.g., a stub glc model), glc_do_dynglacier must be false '// &
@@ -340,9 +341,7 @@ contains
           this%icemask_coupled_fluxes_grc(g)  = icemask_coupled_fluxes_grc(g)
        end do
 
-       call this%check_glc2lnd_icemask(bounds)
-       call this%check_glc2lnd_icemask_coupled_fluxes(bounds)
-       call this%update_glc2lnd_dyn_runoff_routing(bounds)
+       call this%set_glc2lnd_fields_wrapup(bounds)
     else
        if (glc_do_dynglacier) then
           call endrun(' ERROR: With glc_present false (e.g., a stub glc model), glc_do_dynglacier must be false '// &
@@ -395,6 +394,27 @@ contains
     end if
 
   end subroutine for_test_set_glc2lnd_fields_directly
+
+  !-----------------------------------------------------------------------
+  subroutine set_glc2lnd_fields_wrapup(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Call various wrapup routines at the end of setting glc2lnd fields
+    !
+    ! !ARGUMENTS:
+    class(glc2lnd_type), intent(in) :: this
+    type(bounds_type)  , intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'set_glc2lnd_fields_wrapup'
+    !-----------------------------------------------------------------------
+
+    call this%check_glc2lnd_icemask(bounds)
+    call this%check_glc2lnd_icemask_coupled_fluxes(bounds)
+    call this%update_glc2lnd_dyn_runoff_routing(bounds)
+
+  end subroutine set_glc2lnd_fields_wrapup
 
   !-----------------------------------------------------------------------
   subroutine check_glc2lnd_icemask(this, bounds)
