@@ -1164,7 +1164,7 @@ contains
          qflx_snow_drain(c)   = 0._r8
       end do
 
-      do j = -nlevsno+1,nlevgrnd       ! all layers
+      do j = -nlevsno+1,nlevmaxurbgrnd       ! all layers
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             if (j >= snl(c)+1) then
@@ -1223,8 +1223,8 @@ contains
             ! add in urban condition if-block
             if ((col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
                  .and. col%itype(c) /= icol_roof .and. j <= nlevgrnd) .or. &
-                 (col%itype(c) == icol_sunwall .and. col%itype(c) == icol_shadewall &
-                 .and. col%itype(c) == icol_roof .and. j <= nlevurb)) then
+                 ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
+                 .or. col%itype(c) == icol_roof) .and. j <= nlevurb)) then
 
 
 
@@ -1273,8 +1273,8 @@ contains
 
             if ((col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
                  .and. col%itype(c) /= icol_roof .and. j <= nlevgrnd) .or. &
-                 (col%itype(c) == icol_sunwall .and. col%itype(c) == icol_shadewall &
-                 .and. col%itype(c) == icol_roof .and. j <= nlevurb)) then
+                 ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
+                 .or. col%itype(c) == icol_roof) .and. j <= nlevurb)) then
 
                if (j >= snl(c)+1) then
 
