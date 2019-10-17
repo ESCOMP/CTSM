@@ -608,9 +608,9 @@ contains
     ! !USES:
     use spmdMod          , only : masterproc
     use clm_varcon       , only : pondmx, watmin, spval, nameg
-    use landunit_varcon  , only : istcrop, istdlak, istsoil  
+    use landunit_varcon  , only : istdlak
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step
+    use clm_time_manager , only : is_first_step, is_restart
     use clm_varctl       , only : bound_h2osoi
     use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
     use restUtilMod
@@ -623,6 +623,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     logical  :: readvar
+    integer  :: c
     !------------------------------------------------------------------------
 
 
@@ -672,6 +673,28 @@ contains
          long_name=this%info%lname('fraction of ground covered by snow (0 to 1)'),&
          units='unitless',&
          interpinic_flag='interp', readvar=readvar, data=this%frac_sno_col)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2019-10-15) Due to ESCOMP/ctsm#783, old restart files
+    ! can have frac_sno == 0 for lake points despite having a snow pack. This can cause
+    ! other problems, so fix that here. (This mainly impacts restart files produced by
+    ! versions prior to the initial fix of ESCOMP/ctsm#783 - i.e., prior to
+    ! ctsm1.0.dev057. However, in principle, restart files produced by versions after that
+    ! tag could still have this issue, since this backwards compatibility code wasn't in
+    ! place at that point, so frac_sno could have persisted at 0 if there were no new snow
+    ! since the last restart file was written. So, to be safe, this backwards
+    ! compatibility code should be left in place until we can rely on all restart files
+    ! being from versions later than the tag where this backwards compatibility was first
+    ! implemented.)
+    if (flag == 'read' .and. .not. is_restart()) then
+       do c = bounds%begc, bounds%endc
+          if (col%lun_itype(c) == istdlak .and. &
+               this%frac_sno_col(c) == 0._r8 .and. this%snow_depth_col(c) > 0._r8) then
+             ! Often the value should be between 0 and 1 rather than being 1, but 1 is at
+             ! least better than 0 in this case, and it would be tricky or impossible to
+             ! figure out the "correct" value.
+             this%frac_sno_col(c) = 1._r8
+          end if
+       end do
+    end if
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('FWET'), &
