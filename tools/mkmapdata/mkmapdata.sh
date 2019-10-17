@@ -263,22 +263,12 @@ fi
 
 if [ "$phys" = "clm4_5" ]; then
     grids=(                    \
-           "0.5x0.5_AVHRR"     \
-           "0.25x0.25_MODIS"   \
-           "0.5x0.5_MODIS"     \
-           "3x3min_LandScan2004" \
-           "3x3min_MODIS-wCsp" \
-           "3x3min_USGS"       \
+           "0.5x0.5_nomask"     \
+           "0.25x0.25_nomask"   \
            "5x5min_nomask"     \
-           "5x5min_IGBP-GSDP"  \
-           "5x5min_ISRIC-WISE" \
-           "5x5min_ORNL-Soil" \
            "10x10min_nomask"   \
-           "10x10min_IGBPmergeICESatGIS" \
-           "3x3min_GLOBE-Gardner" \
-           "3x3min_GLOBE-Gardner-mergeGIS" \
-           "0.9x1.25_GRDC" \
-           "360x720cru_cruncep" \
+           "0.9x1.25_nomask" \
+           "3x3min_nomask" \
            "1km-merge-10min_HYDRO1K-merge-nomask" \
           )
 
@@ -288,7 +278,7 @@ else
 fi
 
 # Set timestamp for names below 
-CDATE="c"`date +%y%m%d`
+CDATE="c"`date -d "-1 days" +%y%m%d`
 
 # Set name of each output mapping file
 # First determine the name of the input scrip grid file  
@@ -346,7 +336,7 @@ case $hostname in
   intelvers=17.0.1
   module load esmf_libs/$esmfvers
   module load intel/$intelvers
-  module load ncl
+  module load ncl/6.6.2
   module load nco
 
   if [ "$interactive" = "NO" ]; then
