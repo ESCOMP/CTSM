@@ -957,6 +957,7 @@ contains
        call hist_addfld1d (fname='NMANURE', units='gN/m^2/s', &
             avgflag='A', long_name='Manure N added according to CLM default', &
             ptr_patch=this%manure_patch, default='inactive')
+       this%synthfert_patch(begp:endp) = spval
        call hist_addfld1d (fname='NSYNTHFERT', units='gN/m^2/s', &
             avgflag='A', long_name='Syntheric fertilizer N added', &
             ptr_patch=this%synthfert_patch, default='inactive')
