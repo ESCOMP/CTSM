@@ -45,6 +45,8 @@ module SPMMod
     procedure, public :: SetValueSM     ! subroutine to set values in sparse matrix of any shape
     procedure, public :: SetValueA      ! subroutine to set off-diagonal values in sparse matrix of A
     procedure, public :: SetValueA_diag ! subroutine to set diagonal values in sparse matrix of A
+    procedure, public :: SetValueCopySM ! subroutine to copy the input sparse matrix to the output
+    procedure, public :: IsValuesSetSM  ! return true if the values are set in the matrix
     procedure, public :: SPMM_AK        ! subroutine to calculate sparse matrix multiplication: A(sparse matrix) = A(sparse matrix) * K(diagonal matrix)
     procedure, public :: SPMP_AB        ! subroutine to calculate sparse matrix addition AB(sparse matrix) = A(sparse matrix) + B(sparse matrix)
     procedure, public :: SPMP_B_ACC     ! subroutine to calculate sparse matrix accumulation: B(sparse matrix) = B(sparse matrix) + A(sparse matrix)
@@ -255,10 +257,10 @@ SHR_ASSERT_FL((ubound(M, 1) == this%endu), sourcefile, __LINE__)
 SHR_ASSERT_FL((lbound(M, 1) >= this%begu), sourcefile, __LINE__)
 SHR_ASSERT_FL((ubound(M, 1) <= this%endu), sourcefile, __LINE__)
 #endif
-SHR_ASSERT_FL((maxval(I) <= this%SM), sourcefile, __LINE__)
-SHR_ASSERT_FL((minval(I) >= 1), sourcefile, __LINE__)
-SHR_ASSERT_FL((maxval(J) <= this%SM), sourcefile, __LINE__)
-SHR_ASSERT_FL((minval(J) >= 1), sourcefile, __LINE__)
+SHR_ASSERT_FL((maxval(I(:this%NE)) <= this%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((minval(I(:this%NE)) >= 1), sourcefile, __LINE__)
+SHR_ASSERT_FL((maxval(J(:this%NE)) <= this%SM), sourcefile, __LINE__)
+SHR_ASSERT_FL((minval(J(:this%NE)) >= 1), sourcefile, __LINE__)
 do k = 1,NE_in
    do fu = 1,num_unit
       u = filter_u(fu)  
@@ -406,6 +408,58 @@ end if
 
 end subroutine SetValueA
 
+
+  ! ========================================================================
+
+  subroutine SetValueCopySM(this, num_unit, filter_u, matrix)
+
+  ! Set the sparse matrix by copying from another sparse matrix
+
+     class(sparse_matrix_type) :: this
+     type(sparse_matrix_type), intent(in) :: matrix   ! Sparse Matrix to copy
+     integer ,intent(in) :: num_unit
+     integer ,intent(in) :: filter_u(:)
+     character(len=*),parameter :: subname = 'SetValueCopySM'
+
+     if ( .not. this%IsAllocSM() )then
+        call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
+        return
+     end if
+     if ( .not. matrix%IsValuesSetSM() )then
+        call endrun( subname//" ERROR: Sparse Matrix data sent in was NOT already set" )
+        return
+     end if
+     SHR_ASSERT_FL( (this%SM   == matrix%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL( (this%begu == matrix%begu), sourcefile, __LINE__)
+     SHR_ASSERT_FL( (this%endu == matrix%endu), sourcefile, __LINE__)
+     SHR_ASSERT_FL((maxval(matrix%RI(:this%NE)) <= this%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL((minval(matrix%RI(:this%NE)) >= 1), sourcefile, __LINE__)
+     SHR_ASSERT_FL((maxval(matrix%CI(:this%NE)) <= this%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL((minval(matrix%CI(:this%NE)) >= 1), sourcefile, __LINE__)
+     call this%SetValueSM( matrix%begu, matrix%endu, num_unit, filter_u, matrix%M, &
+                           matrix%RI, matrix%CI, matrix%NE)
+
+  end subroutine SetValueCopySM
+
+  ! ========================================================================
+
+  logical function IsValuesSetSM(this)
+
+  ! Check if the Sparse Matrix has it's data been set (One of the SetValue* subroutines was called on it)
+
+     class(sparse_matrix_type) :: this
+
+     if ( .not. this%IsAllocSM() )then
+        IsValuesSetSM = .false.
+     else if ( this%NE == empty_int )then
+        IsValuesSetSM = .false.
+     else
+        IsValuesSetSM = .true.
+     end if
+
+  end function IsValuesSetSM
+
+  ! ========================================================================
 
 subroutine InitDM(this,SM_in,begu,endu)
 
@@ -696,9 +750,6 @@ SHR_ASSERT_FL((this%SM            == A%SM), sourcefile, __LINE__)
 SHR_ASSERT_FL((this%NE            == A%NE), sourcefile, __LINE__)
 SHR_ASSERT_ALL_FL((this%RI        == A%RI), sourcefile, __LINE__)
 SHR_ASSERT_ALL_FL((this%CI        == A%CI), sourcefile, __LINE__)
-this%NE=A%NE
-this%RI=A%RI
-this%CI=A%CI
 
 do i=1,A%NE
    do fu = 1, num_unit

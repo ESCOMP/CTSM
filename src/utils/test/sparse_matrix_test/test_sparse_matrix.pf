@@ -182,8 +182,14 @@ contains
     do i = begu, endu
        this%filter_u(i) = i
     end do
+    @assertFalse( this%SM_identity%IsAllocSM() )
+    @assertFalse( this%SM_identity%IsValuesSetSM() )
     call this%SM_identity%InitSM( ndims, begu, endu )
+    @assertTrue( this%SM_identity%IsAllocSM() )
+    @assertFalse( this%SM_identity%IsValuesSetSM() )
     call this%SM_identity%SetValueA_diag( this%num_unit,this%filter_u, 1.0_r8 )
+    @assertTrue( this%SM_identity%IsAllocSM() )
+    @assertTrue( this%SM_identity%IsValuesSetSM() )
     call this%DM_identity%InitDM( ndims, begu, endu )
     Mdiag = 1.0_r8
     call this%DM_identity%SetValueDM(begu,endu,this%num_unit,this%filter_u,Mdiag)
@@ -197,6 +203,8 @@ contains
     call this%V_identity%ReleaseV( )
     call this%SM_identity%ReleaseSM( )
     call this%DM_identity%ReleaseDM( )
+    @assertFalse( this%SM_identity%IsAllocSM() )
+    @assertFalse( this%SM_identity%IsValuesSetSM() )
     deallocate( this%filter_u )
   end subroutine tearDown
 
@@ -239,8 +247,10 @@ contains
     Mexpect       = 1.0_r8
     @assertEqual( Mexpect, MatrixSetup%M(1,:) )
     call SymBand%InitSM( ndims, begu, endu )
+    @assertTrue( SymBand%IsAllocSM() )
     call SymBand%SetValueSM(begu,endu,this%num_unit,this%filter_u, &
                                MatrixSetup%M,MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    @assertTrue( SymBand%IsValuesSetSM() )
     ! Multiply it by a diagonal matrix that is exactly three
     @assertEqual( this%DM_identity%SM, ndims )
     this%DM_identity%DM(begu:endu,:ndims) = 3.0_r8
@@ -590,6 +600,36 @@ contains
     end do
 
   end subroutine SM_lower_plus_upper_plus_diag_equal_filled
+
+  @Test
+  subroutine SM_SetValueCopySM_Is_Same( this )
+    class(TestSparseMatrix), intent(inout) :: this
+    type(sparse_matrix_type) :: ArbSMatrix
+    type(sparse_matrix_type) :: CopyMatrix
+    type(arb_band_sparse_matrix_setup) :: MatrixSetup
+
+    ! Create arbitrary matrix
+    call MatrixSetup%createArbBandMatrix2( )
+    call ArbSMatrix%InitSM( ndims, begu, endu )
+    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                                MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    ! Copy it
+    @assertFalse( CopyMatrix%IsAllocSM() )
+    call CopyMatrix%InitSM( ndims, begu, endu )
+    @assertTrue(  CopyMatrix%IsAllocSM() )
+    @assertFalse( CopyMatrix%IsValuesSetSM() )
+    call CopyMatrix%SetValueCopySM( this%num_unit,this%filter_u, ArbSMatrix )
+    @assertTrue( CopyMatrix%IsValuesSetSM() )
+    ! Test that it's the same
+    @assertEqual( CopyMatrix%begu, ArbSMatrix%begu )
+    @assertEqual( CopyMatrix%endu, ArbSMatrix%endu )
+    @assertEqual( CopyMatrix%SM,   ArbSMatrix%SM   )
+    @assertEqual( CopyMatrix%NE,   ArbSMatrix%NE   )
+    @assertEqual( CopyMatrix%M,    ArbSMatrix%M    )
+    @assertEqual( CopyMatrix%RI,   ArbSMatrix%RI   )
+    @assertEqual( CopyMatrix%CI,   ArbSMatrix%CI   )
+
+  end subroutine SM_SetValueCopySM_Is_Same
 
   @Test
   subroutine check_alloc_first_setvalueA_diag(this)
