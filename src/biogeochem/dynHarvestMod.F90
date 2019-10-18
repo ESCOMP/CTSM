@@ -480,6 +480,21 @@ contains
          end if  ! end tree block
       end do ! end of pft loop
 
+      if(use_matrixcn)then
+         do fp = 1,num_soilp
+            p = filter_soilp(fp)
+            if (ivt(p) > noveg .and. ivt(p) < nbrdlf_evr_shrub) then
+
+               if (do_harvest) then
+                  if(cnveg_carbonflux_inst%matrix_phtransfer_patch(p,cnveg_carbonflux_inst%ifroot_to_iout_ph) .ge. 1._r8 / dtime)then
+                     hrv_frootc_to_litter(p)              = 0.
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc) = 0._r8
+                  end if
+               end if
+            end if
+         end do
+      end if
+                   
       ! gather all patch-level litterfall fluxes from harvest to the column
       ! for litter C and N inputs
 

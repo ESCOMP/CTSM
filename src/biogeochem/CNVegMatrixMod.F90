@@ -1212,69 +1212,71 @@ contains
   ! Save *c0* and *n0* variables at begin of each year.
       if (is_beg_curr_year())then
          iyr = iyr + 1
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            leafc0(p)                = max(leafc(p),  epsi)
-            leafc0_storage(p)        = max(leafc_storage(p),  epsi)
-            leafc0_xfer(p)           = max(leafc_xfer(p),  epsi)
-            frootc0(p)               = max(frootc(p),  epsi)
-            frootc0_storage(p)       = max(frootc_storage(p),  epsi)
-            frootc0_xfer(p)          = max(frootc_xfer(p),  epsi)
-            livestemc0(p)            = max(livestemc(p),  epsi)
-            livestemc0_storage(p)    = max(livestemc_storage(p),  epsi)
-            livestemc0_xfer(p)       = max(livestemc_xfer(p),  epsi)
-            deadstemc0(p)            = max(deadstemc(p),  epsi)
-            deadstemc0_storage(p)    = max(deadstemc_storage(p),  epsi)
-            deadstemc0_xfer(p)       = max(deadstemc_xfer(p),  epsi)
-            livecrootc0(p)           = max(livecrootc(p),  epsi)
-            livecrootc0_storage(p)   = max(livecrootc_storage(p),  epsi)
-            livecrootc0_xfer(p)      = max(livecrootc_xfer(p),  epsi)
-            deadcrootc0(p)           = max(deadcrootc(p),  epsi)
-            deadcrootc0_storage(p)   = max(deadcrootc_storage(p),  epsi)
-            deadcrootc0_xfer(p)      = max(deadcrootc_xfer(p),  epsi)
-         end do
+         if(.not. isspinup .or. isspinup .and. iyr .eq. 1)then
+            do fp = 1,num_soilp
+               p = filter_soilp(fp)
+               leafc0(p)                = max(leafc(p),  epsi)
+               leafc0_storage(p)        = max(leafc_storage(p),  epsi)
+               leafc0_xfer(p)           = max(leafc_xfer(p),  epsi)
+               frootc0(p)               = max(frootc(p),  epsi)
+               frootc0_storage(p)       = max(frootc_storage(p),  epsi)
+               frootc0_xfer(p)          = max(frootc_xfer(p),  epsi)
+               livestemc0(p)            = max(livestemc(p),  epsi)
+               livestemc0_storage(p)    = max(livestemc_storage(p),  epsi)
+               livestemc0_xfer(p)       = max(livestemc_xfer(p),  epsi)
+               deadstemc0(p)            = max(deadstemc(p),  epsi)
+               deadstemc0_storage(p)    = max(deadstemc_storage(p),  epsi)
+               deadstemc0_xfer(p)       = max(deadstemc_xfer(p),  epsi)
+               livecrootc0(p)           = max(livecrootc(p),  epsi)
+               livecrootc0_storage(p)   = max(livecrootc_storage(p),  epsi)
+               livecrootc0_xfer(p)      = max(livecrootc_xfer(p),  epsi)
+               deadcrootc0(p)           = max(deadcrootc(p),  epsi)
+               deadcrootc0_storage(p)   = max(deadcrootc_storage(p),  epsi)
+               deadcrootc0_xfer(p)      = max(deadcrootc_xfer(p),  epsi)
+            end do
 
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            if(ivt(p) >= npcropmin)then
-               grainc0(p)               = max(grainc(p),  epsi)
-               grainc0_storage(p)       = max(grainc_storage(p),  epsi)
-               grainc0_xfer(p)          = max(grainc_xfer(p),  epsi)
-            end if
-         end do
+            do fp = 1,num_soilp
+               p = filter_soilp(fp)
+               if(ivt(p) >= npcropmin)then
+                  grainc0(p)               = max(grainc(p),  epsi)
+                  grainc0_storage(p)       = max(grainc_storage(p),  epsi)
+                  grainc0_xfer(p)          = max(grainc_xfer(p),  epsi)
+               end if
+            end do
 
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            leafn0(p)                = max(leafn(p),  epsi)
-            leafn0_storage(p)        = max(leafn_storage(p),  epsi)
-            leafn0_xfer(p)           = max(leafn_xfer(p),  epsi)
-            frootn0(p)               = max(frootn(p),  epsi)
-            frootn0_storage(p)       = max(frootn_storage(p),  epsi)
-            frootn0_xfer(p)          = max(frootn_xfer(p),  epsi)
-            livestemn0(p)            = max(livestemn(p),  epsi)
-            livestemn0_storage(p)    = max(livestemn_storage(p),  epsi)
-            livestemn0_xfer(p)       = max(livestemn_xfer(p),  epsi)
-            deadstemn0(p)            = max(deadstemn(p),  epsi)
-            deadstemn0_storage(p)    = max(deadstemn_storage(p),  epsi)
-            deadstemn0_xfer(p)       = max(deadstemn_xfer(p),  epsi)
-            livecrootn0(p)           = max(livecrootn(p),  epsi)
-            livecrootn0_storage(p)   = max(livecrootn_storage(p),  epsi)
-            livecrootn0_xfer(p)      = max(livecrootn_xfer(p),  epsi)
-            deadcrootn0(p)           = max(deadcrootn(p),  epsi)
-            deadcrootn0_storage(p)   = max(deadcrootn_storage(p),  epsi)
-            deadcrootn0_xfer(p)      = max(deadcrootn_xfer(p),  epsi)
-            retransn0(p)             = max(retransn(p),  epsi)
-         end do
+            do fp = 1,num_soilp
+               p = filter_soilp(fp)
+               leafn0(p)                = max(leafn(p),  epsi)
+               leafn0_storage(p)        = max(leafn_storage(p),  epsi)
+               leafn0_xfer(p)           = max(leafn_xfer(p),  epsi)
+               frootn0(p)               = max(frootn(p),  epsi)
+               frootn0_storage(p)       = max(frootn_storage(p),  epsi)
+               frootn0_xfer(p)          = max(frootn_xfer(p),  epsi)
+               livestemn0(p)            = max(livestemn(p),  epsi)
+               livestemn0_storage(p)    = max(livestemn_storage(p),  epsi)
+               livestemn0_xfer(p)       = max(livestemn_xfer(p),  epsi)
+               deadstemn0(p)            = max(deadstemn(p),  epsi)
+               deadstemn0_storage(p)    = max(deadstemn_storage(p),  epsi)
+               deadstemn0_xfer(p)       = max(deadstemn_xfer(p),  epsi)
+               livecrootn0(p)           = max(livecrootn(p),  epsi)
+               livecrootn0_storage(p)   = max(livecrootn_storage(p),  epsi)
+               livecrootn0_xfer(p)      = max(livecrootn_xfer(p),  epsi)
+               deadcrootn0(p)           = max(deadcrootn(p),  epsi)
+               deadcrootn0_storage(p)   = max(deadcrootn_storage(p),  epsi)
+               deadcrootn0_xfer(p)      = max(deadcrootn_xfer(p),  epsi)
+               retransn0(p)             = max(retransn(p),  epsi)
+            end do
 
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            if(ivt(p) >= npcropmin)then
-               grainn0(p)               = max(grainn(p),  epsi)
-               grainn0_storage(p)       = max(grainn_storage(p),  epsi)
-               grainn0_xfer(p)          = max(grainn_xfer(p),  epsi)
-            end if
-         end do
-      end if
+            do fp = 1,num_soilp
+               p = filter_soilp(fp)
+               if(ivt(p) >= npcropmin)then
+                  grainn0(p)               = max(grainn(p),  epsi)
+                  grainn0_storage(p)       = max(grainn_storage(p),  epsi)
+                  grainn0_xfer(p)          = max(grainn_xfer(p),  epsi)
+               end if
+            end do
+         end if
+      end if    
 
          call t_stopf('CN veg matrix-set old value')
 
@@ -2224,49 +2226,58 @@ contains
                   
                   if(isspinup .and. .not. is_first_step_of_this_run_segment())then
   ! if spin up is true, set C storage to capacity. Not tested yet
-                     leafc(p)                  = vegmatrixc_rt(ileaf)
-                     leafc_storage(p)          = vegmatrixc_rt(ileaf_st)
-      !               leafc_xfer(p)             = vegmatrixc_rt(ileaf_xf)
-                     frootc(p)                 = vegmatrixc_rt(ifroot)
-                     frootc_storage(p)         = vegmatrixc_rt(ifroot_st)
-      !               frootc_xfer(p)            = vegmatrixc_rt(ifroot_xf)
-                     livestemc(p)              = vegmatrixc_rt(ilivestem)
-                     livestemc_storage(p)      = vegmatrixc_rt(ilivestem_st)
-      !               livestemc_xfer(p)         = vegmatrixc_rt(ilivestem_xf)
-                     deadstemc(p)              = vegmatrixc_rt(ideadstem)
-                     deadstemc_storage(p)      = vegmatrixc_rt(ideadstem_st)
-      !               deadstemc_xfer(p)         = vegmatrixc_rt(ideadstem_xf)
-                     livecrootc(p)             = vegmatrixc_rt(ilivecroot)
-                     livecrootc_storage(p)     = vegmatrixc_rt(ilivecroot_st)
-      !               livecrootc_xfer(p)        = vegmatrixc_rt(ilivecroot_xf)   
-                     deadcrootc(p)             = vegmatrixc_rt(ideadcroot)
-                     deadcrootc_storage(p)     = vegmatrixc_rt(ideadcroot_st)
-      !               deadcrootc_xfer(p)        = vegmatrixc_rt(ideadcroot_xf) 
-                     if(ivt(p) >= npcropmin)then
-                        grainc(p)              = vegmatrixc_rt(igrain)
-                        grainc_storage(p)      = vegmatrixc_rt(igrain_st)
-                     end if
-                     leafn(p)                  = vegmatrixn_rt(ileaf)
-                     leafn_storage(p)          = vegmatrixn_rt(ileaf_st)
-      !               leafn_xfer(p)             = vegmatrixn_rt(ileaf_xf)
-                     frootn(p)                 = vegmatrixn_rt(ifroot)
-                     frootn_storage(p)         = vegmatrixn_rt(ifroot_st)
-      !               frootn_xfer(p)            = vegmatrixn_rt(ifroot_xf)
-                     livestemn(p)              = vegmatrixn_rt(ilivestem)
-                     livestemn_storage(p)      = vegmatrixn_rt(ilivestem_st)
-      !               livestemn_xfer(p)         = vegmatrixn_rt(ilivestem_xf)
-                     deadstemn(p)              = vegmatrixn_rt(ideadstem)
-                     deadstemn_storage(p)      = vegmatrixn_rt(ideadstem_st)
-      !               deadstemn_xfer(p)         = vegmatrixn_rt(ideadstem_xf)
-                     livecrootn(p)             = vegmatrixn_rt(ilivecroot)
-                     livecrootn_storage(p)     = vegmatrixn_rt(ilivecroot_st)
-      !               livecrootn_xfer(p)        = vegmatrixn_rt(ilivecroot_xf)   
-                     deadcrootn(p)             = vegmatrixn_rt(ideadcroot)
-                     deadcrootn_storage(p)     = vegmatrixn_rt(ideadcroot_st)
-      !               deadcrootn_xfer(p)        = vegmatrixn_rt(ideadcroot_xf)
-                     if(ivt(p) >= npcropmin)then
-                        grainn(p)              = vegmatrixn_rt(igrain)
-                     end if
+!                     leafc(p)                  = vegmatrixc_rt(ileaf)
+!                     leafc_storage(p)          = vegmatrixc_rt(ileaf_st)
+!                     leafc_xfer(p)             = vegmatrixc_rt(ileaf_xf)
+!                     frootc(p)                 = vegmatrixc_rt(ifroot)
+!                     frootc_storage(p)         = vegmatrixc_rt(ifroot_st)
+!                     frootc_xfer(p)            = vegmatrixc_rt(ifroot_xf)
+!                     livestemc(p)              = vegmatrixc_rt(ilivestem)
+!                     livestemc_storage(p)      = vegmatrixc_rt(ilivestem_st)
+!                     livestemc_xfer(p)         = vegmatrixc_rt(ilivestem_xf)
+!                     deadstemc(p)              = vegmatrixc_rt(ideadstem)
+                     deadstemc(p)               = -(matrix_ctransfer_acc(ideadstem,ideadstem_xf)*deadstemc0_xfer(p) &
+                                                + matrix_ctransfer_acc(ideadstem,ilivestem)*livestemc0(p)) / matrix_ctransfer_acc(ideadstem,ideadstem)
+!                     deadstemc_storage(p)      = vegmatrixc_rt(ideadstem_st)
+!                     deadstemc_xfer(p)         = vegmatrixc_rt(ideadstem_xf)
+!                     livecrootc(p)             = vegmatrixc_rt(ilivecroot)
+!                     livecrootc_storage(p)     = vegmatrixc_rt(ilivecroot_st)
+!                     livecrootc_xfer(p)        = vegmatrixc_rt(ilivecroot_xf)   
+!                     deadcrootc(p)             = vegmatrixc_rt(ideadcroot)
+                     deadcrootc(p)              = -(matrix_ctransfer_acc(ideadcroot,ideadcroot_xf)*deadcrootc0_xfer(p) &
+                                                + matrix_ctransfer_acc(ideadcroot,ilivecroot)*livecrootc0(p)) / matrix_ctransfer_acc(ideadcroot,ideadcroot)
+!                     deadcrootc_storage(p)     = vegmatrixc_rt(ideadcroot_st)
+!                     deadcrootc_xfer(p)        = vegmatrixc_rt(ideadcroot_xf) 
+!                     if(ivt(p) >= npcropmin)then
+!                        grainc(p)              = vegmatrixc_rt(igrain)
+!                        grainc_storage(p)      = vegmatrixc_rt(igrain_st)
+!                     end if
+!                     leafn(p)                  = vegmatrixn_rt(ileaf)
+!                     leafn_storage(p)          = vegmatrixn_rt(ileaf_st)
+!                     leafn_xfer(p)             = vegmatrixn_rt(ileaf_xf)
+!                     frootn(p)                 = vegmatrixn_rt(ifroot)
+!                     frootn_storage(p)         = vegmatrixn_rt(ifroot_st)
+!                     frootn_xfer(p)            = vegmatrixn_rt(ifroot_xf)
+!                     livestemn(p)              = vegmatrixn_rt(ilivestem)
+!                     livestemn_storage(p)      = vegmatrixn_rt(ilivestem_st)
+!                     livestemn_xfer(p)         = vegmatrixn_rt(ilivestem_xf)
+                     deadstemn(p)               = -(matrix_ntransfer_acc(ideadstem,ideadstem_xf)*deadstemn0_xfer(p) &
+                                                + matrix_ntransfer_acc(ideadstem,ilivestem)*livestemn0(p) &
+                                                + matrix_ntransfer_acc(ideadstem,iretransn)*retransn0(p)) / matrix_ntransfer_acc(ideadstem,ideadstem)
+!                     deadstemn_storage(p)      = vegmatrixn_rt(ideadstem_st)
+!                     deadstemn_xfer(p)         = vegmatrixn_rt(ideadstem_xf)
+!                     livecrootn(p)             = vegmatrixn_rt(ilivecroot)
+!                     livecrootn_storage(p)     = vegmatrixn_rt(ilivecroot_st)
+!                     livecrootn_xfer(p)        = vegmatrixn_rt(ilivecroot_xf)   
+                     deadcrootn(p)              = -(matrix_ntransfer_acc(ideadcroot,ideadcroot_xf)*deadcrootn0_xfer(p) &
+                                                + matrix_ntransfer_acc(ideadcroot,ilivecroot)*livecrootn0(p) &
+                                                + matrix_ntransfer_acc(ideadcroot,iretransn)*retransn0(p)) / matrix_ntransfer_acc(ideadcroot,ideadcroot)
+!                     deadcrootn(p)             = vegmatrixn_rt(ideadcroot)
+!                     deadcrootn_storage(p)     = vegmatrixn_rt(ideadcroot_st)
+!                     deadcrootn_xfer(p)        = vegmatrixn_rt(ideadcroot_xf)
+!                     if(ivt(p) >= npcropmin)then
+!                        grainn(p)              = vegmatrixn_rt(igrain)
+!                     end if
                      call update_DA_nstep()
                   end if
 
