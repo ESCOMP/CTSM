@@ -46,6 +46,7 @@ module SPMMod
     procedure, public :: SetValueA      ! subroutine to set off-diagonal values in sparse matrix of A
     procedure, public :: SetValueA_diag ! subroutine to set diagonal values in sparse matrix of A
     procedure, public :: SetValueCopySM ! subroutine to copy the input sparse matrix to the output
+    procedure, public :: CopyIdxSM      ! subroutine to copy the input indices to the sparse matrix
     procedure, public :: IsValuesSetSM  ! return true if the values are set in the matrix
     procedure, public :: SPMM_AK        ! subroutine to calculate sparse matrix multiplication: A(sparse matrix) = A(sparse matrix) * K(diagonal matrix)
     procedure, public :: SPMP_AB        ! subroutine to calculate sparse matrix addition AB(sparse matrix) = A(sparse matrix) + B(sparse matrix)
@@ -440,6 +441,36 @@ end subroutine SetValueA
                            matrix%RI, matrix%CI, matrix%NE)
 
   end subroutine SetValueCopySM
+
+  ! ========================================================================
+
+  subroutine CopyIdxSM(this, num_unit, filter_u, matrix)
+
+  ! Copy the indices from the input matrix to this sparse matrix
+  ! also make sure the sizes are consistent
+
+     class(sparse_matrix_type) :: this
+     type(sparse_matrix_type), intent(in) :: matrix   ! Sparse Matrix to copy
+     integer ,intent(in) :: num_unit
+     integer ,intent(in) :: filter_u(:)
+     character(len=*),parameter :: subname = 'CopyIdxSM'
+
+     if ( .not. this%IsAllocSM() )then
+        call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
+        return
+     end if
+     if ( .not. matrix%IsValuesSetSM() )then
+        call endrun( subname//" ERROR: Sparse Matrix data sent in was NOT already set" )
+        return
+     end if
+     SHR_ASSERT_FL( (this%SM   == matrix%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL( (this%begu == matrix%begu), sourcefile, __LINE__)
+     SHR_ASSERT_FL( (this%endu == matrix%endu), sourcefile, __LINE__)
+     SHR_ASSERT_FL((maxval(matrix%RI(:matrix%NE)) <= this%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL((minval(matrix%RI(:matrix%NE)) >= 1), sourcefile, __LINE__)
+     SHR_ASSERT_FL((maxval(matrix%CI(:matrix%NE)) <= this%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL((minval(matrix%CI(:matrix%NE)) >= 1), sourcefile, __LINE__)
+  end subroutine CopyIdxSM
 
   ! ========================================================================
 

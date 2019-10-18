@@ -19,7 +19,7 @@ module CNSoilMatrixMod
   use decompMod                          , only : bounds_type  
   use abortutils                         , only : endrun
   use clm_time_manager                   , only : get_step_size, is_end_curr_month,get_curr_date,update_DA_nstep
-  use clm_time_manager                   , only : is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year
+  use clm_time_manager                   , only : is_first_restart_step,is_beg_curr_year,is_end_curr_year
   use clm_varpar                         , only : ndecomp_pools, nlevdecomp, ndecomp_pools_vr        !number of biogeochemically active soil layers
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_cascade_outtransitions
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
@@ -490,20 +490,34 @@ contains
          call t_stopf('CN Soil matrix-spinup & output1.6')
         
          ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
+         if ( is_first_restart_step() )then
+           ! Copy indices from AKallsoiln on restart step
+           AKXnacc%NE = AKallsoiln%NE
+           AKXnacc%RI = AKallsoiln%RI
+           AKXnacc%CI = AKallsoiln%CI
+         end if
          if ( AKXnacc%IsValuesSetSM() )then
             call t_startf('CN Soil matrix-spinup & output2')
             call AKXnacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoiln)
             call t_stopf('CN Soil matrix-spinup & output2')
          else
+            ! This should only happen on the first time-step
             call AKXnacc%SetValueCopySM(num_soilc,filter_soilc,AKallsoiln)
          end if
 
          ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
+         if ( is_first_restart_step() )then
+           ! Copy indices from AKallsoilc on restart step
+           AKXcacc%NE = AKallsoilc%NE
+           AKXcacc%RI = AKallsoilc%RI
+           AKXcacc%CI = AKallsoilc%CI
+         end if
          if ( AKXcacc%IsValuesSetSM() )then
             call t_startf('CN Soil matrix-spinup & output3')
             call AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoilc)
             call t_stopf('CN Soil matrix-spinup & output3')
          else
+            ! This should only happen on the first time-step
             call AKXcacc%SetValueCopySM(num_soilc,filter_soilc,AKallsoilc)
          end if
 

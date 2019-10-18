@@ -632,6 +632,20 @@ contains
   end subroutine SM_SetValueCopySM_Is_Same
 
   @Test
+  subroutine SM_CheckCopyIdx( this )
+    class(TestSparseMatrix), intent(inout) :: this
+    type(sparse_matrix_type) :: ArbSMatrix
+    type(sparse_matrix_type) :: CopyMatrix
+    type(arb_band_sparse_matrix_setup) :: MatrixSetup
+
+    ! Create arbitrary matrix
+    call MatrixSetup%createArbBandMatrix2( )
+    call ArbSMatrix%InitSM( ndims, begu, endu )
+    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                                MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+  end subroutine SM_CheckCopyIdx
+
+  @Test
   subroutine check_alloc_first_setvalueA_diag(this)
     class(TestSparseMatrix), intent(inout) :: this
 
