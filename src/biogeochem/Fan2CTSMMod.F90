@@ -327,7 +327,6 @@ contains
 
     call handle_storage(bounds, temperature_inst, frictionvel_inst, dt, &
          atm2lnd_inst%forc_ndep_sgrz_grc, atm2lnd_inst%forc_ndep_ngrz_grc, &
-         ns%manure_n_stored_col, ns%manure_tan_stored_col, &
          nf%manure_n_appl_col, nf%manure_tan_appl_col, &
          nf%manure_n_grz_col, nf%manure_n_mix_col, &
          nf%nh3_stores_col, nf%nh3_barns_col, &
@@ -513,7 +512,7 @@ contains
        do ind_substep = 1, num_substeps
           if (debug_fan .and. any(abs(tanpools(1:4)) > 1e12)) then
              write(iulog, *) ind_substep, tanpools(1:4), tandep, nf%fert_n_appl_col(c), &
-                  nf%manure_n_appl_col(c), ns%manure_n_stored_col(c), ns%manure_tan_stored_col(c)
+                  nf%manure_n_appl_col(c)
              call endrun('bad tanpools (manure app)')
           end if
 
@@ -671,7 +670,7 @@ contains
         
       select case(which)
       case('pools_storage')
-         total = sum(ns%manure_n_stored_col(soilc))
+         total = 0.0_r8 ! no explicit storage in this version
          
       case('fluxes_storage')
          total = sum(nf%manure_n_mix_col(soilc))
@@ -732,7 +731,7 @@ contains
   !************************************************************************************
   
   subroutine handle_storage(bounds, temperature_inst, frictionvel_inst, dt,  &
-       ndep_sgrz_grc, ndep_ngrz_grc, n_stored_col, tan_stored_col, &
+       ndep_sgrz_grc, ndep_ngrz_grc, &
        n_manure_spread_col, tan_manure_spread_col, &
        n_manure_graze_col, n_manure_mixed_col, &
        nh3_flux_stores, nh3_flux_barns, man_n_transf, &
@@ -764,8 +763,6 @@ contains
     ! N excreted in manure, gN/m2:
     real(r8), intent(in) :: ndep_sgrz_grc(bounds%begg:bounds%endg) ! seasonally grazing animals
     real(r8), intent(in) :: ndep_ngrz_grc(bounds%begg:bounds%endg) ! non-grazing animals
-    real(r8), intent(inout) :: n_stored_col(bounds%begc:bounds%endc), &
-         & tan_stored_col(bounds%begc:bounds%endc) ! N, TAN currently stored, gN/m2
     ! N, TAN spread on grasslands, gN/m2/s:
     real(r8), intent(inout) :: n_manure_spread_col(bounds%begc:bounds%endc) 
     real(r8), intent(out) :: tan_manure_spread_col(bounds%begc:bounds%endc) ! output, calculated from the above and stored manure

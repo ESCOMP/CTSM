@@ -64,8 +64,6 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: manure_a_app_col(:)                     ! col (gN/m2) available organic N, application
      real(r8), pointer :: manure_r_app_col(:)                     ! col (gN/m2) resistant organic N, application
 
-     real(r8), pointer :: manure_n_stored_col(:)                  ! col (gN/m2) manure N in storage
-     real(r8), pointer :: manure_tan_stored_col(:)                ! col (gN/m2) manure TAN in storage
      real(r8), pointer :: fan_grz_fract_col(:)                 ! col unitless fraction of animals grazing
 
      real(r8), pointer :: fan_totn_col(:)                      ! col (gN/m2) total N in FAN pools
@@ -189,8 +187,6 @@ contains
        allocate(this%manure_a_app_col(begc:endc)) ; this%manure_a_app_col(:) = nan
        allocate(this%manure_r_app_col(begc:endc)) ; this%manure_r_app_col(:) = nan
 
-       allocate(this%manure_n_stored_col(begc:endc)) ; this%manure_n_stored_col(:) = nan
-       allocate(this%manure_tan_stored_col(begc:endc)) ; this%manure_tan_stored_col(:) = nan
        allocate(this%fan_grz_fract_col(begc:endc)) ; this%fan_grz_fract_col(:) = nan
 
     end if
@@ -451,16 +447,6 @@ contains
             avgflag='A', long_name='Resistant manure nitrogen, application', &
             ptr_col=this%manure_r_app_col, default=fanpools_default)
 
-       this%manure_n_stored_col(begc:endc) = spval
-       call hist_addfld1d (fname='MANURE_N_STORED', units='gN/m^2', &
-            avgflag='A', long_name='Manure nitrogen in storage', &
-            ptr_col=this%manure_n_stored_col, default=fanpools_default)
-       
-       this%manure_tan_stored_col(begc:endc) = spval
-       call hist_addfld1d (fname='MANURE_TAN_STORED', units='gN/m^2', &
-            avgflag='A', long_name='Manure ammoniacal nitrogen in storage', &
-            ptr_col=this%manure_tan_stored_col, default=fanpools_default)
-
        this%fan_grz_fract_col(begc:endc) = spval
        call hist_addfld1d (fname='FAN_GRZ_FRACT', units='', &
             avgflag='A', long_name='Fraction of animals grazing', &
@@ -582,9 +568,7 @@ contains
              this%manure_a_app_col(c) = 0.0_r8
              this%manure_r_app_col(c) = 0.0_r8
 
-             this%manure_tan_stored_col(c) = 0.0_r8
              this%fan_grz_fract_col(c) = 0.0_r8
-             this%manure_n_stored_col(c) = 0.0_r8
              
           end if
           this%fan_totn_col(c) = 0.0_r8
@@ -784,12 +768,6 @@ contains
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%manure_r_app_col)
 
-       call restartvar(ncid=ncid, flag=flag, varname='manure_tan_stored', xtype=ncd_double, &
-                     dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%manure_tan_stored_col)
-       call restartvar(ncid=ncid, flag=flag, varname='manure_n_stored', xtype=ncd_double, &
-                     dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%manure_n_stored_col)
        call restartvar(ncid=ncid, flag=flag, varname='fan_grz_fract', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%fan_grz_fract_col)
