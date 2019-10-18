@@ -637,12 +637,34 @@ contains
     type(sparse_matrix_type) :: ArbSMatrix
     type(sparse_matrix_type) :: CopyMatrix
     type(arb_band_sparse_matrix_setup) :: MatrixSetup
+    real(r8), parameter :: special_float =  2.567_r8
+    integer :: i, j
 
     ! Create arbitrary matrix
     call MatrixSetup%createArbBandMatrix2( )
     call ArbSMatrix%InitSM( ndims, begu, endu )
     call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
                                 MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    ! Copy it to a different matrix, and change the data, and zero out the indices
+    call CopyMatrix%InitSM( ndims, begu, endu )
+    call CopyMatrix%SetValueCopySM( this%num_unit,this%filter_u, ArbSMatrix )
+    CopyMatrix%M(:,1:CopyMatrix%NE) = special_float
+    CopyMatrix%RI(1:CopyMatrix%NE) = empty_int
+    CopyMatrix%CI(1:CopyMatrix%NE) = empty_int
+    CopyMatrix%NE = empty_int
+    ! Indices will be different now
+    @assertFalse( ArbSMatrix%IsEquivIdxSM( CopyMatrix )  )
+    ! Copy indices and now indices should be the same, but array different
+    call CopyMatrix%CopyIdxSM( ArbSMatrix )
+    @assertTrue( ArbSMatrix%IsEquivIdxSM( CopyMatrix )  )
+    do j = begu, endu
+       do i = 1, CopyMatrix%NE
+         @assertEqual( CopyMatrix%M(j,i), special_float )
+       end do
+       do i = CopyMatrix%NE+1, CopyMatrix%SM
+         @assertEqual( CopyMatrix%M(j,i), empty_real )
+       end do
+    end do
   end subroutine SM_CheckCopyIdx
 
   @Test
@@ -746,6 +768,39 @@ contains
          'SPMP_ABC ERROR: missing required optional arguments' )
     @assertExceptionRaised(expected_msg)
   end subroutine check_opt_arg_sent_SPMP_ABC
+
+  @Test
+  subroutine data_size_different_so_can_not_copyidxSM( this )
+    class(TestSparseMatrix), intent(inout) :: this
+ 
+    character(len=:), allocatable :: expected_msg
+    type(sparse_matrix_type) :: ArbSMatrix
+    type(sparse_matrix_type) :: CopyMatrix
+    type(arb_band_sparse_matrix_setup) :: MatrixSetup
+    real(r8), parameter :: special_float =  2.567_r8
+
+    ! Create arbitrary matrix
+    call MatrixSetup%createArbBandMatrix2( )
+    call ArbSMatrix%InitSM( ndims, begu, endu )
+    call ArbSMatrix%SetValueSM(begu,endu,this%num_unit,this%filter_u,MatrixSetup%M, &
+                                MatrixSetup%Iindex,MatrixSetup%Jindex,NonZeroTriBand)
+    ! Copy it to a different matrix, and change the data and datasize, and zero out the indices
+    call CopyMatrix%InitSM( ndims, begu, endu )
+    call CopyMatrix%SetValueCopySM( this%num_unit,this%filter_u, ArbSMatrix )
+    CopyMatrix%NE = CopyMatrix%NE + 1
+    CopyMatrix%M(:,1:CopyMatrix%NE) = special_float
+    CopyMatrix%RI(1:CopyMatrix%NE) = empty_int
+    CopyMatrix%CI(1:CopyMatrix%NE) = empty_int
+    CopyMatrix%NE = empty_int
+    ! Indices will be different now
+    @assertFalse( ArbSMatrix%IsEquivIdxSM( CopyMatrix )  )
+    ! Try to run copy indices, but should fail
+    call CopyMatrix%CopyIdxSM( ArbSMatrix )
+    expected_msg = endrun_msg( &
+         'CopyIdxSM ERROR: Sparse Matrix empty data size is different from input one copying the indices from' )
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine data_size_different_so_can_not_copyidxSM
 
   @Test
   subroutine check_alloc_twice(this)

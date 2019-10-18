@@ -491,12 +491,12 @@ contains
          call AKallsoilc%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
          call t_stopf('CN Soil matrix-spinup & output1.6')
         
+         !
          ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
+         !
+         ! Copy indices from AKallsoiln on restart step
          if ( is_first_restart_step() )then
-           ! Copy indices from AKallsoiln on restart step
-           AKXnacc%NE = AKallsoiln%NE
-           AKXnacc%RI = AKallsoiln%RI
-           AKXnacc%CI = AKallsoiln%CI
+           call AKXnacc%CopyIdxSM( AKallsoiln )
          end if
          if ( AKXnacc%IsValuesSetSM() )then
             call t_startf('CN Soil matrix-spinup & output2')
@@ -507,12 +507,13 @@ contains
             call AKXnacc%SetValueCopySM(num_soilc,filter_soilc,AKallsoiln)
          end if
 
+         !
          ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
+         !
+
+         ! Copy indices from AKallsoilc on restart step
          if ( is_first_restart_step() )then
-           ! Copy indices from AKallsoilc on restart step
-           AKXcacc%NE = AKallsoilc%NE
-           AKXcacc%RI = AKallsoilc%RI
-           AKXcacc%CI = AKallsoilc%CI
+           call AKXcacc%CopyIdxSM( AKallsoilc )
          end if
          if ( AKXcacc%IsValuesSetSM() )then
             call t_startf('CN Soil matrix-spinup & output3')

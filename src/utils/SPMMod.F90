@@ -95,8 +95,8 @@ module SPMMod
 
   end type vector_type
 
-  integer,  parameter :: empty_int  = -9999
-  real(r8), parameter :: empty_real = -9999._r8
+  integer,  public, parameter :: empty_int  = -9999
+  real(r8), public, parameter :: empty_real = -9999._r8
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -444,16 +444,15 @@ end subroutine SetValueA
 
   ! ========================================================================
 
-  subroutine CopyIdxSM(this, num_unit, filter_u, matrix)
+  subroutine CopyIdxSM(this, matrix)
 
   ! Copy the indices from the input matrix to this sparse matrix
   ! also make sure the sizes are consistent
 
      class(sparse_matrix_type) :: this
      type(sparse_matrix_type), intent(in) :: matrix   ! Sparse Matrix to copy
-     integer ,intent(in) :: num_unit
-     integer ,intent(in) :: filter_u(:)
      character(len=*),parameter :: subname = 'CopyIdxSM'
+     integer :: i
 
      if ( .not. this%IsAllocSM() )then
         call endrun( subname//" ERROR: Sparse Matrix was NOT already allocated" )
@@ -470,6 +469,25 @@ end subroutine SetValueA
      SHR_ASSERT_FL((minval(matrix%RI(:matrix%NE)) >= 1), sourcefile, __LINE__)
      SHR_ASSERT_FL((maxval(matrix%CI(:matrix%NE)) <= this%SM), sourcefile, __LINE__)
      SHR_ASSERT_FL((minval(matrix%CI(:matrix%NE)) >= 1), sourcefile, __LINE__)
+     !
+     ! Figure out the number of non-empty data values and make sure it's same as input
+     !
+     this%NE = size(this%M,2)
+     do i = 1, this%NE
+       if ( all(this%M(:,i) == empty_int) )then
+          this%NE = i-1
+          exit
+       end if
+     end do
+     if ( this%NE /= matrix%NE )then
+        call endrun( subname//" ERROR: Sparse Matrix empty data size is different from input one copying the indices from" )
+        return
+     end if
+     !
+     ! Copy indices
+     !
+     this%RI(:this%NE) = matrix%RI(:matrix%NE)
+     this%CI(:this%NE) = matrix%CI(:matrix%NE)
   end subroutine CopyIdxSM
 
   ! ========================================================================
