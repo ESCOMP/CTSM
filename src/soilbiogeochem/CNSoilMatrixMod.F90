@@ -289,23 +289,25 @@ contains
 
       ! Save the C and N pool size at begin of each year, which are used to calculate C and N capacity at end of each year.
       call t_startf('CN Soil matrix-assign matrix-decomp0')
-      if (isbegofyear)then  
+      if (is_beg_curr_year())then  
          iyr = iyr + 1
-         do i = 1,ndecomp_pools
-            do j = 1, nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
-                  cs_soil%decomp0_cpools_vr_col(c,j,i)=cs_soil%decomp_cpools_vr_col(c,j,i)
-                  ns_soil%decomp0_npools_vr_col(c,j,i)=ns_soil%decomp_npools_vr_col(c,j,i)
+         if(.not. isspinup .or. isspinup .and. iyr .eq. 1)then
+            do i = 1,ndecomp_pools
+               do j = 1, nlevdecomp
+                  do fc = 1,num_soilc
+                     c = filter_soilc(fc)
+                     cs_soil%decomp0_cpools_vr_col(c,j,i)=cs_soil%decomp_cpools_vr_col(c,j,i)
+                     ns_soil%decomp0_npools_vr_col(c,j,i)=ns_soil%decomp_npools_vr_col(c,j,i)
+                  end do
                end do
             end do
-         end do
-         where(cs_soil%decomp0_cpools_vr_col .lt. epsi)
-            cs_soil%decomp0_cpools_vr_col = epsi
-         end where
-         where(ns_soil%decomp0_npools_vr_col .lt. epsi)
-            ns_soil%decomp0_npools_vr_col = epsi
-         end where
+            where(cs_soil%decomp0_cpools_vr_col .lt. epsi)
+               cs_soil%decomp0_cpools_vr_col = epsi
+            end where
+            where(ns_soil%decomp0_npools_vr_col .lt. epsi)
+               ns_soil%decomp0_npools_vr_col = epsi
+            end where
+         end if
       end if
       call t_stopf('CN Soil matrix-assign matrix-decomp0')
    
@@ -569,6 +571,15 @@ contains
                soilmatrixn_cap(c,:,1) = -matmul(AKinvn(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ns_soil%in_nacc(c,1:ndecomp_pools_vr))
             end do
          
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               if(any(soilmatrixc_cap(c,:,1) .lt. 0) .or. any(soilmatrixc_cap(c,:,1) .gt. 1.e+6_r8) &
+             .or. any(soilmatrixn_cap(c,:,1) .lt. 0) .or. any(soilmatrixn_cap(c,:,1) .gt. 1.e+6_r8))then
+                  soilmatrixc_cap(c,:,1) = matrix_Cinter%V(c,:)
+                  soilmatrixn_cap(c,:,1) = matrix_Ninter%V(c,:)
+               end if
+            end do
+
             ! If spin up is on, the capacity replaces the pool size with capacity.
             ! Copy the capacity into a 3D variable, and be ready to write to history files.
             do i=1,ndecomp_pools
@@ -577,7 +588,11 @@ contains
                      c = filter_soilc(fc)
                      if(isspinup)then
                         cs_soil%decomp_cpools_vr_col(c,j,i) =  soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
-                        ns_soil%decomp_npools_vr_col(c,j,i) =  soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)
+                        if(floating_cn_ratio_decomp_pools(i))then
+                           ns_soil%decomp_npools_vr_col(c,j,i) =  soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)
+                        else
+                           ns_soil%decomp_npools_vr_col(c,j,i) = cs_soil%decomp_cpools_vr_col(c,j,i) / cn_decomp_pools(c,j,i)
+                        end if
                      end if
                      cs_soil%matrix_cap_decomp_cpools_vr_col(c,j,i) = soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
                      ns_soil%matrix_cap_decomp_npools_vr_col(c,j,i) = soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)

@@ -96,7 +96,7 @@ contains
     ! Gap-phase mortality routine for coupled carbon-nitrogen code (CN)
     !
     ! !USES:
-    use clm_time_manager , only: get_days_per_year
+    use clm_time_manager , only: get_days_per_year, get_step_size_real
     use clm_varpar       , only: nlevdecomp_full
     use clm_varcon       , only: secspday
     use clm_varctl       , only: use_cndv, spinup_state
@@ -380,6 +380,16 @@ contains
 
       end do ! end of patch loop
 
+      if(use_matrixcn)then
+         do fp = 1,num_soilp
+            p = filter_soilp(fp)
+            if(cnveg_carbonflux_inst%matrix_phtransfer_patch(p,cnveg_carbonflux_inst%ifroot_to_iout_ph) .ge. 1._r8 / get_step_size_real())then
+               cnveg_carbonflux_inst%m_frootc_to_litter_patch(p) = 0._r8
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc) = 0._r8
+            end if
+         end do
+      end if
+      
       ! gather all patch-level litterfall fluxes to the column
       ! for litter C and N inputs
 
