@@ -738,7 +738,8 @@ contains
     call this%waterstatebulk_inst%restartBulk (bounds, ncid, flag=flag, &
          watsat_col=watsat_col(bounds%begc:bounds%endc,:))
 
-    call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag)
+    call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag, &
+         waterstatebulk_inst = this%waterstatebulk_inst)
 
     do i = this%tracers_beg, this%tracers_end
 

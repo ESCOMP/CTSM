@@ -21,10 +21,12 @@ module WaterDiagnosticBulkType
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
+  use filterColMod   , only : filter_col_type, col_filter_from_ltypes
   use WaterDiagnosticType, only : waterdiagnostic_type
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterStateType, only : waterstate_type
+  use WaterStateBulkType, only : waterstatebulk_type
   use WaterFluxType, only : waterflux_type
   !
   implicit none
@@ -600,7 +602,7 @@ contains
   end subroutine InitBulkCold
 
   !------------------------------------------------------------------------
-  subroutine RestartBulk(this, bounds, ncid, flag)
+  subroutine RestartBulk(this, bounds, ncid, flag, waterstatebulk_inst)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
@@ -620,10 +622,13 @@ contains
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
     logical  :: readvar
-    integer  :: c
+    integer  :: fc, c
+    real(r8) :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water (mm H2O)
+    type(filter_col_type) :: filter_lakec  ! filter for lake columns
     !------------------------------------------------------------------------
 
 
@@ -685,9 +690,19 @@ contains
     ! being from versions later than the tag where this backwards compatibility was first
     ! implemented.)
     if (flag == 'read' .and. .not. is_restart()) then
-       do c = bounds%begc, bounds%endc
-          if (col%lun_itype(c) == istdlak .and. &
-               this%frac_sno_col(c) == 0._r8 .and. this%snow_depth_col(c) > 0._r8) then
+       filter_lakec = col_filter_from_ltypes( &
+            bounds = bounds, &
+            ltypes = [istdlak], &
+            include_inactive = .true.)
+       call waterstatebulk_inst%CalculateTotalH2osno( &
+            bounds = bounds, &
+            num_c = filter_lakec%num, &
+            filter_c = filter_lakec%indices, &
+            caller = 'WaterDiagnosticBulkType_RestartBulk', &
+            h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+       do fc = 1, filter_lakec%num
+          c = filter_lakec%indices(fc)
+          if (this%frac_sno_col(c) == 0._r8 .and. h2osno_total(c) > 0._r8) then
              ! Often the value should be between 0 and 1 rather than being 1, but 1 is at
              ! least better than 0 in this case, and it would be tricky or impossible to
              ! figure out the "correct" value.
