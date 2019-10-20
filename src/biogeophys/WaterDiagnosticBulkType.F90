@@ -86,6 +86,7 @@ module WaterDiagnosticBulkType
      procedure, private :: InitBulkAllocate 
      procedure, private :: InitBulkHistory  
      procedure, private :: InitBulkCold     
+     procedure, private :: RestartBackcompatIssue783
 
   end type waterdiagnosticbulk_type
 
@@ -610,16 +611,13 @@ contains
     ! !USES:
     use spmdMod          , only : masterproc
     use clm_varcon       , only : pondmx, watmin, spval, nameg
-    use landunit_varcon  , only : istdlak
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step, is_restart
     use clm_varctl       , only : bound_h2osoi
     use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
-    use ncdio_pio        , only : ncd_putatt, ncd_getatt, check_att, ncd_global
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterdiagnosticbulk_type), intent(in) :: this
+    class(waterdiagnosticbulk_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
@@ -627,12 +625,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     logical  :: readvar
-    integer  :: fc, c
-    logical  :: issue_783_att_found
-    integer  :: issue_783_fixed_val
-    logical  :: issue_783_do_correction
-    real(r8) :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water (mm H2O)
-    type(filter_col_type) :: filter_lakec  ! filter for lake columns
     !------------------------------------------------------------------------
 
 
@@ -682,61 +674,7 @@ contains
          long_name=this%info%lname('fraction of ground covered by snow (0 to 1)'),&
          units='unitless',&
          interpinic_flag='interp', readvar=readvar, data=this%frac_sno_col)
-    ! BACKWARDS_COMPATIBILITY(wjs, 2019-10-15) Due to ESCOMP/ctsm#783, old restart files
-    ! can have frac_sno == 0 for lake points despite having a snow pack. This can cause
-    ! other problems, so fix that here. However, it is apparently possible for frac_sno to
-    ! be 0 legitimately when h2osno_total > 0. So if we apply this correction always, then
-    ! we sometimes introduce unintentional changes to newer restart files where we don't
-    ! actually need to apply this correction. We avoid this by writing metadata to the
-    ! restart file indicating that it's new enough to have this correction already in
-    ! place, then avoiding doing the correction here if we find we're working with a
-    ! new-enough restart file.
-    !
-    ! This backwards compatibility code can be removed once we can rely on all restart
-    ! files being new enough. i.e., we can remove this code once we can rely all restart
-    ! files having this new piece of metadata (at which point we can also stop writing
-    ! this metadata, as long as we don't need to use newer restart files with older code
-    ! versions).
-    if (flag == 'write') then
-       call ncd_putatt(ncid, ncd_global, 'issue_783_fixed', 1)
-    else if (flag == 'read' .and. .not. is_restart()) then
-       call check_att(ncid, ncd_global, 'issue_783_fixed', issue_783_att_found)
-       if (issue_783_att_found) then
-          ! It's probably sufficient just to know that the issue_783_fixed attribute is
-          ! on the file. But since this feels like a logical variable, it feels best to
-          ! also make sure that its value is true.
-          call ncd_getatt(ncid, ncd_global, 'issue_783_fixed', issue_783_fixed_val)
-          if (issue_783_fixed_val == 0) then
-             issue_783_do_correction = .true.
-          else
-             issue_783_do_correction = .false.
-          end if
-       else
-          issue_783_do_correction = .true.
-       end if
-
-       if (issue_783_do_correction) then
-          filter_lakec = col_filter_from_ltypes( &
-               bounds = bounds, &
-               ltypes = [istdlak], &
-               include_inactive = .true.)
-          call waterstatebulk_inst%CalculateTotalH2osno( &
-               bounds = bounds, &
-               num_c = filter_lakec%num, &
-               filter_c = filter_lakec%indices, &
-               caller = 'WaterDiagnosticBulkType_RestartBulk', &
-               h2osno_total = h2osno_total(bounds%begc:bounds%endc))
-          do fc = 1, filter_lakec%num
-             c = filter_lakec%indices(fc)
-             if (this%frac_sno_col(c) == 0._r8 .and. h2osno_total(c) > 0._r8) then
-                ! Often the value should be between 0 and 1 rather than being 1, but 1 is at
-                ! least better than 0 in this case, and it would be tricky or impossible to
-                ! figure out the "correct" value.
-                this%frac_sno_col(c) = 1._r8
-             end if
-          end do
-       end if
-    end if
+    call this%RestartBackcompatIssue783(bounds, ncid, flag, waterstatebulk_inst)
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('FWET'), &
@@ -789,6 +727,97 @@ contains
 
 
   end subroutine RestartBulk
+
+  !-----------------------------------------------------------------------
+  subroutine RestartBackcompatIssue783(this, bounds, ncid, flag, waterstatebulk_inst)
+    !
+    ! !DESCRIPTION:
+    ! Apply backwards compatibility corrections to address issue ESCOMP/ctsm#783
+    !
+    ! BACKWARDS_COMPATIBILITY(wjs, 2019-10-15) Due to ESCOMP/ctsm#783, old restart files
+    ! can have frac_sno == 0 for lake points despite having a snow pack. This can cause
+    ! other problems, so fix that here. However, it is apparently possible for frac_sno to
+    ! be 0 legitimately when h2osno_total > 0. So if we apply this correction always, then
+    ! we sometimes introduce unintentional changes to newer restart files where we don't
+    ! actually need to apply this correction. We avoid this by writing metadata to the
+    ! restart file indicating that it's new enough to have this correction already in
+    ! place, then avoiding doing the correction here if we find we're working with a
+    ! new-enough restart file.
+    !
+    ! This backwards compatibility code can be removed once we can rely on all restart
+    ! files being new enough. i.e., we can remove this code once we can rely all restart
+    ! files having this new piece of metadata (at which point we can also stop writing
+    ! this metadata, as long as we don't need to use newer restart files with older code
+    ! versions).
+    !
+    ! !USES:
+    use ncdio_pio        , only : file_desc_t, ncd_putatt, ncd_getatt, check_att, ncd_global
+    use landunit_varcon  , only : istdlak
+    use clm_time_manager , only : is_restart
+    !
+    ! !ARGUMENTS:
+    class(waterdiagnosticbulk_type), intent(inout) :: this
+    type(bounds_type), intent(in)    :: bounds 
+    type(file_desc_t), intent(inout) :: ncid   ! netcdf id
+    character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c
+    logical  :: att_found
+    integer  :: att_val
+    logical  :: do_correction
+    real(r8) :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water (mm H2O)
+    type(filter_col_type) :: filter_lakec  ! filter for lake columns
+
+    character(len=*), parameter :: att_name = 'issue_783_fixed'
+
+    character(len=*), parameter :: subname = 'RestartBackcompatIssue783'
+    !-----------------------------------------------------------------------
+
+    if (flag == 'write') then
+       call ncd_putatt(ncid, ncd_global, att_name, 1)
+
+    else if (flag == 'read' .and. .not. is_restart()) then
+       call check_att(ncid, ncd_global, att_name, att_found)
+       if (att_found) then
+          ! It's probably sufficient just to know that the issue_783_fixed attribute is
+          ! on the file. But since this feels like a logical variable, it feels best to
+          ! also make sure that its value is true.
+          call ncd_getatt(ncid, ncd_global, att_name, att_val)
+          if (att_val == 0) then
+             do_correction = .true.
+          else
+             do_correction = .false.
+          end if
+       else
+          do_correction = .true.
+       end if
+
+       if (do_correction) then
+          filter_lakec = col_filter_from_ltypes( &
+               bounds = bounds, &
+               ltypes = [istdlak], &
+               include_inactive = .true.)
+          call waterstatebulk_inst%CalculateTotalH2osno( &
+               bounds = bounds, &
+               num_c = filter_lakec%num, &
+               filter_c = filter_lakec%indices, &
+               caller = 'WaterDiagnosticBulkType_RestartBulk', &
+               h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+          do fc = 1, filter_lakec%num
+             c = filter_lakec%indices(fc)
+             if (this%frac_sno_col(c) == 0._r8 .and. h2osno_total(c) > 0._r8) then
+                ! Often the value should be between 0 and 1 rather than being 1, but 1 is at
+                ! least better than 0 in this case, and it would be tricky or impossible to
+                ! figure out the "correct" value.
+                this%frac_sno_col(c) = 1._r8
+             end if
+          end do
+       end if
+    end if
+
+  end subroutine RestartBackcompatIssue783
 
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, &
