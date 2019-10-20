@@ -775,7 +775,7 @@ contains
     character(len=*), parameter :: subname = 'RestartBackcompatIssue783'
     !-----------------------------------------------------------------------
 
-    if (flag == 'write') then
+    if (flag == 'define') then
        call ncd_putatt(ncid, ncd_global, att_name, 1)
 
     else if (flag == 'read' .and. .not. is_restart()) then
