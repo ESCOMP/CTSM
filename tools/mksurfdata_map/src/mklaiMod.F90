@@ -247,7 +247,7 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
      ! Loop over pft types to do mapping
 
      do l = 0, numpft_i - 1
-        mask_src(:) = 1._r8 
+        mask_src(:) = tdomain%frac(:)
         call gridmap_areaave(tgridmap, mlai_i(:,l) , mlai_o(:,l) , nodata=0._r8, mask_src=mask_src)
         call gridmap_areaave(tgridmap, msai_i(:,l) , msai_o(:,l) , nodata=0._r8, mask_src=mask_src)
         call gridmap_areaave(tgridmap, mhgtt_i(:,l), mhgtt_o(:,l), nodata=0._r8, mask_src=mask_src)
@@ -311,13 +311,13 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
      do l = 0, numpft_i - 1
      do ni = 1, ns_i
         glai_i(l)  = glai_i(l) + mlai_i(ni,l) *tgridmap%area_src(ni)*&
-             tgridmap%frac_src(ni)*re**2
+             mask_src(ni)*re**2
         gsai_i(l)  = gsai_i(l) + msai_i(ni,l) *tgridmap%area_src(ni)*&
-             tgridmap%frac_src(ni)*re**2
+             mask_src(ni)*re**2
         ghgtt_i(l) = ghgtt_i(l)+ mhgtt_i(ni,l)*tgridmap%area_src(ni)*&
-             tgridmap%frac_src(ni)*re**2
+             mask_src(ni)*re**2
         ghgtb_i(l) = ghgtb_i(l)+ mhgtb_i(ni,l)*tgridmap%area_src(ni)*&
-             tgridmap%frac_src(ni)*re**2
+             mask_src(ni)*re**2
      end do
      end do
 

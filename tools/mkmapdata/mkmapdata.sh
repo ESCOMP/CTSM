@@ -278,7 +278,7 @@ else
 fi
 
 # Set timestamp for names below 
-CDATE="c"`date -d "-1 days" +%y%m%d`
+CDATE="c"`date -d "-0 days" +%y%m%d`
 
 # Set name of each output mapping file
 # First determine the name of the input scrip grid file  

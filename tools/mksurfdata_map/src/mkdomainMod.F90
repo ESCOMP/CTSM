@@ -866,15 +866,6 @@ end subroutine domain_check
      end if
      do n = 1,ns
         ni = src_indx(n)
-        if ( srcdomain%maskset )then
-           if (srcdomain%mask(ni) /= mask_src(ni)) then
-              write(6,*) trim(subname)// &              
-                 ' ERROR: input domain mask and gridmap mask are not the same at ni = ',ni
-              write(6,*)' domain  mask= ',srcdomain%mask(ni)
-              write(6,*)' gridmap mask= ',mask_src(ni)
-              call abort()
-           end if
-        end if
         if (abs(srcdomain%lonc(ni) - xc_src(ni)) > eps) then
            write(6,*) trim(subname)// &
                ' ERROR: input domain lon and gridmap lon not the same at ni = ',ni

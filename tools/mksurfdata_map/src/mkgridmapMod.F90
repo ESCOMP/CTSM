@@ -688,21 +688,19 @@ contains
 ! !LOCAL VARIABLES:
     integer :: n,ns,ni,no
     real(r8):: wt
-    real(r8), allocatable :: wtnorm(:)
     character(*),parameter :: subName = '(gridmap_areaave_srcmask) '
 !EOP
 !------------------------------------------------------------------------------
     call gridmap_checkifset( gridmap, subname )
     ns = size(dst_array)
-    allocate(wtnorm(ns)) 
-    wtnorm(:) = 0._r8
+    gridmap%frac_dst(:) = 0._r8
 
     do n = 1,gridmap%ns
        ni = gridmap%src_indx(n)
        no = gridmap%dst_indx(n)
        wt = gridmap%wovr(n)
        if (mask_src(ni) > 0) then
-          wtnorm(no) = wtnorm(no) + wt*mask_src(ni)
+          gridmap%frac_dst(no) = gridmap%frac_dst(no) + wt*mask_src(ni)
        end if
     end do
 
@@ -712,15 +710,13 @@ contains
        no = gridmap%dst_indx(n)
        wt = gridmap%wovr(n)
        if (mask_src(ni) > 0) then 
-          dst_array(no) = dst_array(no) + wt*mask_src(ni)*src_array(ni)/wtnorm(no)
+          dst_array(no) = dst_array(no) + wt*mask_src(ni)*src_array(ni)/gridmap%frac_dst(no)
        end if
     end do
 
-    where (wtnorm == 0._r8)
+    where (gridmap%frac_dst== 0._r8)
        dst_array = nodata
     end where
-
-    deallocate(wtnorm)
 
   end subroutine gridmap_areaave_srcmask
 
