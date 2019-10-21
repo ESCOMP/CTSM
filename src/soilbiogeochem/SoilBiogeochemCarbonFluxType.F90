@@ -748,8 +748,10 @@ contains
           end do
        end do
        call this%matrix_Cinput%SetValueV_scaler(num_column,filter_column(1:num_column),value_column)
-!       if(.not. use_vertsoilc)then
-       if(use_vertsoilc)then
+       ! IMPORTANT NOTE: Although it looks like the following if appears to be
+       ! backwards (it should be 'if use_versoilc'), fixing it causes Carbon 
+       ! balance checks to fail. EBK 10/21/2019
+       if(.not. use_vertsoilc)then
           do k = 1,decomp_cascade_con%Ntri_setup
              do fi = 1,num_column
                 i = filter_column(fi)
