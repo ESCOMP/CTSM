@@ -1,3 +1,94 @@
+module demo_mod
+!----------------------------------------------------------------------------
+    use mpi           ,  only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
+    use spmdMod       ,  only : masterproc
+    implicit none
+    private
+    public :: demo_init
+    integer                            :: ierr
+    integer                                         :: COMP_COMM
+    integer                            :: npts   ! domain global size
+    integer                            :: num_local
+!----------------------------------------------------------------------------
+contains
+!----------------------------------------------------------------------------
+    subroutine demo_init(gindex_atm)
+        !! TODO: IS THE INTENT CORRECT FOR GINDEX_ATM
+        integer , allocatable, intent(inout)  :: gindex_atm(:)
+        integer                :: ntasks
+        integer                :: mytask
+        !-----------------------------------------------------------------------------
+        ! Initiallize MPI
+        !-----------------------------------------------------------------------------
+
+        npts = 3312
+        ! this is coming from
+        ! /glade/work/mvertens/ctsm.nuopc/cime/src/drivers/nuopc/drivers/cime/esmApp.F90
+        call MPI_init(ierr)
+        COMP_COMM = MPI_COMM_WORLD
+
+        !https://github.com/yudong-tian/LIS-CLM4.5SP/blob/8cec515a628325c73058cfa466db63210cd562ac/xlis-bld/xlis_main.F90
+        if (ierr .ne. MPI_SUCCESS) then
+            print *,'Error starting MPI program. Terminating.'
+            call MPI_ABORT(MPI_COMM_WORLD, ierr)
+        end if
+
+        !
+
+        call MPI_COMM_RANK(COMP_COMM, mytask, ierr)
+        call MPI_COMM_SIZE(COMP_COMM, ntasks, ierr)
+
+        if (masterproc) then
+            print *, "MPI initialization done ..., ntasks=", ntasks
+        end if
+        
+        call decompInit_atm( ntasks, mytask, gindex_atm)
+        print *, "gindex_atm for ", mytask,"is: ", gindex_atm
+        print *, "size gindex_atm for ", mytask,"is: ", size(gindex_atm)
+    end subroutine demo_init
+
+    subroutine decompInit_atm( ntasks, mytask,  gindex_atm)
+
+    ! !DESCRIPTION:
+
+    ! !USES:
+
+    ! !ARGUMENTS:
+    integer , intent(in)               :: ntasks
+    integer , intent(in)               :: mytask
+    integer , allocatable, intent(out) :: gindex_atm(:) ! this variable is allocated here, and is assumed to start unallocated
+    ! !LOCAL VARIABLES:
+    integer                            :: my_start
+    integer                            :: my_end
+    integer                            :: i_local
+    integer                            :: i_global
+    !------------------------------------------------------------------------------
+    ! create the a global index array for ocean points
+
+    num_local = npts / ntasks
+
+    my_start = num_local*mytask + min(mytask, mod(npts, ntasks)) + 1
+    ! The first mod(npts,ntasks) of ntasks are the ones that have an extra point
+    if (mytask < mod(npts, ntasks)) then
+       num_local = num_local + 1
+    end if
+    my_end = my_start + num_local - 1
+
+    allocate(gindex_atm(num_local))
+
+    i_global = my_start
+    do i_local = 1, num_local
+        gindex_atm(i_local) = i_global
+        i_global = i_global +1
+    end do 
+
+    end subroutine decompInit_atm
+
+
+end module demo_mod
+
+
+
 program demo_lilac_driver
 
     !----------------------------------------------------------------------------
@@ -12,7 +103,7 @@ program demo_lilac_driver
     !           atmos cap                      land cap ____________.     ......... gridded components
     !               |                              |                |
     !               |                              |             river cap
-    !           oceaan (MOM, POM)?                 |                |
+    !           ocean (MOM, POM)?                  |                |
     !                                              |            Mizzouroute...
     !                                            CTSM
     !
@@ -22,9 +113,10 @@ program demo_lilac_driver
     ! modules
     use ESMF
     use lilac_mod
-    use lilac_utils , only : atm2lnd_data1d_type , lnd2atm_data1d_type, atm2lnd_data2d_type, atm2lnd_data2d_type , this_clock
+    use lilac_utils , only : atm2lnd_data1d_type , lnd2atm_data1d_type , atm2lnd_data2d_type , atm2lnd_data2d_type , this_clock
     use clm_varctl  , only : iulog
     use spmdMod     , only : masterproc
+    use demo_mod    , only : demo_init
     implicit none
 
     ! TO DO: change the name and the derived data types
@@ -52,8 +144,8 @@ program demo_lilac_driver
 
     character(*),parameter                                :: F01 =   "(a,i4,d26.19)"
     character(*),parameter                                :: F02 = "('[demo_driver]',a,i5,2x,d26.19)"
+    integer , allocatable :: gindex_atm(:)
     !------------------------------------------------------------------------
-
     ! real atmosphere:
     begc       = 1
     !endc       = 6912/4/2
@@ -126,6 +218,14 @@ program demo_lilac_driver
     allocate ( lnd2atm%Sl_fv    (begc:endc) ) ; lnd2atm%Sl_fv    (:) =  0
     allocate ( lnd2atm%Sl_ram1  (begc:endc) ) ; lnd2atm%Sl_ram1  (:) =  0
 
+
+
+    !------------------------------------------------------------------------
+    ! The newly added demo_init
+    !------------------------------------------------------------------------
+
+    call demo_init(gindex_atm)
+
     !------------------------------------------------------------------------
     ! looping over imaginary time ....
     !------------------------------------------------------------------------
@@ -137,26 +237,6 @@ program demo_lilac_driver
     end do
     call lilac_final    ( )
     call ESMF_Finalize  ( )
-
-
-    !do curr_time = start_time, end_time
-    !    if  (curr_time == start_time) then
-    !        ! Initalization phase
-    !        !if (masterproc) then
-    !            print *,  "--------------------------"
-    !            print *,  " LILAC Initalization phase"
-    !            print *,  "--------------------------"
-    !        !end if
-    !        call lilac_init     ( atm2lnd1d = atm2lnd   ,   lnd2atm1d =  lnd2atm )
-    !    else if (curr_time == end_time  ) then
-    !        ! Finalization phase
-    !        call lilac_final    ( )
-    !        call ESMF_Finalize  ( )
-    !    else
-    !        call lilac_run      ( )
-    !   endif
-    !    itime_step = itime_step + 1
-    !end do
 
     print *,  "======================================="
     print *,  " ............. DONE ..................."

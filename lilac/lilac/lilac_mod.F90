@@ -119,7 +119,6 @@ module lilac_mod
 
         ! this is coming from
         ! /glade/work/mvertens/ctsm.nuopc/cime/src/drivers/nuopc/drivers/cime/esmApp.F90
-        call MPI_init(ierr)
         COMP_COMM = MPI_COMM_WORLD
 
         !https://github.com/yudong-tian/LIS-CLM4.5SP/blob/8cec515a628325c73058cfa466db63210cd562ac/xlis-bld/xlis_main.F90
