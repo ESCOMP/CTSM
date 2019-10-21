@@ -669,7 +669,7 @@ contains
 ! !IROUTINE: gridmap_areaave_srcmask
 !
 ! !INTERFACE:
-  subroutine gridmap_areaave_srcmask (gridmap, src_array, dst_array, nodata, mask_src)
+  subroutine gridmap_areaave_srcmask (gridmap, src_array, dst_array, nodata, mask_src, wtnorm)
 !
 ! !DESCRIPTION:
 ! This subroutine does an area average with the source mask
@@ -681,6 +681,7 @@ contains
     real(r8), intent(out):: dst_array(:)
     real(r8), intent(in) :: nodata               ! value to apply where there are no input data
     real(r8), intent(in) :: mask_src(:)
+    real(r8), intent(out) :: wtnorm(:)  ! same as gridmap%frac_dst
 !
 ! !REVISION HISTORY:
 !   Created by Mariana Vertenstein
@@ -693,14 +694,14 @@ contains
 !------------------------------------------------------------------------------
     call gridmap_checkifset( gridmap, subname )
     ns = size(dst_array)
-    gridmap%frac_dst(:) = 0._r8
+    wtnorm(:) = 0._r8
 
     do n = 1,gridmap%ns
        ni = gridmap%src_indx(n)
        no = gridmap%dst_indx(n)
        wt = gridmap%wovr(n)
        if (mask_src(ni) > 0) then
-          gridmap%frac_dst(no) = gridmap%frac_dst(no) + wt*mask_src(ni)
+          wtnorm(no) = wtnorm(no) + wt*mask_src(ni)
        end if
     end do
 
@@ -710,11 +711,11 @@ contains
        no = gridmap%dst_indx(n)
        wt = gridmap%wovr(n)
        if (mask_src(ni) > 0) then 
-          dst_array(no) = dst_array(no) + wt*mask_src(ni)*src_array(ni)/gridmap%frac_dst(no)
+          dst_array(no) = dst_array(no) + wt*mask_src(ni)*src_array(ni)/wtnorm(no)
        end if
     end do
 
-    where (gridmap%frac_dst== 0._r8)
+    where (wtnorm == 0._r8)
        dst_array = nodata
     end where
 
