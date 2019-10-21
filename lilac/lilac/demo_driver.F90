@@ -189,6 +189,7 @@ program demo_lilac_driver
     allocate ( atm2lnd%Faxa_swvdr (begc:endc) ) ; atm2lnd%Faxa_swvdr (:) =  50.0d0
     allocate ( atm2lnd%Faxa_swndf (begc:endc) ) ; atm2lnd%Faxa_swndf (:) =  20.0d0
     allocate ( atm2lnd%Faxa_swvdf (begc:endc) ) ; atm2lnd%Faxa_swvdf (:) =  40.0d0
+    !allocate ( atm2lnd%Faxa_bcph  (begc:endc) )  ; atm2lnd%Faxa_bcph (:) =  0.0d0
 
 
     fldname = 'Sa_topo'
@@ -197,7 +198,6 @@ program demo_lilac_driver
             write (iulog,F02)'import: nstep, n, '//trim(fldname)//' = ',i, atm2lnd%Sa_topo(i)
         enddo
     end if
-    !allocate ( atm2lnd%Faxa_bcph  (begc:endc) )  ; atm2lnd%Faxa_bcph (:) =  0.0d0
 
     !endc       = 18048 ? should this be the size of the land or atmosphere???
 
