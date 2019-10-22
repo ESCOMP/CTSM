@@ -603,7 +603,7 @@ contains
   end subroutine InitBulkCold
 
   !------------------------------------------------------------------------
-  subroutine RestartBulk(this, bounds, ncid, flag, waterstatebulk_inst)
+  subroutine RestartBulk(this, bounds, ncid, flag, writing_finidat_interp_dest_file, waterstatebulk_inst)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
@@ -621,6 +621,7 @@ contains
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
+    logical, intent(in) :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
     type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
@@ -674,7 +675,12 @@ contains
          long_name=this%info%lname('fraction of ground covered by snow (0 to 1)'),&
          units='unitless',&
          interpinic_flag='interp', readvar=readvar, data=this%frac_sno_col)
-    call this%RestartBackcompatIssue783(bounds, ncid, flag, waterstatebulk_inst)
+    call this%RestartBackcompatIssue783( &
+         bounds = bounds, &
+         ncid = ncid, &
+         flag = flag, &
+         writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+         waterstatebulk_inst = waterstatebulk_inst)
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('FWET'), &
@@ -729,7 +735,8 @@ contains
   end subroutine RestartBulk
 
   !-----------------------------------------------------------------------
-  subroutine RestartBackcompatIssue783(this, bounds, ncid, flag, waterstatebulk_inst)
+  subroutine RestartBackcompatIssue783(this, bounds, ncid, flag, &
+       writing_finidat_interp_dest_file, waterstatebulk_inst)
     !
     ! !DESCRIPTION:
     ! Apply backwards compatibility corrections to address issue ESCOMP/ctsm#783
@@ -751,7 +758,8 @@ contains
     ! versions).
     !
     ! !USES:
-    use ncdio_pio        , only : file_desc_t, ncd_putatt, ncd_getatt, check_att, ncd_global
+    use ncdio_pio        , only : file_desc_t
+    use IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
     use landunit_varcon  , only : istdlak
     use clm_time_manager , only : is_restart
     !
@@ -760,38 +768,36 @@ contains
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
+    logical, intent(in) :: writing_finidat_interp_dest_file ! true if this is a finidat_interp_dest file
     type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
-    logical  :: att_found
-    integer  :: att_val
+    integer  :: attribute_value
     logical  :: do_correction
     real(r8) :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water (mm H2O)
     type(filter_col_type) :: filter_lakec  ! filter for lake columns
 
-    character(len=*), parameter :: att_name = 'issue_783_fixed'
+    integer, parameter :: issue_num = 783
 
     character(len=*), parameter :: subname = 'RestartBackcompatIssue783'
     !-----------------------------------------------------------------------
 
     if (flag == 'define') then
-       call ncd_putatt(ncid, ncd_global, att_name, 1)
+       call write_issue_fixed_metadata( &
+            ncid = ncid, &
+            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+            issue_num = issue_num)
 
     else if (flag == 'read' .and. .not. is_restart()) then
-       call check_att(ncid, ncd_global, att_name, att_found)
-       if (att_found) then
-          ! It's probably sufficient just to know that the issue_783_fixed attribute is
-          ! on the file. But since this feels like a logical variable, it feels best to
-          ! also make sure that its value is true.
-          call ncd_getatt(ncid, ncd_global, att_name, att_val)
-          if (att_val == 0) then
-             do_correction = .true.
-          else
-             do_correction = .false.
-          end if
-       else
+       call read_issue_fixed_metadata( &
+            ncid = ncid, &
+            issue_num = issue_num, &
+            attribute_value = attribute_value)
+       if (attribute_value == 0) then
           do_correction = .true.
+       else
+          do_correction = .false.
        end if
 
        if (do_correction) then

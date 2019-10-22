@@ -575,7 +575,7 @@ contains
        end if
 
        ! Create new template file using cold start
-       call restFile_write(bounds_proc, finidat_interp_dest)
+       call restFile_write(bounds_proc, finidat_interp_dest, writing_finidat_interp_dest_file=.true.)
 
        ! Interpolate finidat onto new template file
        call getfil( finidat_interp_source, fnamer,  0 )
