@@ -57,7 +57,7 @@ module mkpctPftTypeMod
   end interface pct_pft_type
 
   ! !PRIVATE TYPES:
-  real(r8), parameter :: tol = 1.e-12_r8  ! tolerance for checking equality
+  real(r8), parameter :: tol = 1.e-9_r8  ! tolerance for checking equality
 
   !EOP
 
