@@ -199,7 +199,7 @@ contains
             ! this ensures hs_top_snow will equal hs_top_soil
             if (snl(c) >= 0) then
                qg_snow(c) = qg_soil(c)
-               dqgdT(c) = (1._r8 - frac_h2osfc(c))*hr*dqgdT(c)
+               dqgdT(c) = (1._r8 - frac_h2osfc(c))*hr*qsatgdT
             endif
 
             call QSat(t_h2osfc(c), forc_pbot(c), eg, degdT, qsatg, qsatgdT)

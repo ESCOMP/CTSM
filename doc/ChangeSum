@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev073    sacks 10/22/2019 Fix bug in calculation of dqgdT
   ctsm1.0.dev072 mvertens 10/15/2019 Add NUOPC cap
   ctsm1.0.dev071    sacks 10/11/2019 Split CanopyTemperature into separate pieces
   ctsm1.0.dev070    sacks 10/09/2019 Fix for writing 0-d variables with PIO2
