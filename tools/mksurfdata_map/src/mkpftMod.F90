@@ -216,6 +216,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
   real(r8), allocatable :: pctnatveg_o(:)     ! output grid: natural veg percent (% of grid cell)
   real(r8), allocatable :: pctcrop_i(:)       ! input grid: all crop percent (% of grid cell)
   real(r8), allocatable :: pctcrop_o(:)       ! output grid: all crop percent (% of grid cell)
+  real(r8), allocatable :: mask_src(:)        ! input grid: mask (0, 1)
   real(r8), allocatable :: wtnorm(:)          ! output fractions: same as tgridmap%frac_dst 
   real(r8), allocatable :: pct_cft_i(:,:)     ! input grid: CFT (Crop Functional Type) percent (% of landunit cell)
   real(r8), allocatable :: temp_i(:,:)        ! input grid: temporary 2D variable to read in
@@ -418,6 +419,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
                  pctcrop_i(ns_i),   &
                  pctcrop_o(ns_o),   &
                  wtnorm(ns_o),      &
+                 mask_src(ns_i),    &
                  pct_cft_i(ns_i,1:num_cft), &
                  pct_cft_o(ns_o,1:num_cft), &
                  pct_nat_pft_i(ns_i,0:num_natpft), &
@@ -520,10 +522,12 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
         ldomain%frac(no) = tgridmap%frac_dst(no) 
      end do
 
+     mask_src(:) = tdomain%mask(:)
+
      ! New format with extra variables on input
      if ( .not. oldformat ) then
-        call gridmap_areaave(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8, mask_src=tgridmap%frac_src, wtnorm=wtnorm)
-        call gridmap_areaave(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8, mask_src=tgridmap%frac_src, wtnorm=wtnorm)
+        call gridmap_areaave(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8, mask_src=mask_src, wtnorm=wtnorm)
+        call gridmap_areaave(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8, mask_src=mask_src, wtnorm=wtnorm)
 
         do m = 0, num_natpft
            call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), pct_nat_pft_o(:,m), &
@@ -554,7 +558,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
      ! Old format with just PCTPFT
      else
         do m = 0, numpft_i - 1
-           call gridmap_areaave(tgridmap, pctpft_i(:,m), pctpft_o(:,m), nodata=0._r8, mask_src=tgridmap%frac_src, wtnorm=wtnorm)
+           call gridmap_areaave(tgridmap, pctpft_i(:,m), pctpft_o(:,m), nodata=0._r8, mask_src=mask_src, wtnorm=wtnorm)
            do no = 1,ns_o
               if (pctlnd_o(no) < 1.0e-6) then
                  if (m == 0) then
@@ -724,7 +728,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
 1002 format (1x,a35,f16.3,f17.3)
      call shr_sys_flush(ndiag)
 
-     deallocate(gpft_i, gpft_o, wtnorm)
+     deallocate(gpft_i, gpft_o, wtnorm, mask_src)
      if ( .not. oldformat ) then
         deallocate(pctpft_o)
      end if
