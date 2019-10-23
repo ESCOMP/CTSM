@@ -601,7 +601,7 @@ contains
 ! !IROUTINE: gridmap_areaave_scs
 !
 ! !INTERFACE:
-  subroutine gridmap_areaave_scs (gridmap, src_array, dst_array, nodata, src_wt, dst_wt)
+  subroutine gridmap_areaave_scs (gridmap, src_array, dst_array, nodata, src_wt, dst_wt, wtnorm)
 !
 ! !DESCRIPTION:
 ! This subroutine does a simple area average, but multiplies by the ratio of the source over
@@ -615,6 +615,7 @@ contains
     real(r8), intent(in) :: nodata               ! value to apply where there are no input data
     real(r8), intent(in) :: src_wt(:)            ! Source weights
     real(r8), intent(in) :: dst_wt(:)            ! Destination weights
+    real(r8), intent(in) :: wtnorm(:)            ! Output grid weights
 
 !
 ! !REVISION HISTORY:
@@ -636,7 +637,7 @@ contains
        ni = gridmap%src_indx(n)
        no = gridmap%dst_indx(n)
        wt = gridmap%wovr(n)
-       frac = gridmap%frac_dst(no)
+       frac = wtnorm(no)
        swt = src_wt(ni)
        dwt = dst_wt(no)
        wt = wt * swt

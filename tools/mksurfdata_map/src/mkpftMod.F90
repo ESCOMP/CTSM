@@ -513,15 +513,6 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
 
      call domain_checksame( tdomain, ldomain, tgridmap )
 
-     ! Area-average percent cover on input grid [pctpft_i] to output grid 
-     ! [pctpft_o] and correct [pctpft_o] according to land landmask
-     ! Note that percent cover is in terms of total grid area.
-  
-     do no = 1,ns_o
-        pctlnd_o(no)     = tgridmap%frac_dst(no) * 100._r8
-        ldomain%frac(no) = tgridmap%frac_dst(no) 
-     end do
-
      mask_src(:) = tdomain%mask(:)
 
      ! New format with extra variables on input
@@ -531,8 +522,12 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
 
         do m = 0, num_natpft
            call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), pct_nat_pft_o(:,m), &
-                nodata=0._r8,src_wt=pctnatveg_i*0.01_r8,dst_wt=pctnatveg_o*0.01_r8)
+                nodata=0._r8,src_wt=pctnatveg_i*0.01_r8*mask_src,dst_wt=pctnatveg_o*0.01_r8, wtnorm=wtnorm)
            do no = 1,ns_o
+              ! Area-average percent cover on input grid [pctpft_i] to output grid 
+              ! [pctpft_o] and correct [pctpft_o] according to land landmask
+              ! Note that percent cover is in terms of total grid area.
+              pctlnd_o(no) = wtnorm(no) * 100._r8
               if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
                  if (m == 0) then
                     pct_nat_pft_o(no,m) = 100._r8
@@ -544,8 +539,12 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
         end do
         do m = 1, num_cft
            call gridmap_areaave_scs(tgridmap, pct_cft_i(:,m), pct_cft_o(:,m), &
-                nodata=0._r8,src_wt=pctcrop_i*0.01_r8,dst_wt=pctcrop_o*0.01_r8)
+                nodata=0._r8,src_wt=pctcrop_i*0.01_r8*mask_src,dst_wt=pctcrop_o*0.01_r8, wtnorm=wtnorm)
            do no = 1,ns_o
+              ! Area-average percent cover on input grid [pctpft_i] to output grid 
+              ! [pctpft_o] and correct [pctpft_o] according to land landmask
+              ! Note that percent cover is in terms of total grid area.
+              pctlnd_o(no) = wtnorm(no) * 100._r8
               if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
                  if (m == 1) then
                     pct_cft_o(no,m) = 100._r8
@@ -560,6 +559,10 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
         do m = 0, numpft_i - 1
            call gridmap_areaave(tgridmap, pctpft_i(:,m), pctpft_o(:,m), nodata=0._r8, mask_src=mask_src, wtnorm=wtnorm)
            do no = 1,ns_o
+              ! Area-average percent cover on input grid [pctpft_i] to output grid 
+              ! [pctpft_o] and correct [pctpft_o] according to land landmask
+              ! Note that percent cover is in terms of total grid area.
+              pctlnd_o(no) = wtnorm(no) * 100._r8
               if (pctlnd_o(no) < 1.0e-6) then
                  if (m == 0) then
                     pctpft_o(no,m) = 100._r8
