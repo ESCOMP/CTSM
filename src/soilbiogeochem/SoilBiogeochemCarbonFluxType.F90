@@ -751,14 +751,16 @@ contains
        ! IMPORTANT NOTE: Although it looks like the following if appears to be
        ! backwards (it should be 'if use_versoilc'), fixing it causes Carbon 
        ! balance checks to fail. EBK 10/21/2019
-       if(.not. use_vertsoilc)then
+       ! Both use_vertsoilc and .not. use_vertsoilc should reset tri_ma_vr to 0. 
+       ! Because single soil layer still add V matrix but as a zero matrix. CL 10/23/2019
+!       if(.not. use_vertsoilc)then
           do k = 1,decomp_cascade_con%Ntri_setup
              do fi = 1,num_column
                 i = filter_column(fi)
                 this%tri_ma_vr(i,k) = value_column
              end do
           end do
-       end if
+!       end if
     end if
     do j = 1, nlevdecomp_full
        do fi = 1,num_column
