@@ -712,7 +712,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine Restart(this, bounds, ncid, flag, &
+  subroutine Restart(this, bounds, ncid, flag, writing_finidat_interp_dest_file, &
        watsat_col)
     !
     ! !DESCRIPTION:
@@ -723,6 +723,7 @@ contains
     type(bounds_type), intent(in)    :: bounds
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read', 'write' or 'define'
+    logical          , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
     !
     ! !LOCAL VARIABLES:
@@ -738,7 +739,9 @@ contains
     call this%waterstatebulk_inst%restartBulk (bounds, ncid, flag=flag, &
          watsat_col=watsat_col(bounds%begc:bounds%endc,:))
 
-    call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag)
+    call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag, &
+         writing_finidat_interp_dest_file=writing_finidat_interp_dest_file, &
+         waterstatebulk_inst = this%waterstatebulk_inst)
 
     do i = this%tracers_beg, this%tracers_end
 

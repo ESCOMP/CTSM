@@ -1,4 +1,167 @@
 ===============================================================
+Tag name:  ctsm1.0.dev074
+Originator(s):  sacks (Bill Sacks)
+Date:  Wed Oct 23 19:25:21 MDT 2019
+One-line Summary: For lakes: when reading finidat, set frac_sno=1 if h2osno_total > 0
+
+Purpose of changes
+------------------
+
+Due to ESCOMP/ctsm#783, frac_sno used to be 0 for all lake points. That
+was mostly fixed, but the issue is still present on initial conditions
+files that were generated prior to that fix (which includes most or all
+of our out-of-the-box restart files). This causes frac_sno to be 0 for
+lake points at the start of the simulation, even if there is a snow pack
+present. Currently this doesn't cause significant problems, but I'd like
+to change the calculation of frac_sno_eff so that it is 0 if frac_sno is
+0 - and then this frac_sno problem becomes an issue (causing divide by 0
+in at least one place).
+
+However, further problems were introduced if I tried to always apply
+this correction: It appears that sometimes the restart file legitimately
+has frac_sno == 0 for lake columns with non-zero snow cover. To avoid
+changing answers for newer restart files, I am writing metadata to the
+restart file documenting whether the fix has already been applied on
+that restart file, and if so, we avoid reapplying the fix.
+
+Getting this restart metadata correct was tricky, especially when
+running init_interp. I have introduced a new module to encapsulate this
+complexity. This can be used in general for writing / reading metadata
+on which issues have been fixed on a given restart file.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): [If none, remove this line]
+- Resolves ESCOMP/ctsm#783
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- The setting of initial lake frac_sno to 1 isn't exactly correct, but
+  it's better than the old value of 0.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+- I didn't check the PFS test, but the only change that could have
+  likely led to performance changes was the addition of a metadata copy
+  in init_interp. I checked the timing of this piece, and found it to be
+  a negligible portion of the total init_interp time
+  (https://github.com/ESCOMP/CTSM/pull/825#issuecomment-545219601).
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Erik Kluzek gave this an initial look and gave general
+approval for the restart file metadata mechanism I have added. He may
+give it a more careful look, possibly accompanied by a further cleanup
+tag addressing any issues he finds.
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+    ok means tests passed, baselines fail as expected.
+
+    Note that the FUNIT test failed initially; I got it passing on my
+    Mac, but didn't rerun it on cheyenne.
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff/same climate
+
+      The only change is in initial lake frac_sno. This should only
+      affect the start of the simulation, and only over lake points. I
+      verified that changes are only over lake points via: For both
+      SMS_D_Ld1.f09_g17.I1850Clm50Sp.cheyenne_intel.clm-default (which
+      doesn't use init_interp) and
+      SMS_D_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_gnu.clm-default
+      (which uses init_interp): I checked which points have differences
+      in FSH in the h1 (vector) history file. Diffs were only over lake
+      points.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/825
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev073
 Originator(s):  sacks (Bill Sacks)
 Date:  Tue Oct 22 06:14:24 MDT 2019
