@@ -69,6 +69,9 @@ contains
     real(r8) :: qsatg        ! saturated humidity [kg/kg]
     real(r8) :: degdT        ! d(eg)/dT
     real(r8) :: qsatgdT      ! d(qsatg)/dT
+    real(r8) :: qsatgdT_snow ! d(qsatg)/dT, for snow
+    real(r8) :: qsatgdT_soil ! d(qsatg)/dT, for soil
+    real(r8) :: qsatgdT_h2osfc ! d(qsatg)/dT, for h2osfc
     real(r8) :: fac          ! soil wetness of surface layer
     real(r8) :: psit         ! negative potential of soil
     real(r8) :: hr           ! alpha soil
@@ -182,30 +185,32 @@ contains
          ! compute humidities individually for snow, soil, h2osfc for vegetated landunits
          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
-            call QSat(t_soisno(c,snl(c)+1), forc_pbot(c), eg, degdT, qsatg, qsatgdT)
-
-            qg_snow(c) = qsatg
-            dqgdT(c) = frac_sno(c)*qsatgdT
-
-            call QSat(t_soisno(c,1) , forc_pbot(c), eg, degdT, qsatg, qsatgdT)
+            call QSat(t_soisno(c,1) , forc_pbot(c), eg, degdT, qsatg, qsatgdT_soil)
             if (qsatg > forc_q(c) .and. forc_q(c) > hr*qsatg) then
                qsatg = forc_q(c)
-               qsatgdT = 0._r8
+               qsatgdT_soil = 0._r8
             end if
             qg_soil(c) = hr*qsatg
-            dqgdT(c) = dqgdT(c) + (1._r8 - frac_sno(c) - frac_h2osfc(c))*hr*qsatgdT
 
-            ! to be consistent with hs_top values in SoilTemp, set qg_snow to qg_soil for snl = 0 case
-            ! this ensures hs_top_snow will equal hs_top_soil
-            if (snl(c) >= 0) then
+            if (snl(c) < 0) then
+               call QSat(t_soisno(c,snl(c)+1), forc_pbot(c), eg, degdT, qsatg, qsatgdT_snow)
+               qg_snow(c) = qsatg
+               dqgdT(c) = frac_sno(c)*qsatgdT_snow + &
+                    (1._r8 - frac_sno(c) - frac_h2osfc(c))*hr*qsatgdT_soil
+            else
+               ! To be consistent with hs_top values in SoilTemp, set qg_snow to qg_soil
+               ! for snl = 0 case. This ensures hs_top_snow will equal hs_top_soil.
                qg_snow(c) = qg_soil(c)
-               dqgdT(c) = (1._r8 - frac_h2osfc(c))*hr*qsatgdT
+               dqgdT(c) = (1._r8 - frac_h2osfc(c))*hr*qsatgdT_soil
             endif
 
-            call QSat(t_h2osfc(c), forc_pbot(c), eg, degdT, qsatg, qsatgdT)
-
-            qg_h2osfc(c) = qsatg
-            dqgdT(c) = dqgdT(c) + frac_h2osfc(c) * qsatgdT
+            if (frac_h2osfc(c) > 0._r8) then
+               call QSat(t_h2osfc(c), forc_pbot(c), eg, degdT, qsatg, qsatgdT_h2osfc)
+               qg_h2osfc(c) = qsatg
+               dqgdT(c) = dqgdT(c) + frac_h2osfc(c) * qsatgdT_h2osfc
+            else
+               qg_h2osfc(c) = qg_soil(c)
+            end if
 
             !          qg(c) = frac_sno(c)*qg_snow(c) + (1._r8 - frac_sno(c) - frac_h2osfc(c))*qg_soil(c) &
             qg(c) = frac_sno_eff(c)*qg_snow(c) + (1._r8 - frac_sno_eff(c) - frac_h2osfc(c))*qg_soil(c) &
