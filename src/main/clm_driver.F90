@@ -1294,7 +1294,8 @@ contains
           call t_startf('clm_drv_io_wrest')
           filer = restFile_filename(rdate=rdate)
 
-          call restFile_write( bounds_proc, filer, rdate=rdate )
+          call restFile_write( bounds_proc, filer, &
+               writing_finidat_interp_dest_file=.false., rdate=rdate )
 
           call t_stopf('clm_drv_io_wrest')
        end if
