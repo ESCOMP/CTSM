@@ -327,13 +327,13 @@ contains
 
           h2osno_temp = h2osno_no_layers(c)
           h2osno_no_layers(c) = h2osno_no_layers(c) + (-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
+          h2osno_no_layers(c) = max(h2osno_no_layers(c), 0._r8)
           if (h2osno_temp > 0._r8) then
              snow_depth(c) = snow_depth(c) * h2osno_no_layers(c) / h2osno_temp
           else
              snow_depth(c) = h2osno_no_layers(c)/snow_bd !Assume a constant snow bulk density = 250.
           end if
 
-          h2osno_no_layers(c) = max(h2osno_no_layers(c), 0._r8)
        end if
     end do
 
