@@ -453,7 +453,10 @@ def _get_create_test_args(compare_name, generate_name, baseline_root,
     if queue:
         args.extend(['--queue', queue])
     if rerun_existing_failures:
-        args.extend(['--use-existing'])
+        # In addition to --use-existing, we also need --allow-baseline-overwrite in this
+        # case; otherwise, create_test throws an error saying that the baseline
+        # directories already exist.
+        args.extend(['--use-existing', '--allow-baseline-overwrite'])
     args.extend(extra_create_test_args.split())
     return args
 
