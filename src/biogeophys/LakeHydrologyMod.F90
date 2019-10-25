@@ -122,8 +122,8 @@ contains
     logical  :: unfrozen(bounds%begc:bounds%endc)               ! true if top lake layer is unfrozen with snow layers above
     real(r8) :: heatrem                                         ! used in case above [J/m^2]
     real(r8) :: heatsum(bounds%begc:bounds%endc)                ! used in case above [J/m^2]
-    real(r8) :: snowmass                                        ! liquid+ice snow mass in a layer [kg/m2]
-    real(r8) :: snowcap_scl_fct                                 ! temporary factor used to correct for snow capping
+    real(r8) :: qflx_dew_minus_sub_snow                         ! qflx_dew_snow - qflx_sub_snow [mm/s]
+    real(r8), parameter :: frac_sno_small = 1.e-6_r8            ! small value of frac_sno used when initiating a snow pack due to frost
     real(r8), parameter :: snow_bd = 250._r8                    ! assumed snow bulk density (for lakes w/out resolved snow layers) [kg/m^3]
     ! Should only be used for frost below.
     !-----------------------------------------------------------------------
@@ -326,16 +326,43 @@ contains
           ! Update snow pack for dew & sub.
 
           h2osno_temp = h2osno_no_layers(c)
-          h2osno_no_layers(c) = h2osno_no_layers(c) + (-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
+          qflx_dew_minus_sub_snow = -qflx_sub_snow(p)+qflx_dew_snow(p)
+          h2osno_no_layers(c) = h2osno_no_layers(c) + qflx_dew_minus_sub_snow*dtime
+          h2osno_no_layers(c) = max(h2osno_no_layers(c), 0._r8)
+          if (qflx_dew_minus_sub_snow > 0._r8) then
+             ! If we're accumulating snow from dew, then ensure that we have at least a
+             ! small, non-zero frac_sno. (It complicates the code too much to call
+             ! UpdateSnowDepthAndFrac for this purpose - see
+             ! <https://github.com/ESCOMP/CTSM/issues/827#issuecomment-546163067>.)
+             if (frac_sno(c) <= 0._r8) then
+                frac_sno(c) = frac_sno_small
+             end if
+          else if (qflx_dew_minus_sub_snow < 0._r8) then
+             ! If we're losing snow from sublimation, and this has caused the snow pack
+             ! to completely vanish, then ensure that frac_sno is reset to 0.
+             if (h2osno_no_layers(c) == 0._r8) then
+                frac_sno(c) = 0._r8
+             end if
+          end if
           if (h2osno_temp > 0._r8) then
+             ! Assume that snow bulk density remains the same as before
              snow_depth(c) = snow_depth(c) * h2osno_no_layers(c) / h2osno_temp
           else
-             snow_depth(c) = h2osno_no_layers(c)/snow_bd !Assume a constant snow bulk density = 250.
+             ! Assume a constant snow bulk density = 250.
+             snow_depth(c) = h2osno_no_layers(c)/snow_bd
           end if
 
-          h2osno_no_layers(c) = max(h2osno_no_layers(c), 0._r8)
        end if
     end do
+
+    ! Since frac_sno may have been updated above, recalculate frac_sno_eff accordingly
+    call scf_method%CalcFracSnoEff(bounds, num_lakec, filter_lakec, &
+         ! Inputs
+         lun_itype_col = col%lun_itype(begc:endc), &
+         urbpoi        = col%urbpoi(begc:endc), &
+         frac_sno      = frac_sno(begc:endc), &
+         ! Outputs
+         frac_sno_eff  = frac_sno_eff(begc:endc))
 
     ! patch averages must be done here -- BEFORE SNOW CALCULATIONS AS THEY USE IT.
     ! for output to history tape and other uses
