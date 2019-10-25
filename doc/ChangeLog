@@ -1,4 +1,157 @@
 ===============================================================
+Tag name:  ctsm1.0.dev075
+Originator(s):  sacks (Bill Sacks)
+Date:  Fri Oct 25 15:44:52 MDT 2019
+One-line Summary: Lakes: Adjust frac_sno after updating 0-layer snow pack for dew & sublimation
+
+Purpose of changes
+------------------
+
+Main change is: for lakes, possibly adjust frac_sno after updating
+0-layer snow pack for dew & sub, ensuring that zero vs. non-zero values
+of frac_sno agree with whether the snow pack has zero or non-zero
+amounts of snow. The main motivation for this is to ensure that, if we
+have any snow, then frac_sno should be non-zero. Along with this, I'm
+also ensuring that, if we go down to 0 snow, then we also go down to 0
+frac_sno.
+
+A related change was to move the code ensuring that h2osno_no_layers
+doesn't go negative: I have moved this to before h2osno_no_layers is
+referenced, to assure we don't get a slightly negative snow depth. (I
+haven't noticed any problems due to the old placement, but it seems
+safer to put the limiting before the reference to h2osno_no_layers.)
+
+Also, an unrelated change in run_sys_tests: Add option for rerunning
+existing failed tests.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#827 (Lake frac_sno can remain 0 even when there
+  is some snow addition from frost)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: None expected
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - pass (on my mac: 'make test' with python2 & python3 and 'make lint')
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+    ok means tests pass, answers change as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Expected to be larger than roundoff/same climate
+
+      Changes are introduced only over lake columns, and these changes
+      should be small, since they only relate to the setting of frac_sno
+      when there is dew or sublimation on a very thin snow
+      pack.
+
+      Although the direct changes should only affect lakes, I did
+      observe changes in crop columns in a transient test that I
+      spot-checked
+      (ERP_Ly3_P72x2.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-cropMonthOutput)
+      - maybe due to some of the non-local interactions in
+      https://github.com/ESCOMP/CTSM/wiki/Parameterizations-that-can-cause-nonlocal-interactions,
+      or maybe due to some other non-local interaction, either known or
+      buggy. (In non-transient tests that I spot checked
+      (ERP_P72x2_Lm36.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-clm50cropIrrigMonth_interp
+      and
+      SMS_Lm13.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-cropMonthOutput):
+      diffs in FSH in h1 file are just over lake landunits, as
+      expected.)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev074
 Originator(s):  sacks (Bill Sacks)
 Date:  Wed Oct 23 19:25:21 MDT 2019
