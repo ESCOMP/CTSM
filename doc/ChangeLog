@@ -1,4 +1,189 @@
 ===============================================================
+Tag name:  ctsm1.0.dev077
+Originator(s):  sacks (Bill Sacks)
+Date:  Sun Oct 27 16:23:39 MDT 2019
+One-line Summary: Consistently use frac_sno_eff rather than frac_sno in qg calculations
+
+Purpose of changes
+------------------
+
+Consistently use frac_sno_eff rather than frac_sno in qg calculations
+
+The change here only changes answers for (1) urban pervious road, and
+(2) more broadly with use_subgrid_fluxes = .false.
+
+Previously, code in CalculateSurfaceHumidity was inconsistent regarding
+the use of frac_sno vs. frac_sno_eff. I wanted to make this consistent
+to facilitate upcoming cleanup of CalculateSurfaceHumidity. I went back
+and forth as to which one we should use here. (See also
+https://github.com/ESCOMP/CTSM/issues/822).
+
+Argument for frac_sno_eff: This is consistent with the use of
+frac_sno_eff elsewhere in the calculation of surface fluxes.
+
+Argument for frac_sno: Even in CLM4.0 (prior to the introduction of
+frac_sno_eff and frac_h2osfc), frac_sno was used to calculate surface
+relative humidity. That makes me think that the parameterizations were
+improved by using frac_sno here, even though frac_sno at that point was
+mainly just used for albedo / radiation calculations. So sticking with
+frac_sno would be more consistent with what has been done for a long
+time, and would presumably be a bit better scientifically.
+
+However, when I tried changing this to use frac_sno rather than
+frac_sno_eff:
+
+    qg(c) = frac_sno_eff(c)*qg_snow(c) + (1._r8 - frac_sno_eff(c) - frac_h2osfc(c))*qg_soil(c) &
+          + frac_h2osfc(c) * qg_h2osfc(c)
+
+I got a crash with use_subgrid_fluxes false (test
+SMS_D_Ld1_P4x1.f10_f10_musgs.I2000Clm45BgcCropQianRsGs.bishorn_gnu.clm-no_subgrid_fluxes),
+due to a check I put in relatively recently to ensure that the top-layer
+soil liquid never goes significantly negative:
+
+WJS 218: frac_sno, frac_sno_eff, frac_h2osfc, snl =    6.6447358408778726E-005   1.0000000000000000        0.0000000000000000               -1
+ qg_snow, qg_soil, qg_h2osfc, qg =    3.8414454029812475E-003   3.6634834595404343E-003   3.6635176705822736E-003   3.6634952846414733E-003
+ ERROR: In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative
+ Bulk/tracer name = bulk
+ c, lev_top(c) =          218           0
+ h2osoi_liq_top_orig  =    6.6448689668604415E-004
+ h2osoi_liq           =   -2.6754040213948407E-004
+ frac_sno_eff         =    1.0000000000000000
+ qflx_liq_grnd*dtime  =    0.0000000000000000
+ qflx_dew_grnd*dtime  =    0.0000000000000000
+ qflx_evap_grnd*dtime =    9.3202729882552822E-004
+ ENDRUN:
+ ERROR: In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative
+
+What seems to be going on is: With a little bit of snow present, when I
+use frac_sno rather than frac_sno_eff, we end up with a qg value very
+close to that of soil. But I think the later evaporation happens from
+the snow, at which point I guess the dryer air above leads to there
+being too large evaporation from the snow.
+
+So in the end, I decided to consistently use frac_sno_eff, even though
+this might be a small step backwards in terms of the accuracy of surface
+humidity for urban pervious road and with use_subgrid_fluxes = .false.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self (but approved conceptually by Sean Swenson and
+Keith Oleson)
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+    ok means tests pass, answers change as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Expected to be larger than roundoff/same climate, but not
+      investigated carefully
+
+      For the default configuration with use_subgrid_fluxes = .true.,
+      differences are restricted to urban pervious road. I spot-checked
+      a few tests to ensure that we only saw differences in FSH for
+      urban landunits; this was generally true, with the exception of
+      ERP_Ly3_P72x2.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-cropMonthOutput,
+      which also had differences over crop and natural veg
+      landunits. This spillover effect seems to be related to the
+      non-local interactions that arise from methane's dependence on
+      TWS, though I don't understand why I only saw this in a transient
+      case, and not in similar non-transient cases. See
+      https://github.com/ESCOMP/CTSM/issues/658#issuecomment-546740771
+      for more details.
+
+      For the non-default use_subgrid_fluxes = .false., there
+      differences in the natural vegetation and crop landunits, too.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev076
 Originator(s):  sacks (Bill Sacks)
 Date:  Fri Oct 25 16:04:20 MDT 2019
