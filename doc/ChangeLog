@@ -263,6 +263,13 @@ Changes answers relative to baseline: YES
       diffs in FSH in h1 file are just over lake landunits, as
       expected.)
 
+         Update: it seems that these changes in crop columns arise from
+         the nonlocal interactions caused by the dependence of methane
+         on TWS, though I don't understand why I only saw this in a
+         transient case, and not in similar non-transient cases. See
+         https://github.com/ESCOMP/CTSM/issues/658#issuecomment-546740771
+         for more details.
+
    If bitwise differences were observed, how did you show they were no worse
    than roundoff? N/A
 
