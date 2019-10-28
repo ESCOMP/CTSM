@@ -2843,7 +2843,7 @@ contains
          t_soisno      =>    temperature_inst%t_soisno_col                , & ! Input:  [real(r8) (:,:)  ]  soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
 
          watsat        =>    soilstate_inst%watsat_col                    , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water at saturation (porosity)   
-         rootr         =>    soilstate_inst%rootr_patch                   , & ! Input:  [real(r8) (:,:)  ]  effective fraction of roots in each soil layer  (nlevgrnd)
+         rootr         =>    soilstate_inst%rootr_patch                   , & ! Input:  [real(r8) (:,:)  ]  effective fraction of roots in each soil layer (SMS method only) (nlevgrnd)
          rootfr        =>    soilstate_inst%rootfr_patch                  , & ! Input:  [real(r8) (:,:)  ]  fraction of roots in each soil layer  (nlevsoi) 
 
          h2osoi_vol    =>    waterstatebulk_inst%h2osoi_vol_col               , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]

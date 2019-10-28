@@ -215,7 +215,7 @@ contains
 
          rootr_road_perv     =>   soilstate_inst%rootr_road_perv_col        , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer for urban pervious road
          soilalpha_u         =>   soilstate_inst%soilalpha_u_col            , & ! Input:  [real(r8) (:)   ]  Urban factor that reduces ground saturated specific humidity (-)
-         rootr               =>   soilstate_inst%rootr_patch                , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
+         rootr               =>   soilstate_inst%rootr_patch                , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer (SMS method only) 
 
          t_grnd              =>   temperature_inst%t_grnd_col               , & ! Input:  [real(r8) (:)   ]  ground surface temperature (K)                    
          t_soisno            =>   temperature_inst%t_soisno_col             , & ! Input:  [real(r8) (:,:) ]  soil temperature (K)                            
