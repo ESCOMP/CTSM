@@ -217,7 +217,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
   real(r8), allocatable :: pctcrop_i(:)       ! input grid: all crop percent (% of grid cell)
   real(r8), allocatable :: pctcrop_o(:)       ! output grid: all crop percent (% of grid cell)
   real(r8), allocatable :: mask_src(:)        ! input grid: mask (0, 1)
-  real(r8), allocatable :: wtnorm(:)          ! output fractions: same as tgridmap%frac_dst 
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   real(r8), allocatable :: pct_cft_i(:,:)     ! input grid: CFT (Crop Functional Type) percent (% of landunit cell)
   real(r8), allocatable :: temp_i(:,:)        ! input grid: temporary 2D variable to read in
   real(r8), allocatable :: pct_cft_o(:,:)     ! output grid: CFT (Crop Functional Type) percent (% of landunit cell)
@@ -418,7 +418,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
                  pctnatveg_o(ns_o), &
                  pctcrop_i(ns_i),   &
                  pctcrop_o(ns_o),   &
-                 wtnorm(ns_o),      &
+                 frac_dst(ns_o),    &
                  mask_src(ns_i),    &
                  pct_cft_i(ns_i,1:num_cft), &
                  pct_cft_o(ns_o,1:num_cft), &
@@ -513,21 +513,23 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
 
      call domain_checksame( tdomain, ldomain, tgridmap )
 
+     ! Obtain mask_src and frac_dst
      mask_src(:) = tdomain%mask(:)
+     call gridmap_calc_frac_dst(tgridmap, mask_src, frac_dst)
+     ! Area-average percent cover on input grid [pctpft_i] to output grid 
+     ! [pctpft_o] and correct [pctpft_o] according to land landmask
+     ! Note that percent cover is in terms of total grid area.
+     pctlnd_o(:) = frac_dst(:) * 100._r8
 
      ! New format with extra variables on input
      if ( .not. oldformat ) then
-        call gridmap_areaave(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8, mask_src=mask_src, wtnorm=wtnorm)
-        call gridmap_areaave(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8, mask_src=mask_src, wtnorm=wtnorm)
+        call gridmap_areaave(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8, mask_src=mask_src, frac_dst=frac_dst)
+        call gridmap_areaave(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8, mask_src=mask_src, frac_dst=frac_dst)
 
         do m = 0, num_natpft
            call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), pct_nat_pft_o(:,m), &
-                nodata=0._r8,src_wt=pctnatveg_i*0.01_r8*mask_src,dst_wt=pctnatveg_o*0.01_r8, wtnorm=wtnorm)
+                nodata=0._r8,src_wt=pctnatveg_i*0.01_r8*mask_src,dst_wt=pctnatveg_o*0.01_r8, frac_dst=frac_dst)
            do no = 1,ns_o
-              ! Area-average percent cover on input grid [pctpft_i] to output grid 
-              ! [pctpft_o] and correct [pctpft_o] according to land landmask
-              ! Note that percent cover is in terms of total grid area.
-              pctlnd_o(no) = wtnorm(no) * 100._r8
               if (pctlnd_o(no) < 1.0e-6 .or. pctnatveg_o(no) < 1.0e-6) then
                  if (m == 0) then
                     pct_nat_pft_o(no,m) = 100._r8
@@ -539,12 +541,8 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
         end do
         do m = 1, num_cft
            call gridmap_areaave_scs(tgridmap, pct_cft_i(:,m), pct_cft_o(:,m), &
-                nodata=0._r8,src_wt=pctcrop_i*0.01_r8*mask_src,dst_wt=pctcrop_o*0.01_r8, wtnorm=wtnorm)
+                nodata=0._r8,src_wt=pctcrop_i*0.01_r8*mask_src,dst_wt=pctcrop_o*0.01_r8, frac_dst=frac_dst)
            do no = 1,ns_o
-              ! Area-average percent cover on input grid [pctpft_i] to output grid 
-              ! [pctpft_o] and correct [pctpft_o] according to land landmask
-              ! Note that percent cover is in terms of total grid area.
-              pctlnd_o(no) = wtnorm(no) * 100._r8
               if (pctlnd_o(no) < 1.0e-6 .or. pctcrop_o(no) < 1.0e-6) then
                  if (m == 1) then
                     pct_cft_o(no,m) = 100._r8
@@ -557,12 +555,8 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
      ! Old format with just PCTPFT
      else
         do m = 0, numpft_i - 1
-           call gridmap_areaave(tgridmap, pctpft_i(:,m), pctpft_o(:,m), nodata=0._r8, mask_src=mask_src, wtnorm=wtnorm)
+           call gridmap_areaave(tgridmap, pctpft_i(:,m), pctpft_o(:,m), nodata=0._r8, mask_src=mask_src, frac_dst=frac_dst)
            do no = 1,ns_o
-              ! Area-average percent cover on input grid [pctpft_i] to output grid 
-              ! [pctpft_o] and correct [pctpft_o] according to land landmask
-              ! Note that percent cover is in terms of total grid area.
-              pctlnd_o(no) = wtnorm(no) * 100._r8
               if (pctlnd_o(no) < 1.0e-6) then
                  if (m == 0) then
                     pctpft_o(no,m) = 100._r8
@@ -694,7 +688,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
         garea_i = garea_i + tgridmap%area_src(ni)*re**2
         do m = 0, numpft_i - 1
            gpft_i(m) = gpft_i(m) + pctpft_i(ni,m)*tgridmap%area_src(ni)*&
-                                                  tgridmap%frac_src(ni)*re**2
+                                                  mask_src(ni)*re**2
         end do
      end do
      if ( allocated(pctpft_i) ) deallocate (pctpft_i)
@@ -707,7 +701,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
         garea_o = garea_o + tgridmap%area_dst(no)*re**2
         do m = 0, numpft_i - 1
            gpft_o(m) = gpft_o(m) + pctpft_o(no,m)*tgridmap%area_dst(no)*&
-                                                  wtnorm(no)*re**2
+                                                  frac_dst(no)*re**2
         end do
      end do
 
@@ -731,7 +725,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
 1002 format (1x,a35,f16.3,f17.3)
      call shr_sys_flush(ndiag)
 
-     deallocate(gpft_i, gpft_o, wtnorm, mask_src)
+     deallocate(gpft_i, gpft_o, frac_dst, mask_src)
      if ( .not. oldformat ) then
         deallocate(pctpft_o)
      end if

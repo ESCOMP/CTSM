@@ -40,6 +40,7 @@ module mkgridmapMod
   public :: for_test_create_gridmap  ! Set a gridmap directly, for testing
   public :: gridmap_mapread     ! Read in gridmap
   public :: gridmap_check       ! Check validity of a gridmap
+  public :: gridmap_calc_frac_dst  ! Obtain frac_dst
   public :: gridmap_areaave     ! do area average
   public :: gridmap_areaave_scs ! area average, but multiply by ratio of source over destination weight
   public :: gridmap_areastddev  ! do area-weighted standard deviation
@@ -52,7 +53,6 @@ module mkgridmapMod
   interface gridmap_areaave
      module procedure gridmap_areaave_default
      module procedure gridmap_areaave_srcmask
-     module procedure gridmap_areaave_srcmask2
   end interface
 
   ! questions - how does the reverse mapping occur 
@@ -601,7 +601,7 @@ contains
 ! !IROUTINE: gridmap_areaave_scs
 !
 ! !INTERFACE:
-  subroutine gridmap_areaave_scs (gridmap, src_array, dst_array, nodata, src_wt, dst_wt, wtnorm)
+  subroutine gridmap_areaave_scs (gridmap, src_array, dst_array, nodata, src_wt, dst_wt, frac_dst)
 !
 ! !DESCRIPTION:
 ! This subroutine does a simple area average, but multiplies by the ratio of the source over
@@ -615,7 +615,7 @@ contains
     real(r8), intent(in) :: nodata               ! value to apply where there are no input data
     real(r8), intent(in) :: src_wt(:)            ! Source weights
     real(r8), intent(in) :: dst_wt(:)            ! Destination weights
-    real(r8), intent(in) :: wtnorm(:)            ! Output grid weights
+    real(r8), intent(in) :: frac_dst(:)          ! Output grid weights
 
 !
 ! !REVISION HISTORY:
@@ -637,7 +637,7 @@ contains
        ni = gridmap%src_indx(n)
        no = gridmap%dst_indx(n)
        wt = gridmap%wovr(n)
-       frac = wtnorm(no)
+       frac = frac_dst(no)
        swt = src_wt(ni)
        dwt = dst_wt(no)
        wt = wt * swt
@@ -670,7 +670,7 @@ contains
 ! !IROUTINE: gridmap_areaave_srcmask
 !
 ! !INTERFACE:
-  subroutine gridmap_areaave_srcmask (gridmap, src_array, dst_array, nodata, mask_src, wtnorm)
+  subroutine gridmap_areaave_srcmask (gridmap, src_array, dst_array, nodata, mask_src, frac_dst)
 !
 ! !DESCRIPTION:
 ! This subroutine does an area average with the source mask
@@ -682,7 +682,7 @@ contains
     real(r8), intent(out):: dst_array(:)
     real(r8), intent(in) :: nodata               ! value to apply where there are no input data
     real(r8), intent(in) :: mask_src(:)
-    real(r8), intent(out) :: wtnorm(:)  ! same as gridmap%frac_dst
+    real(r8), intent(in) :: frac_dst(:)
 !
 ! !REVISION HISTORY:
 !   Created by Mariana Vertenstein
@@ -695,16 +695,6 @@ contains
 !------------------------------------------------------------------------------
     call gridmap_checkifset( gridmap, subname )
     ns = size(dst_array)
-    wtnorm(:) = 0._r8
-
-    do n = 1,gridmap%ns
-       ni = gridmap%src_indx(n)
-       no = gridmap%dst_indx(n)
-       wt = gridmap%wovr(n)
-       if (mask_src(ni) > 0) then
-          wtnorm(no) = wtnorm(no) + wt*mask_src(ni)
-       end if
-    end do
 
     dst_array = 0._r8
     do n = 1,gridmap%ns
@@ -712,85 +702,15 @@ contains
        no = gridmap%dst_indx(n)
        wt = gridmap%wovr(n)
        if (mask_src(ni) > 0) then 
-          dst_array(no) = dst_array(no) + wt*mask_src(ni)*src_array(ni)/wtnorm(no)
+          dst_array(no) = dst_array(no) + wt*mask_src(ni)*src_array(ni)/frac_dst(no)
        end if
     end do
 
-    where (wtnorm == 0._r8)
+    where (frac_dst == 0._r8)
        dst_array = nodata
     end where
 
   end subroutine gridmap_areaave_srcmask
-
-!==========================================================================
-
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: gridmap_areaave_srcmask2
-!
-! !INTERFACE:
-  subroutine gridmap_areaave_srcmask2 (gridmap, src_array, dst_array, nodata, mask_src, &
-       mask_dst, mask_dst_min)
-!
-! !DESCRIPTION:
-! This subroutine does an area average with the source mask and making sure the
-! destination mask is valid as well.
-!
-! !ARGUMENTS:
-    implicit none
-    type(gridmap_type) , intent(in) :: gridmap   ! gridmap data
-    real(r8), intent(in) :: src_array(:)
-    real(r8), intent(out):: dst_array(:)
-    real(r8), intent(in) :: nodata               ! value to apply where there are no input data
-    real(r8), intent(in) :: mask_src(:)
-    real(r8), intent(in) :: mask_dst(:)
-    real(r8), intent(in) :: mask_dst_min
-!
-! !REVISION HISTORY:
-!   Created by Mariana Vertenstein
-!
-! !LOCAL VARIABLES:
-    integer :: n,ns,ni,no
-    real(r8):: wt
-    real(r8), allocatable :: wtnorm(:)
-    character(*),parameter :: subName = '(gridmap_areaave_srcmask2) '
-!EOP
-!------------------------------------------------------------------------------
-
-    call gridmap_checkifset( gridmap, subname )
-    ns = size(dst_array)
-    allocate(wtnorm(ns)) 
-    wtnorm(:) = 0._r8
-
-    do n = 1,gridmap%ns
-       ni = gridmap%src_indx(n)
-       no = gridmap%dst_indx(n)
-       wt = gridmap%wovr(n)
-       if (mask_src(ni) > 0) then
-          wtnorm(no) = wtnorm(no) + wt*mask_src(ni)
-       end if
-    end do
-
-    dst_array = 0._r8
-    do n = 1,gridmap%ns
-       ni = gridmap%src_indx(n)
-       no = gridmap%dst_indx(n)
-       wt = gridmap%wovr(n)
-       if (mask_dst(no) > mask_dst_min) then
-          if (mask_src(ni) > 0) then 
-             dst_array(no) = dst_array(no) + wt*mask_src(ni)*src_array(ni)/wtnorm(no)
-          end if
-       end if
-    end do
-
-    where ((wtnorm == 0._r8) .or. (mask_dst <= mask_dst_min))
-       dst_array = nodata
-    end where
-
-    deallocate(wtnorm)
-
-  end subroutine gridmap_areaave_srcmask2
 
 !==========================================================================
 
@@ -927,6 +847,51 @@ contains
        call abort()
     end if
   end subroutine gridmap_checkifset
+
+!==========================================================================
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: gridmap_calc_frac_dst
+!
+! !INTERFACE:
+  subroutine gridmap_calc_frac_dst(gridmap, mask_src, frac_dst)
+!
+! !DESCRIPTION:
+! This subroutine calculates frac_dst
+!
+! !ARGUMENTS:
+    implicit none
+    type(gridmap_type) , intent(in) :: gridmap   ! gridmap data
+    real(r8), intent(in) :: mask_src(:)
+    real(r8), intent(out) :: frac_dst(:)
+!
+! !REVISION HISTORY:
+!   Created by Sam Levis
+!
+! !LOCAL VARIABLES:
+    integer :: n,ns,ni,no
+    real(r8):: wt
+    character(*),parameter :: subName = '(gridmap_calc_frac_dst) '
+!EOP
+!------------------------------------------------------------------------------
+    call gridmap_checkifset( gridmap, subname )
+    frac_dst(:) = 0._r8
+    ns = size(frac_dst)
+
+    do n = 1,gridmap%ns
+       ni = gridmap%src_indx(n)
+       no = gridmap%dst_indx(n)
+       wt = gridmap%wovr(n)
+       if (mask_src(ni) > 0) then
+          frac_dst(no) = frac_dst(no) + wt*mask_src(ni)
+       end if
+    end do
+
+  end subroutine gridmap_calc_frac_dst
+
+!==========================================================================
 
 end module mkgridmapMod
 
