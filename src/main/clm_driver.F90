@@ -80,7 +80,7 @@ module clm_driver
   use clm_instMod
   use clm_initializeMod      , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
-  use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp
+  use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -322,10 +322,9 @@ contains
     ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe).
     ! ============================================================================
     if (use_soil_moisture_streams) then
-       call t_startf('prescribed_sm')
-       call PrescribedSoilMoistureInterp(bounds_proc, soilstate_inst, &
-               waterstate_inst)
-       call t_stopf('prescribed_sm')
+       !call t_startf('prescribed_sm')
+       !call PrescribedSoilMoistureAdvance( bounds_proc )
+       !call t_stopf('prescribed_sm')
     endif
     ! ============================================================================
     ! Initialize the column-level mass balance checks for water, carbon & nitrogen.
@@ -346,6 +345,14 @@ contains
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
+       if (use_soil_moisture_streams) then 
+          call t_startf('prescribed_sm')
+          call PrescribedSoilMoistureAdvance( bounds_clump )
+          call PrescribedSoilMoistureInterp(bounds_clump, soilstate_inst, &
+               waterstate_inst)
+          call t_stopf('prescribed_sm')
+       endif
+ 
        call t_startf('begwbal')
        call BeginWaterBalance(bounds_clump,                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
