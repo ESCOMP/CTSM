@@ -255,6 +255,7 @@ contains
     if (use_cn .and. .not.(use_hydrstress)) then
        ! rootr_col isn't computed for use_hydrstress = .true. (In contrast, rootr_patch is
        ! still computed, albeit using the inconsistent Soil Moisture Stress (SMS) method.)
+       ! (See also https://github.com/ESCOMP/CTSM/issues/812.)
        this%rootr_col(begc:endc,:) = spval
        call hist_addfld2d (fname='ROOTR_COLUMN', units='proportion', type2d='levgrnd', &
             avgflag='A', long_name='effective fraction of roots in each soil layer (SMS method)', &
