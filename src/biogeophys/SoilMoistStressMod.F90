@@ -410,6 +410,9 @@ contains
                ! We need btran here regardless of whether use_hydrstress is true or false 
                ! in order to calculate rootr.  rootr is needed by SoilWaterPlantSinkMod.F90 and ch4Mod.F90 when
                ! use_hydrstress = false, and by ch4Mod.F90 when use_hydrstress = true or false.
+               ! Note that, with use_hydrstress = true, btran will be recalculated using the PHS method later,
+               ! but this SMS form of btran is still used to calculate rootr here; we're living with this
+               ! inconsistency for now.
                btran(p)    = btran(p) + max(rootr(p,j),0._r8)
             end if
             s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
