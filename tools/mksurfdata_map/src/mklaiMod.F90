@@ -88,7 +88,6 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
   real(r8), allocatable :: msai_i(:,:)      ! monthly sai in
   real(r8), allocatable :: mhgtt_i(:,:)     ! monthly height (top) in
   real(r8), allocatable :: mhgtb_i(:,:)     ! monthly height (bottom) in
-  real(r8), allocatable :: mask_src(:)      ! input grid: mask (0, 1)
   real(r8), allocatable :: frac_dst(:)        ! output fractions: same as frac_dst
   integer,  pointer     :: laimask(:,:)     ! lai+sai output mask for each plant function type
   real(r8) :: garea_i                       ! input  grid: global area
@@ -157,7 +156,6 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
            msai_i(ns_i,0:numpft_i),  &
            mhgtt_i(ns_i,0:numpft_i), &
            mhgtb_i(ns_i,0:numpft_i), &
-           mask_src(ns_i),         &
            frac_dst(ns_o),           &
            mlai_o(ns_o,0:numpft),  &
            msai_o(ns_o,0:numpft),  &
@@ -246,16 +244,15 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
      mhgtt_o(:,:) = 0.
      mhgtb_o(:,:) = 0.
 
-     ! Obtain mask_src and frac_dst
-     mask_src(:) = tdomain%mask(:)
-     call gridmap_calc_frac_dst(tgridmap, mask_src, frac_dst)
+     ! Obtain frac_dst
+     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
      ! Loop over pft types to do mapping
      do l = 0, numpft_i - 1
-        call gridmap_areaave(tgridmap, mlai_i(:,l) , mlai_o(:,l) , nodata=0._r8, mask_src=mask_src, frac_dst=frac_dst)
-        call gridmap_areaave(tgridmap, msai_i(:,l) , msai_o(:,l) , nodata=0._r8, mask_src=mask_src, frac_dst=frac_dst)
-        call gridmap_areaave(tgridmap, mhgtt_i(:,l), mhgtt_o(:,l), nodata=0._r8, mask_src=mask_src, frac_dst=frac_dst)
-        call gridmap_areaave(tgridmap, mhgtb_i(:,l), mhgtb_o(:,l), nodata=0._r8, mask_src=mask_src, frac_dst=frac_dst)
+        call gridmap_areaave(tgridmap, mlai_i(:,l) , mlai_o(:,l) , nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+        call gridmap_areaave(tgridmap, msai_i(:,l) , msai_o(:,l) , nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+        call gridmap_areaave(tgridmap, mhgtt_i(:,l), mhgtt_o(:,l), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+        call gridmap_areaave(tgridmap, mhgtb_i(:,l), mhgtb_o(:,l), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
      enddo
 
      ! Determine laimask
@@ -315,13 +312,13 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
      do l = 0, numpft_i - 1
      do ni = 1, ns_i
         glai_i(l)  = glai_i(l) + mlai_i(ni,l) *tgridmap%area_src(ni)*&
-             mask_src(ni)*re**2
+             tdomain%mask(ni)*re**2
         gsai_i(l)  = gsai_i(l) + msai_i(ni,l) *tgridmap%area_src(ni)*&
-             mask_src(ni)*re**2
+             tdomain%mask(ni)*re**2
         ghgtt_i(l) = ghgtt_i(l)+ mhgtt_i(ni,l)*tgridmap%area_src(ni)*&
-             mask_src(ni)*re**2
+             tdomain%mask(ni)*re**2
         ghgtb_i(l) = ghgtb_i(l)+ mhgtb_i(ni,l)*tgridmap%area_src(ni)*&
-             mask_src(ni)*re**2
+             tdomain%mask(ni)*re**2
      end do
      end do
 
@@ -385,7 +382,6 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
   deallocate(msai_i)
   deallocate(mhgtt_i)
   deallocate(mhgtb_i)
-  deallocate(mask_src)
   deallocate(mlai_o)
   deallocate(msai_o)
   deallocate(mhgtt_o)

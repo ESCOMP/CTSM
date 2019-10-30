@@ -681,7 +681,7 @@ contains
     real(r8), intent(in) :: src_array(:)
     real(r8), intent(out):: dst_array(:)
     real(r8), intent(in) :: nodata               ! value to apply where there are no input data
-    real(r8), intent(in) :: mask_src(:)
+    integer, intent(in) :: mask_src(:)
     real(r8), intent(in) :: frac_dst(:)
 !
 ! !REVISION HISTORY:
@@ -864,7 +864,7 @@ contains
 ! !ARGUMENTS:
     implicit none
     type(gridmap_type) , intent(in) :: gridmap   ! gridmap data
-    real(r8), intent(in) :: mask_src(:)
+    integer, intent(in) :: mask_src(:)
     real(r8), intent(out) :: frac_dst(:)
 !
 ! !REVISION HISTORY:
