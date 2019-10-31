@@ -15,7 +15,7 @@ module SurfaceHumidityMod
   use column_varcon           , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon           , only : icol_road_imperv, icol_road_perv
   use landunit_varcon         , only : istice_mec, istwet, istsoil, istcrop
-  use clm_varpar              , only : nlevsoi
+  use clm_varpar              , only : nlevgrnd
   use atm2lndType             , only : atm2lnd_type
   use SoilStateType           , only : soilstate_type
   use TemperatureType         , only : temperature_type
@@ -144,7 +144,7 @@ contains
 
             else if (col%itype(c) == icol_road_perv) then
                ! Pervious road depends on water in total soil column
-               do j = 1, nlevsoi
+               do j = 1, nlevgrnd
                   if (t_soisno(c,j) >= tfrz) then
                      vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
                      eff_porosity = watsat(c,j)-vol_ice
@@ -161,7 +161,7 @@ contains
 
                ! Normalize root resistances to get layer contribution to total ET
                if (hr_road_perv > 0._r8) then
-                  do j = 1, nlevsoi
+                  do j = 1, nlevgrnd
                      rootr_road_perv(c,j) = rootr_road_perv(c,j)/hr_road_perv
                   end do
                end if

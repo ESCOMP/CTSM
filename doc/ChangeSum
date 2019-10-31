@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev078   oleson 10/31/2019 Fix rootr calculation with use_hydrstress true
   ctsm1.0.dev077    sacks 10/27/2019 Consistently use frac_sno_eff rather than frac_sno in qg calculations
   ctsm1.0.dev076    sacks 10/25/2019 Set frac_sno_eff=0 if frac_sno is 0; avoid unnecessary calls to QSat
   ctsm1.0.dev075    sacks 10/25/2019 Lakes: Adjust frac_sno after updating 0-layer snow pack for dew & sublimation

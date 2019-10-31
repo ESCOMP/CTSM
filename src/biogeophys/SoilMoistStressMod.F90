@@ -366,7 +366,7 @@ contains
          bsw           => soilstate_inst%bsw_col            , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"                         (constant)                                        
          eff_porosity  => soilstate_inst%eff_porosity_col   , & ! Input:  [real(r8) (:,:) ]  effective porosity = porosity - vol_ice         
          rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
-         rootr         => soilstate_inst%rootr_patch        , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer                      
+         rootr         => soilstate_inst%rootr_patch        , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer (SMS method only)
 
          btran         => energyflux_inst%btran_patch       , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) (integrated soil water stress)
          btran2        => energyflux_inst%btran2_patch      , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
@@ -407,9 +407,13 @@ contains
                end if
 
                !it is possible to further separate out a btran function, but I will leave it for the moment, jyt
-               if ( .not.(use_hydrstress) ) then
-                  btran(p)    = btran(p) + max(rootr(p,j),0._r8)
-               end if
+               ! We need btran here regardless of whether use_hydrstress is true or false 
+               ! in order to calculate rootr.  rootr is needed by SoilWaterPlantSinkMod.F90 and ch4Mod.F90 when
+               ! use_hydrstress = false, and by ch4Mod.F90 when use_hydrstress = true or false.
+               ! Note that, with use_hydrstress = true, btran will be recalculated using the PHS method later,
+               ! but this SMS form of btran is still used to calculate rootr here; we're living with this
+               ! inconsistency for now.
+               btran(p)    = btran(p) + max(rootr(p,j),0._r8)
             end if
             s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
 
@@ -422,6 +426,9 @@ contains
       end do
 
       ! Normalize root resistances to get layer contribution to ET
+      ! Note that rootr as calculated here is based on the SMS (soil moisture stress) method, 
+      ! not the PHS (plant hydraulic stress) method. It is (should) only be used by SoilWaterPlantSinkMod.F90
+      ! and ch4Mod.F90 when use_hydrstress = false, and by ch4Mod.F90 when use_hydrstress = true or false.
       do j = 1,nlevgrnd
          do f = 1, fn
             p = filterp(f)
@@ -432,6 +439,7 @@ contains
             end if
          end do
       end do
+
     end associate
 
   end subroutine calc_root_moist_stress_clm45default
