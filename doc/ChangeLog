@@ -1,4 +1,155 @@
 ===============================================================
+Tag name:  ctsm1.0.dev078
+Originator(s):  oleson (Keith Oleson)
+Date:  Thu Oct 31 12:30:00 MDT 2019
+One-line Summary: Fix rootr calculation with use_hydrstress true
+
+Purpose of changes
+------------------
+
+In cases with use_hydrstress=.true., both rootr_patch and rootr_col had
+problems. This affected the diagnostic fields ROOTR and ROOTR_COLUMN,
+and (in BGC cases) fed back on other parts of the system via affecting
+the methane code. See https://github.com/ESCOMP/CTSM/issues/812 for more
+details.
+
+This tag fixes this issue via these specific changes:
+
+1. Calculate btran in SoilMoistStressMod.F90 regardless of
+   use_hydrstress
+
+2. Comment on the applicability of this calculation and that of rootr in
+   SoilMoistStressMod.F90
+
+3. Add the following comment to uses of rootr and rootr_col throughout
+   the code: "SMS method only"
+
+4. Allow ROOTR_COL history field only if use_hydrstress = .false.
+
+5. Remove the calculation of rootr_col in subroutine
+   Compute_EffecRootFrac_And_VertTranSink_HydStress within module
+   SoilWaterPlantSinkMod.F90 since that calculation is invalid for PHS.
+
+6. Normalize root resistances for pervious road over nlevgrnd, not
+   nlevsoi
+
+Note that the rootr calculation is done using the non-PHS (i.e., SMS)
+method. So rootr is not really consistent with PHS; this is something
+that should probably be revisited later.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes ESCOMP/ctsm#812 (Problems with rootr when use_hydrstress=.true.)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: not checked; none expected
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Bill Sacks
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+    ok means tests pass, answers change as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm50Bgc (cases with both use_hydrstress=.true. and methane active)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff / same climate
+
+      For details on differences, see
+      https://github.com/ESCOMP/CTSM/issues/812#issuecomment-547924289
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate:
+   http://webext.cgd.ucar.edu/I20TR/clm50_ctsm10d074_2deg_GSWP3V1_rootr_hist/lnd/clm50_ctsm10d074_2deg_GSWP3V1_rootr_hist.1995_2014-clm50_ctsm10d074_2deg_GSWP3V1_hist.1995_2014/setsIndex.html
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev077
 Originator(s):  sacks (Bill Sacks)
 Date:  Sun Oct 27 16:23:39 MDT 2019
