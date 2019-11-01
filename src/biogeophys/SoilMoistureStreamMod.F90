@@ -147,7 +147,7 @@ contains
        write(iulog,*) '  model_year_align_soilm   = ',model_year_align_soilm   
        write(iulog,*) '  stream_fldfilename_soilm = ',trim(stream_fldfilename_soilm)
        write(iulog,*) '  soilm_tintalgo = ',trim(soilm_tintalgo)
-       write(iulog,*) '  soilm_offset = ',trim(soilm_offset)
+       write(iulog,*) '  soilm_offset = ',soilm_offset
 
     endif
 
