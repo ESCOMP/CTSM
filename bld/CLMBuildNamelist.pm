@@ -3531,28 +3531,33 @@ sub setup_logic_megan {
 
 sub setup_logic_soilm_streams {
   # prescribed soil moisture streams require clm4_5/clm5_0
-  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_soil_moisture_streams');
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_soil_moisture_streams');
       if ( &value_is_true( $nl->get_value('use_soil_moisture_streams') ) ) {
-         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_tintalgo',
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_tintalgo',
                      'hgrid'=>$nl_flags->{'res'} );
-         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_soilm', 'phys'=>$nl_flags->{'phys'},
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_soilm', 'phys'=>$nl_flags->{'phys'},
                      'sim_year'=>$nl_flags->{'sim_year'},
                      'sim_year_range'=>$nl_flags->{'sim_year_range'});
-         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_soilm', 'phys'=>$nl_flags->{'phys'},
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_soilm', 'phys'=>$nl_flags->{'phys'},
                      'sim_year'=>$nl_flags->{'sim_year'},
                      'sim_year_range'=>$nl_flags->{'sim_year_range'});
          # Set align year, if first and last years are different
          if ( $nl->get_value('stream_year_first_soilm') !=
               $nl->get_value('stream_year_last_soilm') ) {
-              add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
                           'model_year_align_soilm', 'sim_year'=>$nl_flags->{'sim_year'},
                           'sim_year_range'=>$nl_flags->{'sim_year_range'});
          }
-         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_soilm', 'phys'=>$nl_flags->{'phys'},
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_soilm', 'phys'=>$nl_flags->{'phys'},
                      'hgrid'=>$nl_flags->{'res'} );
+         if ( ($opts->{'use_case'} =~ /_transient$/) && 
+              (remove_leading_and_trailing_quotes($nl->get_value("soilm_tintalgo")) eq "linear") ) {
+             $log->fatal_error("For a transient case, soil moisture streams, must NOT use soilm_tintalgo='linear'" .
+                               " since vegetated areas could go from missing to not missing or vice versa" );
+         }
       } else {
          if ( defined($nl->get_value('stream_year_first_soilm')) ||
               defined($nl->get_value('model_year_align_soilm')) ||
