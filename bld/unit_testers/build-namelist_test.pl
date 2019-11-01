@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 829;
+my $ntests = 830;
 if ( defined($opts{'compare'}) ) {
    $ntests += 504;
 }
@@ -413,7 +413,12 @@ my %failtest = (
      "soilm_stream wo use"       =>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='missing_file'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "soilm_stream w transient"  =>{ options=>"-res 0.9x1.25 -envxml_dir . -use_case 20thC_transient",
+                                     namelst=>"use_soil_moisture_streams=T,soilm_tintalgo='linear'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
                                    },
      "clm50CNDVwtransient"       =>{ options=>" -envxml_dir . -use_case 20thC_transient -dynamic_vegetation -res 10x15",
                                      namelst=>"",
