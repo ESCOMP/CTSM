@@ -86,6 +86,7 @@ contains
     integer            :: model_year_align_soilm     ! align stream_year_first_soilm with 
     integer            :: nu_nml                     ! unit for namelist file
     integer            :: nml_error                  ! namelist i/o error flag
+    integer            :: soilm_offset               ! Offset in time for dataset (sec)
     type(mct_ggrid)    :: dom_clm                    ! domain information 
     character(len=CL)  :: stream_fldfilename_soilm   ! ustar stream filename to read
     character(len=CL)  :: soilm_tintalgo = 'linear'  ! Time interpolation alogrithm
@@ -102,7 +103,8 @@ contains
          stream_year_first_soilm,    &
          stream_year_last_soilm,     &
          model_year_align_soilm,     &
-         soilm_tintalgo,            &
+         soilm_tintalgo,             &
+         soilm_offset,               &
          stream_fldfilename_soilm
 
     ! Default values for namelist
@@ -110,6 +112,7 @@ contains
     stream_year_last_soilm      = 1      ! last  year in stream to use
     model_year_align_soilm      = 1      ! align stream_year_first_soilm with this model year
     stream_fldfilename_soilm    = shr_stream_file_null
+    soilm_offset                = 0
 
     ! Read soilm_streams namelist
     if (masterproc) then
@@ -133,6 +136,7 @@ contains
     call shr_mpi_bcast(model_year_align_soilm, mpicom)
     call shr_mpi_bcast(stream_fldfilename_soilm, mpicom)
     call shr_mpi_bcast(soilm_tintalgo, mpicom)
+    call shr_mpi_bcast(soilm_offset, mpicom)
 
     if (masterproc) then
 
@@ -143,6 +147,7 @@ contains
        write(iulog,*) '  model_year_align_soilm   = ',model_year_align_soilm   
        write(iulog,*) '  stream_fldfilename_soilm = ',trim(stream_fldfilename_soilm)
        write(iulog,*) '  soilm_tintalgo = ',trim(soilm_tintalgo)
+       write(iulog,*) '  soilm_offset = ',trim(soilm_offset)
 
     endif
 
@@ -165,7 +170,7 @@ contains
          yearFirst=stream_year_first_soilm,            &
          yearLast=stream_year_last_soilm,              &
          yearAlign=model_year_align_soilm,             &
-         offset=0,                                     &
+         offset=soilm_offset,                          &
          domFilePath='',                               &
          domFileName=trim(stream_fldFileName_soilm),   &
          domTvarName='time',                           &

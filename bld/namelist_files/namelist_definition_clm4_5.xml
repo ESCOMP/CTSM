@@ -1584,6 +1584,11 @@ Filename of input stream data for prescribed soil moisture streams data
 Time interpolation method to use for prescribed soil moisture streams data
 </entry>
 
+<entry id="soilm_offset" type="integer" category="datasets"
+       group="soil_moisture_streams" >
+Offset in time coordinate for soil moisture streams (sec)
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- lai_streams streams Namelist (when phys = CLM4_5)                              -->
 <!-- ========================================================================================  -->
