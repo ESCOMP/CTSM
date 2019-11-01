@@ -258,7 +258,7 @@ contains
     ! !USES:
     use clm_time_manager, only : get_curr_date
     use clm_varpar      , only : nlevsoi
-    use clm_varcon      , only : denh2o, denice, watmin
+    use clm_varcon      , only : denh2o, denice, watmin, spval
     use landunit_varcon , only : istsoil, istcrop
     !
     ! !ARGUMENTS:
@@ -289,27 +289,44 @@ contains
          h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col        , & ! Input/Output:  [real(r8) (:,:) ]  liquid water (kg/m2)
          h2osoi_ice       =>    waterstate_inst%h2osoi_ice_col        , & ! Input/Output:  [real(r8) (:,:) ]  ice water (kg/m2)
          h2osoi_vol       =>    waterstate_inst%h2osoi_vol_col        , & ! Output: volumetric soil water (m3/m3)
-         h2osoi_vol_prs   =>    waterstate_inst%h2osoi_vol_prs_col      & ! Output: prescribed volumetric soil water (m3/m3)
+         h2osoi_vol_prs   =>    waterstate_inst%h2osoi_vol_prs_grc      & ! Output: prescribed volumetric soil water (m3/m3)
          )
       SHR_ASSERT_FL( (lbound(h2osoi_vol,1) <= bounds%begc ), sourcefile, __LINE__)
       SHR_ASSERT_FL( (ubound(h2osoi_vol,1) >= bounds%endc ), sourcefile, __LINE__)
       SHR_ASSERT_FL( (lbound(h2osoi_vol,2) == 1 ),           sourcefile, __LINE__)
       SHR_ASSERT_FL( (ubound(h2osoi_vol,2) >= nlevsoi ),     sourcefile, __LINE__)
-      SHR_ASSERT_FL( (lbound(h2osoi_vol_prs,1) <= bounds%begc ), sourcefile, __LINE__)
-      SHR_ASSERT_FL( (ubound(h2osoi_vol_prs,1) >= bounds%endc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_vol_prs,1) <= bounds%begg ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_vol_prs,1) >= bounds%endg ), sourcefile, __LINE__)
       SHR_ASSERT_FL( (lbound(h2osoi_vol_prs,2) == 1 ),           sourcefile, __LINE__)
       SHR_ASSERT_FL( (ubound(h2osoi_vol_prs,2) >= nlevsoi ),     sourcefile, __LINE__)
+      !
+      ! Set the prescribed soil moisture read from the file everywhere
+      !
+      do g = bounds%begg, bounds%endg
+         ig = g_to_ig(g)
+         do j = 1, nlevsoi
+               
+             n = ig + (j-1)*size(g_to_ig)
 
-      
-      ! Read data from stream into column level variable
+             h2osoi_vol_prs(g,j) = sdat_soilm%avs(1)%rAttr(ism,n)
+
+             ! If soil moiture is being interpolated in time and the result is
+             ! large that probably means one of the two data points is missing (set to spval)
+             if ( h2osoi_vol_prs(g,j) > 10.0_r8 )then
+                h2osoi_vol_prs(g,j) = spval
+             end if
+
+         end do
+      end do
       
       do c = bounds%begc, bounds%endc
-         if (lun%itype(col%landunit(c)) == istsoil .or. lun%itype(col%landunit(c)) == istcrop) then
-            !
-            ! Set variable for each gridcell/column combination
-            !
-            ig = g_to_ig(col%gridcell(c))
+         !
+         ! Set variable for each gridcell/column combination
+         !
+         g = col%gridcell(c)
+         ig = g_to_ig(g)
             
+         if (lun%itype(col%landunit(c)) == istsoil .or. lun%itype(col%landunit(c)) == istcrop) then
             !       this is a 2d field (gridcell/nlevsoi) !
             do j = 1, nlevsoi
                
@@ -321,9 +338,17 @@ contains
                   ! save original soil moisture value
                   h2osoi_vol_initial = h2osoi_vol(c,j)
             
-                  ! update volumetric soil moisture
-                  h2osoi_vol(c,j) = sdat_soilm%avs(1)%rAttr(ism,n)
-                  h2osoi_vol_prs(c,j) = sdat_soilm%avs(1)%rAttr(ism,n)
+                  ! Check if the vegetated land mask from the dataset on the
+                  ! file is different
+                  if ( h2osoi_vol_prs(g,j) == spval )then
+                     write(iulog,*) 'WARNING: Input soil moisture dataset is not vegetated as expected', g, j
+                     !call endrun(subname // ':: The input soil moisture stream is NOT vegetated for one of the land points' )
+                     !cycle
+                  end if
+
+                  ! update volumetric soil moisture from data prescribed from the file
+                  h2osoi_vol(c,j) = h2osoi_vol_prs(g,j)
+
 
                   ! calculate liq/ice mass fractions
                   soilm_liq_frac  = h2osoi_liq(c, j) /(h2osoi_liq(c, j) + h2osoi_ice(c, j))

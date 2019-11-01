@@ -40,7 +40,7 @@ module WaterstateType
      real(r8), pointer :: h2osoi_ice_tot_col     (:)   ! vertically summed col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_liqice_10cm_col (:)   ! col liquid water + ice lens in top 10cm of soil (kg/m2)
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
-     real(r8), pointer :: h2osoi_vol_prs_col     (:,:) ! col volumetric soil water prescribed (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
+     real(r8), pointer :: h2osoi_vol_prs_grc     (:,:) ! grc volumetric soil water prescribed (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
      real(r8), pointer :: air_vol_col            (:,:) ! col air filled porosity
      real(r8), pointer :: h2osoi_liqvol_col      (:,:) ! col volumetric liquid water content (v/v)
      real(r8), pointer :: h2ocan_patch           (:)   ! patch canopy water (mm H2O)
@@ -185,7 +185,7 @@ contains
     allocate(this%h2osno_old_col         (begc:endc))                     ; this%h2osno_old_col         (:)   = nan   
     allocate(this%h2osoi_liqice_10cm_col (begc:endc))                     ; this%h2osoi_liqice_10cm_col (:)   = nan   
     allocate(this%h2osoi_vol_col         (begc:endc, 1:nlevgrnd))         ; this%h2osoi_vol_col         (:,:) = nan
-    allocate(this%h2osoi_vol_prs_col     (begc:endc, 1:nlevgrnd))         ; this%h2osoi_vol_prs_col     (:,:) = nan
+    allocate(this%h2osoi_vol_prs_grc     (begg:endg, 1:nlevgrnd))         ; this%h2osoi_vol_prs_grc     (:,:) = nan
     allocate(this%air_vol_col            (begc:endc, 1:nlevgrnd))         ; this%air_vol_col            (:,:) = nan
     allocate(this%h2osoi_liqvol_col      (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liqvol_col      (:,:) = nan
     allocate(this%h2osoi_ice_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_ice_col         (:,:) = nan
@@ -290,10 +290,10 @@ contains
          ptr_col=this%h2osoi_vol_col, l2g_scale_type='veg')
 
     if ( use_soil_moisture_streams )then
-       data2dptr => this%h2osoi_vol_prs_col(begc:endc,1:nlevsoi)
-       call hist_addfld2d (fname='H2OSOI_PRESCRIBED',  units='mm3/mm3', type2d='levsoi', &
+       data2dptr => this%h2osoi_vol_prs_grc(begg:endg,1:nlevsoi)
+       call hist_addfld2d (fname='H2OSOI_PRESCRIBED_GRC',  units='mm3/mm3', type2d='levsoi', &
             avgflag='A', long_name='volumetric soil water prescribed (vegetated landunits only)', &
-            ptr_col=this%h2osoi_vol_prs_col, l2g_scale_type='veg')
+            ptr_gcell=this%h2osoi_vol_prs_grc )
     end if
 
 !    this%h2osoi_liq_col(begc:endc,:) = spval
@@ -747,7 +747,7 @@ contains
       ! and urban pervious road (other urban columns have zero soil water)
 
       this%h2osoi_vol_col(bounds%begc:bounds%endc,         1:) = spval
-      this%h2osoi_vol_prs_col(bounds%begc:bounds%endc,     1:) = spval
+      this%h2osoi_vol_prs_grc(bounds%begg:bounds%endg,     1:) = spval
       this%h2osoi_liq_col(bounds%begc:bounds%endc,-nlevsno+1:) = spval
       this%h2osoi_ice_col(bounds%begc:bounds%endc,-nlevsno+1:) = spval
       do c = bounds%begc,bounds%endc
