@@ -1101,6 +1101,7 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <stream_fldfilename_soilm hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.climo1980-2014.MONS_c190709.nc</stream_fldfilename_soilm>
 
 <soilm_tintalgo>linear</soilm_tintalgo>
+<soilm_offset  >0</soilm_offset>
 
 <!-- LAI streams namelist defaults -->
 <use_lai_streams        >.false.</use_lai_streams>

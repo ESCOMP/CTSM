@@ -3538,7 +3538,9 @@ sub setup_logic_soilm_streams {
       if ( &value_is_true( $nl->get_value('use_soil_moisture_streams') ) ) {
          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_tintalgo',
                      'hgrid'=>$nl_flags->{'res'} );
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_soilm', 'phys'=>$nl_flags->{'phys'},
+         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_offset',
+                     'hgrid'=>$nl_flags->{'res'} );
+         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_soilm', 'phys'=>$nl_flags->{'phys'},
                      'sim_year'=>$nl_flags->{'sim_year'},
                      'sim_year_range'=>$nl_flags->{'sim_year_range'});
          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_soilm', 'phys'=>$nl_flags->{'phys'},
@@ -3562,9 +3564,12 @@ sub setup_logic_soilm_streams {
          if ( defined($nl->get_value('stream_year_first_soilm')) ||
               defined($nl->get_value('model_year_align_soilm')) ||
               defined($nl->get_value('stream_fldfilename_soilm')) ||
+              defined($nl->get_value('soilm_tintalgo')) ||
+              defined($nl->get_value('soilm_offset')) ||
               defined($nl->get_value('stream_year_last_soilm')) ) {
              $log->fatal_error("One of the soilm streams namelist items (stream_year_first_soilm, " . 
                                 " model_year_align_soilm, stream_fldfilename_soilm, stream_fldfilename_soilm)" . 
+                                " soilm_tintalgo soilm_offset" .
                                 " is defined, but use_soil_moisture_streams option NOT set to true");
          }
       }
