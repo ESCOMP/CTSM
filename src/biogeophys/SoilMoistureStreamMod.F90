@@ -326,7 +326,7 @@ contains
          g = col%gridcell(c)
          ig = g_to_ig(g)
             
-         if (lun%itype(col%landunit(c)) == istsoil .or. lun%itype(col%landunit(c)) == istcrop) then
+         if (lun%itype(col%landunit(c)) == istsoil ) then
             !       this is a 2d field (gridcell/nlevsoi) !
             do j = 1, nlevsoi
                
