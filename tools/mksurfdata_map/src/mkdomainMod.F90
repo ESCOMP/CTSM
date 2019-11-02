@@ -838,7 +838,7 @@ end subroutine domain_check
         write(6,*) trim(subname)//'ERROR: source domain is unset!'
         call abort()
      end if
-     if (srcdomain%set == unset) then
+     if (dstdomain%set == unset) then
         write(6,*) trim(subname)//'ERROR: destination domain is unset!'
         call abort()
      end if

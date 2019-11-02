@@ -505,13 +505,14 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
   type(gridmap_type)   :: tgridmap
   type(domain_type)    :: tdomain            ! local domain
   real(r8), allocatable :: glac_i(:)          ! input grid: percent glac
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   real(r8) :: sum_fldi                        ! global sum of dummy input fld
   real(r8) :: sum_fldo                        ! global sum of dummy output fld
   real(r8) :: gglac_i                         ! input  grid: global glac
   real(r8) :: garea_i                         ! input  grid: global area
   real(r8) :: gglac_o                         ! output grid: global glac
   real(r8) :: garea_o                         ! output grid: global area
-  integer  :: ni,no,k,n,m,ns                  ! indices
+  integer  :: ni,no,k,n,m,ns, ns_o            ! indices
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
@@ -529,7 +530,10 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
 
   call domain_read(tdomain,datfname)
   ns = tdomain%ns
-  allocate(glac_i(ns), stat=ier)
+  ns_o = ldomain%ns
+  allocate(glac_i(ns),  &
+           frac_dst(ns_o),  &
+           stat=ier)
   if (ier/=0) call abort()
 
   write (6,*) 'Open glacier file: ', trim(datfname)
@@ -544,7 +548,7 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
 
   if ( zero_out )then
 
-     do no = 1, ldomain%ns
+     do no = 1, ns_o
         glac_o(no) = 0.
      enddo
 
@@ -555,18 +559,21 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
      ! Error checks for domain and map consistencies
      call domain_checksame( tdomain, ldomain, tgridmap )
      
+     ! Obtain frac_dst
+     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
      ! Determine glac_o on output grid
 
-     call gridmap_areaave(tgridmap, glac_i, glac_o, nodata=0._r8)
+     call gridmap_areaave(tgridmap, glac_i, glac_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
      
-     do no = 1, ldomain%ns
+     do no = 1, ns_o
         if (glac_o(no) < 1.) glac_o(no) = 0.
      enddo
   end if
 
   ! Check for conservation
 
-  do no = 1, ldomain%ns
+  do no = 1, ns_o
      if ((glac_o(no)) > 100.000001_r8) then
         write (6,*) 'MKGLACIER error: glacier = ',glac_o(no), &
                 ' greater than 100.000001 for column, row = ',no
@@ -583,12 +590,12 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
      ! output grid that is land as determined by input grid
 
      sum_fldi = 0.0_r8
-     do ni = 1, tdomain%ns
+     do ni = 1, ns
         sum_fldi = sum_fldi + tgridmap%area_src(ni) * tgridmap%frac_src(ni)
      enddo
 
      sum_fldo = 0.
-     do no = 1, ldomain%ns
+     do no = 1, ns_o
         sum_fldo = sum_fldo + tgridmap%area_dst(no) * tgridmap%frac_dst(no)
      end do
 
@@ -615,7 +622,7 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
 
      gglac_i = 0.
      garea_i = 0.
-     do ni = 1, tdomain%ns
+     do ni = 1, ns
         garea_i = garea_i + tgridmap%area_src(ni)*re**2
         gglac_i = gglac_i + glac_i(ni)*(tgridmap%area_src(ni)/100.)*&
                                         tgridmap%frac_src(ni)*re**2
@@ -625,7 +632,7 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
 
      gglac_o = 0.
      garea_o = 0.
-     do no = 1, ldomain%ns
+     do no = 1, ns_o
         garea_o = garea_o + tgridmap%area_dst(no)*re**2
         gglac_o = gglac_o + glac_o(no)*(tgridmap%area_dst(no)/100.)*&
                                         tgridmap%frac_dst(no)*re**2
@@ -657,7 +664,7 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
   call domain_clean(tdomain) 
   if ( .not. zero_out )then
      call gridmap_clean(tgridmap)
-     deallocate (glac_i)
+     deallocate (glac_i, frac_dst)
   end if
 
   write (6,*) 'Successfully made %glacier'
