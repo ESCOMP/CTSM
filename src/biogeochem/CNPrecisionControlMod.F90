@@ -22,9 +22,9 @@ module CNPrecisionControlMod
 
   ! !PUBLIC DATA:
   real(r8), public :: ccrit    =  1.e-8_r8              ! critical carbon state value for truncation (gC/m2)
-  real(r8), public :: cnegcrit = -6.e+1_r8              ! critical negative carbon state value for abort (gC/m2)
+  real(r8), public :: cnegcrit = -6.e+6_r8      ! -6.e+1_r8        ! critical negative carbon state value for abort (gC/m2)
   real(r8), public :: ncrit    =  1.e-8_r8              ! critical nitrogen state value for truncation (gN/m2)
-  real(r8), public :: nnegcrit = -7.e+0_r8              ! critical negative nitrogen state value for abort (gN/m2)
+  real(r8), public :: nnegcrit = -7.e+5_r8      ! -7.e+0_r8        ! critical negative nitrogen state value for abort (gN/m2)
   real(r8), public, parameter :: n_min = 0.000000001_r8 ! Minimum Nitrogen value to use when calculating CN ratio (gN/m2)
 
   ! !PRIVATE DATA:
@@ -406,7 +406,7 @@ contains
     !
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use clm_varctl , only : use_c13, use_c14, use_nguardrail
+    use clm_varctl , only : use_c13, use_c14, use_nguardrail, use_matrixcn
     use clm_varctl , only : iulog
     use pftconMod  , only : nc3crop
     use decompMod  , only : bounds_type
@@ -468,21 +468,42 @@ contains
              write(iulog,*) 'ERROR: Carbon or Nitrogen patch negative = ', carbon_patch(p), nitrogen_patch(p)
              write(iulog,*) 'ERROR: limits = ', cnegcrit, nnegcrit
              call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))
-          else if ( abs(carbon_patch(p)) < ccrit .or. (use_nguardrail .and. abs(nitrogen_patch(p)) < ncrit) ) then
-             pc(p) = pc(p) + carbon_patch(p)
-             carbon_patch(p) = 0._r8
-      
-             pn(p) = pn(p) + nitrogen_patch(p)
-             nitrogen_patch(p) = 0._r8
-   
-             if ( use_c13 .and. present(c13) .and. present(pc13) ) then
-                pc13(p) = pc13(p) + c13(p)
-                c13(p) = 0._r8
-             endif
-             if ( use_c14 .and. present(c14) .and. present(pc14)) then
-                pc14(p) = pc14(p) + c14(p)
-                c14(p) = 0._r8
-             endif
+          else 
+             if (use_matrixcn)then
+                if ( (carbon_patch(p) < ccrit .and. carbon_patch(p) > -ccrit * 1.e+6) .or. (use_nguardrail .and. nitrogen_patch(p) < ncrit .and. nitrogen_patch(p) > -ncrit*1.e+6) ) then
+                   pc(p) = pc(p) + carbon_patch(p)
+                   carbon_patch(p) = 0._r8
+          
+                   pn(p) = pn(p) + nitrogen_patch(p)
+                   nitrogen_patch(p) = 0._r8
+    
+                   if ( use_c13 .and. present(c13) .and. present(pc13) ) then
+                      pc13(p) = pc13(p) + c13(p)
+                      c13(p) = 0._r8
+                   endif
+                   if ( use_c14 .and. present(c14) .and. present(pc14)) then
+                      pc14(p) = pc14(p) + c14(p)
+                      c14(p) = 0._r8
+                   endif
+                end if
+             else
+                if ( abs(carbon_patch(p)) < ccrit .or. (use_nguardrail .and. abs(nitrogen_patch(p)) < ncrit ) ) then
+                   pc(p) = pc(p) + carbon_patch(p)
+                   carbon_patch(p) = 0._r8
+
+                   pn(p) = pn(p) + nitrogen_patch(p)
+                   nitrogen_patch(p) = 0._r8
+
+                   if ( use_c13 .and. present(c13) .and. present(pc13) ) then
+                      pc13(p) = pc13(p) + c13(p)
+                      c13(p) = 0._r8
+                   endif
+                   if ( use_c14 .and. present(c14) .and. present(pc14)) then
+                      pc14(p) = pc14(p) + c14(p)
+                      c14(p) = 0._r8
+                   endif
+                end if
+             end if
           end if
        end if
     end do

@@ -33,6 +33,10 @@ module CNBalanceCheckMod
      real(r8), pointer :: endcb_col(:)        ! (gC/m2) carbon mass, end of time step
      real(r8), pointer :: begnb_col(:)        ! (gN/m2) nitrogen mass, beginning of time step 
      real(r8), pointer :: endnb_col(:)        ! (gN/m2) nitrogen mass, end of time step 
+     real(r8)          :: cwarning            ! (gC/m2) For a Carbon balance warning
+     real(r8)          :: nwarning            ! (gN/m2) For a Nitrogen balance warning
+     real(r8)          :: cerror              ! (gC/m2) For a Carbon balance error
+     real(r8)          :: nerror              ! (gN/m2) For a Nitrogen balance error
    contains
      procedure , public  :: Init
      procedure , public  :: BeginCNBalance
@@ -50,10 +54,28 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Init(this, bounds)
+    use clm_varctl       , only : use_matrixcn, use_soil_matrixcn, isspinup
     class(cn_balance_type)         :: this
     type(bounds_type) , intent(in) :: bounds  
 
     call this%InitAllocate(bounds)
+
+    this%cwarning = 1.e-8_r8
+    if(use_matrixcn .or. use_soil_matrixcn)then
+       this%nwarning = 1.e-7_r8
+       this%nerror   = 1.e-3_r8
+       this%cerror   = 1.e-7_r8
+    else
+       this%nwarning = 1.e-7_r8
+       this%nerror   = 1.e-3_r8
+       this%cerror   = 1.e-7_r8
+    end if
+    if ( isspinup )then
+       this%nwarning = 1.e-5_r8
+       this%nerror   = 1.e-1_r8
+       this%cwarning = 1.e-6_r8
+       this%cerror   = 1.e-3_r8
+    end if
   end subroutine Init
 
   !-----------------------------------------------------------------------
@@ -189,15 +211,13 @@ contains
               (col_endcb(c) - col_begcb(c))
 
          ! check for significant errors
-         if (abs(col_errcb(c)) > 1e-7_r8) then
+         if (abs(col_errcb(c)) > this%cerror) then 
             err_found = .true.
             err_index = c
          end if
-          if (abs(col_errcb(c)) > 1e-8_r8) then
+          if (abs(col_errcb(c)) > this%cwarning) then
             write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
          end if
-
-
 
       end do ! end of columns loop
 
@@ -325,15 +345,14 @@ contains
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
-
-         if (abs(col_errnb(c)) > 1e-3_r8) then
+        
+         if (abs(col_errnb(c)) > this%nerror) then 
             err_found = .true.
             err_index = c
          end if
-         
-         if (abs(col_errnb(c)) > 1e-7_r8) then
+         if (abs(col_errnb(c)) > this%nwarning) then
             write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
-            write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+            write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt  
             write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
          end if
 

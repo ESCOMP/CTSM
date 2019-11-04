@@ -205,6 +205,14 @@ module clm_varctl
 
   logical, public :: use_c13 = .false.                  ! true => use C-13 model
   logical, public :: use_c14 = .false.                  ! true => use C-14 model
+  !----------------------------------------------------------
+  ! CN matrix
+  !----------------------------------------------------------  
+  logical, public :: use_matrixcn = .true. !.false.              ! true => use cn matrix
+  logical, public :: use_soil_matrixcn = .true.! true => use cn matrix  
+  logical, public :: isspinup = .false.  !.false.              ! true => use acc spinup
+  logical, public :: is_outmatrix = .true. !.false.              ! true => use acc spinup
+  integer, public :: nyr_forcing  = 10   ! number of forcing-years for the spin up
 
   ! BUG(wjs, 2018-10-25, ESCOMP/ctsm#67) There is a bug that causes incorrect values for C
   ! isotopes if running init_interp from a case without C isotopes to a case with C

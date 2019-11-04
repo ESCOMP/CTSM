@@ -2971,7 +2971,6 @@ contains
           end if
 
           ! Write history output.  Always output land and ocean runoff on xy grid.
-
           if (num2d == 1) then
              call ncd_io(flag='write', varname=varname, &
                   dim1name=type1d_out, data=hist1do, ncid=nfid(t), nt=nt)

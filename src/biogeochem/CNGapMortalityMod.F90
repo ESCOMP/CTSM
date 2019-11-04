@@ -8,19 +8,27 @@ module CNGapMortalityMod
   ! nitrogen code.
   !
   ! !USES:
-  use shr_kind_mod            , only : r8 => shr_kind_r8
-  use decompMod               , only : bounds_type
-  use abortutils              , only : endrun
-  use shr_log_mod             , only : errMsg => shr_log_errMsg
-  use pftconMod               , only : pftcon
-  use CNDVType                , only : dgvs_type
-  use CNVegCarbonStateType    , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType     , only : cnveg_carbonflux_type
-  use CNVegNitrogenStateType  , only : cnveg_nitrogenstate_type
-  use CNVegNitrogenFluxType   , only : cnveg_nitrogenflux_type
-  use CanopyStateType         , only : canopystate_type            
-  use ColumnType              , only : col                
-  use PatchType               , only : patch                
+  use shr_kind_mod                   , only : r8 => shr_kind_r8
+  use decompMod                      , only : bounds_type
+  use abortutils                     , only : endrun
+  use shr_log_mod                    , only : errMsg => shr_log_errMsg
+  use pftconMod                      , only : pftcon
+  use CNDVType                       , only : dgvs_type
+  use CNVegCarbonStateType           , only : cnveg_carbonstate_type
+  use CNVegCarbonFluxType            , only : cnveg_carbonflux_type
+  use CNVegNitrogenStateType         , only : cnveg_nitrogenstate_type
+  use CNVegNitrogenFluxType          , only : cnveg_nitrogenflux_type
+  use SoilBiogeochemNitrogenFluxType , only : soilbiogeochem_nitrogenflux_type
+  use CanopyStateType                , only : canopystate_type            
+  use ColumnType                     , only : col                
+  use PatchType                      , only : patch                
+  use GridcellType                   , only : grc
+  use clm_varctl                     , only : use_matrixcn  
+  use clm_varpar                     , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                              ilivestem,ilivestem_st,ilivestem_xf,&
+                                              ideadstem,ideadstem_st,ideadstem_xf,&
+                                              ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                              ideadcroot,ideadcroot_st,ideadcroot_xf,iretransn,ioutc,ioutn
   !
   implicit none
   private
@@ -80,7 +88,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNGapMortality (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+       dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,&
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, canopystate_inst, &  
        leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch)  
     !
@@ -88,28 +96,29 @@ contains
     ! Gap-phase mortality routine for coupled carbon-nitrogen code (CN)
     !
     ! !USES:
-    use clm_time_manager , only: get_days_per_year
+    use clm_time_manager , only: get_days_per_year, get_step_size_real
     use clm_varpar       , only: nlevdecomp_full
     use clm_varcon       , only: secspday
     use clm_varctl       , only: use_cndv, spinup_state
     use pftconMod        , only: npcropmin
     !
     ! !ARGUMENTS:
-    type(bounds_type)               , intent(in)    :: bounds
-    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                         , intent(in)    :: filter_soilc(:) ! column filter for soil points
-    integer                         , intent(in)    :: num_soilp       ! number of soil patches in filter
-    integer                         , intent(in)    :: filter_soilp(:) ! patch filter for soil points
-    type(dgvs_type)                 , intent(inout) :: dgvs_inst
-    type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
-    type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
-    type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
-    type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
-    type(canopystate_type)          , intent(in)    :: canopystate_inst            
-    real(r8)                        , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
-    real(r8)                        , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
-    real(r8)                        , intent(in)    :: croot_prof_patch(bounds%begp:,1:)
-    real(r8)                        , intent(in)    :: stem_prof_patch(bounds%begp:,1:)
+    type(bounds_type)                      , intent(in)    :: bounds
+    integer                                , intent(in)    :: num_soilc       ! number of soil columns in filter
+    integer                                , intent(in)    :: filter_soilc(:) ! column filter for soil points
+    integer                                , intent(in)    :: num_soilp       ! number of soil patches in filter
+    integer                                , intent(in)    :: filter_soilp(:) ! patch filter for soil points
+    type(dgvs_type)                        , intent(inout) :: dgvs_inst
+    type(cnveg_carbonstate_type)           , intent(in)    :: cnveg_carbonstate_inst
+    type(cnveg_nitrogenstate_type)         , intent(in)    :: cnveg_nitrogenstate_inst
+    type(cnveg_carbonflux_type)            , intent(inout) :: cnveg_carbonflux_inst
+    type(cnveg_nitrogenflux_type)          , intent(inout) :: cnveg_nitrogenflux_inst
+    type(canopystate_type)                 , intent(in)    :: canopystate_inst            
+    type(soilbiogeochem_nitrogenflux_type) , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+    real(r8)                               , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
+    real(r8)                               , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
+    real(r8)                               , intent(in)    :: croot_prof_patch(bounds%begp:,1:)
+    real(r8)                               , intent(in)    :: stem_prof_patch(bounds%begp:,1:)
     !
     ! !LOCAL VARIABLES:
     integer :: p             ! patch index
@@ -126,20 +135,57 @@ contains
     SHR_ASSERT_ALL((ubound(stem_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
 
     associate(                                         & 
-         ivt        =>    patch%itype                  , & ! Input:  [integer  (:) ]  patch vegetation type                                
+         ivt                      => patch%itype                  , & ! Input:  [integer  (:) ]  patch vegetation type                                
 
-         woody      =>    pftcon%woody               , & ! Input:  binary flag for woody lifeform                    
+         woody                    => pftcon%woody               , & ! Input:  binary flag for woody lifeform                    
          
-         greffic    =>    dgvs_inst%greffic_patch    , & ! Input:  [real(r8) (:) ]                                                    
-         heatstress =>    dgvs_inst%heatstress_patch , & ! Input:  [real(r8) (:) ]    
+         greffic                  => dgvs_inst%greffic_patch    , & ! Input:  [real(r8) (:) ]                                                    
+         heatstress               => dgvs_inst%heatstress_patch , & ! Input:  [real(r8) (:) ]    
          
-         leafcn  	=>    pftcon%leafcn               , & ! Input:  [real(r8) (:)]  leaf C:N (gC/gN)                        
-         frootcn    =>    pftcon%frootcn              , & ! Input:  [real(r8) (:)]  fine root C:N (gC/gN)                  
-         livewdcn   =>    pftcon%livewdcn             , & ! Input:  [real(r8) (:)]  live wood (phloem and ray parenchyma) C:N (gC/gN) 
-         laisun     =>    canopystate_inst%laisun_patch  , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index      
-         laisha     =>    canopystate_inst%laisha_patch  , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index   
+         leafcn                   => pftcon%leafcn               , & ! Input:  [real(r8) (:)]  leaf C:N (gC/gN)                        
+         frootcn                  => pftcon%frootcn              , & ! Input:  [real(r8) (:)]  fine root C:N (gC/gN)                  
+         livewdcn                 => pftcon%livewdcn             , & ! Input:  [real(r8) (:)]  live wood (phloem and ray parenchyma) C:N (gC/gN) 
+         laisun                   => canopystate_inst%laisun_patch  , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index      
+         laisha                   => canopystate_inst%laisha_patch  , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index   
                                                          
-         nind       =>    dgvs_inst%nind_patch         & ! Output: [real(r8) (:) ]  number of individuals (#/m2) added by F. Li and S. Levis
+         nind                     => dgvs_inst%nind_patch                           , & ! Output:[real(r8)(:)] number of individuals (#/m2) added by F. Li and S. Levis		
+         ileaf_to_iout_gmc        => cnveg_carbonflux_inst%ileaf_to_iout_gm         , & ! Input: [integer (:)] Index of gap mortality related C transfer from leaf pool to outside of vegetation pools
+         ileafst_to_iout_gmc      => cnveg_carbonflux_inst%ileafst_to_iout_gm       , & ! Input: [integer (:)] Index of gap mortality related C transfer from leaf storage pool to outside of vegetation pools
+         ileafxf_to_iout_gmc      => cnveg_carbonflux_inst%ileafxf_to_iout_gm       , & ! Input: [integer (:)] Index of gap mortality related C transfer from leaf transfer pool to outside of vegetation pools
+         ifroot_to_iout_gmc       => cnveg_carbonflux_inst%ifroot_to_iout_gm        , & ! Input: [integer (:)] Index of gap mortality related C transfer from fine root pool to outside of vegetation pools
+         ifrootst_to_iout_gmc     => cnveg_carbonflux_inst%ifrootst_to_iout_gm      , & ! Input: [integer (:)] Index of gap mortality related C transfer from fine root storage pool to outside of vegetation pools
+         ifrootxf_to_iout_gmc     => cnveg_carbonflux_inst%ifrootxf_to_iout_gm      , & ! Input: [integer (:)] Index of gap mortality related C transfer from fine root transfer pool to outside of vegetation pools
+         ilivestem_to_iout_gmc    => cnveg_carbonflux_inst%ilivestem_to_iout_gm     , & ! Input: [integer (:)] Index of gap mortality related C transfer from live stem pool to outside of vegetation pools
+         ilivestemst_to_iout_gmc  => cnveg_carbonflux_inst%ilivestemst_to_iout_gm   , & ! Input: [integer (:)] Index of gap mortality related C transfer from live stem storage pool to outside of vegetation pools
+         ilivestemxf_to_iout_gmc  => cnveg_carbonflux_inst%ilivestemxf_to_iout_gm   , & ! Input: [integer (:)] Index of gap mortality related C transfer from live stem transfer pool to outside of vegetation pools
+         ideadstem_to_iout_gmc    => cnveg_carbonflux_inst%ideadstem_to_iout_gm     , & ! Input: [integer (:)] Index of gap mortality related C transfer from dead stem pool to outside of vegetation pools
+         ideadstemst_to_iout_gmc  => cnveg_carbonflux_inst%ideadstemst_to_iout_gm   , & ! Input: [integer (:)] Index of gap mortality related C transfer from dead stem storage pool to outside of vegetation pools
+         ideadstemxf_to_iout_gmc  => cnveg_carbonflux_inst%ideadstemxf_to_iout_gm   , & ! Input: [integer (:)] Index of gap mortality related C transfer from dead stem transfer pool to outside of vegetation pools
+         ilivecroot_to_iout_gmc   => cnveg_carbonflux_inst%ilivecroot_to_iout_gm    , & ! Input: [integer (:)] Index of gap mortality related C transfer from live coarse root pool to outside of vegetation pools
+         ilivecrootst_to_iout_gmc => cnveg_carbonflux_inst%ilivecrootst_to_iout_gm  , & ! Input: [integer (:)] Index of gap mortality related C transfer from live coarse root storage pool to outside of vegetation pools
+         ilivecrootxf_to_iout_gmc => cnveg_carbonflux_inst%ilivecrootxf_to_iout_gm  , & ! Input: [integer (:)] Index of gap mortality related C transfer from live coarse root transfer pool to outside of vegetation pools
+         ideadcroot_to_iout_gmc   => cnveg_carbonflux_inst%ideadcroot_to_iout_gm    , & ! Input: [integer (:)] Index of gap mortality related C transfer from dead coarse root pool to outside of vegetation pools
+         ideadcrootst_to_iout_gmc => cnveg_carbonflux_inst%ideadcrootst_to_iout_gm  , & ! Input: [integer (:)] Index of gap mortality related C transfer from dead coarse root storage pool to outside of vegetation pools
+         ideadcrootxf_to_iout_gmc => cnveg_carbonflux_inst%ideadcrootxf_to_iout_gm  , & ! Input: [integer (:)] Index of gap mortality related C transfer from dead coarse root transfer pool to outside of vegetation pools
+         ileaf_to_iout_gmn        => cnveg_nitrogenflux_inst%ileaf_to_iout_gm       , & ! Input: [integer (:)] Index of gap mortality related N transfer from leaf pool to outside of vegetation pools
+         ileafst_to_iout_gmn      => cnveg_nitrogenflux_inst%ileafst_to_iout_gm     , & ! Input: [integer (:)] Index of gap mortality related N transfer from leaf storage pool to outside of vegetation pools
+         ileafxf_to_iout_gmn      => cnveg_nitrogenflux_inst%ileafxf_to_iout_gm     , & ! Input: [integer (:)] Index of gap mortality related N transfer from leaf transfer pool to outside of vegetation pools
+         ifroot_to_iout_gmn       => cnveg_nitrogenflux_inst%ifroot_to_iout_gm      , & ! Input: [integer (:)] Index of gap mortality related N transfer from fine root pool to outside of vegetation pools
+         ifrootst_to_iout_gmn     => cnveg_nitrogenflux_inst%ifrootst_to_iout_gm    , & ! Input: [integer (:)] Index of gap mortality related N transfer from fine root storage pool to outside of vegetation pools
+         ifrootxf_to_iout_gmn     => cnveg_nitrogenflux_inst%ifrootxf_to_iout_gm    , & ! Input: [integer (:)] Index of gap mortality related N transfer from fine root transfer pool to outside of vegetation pools
+         ilivestem_to_iout_gmn    => cnveg_nitrogenflux_inst%ilivestem_to_iout_gm   , & ! Input: [integer (:)] Index of gap mortality related N transfer from live stem pool to outside of vegetation pools
+         ilivestemst_to_iout_gmn  => cnveg_nitrogenflux_inst%ilivestemst_to_iout_gm , & ! Input: [integer (:)] Index of gap mortality related N transfer from live stem storage pool to outside of vegetation pools
+         ilivestemxf_to_iout_gmn  => cnveg_nitrogenflux_inst%ilivestemxf_to_iout_gm , & ! Input: [integer (:)] Index of gap mortality related N transfer from live stem transfer pool to outside of vegetation pools
+         ideadstem_to_iout_gmn    => cnveg_nitrogenflux_inst%ideadstem_to_iout_gm   , & ! Input: [integer (:)] Index of gap mortality related N transfer from dead stem pool to outside of vegetation pools
+         ideadstemst_to_iout_gmn  => cnveg_nitrogenflux_inst%ideadstemst_to_iout_gm , & ! Input: [integer (:)] Index of gap mortality related N transfer from dead stem storage pool to outside of vegetation pools
+         ideadstemxf_to_iout_gmn  => cnveg_nitrogenflux_inst%ideadstemxf_to_iout_gm , & ! Input: [integer (:)] Index of gap mortality related N transfer from dead stem transfer pool to outside of vegetation pools
+         ilivecroot_to_iout_gmn   => cnveg_nitrogenflux_inst%ilivecroot_to_iout_gm  , & ! Input: [integer (:)] Index of gap mortality related N transfer from live coarse root pool to outside of vegetation pools
+         ilivecrootst_to_iout_gmn => cnveg_nitrogenflux_inst%ilivecrootst_to_iout_gm, & ! Input: [integer (:)] Index of gap mortality related N transfer from live coarse root storage pool to outside of vegetation pools
+         ilivecrootxf_to_iout_gmn => cnveg_nitrogenflux_inst%ilivecrootxf_to_iout_gm, & ! Input: [integer (:)] Index of gap mortality related N transfer from live coarse root transfer pool to outside of vegetation pools
+         ideadcroot_to_iout_gmn   => cnveg_nitrogenflux_inst%ideadcroot_to_iout_gm  , & ! Input: [integer (:)] Index of gap mortality related N transfer from dead coarse root pool to outside of vegetation pools
+         ideadcrootst_to_iout_gmn => cnveg_nitrogenflux_inst%ideadcrootst_to_iout_gm, & ! Input: [integer (:)] Index of gap mortality related N transfer from dead coarse root storage pool to outside of vegetation pools
+         ideadcrootxf_to_iout_gmn => cnveg_nitrogenflux_inst%ideadcrootxf_to_iout_gm, & ! Input: [integer (:)] Index of gap mortality related N transfer from dead coarse root transfer pool to outside of vegetation pools
+         iretransn_to_iout_gmn    => cnveg_nitrogenflux_inst%iretransn_to_iout_gm     & ! Input: [integer (:)] Index of gap mortality related N transfer from retranslocation pool to outside of vegetation pools
          )
 
       ! set the mortality rate based on annual rate
@@ -194,9 +240,17 @@ contains
          if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
            cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)  * m * 10._r8
            cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * 10._r8
+           if (use_matrixcn) then  
+              cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)     = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)     + m * 10._r8
+              cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    + m * 10._r8
+           end if !use_matrixcn
          else
            cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)           * m
            cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)          * m
+           if (use_matrixcn) then
+              cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)     = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)     + m
+              cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    + m
+           end if !use_matrixcn
          end if
 
          ! storage pools
@@ -216,6 +270,29 @@ contains
          cnveg_carbonflux_inst%m_livecrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%livecrootc_xfer_patch(p)     * m
          cnveg_carbonflux_inst%m_deadcrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%deadcrootc_xfer_patch(p)     * m
          cnveg_carbonflux_inst%m_gresp_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%gresp_xfer_patch(p)          * m
+         if (use_matrixcn) then 
+         ! displayed pools
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc)         = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc)        = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc)     = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc)    = m
+
+         ! storage pools
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc)       = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootst_to_iout_gmc)      = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemst_to_iout_gmc)   = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootst_to_iout_gmc)  = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemst_to_iout_gmc)   = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc)  = m
+
+         ! transfer pools
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc)       = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootxf_to_iout_gmc)      = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemxf_to_iout_gmc)   = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc)  = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemxf_to_iout_gmc)   = m
+            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc)  = m
+         end if !use_matrixcn
 
          !------------------------------------------------------
          ! patch-level gap mortality nitrogen fluxes
@@ -230,9 +307,17 @@ contains
          if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
            cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * m * 10._r8
            cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * m * 10._r8
+           if (use_matrixcn) then
+             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     + m* 10._r8
+             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    + m*10._r8
+           end if !use_matrixcn
          else
            cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_patch(p)           * m 
            cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_patch(p)          * m 
+           if (use_matrixcn) then
+             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     + m
+             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    + m
+           end if !use_matrixcn
          end if
 
          if (ivt(p) < npcropmin) then
@@ -254,6 +339,33 @@ contains
          cnveg_nitrogenflux_inst%m_deadstemn_xfer_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_xfer_patch(p)     * m
          cnveg_nitrogenflux_inst%m_livecrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%livecrootn_xfer_patch(p)    * m
          cnveg_nitrogenflux_inst%m_deadcrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_xfer_patch(p)    * m
+         if (use_matrixcn) then	 
+         ! displayed pools
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileaf_to_iout_gmn)        = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifroot_to_iout_gmn)       = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestem_to_iout_gmn)    = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn)   = m
+
+         ! storage pools
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileafst_to_iout_gmn)      = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifrootst_to_iout_gmn)     = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestemst_to_iout_gmn)  = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecrootst_to_iout_gmn) = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstemst_to_iout_gmn)  = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcrootst_to_iout_gmn) = m
+
+         ! transfer pools
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileafxf_to_iout_gmn)      = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifrootxf_to_iout_gmn)     = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestemxf_to_iout_gmn)  = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecrootxf_to_iout_gmn) = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstemxf_to_iout_gmn)  = m
+            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcrootxf_to_iout_gmn) = m
+
+            if (ivt(p) < npcropmin) then
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iretransn_to_iout_gmn) = m
+            end if
+         end if !use_matrixcn
 
          ! added by F. Li and S. Levis
          if (use_cndv) then
@@ -268,6 +380,16 @@ contains
 
       end do ! end of patch loop
 
+      if(use_matrixcn)then
+         do fp = 1,num_soilp
+            p = filter_soilp(fp)
+            if(cnveg_carbonflux_inst%matrix_phtransfer_patch(p,cnveg_carbonflux_inst%ifroot_to_iout_ph) .ge. 1._r8 / get_step_size_real())then
+               cnveg_carbonflux_inst%m_frootc_to_litter_patch(p) = 0._r8
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc) = 0._r8
+            end if
+         end do
+      end if
+      
       ! gather all patch-level litterfall fluxes to the column
       ! for litter C and N inputs
 

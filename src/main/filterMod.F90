@@ -93,6 +93,12 @@ module filterMod
      integer, pointer :: do_smb_c(:)     ! glacier+bareland SMB calculations-on filter (cols)
      integer :: num_do_smb_c             ! number of columns in glacier+bareland SMB mec filter         
 
+     integer, pointer :: actfirec(:)     ! glacier+bareland SMB calculations-on filter (cols)
+     integer :: num_actfirec             ! number of columns in glacier+bareland SMB mec filter         
+
+     integer, pointer :: actfirep(:)     ! glacier+bareland SMB calculations-on filter (cols)
+     integer :: num_actfirep             ! number of columns in glacier+bareland SMB mec filter         
+
   end type clumpfilter
   public clumpfilter
 
@@ -229,6 +235,12 @@ contains
 
        allocate(this_filter(nc)%icemecc(bounds%endc-bounds%begc+1))      
        allocate(this_filter(nc)%do_smb_c(bounds%endc-bounds%begc+1))       
+       
+       allocate(this_filter(nc)%actfirec(bounds%endc-bounds%begc+1))      
+       allocate(this_filter(nc)%actfirep(bounds%endp-bounds%begp+1))
+
+       this_filter(nc)%num_actfirep = 1
+       this_filter(nc)%num_actfirec = 1
        
     end do
 !$OMP END PARALLEL DO
@@ -378,7 +390,6 @@ contains
        end if
     end do
     this_filter(nc)%num_soilc = fs
-
     ! Create soil filter at patch-level
 
     fs = 0
