@@ -1589,6 +1589,14 @@ Time interpolation method to use for prescribed soil moisture streams data
 Offset in time coordinate for soil moisture streams (sec)
 </entry>
 
+<entry id="soilm_ignore_data_if_missing" type="logical" category="datasets"
+       group="soil_moisture_streams" >
+If false will abort if using soil moisture streams and find a point where the model shows H2OSOI_VOL
+should be set because it's vegetated, but the input soilm streams dataset shows that point is missing.
+If true, will ignore the prescribed soilm data for that point and let the model run for that point without
+prescribed data.
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- lai_streams streams Namelist (when phys = CLM4_5)                              -->
 <!-- ========================================================================================  -->
