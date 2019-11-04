@@ -719,7 +719,8 @@ contains
     end if
 
     call NStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
+         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
+         soilbiogeochem_nitrogenflux_inst)
 
     !--------------------------------------------
     ! Update2g (gross unrepresented landcover change)
@@ -759,8 +760,7 @@ contains
     end if
 
     call NStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
-         soilbiogeochem_nitrogenflux_inst)
+         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
     call t_stopf('CNUpdate2')
 
     if ( use_nguardrail ) then
