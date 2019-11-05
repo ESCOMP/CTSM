@@ -184,6 +184,7 @@ subroutine mkglcmec(ldomain, mapfname, &
   real(r8), allocatable :: pctglc_icesheet_i(:) ! input icesheet percentage for a single level
   real(r8), allocatable :: topoglcmec_unnorm_o(:,:) ! same as topoglcmec_o, but unnormalized
   real(r8), allocatable :: pctglc_tot_o(:)      ! total glacier cover for the grid cell
+  real(r8), allocatable :: frac_dst(:)          ! output fractions
   real(r8) :: topoice_i                         ! topographic height of this level
   real(r8) :: pctglc_i                          ! input total pct glacier for a single level & single point
   real(r8) :: wt, frac                          ! weighting factors for remapping
@@ -278,6 +279,9 @@ subroutine mkglcmec(ldomain, mapfname, &
   allocate(topoglcmec_unnorm_o(ns_o,nglcec), stat=ier)
   if (ier/=0) call abort()
 
+  allocate(frac_dst(ns_o), stat=ier)
+  if (ier/=0) call abort()
+
   topoglcmec_unnorm_o(:,:) = 0.
 
   write(6,'(a,i4,a)',advance='no') 'Level (out of ', nlev, '): '
@@ -301,13 +305,16 @@ subroutine mkglcmec(ldomain, mapfname, &
         call abort()
      end if
 
+     ! Obtain frac_dst
+     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
      do n = 1,tgridmap%ns
         ni = tgridmap%src_indx(n)
         no = tgridmap%dst_indx(n)
-        wt = tgridmap%wovr(n)
+        wt = tgridmap%wovr(n) * tdomain%mask(ni)
 
         ! fraction of this destination cell that is covered by source cells that are within the source landmask
-        frac = tgridmap%frac_dst(no)
+        frac = frac_dst(no)
 
         ! If frac == 0, then we can't do this, to avoid divide by 0. In this case, the
         ! outputs remain equal to 0 (their initialized value).
@@ -447,6 +454,7 @@ subroutine mkglcmec(ldomain, mapfname, &
   deallocate(pctglc_gic_i, pctglc_icesheet_i)
   deallocate(topoglcmec_unnorm_o)
   deallocate(pctglc_tot_o)
+  deallocate(frac_dst)
   deallocate(starts, counts)
 
   write (6,*) 'Successfully made percent elevation class and mean elevation for glaciers'
@@ -591,12 +599,12 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
 
      sum_fldi = 0.0_r8
      do ni = 1, ns
-        sum_fldi = sum_fldi + tgridmap%area_src(ni) * tgridmap%frac_src(ni)
+        sum_fldi = sum_fldi + tgridmap%area_src(ni) * tdomain%mask(ni)
      enddo
 
      sum_fldo = 0.
      do no = 1, ns_o
-        sum_fldo = sum_fldo + tgridmap%area_dst(no) * tgridmap%frac_dst(no)
+        sum_fldo = sum_fldo + tgridmap%area_dst(no) * frac_dst(no)
      end do
 
      ! -----------------------------------------------------------------
@@ -625,7 +633,7 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
      do ni = 1, ns
         garea_i = garea_i + tgridmap%area_src(ni)*re**2
         gglac_i = gglac_i + glac_i(ni)*(tgridmap%area_src(ni)/100.)*&
-                                        tgridmap%frac_src(ni)*re**2
+                                        tdomain%mask(ni)*re**2
      end do
 
      ! Output grid
@@ -635,7 +643,7 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
      do no = 1, ns_o
         garea_o = garea_o + tgridmap%area_dst(no)*re**2
         gglac_o = gglac_o + glac_o(no)*(tgridmap%area_dst(no)/100.)*&
-                                        tgridmap%frac_dst(no)*re**2
+                                        frac_dst(no)*re**2
      end do
 
      ! Diagnostic output
