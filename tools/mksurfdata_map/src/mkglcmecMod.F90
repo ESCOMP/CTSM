@@ -285,6 +285,10 @@ subroutine mkglcmec(ldomain, mapfname, &
   topoglcmec_unnorm_o(:,:) = 0.
 
   write(6,'(a,i4,a)',advance='no') 'Level (out of ', nlev, '): '
+
+  ! Obtain frac_dst
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
   do lev = 1, nlev
      write(6,'(i4)',advance='no') lev
      flush(6)
@@ -304,9 +308,6 @@ subroutine mkglcmec(ldomain, mapfname, &
      if (m < 1 .or. m > nglcec) then 
         call abort()
      end if
-
-     ! Obtain frac_dst
-     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
      do n = 1,tgridmap%ns
         ni = tgridmap%src_indx(n)
