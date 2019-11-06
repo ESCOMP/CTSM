@@ -41,9 +41,12 @@ module SoilMoistureStreamMod
   public :: PrescribedSoilMoistureInterp  ! interpolates between two periods of soil moisture data
 
   ! !PRIVATE MEMBER DATA:
-  type(shr_strdata_type) :: sdat_soilm  ! soil moisture input data stream
-  integer :: ism                        ! Soil moisture steram index
+  type(shr_strdata_type) :: sdat_soilm    ! soil moisture input data stream
+  integer :: ism                          ! Soil moisture steram index
   integer, allocatable :: g_to_ig(:)
+  logical :: soilm_ignore_data_if_missing ! If should ignore overridding a point with soil moisture data
+                                          ! from the streams file, if the streams file shows that point 
+                                          ! as missing (namelist item)
   !
   ! !PRIVATE TYPES:
 
@@ -99,20 +102,22 @@ contains
     !
     ! deal with namelist variables here in init
     !
-    namelist /soil_moisture_streams/         &
-         stream_year_first_soilm,    &
-         stream_year_last_soilm,     &
-         model_year_align_soilm,     &
-         soilm_tintalgo,             &
-         soilm_offset,               &
+    namelist /soil_moisture_streams/   &
+         stream_year_first_soilm,      &
+         stream_year_last_soilm,       &
+         model_year_align_soilm,       &
+         soilm_tintalgo,               &
+         soilm_offset,                 &
+         soilm_ignore_data_if_missing, &
          stream_fldfilename_soilm
 
     ! Default values for namelist
-    stream_year_first_soilm     = 1      ! first year in stream to use
-    stream_year_last_soilm      = 1      ! last  year in stream to use
-    model_year_align_soilm      = 1      ! align stream_year_first_soilm with this model year
-    stream_fldfilename_soilm    = shr_stream_file_null
-    soilm_offset                = 0
+    stream_year_first_soilm      = 1      ! first year in stream to use
+    stream_year_last_soilm       = 1      ! last  year in stream to use
+    model_year_align_soilm       = 1      ! align stream_year_first_soilm with this model year
+    stream_fldfilename_soilm     = shr_stream_file_null
+    soilm_offset                 = 0
+    soilm_ignore_data_if_missing = .false.
 
     ! Read soilm_streams namelist
     if (masterproc) then
@@ -137,6 +142,7 @@ contains
     call shr_mpi_bcast(stream_fldfilename_soilm, mpicom)
     call shr_mpi_bcast(soilm_tintalgo, mpicom)
     call shr_mpi_bcast(soilm_offset, mpicom)
+    call shr_mpi_bcast(soilm_ignore_data_if_missing, mpicom)
 
     if (masterproc) then
 
@@ -148,6 +154,11 @@ contains
        write(iulog,*) '  stream_fldfilename_soilm = ',trim(stream_fldfilename_soilm)
        write(iulog,*) '  soilm_tintalgo = ',trim(soilm_tintalgo)
        write(iulog,*) '  soilm_offset = ',soilm_offset
+       if ( soilm_ignore_data_if_missing )then
+          write(iulog,*) '  Do NOT override a point with streams data if the streams data is missing'
+       else
+          write(iulog,*) '  Abort, if you find a model point where the input streams data is set to missing value'
+       end if
 
     endif
 
@@ -300,6 +311,22 @@ contains
       SHR_ASSERT_FL( (ubound(h2osoi_vol,1) >= bounds%endc ), sourcefile, __LINE__)
       SHR_ASSERT_FL( (lbound(h2osoi_vol,2) == 1 ),           sourcefile, __LINE__)
       SHR_ASSERT_FL( (ubound(h2osoi_vol,2) >= nlevsoi ),     sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(dz,1) <= bounds%begc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(dz,1) >= bounds%endc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(dz,2) <= 1 ),           sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(dz,2) >= nlevsoi ),     sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(watsat,1) <= bounds%begc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(watsat,1) >= bounds%endc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(watsat,2) <= 1 ),           sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(watsat,2) >= nlevsoi ),     sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_liq,1) <= bounds%begc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_liq,1) >= bounds%endc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_liq,2) <= 1 ),           sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_liq,2) >= nlevsoi ),     sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_ice,1) <= bounds%begc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_ice,1) >= bounds%endc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_ice,2) <= 1 ),           sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_ice,2) >= nlevsoi ),     sourcefile, __LINE__)
       SHR_ASSERT_FL( (lbound(h2osoi_vol_prs,1) <= bounds%begg ), sourcefile, __LINE__)
       SHR_ASSERT_FL( (ubound(h2osoi_vol_prs,1) >= bounds%endg ), sourcefile, __LINE__)
       SHR_ASSERT_FL( (lbound(h2osoi_vol_prs,2) == 1 ),           sourcefile, __LINE__)
@@ -311,15 +338,16 @@ contains
          ig = g_to_ig(g)
          do j = 1, nlevsoi
                
-             n = ig + (j-1)*size(g_to_ig)
+             !n = ig + (j-1)*size(g_to_ig)
+             n = ig + (j-1)*(bounds%endg-bounds%begg+1)
 
              h2osoi_vol_prs(g,j) = sdat_soilm%avs(1)%rAttr(ism,n)
 
              ! If soil moiture is being interpolated in time and the result is
              ! large that probably means one of the two data points is missing (set to spval)
-             if ( h2osoi_vol_prs(g,j) > 10.0_r8 )then
-                h2osoi_vol_prs(g,j) = spval
-             end if
+             !if ( h2osoi_vol_prs(g,j) > 10.0_r8 .and. (h2osoi_vol_prs(g,j) /= spval) )then
+                !h2osoi_vol_prs(g,j) = spval
+             !end if
 
          end do
       end do
@@ -332,10 +360,12 @@ contains
          ig = g_to_ig(g)
             
          if (lun%itype(col%landunit(c)) == istsoil ) then
+         !if ( (lun%itype(col%landunit(c)) == istsoil) .or. (lun%itype(col%landunit(c)) == istcrop) ) then
             !       this is a 2d field (gridcell/nlevsoi) !
             do j = 1, nlevsoi
                
-               n = ig + (j-1)*size(g_to_ig)
+               !n = ig + (j-1)*size(g_to_ig)
+               n = ig + (j-1)*(bounds%endg-bounds%begg+1)
 
                ! if soil water is zero, liq/ice fractions cannot be calculated
                if((h2osoi_liq(c, j) + h2osoi_ice(c, j)) > 0._r8) then
@@ -345,10 +375,14 @@ contains
             
                   ! Check if the vegetated land mask from the dataset on the
                   ! file is different
-                  if ( h2osoi_vol_prs(g,j) == spval )then
-                     write(iulog,*) 'WARNING: Input soil moisture dataset is not vegetated as expected', g, j
-                     !call endrun(subname // ':: The input soil moisture stream is NOT vegetated for one of the land points' )
-                     !cycle
+                  if ( (h2osoi_vol_prs(g,j) == spval) .and. (h2osoi_vol_initial /= spval) )then
+                     if ( soilm_ignore_data_if_missing )then
+                        !cycle
+                     else
+                        write(iulog,*) 'Input soil moisture dataset is not vegetated as expected: gridcell=', &
+                                        g, ' active = ', col%active(c)
+                        call endrun(subname // ' ERROR:: The input soil moisture stream is NOT vegetated for one of the land points' )
+                     end if
                   end if
 
                   ! update volumetric soil moisture from data prescribed from the file
