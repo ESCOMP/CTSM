@@ -9,15 +9,16 @@ find_package(ESMF REQUIRED)
 set(CIME_ROOT "/glade/work/jhamman/lilac/cime")  # TDOO: generalize this
 file(GLOB CIME_SOURCES ${CIME_ROOT}/src/share/streams/*F90
                        ${CIME_ROOT}/src/share/util/*F90
+                       ${CIME_ROOT}/src/share/util/*F90.in
                        ${CIME_ROOT}/src/share/esmf_wrf_timemgr/*F90
-                       ${CIME_ROOT}/src/share/streams/*.inc
-                       ${CIME_ROOT}/src/share/util/*.inc
-                       ${CIME_ROOT}/src/share/esmf_wrf_timemgr/*.inc
                        ${CIME_ROOT}/src/share/streams/*.h
                        ${CIME_ROOT}/src/share/util/*.h
                        ${CIME_ROOT}/src/share/esmf_wrf_timemgr/*.h)
 add_library(cime SHARED ${CIME_SOURCES})
 target_link_libraries(cime ESMF)
+
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -I ${CIME_ROOT}/src/share/streams/ -I ${CIME_ROOT}/src/share/util/ -I ${CIME_ROOT}/src/share/esmf_wrf_timemgr/")
+
 
 # ctsm build
 file(GLOB_RECURSE CTSM_SOURCES src/**/*.F90 src/**/*.h src/**/*.inc)
