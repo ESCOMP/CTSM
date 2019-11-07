@@ -110,7 +110,7 @@ contains
     ! !USES:
     use clm_time_manager     , only : get_curr_date
     use clm_varctl           , only : use_lai_streams
-    use SatellitePhenologyMod, only : lai_interp
+    use SatellitePhenologyMod, only : lai_advance
     !
     ! !ARGUMENTS:
     implicit none
@@ -402,9 +402,9 @@ contains
 
     ! When LAI streams are being used
     ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe)
-    !if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then 
-       !call lai_interp(bounds_proc, canopystate_inst)
-    !endif
+    if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then 
+       call lai_advance()
+    endif
 
     ! ============================================================================
     ! Initialize variables from previous time step, downscale atm forcings, and

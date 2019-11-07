@@ -39,11 +39,12 @@ module SatellitePhenologyMod
   public :: SatellitePhenologyInit ! Dynamically allocate memory
   public :: interpMonthlyVeg       ! interpolate monthly vegetation data
   public :: readAnnualVegetation   ! Read in annual vegetation (needed for Dry-deposition)
-  public :: lai_interp             ! interpolates between two years of LAI data (when LAI streams are being used)
+  public :: lai_advance            ! Advance the LAI streams (outside of a Open-MP threading loop)
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: readMonthlyVegetation   ! read monthly vegetation data for two months
-  private :: lai_init    ! position datasets for LAI
+  private :: lai_init                ! position datasets for LAI
+  private :: lai_interp              ! interpolates between two years of LAI data (when LAI streams are being used)
 
   ! !PRIVATE MEMBER DATA:
   type(shr_strdata_type) :: sdat_lai           ! LAI input data stream
@@ -194,6 +195,37 @@ contains
 
   !-----------------------------------------------------------------------
   !
+  ! lai_advance
+  !
+  !-----------------------------------------------------------------------
+  subroutine lai_advance()
+    !
+    ! Advance LAI streams
+    !
+    ! !USES:
+    use clm_time_manager, only : get_curr_date
+    !
+    ! !ARGUMENTS:
+    implicit none
+    !
+    ! !LOCAL VARIABLES:
+    integer :: year    ! year (0, ...) for nstep+1
+    integer :: mon     ! month (1, ..., 12) for nstep+1
+    integer :: day     ! day of month (1, ..., 31) for nstep+1
+    integer :: sec     ! seconds into current date for nstep+1
+    integer :: mcdate  ! Current model date (yyyymmdd)
+    !-----------------------------------------------------------------------
+
+    call get_curr_date(year, mon, day, sec)
+    mcdate = year*10000 + mon*100 + day
+
+    call shr_strdata_advance(sdat_lai, mcdate, sec, mpicom, 'laidyn')
+
+  end subroutine lai_advance
+
+
+  !-----------------------------------------------------------------------
+  !
   ! lai_interp
   !
   !-----------------------------------------------------------------------
@@ -202,7 +234,6 @@ contains
     ! Interpolate data stream information for Lai.
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date
     use pftconMod       , only : noveg
     !
     ! !ARGUMENTS:
@@ -212,18 +243,8 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: ivt, p, g, ip, ig, gpft
-    integer :: year    ! year (0, ...) for nstep+1
-    integer :: mon     ! month (1, ..., 12) for nstep+1
-    integer :: day     ! day of month (1, ..., 31) for nstep+1
-    integer :: sec     ! seconds into current date for nstep+1
-    integer :: mcdate  ! Current model date (yyyymmdd)
     character(len=CL)  :: stream_var_name
     !-----------------------------------------------------------------------
-
-    call get_curr_date(year, mon, day, sec)
-    mcdate = year*10000 + mon*100 + day
-
-    call shr_strdata_advance(sdat_lai, mcdate, sec, mpicom, 'laidyn')
 
     do p = bounds%begp, bounds%endp
        ivt = patch%itype(p)
