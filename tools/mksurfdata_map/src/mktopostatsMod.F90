@@ -143,7 +143,7 @@ subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_
      call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
      call gridmap_areaave(tgridmap, data_i, slope_o, nodata=0._r8)
 
-     call output_diagnostics_continuous(data_i, slope_o, tgridmap, "Slope", "degrees", ndiag)
+     call output_diagnostics_continuous(data_i, slope_o, tgridmap, "Slope", "degrees", ndiag, tdomain%mask, tgridmap%frac_dst)
   else
      write (6,*) '    Set slope of topography to ', 0.0_r8
      slope_o = 0.0_r8

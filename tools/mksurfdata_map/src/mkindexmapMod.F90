@@ -59,7 +59,7 @@ contains
 ! !IROUTINE: get_dominant_indices
 !
 ! !INTERFACE:
-subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, filter)
+subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, filter, mask_src)
 !
 ! !DESCRIPTION:
 ! Fills an output array on the destination grid (dst_array) whose values are equal to the
@@ -85,6 +85,7 @@ subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, n
    integer           , intent(in) :: minval        ! minimum valid value in src_array
    integer           , intent(in) :: maxval        ! maximum valid value in src_array
    integer           , intent(in) :: nodata        ! value to assign to dst_array where there are no valid source points
+   integer           , intent(in) :: mask_src(:)
 
    logical, intent(in), optional :: filter(:)  ! only consider overlaps where filter is .true.; length gridmap%ns
 !
@@ -145,7 +146,7 @@ subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, n
       if (lfilter(n)) then
          ni = gridmap%src_indx(n)
          no = gridmap%dst_indx(n)
-         wt = gridmap%wovr(n)
+         wt = gridmap%wovr(n) * mask_src(ni)
          k = src_array(ni)
          if (k >= minval .and. k <= maxval) then
             ! Note: if we were doing something like weighted sums, I think we would

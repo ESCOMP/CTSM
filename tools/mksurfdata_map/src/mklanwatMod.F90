@@ -73,6 +73,7 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
   type(gridmap_type)    :: tgridmap
   type(domain_type)    :: tdomain            ! local domain
   real(r8), allocatable :: lake_i(:)          ! input grid: percent lake
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   real(r8) :: sum_fldi                        ! global sum of dummy input fld
   real(r8) :: sum_fldo                        ! global sum of dummy output fld
   real(r8) :: glake_i                         ! input  grid: global lake
@@ -103,6 +104,8 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
   if ( .not. zero_out )then
      allocate(lake_i(ns_i), stat=ier)
      if (ier/=0) call abort()
+     allocate(frac_dst(ns_o), stat=ier)
+     if (ier/=0) call abort()
 
      write(6,*)'Open lake file: ', trim(datfname)
      call check_ret(nf_open(datfname, 0, ncid), subname)
@@ -120,9 +123,12 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
 
      call domain_checksame( tdomain, ldomain, tgridmap )
 
+     ! Obtain frac_dst
+     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
      ! Determine lake_o on output grid
 
-     call gridmap_areaave(tgridmap, lake_i,lake_o, nodata=0._r8)
+     call gridmap_areaave(tgridmap, lake_i,lake_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
      do no = 1,ns_o
         if (lake_o(no) < 1.) lake_o(no) = 0.
@@ -136,12 +142,12 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
 
      sum_fldi = 0.0_r8
      do ni = 1,ns_i
-       sum_fldi = sum_fldi + tgridmap%area_src(ni)*tgridmap%frac_src(ni)*re**2
+       sum_fldi = sum_fldi + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
      enddo
 
      sum_fldo = 0.
      do no = 1,ns_o
-        sum_fldo = sum_fldo + tgridmap%area_dst(no)*tgridmap%frac_dst(no)*re**2
+        sum_fldo = sum_fldo + tgridmap%area_dst(no)*frac_dst(no)*re**2
      end do
 
      ! -----------------------------------------------------------------
@@ -211,6 +217,7 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
   if ( .not. zero_out )then
      call gridmap_clean(tgridmap)
      deallocate (lake_i)
+     deallocate (frac_dst)
   end if
 
   write (6,*) 'Successfully made %lake'
@@ -259,6 +266,7 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
   type(gridmap_type)    :: tgridmap
   type(domain_type)    :: tdomain            ! local domain
   real(r8), allocatable :: swmp_i(:)          ! input grid: percent swamp
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   real(r8) :: sum_fldi                        ! global sum of dummy input fld
   real(r8) :: sum_fldo                        ! global sum of dummy output fld
   real(r8) :: gswmp_i                         ! input  grid: global swamp
@@ -289,6 +297,8 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
   if ( .not. zero_out )then
      allocate(swmp_i(ns_i), stat=ier)
      if (ier/=0) call abort()
+     allocate(frac_dst(ns_o), stat=ier)
+     if (ier/=0) call abort()
 
      write(6,*)'Open wetland file: ', trim(datfname)
      call check_ret(nf_open(datfname, 0, ncid), subname)
@@ -305,9 +315,13 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
      ! Error checks for domain and map consistencies
 
      call domain_checksame( tdomain, ldomain, tgridmap )
+
+     ! Obtain frac_dst
+     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
      ! Determine swmp_o on output grid
 
-     call gridmap_areaave(tgridmap, swmp_i,swmp_o, nodata=0._r8)
+     call gridmap_areaave(tgridmap, swmp_i, swmp_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
      do no = 1,ns_o
         if (swmp_o(no) < 1.) swmp_o(no) = 0.
@@ -321,12 +335,12 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
 
      sum_fldi = 0.0_r8
      do ni = 1,ns_i
-       sum_fldi = sum_fldi + tgridmap%area_src(ni)*tgridmap%frac_src(ni)*re**2
+       sum_fldi = sum_fldi + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
      enddo
 
      sum_fldo = 0.
      do no = 1,ns_o
-        sum_fldo = sum_fldo + tgridmap%area_dst(no)*tgridmap%frac_dst(no)*re**2
+        sum_fldo = sum_fldo + tgridmap%area_dst(no)*frac_dst(no)*re**2
      end do
 
      ! -----------------------------------------------------------------
@@ -396,6 +410,7 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
   if ( .not. zero_out )then
      call gridmap_clean(tgridmap)
      deallocate (swmp_i)
+     deallocate (frac_dst)
   end if
 
   write (6,*) 'Successfully made %wetland'
@@ -444,6 +459,7 @@ subroutine mklakparams(ldomain, mapfname, datfname, ndiag, &
   type(gridmap_type)    :: tgridmap
   type(domain_type)     :: tdomain            ! local domain
   real(r8), allocatable :: data_i(:)          ! data on input grid
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   integer  :: ncid,varid                      ! input netCDF id's
   integer  :: ier                             ! error status
   
@@ -475,6 +491,11 @@ subroutine mklakparams(ldomain, mapfname, datfname, ndiag, &
 
   allocate(data_i(tdomain%ns), stat=ier)
   if (ier/=0) call abort()
+  allocate(frac_dst(ldomain%ns), stat=ier)
+  if (ier/=0) call abort()
+
+  ! Obtain frac_dst
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Regrid lake depth
@@ -482,14 +503,14 @@ subroutine mklakparams(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'LAKEDEPTH', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, lakedepth_o, nodata=10._r8)
+  call gridmap_areaave(tgridmap, data_i, lakedepth_o, nodata=10._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(lakedepth_o, min_valid_lakedepth, 'lakedepth')) then
      stop
   end if
 
-  call output_diagnostics_continuous(data_i, lakedepth_o, tgridmap, "Lake Depth", "m", ndiag)
+  call output_diagnostics_continuous(data_i, lakedepth_o, tgridmap, "Lake Depth", "m", ndiag, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Close files and deallocate dynamic memory
@@ -499,6 +520,7 @@ subroutine mklakparams(ldomain, mapfname, datfname, ndiag, &
   call domain_clean(tdomain) 
   call gridmap_clean(tgridmap)
   deallocate (data_i)
+  deallocate (frac_dst)
 
   write (6,*) 'Successfully made lake parameters'
   write (6,*)

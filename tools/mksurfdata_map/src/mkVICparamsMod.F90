@@ -73,6 +73,7 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
   type(gridmap_type)    :: tgridmap
   type(domain_type)     :: tdomain            ! local domain
   real(r8), allocatable :: data_i(:)          ! data on input grid
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   integer  :: ncid,varid                      ! input netCDF id's
   integer  :: ier                             ! error status
   
@@ -107,6 +108,11 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   allocate(data_i(tdomain%ns), stat=ier)
   if (ier/=0) call abort()
+  allocate(frac_dst(ldomain%ns), stat=ier)
+  if (ier/=0) call abort()
+
+  ! Obtain frac_dst
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Regrid binfl
@@ -114,14 +120,14 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'binfl', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, binfl_o, nodata=0.1_r8)
+  call gridmap_areaave(tgridmap, data_i, binfl_o, nodata=0.1_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(binfl_o, min_valid_binfl, 'binfl')) then
      stop
   end if
 
-  call output_diagnostics_continuous(data_i, binfl_o, tgridmap, "VIC b parameter", "unitless", ndiag)
+  call output_diagnostics_continuous(data_i, binfl_o, tgridmap, "VIC b parameter", "unitless", ndiag, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Regrid Ws
@@ -129,14 +135,14 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'Ws', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, ws_o, nodata=0.75_r8)
+  call gridmap_areaave(tgridmap, data_i, ws_o, nodata=0.75_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(ws_o, min_valid_ws, 'Ws')) then
      stop
   end if
 
-  call output_diagnostics_continuous(data_i, ws_o, tgridmap, "VIC Ws parameter", "unitless", ndiag)
+  call output_diagnostics_continuous(data_i, ws_o, tgridmap, "VIC Ws parameter", "unitless", ndiag, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Regrid Dsmax
@@ -144,14 +150,14 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'Dsmax', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, dsmax_o, nodata=10._r8)
+  call gridmap_areaave(tgridmap, data_i, dsmax_o, nodata=10._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(dsmax_o, min_valid_dsmax, 'Dsmax')) then
      stop
   end if
 
-  call output_diagnostics_continuous(data_i, dsmax_o, tgridmap, "VIC Dsmax parameter", "mm/day", ndiag)
+  call output_diagnostics_continuous(data_i, dsmax_o, tgridmap, "VIC Dsmax parameter", "mm/day", ndiag, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Regrid Ds
@@ -159,14 +165,14 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'Ds', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, ds_o, nodata=0.1_r8)
+  call gridmap_areaave(tgridmap, data_i, ds_o, nodata=0.1_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(ds_o, min_valid_ds, 'Ds')) then
      stop
   end if
 
-  call output_diagnostics_continuous(data_i, ds_o, tgridmap, "VIC Ds parameter", "unitless", ndiag)
+  call output_diagnostics_continuous(data_i, ds_o, tgridmap, "VIC Ds parameter", "unitless", ndiag, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Close files and deallocate dynamic memory
@@ -176,6 +182,7 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
   call domain_clean(tdomain) 
   call gridmap_clean(tgridmap)
   deallocate (data_i)
+  deallocate (frac_dst)
 
   write (6,*) 'Successfully made VIC parameters'
   write (6,*)

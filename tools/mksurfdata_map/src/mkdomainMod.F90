@@ -817,12 +817,10 @@ end subroutine domain_check
      integer :: n, ni                  ! indices
      real(r8), pointer :: xc_src(:)    ! Source longitude
      real(r8), pointer :: yc_src(:)    ! Source latitude
-     real(r8), pointer :: frac_src(:)  ! Source fraction
      integer,  pointer :: mask_src(:)  ! Source mask
      integer,  pointer :: src_indx(:)  ! Source index
      real(r8), pointer :: xc_dst(:)    ! Destination longitude
      real(r8), pointer :: yc_dst(:)    ! Destination latitude
-     real(r8), pointer :: frac_dst(:)  ! Destination fraction
      integer,  pointer :: mask_dst(:)  ! Destination mask
      integer,  pointer :: dst_indx(:)  ! Destination index
      character(len= 32) :: subname = 'domain_checksame'

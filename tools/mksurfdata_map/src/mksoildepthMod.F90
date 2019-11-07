@@ -69,6 +69,7 @@ subroutine mksoildepth(ldomain, mapfname, datfname, ndiag, soildepth_o)
   type(gridmap_type)    :: tgridmap
   type(domain_type)     :: tdomain            ! local domain
   real(r8), allocatable :: data_i(:)          ! data on input grid
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   integer  :: ncid,varid                      ! input netCDF id's
   integer  :: ier                             ! error status
  
@@ -102,6 +103,11 @@ subroutine mksoildepth(ldomain, mapfname, datfname, ndiag, soildepth_o)
 
   allocate(data_i(tdomain%ns), stat=ier)
   if (ier/=0) call abort()
+  allocate(frac_dst(ldomain%ns), stat=ier)
+  if (ier/=0) call abort()
+
+  ! Obtain frac_dst
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Regrid soildepth
@@ -130,7 +136,7 @@ subroutine mksoildepth(ldomain, mapfname, datfname, ndiag, soildepth_o)
 !  call check_ret(nf_inq_varid (ncid, 'Avg_Depth_Median', varid), subname)
   call check_ret(nf_inq_varid (ncid, varname, varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, soildepth_o, nodata=0._r8)
+  call gridmap_areaave(tgridmap, data_i, soildepth_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(soildepth_o, min_valid, 'soildepth') .or. &
@@ -138,7 +144,7 @@ subroutine mksoildepth(ldomain, mapfname, datfname, ndiag, soildepth_o)
      stop
   end if
   
-  call output_diagnostics_area(data_i, soildepth_o, tgridmap, "Soildepth", percent=.false., ndiag=ndiag)
+  call output_diagnostics_area(data_i, soildepth_o, tgridmap, "Soildepth", percent=.false., ndiag=ndiag, mask_src=tdomain%mask, frac_dst=frac_dst)
   
   ! -----------------------------------------------------------------
   ! Close files and deallocate dynamic memory
@@ -148,6 +154,7 @@ subroutine mksoildepth(ldomain, mapfname, datfname, ndiag, soildepth_o)
   call domain_clean(tdomain) 
   call gridmap_clean(tgridmap)
   deallocate (data_i)
+  deallocate (frac_dst)
 
   write (6,*) 'Successfully made soildepth'
   write (6,*)

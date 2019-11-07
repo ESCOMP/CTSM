@@ -72,6 +72,7 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
   type(gridmap_type)    :: tgridmap
   type(domain_type)     :: tdomain            ! local domain
   real(r8), allocatable :: data_i(:)          ! data on input grid
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   integer  :: ncid,varid                      ! input netCDF id's
   integer  :: ier                             ! error status
   
@@ -106,6 +107,11 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
 
   allocate(data_i(tdomain%ns), stat=ier)
   if (ier/=0) call abort()
+  allocate(frac_dst(ldomain%ns), stat=ier)
+  if (ier/=0) call abort()
+
+  ! Obtain frac_dst
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Regrid f0
@@ -113,7 +119,7 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'F0', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, f0_o, nodata=0.01_r8)
+  call gridmap_areaave(tgridmap, data_i, f0_o, nodata=0.01_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(f0_o, min_valid_f0, 'f0') .or. &
@@ -121,7 +127,7 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
      stop
   end if
 
-  call output_diagnostics_continuous(data_i, f0_o, tgridmap, "F0: max inundated area", "unitless", ndiag)
+  call output_diagnostics_continuous(data_i, f0_o, tgridmap, "F0: max inundated area", "unitless", ndiag, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Regrid p3
@@ -129,14 +135,14 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'P3', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, p3_o, nodata=10._r8)
+  call gridmap_areaave(tgridmap, data_i, p3_o, nodata=10._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(p3_o, min_valid_p3, 'p3')) then
      stop
   end if
 
-  call output_diagnostics_continuous(data_i, p3_o, tgridmap, "P3: finundated coeff", "s/mm", ndiag)
+  call output_diagnostics_continuous(data_i, p3_o, tgridmap, "P3: finundated coeff", "s/mm", ndiag, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Regrid zwt0
@@ -144,14 +150,14 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'ZWT0', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, zwt0_o, nodata=0.01_r8)
+  call gridmap_areaave(tgridmap, data_i, zwt0_o, nodata=0.01_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(zwt0_o, min_valid_zwt0, 'zwt0')) then
      stop
   end if
 
-  call output_diagnostics_continuous(data_i, zwt0_o, tgridmap, "ZWT0: finundated decay factor", "m", ndiag)
+  call output_diagnostics_continuous(data_i, zwt0_o, tgridmap, "ZWT0: finundated decay factor", "m", ndiag, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Close files and deallocate dynamic memory
@@ -161,6 +167,7 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
   call domain_clean(tdomain) 
   call gridmap_clean(tgridmap)
   deallocate (data_i)
+  deallocate (frac_dst)
 
   write (6,*) 'Successfully made inversion-derived CH4 parameters'
   write (6,*)

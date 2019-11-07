@@ -46,7 +46,7 @@ contains
 ! !IROUTINE: mkurban_pct
 !
 ! !INTERFACE:
-subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o)
+subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o, frac_dst)
 !
 ! !DESCRIPTION:
 ! make percent urban on output grid, given percent urban on input grid
@@ -65,6 +65,7 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o)
    type(domain_type) , intent(in) :: tdomain    ! local domain
    type(gridmap_type), intent(in) :: tgridmap   ! local gridmap
    real(r8)          , intent(in) :: urbn_i(:)  ! input grid: percent urban
+   real(r8)          , intent(in) :: frac_dst(:)  ! output fractions
    real(r8)          , intent(out):: urbn_o(:)  ! output grid: percent urban
 !
 ! !REVISION HISTORY:
@@ -102,7 +103,7 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o)
    ! and correct according to land landmask
    ! Note that percent cover is in terms of total grid area.   
 
-   call gridmap_areaave(tgridmap, urbn_i, urbn_o, nodata=0._r8)
+   call gridmap_areaave(tgridmap, urbn_i, urbn_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
    ! Check for conservation
 
@@ -119,12 +120,12 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o)
 
    sum_fldi = 0.0_r8
    do ni = 1,tdomain%ns
-      sum_fldi = sum_fldi + tgridmap%area_src(ni) * tgridmap%frac_src(ni)
+      sum_fldi = sum_fldi + tgridmap%area_src(ni) * tdomain%mask(ni)
    enddo
 
    sum_fldo = 0._r8
    do no = 1, ldomain%ns
-      sum_fldo = sum_fldo + tgridmap%area_dst(no) * tgridmap%frac_dst(no)
+      sum_fldo = sum_fldo + tgridmap%area_dst(no) * frac_dst(no)
    end do
 
    ! -----------------------------------------------------------------
@@ -152,7 +153,7 @@ end subroutine mkurban_pct
 ! !IROUTINE: mkurban_pct_diagnostics
 !
 ! !INTERFACE:
-subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, ndiag, dens_class)
+subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, ndiag, dens_class, frac_dst)
 !
 ! !DESCRIPTION:
 ! print diagnostics related to pct urban
@@ -174,6 +175,7 @@ subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, n
    type(gridmap_type), intent(in) :: tgridmap   ! local gridmap
    real(r8)          , intent(in) :: urbn_i(:)  ! input grid: percent urban
    real(r8)          , intent(in) :: urbn_o(:)  ! output grid: percent urban
+   real(r8)          , intent(in) :: frac_dst(:)  ! output fractions
    integer           , intent(in) :: ndiag      ! unit number for diag out
 
    integer , intent(in), optional :: dens_class ! density class
@@ -205,7 +207,7 @@ subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, n
    do ni = 1, tdomain%ns
       garea_i = garea_i + tgridmap%area_src(ni)*re**2
       gurbn_i = gurbn_i + urbn_i(ni)*(tgridmap%area_src(ni)/100._r8)*&
-           tgridmap%frac_src(ni)*re**2
+           tdomain%mask(ni)*re**2
    end do
 
    ! Output grid
@@ -216,7 +218,7 @@ subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, n
    do no = 1, ldomain%ns
       garea_o = garea_o + tgridmap%area_dst(no)*re**2
       gurbn_o = gurbn_o + urbn_o(no)* (tgridmap%area_dst(no)/100._r8)*&
-           tgridmap%frac_dst(no)*re**2
+           frac_dst(no)*re**2
    end do
 
    ! Diagnostic output

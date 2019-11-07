@@ -84,7 +84,7 @@ contains
     do n = 1,tgridmap%ns
        ni = tgridmap%src_indx(n)
        no = tgridmap%dst_indx(n)
-       wt = tgridmap%wovr(n)
+       wt = tgridmap%wovr(n) * mask_i(ni)
        k  = soil_color_i(ni) * mask_i(ni)
        wst(k,no) = wst(k,no) + wt
     enddo

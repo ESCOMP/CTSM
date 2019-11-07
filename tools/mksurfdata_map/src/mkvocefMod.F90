@@ -76,6 +76,7 @@ subroutine mkvocef(ldomain, mapfname, datfname, ndiag, &
   real(r8), allocatable :: ef_shr_i(:)      ! input grid: EFs for shrubs
   real(r8), allocatable :: ef_grs_i(:)      ! input grid: EFs for grasses
   real(r8), allocatable :: ef_crp_i(:)      ! input grid: EFs for crops
+  real(r8), allocatable :: frac_dst(:)      ! output fractions
   real(r8) :: sum_fldo                      ! global sum of dummy input fld
   real(r8) :: sum_fldi                      ! global sum of dummy input fld
   integer  :: k,n,no,ni,ns_o,ns_i           ! indices
@@ -100,7 +101,7 @@ subroutine mkvocef(ldomain, mapfname, datfname, ndiag, &
   ns_i = tdomain%ns
   allocate(ef_btr_i(ns_i), ef_fet_i(ns_i), ef_fdt_i(ns_i), &
            ef_shr_i(ns_i), ef_grs_i(ns_i), ef_crp_i(ns_i), &
-           stat=ier)
+           frac_dst(ns_o), stat=ier)
   if (ier/=0) call abort()
 
   write (6,*) 'Open VOC file: ', trim(datfname)
@@ -129,14 +130,17 @@ subroutine mkvocef(ldomain, mapfname, datfname, ndiag, &
 
   call domain_checksame( tdomain, ldomain, tgridmap )
 
+  ! Obtain frac_dst
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
   ! Do mapping from input to output grid
 
-  call gridmap_areaave(tgridmap, ef_btr_i, ef_btr_o, nodata=0._r8)
-  call gridmap_areaave(tgridmap, ef_fet_i, ef_fet_o, nodata=0._r8)
-  call gridmap_areaave(tgridmap, ef_fdt_i, ef_fdt_o, nodata=0._r8)
-  call gridmap_areaave(tgridmap, ef_shr_i, ef_shr_o, nodata=0._r8)
-  call gridmap_areaave(tgridmap, ef_grs_i, ef_grs_o, nodata=0._r8)
-  call gridmap_areaave(tgridmap, ef_crp_i, ef_crp_o, nodata=0._r8)
+  call gridmap_areaave(tgridmap, ef_btr_i, ef_btr_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave(tgridmap, ef_fet_i, ef_fet_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave(tgridmap, ef_fdt_i, ef_fdt_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave(tgridmap, ef_shr_i, ef_shr_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave(tgridmap, ef_grs_i, ef_grs_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave(tgridmap, ef_crp_i, ef_crp_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check for conservation
 
@@ -183,12 +187,12 @@ subroutine mkvocef(ldomain, mapfname, datfname, ndiag, &
 
   sum_fldi = 0.0_r8
   do ni = 1,ns_i
-     sum_fldi = sum_fldi + tgridmap%area_src(ni) * tgridmap%frac_src(ni)
+     sum_fldi = sum_fldi + tgridmap%area_src(ni) * tdomain%mask(ni)
   enddo
 
   sum_fldo = 0._r8
   do no = 1,ns_o
-     sum_fldo = sum_fldo + tgridmap%area_dst(no) * tgridmap%frac_dst(no)
+     sum_fldo = sum_fldo + tgridmap%area_dst(no) * frac_dst(no)
   end do
 
   if ( trim(mksrf_gridtype) == 'global') then
@@ -207,7 +211,7 @@ subroutine mkvocef(ldomain, mapfname, datfname, ndiag, &
   ! Deallocate dynamic memory
 
   deallocate ( ef_btr_i, ef_fet_i, ef_fdt_i, &
-               ef_shr_i, ef_grs_i, ef_crp_i )
+               ef_shr_i, ef_grs_i, ef_crp_i, frac_dst )
   call domain_clean(tdomain)
   call gridmap_clean(tgridmap)
 
