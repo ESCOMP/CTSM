@@ -324,8 +324,6 @@ contains
     if (use_soil_moisture_streams) then
        call t_startf('prescribed_sm')
        call PrescribedSoilMoistureAdvance( bounds_proc )
-       call PrescribedSoilMoistureInterp(bounds_clump, soilstate_inst, &
-               waterstate_inst)
        call t_stopf('prescribed_sm')
     endif
     ! ============================================================================
@@ -347,6 +345,12 @@ contains
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
+       if (use_soil_moisture_streams) then
+          call t_startf('prescribed_sm')
+          call PrescribedSoilMoistureInterp(bounds_clump, soilstate_inst, &
+                  waterstate_inst)
+          call t_stopf('prescribed_sm')
+       endif
        call t_startf('begwbal')
        call BeginWaterBalance(bounds_clump,                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
