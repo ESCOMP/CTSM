@@ -15,7 +15,6 @@ module mkglacierregionMod
   !
   ! !USES:
   use shr_sys_mod , only : shr_sys_flush
-  use shr_kind_mod, only : r8 => shr_kind_r8
   implicit none
 
   private
@@ -56,7 +55,6 @@ contains
     type(gridmap_type)   :: tgridmap
     type(domain_type)    :: tdomain             ! local domain
     integer, allocatable :: glacier_region_i(:) ! glacier region on input grid
-    real(r8), allocatable :: frac_dst(:)        ! output fractions
     integer              :: ncid,varid          ! input netCDF id's
     integer              :: ier                 ! error status
     integer              :: max_region          ! max region ID
@@ -87,11 +85,6 @@ contains
 
     allocate(glacier_region_i(tdomain%ns), stat=ier)
     if (ier/=0) call abort()
-    allocate(frac_dst(ldomain%ns), stat=ier)
-    if (ier/=0) call abort()
-
-    ! Obtain frac_dst
-    call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
     ! ------------------------------------------------------------------------
     ! Regrid glacier_region
@@ -121,7 +114,6 @@ contains
     call domain_clean(tdomain)
     call gridmap_clean(tgridmap)
     deallocate(glacier_region_i)
-    deallocate(frac_dst)
 
     write (6,*) 'Successfully made glacier region'
     write (6,*)
