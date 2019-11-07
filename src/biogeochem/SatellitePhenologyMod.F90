@@ -332,6 +332,11 @@ contains
          frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch & ! Output: [integer  (:) ] fraction of vegetation not covered by snow (0 OR 1) [-]
          )
 
+      if (use_lai_streams) then
+         call lai_interp(bounds, canopystate_inst)
+      endif
+
+
       do fp = 1, num_nolakep
          p = filter_nolakep(fp)
          c = patch%column(p)
