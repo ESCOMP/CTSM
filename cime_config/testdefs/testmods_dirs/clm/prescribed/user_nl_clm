@@ -1,2 +1,3 @@
  use_soil_moisture_streams = .true.
  use_lai_streams = .true.
+ hist_fincl1   += 'H2OSOI_PRESCRIBED_GRC'

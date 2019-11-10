@@ -73,7 +73,6 @@ contains
     use shr_pio_mod      , only : shr_pio_getiotype
     use clm_nlUtilsMod   , only : find_nlgroup_name
     use ndepStreamMod    , only : clm_domain_mct
-    use histFileMod      , only : hist_addfld1d
     use shr_stream_mod   , only : shr_stream_file_null
     use shr_string_mod   , only : shr_string_listCreateField
     use clm_varpar       , only : nlevsoi

@@ -293,7 +293,7 @@ contains
        data2dptr => this%h2osoi_vol_prs_grc(begg:endg,1:nlevsoi)
        call hist_addfld2d (fname='H2OSOI_PRESCRIBED_GRC',  units='mm3/mm3', type2d='levsoi', &
             avgflag='A', long_name='volumetric soil water prescribed (vegetated landunits only)', &
-            ptr_gcell=this%h2osoi_vol_prs_grc )
+            ptr_gcell=this%h2osoi_vol_prs_grc, default='inactive' )
     end if
 
 !    this%h2osoi_liq_col(begc:endc,:) = spval
