@@ -1,5 +1,7 @@
 module SatellitePhenologyMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! CLM Satelitte Phenology model (SP) ecosystem dynamics (phenology, vegetation). 
@@ -50,6 +52,7 @@ module SatellitePhenologyMod
   type(shr_strdata_type) :: sdat_lai           ! LAI input data stream
   !
   ! !PRIVATE TYPES:
+  integer, allocatable :: g_to_ig(:)            ! Array matching gridcell index to data index
   integer , private :: InterpMonths1            ! saved month index
   real(r8), private :: timwt(2)                 ! time weights for month 1 and month 2
   real(r8), private, allocatable :: mlai2t(:,:) ! lai for interpolation (2 months)
@@ -198,7 +201,7 @@ contains
   ! lai_advance
   !
   !-----------------------------------------------------------------------
-  subroutine lai_advance()
+  subroutine lai_advance( bounds )
     !
     ! Advance LAI streams
     !
@@ -207,8 +210,10 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
+    type(bounds_type)      , intent(in)    :: bounds                          
     !
     ! !LOCAL VARIABLES:
+    integer :: g, ig   ! Indices
     integer :: year    ! year (0, ...) for nstep+1
     integer :: mon     ! month (1, ..., 12) for nstep+1
     integer :: day     ! day of month (1, ..., 31) for nstep+1
@@ -220,6 +225,15 @@ contains
     mcdate = year*10000 + mon*100 + day
 
     call shr_strdata_advance(sdat_lai, mcdate, sec, mpicom, 'laidyn')
+    if ( .not. allocated(g_to_ig) )then
+       allocate (g_to_ig(bounds%begg:bounds%endg) )
+
+       ig = 0
+       do g = bounds%begg,bounds%endg
+          ig = ig+1
+          g_to_ig(g) = ig
+       end do
+    end if
 
   end subroutine lai_advance
 
@@ -242,10 +256,13 @@ contains
     type(canopystate_type) , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: ivt, p, g, ip, ig, gpft
+    integer :: ivt, p, ip, ig
     character(len=CL)  :: stream_var_name
     !-----------------------------------------------------------------------
-
+    SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(sdat_lai%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(sdat_lai%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
     do p = bounds%begp, bounds%endp
        ivt = patch%itype(p)
        if (ivt /= noveg) then     ! vegetated pft
@@ -253,17 +270,7 @@ contains
           stream_var_name = 'LAI_'//trim(adjustl(stream_var_name))
           ip = mct_aVect_indexRA(sdat_lai%avs(1),trim(stream_var_name))
        endif
-       gpft = patch%gridcell(p)
-
-       !
-       ! Determine vector index corresponding to gpft
-       !
-       ig = 0
-       do g = bounds%begg,bounds%endg
-          ig = ig+1
-          if (g == gpft) exit
-       end do
-
+       ig = g_to_ig(patch%gridcell(p))
        !
        ! Set lai for each gridcell/patch combination
        !

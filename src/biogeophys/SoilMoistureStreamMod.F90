@@ -43,7 +43,7 @@ module SoilMoistureStreamMod
   ! !PRIVATE MEMBER DATA:
   type(shr_strdata_type) :: sdat_soilm    ! soil moisture input data stream
   integer :: ism                          ! Soil moisture steram index
-  integer, allocatable :: g_to_ig(:)
+  integer, allocatable :: g_to_ig(:)      ! Array matching gridcell index to data index
   logical :: soilm_ignore_data_if_missing ! If should ignore overridding a point with soil moisture data
                                           ! from the streams file, if the streams file shows that point 
                                           ! as missing (namelist item)
@@ -297,8 +297,8 @@ contains
     SHR_ASSERT_FL( (ubound(sdat_soilm%avs(1)%rAttr,1) == ism ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (lbound(sdat_soilm%avs(1)%rAttr,2) == g_to_ig(bounds%begg) ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (ubound(sdat_soilm%avs(1)%rAttr,2) == g_to_ig(bounds%endg)+(nlevsoi-1)*size(g_to_ig) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(sdat_soilm%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(sdat_soilm%avs(1)%rAttr,2) >= g_to_ig(bounds%endg)+(nlevsoi-1)*size(g_to_ig) ), sourcefile, __LINE__)
     associate( &
          dz               =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
          watsat           =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)
@@ -339,7 +339,7 @@ contains
          do j = 1, nlevsoi
                
              !n = ig + (j-1)*size(g_to_ig)
-             n = ig + (j-1)*(bounds%endg-bounds%begg+1)
+             n = ig + (j-1)*size(g_to_ig)
 
              h2osoi_vol_prs(g,j) = sdat_soilm%avs(1)%rAttr(ism,n)
 
@@ -364,8 +364,7 @@ contains
             !       this is a 2d field (gridcell/nlevsoi) !
             do j = 1, nlevsoi
                
-               !n = ig + (j-1)*size(g_to_ig)
-               n = ig + (j-1)*(bounds%endg-bounds%begg+1)
+               n = ig + (j-1)*size(g_to_ig)
 
                ! if soil water is zero, liq/ice fractions cannot be calculated
                if((h2osoi_liq(c, j) + h2osoi_ice(c, j)) > 0._r8) then
