@@ -1526,6 +1526,11 @@ Time interpolation mode to determine how to handle data before and after the tim
     limit   = Only use the data within the times available -- abort if the model tries to go outside it
 </entry>
 
+<entry id="ndep_tintalgo" type="char*80" category="datasets"
+       group="ndepdyn_nml" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use for Nitrogen Deposition
+</entry>
+
 <entry id="ndep_varlist" type="char*256" category="datasets"
        group="ndepdyn_nml" valid_values="" >
 Colon delimited list of variables to read from the streams file for nitrogen deposition
@@ -1628,6 +1633,11 @@ Simulation year that aligns with stream_year_first_lai value
 Filename of input stream data for LAI
 </entry>
 
+<entry id="lai_tintalgo" type="char*80" category="datasets"
+       group="lai_streams" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use with LAI streams
+</entry>
+
 <entry id="lai_mapalgo" type="char*256" category="datasets"
        group="lai_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
 Mapping method from LAI input file to the model resolution
@@ -1662,6 +1672,11 @@ Simulation year that aligns with stream_year_first_lightng value
 <entry id="stream_fldfilename_lightng" type="char*256" category="datasets"
        input_pathname="abs" group="light_streams" valid_values="" >
 Filename of input stream data for Lightning
+</entry>
+
+<entry id="lightng_tintalgo" type="char*80" category="datasets"
+       group="light_streams" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use with Lightning streams
 </entry>
 
 <entry id="lightngmapalgo" type="char*256" category="datasets"
@@ -1701,6 +1716,11 @@ Simulation year that aligns with stream_year_first_popdens value
 Filename of input stream data for human population density
 </entry>
 
+<entry id="popdens_tintalgo" type="char*80" category="datasets"
+       group="popd_streams" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use with human population density streams
+</entry>
+
 <entry id="popdensmapalgo" type="char*256" category="datasets"
        group="popd_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
 Mapping method from human population density input file to the model resolution
@@ -1736,6 +1756,11 @@ Simulation year that aligns with stream_year_first_urbantv value
 <entry id="stream_fldfilename_urbantv" type="char*256" category="datasets"
        input_pathname="abs" group="urbantv_streams" valid_values="" >
 Filename of input stream data for urban time varying
+</entry>
+
+<entry id="urbantv_tintalgo" type="char*80" category="datasets"
+       group="urbantv_streams" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use with urban time varying streams
 </entry>
 
 <entry id="urbantvmapalgo" type="char*256" category="datasets"
