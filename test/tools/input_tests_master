@@ -30,8 +30,8 @@ smi74 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-20
 bli74 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
 smi78 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds
 bli78 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds
-smiT4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp24_2000^tools__ds
-bliT4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp24_2000^tools__ds
+smiT4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_2000^tools__ds
+bliT4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_2000^tools__ds
 smiT2 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
 bliT2 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
 
