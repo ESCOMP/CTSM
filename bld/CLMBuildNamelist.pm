@@ -1041,12 +1041,22 @@ sub setup_cmdl_maxpft {
     $log->verbose_message("Using $nl_flags->{'maxpft'} for maxpft.");
 
     $var = "maxpatch_pft";
-    $val = $nl_flags->{'maxpft'};
     my $group = $definition->get_group_name($var);
-    $nl->set_variable_value($group, $var, $val);
-    if (  ! $definition->is_valid_value( $var, $val ) ) {
-      my @valid_values   = $definition->get_valid_values( $var );
-      $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
+    if ( ! defined($nl->get_variable_value($group, $var)) ) {
+      $val = $nl_flags->{'maxpft'};
+      $nl->set_variable_value($group, $var, $val);
+    }
+    $val = $nl->get_variable_value($group, $var);
+    my @valid_values   = ($maxpatchpft{'.true.'}, $maxpatchpft{'.false.'}  );
+    my $found = 0;
+    foreach my $valid_val ( @valid_values ) {
+       if ( $val == $valid_val ) {
+         $found = 1;
+         last;
+       }
+    }
+    if ( ! $found ) {
+       $log->warning("$var has a value ($val) that is normally NOT valid. Normal valid values are: @valid_values");
     }
   }
 }
@@ -3385,9 +3395,10 @@ sub setup_logic_popd_streams {
       if ( defined($nl->get_value('stream_year_first_popdens')) ||
            defined($nl->get_value('stream_year_last_popdens'))  ||
            defined($nl->get_value('model_year_align_popdens'))  ||
+           defined($nl->get_value('popdens_tintalgo'        ))  ||
            defined($nl->get_value('stream_fldfilename_popdens'))   ) {
         $log->fatal_error("When bgc is SP (NOT CN or BGC) or fire_method==nofire none of: stream_year_first_popdens,\n" .
-                    "stream_year_last_popdens, model_year_align_popdens, nor\n" .
+                    "stream_year_last_popdens, model_year_align_popdens, popdens_tintalgo nor\n" .
                     "stream_fldfilename_popdens can be set!");
       }
     }
@@ -3451,9 +3462,10 @@ sub setup_logic_lightning_streams {
       if ( defined($nl->get_value('stream_year_first_lightng')) ||
            defined($nl->get_value('stream_year_last_lightng'))  ||
            defined($nl->get_value('model_year_align_lightng'))  ||
+           defined($nl->get_value('lightng_tintalgo'        ))  ||
            defined($nl->get_value('stream_fldfilename_lightng'))   ) {
         $log->fatal_error("When bgc is SP (NOT CN or BGC) or fire_method==nofire none of: stream_year_first_lightng,\n" .
-                    "stream_year_last_lightng, model_year_align_lightng, nor\n" .
+                    "stream_year_last_lightng, model_year_align_lightng, lightng_tintalgo nor\n" .
                     "stream_fldfilename_lightng can be set!");
       }
     }
@@ -3557,8 +3569,8 @@ sub setup_logic_soilm_streams {
                      'hgrid'=>$nl_flags->{'res'} );
          if ( ($opts->{'use_case'} =~ /_transient$/) && 
               (remove_leading_and_trailing_quotes($nl->get_value("soilm_tintalgo")) eq "linear") ) {
-             $log->fatal_error("For a transient case, soil moisture streams, must NOT use soilm_tintalgo='linear'" .
-                               " since vegetated areas could go from missing to not missing or vice versa" );
+             $log->warning("For a transient case, soil moisture streams, should NOT use soilm_tintalgo='linear'" .
+                           " since vegetated areas could go from missing to not missing or vice versa" );
          }
       } else {
          if ( defined($nl->get_value('stream_year_first_soilm')) ||
@@ -3615,9 +3627,10 @@ sub setup_logic_lai_streams {
       if ( defined($nl->get_value('stream_year_first_lai')) ||
            defined($nl->get_value('stream_year_last_lai'))  ||
            defined($nl->get_value('model_year_align_lai'))  ||
+           defined($nl->get_value('lai_tintalgo'        ))  ||
            defined($nl->get_value('stream_fldfilename_lai'))   ) {
              $log->fatal_error("When bgc is NOT SP none of the following can be set: stream_year_first_lai,\n" .
-                  "stream_year_last_lai, model_year_align_lai, nor\n" .
+                  "stream_year_last_lai, model_year_align_lai, lai_tintalgo nor\n" .
                   "stream_fldfilename_lai (eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
       }
     }

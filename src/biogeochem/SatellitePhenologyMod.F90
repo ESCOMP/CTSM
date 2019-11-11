@@ -101,6 +101,7 @@ contains
     type(mct_ggrid)    :: dom_clm                    ! domain information 
     character(len=CL)  :: stream_fldFileName_lai     ! lai stream filename to read
     character(len=CL)  :: lai_mapalgo = 'bilinear'   ! Mapping alogrithm
+    character(len=CL)  :: lai_tintalgo = 'linear'    ! Time interpolation alogrithm
 
     character(*), parameter    :: subName = "('laidyn_init')"
     character(*), parameter    :: F00 = "('(laidyn_init) ',4a)"
@@ -116,7 +117,8 @@ contains
          stream_year_last_lai,     &
          model_year_align_lai,     &
          lai_mapalgo,              &
-         stream_fldFileName_lai
+         stream_fldFileName_lai,   &
+         lai_tintalgo
 
     ! Default values for namelist
     stream_year_first_lai     = 1      ! first year in stream to use
@@ -145,6 +147,7 @@ contains
     call shr_mpi_bcast(stream_year_last_lai, mpicom)
     call shr_mpi_bcast(model_year_align_lai, mpicom)
     call shr_mpi_bcast(stream_fldFileName_lai, mpicom)
+    call shr_mpi_bcast(lai_tintalgo, mpicom)
 
     if (masterproc) then
 
@@ -154,6 +157,7 @@ contains
        write(iulog,*) '  stream_year_last_lai   = ',stream_year_last_lai   
        write(iulog,*) '  model_year_align_lai   = ',model_year_align_lai   
        write(iulog,*) '  stream_fldFileName_lai = ',trim(stream_fldFileName_lai)
+       write(iulog,*) '  lai_tintalgo           = ',trim(lai_tintalgo)
 
     endif
 
@@ -187,6 +191,7 @@ contains
          fldListModel=fldList,                         &
          fillalgo='none',                              &
          mapalgo=lai_mapalgo,                          &
+         tintalgo=lai_tintalgo,                        &
          calendar=get_calendar(),                      &
          taxmode='cycle'                               )
 
