@@ -1,4 +1,193 @@
 ===============================================================
+Tag name:  ctsm1.0.dev080
+Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
+Date:  Sun Nov 10 17:11:27 MST 2019
+One-line Summary: Replace masked with "nomask" SRC files for use with mkmapdata and mksurfdata_map
+
+Purpose of changes
+------------------
+
+ 1) Collapse multiple source (SRC) files of a given resolution to a
+ single "nomask" SRC file per SRC resolution. The mask variable is now
+ set to 1 everywhere in all SRC files and mkmapdata.sh generates
+ a single map_ file (aka weight file) per destination (DST) resolution. 
+ 2) Now applying the SRC mask found in the raw datasets while
+ running mksurfdata_map.
+
+ These changes simplify the introduction of new surface variables with
+ raw data in one of our existing SRC resolutions because we need not
+ create new SRC files for such variables. To introduce new surface
+ variables with raw data in new resolutions, the corresponding new SRC
+ files will have mask equal to 1 everywhere.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #286
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+ These changes are transparent to users making surface datasets using
+ default SRC resolutions. Users using non-default SRC resolutions or
+ users introducing new surface variables with raw data in non-default
+ SRC resolutions, will create new SRC file(s) with mask always set to 1
+ everywhere.
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ None.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ Changed the names of most default SRC files and default map_ files to
+ the names of the "nomask" versions of these files.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Replaced SRC files and map_ files with "nomask" versions. Most SRC
+ resolutions already had nomask files available, so I created such files
+ for 0.25x0.25, 0.9x1.25, 3x3min, 5x5min, and 0.125x0.125. I changed all
+ of the map_ files except
+ map_1km-merge-10min_HYDRO1K-merge-nomask SRC resolution.
+
+Substantial timing or memory changes:
+ We end up with fewer SRC files and fewer/larger map_ files. Running
+ mkmapdata.sh may take longer, but we plan to upgrade the script to call
+ the ocgis tool that is more time and memory efficient than what we have
+ currently. Running msurfdata_map may take a bit longer to run, but this
+ does not outweigh the benefit of easier SRC and map_ file management.
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ None
+
+Changes to tests or testing:
+ None
+
+Code reviewed by:
+ @billsacks @ekluzek
+
+CTSM testing:
+
+[... Remove before making master tag.  Available test levels:
+
+    a) regular (must be run before handing off a tag to SEs and must be run
+     before committing a tag)
+    b) build_namelist (if namelists and/or build_system changed))
+    c) tools (only if tools are modified and no CTSM source is modified)
+    d) short (for use during development and in rare cases where only a small
+          change with known behavior is added ... eg. a minor bug fix)
+    e) doc (no source testing required)
+
+... ]
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- 
+    izumi ------- 
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change: larger than roundoff/same climate
+
+ I performed testing at the 0.9x1.25 degree resolution.
+
+ Code changes were tested by comparing baseline files (a)
+ surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c191101.nc
+ surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c191101.log
+ generated by running baseline code pointing to masked map_ files
+ to (b)
+ surfdata_0.9x1.25_new_hist_78pfts_CMIP6_simyr2000_c191101.nc
+ surfdata_0.9x1.25_new_hist_78pfts_CMIP6_simyr2000_c191101.log
+ generated by running the new code still pointing to masked map_ files
+ and then comparing to (c)
+ surfdata_0.9x1.25_nomask_78pfts_CMIP6_simyr2000_c191101.nc
+ surfdata_0.9x1.25_nomask_78pfts_CMIP6_simyr2000_c191101.log
+ generated by running the new code pointing to nomask map_ files.
+
+ We set an expectation of max abs relative differences of less than
+ roughly 1e-13. I got an actual max abs relative difference of 7e-12 in
+ PCT_NAT_PFT for (a) vs (b) and (a) vs (c). I refer to these here as
+ small diffs.
+
+ All other variables gave smaller diffs except the four VIC variables
+ binfil, Ws, Ds, Dsmax between (b) and (c). These diffs appear in 5 grid
+ cells (along two meridians that got shifted in longitude by less than
+ 1e-13 degrees) that vic considers land in the baseline and
+ ocean in the nomask case. Vic provides valid generic data for ocean
+ grid cells and, therefore, also where the discrepancies occur. This
+ means that if the land model treats these grid cells as land, the
+ model will work.
+
+ I had to generate new masked map_ files for (a) and (b) because
+ changes in ESMF codes over the years were leading to large differences
+ between all three (a) vs (b) vs (c). Generating new masked map_ files
+ brought the diffs back to small.
+
+ For the 3x3min and 5x5min SRC resolutions, I made six temporary
+ nomask SRC files, one per surface variable pointing to 3x3min
+ map_ files and one per surface variable pointing to 5x5min map_ files.
+ I did this to get small differences relative to the baseline. I created
+ the temporary files by making copies of the correspoding masked SRC
+ files and changing mask to 1 everywhere. The temporary files had diffs
+ less than roughly 1e-5 from generic nomask files generated by running
+ mkscripgrid.ncl for 3x3min and 5x5min. Ultimately we are replacing the
+ temporary files with the generic nomask files, which leads to larger
+ diffs in the surface datasets.
+
+
+Detailed list of changes
+------------------------
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/823
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev070
 Originator(s):  sacks (Bill Sacks)
 Date:  Wed Oct  9 06:16:39 MDT 2019

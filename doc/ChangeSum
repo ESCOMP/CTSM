@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev080   slevis 11/09/2019 mksurfdata_map: replace SRC files of various masks with SRC files w no mask
   ctsm1.0.dev070    sacks 10/09/2019 Fix for writing 0-d variables with PIO2
   ctsm1.0.dev069    sacks 10/07/2019 Misc. code cleanup and minor bug fixes
   ctsm1.0.dev068    sacks 09/30/2019 Add water tracers to CombineSnowLayers, DivideSnowLayers, ZeroEmptySnowLayers
