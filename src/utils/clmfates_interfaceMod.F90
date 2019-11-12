@@ -965,6 +965,9 @@ contains
       ! I think that is it...
       ! ---------------------------------------------------------------------------------
 
+      ! Set the FATES global time and date variables
+      call GetAndSetTime 
+
       if(.not.initialized) then
 
          initialized=.true.
@@ -1193,6 +1196,9 @@ contains
      integer :: s
      integer :: c
 
+
+     ! Set the FATES global time and date variables
+     call GetAndSetTime                                                                
 
      nclumps = get_proc_clumps()
 
