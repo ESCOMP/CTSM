@@ -65,7 +65,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3x3min_nomask_c191102.nc</scripgriddata>
 <scripgriddata_lrgfile_needed hgrid="3x3min" lmask="nomask">64bit_offset</scripgriddata_lrgfile_needed>
 <scripgriddata hgrid="360x720cru"   lmask="nomask" 
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_nomask_c120830.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="0.9x1.25"  lmask="nomask"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.9x1.25_nomask_c191014.nc</scripgriddata>
 
@@ -257,7 +257,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc</mksrf_fvic>
 
 <mksrf_fch4 hgrid="360x720cru" lmask="cruncep"
->lnd/clm2/rawdata/mksrf_ch4inversion_360x720_cruncep_simyr2000.c130322.nc</mksrf_fch4>
+>lnd/clm2/rawdata/mksrf_ch4inversion_0.5x0.5_cruncep_simyr2000.c191112.nc</mksrf_fch4>
 
 <!-- mksrf_fvegtyp -->
 
