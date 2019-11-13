@@ -1115,7 +1115,7 @@ program mksurfdat
           !
           ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
           !
-          if ( .not. all_veg )then
+          if ( all_veg )then
              fname = ' '
              fhrvname  = ' '
              call mkpft_parse_oride(string)
