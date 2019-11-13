@@ -575,7 +575,7 @@
       <option name="comment"  >Multi-year global test of transient crops together with transient glaciers. Use no-evolve glaciers with ERP test</option>
     </options>
   </test>
-  <test name="ERP_P36x2_D_Ld5" grid="f09_g17" compset="I2000Clm45BgcGs" testmods="clm/prescribed">
+  <test name="ERP_P36x2_D_Ld5" grid="f09_g17" compset="I2000Clm45Sp" testmods="clm/prescribed">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
