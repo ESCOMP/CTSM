@@ -229,8 +229,88 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
+    ## izumi
+    izumi* | i*.unified.ucar.edu) 
+    submit_script="test_driver_izumi_${cur_time}.sh"
+    export PATH=/cluster/torque/bin:${PATH}
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+# Name of the queue (CHANGE THIS if needed)
+#PBS -q long
+# Number of nodes (CHANGE THIS if needed)
+#PBS -l nodes=1:ppn=24
+# output file base name
+#PBS -N test_dr
+# Put standard error and standard out in same file
+#PBS -j oe
+# Export all Environment variables
+#PBS -V
+# End of options
+
+if [ -n "\$PBS_JOBID" ]; then    #batch job
+    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
+    initdir=\${PBS_O_WORKDIR}
+fi
+
+if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
+    interactive="NO"
+    input_file="tests_posttag_izumi"
+else
+    interactive="YES"
+    input_file="tests_posttag_izumi_nompi"
+fi
+
+##omp threads
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=2
+fi
+export CLM_RESTART_THREADS=1
+
+##mpi tasks
+export CLM_TASKS=24
+export CLM_RESTART_TASKS=20
+
+export P4_GLOBMEMSIZE=500000000
+
+
+export CESM_MACH="izumi"
+
+ulimit -s unlimited
+ulimit -c unlimited
+
+export CESM_COMP="intel"
+export TOOLS_MAKE_STRING="USER_FC=ifort USER_CC=icc "
+export TOOLS_CONF_STRING=" -mpilib mpi-serial"
+export CFG_STRING=""
+export INITMODULES="/usr/share/Modules/init/sh"
+
+. \$INITMODULES
+module purge
+module load compiler/intel/19.0.1
+module load tool/nco/4.7.5
+module load tool/netcdf/4.6.1/intel
+
+export NETCDF_DIR=\$NETCDF_PATH
+export INC_NETCDF=\${NETCDF_PATH}/include
+export LIB_NETCDF=\${NETCDF_PATH}/lib
+export MAKE_CMD="gmake -j 5"   ##using hyper-threading on izumi
+export MACH_WORKSPACE="/scratch/cluster"
+export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_izumi/cprnc
+export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
+dataroot="/fs/cgd/csm"
+export TOOLSSLIBS=""
+echo_arg="-e"
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+
     * )
-    echo "Only setup to work on: cheyenne and hobart"
+    echo "Only setup to work on: cheyenne, hobart and izumi"
     exit
  
 
@@ -542,7 +622,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on cheyenne and hobart: "
+    echo "usage on cheyenne, hobart, and izumi: "
     echo "./test_driver.sh -i"
     echo ""
     echo "valid arguments: "
