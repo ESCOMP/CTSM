@@ -1,6 +1,15 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
   ctsm1.0.dev080   slevis 11/09/2019 mksurfdata_map: replace SRC files of various masks with SRC files w no mask
+  ctsm1.0.dev079    sacks 11/04/2019 Change a few uses of shr_kind
+  ctsm1.0.dev078   oleson 10/31/2019 Fix rootr calculation with use_hydrstress true
+  ctsm1.0.dev077    sacks 10/27/2019 Consistently use frac_sno_eff rather than frac_sno in qg calculations
+  ctsm1.0.dev076    sacks 10/25/2019 Set frac_sno_eff=0 if frac_sno is 0; avoid unnecessary calls to QSat
+  ctsm1.0.dev075    sacks 10/25/2019 Lakes: Adjust frac_sno after updating 0-layer snow pack for dew & sublimation
+  ctsm1.0.dev074    sacks 10/23/2019 For lakes: when reading finidat, set frac_sno=1 if h2osno_total > 0
+  ctsm1.0.dev073    sacks 10/22/2019 Fix bug in calculation of dqgdT
+  ctsm1.0.dev072 mvertens 10/15/2019 Add NUOPC cap
+  ctsm1.0.dev071    sacks 10/11/2019 Split CanopyTemperature into separate pieces
   ctsm1.0.dev070    sacks 10/09/2019 Fix for writing 0-d variables with PIO2
   ctsm1.0.dev069    sacks 10/07/2019 Misc. code cleanup and minor bug fixes
   ctsm1.0.dev068    sacks 09/30/2019 Add water tracers to CombineSnowLayers, DivideSnowLayers, ZeroEmptySnowLayers

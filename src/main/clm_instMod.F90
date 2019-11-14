@@ -309,7 +309,7 @@ contains
 
     call aerosol_inst%Init(bounds, NLFilename)
 
-    call frictionvel_inst%Init(bounds)
+    call frictionvel_inst%Init(bounds, NLFilename = NLFilename, params_ncid = params_ncid)
 
     call lakestate_inst%Init(bounds)
     call LakeConInit()
@@ -471,7 +471,7 @@ contains
   end subroutine clm_instInit
 
   !-----------------------------------------------------------------------
-  subroutine clm_instRest(bounds, ncid, flag)
+  subroutine clm_instRest(bounds, ncid, flag, writing_finidat_interp_dest_file)
     !
     ! !USES:
     use ncdio_pio       , only : file_desc_t
@@ -487,6 +487,7 @@ contains
     
     type(file_desc_t) , intent(inout) :: ncid ! netcdf id
     character(len=*)  , intent(in)    :: flag ! 'define', 'write', 'read' 
+    logical           , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
 
     ! Local variables
     integer                           :: nc, nclumps
@@ -521,6 +522,7 @@ contains
     call soilstate_inst%restart (bounds, ncid, flag=flag)
 
     call water_inst%restart(bounds, ncid, flag=flag, &
+         writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:))
 
     call irrigation_inst%restart (bounds, ncid, flag=flag)
@@ -573,8 +575,7 @@ contains
 
        call clm_fates%restart(bounds, ncid, flag=flag,  &
             waterdiagnosticbulk_inst=water_inst%waterdiagnosticbulk_inst, &
-            canopystate_inst=canopystate_inst, &
-            frictionvel_inst=frictionvel_inst)
+            canopystate_inst=canopystate_inst)
 
     end if
 

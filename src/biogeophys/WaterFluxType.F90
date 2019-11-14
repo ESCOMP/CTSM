@@ -629,7 +629,7 @@ contains
          units='mm/s',  &
          avgflag='A', &
          long_name=this%info%lname('canopy transpiration'), &
-         ptr_patch=this%qflx_tran_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
+         ptr_patch=this%qflx_tran_veg_patch, c2l_scale_type='urbanf')
 
     call hist_addfld1d ( &
          fname=this%info%fname('QSNOEVAP'), &
@@ -856,6 +856,11 @@ contains
     ! Other qflx_glcice fluxes intentionally remain unset (spval) outside the do_smb
     ! filter, so that they are flagged as missing value outside that filter.
     this%qflx_glcice_dyn_water_flux_col(bounds%begc:bounds%endc) = 0._r8
+
+    ! These fluxes are never set for non-vegetated landunits, but we want their values to
+    ! be 0 there, so initialize the fluxes to 0 everywhere
+    this%qflx_tran_veg_patch(bounds%begp:bounds%endp) = 0._r8
+    this%qflx_evap_veg_patch(bounds%begp:bounds%endp) = 0._r8
 
     ! needed for CNNLeaching 
     do c = bounds%begc, bounds%endc
