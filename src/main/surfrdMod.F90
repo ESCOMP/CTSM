@@ -677,13 +677,13 @@ contains
     real(r8),pointer :: array2D(:,:)                 ! local array
     character(len=32) :: subname = 'surfrd_cftformat'! subroutine name
 !-----------------------------------------------------------------------
-    SHR_ASSERT_ALL((lbound(wt_cft)          == (/begg, cft_lb/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_cft, dim=1)   == (/endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_cft, dim=2)   >= (/cftsize+1-cft_lb/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((lbound(fert_cft)        == (/begg, cft_lb/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fert_cft, dim=1) == (/endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fert_cft, dim=2) >= (/cftsize+1-cft_lb/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wt_nat_patch)    >= (/endg,natpft_size-1+natpft_lb/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((lbound(wt_cft)          == (/begg, cft_lb/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wt_cft, dim=1)   == (/endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wt_cft, dim=2)   >= (/cftsize+1-cft_lb/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((lbound(fert_cft)        == (/begg, cft_lb/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fert_cft, dim=1) == (/endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fert_cft, dim=2) >= (/cftsize+1-cft_lb/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wt_nat_patch)    >= (/endg,natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
     call check_dim(ncid, 'cft',    cftsize)
     call check_dim(ncid, 'natpft', natpft_size)
@@ -746,7 +746,7 @@ contains
     logical  :: readvar                        ! is variable on dataset
     character(len=32) :: subname = 'surfrd_pftformat'! subroutine name
 !-----------------------------------------------------------------------
-    SHR_ASSERT_ALL((ubound(wt_nat_patch) == (/endg, natpft_size-1+natpft_lb/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(wt_nat_patch) == (/endg, natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
     call check_dim(ncid, 'natpft', natpft_size)
     ! If cft_size == 0, then we expect to be running with a surface dataset

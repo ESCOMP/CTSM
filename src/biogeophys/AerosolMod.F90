@@ -373,8 +373,8 @@ contains
     logical :: readvar      ! determine if variable is on initial file
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osoi_ice_col) == (/bounds%endc,nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osoi_liq_col) == (/bounds%endc,nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_ice_col) == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_liq_col) == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
 
     call restartvar(ncid=ncid, flag=flag, varname='mss_bcpho', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &

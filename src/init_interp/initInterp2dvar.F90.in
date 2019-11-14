@@ -261,8 +261,8 @@ contains
     character(len=*), parameter :: subname = 'readlevel'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((lbound(data) == (/this%vec_beg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(data) == (/this%vec_end/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((lbound(data) == (/this%vec_beg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(data) == (/this%vec_end/)), sourcefile, __LINE__)
 
     if (this%file_is_dest) then
        ! NOTE(wjs, 2015-11-22) As far as I can tell, ncdio_pio currently doesn't provide
