@@ -490,7 +490,7 @@ until ((nfile>${#INGRID[*]})); do
       echo "Skipping creation of ${OUTFILE[nfile]} as fast mode is on so skipping large files in NetCDF4 format"
    else
 
-      WD=/glade/work/slevis/ocgis_work/
+      WD=/glade/work/slevis/git/mkmapdata_ocgis/tools/mkmapdata
       CHUNKDIR=${WD}/chunking
       rm -rf ${CHUNKDIR}
       NCHUNKS_DST=20
