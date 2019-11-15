@@ -35,6 +35,9 @@
 <!-- Use single year ndep file for CLM50 as the new multi-year file has different times that change answers relative to control sims -->
 <stream_fldfilename_ndep phys="clm5_0" use_cn=".true."
 >lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</stream_fldfilename_ndep>
+
+<stream_fldfilename_ndep phys="clm4_5" use_cn=".true."
+>lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</stream_fldfilename_ndep>
  
 <ndep_taxmode            phys="clm5_0" use_cn=".true." >cycle</ndep_taxmode>
 
