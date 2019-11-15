@@ -32,6 +32,9 @@
 <stream_year_first_urbantv phys="clm5_0"  >1850</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0"  >1850</stream_year_last_urbantv>
 
+<stream_year_first_urbantv phys="clm4_5"  >1850</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm4_5"  >1850</stream_year_last_urbantv>
+
 <!-- Use single year ndep file for CLM50 as the new multi-year file has different times that change answers relative to control sims -->
 <stream_fldfilename_ndep phys="clm5_0" use_cn=".true."
 >lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</stream_fldfilename_ndep>

@@ -33,4 +33,7 @@
 <stream_year_first_urbantv phys="clm5_0" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" >2000</stream_year_last_urbantv>
 
+<stream_year_first_urbantv phys="clm4_5" >2000</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm4_5" >2000</stream_year_last_urbantv>
+
 </namelist_defaults>
