@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 825;
+my $ntests = 838;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 501;
+   $ntests += 504;
 }
 plan( tests=>$ntests );
 
@@ -279,6 +279,7 @@ foreach my $options ( "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp S
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
                       "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
+                      "-clm_start_type branch -namelist '&a nrevsn=\"thing.nc\",use_init_interp=T/'",
                       "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
                      ) {
    my $file = $startfile;
@@ -412,7 +413,7 @@ my %failtest = (
      "soilm_stream wo use"       =>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='missing_file'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
+                                     conopts=>"-phys clm5_0",
                                    },
      "clm50CNDVwtransient"       =>{ options=>" -envxml_dir . -use_case 20thC_transient -dynamic_vegetation -res 10x15",
                                      namelst=>"",
@@ -1016,13 +1017,18 @@ my %warntest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "use_c14_wo_bgc"            =>{ options=>"-envxml_dir . -bgc cndv",
+     "use_c14_wo_bgc"            =>{ options=>"-envxml_dir . -bgc cn",
                                      namelst=>"use_c14=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
-     "maxpft_wrong"              =>{ options=>"-envxml_dir . -bgc cndv",
+     "maxpft_wrong"              =>{ options=>"-envxml_dir . -bgc cn",
                                      namelst=>"maxpatch_pft=19",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "soilm_stream w transient"  =>{ options=>"-res 0.9x1.25 -envxml_dir . -use_case 20thC_transient",
+                                     namelst=>"use_soil_moisture_streams=T,soilm_tintalgo='linear'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
@@ -1044,6 +1050,7 @@ foreach my $key ( keys(%warntest) ) {
    # Now run with -ignore_warnings and make sure it works
    $options .= " -ignore_warnings";
    eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
+   is( $?, 0, $key );
    is( $@, '', "$options" );
    system( "cat $tempfile" );
 }

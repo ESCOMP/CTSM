@@ -390,6 +390,7 @@ EOF
   }
   if ( defined($opts{'pft_override'}) ) {
     print $fh <<"EOF";
+ all_veg      = .true.
  pft_frc      = $opts{'pft_frc'}
  pft_idx      = $opts{'pft_idx'}
 EOF

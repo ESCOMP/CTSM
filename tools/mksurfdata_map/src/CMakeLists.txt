@@ -11,16 +11,27 @@ include(CIME_utils)
 # Build library containing stuff needed for the unit tests
 list(APPEND mksurfdat_sources
   shr_kind_mod.F90
+  shr_log_mod.F90
+  nanMod.F90
+  shr_string_mod.F90
+  fileutils.F90
+  shr_timer_mod.F90
+  shr_file_mod.F90
   mkgridmapMod.F90
   mkindexmapMod.F90
   mkpftConstantsMod.F90
   mkpctPftTypeMod.F90
+  mkpftMod.F90
+  mkdomainMod.F90
+  mkgridmapMod.F90
   mkutilsMod.F90
   mkpftUtilsMod.F90
   mksoilUtilsMod.F90
   mkvarctl.F90
   mkvarpar.F90
   shr_const_mod.F90
+  shr_sys_mod.F90
+  unit_test_stubs/abort.F90
   unit_test_stubs/mkncdio.F90)
 add_library(mksurfdat ${mksurfdat_sources})
 
