@@ -1,4 +1,136 @@
 ===============================================================
+Tag name:  release-clm5.0.28
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Nov 14 23:03:39 MST 2019
+One-line Summary: Several bit-for-bit fixes especially around soil-moisture streams
+
+Purpose of this version:
+------------------------
+
+A list of several bit-for-bit fixes. Some very minor and other's more extensive.
+
+mksurfdata_map was extended so that when you specify vegetation types, you can let it use the natural and crop coverage
+from the input datasets. This allows you to for example run a global simulation with all vegetation types in every grid cell.
+This can be useful in seeing what types of vegetation grow in each grid cell. Also simplify some of the logic that allowed
+for old format PFT datasets that didn't include crop information. Since, we don't have or need to work with such datasets
+this complex logic could be removed. Also added some new unit tests for mksurfdata and the defining PFT values.
+
+Add time interpolation alogrithm type to most of the stream files, so it can be changed via namelist. Add historical data to the
+Nitrogen deposition future scenario datasets.
+
+Add namelist control variables for soilm_offset, and tint_algo for most of the streams. tint_algo allows you to control the time
+interpolation and change it to a simpler one (like upper) in order to show that the streams output agrees with the streams data
+input. soilm_offset allows the user to change the time-stamp offset if the time-stamp isn't at the middle of averaging interval.
+This is important for the soil moisture streams for a case where you want to use the output of a CTSM simulation for soil-moisture
+as normally the time-stamp is the end of the interval (so you could use -1296000 to roughly compensate for the time-stamps to be
+at the end of the month rather than mid-month). Add a namelist item to continue when soil moisture is prescribed and a gridpoint
+is missing on the input streams file, but required for the simulation running. Also add an optional history field H2OSOI_PRESCRIBED_GRC
+that corresponds to the input soil moisture streams, so you can ensure the prescribe soil moisture is working correctly and agrees
+with the input dataset.
+
+Fix the threading bug for soil-moisture and LAI streams. This is done by adding a new "advance" subroutine that does the streams
+advance part of the calculation in a non-OpenMP area of the CLM driver, while the "interp" subroutine remains in the Open-MP 
+loop.
+
+Include missing prescribed testmods directory. Allow branches with use_init_interp=T with a log message about it. 
+Move tests from hobart to izumi.
+
+This is bit-for-bit
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #809, #804, #786, #702, #791, #150 #830, #831, #832, #836
+  Fixes #809 -- mkmapdata old version of intel
+  Fixes #804 -- allow mksurfdata_map to prescribe vegetation cover for globe
+  Fixes #786 -- allow use_init_interp for a branch
+  Fixes #702 -- add historical period to start of ndep SSP files
+  Fixes #791 -- fix threading for prescribed LAI and soil-moisture
+  Fixes #150 -- remove extra logic in mksurfdata_map for old format and missing crops
+  Fixes #830 -- time offset is assumed to be zero for soil moisture streams
+  Fixes #831 -- add namelist tint_algo settings for input streams
+  partial for  #832 -- an option to override if soil moisture stream has missing data where needed
+  Fixes #836 -- add izumi as a place that can run tools tests
+
+Science changes since: release-clm6.0.27
+   None, answers are the same. Some more flexibility was added with namelist control as follows in the next section.
+
+Software changes since: release-clm6.0.27
+   New namelist items: ndep_tintalgo, soilm_offset, soilm_ignore_data_if_missing, lai_tintalgo, lightng_tintalgo, popdens_tintalgo
+                       urbantv_tintalgo
+   If maxpatch_pft's is not set to a regular value (with or without crops) will now abort, with an option to override if needed
+
+   Move tests from hobart to izumi. prescribed test-mod directory that wasn't there before is now there.
+   Add some assert debug checking for lai and soilm streams.
+   Add some new unit tests for mksurfdata_map
+
+Changes to User Interface since: release-clm6.0.27
+   Note, that streams text files are now legitimate XML files
+
+Testing:  regular
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+    izumi ---- Not working (needs a cime update)
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+    hobart --- OK
+    izumi ---- OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_intel ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK (fail on run needs some cime updates)
+    izumi_intel ------- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No (bit-for-bit) (other than two tests on hobart because of cime issue #3302)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: Update cime
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.03
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.25
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #814
+(https://github.com/ESCOMP/ctsm/pull)
+   #814 -- A few fixes and extend mksurfdata to set PFT/CFT fractions but use veg-cover from dataset
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.27
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Aug 13 14:31:50 MDT 2019
