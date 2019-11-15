@@ -1098,7 +1098,7 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <stream_year_last_soilm   >1997</stream_year_last_soilm>
 <model_year_align_soilm   >1997</model_year_align_soilm>
 
-<stream_fldfilename_soilm hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.climo1980-2014.MONS_c190709.nc</stream_fldfilename_soilm>
+<stream_fldfilename_soilm hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.1980-2014.MONS_climo.c190716.nc</stream_fldfilename_soilm>
 
 <soilm_tintalgo>linear</soilm_tintalgo>
 <soilm_offset  >0</soilm_offset>
