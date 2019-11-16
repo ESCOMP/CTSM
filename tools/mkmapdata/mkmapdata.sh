@@ -227,6 +227,7 @@ else
     # Determine extra information about the destination grid file
     DST_LRGFIL=`$QUERY -var scripgriddata_lrgfile_needed $QUERYARGS`
     DST_TYPE=`$QUERY -var scripgriddata_type $QUERYARGS`
+    DST_MAXSPATIALRES=`$QUERY -var max_res $QUERYARGS`
     if [ "$DST_TYPE" = "UGRID" ]; then
         # For UGRID, we need extra information: the meshname variable
 	dst_meshname=`$QUERY -var scripgriddata_meshname $QUERYARGS`
@@ -263,22 +264,13 @@ fi
 
 if [ "$phys" = "clm4_5" ]; then
     grids=(                    \
-           "0.5x0.5_AVHRR"     \
-           "0.25x0.25_MODIS"   \
-           "0.5x0.5_MODIS"     \
-           "3x3min_LandScan2004" \
-           "3x3min_MODIS-wCsp" \
-           "3x3min_USGS"       \
+           "0.5x0.5_nomask"    \
+           "0.25x0.25_nomask"  \
+           "0.125x0.125_nomask"  \
            "5x5min_nomask"     \
-           "5x5min_IGBP-GSDP"  \
-           "5x5min_ISRIC-WISE" \
-           "5x5min_ORNL-Soil" \
            "10x10min_nomask"   \
-           "10x10min_IGBPmergeICESatGIS" \
-           "3x3min_GLOBE-Gardner" \
-           "3x3min_GLOBE-Gardner-mergeGIS" \
-           "0.9x1.25_GRDC" \
-           "360x720cru_cruncep" \
+           "0.9x1.25_nomask"   \
+           "3x3min_nomask"     \
            "1km-merge-10min_HYDRO1K-merge-nomask" \
           )
 
@@ -288,7 +280,7 @@ else
 fi
 
 # Set timestamp for names below 
-CDATE="c"`date +%y%m%d`
+CDATE="c"`date -d "-0 days" +%y%m%d`
 
 # Set name of each output mapping file
 # First determine the name of the input scrip grid file  
@@ -301,10 +293,11 @@ do
 
    QUERYARGS="-res $grid -options lmask=$lmask,glc_nec=10 "
 
-   QUERYFIL="$QUERY -var scripgriddata $QUERYARGS -onlyfiles"
+   QUERYFIL="$QUERY -var unstructdata $QUERYARGS -onlyfiles"
    if [ "$verbose" = "YES" ]; then
       echo $QUERYFIL
    fi
+   SRC_MAXSPATIALRES[nfile]=`$QUERY -var max_res $QUERYARGS`
    INGRID[nfile]=`$QUERYFIL`
    if [ "$list" = "YES" ]; then
       echo "ingrid = ${INGRID[nfile]}"
@@ -315,8 +308,8 @@ do
 
    # Determine extra information about the source grid file
    SRC_EXTRA_ARGS[nfile]=""
-   SRC_LRGFIL[nfile]=`$QUERY -var scripgriddata_lrgfile_needed $QUERYARGS`
-   SRC_TYPE[nfile]=`$QUERY -var scripgriddata_type $QUERYARGS`
+   SRC_LRGFIL[nfile]="none"
+   SRC_TYPE[nfile]=`$QUERY -var unstructdata_type $QUERYARGS`
    if [ "${SRC_TYPE[nfile]}" = "UGRID" ]; then
        # For UGRID, we need extra information: the meshname variable
        src_meshname=`$QUERY -var scripgriddata_meshname $QUERYARGS`
@@ -491,12 +484,14 @@ until ((nfile>${#INGRID[*]})); do
    else
 
       WD=/glade/work/slevis/git/mkmapdata_ocgis/tools/mkmapdata
+      SS_PATH=${WD}/subsets/spatial_subset.nc
+      rm -rf ${SS_PATH}
       CHUNKDIR=${WD}/chunking
       rm -rf ${CHUNKDIR}
-      NCHUNKS_DST=20
+      NCHUNKS_DST=10
       CRWG="ocli chunked-rwg"
 
-      cmd="$mpirun ${CRWG} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE}"
+      cmd="$mpirun ${CRWG} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES}"
 
       runcmd $cmd
 
