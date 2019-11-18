@@ -2603,7 +2603,7 @@ sub setup_logic_do_grossunrep {
    # conditions: (1) set default value to '.false.'; (2) make sure that the
    # value is indeed false (e.g., that the user didn't try to set it to true).
 
-   my $default_val = ".false.";
+   my $default_val = ".true.";
 
    # cannot_be_true will be set to a non-empty string in any case where
    # do_grossunrep should not be true; if it turns out that do_grossunrep IS true
