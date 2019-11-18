@@ -271,7 +271,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine NStateUpdate2g(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
+       cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
+       soilbiogeochem_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
     ! Update all the prognostic nitrogen state
@@ -287,6 +288,7 @@ contains
     type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c,p,j,l ! indices
@@ -297,6 +299,7 @@ contains
     associate(                                 & 
          nf_veg  => cnveg_nitrogenflux_inst  , &
          ns_veg  => cnveg_nitrogenstate_inst , &
+         nf_soil => soilbiogeochem_nitrogenflux_inst, &
          ns_soil => soilbiogeochem_nitrogenstate_inst   &
          )
 
@@ -308,14 +311,25 @@ contains
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-            ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + nf_veg%gru_n_to_litr_met_n_col(c,j) * dt
-            ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + nf_veg%gru_n_to_litr_cel_n_col(c,j) * dt
-            ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + nf_veg%gru_n_to_litr_lig_n_col(c,j) * dt
-            ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%gru_n_to_cwdn_col(c,j)       * dt
+            if (.not. use_soil_matrixcn)then
+               ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = &
+                    ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + nf_veg%gru_n_to_litr_met_n_col(c,j) * dt
+               ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = &
+                    ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + nf_veg%gru_n_to_litr_cel_n_col(c,j) * dt
+               ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = &
+                    ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + nf_veg%gru_n_to_litr_lig_n_col(c,j) * dt
+               ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
+                    ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%gru_n_to_cwdn_col(c,j)       * dt
+            else
+               nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
+                    nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + nf_veg%gru_n_to_litr_met_n_col(c,j) * dt
+               nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
+                    nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) + nf_veg%gru_n_to_litr_cel_n_col(c,j) * dt
+               nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
+                    nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + nf_veg%gru_n_to_litr_lig_n_col(c,j) * dt
+               nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     = &
+                    nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     + nf_veg%gru_n_to_cwdn_col(c,j)       * dt
+            end if
          end do
       end do
 
@@ -324,51 +338,53 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
-         ! displayed pools
-         ns_veg%leafn_patch(p) = ns_veg%leafn_patch(p)                           &
-              - nf_veg%gru_leafn_to_litter_patch(p) * dt
-         ns_veg%frootn_patch(p) = ns_veg%frootn_patch(p)                         &
-              - nf_veg%gru_frootn_to_litter_patch(p) * dt
-         ns_veg%livestemn_patch(p) = ns_veg%livestemn_patch(p)                   &
-              - nf_veg%gru_livestemn_to_atm_patch(p) * dt
-         ns_veg%deadstemn_patch(p) = ns_veg%deadstemn_patch(p)                   &
-              - nf_veg%gru_deadstemn_to_atm_patch(p) * dt
-         ns_veg%deadstemn_patch(p) = ns_veg%deadstemn_patch(p)                   &
-              - nf_veg%gru_wood_productn_gain_patch(p) * dt
-         ns_veg%livecrootn_patch(p) = ns_veg%livecrootn_patch(p)                 &
-              - nf_veg%gru_livecrootn_to_litter_patch(p) * dt
-         ns_veg%deadcrootn_patch(p) = ns_veg%deadcrootn_patch(p)                 &
-              - nf_veg%gru_deadcrootn_to_litter_patch(p) * dt
-         ns_veg%retransn_patch(p) = ns_veg%retransn_patch(p)                     &
+         if (.not. use_soil_matrixcn)then
+            ! displayed pools
+            ns_veg%leafn_patch(p) = ns_veg%leafn_patch(p)                           &
+                 - nf_veg%gru_leafn_to_litter_patch(p) * dt
+            ns_veg%frootn_patch(p) = ns_veg%frootn_patch(p)                         &
+                 - nf_veg%gru_frootn_to_litter_patch(p) * dt
+            ns_veg%livestemn_patch(p) = ns_veg%livestemn_patch(p)                   &
+                 - nf_veg%gru_livestemn_to_atm_patch(p) * dt
+            ns_veg%deadstemn_patch(p) = ns_veg%deadstemn_patch(p)                   &
+                 - nf_veg%gru_deadstemn_to_atm_patch(p) * dt
+            ns_veg%deadstemn_patch(p) = ns_veg%deadstemn_patch(p)                   &
+                 - nf_veg%gru_wood_productn_gain_patch(p) * dt
+            ns_veg%livecrootn_patch(p) = ns_veg%livecrootn_patch(p)                 &
+                 - nf_veg%gru_livecrootn_to_litter_patch(p) * dt
+            ns_veg%deadcrootn_patch(p) = ns_veg%deadcrootn_patch(p)                 &
+                 - nf_veg%gru_deadcrootn_to_litter_patch(p) * dt
+            ns_veg%retransn_patch(p) = ns_veg%retransn_patch(p)                     &
               - nf_veg%gru_retransn_to_litter_patch(p) * dt
 
-         ! storage pools
-         ns_veg%leafn_storage_patch(p) = ns_veg%leafn_storage_patch(p)           &
-              - nf_veg%gru_leafn_storage_to_atm_patch(p) * dt
-         ns_veg%frootn_storage_patch(p) = ns_veg%frootn_storage_patch(p)         &
-              - nf_veg%gru_frootn_storage_to_atm_patch(p) * dt
-         ns_veg%livestemn_storage_patch(p) = ns_veg%livestemn_storage_patch(p)   &
-              - nf_veg%gru_livestemn_storage_to_atm_patch(p) * dt
-         ns_veg%deadstemn_storage_patch(p) = ns_veg%deadstemn_storage_patch(p)   &
-              - nf_veg%gru_deadstemn_storage_to_atm_patch(p) * dt
-         ns_veg%livecrootn_storage_patch(p) = ns_veg%livecrootn_storage_patch(p) &
-              - nf_veg%gru_livecrootn_storage_to_atm_patch(p) * dt
-         ns_veg%deadcrootn_storage_patch(p) = ns_veg%deadcrootn_storage_patch(p) &
-              - nf_veg%gru_deadcrootn_storage_to_atm_patch(p) * dt
+            ! storage pools
+            ns_veg%leafn_storage_patch(p) = ns_veg%leafn_storage_patch(p)           &
+                 - nf_veg%gru_leafn_storage_to_atm_patch(p) * dt
+            ns_veg%frootn_storage_patch(p) = ns_veg%frootn_storage_patch(p)         &
+                 - nf_veg%gru_frootn_storage_to_atm_patch(p) * dt
+            ns_veg%livestemn_storage_patch(p) = ns_veg%livestemn_storage_patch(p)   &
+                 - nf_veg%gru_livestemn_storage_to_atm_patch(p) * dt
+            ns_veg%deadstemn_storage_patch(p) = ns_veg%deadstemn_storage_patch(p)   &
+                 - nf_veg%gru_deadstemn_storage_to_atm_patch(p) * dt
+            ns_veg%livecrootn_storage_patch(p) = ns_veg%livecrootn_storage_patch(p) &
+                 - nf_veg%gru_livecrootn_storage_to_atm_patch(p) * dt
+            ns_veg%deadcrootn_storage_patch(p) = ns_veg%deadcrootn_storage_patch(p) &
+                 - nf_veg%gru_deadcrootn_storage_to_atm_patch(p) * dt
 
-         ! transfer pools
-         ns_veg%leafn_xfer_patch(p) = ns_veg%leafn_xfer_patch(p)                 &
-              - nf_veg%gru_leafn_xfer_to_atm_patch(p) *dt
-         ns_veg%frootn_xfer_patch(p) = ns_veg%frootn_xfer_patch(p)               &
-              - nf_veg%gru_frootn_xfer_to_atm_patch(p) *dt
-         ns_veg%livestemn_xfer_patch(p) = ns_veg%livestemn_xfer_patch(p)         &
-              - nf_veg%gru_livestemn_xfer_to_atm_patch(p) *dt
-         ns_veg%deadstemn_xfer_patch(p) = ns_veg%deadstemn_xfer_patch(p)         &
-              - nf_veg%gru_deadstemn_xfer_to_atm_patch(p) *dt
-         ns_veg%livecrootn_xfer_patch(p) = ns_veg%livecrootn_xfer_patch(p)       &
-              - nf_veg%gru_livecrootn_xfer_to_atm_patch(p) *dt
-         ns_veg%deadcrootn_xfer_patch(p) = ns_veg%deadcrootn_xfer_patch(p)       &
-              - nf_veg%gru_deadcrootn_xfer_to_atm_patch(p) *dt
+            ! transfer pools
+            ns_veg%leafn_xfer_patch(p) = ns_veg%leafn_xfer_patch(p)                 &
+                 - nf_veg%gru_leafn_xfer_to_atm_patch(p) *dt
+            ns_veg%frootn_xfer_patch(p) = ns_veg%frootn_xfer_patch(p)               &
+                 - nf_veg%gru_frootn_xfer_to_atm_patch(p) *dt
+            ns_veg%livestemn_xfer_patch(p) = ns_veg%livestemn_xfer_patch(p)         &
+                 - nf_veg%gru_livestemn_xfer_to_atm_patch(p) *dt
+            ns_veg%deadstemn_xfer_patch(p) = ns_veg%deadstemn_xfer_patch(p)         &
+                 - nf_veg%gru_deadstemn_xfer_to_atm_patch(p) *dt
+            ns_veg%livecrootn_xfer_patch(p) = ns_veg%livecrootn_xfer_patch(p)       &
+                 - nf_veg%gru_livecrootn_xfer_to_atm_patch(p) *dt
+            ns_veg%deadcrootn_xfer_patch(p) = ns_veg%deadcrootn_xfer_patch(p)       &
+                 - nf_veg%gru_deadcrootn_xfer_to_atm_patch(p) *dt
+         end if
 
       end do
 
