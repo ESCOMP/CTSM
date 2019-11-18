@@ -297,13 +297,6 @@ do
       echo $QUERYFIL
    fi
    INGRID[nfile]=`$QUERYFIL`
-   INGRID[1]="/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c191114.nc"
-   INGRID[2]="/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c191114.nc"
-   INGRID[3]="/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.125x0.125_nomask_c191114.nc"
-   INGRID[4]="/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c191114.nc"
-   INGRID[5]="/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_c191114.nc"
-   INGRID[6]="/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.9x1.25_nomask_c191114.nc"
-   INGRID[7]="/glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c191114.nc"
    if [ "$list" = "YES" ]; then
       echo "ingrid = ${INGRID[nfile]}"
       echo "ingrid = ${INGRID[nfile]}" >> $outfilelist

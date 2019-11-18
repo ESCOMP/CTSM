@@ -65,11 +65,42 @@ Changes to the datasets (e.g., parameter, surface or initial files):
  map_1km-merge-10min_HYDRO1K-merge-nomask SRC resolution.
 
 Substantial timing or memory changes:
- We end up with fewer SRC files and fewer/larger map_ files. Running
- mkmapdata.sh may take longer, but we plan to upgrade the script to call
- the ocgis tool that is more time and memory efficient than what we have
- currently. Running msurfdata_map may take a bit longer to run, but this
- does not outweigh the benefit of easier SRC and map_ file management.
+ - We end up with fewer SRC and map_ files by replacing multiple custom
+ grids per SRC resolution with one nomask grid. I list here resolutions
+ that had multiple custom grids per resolution before the switch to
+ nomask:
+ 0.5x0.5: AVHRR, MODIS, and 360x720cru_cruncep
+ 3x3min: GLOBE-Gardner-mergeGIS, GLOBE-Gardner, LandScan2004, MODIS-wCsp
+ 5x5min: IGBP-GSDP, ISRIC-WISE, ORNL
+ 10x10min_IGBPmergeICESatGIS
+
+ UNSTRUCT info shown for comparison here.
+ NOT switching to UNSTRUCT files at this time.
+
+ - The nomask map_ files are larger now. E.g.:
+slevis ncar 2754246572 Nov  1 map_3x3min_GLOBE-Gardner_to_0.9x1.25_nomask_aave_da_c191101.nc  MASKED SCRIP
+slevis ncar 3051641404 Nov  9 map_3x3min_nomask_to_0.9x1.25_nomask_aave_da_c191109.nc         NOMASK SCRIP
+slevis ncar 2974797264 Nov 15 map_3x3min_nomask_to_0.9x1.25_nomask_aave_da_c191115.nc         NOMASK UNSTRUCT
+
+ - The nomask SCRIP cases are slower now. E.g.:
+mkmapdata 0.5x0.5 to 0.9x1.25 MASKED (2 grids) 78.0u 1.30s 1:20.08 99.1%
+mkmapdata 0.5x0.5 to 0.9x1.25 NOMASK SCRIP   51.199u 0.85s 0:52.61 98.8%
+mkmapdata 0.5x0.5 to 0.9x1.25 NOMASK UNSTRUC 38.316u 0.69s 0:39.51 98.7%
+
+mkmapdata 0.25x0.25 to 0.9x1.25 MASKED SCRI 129.288u 1.46s 2:11.38 99.5%
+mkmapdata 0.25x0.25 to 0.9x1.25 NOMASK SCRI 168.443u 1.69s 2:50.77 99.6%
+mkmapdata 0.25x0.25 to 0.9x1.25 NOMASK UNST 110.875u 1.46s 1:52.80 99.5%
+
+mkmapdata 0.125x0.125 to 0.9x1.25 MASKED SC 489.651u 3.67s 8:14.58 99.7%
+mkmapdata 0.125x0.125 to 0.9x1.25 NOMASK SC 646.372u 5.07s 10:54   99.5%
+mkmapdata 0.125x0.125 to 0.9x1.25 NOMASK UN 388.842u 4.20s  6:33   99.7%
+
+mkmapdata 10x10min to 0.9x1.25 MASKED (2 grids) 639.7u 4.8s 10:46  99.7%
+mkmapdata 10x10min to 0.9x1.25 NOMASK SCRIP     380.3u 3.1s  6:24  99.7%
+mkmapdata 10x10min to 0.9x1.25 NOMASK UNSTRUCT  264.2u 2.6s  4:27  99.6%
+
+mksurfdata_map 0.9x1.25 MASKED SCRIP: 65.846u 18.204s 1:42.64 81.8%
+mksurfdata_map 0.9x1.25 NOMASK SCRIP: 74.439u 18.502s 1:57.48 79.1%
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
