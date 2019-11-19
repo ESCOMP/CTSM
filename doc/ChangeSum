@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.29     erik 11/19/2019 Some answer changes needed for prescribed soil-moisture and clm4_5 defaults (1850-ndep, and urbantv settings)
 release-clm5.0.28     erik 11/14/2019 Several bit-for-bit fixes especially around soil-moisture streams
 release-clm5.0.27     erik 08/13/2019 Add presoribed soil moisture streams as an option, and a few fixes
 release-clm5.0.26    sacks 07/29/2019 Add a CN precision control call to fix problems related to small negative values

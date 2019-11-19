@@ -1,4 +1,118 @@
 ===============================================================
+Tag name:  release-clm5.0.29
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Nov 19 12:14:02 MST 2019
+One-line Summary: Some answer changes needed for prescribed soil-moisture and clm4_5 defaults (1850-ndep, and urbantv settings)
+
+Purpose of this version:
+------------------------
+
+Some answer changes needed for prescribed soil-moisture. And clm4_5 defaults for 1850 Nitrogen deposition and or urbantv
+settings were made to be consistent with clm5_0.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #175, #817, #832 #833
+
+   Fixes #817 -- Have clm4_5 use the same ndep file as clm5_0 for 1850
+   Fixes #175 -- Have clm4_5 use the same settings for urbantv years as clm5_0
+   Fixes #832 -- don't override with missing value, let the model set it
+   Fixes #833 -- time interpolation of soilm causes bad values for some missing points
+
+Science changes since: release-clm5.0.28
+
+   Defaults for clm4_5, prescribed soil-moisture
+
+   Some defaults were changed for clm4_5 to be consistent with clm5_0 (use of the same 1850-ndep file, 
+   and changes in the urbantv year settings)
+
+   Prescribed soil-moisture was changes so that if time-interpolation produces large values, they
+   will be marked as missing (spval). Also points where the input prescribed soil moisture is missing
+   are now ignored (and run normally).
+
+Software changes since:  release-clm5.0.28
+
+
+Changes to User Interface since: release-clm5.0.28
+
+  Behavior of soilm_ignore_data_if_missing changes!
+
+  Behavior of soilm_ignore_data_if_missing changes. Now if true will ignore any points
+  where the prescribed soil moisture dataset is missing. So for these points the model
+  will run normally (as if prescribed soil moisture was off). Before it would mark them
+  as missing, but modify h2osoi_ice/liq in an odd fashion.
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (10 tests are different)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - NOT run
+    hobart --- NOT run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - NOT run
+     hobart --- NOT run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: Yes for some! prescribed soil-moisture and clm4_5 (1850-ndep, and urbantv settings)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: prescribed soil-moisture, or clm4_5 due to default changes in 1850-ndep and urbantv
+    - what platforms/compilers: all
+    - nature of change:  similar climate
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+
+Detailed list of changes:
+------------------------
+
+Externals being used: No changes
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.03
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.25
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #841
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #841 -- Some answer changes for release branch
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.28
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Nov 14 23:03:39 MST 2019
