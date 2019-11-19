@@ -1,4 +1,92 @@
 ===============================================================
+Tag name:  release-clm5.0.30
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Tue Nov 19 16:34:38 MST 2019
+One-line Summary: Update FATES to sci.1.30.0_api.8.0.0
+
+Purpose of this version:
+------------------------
+
+Update FATES to sci.1.30.0_api.8.0.0, and point to the NGEET version, rather
+than NCAR/fates-release version.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): None
+
+Science changes since: release-clm5.0.28
+  FATES science update from sci-1.27.1  to sci.1.30.0
+
+Software changes since: release-clm5.0.28
+  FATES API update from api.7.3.0 to api.8.0.0
+
+Changes to User Interface since: release-clm5.0.28
+  fates paramfile is updated
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (35 tests are different because of fates param file update)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - NOT run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - NOT run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: Yes, but only when running with FATES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: with FATES active
+    - what platforms/compilers: all
+    - nature of change: similar climate
+
+Detailed list of changes:
+------------------------
+
+Externals being used: FATES updated
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.03
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.25
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #846
+(https://github.com/ESCOMP/ctsm/pull)
+   #846 -- Update to fates sci.1.30.0_api.8.0.0
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.29
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue Nov 19 12:14:02 MST 2019
