@@ -344,9 +344,9 @@ contains
 
              ! If soil moiture is being interpolated in time and the result is
              ! large that probably means one of the two data points is missing (set to spval)
-             !if ( h2osoi_vol_prs(g,j) > 10.0_r8 .and. (h2osoi_vol_prs(g,j) /= spval) )then
-                !h2osoi_vol_prs(g,j) = spval
-             !end if
+             if ( h2osoi_vol_prs(g,j) > 10.0_r8 .and. (h2osoi_vol_prs(g,j) /= spval) )then
+                h2osoi_vol_prs(g,j) = spval
+             end if
 
          end do
       end do
@@ -358,8 +358,7 @@ contains
          g = col%gridcell(c)
          ig = g_to_ig(g)
             
-         if (lun%itype(col%landunit(c)) == istsoil ) then
-         !if ( (lun%itype(col%landunit(c)) == istsoil) .or. (lun%itype(col%landunit(c)) == istcrop) ) then
+         if ( (lun%itype(col%landunit(c)) == istsoil) .or. (lun%itype(col%landunit(c)) == istcrop) ) then
             !       this is a 2d field (gridcell/nlevsoi) !
             do j = 1, nlevsoi
                
@@ -375,7 +374,7 @@ contains
                   ! file is different
                   if ( (h2osoi_vol_prs(g,j) == spval) .and. (h2osoi_vol_initial /= spval) )then
                      if ( soilm_ignore_data_if_missing )then
-                        !cycle
+                        cycle
                      else
                         write(iulog,*) 'Input soil moisture dataset is not vegetated as expected: gridcell=', &
                                         g, ' active = ', col%active(c)
