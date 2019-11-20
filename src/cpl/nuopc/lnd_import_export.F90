@@ -197,7 +197,6 @@ contains
 
     ! Fire emissions fluxes from land
     call shr_fire_emis_readnl('drv_flds_in', emis_nflds)
-    write(6,*)'DEBUG: emis_nflds= ',emis_nflds
     if (emis_nflds > 0) then
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Fall_fire', ungridded_lbound=1, ungridded_ubound=emis_nflds)
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_fztop')
