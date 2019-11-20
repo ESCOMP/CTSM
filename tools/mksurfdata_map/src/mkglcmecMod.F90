@@ -573,7 +573,7 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
 
      ! Determine glac_o on output grid
 
-     call gridmap_areaave(tgridmap, glac_i, glac_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+     call gridmap_areaave_srcmask(tgridmap, glac_i, glac_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
      
      do no = 1, ns_o
         if (glac_o(no) < 1.) glac_o(no) = 0.

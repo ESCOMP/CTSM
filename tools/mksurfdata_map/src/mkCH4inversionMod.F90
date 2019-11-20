@@ -119,7 +119,7 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'F0', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, f0_o, nodata=0.01_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, data_i, f0_o, nodata=0.01_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(f0_o, min_valid_f0, 'f0') .or. &
@@ -135,7 +135,7 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'P3', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, p3_o, nodata=10._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, data_i, p3_o, nodata=10._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(p3_o, min_valid_p3, 'p3')) then
@@ -150,7 +150,7 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'ZWT0', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, zwt0_o, nodata=0.01_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, data_i, zwt0_o, nodata=0.01_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(zwt0_o, min_valid_zwt0, 'zwt0')) then

@@ -128,7 +128,7 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
 
      ! Determine lake_o on output grid
 
-     call gridmap_areaave(tgridmap, lake_i,lake_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+     call gridmap_areaave_srcmask(tgridmap, lake_i,lake_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
      do no = 1,ns_o
         if (lake_o(no) < 1.) lake_o(no) = 0.
@@ -321,7 +321,7 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
 
      ! Determine swmp_o on output grid
 
-     call gridmap_areaave(tgridmap, swmp_i, swmp_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+     call gridmap_areaave_srcmask(tgridmap, swmp_i, swmp_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
      do no = 1,ns_o
         if (swmp_o(no) < 1.) swmp_o(no) = 0.
@@ -503,7 +503,7 @@ subroutine mklakparams(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'LAKEDEPTH', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, lakedepth_o, nodata=10._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, data_i, lakedepth_o, nodata=10._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(lakedepth_o, min_valid_lakedepth, 'lakedepth')) then

@@ -520,8 +520,8 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
 
      ! New format with extra variables on input
      if ( .not. oldformat ) then
-        call gridmap_areaave(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-        call gridmap_areaave(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+        call gridmap_areaave_srcmask(tgridmap, pctnatveg_i, pctnatveg_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+        call gridmap_areaave_srcmask(tgridmap, pctcrop_i,   pctcrop_o,   nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
         do m = 0, num_natpft
            call gridmap_areaave_scs(tgridmap, pct_nat_pft_i(:,m), pct_nat_pft_o(:,m), &
@@ -552,7 +552,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
      ! Old format with just PCTPFT
      else
         do m = 0, numpft_i - 1
-           call gridmap_areaave(tgridmap, pctpft_i(:,m), pctpft_o(:,m), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+           call gridmap_areaave_srcmask(tgridmap, pctpft_i(:,m), pctpft_o(:,m), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
            do no = 1,ns_o
               if (pctlnd_o(no) < 1.0e-6) then
                  if (m == 0) then

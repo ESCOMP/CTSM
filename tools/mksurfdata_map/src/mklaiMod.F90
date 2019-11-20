@@ -249,10 +249,10 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
 
      ! Loop over pft types to do mapping
      do l = 0, numpft_i - 1
-        call gridmap_areaave(tgridmap, mlai_i(:,l) , mlai_o(:,l) , nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-        call gridmap_areaave(tgridmap, msai_i(:,l) , msai_o(:,l) , nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-        call gridmap_areaave(tgridmap, mhgtt_i(:,l), mhgtt_o(:,l), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-        call gridmap_areaave(tgridmap, mhgtb_i(:,l), mhgtb_o(:,l), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+        call gridmap_areaave_srcmask(tgridmap, mlai_i(:,l) , mlai_o(:,l) , nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+        call gridmap_areaave_srcmask(tgridmap, msai_i(:,l) , msai_o(:,l) , nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+        call gridmap_areaave_srcmask(tgridmap, mhgtt_i(:,l), mhgtt_o(:,l), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+        call gridmap_areaave_srcmask(tgridmap, mhgtb_i(:,l), mhgtb_o(:,l), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
      enddo
 
      ! Determine laimask

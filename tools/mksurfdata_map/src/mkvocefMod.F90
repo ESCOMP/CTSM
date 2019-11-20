@@ -135,12 +135,12 @@ subroutine mkvocef(ldomain, mapfname, datfname, ndiag, &
 
   ! Do mapping from input to output grid
 
-  call gridmap_areaave(tgridmap, ef_btr_i, ef_btr_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-  call gridmap_areaave(tgridmap, ef_fet_i, ef_fet_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-  call gridmap_areaave(tgridmap, ef_fdt_i, ef_fdt_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-  call gridmap_areaave(tgridmap, ef_shr_i, ef_shr_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-  call gridmap_areaave(tgridmap, ef_grs_i, ef_grs_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
-  call gridmap_areaave(tgridmap, ef_crp_i, ef_crp_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, ef_btr_i, ef_btr_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, ef_fet_i, ef_fet_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, ef_fdt_i, ef_fdt_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, ef_shr_i, ef_shr_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, ef_grs_i, ef_grs_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, ef_crp_i, ef_crp_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check for conservation
 

@@ -943,14 +943,14 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harvdata)
         ifld = ind1D(k)
         data1D_i => harvdata%get1DFieldPtr( ifld )
         data1D_o => harvdata%get1DFieldPtr( ifld, output=.true. )
-        call gridmap_areaave(tgridmap, data1D_i, data1D_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+        call gridmap_areaave_srcmask(tgridmap, data1D_i, data1D_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
      end do
      do k = 1, harvdata%num2Dfields()
         ifld = ind2D(k)
         data2D_i => harvdata%get2DFieldPtr( ifld )
         data2D_o => harvdata%get2DFieldPtr( ifld, output=.true. )
         do m = lbound(data2D_i(:,:),dim=2), ubound(data2D_i(:,:),dim=2)
-           call gridmap_areaave(tgridmap, data2D_i(:,m), data2D_o(:,m), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+           call gridmap_areaave_srcmask(tgridmap, data2D_i(:,m), data2D_o(:,m), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
         end do
      end do
 

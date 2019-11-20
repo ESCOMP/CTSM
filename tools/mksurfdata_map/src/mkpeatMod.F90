@@ -113,7 +113,7 @@ subroutine mkpeat(ldomain, mapfname, datfname, ndiag, peat_o)
 
   call check_ret(nf_inq_varid (ncid, 'peatf', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, peat_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, data_i, peat_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(peat_o, min_valid, 'peat') .or. &

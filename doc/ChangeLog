@@ -74,7 +74,7 @@ Substantial timing or memory changes:
  5x5min: IGBP-GSDP, ISRIC-WISE, ORNL
  10x10min_IGBPmergeICESatGIS
 
- UNSTRUCT info shown for comparison here.
+ UNSTRUCT info shown only for comparison here.
  NOT switching to UNSTRUCT files at this time.
 
  - The nomask map_ files are larger now. E.g.:
@@ -82,7 +82,13 @@ slevis ncar 2754246572 Nov  1 map_3x3min_GLOBE-Gardner_to_0.9x1.25_nomask_aave_d
 slevis ncar 3051641404 Nov  9 map_3x3min_nomask_to_0.9x1.25_nomask_aave_da_c191109.nc         NOMASK SCRIP
 slevis ncar 2974797264 Nov 15 map_3x3min_nomask_to_0.9x1.25_nomask_aave_da_c191115.nc         NOMASK UNSTRUCT
 
- - The nomask SCRIP cases are slower now. E.g.:
+ - Although the nomask SCRIP cases shown below are slower because each
+ individual mapping file takes longer to create, the total time to
+ generate mapping files is reduced, possibly significantly, due to the
+ need for fewer mapping files in total. Note the increase in time
+ savings from the 0.5x0.5 to the 10x10min resolution, which suggests
+ even greater time savings for the 3x3min and 5x5min that went from a
+ total of 7 to 2 map_ files. Sample timing data:
 mkmapdata 0.5x0.5 to 0.9x1.25 MASKED (2 grids) 78.0u 1.30s 1:20.08 99.1%
 mkmapdata 0.5x0.5 to 0.9x1.25 NOMASK SCRIP   51.199u 0.85s 0:52.61 98.8%
 mkmapdata 0.5x0.5 to 0.9x1.25 NOMASK UNSTRUC 38.316u 0.69s 0:39.51 98.7%

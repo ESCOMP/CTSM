@@ -120,7 +120,7 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'binfl', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, binfl_o, nodata=0.1_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, data_i, binfl_o, nodata=0.1_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(binfl_o, min_valid_binfl, 'binfl')) then
@@ -135,7 +135,7 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'Ws', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, ws_o, nodata=0.75_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, data_i, ws_o, nodata=0.75_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(ws_o, min_valid_ws, 'Ws')) then
@@ -150,7 +150,7 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'Dsmax', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, dsmax_o, nodata=10._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, data_i, dsmax_o, nodata=10._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(dsmax_o, min_valid_dsmax, 'Dsmax')) then
@@ -165,7 +165,7 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 
   call check_ret(nf_inq_varid (ncid, 'Ds', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, ds_o, nodata=0.1_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, data_i, ds_o, nodata=0.1_r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(ds_o, min_valid_ds, 'Ds')) then

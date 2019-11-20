@@ -136,7 +136,7 @@ subroutine mksoildepth(ldomain, mapfname, datfname, ndiag, soildepth_o)
 !  call check_ret(nf_inq_varid (ncid, 'Avg_Depth_Median', varid), subname)
   call check_ret(nf_inq_varid (ncid, varname, varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, soildepth_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, data_i, soildepth_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(soildepth_o, min_valid, 'soildepth') .or. &

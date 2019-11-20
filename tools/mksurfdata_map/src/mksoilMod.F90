@@ -891,7 +891,7 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
   call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
   do lev = 1,nlay
-     call gridmap_areaave(tgridmap, organic_i(:,lev), organic_o(:,lev), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+     call gridmap_areaave_srcmask(tgridmap, organic_i(:,lev), organic_o(:,lev), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
   end do
 
   do lev = 1,nlevsoi
@@ -1073,7 +1073,7 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
   ! In points with no data, use globalAvg
   ! (WJS (3-11-13): use real(.365783,r8) rather than .365783_r8 to maintain bfb results
   ! with old code)
-  call gridmap_areaave(tgridmap, fmax_i, fmax_o, nodata=real(.365783,r8), mask_src=tdomain%mask, frac_dst=frac_dst)
+  call gridmap_areaave_srcmask(tgridmap, fmax_i, fmax_o, nodata=real(.365783,r8), mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check for conservation
 

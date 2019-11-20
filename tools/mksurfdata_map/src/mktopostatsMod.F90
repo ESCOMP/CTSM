@@ -141,7 +141,7 @@ subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_
   if ( .not. bypass_reading )then
      call check_ret(nf_inq_varid (ncid, 'SLOPE', varid), subname)
      call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-     call gridmap_areaave(tgridmap, data_i, slope_o, nodata=0._r8)
+     call gridmap_areaave_no_srcmask(tgridmap, data_i, slope_o, nodata=0._r8)
 
      call output_diagnostics_continuous(data_i, slope_o, tgridmap, "Slope", "degrees", ndiag, tdomain%mask, tgridmap%frac_dst)
   else

@@ -41,7 +41,8 @@ module mkgridmapMod
   public :: gridmap_mapread     ! Read in gridmap
   public :: gridmap_check       ! Check validity of a gridmap
   public :: gridmap_calc_frac_dst  ! Obtain frac_dst
-  public :: gridmap_areaave     ! do area average
+  public :: gridmap_areaave_no_srcmask  ! do area average without passing mask
+  public :: gridmap_areaave_srcmask  ! do area average with mask passed
   public :: gridmap_areaave_scs ! area average, but multiply by ratio of source over destination weight
   public :: gridmap_areastddev  ! do area-weighted standard deviation
   public :: gridmap_clean       ! Clean and deallocate a gridmap structure
@@ -49,11 +50,6 @@ module mkgridmapMod
 !
 ! !REVISION HISTORY:
 ! Author Mariana Vertenstein
-
-  interface gridmap_areaave
-     module procedure gridmap_areaave_default
-     module procedure gridmap_areaave_srcmask
-  end interface
 
   ! questions - how does the reverse mapping occur 
   ! is mask_dst read in - and what happens if this is very different
@@ -546,13 +542,14 @@ contains
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: gridmap_areaave_default
+! !IROUTINE: gridmap_areaave_no_srcmask
 !
 ! !INTERFACE:
-  subroutine gridmap_areaave_default (gridmap, src_array, dst_array, nodata)
+  subroutine gridmap_areaave_no_srcmask (gridmap, src_array, dst_array, nodata)
 !
 ! !DESCRIPTION:
-! This subroutine does a simple area average
+! This subroutine does a simple area average without explicitly using a
+! src mask
 !
 ! !ARGUMENTS:
     implicit none
@@ -568,7 +565,7 @@ contains
     integer :: n,ns,ni,no
     real(r8):: wt,frac
     real(r8), allocatable :: sum_weights(:)      ! sum of weights on the output grid
-    character(*),parameter :: subName = '(gridmap_areaave_default) '
+    character(*),parameter :: subName = '(gridmap_areaave_no_srcmask) '
 !EOP
 !------------------------------------------------------------------------------
     call gridmap_checkifset( gridmap, subname )
@@ -593,7 +590,7 @@ contains
 
     deallocate(sum_weights)
 
-  end subroutine gridmap_areaave_default
+  end subroutine gridmap_areaave_no_srcmask
 
 !------------------------------------------------------------------------------
 !BOP
@@ -758,7 +755,7 @@ contains
 
     ns_o = size(dst_array)
     allocate(weighted_means(ns_o))
-    call gridmap_areaave(gridmap, src_array, weighted_means, nodata=0._r8)
+    call gridmap_areaave_no_srcmask(gridmap, src_array, weighted_means, nodata=0._r8)
 
     ! WJS (3-5-13): I believe that sum_weights should be the same as gridmap%frac_dst,
     ! but I'm not positive of this, so we compute it explicitly to be safe

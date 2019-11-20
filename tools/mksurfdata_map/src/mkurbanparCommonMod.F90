@@ -103,7 +103,7 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o, frac_dst)
    ! and correct according to land landmask
    ! Note that percent cover is in terms of total grid area.   
 
-   call gridmap_areaave(tgridmap, urbn_i, urbn_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+   call gridmap_areaave_srcmask(tgridmap, urbn_i, urbn_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
    ! Check for conservation
 
@@ -337,7 +337,7 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
 
   elev_o(:) = 0.
 
-  call gridmap_areaave(tgridmap, elev_i, elev_o, nodata=0._r8)
+  call gridmap_areaave_no_srcmask(tgridmap, elev_i, elev_o, nodata=0._r8)
 
   ! Deallocate dynamic memory
 
