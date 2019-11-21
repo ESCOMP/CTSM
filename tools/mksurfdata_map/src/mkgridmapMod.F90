@@ -542,59 +542,6 @@ contains
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: gridmap_areaave_no_srcmask
-!
-! !INTERFACE:
-  subroutine gridmap_areaave_no_srcmask (gridmap, src_array, dst_array, nodata)
-!
-! !DESCRIPTION:
-! This subroutine does a simple area average without explicitly using a
-! src mask
-!
-! !ARGUMENTS:
-    implicit none
-    type(gridmap_type) , intent(in) :: gridmap   ! gridmap data
-    real(r8), intent(in) :: src_array(:)
-    real(r8), intent(out):: dst_array(:)
-    real(r8), intent(in) :: nodata               ! value to apply where there are no input data
-!
-! !REVISION HISTORY:
-!   Created by Mariana Vertenstein
-!
-! !LOCAL VARIABLES:
-    integer :: n,ns,ni,no
-    real(r8):: wt,frac
-    real(r8), allocatable :: sum_weights(:)      ! sum of weights on the output grid
-    character(*),parameter :: subName = '(gridmap_areaave_no_srcmask) '
-!EOP
-!------------------------------------------------------------------------------
-    call gridmap_checkifset( gridmap, subname )
-    allocate(sum_weights(size(dst_array)))
-    sum_weights = 0._r8
-    dst_array = 0._r8
-
-    do n = 1,gridmap%ns
-       ni = gridmap%src_indx(n)
-       no = gridmap%dst_indx(n)
-       wt = gridmap%wovr(n)
-       frac = gridmap%frac_dst(no)
-       if (frac > 0.) then  
-          dst_array(no) = dst_array(no) + wt * src_array(ni)/frac
-          sum_weights(no) = sum_weights(no) + wt
-       end if
-    end do
-
-    where (sum_weights == 0._r8)
-       dst_array = nodata
-    end where
-
-    deallocate(sum_weights)
-
-  end subroutine gridmap_areaave_no_srcmask
-
-!------------------------------------------------------------------------------
-!BOP
-!
 ! !IROUTINE: gridmap_areaave_scs
 !
 ! !INTERFACE:
@@ -760,6 +707,12 @@ contains
 
     ns_o = size(dst_array)
     allocate(weighted_means(ns_o))
+
+    ! Subr. gridmap_areaave_no_srcmask should NOT be used in general. We have
+    ! kept it to support the rare raw data files for which we have masking on
+    ! the mapping file and, therefore, we do not explicitly pass the src_mask
+    ! as an argument. In general, users are advised to use subroutine
+    ! gridmap_areaave_srcmask.
     call gridmap_areaave_no_srcmask(gridmap, src_array, weighted_means, nodata=0._r8)
 
     ! WJS (3-5-13): I believe that sum_weights should be the same as gridmap%frac_dst,
@@ -894,6 +847,64 @@ contains
   end subroutine gridmap_calc_frac_dst
 
 !==========================================================================
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: gridmap_areaave_no_srcmask
+!
+! !INTERFACE:
+  subroutine gridmap_areaave_no_srcmask (gridmap, src_array, dst_array, nodata)
+!
+! !DESCRIPTION:
+! This subroutine should NOT be used in general. We have kept it to support the
+! rare raw data files for which we have masking on the mapping file and,
+! therefore, we do not explicitly pass the src_mask as an argument. In general,
+! users are advised to use subroutine gridmap_areaave_srcmask.
+!
+! Perform simple area average without explicitly passing a src mask. The src
+! mask may be implicit in gridmap%wovr.
+!
+! !ARGUMENTS:
+    implicit none
+    type(gridmap_type) , intent(in) :: gridmap   ! gridmap data
+    real(r8), intent(in) :: src_array(:)
+    real(r8), intent(out):: dst_array(:)
+    real(r8), intent(in) :: nodata               ! value to apply where there are no input data
+!
+! !REVISION HISTORY:
+!   Created by Mariana Vertenstein
+!
+! !LOCAL VARIABLES:
+    integer :: n,ns,ni,no
+    real(r8):: wt,frac
+    real(r8), allocatable :: sum_weights(:)      ! sum of weights on the output grid
+    character(*),parameter :: subName = '(gridmap_areaave_no_srcmask) '
+!EOP
+!------------------------------------------------------------------------------
+    call gridmap_checkifset( gridmap, subname )
+    allocate(sum_weights(size(dst_array)))
+    sum_weights = 0._r8
+    dst_array = 0._r8
+
+    do n = 1,gridmap%ns
+       ni = gridmap%src_indx(n)
+       no = gridmap%dst_indx(n)
+       wt = gridmap%wovr(n)
+       frac = gridmap%frac_dst(no)
+       if (frac > 0.) then  
+          dst_array(no) = dst_array(no) + wt * src_array(ni)/frac
+          sum_weights(no) = sum_weights(no) + wt
+       end if
+    end do
+
+    where (sum_weights == 0._r8)
+       dst_array = nodata
+    end where
+
+    deallocate(sum_weights)
+
+  end subroutine gridmap_areaave_no_srcmask
 
 end module mkgridmapMod
 
