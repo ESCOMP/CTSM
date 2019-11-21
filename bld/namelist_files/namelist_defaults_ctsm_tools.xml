@@ -89,6 +89,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata hgrid="1x1_vancouverCAN"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_vancouverCAN_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="5x5_amazon"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5pt_amazon_nomask_c110308.nc</scripgriddata>
 
+<max_res hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">0.01</max_res>
 <max_res hgrid="0.23x0.31" lmask="nomask">0.23</max_res>
 <max_res hgrid="0.47x0.63" lmask="nomask">0.47</max_res>
 <max_res hgrid="0.9x1.25" lmask="nomask">0.9</max_res>
@@ -116,17 +117,16 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <max_res hgrid="10x10min" lmask="nomask">0.16</max_res>
 <max_res hgrid="3x3min" lmask="nomask">0.05</max_res>
 <max_res hgrid="360x720cru" lmask="nomask">0.5</max_res>
-<max_res hgrid="1km-merge-10min" lmask="nomask">0.01</max_res>
 <max_res hgrid="0.125nldas2" lmask="nomask">0.125</max_res>
-<max_res hgrid="1x1_asphaltjungleNJ" lmask="nomask">0.1</max_res>
-<max_res hgrid="1x1_brazil" lmask="nomask">0.1</max_res>
-<max_res hgrid="1x1_camdenNJ" lmask="nomask">0.1</max_res>
-<max_res hgrid="1x1_mexicocityMEX" lmask="nomask">0.1</max_res>
-<max_res hgrid="1x1_numaIA" lmask="nomask">0.1</max_res>
-<max_res hgrid="1x1_smallvilleIA" lmask="nomask">0.1</max_res>
-<max_res hgrid="1x1_urbanc_alpha" lmask="nomask">0.1</max_res>
-<max_res hgrid="1x1_vacouverCAN" lmask="nomask">0.1</max_res>
-<max_res hgrid="5x5_amazon" lmask="nomask">0.1</max_res>
+<max_res hgrid="1x1_asphaltjungleNJ" lmask="nomask">2</max_res>
+<max_res hgrid="1x1_brazil" lmask="nomask">2</max_res>
+<max_res hgrid="1x1_camdenNJ" lmask="nomask">2</max_res>
+<max_res hgrid="1x1_mexicocityMEX" lmask="nomask">1</max_res>
+<max_res hgrid="1x1_numaIA" lmask="nomask">0.5</max_res>
+<max_res hgrid="1x1_smallvilleIA" lmask="nomask">0.5</max_res>
+<max_res hgrid="1x1_urbanc_alpha" lmask="nomask">1</max_res>
+<max_res hgrid="1x1_vancouverCAN" lmask="nomask">1</max_res>
+<max_res hgrid="5x5_amazon" lmask="nomask">2.2</max_res>
 
 <!-- Ocean grids -->
 <scripgriddata hgrid="0.33x0.33"  lmask="0.33x0.33" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.33x0.33_navy_c111207.nc</scripgriddata>
@@ -158,6 +158,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <unstructdata hgrid="0.9x1.25" lmask="nomask"
    >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.9x1.25_nomask_c191114.nc</unstructdata>
 <unstructdata_type hgrid="0.9x1.25" lmask="nomask">ESMFMESH</unstructdata_type>
+<unstructdata hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask"
+   >lnd/clm2/mappingdata/grids/UGRID_1km-merge-10min_HYDRO1K-merge-nomask_c130402.nc</unstructdata>
+<unstructdata_type hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">UGRID</unstructdata_type>
 
 <!-- land masks for different types of mksurfdata_map input files -->
 <lmask type="lak"              >MODIS-wCsp</lmask>

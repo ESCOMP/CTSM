@@ -1190,7 +1190,7 @@ name of the dummy variable that has all of the topology information stored
 in its attributes. (Only used if scripgriddata_src_type = UGRID.)
 </entry>
 
-<entry id="max_res" type="integer" category="mkmapdata"
+<entry id="max_res" type="real" category="mkmapdata"
        group="clmexp" valid_values="" >
 Maximum resolution of source and destination files required by the ocgis
 tool.

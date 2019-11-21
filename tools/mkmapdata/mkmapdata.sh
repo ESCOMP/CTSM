@@ -280,7 +280,7 @@ else
 fi
 
 # Set timestamp for names below 
-CDATE="c"`date -d "-0 days" +%y%m%d`
+CDATE="c"`date -d "0 days" +%y%m%d`
 
 # Set name of each output mapping file
 # First determine the name of the input scrip grid file  
@@ -294,10 +294,10 @@ do
    QUERYARGS="-res $grid -options lmask=$lmask,glc_nec=10 "
 
    QUERYFIL="$QUERY -var unstructdata $QUERYARGS -onlyfiles"
+
    if [ "$verbose" = "YES" ]; then
       echo $QUERYFIL
    fi
-   SRC_MAXSPATIALRES[nfile]=`$QUERY -var max_res $QUERYARGS`
    INGRID[nfile]=`$QUERYFIL`
    if [ "$list" = "YES" ]; then
       echo "ingrid = ${INGRID[nfile]}"
@@ -310,6 +310,7 @@ do
    SRC_EXTRA_ARGS[nfile]=""
    SRC_LRGFIL[nfile]="none"
    SRC_TYPE[nfile]=`$QUERY -var unstructdata_type $QUERYARGS`
+   SRC_MAXSPATIALRES[nfile]=`$QUERY -var max_res $QUERYARGS`
    if [ "${SRC_TYPE[nfile]}" = "UGRID" ]; then
        # For UGRID, we need extra information: the meshname variable
        src_meshname=`$QUERY -var scripgriddata_meshname $QUERYARGS`
@@ -428,7 +429,7 @@ if [ "$interactive" = "NO" ]; then
    mpirun=$MPIEXEC
    echo "Running in batch mode"
 else
-   mpirun="mpirun -np 4"
+   mpirun="mpirun -np 1"
 fi
   
 # Remove previous log files
@@ -488,12 +489,20 @@ until ((nfile>${#INGRID[*]})); do
       rm -rf ${SS_PATH}
       CHUNKDIR=${WD}/chunking
       rm -rf ${CHUNKDIR}
-      NCHUNKS_DST=10
       CRWG="ocli chunked-rwg"
 
-      cmd="$mpirun ${CRWG} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES}"
+      if [ "$type" = "global" ]; then
+         NCHUNKS_DST=20
+         cmd="$mpirun ${CRWG} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES}"
+         runcmd $cmd
+      else
+         NCHUNKS_DST=2
+         cmd="$mpirun ${CRWG} --source ${INGRID[nfile]} --destination ${GRIDFILE} --spatial_subset --no_genweights --spatial_subset_path ${SS_PATH} --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]}"
+         runcmd $cmd
 
-      runcmd $cmd
+         cmd="$mpirun ${CRWG} --source ${SS_PATH} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES}"
+         runcmd $cmd
+      fi
 
       if [ "$debug" != "YES" ] && [ ! -f "${OUTFILE[nfile]}" ]; then
          echo "Output mapping file was NOT created: ${OUTFILE[nfile]}"
