@@ -604,6 +604,11 @@ contains
 ! This subroutine does a simple area average, but multiplies by the ratio of the source over
 ! the destination weight. Sets to zero if destination weight is zero.
 !
+! The src_wt must be multiplied by tdomain%mask to maintain consistency with the
+! incoming frac_dst.
+!
+! Called by subroutine mkpft.
+!
 ! !ARGUMENTS:
     implicit none
     type(gridmap_type) , intent(in) :: gridmap   ! gridmap data

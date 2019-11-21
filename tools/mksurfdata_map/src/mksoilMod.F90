@@ -267,9 +267,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
      allocate(novr(ns_o))
      novr(:) = 0
      do n = 1,tgridmap%ns
-        ni = tgridmap%src_indx(n)
         no = tgridmap%dst_indx(n)
-        wt = tgridmap%wovr(n)
         novr(no) = novr(no) + 1
      end do
      maxovr = maxval(novr(:))
@@ -294,8 +292,8 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
      do n = 1,tgridmap%ns
         ni = tgridmap%src_indx(n)
         no = tgridmap%dst_indx(n)
-        wt = tgridmap%wovr(n)
-        if (tgridmap%frac_src(ni) > 0) then
+        wt = tgridmap%wovr(n) * tdomain%mask(ni)
+        if (tdomain%mask(ni) > 0) then
            k = mapunit_i(ni) 
         else
            k = 0
