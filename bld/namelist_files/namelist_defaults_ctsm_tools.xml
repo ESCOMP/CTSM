@@ -254,11 +254,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Glacier region ID -->
 <mksrf_fglacierregion hgrid="10x10min" lmask="nomask"
->lnd/clm2/rawdata/mksrf_GlacierRegion_10x10min_nomask_c170616.nc</mksrf_fglacierregion>
+>lnd/clm2/rawdata/mksrf_GlacierRegion_10x10min_nomask_c191120.nc</mksrf_fglacierregion>
 
 <!-- mksrf_furbtopo - topography for urban threshold -->
 <mksrf_furbtopo hgrid="10x10min" lmask="nomask"
->lnd/clm2/rawdata/mksrf_topo.10min.c080912.nc</mksrf_furbtopo>
+>lnd/clm2/rawdata/mksrf_topo.10min.c191120.nc</mksrf_furbtopo>
 
 <!-- fire-related datasets -->
 <mksrf_fgdp hgrid="0.5x0.5" lmask="AVHRR"
