@@ -181,7 +181,7 @@ end subroutine get_dominant_indices
 !------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-subroutine get_max_indices(gridmap, src_array, dst_array, nodata)
+subroutine get_max_indices(gridmap, src_array, dst_array, nodata, mask_src)
   !
   ! !DESCRIPTION:
   ! Fills an output array on the destination grid (dst_array) whose values are equal to
@@ -199,6 +199,7 @@ subroutine get_max_indices(gridmap, src_array, dst_array, nodata)
   integer            , intent(in)  :: src_array(:) ! input values; length gridmap%na
   integer            , intent(out) :: dst_array(:) ! output values; length gridmap%nb
   integer            , intent(in)  :: nodata       ! value to assign to dst_array where there are no valid source points
+  integer            , intent(in)  :: mask_src(:)  ! mask at the source resolution
   !
   ! !LOCAL VARIABLES:
   logical, allocatable  :: hasdata(:)    ! true if an output cell has any valid data;
@@ -226,9 +227,9 @@ subroutine get_max_indices(gridmap, src_array, dst_array, nodata)
    hasdata(:) = .false.
 
    do n = 1, gridmap%ns
-      wt = gridmap%wovr(n)
+      ni = gridmap%src_indx(n)
+      wt = gridmap%wovr(n) * mask_src(ni)
       if (wt > 0._r8) then
-         ni = gridmap%src_indx(n)
          no = gridmap%dst_indx(n)
          src_val = src_array(ni)
          if (.not. hasdata(no)) then

@@ -293,11 +293,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
         ni = tgridmap%src_indx(n)
         no = tgridmap%dst_indx(n)
         wt = tgridmap%wovr(n) * tdomain%mask(ni)
-        if (tdomain%mask(ni) > 0) then
-           k = mapunit_i(ni) 
-        else
-           k = 0
-        end if
+        k = mapunit_i(ni) 
         found = .false.
         do l = 0,kmax(no)
            if (k == kmap(l,no)) then

@@ -265,6 +265,7 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
   use mkvarpar	
   use mkvarctl    
   use mkncdio
+  use mkdiagnosticsMod, only : output_diagnostics_continuous
 !
 ! !ARGUMENTS:
   implicit none
@@ -289,7 +290,7 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
   type(gridmap_type)    :: tgridmap           ! local gridmap
 
   real(r8), allocatable :: elev_i(:)          ! canyon_height to width ratio in
-  real(r8), allocatable :: mask_i(:)          ! input grid: mask (0, 1)
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   integer  :: ns_i,ns_o                       ! indices
   integer  :: k,l,n,m,ni                      ! indices
   integer  :: ncidi,dimid,varid               ! input netCDF id's
@@ -314,6 +315,7 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
 
   ns_i = tdomain%ns
   allocate(elev_i(ns_i), stat=ier)
+  allocate(frac_dst(ns_o), stat=ier)
   if (ier /= 0) then
      write(6,*)'mkelev allocation error'; call abort()
   end if
@@ -333,17 +335,24 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
 
   call domain_checksame( tdomain, ldomain, tgridmap )
 
+  ! Obtain frac_dst
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
   ! Determine elev_o on output grid
 
   elev_o(:) = 0.
 
-  call gridmap_areaave_no_srcmask(tgridmap, elev_i, elev_o, nodata=0._r8)
+  call gridmap_areaave_srcmask(tgridmap, elev_i, elev_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+
+  call output_diagnostics_continuous(elev_i, elev_o, tgridmap, "Urban elev variable", "m", ndiag, tdomain%mask, frac_dst)
+
 
   ! Deallocate dynamic memory
 
   call domain_clean(tdomain)
   call gridmap_clean(tgridmap)
   deallocate (elev_i)
+  deallocate (frac_dst)
 
   write (6,*) 'Successfully made elevation' 
   write (6,*)
