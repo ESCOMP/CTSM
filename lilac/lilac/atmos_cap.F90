@@ -18,6 +18,8 @@ module atmos_cap
     type(ESMF_Field),    public , save                            :: field
     type(fld_list_type), public , allocatable                     :: c2a_fldlist(:)
     type(fld_list_type), public , allocatable                     :: a2c_fldlist(:)
+    integer ,            public , allocatable                     :: dummy_gindex_atm(:)
+
     integer                                                       :: a2c_fldlist_num
     integer                                                       :: c2a_fldlist_num
     public                                                        :: atmos_register
@@ -76,11 +78,12 @@ module atmos_cap
         type (ESMF_FieldBundle)      ::  c2a_fb , a2c_fb
         integer                      ::  n
         type(ESMF_Mesh)              ::  atmos_mesh
+        type(ESMF_Mesh)              ::  atmos_mesh_tmp
         character(len=ESMF_MAXSTR)   ::  atmos_mesh_filepath
         integer                      ::  petCount, localrc, urc
         integer                      ::  mid, by2, quart, by4
         type(ESMF_Grid)              ::  atmos_grid
-        type(ESMF_DistGrid)          ::  distgridIN, distgridFS
+        type(ESMF_DistGrid)          ::  atmos_distgrid
         logical                      ::  mesh_switch
         character(len=*), parameter  :: subname=trim(modname)//': [atmos_init] '
         !integer                     :: regDecomp(:,:)
@@ -110,10 +113,15 @@ module atmos_cap
             atmos_mesh_filepath  =   '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
 
 
-            atmos_mesh           = ESMF_MeshCreate(filename=trim(atmos_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+            atmos_mesh_tmp           = ESMF_MeshCreate(filename=trim(atmos_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
             call ESMF_LogWrite(subname//"Mesh for atmosphere is created!", ESMF_LOGMSG_INFO)
             !print *, "!Mesh for atmosphere is created!"
+            
+            atmos_distgrid = ESMF_DistGridCreate (arbSeqIndexList=dummy_gindex_atm, rc=rc)
+
+            ! recreate the mesh using the above distgrid 
+            atmos_mesh = ESMF_MeshCreate(atmos_mesh_tmp, elementDistgrid=atmos_distgrid, rc=rc)
 
         else
             !TODO: Fix how you want to create the grid here if mesh_switch is off

@@ -54,19 +54,21 @@ module lilac_mod
     contains
     !========================================================================
 
-    subroutine lilac_init( atm2lnd1d, atm2lnd2d, lnd2atm1d, lnd2atm2d)
+    subroutine lilac_init( atm2lnd1d, atm2lnd2d, lnd2atm1d, lnd2atm2d, gindex_atm)
 
         use atmos_cap , only :          a2c_fldlist , c2a_fldlist
+        use atmos_cap , only :          dummy_gindex_atm
         use lnd_cap   , only :          l2c_fldlist , c2l_fldlist
  
         character(len=*), parameter                      :: subname=trim(modname)//': [lilac_init] '
 
         ! input/output variables
-        type(atm2lnd_data1d_type), intent(in), optional  :: atm2lnd1d
-        type(atm2lnd_data2d_type), intent(in), optional  :: atm2lnd2d
-        type(lnd2atm_data1d_type), intent(in), optional  :: lnd2atm1d
-        type(lnd2atm_data2d_type), intent(in), optional  :: lnd2atm2d
+        type(atm2lnd_data1d_type), intent(in), optional :: atm2lnd1d
+        type(atm2lnd_data2d_type), intent(in), optional :: atm2lnd2d
+        type(lnd2atm_data1d_type), intent(in), optional :: lnd2atm1d
+        type(lnd2atm_data2d_type), intent(in), optional :: lnd2atm2d
 
+        integer , allocatable                           :: gindex_atm(:)
         ! local variables
 
         type(ESMF_State)                                 :: importState, exportState
@@ -122,10 +124,10 @@ module lilac_mod
         COMP_COMM = MPI_COMM_WORLD
 
         !https://github.com/yudong-tian/LIS-CLM4.5SP/blob/8cec515a628325c73058cfa466db63210cd562ac/xlis-bld/xlis_main.F90
-        if (ierr .ne. MPI_SUCCESS) then
-            print *,'Error starting MPI program. Terminating.'
-            call MPI_ABORT(MPI_COMM_WORLD, ierr)
-        end if
+        !if (ierr .ne. MPI_SUCCESS) then
+        !    print *,'Error starting MPI program. Terminating.'
+        !    call MPI_ABORT(MPI_COMM_WORLD, ierr)
+        !end if
 
         !
 
@@ -279,6 +281,7 @@ module lilac_mod
 
 
 
+        dummy_gindex_atm  = gindex_atm
         ! ========================================================================
 
         !-------------------------------------------------------------------------
