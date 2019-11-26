@@ -199,6 +199,8 @@ contains
               cf_veg%m_deadcrootc_xfer_to_fire_patch(p) * dt
             cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p) -       &
               cf_veg%m_deadcrootc_xfer_to_litter_fire_patch(p)* dt
+         else
+            ! NOTE: The equivalent changes for matrix code are in CNFireBase and CNFireLi2014 codes EBK (11/26/2019)
          end if !not use_matrixcn
       end do ! end of patch loop
 

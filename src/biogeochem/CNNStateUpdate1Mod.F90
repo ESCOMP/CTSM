@@ -193,6 +193,8 @@ contains
             ns_veg%frootn_patch(p)   = ns_veg%frootn_patch(p)   - nf_veg%frootn_to_litter_patch(p)*dt
             ns_veg%leafn_patch(p)    = ns_veg%leafn_patch(p)    - nf_veg%leafn_to_retransn_patch(p)*dt
             ns_veg%retransn_patch(p) = ns_veg%retransn_patch(p) + nf_veg%leafn_to_retransn_patch(p)*dt
+         else
+            ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
          end if !not use_matrixcn
 
          ! live wood turnover and retranslocation fluxes
@@ -207,6 +209,8 @@ contains
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
                ns_veg%livecrootn_patch(p)   = ns_veg%livecrootn_patch(p) - nf_veg%livecrootn_to_retransn_patch(p)*dt
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livecrootn_to_retransn_patch(p)*dt
+            else
+               ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
          end if 
          if (ivt(p) >= npcropmin) then ! Beth adds retrans from froot
@@ -218,6 +222,8 @@ contains
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
                ns_veg%grainn_patch(p)       = ns_veg%grainn_patch(p) &
                    - (nf_veg%grainn_to_food_patch(p) + nf_veg%grainn_to_seed_patch(p))*dt
+            else
+               ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
             ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
                  - nf_veg%crop_seedn_to_leaf_patch(p) * dt &
@@ -270,6 +276,8 @@ contains
                ns_veg%livecrootn_storage_patch(p) = ns_veg%livecrootn_storage_patch(p) + nf_veg%npool_to_livecrootn_storage_patch(p)*dt
                ns_veg%deadcrootn_patch(p)         = ns_veg%deadcrootn_patch(p)         + nf_veg%npool_to_deadcrootn_patch(p)*dt
                ns_veg%deadcrootn_storage_patch(p) = ns_veg%deadcrootn_storage_patch(p) + nf_veg%npool_to_deadcrootn_storage_patch(p)*dt
+            else
+               ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if ! not use_matrixcn
          end if
 
@@ -283,6 +291,8 @@ contains
                ns_veg%livestemn_storage_patch(p)  = ns_veg%livestemn_storage_patch(p)  + nf_veg%npool_to_livestemn_storage_patch(p)*dt
                ns_veg%grainn_patch(p)             = ns_veg%grainn_patch(p)             + nf_veg%npool_to_grainn_patch(p)*dt
                ns_veg%grainn_storage_patch(p)     = ns_veg%grainn_storage_patch(p)     + nf_veg%npool_to_grainn_storage_patch(p)*dt
+            else
+               ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if ! not use_matrixcn
          end if
 
@@ -303,6 +313,8 @@ contains
                ns_veg%deadcrootn_storage_patch(p) = ns_veg%deadcrootn_storage_patch(p) - nf_veg%deadcrootn_storage_to_xfer_patch(p)*dt
                ns_veg%deadcrootn_xfer_patch(p)    = ns_veg%deadcrootn_xfer_patch(p)    + nf_veg%deadcrootn_storage_to_xfer_patch(p)*dt
             end if
+         else
+            ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
          end if  ! not use_matrixcn
 
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
@@ -312,6 +324,8 @@ contains
                ns_veg%livestemn_xfer_patch(p)     = ns_veg%livestemn_xfer_patch(p)    + nf_veg%livestemn_storage_to_xfer_patch(p)*dt
                ns_veg%grainn_storage_patch(p)     = ns_veg%grainn_storage_patch(p)    - nf_veg%grainn_storage_to_xfer_patch(p)*dt
                ns_veg%grainn_xfer_patch(p)        = ns_veg%grainn_xfer_patch(p)       + nf_veg%grainn_storage_to_xfer_patch(p)*dt
+            else
+               ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if ! not use_matrixcn
          end if
 
