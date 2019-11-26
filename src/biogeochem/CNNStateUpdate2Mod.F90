@@ -140,6 +140,8 @@ contains
             ns_veg%deadcrootn_xfer_patch(p) =  ns_veg%deadcrootn_xfer_patch(p)       &
               - nf_veg%m_deadcrootn_xfer_to_litter_patch(p) * dt
 
+         else
+            ! NOTE: The matrix part of this update is in dynHarvest, CNHarvest (EBK 11/25/2019)
          end if !not use_matrixcn
       end do
 
@@ -260,6 +262,8 @@ contains
               - nf_veg%hrv_livecrootn_xfer_to_litter_patch(p) *dt
             ns_veg%deadcrootn_xfer_patch(p) = ns_veg%deadcrootn_xfer_patch(p)       &
               - nf_veg%hrv_deadcrootn_xfer_to_litter_patch(p) *dt
+         else
+            ! NOTE: The matrix part of this update is in dynHarvest, CNHarvest (EBK 11/25/2019)
          end if !not use_matrixcn
 
       end do
