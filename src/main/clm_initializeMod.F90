@@ -17,19 +17,20 @@ module clm_initializeMod
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
   use ncdio_pio       , only : file_desc_t
-  use GridcellType    , only : grc           ! instance     
-  use LandunitType    , only : lun           ! instance          
-  use ColumnType      , only : col           ! instance          
-  use PatchType       , only : patch         ! instance            
+  use GridcellType    , only : grc           ! instance
+  use LandunitType    , only : lun           ! instance
+  use ColumnType      , only : col           ! instance
+  use PatchType       , only : patch         ! instance
   use reweightMod     , only : reweight_wrapup
   use filterMod       , only : allocFilters, filter, filter_inactive_and_active
   use FatesInterfaceMod, only : set_fates_global_elements
   use dynSubgridControlMod, only: dynSubgridControl_init, get_reset_dynbal_baselines
 
-  use clm_instMod       
-  ! 
+  use clm_instMod
+  !
   implicit none
-  private  ! By default everything is private 
+  private  ! By default everything is private
+
   !
   public :: initialize1  ! Phase one initialization
   public :: initialize2  ! Phase two initialization
@@ -38,18 +39,19 @@ module clm_initializeMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine initialize1( )
+  subroutine initialize1(gindex_ocn)
     !
     ! !DESCRIPTION:
-    ! CLM initialization first phase 
+    ! CLM initialization first phase
     !
     ! !USES:
     use clm_varpar       , only: clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
     use clm_varcon       , only: clm_varcon_init
     use landunit_varcon  , only: landunit_varcon_init, max_lunit
-    use clm_varctl       , only: fsurdat, fatmlndfrc, noland, version  
-    use pftconMod        , only: pftcon       
+    use clm_varctl       , only: fsurdat, fatmlndfrc, noland, version
+    use pftconMod        , only: pftcon
     use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
+    use decompInitMod    , only: decompInit_ocn
     use domainMod        , only: domain_check, ldomain, domain_init
     use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data, surfrd_get_num_patches
     use controlMod       , only: control_init, control_print, NLFilename
@@ -57,6 +59,10 @@ contains
     use initGridCellsMod , only: initGridCells
     use ch4varcon        , only: ch4conrd
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
+    use dynSubgridControlMod, only: dynSubgridControl_init
+    !
+    ! !ARGUMENTS
+    integer, pointer, optional :: gindex_ocn(:)
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
@@ -64,7 +70,7 @@ contains
     integer           :: nl                      ! gdc and glo lnd indices
     integer           :: ns, ni, nj              ! global grid sizes
     integer           :: begg, endg              ! processor bounds
-    type(bounds_type) :: bounds_proc             
+    type(bounds_type) :: bounds_proc
     type(bounds_type) :: bounds_clump
     integer           :: nclumps                 ! number of clumps on this processor
     integer           :: nc                      ! clump index
@@ -123,10 +129,13 @@ contains
     ! ------------------------------------------------------------------------
 
     call decompInit_lnd(ni, nj, amask)
+    if (present(gindex_ocn)) then
+       call decompInit_ocn(ni, nj, amask, gindex_ocn=gindex_ocn)
+    end if
     deallocate(amask)
 
     ! *** Get JUST gridcell processor bounds ***
-    ! Remaining bounds (landunits, columns, patches) will be determined 
+    ! Remaining bounds (landunits, columns, patches) will be determined
     ! after the call to decompInit_glcp - so get_proc_bounds is called
     ! twice and the gridcell information is just filled in twice
 
@@ -172,7 +181,6 @@ contains
     call pftcon%Init()
 
     ! Read surface dataset and set up subgrid weight arrays
-    
     call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
 
     ! ------------------------------------------------------------------------
@@ -184,11 +192,11 @@ contains
     ! Sets:
     ! fates_maxElementsPerPatch
     ! fates_maxElementsPerSite (where a site is roughly equivalent to a column)
-    ! 
+    !
     ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
     ! to allocate space)
     ! ------------------------------------------------------------------------
-    
+
     call set_fates_global_elements(use_fates)
 
     ! ------------------------------------------------------------------------
@@ -200,7 +208,7 @@ contains
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
 
     call get_proc_bounds(bounds_proc)
-    
+
     ! Allocate memory for subgrid data structures
     ! This is needed here BEFORE the following call to initGridcells
     ! Note that the assumption is made that none of the subgrid initialization
@@ -237,7 +245,7 @@ contains
     ! ------------------------------------------------------------------------
 
     ! Set CH4 Model Parameters from namelist.
-    ! Need to do before initTimeConst so that it knows whether to 
+    ! Need to do before initTimeConst so that it knows whether to
     ! look for several optional parameters on surfdata file.
 
     if (use_lch4) then
@@ -265,7 +273,7 @@ contains
     use shr_orb_mod           , only : shr_orb_decl
     use shr_scam_mod          , only : shr_scam_getCloseLatLon
     use seq_drydep_mod        , only : n_drydep, drydep_method, DD_XLND
-    use accumulMod            , only : print_accum_fields 
+    use accumulMod            , only : print_accum_fields
     use clm_varpar            , only : nlevsno
     use clm_varcon            , only : spval
     use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
@@ -273,7 +281,7 @@ contains
     use clm_varctl            , only : use_crop, ndep_from_cpl
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size_real, get_curr_calday
-    use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
+    use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
     use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
     use DaylengthMod          , only : InitDaylength
@@ -285,9 +293,9 @@ contains
     use histFileMod           , only : hist_htapes_build, htapes_fieldlist, hist_printflds
     use histFileMod           , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use restFileMod           , only : restFile_getfile, restFile_open, restFile_close
-    use restFileMod           , only : restFile_read, restFile_write 
+    use restFileMod           , only : restFile_read, restFile_write
     use ndepStreamMod         , only : ndep_init, ndep_interp
-    use LakeCon               , only : LakeConInit 
+    use LakeCon               , only : LakeConInit
     use SatellitePhenologyMod , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
     use SnowSnicarMod         , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod            , only : lnd2atm_minimal
@@ -296,7 +304,7 @@ contains
     use clm_instMod           , only : clm_fates
     use BalanceCheckMod       , only : BalanceCheckInit
     !
-    ! !ARGUMENTS    
+    ! !ARGUMENTS
     !
     ! !LOCAL VARIABLES:
     integer               :: c,i,j,k,l,p! indices
@@ -306,7 +314,7 @@ contains
     integer               :: ncsec        ! current time of day [seconds]
     integer               :: nc           ! clump index
     integer               :: nclumps      ! number of clumps on this processor
-    character(len=256)    :: fnamer       ! name of netcdf restart file 
+    character(len=256)    :: fnamer       ! name of netcdf restart file
     character(len=256)    :: pnamer       ! full pathname of netcdf restart file
     character(len=256)    :: locfn        ! local file name
     type(file_desc_t)     :: ncid         ! netcdf id
@@ -326,7 +334,7 @@ contains
     integer               :: begc, endc
     integer               :: begl, endl
     real(r8), pointer     :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
-    character(len=32)     :: subname = 'initialize2' 
+    character(len=32)     :: subname = 'initialize2'
     !----------------------------------------------------------------------
 
     call t_startf('clm_init2')
@@ -352,7 +360,7 @@ contains
     ! Initialize time manager
     ! ------------------------------------------------------------------------
 
-    if (nsrest == nsrStartup) then  
+    if (nsrest == nsrStartup) then
        call timemgr_init()
     else
        call restFile_getfile(file=fnamer, path=pnamer)
@@ -376,12 +384,12 @@ contains
     call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
 
     call t_stopf('init_orbd')
-    
+
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
 
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
-             
+
     ! History file variables
 
     if (use_cn) then
@@ -395,7 +403,7 @@ contains
     end if
 
     ! ------------------------------------------------------------------------
-    ! Initialize component data structures 
+    ! Initialize component data structures
     ! ------------------------------------------------------------------------
 
     ! Note: new logic is in place that sets all the history fields to spval so
@@ -485,7 +493,7 @@ contains
        ! be moved into bgc_vegetation_inst%Init2
 
        if (n_drydep > 0 .and. drydep_method == DD_XLND) then
-          ! Must do this also when drydeposition is used so that estimates of monthly 
+          ! Must do this also when drydeposition is used so that estimates of monthly
           ! differences in LAI can be computed
           call SatellitePhenologyInit(bounds_proc)
        end if
@@ -502,10 +510,10 @@ contains
     end if
 
 
-    
+
 
     ! ------------------------------------------------------------------------
-    ! On restart only - process the history namelist. 
+    ! On restart only - process the history namelist.
     ! ------------------------------------------------------------------------
 
     ! Later the namelist from the restart file will be used.  This allows basic
@@ -516,7 +524,7 @@ contains
     end if
 
     ! ------------------------------------------------------------------------
-    ! Read restart/initial info 
+    ! Read restart/initial info
     ! ------------------------------------------------------------------------
 
     is_cold_start = .false.
@@ -530,13 +538,13 @@ contains
              if (masterproc) then
                 write(iulog,*)'Using cold start initial conditions '
              end if
-          else 
+          else
              if (masterproc) then
                 write(iulog,*)'Interpolating initial conditions from ',trim(finidat_interp_source),&
                      ' and creating new initial conditions ', trim(finidat_interp_dest)
              end if
           end if
-       else 
+       else
           if (masterproc) then
              write(iulog,*)'Reading initial conditions from ',trim(finidat)
           end if
@@ -578,7 +586,7 @@ contains
        ! Read new interpolated conditions file back in
        call restFile_read(bounds_proc, finidat_interp_dest, glc_behavior)
 
-       ! Reset finidat to now be finidat_interp_dest 
+       ! Reset finidat to now be finidat_interp_dest
        ! (to be compatible with routines still using finidat)
        finidat = trim(finidat_interp_dest)
 
@@ -630,11 +638,11 @@ contains
     end if
 
     ! ------------------------------------------------------------------------
-    ! Initialize active history fields. 
+    ! Initialize active history fields.
     ! ------------------------------------------------------------------------
 
-    ! This is only done if not a restart run. If a restart run, then this 
-    ! information has already been obtained from the restart data read above. 
+    ! This is only done if not a restart run. If a restart run, then this
+    ! information has already been obtained from the restart data read above.
     ! Note that routine hist_htapes_build needs time manager information,
     ! so this call must be made after the restart information has been read.
 
@@ -647,7 +655,7 @@ contains
     ! ------------------------------------------------------------------------
 
     ! The following is called for both initial and restart runs and must
-    ! must be called after the restart file is read 
+    ! must be called after the restart file is read
 
     call atm2lnd_inst%initAccVars(bounds_proc)
     call temperature_inst%initAccVars(bounds_proc)
@@ -661,11 +669,11 @@ contains
        call crop_inst%initAccVars(bounds_proc)
     end if
 
-    !------------------------------------------------------------       
+    !------------------------------------------------------------
     ! Read monthly vegetation
-    !------------------------------------------------------------       
+    !------------------------------------------------------------
 
-    ! Even if CN is on, and dry-deposition is active, read CLMSP annual vegetation 
+    ! Even if CN is on, and dry-deposition is active, read CLMSP annual vegetation
     ! to get estimates of monthly LAI
 
     if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
@@ -677,9 +685,9 @@ contains
        end if
     end if
 
-    !------------------------------------------------------------       
+    !------------------------------------------------------------
     ! Determine gridcell averaged properties to send to atm
-    !------------------------------------------------------------       
+    !------------------------------------------------------------
 
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
@@ -688,9 +696,9 @@ contains
        call t_stopf('init_map2gc')
     end if
 
-    !------------------------------------------------------------       
+    !------------------------------------------------------------
     ! Initialize sno export state to send to glc
-    !------------------------------------------------------------       
+    !------------------------------------------------------------
 
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1,nclumps
@@ -705,9 +713,9 @@ contains
     end do
     !$OMP END PARALLEL DO
 
-    !------------------------------------------------------------       
+    !------------------------------------------------------------
     ! Deallocate wt_nat_patch
-    !------------------------------------------------------------       
+    !------------------------------------------------------------
 
     ! wt_nat_patch was allocated in initialize1, but needed to be kept around through
     ! initialize2 for some consistency checking; now it can be deallocated
@@ -717,7 +725,7 @@ contains
     ! --------------------------------------------------------------
     ! Initialise the fates model state structure
     ! --------------------------------------------------------------
-   
+
     if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
@@ -730,9 +738,9 @@ contains
 
     deallocate(topo_glc_mec, fert_cft, irrig_method)
 
-    !------------------------------------------------------------       
+    !------------------------------------------------------------
     ! Write log output for end of initialization
-    !------------------------------------------------------------       
+    !------------------------------------------------------------
 
     call t_startf('init_wlog')
     if (masterproc) then
