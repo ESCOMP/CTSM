@@ -83,10 +83,10 @@ demo_driver: demo_driver.o atmos_cap.o lilac_mod.o lilac_utils.o cpl_mod.o lnd_c
 
 # module dependencies:
 #demo_driver.o: lilac_mod.o atmos_cap.o lilac_utils.o cpl_mod.o shr_string_mod.o shr_kind_mod.o shr_sys_mod.o shr_log_mod.o shr_timer_mod.o
-demo_driver.o: lilac_mod.o atmos_cap.o lilac_utils.o cpl_mod.o
+demo_driver.o: lilac_mod.o atmos_cap.o lilac_utils.o cpl_mod.o demo_utils.o demo_mod.o
 lilac_mod.o: atmos_cap.o lilac_utils.o cpl_mod.o lnd_cap.o #shr_pio_mod.o
 atmos_cap.o: lilac_utils.o
-
+demo_mod.o: 
 # -----------------------------------------------------------------------------
 
 .PHONY: clean berzerk remake
