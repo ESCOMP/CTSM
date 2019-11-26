@@ -897,21 +897,22 @@ contains
               doalb = (nextsw_cday >= -0.5_r8)
            end if
 
-           if (masterproc) then
-               write(iulog,*) 'doalb is: ', doalb
-           end if
 
            if (masterproc) then
                write(iulog,*) '------------  LILAC  ----------------'
                write(iulog,*) 'nstep       : ', nstep
                write(iulog,*) 'dtime       : ', dtime
-               write(iulog,*) 'calday      : ', calday
-               write(iulog,*) 'caldayp1    : ', caldayp1
-               write(iulog,*) 'nextsw_cday : ', nextsw_cday
+               write(iulog,F02) 'calday      : ', calday
+               write(iulog,F02) 'caldayp1    : ', caldayp1
+               write(iulog,F02) 'nextsw_cday : ', nextsw_cday
                write(iulog,*) '-------------------------------------'
            end if
 
            call update_rad_dtime(doalb)
+
+           if (masterproc) then
+               write(iulog,*) 'doalb is: ', doalb
+           end if
 
            !--------------------------------
            ! Determine if time to write restart
@@ -961,6 +962,7 @@ contains
 
            if (masterproc) then
                write(iulog,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+               write(iulog,*  ) 'doalb           :  ', doalb
                write(iulog,*) 'call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, decl'
                write(iulog,*) 'call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0,  obliqr, decl'
                write(iulog,F02) 'calday is  :  ', calday
@@ -969,7 +971,6 @@ contains
                write(iulog,F02) 'lambm0 is  :  ', lambm0
                write(iulog,F02) 'obliqr is  :  ', obliqr
                write(iulog,F02) 'clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)'
-               write(iulog,*  ) 'doalb           :  ', doalb
                write(iulog,F02) 'declin is       :  ', declin
                write(iulog,F02) 'declinp1 is     :  ', declinp1
                write(iulog,F02) 'rof_prognostic  :  ', rof_prognostic
