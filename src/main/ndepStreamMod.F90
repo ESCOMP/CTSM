@@ -1,13 +1,13 @@
 module ndepStreamMod
 
-  !----------------------------------------------------------------------- 
-  ! !DESCRIPTION: 
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
   ! Contains methods for reading in nitrogen deposition data file
-  ! Also includes functions for dynamic ndep file handling and 
+  ! Also includes functions for dynamic ndep file handling and
   ! interpolation.
   !
   ! !USES
-  use shr_kind_mod, only: r8 => shr_kind_r8, CL => shr_kind_cl 
+  use shr_kind_mod, only: r8 => shr_kind_r8, CL => shr_kind_cl
   use shr_strdata_mod, only: shr_strdata_type, shr_strdata_create
   use shr_strdata_mod, only: shr_strdata_print, shr_strdata_advance
   use mct_mod     , only: mct_ggrid
@@ -15,7 +15,7 @@ module ndepStreamMod
   use clm_varctl  , only: iulog
   use abortutils  , only: endrun
   use fileutils   , only: getavu, relavu
-  use decompMod   , only: bounds_type, ldecomp, gsmap_lnd_gdc2glo 
+  use decompMod   , only: bounds_type, ldecomp, gsmap_lnd_gdc2glo
   use domainMod   , only: ldomain
 
   ! !PUBLIC TYPES:
@@ -34,7 +34,7 @@ module ndepStreamMod
   type(shr_strdata_type)  :: sdat           ! input data stream
   integer :: stream_year_first_ndep         ! first year in stream to use
   integer :: stream_year_last_ndep          ! last year in stream to use
-  integer :: model_year_align_ndep          ! align stream_year_firstndep with 
+  integer :: model_year_align_ndep          ! align stream_year_firstndep with
   logical :: divide_by_secs_per_yr = .true. ! divide by the number of seconds per year
 
   character(len=*), parameter, private :: sourcefile = &
@@ -46,8 +46,8 @@ contains
   !==============================================================================
 
   subroutine ndep_init(bounds, NLFilename)
-   !    
-   ! Initialize data stream information.  
+   !
+   ! Initialize data stream information.
    !
    ! Uses:
    use shr_kind_mod     , only : CS => shr_kind_cs
@@ -61,13 +61,13 @@ contains
    !
    ! arguments
    implicit none
-   type(bounds_type), intent(in) :: bounds  
+   type(bounds_type), intent(in) :: bounds
    character(len=*),  intent(in) :: NLFilename   ! Namelist filename
    !
    ! local variables
    integer            :: nu_nml    ! unit for namelist file
    integer            :: nml_error ! namelist i/o error flag
-   type(mct_ggrid)    :: dom_clm   ! domain information 
+   type(mct_ggrid)    :: dom_clm   ! domain information
    character(len=CL)  :: stream_fldFileName_ndep
    character(len=CL)  :: ndepmapalgo = 'bilinear'
    character(len=CS)  :: ndep_taxmode = 'extend'
@@ -118,9 +118,9 @@ contains
    if (masterproc) then
       write(iulog,*) ' '
       write(iulog,*) 'ndepdyn stream settings:'
-      write(iulog,*) '  stream_year_first_ndep  = ',stream_year_first_ndep  
-      write(iulog,*) '  stream_year_last_ndep   = ',stream_year_last_ndep   
-      write(iulog,*) '  model_year_align_ndep   = ',model_year_align_ndep   
+      write(iulog,*) '  stream_year_first_ndep  = ',stream_year_first_ndep
+      write(iulog,*) '  stream_year_last_ndep   = ',stream_year_last_ndep
+      write(iulog,*) '  model_year_align_ndep   = ',model_year_align_ndep
       write(iulog,*) '  stream_fldFileName_ndep = ',stream_fldFileName_ndep
       write(iulog,*) '  ndep_varList            = ',ndep_varList
       write(iulog,*) '  ndep_taxmode            = ',ndep_taxmode
@@ -133,7 +133,7 @@ contains
    call clm_domain_mct (bounds, dom_clm)
 
    call shr_strdata_create(sdat,name="clmndep",    &
-        pio_subsystem=pio_subsystem,               & 
+        pio_subsystem=pio_subsystem,               &
         pio_iotype=shr_pio_getiotype(inst_name),   &
         mpicom=mpicom, compid=comp_id,             &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,    &
@@ -146,7 +146,7 @@ contains
         domFileName=trim(stream_fldFileName_ndep), &
         domTvarName='time',                        &
         domXvarName='lon' ,                        &
-        domYvarName='lat' ,                        &  
+        domYvarName='lat' ,                        &
         domAreaName='area',                        &
         domMaskName='mask',                        &
         filePath='',                               &
@@ -165,7 +165,7 @@ contains
 
  end subroutine ndep_init
  !================================================================
-  
+
  subroutine check_units( stream_fldFileName_ndep, ndep_varList )
    !-------------------------------------------------------------------
    ! Check that units are correct on the file and if need any conversion
@@ -222,11 +222,11 @@ contains
    use atm2lndType     , only : atm2lnd_type
    !
    ! Arguments
-   type(bounds_type) , intent(in)    :: bounds  
+   type(bounds_type) , intent(in)    :: bounds
    type(atm2lnd_type), intent(inout) :: atm2lnd_inst
    !
    ! Local variables
-   integer :: g, ig 
+   integer :: g, ig
    integer :: year    ! year (0, ...) for nstep+1
    integer :: mon     ! month (1, ..., 12) for nstep+1
    integer :: day     ! day of month (1, ..., 31) for nstep+1
@@ -254,7 +254,7 @@ contains
          atm2lnd_inst%forc_ndep_grc(g) = sdat%avs(1)%rAttr(1,ig)
       end do
    end if
-   
+
  end subroutine ndep_interp
 
  !==============================================================================
@@ -264,14 +264,13 @@ contains
     ! Set domain data type for internal clm grid
     use clm_varcon  , only : re
     use domainMod   , only : ldomain
-    use seq_flds_mod
     use mct_mod     , only : mct_ggrid, mct_gsMap_lsize, mct_gGrid_init
     use mct_mod     , only : mct_gsMap_orderedPoints, mct_gGrid_importIAttr
     use mct_mod     , only : mct_gGrid_importRAttr
     implicit none
-    ! 
+    !
     ! arguments
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     type(mct_ggrid), intent(out)   :: dom_clm     ! Output domain information for land model
     !
     ! local variables
@@ -284,10 +283,10 @@ contains
     ! Initialize mct domain type
     ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
     ! Note that in addition land carries around landfrac for the purposes of domain checking
-    ! 
+    !
     lsize = mct_gsMap_lsize(gsmap_lnd_gdc2glo, mpicom)
-    call mct_gGrid_init( GGrid=dom_clm, CoordChars=trim(seq_flds_dom_coord), &
-                         OtherChars=trim(seq_flds_dom_other), lsize=lsize )
+    call mct_gGrid_init( GGrid=dom_clm, &
+         CoordChars='lat:lon:hgt', OtherChars='area:aream:mask:frac', lsize=lsize )
     !
     ! Allocate memory
     !
@@ -301,13 +300,13 @@ contains
     ! Determine domain (numbering scheme is: West to East and South to North to South pole)
     ! Initialize attribute vector with special value
     !
-    data(:) = -9999.0_R8 
-    call mct_gGrid_importRAttr(dom_clm,"lat"  ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_clm,"lon"  ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_clm,"area" ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_clm,"aream",data,lsize) 
-    data(:) = 0.0_R8     
-    call mct_gGrid_importRAttr(dom_clm,"mask" ,data,lsize) 
+    data(:) = -9999.0_R8
+    call mct_gGrid_importRAttr(dom_clm,"lat"  ,data,lsize)
+    call mct_gGrid_importRAttr(dom_clm,"lon"  ,data,lsize)
+    call mct_gGrid_importRAttr(dom_clm,"area" ,data,lsize)
+    call mct_gGrid_importRAttr(dom_clm,"aream",data,lsize)
+    data(:) = 0.0_R8
+    call mct_gGrid_importRAttr(dom_clm,"mask" ,data,lsize)
     !
     ! Determine bounds
     !
@@ -318,36 +317,35 @@ contains
        i = 1 + (g - bounds%begg)
        data(i) = ldomain%lonc(g)
     end do
-    call mct_gGrid_importRattr(dom_clm,"lon",data,lsize) 
+    call mct_gGrid_importRattr(dom_clm,"lon",data,lsize)
 
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = ldomain%latc(g)
     end do
-    call mct_gGrid_importRattr(dom_clm,"lat",data,lsize) 
+    call mct_gGrid_importRattr(dom_clm,"lat",data,lsize)
 
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = ldomain%area(g)/(re*re)
     end do
-    call mct_gGrid_importRattr(dom_clm,"area",data,lsize) 
+    call mct_gGrid_importRattr(dom_clm,"area",data,lsize)
 
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = real(ldomain%mask(g), r8)
     end do
-    call mct_gGrid_importRattr(dom_clm,"mask",data,lsize) 
+    call mct_gGrid_importRattr(dom_clm,"mask",data,lsize)
 
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = real(ldomain%frac(g), r8)
     end do
-    call mct_gGrid_importRattr(dom_clm,"frac",data,lsize) 
+    call mct_gGrid_importRattr(dom_clm,"frac",data,lsize)
 
     deallocate(data)
     deallocate(idata)
 
   end subroutine clm_domain_mct
-    
-end module ndepStreamMod
 
+end module ndepStreamMod
