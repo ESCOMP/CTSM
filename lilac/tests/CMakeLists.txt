@@ -1,2 +1,2 @@
 # Add tests here
-add_subdirectory(hello_world)
+target_include_directories(lilac PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

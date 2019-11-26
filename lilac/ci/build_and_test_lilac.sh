@@ -17,3 +17,7 @@ echo "done building lilac, time to run the tests..."
 
 # run test suite
 ctest
+
+# run system tests
+# TODO: these should probably be run via ctest
+/lilac/build/tests/rand_atm_rand_lnd/rand_atm_rand_lnd

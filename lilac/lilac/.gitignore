@@ -1,0 +1,5 @@
+*.o
+job_name*
+PET*
+*.exe
+batch.sub
