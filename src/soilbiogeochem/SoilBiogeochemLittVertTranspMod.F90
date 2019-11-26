@@ -414,7 +414,7 @@ contains
                            c_tri(c,j) = -(d_p1_zp1(c,j) * aaa(pe_p1(c,j)) + max(-f_p1(c,j), 0._r8))
                            b_tri(c,j) = - a_tri(c,j) - c_tri(c,j) + a_p_0
                            r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + (a_p_0 - adv_flux(c,j)) * conc_trcr(c,j)
-                           if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn)then !vertical matrix are the same for all pools
+                           if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn .and. use_vertsoilc)then !vertical matrix are the same for all pools
                               do i = 1,ndecomp_pools-1 !excluding cwd
                                  tri_ma_vr(c,1+(i-1)*(nlevdecomp*3-2)) = (b_tri(c,j) - a_p_0) / dzsoi_decomp(j) * (-dtime)
                                  tri_ma_vr(c,3+(i-1)*(nlevdecomp*3-2)) = c_tri(c,j) / dzsoi_decomp(j) * (-dtime)
@@ -425,7 +425,7 @@ contains
                            c_tri(c,j) = -(d_p1_zp1(c,j) * aaa(pe_p1(c,j)) + max(-f_p1(c,j), 0._r8))
                            b_tri(c,j) = - a_tri(c,j) - c_tri(c,j) + a_p_0
                            r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + a_p_0 * conc_trcr(c,j)
-                           if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn)then                   
+                           if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn .and. use_vertsoilc)then                   
                               if(j .le. col%nbedrock(c))then
                                  do i = 1,ndecomp_pools-1
                                     tri_ma_vr(c,j*3-4+(i-1)*(nlevdecomp*3-2)) = a_tri(c,j) / dzsoi_decomp(j) * (-dtime)

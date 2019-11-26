@@ -160,7 +160,6 @@ contains
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
   
      if(use_soil_matrixcn)then
-        allocate(this%tri_ma_vr(begc:endc,1:decomp_cascade_con%Ntri_setup))
         allocate(this%matrix_decomp_fire_k_col(begc:endc,1:nlevdecomp*ndecomp_pools));  this%matrix_decomp_fire_k_col(:,:)= nan
         Ntrans = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
         call this%AKsoilc%InitSM                (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+ndecomp_pools*nlevdecomp)
@@ -176,6 +175,9 @@ contains
         call this%Ksoil%InitDM                  (ndecomp_pools*nlevdecomp,begc,endc)
         call this%Xdiagsoil%InitDM              (ndecomp_pools*nlevdecomp,begc,endc)
         call this%matrix_Cinput%InitV(ndecomp_pools*nlevdecomp,begc,endc)
+     end if
+     if(use_soil_matrixcn .and. use_vertsoilc)then
+        allocate(this%tri_ma_vr(begc:endc,1:decomp_cascade_con%Ntri_setup))
      else
         allocate(this%tri_ma_vr(1,1)); this%tri_ma_vr(:,:) = nan
      end if
@@ -753,14 +755,14 @@ contains
        ! balance checks to fail. EBK 10/21/2019
        ! Both use_vertsoilc and .not. use_vertsoilc should reset tri_ma_vr to 0. 
        ! Because single soil layer still add V matrix but as a zero matrix. CL 10/23/2019
-!       if(.not. use_vertsoilc)then
+        if(use_vertsoilc)then
           do k = 1,decomp_cascade_con%Ntri_setup
              do fi = 1,num_column
                 i = filter_column(fi)
                 this%tri_ma_vr(i,k) = value_column
              end do
           end do
-!       end if
+        end if
     end if
     do j = 1, nlevdecomp_full
        do fi = 1,num_column
