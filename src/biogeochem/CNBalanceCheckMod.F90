@@ -61,21 +61,9 @@ contains
     call this%InitAllocate(bounds)
 
     this%cwarning = 1.e-8_r8
-    if(use_matrixcn .or. use_soil_matrixcn)then
-       this%nwarning = 1.e-7_r8
-       this%nerror   = 1.e-3_r8
-       this%cerror   = 1.e-7_r8
-    else
-       this%nwarning = 1.e-7_r8
-       this%nerror   = 1.e-3_r8
-       this%cerror   = 1.e-7_r8
-    end if
-    if ( isspinup )then
-       this%nwarning = 1.e-5_r8
-       this%nerror   = 1.e-1_r8
-       this%cwarning = 1.e-6_r8
-       this%cerror   = 1.e-3_r8
-    end if
+    this%nwarning = 1.e-7_r8
+    this%nerror   = 1.e-3_r8
+    this%cerror   = 1.e-7_r8
   end subroutine Init
 
   !-----------------------------------------------------------------------
