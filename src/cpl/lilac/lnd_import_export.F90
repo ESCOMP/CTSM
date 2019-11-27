@@ -1,13 +1,6 @@
 module lnd_import_export
-  use ESMF                  , only : ESMF_GridComp, ESMF_State, ESMF_Mesh, ESMF_StateGet
-  use ESMF                  , only : ESMF_StatePrint
-  use ESMF                  , only : ESMF_GridCompGet
-  use ESMF                  , only : ESMF_KIND_R8, ESMF_SUCCESS, ESMF_MAXSTR, ESMF_LOGMSG_INFO
-  use ESMF                  , only : ESMF_LogWrite, ESMF_LOGMSG_ERROR, ESMF_LogFoundError
-  use ESMF                  , only : ESMF_STATEITEM_NOTFOUND, ESMF_StateItem_Flag
-  use ESMF                  , only : operator(/=), operator(==)
-  !use NUOPC                 , only : NUOPC_CompAttributeGet, NUOPC_Advertise, NUOPC_IsConnected
-  !use NUOPC_Model           , only : NUOPC_ModelGet
+
+  use ESMF
   use shr_kind_mod          , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_infnan_mod        , only : isnan => shr_infnan_isnan
   use shr_string_mod        , only : shr_string_listGetName, shr_string_listGetNum
@@ -32,13 +25,10 @@ module lnd_import_export
   implicit none
   private ! except
 
-!  public  :: advertise_fields
-!  public  :: realize_fields
   public  :: import_fields
   public  :: export_fields
 
   private :: fldlist_add
-  private :: fldlist_realize
   private :: state_getimport
   private :: state_setexport
   private :: state_getfldptr
@@ -58,18 +48,14 @@ module lnd_import_export
   integer, parameter     :: gridTofieldMap = 2 ! ungridded dimension is innermost
 
   ! from atm->lnd
-  integer                :: ndep_nflds       ! number  of nitrogen deposition fields from atm->lnd/ocn 
+  integer                :: ndep_nflds       ! number  of nitrogen deposition fields from atm->lnd/ocn
 
   ! from lnd->atm
-  character(len=cx)      :: carma_fields     ! List of CARMA fields from lnd->atm
   integer                :: drydep_nflds     ! number of dry deposition velocity fields lnd-> atm
   integer                :: megan_nflds      ! number of MEGAN voc fields from lnd-> atm
   integer                :: emis_nflds       ! number of fire emission fields from lnd-> atm
 
-  logical                :: flds_co2a        ! use case
-  logical                :: flds_co2b        ! use case
-  logical                :: flds_co2c        ! use case
-  integer                :: glc_nec          ! number of glc elevation classes 
+  integer                :: glc_nec = 10     ! number of glc elevation classes
   integer, parameter     :: debug = 1        ! internal debug level
 
   character(*),parameter :: F01 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d21.14)"
@@ -78,291 +64,8 @@ module lnd_import_export
        __FILE__
   character(*),parameter :: modname =  "[lnd_import_export]: "
 
-!===============================================================================
+  !===============================================================================
 contains
-!===============================================================================
-
-!  subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, rof_prognostic, rc)
-!
-!    use clm_varctl, only : ndep_from_cpl
-!
-!    ! input/output variables
-!    type(ESMF_GridComp)            :: gcomp
-!    character(len=*) , intent(in)  :: flds_scalar_name
-!    logical          , intent(in)  :: glc_present
-!    logical          , intent(in)  :: rof_prognostic
-!    integer          , intent(out) :: rc
-!
-!    ! local variables
-!    type(ESMF_State)       :: importState
-!    type(ESMF_State)       :: exportState
-!    character(ESMF_MAXSTR) :: stdname
-!    character(ESMF_MAXSTR) :: cvalue
-!    character(len=2)       :: nec_str
-!    integer                :: n, num
-!    character(len=128)     :: fldname
-!    character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
-!    !-------------------------------------------------------------------------------
-!
-!    rc = ESMF_SUCCESS
-!
-!    call NUOPC_ModelGet(gcomp, importState=importState, exportState=exportState, rc=rc)
-!    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!
-!    !--------------------------------
-!    ! determine necessary toggles for below
-!    !--------------------------------
-!
-!    call NUOPC_CompAttributeGet(gcomp, name='flds_co2a', value=cvalue, rc=rc)
-!    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!    read(cvalue,*) flds_co2a
-!    call ESMF_LogWrite('flds_co2a = '// trim(cvalue), ESMF_LOGMSG_INFO)
-!
-!    call NUOPC_CompAttributeGet(gcomp, name='flds_co2b', value=cvalue, rc=rc)
-!    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!    read(cvalue,*) flds_co2b
-!    call ESMF_LogWrite('flds_co2b = '// trim(cvalue), ESMF_LOGMSG_INFO)
-!
-!    call NUOPC_CompAttributeGet(gcomp, name='flds_co2c', value=cvalue, rc=rc)
-!    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!    read(cvalue,*) flds_co2c
-!    call ESMF_LogWrite('flds_co2c = '// trim(cvalue), ESMF_LOGMSG_INFO)
-!
-!    ! Determine  number of elevation classes
-!    call NUOPC_CompAttributeGet(gcomp, name='glc_nec', value=cvalue, rc=rc)
-!    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!    read(cvalue,*) glc_nec
-!    call ESMF_LogWrite('glc_nec = '// trim(cvalue), ESMF_LOGMSG_INFO)
-!    if (glc_nec < 1) then
-!       call shr_sys_abort('ERROR: In CLM4.5 and later, glc_nec must be at least 1.')
-!    end if
-!
-!    ! Initialize glc_elevclass module
-!    call glc_elevclass_init(glc_nec)
-!
-!    !--------------------------------
-!    ! Advertise export fields
-!    !--------------------------------
-!
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, trim(flds_scalar_name))
-!
-!    ! export land states
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin'      )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_t'          )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_tref'       )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_qref'       )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_avsdr'      )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_anidr'      )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_avsdf'      )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_anidf'      )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_snowh'      )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_u10'        )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_fv'         )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_ram1'       )
-!
-!    ! export fluxes to river
-!    if (rof_prognostic) then
-!       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofsur'   )
-!       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofgwl'   )
-!       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofsub'   )
-!       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_rofi'     )
-!       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Flrl_irrig'    )
-!    end if
-!
-!    ! export fluxes to atm
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_taux'     )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_tauy'     )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_lat'      )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_sen'      )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_lwup'     )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_evap'     )
-!    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_swnet'    )
-!
-!    ! call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_methane'  )
-!
-!    ! dust fluxes from land (4 sizes)
-!    call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Fall_flxdst', ungridded_lbound=1, ungridded_ubound=4)
-!
-!    ! co2 fields from land
-!    if (flds_co2b .or. flds_co2c) then
-!       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Fall_fco2_lnd' )
-!    end if
-!
-!    ! Dry Deposition velocities from land - ALSO initialize drydep here
-!    call seq_drydep_readnl("drv_flds_in", drydep_nflds)
-!    if (n_drydep .ne. drydep_nflds) call shr_sys_abort('ERROR: drydep field count mismatch')
-!    if (n_drydep > 0) then
-!       call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_ddvel', ungridded_lbound=1, ungridded_ubound=drydep_nflds)
-!    end if
-!    call seq_drydep_init( )
-!
-!    ! MEGAN VOC emissions fluxes from land
-!    megan_nflds=0
-!    call shr_megan_readnl('drv_flds_in', megan_nflds)
-!    if (shr_megan_mechcomps_n .ne. megan_nflds) call shr_sys_abort('ERROR: megan field count mismatch')
-!    if (shr_megan_mechcomps_n > 0) then
-!       call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Fall_voc', ungridded_lbound=1, ungridded_ubound=megan_nflds)
-!    end if
-!
-!    ! Fire emissions fluxes from land
-!    call shr_fire_emis_readnl('drv_flds_in', emis_nflds)
-!    if (shr_fire_emis_mechcomps_n .ne. emis_nflds) call shr_sys_abort('ERROR: fire_emis field count mismatch')
-!    if (shr_fire_emis_mechcomps_n > 0) then
-!       call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Fall_fire', ungridded_lbound=1, ungridded_ubound=emis_nflds)
-!       call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_fztop')
-!    end if
-!    ! CARMA volumetric soil water from land
-!    ! TODO: is the following correct - the CARMA field exchange is very confusing in mct
-!    call shr_carma_readnl('drv_flds_in', carma_fields)
-!    if (carma_fields /= ' ') then
-!       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_soilw') ! optional for carma
-!    end if
-!
-!    if (glc_present) then
-!       ! lnd->glc states from land all lnd->glc elevation classes (1:glc_nec) plus bare land (index 0).
-!       ! The following puts all of the elevation class fields as an
-!       ! undidstributed dimension in the export state field
-!
-!       call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_tsrf_elev'  , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
-!       call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_topo_elev'  , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
-!       call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Flgl_qice_elev', ungridded_lbound=1, ungridded_ubound=glc_nec+1)
-!    end if
-!
-!    ! Now advertise above export fields
-!    do n = 1,fldsFrLnd_num
-!       call NUOPC_Advertise(exportState, standardName=fldsFrLnd(n)%stdname, &
-!            TransferOfferGeomObject='will provide', rc=rc)
-!       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!    enddo
-!
-!    !--------------------------------
-!    ! Advertise import fields
-!    !--------------------------------
-!
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, trim(flds_scalar_name))
-!
-!    ! from atm - states
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_z'         )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_topo'      )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_u'         )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_v'         )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_ptem'      )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_pbot'      )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_tbot'      )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_shum'      )
-!   !call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_methane'   )
-!
-!    ! from atm - fluxes
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_lwdn'    )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_rainc'   )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_rainl'   )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_snowc'   )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_snowl'   )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_swndr'   )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_swvdr'   )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_swndf'   )
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_swvdf'   )
-!
-!    ! from atm - black carbon deposition fluxes (3)
-!    ! (1) => bcphidry, (2) => bcphodry, (3) => bcphiwet
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_bcph',  ungridded_lbound=1, ungridded_ubound=3)
-!
-!    ! from atm - organic carbon deposition fluxes (3)
-!    ! (1) => ocphidry, (2) => ocphodry, (3) => ocphiwet
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_ocph',  ungridded_lbound=1, ungridded_ubound=3)
-!
-!    ! from atm - wet dust deposition frluxes (4 sizes)
-!    ! (1) => dstwet1, (2) => dstwet2, (3) => dstwet3, (4) => dstwet4 
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_dstwet', ungridded_lbound=1, ungridded_ubound=4)
-!
-!    ! from - atm dry dust deposition frluxes (4 sizes)
-!    call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_dstdry', ungridded_lbound=1, ungridded_ubound=4)
-!
-!    ! from atm - nitrogen deposition
-!    call shr_ndep_readnl("drv_flds_in", ndep_nflds)
-!    if (ndep_nflds > 0) then
-!       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_ndep', ungridded_lbound=1, ungridded_ubound=ndep_nflds)
-!       ! This sets a variable in clm_varctl
-!       ndep_from_cpl = .true.
-!    end if
-!
-!    ! from atm - co2 exchange scenarios
-!    if (flds_co2a .or. flds_co2b .or. flds_co2c) then
-!       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_co2prog')
-!       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sa_co2diag')
-!    end if
-!
-!    if (rof_prognostic) then
-!       ! from river
-!       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_flood'   )
-!       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_volr'    )
-!       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flrr_volrmch' )
-!    end if
-!
-!    if (glc_present) then
-!       ! from land-ice (glc) - no elevation classes 
-!       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask'               )
-!       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask_coupled_fluxes')
-!       
-!       ! from land-ice (glc) - fields for all glc->lnd elevation classes (1:glc_nec) plus bare land (index 0)
-!       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_ice_covered_elev', ungridded_lbound=1, ungridded_ubound=glc_nec+1)
-!       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_topo_elev'       , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
-!       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Flgg_hflx_elev'     , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
-!    end if
-!
-!    ! Now advertise import fields
-!    do n = 1,fldsToLnd_num
-!       call NUOPC_Advertise(importState, standardName=fldsToLnd(n)%stdname, &
-!            TransferOfferGeomObject='will provide', rc=rc)
-!       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!    enddo
-!
-!  end subroutine advertise_fields
-!
-!  !===============================================================================
-!
-!  subroutine realize_fields(gcomp, Emesh, flds_scalar_name, flds_scalar_num, rc)
-!
-!    ! input/output variables
-!    type(ESMF_GridComp) , intent(inout) :: gcomp
-!    type(ESMF_Mesh)     , intent(in)    :: Emesh
-!    character(len=*)    , intent(in)    :: flds_scalar_name
-!    integer             , intent(in)    :: flds_scalar_num 
-!    integer             , intent(out)   :: rc
-!
-!    ! local variables
-!    type(ESMF_State)     :: importState
-!    type(ESMF_State)     :: exportState
-!    character(len=*), parameter :: subname='(lnd_import_export:realize_fields)'
-!    !---------------------------------------------------------------------------
-!
-!    rc = ESMF_SUCCESS
-!
-!    call NUOPC_ModelGet(gcomp, importState=importState, exportState=exportState, rc=rc)
-!    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!
-!    call fldlist_realize( &
-!         state=ExportState, &
-!         fldList=fldsFrLnd, &
-!         numflds=fldsFrLnd_num, &
-!         flds_scalar_name=flds_scalar_name, &
-!         flds_scalar_num=flds_scalar_num, &
-!         tag=subname//':clmExport',&
-!         mesh=Emesh, rc=rc)
-!    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!
-!    call fldlist_realize( &
-!         state=importState, &
-!         fldList=fldsToLnd, &
-!         numflds=fldsToLnd_num, &
-!         flds_scalar_name=flds_scalar_name, &
-!         flds_scalar_num=flds_scalar_num, &
-!         tag=subname//':clmImport',&
-!         mesh=Emesh, rc=rc)
-!    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!
-!  end subroutine realize_fields
-
   !===============================================================================
 
   subroutine import_fields( gcomp, bounds, glc_present, rof_prognostic, &
@@ -443,12 +146,9 @@ contains
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     ! Get import state
-    !call NUOPC_ModelGet(gcomp, importState=importState, rc=rc)
-    !if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! Get import state 
     call ESMF_GridCompGet(gcomp, importState=importState, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
     ! Set bounds
     begg = bounds%begg; endg=bounds%endg
 
@@ -513,192 +213,81 @@ contains
     call state_getimport(importState, 'Faxa_swndf', bounds, output=atm2lnd_inst%forc_solai_grc(:,2), rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    
+    ! ! Atmosphere prognostic/prescribed aerosol fields
 
-!!!#    ! Atmosphere prognostic/prescribed aerosol fields
-!!!#
-!!!#    ! bcphidry
-!!!#    call state_getimport(importState, 'Faxa_bcph', bounds, output=atm2lnd_inst%forc_aer_grc(:,1), &
-!!!#         ungridded_index=1, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    ! bcphodry
-!!!#    call state_getimport(importState, 'Faxa_bcph', bounds, output=atm2lnd_inst%forc_aer_grc(:,2), &
-!!!#         ungridded_index=2, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    ! bcphiwet
-!!!#    call state_getimport(importState, 'Faxa_bcph', bounds, output=atm2lnd_inst%forc_aer_grc(:,3), &
-!!!#         ungridded_index=3, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#
-!!!#    ! ocphidry
-!!!#    call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,4), &
-!!!#         ungridded_index=1, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    ! bcphodry
-!!!#    call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,5), &
-!!!#         ungridded_index=2, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    ! bcphiwet
-!!!#    call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,6), &
-!!!#         ungridded_index=3, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#
-!!!#    call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,7), &
-!!!#         ungridded_index=1, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,8), &
-!!!#         ungridded_index=1, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#
-!!!#    call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,9), &
-!!!#         ungridded_index=2, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,10), &
-!!!#         ungridded_index=2, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#
-!!!#    call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,11), &
-!!!#         ungridded_index=3, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,12), &
-!!!#         ungridded_index=3, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#
-!!!#    call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,13), &
-!!!#         ungridded_index=4, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,14), &
-!!!#         ungridded_index=4, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#
-!!!#    call state_getimport(importState, 'Sa_methane', bounds, output=atm2lnd_inst%forc_pch4_grc, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#
-!!!#    ! The mediator is sending ndep in units if kgN/m2/s - and ctsm uses units of gN/m2/sec
-!!!#    ! so the following conversion needs to happen
-!!!#
-!!!#    call state_getimport(importState, 'Faxa_nhx', bounds, output=forc_nhx, ungridded_index=1, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    call state_getimport(importState, 'Faxa_noy', bounds, output=forc_noy, ungridded_index=2, rc=rc )
-!!!#    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    do g = begg,endg
-!!!#       atm2lnd_inst%forc_ndep_grc(g) = (forc_nhx(g) + forc_noy(g))*1000._r8
-!!!#    end do
-!!!#
-!!!#    !--------------------------
-!!!#    ! Atmosphere co2
-!!!#    !--------------------------
-!!!#
-!!!#    fldName = 'Sa_co2prog'
-!!!#    call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
-!!!#    if ( ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'prognostic') then
-!!!#       call shr_sys_abort( subname//' ERROR: must have nonzero Sa_co2prog for co2_type equal to prognostic' )
-!!!#    end if
-!!!#    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
-!!!#       call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
-!!!#       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#       do g = begg,endg
-!!!#          co2_ppmv_prog(g) = dataPtr(g-begg+1)   ! co2 atm prognostic
-!!!#       end do
-!!!#    else
-!!!#       do g = begg,endg
-!!!#          co2_ppmv_prog(g) = co2_ppmv
-!!!#       end do
-!!!#    end if
-!!!#
-!!!#    fldName = 'Sa_co2diag'
-!!!#    call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
-!!!#    if ( ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#    if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'diagnostic') then
-!!!#       call shr_sys_abort( subname//' ERROR: must have nonzero Sa_co2prog for co2_type equal to prognostic' )
-!!!#    end if
-!!!#    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
-!!!#       call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
-!!!#       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#       do g = begg,endg
-!!!#          co2_ppmv_diag(g) = dataPtr(g-begg+1)   ! co2 atm diagnostic
-!!!#       end do
-!!!#    else
-!!!#       do g = begg,endg
-!!!#          co2_ppmv_diag(g) = co2_ppmv
-!!!#       end do
-!!!#    end if
-!!!#
-!!!#    ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
-!!!#    ! Note that forc_pbot is in Pa
-!!!#    do g = begg,endg
-!!!#       if (co2_type == 'prognostic') then
-!!!#          co2_ppmv_val = co2_ppmv_prog(g)
-!!!#       else if (co2_type == 'diagnostic') then
-!!!#          co2_ppmv_val = co2_ppmv_diag(g)
-!!!#       else
-!!!#          co2_ppmv_val = co2_ppmv
-!!!#       end if
-!!!#       forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
-!!!#       atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv_val * 1.e-6_r8 * forc_pbot
-!!!#       if (use_c13) then
-!!!#          atm2lnd_inst%forc_pc13o2_grc(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * forc_pbot
-!!!#       end if
-!!!#    end do
-!!!#
-!!!#    !--------------------------
-!!!#    ! Flooding back from river
-!!!#    !--------------------------
-!!!#
-!!!#    ! sign convention is positive downward and hierarchy is atm/glc/lnd/rof/ice/ocn.
-!!!#    ! so water sent from rof to land is negative,
-!!!#    ! change the sign to indicate addition of water to system.
-!!!#
-!!!#    if (rof_prognostic) then
-!!!#       call state_getimport(importState, 'Flrr_flood', bounds, output=wateratm2lndbulk_inst%forc_flood_grc, rc=rc )
-!!!#       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#       wateratm2lndbulk_inst%forc_flood_grc(:) = -wateratm2lndbulk_inst%forc_flood_grc(:)
-!!!#    else
-       wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
-!!!#    end if
-!!!#
-!!!#    if (rof_prognostic) then
-!!!#       call state_getimport(importState, 'Flrr_volr', bounds, output=wateratm2lndbulk_inst%volr_grc, rc=rc )
-!!!#       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#       wateratm2lndbulk_inst%volr_grc(:) = wateratm2lndbulk_inst%volr_grc(:) * (ldomain%area(:) * 1.e6_r8)
-!!!#    else
-!!!#       wateratm2lndbulk_inst%volr_grc(:) = 0._r8
-!!!#    end if
-!!!#
-!!!#    if (rof_prognostic) then
-!!!#       call state_getimport(importState, 'Flrr_volrmch', bounds, output=wateratm2lndbulk_inst%volrmch_grc, rc=rc )
-!!!#       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#       wateratm2lndbulk_inst%volrmch_grc(:) = wateratm2lndbulk_inst%volrmch_grc(:) * (ldomain%area(:) * 1.e6_r8)
-!!!#    else
-!!!#       wateratm2lndbulk_inst%volrmch_grc(:) = 0._r8
-!!!#    end if
-!!!#
-!!!#    !--------------------------
-!!!#    ! Land-ice (glc) fields
-!!!#    !--------------------------
-!!!#       
-!!!#    if (glc_present) then
-!!!#       ! We could avoid setting these fields if glc_present is .false., if that would
-!!!#       ! help with performance. (The downside would be that we wouldn't have these fields
-!!!#       ! available for diagnostic purposes or to force a later T compset with dlnd.)
-!!!#       
-!!!#       do num = 0,glc_nec
-!!!#          call state_getimport(importState, 'Sg_ice_covered_elev', bounds, frac_grc(:,num), ungridded_index=num+1, rc=rc)
-!!!#          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#          call state_getimport(importState, 'Sg_topo_elev'       , bounds, topo_grc(:,num), ungridded_index=num+1, rc=rc)
-!!!#          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#          call state_getimport(importState, 'Flgg_hflx_elev'     , bounds, hflx_grc(:,num), ungridded_index=num+1, rc=rc)
-!!!#          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#       end do
-!!!#       call state_getimport(importState, 'Sg_icemask'               ,  bounds, icemask_grc, rc=rc)
-!!!#       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#       call state_getimport(importState, 'Sg_icemask_coupled_fluxes',  bounds, icemask_grc, rc=rc)
-!!!#       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!!#
-!!!#       call glc2lnd_inst%set_glc2lnd_fields_nuopc( bounds, glc_present, &
-!!!#            frac_grc, topo_grc, hflx_grc, icemask_grc, icemask_coupled_fluxes_grc)
-!!!#    end if
+    ! ! bcphidry
+    ! call state_getimport(importState, 'Faxa_bcph', bounds, output=atm2lnd_inst%forc_aer_grc(:,1), &
+    !      ungridded_index=1, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! ! bcphodry
+    ! call state_getimport(importState, 'Faxa_bcph', bounds, output=atm2lnd_inst%forc_aer_grc(:,2), &
+    !      ungridded_index=2, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! ! bcphiwet
+    ! call state_getimport(importState, 'Faxa_bcph', bounds, output=atm2lnd_inst%forc_aer_grc(:,3), &
+    !      ungridded_index=3, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! ! ocphidry
+    ! call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,4), &
+    !      ungridded_index=1, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! ! bcphodry
+    ! call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,5), &
+    !      ungridded_index=2, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! ! bcphiwet
+    ! call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,6), &
+    !      ungridded_index=3, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,7), &
+    !      ungridded_index=1, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,8), &
+    !      ungridded_index=1, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,9), &
+    !      ungridded_index=2, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,10), &
+    !      ungridded_index=2, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,11), &
+    !      ungridded_index=3, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,12), &
+    !      ungridded_index=3, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,13), &
+    !      ungridded_index=4, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,14), &
+    !      ungridded_index=4, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! call state_getimport(importState, 'Sa_methane', bounds, output=atm2lnd_inst%forc_pch4_grc, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! ! The mediator is sending ndep in units if kgN/m2/s - and ctsm uses units of gN/m2/sec
+    ! ! so the following conversion needs to happen
+
+    ! call state_getimport(importState, 'Faxa_nhx', bounds, output=forc_nhx, ungridded_index=1, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call state_getimport(importState, 'Faxa_noy', bounds, output=forc_noy, ungridded_index=2, rc=rc )
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! do g = begg,endg
+    !    atm2lnd_inst%forc_ndep_grc(g) = (forc_nhx(g) + forc_noy(g))*1000._r8
+    ! end do
+
+    !--------------------------
+    ! Set force flood back from river to 0
+    !--------------------------
+
+    wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
 
     !--------------------------
     ! Derived quantities
@@ -725,7 +314,7 @@ contains
        atm2lnd_inst%forc_wind_grc(g) = sqrt(atm2lnd_inst%forc_u_grc(g)**2 + atm2lnd_inst%forc_v_grc(g)**2)
 
        atm2lnd_inst%forc_solar_grc(g) = atm2lnd_inst%forc_solad_grc(g,1) + atm2lnd_inst%forc_solai_grc(g,1) + &
-                                        atm2lnd_inst%forc_solad_grc(g,2) + atm2lnd_inst%forc_solai_grc(g,2)
+            atm2lnd_inst%forc_solad_grc(g,2) + atm2lnd_inst%forc_solai_grc(g,2)
 
        wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
        wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
@@ -742,7 +331,7 @@ contains
        if (1==2) then
           if ((forc_rainc(g)+forc_rainl(g)) > 0._r8) then
              forc_q = 0.95_r8*qsat
-            !forc_q = qsat
+             !forc_q = qsat
              wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
           endif
        endif
@@ -782,7 +371,7 @@ contains
 
   end subroutine import_fields
 
-!==============================================================================
+  !==============================================================================
 
   subroutine export_fields( gcomp, bounds, glc_present, rof_prognostic, &
        waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
@@ -908,12 +497,6 @@ contains
          input=waterlnd2atmbulk_inst%h2osoi_vol_grc(:,1), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! co2 from land
-    if (flds_co2b .or. flds_co2c) then
-       call state_setexport(exportState, 'Fall_fco2_lnd', bounds, lnd2atm_inst%net_carbon_exchange_grc, minus=.true., rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
-
     ! dry dep velocities
     do num = 1, drydep_nflds
        call state_setexport(exportState, 'Sl_ddvel', bounds, input=lnd2atm_inst%ddvel_grc(:,num), &
@@ -1028,166 +611,8 @@ contains
 
   !===============================================================================
 
-  subroutine fldlist_realize(state, fldList, numflds, flds_scalar_name, flds_scalar_num, mesh, tag, rc)
-
-    use NUOPC , only : NUOPC_IsConnected, NUOPC_Realize
-    use ESMF  , only : ESMF_MeshLoc_Element, ESMF_FieldCreate, ESMF_TYPEKIND_R8
-    use ESMF  , only : ESMF_MAXSTR, ESMF_Field, ESMF_State, ESMF_Mesh, ESMF_StateRemove, ESMF_FieldBundle
-    use ESMF  , only :  ESMF_FieldBundle, ESMF_FieldBundleCreate, ESMF_FieldBundleAdd, ESMF_StateAdd
-    use ESMF  , only : ESMF_LogFoundError, ESMF_LOGMSG_INFO, ESMF_SUCCESS
-    use ESMF  , only : ESMF_LogWrite, ESMF_LOGMSG_ERROR, ESMF_LOGERR_PASSTHRU
-
-    ! input/output variables
-    type(ESMF_State)    , intent(inout) :: state
-    type(fld_list_type) , intent(in)    :: fldList(:)
-    integer             , intent(in)    :: numflds
-    character(len=*)    , intent(in)    :: flds_scalar_name
-    integer             , intent(in)    :: flds_scalar_num
-    character(len=*)    , intent(in)    :: tag
-    type(ESMF_Mesh)     , intent(in)    :: mesh
-    integer             , intent(inout) :: rc
-
-    ! local variables
-    integer                :: n
-    type(ESMF_Field)       :: field
-    character(len=80)      :: stdname
-    character(len=*),parameter  :: subname='(lnd_import_export:fldlist_realize)'
-    type (ESMF_FieldBundle)      ::  l2c_fb , c2l_fb
-    ! ----------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-!!    do n = 1, numflds
-!!       stdname = fldList(n)%stdname
-!!       if (NUOPC_IsConnected(state, fieldName=stdname)) then
-!!          if (stdname == trim(flds_scalar_name)) then
-!!             call ESMF_LogWrite(trim(subname)//trim(tag)//" Field = "//trim(stdname)//" is connected on root pe", &
-!!                  ESMF_LOGMSG_INFO)
-!!             ! Create the scalar field
-!!             call SetScalarField(field, flds_scalar_name, flds_scalar_num, rc=rc)
-!!             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-!!          else
-!!             ! Create the field
-!!             if (fldlist(n)%ungridded_lbound > 0 .and. fldlist(n)%ungridded_ubound > 0) then
-!!                field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name=stdname, meshloc=ESMF_MESHLOC_ELEMENT, &
-!!                     ungriddedLbound=(/fldlist(n)%ungridded_lbound/), &
-!!                     ungriddedUbound=(/fldlist(n)%ungridded_ubound/), &
-!!                     gridToFieldMap=(/gridToFieldMap/), rc=rc)
-!!                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-!!             else
-!!                field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name=stdname, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-!!                if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-!!             end if
-!!             call ESMF_LogWrite(trim(subname)//trim(tag)//" Field = "//trim(stdname)//" is connected using mesh", &
-!!                  ESMF_LOGMSG_INFO)
-!!          endif
-!!
-!!          ! NOW call NUOPC_Realize
-!!          call NUOPC_Realize(state, field=field, rc=rc)
-!!          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-!!       else
-!!          if (stdname /= trim(flds_scalar_name)) then
-!!             call ESMF_LogWrite(subname // trim(tag) // " Field = "// trim(stdname) // " is not connected.", &
-!!                  ESMF_LOGMSG_INFO)
-!!             call ESMF_StateRemove(state, (/stdname/), rc=rc)
-!!             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-!!          end if
-!!       end if
-!!    end do
-
-
-
-
-
-
-    l2c_fb = ESMF_FieldBundleCreate (name="l2c_fb", rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-
-    do n = 1, numflds
-        stdname = fldList(n)%stdname
-        if (stdname == trim(flds_scalar_name)) then
-            call ESMF_LogWrite(trim(subname)//trim(tag)//" Field = "//trim(stdname)//" is connected on root pe", ESMF_LOGMSG_INFO)
-            ! Create the scalar field
-            call SetScalarField(field, flds_scalar_name, flds_scalar_num, rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-        else
-            ! Create the field
-            if (fldlist(n)%ungridded_lbound > 0 .and. fldlist(n)%ungridded_ubound > 0) then
-                field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name=stdname, meshloc=ESMF_MESHLOC_ELEMENT, &
-                      ungriddedLbound=(/fldlist(n)%ungridded_lbound/), &
-                      ungriddedUbound=(/fldlist(n)%ungridded_ubound/), &
-                      gridToFieldMap=(/gridToFieldMap/), rc=rc)
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-            else
-                field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name=stdname, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-                if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-            end if
-            call ESMF_LogWrite(trim(subname)//trim(tag)//" Field = "//trim(stdname)//" is connected using mesh", &
-                   ESMF_LOGMSG_INFO)
-        endif
-            call ESMF_FieldBundleAdd(l2c_fb, (/field/), rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-            call ESMF_StateAdd(state, (/l2c_fb/), rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-
-            if (masterproc .and. debug > 0)  then
-                write(iulog,F01)' lnd2atm_l_state is filld with l2c_fb field bundle!'
-            end if 
-    end do
-
-
-
-
-
-
-
-
-
-
-      contains  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-        subroutine SetScalarField(field, flds_scalar_name, flds_scalar_num, rc)
-          ! ----------------------------------------------
-          ! create a field with scalar data on the root pe
-          ! ----------------------------------------------
-          use ESMF, only : ESMF_Field, ESMF_DistGrid, ESMF_Grid
-          use ESMF, only : ESMF_DistGridCreate, ESMF_GridCreate, ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU
-          use ESMF, only : ESMF_FieldCreate, ESMF_GridCreate, ESMF_TYPEKIND_R8
-
-      type(ESMF_Field) , intent(inout) :: field
-      character(len=*) , intent(in)    :: flds_scalar_name
-      integer          , intent(in)    :: flds_scalar_num
-      integer          , intent(inout) :: rc
-
-      ! local variables
-      type(ESMF_Distgrid) :: distgrid
-      type(ESMF_Grid)     :: grid
-      character(len=*), parameter :: subname='(lnd_import_export:SetScalarField)'
-      ! ----------------------------------------------
-
-      rc = ESMF_SUCCESS
-
-      ! create a DistGrid with a single index space element, which gets mapped onto DE 0.
-      distgrid = ESMF_DistGridCreate(minIndex=(/1/), maxIndex=(/1/), rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-
-      grid = ESMF_GridCreate(distgrid, rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-
-      field = ESMF_FieldCreate(name=trim(flds_scalar_name), grid=grid, typekind=ESMF_TYPEKIND_R8, &
-           ungriddedLBound=(/1/), ungriddedUBound=(/flds_scalar_num/), gridToFieldMap=(/2/), rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-
-    end subroutine SetScalarField
-
-  end subroutine fldlist_realize
-
-  !===============================================================================
-
   subroutine state_getimport(state, fldname, bounds, output, ungridded_index, rc)
 
-    use ESMF                  , only : ESMF_Field, ESMF_FieldBundle
-    use ESMF                  , only : ESMF_FieldBundleGet
     ! ----------------------------------------------
     ! Map import state field to output array
     ! ----------------------------------------------
@@ -1228,10 +653,10 @@ contains
 
     ! print out what is in our state???
     if (masterproc .and. debug > 0)  then
-         write(iulog,F01)' Show me what is in the state? for  '//trim(fldname)
-        call ESMF_StatePrint(state, rc=rc)
-        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if 
+       write(iulog,F01)' Show me what is in the state? for  '//trim(fldname)
+       call ESMF_StatePrint(state, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
 
     ! Determine if fieldbundle  exists in state
     call ESMF_StateGet(state, "c2l_fb", itemFlag, rc=rc)
@@ -1240,19 +665,19 @@ contains
 
     ! if fieldbundle exists then create output array - else do nothing
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
-        ! Get the field bundle???
-        call ESMF_StateGet(state, "c2l_fb", fieldBundle, rc=rc)
-        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       ! Get the field bundle???
+       call ESMF_StateGet(state, "c2l_fb", fieldBundle, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-        call ESMF_LogWrite(subname//'c2l_fb found and now ... getting '//trim(fldname), ESMF_LOGMSG_INFO)
-        call ESMF_FieldBundleGet(fieldBundle,fieldName=trim(fldname), field=lfield,  isPresent=isPresent, rc=rc)
-        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-        !call ESMF_FieldBundleGet(fieldBundle,fieldName=trim(fldname), field=field, isPresent=isPresent, rc=rc)
-        !call ESMF_FieldBundleGet(fieldBundle,field=field, rc=rc)
-        !call ESMF_FieldBundleGet(fieldBundle, fieldCount=fieldCount, rc=rc)
+       call ESMF_LogWrite(subname//'c2l_fb found and now ... getting '//trim(fldname), ESMF_LOGMSG_INFO)
+       call ESMF_FieldBundleGet(fieldBundle,fieldName=trim(fldname), field=lfield,  isPresent=isPresent, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       !call ESMF_FieldBundleGet(fieldBundle,fieldName=trim(fldname), field=field, isPresent=isPresent, rc=rc)
+       !call ESMF_FieldBundleGet(fieldBundle,field=field, rc=rc)
+       !call ESMF_FieldBundleGet(fieldBundle, fieldCount=fieldCount, rc=rc)
 
 
-        ! Now for error checking we can put ... if (isPresent...) 
+       ! Now for error checking we can put ... if (isPresent...)
        ! get field pointer
        if (present(ungridded_index)) then
           write(cvalue,*) ungridded_index
@@ -1284,8 +709,8 @@ contains
              n = g - bounds%begg + 1
              output(g) = fldptr1d(n)
              if (masterproc .and. debug > 0 .and. get_nstep() < 5) then
-                 write(iulog,F02)' n, g , fldptr1d(n) '//trim(fldname)//' = ',n, g, fldptr1d(n)
-             end if 
+                write(iulog,F02)' n, g , fldptr1d(n) '//trim(fldname)//' = ',n, g, fldptr1d(n)
+             end if
           end do
        end if
 
@@ -1410,12 +835,6 @@ contains
     ! Get pointer to a state field
     ! ----------------------------------------------
 
-    use ESMF , only : ESMF_State, ESMF_Field, ESMF_Mesh, ESMF_FieldStatus_Flag
-    use ESMF , only : ESMF_FieldBundle
-    use ESMF , only : ESMF_StateGet, ESMF_FieldGet, ESMF_MeshGet
-    use ESMF , only : ESMF_FIELDSTATUS_COMPLETE, ESMF_FAILURE
-    use ESMF                  , only : ESMF_FieldBundleGet
-
     ! input/output variables
     type(ESMF_State),             intent(in)    :: State
     character(len=*),             intent(in)    :: fldname
@@ -1443,7 +862,7 @@ contains
     call ESMF_StateGet(state, "c2l_fb", itemFlag, rc=rc)
     !call ESMF_StateGet(State, itemName=trim(fldname), field=lfield, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-   
+
     ! Get the fieldbundle from state...
     call ESMF_StateGet(state, "c2l_fb", fieldBundle, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -1478,7 +897,7 @@ contains
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           if (masterproc .and. debug > 0)  then
              write(iulog,F01)' in '//trim(subname)//'fldptr1d for '//trim(fldname)//' is  '
-          end if 
+          end if
           !print *, "FLDPTR1D is"
           !print *, FLDPTR1d
        else if (present(fldptr2d)) then
@@ -1499,7 +918,7 @@ contains
     real(r8)         , intent(in) :: array(:)
     character(len=*) , intent(in) :: fname
     integer          , intent(in) :: begg
-!
+    !
     ! local variables
     integer :: i
     !-------------------------------------------------------------------------------
