@@ -7,29 +7,26 @@ module lilac_atmcap
 
   ! !USES
   use ESMF
-  use lilac_utils , only : atm2lnd, lnd2atm, gindex_atm
+  use lilac_utils , only : atm2lnd, lnd2atm, gindex_atm, atm_mesh_filename
   implicit none
 
-  include 'mpif.h'
+  public :: lilac_atmos_register
 
-  public :: atmos_register
-
-  integer                 :: mytask 
-  character(*), parameter :: modname =  "atmos_cap"
-  integer, parameter      :: debug = 0 ! internal debug level
+  integer            :: mytask 
+  integer, parameter :: debug = 0 ! internal debug level
 
 !========================================================================
 contains
 !========================================================================
 
-  subroutine atmos_register (comp, rc)
+  subroutine lilac_atmos_register (comp, rc)
 
     type(ESMF_GridComp)          :: comp   ! must not be optional
     integer, intent(out)         :: rc
 
     ! local variables
     type(ESMF_VM)                :: vm
-    character(len=*), parameter  :: subname=trim(modname)//':(atmos_register) '
+    character(len=*), parameter  :: subname='(lilac_atmos_register): '
     !-------------------------------------------------------------------------
 
     call ESMF_VMGetGlobal(vm=vm, rc=rc)
@@ -45,67 +42,58 @@ contains
     rc = ESMF_SUCCESS
 
     ! Set the entry points for standard ESMF Component methods
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, userRoutine=atmos_init, rc=rc)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, userRoutine=lilac_atmos_init, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, userRoutine=atmos_run, rc=rc)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, userRoutine=lilac_atmos_run, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, userRoutine=atmos_final, rc=rc)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, userRoutine=lilac_atmos_final, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-  end subroutine atmos_register
+  end subroutine lilac_atmos_register
 
 !========================================================================
 
-  subroutine atmos_init (comp, lnd2atm_a_state, atm2lnd_a_state, clock, rc)
+  subroutine lilac_atmos_init (comp, lnd2atm_a_state, atm2lnd_a_state, clock, rc)
 
     ! input/output variables
-    type (ESMF_GridComp) ::  comp
-    type (ESMF_State)    ::  lnd2atm_a_state, atm2lnd_a_state
-    type (ESMF_Clock)    ::  clock
-    integer, intent(out) ::  rc
+    type (ESMF_GridComp) :: comp
+    type (ESMF_State)    :: lnd2atm_a_state, atm2lnd_a_state
+    type (ESMF_Clock)    :: clock
+    integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_Mesh)             :: atmos_mesh
-    type(ESMF_DistGrid)         :: atmos_distgrid
+    type(ESMF_Mesh)             :: atm_mesh
+    type(ESMF_DistGrid)         :: atm_distgrid
     type(ESMF_Field)            :: field
     type(ESMF_FieldBundle)      :: c2a_fb , a2c_fb
-    character(len=ESMF_MAXSTR)  :: atmos_mesh_filepath
-    integer                     :: n, i, myid
-    integer                     :: mpierror, numprocs
-    integer                     :: petCount, localrc, urc
-    character(*),parameter      :: F02 =   "('[atmos_cap]',a,i5,2x,d26.19)"
-    character(len=*), parameter :: subname=trim(modname)//': [atmos_init] '
+    integer                     :: n, i
+    character(len=*), parameter :: subname='(lilac_atmos_init): '
     !-------------------------------------------------------------------------
 
     ! Initialize return code
     rc = ESMF_SUCCESS
+
     call ESMF_LogWrite(subname//"------------------------!", ESMF_LOGMSG_INFO)
 
-    call ESMF_GridCompGet (comp, petcount=petcount, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
     !-------------------------------------------------------------------------
-    ! Read in the mesh
+    ! Read in the atm mesh
     !-------------------------------------------------------------------------
 
-    ! TODO: use ESMF VM calls
-    call MPI_Comm_size(MPI_COMM_WORLD, numprocs, mpierror)
-    call MPI_Comm_rank(MPI_COMM_WORLD, myid, mpierror)
+    ! Note that in the call to lilac_atm the host atmospere sent both the gindex_atm and 
+    ! the atm_mesh_filename that were then set as module variables in lilac_utils
 
-    atmos_mesh_filepath = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
-
-    atmos_distgrid = ESMF_DistGridCreate (arbSeqIndexList=gindex_atm, rc=rc)
+    atm_distgrid = ESMF_DistGridCreate (arbSeqIndexList=gindex_atm, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    atmos_mesh = ESMF_MeshCreate(filename=trim(atmos_mesh_filepath), fileformat=ESMF_FILEFORMAT_ESMFMESH, &
-         elementDistGrid=atmos_distgrid, rc=rc)
+    atm_mesh = ESMF_MeshCreate(filename=trim(atm_mesh_filename), fileformat=ESMF_FILEFORMAT_ESMFMESH, &
+         elementDistGrid=atm_distgrid, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    call ESMF_LogWrite(subname//"Mesh for atmosphere is created!", ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(trim(subname)//"Mesh for atmosphere is created for "//trim(atm_mesh_filename), ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       !print *, "!Mesh for atmosphere is created!"
+       print *, trim(subname) // "Mesh for atmosphere is created for "//trim(atm_mesh_filename)
     end if
 
     !-------------------------------------------------------------------------
@@ -121,7 +109,7 @@ contains
 
     ! create fields and add to field bundle
     do n = 1, size(atm2lnd)
-       field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
+       field = ESMF_FieldCreate(atm_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
             name=trim(atm2lnd(n)%fldname), farrayPtr=atm2lnd(n)%dataptr, rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
        call ESMF_FieldBundleAdd(a2c_fb, (/field/), rc=rc)
@@ -154,7 +142,7 @@ contains
 
     ! create fields and add to field bundle
     do n = 1, size(lnd2atm)
-       field = ESMF_FieldCreate(atmos_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
+       field = ESMF_FieldCreate(atm_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
             name=trim(lnd2atm(n)%fldname), farrayPtr=lnd2atm(n)%dataptr, rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
        call ESMF_FieldBundleAdd(c2a_fb, (/field/), rc=rc)
@@ -174,11 +162,11 @@ contains
     ! Set Attributes needed by land
     call ESMF_AttributeSet(lnd2atm_a_state, name="nextsw_cday", value=11, rc=rc)  ! TODO: mv what in the world is this???
 
-  end subroutine atmos_init
+  end subroutine lilac_atmos_init
 
 !========================================================================
 
-  subroutine atmos_run(comp, importState, exportState, clock, rc)
+  subroutine lilac_atmos_run(comp, importState, exportState, clock, rc)
 
     ! input/output variables
     type(ESMF_GridComp)  :: comp
@@ -187,25 +175,29 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    character(len=*), parameter :: subname=trim(modname)//': [atmos_run] '
+    character(len=*), parameter :: subname='(lilac_atmos_run):'
 
     ! Initialize return code
     rc = ESMF_SUCCESS
 
     call ESMF_LogWrite(subname//"Should atmos_run ", ESMF_LOGMSG_INFO)
 
-  end subroutine atmos_run
+  end subroutine lilac_atmos_run
 
 !========================================================================
 
-  subroutine atmos_final(comp, importState, exportState, clock, rc)
+  subroutine lilac_atmos_final(comp, importState, exportState, clock, rc)
+
+    ! input/output variables
     type(ESMF_GridComp)  :: comp
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
     integer, intent(out) :: rc
 
-    character(len=*), parameter :: subname=trim(modname)//': [atmos_final] '
-    type (ESMF_FieldBundle)     ::  import_fieldbundle, export_fieldbundle
+    ! local variables
+    type (ESMF_FieldBundle) ::  import_fieldbundle, export_fieldbundle
+    character(len=*), parameter :: subname='( lilac_atmos_final): '
+    !-------------------------------------------------------------------------
 
     ! Initialize return code
     rc = ESMF_SUCCESS
@@ -221,6 +213,6 @@ contains
 
     call ESMF_LogWrite(subname//"?? Are there any other thing for destroying in atmos_final??", ESMF_LOGMSG_INFO)
 
-  end subroutine atmos_final
+  end subroutine lilac_atmos_final
 
 end module lilac_atmcap

@@ -36,4 +36,4 @@ setenv UGCSFIXEDFILEPATH /glade/work/turuncu/FV3GFS/fix_am
 setenv UGCSADDONPATH /glade/work/turuncu/FV3GFS/addon
 #setenv MPI_USE_ARRAY false
 
-mpiexec_mpt ./atm_driver.exe
+mpiexec_mpt -p "%g:" ./atm_driver.exe
