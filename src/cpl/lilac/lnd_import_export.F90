@@ -55,7 +55,7 @@ module lnd_import_export
   integer                :: emis_nflds               ! number of fire emission fields from lnd-> atm
 
   integer                :: glc_nec = 10             ! number of glc elevation classes
-  integer, parameter     :: debug = 1                ! internal debug level
+  integer, parameter     :: debug = 0                ! internal debug level
 
   character(*),parameter :: F01 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d21.14)"
   character(*),parameter :: F02 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d26.19)"

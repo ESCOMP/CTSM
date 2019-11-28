@@ -552,8 +552,10 @@ contains
 
     call ESMF_LogWrite(subname//' CTSM INITIALIZATION DONE SUCCESSFULLY!!!! ', ESMF_LOGMSG_INFO)
 
-    write(iulog,*) " finished (lnd_comp_esmf): lnd_comp_init "
-    write(iulog,*) "========================================="
+    if (masterproc) then
+       write(iulog,*) " finished (lnd_comp_esmf): lnd_comp_init "
+       write(iulog,*) "========================================="
+    end if
 
   !---------------------------
   contains
@@ -606,11 +608,11 @@ contains
     integer                :: mon            ! CTSM current month
     integer                :: day            ! CTSM current day
     integer                :: tod            ! CTSM current time of day (sec)
-    integer                :: ymd_sync       ! Sync date (YYYYMMDD)
-    integer                :: yr_sync        ! Sync current year
-    integer                :: mon_sync       ! Sync current month
-    integer                :: day_sync       ! Sync current day
-    integer                :: tod_sync       ! Sync current time of day (sec)
+    integer                :: ymd_lilac       ! Sync date (YYYYMMDD)
+    integer                :: yr_lilac        ! Sync current year
+    integer                :: mon_lilac       ! Sync current month
+    integer                :: day_lilac       ! Sync current day
+    integer                :: tod_lilac       ! Sync current time of day (sec)
     integer                :: dtime          ! time step increment (sec)
     integer                :: nstep          ! time step index
     logical                :: rstwr          ! .true. ==> write restart file before returning
@@ -808,9 +810,9 @@ contains
 
        call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_TimeGet(nexttime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc)
+       call ESMF_TimeGet(nexttime, yy=yr_lilac, mm=mon_lilac, dd=day_lilac, s=tod_lilac, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync, mon_sync, day_sync, tod_sync
+       write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_lilac, mon_lilac, day_lilac, tod_lilac
 
        call t_startf ('ctsm_run')
        call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic=.false.)
@@ -833,26 +835,35 @@ contains
 
     end do
 
-    ! Check that internal clock is in sync with master clock
-    ! Note that the driver clock has not been updated yet - so at this point
-    ! CTSM is actually 1 coupling intervals ahead of the driver clock
+    !--------------------------------
+    ! Check that internal clock is in sync with lilac driver clock
+    !--------------------------------
 
+    ! Get ctsm current time info
     call get_curr_date( yr, mon, day, tod, offset=-2*dtime )
     ymd = yr*10000 + mon*100 + day
     tod = tod
 
+    ! Get lilac clock info
     call ESMF_ClockGet( clock, currTime=currTime, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call ESMF_TimeGet( currTime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc )
+    call ESMF_TimeGet( currTime, yy=yr_lilac, mm=mon_lilac, dd=day_lilac, s=tod_lilac, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call shr_cal_ymd2date(yr_sync, mon_sync, day_sync, ymd_sync)
+    call shr_cal_ymd2date(yr_lilac, mon_lilac, day_lilac, ymd_lilac)
 
-    if ( (ymd /= ymd_sync) .and. (tod /= tod_sync) ) then
-       write(iulog,*)'ctsm ymd=',ymd     ,' ctsm tod= ',tod
-       write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
+    if (masterproc) then
+       write(iulog,*)'lilac ymd=',ymd     ,' lilac tod= ',tod
+    end if
+
+    ! Note that the driver clock has not been updated yet - so at this point
+    ! CTSM is actually 1 coupling intervals ahead of the driver clock
+
+    if ( (ymd /= ymd_lilac) .and. (tod /= tod_lilac) ) then
+       write(iulog,*)'ctsm  ymd=',ymd      ,' ctsm  tod= ',tod
+       write(iulog,*)'lilac ymd=',ymd_lilac,' lilac tod= ',tod_lilac
        rc = ESMF_FAILURE
-       call ESMF_LogWrite(subname//" CTSM clock not in sync with Master Sync clock",ESMF_LOGMSG_ERROR)
+       call ESMF_LogWrite(subname//" CTSM clock not in sync with lilac clock",ESMF_LOGMSG_ERROR)
     end if
 
     !--------------------------------
