@@ -159,7 +159,11 @@ program atm_driver
   !------------------------------------------------------------------------
 
   do nstep = atm_timestep_start, atm_timestep_stop
-     call lilac_run( )
+     if (nstep == atm_timestep_stop) then
+        call lilac_run(restart_alarm_is_ringing=.true., stop_alarm_is_ringing=.true.)
+     else
+        call lilac_run(restart_alarm_is_ringing=.false., stop_alarm_is_ringing=.false.)
+     end if
   end do
 
   !------------------------------------------------------------------------

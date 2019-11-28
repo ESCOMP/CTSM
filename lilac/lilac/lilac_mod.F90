@@ -13,6 +13,8 @@ module lilac_mod
   ! Clock, TimeInterval, and Times
   type(ESMF_Clock)           :: lilac_clock
   type(ESMF_Calendar),target :: lilac_calendar
+  type(ESMF_Alarm)           :: lilac_restart_alarm
+  type(ESMF_Alarm)           :: lilac_stop_alarm
 
   ! Gridded components and states in gridded components
   type(ESMF_GridComp)        :: atm_gcomp
@@ -40,12 +42,13 @@ contains
     ! This is called by the host atmosphere
     ! --------------------------------------------------------------------------------
 
-    use lilac_utils   ,  only : lilac_init_lnd2atm, lilac_init_atm2lnd
-    use lilac_utils   ,  only : gindex_atm, atm_mesh_filename
-    use lilac_cpl     ,  only : cpl_atm2lnd_register, cpl_lnd2atm_register
-    use lilac_atmcap  ,  only : lilac_atmos_register
-    use lnd_comp_esmf ,  only : lnd_register !ctsm routine
-    use shr_pio_mod   ,  only : shr_pio_init1
+    use lilac_utils   , only : lilac_init_lnd2atm, lilac_init_atm2lnd
+    use lilac_utils   , only : gindex_atm, atm_mesh_filename
+    use lilac_cpl     , only : cpl_atm2lnd_register, cpl_lnd2atm_register
+    use lilac_atmcap  , only : lilac_atmos_register
+    use lnd_comp_esmf , only : lnd_register !ctsm routine
+    use shr_pio_mod   , only : shr_pio_init1
+    use shr_sys_mod   , only : shr_sys_abort
 
     ! input/output variables
     integer          , intent(in) :: atm_global_index(:)
@@ -238,6 +241,18 @@ contains
        print *, trim(subname) // "---------------------------------------"
     end if
 
+    ! Add a restart alarm to the clock
+    lilac_restart_alarm = ESMF_AlarmCreate(lilac_clock, ringTime=StopTime, name='lilac_restart_alarm', rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort('error in initializing restart alarm')
+    end if
+
+    ! Add a stop alarm to the clock
+    lilac_stop_alarm = ESMF_AlarmCreate(lilac_clock, ringTime=StopTime, name='lilac_stop_alarm', rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort('error in initializing stop alarm')
+    end if
+
     ! -------------------------------------------------------------------------
     ! Initialze lilac_atm gridded component
     ! First Create the empty import and export states used to pass data
@@ -294,9 +309,13 @@ contains
 
   !========================================================================
 
-  subroutine lilac_run( )
+  subroutine lilac_run(restart_alarm_is_ringing, stop_alarm_is_ringing)
 
     use shr_sys_mod, only : shr_sys_abort
+
+    ! input/output variables
+    logical, intent(in) :: restart_alarm_is_ringing
+    logical, intent(in) :: stop_alarm_is_ringing
 
     ! local variables
     type(ESMF_State)            :: importState, exportState
@@ -310,6 +329,22 @@ contains
        print *,  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
        print *,  "               Lilac Run               "
        print *,  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    end if
+
+    ! Set the clock restart alarm if restart_alarm_ringing is true
+    if (restart_alarm_is_ringing) then
+       call ESMF_AlarmRingerOn(lilac_restart_alarm, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call shr_sys_abort("lilac error in running lilac atm_cap")
+       end if
+    end if
+
+    ! Set the clock stop alarm if stop_alarm_ringing is true
+    if (stop_alarm_is_ringing) then
+       call ESMF_AlarmRingerOn(lilac_stop_alarm, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call shr_sys_abort("lilac error in running lilac atm_cap")
+       end if
     end if
 
     ! Run lilac atmcap
