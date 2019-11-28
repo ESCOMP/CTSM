@@ -5,22 +5,19 @@ module lnd_import_export
   use shr_infnan_mod        , only : isnan => shr_infnan_isnan
   use shr_string_mod        , only : shr_string_listGetName, shr_string_listGetNum
   use shr_sys_mod           , only : shr_sys_abort
-  use clm_varctl            , only : iulog
+  use shr_const_mod         , only : SHR_CONST_TKFRZ, fillvalue=>SHR_CONST_SPVAL
+  use clm_varctl            , only : iulog, co2_ppmv, ndep_from_cpl
+  use clm_varcon            , only : rair, o2_molar_const
   use clm_time_manager      , only : get_nstep
+  use spmdMod               , only : masterproc
   use decompmod             , only : bounds_type
   use lnd2atmType           , only : lnd2atm_type
   use lnd2glcMod            , only : lnd2glc_type
   use atm2lndType           , only : atm2lnd_type
-  use glc2lndMod            , only : glc2lnd_type
   use domainMod             , only : ldomain
-  use spmdMod               , only : masterproc
-  use seq_drydep_mod        , only : seq_drydep_readnl, n_drydep, seq_drydep_init
-  use shr_megan_mod         , only : shr_megan_readnl, shr_megan_mechcomps_n
-  use shr_fire_emis_mod     , only : shr_fire_emis_readnl, shr_fire_emis_mechcomps_n
-  use shr_carma_mod         , only : shr_carma_readnl
-  use shr_ndep_mod          , only : shr_ndep_readnl
-  use glc_elevclass_mod     , only : glc_elevclass_init
+  use shr_megan_mod         , only : shr_megan_mechcomps_n  ! TODO: need to add a namelist read nere
   use lnd_shr_methods       , only : chkerr
+  use clm_instMod           , only : atm2lnd_inst, lnd2atm_inst, water_inst
 
   implicit none
   private ! except
@@ -45,18 +42,20 @@ module lnd_import_export
   integer                :: fldsFrLnd_num = 0
   type (fld_list_type)   :: fldsToLnd(fldsMax)
   type (fld_list_type)   :: fldsFrLnd(fldsMax)
-  integer, parameter     :: gridTofieldMap = 2 ! ungridded dimension is innermost
+  integer, parameter     :: gridTofieldMap = 2       ! ungridded dimension is innermost
+
+  logical                :: glc_present    = .false. ! .true. => running with a non-stubGLC model
+  logical                :: rof_prognostic = .false. ! .true. => running with a prognostic ROF model
 
   ! from atm->lnd
-  integer                :: ndep_nflds       ! number  of nitrogen deposition fields from atm->lnd/ocn
+  integer                :: ndep_nflds               ! number  of nitrogen deposition fields from atm->lnd/ocn
 
   ! from lnd->atm
-  integer                :: drydep_nflds     ! number of dry deposition velocity fields lnd-> atm
-  integer                :: megan_nflds      ! number of MEGAN voc fields from lnd-> atm
-  integer                :: emis_nflds       ! number of fire emission fields from lnd-> atm
+  integer                :: drydep_nflds             ! number of dry deposition velocity fields lnd-> atm
+  integer                :: emis_nflds               ! number of fire emission fields from lnd-> atm
 
-  integer                :: glc_nec = 10     ! number of glc elevation classes
-  integer, parameter     :: debug = 1        ! internal debug level
+  integer                :: glc_nec = 10             ! number of glc elevation classes
+  integer, parameter     :: debug = 1                ! internal debug level
 
   character(*),parameter :: F01 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d21.14)"
   character(*),parameter :: F02 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d26.19)"
@@ -64,44 +63,28 @@ module lnd_import_export
        __FILE__
   character(*),parameter :: modname =  "[lnd_import_export]: "
 
-  !===============================================================================
+!===============================================================================
 contains
-  !===============================================================================
+!===============================================================================
 
-  subroutine import_fields( gcomp, bounds, glc_present, rof_prognostic, &
-       atm2lnd_inst, glc2lnd_inst, wateratm2lndbulk_inst, rc)
+  subroutine import_fields( gcomp, bounds, rc)
 
     !---------------------------------------------------------------------------
     ! Convert the input data from the mediator to the land model
     !---------------------------------------------------------------------------
 
-    use clm_varctl           , only: co2_type, co2_ppmv, use_c13, ndep_from_cpl
-    use clm_varcon           , only: rair, o2_molar_const, c13ratio
-    use shr_const_mod        , only: SHR_CONST_TKFRZ
-    use Wateratm2lndBulkType , only: wateratm2lndbulk_type
-
     ! input/output variabes
-    type(ESMF_GridComp)                         :: gcomp
-    type(bounds_type)           , intent(in)    :: bounds       ! bounds
-    logical                     , intent(in)    :: glc_present    ! .true. => running with a non-stub GLC model
-    logical                     , intent(in)    :: rof_prognostic ! .true. => running with a prognostic ROF model
-    type(atm2lnd_type)          , intent(inout) :: atm2lnd_inst ! clm internal input data type
-    type(glc2lnd_type)          , intent(inout) :: glc2lnd_inst ! clm internal input data type
-    type(Wateratm2lndbulk_type) , intent(inout) :: wateratm2lndbulk_inst
-    integer                     , intent(out)   :: rc
+    type(ESMF_GridComp)             :: gcomp
+    type(bounds_type) , intent(in)  :: bounds       ! bounds
+    integer           , intent(out) :: rc
 
     ! local variables
     type(ESMF_State)          :: importState
-    type(ESMF_StateItem_Flag) :: itemFlag
-    real(r8), pointer         :: dataPtr(:)
-    character(len=128)        :: fldname
     integer                   :: num
     integer                   :: begg, endg                             ! bounds
     integer                   :: g,i,k                                  ! indices
     real(r8)                  :: e                                      ! vapor pressure (Pa)
     real(r8)                  :: qsat                                   ! saturation specific humidity (kg/kg)
-    real(r8)                  :: co2_ppmv_diag(bounds%begg:bounds%endg) ! temporary
-    real(r8)                  :: co2_ppmv_prog(bounds%begg:bounds%endg) ! temporary
     real(r8)                  :: co2_ppmv_val                           ! temporary
     real(r8)                  :: esatw                                  ! saturation vapor pressure over water (Pa)
     real(r8)                  :: esati                                  ! saturation vapor pressure over ice (Pa)
@@ -117,13 +100,8 @@ contains
     real(r8)                  :: forc_snowl(bounds%begg:bounds%endg)    ! snowfxl Atm flux  mm/s
     real(r8)                  :: forc_noy(bounds%begg:bounds%endg)
     real(r8)                  :: forc_nhx(bounds%begg:bounds%endg)
-    real(r8)                  :: frac_grc(bounds%begg:bounds%endg, 0:glc_nec)
     real(r8)                  :: topo_grc(bounds%begg:bounds%endg, 0:glc_nec)
-    real(r8)                  :: hflx_grc(bounds%begg:bounds%endg, 0:glc_nec)
-    real(r8)                  :: icemask_grc(bounds%begg:bounds%endg)
-    real(r8)                  :: icemask_coupled_fluxes_grc(bounds%begg:bounds%endg)
     character(len=*), parameter :: subname='(lnd_import_export:import_fields)'
-    !character(len=*     ) , parameter :: subname=trim(modname ) //' : (import_fields) '
 
     ! Constants to compute vapor pressure
     parameter (a0=6.107799961_r8    , a1=4.436518521e-01_r8, &
@@ -177,7 +155,7 @@ contains
     call state_getimport(importState, 'Sa_ptem', bounds, output=atm2lnd_inst%forc_th_not_downscaled_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_getimport(importState, 'Sa_shum', bounds, output=wateratm2lndbulk_inst%forc_q_not_downscaled_grc, rc=rc)
+    call state_getimport(importState, 'Sa_shum', bounds, output=water_inst%wateratm2lndbulk_inst%forc_q_not_downscaled_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'Sa_pbot', bounds, output=atm2lnd_inst%forc_pbot_not_downscaled_grc, rc=rc)
@@ -287,7 +265,7 @@ contains
     ! Set force flood back from river to 0
     !--------------------------
 
-    wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
+    water_inst%wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
 
     !--------------------------
     ! Derived quantities
@@ -295,7 +273,7 @@ contains
 
     do g = begg, endg
        forc_t    = atm2lnd_inst%forc_t_not_downscaled_grc(g)
-       forc_q    = wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g)
+       forc_q    = water_inst%wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g)
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
 
        atm2lnd_inst%forc_hgt_u_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of wind [m]
@@ -316,8 +294,8 @@ contains
        atm2lnd_inst%forc_solar_grc(g) = atm2lnd_inst%forc_solad_grc(g,1) + atm2lnd_inst%forc_solai_grc(g,1) + &
             atm2lnd_inst%forc_solad_grc(g,2) + atm2lnd_inst%forc_solai_grc(g,2)
 
-       wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
-       wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
+       water_inst%wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
+       water_inst%wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
 
 
        if (forc_t > SHR_CONST_TKFRZ) then
@@ -332,13 +310,13 @@ contains
           if ((forc_rainc(g)+forc_rainl(g)) > 0._r8) then
              forc_q = 0.95_r8*qsat
              !forc_q = qsat
-             wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
+             water_inst%wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
           endif
        endif
 
-       wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
-       wateratm2lndbulk_inst%volr_grc(g) = 0._r8
-       wateratm2lndbulk_inst%volrmch_grc(g) = 0._r8
+       water_inst%wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
+       water_inst%wateratm2lndbulk_inst%volr_grc(g) = 0._r8
+       water_inst%wateratm2lndbulk_inst%volrmch_grc(g) = 0._r8
     end do
 
     !--------------------------
@@ -359,7 +337,7 @@ contains
                ' ERROR: One of the solar fields (indirect/diffuse, vis or near-IR)'// &
                ' from the atmosphere model is negative or zero' )
        end if
-       if ( wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) < 0.0_r8 )then
+       if ( water_inst%wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) < 0.0_r8 )then
           call shr_sys_abort( subname//&
                ' ERROR: Bottom layer specific humidty sent from the atmosphere model is less than zero' )
        end if
@@ -373,42 +351,28 @@ contains
 
   !==============================================================================
 
-  subroutine export_fields( gcomp, bounds, glc_present, rof_prognostic, &
-       waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
+  subroutine export_fields(gcomp, bounds, rc)
 
     !-------------------------------
     ! Pack the export state
     !-------------------------------
 
-    use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
-
     ! input/output variables
-    type(ESMF_GridComp)                         :: gcomp
-    type(bounds_type)           , intent(in)    :: bounds       ! bounds
-    logical                     , intent(in)    :: glc_present
-    logical                     , intent(in)    :: rof_prognostic
-    type(waterlnd2atmbulk_type) , intent(inout) :: waterlnd2atmbulk_inst
-    type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst ! land to atmosphere exchange data type
-    type(lnd2glc_type)          , intent(inout) :: lnd2glc_inst ! land to atmosphere exchange data type
-    integer                     , intent(out)   :: rc
+    type(ESMF_GridComp)             :: gcomp
+    type(bounds_type) , intent(in)  :: bounds       ! bounds
+    integer           , intent(out) :: rc
 
-    !type(datawrapper) :: wrap2
     ! local variables
-    type(ESMF_State)   :: exportState
-    integer            :: i, g, num
-    real(r8)           :: array(bounds%begg:bounds%endg)
+    type(ESMF_State)            :: exportState
+    integer                     :: i, g, num
+    real(r8)                    :: array(bounds%begg:bounds%endg)
     character(len=*), parameter :: subname='(lnd_import_export:export_fields)'
     !---------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
 
-    ! Get export state
-    !call NUOPC_ModelGet(gcomp, exportState=exportState, rc=rc)
-    !if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     ! Get export state (ESMF)
     call ESMF_GridCompGet(gcomp, exportState=exportState, rc=rc) ! do we need the clock now?
-    !call ESMF_GridCompGet(gcomp, exportState, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------
@@ -425,8 +389,7 @@ contains
     call state_setexport(exportState, 'Sl_t', bounds, input=lnd2atm_inst%t_rad_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Sl_snowh', bounds, &
-         input=waterlnd2atmbulk_inst%h2osno_grc, rc=rc)
+    call state_setexport(exportState, 'Sl_snowh', bounds, input=water_inst%waterlnd2atmbulk_inst%h2osno_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_setexport(exportState, 'Sl_avsdr', bounds, input=lnd2atm_inst%albd_grc(bounds%begg:,1), rc=rc)
@@ -444,7 +407,7 @@ contains
     call state_setexport(exportState, 'Sl_tref', bounds, input=lnd2atm_inst%t_ref2m_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Sl_qref', bounds, input=waterlnd2atmbulk_inst%q_ref2m_grc, rc=rc)
+    call state_setexport(exportState, 'Sl_qref', bounds, input=water_inst%waterlnd2atmbulk_inst%q_ref2m_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_setexport(exportState, 'Sl_u10', bounds, input=lnd2atm_inst%u_ref10m_grc, rc=rc)
@@ -465,7 +428,7 @@ contains
     call state_setexport(exportState, 'Fall_lwup', bounds, input=lnd2atm_inst%eflx_lwrad_out_grc, minus=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Fall_evap', bounds, input=waterlnd2atmbulk_inst%qflx_evap_tot_grc, minus=.true., rc=rc)
+    call state_setexport(exportState, 'Fall_evap', bounds, input=water_inst%waterlnd2atmbulk_inst%qflx_evap_tot_grc, minus=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_setexport(exportState, 'Fall_swnet', bounds, input=lnd2atm_inst%fsa_grc, rc=rc)
@@ -493,8 +456,7 @@ contains
     call state_setexport(exportState, 'Sl_fv', bounds, input=lnd2atm_inst%fv_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Sl_soilw', bounds, &
-         input=waterlnd2atmbulk_inst%h2osoi_vol_grc(:,1), rc=rc)
+    call state_setexport(exportState, 'Sl_soilw', bounds, input=water_inst%waterlnd2atmbulk_inst%h2osoi_vol_grc(:,1), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! dry dep velocities
@@ -529,50 +491,32 @@ contains
     ! -----------------------
 
     ! surface runoff is the sum of qflx_over, qflx_h2osfc_surf
-    !    do g = bounds%begg,bounds%endg
-    !       array(g) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(g) + waterlnd2atmbulk_inst%qflx_rofliq_h2osfc_grc(g)
-    !    end do
-    call state_setexport(exportState, 'Flrl_rofsur', bounds, input=waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc, rc=rc)
+    ! do g = bounds%begg,bounds%endg
+    !    array(g) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(g) + water_inst%waterlnd2atmbulk_inst%qflx_rofliq_h2osfc_grc(g)
+    ! end do
+
+    call state_setexport(exportState, 'Flrl_rofsur', bounds, input=water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! subsurface runoff is the sum of qflx_drain and qflx_perched_drain
     do g = bounds%begg,bounds%endg
-       array(g) = waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(g) + waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
+       array(g) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(g) + &
+                  water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
     end do
     call state_setexport(exportState, 'Flrl_rofsub', bounds, input=array, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! qgwl sent individually to coupler
-    call state_setexport(exportState, 'Flrl_rofgwl', bounds, input=waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc, rc=rc)
+    call state_setexport(exportState, 'Flrl_rofgwl', bounds, input=water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ice  sent individually to coupler
-    call state_setexport(exportState, 'Flrl_rofi', bounds, input=waterlnd2atmbulk_inst%qflx_rofice_grc, rc=rc)
+    call state_setexport(exportState, 'Flrl_rofi', bounds, input=water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! irrigation flux to be removed from main channel storage (negative)
-    call state_setexport(exportState, 'Flrl_irrig', bounds, input=waterlnd2atmbulk_inst%qirrig_grc, minus=.true., rc=rc)
+    call state_setexport(exportState, 'Flrl_irrig', bounds, input=water_inst%waterlnd2atmbulk_inst%qirrig_grc, minus=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! -----------------------
-    ! output to glc
-    ! -----------------------
-
-    ! We could avoid setting these fields if glc_present is .false., if that would
-    ! help with performance. (The downside would be that we wouldn't have these fields
-    ! available for diagnostic purposes or to force a later T compset with dlnd.)
-
-    do num = 0,glc_nec
-       call state_setexport(exportState, 'Sl_tsrf_elev', bounds, input=lnd2glc_inst%tsrf_grc(:,num), &
-            ungridded_index=num+1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport(exportState, 'Sl_topo_elev', bounds, input=lnd2glc_inst%topo_grc(:,num), &
-            ungridded_index=num+1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport(exportState, 'Flgl_qice_elev', bounds, input=lnd2glc_inst%qice_grc(:,num), &
-            ungridded_index=num+1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end do
 
   end subroutine export_fields
 
@@ -735,8 +679,6 @@ contains
     ! ----------------------------------------------
     ! Map input array to export state field
     ! ----------------------------------------------
-
-    use shr_const_mod, only : fillvalue=>SHR_CONST_SPVAL
 
     ! input/output variables
     type(ESMF_State)    , intent(inout) :: state

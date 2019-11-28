@@ -4,29 +4,37 @@ module lnd_comp_esmf
   ! This is the ESMF cap for CTSM
   !----------------------------------------------------------------------------
 
+  ! External libraries
   use ESMF
+  use mpi               , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE
   use mct_mod           , only : mct_world_init, mct_world_clean, mct_die
+  use shr_pio_mod       , only : shr_pio_init1, shr_pio_init2
+  use perf_mod          , only : t_startf, t_stopf, t_barrierf
+
+  ! ctsm and share code
   use shr_kind_mod      , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod       , only : shr_sys_abort
-  use shr_file_mod      , only : shr_file_getlogunit, shr_file_setlogunit
-  use shr_orb_mod       , only : shr_orb_decl
+  use shr_file_mod      , only : shr_file_setLogUnit, shr_file_getLogUnit 
+  use shr_orb_mod       , only : shr_orb_decl, shr_orb_params
   use shr_cal_mod       , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
   use spmdMod           , only : masterproc, mpicom, spmd_init
   use decompMod         , only : bounds_type, ldecomp, get_proc_bounds
   use domainMod         , only : ldomain
   use controlMod        , only : control_setNL
   use clm_varorb        , only : eccen, obliqr, lambm0, mvelpp
-  use clm_varctl        , only : single_column, clm_varctl_set, iulog
+  use clm_varctl        , only : clm_varctl_set, iulog, finidat 
   use clm_varctl        , only : nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl        , only : inst_index, inst_suffix, inst_name
   use clm_time_manager  , only : set_timemgr_init, advance_timestep
   use clm_time_manager  , only : set_nextsw_cday, update_rad_dtime
   use clm_time_manager  , only : get_nstep, get_step_size
-  use clm_time_manager  , only : get_curr_date, get_curr_calday
+  use clm_time_manager  , only : get_curr_date, get_curr_calday, set_nextsw_cday
   use clm_initializeMod , only : initialize1, initialize2
   use clm_driver        , only : clm_drv
-  use perf_mod          , only : t_startf, t_stopf, t_barrierf
   use lnd_import_export , only : import_fields, export_fields
   use lnd_shr_methods   , only : chkerr, state_diagnose
+  use spmdMod           , only : masterproc, spmd_init
+  use glc_elevclass_mod , only : glc_elevclass_init
 
   implicit none
   private                         ! By default make data private except
@@ -40,15 +48,14 @@ module lnd_comp_esmf
   ! Private module data
   !--------------------------------------------------------------------------
 
-  integer         , parameter     :: dbug_flag = 6
-  type(ESMF_Field), public, save  :: field
+  integer         , parameter    :: dbug_flag = 6
+  type(ESMF_Field), public, save :: field
 
-  logical                    :: glc_present    = .false.      ! .true. => running with a non-stubGLC model
-  logical                    :: rof_prognostic = .false.      ! .true. => running with a prognostic ROF model
-  integer, parameter         :: memdebug_level=1
-  integer, parameter         :: dbug = 1
-  character(*)    ,parameter :: modName =  "lnd_comp_esmf"
-  character(*),parameter     :: u_FILE_u = &
+  integer                        :: glc_nec = 10   ! number of glc elevation classes
+  integer,          parameter    :: memdebug_level=1
+  integer,          parameter    :: dbug = 1
+  character(*)    , parameter    :: modName =  "lnd_comp_esmf"
+  character(*),     parameter    :: u_FILE_u = &
        __FILE__!
   type(ESMF_Mesh)         :: Emesh, EMeshTemp, lnd_mesh      ! esmf meshes
 
@@ -91,23 +98,6 @@ contains
     ! Initialize land surface model and obtain relevant atmospheric model arrays
     ! back from (i.e. albedos, surface temperature and snow cover over land).
 
-    use shr_file_mod      , only : shr_file_setLogUnit, shr_file_setLogLevel
-    use shr_file_mod      , only : shr_file_getLogUnit, shr_file_getLogLevel
-    use shr_file_mod      , only : shr_file_getUnit, shr_file_setIO
-    use clm_time_manager  , only : get_nstep, get_step_size, set_timemgr_init, set_nextsw_cday
-    use clm_initializeMod , only : initialize1, initialize2
-    use clm_varctl        , only : finidat,single_column, clm_varctl_set, noland
-    use clm_varctl        , only : inst_index, inst_suffix, inst_name
-    use clm_varctl        , only : nsrStartup, nsrContinue, nsrBranch
-    use clm_varorb        , only : eccen, obliqr, lambm0, mvelpp
-    use controlMod        , only : control_setNL
-    use spmdMod           , only : masterproc, spmd_init
-    use clm_instMod       , only : water_inst, lnd2atm_inst, lnd2glc_inst
-    use mpi               , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE
-    use shr_pio_mod       , only : shr_pio_init1, shr_pio_init2
-    use glc_elevclass_mod , only : glc_elevclass_init
-    use shr_orb_mod       , only : shr_orb_params
-
     ! input/output variables
     type(ESMF_GridComp)  :: comp         ! CLM gridded component
     type(ESMF_State)     :: import_state ! CLM import state
@@ -144,7 +134,7 @@ contains
     logical                        :: brnch_retain_casename           ! flag if should retain the case name on a branch start type
     logical                        :: atm_aero                        ! Flag if aerosol data sent from atm model
     integer                        :: lbnum                           ! input to memory diagnostic
-    integer                        :: shrlogunit,shrloglev            ! old values for log unit and log level
+    integer                        :: shrlogunit                      ! old values for log unit and log level
     integer                        :: logunit                         ! original log unit
     type(bounds_type)              :: bounds                          ! bounds
     integer                        :: nfields
@@ -183,7 +173,6 @@ contains
     type(ESMF_FieldBundle)         :: c2l_fb
     type(ESMF_FieldBundle)         :: l2c_fb
     type(ESMF_State)               :: importState, exportState
-    integer                        :: glc_nec = 10                    ! number of glc elevation classes
     integer                        :: compid                          ! component id
     character(len=32), parameter   :: sub = 'lnd_init'
     character(len=*),  parameter   :: format = "('("//trim(sub)//") :',A)"
@@ -251,35 +240,23 @@ contains
     !--- Log File ---
     !------------------------------------------------------------------------
 
-    inst_name  = 'LND'
-    inst_index  = 1
-    inst_suffix = ""
+    inst_name  = 'LND'; inst_index  = 1; inst_suffix = ""
 
     ! Initialize io log unit
-    !! TODO: Put this in a subroutine.....
     call shr_file_getLogUnit (shrlogunit)
     if (masterproc) then
-       inquire(file='lnd_modelio.nml'//trim(inst_suffix),exist=exists)
-       if (exists) then
-          iulog = shr_file_getUnit()
-          call shr_file_setIO('lnd_modelio.nml'//trim(inst_suffix),iulog)
-       end if
        write(iulog,format) "CLM land model initialization"
     else
        iulog = shrlogunit
     end if
-
-    call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (iulog)
 
     !------------------------------------------------------------------------
     !--- Orbital Values ---
     !------------------------------------------------------------------------
 
-
     ! TODO: orbital values should be provided by lilac - but for now lets use defaults
-    !! hard wire these these in and we can decide on maybe having a
-    !namelist/
+    !! hard wire these these in and we can decide on maybe having a namelist/
 
     !call shr_cal_date2ymd(ymd,year,month,day)
     !orb_cyear = orb_iyear + (year - orb_iyear_align)
@@ -370,8 +347,6 @@ contains
     call clm_varctl_set(caseid_in=caseid, nsrest_in=nsrest)
     call ESMF_LogWrite(subname//"default values for run control variables are set...", ESMF_LOGMSG_INFO)
 
-
-
     !----------------------
     ! Initialize glc_elevclass module
     !----------------------
@@ -390,9 +365,6 @@ contains
     ! obtain global index array for just land points which includes mask=0 or ocean points
     call get_proc_bounds( bounds )
 
-    !print ,* "bound is :", bounds
-    !print ,* "bounds%begg :", bounds%begg
-    !print ,* "bounds%endg : ", bounds%endg
     nlnd = bounds%endg - bounds%begg + 1
     allocate(gindex_lnd(nlnd))
     !print ,* "nlnd is :", nlnd
@@ -520,28 +492,15 @@ contains
     call ESMF_StateAdd(export_state, fieldbundleList = (/l2c_fb/), rc=rc)
     !call ESMF_StateAdd(exportState, fieldbundleList = (/l2c_fb/), rc=rc)
 
-
-
-
-
-
-
-
-
-
-
     !--------------------------------
     ! Create land export state
     !--------------------------------
     call ESMF_LogWrite(subname//"Creating land export state", ESMF_LOGMSG_INFO)
 
-    ! FIXME (NS, 2019-07-30)
-    ! FIX THIS EXPORT STATES!!!!!! MAYBE REWRITE WITH THE ORIGINAL STRUCTURE
-    ! IN MIND
-
     ! Fill in export state at end of initialization
-    call export_fields(comp, bounds, glc_present, rof_prognostic, &
-         water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
+    call export_fields(comp, bounds, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -555,7 +514,6 @@ contains
        call ESMF_TimeGet( currTime, dayOfYear_r8=nextsw_cday, rc=rc )
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
     end if
-
 
     ! Set nextsw_cday
     call set_nextsw_cday( nextsw_cday )
@@ -583,11 +541,6 @@ contains
        call State_diagnose(export_state, subname//':ExportState',rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
-
-    ! Reset shr logging to original values
-
-    call shr_file_setLogUnit (shrlogunit)
-    call shr_file_setLogLevel(shrloglev)
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -631,10 +584,6 @@ contains
     ! Run CTSM
     !------------------------
 
-    use clm_instMod        , only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
-    use lnd_import_export , only : import_fields, export_fields
-    use clm_instMod      , only : water_inst, lnd2atm_inst, lnd2glc_inst
-
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp           ! CLM gridded component
     type(ESMF_State)     :: import_state    ! CLM import state
@@ -675,20 +624,12 @@ contains
     real(r8)               :: eccf           ! earth orbit eccentricity factor
     type(bounds_type)      :: bounds         ! bounds
     character(len=32)      :: rdate          ! date char string for restart file names
-    integer                :: shrlogunit ! original log unit
     character(len=*),parameter  :: subname=trim(modName)//':[lnd_run] '
-
     character(*),parameter :: F02 = "('[lnd_comp_esmf] ',a, d26.19)"
     !-------------------------------------------------------------------------------
 
-
-
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
-
-    call shr_file_getLogUnit (shrlogunit)
-    call shr_file_setLogUnit (iulog)
-    call ESMF_LogWrite(subname//' shr_file_getLogunits....', ESMF_LOGMSG_INFO)
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -718,16 +659,18 @@ contains
     !read(cvalue,*) mvelpp
 
     !--------------------------------
+    ! Get processor bounds
+    !--------------------------------
+
+    call get_proc_bounds(bounds)
+
+    !--------------------------------
     ! Unpack import state
     !--------------------------------
 
     call t_startf ('lc_lnd_import')
-
-    call get_proc_bounds(bounds)
-    call ESMF_LogWrite(subname//'after get_proc_bounds', ESMF_LOGMSG_INFO)
-    call import_fields( gcomp       , bounds, glc_present, rof_prognostic, atm2lnd_inst, glc2lnd_inst, water_inst%wateratm2lndbulk_inst, rc )
+    call import_fields( gcomp, bounds, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     call t_stopf ('lc_lnd_import')
 
     !--------------------------------
@@ -843,27 +786,25 @@ contains
 
        if (masterproc) then
           write(iulog,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-          write(iulog,*  ) 'doalb           :  ', doalb
+          write(iulog,*) 'doalb           :  ', doalb
           write(iulog,*) 'call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, decl'
           write(iulog,*) 'call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0,  obliqr, decl'
-          write(iulog,F02) 'calday is  :  ', calday
-          write(iulog,F02) 'eccen is   :  ', eccen
-          write(iulog,F02) 'mvelpp is  :  ', mvelpp
-          write(iulog,F02) 'lambm0 is  :  ', lambm0
-          write(iulog,F02) 'obliqr is  :  ', obliqr
+          write(iulog,F02) 'calday is   :  ', calday
+          write(iulog,F02) 'eccen is    :  ', eccen
+          write(iulog,F02) 'mvelpp is   :  ', mvelpp
+          write(iulog,F02) 'lambm0 is   :  ', lambm0
+          write(iulog,F02) 'obliqr is   :  ', obliqr
           write(iulog,F02) 'clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)'
-          write(iulog,F02) 'declin is       :  ', declin
-          write(iulog,F02) 'declinp1 is     :  ', declinp1
-          write(iulog,F02) 'rof_prognostic  :  ', rof_prognostic
+          write(iulog,F02) 'declin is   :  ', declin
+          write(iulog,F02) 'declinp1 is :  ', declinp1
           write(iulog,*  ) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
        end if
 
        call t_stopf ('shr_orb_decl')
 
-       call t_startf ('ctsm_run')
-
        ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
        ! the timestep and is preferred for restart file names
+       ! TODO: is this correct for lilac?
 
        call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -871,8 +812,8 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync, mon_sync, day_sync, tod_sync
 
-       call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
-
+       call t_startf ('ctsm_run')
+       call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic=.false.)
        call t_stopf ('ctsm_run')
 
        !--------------------------------
@@ -880,12 +821,8 @@ contains
        !--------------------------------
 
        call t_startf ('lc_lnd_export')
-
-       call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
-            water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
-       !call export_fields(exportState, bounds, water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, rc)
-       !if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
+       call export_fields(gcomp, bounds,  rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call t_stopf ('lc_lnd_export')
 
        !--------------------------------
@@ -932,12 +869,6 @@ contains
     !      if (ChkErr(rc,__LINE__,u_FILE_u)) return
     !   end if
     !end if
-
-    !--------------------------------
-    ! Reset shr logging to my original values
-    !--------------------------------
-
-    call shr_file_setLogUnit (shrlogunit)
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
