@@ -17,7 +17,7 @@ module lnd_comp_esmf
   use shr_file_mod      , only : shr_file_setLogUnit, shr_file_getLogUnit
   use shr_orb_mod       , only : shr_orb_decl, shr_orb_params
   use shr_cal_mod       , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
-  use spmdMod           , only : masterproc, mpicom, spmd_init
+  use spmdMod           , only : masterproc, spmd_init, mpicom
   use decompMod         , only : bounds_type, ldecomp, get_proc_bounds
   use domainMod         , only : ldomain
   use controlMod        , only : control_setNL
@@ -66,16 +66,11 @@ contains
     ! input/output argumenents
     type(ESMF_GridComp)  :: comp  ! CLM grid component
     integer, intent(out) :: rc    ! return status
-
-    ! local variables
-    character(len=*), parameter :: subname=trim(modname)//': [lnd_register] '
     !-----------------------------------------------------------------------
 
-    print *, "in lnd register routine"
     rc = ESMF_SUCCESS
 
     call ESMF_LogSet ( flush =.true.)
-    call ESMF_LogWrite(subname//"lnd gridcompset entry points setting ....!", ESMF_LOGMSG_INFO)
 
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, lnd_init, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
@@ -86,7 +81,8 @@ contains
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, lnd_final, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    call ESMF_LogWrite(subname//"lnd gridcompset entry points finished!", ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite("lnd gridcompset entry points finished!", ESMF_LOGMSG_INFO)
+
   end subroutine lnd_register
 
   !===============================================================================
@@ -104,145 +100,139 @@ contains
     integer, intent(out) :: rc           ! Return code
 
     ! local variable
-    type(ESMF_Mesh)                :: lnd_mesh
-    character(ESMF_MAXSTR)         :: lnd_mesh_filename     ! full filepath of land mesh file
-    integer                        :: ierr
-    integer                        :: mpicom_lnd, mpicom_vm, gsize
-    type(ESMF_DistGrid)            :: distgrid
-    type(ESMF_VM)                  :: vm
-    integer                        :: lsize                 ! size of attribute vector
-    integer                        :: g,i,j                 ! indices
+    integer                        :: ierr                  ! error code
+    integer                        :: n,g,i,j               ! indices
     logical                        :: exists                ! true if file exists
     real(r8)                       :: nextsw_cday           ! calday from clock of next radiation computation
     character(len=CL)              :: caseid                ! case identifier name
     character(len=CL)              :: ctitle                ! case description title
     character(len=CL)              :: starttype             ! start-type (startup, continue, branch, hybrid)
-    character(len=CL)              :: calendar              ! calendar type name
-    character(len=CL)              :: hostname              ! hostname of machine running on
-    character(len=CL)              :: version               ! Model version
-    character(len=CL)              :: username              ! user running the model
     integer                        :: nsrest                ! clm restart type
+    logical                        :: brnch_retain_casename ! flag if should retain the case name on a branch start type
+    logical                        :: atm_aero              ! Flag if aerosol data sent from atm model
+    integer                        :: lbnum                 ! input to memory diagnostic
+    integer                        :: shrlogunit            ! old values for log unit and log level
+    type(bounds_type)              :: bounds                ! bounds
+
+    ! generation of field bundles
+    type(ESMF_State)               :: importState, exportState
+    type(ESMF_FieldBundle)         :: c2l_fb
+    type(ESMF_FieldBundle)         :: l2c_fb
+
+    ! mesh generation
+    type(ESMF_Mesh)                :: lnd_mesh
+    character(ESMF_MAXSTR)         :: lnd_mesh_filename     ! full filepath of land mesh file
+    integer                        :: nlnd, nocn            ! local size ofarrays
+    integer, pointer               :: gindex(:)             ! global index space for land and ocean points
+    integer, pointer               :: gindex_lnd(:)         ! global index space for just land points
+    integer, pointer               :: gindex_ocn(:)         ! global index space for just ocean points
+    type(ESMF_DistGrid)            :: distgrid
+
+    ! clock info
+    character(len=CL)              :: calendar              ! calendar type name
+    type(ESMF_CalKind_Flag)        :: caltype               ! calendar type from lilac clock
+    integer                        :: curr_tod, curr_ymd    ! current time info
+    integer                        :: yy, mm, dd            ! query output from lilac clock
+    integer                        :: dtime_lilac           ! coupling time-step from the input lilac clock
     integer                        :: ref_ymd               ! reference date (YYYYMMDD)
     integer                        :: ref_tod               ! reference time of day (sec)
     integer                        :: start_ymd             ! start date (YYYYMMDD)
     integer                        :: start_tod             ! start time of day (sec)
     integer                        :: stop_ymd              ! stop date (YYYYMMDD)
     integer                        :: stop_tod              ! stop time of day (sec)
-    logical                        :: brnch_retain_casename ! flag if should retain the case name on a branch start type
-    logical                        :: atm_aero              ! Flag if aerosol data sent from atm model
-    integer                        :: lbnum                 ! input to memory diagnostic
-    integer                        :: shrlogunit            ! old values for log unit and log level
-    integer                        :: logunit               ! original log unit
-    type(bounds_type)              :: bounds                ! bounds
-    integer                        :: nfields
-    integer                        :: ncomps = 1
-    integer, pointer               :: comps(:)              ! array with component ids
-    integer, pointer               :: comms(:)              ! array with mpicoms
-    character(len=32), allocatable :: compLabels(:)
-    integer,allocatable            :: comp_id(:)            ! for pio init2
-    character(len=64),allocatable  :: comp_name(:)          ! for pio init2
-    integer,allocatable            :: comp_comm(:)          ! for pio_init2
-    logical,allocatable            :: comp_iamin(:)         ! for pio init2
-    integer,allocatable            :: comp_comm_iam(:)      ! for pio_init2
-    integer                        :: ymd                   ! CTSM current date (YYYYMMDD)
-    integer                        :: orb_iyear_align       ! associated with model year
-    integer                        :: orb_cyear             ! orbital year for current orbital computation
-    integer                        :: orb_iyear             ! orbital year for current orbital computation
-    integer                        :: orb_eccen             ! orbital year for current orbital computation
-    integer                        :: dtime_lilac           ! coupling time-step from the input lilac clock
-    integer                        :: curr_tod, curr_ymd  
-    integer                        :: yy, mm, dd
     type(ESMF_Time)                :: currTime              ! Current time
     type(ESMF_Time)                :: startTime             ! Start time
     type(ESMF_Time)                :: stopTime              ! Stop time
     type(ESMF_Time)                :: refTime               ! Ref time
-    type(ESMF_TimeInterval)        :: timeStep
-    type(ESMF_Calendar)            :: esmf_calendar         ! esmf calendar
-    type(ESMF_CalKind_Flag)        :: esmf_caltype          ! esmf calendar type
-    integer, pointer               :: gindex(:)             ! global index space for land and ocean points
-    integer, pointer               :: gindex_lnd(:)         ! global index space for just land points
-    integer, pointer               :: gindex_ocn(:)         ! global index space for just ocean points
-    integer                        :: nlnd, nocn            ! local size ofarrays
-    integer                        :: n                     ! indices
-    integer                        :: dtime                 ! time step increment (sec)
-    type(ESMF_FieldBundle)         :: c2l_fb
-    type(ESMF_FieldBundle)         :: l2c_fb
-    type(ESMF_State)               :: importState, exportState
-    integer                        :: compid                ! component id
-    character(len=*), parameter    :: subname=trim(modName)//': [lnd_init] '
+    type(ESMF_TimeInterval)        :: timeStep              ! time step from lilac clock
+
+    ! orbital info
+    integer                        :: orb_iyear_align       ! associated with model year
+    integer                        :: orb_cyear             ! orbital year for current orbital computation
+    integer                        :: orb_iyear             ! orbital year for current orbital computation
+    integer                        :: orb_eccen             ! orbital year for current orbital computation
+
+    ! for pio_init2 and mct
+    type(ESMF_VM)               :: vm
+    integer                     :: mpicom_vm
+    integer                     :: ncomps = 1
+    integer, pointer            :: mycomms(:)                 ! for mct
+    integer, pointer            :: myids(:)                   ! for mct
+    integer                     :: compids(1) = (/1/)         ! for both mct and pio_init2 - array with component ids
+    integer                     :: comms(1)                   ! for both mct and pio_init2 - array with mpicoms
+    character(len=32)           :: compLabels(1) = (/'LND'/)  ! for pio_init2
+    character(len=64)           :: comp_name(1) = (/'LND'/)   ! for pio_init2
+    logical                     :: comp_iamin(1) = (/.true./) ! for pio init2
+    integer                     :: iam(1)                     ! for pio_init2
+    character(len=*), parameter :: subname=trim(modName)//': (lnd_init) '
     !------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' is called!', ESMF_LOGMSG_INFO)
 
     !------------------------------------------------------------------------
-    ! Initialize clm MPI communicator
+    ! Query VM for local PET and mpi communicator
     !------------------------------------------------------------------------
+
+    ! NOTE : both MPI_INIT and PIO_INIT1 are initialized in lilac_mod.F90
+
     call ESMF_VMGetCurrent(vm, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
 
-    call ESMF_LogWrite(subname//"ESMF_VMGetCurrent", ESMF_LOGMSG_INFO)
-    call ESMF_VMPrint (vm, rc = rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-
-    call ESMF_VMGet(vm, mpiCommunicator=mpicom_vm, rc=rc)
+    call ESMF_VMGet(vm, mpiCommunicator=mpicom_vm, localPet=iam(1), rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
     call ESMF_LogWrite(subname//"ESMF_VMGet", ESMF_LOGMSG_INFO)
 
-    ! duplicate the mpi communicator from the current VM
-    call MPI_Comm_dup(mpicom_vm, mpicom_lnd, rc)
-    call ESMF_LogWrite(subname//"MPI_Comm_dup...", ESMF_LOGMSG_INFO)
+    !call ESMF_VMPrint (vm, rc = rc)
+    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
 
-!!!! NS : BOTH MPI_INIT and PIO_INIT1 are in lilac_mod.F90
-
+    comms(1) = mpicom_vm
 
     !------------------------------------------------------------------------
-    ! Initialize mct
-    ! (needed for data models and cice prescribed capability)
-    ! (needed for data model share code - e.g. nitrogen deposition)
+    ! Initialize pio_init2 TODO: is this needed here?
     !------------------------------------------------------------------------
-    ! TODO: FIX THIS PLEASE!!!!
 
-    allocate(comms(1), comps(1), compLabels(1), comp_iamin(1), comp_comm_iam(1), comp_name(1),stat=ierr)
+    call shr_pio_init2(compids, compLabels, comp_iamin, comms, iam)
+    call ESMF_LogWrite(subname//"initialized shr_pio_init2 ...", ESMF_LOGMSG_INFO)
 
-    comms(1)      = mpicom_lnd !or call MPI_Comm_dup(mpicom_vm, comms(1), ierr)
-    comps(1)      = 1
-    compLabels(1) = 'LND'
-    comp_iamin(1) = .true.
-    comp_name(1)  = 'LND'
+    !------------------------------------------------------------------------
+    ! Initialize mct - needed for data model share code - e.g. nitrogen deposition
+    !------------------------------------------------------------------------
 
-    call ESMF_VMGet(vm, mpiCommunicator=comms(1), localPet=comp_comm_iam(1), rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+    allocate(mycomms(1), myids(1))
+    mycomms = (/mpicom_vm/) ; myids = (/1/)
 
-    call shr_pio_init2(comps, compLabels, comp_iamin, comms, comp_comm_iam)
+    call mct_world_init(ncomps, mpicom_vm, mycomms, myids)
+    call ESMF_LogWrite(subname//"initialized mct ...  ", ESMF_LOGMSG_INFO)
 
-    call ESMF_LogWrite(subname//"after shr_pio_init2", ESMF_LOGMSG_INFO)
+    !------------------------------------------------------------------------
+    ! Initialize internal ctsm MPI info
+    !------------------------------------------------------------------------
 
-    call ESMF_LogWrite(subname//"Now calling mct_world_init", ESMF_LOGMSG_INFO)
-    call mct_world_init(ncomps, mpicom_lnd, comms, comps)
-    call ESMF_LogWrite(subname//"mct world initialized! ", ESMF_LOGMSG_INFO)
-
-    !deallocate(comms, comps, compLabels, comp_iamin, comp_comm_iam, comp_name)   ???
-
-    ! Initialize model mpi info
-    compid = 1
-    call spmd_init( mpicom_lnd, compid)
+    call spmd_init( clm_mpicom=mpicom_vm, lndid=1)
     call ESMF_LogWrite(subname//"initialized model mpi info using spmd_init", ESMF_LOGMSG_INFO)
 
     !------------------------------------------------------------------------
     !--- Log File ---
     !------------------------------------------------------------------------
 
+    ! TODO: by default iulog = 6 in clm_varctl - this should be generalized so that we
+    ! can control the output log file for ctsm running with a lilac driver
+
     inst_name  = 'LND'; inst_index  = 1; inst_suffix = ""
 
     ! Initialize io log unit
     call shr_file_getLogUnit (shrlogunit)
-    if (masterproc) then
-       write(iulog,*) trim(subname) // "CLM land model initialization"
-    else
-       iulog = shrlogunit
+    if (.not. masterproc) then
+       iulog = shrlogunit  ! All shr code output will go to iulog for masterproc
     end if
     call shr_file_setLogUnit (iulog)
+
+    if (masterproc) then
+       write(iulog,*) "========================================="
+       write(iulog,*) " starting (lnd_comp_esmf): lnd_comp_init "
+       write(iulog,*) " CLM land model initialization"
+    end if
 
     !------------------------------------------------------------------------
     !--- Orbital Values ---
@@ -265,14 +255,12 @@ contains
     !lambm0      =  -3.247249566152933E-0020
     !obliqr      =  0.409101122579779
 
-    !if ((debug >1) .and. (masterproc)) then
     if (masterproc) then
-       write(iulog,*) trim(subname) // 'shr_obs_params is setting these:', eccen
-       write(iulog,*) trim(subname) // 'eccen is : ', eccen
-       write(iulog,*) trim(subname) // 'mvelpp is : ', mvelpp
-
-       write(iulog,*) trim(subname) // 'lambm0 is : ', lambm0
-       write(iulog,*) trim(subname) // 'obliqr is : ', obliqr
+       write(iulog,*) 'shr_obs_params is setting the following:'
+       write(iulog,*) 'eccen is  : ', eccen
+       write(iulog,*) 'mvelpp is : ', mvelpp
+       write(iulog,*) 'lambm0 is : ', lambm0
+       write(iulog,*) 'obliqr is : ', obliqr
     end if
 
     !----------------------
@@ -308,20 +296,20 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call shr_cal_ymd2date(yy,mm,dd,ref_ymd)
 
-    call ESMF_TimeGet( currTime, calkindflag=esmf_caltype, rc=rc )
+    call ESMF_TimeGet( currTime, calkindflag=caltype, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    if (esmf_caltype == ESMF_CALKIND_NOLEAP) then
+    if (caltype == ESMF_CALKIND_NOLEAP) then
        calendar = shr_cal_noleap
-    else if (esmf_caltype == ESMF_CALKIND_GREGORIAN) then
+    else if (caltype == ESMF_CALKIND_GREGORIAN) then
        calendar = shr_cal_gregorian
     else
        call shr_sys_abort( subname//'ERROR:: bad calendar for ESMF' )
     end if
 
-    ! The following sets the module variables in clm_time_mamanger.F90 - BUT DOES NOT intialize the 
+    ! The following sets the module variables in clm_time_mamanger.F90 - BUT DOES NOT intialize the
     ! clock. Routine timemgr_init (called by initialize1) initializes the clock using the module variables
-    ! that have been set via calls to set_timemgr_init. 
+    ! that have been set via calls to set_timemgr_init.
 
     call set_timemgr_init( &
          calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
@@ -339,7 +327,7 @@ contains
     ! Initialize glc_elevclass module
     !----------------------
 
-    call glc_elevclass_init(glc_nec)  ! TODO: is this needed still? 
+    call glc_elevclass_init(glc_nec)  ! TODO: is this needed still?
 
     !----------------------
     ! Call initialize1
@@ -369,14 +357,13 @@ contains
     ! TODO: mesh file should come into clm as a namelist for lilac only
     ! for now need to hardwire this in lnd_mesh_filename here
 
-    lnd_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc' 
+    lnd_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
 
     ! obtain global index array for just land points which includes mask=0 or ocean points
     call get_proc_bounds( bounds )
 
     nlnd = bounds%endg - bounds%begg + 1
     allocate(gindex_lnd(nlnd))
-    !print ,* "nlnd is :", nlnd
     do g = bounds%begg,bounds%endg
        n = 1 + (g - bounds%begg)
        gindex_lnd(n) = ldecomp%gdc2glo(g)
@@ -564,6 +551,9 @@ contains
 #endif
 
     call ESMF_LogWrite(subname//' CTSM INITIALIZATION DONE SUCCESSFULLY!!!! ', ESMF_LOGMSG_INFO)
+
+    write(iulog,*) " finished (lnd_comp_esmf): lnd_comp_init "
+    write(iulog,*) "========================================="
 
   !---------------------------
   contains
@@ -893,11 +883,11 @@ contains
   !---------------------------------------------------------------------------
 
   subroutine lnd_final(comp, import_state, export_state, clock, rc)
-    !
-    ! !DESCRIPTION:
+    !---------------------------------
     ! Finalize land surface model
-    !
-    ! !ARGUMENTS:
+    !---------------------------------
+
+    ! input/output variables
     type(ESMF_GridComp)  :: comp            ! CLM gridded component
     type(ESMF_State)     :: import_state    ! CLM import state
     type(ESMF_State)     :: export_state    ! CLM export state
@@ -907,19 +897,9 @@ contains
 
     rc = ESMF_SUCCESS
 
-    ! Destroy ESMF objects
-    !call esmfshr_util_StateArrayDestroy(export_state,'domain',rc)
-    !if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    !call esmfshr_util_StateArrayDestroy(export_state,'d2x',rc)
-    !if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    !call esmfshr_util_StateArrayDestroy(import_state,'x2d',rc)
-    !if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    ! TODO: Destroy ESMF objects
 
   end subroutine lnd_final
-
-  !---------------------------------------------------------------------------
 
   !===============================================================================
 
