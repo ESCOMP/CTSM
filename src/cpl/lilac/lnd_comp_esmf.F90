@@ -14,7 +14,7 @@ module lnd_comp_esmf
   ! ctsm and share code
   use shr_kind_mod      , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod       , only : shr_sys_abort
-  use shr_file_mod      , only : shr_file_setLogUnit, shr_file_getLogUnit 
+  use shr_file_mod      , only : shr_file_setLogUnit, shr_file_getLogUnit
   use shr_orb_mod       , only : shr_orb_decl, shr_orb_params
   use shr_cal_mod       , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
   use spmdMod           , only : masterproc, mpicom, spmd_init
@@ -22,7 +22,7 @@ module lnd_comp_esmf
   use domainMod         , only : ldomain
   use controlMod        , only : control_setNL
   use clm_varorb        , only : eccen, obliqr, lambm0, mvelpp
-  use clm_varctl        , only : clm_varctl_set, iulog, finidat 
+  use clm_varctl        , only : clm_varctl_set, iulog, finidat
   use clm_varctl        , only : nsrStartup, nsrContinue, nsrBranch
   use clm_varctl        , only : inst_index, inst_suffix, inst_name
   use clm_time_manager  , only : set_timemgr_init, advance_timestep
@@ -34,7 +34,7 @@ module lnd_comp_esmf
   use lnd_import_export , only : import_fields, export_fields
   use lnd_shr_methods   , only : chkerr, state_diagnose
   use spmdMod           , only : masterproc, spmd_init
-  use glc_elevclass_mod , only : glc_elevclass_init
+  use glc_elevclass_mod , only : glc_elevclass_init  ! TODO: is this needed?
 
   implicit none
   private                         ! By default make data private except
@@ -48,16 +48,12 @@ module lnd_comp_esmf
   ! Private module data
   !--------------------------------------------------------------------------
 
-  integer         , parameter    :: dbug_flag = 6
-  type(ESMF_Field), public, save :: field
-
-  integer                        :: glc_nec = 10   ! number of glc elevation classes
-  integer,          parameter    :: memdebug_level=1
-  integer,          parameter    :: dbug = 1
-  character(*)    , parameter    :: modName =  "lnd_comp_esmf"
-  character(*),     parameter    :: u_FILE_u = &
-       __FILE__!
-  type(ESMF_Mesh)         :: Emesh, EMeshTemp, lnd_mesh      ! esmf meshes
+  integer                 :: glc_nec = 10   ! fixed # of glc elevation classes
+  integer,      parameter :: memdebug_level=1
+  integer,      parameter :: dbug = 1
+  character(*), parameter :: modName =  "lnd_comp_esmf"
+  character(*), parameter :: u_FILE_u = &
+       __FILE__
 
 !===============================================================================
 contains
@@ -77,16 +73,18 @@ contains
 
     print *, "in lnd register routine"
     rc = ESMF_SUCCESS
+
     call ESMF_LogSet ( flush =.true.)
     call ESMF_LogWrite(subname//"lnd gridcompset entry points setting ....!", ESMF_LOGMSG_INFO)
+
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, lnd_init, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, lnd_run, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, lnd_final, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
     call ESMF_LogWrite(subname//"lnd gridcompset entry points finished!", ESMF_LOGMSG_INFO)
   end subroutine lnd_register
@@ -106,77 +104,72 @@ contains
     integer, intent(out) :: rc           ! Return code
 
     ! local variable
-    integer                        :: mpicom_lnd, mpicom_vm, gsize
-    type(ESMF_ArraySpec)           :: arrayspec
-    type(ESMF_DistGrid)            :: distgrid
-    type(ESMF_Array)               :: dom, l2x, x2l
-    type(ESMF_VM)                  :: vm
-    integer                        :: lsize                           ! size of attribute vector
-    integer                        :: g,i,j                           ! indices
-    integer                        :: dtime_sync                      ! coupling time-step from the input synchronization clock
-    integer                        :: dtime_clm                       ! clm time-step
-    logical                        :: exists                          ! true if file exists
-    real(r8)                       :: nextsw_cday                     ! calday from clock of next radiation computation
-    character(len=CL)              :: caseid                          ! case identifier name
-    character(len=CL)              :: ctitle                          ! case description title
-    character(len=CL)              :: starttype                       ! start-type (startup, continue, branch, hybrid)
-    character(len=CL)              :: calendar                        ! calendar type name
-    character(len=CL)              :: hostname                        ! hostname of machine running on
-    character(len=CL)              :: version                         ! Model version
-    character(len=CL)              :: username                        ! user running the model
-    integer                        :: nsrest                          ! clm restart type
-    integer                        :: ref_ymd                         ! reference date (YYYYMMDD)
-    integer                        :: ref_tod                         ! reference time of day (sec)
-    integer                        :: start_ymd                       ! start date (YYYYMMDD)
-    integer                        :: start_tod                       ! start time of day (sec)
-    integer                        :: stop_ymd                        ! stop date (YYYYMMDD)
-    integer                        :: stop_tod                        ! stop time of day (sec)
-    logical                        :: brnch_retain_casename           ! flag if should retain the case name on a branch start type
-    logical                        :: atm_aero                        ! Flag if aerosol data sent from atm model
-    integer                        :: lbnum                           ! input to memory diagnostic
-    integer                        :: shrlogunit                      ! old values for log unit and log level
-    integer                        :: logunit                         ! original log unit
-    type(bounds_type)              :: bounds                          ! bounds
-    integer                        :: nfields
-    real(R8), pointer              :: fptr(:, :)
+    type(ESMF_Mesh)                :: lnd_mesh
+    character(ESMF_MAXSTR)         :: lnd_mesh_filename     ! full filepath of land mesh file
     integer                        :: ierr
+    integer                        :: mpicom_lnd, mpicom_vm, gsize
+    type(ESMF_DistGrid)            :: distgrid
+    type(ESMF_VM)                  :: vm
+    integer                        :: lsize                 ! size of attribute vector
+    integer                        :: g,i,j                 ! indices
+    logical                        :: exists                ! true if file exists
+    real(r8)                       :: nextsw_cday           ! calday from clock of next radiation computation
+    character(len=CL)              :: caseid                ! case identifier name
+    character(len=CL)              :: ctitle                ! case description title
+    character(len=CL)              :: starttype             ! start-type (startup, continue, branch, hybrid)
+    character(len=CL)              :: calendar              ! calendar type name
+    character(len=CL)              :: hostname              ! hostname of machine running on
+    character(len=CL)              :: version               ! Model version
+    character(len=CL)              :: username              ! user running the model
+    integer                        :: nsrest                ! clm restart type
+    integer                        :: ref_ymd               ! reference date (YYYYMMDD)
+    integer                        :: ref_tod               ! reference time of day (sec)
+    integer                        :: start_ymd             ! start date (YYYYMMDD)
+    integer                        :: start_tod             ! start time of day (sec)
+    integer                        :: stop_ymd              ! stop date (YYYYMMDD)
+    integer                        :: stop_tod              ! stop time of day (sec)
+    logical                        :: brnch_retain_casename ! flag if should retain the case name on a branch start type
+    logical                        :: atm_aero              ! Flag if aerosol data sent from atm model
+    integer                        :: lbnum                 ! input to memory diagnostic
+    integer                        :: shrlogunit            ! old values for log unit and log level
+    integer                        :: logunit               ! original log unit
+    type(bounds_type)              :: bounds                ! bounds
+    integer                        :: nfields
     integer                        :: ncomps = 1
-    integer, pointer               :: comps(:)                        ! array with component ids
-    integer, pointer               :: comms(:)                        ! array with mpicoms
+    integer, pointer               :: comps(:)              ! array with component ids
+    integer, pointer               :: comms(:)              ! array with mpicoms
     character(len=32), allocatable :: compLabels(:)
-    integer,allocatable            :: comp_id(:)                      ! for pio init2
-    character(len=64),allocatable  :: comp_name(:)                    ! for pio init2
-    integer,allocatable            :: comp_comm(:)                    ! for pio_init2
-    logical,allocatable            :: comp_iamin(:)                   ! for pio init2
-    integer,allocatable            :: comp_comm_iam(:)                ! for pio_init2
-    integer                        :: ymd                             ! CTSM current date (YYYYMMDD)
-    integer                        :: orb_iyear_align                 ! associated with model year
-    integer                        :: orb_cyear                       ! orbital year for current orbital computation
-    integer                        :: orb_iyear                       ! orbital year for current orbital computation
-    integer                        :: orb_eccen                       ! orbital year for current orbital computation
-    integer                        :: yy, mm ,dd , curr_tod, curr_ymd ! orbital year for current orbital computation
-    type(ESMF_Time)                :: currTime                        ! Current time
-    type(ESMF_Time)                :: startTime                       ! Start time
-    type(ESMF_Time)                :: stopTime                        ! Stop time
-    type(ESMF_Time)                :: refTime                         ! Ref time
+    integer,allocatable            :: comp_id(:)            ! for pio init2
+    character(len=64),allocatable  :: comp_name(:)          ! for pio init2
+    integer,allocatable            :: comp_comm(:)          ! for pio_init2
+    logical,allocatable            :: comp_iamin(:)         ! for pio init2
+    integer,allocatable            :: comp_comm_iam(:)      ! for pio_init2
+    integer                        :: ymd                   ! CTSM current date (YYYYMMDD)
+    integer                        :: orb_iyear_align       ! associated with model year
+    integer                        :: orb_cyear             ! orbital year for current orbital computation
+    integer                        :: orb_iyear             ! orbital year for current orbital computation
+    integer                        :: orb_eccen             ! orbital year for current orbital computation
+    integer                        :: dtime_lilac           ! coupling time-step from the input lilac clock
+    integer                        :: curr_tod, curr_ymd  
+    integer                        :: yy, mm, dd
+    type(ESMF_Time)                :: currTime              ! Current time
+    type(ESMF_Time)                :: startTime             ! Start time
+    type(ESMF_Time)                :: stopTime              ! Stop time
+    type(ESMF_Time)                :: refTime               ! Ref time
     type(ESMF_TimeInterval)        :: timeStep
-    type(ESMF_Calendar)            :: esmf_calendar                   ! esmf calendar
-    type(ESMF_CalKind_Flag)        :: esmf_caltype                    ! esmf calendar type
-    integer, pointer               :: gindex(:)                       ! global index space for land and ocean points
-    integer, pointer               :: gindex_lnd(:)                   ! global index space for just land points
-    integer, pointer               :: gindex_ocn(:)                   ! global index space for just ocean points
-    character(ESMF_MAXSTR)         :: cvalue                          ! config data
-    integer                        :: nlnd, nocn                      ! local size ofarrays
-    integer                        :: n                               ! indices
-    integer                        :: year, month, day
-    integer                        :: dtime                           ! time step increment (sec)
+    type(ESMF_Calendar)            :: esmf_calendar         ! esmf calendar
+    type(ESMF_CalKind_Flag)        :: esmf_caltype          ! esmf calendar type
+    integer, pointer               :: gindex(:)             ! global index space for land and ocean points
+    integer, pointer               :: gindex_lnd(:)         ! global index space for just land points
+    integer, pointer               :: gindex_ocn(:)         ! global index space for just ocean points
+    integer                        :: nlnd, nocn            ! local size ofarrays
+    integer                        :: n                     ! indices
+    integer                        :: dtime                 ! time step increment (sec)
     type(ESMF_FieldBundle)         :: c2l_fb
     type(ESMF_FieldBundle)         :: l2c_fb
     type(ESMF_State)               :: importState, exportState
-    integer                        :: compid                          ! component id
-    character(len=32), parameter   :: sub = 'lnd_init'
-    character(len=*),  parameter   :: format = "('("//trim(sub)//") :',A)"
-    character(len=*), parameter    :: subname=trim(modName)//': [lnd_init_lilac_cap] '
+    integer                        :: compid                ! component id
+    character(len=*), parameter    :: subname=trim(modName)//': [lnd_init] '
     !------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -245,7 +238,7 @@ contains
     ! Initialize io log unit
     call shr_file_getLogUnit (shrlogunit)
     if (masterproc) then
-       write(iulog,format) "CLM land model initialization"
+       write(iulog,*) trim(subname) // "CLM land model initialization"
     else
        iulog = shrlogunit
     end if
@@ -274,12 +267,12 @@ contains
 
     !if ((debug >1) .and. (masterproc)) then
     if (masterproc) then
-       write(iulog,*) 'shr_obs_params is setting these:', eccen
-       write(iulog,*) 'eccen is : ', eccen
-       write(iulog,*) 'mvelpp is : ', mvelpp
+       write(iulog,*) trim(subname) // 'shr_obs_params is setting these:', eccen
+       write(iulog,*) trim(subname) // 'eccen is : ', eccen
+       write(iulog,*) trim(subname) // 'mvelpp is : ', mvelpp
 
-       write(iulog,*) 'lambm0 is : ', lambm0
-       write(iulog,*) 'obliqr is : ', obliqr
+       write(iulog,*) trim(subname) // 'lambm0 is : ', lambm0
+       write(iulog,*) trim(subname) // 'obliqr is : ', obliqr
     end if
 
     !----------------------
@@ -287,14 +280,16 @@ contains
     !----------------------
     call control_setNL("lnd_in")
 
-    !----------------------
-    ! Get properties from clock
-    !----------------------
+    ! TODO: how do we set case_name and nsrest - should we hardwire for now?
+    caseid = 'test_lilac'
+    nsrest = nsrStartup
 
+    !----------------------
+    ! Initialize module variables in clm_time_manger.F90
+    !----------------------
 
     call ESMF_ClockGet( clock, &
-         currTime=currTime, startTime=startTime, stopTime=stopTime, refTime=RefTime, &
-         timeStep=timeStep, rc=rc)
+         currTime=currTime, startTime=startTime, stopTime=stopTime, refTime=RefTime, timeStep=timeStep, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_TimeGet( currTime, yy=yy, mm=mm, dd=dd, s=curr_tod, rc=rc )
@@ -324,20 +319,13 @@ contains
        call shr_sys_abort( subname//'ERROR:: bad calendar for ESMF' )
     end if
 
-    ! TODO: how do we set case_name and nsrest - should we hardwire for now?
-    caseid = 'test_lilac'
-    nsrest = nsrStartup
-    call ESMF_LogWrite(subname//"time manager Initialized....", ESMF_LOGMSG_INFO)
-
-    !----------------------
-    ! Initialize CTSM time manager
-    !----------------------
+    ! The following sets the module variables in clm_time_mamanger.F90 - BUT DOES NOT intialize the 
+    ! clock. Routine timemgr_init (called by initialize1) initializes the clock using the module variables
+    ! that have been set via calls to set_timemgr_init. 
 
     call set_timemgr_init( &
          calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
-         ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd,         &
-         stop_tod_in=stop_tod)
-    call ESMF_LogWrite(subname//"time manager is set now!", ESMF_LOGMSG_INFO)
+         ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd, stop_tod_in=stop_tod)
 
     !----------------------
     ! Read namelist, grid and surface data
@@ -350,17 +338,38 @@ contains
     !----------------------
     ! Initialize glc_elevclass module
     !----------------------
-    call glc_elevclass_init(glc_nec)
+
+    call glc_elevclass_init(glc_nec)  ! TODO: is this needed still? 
 
     !----------------------
-    ! Initialize1
+    ! Call initialize1
     !----------------------
 
-    ! note that the memory for gindex_ocn will be allocated in the following call
-    call initialize1(gindex_ocn)
-    ! call initialize1()
+    call ESMF_TimeIntervalGet(timeStep, s=dtime_lilac, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call ESMF_LogWrite(subname//"initialize1 done...", ESMF_LOGMSG_INFO)
+    if (masterproc) then
+       write(iulog,*)'dtime_lilac= ',dtime_lilac
+    end if
+
+    ! Note that routine controlMod.F90 will initialze the dtime module
+    ! variable in clm_time_manager to the dtime_lilac AND NOT the
+    ! dtime read in from the clm_inparm namelist in this case.  Note
+    ! that the memory for gindex_ocn will be allocated in the following call
+
+    call initialize1(gindex_ocn=gindex_ocn, dtime_driver=dtime_lilac)
+
+    call ESMF_LogWrite(subname//"ctsm time manager initialized....", ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(subname//"ctsm initialize1 done...", ESMF_LOGMSG_INFO)
+
+    !--------------------------------
+    ! generate the land mesh on ctsm distribution
+    !--------------------------------
+
+    ! TODO: mesh file should come into clm as a namelist for lilac only
+    ! for now need to hardwire this in lnd_mesh_filename here
+
+    lnd_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc' 
 
     ! obtain global index array for just land points which includes mask=0 or ocean points
     call get_proc_bounds( bounds )
@@ -388,120 +397,123 @@ contains
 
     ! create distGrid from global index array
     DistGrid = ESMF_DistGridCreate(arbSeqIndexList=gindex, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     deallocate(gindex)
     call ESMF_LogWrite(subname//"DistGrid created......", ESMF_LOGMSG_INFO)
 
-    !--------------------------------
-    ! generate the mesh on ctsm distribution
-    !--------------------------------
-
-    ! TODO: mesh file should come into clm as a namelist for lilac only
-    ! for now need to hardwire this in cvalue here
-    cvalue = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc' ! this will need to be filled in to run
-
-    EMeshTemp = ESMF_MeshCreate(filename=trim(cvalue), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    lnd_mesh = ESMF_MeshCreate(filename=trim(lnd_mesh_filename), fileformat=ESMF_FILEFORMAT_ESMFMESH, elementDistgrid=Distgrid, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     if (masterproc) then
-       write(iulog,*)'mesh file for domain is ',trim(cvalue)
+       write(iulog,*)'mesh file for domain is ',trim(lnd_mesh_filename)
     end if
+    call ESMF_LogWrite(subname//" Create Mesh using file ...."//trim(lnd_mesh_filename), ESMF_LOGMSG_INFO)
 
-    ! recreate the mesh using the above distGrid
-    EMesh = ESMF_MeshCreate(EMeshTemp, elementDistgrid=Distgrid, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-
-    call ESMF_LogWrite(subname//" Create Mesh using distgrid ....", ESMF_LOGMSG_INFO)
-    lnd_mesh = EMesh
     !--------------------------------
     ! Finish initializing ctsm
     !--------------------------------
-    call ESMF_LogWrite(subname//"before initialize2", ESMF_LOGMSG_INFO)
 
     call initialize2()
-
-    call ESMF_LogWrite(subname//"initialize2 done...", ESMF_LOGMSG_INFO)
-
-    !--------------------------------
-    ! Check that ctsm internal dtime aligns with ctsm coupling interval
-    !--------------------------------
-    call ESMF_LogWrite(subname//"cheking CTSM dtime and coupling intervals....", ESMF_LOGMSG_INFO)
-
-    call ESMF_ClockGet( clock, timeStep=timeStep, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-    call ESMF_TimeIntervalGet( timeStep, s=dtime_sync, rc=rc )
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-
-    dtime_clm = get_step_size()
-
-    if (masterproc) then
-       write(iulog,*)'dtime_sync= ',dtime_sync,' dtime_ctsm= ',dtime_clm,' mod = ',mod(dtime_sync,dtime_clm)
-    end if
-    if (mod(dtime_sync,dtime_clm) /= 0) then
-       write(iulog,*)'ctsm dtime ',dtime_clm,' and clock dtime ',dtime_sync,' never align'
-       rc = ESMF_FAILURE
-       return
-    end if
+    call ESMF_LogWrite(subname//"ctsm initialize2 done...", ESMF_LOGMSG_INFO)
 
     !--------------------------------
     ! Create import state (only assume input from atm - not rof and glc)
     !--------------------------------
 
+    ! First create an empty field bundle
     c2l_fb =  ESMF_FieldBundleCreate ( name='c2l_fb', rc=rc)
 
+    ! Now add fields on lnd_mesh to this field bundle
+    call fldbundle_add( 'Sa_z'       , c2l_fb,rc) !1
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_topo'    , c2l_fb,rc) !2
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_u'       , c2l_fb,rc) !3
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_v'       , c2l_fb,rc) !4
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_ptem'    , c2l_fb,rc) !5
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_pbot'    , c2l_fb,rc) !6
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_tbot'    , c2l_fb,rc) !7
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_shum'    , c2l_fb,rc) !8
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_lwdn'  , c2l_fb,rc) !9
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_rainc' , c2l_fb,rc) !10
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_rainl' , c2l_fb,rc) !11
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_snowc' , c2l_fb,rc) !12
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_snowl' , c2l_fb,rc) !13
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_swndr' , c2l_fb,rc) !14
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_swvdr' , c2l_fb,rc) !15
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_swndf' , c2l_fb,rc) !16
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_swvdf' , c2l_fb,rc) !17
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call fldbundle_add( 'Sa_z'       , c2l_fb,rc)    !1
-    call fldbundle_add( 'Sa_topo'    , c2l_fb,rc)    !2
-    call fldbundle_add( 'Sa_u'       , c2l_fb,rc)    !3
-    call fldbundle_add( 'Sa_v'       , c2l_fb,rc)    !4
-    call fldbundle_add( 'Sa_ptem'    , c2l_fb,rc)    !5
-    call fldbundle_add( 'Sa_pbot'    , c2l_fb,rc)    !6
-    call fldbundle_add( 'Sa_tbot'    , c2l_fb,rc)    !7
-    call fldbundle_add( 'Sa_shum'    , c2l_fb,rc)    !8
-
-    call fldbundle_add( 'Faxa_lwdn'  , c2l_fb,rc)    !9
-    call fldbundle_add( 'Faxa_rainc'  , c2l_fb,rc)   !10
-    call fldbundle_add( 'Faxa_rainl'  , c2l_fb,rc)   !11
-    call fldbundle_add( 'Faxa_snowc'  , c2l_fb,rc)   !12
-    call fldbundle_add( 'Faxa_snowl'  , c2l_fb,rc)   !13
-    call fldbundle_add( 'Faxa_swndr' , c2l_fb,rc)    !14
-    call fldbundle_add( 'Faxa_swvdr' , c2l_fb,rc)    !15
-    call fldbundle_add( 'Faxa_swndf' , c2l_fb,rc)    !16
-    call fldbundle_add( 'Faxa_swvdf' , c2l_fb,rc)    !17
     call ESMF_StateAdd(import_state, fieldbundleList = (/c2l_fb/), rc=rc)
 
+    !--------------------------------
     ! Create export state
+    !--------------------------------
 
+    ! First create an empty field bundle
     l2c_fb = ESMF_FieldBundleCreate(name='l2c_fb', rc=rc)
-    !call fldbundle_add( 'Sl_lfrint'   ,  l2c_fb,rc)   !1
-    call fldbundle_add( 'Sl_lfrin'   ,  l2c_fb,rc)   !1
+
+    ! Now add fields on lnd_mesh to this field bundle
+    call fldbundle_add( 'Sl_lfrin'    ,  l2c_fb,rc)   !1
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call fldbundle_add( 'Sl_t'        ,  l2c_fb,rc)   !2
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call fldbundle_add( 'Sl_tref'     ,  l2c_fb,rc)   !3
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call fldbundle_add( 'Sl_qref'     ,  l2c_fb,rc)   !4
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call fldbundle_add( 'Sl_avsdr'    ,  l2c_fb,rc)   !5
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call fldbundle_add( 'Sl_anidr'    ,  l2c_fb,rc)   !6
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call fldbundle_add( 'Sl_avsdf'    ,  l2c_fb,rc)   !7
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call fldbundle_add( 'Sl_anidf'    ,  l2c_fb,rc)   !8
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call fldbundle_add( 'Sl_snowh'    ,  l2c_fb,rc)   !9
-    call fldbundle_add( 'Fall_u10'   ,  l2c_fb,rc)   !10
-    call fldbundle_add( 'Fall_fv'    ,  l2c_fb,rc)   !11
-    call fldbundle_add( 'Fall_ram1'    ,  l2c_fb,rc)   !12
-    !call fldbundle_add( 'Fall_taux'   ,  l2c_fb,rc)   !10
-    !call fldbundle_add( 'Fall_lwup'   ,  l2c_fb,rc)   !14
-    !call fldbundle_add( 'Fall_evap'   ,  l2c_fb,rc)   !15
-    !call fldbundle_add( 'Fall_swniet' ,  l2c_fb,rc)   !16
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Fall_u10'    ,  l2c_fb,rc)   !10
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Fall_fv'     ,  l2c_fb,rc)   !11
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Fall_ram1'   ,  l2c_fb,rc)   !12
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call fldbundle_add( 'Fall_taux'   ,  l2c_fb,rc)   !10
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call fldbundle_add( 'Fall_lwup'   ,  l2c_fb,rc)   !14
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call fldbundle_add( 'Fall_evap'   ,  l2c_fb,rc)   !15
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call fldbundle_add( 'Fall_swnet'  ,  l2c_fb,rc)   !16
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
     call ESMF_StateAdd(export_state, fieldbundleList = (/l2c_fb/), rc=rc)
-    !call ESMF_StateAdd(exportState, fieldbundleList = (/l2c_fb/), rc=rc)
 
     !--------------------------------
     ! Create land export state
     !--------------------------------
+
     call ESMF_LogWrite(subname//"Creating land export state", ESMF_LOGMSG_INFO)
 
     ! Fill in export state at end of initialization
     call export_fields(comp, bounds, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_LogWrite(subname//"Getting Calendar Day of nextsw calculation...", ESMF_LOGMSG_INFO)
@@ -509,10 +521,10 @@ contains
     ! Get calendar day of next sw (shortwave) calculation (nextsw_cday)
     if (nsrest == nsrStartup) then
        call ESMF_ClockGet( clock, currTime=currTime, rc=rc )
-       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
        call ESMF_TimeGet( currTime, dayOfYear_r8=nextsw_cday, rc=rc )
-       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     end if
 
     ! Set nextsw_cday
@@ -553,31 +565,33 @@ contains
 
     call ESMF_LogWrite(subname//' CTSM INITIALIZATION DONE SUCCESSFULLY!!!! ', ESMF_LOGMSG_INFO)
 
+  !---------------------------
+  contains
+  !---------------------------
+
+    subroutine fldbundle_add(stdname, fieldbundle,rc)
+      !---------------------------
+      ! Create an empty input field with name 'stdname' to add to fieldbundle
+      !---------------------------
+
+      ! input/output variables
+      character(len=*)        , intent(in)    :: stdname
+      type (ESMF_FieldBundle) , intent(inout) :: fieldbundle
+      integer                 , intent(out)   :: rc
+      ! local variables
+      type(ESMF_Field) :: field
+      !-------------------------------------------------------------------------------
+      rc = ESMF_SUCCESS
+      field = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT , name=trim(stdname), rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+      call ESMF_FieldBundleAdd(fieldbundle, (/field/), rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end subroutine fldbundle_add
+
   end subroutine lnd_init
 
   !---------------------------------------------------------------------------
 
-  !subroutine fldbundle_add(stdname, fldptr, fieldbundle,rc)
-  subroutine fldbundle_add(stdname, fieldbundle,rc)
-    type(ESMF_Field)                   :: field
-    !type(ESMF_Mesh)                    :: lnd_mesh
-    character(len=*),            intent(in)    :: stdname
-    type (ESMF_FieldBundle)      :: fieldbundle
-    integer, intent(out) :: rc
-
-    print *, "in lnd register routine"
-
-    rc = ESMF_SUCCESS
-
-    !field = ESMF_FieldCreate(lnd_mesh, meshloc=ESMF_MESHLOC_ELEMENT, name=trim(stdname), rc=rc)
-    field = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT , name=trim(stdname), rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-
-    call ESMF_FieldBundleAdd(fieldbundle, (/field/), rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return  ! bail out
-  end subroutine fldbundle_add
-
-  !---------------------------------------------------------------------------
   subroutine lnd_run(gcomp, import_state, export_state, clock, rc)
 
     !------------------------
@@ -597,7 +611,6 @@ contains
     type(ESMF_Time)        :: nextTime
     type(ESMF_State)       :: importState, exportState
     character(ESMF_MAXSTR) :: cvalue
-    character(ESMF_MAXSTR) :: case_name      ! case name
     integer                :: ymd            ! CTSM current date (YYYYMMDD)
     integer                :: yr             ! CTSM current year
     integer                :: mon            ! CTSM current month
@@ -624,8 +637,8 @@ contains
     real(r8)               :: eccf           ! earth orbit eccentricity factor
     type(bounds_type)      :: bounds         ! bounds
     character(len=32)      :: rdate          ! date char string for restart file names
-    character(len=*),parameter  :: subname=trim(modName)//':[lnd_run] '
-    character(*),parameter :: F02 = "('[lnd_comp_esmf] ',a, d26.19)"
+    character(*)    , parameter :: F02 = "('[lnd_comp_esmf] ',a, d26.19)"
+    character(len=*), parameter :: subname=trim(modName)//':[lnd_run] '
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -704,7 +717,7 @@ contains
 
        nextsw_cday = calday
        if (masterproc) then
-          write(iulog,*) 'State_GetScalar ... nextsw_cday is : ', nextsw_cday
+          write(iulog,*) trim(subname) // '... nextsw_cday is : ', nextsw_cday
        end if
 
        !--------------------------------
@@ -723,11 +736,11 @@ contains
 
        if (masterproc) then
           write(iulog,*) '------------  LILAC  ----------------'
-          write(iulog,*) 'nstep       : ', nstep
-          write(iulog,*) 'dtime       : ', dtime
-          write(iulog,F02) 'calday      : ', calday
-          write(iulog,F02) 'caldayp1    : ', caldayp1
-          write(iulog,F02) 'nextsw_cday : ', nextsw_cday
+          write(iulog,*) trim(subname) // 'nstep       : ', nstep
+          write(iulog,*) trim(subname) // 'dtime       : ', dtime
+          write(iulog,*) trim(subname) // 'calday      : ', calday
+          write(iulog,*) trim(subname) // 'caldayp1    : ', caldayp1
+          write(iulog,*) trim(subname) // 'nextsw_cday : ', nextsw_cday
           write(iulog,*) '-------------------------------------'
        end if
 
@@ -786,15 +799,12 @@ contains
 
        if (masterproc) then
           write(iulog,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-          write(iulog,*) 'doalb           :  ', doalb
-          write(iulog,*) 'call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, decl'
-          write(iulog,*) 'call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0,  obliqr, decl'
+          write(iulog,*)   'doalb       :  ', doalb
           write(iulog,F02) 'calday is   :  ', calday
           write(iulog,F02) 'eccen is    :  ', eccen
           write(iulog,F02) 'mvelpp is   :  ', mvelpp
           write(iulog,F02) 'lambm0 is   :  ', lambm0
           write(iulog,F02) 'obliqr is   :  ', obliqr
-          write(iulog,F02) 'clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)'
           write(iulog,F02) 'declin is   :  ', declin
           write(iulog,F02) 'declinp1 is :  ', declinp1
           write(iulog,*  ) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -829,9 +839,7 @@ contains
        ! Advance ctsm time step
        !--------------------------------
 
-       call t_startf ('lc_ctsm2_adv_timestep')
        call advance_timestep()
-       call t_stopf ('lc_ctsm2_adv_timestep')
 
     end do
 
@@ -910,6 +918,8 @@ contains
     !if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
   end subroutine lnd_final
+
+  !---------------------------------------------------------------------------
 
   !===============================================================================
 

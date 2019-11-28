@@ -109,7 +109,8 @@ contains
   end subroutine control_setNL
 
   !------------------------------------------------------------------------
-  subroutine control_init( )
+
+  subroutine control_init(dtime_driver)
     !
     ! !DESCRIPTION:
     ! Initialize CLM run control information
@@ -124,6 +125,9 @@ contains
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
     !
+    ! ARGUMENTS
+    integer, intent(in), optional :: dtime_driver
+
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
     integer :: ierr                 ! error code
@@ -339,19 +343,28 @@ contains
        ! Process some namelist variables, and perform consistency checks
        ! ----------------------------------------------------------------------
 
-       call set_timemgr_init( dtime_in=dtime )
-
-       if (use_init_interp) then
-          call apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
+       if (present(dtime_driver)) then
+          ! overwrite dtime with dtime_in - instead of what is being used in the namelist
+          if (masterproc) then
+             write(iulog,*) 'WARNING: using dtime from cap rather than what is being read in from namelist'
+          end if
+          dtime = dtime_driver
        end if
 
-       ! History and restart files
+       ! Now initialize the module variable dtime in clm_time_manger - this will be utilized to create the 
+       ! internal clm clock
+       call set_timemgr_init( dtime_in=dtime )
 
+       ! History and restart files (dependent on settings of dtime)
        do i = 1, max_tapes
           if (hist_nhtfrq(i) < 0) then
              hist_nhtfrq(i) = nint(-hist_nhtfrq(i)*SHR_CONST_CDAY/(24._r8*dtime))
           endif
        end do
+
+       if (use_init_interp) then
+          call apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
+       end if
 
        if (maxpatch_glcmec <= 0) then
           call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &

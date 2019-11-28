@@ -39,7 +39,7 @@ module clm_initializeMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine initialize1(gindex_ocn)
+  subroutine initialize1(gindex_ocn, dtime_driver)
     !
     ! !DESCRIPTION:
     ! CLM initialization first phase
@@ -63,6 +63,7 @@ contains
     !
     ! !ARGUMENTS
     integer, pointer, optional :: gindex_ocn(:)
+    integer, intent(in), optional :: dtime_driver 
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
@@ -94,7 +95,7 @@ contains
        call shr_sys_flush(iulog)
     endif
 
-    call control_init()
+    call control_init(dtime_driver)  
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
     call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
