@@ -1,5 +1,5 @@
 # set the run directory
-rundir            = "/glade/u/home/mvertens/src/LILAC/lilac_atm_driver"
+rundir            = "/glade/u/home/mvertens/src/LILAC/lilac/atm_driver"
 
 # set the input namelist options for clm's build-namelist
 clm_phys          = "clm5_0"

@@ -125,19 +125,11 @@ def buildnml():
     #   clm5_0_cam6.0, clm5_0_GSWP3v1, clm5_0_CRUv7, clm4_5_CRUv7, clm4_5_GSWP3v1, clm4_5_cam6.0
     # - only support startup or continue runs for now
 
-    glc_nec           =  str(10) #
-    lnd_ncpl          =  str(1)  # this will not be used - but is only here as a place holder to satisfy build_namelist
-    nomeg             = ""
-    caseroot          = "."
-
     # set path for the namelist assume that build namelist in lilac_conf/namelist
-    clmconf        = os.path.join(os.getcwd(),"namelist")
-    infile         = os.path.join(clmconf, "namelist")
+    clmconf        = rundir
     inputdata_file = os.path.join(clmconf, "clm.input_data_list")
     config_cache   = os.path.join(clmconf, "config_cache.xml")
-    env_lilac      = os.path.join(clmconf, "env_lilac.xml")
-    lndfrac_file   = os.path.join(lnd_domain_path,lnd_domain_file)
-
+    
     # create clmconf if it does not exist
     if not os.path.isdir(clmconf):
         os.makedirs(clmconf)
@@ -153,7 +145,8 @@ def buildnml():
     with open(config_cache, 'w') as tempfile:
         tempfile.write(config_cache_text)
 
-    # Create env_lilac text
+    # Create temporary env_lilac.xml
+    env_lilac = os.path.join(clmconf, "env_lilac.xml")
     env_lilac_text = _env_lilac_template.format()
     with open(env_lilac, 'w') as tempfile:
         tempfile.write(env_lilac_text)
@@ -171,34 +164,30 @@ def buildnml():
                '-res', lnd_grid, 
                '-mask',gridmask,
                '-clm_start_type', start_type, 
-               '-l_ncpl', lnd_ncpl, 
+               '-l_ncpl', str(1),  # this will not be used in lilac - but is needed as input
                '-configuration', configuration, 
                '-structure', structure,
-               '-lnd_frac', lndfrac_file, 
-               '-glc_nec', glc_nec, 
+               '-lnd_frac', os.path.join(lnd_domain_path,lnd_domain_file),
+               '-glc_nec', str(10), 
                '-co2_ppmv', ccsm_co2_ppmv,
                '-co2_type', clm_co2_type, 
                '-clm_accelerated_spinup', spinup,
                '-lnd_tuning_mode',lnd_tuning_mode,
                '-config',os.path.join(clmconf, "config_cache.xml"),
                '-envxml_dir', os.path.join(os.getcwd(), "namelist"), 
-               nomeg, clm_bldnml_opts]
+               clm_bldnml_opts]
 
     cmd = ' '.join(command)
     rc, out, err = run_cmd(cmd, from_dir=os.getcwd())
-
-    #TODO: need to put in error handling
-    #raise Exception("Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
+    if rc > 0:
+        raise Exception("Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
 
     # -----------------------------------------------------
-    # copy resolved namelist to rundir
+    # remove temporary files from rundir
     # -----------------------------------------------------
 
-    if os.path.isdir(rundir):
-        file1 = os.path.join(clmconf, "lnd_in")
-        file2 = os.path.join(rundir , "lnd_in")
-        logger.debug("CLM namelist copy: file1 %s file2 %s " %(file1, file2))
-        shutil.copy(file1,file2)
+    os.remove(os.path.join(rundir, "config_cache.xml"))
+    os.remove(os.path.join(rundir, "env_lilac.xml"))
 
 ###############################################################################
 if __name__ == "__main__":
