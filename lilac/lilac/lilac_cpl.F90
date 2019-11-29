@@ -8,9 +8,6 @@ module lilac_cpl
 
   use ESMF
   implicit none
-
-  include 'mpif.h' !TODO: remove this and use ESMF
-
   private
 
   public :: cpl_atm2lnd_register
@@ -44,7 +41,6 @@ contains
     call ESMF_VMGet(vm, localPet=mytask, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    print *,'mytask= ',mytask
     if (mytask == 0) then
        print *, "in cpl_atm2lnd_register routine"
     end if

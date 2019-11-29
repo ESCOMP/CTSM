@@ -9,10 +9,13 @@ module lilac_utils
   public :: lilac_atm2lnd
   public :: lilac_lnd2atm
 
+  ! the HOST ATMOSPHERE atm sends gindex_atm and atm_mesh_filename via the inputs to lilac_init
+
   ! Global index space info for atm data
-  ! the HOST ATMOSPHERE is also responsible for filling in the gindex information
-  ! this is used to create the distgrid for the mesh in lilac ***
   integer, public, allocatable  :: gindex_atm (:)
+
+  ! Mesh file to be read in by lilac_atm 
+  character(len=256), public :: atm_mesh_filename
 
   type :: atm2lnd_type
      character(len=128) :: fldname

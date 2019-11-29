@@ -13,41 +13,53 @@ program atm_driver
   !    lilac (not an ESMF gridded component!)
   !         |     |________________________.____________.......... gridded components
   !         |                              |                 |
-  !   ESMF lilac_atmcap            ESMF land cap     ESMF river cap
-  !                                        |                 |
-  !                                       CTSM          Mizzouroute...  
+  !   ESMF lilac_atmcap            ESMF CTSM cap     ESMF river cap (Mizzouroute, Mosart)
   !----------------------------------------------------------------------------
   
   use lilac_mod   , only : lilac_init, lilac_run, lilac_final
-  use lilac_utils , only : lilac_atm2lnd, lilac_lnd2atm, gindex_atm
+  use lilac_utils , only : lilac_atm2lnd, lilac_lnd2atm
+  use shr_sys_mod , only : shr_sys_abort
   use mpi         , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
 
   implicit none
 
-  integer                :: comp_comm
-  integer                :: ierr
-  real    , allocatable  :: centerCoords(:,:)
-  real    , allocatable  :: lon(:), lat(:)
-  integer                :: mytask, ntasks
-  integer                :: my_start, my_end
-  integer                :: i_local, i_global
-  integer                :: nlocal, nglobal
-  integer                :: start_time               !-- start_time    start time
-  integer                :: end_time                 !-- end_time      end time
-  integer                :: curr_time                !-- cur_time      current time
-  integer                :: itime_step               !-- itime_step    counter of time steps
-  integer                :: g,i,k                    !-- indices
-  character(len=128)     :: filename
-  !------------------------------------------------------------------------
+  integer               :: comp_comm
+  integer               :: ierr
+  real    , allocatable :: centerCoords(:,:)
+  real    , allocatable :: lon(:), lat(:)
+  integer , allocatable :: atm_global_index(:)
+  integer               :: mytask, ntasks
+  integer               :: my_start, my_end
+  integer               :: i_local, i_global
+  integer               :: nlocal, nglobal
+  integer               :: nstep         ! time step counter
+  integer               :: g,i,k         ! indices
+  integer               :: fileunit      ! for namelist input
 
-  start_time = 1
-  end_time   = 48
+  ! Namelist and related variables
+  character(len=512) :: atm_mesh_filename
+  character(len=128) :: atm_calendar
+  integer            :: atm_timestep 
+  integer            :: atm_start_year ! (yyyy)
+  integer            :: atm_start_mon  ! (mm)
+  integer            :: atm_start_day
+  integer            :: atm_start_secs
+  integer            :: atm_stop_year  ! (yyyy)
+  integer            :: atm_stop_mon   ! (mm)
+  integer            :: atm_stop_day
+  integer            :: atm_stop_secs
+  integer            :: atm_timestep_start  ! for internal time loop only
+  integer            :: atm_timestep_stop   ! for internal time loop only
+
+  namelist /lilac_input/ atm_mesh_filename, atm_calendar, atm_timestep, &
+       atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
+       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, &
+       atm_timestep_start, atm_timestep_stop
+  !------------------------------------------------------------------------
 
   !-----------------------------------------------------------------------------
   ! Initiallize MPI
   !-----------------------------------------------------------------------------
-
-  write(*, *) "MPI initialization starts ..."
 
   call MPI_init(ierr)
   if (ierr .ne. MPI_SUCCESS) then
@@ -64,12 +76,32 @@ program atm_driver
   end if
 
   !-----------------------------------------------------------------------------
+  ! Read in namelist file ...
+  !-----------------------------------------------------------------------------
+
+  if (mytask == 0) then
+     print *,"---------------------------------------"
+     print *, "MPI initialized in atm_driver ..."
+  end if
+
+  ! The following will read this on all processors - might want to do a read just on the 
+  ! master processor and broadcast in the future
+
+  open(newunit=fileunit, status="old", file="atm_driver_in")
+  read(fileunit, lilac_input, iostat=ierr)
+  if (ierr > 0) then
+     call shr_sys_abort( 'problem on read of atm_driver_in')
+  end if
+  close(fileunit)
+
+  !-----------------------------------------------------------------------------
   ! Read mesh file to get number of points (n_points)
   !-----------------------------------------------------------------------------
-  filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
-  call read_netcdf_mesh(filename, nglobal)
+
+  call read_netcdf_mesh(atm_mesh_filename, nglobal)
   if (mytask == 0 ) then
-     print *, "number of global points is is:", nglobal
+     print *, " atm_driver mesh file ",trim(atm_mesh_filename)
+     print *, "number of global points in mesh is:", nglobal
   end if
 
   !-----------------------------------------------------------------------------
@@ -85,11 +117,11 @@ program atm_driver
   end if
   my_end = my_start + nlocal - 1
 
-  allocate(gindex_atm(nlocal))
+  allocate(atm_global_index(nlocal))
 
   i_global = my_start
   do i_local = 1, nlocal
-     gindex_atm(i_local) = i_global
+     atm_global_index(i_local) = i_global
      i_global = i_global + 1
   end do
 
@@ -97,7 +129,12 @@ program atm_driver
   ! Initialize lilac
   !------------------------------------------------------------------------
 
-  call lilac_init(nlocal)
+  if (mytask == 0 ) then
+     print *, " initializing lilac "
+  end if
+  call lilac_init(atm_global_index, atm_mesh_filename, atm_calendar, atm_timestep, &
+       atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
+       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs)
 
   !------------------------------------------------------------------------
   ! Fill in atm2lnd type pointer data
@@ -107,7 +144,7 @@ program atm_driver
   allocate(lon(nlocal))
   allocate(lat(nlocal))
   do i = 1,nlocal
-     i_global = gindex_atm(i)
+     i_global = atm_global_index(i)
      lon(i) = centerCoords(1,i_global)
      lon(i) = real(nint(lon(i))) ! rounding to nearest int
      lat(i) = centerCoords(2,i_global)
@@ -121,10 +158,12 @@ program atm_driver
   ! Run lilac
   !------------------------------------------------------------------------
 
-  itime_step = 1
-  do curr_time = start_time, end_time
-     call lilac_run( )
-     itime_step = itime_step + 1
+  do nstep = atm_timestep_start, atm_timestep_stop
+     if (nstep == atm_timestep_stop) then
+        call lilac_run(restart_alarm_is_ringing=.true., stop_alarm_is_ringing=.true.)
+     else
+        call lilac_run(restart_alarm_is_ringing=.false., stop_alarm_is_ringing=.false.)
+     end if
   end do
 
   !------------------------------------------------------------------------
@@ -139,9 +178,9 @@ program atm_driver
      print *,  "======================================="
   end if
 
-  !=====================
+!=======================================================
 contains
-  !=====================
+!=======================================================
 
   subroutine read_netcdf_mesh(filename, nglobal)
 
@@ -154,7 +193,7 @@ contains
 
     !  local Variables
     integer :: idfile
-    integer :: ierror
+    integer :: ierr
     integer :: dimid_elem
     integer :: dimid_coordDim
     integer :: iddim_elem
@@ -166,20 +205,20 @@ contains
     !-----------------------------------------------------------------------------
 
     ! Open mesh file and get the idfile
-    ierror  = nf90_open(filename, NF90_NOWRITE, idfile)
-    call nc_check_err(ierror, "opening file", filename)
+    ierr  = nf90_open(filename, NF90_NOWRITE, idfile)
+    call nc_check_err(ierr, "opening file", filename)
 
     ! Get the dimid of  dimensions
-    ierror  = nf90_inq_dimid(idfile, 'elementCount', dimid_elem)
-    call nc_check_err(ierror, "inq_dimid elementCount", filename)
-    ierror  = nf90_inq_dimid(idfile, 'coordDim', dimid_coordDim)
-    call nc_check_err(ierror, "coordDim", filename)
+    ierr  = nf90_inq_dimid(idfile, 'elementCount', dimid_elem)
+    call nc_check_err(ierr, "inq_dimid elementCount", filename)
+    ierr  = nf90_inq_dimid(idfile, 'coordDim', dimid_coordDim)
+    call nc_check_err(ierr, "coordDim", filename)
 
     ! Inquire dimensions based on their dimeid(s)
-    ierror = nf90_inquire_dimension(idfile, dimid_elem, string, nelem)
-    call nc_check_err(ierror, "inq_dim elementCount", filename)
-    ierror = nf90_inquire_dimension(idfile, dimid_coordDim, string, coordDim)
-    call nc_check_err(ierror, "inq_dim coordDim", filename)
+    ierr = nf90_inquire_dimension(idfile, dimid_elem, string, nelem)
+    call nc_check_err(ierr, "inq_dim elementCount", filename)
+    ierr = nf90_inquire_dimension(idfile, dimid_coordDim, string, coordDim)
+    call nc_check_err(ierr, "inq_dim coordDim", filename)
 
     if (mytask == 0 ) then
        print *,  "======================================="
@@ -191,10 +230,10 @@ contains
     ! Get coordinate values
     allocate (centerCoords(coordDim, nelem))
 
-    ierror = nf90_inq_varid(idfile, 'centerCoords' , idvar_centerCoords)
-    call nc_check_err(ierror, "inq_varid centerCoords", filename)
-    ierror = nf90_get_var(idfile, idvar_CenterCoords, centerCoords, start=(/1,1/), count=(/coordDim, nelem/))
-    call nc_check_err(ierror,"get_var CenterCoords", filename)
+    ierr = nf90_inq_varid(idfile, 'centerCoords' , idvar_centerCoords)
+    call nc_check_err(ierr, "inq_varid centerCoords", filename)
+    ierr = nf90_get_var(idfile, idvar_CenterCoords, centerCoords, start=(/1,1/), count=(/coordDim, nelem/))
+    call nc_check_err(ierr,"get_var CenterCoords", filename)
 
     nglobal = nelem
 
@@ -291,7 +330,7 @@ contains
     real*8, allocatable :: data(:)
     ! --------------------------------------------
 
-    lsize = size(gindex_atm)
+    lsize = size(atm_global_index)
     allocate(data(lsize))
 
     call lilac_lnd2atm('Sl_lfrin' , data)

@@ -11,21 +11,21 @@ module lilac_mod
   public :: lilac_run
 
   ! Clock, TimeInterval, and Times
-  type(ESMF_Clock)           :: clock
-  type(ESMF_TimeInterval)    :: timeStep
-  type(ESMF_Time)            :: startTime
-  type(ESMF_Time)            :: stopTime
-  type(ESMF_Alarm)           :: EAlarm_stop, EAlarm_rest
-  type(ESMF_Calendar),target :: calendar
-  integer                    :: yy,mm,dd,sec
+  type(ESMF_Clock)           :: lilac_clock
+  type(ESMF_Calendar),target :: lilac_calendar
+  type(ESMF_Alarm)           :: lilac_restart_alarm
+  type(ESMF_Alarm)           :: lilac_stop_alarm
 
-  ! Gridded Components and Coupling Components
+  ! Gridded components and states in gridded components
   type(ESMF_GridComp)        :: atm_gcomp
   type(ESMF_GridComp)        :: lnd_gcomp
-  type(ESMF_CplComp)         :: cpl_atm2lnd_comp
-  type(ESMF_CplComp)         :: cpl_lnd2atm_comp
   type(ESMF_State)           :: atm2lnd_l_state, atm2lnd_a_state
   type(ESMF_State)           :: lnd2atm_a_state, lnd2atm_l_state
+
+  ! Coupler components
+  type(ESMF_CplComp)         :: cpl_atm2lnd_comp
+  type(ESMF_CplComp)         :: cpl_lnd2atm_comp
+
   character(*) , parameter   :: modname     = "lilac_mod"
 
   integer :: mytask
@@ -34,38 +34,53 @@ module lilac_mod
 contains
 !========================================================================
 
-  subroutine lilac_init(lsize)
+  subroutine lilac_init(atm_global_index, atm_mesh_filepath, atm_calendar, atm_timestep, &
+       atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
+       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs)
 
     ! --------------------------------------------------------------------------------
     ! This is called by the host atmosphere
     ! --------------------------------------------------------------------------------
 
-    use lilac_utils   ,  only : lilac_init_lnd2atm, lilac_init_atm2lnd
-    use lilac_cpl     ,  only : cpl_atm2lnd_register, cpl_lnd2atm_register
-    use lilac_atmcap  ,  only : atmos_register
-    use lnd_comp_esmf ,  only : lnd_register !ctsm routine
-    use shr_pio_mod   ,  only : shr_pio_init1
+    use lilac_utils   , only : lilac_init_lnd2atm, lilac_init_atm2lnd
+    use lilac_utils   , only : gindex_atm, atm_mesh_filename
+    use lilac_cpl     , only : cpl_atm2lnd_register, cpl_lnd2atm_register
+    use lilac_atmcap  , only : lilac_atmos_register
+    use lnd_comp_esmf , only : lnd_register !ctsm routine
+    use shr_pio_mod   , only : shr_pio_init1
+    use shr_sys_mod   , only : shr_sys_abort
 
     ! input/output variables
-    integer, intent(in) :: lsize
+    integer          , intent(in) :: atm_global_index(:)
+    character(len=*) , intent(in) :: atm_mesh_filepath
+    character(len=*) , intent(in) :: atm_calendar
+    integer          , intent(in) :: atm_timestep 
+    integer          , intent(in) :: atm_start_year !(yyyy)
+    integer          , intent(in) :: atm_start_mon  !(mm)
+    integer          , intent(in) :: atm_start_day
+    integer          , intent(in) :: atm_start_secs
+    integer          , intent(in) :: atm_stop_year  !(yyyy)
+    integer          , intent(in) :: atm_stop_mon   !(mm)
+    integer          , intent(in) :: atm_stop_day
+    integer          , intent(in) :: atm_stop_secs
 
     ! local variables
+    type(ESMF_TimeInterval)     :: timeStep
+    type(ESMF_Time)             :: startTime
+    type(ESMF_Time)             :: stopTime
+    type(ESMF_Alarm)            :: EAlarm_stop, EAlarm_rest
+    integer                     :: yy,mm,dd,sec
+    integer                     :: lsize
     type(ESMF_State)            :: importState, exportState
     type(ESMF_VM)               :: vm
     integer                     :: rc
     character(len=ESMF_MAXSTR)  :: cname   !components or cpl names
-    integer                     :: COMP_COMM
     integer                     :: ierr
     integer                     :: mpic   ! mpi communicator 
     integer                     :: n, i
     integer                     :: fileunit
     integer, parameter          :: debug = 1   !-- internal debug level
     character(len=*), parameter :: subname=trim(modname)//': [lilac_init] '
-
-    ! Namelist and related variables
-    integer ::  s_month, s_day, s_hour, s_min
-    integer ::  e_month, e_day, e_hour, e_min
-    namelist /input/ s_month, s_day, s_hour, s_min, e_month, e_day, e_hour, e_min
     !------------------------------------------------------------------------
 
     ! Initialize return code
@@ -94,47 +109,38 @@ contains
 
     call shr_pio_init1(ncomps=1, nlfilename="drv_in", Global_Comm=mpic)  ! TODO: make the filename lilac_in
 
-    ! Initialize atm2lnd and lnd2atm data types
+    ! Initialize lilac_util module variable gindex_atm
+    lsize = size(atm_global_index)
+    allocate(gindex_atm(lsize))
+    gindex_atm(:) = atm_global_index(:)
+
+    ! Initialize lilac_util module variable for atm mesh file
+    atm_mesh_filename = atm_mesh_filepath
+
+    ! Initialize lilac_util module data atm2lnd and lnd2atm 
     call lilac_init_atm2lnd(lsize)
     call lilac_init_lnd2atm(lsize)
 
     !-------------------------------------------------------------------------
-    ! Read in configuration data -- namelist.input from host atmosphere(wrf)
+    ! Create Gridded Component --  lilac atmos_cap
     !-------------------------------------------------------------------------
-
-    ! Read in namelist file ...
-
-    if (mytask == 0) then
-       print *,  "---------------------------------------"
-    end if
-
-    ! TODO: put checks for error below
-    ! TODO: only the master lilac proc should read the namelist file and do a broadcast to the
-    ! other processors
-    open(newunit=fileunit, status="old", file="namelist_lilac",  action="read", iostat=rc)
-    read(fileunit, input)
-    close(fileunit)
-
-    !-------------------------------------------------------------------------
-    ! Create Gridded Component!  --  atmosphere ( atmos_cap)
-    !-------------------------------------------------------------------------
-    cname = " Atmosphere or Atmosphere Cap"
+    cname = " LILAC atm cap "
     atm_gcomp = ESMF_GridCompCreate(name=cname, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"Created "//trim(cname)//" component", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "Atmosphere Gridded Component Created!"
+       print *, trim(subname) // "lilac atm cap gridded component created"
     end if
 
     !-------------------------------------------------------------------------
-    ! Create Gridded Component!  --- CTSM land ( land_capX )
+    ! Create Gridded Component -- CTSM land
     !-------------------------------------------------------------------------
-    cname = " Land ctsm "
+    cname = " CTSM "
     lnd_gcomp = ESMF_GridCompCreate(name=cname, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"Created "//trim(cname)//" component", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "  Land (ctsm) Gridded Component Created!"
+       print *, trim(subname) // " ctsm gridded component created"
     end if
 
     !-------------------------------------------------------------------------
@@ -145,7 +151,7 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"Created "//trim(cname)//" component", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "1st Coupler Component (atmosphere to land ) Created!"
+       print *, trim(subname) // " coupler component (atmosphere to land) created"
     end if
 
     !-------------------------------------------------------------------------
@@ -156,17 +162,17 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"Created "//trim(cname)//" component", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "2nd Coupler Component (land to atmosphere) Created!"
+       print *, trim(subname) // " coupler component (land to atmosphere) created"
     end if
 
     !-------------------------------------------------------------------------
     ! Register section -- set services -- atmos_cap
     !-------------------------------------------------------------------------
-    call ESMF_GridCompSetServices(atm_gcomp, userRoutine=atmos_register, rc=rc)
+    call ESMF_GridCompSetServices(atm_gcomp, userRoutine=lilac_atmos_register, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"  atmos SetServices finished!", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "  Atmosphere Gridded Component SetServices finished!"
+       print *, trim(subname) // " lilac atm cap setservices finished"
     end if
 
     !-------------------------------------------------------------------------
@@ -176,7 +182,7 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"land SetServices finished!", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "Land  Gridded Component SetServices finished!"
+       print *, trim(subname) // " CTSM setservices finished"
     end if
 
     !-------------------------------------------------------------------------
@@ -186,7 +192,7 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"Coupler from atmosphere to land  SetServices finished!", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "Coupler from atmosphere to land SetServices finished!"
+       print *, trim(subname) // " coupler from atmosphere to land setservices finished"
     end if
 
     !-------------------------------------------------------------------------
@@ -196,40 +202,55 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"Coupler from land to atmosphere SetServices finished!", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "Coupler from land to atmosphere SetServices finished!"
+       print *, trim(subname) // " coupler from land to atmosphere setservices finished"
     end if
+
     !-------------------------------------------------------------------------
-    !  Create and initialize a clock!
-    !  Clock is initialized here from namelist.input from WRF..... still we
-    !  are looping over time from host atmosphere
+    !  Create and initialize the lilac_clock and calendar
     !-------------------------------------------------------------------------
-    calendar = ESMF_CalendarCreate(name='lilac_drv_NOLEAP', calkindflag=ESMF_CALKIND_NOLEAP, rc=rc )
-    call ESMF_TimeIntervalSet(TimeStep, s=2, rc=rc) ! time step every 2second
+
+    if (trim(atm_calendar) == 'NOLEAP') then
+       lilac_calendar = ESMF_CalendarCreate(name='NOLEAP', calkindflag=ESMF_CALKIND_NOLEAP, rc=rc )
+    else if (trim(atm_calendar) == 'GREGORIAN') then
+       lilac_calendar = ESMF_CalendarCreate(name='NOLEAP', calkindflag=ESMF_CALKIND_GREGORIAN, rc=rc )
+    else
+       ! TODO: add supported calendars here
+    end if
+
+    call ESMF_TimeIntervalSet(TimeStep, s=atm_timestep, rc=rc) 
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    !call ESMF_TimeSet(startTime, yy=2003, mm=s_month, dd=s_day, h=s_hour, m=s_min, s=0, rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    !call ESMF_TimeSet(stopTime,  yy=2003, mm=e_month, dd=e_day, h=e_hour, m=e_min, s=0, rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    !clock = ESMF_ClockCreate(timeStep=timeStep, startTime=startTime, stopTime=stopTime, rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    call ESMF_TimeSet(StartTime, yy=2000, mm=1, dd=1 , s=0, calendar=Calendar, rc=rc)
-    call ESMF_TimeSet(StopTime , yy=2000, mm=03, dd=01, s=0, calendar=Calendar, rc=rc)
-    !call ESMF_TimeIntervalSet(TimeStep, s=3600, rc=rc)
-    call ESMF_TimeIntervalSet(TimeStep, s=1800, rc=rc)
-    clock = ESMF_ClockCreate(name='lilac_drv_EClock', TimeStep=TimeStep, startTime=StartTime, &
+    call ESMF_TimeSet(StartTime, yy=atm_start_year, mm=atm_start_mon, dd=atm_start_day , s=atm_start_secs, &
+          calendar=lilac_calendar, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+
+    call ESMF_TimeSet(StopTime , yy=atm_stop_year , mm=atm_stop_mon , dd=atm_stop_day  , s=atm_stop_secs , &
+          calendar=lilac_calendar, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+
+    lilac_clock = ESMF_ClockCreate(name='lilac_clock', TimeStep=TimeStep, startTime=StartTime, &
          RefTime=StartTime, stopTime=stopTime, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
     if (mytask == 0) then
-       print *,  "---------------------------------------"
+       print *, trim(subname) // "---------------------------------------"
+       call ESMF_ClockPrint (lilac_clock, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+       call ESMF_CalendarPrint (lilac_calendar , rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+       print *, trim(subname) // "---------------------------------------"
     end if
-    !call ESMF_ClockPrint (clock, rc=rc)
-    if (mytask == 0) then
-       print *,  "======================================="
+
+    ! Add a restart alarm to the clock
+    lilac_restart_alarm = ESMF_AlarmCreate(lilac_clock, ringTime=StopTime, name='lilac_restart_alarm', rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort('error in initializing restart alarm')
     end if
-    !call ESMF_CalendarPrint ( calendar , rc=rc)
-    if (mytask == 0) then
-       print *,  "---------------------------------------"
+
+    ! Add a stop alarm to the clock
+    lilac_stop_alarm = ESMF_AlarmCreate(lilac_clock, ringTime=StopTime, name='lilac_stop_alarm', rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort('error in initializing stop alarm')
     end if
 
     ! -------------------------------------------------------------------------
@@ -243,7 +264,7 @@ contains
     lnd2atm_a_state = ESMF_StateCreate(name='lnd_state_on_lnd_mesh', stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    call ESMF_GridCompInitialize(atm_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=clock, rc=rc)
+    call ESMF_GridCompInitialize(atm_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=lilac_clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"atmos_cap or atm_gcomp initialized", ESMF_LOGMSG_INFO)
 
@@ -260,7 +281,7 @@ contains
     lnd2atm_l_state = ESMF_StateCreate(name='lnd_state_on_atm_mesh', stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    call ESMF_GridCompInitialize(lnd_gcomp, importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
+    call ESMF_GridCompInitialize(lnd_gcomp, importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=lilac_clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"lnd_cap or lnd_gcomp initialized", ESMF_LOGMSG_INFO)
 
@@ -270,34 +291,38 @@ contains
     ! Initialze LILAC coupler components
     ! -------------------------------------------------------------------------
 
-    call ESMF_CplCompInitialize(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=clock, rc=rc)
+    call ESMF_CplCompInitialize(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=lilac_clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"coupler :: cpl_atm2lnd_comp initialized", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "coupler :: cpl_atm2lnd_comp initialize finished" !, rc =", rc
+       print *, trim(subname) // "coupler :: cpl_atm2lnd_comp initialize finished" !, rc =", rc
     end if
 
-    call ESMF_CplCompInitialize(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=clock, rc=rc)
+    call ESMF_CplCompInitialize(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=lilac_clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"coupler :: cpl_lnd2atm_comp initialized", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "coupler :: cpl_lnd2atm_comp initialize finished" !, rc =", rc
+       print *, trim(subname) // "coupler :: cpl_lnd2atm_comp initialize finished" !, rc =", rc
     end if
 
   end subroutine lilac_init
 
   !========================================================================
 
-  subroutine lilac_run( )
+  subroutine lilac_run(restart_alarm_is_ringing, stop_alarm_is_ringing)
+
+    use shr_sys_mod, only : shr_sys_abort
+
+    ! input/output variables
+    logical, intent(in) :: restart_alarm_is_ringing
+    logical, intent(in) :: stop_alarm_is_ringing
 
     ! local variables
     type(ESMF_State)            :: importState, exportState
-    integer                     :: rc, userRC
-    type (ESMF_Clock)           :: local_clock
+    integer                     :: rc
     character(len=*), parameter :: subname=trim(modname)//': [lilac_run] '
     !------------------------------------------------------------------------
 
-    ! Initialize return code
     rc = ESMF_SUCCESS
 
     if (mytask == 0) then
@@ -306,66 +331,65 @@ contains
        print *,  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     end if
 
-    !-------------------------------------------------------------------------
-    ! Create a local clock from the general clock!
-    !-------------------------------------------------------------------------
-
-    local_clock = ESMF_ClockCreate(clock, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-
-    if (mytask == 0) then
-       print *, "Run Loop Start time"
+    ! Set the clock restart alarm if restart_alarm_ringing is true
+    if (restart_alarm_is_ringing) then
+       call ESMF_AlarmRingerOn(lilac_restart_alarm, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call shr_sys_abort("lilac error in running lilac atm_cap")
+       end if
     end if
-    !call ESMF_ClockPrint(local_clock, options="currtime string", rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    !-------------------------------------------------------------------------
-    ! We are running components in this order:
-    ! 1- atmos_cap   2- cpl_atm2lnd! 3- lnd_cap   4- cpl_lnd2atm
-    !-------------------------------------------------------------------------
+    ! Set the clock stop alarm if stop_alarm_ringing is true
+    if (stop_alarm_is_ringing) then
+       call ESMF_AlarmRingerOn(lilac_stop_alarm, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call shr_sys_abort("lilac error in running lilac atm_cap")
+       end if
+    end if
 
-    ! if we want to loop through clock in atmos cap.
-    !do while (.NOT. ESMF_ClockIsStopTime(local_clock, rc=rc))
+    ! Run lilac atmcap
+    call ESMF_LogWrite(subname//"running lilac atmos_cap", ESMF_LOGMSG_INFO)
+    if (mytask == 0) print *, "Running atmos_cap gridded component , rc =", rc
     call ESMF_GridCompRun(atm_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, &
-         clock=local_clock, rc=rc, userRC=userRC)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    if (ESMF_LogFoundError(rcToCheck=userRC, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-
-    call ESMF_LogWrite(subname//"atmos_cap or atm_gcomp is running", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       print *, "Running atmos_cap gridded component , rc =", rc
+         clock=lilac_clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort("lilac error in running lilac atm_cap")
     end if
 
-    call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, &
-         clock=local_clock, rc=rc , userRC=userRC)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    if (ESMF_LogFoundError(rcToCheck=userRC, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    ! Run cpl_atm2lnd
     call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       print *, "Running coupler component..... cpl_atm2lnd_comp , rc =", rc
+    if (mytask == 0) print *, "Running coupler component..... cpl_atm2lnd_comp"
+    call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, &
+         clock=lilac_clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort("lilac error in running cpl_atm2lnd")
     end if
 
+    ! Run ctsm
+    call ESMF_LogWrite(subname//"running ctsm", ESMF_LOGMSG_INFO)
+    if (mytask == 0) print *, "Running ctsm"
     call ESMF_GridCompRun(lnd_gcomp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, &
-         clock=local_clock, rc=rc, userRC=userRC)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    if (ESMF_LogFoundError(rcToCheck=userRC, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    call ESMF_LogWrite(subname//"lnd_cap or lnd_gcomp is running", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       print *, "Running lnd_cap gridded component  , rc =", rc
+         clock=lilac_clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort("lilac error in running ctsm")
     end if
 
-    call ESMF_CplCompRun(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, &
-         clock=local_clock, rc=rc, userRC=userRC)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    if (ESMF_LogFoundError(rcToCheck=userRC, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    ! Run cpl_lnd2atm
     call ESMF_LogWrite(subname//"running cpl_lnd2atm_comp ", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
        print *, "Running coupler component..... cpl_lnd2atm_comp , rc =", rc
     end if
+    call ESMF_CplCompRun(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, &
+         clock=lilac_clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort("lilac error in cpl_lnd2atm")
+    end if
 
-    ! Advance the time
-    call ESMF_ClockAdvance(local_clock, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    ! Advance the time at the end of the time step
+    call ESMF_ClockAdvance(lilac_clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort("lilac error in advancing time step")
+    end if
     call ESMF_LogWrite(subname//"time is icremented now... (ClockAdvance)", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
        print *, "time is icremented now... (ClockAdvance) , rc =", rc
@@ -395,7 +419,7 @@ contains
     !-------------------------------------------------------------------------
     ! Gridded Component Finalizing!     ---       atmosphere
     !-------------------------------------------------------------------------
-    call ESMF_GridCompFinalize(atm_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=clock, rc=rc)
+    call ESMF_GridCompFinalize(atm_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=lilac_clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"atmos_cap or atm_gcomp is running", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -405,7 +429,7 @@ contains
     !-------------------------------------------------------------------------
     ! Coupler component Finalizing     ---    coupler atmos to land
     !-------------------------------------------------------------------------
-    call ESMF_CplCompFinalize(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=clock, rc=rc)
+    call ESMF_CplCompFinalize(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=lilac_clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -415,7 +439,7 @@ contains
     !-------------------------------------------------------------------------
     ! Gridded Component Finalizing!     ---       land
     !-------------------------------------------------------------------------
-    call ESMF_GridCompFinalize(lnd_gcomp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=clock, rc=rc)
+    call ESMF_GridCompFinalize(lnd_gcomp,  importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=lilac_clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"lnd_cap or lnd_gcomp is running", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -425,7 +449,7 @@ contains
     !-------------------------------------------------------------------------
     ! Coupler component Finalizing     ---    coupler land to atmos
     !-------------------------------------------------------------------------
-    call ESMF_CplCompFinalize(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=clock, rc=rc)
+    call ESMF_CplCompFinalize(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=lilac_clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//"running cpl_lnd2atm_comp ", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
