@@ -113,7 +113,7 @@ contains
     call ESMF_VMGet(vm, localPet=mytask, mpiCommunicator=mpic, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    call shr_pio_init1(ncomps=1, nlfilename="drv_in", Global_Comm=mpic)  ! TODO: make the filename lilac_in
+    call shr_pio_init1(ncomps=1, nlfilename="lilac_in", Global_Comm=mpic)
 
     !-------------------------------------------------------------------------
     ! Initial lilac_utils module variables
