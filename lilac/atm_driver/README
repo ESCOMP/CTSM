@@ -1,0 +1,14 @@
+assume the ctsm code base is checked out in $CTSM_ROOTDIR 
+
+- to customize the generated namelist - edit the file
+  > $CTSM_ROOTDIR/lilac_config/lnd_input.py
+
+- to create the ctsm namelist FROM THIS DIRECTORY:
+  > $CTSM_ROOTDIR/lilac_config/buildnml
+
+- this will now create the files lnd_in, drv_flds_in, and clm.input_data_list in this directory
+  THIS ONLY NEEDS TO BE DONE ONCE 
+  to futher customize the lnd_in (say to adjust the ctsm history output) edit the generated lnd_in in this directory
+
+
+
