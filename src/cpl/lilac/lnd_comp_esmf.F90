@@ -674,7 +674,7 @@ contains
     !--------------------------------
 
     call t_startf ('lc_lnd_import')
-    call import_fields( gcomp, bounds, rc)
+    call import_fields(gcomp, bounds, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call t_stopf ('lc_lnd_import')
 
@@ -701,7 +701,7 @@ contains
        caldayp1 = get_curr_calday(offset=dtime)
 
        !--------------------------------
-       ! Get  time of next atmospheric shortwave calculation
+       ! Get time of next atmospheric shortwave calculation
        !--------------------------------
 
        ! TODO(NS): nextsw_cday should come directly from atmosphere!
@@ -710,6 +710,25 @@ contains
        nextsw_cday = calday
        if (masterproc) then
           write(iulog,*) trim(subname) // '... nextsw_cday is : ', nextsw_cday
+       end if
+
+       !--------------------------------
+       ! Obtain orbital values
+       !--------------------------------
+
+       call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
+       call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
+
+       if (masterproc) then
+          write(iulog,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+          write(iulog,F02) 'calday is   :  ', calday
+          write(iulog,F02) 'eccen is    :  ', eccen
+          write(iulog,F02) 'mvelpp is   :  ', mvelpp
+          write(iulog,F02) 'lambm0 is   :  ', lambm0
+          write(iulog,F02) 'obliqr is   :  ', obliqr
+          write(iulog,F02) 'declin is   :  ', declin
+          write(iulog,F02) 'declinp1 is :  ', declinp1
+          write(iulog,*  ) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
        end if
 
        !--------------------------------
@@ -728,81 +747,59 @@ contains
 
        if (masterproc) then
           write(iulog,*) '------------  LILAC  ----------------'
-          write(iulog,*) trim(subname) // 'nstep       : ', nstep
-          write(iulog,*) trim(subname) // 'dtime       : ', dtime
-          write(iulog,*) trim(subname) // 'calday      : ', calday
-          write(iulog,*) trim(subname) // 'caldayp1    : ', caldayp1
-          write(iulog,*) trim(subname) // 'nextsw_cday : ', nextsw_cday
+          write(iulog,*) 'nstep       : ', nstep
+          write(iulog,*) 'calday      : ', calday
+          write(iulog,*) 'caldayp1    : ', caldayp1
+          write(iulog,*) 'nextsw_cday : ', nextsw_cday
+          write(iulog,*) 'doalb       : ', doalb
           write(iulog,*) '-------------------------------------'
        end if
 
        call update_rad_dtime(doalb)
 
-       if (masterproc) then
-          write(iulog,*) 'doalb is: ', doalb
-       end if
-
        !--------------------------------
        ! Determine if time to write restart
        !--------------------------------
 
-       !call ESMF_ClockGetAlarm(clock, alarmname='alarm_restart', alarm=alarm, rc=rc)
-       !if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_ClockGetAlarm(clock, alarmname='lilac_restart_alarm', alarm=alarm, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       !if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-       !if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       !rstwr = .true.
-       !call ESMF_AlarmRingerOff( alarm, rc=rc )
-       !if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       !else
-       !rstwr = .false.
-       !endif
-
-       ! TODO: for now hardwire rstwr to .false.
-       rstwr = .false.
+       if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          rstwr = .true.
+          call ESMF_AlarmRingerOff( alarm, rc=rc )
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       else
+          rstwr = .false.
+       endif
+       if (masterproc) then
+          write(iulog,*)' restart alarm is ',rstwr
+       end if
 
        !--------------------------------
        ! Determine if time to stop
        !--------------------------------
 
-       !call ESMF_ClockGetAlarm(clock, alarmname='alarm_stop', alarm=alarm, rc=rc)
-       !if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_ClockGetAlarm(clock, alarmname='lilac_stop_alarm', alarm=alarm, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       !if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-       !if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       !nlend = .true.
-       !call ESMF_AlarmRingerOff( alarm, rc=rc )
-       !if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       !else
-       !   nlend = .false.
-       !endif
+       if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          nlend = .true.
+          call ESMF_AlarmRingerOff( alarm, rc=rc )
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       else
+          nlend = .false.
+       endif
+       if (masterproc) then
+          write(iulog,*)' stop alarm is ',nlend
+       end if
 
        !--------------------------------
        ! Run CTSM
        !--------------------------------
 
        call t_barrierf('sync_ctsm_run1', mpicom)
-
-       call t_startf ('shr_orb_decl')
-       calday = get_curr_calday()
-
-       call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
-       call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
-
-       if (masterproc) then
-          write(iulog,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-          write(iulog,*)   'doalb       :  ', doalb
-          write(iulog,F02) 'calday is   :  ', calday
-          write(iulog,F02) 'eccen is    :  ', eccen
-          write(iulog,F02) 'mvelpp is   :  ', mvelpp
-          write(iulog,F02) 'lambm0 is   :  ', lambm0
-          write(iulog,F02) 'obliqr is   :  ', obliqr
-          write(iulog,F02) 'declin is   :  ', declin
-          write(iulog,F02) 'declinp1 is :  ', declinp1
-          write(iulog,*  ) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-       end if
-
-       call t_stopf ('shr_orb_decl')
 
        ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
        ! the timestep and is preferred for restart file names

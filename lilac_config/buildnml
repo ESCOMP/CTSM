@@ -1,0 +1,207 @@
+#!/usr/bin/env python
+
+"""
+CLM namelist creator
+"""
+import sys, os, shutil, subprocess, logging
+import six
+from lnd_input import *
+
+logger = logging.getLogger(__name__)
+
+# Find python version
+PY3 = sys.version_info[0] > 2
+PYSUBVER = sys.version_info[1]
+
+_config_cache_template = """
+<?xml version="1.0"?>
+<config_definition>
+<commandline></commandline>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0">Specifies clm physics</entry>
+</config_definition>
+"""
+
+# Note the following is needed in env_lilac.xml otherwise the following error appers in the call to build_namelist
+#err=ERROR : CLM build-namelist::CLMBuildNamelist::logical_to_fortran() : Unexpected value in logical_to_fortran:
+
+_env_lilac_template = """
+<?xml version="1.0"?>
+<file id="env_lilac.xml" version="2.0">
+  <group id="run_glc">
+    <entry id="GLC_TWO_WAY_COUPLING" value="FALSE">
+      <type>logical</type>
+      <valid_values>TRUE,FALSE</valid_values>
+    </entry>
+  </group>
+</file>
+"""
+
+_hack=object()
+
+###############################################################################
+def run_cmd(cmd, input_str=None, from_dir=None, verbose=None,
+            arg_stdout=_hack, arg_stderr=_hack, env=None, combine_output=False):
+###############################################################################
+
+    """
+    Wrapper around subprocess to make it much more convenient to run shell commands
+
+    >>> run_cmd('ls file_i_hope_doesnt_exist')[0] != 0
+    True
+    """
+    import subprocess # Not safe to do globally, module not available in older pythons
+
+    # Real defaults for these value should be subprocess.PIPE
+    if arg_stdout is _hack:
+        arg_stdout = subprocess.PIPE
+    elif isinstance(arg_stdout, six.string_types):
+        arg_stdout = _convert_to_fd(arg_stdout, from_dir)
+
+    if arg_stderr is _hack:
+        arg_stderr = subprocess.STDOUT if combine_output else subprocess.PIPE
+    elif isinstance(arg_stderr, six.string_types):
+        arg_stderr = _convert_to_fd(arg_stdout, from_dir)
+
+    if (verbose != False and (verbose or logger.isEnabledFor(logging.DEBUG))):
+        logger.info("RUN: {}\nFROM: {}".format(cmd, os.getcwd() if from_dir is None else from_dir))
+
+    if (input_str is not None):
+        stdin = subprocess.PIPE
+    else:
+        stdin = None
+
+    proc = subprocess.Popen(cmd,
+                            shell=True,
+                            stdout=arg_stdout,
+                            stderr=arg_stderr,
+                            stdin=stdin,
+                            cwd=from_dir,
+                            env=env)
+
+    output, errput = proc.communicate(input_str)
+    if output is not None:
+        try:
+            output = output.decode('utf-8', errors='ignore').strip()
+        except AttributeError:
+            pass
+    if errput is not None:
+        try:
+            errput = errput.decode('utf-8', errors='ignore').strip()
+        except AttributeError:
+            pass
+
+    stat = proc.wait()
+    if six.PY2:
+        if isinstance(arg_stdout, file): # pylint: disable=undefined-variable
+            arg_stdout.close() # pylint: disable=no-member
+        if isinstance(arg_stderr, file) and arg_stderr is not arg_stdout: # pylint: disable=undefined-variable
+            arg_stderr.close() # pylint: disable=no-member
+    else:
+        if isinstance(arg_stdout, io.IOBase):
+            arg_stdout.close() # pylint: disable=no-member
+        if isinstance(arg_stderr, io.IOBase) and arg_stderr is not arg_stdout:
+            arg_stderr.close() # pylint: disable=no-member
+
+
+    if (verbose != False and (verbose or logger.isEnabledFor(logging.DEBUG))):
+        if stat != 0:
+            logger.info("  stat: {:d}\n".format(stat))
+        if output:
+            logger.info("  output: {}\n".format(output))
+        if errput:
+            logger.info("  errput: {}\n".format(errput))
+
+    return stat, output, errput
+
+###############################################################################
+def buildnml():
+###############################################################################
+
+    """Build the clm namelist """
+
+    # A few notes:
+    # - tuning parameters and initial conditions should be optimized for what CLM model version and 
+    #   what meteorlogical forcing combination? valid values are:
+    #   clm5_0_cam6.0, clm5_0_GSWP3v1, clm5_0_CRUv7, clm4_5_CRUv7, clm4_5_GSWP3v1, clm4_5_cam6.0
+    # - only support startup or continue runs for now
+
+    glc_nec           =  str(10) #
+    lnd_ncpl          =  str(1)  # this will not be used - but is only here as a place holder to satisfy build_namelist
+    nomeg             = ""
+    caseroot          = "."
+
+    # set path for the namelist assume that build namelist in lilac_conf/namelist
+    clmconf        = os.path.join(os.getcwd(),"namelist")
+    infile         = os.path.join(clmconf, "namelist")
+    inputdata_file = os.path.join(clmconf, "clm.input_data_list")
+    config_cache   = os.path.join(clmconf, "config_cache.xml")
+    env_lilac      = os.path.join(clmconf, "env_lilac.xml")
+    lndfrac_file   = os.path.join(lnd_domain_path,lnd_domain_file)
+
+    # create clmconf if it does not exist
+    if not os.path.isdir(clmconf):
+        os.makedirs(clmconf)
+
+    # clean inputdata_file if it does exist
+    if os.path.exists(inputdata_file):
+        os.remove(inputdata_file)
+
+    # Create config_cache.xml file 
+    # Note that build-namelist utilizes the contents of the config_cache.xml file in 
+    # the namelist_defaults.xml file to obtain namelist variables
+    config_cache_text = _config_cache_template.format(clm_phys=clm_phys)
+    with open(config_cache, 'w') as tempfile:
+        tempfile.write(config_cache_text)
+
+    # Create env_lilac text
+    env_lilac_text = _env_lilac_template.format()
+    with open(env_lilac, 'w') as tempfile:
+        tempfile.write(env_lilac_text)
+
+    # -----------------------------------------------------
+    # call build-namelist
+    # -----------------------------------------------------
+
+    cmd = os.path.join(os.pardir, "bld","build-namelist")
+    command = [cmd,
+               '-csmdata', din_loc_root, 
+               '-inputdata', inputdata_file, ignore, 
+               '-namelist', '\'&clm_inparm  start_ymd={} {}/\''.format(start_ymd, clm_namelist_opts),
+               '-use_case',use_case, 
+               '-res', lnd_grid, 
+               '-mask',gridmask,
+               '-clm_start_type', start_type, 
+               '-l_ncpl', lnd_ncpl, 
+               '-configuration', configuration, 
+               '-structure', structure,
+               '-lnd_frac', lndfrac_file, 
+               '-glc_nec', glc_nec, 
+               '-co2_ppmv', ccsm_co2_ppmv,
+               '-co2_type', clm_co2_type, 
+               '-clm_accelerated_spinup', spinup,
+               '-lnd_tuning_mode',lnd_tuning_mode,
+               '-config',os.path.join(clmconf, "config_cache.xml"),
+               '-envxml_dir', os.path.join(os.getcwd(), "namelist"), 
+               nomeg, clm_bldnml_opts]
+
+    cmd = ' '.join(command)
+    rc, out, err = run_cmd(cmd, from_dir=os.getcwd())
+
+    #TODO: need to put in error handling
+    #raise Exception("Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
+
+    # -----------------------------------------------------
+    # copy resolved namelist to rundir
+    # -----------------------------------------------------
+
+    if os.path.isdir(rundir):
+        file1 = os.path.join(clmconf, "lnd_in")
+        file2 = os.path.join(rundir , "lnd_in")
+        logger.debug("CLM namelist copy: file1 %s file2 %s " %(file1, file2))
+        shutil.copy(file1,file2)
+
+###############################################################################
+if __name__ == "__main__":
+    buildnml()
+
+
