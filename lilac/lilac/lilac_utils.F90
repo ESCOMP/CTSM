@@ -3,19 +3,19 @@ module lilac_utils
   implicit none
   private
 
-  public :: this_clock
   public :: lilac_init_atm2lnd
   public :: lilac_init_lnd2atm
   public :: lilac_atm2lnd
   public :: lilac_lnd2atm
-
-  ! the HOST ATMOSPHERE atm sends gindex_atm and atm_mesh_filename via the inputs to lilac_init
 
   ! Global index space info for atm data
   integer, public, allocatable  :: gindex_atm (:)
 
   ! Mesh file to be read in by lilac_atm 
   character(len=256), public :: atm_mesh_filename
+
+  ! Mesh file to be read in by ctsm
+  character(len=256), public :: lnd_mesh_filename
 
   type :: atm2lnd_type
      character(len=128) :: fldname
@@ -32,15 +32,6 @@ module lilac_utils
      character(len=64)  :: units
   end type lnd2atm_type
   type(atm2lnd_type), pointer, public :: lnd2atm(:)
-
-  type :: this_clock
-     integer, pointer :: yy
-     integer, pointer :: mm
-     integer, pointer :: dd
-     integer, pointer :: hh
-     integer, pointer :: mn
-     integer, pointer :: ss
-  end type this_clock
 
 !========================================================================
 contains

@@ -2,6 +2,9 @@ module lilac_mod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
+  ! This is the driver for running CTSM and the ESMF lilac atm cap that
+  ! is put in place to ensure that the host atmosphere does not need to
+  ! know about ESMF
   !-----------------------------------------------------------------------
 
   use ESMF
@@ -34,7 +37,8 @@ module lilac_mod
 contains
 !========================================================================
 
-  subroutine lilac_init(atm_global_index, atm_mesh_filepath, atm_calendar, atm_timestep, &
+  subroutine lilac_init(atm_mesh_file, atm_global_index, atm_lons, atm_lats, &
+       atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
        atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs)
 
@@ -51,8 +55,10 @@ contains
     use shr_sys_mod   , only : shr_sys_abort
 
     ! input/output variables
+    character(len=*) , intent(in) :: atm_mesh_file
     integer          , intent(in) :: atm_global_index(:)
-    character(len=*) , intent(in) :: atm_mesh_filepath
+    real             , intent(in) :: atm_lons(:)
+    real             , intent(in) :: atm_lats(:)
     character(len=*) , intent(in) :: atm_calendar
     integer          , intent(in) :: atm_timestep 
     integer          , intent(in) :: atm_start_year !(yyyy)
@@ -109,15 +115,19 @@ contains
 
     call shr_pio_init1(ncomps=1, nlfilename="drv_in", Global_Comm=mpic)  ! TODO: make the filename lilac_in
 
-    ! Initialize lilac_util module variable gindex_atm
+    !-------------------------------------------------------------------------
+    ! Initial lilac_utils module variables
+    !-------------------------------------------------------------------------
+
+    ! Initialize gindex_atm
     lsize = size(atm_global_index)
     allocate(gindex_atm(lsize))
     gindex_atm(:) = atm_global_index(:)
 
-    ! Initialize lilac_util module variable for atm mesh file
-    atm_mesh_filename = atm_mesh_filepath
+    ! Initialize atm_mesh_filename
+    atm_mesh_filename = atm_mesh_file
 
-    ! Initialize lilac_util module data atm2lnd and lnd2atm 
+    ! Initialize datatypes atm2lnd and lnd2atm 
     call lilac_init_atm2lnd(lsize)
     call lilac_init_lnd2atm(lsize)
 

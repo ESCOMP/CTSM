@@ -14,8 +14,6 @@ include $(ESMFMKFILE)
 #================================================================================
 ### Define directory paths
 #================================================================================
-# Temporarily hard-coded
-# TODO: Please fix this part.
 CASE_NAME        =  why01-g
 CTSM_BLD_DIR     =  /glade/scratch/mvertens/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/mct/esmf
 CTSM_INC         =  -I$(CTSM_BLD_DIR)/include

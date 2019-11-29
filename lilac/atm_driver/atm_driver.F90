@@ -26,7 +26,7 @@ program atm_driver
   integer               :: comp_comm
   integer               :: ierr
   real    , allocatable :: centerCoords(:,:)
-  real    , allocatable :: lon(:), lat(:)
+  real    , allocatable :: atm_lons(:), atm_lats(:)
   integer , allocatable :: atm_global_index(:)
   integer               :: mytask, ntasks
   integer               :: my_start, my_end
@@ -37,7 +37,7 @@ program atm_driver
   integer               :: fileunit      ! for namelist input
 
   ! Namelist and related variables
-  character(len=512) :: atm_mesh_filename
+  character(len=512) :: atm_mesh_file
   character(len=128) :: atm_calendar
   integer            :: atm_timestep 
   integer            :: atm_start_year ! (yyyy)
@@ -51,7 +51,7 @@ program atm_driver
   integer            :: atm_timestep_start  ! for internal time loop only
   integer            :: atm_timestep_stop   ! for internal time loop only
 
-  namelist /lilac_input/ atm_mesh_filename, atm_calendar, atm_timestep, &
+  namelist /atm_driver_input/ atm_mesh_file, atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
        atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, &
        atm_timestep_start, atm_timestep_stop
@@ -88,7 +88,7 @@ program atm_driver
   ! master processor and broadcast in the future
 
   open(newunit=fileunit, status="old", file="atm_driver_in")
-  read(fileunit, lilac_input, iostat=ierr)
+  read(fileunit, atm_driver_input, iostat=ierr)
   if (ierr > 0) then
      call shr_sys_abort( 'problem on read of atm_driver_in')
   end if
@@ -98,9 +98,10 @@ program atm_driver
   ! Read mesh file to get number of points (n_points)
   !-----------------------------------------------------------------------------
 
-  call read_netcdf_mesh(atm_mesh_filename, nglobal)
+  print *, "DEBUG: atm_mesh_file = ",trim(atm_mesh_file)
+  call read_netcdf_mesh(atm_mesh_file, nglobal)
   if (mytask == 0 ) then
-     print *, " atm_driver mesh file ",trim(atm_mesh_filename)
+     print *, " atm_driver mesh file ",trim(atm_mesh_file)
      print *, "number of global points in mesh is:", nglobal
   end if
 
@@ -125,6 +126,17 @@ program atm_driver
      i_global = i_global + 1
   end do
 
+  ! first determine lats and lons
+  allocate(atm_lons(nlocal))
+  allocate(atm_lats(nlocal))
+  do i = 1,nlocal
+     i_global = atm_global_index(i)
+     atm_lons(i) = centerCoords(1,i_global)
+     atm_lons(i) = real(nint(atm_lons(i))) ! rounding to nearest int
+     atm_lats(i) = centerCoords(2,i_global)
+     atm_lats(i) = real(nint(atm_lats(i))) ! rounding to nearest int
+  end do
+
   !------------------------------------------------------------------------
   ! Initialize lilac
   !------------------------------------------------------------------------
@@ -132,7 +144,8 @@ program atm_driver
   if (mytask == 0 ) then
      print *, " initializing lilac "
   end if
-  call lilac_init(atm_global_index, atm_mesh_filename, atm_calendar, atm_timestep, &
+  call lilac_init(atm_mesh_file, atm_global_index, atm_lons, atm_lats, &
+       atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
        atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs)
 
@@ -140,19 +153,8 @@ program atm_driver
   ! Fill in atm2lnd type pointer data
   !------------------------------------------------------------------------
 
-  ! first determine lats and lons
-  allocate(lon(nlocal))
-  allocate(lat(nlocal))
-  do i = 1,nlocal
-     i_global = atm_global_index(i)
-     lon(i) = centerCoords(1,i_global)
-     lon(i) = real(nint(lon(i))) ! rounding to nearest int
-     lat(i) = centerCoords(2,i_global)
-     lat(i) = real(nint(lat(i))) ! rounding to nearest int
-  end do
-
   ! now fill in the dataptr values
-  call atm_to_lilac (lon, lat)
+  call atm_driver_to_lilac (atm_lons, atm_lats)
 
   !------------------------------------------------------------------------
   ! Run lilac
@@ -253,7 +255,7 @@ contains
   end subroutine nc_check_err
 
   !========================================================================
-  subroutine atm_to_lilac (lon, lat)
+  subroutine atm_driver_to_lilac (lon, lat)
 
     ! input/output variables
     real, intent(in) :: lon(:)
@@ -320,10 +322,10 @@ contains
     data(:) = 40.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
     call lilac_atm2lnd('Faxa_swvdf', data)
 
-  end subroutine atm_to_lilac
+  end subroutine atm_driver_to_lilac
 
   !========================================================================
-  subroutine lilac_to_atm ()
+  subroutine lilac_to_atm_driver ()
 
     ! local variables
     integer :: lsize
@@ -346,6 +348,6 @@ contains
     call lilac_lnd2atm('Sl_fv'    , data)
     call lilac_lnd2atm('Sl_ram1'  , data)
 
-  end subroutine lilac_to_atm
+  end subroutine lilac_to_atm_driver
 
 end program
