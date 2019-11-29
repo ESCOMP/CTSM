@@ -4,19 +4,23 @@ module lnd_comp_esmf
   ! This is the ESMF cap for CTSM
   !----------------------------------------------------------------------------
 
-  ! External libraries
+  ! external libraries
   use ESMF
   use mpi               , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE
+  use mpi               , only : MPI_BCAST, MPI_CHARACTER
   use mct_mod           , only : mct_world_init, mct_world_clean, mct_die
   use shr_pio_mod       , only : shr_pio_init1, shr_pio_init2
   use perf_mod          , only : t_startf, t_stopf, t_barrierf
 
-  ! ctsm and share code
+  ! cime share code
   use shr_kind_mod      , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod       , only : shr_sys_abort
   use shr_file_mod      , only : shr_file_setLogUnit, shr_file_getLogUnit
   use shr_orb_mod       , only : shr_orb_decl, shr_orb_params
   use shr_cal_mod       , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
+  use glc_elevclass_mod , only : glc_elevclass_init  ! TODO: is this needed?
+
+  ! ctsm code
   use spmdMod           , only : masterproc, spmd_init, mpicom
   use decompMod         , only : bounds_type, ldecomp, get_proc_bounds
   use domainMod         , only : ldomain
@@ -33,8 +37,6 @@ module lnd_comp_esmf
   use clm_driver        , only : clm_drv
   use lnd_import_export , only : import_fields, export_fields
   use lnd_shr_methods   , only : chkerr, state_diagnose
-  use spmdMod           , only : masterproc, spmd_init
-  use glc_elevclass_mod , only : glc_elevclass_init  ! TODO: is this needed?
 
   implicit none
   private                         ! By default make data private except
@@ -100,70 +102,75 @@ contains
     integer, intent(out) :: rc           ! Return code
 
     ! local variable
-    integer                        :: ierr                  ! error code
-    integer                        :: n,g,i,j               ! indices
-    logical                        :: exists                ! true if file exists
-    real(r8)                       :: nextsw_cday           ! calday from clock of next radiation computation
-    character(len=CL)              :: caseid                ! case identifier name
-    character(len=CL)              :: ctitle                ! case description title
-    character(len=CL)              :: starttype             ! start-type (startup, continue, branch, hybrid)
-    integer                        :: nsrest                ! clm restart type
-    logical                        :: brnch_retain_casename ! flag if should retain the case name on a branch start type
-    logical                        :: atm_aero              ! Flag if aerosol data sent from atm model
-    integer                        :: lbnum                 ! input to memory diagnostic
-    integer                        :: shrlogunit            ! old values for log unit and log level
-    type(bounds_type)              :: bounds                ! bounds
+    integer                    :: ierr                  ! error code
+    integer                    :: n,g,i,j               ! indices
+    logical                    :: exists                ! true if file exists
+    real(r8)                   :: nextsw_cday           ! calday from clock of next radiation computation
+    character(len=CL)          :: caseid                ! case identifier name
+    character(len=CL)          :: ctitle                ! case description title
+    character(len=CL)          :: starttype             ! start-type (startup, continue, branch, hybrid)
+    integer                    :: nsrest                ! clm restart type
+    logical                    :: brnch_retain_casename ! flag if should retain the case name on a branch start type
+    logical                    :: atm_aero              ! Flag if aerosol data sent from atm model
+    integer                    :: lbnum                 ! input to memory diagnostic
+    integer                    :: shrlogunit            ! old values for log unit and log level
+    type(bounds_type)          :: bounds                ! bounds
 
     ! generation of field bundles
-    type(ESMF_State)               :: importState, exportState
-    type(ESMF_FieldBundle)         :: c2l_fb
-    type(ESMF_FieldBundle)         :: l2c_fb
+    type(ESMF_State)           :: importState, exportState
+    type(ESMF_FieldBundle)     :: c2l_fb
+    type(ESMF_FieldBundle)     :: l2c_fb
 
     ! mesh generation
-    type(ESMF_Mesh)                :: lnd_mesh
-    character(ESMF_MAXSTR)         :: lnd_mesh_filename     ! full filepath of land mesh file
-    integer                        :: nlnd, nocn            ! local size ofarrays
-    integer, pointer               :: gindex(:)             ! global index space for land and ocean points
-    integer, pointer               :: gindex_lnd(:)         ! global index space for just land points
-    integer, pointer               :: gindex_ocn(:)         ! global index space for just ocean points
-    type(ESMF_DistGrid)            :: distgrid
+    type(ESMF_Mesh)            :: lnd_mesh
+    character(ESMF_MAXSTR)     :: lnd_mesh_filename     ! full filepath of land mesh file
+    integer                    :: nlnd, nocn            ! local size ofarrays
+    integer, pointer           :: gindex(:)             ! global index space for land and ocean points
+    integer, pointer           :: gindex_lnd(:)         ! global index space for just land points
+    integer, pointer           :: gindex_ocn(:)         ! global index space for just ocean points
+    type(ESMF_DistGrid)        :: distgrid
+    integer                    :: fileunit
 
     ! clock info
-    character(len=CL)              :: calendar              ! calendar type name
-    type(ESMF_CalKind_Flag)        :: caltype               ! calendar type from lilac clock
-    integer                        :: curr_tod, curr_ymd    ! current time info
-    integer                        :: yy, mm, dd            ! query output from lilac clock
-    integer                        :: dtime_lilac           ! coupling time-step from the input lilac clock
-    integer                        :: ref_ymd               ! reference date (YYYYMMDD)
-    integer                        :: ref_tod               ! reference time of day (sec)
-    integer                        :: start_ymd             ! start date (YYYYMMDD)
-    integer                        :: start_tod             ! start time of day (sec)
-    integer                        :: stop_ymd              ! stop date (YYYYMMDD)
-    integer                        :: stop_tod              ! stop time of day (sec)
-    type(ESMF_Time)                :: currTime              ! Current time
-    type(ESMF_Time)                :: startTime             ! Start time
-    type(ESMF_Time)                :: stopTime              ! Stop time
-    type(ESMF_Time)                :: refTime               ! Ref time
-    type(ESMF_TimeInterval)        :: timeStep              ! time step from lilac clock
+    character(len=CL)          :: calendar              ! calendar type name
+    type(ESMF_CalKind_Flag)    :: caltype               ! calendar type from lilac clock
+    integer                    :: curr_tod, curr_ymd    ! current time info
+    integer                    :: yy, mm, dd            ! query output from lilac clock
+    integer                    :: dtime_lilac           ! coupling time-step from the input lilac clock
+    integer                    :: ref_ymd               ! reference date (YYYYMMDD)
+    integer                    :: ref_tod               ! reference time of day (sec)
+    integer                    :: start_ymd             ! start date (YYYYMMDD)
+    integer                    :: start_tod             ! start time of day (sec)
+    integer                    :: stop_ymd              ! stop date (YYYYMMDD)
+    integer                    :: stop_tod              ! stop time of day (sec)
+    type(ESMF_Time)            :: currTime              ! Current time
+    type(ESMF_Time)            :: startTime             ! Start time
+    type(ESMF_Time)            :: stopTime              ! Stop time
+    type(ESMF_Time)            :: refTime               ! Ref time
+    type(ESMF_TimeInterval)    :: timeStep              ! time step from lilac clock
 
     ! orbital info
-    integer                        :: orb_iyear_align       ! associated with model year
-    integer                        :: orb_cyear             ! orbital year for current orbital computation
-    integer                        :: orb_iyear             ! orbital year for current orbital computation
-    integer                        :: orb_eccen             ! orbital year for current orbital computation
+    integer                    :: orb_iyear_align       ! associated with model year
+    integer                    :: orb_cyear             ! orbital year for current orbital computation
+    integer                    :: orb_iyear             ! orbital year for current orbital computation
+    integer                    :: orb_eccen             ! orbital year for current orbital computation
 
     ! for pio_init2 and mct
-    type(ESMF_VM)               :: vm
-    integer                     :: mpicom_vm
-    integer                     :: ncomps = 1
-    integer, pointer            :: mycomms(:)                 ! for mct
-    integer, pointer            :: myids(:)                   ! for mct
-    integer                     :: compids(1) = (/1/)         ! for both mct and pio_init2 - array with component ids
-    integer                     :: comms(1)                   ! for both mct and pio_init2 - array with mpicoms
-    character(len=32)           :: compLabels(1) = (/'LND'/)  ! for pio_init2
-    character(len=64)           :: comp_name(1) = (/'LND'/)   ! for pio_init2
-    logical                     :: comp_iamin(1) = (/.true./) ! for pio init2
-    integer                     :: iam(1)                     ! for pio_init2
+    type(ESMF_VM)              :: vm
+    integer                    :: mpicom_vm
+    integer                    :: ncomps = 1
+    integer, pointer           :: mycomms(:)                 ! for mct
+    integer, pointer           :: myids(:)                   ! for mct
+    integer                    :: compids(1) = (/1/)         ! for both mct and pio_init2 - array with component ids
+    integer                    :: comms(1)                   ! for both mct and pio_init2 - array with mpicoms
+    character(len=32)          :: compLabels(1) = (/'LND'/)  ! for pio_init2
+    character(len=64)          :: comp_name(1) = (/'LND'/)   ! for pio_init2
+    logical                    :: comp_iamin(1) = (/.true./) ! for pio init2
+    integer                    :: iam(1)                     ! for pio_init2
+
+    ! input namelist read for ctsm mesh
+    namelist /lnd_mesh_inparm/ lnd_mesh_filename
+
     character(len=*), parameter :: subname=trim(modName)//': (lnd_init) '
     !------------------------------------------------------------------------
 
@@ -354,11 +361,6 @@ contains
     ! generate the land mesh on ctsm distribution
     !--------------------------------
 
-    ! TODO: mesh file should come into clm as a namelist for lilac only
-    ! for now need to hardwire this in lnd_mesh_filename here
-
-    lnd_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
-
     ! obtain global index array for just land points which includes mask=0 or ocean points
     call get_proc_bounds( bounds )
 
@@ -388,6 +390,18 @@ contains
     deallocate(gindex)
     call ESMF_LogWrite(subname//"DistGrid created......", ESMF_LOGMSG_INFO)
 
+    ! obtain the mesh filename from the namelist
+    if (masterproc) then
+       open(newunit=fileunit, status="old", file="lilac_in")
+       read(fileunit, lnd_mesh_inparm, iostat=ierr)
+       if (ierr > 0) then
+          call shr_sys_abort( 'problem on read of lilac_in')
+       end if
+       close(fileunit)
+    end if
+    call MPI_BCAST(lnd_mesh_filename, len(lnd_mesh_filename), MPI_CHARACTER, 0, mpicom, ierr)
+
+    ! create esmf mesh using distgrid and lnd_mesh_filename
     lnd_mesh = ESMF_MeshCreate(filename=trim(lnd_mesh_filename), fileformat=ESMF_FILEFORMAT_ESMFMESH, elementDistgrid=Distgrid, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     if (masterproc) then

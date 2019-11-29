@@ -179,6 +179,11 @@ def buildnml(rundir, bldnmldir):
     # remove temporary files from rundir
     os.remove(os.path.join(rundir, "config_cache.xml"))
     os.remove(os.path.join(rundir, "env_lilac.xml"))
+    os.remove(os.path.join(rundir, "drv_flds_in"))
+
+    # copy lilac_in to rundir - mesh file is defined in lilac_in
+    shutil.copy(os.path.join(bldnmldir,"lilac_in"),
+                os.path.join(rundir, "lilac_in"))
 
 ###############################################################################
 
