@@ -1,3 +1,8 @@
+# - tuning parameters and initial conditions should be optimized for what CLM model version and 
+#   what meteorlogical forcing combination? valid values are:
+#   clm5_0_cam6.0, clm5_0_GSWP3v1, clm5_0_CRUv7, clm4_5_CRUv7, clm4_5_GSWP3v1, clm4_5_cam6.0
+# - only support startup or continue runs for now
+
 # set the run directory
 rundir            = "/glade/u/home/mvertens/src/LILAC/lilac/atm_driver"
 
