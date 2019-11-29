@@ -1,12 +1,11 @@
+# -------------------------------------------------------------------------
+# set the input namelist options for clm's build-namelist
+# -------------------------------------------------------------------------
 # - tuning parameters and initial conditions should be optimized for what CLM model version and 
 #   what meteorlogical forcing combination? valid values are:
 #   clm5_0_cam6.0, clm5_0_GSWP3v1, clm5_0_CRUv7, clm4_5_CRUv7, clm4_5_GSWP3v1, clm4_5_cam6.0
 # - only support startup or continue runs for now
 
-# set the run directory
-rundir            = "/glade/u/home/mvertens/src/LILAC/lilac/atm_driver"
-
-# set the input namelist options for clm's build-namelist
 clm_phys          = "clm5_0"
 start_type        = "default"
 start_ymd         = "20000101"
