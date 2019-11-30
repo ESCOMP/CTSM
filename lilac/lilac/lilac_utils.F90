@@ -106,13 +106,11 @@ contains
     call lnd2atm_add_fld (lnd2atm, fldname='Sl_u10'    , units='unknown', lsize=lsize) 
     call lnd2atm_add_fld (lnd2atm, fldname='Sl_fv'     , units='unknown', lsize=lsize) 
     call lnd2atm_add_fld (lnd2atm, fldname='Sl_ram1'   , units='unknown', lsize=lsize) 
-
-    ! TODO: for now are commenting these since they are in the lnd send - however this
-    ! is not correct and the lnd send should reintroduce these as soon as possible and
-    ! the following should be uncommented
-    !call lnd2atm_add_fld (lnd2atm, fldname='Fall_lwup' , units='unknown', lsize=lsize) 
-    !call lnd2atm_add_fld (lnd2atm, fldname='Fall_taux' , units='unknown', lsize=lsize) 
-    !call lnd2atm_add_fld (lnd2atm, fldname='Fall_tauy' , units='unknown', lsize=lsize) 
+    call lnd2atm_add_fld (lnd2atm, fldname='Fall_lwup' , units='unknown', lsize=lsize) 
+    call lnd2atm_add_fld (lnd2atm, fldname='Fall_taux' , units='unknown', lsize=lsize) 
+    call lnd2atm_add_fld (lnd2atm, fldname='Fall_tauy' , units='unknown', lsize=lsize) 
+    call lnd2atm_add_fld (lnd2atm, fldname='Fall_evap' , units='unknown', lsize=lsize) 
+    call lnd2atm_add_fld (lnd2atm, fldname='Fall_swnet', units='unknown', lsize=lsize) 
 
     ! now add dataptr memory for all of the fields
     do n = 1,size(lnd2atm)

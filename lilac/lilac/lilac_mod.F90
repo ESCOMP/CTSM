@@ -135,6 +135,7 @@ contains
     atm_mesh_filename = atm_mesh_file
 
     ! Initialize datatypes atm2lnd and lnd2atm 
+    ! This must be done BEFORE the component initialization
     call lilac_init_atm2lnd(lsize)
     call lilac_init_lnd2atm(lsize)
 
