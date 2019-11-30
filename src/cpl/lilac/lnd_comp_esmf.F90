@@ -2,17 +2,17 @@ module lnd_comp_esmf
 
   !----------------------------------------------------------------------------
   ! This is the ESMF cap for CTSM
+  ! NOTE : both mpi_init and pio_init1 are initialized in lilac_mod.F90
   !----------------------------------------------------------------------------
 
   ! external libraries
   use ESMF
-  use mpi               , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE
   use mpi               , only : MPI_BCAST, MPI_CHARACTER
-  use mct_mod           , only : mct_world_init, mct_world_clean, mct_die
-  use shr_pio_mod       , only : shr_pio_init1, shr_pio_init2
+  use mct_mod           , only : mct_world_init
   use perf_mod          , only : t_startf, t_stopf, t_barrierf
 
   ! cime share code
+  use shr_pio_mod       , only : shr_pio_init2
   use shr_kind_mod      , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod       , only : shr_sys_abort
   use shr_file_mod      , only : shr_file_setLogUnit, shr_file_getLogUnit
@@ -157,8 +157,8 @@ contains
 
     ! for pio_init2 and mct
     type(ESMF_VM)              :: vm
-    integer                    :: mpicom_vm
-    integer                    :: ncomps = 1
+    integer                    :: mpicom_vm    
+    integer                    :: ncomps = 1                 ! for mct 
     integer, pointer           :: mycomms(:)                 ! for mct
     integer, pointer           :: myids(:)                   ! for mct
     integer                    :: compids(1) = (/1/)         ! for both mct and pio_init2 - array with component ids
@@ -181,8 +181,6 @@ contains
     ! Query VM for local PET and mpi communicator
     !------------------------------------------------------------------------
 
-    ! NOTE : both MPI_INIT and PIO_INIT1 are initialized in lilac_mod.F90
-
     call ESMF_VMGetCurrent(vm, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
 
@@ -190,15 +188,11 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
     call ESMF_LogWrite(subname//"ESMF_VMGet", ESMF_LOGMSG_INFO)
 
-    !call ESMF_VMPrint (vm, rc = rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-
-    comms(1) = mpicom_vm
-
     !------------------------------------------------------------------------
     ! Initialize pio_init2 TODO: is this needed here?
     !------------------------------------------------------------------------
 
+    comms(1) = mpicom_vm
     call shr_pio_init2(compids, compLabels, comp_iamin, comms, iam)
     call ESMF_LogWrite(subname//"initialized shr_pio_init2 ...", ESMF_LOGMSG_INFO)
 
