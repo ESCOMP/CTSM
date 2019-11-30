@@ -9,15 +9,15 @@ module lnd_import_export
   use clm_varctl            , only : iulog, co2_ppmv, ndep_from_cpl
   use clm_varcon            , only : rair, o2_molar_const
   use clm_time_manager      , only : get_nstep
+  use clm_instMod           , only : atm2lnd_inst, lnd2atm_inst, water_inst
+  use domainMod             , only : ldomain
   use spmdMod               , only : masterproc
   use decompmod             , only : bounds_type
   use lnd2atmType           , only : lnd2atm_type
   use lnd2glcMod            , only : lnd2glc_type
   use atm2lndType           , only : atm2lnd_type
-  use domainMod             , only : ldomain
-  use shr_megan_mod         , only : shr_megan_mechcomps_n  ! TODO: need to add a namelist read nere
   use lnd_shr_methods       , only : chkerr
-  use clm_instMod           , only : atm2lnd_inst, lnd2atm_inst, water_inst
+  use shr_megan_mod         , only : shr_megan_mechcomps_n  ! TODO: need to add a namelist read nere
 
   implicit none
   private ! except
@@ -25,27 +25,10 @@ module lnd_import_export
   public  :: import_fields
   public  :: export_fields
 
-  private :: fldlist_add
   private :: state_getimport
   private :: state_setexport
   private :: state_getfldptr
   private :: check_for_nans
-
-  type fld_list_type
-     character(len=128) :: stdname
-     integer :: ungridded_lbound = 0
-     integer :: ungridded_ubound = 0
-  end type fld_list_type
-
-  integer, parameter     :: fldsMax = 100
-  integer                :: fldsToLnd_num = 0
-  integer                :: fldsFrLnd_num = 0
-  type (fld_list_type)   :: fldsToLnd(fldsMax)
-  type (fld_list_type)   :: fldsFrLnd(fldsMax)
-  integer, parameter     :: gridTofieldMap = 2       ! ungridded dimension is innermost
-
-  logical                :: glc_present    = .false. ! .true. => running with a non-stubGLC model
-  logical                :: rof_prognostic = .false. ! .true. => running with a prognostic ROF model
 
   ! from atm->lnd
   integer                :: ndep_nflds               ! number  of nitrogen deposition fields from atm->lnd/ocn
@@ -522,39 +505,6 @@ contains
 
   !===============================================================================
 
-  subroutine fldlist_add(num, fldlist, stdname, ungridded_lbound, ungridded_ubound)
-
-    ! input/output variables
-    integer,                    intent(inout) :: num
-    type(fld_list_type),        intent(inout) :: fldlist(:)
-    character(len=*),           intent(in)    :: stdname
-    integer,          optional, intent(in)    :: ungridded_lbound
-    integer,          optional, intent(in)    :: ungridded_ubound
-
-    ! local variables
-    integer :: rc
-    character(len=*), parameter :: subname='(lnd_import_export:fldlist_add)'
-    !-------------------------------------------------------------------------------
-
-    ! Set up a list of field information
-
-    num = num + 1
-    if (num > fldsMax) then
-       call ESMF_LogWrite(trim(subname)//": ERROR num > fldsMax "//trim(stdname), &
-            ESMF_LOGMSG_ERROR, line=__LINE__, file=__FILE__)
-       return
-    endif
-    fldlist(num)%stdname = trim(stdname)
-
-    if (present(ungridded_lbound) .and. present(ungridded_ubound)) then
-       fldlist(num)%ungridded_lbound = ungridded_lbound
-       fldlist(num)%ungridded_ubound = ungridded_ubound
-    end if
-
-  end subroutine fldlist_add
-
-  !===============================================================================
-
   subroutine state_getimport(state, fldname, bounds, output, ungridded_index, rc)
 
     ! ----------------------------------------------
@@ -570,20 +520,17 @@ contains
     integer             , intent(out)   :: rc
 
     ! local variables
-    integer                     :: g, i,n
-
-    integer                    :: fieldcount
-
-    real(R8), pointer           :: fldptr1d(:)
-    real(R8), pointer           :: fldptr2d(:,:)
-    type(ESMF_StateItem_Flag)   :: itemFlag
-    character(len=cs)           :: cvalue
+    integer                   :: g, i,n
+    integer                   :: fieldcount
+    real(R8), pointer         :: fldptr1d(:)
+    real(R8), pointer         :: fldptr2d(:,:)
+    type(ESMF_StateItem_Flag) :: itemFlag
+    character(len=cs)         :: cvalue
+    type (ESMF_FieldBundle)   :: field
+    type(ESMF_Field)          :: lfield
+    type (ESMF_FieldBundle)   :: fieldBundle
+    logical                   :: isPresent
     character(len=*), parameter :: subname='(lnd_import_export:state_getimport)'
-
-    type (ESMF_FieldBundle)::  field
-    type(ESMF_Field)            :: lfield
-    type (ESMF_FieldBundle)::  fieldBundle
-    logical                       :: isPresent
     ! ----------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -605,7 +552,6 @@ contains
     ! Determine if fieldbundle  exists in state
     call ESMF_StateGet(state, "c2l_fb", itemFlag, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    !call ESMF_StateGet(State, itemName=trim(fldname), field=lfield, rc=rc)
 
     ! if fieldbundle exists then create output array - else do nothing
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
@@ -616,10 +562,6 @@ contains
        call ESMF_LogWrite(subname//'c2l_fb found and now ... getting '//trim(fldname), ESMF_LOGMSG_INFO)
        call ESMF_FieldBundleGet(fieldBundle,fieldName=trim(fldname), field=lfield,  isPresent=isPresent, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       !call ESMF_FieldBundleGet(fieldBundle,fieldName=trim(fldname), field=field, isPresent=isPresent, rc=rc)
-       !call ESMF_FieldBundleGet(fieldBundle,field=field, rc=rc)
-       !call ESMF_FieldBundleGet(fieldBundle, fieldCount=fieldCount, rc=rc)
-
 
        ! Now for error checking we can put ... if (isPresent...)
        ! get field pointer
@@ -637,17 +579,10 @@ contains
 
        ! determine output array
        if (present(ungridded_index)) then
-          if (gridToFieldMap == 1) then
-             do g = bounds%begg, bounds%endg
-                n = g - bounds%begg + 1
-                output(g) = fldptr2d(n,ungridded_index)
-             end do
-          else if (gridToFieldMap == 2) then
-             do g = bounds%begg, bounds%endg
-                n = g - bounds%begg + 1
-                output(g) = fldptr2d(ungridded_index,n)
-             end do
-          end if
+          do g = bounds%begg, bounds%endg
+             n = g - bounds%begg + 1
+             output(g) = fldptr2d(ungridded_index,n)
+          end do
        else
           do g = bounds%begg, bounds%endg
              n = g - bounds%begg + 1
@@ -725,24 +660,13 @@ contains
 
        ! determine output array
        if (present(ungridded_index)) then
-          if (gridToFieldMap == 1) then
-             fldptr2d(:,ungridded_index) = 0._r8
-             do g = bounds%begg, bounds%endg
-                n = g - bounds%begg + 1
-                fldptr2d(n,ungridded_index) = input(g)
-             end do
-             if (present(minus)) then
-                fldptr2d(:,ungridded_index) = -fldptr2d(:,ungridded_index)
-             end if
-          else if (gridToFieldMap == 2) then
-             fldptr2d(ungridded_index,:) = 0._r8
-             do g = bounds%begg, bounds%endg
-                n = g - bounds%begg + 1
-                fldptr2d(ungridded_index,n) = input(g)
-             end do
-             if (present(minus)) then
-                fldptr2d(ungridded_index,:) = -fldptr2d(ungridded_index,:)
-             end if
+          fldptr2d(ungridded_index,:) = 0._r8
+          do g = bounds%begg, bounds%endg
+             n = g - bounds%begg + 1
+             fldptr2d(ungridded_index,n) = input(g)
+          end do
+          if (present(minus)) then
+             fldptr2d(ungridded_index,:) = -fldptr2d(ungridded_index,:)
           end if
        else
           fldptr1d(:) = 0._r8

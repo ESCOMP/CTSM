@@ -6,8 +6,30 @@ CTSM namelist creator
 
 import sys, os, shutil, subprocess, logging, argparse
 import six
-from lnd_input import *
-from argparse   import RawTextHelpFormatter
+from argparse import RawTextHelpFormatter
+
+try:
+    # python2
+    from ConfigParser import SafeConfigParser as config_parser
+    from ConfigParser import MissingSectionHeaderError
+    from ConfigParser import NoSectionError, NoOptionError
+
+    def config_string_cleaner(text):
+        """convert strings into unicode
+        """
+        return text.decode('utf-8')
+except ImportError:
+    # python3
+    from configparser import ConfigParser as config_parser
+    from configparser import MissingSectionHeaderError
+    from configparser import NoSectionError, NoOptionError
+
+    def config_string_cleaner(text):
+        """Python3 already uses unicode strings, so just return the string
+        without modification.
+
+        """
+        return text
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +156,32 @@ def buildnml(rundir, bldnmldir):
 
     """Build the ctsm namelist """
 
+    file_path = os.path.join(rundir,'ctsm.cfg') 
+
+    # read the config file
+    config = config_parser()
+    config.read(file_path) # TODO: add the code in externals_description.py to get the error checks
+
+    clm_phys          = config.get('buildnml_input', 'clm_phys')
+    start_type        = config.get('buildnml_input', 'start_type')
+    start_ymd         = config.get('buildnml_input', 'start_ymd')
+    startfile_type    = config.get('buildnml_input', 'startfile_type')
+    ignore            = config.get('buildnml_input', 'ignore')
+    configuration     = config.get('buildnml_input', 'configuration')
+    structure         = config.get('buildnml_input', 'structure')
+    ccsm_co2_ppmv     = config.get('buildnml_input', 'ccsm_co2_ppmv')
+    clm_co2_type      = config.get('buildnml_input', 'clm_co2_type')
+    clm_bldnml_opts   = config.get('buildnml_input', 'clm_bldnml_opts')
+    use_case          = config.get('buildnml_input', 'use_case')
+    lnd_tuning_mode   = config.get('buildnml_input', 'lnd_tuning_mode')
+    spinup            = config.get('buildnml_input', 'spinup')
+    gridmask          = config.get('buildnml_input', 'gridmask')
+    lnd_grid          = config.get('buildnml_input', 'lnd_grid')
+    lnd_domain_file   = config.get('buildnml_input', 'lnd_domain_file')
+    lnd_domain_path   = config.get('buildnml_input', 'lnd_domain_path')
+    din_loc_root      = config.get('buildnml_input', 'din_loc_root')
+    clm_namelist_opts = config.get('buildnml_input', 'clm_namelist_opts')
+
     # create config_cache.xml file 
     # Note that build-namelist utilizes the contents of the config_cache.xml file in 
     # the namelist_defaults.xml file to obtain namelist variables
@@ -176,7 +224,11 @@ def buildnml(rundir, bldnmldir):
     if rc > 0:
         raise Exception("Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
 
-    # remove temporary files from rundir
+    # remove temporary files in bldnmldir
+    os.remove(os.path.join(bldnmldir, "lnd_in"))
+    os.remove(os.path.join(bldnmldir, "clm.input_data_list"))
+
+    # remove temporary files in rundir
     os.remove(os.path.join(rundir, "config_cache.xml"))
     os.remove(os.path.join(rundir, "env_lilac.xml"))
     os.remove(os.path.join(rundir, "drv_flds_in"))

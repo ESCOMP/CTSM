@@ -21,6 +21,15 @@ from CIME.utils import run_cmd, expect
 logger = logging.getLogger(__name__)
 
 ###############################################################################
+def _get_osvar(key, default):
+###############################################################################
+    if key in os.environ:
+        value = os.environ[key]
+    else:
+        value = default
+    return value
+
+###############################################################################
 def _main_func():
 ###############################################################################
 
@@ -33,12 +42,19 @@ def _main_func():
         gmake_j = case.get_value("GMAKE_J")
         gmake = case.get_value("GMAKE")
 
+        lilac_mode = _get_osvar('LILAC_MODE', 'off')
+        print "DEBUG: lilac_mode is ",lilac_mode
+        if lilac_mode == 'on':
+            lilac_src = _get_osvar('LILAC_SRC', None)
+            expect(lilac_src, "environment variable LILAC_SRC must be set")
+
         #-------------------------------------------------------
         # create Filepath file
         #-------------------------------------------------------
         filepath_file = os.path.join(bldroot,"Filepath")
         if not os.path.isfile(filepath_file):
             caseroot = case.get_value("CASEROOT")
+
             paths = [os.path.join(caseroot,"SourceMods","src.clm"),
                      os.path.join(lnd_root,"src","main"),
                      os.path.join(lnd_root,"src","biogeophys"),
@@ -51,10 +67,14 @@ def _main_func():
                      os.path.join(lnd_root,"src","fates","biogeophys"),
                      os.path.join(lnd_root,"src","fates","biogeochem"),
                      os.path.join(lnd_root,"src","fates","fire"),
-                     os.path.join(lnd_root,"src","utils"),
-                     os.path.join(lnd_root,"src","cpl"),
-                     #os.path.join(lnd_root,"src","cpl","mct"),
-                     os.path.join(lnd_root,"src","cpl","lilac")]
+                     os.path.join(lnd_root,"src","utils")]
+
+            if lilac_mode == 'off':
+                paths.append(os.path.join(lnd_root,"src","cpl","mct"))
+            else:
+                paths.append(os.path.join(lnd_root,"src","cpl","lilac"))
+                paths.append(lilac_src)
+
             with open(filepath_file, "w") as filepath:
                 filepath.write("\n".join(paths))
                 filepath.write("\n")
