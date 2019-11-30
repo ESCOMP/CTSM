@@ -1,4 +1,5 @@
-&lilac_input
+&atm_driver_input
+  atm_mesh_file    	= '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
   atm_start_year	= 2000
   atm_start_mon		= 1
   atm_start_day		= 1
@@ -9,7 +10,6 @@
   atm_stop_secs		= 0
   atm_timestep		= 1800
   atm_calendar		= 'NOLEAP'
-  atm_mesh_filename	= '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
   atm_timestep_start	= 1
   atm_timestep_stop	= 48
 

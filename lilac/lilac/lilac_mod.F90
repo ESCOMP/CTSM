@@ -2,6 +2,9 @@ module lilac_mod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
+  ! This is the driver for running CTSM and the ESMF lilac atm cap that
+  ! is put in place to ensure that the host atmosphere does not need to
+  ! know about ESMF
   !-----------------------------------------------------------------------
 
   use ESMF
@@ -10,21 +13,23 @@ module lilac_mod
   public :: lilac_init
   public :: lilac_run
 
+  ! Gridded components and states in gridded components
+  type(ESMF_GridComp) :: atm_gcomp
+  type(ESMF_GridComp) :: lnd_gcomp
+
+  ! Coupler components
+  type(ESMF_CplComp)  :: cpl_atm2lnd_comp
+  type(ESMF_CplComp)  :: cpl_lnd2atm_comp
+
+  ! States
+  type(ESMF_State)    :: atm2lnd_l_state, atm2lnd_a_state
+  type(ESMF_State)    :: lnd2atm_a_state, lnd2atm_l_state
+
   ! Clock, TimeInterval, and Times
   type(ESMF_Clock)           :: lilac_clock
   type(ESMF_Calendar),target :: lilac_calendar
   type(ESMF_Alarm)           :: lilac_restart_alarm
   type(ESMF_Alarm)           :: lilac_stop_alarm
-
-  ! Gridded components and states in gridded components
-  type(ESMF_GridComp)        :: atm_gcomp
-  type(ESMF_GridComp)        :: lnd_gcomp
-  type(ESMF_State)           :: atm2lnd_l_state, atm2lnd_a_state
-  type(ESMF_State)           :: lnd2atm_a_state, lnd2atm_l_state
-
-  ! Coupler components
-  type(ESMF_CplComp)         :: cpl_atm2lnd_comp
-  type(ESMF_CplComp)         :: cpl_lnd2atm_comp
 
   character(*) , parameter   :: modname     = "lilac_mod"
 
@@ -34,7 +39,8 @@ module lilac_mod
 contains
 !========================================================================
 
-  subroutine lilac_init(atm_global_index, atm_mesh_filepath, atm_calendar, atm_timestep, &
+  subroutine lilac_init(atm_mesh_file, atm_global_index, atm_lons, atm_lats, &
+       atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
        atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs)
 
@@ -42,6 +48,7 @@ contains
     ! This is called by the host atmosphere
     ! --------------------------------------------------------------------------------
 
+    use lilac_io      , only : lilac_io_init
     use lilac_utils   , only : lilac_init_lnd2atm, lilac_init_atm2lnd
     use lilac_utils   , only : gindex_atm, atm_mesh_filename
     use lilac_cpl     , only : cpl_atm2lnd_register, cpl_lnd2atm_register
@@ -51,8 +58,10 @@ contains
     use shr_sys_mod   , only : shr_sys_abort
 
     ! input/output variables
+    character(len=*) , intent(in) :: atm_mesh_file
     integer          , intent(in) :: atm_global_index(:)
-    character(len=*) , intent(in) :: atm_mesh_filepath
+    real             , intent(in) :: atm_lons(:)
+    real             , intent(in) :: atm_lats(:)
     character(len=*) , intent(in) :: atm_calendar
     integer          , intent(in) :: atm_timestep 
     integer          , intent(in) :: atm_start_year !(yyyy)
@@ -100,6 +109,10 @@ contains
     call ESMF_LogWrite(subname//".........................", ESMF_LOGMSG_INFO)
     call ESMF_LogWrite(subname//"Initializing ESMF        ", ESMF_LOGMSG_INFO)
 
+    !-------------------------------------------------------------------------
+    ! Initialize pio with first initialization
+    !-------------------------------------------------------------------------
+
     ! Initialize pio (needed by CTSM) - TODO: this should be done within CTSM not here
 
     call ESMF_VMGetGlobal(vm=vm, rc=rc)
@@ -107,17 +120,21 @@ contains
     call ESMF_VMGet(vm, localPet=mytask, mpiCommunicator=mpic, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
-    call shr_pio_init1(ncomps=1, nlfilename="drv_in", Global_Comm=mpic)  ! TODO: make the filename lilac_in
+    call shr_pio_init1(ncomps=1, nlfilename="lilac_in", Global_Comm=mpic)
 
-    ! Initialize lilac_util module variable gindex_atm
+    !-------------------------------------------------------------------------
+    ! Initial lilac_utils module variables
+    !-------------------------------------------------------------------------
+
+    ! Initialize gindex_atm
     lsize = size(atm_global_index)
     allocate(gindex_atm(lsize))
     gindex_atm(:) = atm_global_index(:)
 
-    ! Initialize lilac_util module variable for atm mesh file
-    atm_mesh_filename = atm_mesh_filepath
+    ! Initialize atm_mesh_filename
+    atm_mesh_filename = atm_mesh_file
 
-    ! Initialize lilac_util module data atm2lnd and lnd2atm 
+    ! Initialize datatypes atm2lnd and lnd2atm 
     call lilac_init_atm2lnd(lsize)
     call lilac_init_lnd2atm(lsize)
 
@@ -265,9 +282,9 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
     call ESMF_GridCompInitialize(atm_gcomp, importState=lnd2atm_a_state, exportState=atm2lnd_a_state, clock=lilac_clock, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    call ESMF_LogWrite(subname//"atmos_cap or atm_gcomp initialized", ESMF_LOGMSG_INFO)
-
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort("lilac error in initializing atmcap")
+    end if
     call ESMF_LogWrite(subname//"lilac_atm gridded component initialized", ESMF_LOGMSG_INFO)
 
     ! -------------------------------------------------------------------------
@@ -282,9 +299,9 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
     call ESMF_GridCompInitialize(lnd_gcomp, importState=atm2lnd_l_state, exportState=lnd2atm_l_state, clock=lilac_clock, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    call ESMF_LogWrite(subname//"lnd_cap or lnd_gcomp initialized", ESMF_LOGMSG_INFO)
-
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort("lilac error in initializing ctsm")
+    end if
     call ESMF_LogWrite(subname//"CTSM gridded component initialized", ESMF_LOGMSG_INFO)
 
     ! -------------------------------------------------------------------------
@@ -292,18 +309,27 @@ contains
     ! -------------------------------------------------------------------------
 
     call ESMF_CplCompInitialize(cpl_atm2lnd_comp, importState=atm2lnd_a_state, exportState=atm2lnd_l_state, clock=lilac_clock, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    call ESMF_LogWrite(subname//"coupler :: cpl_atm2lnd_comp initialized", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       print *, trim(subname) // "coupler :: cpl_atm2lnd_comp initialize finished" !, rc =", rc
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort("lilac error in initializing cpl_lnd2atm coupler component")
     end if
+    call ESMF_LogWrite(subname//"coupler :: cpl_atm2lnd_comp initialized", ESMF_LOGMSG_INFO)
 
     call ESMF_CplCompInitialize(cpl_lnd2atm_comp, importState=lnd2atm_l_state, exportState=lnd2atm_a_state, clock=lilac_clock, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    call ESMF_LogWrite(subname//"coupler :: cpl_lnd2atm_comp initialized", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       print *, trim(subname) // "coupler :: cpl_lnd2atm_comp initialize finished" !, rc =", rc
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort("lilac error in initializing cpl_atm2lnd coupler component")
     end if
+    call ESMF_LogWrite(subname//"coupler :: cpl_lnd2atm_comp initialized", ESMF_LOGMSG_INFO)
+
+    if (mytask == 0) then
+       print *, trim(subname) // "finished lilac initialization"
+    end if
+
+    !-------------------------------------------------------------------------
+    ! Initialize lilac_io_mod module data
+    !-------------------------------------------------------------------------
+
+    call lilac_io_init()
+    call ESMF_LogWrite(subname//"initialized lilac_io ...", ESMF_LOGMSG_INFO)
 
   end subroutine lilac_init
 
@@ -311,7 +337,8 @@ contains
 
   subroutine lilac_run(restart_alarm_is_ringing, stop_alarm_is_ringing)
 
-    use shr_sys_mod, only : shr_sys_abort
+    use shr_sys_mod  , only : shr_sys_abort
+    use lilac_history, only : lilac_history_write
 
     ! input/output variables
     logical, intent(in) :: restart_alarm_is_ringing
@@ -383,6 +410,13 @@ contains
          clock=lilac_clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call shr_sys_abort("lilac error in cpl_lnd2atm")
+    end if
+
+    ! Write out history output
+    call lilac_history_write(atm2lnd_a_state, atm2lnd_l_state, lnd2atm_l_state, lnd2atm_a_state, &
+         lilac_clock, rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort("lilac error in history write")
     end if
 
     ! Advance the time at the end of the time step
