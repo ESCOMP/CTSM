@@ -187,14 +187,17 @@ contains
     ! --- History Alarms
     !---------------------------------------
 
-    if (ESMF_AlarmIsRinging(AlarmHist, rc=rc)) then
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       alarmIsOn = .true.
-       call ESMF_AlarmRingerOff( AlarmHist, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    else
-       alarmisOn = .false.
-    endif
+    ! if (ESMF_AlarmIsRinging(AlarmHist, rc=rc)) then
+    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    !    alarmIsOn = .true.
+    !    call ESMF_AlarmRingerOff( AlarmHist, rc=rc )
+    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! else
+    !    alarmisOn = .false.
+    ! endif
+    ! hard-wire for now
+    alarmisOn = .true.
+    case_name = 'test_lilac'
 
     !---------------------------------------
     ! --- History File
@@ -203,9 +206,9 @@ contains
     !---------------------------------------
 
     if (alarmIsOn) then
-       write(hist_file,"(6a)") &
-            trim(case_name), '.cpl',trim(cpl_inst_tag),'.hi.', trim(nexttimestr),'.nc'
+       write(hist_file,"(6a)") trim(case_name), '.cpl.hi.',trim(nexttimestr),'.nc'
        call ESMF_LogWrite(trim(subname)//": write "//trim(hist_file), ESMF_LOGMSG_INFO, rc=rc)
+
        call lilac_io_wopen(hist_file, vm, iam, clobber=.true.)
 
        do m = 1,2

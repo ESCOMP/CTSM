@@ -14,51 +14,24 @@ module lilac_io
   use lilac_methods   , only : FB_getFldPtr => lilac_methods_FB_getFldPtr
   use lilac_methods   , only : FB_getNameN  => lilac_methods_FB_getNameN
   use lilac_methods   , only : chkerr
-  use pio             , only : file_desc_t, iosystem_desc_t
-  use pio             , only : var_desc_t, io_desc_t, PIO_UNLIMITED
-  use pio             , only : pio_def_dim, pio_inq_dimid, pio_real, pio_put_att, pio_double
-  use pio             , only : pio_inq_varid, pio_setframe, pio_write_darray, pio_initdecomp, pio_freedecomp
-  use pio             , only : pio_syncfile, pio_offset_kind, pio_int
-  use pio             , only : pio_double, pio_def_dim, pio_def_var, pio_put_att, pio_put_var
-  use pio             , only : PIO_IOTYPE_PNETCDF, PIO_IOTYPE_NETCDF, PIO_BCAST_ERROR, PIO_INTERNAL_ERROR
-  use pio             , only : pio_openfile, pio_createfile, PIO_GLOBAL, pio_enddef
-  use pio             , only : pio_put_att, pio_redef, pio_get_att
-  use pio             , only : pio_seterrorhandling, pio_file_is_open, pio_clobber, pio_write, pio_noclobber
-  use pio             , only : pio_file_is_open, pio_closefile
-  use pio             , only : pio_redef, pio_enddef
-  use pio             , only : var_desc_t, pio_def_dim
-  use pio             , only : pio_put_att, pio_put_var
-  use pio             , only : pio_int, pio_char
-  use pio             , only : var_desc_t, pio_def_var, pio_put_att
-  use pio             , only : pio_double, pio_noerr, pio_put_var
-  use pio             , only : file_desc_T, var_desc_t, io_desc_t, pio_nowrite, pio_openfile
-  use pio             , only : pio_noerr, PIO_BCAST_ERROR, PIO_INTERNAL_ERROR
-  use pio             , only : pio_double, pio_get_att, pio_seterrorhandling, pio_freedecomp, pio_closefile
-  use pio             , only : pio_read_darray, pio_offset_kind, pio_setframe
-  use pio             , only : file_desc_T, var_desc_t, io_desc_t, pio_nowrite, pio_openfile
-  use pio             , only : pio_noerr, pio_inq_varndims
-  use pio             , only : pio_inq_dimid, pio_inq_dimlen, pio_inq_vardimid
-  use pio             , only : pio_double, pio_seterrorhandling, pio_initdecomp
-  use pio             , only : var_desc_t, file_desc_t, PIO_BCAST_ERROR, PIO_INTERNAL_ERROR, pio_seterrorhandling
-  use pio             , only : pio_get_var, pio_get_att, pio_openfile
-  use pio             , only : pio_nowrite, pio_openfile, pio_global
-  use pio             , only : pio_closefile
-  use pio             , only : file_desc_t, var_desc_t, pio_openfile, pio_closefile, pio_seterrorhandling
-  use pio             , only : PIO_BCAST_ERROR, PIO_INTERNAL_ERROR, pio_get_var
-  use pio             , only : pio_nowrite, pio_openfile, pio_global, pio_get_att
-  use pio             , only : file_desc_t, var_desc_t, pio_seterrorhandling, PIO_BCAST_ERROR, PIO_INTERNAL_ERROR
-  use pio             , only : pio_closefile, pio_get_var
-  use pio             , only : pio_openfile, pio_global, pio_get_att, pio_nowrite
-  use pio             , only : var_desc_t, pio_def_dim, pio_put_att
-  use pio             , only : pio_put_var
-  use pio             , only : var_desc_t, pio_def_dim
-  use pio             , only : pio_put_var, pio_double, pio_put_att
+  use pio             , only : file_desc_t, iosystem_desc_t, var_desc_t, io_desc_t, file_desc_t
+  use pio             , only : PIO_DOUBLE, PIO_REAL, PIO_INT, PIO_CHAR,PIO_UNLIMITED, PIO_GLOBAL
+  use pio             , only : PIO_IOTYPE_PNETCDF, PIO_IOTYPE_NETCDF, PIO_BCAST_ERROR, PIO_INTERNAL_ERROR, PIO_NOERR
+  use pio             , only : pio_openfile, pio_createfile, pio_nowrite, pio_redef, pio_enddef, pio_closefile
+  use pio             , only : pio_syncfile, pio_offset_kind
+  use pio             , only : pio_initdecomp, pio_freedecomp
+  use pio             , only : pio_seterrorhandling, pio_file_is_open, pio_clobber, pio_noclobber, pio_setframe
+  use pio             , only : pio_inq_dimid, pio_inq_dimlen, pio_inq_vardimid, pio_inq_varid, pio_inq_varndims 
+  use pio             , only : pio_def_dim, pio_def_var 
+  use pio             , only : pio_get_var, pio_get_att
+  use pio             , only : pio_put_var, pio_put_att 
+  use pio             , only : pio_write, pio_write_darray
+  use pio             , only : pio_read_darray
 
   implicit none
   private
 
   integer :: logunit = 6 ! TODO: fix this
-  integer :: lilac_id
 
   ! public member functions:
   public :: lilac_io_wopen
@@ -111,16 +84,18 @@ module lilac_io
   ! module data
   !-------------------------------------------------------------------------------
 
+  type(iosystem_desc_t), pointer :: io_subsystem
+  integer                        :: pio_iotype
+  integer                        :: pio_ioformat
+
+  integer    , parameter         :: file_desc_t_cnt = 20 ! Note - this is hard-wired for now
+  type(file_desc_t)              :: io_file(0:file_desc_t_cnt)
+
   character(*),parameter         :: prefix    = "lilac_io_"
   character(*),parameter         :: modName   = "(lilac_io_mod) "
   character(*),parameter         :: version   = "lilac0"
-  integer    , parameter         :: file_desc_t_cnt = 20 ! Note - this is hard-wired for now
   integer    , parameter         :: number_strlen = 2
   character(CL)                  :: wfilename = ''
-  type(file_desc_t)              :: io_file(0:file_desc_t_cnt)
-  integer                        :: pio_iotype
-  integer                        :: pio_ioformat
-  type(iosystem_desc_t), pointer :: io_subsystem
   character(*),parameter         :: u_file_u = &
        __FILE__
 
@@ -128,6 +103,19 @@ module lilac_io
 contains
 !=================================================================================
 
+  subroutine lilac_io_init()
+
+    !---------------
+    ! initialize module variables
+    !---------------
+
+    io_subsystem => shr_pio_getiosys(compid=1)
+    pio_iotype   =  shr_pio_getiotype(compid=1)
+    pio_ioformat =  shr_pio_getioformat(compid=1)
+
+  end subroutine lilac_io_init
+
+  !===============================================================================
   logical function lilac_io_file_exists(vm, iam, filename)
 
     !---------------
@@ -154,43 +142,6 @@ contains
     if(tmp(1) == 1) lilac_io_file_exists = .true.
 
   end function lilac_io_file_exists
-
-  !===============================================================================
-  subroutine lilac_io_init()
-
-    !---------------
-    ! initialize pio
-    !---------------
-
-#ifdef INTERNAL_PIO_INIT
-    ! if CMEPS is the only component using PIO, then it needs to initialize PIO
-    use shr_pio_mod , only : shr_pio_init2
-
-    type(ESMF_VM)         :: vm
-    integer               :: comms(1), comps(1)
-    logical               :: comp_iamin(1)
-    integer               :: comp_comm_iam(1)
-    character(len=32)     :: compLabels(1)
-    integer               :: rc
-
-    call ESMF_VMGetCurrent(vm=vm, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_VMGet(vm, mpiCommunicator=comms(1), localPet=comp_comm_iam(1), rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    comps(1) = lilac_id
-    compLabels(1) = "MED"
-    comp_iamin(1) = .true.
-
-    call shr_pio_init2(comps, compLabels, comp_iamin, comms, comp_comm_iam)
-#endif
-
-    io_subsystem => shr_pio_getiosys(lilac_id)
-    pio_iotype   =  shr_pio_getiotype(lilac_id)
-    pio_ioformat =  shr_pio_getioformat(lilac_id)
-
-  end subroutine lilac_io_init
 
   !===============================================================================
   subroutine lilac_io_wopen(filename, vm, iam, clobber, file_ind, model_doi_url)
@@ -249,11 +200,11 @@ contains
                 write(logunit,*) subname,' open file ',trim(filename)
              end if
              call pio_seterrorhandling(io_file(lfile_ind),PIO_BCAST_ERROR)
-             rcode = pio_get_att(io_file(lfile_ind),pio_global,"file_version",lversion)
+             rcode = pio_get_att(io_file(lfile_ind),PIO_GLOBAL,"file_version",lversion)
              call pio_seterrorhandling(io_file(lfile_ind),PIO_INTERNAL_ERROR)
              if (trim(lversion) /= trim(version)) then
                 rcode = pio_redef(io_file(lfile_ind))
-                rcode = pio_put_att(io_file(lfile_ind),pio_global,"file_version",version)
+                rcode = pio_put_att(io_file(lfile_ind),PIO_GLOBAL,"file_version",version)
                 rcode = pio_enddef(io_file(lfile_ind))
              endif
           endif
@@ -267,8 +218,8 @@ contains
           if (iam==0) then
              write(logunit,*) subname,' create file ',trim(filename)
           end if
-          rcode = pio_put_att(io_file(lfile_ind),pio_global,"file_version",version)
-          rcode = pio_put_att(io_file(lfile_ind),pio_global,"model_doi_url",lmodel_doi_url)
+          rcode = pio_put_att(io_file(lfile_ind),PIO_GLOBAL,"file_version",version)
+          rcode = pio_put_att(io_file(lfile_ind),PIO_GLOBAL,"model_doi_url",lmodel_doi_url)
        endif
     elseif (trim(wfilename) /= trim(filename)) then
        ! filename is open, better match open filename
@@ -1539,7 +1490,7 @@ contains
     if (lilac_io_file_exists(vm, iam, filename)) then
        rcode = pio_openfile(io_subsystem, pioid, pio_iotype, trim(filename),pio_nowrite)
        call pio_seterrorhandling(pioid,PIO_BCAST_ERROR)
-       rcode = pio_get_att(pioid,pio_global,"file_version",lversion)
+       rcode = pio_get_att(pioid,PIO_GLOBAL,"file_version",lversion)
        call pio_seterrorhandling(pioid,PIO_INTERNAL_ERROR)
     else
        if(iam==0) write(logunit,*) subname,' ERROR: file invalid ',trim(filename),' ',trim(dname)
@@ -1619,7 +1570,7 @@ contains
     if (lilac_io_file_exists(vm, iam, filename)) then
        rcode = pio_openfile(io_subsystem, pioid, pio_iotype, trim(filename),pio_nowrite)
        call pio_seterrorhandling(pioid,PIO_BCAST_ERROR)
-       rcode = pio_get_att(pioid,pio_global,"file_version",lversion)
+       rcode = pio_get_att(pioid,PIO_GLOBAL,"file_version",lversion)
        call pio_seterrorhandling(pioid,PIO_INTERNAL_ERROR)
     else
        if(iam==0) write(logunit,*) subname,' ERROR: file invalid ',trim(filename),' ',trim(dname)
@@ -1672,7 +1623,7 @@ contains
        rcode = pio_openfile(io_subsystem, pioid, pio_iotype, trim(filename),pio_nowrite)
        ! write(logunit,*) subname,' open file ',trim(filename)
        call pio_seterrorhandling(pioid,PIO_BCAST_ERROR)
-       rcode = pio_get_att(pioid,pio_global,"file_version",lversion)
+       rcode = pio_get_att(pioid,PIO_GLOBAL,"file_version",lversion)
        call pio_seterrorhandling(pioid,PIO_INTERNAL_ERROR)
     else
        if(iam==0) write(logunit,*) subname,' ERROR: file invalid ',trim(filename),' ',trim(dname)

@@ -48,6 +48,7 @@ contains
     ! This is called by the host atmosphere
     ! --------------------------------------------------------------------------------
 
+    use lilac_io      , only : lilac_io_init
     use lilac_utils   , only : lilac_init_lnd2atm, lilac_init_atm2lnd
     use lilac_utils   , only : gindex_atm, atm_mesh_filename
     use lilac_cpl     , only : cpl_atm2lnd_register, cpl_lnd2atm_register
@@ -107,6 +108,10 @@ contains
 
     call ESMF_LogWrite(subname//".........................", ESMF_LOGMSG_INFO)
     call ESMF_LogWrite(subname//"Initializing ESMF        ", ESMF_LOGMSG_INFO)
+
+    !-------------------------------------------------------------------------
+    ! Initialize pio with first initialization
+    !-------------------------------------------------------------------------
 
     ! Initialize pio (needed by CTSM) - TODO: this should be done within CTSM not here
 
@@ -319,14 +324,21 @@ contains
        print *, trim(subname) // "finished lilac initialization"
     end if
 
+    !-------------------------------------------------------------------------
+    ! Initialize lilac_io_mod module data
+    !-------------------------------------------------------------------------
+
+    call lilac_io_init()
+    call ESMF_LogWrite(subname//"initialized lilac_io ...", ESMF_LOGMSG_INFO)
+
   end subroutine lilac_init
 
   !========================================================================
 
   subroutine lilac_run(restart_alarm_is_ringing, stop_alarm_is_ringing)
 
-    use shr_sys_mod, only : shr_sys_abort
-    use lilac_history
+    use shr_sys_mod  , only : shr_sys_abort
+    use lilac_history, only : lilac_history_write
 
     ! input/output variables
     logical, intent(in) :: restart_alarm_is_ringing
@@ -398,6 +410,13 @@ contains
          clock=lilac_clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call shr_sys_abort("lilac error in cpl_lnd2atm")
+    end if
+
+    ! Write out history output
+    call lilac_history_write(atm2lnd_a_state, atm2lnd_l_state, lnd2atm_l_state, lnd2atm_a_state, &
+         lilac_clock, rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort("lilac error in history write")
     end if
 
     ! Advance the time at the end of the time step
