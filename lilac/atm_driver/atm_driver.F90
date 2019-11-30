@@ -16,10 +16,9 @@ program atm_driver
   !   ESMF lilac_atmcap            ESMF CTSM cap     ESMF river cap (Mizzouroute, Mosart)
   !----------------------------------------------------------------------------
   
+  use mpi         , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
   use lilac_mod   , only : lilac_init, lilac_run, lilac_final
   use lilac_utils , only : lilac_atm2lnd, lilac_lnd2atm
-  use shr_sys_mod , only : shr_sys_abort
-  use mpi         , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
 
   implicit none
 
@@ -90,7 +89,8 @@ program atm_driver
   open(newunit=fileunit, status="old", file="atm_driver_in")
   read(fileunit, atm_driver_input, iostat=ierr)
   if (ierr > 0) then
-     call shr_sys_abort( 'problem on read of atm_driver_in')
+     print *, 'Error on reading atm_driver_in' 
+     call MPI_ABORT(MPI_COMM_WORLD, ierr)
   end if
   close(fileunit)
 
