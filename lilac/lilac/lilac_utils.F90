@@ -1,5 +1,7 @@
 module lilac_utils
 
+  ! NOTE: the following cannot depend on any esmf objects - since it will be used by the host atmosphere
+
   implicit none
   private
 

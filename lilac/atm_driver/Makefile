@@ -15,11 +15,14 @@ include $(ESMFMKFILE)
 ### Define directory paths
 #================================================================================
 CASE_NAME        =  why01-g
-CTSM_BLD_DIR     =  /glade/scratch/mvertens/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/mct/esmf
+PIO_INC          = -I/glade/scratch/mvertens/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/include
+CTSM_BLD_DIR     =   /glade/scratch/mvertens/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/mct/esmf
 CTSM_INC         =  -I$(CTSM_BLD_DIR)/include
 CTSM_LIB         =  -L$(CTSM_BLD_DIR)/lib -lclm
+
 #TRACEBACK_FLAGS =  -g -traceback -debug all -check all -O2 -r8
 TRACEBACK_FLAGS  = -qno-opt-dynamic-align  -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source -qopt-report -xCORE_AVX2 -no-fma  -O0 -g -check uninit -check bounds -check pointers -fpe0 -check noarg_temp_created -DLINUX  -DFORTRANUNDERSCORE -DCPRINTEL -DDEBUG -DHAVE_MPI -DPIO1 -DHAVE_SLASHPROC -D_PNETCDF -DESMF_VERSION_MAJOR=7 -DESMF_VERSION_MINOR=1 -free
+
 
 # -----------------------------------------------------------------------------
 EXTRA_LIBS  =   -L/glade/scratch/mvertens/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/mct/esmf/c1a1l1i1o1r1g1w1i1e1/lib -lcsm_share -L/glade/scratch/mvertens/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/lib -lpio -lgptl -lmct -lmpeu -mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L$(ESMF_LIB_DIR) -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -Wl,-rpath,$(ESMF_LIB_DIR) -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf -cxxlib
@@ -69,6 +72,36 @@ lilac_mod.o : $(LILAC_DIR)/lilac_mod.F90
 		$(CTSM_INC) $(CTSM_LIB) $(TRACEBACK_FLAGS)           \
 		$(EXTRA_LIBS) $(MORE_LIBS) $<
 
+lilac_constants.o : $(LILAC_DIR)/lilac_constants.F90
+	$(ESMF_F90COMPILER) -c $(ESMF_F90COMPILEOPTS) $(ESMF_F90COMPILEPATHS) \
+		$(ESMF_F90COMPILEFREECPP) $(ESMF_F90COMPILECPPFLAGS) $(ESMF_F90COMPILEFREENOCPP) \
+		$(CTSM_INC) $(CTSM_LIB) $(TRACEBACK_FLAGS)           \
+		$(EXTRA_LIBS) $(MORE_LIBS) $<
+
+lilac_methods.o : $(LILAC_DIR)/lilac_methods.F90
+	$(ESMF_F90COMPILER) -c $(ESMF_F90COMPILEOPTS) $(ESMF_F90COMPILEPATHS) \
+		$(ESMF_F90COMPILEFREECPP) $(ESMF_F90COMPILECPPFLAGS) $(ESMF_F90COMPILEFREENOCPP) \
+		$(CTSM_INC) $(CTSM_LIB) $(TRACEBACK_FLAGS)           \
+		$(EXTRA_LIBS) $(MORE_LIBS) $<
+
+lilac_time.o : $(LILAC_DIR)/lilac_time.F90
+	$(ESMF_F90COMPILER) -c $(ESMF_F90COMPILEOPTS) $(ESMF_F90COMPILEPATHS) \
+		$(ESMF_F90COMPILEFREECPP) $(ESMF_F90COMPILECPPFLAGS) $(ESMF_F90COMPILEFREENOCPP) \
+		$(CTSM_INC) $(CTSM_LIB) $(TRACEBACK_FLAGS)           \
+		$(EXTRA_LIBS) $(MORE_LIBS) $<
+
+lilac_io.o : $(LILAC_DIR)/lilac_io.F90
+	$(ESMF_F90COMPILER) -c $(ESMF_F90COMPILEOPTS) $(ESMF_F90COMPILEPATHS) \
+		$(ESMF_F90COMPILEFREECPP) $(ESMF_F90COMPILECPPFLAGS) $(ESMF_F90COMPILEFREENOCPP) \
+		$(CTSM_INC) $(CTSM_LIB) $(TRACEBACK_FLAGS) $(PIO_INC)    \
+		$(EXTRA_LIBS) $(MORE_LIBS) $<
+
+lilac_history.o : $(LILAC_DIR)/lilac_history.F90
+	$(ESMF_F90COMPILER) -c $(ESMF_F90COMPILEOPTS) $(ESMF_F90COMPILEPATHS) \
+		$(ESMF_F90COMPILEFREECPP) $(ESMF_F90COMPILECPPFLAGS) $(ESMF_F90COMPILEFREENOCPP) \
+		$(CTSM_INC) $(CTSM_LIB) $(TRACEBACK_FLAGS)           \
+		$(EXTRA_LIBS) $(MORE_LIBS) $<
+
 atm_driver.o : $(DRIVER_DIR)/atm_driver.F90
 	$(ESMF_F90COMPILER) -c $(ESMF_F90COMPILEOPTS) $(ESMF_F90COMPILEPATHS) \
 		$(ESMF_F90COMPILEFREECPP) $(ESMF_F90COMPILECPPFLAGS) $(ESMF_F90COMPILEFREENOCPP) \
@@ -81,11 +114,14 @@ atm_driver: atm_driver.o lilac_atmcap.o lilac_mod.o lilac_utils.o lilac_cpl.o
 	rm *.o *.mod
 
 # module dependencies:
-#atm_driver.o: lilac_mod.o lilac_atmcap.o lilac_utils.o lilac_cpl.o shr_string_mod.o shr_kind_mod.o shr_sys_mod.o shr_log_mod.o shr_timer_mod.o
 atm_driver.o: lilac_mod.o lilac_atmcap.o lilac_utils.o lilac_cpl.o
-lilac_mod.o: lilac_atmcap.o lilac_utils.o lilac_cpl.o  #shr_pio_mod.o
+lilac_mod.o: lilac_atmcap.o lilac_utils.o lilac_cpl.o lilac_history.o
 lilac_atmcap.o: lilac_utils.o
-
+lilac_constants.o :
+lilac_methods.o: lilac_constants.o
+lilac_time.o: lilac_constants.o lilac_methods.o
+lilac_io.o: lilac_constants.o lilac_methods.o
+lilac_history.o: lilac_constants.o lilac_methods.o lilac_io.o lilac_time.o
 # -----------------------------------------------------------------------------
 
 .PHONY: clean berzerk remake

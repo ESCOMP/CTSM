@@ -13,21 +13,23 @@ module lilac_mod
   public :: lilac_init
   public :: lilac_run
 
+  ! Gridded components and states in gridded components
+  type(ESMF_GridComp) :: atm_gcomp
+  type(ESMF_GridComp) :: lnd_gcomp
+
+  ! Coupler components
+  type(ESMF_CplComp)  :: cpl_atm2lnd_comp
+  type(ESMF_CplComp)  :: cpl_lnd2atm_comp
+
+  ! States
+  type(ESMF_State)    :: atm2lnd_l_state, atm2lnd_a_state
+  type(ESMF_State)    :: lnd2atm_a_state, lnd2atm_l_state
+
   ! Clock, TimeInterval, and Times
   type(ESMF_Clock)           :: lilac_clock
   type(ESMF_Calendar),target :: lilac_calendar
   type(ESMF_Alarm)           :: lilac_restart_alarm
   type(ESMF_Alarm)           :: lilac_stop_alarm
-
-  ! Gridded components and states in gridded components
-  type(ESMF_GridComp)        :: atm_gcomp
-  type(ESMF_GridComp)        :: lnd_gcomp
-  type(ESMF_State)           :: atm2lnd_l_state, atm2lnd_a_state
-  type(ESMF_State)           :: lnd2atm_a_state, lnd2atm_l_state
-
-  ! Coupler components
-  type(ESMF_CplComp)         :: cpl_atm2lnd_comp
-  type(ESMF_CplComp)         :: cpl_lnd2atm_comp
 
   character(*) , parameter   :: modname     = "lilac_mod"
 
@@ -324,6 +326,7 @@ contains
   subroutine lilac_run(restart_alarm_is_ringing, stop_alarm_is_ringing)
 
     use shr_sys_mod, only : shr_sys_abort
+    use lilac_history
 
     ! input/output variables
     logical, intent(in) :: restart_alarm_is_ringing
