@@ -1,6 +1,11 @@
 &lnd_mesh_inparm
  lnd_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
 /
+&atmaero_stream 
+ stream_fldfilename_atmaero='/glade/p/cesmdata/cseg/inputdata/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_WACCM.ensmean_monthly_hist_1849-2015_0.9x1.25_CMIP6_c180926.nc'
+ stream_year_first_atmaero = 2000
+ stream_year_last_atmaero = 2000
+/
 &papi_inparm
   papi_ctr1_str = "PAPI_FP_OPS"
   papi_ctr2_str = "PAPI_NO_CTR"
