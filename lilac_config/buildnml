@@ -224,10 +224,6 @@ def buildnml(rundir, bldnmldir):
     if rc > 0:
         raise Exception("Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
 
-    # remove temporary files in bldnmldir
-    os.remove(os.path.join(bldnmldir, "lnd_in"))
-    os.remove(os.path.join(bldnmldir, "clm.input_data_list"))
-
     # remove temporary files in rundir
     os.remove(os.path.join(rundir, "config_cache.xml"))
     os.remove(os.path.join(rundir, "env_lilac.xml"))
