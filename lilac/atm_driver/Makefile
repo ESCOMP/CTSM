@@ -10,12 +10,13 @@ ESMFMKFILE   = /glade/work/turuncu/ESMF/8.0.0b50/lib/libg/Linux.intel.64.mpt.def
 ESMF_LIB_DIR = /glade/work/turuncu/ESMF/8.0.0b50/lib/libg/Linux.intel.64.mpt.default
 include $(ESMFMKFILE)
 
-CASE_NAME     =  why01-g
-CTSM_BLD_DIR  = /glade/scratch/mvertens/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/mct/esmf
-MCT_LIB       = /glade/scratch/mvertens/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/lib
-SHR_LIB       = /glade/scratch/mvertens/$(CASE_NAME)/bld/intel/mpt/debug/nothreads/mct/mct/esmf/c1a1l1i1o1r1g1w1i1e1/lib
-SHR_INC       = /glade/scratch/mvertens/$(CASE_NAME)/bld/intel/mpt/debug/mct/mct/esmf/c1a1l1i1o1r1g1w1i1e1/csm_share/
-CTSM_INC      =  $(CTSM_BLD_DIR)/clm/obj
+BLD_DIR       =  /glade/scratch/mvertens/test_lilac/bld
+
+CTSM_BLD_DIR  = $(BLD_DIR)/intel/mpt/debug/nothreads/mct/mct/esmf
+MCT_LIB       = $(BLD_DIR)/intel/mpt/debug/nothreads/mct/lib
+SHR_LIB       = $(BLD_DIR)/intel/mpt/debug/nothreads/mct/mct/esmf/c1a1l1i1o1r1g1w1i1e1/lib
+SHR_INC       = $(BLD_DIR)/intel/mpt/debug/mct/mct/esmf/c1a1l1i1o1r1g1w1i1e1/csm_share/
+CTSM_INC      = $(CTSM_BLD_DIR)/clm/obj
 
 FFLAGS  = -qno-opt-dynamic-align  -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source -qopt-report -xCORE_AVX2 -no-fma  -O0 -g -check uninit -check bounds -check pointers -fpe0 -check noarg_temp_created -DLINUX  -DFORTRANUNDERSCORE -DCPRINTEL -DDEBUG -DHAVE_MPI -DPIO1 -DHAVE_SLASHPROC -D_PNETCDF -DESMF_VERSION_MAJOR=7 -DESMF_VERSION_MINOR=1 -free
 

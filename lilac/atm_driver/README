@@ -1,14 +1,73 @@
-assume the ctsm code base is checked out in $CTSM_ROOTDIR 
+1) to build ctsm and lilac (these are now built together in a single
+library and linked as part of generating the executable)
 
-- to customize the generated namelist - edit the file
-  > $CTSM_ROOTDIR/lilac_config/lnd_input.py
+   > cd ../../
+   > git clone https://github.com/mvertens/ctsm.git
+   > cd ctsm
+   > git checkout mvertens/lilac_cap
+   > ./manage_externals/checkout_externals -v
+   > cd cime/scripts
+   > ./create_newcase --case /glade/scratch/mvertens/test_lilac --compset I2000Clm50SpRsGs --res f45_f45_mg37 --run-unsupported --driver mct
+   >  cd /glade/scratch/mvertens/test_lilac
 
-- to create the ctsm namelist FROM THIS DIRECTORY:
-  > $CTSM_ROOTDIR/lilac_config/buildnml
+   > ./xmlchange USE_ESMF_LIB=TRUE
+   > ./xmlchange DEBUG=TRUE
 
-- this will now create the files lnd_in, drv_flds_in, and clm.input_data_list in this directory
-  THIS ONLY NEEDS TO BE DONE ONCE 
-  to futher customize the lnd_in (say to adjust the ctsm history output) edit the generated lnd_in in this directory
+   > remove the following lines from env_mach_specific:
 
+     <command name="load">esmf_libs</command>
+     <modules DEBUG="TRUE" comp_interface="mct" compiler="intel" mpilib="!mpi-serial">
+       <command name="load">esmf-7.1.0r-defio-mpi-g</command>
+     </modules>
+     <modules DEBUG="FALSE" comp_interface="mct" compiler="intel" mpilib="!mpi-serial">
+       <command name="load">esmf-7.1.0r-defio-mpi-O</command>
+     </modules>
+     <modules DEBUG="TRUE" comp_interface="mct" compiler="intel" mpilib="mpi-serial">
+       <command name="load">esmf-7.1.0r-ncdfio-uni-g</command>
+     </modules>
+     <modules DEBUG="FALSE" comp_interface="mct" compiler="intel" mpilib="mpi-serial">
+       <command name="load">esmf-7.1.0r-ncdfio-uni-O</command>
+     </modules>
+
+   > remove the string comp_interface="nuopc" from the following lines      
+
+      <environment_variables DEBUG="FALSE" comp_interface="nuopc">
+      <environment_variables DEBUG="TRUE" comp_interface="nuopc">
+
+  > make the following changes
+
+     <env name="ESMFMKFILE">/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/lib/libO/Linux.intel.64.mpt.default/esmf.mk</env> to
+     <env name="ESMFMKFILE">/glade/work/turuncu/ESMF/8.0.0b50/lib/libO/Linux.intel.64.mpt.default/esmf.mk</env>
+     <env name="ESMFMKFILE">/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/lib/libg/Linux.intel.64.mpt.default/esmf.mk</env> to 
+     <env name="ESMFMKFILE">/glade/work/turuncu/ESMF/8.0.0b50/lib/libg/Linux.intel.64.mpt.default/esmf.mk</env>
+
+  > set the following environment variables (***THIS IS CRITICAL to have the lilac code built as part of ctsm)
+
+      export LILAC_MODE='on'
+      eport  LILAC_SRC = <full path name of lilac code> (in this case ../lilac/lilac)
+
+  > ./case.setup
+  > ./case.build
+
+2) To build the atm_driver executable on cheyenne - edit the Makefile to change BLD_DIR
+ 
+   > make clean
+   > make atm_driver 
+
+3) to generate the input namelists
+
+  - to customize the generated namelist - edit the file ctsm.cfg (in this directory)
+
+  - to create the ctsm namelist FROM THIS DIRECTORY:
+    assume the ctsm code base is checked out in $CTSM_ROOTDIR 
+    > $CTSM_ROOTDIR/lilac_config/buildnml
+
+  - this will now create the files lnd_in, drv_flds_in, and clm.input_data_list in this directory
+    THIS ONLY NEEDS TO BE DONE ONCE 
+    to futher customize the lnd_in (say to adjust the ctsm history output) edit the generated lnd_in in this directory
+
+4) run the atm_driver on cheyenne
+  
+  > qsub cheyenne.sub
 
 
