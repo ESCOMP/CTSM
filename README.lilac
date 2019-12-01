@@ -1,10 +1,9 @@
 1) set the following environment variables (***THIS IS CRITICAL to have the lilac code built as part of ctsm)
     >  export LILAC_MODE='on'
 
-
 2) check out the code (ctsm and lilac are now bundled together) and built as one library
 
-    SRC_ROOT is where tsm is checked out 
+    SRC_ROOT is where ctsm is checked out 
 
    > git clone https://github.com/mvertens/ctsm.git
    > cd ctsm  (this is $SRCROOT)
@@ -15,41 +14,33 @@
 
    > cd $SRCROOT/cime/scripts
    > ./create_newcase --case /glade/scratch/mvertens/test_lilac --compset I2000Clm50SpRsGs --res f45_f45_mg37 --run-unsupported --driver mct
-
    >  cd /glade/scratch/mvertens/test_lilac
    > ./xmlchange USE_ESMF_LIB=TRUE
    > ./xmlchange DEBUG=TRUE
-
    > remove the following lines from env_mach_specific:
-
-     <command name="load">esmf_libs</command>
-     <modules DEBUG="TRUE" comp_interface="mct" compiler="intel" mpilib="!mpi-serial">
-       <command name="load">esmf-7.1.0r-defio-mpi-g</command>
-     </modules>
-     <modules DEBUG="FALSE" comp_interface="mct" compiler="intel" mpilib="!mpi-serial">
-       <command name="load">esmf-7.1.0r-defio-mpi-O</command>
-     </modules>
-     <modules DEBUG="TRUE" comp_interface="mct" compiler="intel" mpilib="mpi-serial">
-       <command name="load">esmf-7.1.0r-ncdfio-uni-g</command>
-     </modules>
-     <modules DEBUG="FALSE" comp_interface="mct" compiler="intel" mpilib="mpi-serial">
-       <command name="load">esmf-7.1.0r-ncdfio-uni-O</command>
-     </modules>
-
-   > remove the string comp_interface="nuopc" from the following lines      
-
-      <environment_variables DEBUG="FALSE" comp_interface="nuopc">
-      <environment_variables DEBUG="TRUE" comp_interface="nuopc">
-
-   > make the following changes
-
-     <env name="ESMFMKFILE">/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/lib/libO/Linux.intel.64.mpt.default/esmf.mk</env> to
-     <env name="ESMFMKFILE">/glade/work/turuncu/ESMF/8.0.0b50/lib/libO/Linux.intel.64.mpt.default/esmf.mk</env>
-     <env name="ESMFMKFILE">/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/lib/libg/Linux.intel.64.mpt.default/esmf.mk</env> to 
-     <env name="ESMFMKFILE">/glade/work/turuncu/ESMF/8.0.0b50/lib/libg/Linux.intel.64.mpt.default/esmf.mk</env>
-
-  > ./case.setup
-  > ./case.build
+        <command name="load">esmf_libs</command>
+        <modules DEBUG="TRUE" comp_interface="mct" compiler="intel" mpilib="!mpi-serial">
+          <command name="load">esmf-7.1.0r-defio-mpi-g</command>
+        </modules>
+        <modules DEBUG="FALSE" comp_interface="mct" compiler="intel" mpilib="!mpi-serial">
+          <command name="load">esmf-7.1.0r-defio-mpi-O</command>
+        </modules>
+        <modules DEBUG="TRUE" comp_interface="mct" compiler="intel" mpilib="mpi-serial">
+          <command name="load">esmf-7.1.0r-ncdfio-uni-g</command>
+        </modules>
+        <modules DEBUG="FALSE" comp_interface="mct" compiler="intel" mpilib="mpi-serial">
+          <command name="load">esmf-7.1.0r-ncdfio-uni-O</command>
+        </modules>
+    > remove the string comp_interface="nuopc" from the following lines      
+         <environment_variables DEBUG="FALSE" comp_interface="nuopc">
+         <environment_variables DEBUG="TRUE" comp_interface="nuopc">
+    > make the following changes
+         <env name="ESMFMKFILE">/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/lib/libO/Linux.intel.64.mpt.default/esmf.mk</env> to
+         <env name="ESMFMKFILE">/glade/work/turuncu/ESMF/8.0.0b50/lib/libO/Linux.intel.64.mpt.default/esmf.mk</env>
+         <env name="ESMFMKFILE">/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/lib/libg/Linux.intel.64.mpt.default/esmf.mk</env> to 
+         <env name="ESMFMKFILE">/glade/work/turuncu/ESMF/8.0.0b50/lib/libg/Linux.intel.64.mpt.default/esmf.mk</env>
+    > ./case.setup
+    > ./case.build
 
 4) To build the atm_driver executable on cheyenne - edit the Makefile to change BLD_DIR
  
