@@ -29,6 +29,7 @@ contains
 
     ! Add empty fields to field bundle
     do n = 1, size(atm2lnd)
+       write(6,*)'DEBUG: ',n, trim(atm2lnd(n)%fldname)
        call fldbundle_add(trim(atm2lnd(n)%fldname), mesh, fieldbundle, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end do

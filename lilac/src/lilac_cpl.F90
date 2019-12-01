@@ -7,6 +7,8 @@ module lilac_cpl
   !-----------------------------------------------------------------------
 
   use ESMF
+  use shr_sys_mod, only : shr_sys_abort
+
   implicit none
   private
 
@@ -157,7 +159,9 @@ contains
     end if
 
     call ESMF_FieldBundleRedistStore(import_fieldbundle, export_fieldbundle, routehandle=rh_atm2lnd, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort('error in initializing cpl_atm2lnd')
+    end if
 
     call ESMF_LogWrite(subname//"cpl init finished!", ESMF_LOGMSG_INFO)
 
@@ -227,7 +231,9 @@ contains
     end if
 
     call ESMF_FieldBundleRedistStore(import_fieldbundle, export_fieldbundle, routehandle=rh_lnd2atm, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call shr_sys_abort('error in initializing cpl_lnd2atm')
+    end if
 
     call ESMF_LogWrite(subname//"cpl init finished!", ESMF_LOGMSG_INFO)
 

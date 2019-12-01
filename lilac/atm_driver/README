@@ -1,15 +1,22 @@
-1) to build ctsm and lilac (these are now built together in a single
-library and linked as part of generating the executable)
+1) set the following environment variables (***THIS IS CRITICAL to have the lilac code built as part of ctsm)
+    >  export LILAC_MODE='on'
 
-   > cd ../../
+
+2) check out the code (ctsm and lilac are now bundled together) and built as one library
+
+    SRC_ROOT is where tsm is checked out 
+
    > git clone https://github.com/mvertens/ctsm.git
-   > cd ctsm
+   > cd ctsm  (this is $SRCROOT)
    > git checkout mvertens/lilac_cap
    > ./manage_externals/checkout_externals -v
-   > cd cime/scripts
-   > ./create_newcase --case /glade/scratch/mvertens/test_lilac --compset I2000Clm50SpRsGs --res f45_f45_mg37 --run-unsupported --driver mct
-   >  cd /glade/scratch/mvertens/test_lilac
 
+3) build the ctsm/lilac library using a CIME case
+
+   > cd $SRCROOT/cime/scripts
+   > ./create_newcase --case /glade/scratch/mvertens/test_lilac --compset I2000Clm50SpRsGs --res f45_f45_mg37 --run-unsupported --driver mct
+
+   >  cd /glade/scratch/mvertens/test_lilac
    > ./xmlchange USE_ESMF_LIB=TRUE
    > ./xmlchange DEBUG=TRUE
 
@@ -34,39 +41,34 @@ library and linked as part of generating the executable)
       <environment_variables DEBUG="FALSE" comp_interface="nuopc">
       <environment_variables DEBUG="TRUE" comp_interface="nuopc">
 
-  > make the following changes
+   > make the following changes
 
      <env name="ESMFMKFILE">/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/lib/libO/Linux.intel.64.mpt.default/esmf.mk</env> to
      <env name="ESMFMKFILE">/glade/work/turuncu/ESMF/8.0.0b50/lib/libO/Linux.intel.64.mpt.default/esmf.mk</env>
      <env name="ESMFMKFILE">/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/lib/libg/Linux.intel.64.mpt.default/esmf.mk</env> to 
      <env name="ESMFMKFILE">/glade/work/turuncu/ESMF/8.0.0b50/lib/libg/Linux.intel.64.mpt.default/esmf.mk</env>
 
-  > set the following environment variables (***THIS IS CRITICAL to have the lilac code built as part of ctsm)
-
-      export LILAC_MODE='on'
-      eport  LILAC_SRC = <full path name of lilac code> (in this case ../lilac/lilac)
-
   > ./case.setup
   > ./case.build
 
-2) To build the atm_driver executable on cheyenne - edit the Makefile to change BLD_DIR
+4) To build the atm_driver executable on cheyenne - edit the Makefile to change BLD_DIR
  
+   > cd $SRCROOT/lilac/atm_driver
    > make clean
    > make atm_driver 
 
-3) to generate the input namelists
+4) to generate the input namelists
 
   - to customize the generated namelist - edit the file ctsm.cfg (in this directory)
-
   - to create the ctsm namelist FROM THIS DIRECTORY:
-    assume the ctsm code base is checked out in $CTSM_ROOTDIR 
-    > $CTSM_ROOTDIR/lilac_config/buildnml
+
+    > $SRC_ROOT/lilac_config/buildnml
 
   - this will now create the files lnd_in, drv_flds_in, and clm.input_data_list in this directory
     THIS ONLY NEEDS TO BE DONE ONCE 
     to futher customize the lnd_in (say to adjust the ctsm history output) edit the generated lnd_in in this directory
 
-4) run the atm_driver on cheyenne
+5) run the atm_driver on cheyenne
   
   > qsub cheyenne.sub
 
