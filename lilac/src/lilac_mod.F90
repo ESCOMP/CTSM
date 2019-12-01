@@ -54,6 +54,7 @@ contains
     use lilac_cpl     , only : cpl_atm2lnd_register, cpl_lnd2atm_register
     use lilac_atmcap  , only : lilac_atmos_register
     use lnd_comp_esmf , only : lnd_register !ctsm routine
+    use lilac_atmaero , only : lilac_atmaero_init 
     use shr_pio_mod   , only : shr_pio_init1
     use shr_sys_mod   , only : shr_sys_abort
 
@@ -331,6 +332,12 @@ contains
 
     call lilac_io_init()
     call ESMF_LogWrite(subname//"initialized lilac_io ...", ESMF_LOGMSG_INFO)
+
+    !-------------------------------------------------------------------------
+    ! Initialize atmaero stream data (using share strearm capability from CIME)
+    !-------------------------------------------------------------------------
+
+    call lilac_atmaero_init()
 
   end subroutine lilac_init
 
