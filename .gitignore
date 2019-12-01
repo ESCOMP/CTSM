@@ -5,6 +5,7 @@ manage_externals.log
 /tools/PTCLM/
 /cime/
 /components/
+/lilac
 
 # ignore svn directories
 **/.svn/**
