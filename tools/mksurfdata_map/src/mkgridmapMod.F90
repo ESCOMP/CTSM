@@ -23,10 +23,11 @@ module mkgridmapMod
      real(r8), pointer :: yc_dst(:)     ! "degrees" 
      real(r8), pointer :: xc_src(:)     ! "degrees" 
      real(r8), pointer :: xc_dst(:)     ! "degrees" 
-     integer , pointer :: mask_src(:)   ! "unitless" 
-     integer , pointer :: mask_dst(:)   ! "unitless" 
      real(R8), pointer :: area_src(:)   ! area of a grid in map (radians)
      real(R8), pointer :: area_dst(:)   ! area of b grid in map (radians)
+     ! Generally avoid using frac_src and this version of frac_dst, because they
+     ! are read from mapping files and we have generally moved to "nomask"
+     ! mapping files
      real(r8), pointer :: frac_src(:)   ! "unitless" 
      real(r8), pointer :: frac_dst(:)   ! "unitless" 
      integer , pointer :: src_indx(:)   ! correpsonding column index
@@ -79,7 +80,7 @@ contains
 !
 ! !INTERFACE:
   subroutine gridmap_setptrs(gridmap, nsrc, ndst, ns, yc_src, yc_dst, &
-                             xc_src, xc_dst, mask_src, mask_dst,      &
+                             xc_src, xc_dst,  &
                              frac_src, frac_dst, src_indx, dst_indx )
 !
 ! !DESCRIPTION:
@@ -97,8 +98,6 @@ contains
      real(r8), optional, pointer :: yc_dst(:)    ! "degrees" 
      real(r8), optional, pointer :: xc_src(:)    ! "degrees" 
      real(r8), optional, pointer :: xc_dst(:)    ! "degrees" 
-     integer , optional, pointer :: mask_src(:)  ! "unitless" 
-     integer , optional, pointer :: mask_dst(:)  ! "unitless" 
      real(r8), optional, pointer :: frac_src(:)  ! "unitless" 
      real(r8), optional, pointer :: frac_dst(:)  ! "unitless" 
 !
@@ -116,11 +115,9 @@ contains
      if ( present(ns)       ) ns       = gridmap%ns
      if ( present(yc_src)   ) yc_src   => gridmap%yc_src
      if ( present(xc_src)   ) xc_src   => gridmap%xc_src
-     if ( present(mask_src) ) mask_src => gridmap%mask_src
      if ( present(frac_src) ) frac_src => gridmap%frac_src
      if ( present(yc_dst)   ) yc_dst   => gridmap%yc_dst
      if ( present(xc_dst)   ) xc_dst   => gridmap%xc_dst
-     if ( present(mask_dst) ) mask_dst => gridmap%mask_dst
      if ( present(frac_dst) ) frac_dst => gridmap%frac_dst
      if ( present(dst_indx) ) dst_indx => gridmap%dst_indx
      if ( present(src_indx) ) src_indx => gridmap%src_indx
@@ -209,12 +206,10 @@ contains
     allocate(gridmap%wovr(ns)    , &
              gridmap%src_indx(ns), &
              gridmap%dst_indx(ns), &
-             gridmap%mask_src(na), &
              gridmap%area_src(na), &
              gridmap%frac_src(na), &
              gridmap%area_dst(nb), &
              gridmap%frac_dst(nb), &
-             gridmap%mask_dst(nb), &
              gridmap%xc_dst(nb),   &
              gridmap%yc_dst(nb),   &
              gridmap%xc_src(na),   &
@@ -262,22 +257,6 @@ contains
        call abort()
     end if
 
-    rcode = nf_inq_varid(fid,'mask_a',vid)
-    rcode = nf_get_var_int(fid, vid, gridmap%mask_src)
-    if (rcode /= NF_NOERR) write(6,F00) nf_strerror(rcode)
-    if ( any(gridmap%mask_src(:) < 0 .or. gridmap%mask_src > 1) )then
-       write(6,*) SubName//' ERROR: mask_src out of bounds'
-       call abort()
-    end if
-
-    rcode = nf_inq_varid(fid,'mask_b',vid)
-    rcode = nf_get_var_int(fid, vid, gridmap%mask_dst)
-    if (rcode /= NF_NOERR) write(6,F00) nf_strerror(rcode)
-    if ( any(gridmap%mask_dst(:) < 0 .or. gridmap%mask_dst > 1) )then
-       write(6,*) SubName//' ERROR: mask_dst out of bounds'
-       call abort()
-    end if
-
     rcode = nf_inq_varid(fid,'xc_a',vid)
     rcode = nf_get_var_double(fid, vid, gridmap%xc_src)
     if (rcode /= NF_NOERR) write(6,F00) nf_strerror(rcode)
@@ -309,7 +288,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine for_test_create_gridmap(gridmap, na, nb, ns, &
        src_indx, dst_indx, wovr, &
-       mask_src, mask_dst, frac_src, frac_dst, area_src, area_dst, &
+       frac_src, frac_dst, area_src, area_dst, &
        xc_src, xc_dst, yc_src, yc_dst)
     !
     ! !DESCRIPTION:
@@ -327,8 +306,6 @@ contains
     real(r8), intent(in) :: wovr(:)
 
     ! If not provided, mask and frac values are set to 1 everywhere
-    integer, intent(in), optional :: mask_src(:)
-    integer, intent(in), optional :: mask_dst(:)
     real(r8), intent(in), optional :: frac_src(:)
     real(r8), intent(in), optional :: frac_dst(:)
 
@@ -355,9 +332,6 @@ contains
     call check_input_size('dst_indx', size(dst_indx), ns)
     call check_input_size('wovr', size(wovr), ns)
 
-    if (present(mask_src)) then
-       call check_input_size('mask_src', size(mask_src), na)
-    end if
     if (present(frac_src)) then
        call check_input_size('frac_src', size(frac_src), na)
     end if
@@ -371,9 +345,6 @@ contains
        call check_input_size('yc_src', size(yc_src), na)
     end if
 
-    if (present(mask_dst)) then
-       call check_input_size('mask_dst', size(mask_dst), nb)
-    end if
     if (present(frac_dst)) then
        call check_input_size('frac_dst', size(frac_dst), nb)
     end if
@@ -402,10 +373,6 @@ contains
     allocate(gridmap%wovr(ns))
     gridmap%wovr = wovr
 
-    allocate(gridmap%mask_src(na))
-    call set_gridmap_var(gridmap%mask_src, 1, mask_src)
-    allocate(gridmap%mask_dst(nb))
-    call set_gridmap_var(gridmap%mask_dst, 1, mask_dst)
     allocate(gridmap%frac_src(na))
     call set_gridmap_var(gridmap%frac_src, 1._r8, frac_src)
     allocate(gridmap%frac_dst(nb))
@@ -770,8 +737,6 @@ contains
        deallocate(gridmap%wovr    , &
                   gridmap%src_indx, &
                   gridmap%dst_indx, &
-                  gridmap%mask_src, &
-                  gridmap%mask_dst, &
                   gridmap%area_src, &
                   gridmap%area_dst, &
                   gridmap%frac_src, &

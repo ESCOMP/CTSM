@@ -181,6 +181,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
   real(r8), allocatable :: sand_i(:,:)      ! input grid: percent sand
   real(r8), allocatable :: clay_i(:,:)      ! input grid: percent clay
   real(r8), allocatable :: mapunit_i(:)     ! input grid: igbp soil mapunits
+  real(r8), allocatable :: frac_dst(:)      ! output fractions
   integer, parameter :: num=2               ! set soil mapunit number
   integer  :: wsti(num)                     ! index to 1st and 2nd largest wst
   integer, parameter :: nlsm=4              ! number of soil textures 
@@ -258,6 +259,11 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
      ! Error checks for domain and map consistencies
 
      call domain_checksame( tdomain, ldomain, tgridmap )
+
+     ! Obtain frac_dst
+     allocate(frac_dst(ns_o), stat=ier)
+     if (ier/=0) call abort()
+     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
      ! kmap_max are the maximum number of mapunits that will consider on
      ! any output gridcell - this is set currently above and can be changed
@@ -382,12 +388,12 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
 
      sum_fldi = 0.0_r8
      do ni = 1,ns_i
-        sum_fldi = sum_fldi + tgridmap%area_src(ni)*tgridmap%frac_src(ni)*re**2
+        sum_fldi = sum_fldi + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
      enddo
 
      sum_fldo = 0.
      do no = 1,ns_o
-        sum_fldo = sum_fldo + tgridmap%area_dst(no)*tgridmap%frac_dst(no)*re**2
+        sum_fldo = sum_fldo + tgridmap%area_dst(no)*frac_dst(no)*re**2
      end do
 
      ! -----------------------------------------------------------------
@@ -438,7 +444,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
              ' not assigned to soil type for input grid lon,lat,layer = ',ni,l
            call abort()
 101        continue
-           gast_i(m) = gast_i(m) + tgridmap%area_src(ni)*tgridmap%frac_src(ni)*re**2
+           gast_i(m) = gast_i(m) + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
         end do
      end do
 
@@ -466,7 +472,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
              ' not assigned to soil type for output grid lon,lat,layer = ',no,l
            call abort()
 102        continue
-           gast_o(m) = gast_o(m) + tgridmap%area_dst(no)*tgridmap%frac_dst(no)*re**2
+           gast_o(m) = gast_o(m) + tgridmap%area_dst(no)*frac_dst(no)*re**2
         end do
      end do
 
@@ -504,6 +510,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
      call gridmap_clean(tgridmap)
      deallocate (kmap, kwgt, kmax, wst)
      deallocate (sand_i,clay_i,mapunit_i)
+     deallocate (frac_dst)
   end if
 
 
@@ -1126,11 +1133,9 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
      garea_o = garea_o + tgridmap%area_dst(no)*re**2
      gfmax_o = gfmax_o + fmax_o(no)*(tgridmap%area_dst(no)/100.) * &
                                      frac_dst(no)*re**2
-     if ((tgridmap%mask_dst(no) > 0)) then 
-        if ((frac_dst(no) < 0.0) .or. (frac_dst(no) > 1.0001)) then
-           write(6,*) "ERROR:: frac_dst out of range: ", frac_dst(no),no
-           stop 
-        end if
+     if ((frac_dst(no) < 0.0) .or. (frac_dst(no) > 1.0001)) then
+        write(6,*) "ERROR:: frac_dst out of range: ", frac_dst(no),no
+        stop 
      end if
   end do
 

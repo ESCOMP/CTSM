@@ -321,9 +321,6 @@ end subroutine domain_check
       call check_ret(nf_inq_varid (ncid, 'frac_b', varid), subname)
       call check_ret(nf_get_var_double (ncid, varid, domain%frac), subname)
 
-      call check_ret(nf_inq_varid (ncid, 'mask_b', varid), subname)
-      call check_ret(nf_get_var_int (ncid, varid, domain%mask), subname)
-
       call check_ret(nf_inq_varid (ncid, 'area_b', varid), subname)
       call check_ret(nf_get_var_double (ncid, varid, domain%area), subname)
       domain%area = domain%area * re**2
@@ -817,11 +814,9 @@ end subroutine domain_check
      integer :: n, ni                  ! indices
      real(r8), pointer :: xc_src(:)    ! Source longitude
      real(r8), pointer :: yc_src(:)    ! Source latitude
-     integer,  pointer :: mask_src(:)  ! Source mask
      integer,  pointer :: src_indx(:)  ! Source index
      real(r8), pointer :: xc_dst(:)    ! Destination longitude
      real(r8), pointer :: yc_dst(:)    ! Destination latitude
-     integer,  pointer :: mask_dst(:)  ! Destination mask
      integer,  pointer :: dst_indx(:)  ! Destination index
      character(len= 32) :: subname = 'domain_checksame'
 
@@ -844,7 +839,6 @@ end subroutine domain_check
      call gridmap_setptrs( tgridmap, nsrc=na, ndst=nb, ns=ns,    &
                            xc_src=xc_src, yc_src=yc_src,         &
                            xc_dst=xc_dst, yc_dst=yc_dst,         &
-                           mask_src=mask_src, mask_dst=mask_dst, &
                            src_indx=src_indx, dst_indx=dst_indx  &
                          )
        
@@ -881,15 +875,6 @@ end subroutine domain_check
      end do
      do n = 1,ns
         ni = dst_indx(n)
-        if ( dstdomain%maskset )then
-           if (dstdomain%mask(ni) /= mask_dst(ni)) then
-              write(6,*) trim(subname)// &                              
-                  ' ERROR: output domain mask and gridmap mask are not the same at ni = ',ni
-              write(6,*)' domain  mask= ',dstdomain%mask(ni)
-              write(6,*)' gridmap mask= ',mask_dst(ni)
-              call abort()
-           end if
-        end if
         if (abs(dstdomain%lonc(ni) - xc_dst(ni)) > eps) then
            write(6,*) trim(subname)// &
                ' ERROR: output domain lon and gridmap lon not the same at ni = ',ni
