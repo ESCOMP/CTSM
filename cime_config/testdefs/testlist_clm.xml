@@ -1896,6 +1896,16 @@
       </machine>
     </machines>
   </test>
+  <test name="SMS_D_Vnuopc" grid="f10_f10_musgs" compset="I2000Clm50SpRsGs" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">0:30</option>
+          <option name="comment">Include a test of the NUOPC cap</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
   <test name="PFS_Ld20" grid="f09_g17" compset="I2000Clm50BgcCrop">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
