@@ -94,7 +94,13 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
   call domain_read(tdomain,datfname)
   
   call gridmap_mapread(tgridmap, mapfname )
-  call gridmap_check( tgridmap, subname )
+
+  ! Obtain frac_dst
+  allocate(frac_dst(ldomain%ns), stat=ier)
+  if (ier/=0) call abort()
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
+  call gridmap_check( tgridmap, tdomain%mask, frac_dst, subname )
 
   call domain_checksame( tdomain, ldomain, tgridmap )
 
@@ -107,11 +113,6 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
 
   allocate(data_i(tdomain%ns), stat=ier)
   if (ier/=0) call abort()
-  allocate(frac_dst(ldomain%ns), stat=ier)
-  if (ier/=0) call abort()
-
-  ! Obtain frac_dst
-  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Regrid f0

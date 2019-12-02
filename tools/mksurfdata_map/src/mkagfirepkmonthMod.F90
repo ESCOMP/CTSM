@@ -105,12 +105,18 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   call domain_read( tdomain,datfname )
 
   call gridmap_mapread( tgridmap, mapfname )
-  call gridmap_check( tgridmap, subname )
+
+  ! Obtain frac_dst
+  ns_o = ldomain%ns
+  allocate(frac_dst(ns_o), stat=ier)
+  if (ier/=0) call abort()
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
+  call gridmap_check( tgridmap, tdomain%mask, frac_dst, subname )
 
   call domain_checksame( tdomain, ldomain, tgridmap )
 
   ns_i = tdomain%ns
-  ns_o = ldomain%ns
 
   ! -----------------------------------------------------------------
   ! Open input file, allocate memory for input data
@@ -121,11 +127,6 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
 
   allocate(agfirepkmon_i(ns_i), stat=ier)
   if (ier/=0) call abort()
-  allocate(frac_dst(ns_o), stat=ier)
-  if (ier/=0) call abort()
-
-  ! Obtain frac_dst
-  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
   ! -----------------------------------------------------------------
   ! Regrid ag fire peak month

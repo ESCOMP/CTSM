@@ -440,7 +440,7 @@ contains
 ! !IROUTINE: gridmap_check
 !
 ! !INTERFACE:
-  subroutine gridmap_check(gridmap, caller)
+  subroutine gridmap_check(gridmap, mask_src, frac_dst, caller)
 !
 ! !DESCRIPTION:
 ! Check validity of a gridmap
@@ -453,6 +453,8 @@ contains
 ! !ARGUMENTS:
     implicit none
     type(gridmap_type) , intent(in) :: gridmap   ! mapping data
+    integer, intent(in) :: mask_src(:)  ! input mask
+    real(r8), intent(in) :: frac_dst(:)  ! output fractions
     character(len=*)   , intent(in) :: caller    ! calling subroutine (used for error messages)
 !
 ! !REVISION HISTORY:
@@ -479,12 +481,12 @@ contains
     
     sum_area_i = 0.0_r8
     do ni = 1,ns_i
-       sum_area_i = sum_area_i + gridmap%area_src(ni)*gridmap%frac_src(ni)*re**2
+       sum_area_i = sum_area_i + gridmap%area_src(ni)*mask_src(ni)*re**2
     enddo
 
     sum_area_o = 0.
     do no = 1,ns_o
-       sum_area_o = sum_area_o + gridmap%area_dst(no)*gridmap%frac_dst(no)*re**2
+       sum_area_o = sum_area_o + gridmap%area_dst(no)*frac_dst(no)*re**2
     end do
 
     ! -----------------------------------------------------------------
