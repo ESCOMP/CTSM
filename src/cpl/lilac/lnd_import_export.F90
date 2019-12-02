@@ -53,7 +53,7 @@ contains
   subroutine import_fields( gcomp, bounds, rc)
 
     !---------------------------------------------------------------------------
-    ! Convert the input data from the mediator to the land model
+    ! Convert the input data from the lilac to the land model
     !---------------------------------------------------------------------------
 
     ! input/output variabes
@@ -176,69 +176,45 @@ contains
 
     ! ! Atmosphere prognostic/prescribed aerosol fields
 
-    ! ! bcphidry
-    ! call state_getimport(importState, 'Faxa_bcph', bounds, output=atm2lnd_inst%forc_aer_grc(:,1), &
-    !      ungridded_index=1, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! ! bcphodry
-    ! call state_getimport(importState, 'Faxa_bcph', bounds, output=atm2lnd_inst%forc_aer_grc(:,2), &
-    !      ungridded_index=2, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! ! bcphiwet
-    ! call state_getimport(importState, 'Faxa_bcph', bounds, output=atm2lnd_inst%forc_aer_grc(:,3), &
-    !      ungridded_index=3, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_bcphidry', bounds, output=atm2lnd_inst%forc_aer_grc(:,1), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_bcphodry', bounds, output=atm2lnd_inst%forc_aer_grc(:,2), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_bcphiwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,3), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! ! ocphidry
-    ! call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,4), &
-    !      ungridded_index=1, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! ! bcphodry
-    ! call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,5), &
-    !      ungridded_index=2, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! ! bcphiwet
-    ! call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,6), &
-    !      ungridded_index=3, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_ocphidry', bounds, output=atm2lnd_inst%forc_aer_grc(:,4), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_ocphodry', bounds, output=atm2lnd_inst%forc_aer_grc(:,5), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_ocphiwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,6), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,7), &
-    !      ungridded_index=1, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,8), &
-    !      ungridded_index=1, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,9), &
-    !      ungridded_index=2, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,10), &
-    !      ungridded_index=2, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,11), &
-    !      ungridded_index=3, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,12), &
-    !      ungridded_index=3, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! call state_getimport(importState, 'Faxa_dstwet', bounds, output=atm2lnd_inst%forc_aer_grc(:,13), &
-    !      ungridded_index=4, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! call state_getimport(importState, 'Faxa_dstdry', bounds, output=atm2lnd_inst%forc_aer_grc(:,14), &
-    !      ungridded_index=4, rc=rc )
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_dstwet1', bounds, output=atm2lnd_inst%forc_aer_grc(:,7),  rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_dstdry1', bounds, output=atm2lnd_inst%forc_aer_grc(:,8),  rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_dstwet2', bounds, output=atm2lnd_inst%forc_aer_grc(:,9),  rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_dstdry2', bounds, output=atm2lnd_inst%forc_aer_grc(:,10), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_dstwet3', bounds, output=atm2lnd_inst%forc_aer_grc(:,11), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_dstdry3', bounds, output=atm2lnd_inst%forc_aer_grc(:,12), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_dstwet4', bounds, output=atm2lnd_inst%forc_aer_grc(:,13), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call state_getimport(importState, 'Faxa_dstdry4', bounds, output=atm2lnd_inst%forc_aer_grc(:,14), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! call state_getimport(importState, 'Sa_methane', bounds, output=atm2lnd_inst%forc_pch4_grc, rc=rc )
     ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! ! The mediator is sending ndep in units if kgN/m2/s - and ctsm uses units of gN/m2/sec
-    ! ! so the following conversion needs to happen
-
-    ! call state_getimport(importState, 'Faxa_nhx', bounds, output=forc_nhx, ungridded_index=1, rc=rc )
+    ! The lilac is sending ndep in units if kgN/m2/s - and ctsm uses units of gN/m2/sec
+    ! so the following conversion needs to happen
+    ! call state_getimport(importState, 'Faxa_nhx', bounds, output=forc_nhx, rc=rc )
     ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! call state_getimport(importState, 'Faxa_noy', bounds, output=forc_noy, ungridded_index=2, rc=rc )
+    ! call state_getimport(importState, 'Faxa_noy', bounds, output=forc_noy, rc=rc )
     ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
     ! do g = begg,endg
     !    atm2lnd_inst%forc_ndep_grc(g) = (forc_nhx(g) + forc_noy(g))*1000._r8
@@ -359,15 +335,11 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------
-    ! output to mediator
+    ! output to atm
     ! -----------------------
 
     call state_setexport(exportState, 'Sl_lfrin', bounds, input=ldomain%frac, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! -----------------------
-    ! output to atm
-    ! -----------------------
 
     call state_setexport(exportState, 'Sl_t', bounds, input=lnd2atm_inst%t_rad_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -417,20 +389,13 @@ contains
     call state_setexport(exportState, 'Fall_swnet', bounds, input=lnd2atm_inst%fsa_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Fall_flxdst', bounds, input=lnd2atm_inst%flxdst_grc(:,1), &
-         minus=.true., ungridded_index=1, rc=rc)
+    call state_setexport(exportState, 'Fall_flxdst1', bounds, input=lnd2atm_inst%flxdst_grc(:,1), minus=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_setexport(exportState, 'Fall_flxdst', bounds, input=lnd2atm_inst%flxdst_grc(:,2), &
-         minus=.true., ungridded_index=2, rc=rc)
+    call state_setexport(exportState, 'Fall_flxdst2', bounds, input=lnd2atm_inst%flxdst_grc(:,2), minus=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_setexport(exportState, 'Fall_flxdst', bounds, input=lnd2atm_inst%flxdst_grc(:,3), &
-         minus=.true., ungridded_index=3, rc=rc)
+    call state_setexport(exportState, 'Fall_flxdst3', bounds, input=lnd2atm_inst%flxdst_grc(:,3), minus=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_setexport(exportState, 'Fall_flxdst', bounds, input=lnd2atm_inst%flxdst_grc(:,4), &
-         minus=.true., ungridded_index=4, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call state_setexport(exportState, 'Fall_methane', bounds, input=lnd2atm_inst%flux_ch4_grc, minus=.true., rc=rc)
+    call state_setexport(exportState, 'Fall_flxdst4', bounds, input=lnd2atm_inst%flxdst_grc(:,4), minus=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_setexport(exportState, 'Sl_ram1', bounds, input=lnd2atm_inst%ram1_grc, rc=rc)
@@ -439,33 +404,35 @@ contains
     call state_setexport(exportState, 'Sl_fv', bounds, input=lnd2atm_inst%fv_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Sl_soilw', bounds, input=water_inst%waterlnd2atmbulk_inst%h2osoi_vol_grc(:,1), rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! methanem
+    ! call state_setexport(exportState, 'Fall_methane', bounds, input=lnd2atm_inst%flux_ch4_grc, minus=.true., rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! soil water
+    ! call state_setexport(exportState, 'Sl_soilw', bounds, input=water_inst%waterlnd2atmbulk_inst%h2osoi_vol_grc(:,1), rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! dry dep velocities
-    do num = 1, drydep_nflds
-       call state_setexport(exportState, 'Sl_ddvel', bounds, input=lnd2atm_inst%ddvel_grc(:,num), &
-            ungridded_index=num, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end do
+    ! do num = 1, drydep_nflds
+    !    call state_setexport(exportState, 'Sl_ddvel', bounds, input=lnd2atm_inst%ddvel_grc(:,num), ungridded_index=num, rc=rc)
+    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! end do
 
     ! MEGAN VOC emis fluxes
-    do num = 1, shr_megan_mechcomps_n
-       call state_setexport(exportState, 'Fall_voc', bounds, input=lnd2atm_inst%flxvoc_grc(:,num), minus=.true., &
-            ungridded_index=num, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end do
+    ! do num = 1, shr_megan_mechcomps_n
+    !    call state_setexport(exportState, 'Fall_voc', bounds, input=lnd2atm_inst%flxvoc_grc(:,num), minus=.true., ungridded_index=num, rc=rc)
+    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! end do
 
     ! fire emis fluxes
-    do num = 1, emis_nflds
-       call state_setexport(exportState, 'Fall_fire', bounds, input=lnd2atm_inst%fireflx_grc(:,num), minus=.true., &
-            ungridded_index=num, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end do
-    if (emis_nflds > 0) then
-       call state_setexport(exportState, 'Sl_fztopo', bounds, input=lnd2atm_inst%fireztop_grc, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    endif
+    ! do num = 1, emis_nflds
+    !    call state_setexport(exportState, 'Fall_fire', bounds, input=lnd2atm_inst%fireflx_grc(:,num), minus=.true., ungridded_index=num, rc=rc)
+    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! end do
+    ! if (emis_nflds > 0) then
+    !    call state_setexport(exportState, 'Sl_fztopo', bounds, input=lnd2atm_inst%fireztop_grc, rc=rc)
+    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! endif
     ! sign convention is positive downward with hierarchy of atm/glc/lnd/rof/ice/ocn.
     ! i.e. water sent from land to rof is positive
 
@@ -478,28 +445,28 @@ contains
     !    array(g) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(g) + water_inst%waterlnd2atmbulk_inst%qflx_rofliq_h2osfc_grc(g)
     ! end do
 
-    call state_setexport(exportState, 'Flrl_rofsur', bounds, input=water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call state_setexport(exportState, 'Flrl_rofsur', bounds, input=water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc, rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! subsurface runoff is the sum of qflx_drain and qflx_perched_drain
-    do g = bounds%begg,bounds%endg
-       array(g) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(g) + &
-                  water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
-    end do
-    call state_setexport(exportState, 'Flrl_rofsub', bounds, input=array, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! ! subsurface runoff is the sum of qflx_drain and qflx_perched_drain
+    ! do g = bounds%begg,bounds%endg
+    !    array(g) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(g) + &
+    !               water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
+    ! end do
+    ! call state_setexport(exportState, 'Flrl_rofsub', bounds, input=array, rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! qgwl sent individually to coupler
-    call state_setexport(exportState, 'Flrl_rofgwl', bounds, input=water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! ! qgwl sent individually to coupler
+    ! call state_setexport(exportState, 'Flrl_rofgwl', bounds, input=water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc, rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! ice  sent individually to coupler
-    call state_setexport(exportState, 'Flrl_rofi', bounds, input=water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! ! ice  sent individually to coupler
+    ! call state_setexport(exportState, 'Flrl_rofi', bounds, input=water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc, rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! irrigation flux to be removed from main channel storage (negative)
-    call state_setexport(exportState, 'Flrl_irrig', bounds, input=water_inst%waterlnd2atmbulk_inst%qirrig_grc, minus=.true., rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! ! irrigation flux to be removed from main channel storage (negative)
+    ! call state_setexport(exportState, 'Flrl_irrig', bounds, input=water_inst%waterlnd2atmbulk_inst%qirrig_grc, minus=.true., rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
   end subroutine export_fields
 
@@ -789,7 +756,7 @@ contains
     integer :: i
     !-------------------------------------------------------------------------------
 
-    ! Check if any input from mediator or output to mediator is NaN
+    ! Check if any input from lilac or output to lilac is NaN
 
     if (any(isnan(array))) then
        write(iulog,*) '# of NaNs = ', count(isnan(array))

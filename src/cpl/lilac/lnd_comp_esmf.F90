@@ -10,7 +10,7 @@ module lnd_comp_esmf
   use mpi               , only : MPI_BCAST, MPI_CHARACTER
   use mct_mod           , only : mct_world_init
   use perf_mod          , only : t_startf, t_stopf, t_barrierf
-  use lilac_fields      , only : lilac_field_bundle_to_land, lilac_field_bundle_from_land 
+  use lilac_fields      , only : lilac_field_bundle_to_land, lilac_field_bundle_from_land
 
   ! cime share code
   use shr_pio_mod       , only : shr_pio_init2
@@ -158,8 +158,8 @@ contains
 
     ! for pio_init2 and mct
     type(ESMF_VM)              :: vm
-    integer                    :: mpicom_vm    
-    integer                    :: ncomps = 1                 ! for mct 
+    integer                    :: mpicom_vm
+    integer                    :: ncomps = 1                 ! for mct
     integer, pointer           :: mycomms(:)                 ! for mct
     integer, pointer           :: myids(:)                   ! for mct
     integer                    :: compids(1) = (/1/)         ! for both mct and pio_init2 - array with component ids
@@ -424,23 +424,38 @@ contains
     !if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Now add fields on lnd_mesh to this field bundle
-    call fldbundle_add( 'Sa_z'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_topo'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_u'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_v'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_ptem'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_pbot'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_tbot'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_shum'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_lwdn'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_rainc' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_rainl' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_snowc' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_snowl' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_swndr' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_swvdr' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_swndf' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_swvdf' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_z'          , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_topo'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_u'          , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_v'          , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_ptem'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_pbot'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_tbot'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Sa_shum'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_lwdn'     , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_rainc'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_rainl'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_snowc'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_snowl'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_swndr'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_swvdr'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_swndf'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_swvdf'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call fldbundle_add( 'Faxa_bcphidry' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_bcphodry' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_bcphiwet' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_ocphidry' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_ocphodry' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_ocphiwet' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_dstwet1'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_dstdry1'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_dstwet2'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_dstdry2'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_dstwet3'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_dstdry3'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_dstwet4'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call fldbundle_add( 'Faxa_dstdry4'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! add the field bundle to the export state
     call ESMF_StateAdd(import_state, fieldbundleList = (/c2l_fb/))
