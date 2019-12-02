@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev080    sacks 12/02/2019 Update externals, minor fixes to work with latest cime, get nuopc cap working
   ctsm1.0.dev079    sacks 11/04/2019 Change a few uses of shr_kind
   ctsm1.0.dev078   oleson 10/31/2019 Fix rootr calculation with use_hydrstress true
   ctsm1.0.dev077    sacks 10/27/2019 Consistently use frac_sno_eff rather than frac_sno in qg calculations
