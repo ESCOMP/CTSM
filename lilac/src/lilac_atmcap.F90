@@ -5,15 +5,19 @@ module lilac_atmcap
   ! This is a dummy atmosphere cap for setting up lilac structure.
   !-----------------------------------------------------------------------
 
-  ! !USES
   use ESMF
-  use lilac_utils , only : atm2lnd, lnd2atm, gindex_atm, atm_mesh_filename
+  use lilac_utils  , only : atm2lnd, lnd2atm, gindex_atm, atm_mesh_filename
+  use lilac_methods, only : chkerr
+
   implicit none
 
   public :: lilac_atmos_register
 
   integer            :: mytask 
   integer, parameter :: debug = 0 ! internal debug level
+
+  character(*),parameter :: u_FILE_u = &
+       __FILE__
 
 !========================================================================
 contains
@@ -30,9 +34,9 @@ contains
     !-------------------------------------------------------------------------
 
     call ESMF_VMGetGlobal(vm=vm, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMGet(vm, localPet=mytask, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     if (mytask == 0) then
        print *, "in user register routine"
@@ -43,13 +47,13 @@ contains
 
     ! Set the entry points for standard ESMF Component methods
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, userRoutine=lilac_atmos_init, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, userRoutine=lilac_atmos_run, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, userRoutine=lilac_atmos_final, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
   end subroutine lilac_atmos_register
 
@@ -85,11 +89,14 @@ contains
     ! the atm_mesh_filename that were then set as module variables in lilac_utils
 
     atm_distgrid = ESMF_DistGridCreate (arbSeqIndexList=gindex_atm, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    ! TODO: the addUserArea failed for the 4x5 grid - need to have a more robust approach - unless the area will simply be ignored for now?
+    ! atm_mesh = ESMF_MeshCreate(filename=trim(atm_mesh_filename), fileformat=ESMF_FILEFORMAT_ESMFMESH, & 
+    !      elementDistGrid=atm_distgrid, addUserArea=.true., rc=rc)
     atm_mesh = ESMF_MeshCreate(filename=trim(atm_mesh_filename), fileformat=ESMF_FILEFORMAT_ESMFMESH, &
          elementDistGrid=atm_distgrid, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_LogWrite(trim(subname)//"Mesh for atmosphere is created for "//trim(atm_mesh_filename), ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -97,67 +104,64 @@ contains
     end if
 
     !-------------------------------------------------------------------------
-    ! Atmosphere to Coupler (land) Fields --  atmos --> land
-    ! - Create empty field bundle -- a2c_fb
-    ! - Create  Fields and add them to field bundle
-    ! - Add a2c_fb to state (atm2lnd_a_state)
+    ! Create a2c_fb field bundle and add to atm2lnd_a_state
     !-------------------------------------------------------------------------
 
-    ! Create individual fields and add to field bundle -- a2c
+    ! create empty field bundle "a2c_fb"
     a2c_fb = ESMF_FieldBundleCreate(name="a2c_fb", rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! create fields and add to field bundle
     do n = 1, size(atm2lnd)
        field = ESMF_FieldCreate(atm_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
             name=trim(atm2lnd(n)%fldname), farrayPtr=atm2lnd(n)%dataptr, rc=rc)
-       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
        call ESMF_FieldBundleAdd(a2c_fb, (/field/), rc=rc)
-       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       if (debug > 0) then
+          call ESMF_FieldPrint(field,  rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
     end do
 
-    call ESMF_LogWrite(subname//"fieldbundleadd is finished .... !", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       print *, "!Fields to  Coupler (atmos to  land ) (a2c_fb) Field Bundle Created!"
-    end if
-
-    ! Add field bundle to state
+    ! add field bundle to atm2lnd_a_state
     call ESMF_StateAdd(atm2lnd_a_state, (/a2c_fb/), rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-
-    call ESMF_LogWrite(subname//"atm2lnd_a_state is filled with dummy_var field bundle!", ESMF_LOGMSG_INFO)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_LogWrite(subname//"lilac a2c_fb fieldbundle created and added to atm2lnd_a_state", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "!atm2lnd_a_state is filld with dummy_var field bundle!"
+       print *, "lilac a2c_fb fieldbundle created and added to atm2lnd_a_state"
     end if
 
     !-------------------------------------------------------------------------
-    ! Coupler (land) to Atmosphere Fields --  c2a
-    ! - Create Field Bundle -- c2a_fb for because we are in atmos
-    ! - Create  Fields and add them to field bundle
-    ! - Add c2a_fb to state (lnd2atm_a_state)
+    ! Create c2a_fb field bundle and add to lnd2atm_a_state
+    ! Also add nextsw_cday attributes
     !-------------------------------------------------------------------------
 
+    ! create empty field bundle "c2a_fb"
     c2a_fb = ESMF_FieldBundleCreate (name="c2a_fb", rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! create fields and add to field bundle
     do n = 1, size(lnd2atm)
        field = ESMF_FieldCreate(atm_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
             name=trim(lnd2atm(n)%fldname), farrayPtr=lnd2atm(n)%dataptr, rc=rc)
-       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
        call ESMF_FieldBundleAdd(c2a_fb, (/field/), rc=rc)
-       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        if (debug > 0) then
           call ESMF_FieldPrint(field,  rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
     end do
-    call ESMF_LogWrite(subname//"c2a fieldbundleadd is finished .... !", ESMF_LOGMSG_INFO)
 
-    ! Add field bundle to state
+    ! add field bundle to lnd2atm_a_state
     call ESMF_StateAdd(lnd2atm_a_state, (/c2a_fb/), rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_LogWrite(subname//"lilac c2a_fb fieldbundle is done and added to lnd2atm_a_state", ESMF_LOGMSG_INFO)
 
     ! Set Attributes needed by land
     call ESMF_AttributeSet(lnd2atm_a_state, name="nextsw_cday", value=11, rc=rc)  ! TODO: mv what in the world is this???
@@ -203,10 +207,10 @@ contains
     rc = ESMF_SUCCESS
 
     call ESMF_StateGet(importState, "c2a_fb", import_fieldbundle, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_StateGet(exportState, "a2c_fb", export_fieldbundle, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_FieldBundleDestroy(import_fieldbundle, rc=rc)
     call ESMF_FieldBundleDestroy(export_fieldbundle, rc=rc)

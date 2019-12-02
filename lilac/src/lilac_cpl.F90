@@ -260,11 +260,11 @@ contains
     end if
     call ESMF_LogWrite(subname//"-----------------!", ESMF_LOGMSG_INFO)
 
-    call ESMF_StateGet(importState, trim("a2c_fb"), import_fieldbundle, rc=rc)
+    call ESMF_StateGet(importState, "a2c_fb", import_fieldbundle, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//" got a2c fieldbundle!", ESMF_LOGMSG_INFO)
 
-    call ESMF_StateGet(exportState, trim("c2l_fb"), export_fieldbundle, rc=rc)
+    call ESMF_StateGet(exportState, "c2l_fb", export_fieldbundle, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
     call ESMF_LogWrite(subname//" got c2l fieldbundle!", ESMF_LOGMSG_INFO)
 

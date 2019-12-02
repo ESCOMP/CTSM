@@ -1,6 +1,21 @@
 module lilac_utils
 
-  ! NOTE: the following cannot depend on any esmf objects - since it will be used by the host atmosphere
+  ! ***********************************************************************
+  ! NOTE: THE FOLLOWING CANNOT DEPEND ON ANY ESMF OBJECTS
+  ! since it will be used by the host atmosphere
+  ! This is the ONLY lilac routine that is required to be ESMF independent
+  !
+  ! THE HOST ATMOSPHERE IS RESPONSIBLE for calling lilac_init() and in turn
+  ! lilac_init() calls the initialization routines for atm2lnd and lnd2atm
+  !
+  ! the host atm init call will be 
+  !      call lilac_init()
+  ! the host atm run phase will be 
+  !     call lilac_atm2lnd(fldname, data1d)
+  !     call lilac_run(restart_alarm_is_ringing, stop_alarm_is_ringing)
+  !     call lilac_lnd2atm(fldname, data1d)
+  !
+  ! ***********************************************************************
 
   implicit none
   private
@@ -13,7 +28,7 @@ module lilac_utils
   ! Global index space info for atm data
   integer, public, allocatable  :: gindex_atm (:)
 
-  ! Mesh file to be read in by lilac_atm 
+  ! Mesh file to be read in by lilac_atm
   character(len=256), public :: atm_mesh_filename
 
   ! Mesh file to be read in by ctsm
@@ -24,7 +39,7 @@ module lilac_utils
      real*8, pointer    :: dataptr(:)
      character(len=64)  :: units
      logical            :: provided_by_atm
-     logical            :: required_fr_atm 
+     logical            :: required_fr_atm
   end type atm2lnd_type
   type(atm2lnd_type), pointer, public :: atm2lnd(:)
 
@@ -39,44 +54,50 @@ module lilac_utils
 contains
 !========================================================================
 
-  ! *** NOTE - THE HOST ATMOSPHERE IS RESPONSIBLE for calling
-  ! lilac_init that then calls the initialization routines for atm2lnd and lnd2atm
-
-  ! host atm init call will simply be
-  ! call lilac_init()
-
-  ! host atm run phase will be
-  ! call lilac_atm2lnd(fldname, data1d)
-
   subroutine lilac_init_atm2lnd(lsize)
     integer, intent(in) :: lsize
     integer :: n
 
-    ! TODO: how is the atm going to specify which fields are not provided = 
+    ! TODO: how is the atm going to specify which fields are not provided =
     ! should it pass an array of character strings or a colon deliminited set of fields
     ! to specify the fields it will not provide - and then these are checked against those fields
 
-    call atm2lnd_add_fld (atm2lnd, fldname='Sa_z'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Sa_topo'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Sa_u'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Sa_v'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Sa_ptem'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Sa_pbot'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Sa_tbot'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Sa_shum'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_lwdn'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_rainc' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_rainl' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_snowc' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_snowl' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_swndr' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_swvdr' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_swndf' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_swvdf' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Sa_z'          , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Sa_topo'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Sa_u'          , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Sa_v'          , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Sa_ptem'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Sa_pbot'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Sa_tbot'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Sa_shum'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_lwdn'     , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_rainc'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_rainl'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_snowc'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_snowl'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_swndr'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_swvdr'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_swndf'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_swvdf'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_bcphidry' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_bcphodry' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_bcphiwet' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_ocphidry' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_ocphodry' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_ocphiwet' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_dstwet1'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_dstdry1'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_dstwet2'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_dstdry2'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_dstwet3'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_dstdry3'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_dstwet4'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
+    call atm2lnd_add_fld (atm2lnd, fldname='Faxa_dstdry4'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
 
     ! TODO: optional fields - if these are uncommented then need to make sure that they are also appear in the lnd
     ! import state
-    ! CRITICAL the fields in the export state from lilac_atmcap MUST match the fields in the import state to the land 
+    ! CRITICAL the fields in the export state from lilac_atmcap MUST match the fields in the import state to the land
     ! this is not being checked currently and msut be
     !call atm2lnd_add_fld (atm2lnd, fldname='Sa_methane' , units='unknown', required_fr_atm=.false. , lsize=lsize)
     !call atm2lnd_add_fld (atm2lnd, fldname='Faxa_bcph'  , units='unknown', required_fr_atm=.false. , lsize=lsize)
@@ -88,29 +109,29 @@ contains
     end do
   end subroutine lilac_init_atm2lnd
 
-!========================================================================
+  !========================================================================
 
   subroutine lilac_init_lnd2atm(lsize)
     integer, intent(in) :: lsize
     integer :: n
 
     call lnd2atm_add_fld (lnd2atm, fldname='Sl_lfrin'  , units='unknown', lsize=lsize)
-    call lnd2atm_add_fld (lnd2atm, fldname='Sl_t'      , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Sl_tref'   , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Sl_qref'   , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Sl_avsdr'  , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Sl_anidr'  , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Sl_avsdf'  , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Sl_anidf'  , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Sl_snowh'  , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Sl_u10'    , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Sl_fv'     , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Sl_ram1'   , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Fall_lwup' , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Fall_taux' , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Fall_tauy' , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Fall_evap' , units='unknown', lsize=lsize) 
-    call lnd2atm_add_fld (lnd2atm, fldname='Fall_swnet', units='unknown', lsize=lsize) 
+    call lnd2atm_add_fld (lnd2atm, fldname='Sl_t'      , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Sl_tref'   , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Sl_qref'   , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Sl_avsdr'  , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Sl_anidr'  , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Sl_avsdf'  , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Sl_anidf'  , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Sl_snowh'  , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Sl_u10'    , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Sl_fv'     , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Sl_ram1'   , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Fall_lwup' , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Fall_taux' , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Fall_tauy' , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Fall_evap' , units='unknown', lsize=lsize)
+    call lnd2atm_add_fld (lnd2atm, fldname='Fall_swnet', units='unknown', lsize=lsize)
 
     ! now add dataptr memory for all of the fields
     do n = 1,size(lnd2atm)
@@ -159,7 +180,7 @@ contains
     ! if there are fields that the atmosphere does not provide but that are required - then abort
     do n = 1,size(atm2lnd)
        if (atm2lnd(n)%required_fr_atm .and. (.not. atm2lnd(n)%provided_by_atm)) then
-          ! call abort or provide default values? 
+          ! call abort or provide default values?
        else if (.not. atm2lnd(n)%provided_by_atm) then
           ! create default values
        end if
