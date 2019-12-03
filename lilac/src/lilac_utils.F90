@@ -379,7 +379,7 @@ contains
     rc = ESMF_SUCCESS
 
     ! Add empty fields to field bundle
-    do n = 1, size(atm2lnd)
+    do n = 1, size(lnd2atm)
        call fldbundle_add( trim(lnd2atm(n)%fldname), mesh, fieldbundle, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end do
