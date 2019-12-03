@@ -72,14 +72,14 @@ contains
     integer                :: gsize                      ! global size
     integer                :: nunit                      ! namelist input unit
     integer                :: ierr                       ! namelist i/o error flag
-    character(len=cl)      :: stream_fldfilename_atmaero ! name of input stream file
+    character(len=cl)      :: stream_fldfilename ! name of input stream file
     character(len=CL)      :: mapalgo = 'bilinear'       ! type of 2d mapping
     character(len=CS)      :: taxmode = 'extend'         ! time extrapolation
     character(len=CL)      :: fldlistFile                ! name of fields in input stream file
     character(len=CL)      :: fldlistModel               ! name of fields in data stream code
-    integer                :: stream_year_first_atmaero  ! first year in stream to use
-    integer                :: stream_year_last_atmaero   ! last year in stream to use
-    integer                :: model_year_align_atmaero   ! align stream_year_first with model year
+    integer                :: stream_year_first  ! first year in stream to use
+    integer                :: stream_year_last   ! last year in stream to use
+    integer                :: model_year_align   ! align stream_year_first with model year
     integer                :: spatialDim
     integer                :: numOwnedElements
     real(r8), pointer      :: ownedElemCoords(:)
@@ -91,16 +91,16 @@ contains
     !-----------------------------------------------------------------------
 
     namelist /atmaero_stream/      &
-         stream_year_first_atmaero, &
-         stream_year_last_atmaero,  &
-         model_year_align_atmaero,  &
-         stream_fldfilename_atmaero
+         stream_year_first, &
+         stream_year_last,  &
+         model_year_align,  &
+         stream_fldfilename
 
     ! default values for namelist
-    stream_year_first_atmaero  = 1                ! first year in stream to use
-    stream_year_last_atmaero   = 1                ! last  year in stream to use
-    model_year_align_atmaero   = 1                ! align stream_year_first_atmaero with this model year
-    stream_fldFileName_atmaero = ' '
+    stream_year_first  = 1                ! first year in stream to use
+    stream_year_last   = 1                ! last  year in stream to use
+    model_year_align   = 1                ! align stream_year_first with this model year
+    stream_fldFileName = ' '
 
     ! get mytask and mpicom
     call ESMF_VMGetCurrent(vm, rc=rc)
@@ -123,18 +123,18 @@ contains
        close(nunit)
     endif
 
-    call shr_mpi_bcast(stream_year_first_atmaero , mpicom)
-    call shr_mpi_bcast(stream_year_last_atmaero  , mpicom)
-    call shr_mpi_bcast(model_year_align_atmaero  , mpicom)
-    call shr_mpi_bcast(stream_fldfilename_atmaero, mpicom)
+    call shr_mpi_bcast(stream_year_first , mpicom)
+    call shr_mpi_bcast(stream_year_last  , mpicom)
+    call shr_mpi_bcast(model_year_align  , mpicom)
+    call shr_mpi_bcast(stream_fldfilename, mpicom)
 
     if (mytask == 0) then
        print *, ' '
        print *, 'atmaero stream settings:'
-       print *, '  stream_year_first_atmaero  = ',stream_year_first_atmaero
-       print *, '  stream_year_last_atmaero   = ',stream_year_last_atmaero
-       print *, '  model_year_align_atmaero   = ',model_year_align_atmaero
-       print *, '  stream_fldFileName_atmaero = ',stream_fldFileName_atmaero
+       print *, '  stream_year_first  = ',stream_year_first
+       print *, '  stream_year_last   = ',stream_year_last
+       print *, '  model_year_align   = ',model_year_align
+       print *, '  stream_fldFileName = ',stream_fldFileName
        print *, ' '
     endif
 
@@ -218,19 +218,19 @@ contains
          ggrid         = ggrid_atm,                            &
          nxg           = ldomain%ni,                           &
          nyg           = ldomain%nj,                           &
-         yearFirst     = stream_year_first_atmaero,            &
-         yearLast      = stream_year_last_atmaero,             &
-         yearAlign     = model_year_align_atmaero,             &
+         yearFirst     = stream_year_first,            &
+         yearLast      = stream_year_last,             &
+         yearAlign     = model_year_align,             &
          offset        = 0,                                    &
          domFilePath   = '',                                   &
-         domfilename   = trim(stream_fldfilename_atmaero),     &
+         domfilename   = trim(stream_fldfilename),     &
          domTvarName   = 'time',                               &
          domXvarName   = 'lon' ,                               &
          domYvarName   = 'lat' ,                               &
          domAreaName   = 'area',                               &
          domMaskName   = 'mask',                               &
          filePath      = '',                                   &
-         filename      = (/trim(stream_fldfilename_atmaero)/), &
+         filename      = (/trim(stream_fldfilename)/), &
          fldListFile   = trim(fldlistFile),                    &
          fldListModel  = trim(fldlistModel),                   &
          fillalgo      = 'none',                               &
