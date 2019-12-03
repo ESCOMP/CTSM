@@ -10,7 +10,7 @@ module lnd_comp_esmf
   use mpi               , only : MPI_BCAST, MPI_CHARACTER
   use mct_mod           , only : mct_world_init
   use perf_mod          , only : t_startf, t_stopf, t_barrierf
-  use lilac_fields      , only : lilac_field_bundle_to_land, lilac_field_bundle_from_land
+  use lilac_utils       , only : lilac_field_bundle_to_land, lilac_field_bundle_fr_land
 
   ! cime share code
   use shr_pio_mod       , only : shr_pio_init2
@@ -418,44 +418,12 @@ contains
     ! NOTE: currently this must be the same list as in lilac_init_atm2lnd
 
     ! create an empty field bundle
-    c2l_fb =  ESMF_FieldBundleCreate ( name='c2l_fb', rc=rc)
+    c2l_fb =  ESMF_FieldBundleCreate (name='c2l_fb', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !call lilac_field_bundle_to_land(lnd_mesh, c2l_fb, rc)
-    !if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! Now add fields on lnd_mesh to this field bundle
-    call fldbundle_add( 'Sa_z'          , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_topo'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_u'          , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_v'          , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_ptem'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_pbot'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_tbot'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sa_shum'       , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_lwdn'     , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_rainc'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_rainl'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_snowc'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_snowl'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_swndr'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_swvdr'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_swndf'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_swvdf'    , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call fldbundle_add( 'Faxa_bcphidry' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_bcphodry' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_bcphiwet' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_ocphidry' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_ocphodry' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_ocphiwet' , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_dstwet1'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_dstdry1'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_dstwet2'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_dstdry2'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_dstwet3'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_dstdry3'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_dstwet4'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Faxa_dstdry4'  , c2l_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! now add fields on lnd_mesh to this field bundle
+    call lilac_field_bundle_to_land(lnd_mesh, c2l_fb, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! add the field bundle to the export state
     call ESMF_StateAdd(import_state, fieldbundleList = (/c2l_fb/))
@@ -466,32 +434,15 @@ contains
 
     ! NOTE: currently this must be the same list as in lilac_init_lnd2atm
 
-    ! Create an empty field bundle
+    ! create an empty field bundle
     l2c_fb = ESMF_FieldBundleCreate(name='l2c_fb', rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    !call lilac_field_bundle_from_land(lnd_mesh, l2c_fb, rc)
-    !if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! now add fields on lnd_mesh to this field bundle
+    call lilac_field_bundle_fr_land(lnd_mesh, l2c_fb, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Now add fields on lnd_mesh to this field bundle
-    call fldbundle_add( 'Sl_lfrin'    ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sl_t'        ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sl_tref'     ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sl_qref'     ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sl_avsdr'    ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sl_anidr'    ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sl_avsdf'    ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sl_anidf'    ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Sl_snowh'    ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Fall_u10'    ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Fall_fv'     ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Fall_ram1'   ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Fall_lwup'   ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Fall_taux'   ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Fall_tauy'   ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Fall_evap'   ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call fldbundle_add( 'Fall_swnet'  ,  l2c_fb,rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! Add the field bundle to the state
+    ! add the field bundle to the state
     call ESMF_StateAdd(export_state, fieldbundleList = (/l2c_fb/), rc=rc)
 
     !--------------------------------
