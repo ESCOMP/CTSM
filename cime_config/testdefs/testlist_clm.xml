@@ -245,7 +245,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:20:00</option>
       <option name="comment"  >Run in DEBUG with the matrix solution on with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
     </options>
   </test>
