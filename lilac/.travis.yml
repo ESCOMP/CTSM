@@ -1,0 +1,21 @@
+language: cpp
+sudo: required
+dist: trusty
+notifications:
+  email: false
+
+services:
+  - docker
+
+before_install:
+  - docker version
+  - docker-compose version
+
+install:
+  - docker-compose build lilac
+
+before_script:
+  - docker-compose images
+
+script:
+  - docker run -t lilac
