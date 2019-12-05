@@ -14,46 +14,24 @@
 
    > cd $SRCROOT/cime/scripts
    > export CASEDIR=/glade/scratch/mvertens/test_lilac
-   > ./create_newcase --case $CASEDIR --compset I2000Clm50SpRsGs --res f45_f45_mg37 --run-unsupported --driver mct
+   > ./create_newcase --case $CASEDIR --compset I2000Clm50SpRsGs --res f45_f45_mg37 --run-unsupported --driver nuopc
    >  cd $CASEDIR
-   > ./xmlchange USE_ESMF_LIB=TRUE
    > ./xmlchange DEBUG=TRUE
-   > remove the following lines from env_mach_specific:
-        <command name="load">esmf_libs</command>
-        <modules DEBUG="TRUE" comp_interface="mct" compiler="intel" mpilib="!mpi-serial">
-          <command name="load">esmf-7.1.0r-defio-mpi-g</command>
-        </modules>
-        <modules DEBUG="FALSE" comp_interface="mct" compiler="intel" mpilib="!mpi-serial">
-          <command name="load">esmf-7.1.0r-defio-mpi-O</command>
-        </modules>
-        <modules DEBUG="TRUE" comp_interface="mct" compiler="intel" mpilib="mpi-serial">
-          <command name="load">esmf-7.1.0r-ncdfio-uni-g</command>
-        </modules>
-        <modules DEBUG="FALSE" comp_interface="mct" compiler="intel" mpilib="mpi-serial">
-          <command name="load">esmf-7.1.0r-ncdfio-uni-O</command>
-        </modules>
-    > remove the string comp_interface="nuopc" from the following lines      
-         <environment_variables DEBUG="FALSE" comp_interface="nuopc">
-         <environment_variables DEBUG="TRUE" comp_interface="nuopc">
-    > make the following changes
-         <env name="ESMFMKFILE">/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/lib/libO/Linux.intel.64.mpt.default/esmf.mk</env> to
-         <env name="ESMFMKFILE">/glade/work/turuncu/ESMF/8.0.0b50/lib/libO/Linux.intel.64.mpt.default/esmf.mk</env>
-         <env name="ESMFMKFILE">/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/lib/libg/Linux.intel.64.mpt.default/esmf.mk</env> to 
-         <env name="ESMFMKFILE">/glade/work/turuncu/ESMF/8.0.0b50/lib/libg/Linux.intel.64.mpt.default/esmf.mk</env>
-    > ./case.setup
-    > ./case.build
+   > ./case.setup
+   > ./case.build --sharedlib-only
 
-    The last step will fail in building the executable; that's okay: all
-    we need from it is the component libraries.
+4) To build the atm_driver executable on cheyenne
 
-4) To build the atm_driver executable on cheyenne - edit the Makefile to change BLD_DIR
+   - First, edit the Makefile to change BLD_DIR
+
+   - Then, build with:
  
    > cd $SRCROOT/lilac/atm_driver
    > make clean
    > source $CASEDIR/.env_mach_specific.sh
    > make atm_driver 
 
-4) to generate the input namelists
+5) to generate the input namelists
 
   - to customize the generated namelist - edit the file ctsm.cfg (in this directory)
   - to create the ctsm namelist FROM THIS DIRECTORY:
@@ -64,7 +42,7 @@
     THIS ONLY NEEDS TO BE DONE ONCE 
     to futher customize the lnd_in (say to adjust the ctsm history output) edit the generated lnd_in in this directory
 
-5) write CTSM history files every time step
+6) write CTSM history files every time step
 
    insert the following after the initial '&clm_inparm' in lnd_in:
 
@@ -72,11 +50,11 @@
      hist_mfilt = 1
      hist_ndens = 1
 
-6) run the atm_driver on cheyenne
+7) run the atm_driver on cheyenne
   
   > qsub cheyenne.sub
 
-7) compare with latest baselines
+8) compare with latest baselines
 
    use something like this to compare the last clm and last cpl hist files:
 
@@ -84,7 +62,7 @@
    > cprnc test_lilac.clm2.h0.2000-01-02-00000.nc $basedir/test_lilac.clm2.h0.2000-01-02-00000.nc | tail -30
    > cprnc test_lilac.cpl.hi.2000-01-02-00000.nc $basedir/test_lilac.cpl.hi.2000-01-02-00000.nc | tail -30
 
-8) if there are differences, and those are intentional, then create new
+9) if there are differences, and those are intentional, then create new
    baselines
 
    copy all *.nc files, plus ctsm.cfg, lilac_in and lnd_in to the
