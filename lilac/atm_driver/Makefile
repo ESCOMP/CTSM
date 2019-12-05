@@ -22,7 +22,7 @@ CTSM_INC       = $(CTSM_BLD_DIR)/clm/obj
 
 FFLAGS  = -qno-opt-dynamic-align  -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source -qopt-report -xCORE_AVX2 -no-fma  -O0 -g -check uninit -check bounds -check pointers -fpe0 -check noarg_temp_created -DLINUX  -DFORTRANUNDERSCORE -DCPRINTEL -DDEBUG -DHAVE_MPI -DPIO1 -DHAVE_SLASHPROC -D_PNETCDF -DESMF_VERSION_MAJOR=7 -DESMF_VERSION_MINOR=1 -free
 
-LIBS = -L$(CTSM_BLD_DIR)/lib -lclm -L$(SHR_LIB) -lcsm_share -L$(DEPENDS_LIB) -lpio -lgptl -lmct -lmpeu -mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L$(ESMF_LIB_DIR) -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -Wl,-rpath,$(ESMF_LIB_DIR) -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf -cxxlib
+LIBS = -L$(CTSM_BLD_DIR)/lib -lclm -L$(SHR_LIB) -lcsm_share -L$(DEPENDS_LIB) -lpiof -lpioc -lgptl -lmct -lmpeu -mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L$(ESMF_LIB_DIR) -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -Wl,-rpath,$(ESMF_LIB_DIR) -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf -cxxlib
 
 INCLUDES  = -I$(CTSM_BLD_DIR)/include -I$(SHR_INC) -I$(CTSM_INC)
 
