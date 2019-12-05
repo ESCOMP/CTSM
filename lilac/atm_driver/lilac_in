@@ -1,16 +1,17 @@
-&lnd_mesh_inparm
+&lilac_run_input 
+ starttype = 'startup'
+ caseid = 'test_lilac'
+/
+&lilac_lnd_input
  lnd_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
+/
+&lilac_rof_input
+ rof_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/r05_nomask_c110308_ESMFmesh.nc'
 /
 &atmaero_stream 
  stream_fldfilename='/glade/p/cesmdata/cseg/inputdata/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_WACCM.ensmean_monthly_hist_1849-2015_0.9x1.25_CMIP6_c180926.nc'
  stream_year_first = 2000
  stream_year_last = 2000
-/
-&papi_inparm
-  papi_ctr1_str = "PAPI_FP_OPS"
-  papi_ctr2_str = "PAPI_NO_CTR"
-  papi_ctr3_str = "PAPI_NO_CTR"
-  papi_ctr4_str = "PAPI_NO_CTR"
 /
 &pio_default_inparm
   pio_async_interface = .false.
@@ -25,6 +26,12 @@
   pio_rearr_comm_max_pend_req_comp2io = 0
   pio_rearr_comm_max_pend_req_io2comp = 64
   pio_rearr_comm_type = "p2p"
+/
+&papi_inparm
+  papi_ctr1_str = "PAPI_FP_OPS"
+  papi_ctr2_str = "PAPI_NO_CTR"
+  papi_ctr3_str = "PAPI_NO_CTR"
+  papi_ctr4_str = "PAPI_NO_CTR"
 /
 &prof_inparm
   profile_add_detail = .false.
