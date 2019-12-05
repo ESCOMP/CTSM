@@ -4,15 +4,16 @@
 
 #================================================================================
 # Define directory paths
+#
+# Note: You must set the environment BLDDIR before running this - e.g.
+# export BLDDIR=/glade/scratch/sacks/test_lilac_1205a/bld
 #================================================================================
 
 ESMFMKFILE   = /glade/work/turuncu/ESMF/8.0.0b50/lib/libg/Linux.intel.64.mpt.default/esmf.mk
 ESMF_LIB_DIR = /glade/work/turuncu/ESMF/8.0.0b50/lib/libg/Linux.intel.64.mpt.default
 include $(ESMFMKFILE)
 
-BLD_DIR        = /glade/scratch/mvertens/test_lilac/bld
-
-SHARED_BLD_DIR = $(BLD_DIR)/intel/mpt/debug/nothreads/nuopc
+SHARED_BLD_DIR = $(BLDDIR)/intel/mpt/debug/nothreads/nuopc
 CTSM_BLD_DIR   = $(SHARED_BLD_DIR)/nuopc/esmf
 DEPENDS_LIB    = $(SHARED_BLD_DIR)/lib
 SHR_LIB        = $(SHARED_BLD_DIR)/nuopc/esmf/c1a1l1/lib

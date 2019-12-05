@@ -22,7 +22,9 @@
 
 4) To build the atm_driver executable on cheyenne
 
-   - First, edit the Makefile to change BLD_DIR
+   - First, set BLDDIR - e.g.:
+
+   > export BLDDIR=/glade/scratch/sacks/test_lilac_1205a/bld
 
    - Then, build with:
  
