@@ -5,16 +5,17 @@
 
     SRC_ROOT is where ctsm is checked out 
 
-   > git clone https://github.com/mvertens/ctsm.git
+   > git clone https://github.com/ESCOMP/ctsm.git
    > cd ctsm  (this is $SRCROOT)
-   > git checkout mvertens/lilac_cap
+   > git checkout lilac_cap
    > ./manage_externals/checkout_externals -v
 
 3) build the ctsm/lilac library using a CIME case
 
    > cd $SRCROOT/cime/scripts
-   > ./create_newcase --case /glade/scratch/mvertens/test_lilac --compset I2000Clm50SpRsGs --res f45_f45_mg37 --run-unsupported --driver mct
-   >  cd /glade/scratch/mvertens/test_lilac
+   > export CASEDIR=/glade/scratch/mvertens/test_lilac
+   > ./create_newcase --case $CASEDIR --compset I2000Clm50SpRsGs --res f45_f45_mg37 --run-unsupported --driver mct
+   >  cd $CASEDIR
    > ./xmlchange USE_ESMF_LIB=TRUE
    > ./xmlchange DEBUG=TRUE
    > remove the following lines from env_mach_specific:
@@ -42,10 +43,14 @@
     > ./case.setup
     > ./case.build
 
+    The last step will fail in building the executable; that's okay: all
+    we need from it is the component libraries.
+
 4) To build the atm_driver executable on cheyenne - edit the Makefile to change BLD_DIR
  
    > cd $SRCROOT/lilac/atm_driver
    > make clean
+   > source $CASEDIR/.env_mach_specific.sh
    > make atm_driver 
 
 4) to generate the input namelists
@@ -59,8 +64,28 @@
     THIS ONLY NEEDS TO BE DONE ONCE 
     to futher customize the lnd_in (say to adjust the ctsm history output) edit the generated lnd_in in this directory
 
-5) run the atm_driver on cheyenne
+5) write CTSM history files every time step
+
+   insert the following after the initial '&clm_inparm' in lnd_in:
+
+     hist_nhtfrq = 1
+     hist_mfilt = 1
+     hist_ndens = 1
+
+6) run the atm_driver on cheyenne
   
   > qsub cheyenne.sub
 
+7) compare with latest baselines
 
+   use something like this to compare the last clm and last cpl hist files:
+
+   > basedir=/glade/p/cgd/tss/ctsm_baselines/lilac_20191202
+   > cprnc test_lilac.clm2.h0.2000-01-02-00000.nc $basedir/test_lilac.clm2.h0.2000-01-02-00000.nc | tail -30
+   > cprnc test_lilac.cpl.hi.2000-01-02-00000.nc $basedir/test_lilac.cpl.hi.2000-01-02-00000.nc | tail -30
+
+8) if there are differences, and those are intentional, then create new
+   baselines
+
+   copy all *.nc files, plus ctsm.cfg, lilac_in and lnd_in to the
+   baseline directory
