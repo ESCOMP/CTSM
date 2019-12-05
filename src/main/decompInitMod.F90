@@ -325,7 +325,7 @@ contains
     ! !ARGUMENTS:
     integer , intent(in) :: amask(:)
     integer , intent(in) :: ni,nj   ! domain global size
-    integer , pointer    :: gindex_ocn(:)
+    integer , pointer, intent(out) :: gindex_ocn(:) ! this variable is allocated here, and is assumed to start unallocated
 
     ! !LOCAL VARIABLES:
     integer :: n,i,j,nocn

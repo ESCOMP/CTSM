@@ -178,7 +178,7 @@ contains
          units='kg/m2', &
          avgflag='A', &
          long_name=this%info%lname('soil liquid water + ice in top 10cm of soil (veg landunits only)'), &
-         ptr_col=this%h2osoi_liqice_10cm_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+         ptr_col=this%h2osoi_liqice_10cm_col, l2g_scale_type='veg')
 
     this%tws_grc(begg:endg) = spval
     call hist_addfld1d ( &

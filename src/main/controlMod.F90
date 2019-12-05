@@ -119,7 +119,6 @@ contains
     use clm_time_manager                 , only : set_timemgr_init
     use CNMRespMod                       , only : CNMRespReadNML
     use LunaMod                          , only : LunaReadNML
-    use FrictionVelocityMod              , only : FrictionVelReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
@@ -531,7 +530,6 @@ contains
     call UrbanReadNML           ( NLFilename )
     call HumanIndexReadNML      ( NLFilename )
     call LunaReadNML            ( NLFilename )
-    call FrictionVelReadNML     ( NLFilename )
 
     ! ----------------------------------------------------------------------
     ! Broadcast all control information if appropriate

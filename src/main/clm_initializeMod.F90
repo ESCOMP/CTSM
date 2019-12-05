@@ -59,10 +59,9 @@ contains
     use initGridCellsMod , only: initGridCells
     use ch4varcon        , only: ch4conrd
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
-    use dynSubgridControlMod, only: dynSubgridControl_init
     !
     ! !ARGUMENTS
-    integer, pointer, optional :: gindex_ocn(:)
+    integer, pointer, optional, intent(out) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
     integer, intent(in), optional :: dtime_driver 
     !
     ! !LOCAL VARIABLES:
@@ -95,7 +94,7 @@ contains
        call shr_sys_flush(iulog)
     endif
 
-    call control_init(dtime_driver)  
+    call control_init(dtime_driver)
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
     call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
@@ -577,7 +576,7 @@ contains
        end if
 
        ! Create new template file using cold start
-       call restFile_write(bounds_proc, finidat_interp_dest)
+       call restFile_write(bounds_proc, finidat_interp_dest, writing_finidat_interp_dest_file=.true.)
 
        ! Interpolate finidat onto new template file
        call getfil( finidat_interp_source, fnamer,  0 )
@@ -730,7 +729,7 @@ contains
     if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
-            soilstate_inst, frictionvel_inst)
+            soilstate_inst)
     end if
 
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
