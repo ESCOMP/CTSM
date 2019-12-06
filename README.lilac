@@ -1,19 +1,20 @@
-1) set the following environment variables (***THIS IS CRITICAL to have the lilac code built as part of ctsm)
-    >  export LILAC_MODE='on'
-
-2) check out the code (ctsm and lilac are now bundled together) and built as one library
-
-    SRC_ROOT is where ctsm is checked out 
+1) check out the code (ctsm and lilac are now bundled together) and built as one library
 
    > git clone https://github.com/ESCOMP/ctsm.git
-   > cd ctsm  (this is $SRCROOT)
    > git checkout lilac_cap
    > ./manage_externals/checkout_externals -v
+
+1) set the following environment variables (***THIS IS CRITICAL to have the lilac code built as part of ctsm)
+   SRC_ROOT is where ctsm is checked out 
+
+   > export LILAC_MODE='on'
+   > export SRCROOT=`pwd`
+   > export CASEDIR=/glade/scratch/mvertens/test_lilac
+   > export BLDDIR=$CASEDIR/bld
 
 3) build the ctsm/lilac library using a CIME case
 
    > cd $SRCROOT/cime/scripts
-   > export CASEDIR=/glade/scratch/mvertens/test_lilac
    > ./create_newcase --case $CASEDIR --compset I2000Clm50SpRsGs --res f45_f45_mg37 --run-unsupported --driver nuopc
    >  cd $CASEDIR
    > ./xmlchange DEBUG=TRUE
@@ -22,12 +23,6 @@
 
 4) To build the atm_driver executable on cheyenne
 
-   - First, set BLDDIR - e.g.:
-
-   > export BLDDIR=/glade/scratch/sacks/test_lilac_1205a/bld
-
-   - Then, build with:
- 
    > cd $SRCROOT/lilac/atm_driver
    > make clean
    > source $CASEDIR/.env_mach_specific.sh
