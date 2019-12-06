@@ -5,7 +5,7 @@
    > ./manage_externals/checkout_externals -v
 
 1) set the following environment variables (***THIS IS CRITICAL to have the lilac code built as part of ctsm)
-   SRC_ROOT is where ctsm is checked out 
+   SRCROOT is where ctsm is checked out 
 
    > export LILAC_MODE='on'
    > export SRCROOT=`pwd`
@@ -33,7 +33,7 @@
   - to customize the generated namelist - edit the file ctsm.cfg (in this directory)
   - to create the ctsm namelist FROM THIS DIRECTORY:
 
-    > $SRC_ROOT/lilac_config/buildnml
+    > $SRCROOT/lilac_config/buildnml
 
   - this will now create the files lnd_in, drv_flds_in, and clm.input_data_list in this directory
     THIS ONLY NEEDS TO BE DONE ONCE 

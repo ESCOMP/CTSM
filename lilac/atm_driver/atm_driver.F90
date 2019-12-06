@@ -144,7 +144,7 @@ program atm_driver
   if (mytask == 0 ) then
      print *, " initializing lilac "
   end if
-  call lilac_init(atm_mesh_file, atm_global_index, atm_lons, atm_lats, &
+  call lilac_init(comp_comm, atm_mesh_file, atm_global_index, atm_lons, atm_lats, &
        atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
        atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs)

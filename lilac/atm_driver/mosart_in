@@ -1,0 +1,21 @@
+&mosart_inparm
+  bypass_routing_option = "direct_in_place"
+  decomp_option = "roundrobin"
+  delt_mosart = 1800
+  do_rtm = .true.
+  do_rtmflood = .false.
+  finidat_rtm = " "
+  frivinp_rtm = "/glade/p/cesmdata/cseg/inputdata/rof/mosart/MOSART_routing_Global_0.5x0.5_c170601.nc"
+  ice_runoff = .true.
+  qgwl_runoff_option = "threshold"
+  rtmhist_fexcl1 = ""
+  rtmhist_fexcl2 = ""
+  rtmhist_fexcl3 = ""
+  rtmhist_fincl1 = ""
+  rtmhist_fincl2 = ""
+  rtmhist_fincl3 = ""
+  rtmhist_mfilt = 1
+  rtmhist_ndens = 1
+  rtmhist_nhtfrq = 0
+  smat_option = "Xonly"
+/

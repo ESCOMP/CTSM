@@ -1,7 +1,7 @@
 module lilac_history
 
   !-----------------------------------------------------------------------------
-  ! Mediator Phases
+  ! LILAC history output
   !-----------------------------------------------------------------------------
 
   use ESMF
@@ -17,6 +17,10 @@ module lilac_history
   use lilac_io        , only : lilac_io_write, lilac_io_wopen, lilac_io_enddef
   use lilac_io        , only : lilac_io_close, lilac_io_date2yyyymmdd, lilac_io_sec2hms
   use lilac_io        , only : lilac_io_ymd2date
+
+  ! For global domains 
+  ! TODO: need to generalize obtaining global domains via state attributes
+  use domainMod       , only : ldomain
 
   implicit none
   private
@@ -88,50 +92,58 @@ contains
 
   !===============================================================================
 
-  subroutine lilac_history_write(atm2lnd_a_state, atm2lnd_l_state, lnd2atm_l_state, lnd2atm_a_state, clock, rc)
+  subroutine lilac_history_write(atm2cpl_state, lnd2cpl_state, rof2cpl_state, &
+       cpl2atm_state, cpl2lnd_state, cpl2rof_state, clock, rc)
 
     ! Write lilac history file
 
     ! input/output variables
-    type(ESMF_State) :: atm2lnd_a_state
-    type(ESMF_State) :: atm2lnd_l_state
-    type(ESMF_State) :: lnd2atm_l_state
-    type(ESMF_State) :: lnd2atm_a_state
+    type(ESMF_State) :: atm2cpl_state
+    type(ESMF_State) :: lnd2cpl_state
+    type(ESMF_State) :: rof2cpl_state
+    type(ESMF_State) :: cpl2atm_state
+    type(ESMF_State) :: cpl2lnd_state
+    type(ESMF_State) :: cpl2rof_state
     type(ESMF_Clock) :: clock
     integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_FieldBundle)  :: c2a_fb , a2c_fb, c2l_fb, l2c_fb
-    type(ESMF_VM)           :: vm
-    type(ESMF_Time)         :: currtime
-    type(ESMF_Time)         :: reftime
-    type(ESMF_Time)         :: starttime
-    type(ESMF_Time)         :: nexttime
-    type(ESMF_TimeInterval) :: timediff       ! Used to calculate curr_time
-    type(ESMF_Calendar)     :: calendar       ! calendar type
-    character(len=64)       :: currtimestr
-    character(len=64)       :: nexttimestr
-    character(CS)           :: histavg_option ! Histavg option units
-    integer                 :: i,j,m,n,n1,ncnt
-    integer                 :: start_ymd      ! Starting date YYYYMMDD
-    integer                 :: start_tod      ! Starting time-of-day (s)
-    integer                 :: nx,ny          ! global grid size
-    integer                 :: yr,mon,day,sec ! time units
-    real(r8)                :: rval           ! real tmp value
-    real(r8)                :: dayssince      ! Time interval since reference time
-    integer                 :: fk             ! index
-    character(CL)           :: time_units     ! units of time variable
-    character(CL)           :: case_name      ! case name
-    character(CL)           :: hist_file      ! Local path to history filename
-    character(CS)           :: cpl_inst_tag   ! instance tag
-    character(CL)           :: freq_option    ! freq_option setting (ndays, nsteps, etc)
-    integer                 :: freq_n         ! freq_n setting relative to freq_option
-    logical                 :: alarmIsOn      ! generic alarm flag
-    real(r8)                :: tbnds(2)       ! CF1.0 time bounds
-    logical                 :: whead,wdata    ! for writing restart/history cdf files
-    integer                 :: dbrc
-    integer                 :: iam
-    logical,save            :: first_call = .true.
+    type(ESMF_FieldBundle)      :: c2a_fb, a2c_fb
+    type(ESMF_FieldBundle)      :: c2l_fb_atm, c2l_fb_rof, l2c_fb_atm, l2c_fb_rof
+    type(ESMF_FieldBundle)      :: c2r_fb, r2c_fb
+    type(ESMF_VM)               :: vm
+    type(ESMF_Time)             :: currtime
+    type(ESMF_Time)             :: reftime
+    type(ESMF_Time)             :: starttime
+    type(ESMF_Time)             :: nexttime
+    type(ESMF_TimeInterval)     :: timediff       ! Used to calculate curr_time
+    type(ESMF_Calendar)         :: calendar       ! calendar type
+    character(len=CS)           :: currtimestr
+    integer                     :: nx_atm, ny_atm
+    integer                     :: nx_lnd, ny_lnd
+    integer                     :: nx_rof, ny_rof
+    character(len=CS)           :: nexttimestr
+    character(CS)               :: histavg_option ! Histavg option units
+    integer                     :: i,j,m,n,n1,ncnt
+    integer                     :: start_ymd      ! Starting date YYYYMMDD
+    integer                     :: start_tod      ! Starting time-of-day (s)
+    integer                     :: nx,ny          ! global grid size
+    integer                     :: yr,mon,day,sec ! time units
+    real(r8)                    :: rval           ! real tmp value
+    real(r8)                    :: dayssince      ! Time interval since reference time
+    integer                     :: fk             ! index
+    character(CL)               :: time_units     ! units of time variable
+    character(CL)               :: case_name      ! case name
+    character(CL)               :: hist_file      ! Local path to history filename
+    character(CS)               :: cpl_inst_tag   ! instance tag
+    character(CL)               :: freq_option    ! freq_option setting (ndays, nsteps, etc)
+    integer                     :: freq_n         ! freq_n setting relative to freq_option
+    logical                     :: alarmIsOn      ! generic alarm flag
+    real(r8)                    :: tbnds(2)       ! CF1.0 time bounds
+    logical                     :: whead,wdata    ! for writing restart/history cdf files
+    integer                     :: dbrc
+    integer                     :: iam
+    logical,save                :: first_call = .true.
     character(len=*), parameter :: subname='(lilac_history_write)'
     !---------------------------------------
 
@@ -236,32 +248,60 @@ contains
              if (ChkErr(rc,__LINE__,u_FILE_u)) return
           endif
 
-          nx = 72 ! hard-wire for now
-          ny = 46 ! hard-wire for now
+          nx_atm = ldomain%ni
+          ny_atm = ldomain%nj
+          nx_lnd = ldomain%ni
+          ny_lnd = ldomain%nj
+          nx_rof = 720  !TODO: remove this hard-wiring
+          ny_rof = 360  !TODO: remove this hard-wiring
 
-          call ESMF_StateGet(atm2lnd_a_state, 'a2c_fb', a2c_fb) ! from atm
+          call ESMF_StateGet(cpl2atm_state, 'c2a_fb', c2a_fb) ! to atm
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call lilac_io_write(hist_file, iam, c2a_fb, &
+               nx=nx_atm, ny=ny_atm, nt=1, whead=whead, wdata=wdata, pre='cpl_to_atm', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          call ESMF_StateGet(cpl2lnd_state, 'c2l_fb_atm', c2l_fb_atm) ! to land
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call lilac_io_write(hist_file, iam, c2l_fb_atm, &
+               nx=nx_lnd, ny=ny_lnd, nt=1, whead=whead, wdata=wdata, pre='cpl_to_lnd_atm', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          ! call ESMF_StateGet(cpl2lnd_state, 'c2l_fb_rof', c2l_fb_rof) ! to land
+          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          ! call lilac_io_write(hist_file, iam, c2l_fb_rof, &
+          !      nx=nx_lnd, ny=ny_lnd, nt=1, whead=.true., wdata=wdata, pre='cpl_to_lnd_rof', rc=rc)
+          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          call ESMF_StateGet(cpl2rof_state, 'c2r_fb', c2r_fb) ! to rof
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call lilac_io_write(hist_file, iam, c2r_fb, &
+               nx=nx_rof, ny=ny_rof, nt=1, whead=whead, wdata=wdata, pre='cpl_to_rof', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          call ESMF_StateGet(atm2cpl_state, 'a2c_fb', a2c_fb) ! from atm
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call lilac_io_write(hist_file, iam, a2c_fb, &
-               nx=nx, ny=ny, nt=1, whead=whead, wdata=wdata, pre='a2c_from_atm', rc=rc)
+               nx=nx_atm, ny=ny_atm, nt=1, whead=whead, wdata=wdata, pre='atm_to_cpl', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          call ESMF_StateGet(atm2lnd_l_state, 'c2l_fb', c2l_fb) ! to land
+          call ESMF_StateGet(lnd2cpl_state, 'l2c_fb_atm', l2c_fb_atm) ! from land
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call lilac_io_write(hist_file, iam, c2l_fb, &
-               nx=nx, ny=ny, nt=1, whead=whead, wdata=wdata, pre='c2l_to_land', rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-          call ESMF_StateGet(lnd2atm_l_state, 'l2c_fb', l2c_fb)  ! from land 
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call lilac_io_write(hist_file, iam, c2l_fb, &
-               nx=nx, ny=ny, nt=1, whead=whead, wdata=wdata, pre='l2c_from_land', rc=rc)
+          call lilac_io_write(hist_file, iam, l2c_fb_atm, &
+               nx=nx_lnd, ny=ny_lnd, nt=1, whead=whead, wdata=wdata, pre='lnd_to_cpl_atm', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          call ESMF_StateGet(lnd2atm_a_state, 'c2a_fb', c2a_fb) ! to atm
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call lilac_io_write(hist_file, iam, c2l_fb, &
-               nx=nx, ny=ny, nt=1, whead=whead, wdata=wdata, pre='c2a_to_atm', rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          ! call ESMF_StateGet(lnd2cpl_state, 'l2c_fb_rof', l2c_fb_rof) ! from land
+          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          ! call lilac_io_write(hist_file, iam, l2c_fb_rof, &
+          !      nx=nx_lnd, ny=ny_lnd, nt=1, whead=whead, wdata=wdata, pre='lnd_to_cpl_rof', rc=rc)
+          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          ! call ESMF_StateGet(rof2cpl_state, 'r2c_fb', r2c_fb) ! from rof
+          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          ! call lilac_io_write(hist_file, iam, r2c_fb, &
+          !      nx=nx_rof, ny=ny_rof, nt=1, whead=whead, wdata=wdata, pre='rof_to_cpl', rc=rc)
+          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        enddo
 
@@ -281,7 +321,5 @@ contains
     endif
 
   end subroutine lilac_history_write
-
-  !===============================================================================
 
 end module lilac_history
