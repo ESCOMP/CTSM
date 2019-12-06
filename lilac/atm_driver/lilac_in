@@ -2,6 +2,9 @@
  starttype = 'startup'
  caseid = 'test_lilac'
 /
+&lilac_atmcap_input
+ atm_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
+/
 &lilac_lnd_input
  lnd_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
 /

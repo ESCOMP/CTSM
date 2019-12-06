@@ -19,6 +19,7 @@ program atm_driver
   use mpi         , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
   use lilac_mod   , only : lilac_init, lilac_run, lilac_final
   use lilac_atmcap, only : lilac_atmcap_atm2lnd, lilac_atmcap_lnd2atm
+  use shr_sys_mod , only : shr_sys_abort
 
   implicit none
 
@@ -37,6 +38,8 @@ program atm_driver
 
   ! Namelist and related variables
   character(len=512) :: atm_mesh_file
+  integer            :: atm_global_nx
+  integer            :: atm_global_ny
   character(len=128) :: atm_calendar
   integer            :: atm_timestep 
   integer            :: atm_start_year ! (yyyy)
@@ -50,7 +53,8 @@ program atm_driver
   integer            :: atm_timestep_start  ! for internal time loop only
   integer            :: atm_timestep_stop   ! for internal time loop only
 
-  namelist /atm_driver_input/ atm_mesh_file, atm_calendar, atm_timestep, &
+  namelist /atm_driver_input/ atm_mesh_file, atm_global_nx, atm_global_ny, &
+       atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
        atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, &
        atm_timestep_start, atm_timestep_stop
@@ -96,13 +100,19 @@ program atm_driver
 
   !-----------------------------------------------------------------------------
   ! Read mesh file to get number of points (n_points)
+  ! Also read in global number of lons and lats (needed for lilac history output)
   !-----------------------------------------------------------------------------
 
-  print *, "DEBUG: atm_mesh_file = ",trim(atm_mesh_file)
   call read_netcdf_mesh(atm_mesh_file, nglobal)
+  if (atm_global_nx * atm_global_ny /= nglobal) then
+     print *, " atm global nx, ny, nglobal = ",atm_global_nx, atm_global_ny, nglobal
+     call shr_sys_abort("Error atm_nx*atm_ny is not equal to nglobal")
+  end if
   if (mytask == 0 ) then
      print *, " atm_driver mesh file ",trim(atm_mesh_file)
-     print *, "number of global points in mesh is:", nglobal
+     print *, " atm global nx = ",atm_global_nx
+     print *, " atm global nx = ",atm_global_ny
+     print *, " atm number of global points in mesh is:", nglobal
   end if
 
   !-----------------------------------------------------------------------------
@@ -144,23 +154,19 @@ program atm_driver
   if (mytask == 0 ) then
      print *, " initializing lilac "
   end if
-  call lilac_init(comp_comm, atm_mesh_file, atm_global_index, atm_lons, atm_lats, &
-       atm_calendar, atm_timestep, &
+  call lilac_init(comp_comm, atm_global_index, atm_lons, atm_lats, &
+       atm_global_nx, atm_global_ny, atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
        atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs)
-
-  !------------------------------------------------------------------------
-  ! Fill in atm2lnd type pointer data
-  !------------------------------------------------------------------------
-
-  ! now fill in the dataptr values
-  call atm_driver_to_lilac (atm_lons, atm_lats)
 
   !------------------------------------------------------------------------
   ! Run lilac
   !------------------------------------------------------------------------
 
   do nstep = atm_timestep_start, atm_timestep_stop
+     ! fill in the dataptr values in atm2lnd type in lilac_atmcap
+     call atm_driver_to_lilac (atm_lons, atm_lats)
+
      if (nstep == atm_timestep_stop) then
         call lilac_run(restart_alarm_is_ringing=.true., stop_alarm_is_ringing=.true.)
      else

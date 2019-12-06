@@ -6,9 +6,9 @@ module lilac_atmcap
   ! THE HOST ATMOSPHERE IS RESPONSIBLE for calling lilac_init() and in turn
   ! lilac_init() calls the initialization routines for atm2lnd and lnd2atm
   !
-  ! the host atm init call will be 
+  ! the host atm init call will be
   !      call lilac_init()
-  ! the host atm run phase will be 
+  ! the host atm run phase will be
   !     call lilac_atm2lnd(fldname, data1d)
   !     call lilac_run(restart_alarm_is_ringing, stop_alarm_is_ringing)
   !     call lilac_lnd2atm(fldname, data1d)
@@ -21,19 +21,19 @@ module lilac_atmcap
 
   implicit none
 
-  public :: lilac_atmos_register
-
   public :: lilac_atmcap_init
   public :: lilac_atmcap_atm2lnd
   public :: lilac_atmcap_lnd2atm
+  public :: lilac_atmcap_register
 
   private :: lilac_atmcap_add_fld
 
-  ! Global index space info for atm data
-  integer, public, allocatable  :: gindex_atm (:)
-
-  ! Mesh file to be read in by lilac_atm
-  character(len=CL), public :: atm_mesh_filename
+  ! Input from host atmosphere
+  integer, public, allocatable :: gindex_atm(:) ! global index space
+  integer, public, allocatable :: atm_lons(:)   ! local longitudes
+  integer, public, allocatable :: atm_lats(:)   ! local latitudes
+  integer, public              :: atm_global_nx
+  integer, public              :: atm_global_ny
 
   type :: atmcap_type
      character(len=CL)  :: fldname
@@ -45,9 +45,8 @@ module lilac_atmcap
   type(atmcap_type), pointer, public :: atm2lnd(:)
   type(atmcap_type), pointer, public :: lnd2atm(:)
 
-  integer            :: mytask 
-  integer, parameter :: debug = 0 ! internal debug level
-
+  integer                 :: mytask
+  integer     , parameter :: debug = 0 ! internal debug level
   character(*), parameter :: u_FILE_u = &
        __FILE__
 
@@ -55,10 +54,34 @@ module lilac_atmcap
 contains
 !========================================================================
 
-  subroutine lilac_atmcap_init()
-    integer :: n, lsize
+  subroutine lilac_atmcap_init_vars(atm_gindex_in, atm_lons_in, atm_lats_in, atm_global_nx_in, atm_global_ny_in)
 
-    lsize = size(gindex_atm)
+    ! input/output variables
+    integer , intent(in) :: atm_gindex_in(:)
+    real    , intent(in) :: atm_lons_in(:)
+    real    , intent(in) :: atm_lats_in(:)
+    integer , intent(in) :: atm_global_nx_in
+    integer , intent(in) :: atm_global_ny_in
+
+    ! glocal variables
+    integer :: n, lsize, fileunit
+    ! --------------------------------------------
+
+    lsize = size(atm_gindex_in)
+    allocate(gindex_atm(lsize))
+    allocate(atm_lons(lsize))
+    allocate(atm_lats(lsize))
+
+    ! set module variables
+    gindex_atm(:) = atm_gindex_in(:)
+    atm_lons(:)   = atm_lons_in(:)
+    atm_lats(:)   = atm_lats_in(:)
+    atm_global_nx = atm_global_nx_in
+    atm_global_ny = atm_global_ny_in
+
+    !-------------------------------------------------------------------------
+    ! Set module arrays atm2lnd and lnd2atm
+    !-------------------------------------------------------------------------
 
     ! TODO: how is the atm going to specify which fields are not provided =
     ! should it pass an array of character strings or a colon deliminited set of fields
@@ -96,13 +119,8 @@ contains
     call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_dstdry3'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
     call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_dstwet4'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
     call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_dstdry4'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-
-    ! TODO: optional fields - if these are uncommented then need to make sure that they are also appear in the lnd
-    ! import state
-    ! CRITICAL the fields in the export state from lilac_atmcap MUST match the fields in the import state to the land
-    ! this is not being checked currently and msut be
-    !call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_methane' , units='unknown', required_fr_atm=.false. , lsize=lsize)
-    !call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_bcph'  , units='unknown', required_fr_atm=.false. , lsize=lsize)
+  ! call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_methane'    , units='unknown', required_fr_atm=.false. , lsize=lsize)
+  ! call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_bcph'     , units='unknown', required_fr_atm=.false. , lsize=lsize)
 
     ! now add dataptr memory for all of the fields and set default values of provided_by_atm to false
     do n = 1,size(atm2lnd)
@@ -139,7 +157,214 @@ contains
        allocate(lnd2atm(n)%dataptr(lsize))
     end do
 
+  end subroutine lilac_atmcap_init_vars
+
+  !========================================================================
+  subroutine lilac_atmcap_register (comp, rc)
+
+    ! input/output variables
+    type(ESMF_GridComp)          :: comp   ! must not be optional
+    integer, intent(out)         :: rc
+
+    ! local variables
+    type(ESMF_VM)                :: vm
+    character(len=*), parameter  :: subname='(lilac_atmos_register): '
+    !-------------------------------------------------------------------------
+
+    call ESMF_VMGetGlobal(vm=vm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMGet(vm, localPet=mytask, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (mytask == 0) then
+       print *, "in user register routine"
+    end if
+
+    ! Initialize return code
+    rc = ESMF_SUCCESS
+
+    ! Set the entry points for standard ESMF Component methods
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, userRoutine=lilac_atmcap_init, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, userRoutine=lilac_atmcap_run, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, userRoutine=lilac_atmcap_final, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+  end subroutine lilac_atmcap_register
+
+!========================================================================
+
+  subroutine lilac_atmcap_init (comp, lnd2atm_a_state, atm2lnd_a_state, clock, rc)
+
+    ! input/output variables
+    type (ESMF_GridComp) :: comp
+    type (ESMF_State)    :: lnd2atm_a_state, atm2lnd_a_state
+    type (ESMF_Clock)    :: clock
+    integer, intent(out) :: rc
+
+    ! local variables
+    integer                     :: fileunit
+    type(ESMF_Mesh)             :: atm_mesh
+    type(ESMF_DistGrid)         :: atm_distgrid
+    type(ESMF_Field)            :: field
+    type(ESMF_FieldBundle)      :: c2a_fb , a2c_fb
+    integer                     :: n, i, ierr
+    character(len=cl)           :: atm_mesh_filename
+    character(len=*), parameter :: subname='(lilac_atmcap_init): '
+    namelist /lilac_atmcap_input/ atm_mesh_filename
+    !-------------------------------------------------------------------------
+
+    ! Initialize return code
+    rc = ESMF_SUCCESS
+
+    call ESMF_LogWrite(subname//"------------------------!", ESMF_LOGMSG_INFO)
+
+    !-------------------------------------------------------------------------
+    ! Read in the atm mesh
+    !-------------------------------------------------------------------------
+
+    ! read in mesh file name from namelist
+    open(newunit=fileunit, status="old", file="lilac_in")
+    read(fileunit, lilac_atmcap_input, iostat=ierr)
+    if (ierr > 0) then
+       call shr_sys_abort(trim(subname) // 'error reading in lilac_atm_input')
+    end if
+    close(fileunit)
+
+    ! Note that in the call to lilac_atm the host atmospere sent both the gindex_atm and
+    ! the atm_mesh_filename that were then set as module variables here
+
+    atm_distgrid = ESMF_DistGridCreate (arbSeqIndexList=gindex_atm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! TODO: the addUserArea failed for the 4x5 grid - need to have a
+    ! more robust approach - unless the area will simply be ignored for now?
+    ! atm_mesh = ESMF_MeshCreate(filename=trim(atm_mesh_filename), fileformat=ESMF_FILEFORMAT_ESMFMESH, &
+    !      elementDistGrid=atm_distgrid, addUserArea=.true., rc=rc)
+    atm_mesh = ESMF_MeshCreate(filename=trim(atm_mesh_filename), fileformat=ESMF_FILEFORMAT_ESMFMESH, &
+         elementDistGrid=atm_distgrid, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) then
+       call shr_sys_abort(trim(subname) // 'Error: failure in creating lilac atmcap from meshfile '//&
+            trim(atm_mesh_filename))
+    end if
+
+    call ESMF_LogWrite(trim(subname)//"Mesh for atmosphere is created for "//trim(atm_mesh_filename), ESMF_LOGMSG_INFO)
+    if (mytask == 0) then
+       print *, trim(subname) // "Mesh for atmosphere is created for "//trim(atm_mesh_filename)
+    end if
+
+    !-------------------------------------------------------------------------
+    ! Create a2c_fb field bundle and add to atm2lnd_a_state
+    !-------------------------------------------------------------------------
+
+    ! create empty field bundle "a2c_fb"
+    a2c_fb = ESMF_FieldBundleCreate(name="a2c_fb", rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! create fields and add to field bundle
+    do n = 1, size(atm2lnd)
+       field = ESMF_FieldCreate(atm_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
+            name=trim(atm2lnd(n)%fldname), farrayPtr=atm2lnd(n)%dataptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call ESMF_FieldBundleAdd(a2c_fb, (/field/), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       if (debug > 0) then
+          call ESMF_FieldPrint(field,  rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
+    end do
+
+    ! add field bundle to atm2lnd_a_state
+    call ESMF_StateAdd(atm2lnd_a_state, (/a2c_fb/), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_LogWrite(subname//"lilac a2c_fb fieldbundle created and added to atm2lnd_a_state", ESMF_LOGMSG_INFO)
+    if (mytask == 0) then
+       print *, "lilac a2c_fb fieldbundle created and added to atm2lnd_a_state"
+    end if
+
+    !-------------------------------------------------------------------------
+    ! Create c2a_fb field bundle and add to lnd2atm_a_state
+    ! Also add nextsw_cday attributes
+    !-------------------------------------------------------------------------
+
+    ! create empty field bundle "c2a_fb"
+    c2a_fb = ESMF_FieldBundleCreate (name="c2a_fb", rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! create fields and add to field bundle
+    do n = 1, size(lnd2atm)
+       field = ESMF_FieldCreate(atm_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
+            name=trim(lnd2atm(n)%fldname), farrayPtr=lnd2atm(n)%dataptr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call ESMF_FieldBundleAdd(c2a_fb, (/field/), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       if (debug > 0) then
+          call ESMF_FieldPrint(field,  rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
+    end do
+
+    ! add field bundle to lnd2atm_a_state
+    call ESMF_StateAdd(lnd2atm_a_state, (/c2a_fb/), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_LogWrite(subname//"lilac c2a_fb fieldbundle is done and added to lnd2atm_a_state", ESMF_LOGMSG_INFO)
+
+    ! Set Attributes needed by land
+    call ESMF_AttributeSet(lnd2atm_a_state, name="nextsw_cday", value=11, rc=rc)  ! TODO: mv what in the world is this???
+
   end subroutine lilac_atmcap_init
+
+!========================================================================
+  subroutine lilac_atmcap_run(comp, importState, exportState, clock, rc)
+
+    ! input/output variables
+    type(ESMF_GridComp)  :: comp
+    type(ESMF_State)     :: importState, exportState
+    type(ESMF_Clock)     :: clock
+    integer, intent(out) :: rc
+
+    ! Initialize return code
+    ! This routine does nothing - its all in the atm->lnd coupler
+    rc = ESMF_SUCCESS
+
+  end subroutine lilac_atmcap_run
+
+!========================================================================
+  subroutine lilac_atmcap_final(comp, importState, exportState, clock, rc)
+
+    ! input/output variables
+    type(ESMF_GridComp)  :: comp
+    type(ESMF_State)     :: importState, exportState
+    type(ESMF_Clock)     :: clock
+    integer, intent(out) :: rc
+
+    ! local variables
+    type (ESMF_FieldBundle) ::  import_fieldbundle, export_fieldbundle
+    character(len=*), parameter :: subname='( lilac_atmos_final): '
+    !-------------------------------------------------------------------------
+
+    ! Initialize return code
+    rc = ESMF_SUCCESS
+
+    call ESMF_StateGet(importState, "c2a_fb", import_fieldbundle, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_StateGet(exportState, "a2c_fb", export_fieldbundle, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_FieldBundleDestroy(import_fieldbundle, rc=rc)
+    call ESMF_FieldBundleDestroy(export_fieldbundle, rc=rc)
+
+    call ESMF_LogWrite(subname//"Finished lilac_atmcap_final", ESMF_LOGMSG_INFO)
+
+  end subroutine lilac_atmcap_final
 
 !========================================================================
   subroutine lilac_atmcap_atm2lnd(fldname, data)
@@ -274,200 +499,5 @@ contains
     end if
 
   end subroutine lilac_atmcap_add_fld
-
-  !========================================================================
-  subroutine lilac_atmos_register (comp, rc)
-
-    type(ESMF_GridComp)          :: comp   ! must not be optional
-    integer, intent(out)         :: rc
-
-    ! local variables
-    type(ESMF_VM)                :: vm
-    character(len=*), parameter  :: subname='(lilac_atmos_register): '
-    !-------------------------------------------------------------------------
-
-    call ESMF_VMGetGlobal(vm=vm, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMGet(vm, localPet=mytask, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    if (mytask == 0) then
-       print *, "in user register routine"
-    end if
-
-    ! Initialize return code
-    rc = ESMF_SUCCESS
-
-    ! Set the entry points for standard ESMF Component methods
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, userRoutine=lilac_atmos_init, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, userRoutine=lilac_atmos_run, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, userRoutine=lilac_atmos_final, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-  end subroutine lilac_atmos_register
-
-!========================================================================
-
-  subroutine lilac_atmos_init (comp, lnd2atm_a_state, atm2lnd_a_state, clock, rc)
-
-    ! input/output variables
-    type (ESMF_GridComp) :: comp
-    type (ESMF_State)    :: lnd2atm_a_state, atm2lnd_a_state
-    type (ESMF_Clock)    :: clock
-    integer, intent(out) :: rc
-
-    ! local variables
-    type(ESMF_Mesh)             :: atm_mesh
-    type(ESMF_DistGrid)         :: atm_distgrid
-    type(ESMF_Field)            :: field
-    type(ESMF_FieldBundle)      :: c2a_fb , a2c_fb
-    integer                     :: n, i
-    character(len=*), parameter :: subname='(lilac_atmos_init): '
-    !-------------------------------------------------------------------------
-
-    ! Initialize return code
-    rc = ESMF_SUCCESS
-
-    call ESMF_LogWrite(subname//"------------------------!", ESMF_LOGMSG_INFO)
-
-    !-------------------------------------------------------------------------
-    ! Read in the atm mesh
-    !-------------------------------------------------------------------------
-
-    ! Note that in the call to lilac_atm the host atmospere sent both the gindex_atm and 
-    ! the atm_mesh_filename that were then set as module variables here
-
-    atm_distgrid = ESMF_DistGridCreate (arbSeqIndexList=gindex_atm, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! TODO: the addUserArea failed for the 4x5 grid - need to have a more robust approach - unless the area will simply be ignored for now?
-    ! atm_mesh = ESMF_MeshCreate(filename=trim(atm_mesh_filename), fileformat=ESMF_FILEFORMAT_ESMFMESH, & 
-    !      elementDistGrid=atm_distgrid, addUserArea=.true., rc=rc)
-    atm_mesh = ESMF_MeshCreate(filename=trim(atm_mesh_filename), fileformat=ESMF_FILEFORMAT_ESMFMESH, &
-         elementDistGrid=atm_distgrid, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_LogWrite(trim(subname)//"Mesh for atmosphere is created for "//trim(atm_mesh_filename), ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       print *, trim(subname) // "Mesh for atmosphere is created for "//trim(atm_mesh_filename)
-    end if
-
-    !-------------------------------------------------------------------------
-    ! Create a2c_fb field bundle and add to atm2lnd_a_state
-    !-------------------------------------------------------------------------
-
-    ! create empty field bundle "a2c_fb"
-    a2c_fb = ESMF_FieldBundleCreate(name="a2c_fb", rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! create fields and add to field bundle
-    do n = 1, size(atm2lnd)
-       field = ESMF_FieldCreate(atm_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
-            name=trim(atm2lnd(n)%fldname), farrayPtr=atm2lnd(n)%dataptr, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call ESMF_FieldBundleAdd(a2c_fb, (/field/), rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       if (debug > 0) then
-          call ESMF_FieldPrint(field,  rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       end if
-    end do
-
-    ! add field bundle to atm2lnd_a_state
-    call ESMF_StateAdd(atm2lnd_a_state, (/a2c_fb/), rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_LogWrite(subname//"lilac a2c_fb fieldbundle created and added to atm2lnd_a_state", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       print *, "lilac a2c_fb fieldbundle created and added to atm2lnd_a_state"
-    end if
-
-    !-------------------------------------------------------------------------
-    ! Create c2a_fb field bundle and add to lnd2atm_a_state
-    ! Also add nextsw_cday attributes
-    !-------------------------------------------------------------------------
-
-    ! create empty field bundle "c2a_fb"
-    c2a_fb = ESMF_FieldBundleCreate (name="c2a_fb", rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! create fields and add to field bundle
-    do n = 1, size(lnd2atm)
-       field = ESMF_FieldCreate(atm_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
-            name=trim(lnd2atm(n)%fldname), farrayPtr=lnd2atm(n)%dataptr, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call ESMF_FieldBundleAdd(c2a_fb, (/field/), rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       if (debug > 0) then
-          call ESMF_FieldPrint(field,  rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       end if
-    end do
-
-    ! add field bundle to lnd2atm_a_state
-    call ESMF_StateAdd(lnd2atm_a_state, (/c2a_fb/), rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_LogWrite(subname//"lilac c2a_fb fieldbundle is done and added to lnd2atm_a_state", ESMF_LOGMSG_INFO)
-
-    ! Set Attributes needed by land
-    call ESMF_AttributeSet(lnd2atm_a_state, name="nextsw_cday", value=11, rc=rc)  ! TODO: mv what in the world is this???
-
-  end subroutine lilac_atmos_init
-
-!========================================================================
-  subroutine lilac_atmos_run(comp, importState, exportState, clock, rc)
-
-    ! input/output variables
-    type(ESMF_GridComp)  :: comp
-    type(ESMF_State)     :: importState, exportState
-    type(ESMF_Clock)     :: clock
-    integer, intent(out) :: rc
-
-    ! local variables
-    character(len=*), parameter :: subname='(lilac_atmos_run):'
-
-    ! Initialize return code
-    rc = ESMF_SUCCESS
-
-    call ESMF_LogWrite(subname//"Should atmos_run ", ESMF_LOGMSG_INFO)
-
-  end subroutine lilac_atmos_run
-
-!========================================================================
-  subroutine lilac_atmos_final(comp, importState, exportState, clock, rc)
-
-    ! input/output variables
-    type(ESMF_GridComp)  :: comp
-    type(ESMF_State)     :: importState, exportState
-    type(ESMF_Clock)     :: clock
-    integer, intent(out) :: rc
-
-    ! local variables
-    type (ESMF_FieldBundle) ::  import_fieldbundle, export_fieldbundle
-    character(len=*), parameter :: subname='( lilac_atmos_final): '
-    !-------------------------------------------------------------------------
-
-    ! Initialize return code
-    rc = ESMF_SUCCESS
-
-    call ESMF_StateGet(importState, "c2a_fb", import_fieldbundle, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_StateGet(exportState, "a2c_fb", export_fieldbundle, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_FieldBundleDestroy(import_fieldbundle, rc=rc)
-    call ESMF_FieldBundleDestroy(export_fieldbundle, rc=rc)
-
-    call ESMF_LogWrite(subname//"?? Are there any other thing for destroying in atmos_final??", ESMF_LOGMSG_INFO)
-
-  end subroutine lilac_atmos_final
 
 end module lilac_atmcap

@@ -90,6 +90,8 @@ contains
     integer , pointer      :: idata(:)
     !-----------------------------------------------------------------------
 
+    rc = ESMF_SUCCESS
+
     namelist /atmaero_stream/      &
          stream_year_first, &
          stream_year_last,  &
@@ -162,17 +164,27 @@ contains
     ! obtain mesh lats, lons and areas
     ! ------------------------------
 
+    write(6,*)'DEBUG: here1'
+
     call ESMF_StateGet(atm2lnd_a_state, 'a2c_fb', lfieldbundle, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    write(6,*)'DEBUG: here1a'
 
     call lilac_methods_FB_getFieldN(lfieldbundle, fieldnum=1, field=lfield, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    write(6,*)'DEBUG: here1b'
+
     call ESMF_FieldGet(lfield, mesh=lmesh, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    write(6,*)'DEBUG: here1c'
+
     call ESMF_MeshGet(lmesh, spatialDim=spatialDim, numOwnedElements=numOwnedElements, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    write(6,*)'DEBUG: here2'
 
     if (numOwnedElements /= lsize) then
        call shr_sys_abort('ERROR: numOwnedElements is not equal to lsize')
@@ -181,6 +193,8 @@ contains
 
     call ESMF_MeshGet(lmesh, ownedElemCoords=ownedElemCoords, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    write(6,*)'DEBUG: here3'
 
     allocate(mesh_lons(numOwnedElements))
     allocate(mesh_lats(numOwnedElements))
@@ -204,6 +218,8 @@ contains
     rdata(:) = 1._R8
     call mct_gGrid_importRattr(ggrid_atm,"mask", rdata, lsize)
     deallocate(mesh_lons, mesh_lats, mesh_areas, rdata)
+
+    write(6,*)'DEBUG: here4'
 
     ! ------------------------------
     ! create the stream data sdat
@@ -237,6 +253,8 @@ contains
          mapalgo       = mapalgo,                              &
          calendar      = get_calendar(),                       &
          taxmode       = taxmode                               )
+
+    write(6,*)'DEBUG: here5'
 
     if (mytask == 0) then
        call shr_strdata_print(sdat,'ATMAERO data')
