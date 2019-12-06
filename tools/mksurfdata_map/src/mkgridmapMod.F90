@@ -453,7 +453,7 @@ contains
 ! !ARGUMENTS:
     implicit none
     type(gridmap_type) , intent(in) :: gridmap   ! mapping data
-    integer, intent(in) :: mask_src(:)  ! input mask
+    real(r8), intent(in) :: mask_src(:)  ! input mask; could be declared integer but for the argument passed from subr. mktopostats
     real(r8), intent(in) :: frac_dst(:)  ! output fractions
     character(len=*)   , intent(in) :: caller    ! calling subroutine (used for error messages)
 !

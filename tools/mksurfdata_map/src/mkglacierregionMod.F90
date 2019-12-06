@@ -57,6 +57,7 @@ contains
     type(domain_type)    :: tdomain             ! local domain
     integer, allocatable :: glacier_region_i(:) ! glacier region on input grid
     real(r8), allocatable :: frac_dst(:)        ! output fractions
+    real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
     integer              :: ncid,varid          ! input netCDF id's
     integer              :: ier                 ! error status
     integer              :: max_region          ! max region ID
@@ -80,7 +81,10 @@ contains
     if (ier/=0) call abort()
     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
-    call gridmap_check(tgridmap, tdomain%mask, frac_dst, subname)
+    allocate(mask_r8(tdomain%ns), stat=ier)
+    if (ier/=0) call abort()
+    mask_r8 = tdomain%mask
+    call gridmap_check(tgridmap, mask_r8, frac_dst, subname)
 
     call domain_checksame(tdomain, ldomain, tgridmap)
 
@@ -124,6 +128,7 @@ contains
     call gridmap_clean(tgridmap)
     deallocate(glacier_region_i)
     deallocate(frac_dst)
+    deallocate(mask_r8)
 
     write (6,*) 'Successfully made glacier region'
     write (6,*)

@@ -82,6 +82,7 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   real(r8), allocatable :: gast_i(:)        ! global area, by surface type
   real(r8), allocatable :: gast_o(:)        ! global area, by surface type
   real(r8), allocatable :: frac_dst(:)      ! output fractions
+  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
   integer , allocatable :: agfirepkmon_i(:) ! input grid: agricultural fire peak month
   integer  :: nagfirepkmon                  ! number of peak months 
   character(len=35), allocatable :: month(:)! name of each month
@@ -112,7 +113,10 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   if (ier/=0) call abort()
   call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
-  call gridmap_check( tgridmap, tdomain%mask, frac_dst, subname )
+  allocate(mask_r8(tdomain%ns), stat=ier)
+  if (ier/=0) call abort()
+  mask_r8 = tdomain%mask
+  call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
   call domain_checksame( tdomain, ldomain, tgridmap )
 
@@ -201,7 +205,7 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   call check_ret(nf_close(ncid), subname)
   call domain_clean(tdomain)
   call gridmap_clean(tgridmap)
-  deallocate (agfirepkmon_i,gast_i,gast_o,month, frac_dst)
+  deallocate (agfirepkmon_i,gast_i,gast_o,month, frac_dst, mask_r8)
 
   write (6,*) 'Successfully made Agricultural fire peak month'
   write (6,*)

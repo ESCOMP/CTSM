@@ -71,7 +71,6 @@ subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_
   type(gridmap_type)    :: tgridmap
   type(domain_type)     :: tdomain            ! local domain
   real(r8), allocatable :: data_i(:)          ! data on input grid
-  integer, allocatable :: mask_src(:)  ! input mask
   integer  :: ncid,varid                      ! input netCDF id's
   integer  :: ier                             ! error status
   logical  :: bypass_reading                  ! If should bypass reading dataset and just use a global value
@@ -102,10 +101,7 @@ subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_
   
      call gridmap_mapread(tgridmap, mapfname )
 
-     allocate(mask_src(tdomain%ns), stat=ier)
-     if (ier/=0) call abort()
-     mask_src = int(tgridmap%frac_src)
-!    call gridmap_check( tgridmap, mask_src, tgridmap%frac_dst, subname )
+     call gridmap_check( tgridmap, tgridmap%frac_src, tgridmap%frac_dst, subname )
 
      call domain_checksame( tdomain, ldomain, tgridmap )
 
