@@ -60,6 +60,9 @@ module lilac_mod
   type(ESMF_Alarm)           :: lilac_restart_alarm
   type(ESMF_Alarm)           :: lilac_stop_alarm
 
+  ! Coupling to mosart is now set to .false. by default
+  logical                    :: couple_to_river = .false.
+
   integer                    :: mytask
 
   character(*) , parameter   :: modname     = "lilac_mod"
@@ -409,20 +412,22 @@ contains
     call ESMF_LogWrite(subname//"CTSM gridded component initialized", ESMF_LOGMSG_INFO)
 
     ! -------------------------------------------------------------------------
-    ! Initialze MOSART Gridded Component
+    ! Initialize MOSART Gridded Component
     ! First Create the empty import and export states used to pass data
     ! between components. (these are module variables)
     ! -------------------------------------------------------------------------
 
-    cpl2rof_state = ESMF_StateCreate(name='state_to_river', stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    rof2cpl_state = ESMF_StateCreate(name='state_fr_river', stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (couple_to_river) then
+       cpl2rof_state = ESMF_StateCreate(name='state_to_river', stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       rof2cpl_state = ESMF_StateCreate(name='state_fr_river', stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    call ESMF_GridCompInitialize(rof_gcomp, importState=cpl2rof_state, exportState=rof2cpl_state, &
-         clock=lilac_clock, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing mosart")
-    call ESMF_LogWrite(subname//"MOSART gridded component initialized", ESMF_LOGMSG_INFO)
+       call ESMF_GridCompInitialize(rof_gcomp, importState=cpl2rof_state, exportState=rof2cpl_state, &
+            clock=lilac_clock, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing mosart")
+       call ESMF_LogWrite(subname//"MOSART gridded component initialized", ESMF_LOGMSG_INFO)
+    end if
 
     ! -------------------------------------------------------------------------
     ! Initialze LILAC coupler components
@@ -437,23 +442,25 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_atm2lnd component")
     call ESMF_LogWrite(subname//"coupler :: cpl_atm2lnd_comp initialized", ESMF_LOGMSG_INFO)
 
-    ! The following fills in the rof field bundle in cpl2lnd_state
-    call ESMF_CplCompInitialize(cpl_rof2lnd_comp, importState=rof2cpl_state, exportState=cpl2lnd_state, &
-         clock=lilac_clock, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_lnd2atm component")
-    call ESMF_LogWrite(subname//"coupler :: cpl_lnd2atm_comp initialized", ESMF_LOGMSG_INFO)
-
     ! The following maps the atm field bundle in lnd2cpl_state to the atm mesh
     call ESMF_CplCompInitialize(cpl_lnd2atm_comp, importState=lnd2cpl_state, exportState=cpl2atm_state, &
          clock=lilac_clock, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_lnd2atm component")
     call ESMF_LogWrite(subname//"coupler :: cpl_lnd2atm_comp initialized", ESMF_LOGMSG_INFO)
 
-    ! The following maps the rof field bundle in lnd2cpl_state to the rof mesh
-    call ESMF_CplCompInitialize(cpl_lnd2rof_comp, importState=lnd2cpl_state, exportState=cpl2rof_state, &
-         clock=lilac_clock, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_lnd2rof component")
-    call ESMF_LogWrite(subname//"coupler :: cpl_atm2lnd_comp initialized", ESMF_LOGMSG_INFO)
+    if (couple_to_river) then
+       ! The following maps the rof field bundle in lnd2cpl_state to the rof mesh
+       call ESMF_CplCompInitialize(cpl_lnd2rof_comp, importState=lnd2cpl_state, exportState=cpl2rof_state, &
+            clock=lilac_clock, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_lnd2rof component")
+       call ESMF_LogWrite(subname//"coupler :: cpl_atm2lnd_comp initialized", ESMF_LOGMSG_INFO)
+
+       ! The following fills in the rof field bundle in cpl2lnd_state
+       call ESMF_CplCompInitialize(cpl_rof2lnd_comp, importState=rof2cpl_state, exportState=cpl2lnd_state, &
+            clock=lilac_clock, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_lnd2atm component")
+       call ESMF_LogWrite(subname//"coupler :: cpl_lnd2atm_comp initialized", ESMF_LOGMSG_INFO)
+    end if
 
     if (mytask == 0) then
        print *, trim(subname) // "finished lilac initialization"
@@ -543,31 +550,40 @@ contains
          clock=lilac_clock, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in cpl_lnd2atm")
 
-    ! Run cpl_lnd2rof 
-    call ESMF_LogWrite(subname//"running cpl_lnd2rof_comp ", ESMF_LOGMSG_INFO)
-    if (mytask == 0) print *, "Running coupler component..... cpl_lnd2rof_comp"
-    call ESMF_CplCompRun(cpl_lnd2rof_comp, importState=lnd2cpl_state, exportState=cpl2rof_state, &
-         clock=lilac_clock, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running cpl_lnd2rof")
+    if (couple_to_river) then
+       ! Run cpl_lnd2rof 
+       call ESMF_LogWrite(subname//"running cpl_lnd2rof_comp ", ESMF_LOGMSG_INFO)
+       if (mytask == 0) print *, "Running coupler component..... cpl_lnd2rof_comp"
+       call ESMF_CplCompRun(cpl_lnd2rof_comp, importState=lnd2cpl_state, exportState=cpl2rof_state, &
+            clock=lilac_clock, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running cpl_lnd2rof")
 
-    ! Run mosart
-    call ESMF_LogWrite(subname//"running mosart", ESMF_LOGMSG_INFO)
-    if (mytask == 0) print *, "Running mosart"
-    call ESMF_GridCompRun(rof_gcomp, importState=cpl2rof_state, exportState=rof2cpl_state, &
-         clock=lilac_clock, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running ctsm")
+       ! Run mosart
+       call ESMF_LogWrite(subname//"running mosart", ESMF_LOGMSG_INFO)
+       if (mytask == 0) print *, "Running mosart"
+       call ESMF_GridCompRun(rof_gcomp, importState=cpl2rof_state, exportState=rof2cpl_state, &
+            clock=lilac_clock, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running ctsm")
 
-    ! Run cpl_rof2lnd
-    ! call ESMF_LogWrite(subname//"running cpl_rof2lnd_comp ", ESMF_LOGMSG_INFO)
-    ! if (mytask == 0) print *, "Running coupler component..... cpl_rof2lnd_comp"
-    ! call ESMF_CplCompRun(cpl_rof2lnd_comp, importState=rof2cpl_state, exportState=cpl2lnd_state, &
-    !      clock=lilac_clock, rc=rc)
-    ! if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running cpl_rof2lnd")
+       ! Run cpl_rof2lnd
+       ! TODO: uncommenting this needs to be tested
+       ! call ESMF_LogWrite(subname//"running cpl_rof2lnd_comp ", ESMF_LOGMSG_INFO)
+       ! if (mytask == 0) print *, "Running coupler component..... cpl_rof2lnd_comp"
+       ! call ESMF_CplCompRun(cpl_rof2lnd_comp, importState=rof2cpl_state, exportState=cpl2lnd_state, &
+       !      clock=lilac_clock, rc=rc)
+       ! if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running cpl_rof2lnd")
+    end if
 
     ! Write out history output
-    call lilac_history_write(atm2cpl_state, lnd2cpl_state, rof2cpl_state, &
-         cpl2atm_state, cpl2lnd_state, cpl2rof_state, lilac_clock, rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in history write")
+    if (couple_to_river) then
+       call lilac_history_write(atm2cpl_state, cpl2atm_state, lnd2cpl_state, cpl2lnd_state, &
+            rof2cpl_state=rof2cpl_state, cpl2rof_state=cpl2rof_state, clock=lilac_clock, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in history write")
+    else
+       call lilac_history_write(atm2cpl_state, cpl2atm_state, lnd2cpl_state, cpl2lnd_state, &
+            clock=lilac_clock, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in history write")
+    end if
 
     ! Advance the time at the end of the time step
     call ESMF_ClockAdvance(lilac_clock, rc=rc)

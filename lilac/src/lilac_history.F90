@@ -92,20 +92,22 @@ contains
 
   !===============================================================================
 
-  subroutine lilac_history_write(atm2cpl_state, lnd2cpl_state, rof2cpl_state, &
-       cpl2atm_state, cpl2lnd_state, cpl2rof_state, clock, rc)
+  subroutine lilac_history_write(atm2cpl_state, cpl2atm_state, &
+       lnd2cpl_state, cpl2lnd_state, rof2cpl_state, cpl2rof_state, clock, rc)
 
+    ! ------------------------------
     ! Write lilac history file
+    ! ------------------------------
 
     ! input/output variables
-    type(ESMF_State) :: atm2cpl_state
-    type(ESMF_State) :: lnd2cpl_state
-    type(ESMF_State) :: rof2cpl_state
-    type(ESMF_State) :: cpl2atm_state
-    type(ESMF_State) :: cpl2lnd_state
-    type(ESMF_State) :: cpl2rof_state
-    type(ESMF_Clock) :: clock
-    integer, intent(out) :: rc
+    type(ESMF_State)           :: atm2cpl_state
+    type(ESMF_State)           :: cpl2atm_state
+    type(ESMF_State)           :: lnd2cpl_state
+    type(ESMF_State)           :: cpl2lnd_state
+    type(ESMF_State), optional :: rof2cpl_state
+    type(ESMF_State), optional :: cpl2rof_state
+    type(ESMF_Clock)           :: clock
+    integer, intent(out)       :: rc
 
     ! local variables
     type(ESMF_FieldBundle)      :: c2a_fb, a2c_fb
@@ -218,7 +220,7 @@ contains
     !---------------------------------------
 
     if (alarmIsOn) then
-       write(hist_file,"(6a)") trim(case_name), '.cpl.hi.',trim(nexttimestr),'.nc'
+       write(hist_file,"(6a)") trim(case_name), '.lilac.hi.',trim(nexttimestr),'.nc'
        call ESMF_LogWrite(trim(subname)//": write "//trim(hist_file), ESMF_LOGMSG_INFO, rc=rc)
 
        call lilac_io_wopen(hist_file, vm, iam, clobber=.true.)
@@ -255,53 +257,59 @@ contains
           nx_rof = 720  !TODO: remove this hard-wiring
           ny_rof = 360  !TODO: remove this hard-wiring
 
-          call ESMF_StateGet(cpl2atm_state, 'c2a_fb', c2a_fb) ! to atm
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call lilac_io_write(hist_file, iam, c2a_fb, &
-               nx=nx_atm, ny=ny_atm, nt=1, whead=whead, wdata=wdata, pre='cpl_to_atm', rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-          call ESMF_StateGet(cpl2lnd_state, 'c2l_fb_atm', c2l_fb_atm) ! to land
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call lilac_io_write(hist_file, iam, c2l_fb_atm, &
-               nx=nx_lnd, ny=ny_lnd, nt=1, whead=whead, wdata=wdata, pre='cpl_to_lnd_atm', rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-          ! call ESMF_StateGet(cpl2lnd_state, 'c2l_fb_rof', c2l_fb_rof) ! to land
-          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          ! call lilac_io_write(hist_file, iam, c2l_fb_rof, &
-          !      nx=nx_lnd, ny=ny_lnd, nt=1, whead=.true., wdata=wdata, pre='cpl_to_lnd_rof', rc=rc)
-          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-          call ESMF_StateGet(cpl2rof_state, 'c2r_fb', c2r_fb) ! to rof
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call lilac_io_write(hist_file, iam, c2r_fb, &
-               nx=nx_rof, ny=ny_rof, nt=1, whead=whead, wdata=wdata, pre='cpl_to_rof', rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-          call ESMF_StateGet(atm2cpl_state, 'a2c_fb', a2c_fb) ! from atm
+          call ESMF_StateGet(atm2cpl_state, 'a2c_fb', a2c_fb)         ! from atm
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call lilac_io_write(hist_file, iam, a2c_fb, &
                nx=nx_atm, ny=ny_atm, nt=1, whead=whead, wdata=wdata, pre='atm_to_cpl', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          call ESMF_StateGet(lnd2cpl_state, 'l2c_fb_atm', l2c_fb_atm) ! from land
+          call ESMF_StateGet(cpl2atm_state, 'c2a_fb', c2a_fb)         ! to atm
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call lilac_io_write(hist_file, iam, c2a_fb, &
+               nx=nx_atm, ny=ny_atm, nt=1, whead=whead, wdata=wdata, pre='cpl_to_atm', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          call ESMF_StateGet(lnd2cpl_state, 'l2c_fb_atm', l2c_fb_atm) ! from lnd
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call lilac_io_write(hist_file, iam, l2c_fb_atm, &
                nx=nx_lnd, ny=ny_lnd, nt=1, whead=whead, wdata=wdata, pre='lnd_to_cpl_atm', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          ! call ESMF_StateGet(lnd2cpl_state, 'l2c_fb_rof', l2c_fb_rof) ! from land
-          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          ! call lilac_io_write(hist_file, iam, l2c_fb_rof, &
-          !      nx=nx_lnd, ny=ny_lnd, nt=1, whead=whead, wdata=wdata, pre='lnd_to_cpl_rof', rc=rc)
-          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call ESMF_StateGet(lnd2cpl_state, 'l2c_fb_rof', l2c_fb_rof) ! from lnd
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call lilac_io_write(hist_file, iam, l2c_fb_rof, &
+               nx=nx_lnd, ny=ny_lnd, nt=1, whead=whead, wdata=wdata, pre='lnd_to_cpl_rof', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          ! call ESMF_StateGet(rof2cpl_state, 'r2c_fb', r2c_fb) ! from rof
-          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          ! call lilac_io_write(hist_file, iam, r2c_fb, &
-          !      nx=nx_rof, ny=ny_rof, nt=1, whead=whead, wdata=wdata, pre='rof_to_cpl', rc=rc)
-          ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call ESMF_StateGet(cpl2lnd_state, 'c2l_fb_atm', c2l_fb_atm) ! to lnd
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call lilac_io_write(hist_file, iam, c2l_fb_atm, &
+               nx=nx_lnd, ny=ny_lnd, nt=1, whead=whead, wdata=wdata, pre='cpl_to_lnd_atm', rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+          if (present(rof2cpl_state)) then
+             call ESMF_StateGet(cpl2lnd_state, 'c2l_fb_rof', c2l_fb_rof) ! to lnd 
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             call lilac_io_write(hist_file, iam, c2l_fb_rof, &
+                  nx=nx_lnd, ny=ny_lnd, nt=1, whead=.true., wdata=wdata, pre='cpl_to_lnd_rof', rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          end if
+
+          if (present(cpl2rof_state)) then
+             call ESMF_StateGet(cpl2rof_state, 'c2r_fb', c2r_fb)      ! to rof 
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             call lilac_io_write(hist_file, iam, c2r_fb, &
+                  nx=nx_rof, ny=ny_rof, nt=1, whead=whead, wdata=wdata, pre='cpl_to_rof', rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          end if
+
+          if (present(rof2cpl_state)) then
+             call ESMF_StateGet(rof2cpl_state, 'r2c_fb', r2c_fb)      ! from rof
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             call lilac_io_write(hist_file, iam, r2c_fb, &
+                  nx=nx_rof, ny=ny_rof, nt=1, whead=whead, wdata=wdata, pre='rof_to_cpl', rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          end if
 
        enddo
 
