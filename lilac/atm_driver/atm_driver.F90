@@ -18,7 +18,7 @@ program atm_driver
   
   use mpi         , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
   use lilac_mod   , only : lilac_init, lilac_run, lilac_final
-  use lilac_utils , only : lilac_atm2lnd, lilac_lnd2atm
+  use lilac_atmcap, only : lilac_atmcap_atm2lnd, lilac_atmcap_lnd2atm
 
   implicit none
 
@@ -272,60 +272,60 @@ contains
     allocate(data(lsize))
 
     data(:) = 30.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Sa_z', data)
+    call lilac_atmcap_atm2lnd('Sa_z', data)
 
     data(:) = 10.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Sa_topo', data)
+    call lilac_atmcap_atm2lnd('Sa_topo', data)
 
     data(:) = 20.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Sa_u', data)
+    call lilac_atmcap_atm2lnd('Sa_u', data)
 
     data(:) = 40.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Sa_v', data)
+    call lilac_atmcap_atm2lnd('Sa_v', data)
 
     data(:) = 280.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Sa_ptem', data)
+    call lilac_atmcap_atm2lnd('Sa_ptem', data)
 
     data(:) = 100100.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Sa_pbot', data)
+    call lilac_atmcap_atm2lnd('Sa_pbot', data)
 
     data(:) = 280.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Sa_tbot', data)
+    call lilac_atmcap_atm2lnd('Sa_tbot', data)
 
     data(:) = 0.0004d0   !+(lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
-    call lilac_atm2lnd('Sa_shum', data)
+    call lilac_atmcap_atm2lnd('Sa_shum', data)
 
     data(:) = 200.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Faxa_lwdn', data)
+    call lilac_atmcap_atm2lnd('Faxa_lwdn', data)
 
     data(:) = 0.0d0
-    call lilac_atm2lnd('Faxa_rainc', data)
+    call lilac_atmcap_atm2lnd('Faxa_rainc', data)
 
     data(:) = 3.0d-8 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
-    call lilac_atm2lnd('Faxa_rainl', data)
+    call lilac_atmcap_atm2lnd('Faxa_rainl', data)
 
     data(:) = 1.0d-8 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
-    call lilac_atm2lnd('Faxa_snowc', data)
+    call lilac_atmcap_atm2lnd('Faxa_snowc', data)
 
     data(:) = 2.0d-8 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
-    call lilac_atm2lnd('Faxa_snowl', data)
+    call lilac_atmcap_atm2lnd('Faxa_snowl', data)
 
     data(:) = 100.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Faxa_swndr', data)
+    call lilac_atmcap_atm2lnd('Faxa_swndr', data)
 
     data(:) = 50.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Faxa_swvdr', data)
+    call lilac_atmcap_atm2lnd('Faxa_swvdr', data)
 
     data(:) = 20.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Faxa_swndf', data)
+    call lilac_atmcap_atm2lnd('Faxa_swndf', data)
 
     data(:) = 40.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
-    call lilac_atm2lnd('Faxa_swvdf', data)
+    call lilac_atmcap_atm2lnd('Faxa_swvdf', data)
 
   end subroutine atm_driver_to_lilac
 
   !========================================================================
-  subroutine lilac_to_atm_driver ()
+  subroutine lilac_to_atm_driver
 
     ! local variables
     integer :: lsize
@@ -335,18 +335,18 @@ contains
     lsize = size(atm_global_index)
     allocate(data(lsize))
 
-    call lilac_lnd2atm('Sl_lfrin' , data)
-    call lilac_lnd2atm('Sl_t'     , data)
-    call lilac_lnd2atm('Sl_tref'  , data)
-    call lilac_lnd2atm('Sl_qref'  , data)
-    call lilac_lnd2atm('Sl_avsdr' , data)
-    call lilac_lnd2atm('Sl_anidr' , data)
-    call lilac_lnd2atm('Sl_avsdf' , data)
-    call lilac_lnd2atm('Sl_anidf' , data)
-    call lilac_lnd2atm('Sl_snowh' , data)
-    call lilac_lnd2atm('Sl_u10'   , data)
-    call lilac_lnd2atm('Sl_fv'    , data)
-    call lilac_lnd2atm('Sl_ram1'  , data)
+    call lilac_atmcap_lnd2atm('Sl_lfrin' , data)
+    call lilac_atmcap_lnd2atm('Sl_t'     , data)
+    call lilac_atmcap_lnd2atm('Sl_tref'  , data)
+    call lilac_atmcap_lnd2atm('Sl_qref'  , data)
+    call lilac_atmcap_lnd2atm('Sl_avsdr' , data)
+    call lilac_atmcap_lnd2atm('Sl_anidr' , data)
+    call lilac_atmcap_lnd2atm('Sl_avsdf' , data)
+    call lilac_atmcap_lnd2atm('Sl_anidf' , data)
+    call lilac_atmcap_lnd2atm('Sl_snowh' , data)
+    call lilac_atmcap_lnd2atm('Sl_u10'   , data)
+    call lilac_atmcap_lnd2atm('Sl_fv'    , data)
+    call lilac_atmcap_lnd2atm('Sl_ram1'  , data)
 
   end subroutine lilac_to_atm_driver
 

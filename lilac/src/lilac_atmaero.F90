@@ -28,7 +28,7 @@ module lilac_atmaero
   use clm_time_manager , only : get_calendar
 
   ! lilac uses
-  use lilac_utils      , only : gindex_atm
+  use lilac_atmcap     , only : gindex_atm
   use lilac_methods    , only : chkerr
   use lilac_methods    , only : lilac_methods_FB_getFieldN
 

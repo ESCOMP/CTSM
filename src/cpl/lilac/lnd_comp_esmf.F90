@@ -9,7 +9,9 @@ module lnd_comp_esmf
   use ESMF
   use mpi               , only : MPI_BCAST, MPI_CHARACTER
   use perf_mod          , only : t_startf, t_stopf, t_barrierf
-  use lilac_utils       , only : lilac_field_bundle_to_land, lilac_field_bundle_fr_land
+
+  ! lilac code
+  use lilac_atmcap      , only : atm2lnd, lnd2atm
 
   ! cime share code
   use shr_kind_mod      , only : r8 => shr_kind_r8, cl=>shr_kind_cl
@@ -120,6 +122,7 @@ contains
     type(ESMF_State)           :: importState, exportState
     type(ESMF_FieldBundle)     :: c2l_fb_atm, c2l_fb_rof     ! field bundles in import state
     type(ESMF_FieldBundle)     :: l2c_fb_atm, l2c_fb_rof     ! field bundles in export state
+    type(ESMF_Field)           :: lfield
 
                                                              ! mesh generation
     type(ESMF_Mesh)            :: lnd_mesh
@@ -414,8 +417,13 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! now add atm import fields on lnd_mesh to this field bundle
-    call lilac_field_bundle_to_land(lnd_mesh, c2l_fb_atm, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do n = 1, size(atm2lnd)
+       lfield = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT, &
+            name=trim(atm2lnd(n)%fldname), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldBundleAdd(c2l_fb_atm, (/lfield/), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end do
 
     ! add the field bundle to the state
     call ESMF_StateAdd(import_state, fieldbundleList = (/c2l_fb_atm/))
@@ -445,8 +453,13 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! now add atm export fields on lnd_mesh to this field bundle
-    call lilac_field_bundle_fr_land(lnd_mesh, l2c_fb_atm, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do n = 1, size(lnd2atm)
+       lfield = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT, &
+            name=trim(lnd2atm(n)%fldname), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldBundleAdd(l2c_fb_atm, (/lfield/), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end do
 
     ! add the field bundle to the state
     call ESMF_StateAdd(export_state, fieldbundleList = (/l2c_fb_atm/), rc=rc)

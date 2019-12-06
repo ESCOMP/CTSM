@@ -17,8 +17,8 @@ module lilac_mod
 
   ! lilac routines
   use lilac_io      , only : lilac_io_init
-  use lilac_utils   , only : lilac_init_lnd2atm, lilac_init_atm2lnd
-  use lilac_utils   , only : gindex_atm, atm_mesh_filename
+  use lilac_atmcap  , only : lilac_atmcap_init
+  use lilac_atmcap  , only : gindex_atm, atm_mesh_filename
   use lilac_cpl     , only : cpl_atm2lnd_register, cpl_lnd2atm_register
   use lilac_cpl     , only : cpl_lnd2rof_register, cpl_rof2lnd_register
   use lilac_atmcap  , only : lilac_atmos_register
@@ -171,7 +171,7 @@ contains
     call ESMF_LogWrite(subname//"initialized shr_pio_init2 ...", ESMF_LOGMSG_INFO)
 
     !-------------------------------------------------------------------------
-    ! Initial lilac_utils module variables
+    ! Initial lilac_atmcap module variables
     !-------------------------------------------------------------------------
 
     ! Initialize gindex_atm
@@ -184,9 +184,8 @@ contains
 
     ! Initialize datatypes atm2lnd and lnd2atm
     ! This must be done BEFORE the atmcap initialization - since the dataptr attributes
-    ! are only needed to initialize the atmcap field bundles
-    call lilac_init_atm2lnd(lsize)
-    call lilac_init_lnd2atm(lsize)
+    ! are needed to initialize the atmcap field bundles
+    call lilac_atmcap_init()
 
     !-------------------------------------------------------------------------
     ! Create Gridded Component --  lilac atmos_cap
