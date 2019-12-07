@@ -9,6 +9,7 @@ module lilac_io
   use shr_kind_mod    , only : r4=>shr_kind_r4, i8=>shr_kind_i8, r8=>shr_kind_r8
   use shr_const_mod   , only : fillvalue => SHR_CONST_SPVAL
   use shr_pio_mod     , only : shr_pio_getiosys, shr_pio_getiotype, shr_pio_getioformat
+  use shr_sys_mod     , only : shr_sys_abort
   use lilac_constants , only : dbug_flag    => lilac_constants_dbug_flag
   use lilac_methods   , only : FB_getFieldN => lilac_methods_FB_getFieldN
   use lilac_methods   , only : FB_getFldPtr => lilac_methods_FB_getFldPtr
@@ -523,9 +524,6 @@ contains
     ! write(tmpstr,*) subname,' counts = ',dimcount,tilecount,minindexptile,maxindexptile
     ! call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
 
-    ! TODO: this is not getting the global size correct for a FB coming in that does not have
-    ! all the global grid values in the distgrid - e.g. CTSM
-
     ng = maxval(maxIndexPTile)
     lnx = ng
     lny = 1
@@ -544,10 +542,8 @@ contains
     if (lnx*lny /= ng) then
        write(tmpstr,*) subname,' ERROR: grid2d size not consistent ',ng,lnx,lny
        call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
-
-       !TODO: this should not be an error for say CTSM which does not send a global grid
-       !rc = ESMF_FAILURE
-       !return
+       call shr_sys_abort()
+       !This should not be an error for say CTSM which does not send a global grid
     endif
 
     if (lwhead) then
@@ -575,56 +571,53 @@ contains
           call ESMF_FieldGet(lfield, rank=rank, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-          ! TODO (mvertens, 2019-03-13): this is a temporary mod to NOT write hgt
-          if (trim(itemc) /= "hgt") then
-             if (rank == 2) then
-                call ESMF_FieldGet(lfield, ungriddedUBound=ungriddedUBound, rc=rc)
-                if (chkerr(rc,__LINE__,u_FILE_u)) return
-                write(cnumber,'(i0)') ungriddedUbound(1)
-                call ESMF_LogWrite(trim(subname)//':'//'field '//trim(itemc)// &
-                     ' has an griddedUBound of  '//trim(cnumber), ESMF_LOGMSG_INFO)
+          if (rank == 2) then
+             call ESMF_FieldGet(lfield, ungriddedUBound=ungriddedUBound, rc=rc)
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
+             write(cnumber,'(i0)') ungriddedUbound(1)
+             call ESMF_LogWrite(trim(subname)//':'//'field '//trim(itemc)// &
+                  ' has an griddedUBound of  '//trim(cnumber), ESMF_LOGMSG_INFO)
 
-                ! Create a new output variable for each element of the undistributed dimension
-                do n = 1,ungriddedUBound(1)
-                   if (trim(itemc) /= "hgt") then
-                      write(cnumber,'(i0)') n
-                      name1 = trim(lpre)//'_'//trim(itemc)//trim(cnumber)
-                      call ESMF_LogWrite(trim(subname)//': defining '//trim(name1), ESMF_LOGMSG_INFO)
-                      if (luse_float) then
-                         rcode = pio_def_var(io_file(lfile_ind), trim(name1), PIO_REAL, dimid, varid)
-                         rcode = pio_put_att(io_file(lfile_ind), varid,"_FillValue",real(lfillvalue,r4))
-                      else
-                         rcode = pio_def_var(io_file(lfile_ind), trim(name1), PIO_DOUBLE, dimid, varid)
-                         rcode = pio_put_att(io_file(lfile_ind),varid,"_FillValue",lfillvalue)
-                      end if
-                      if (chkerr(rc,__LINE__,u_FILE_u)) return
-                      rcode = pio_put_att(io_file(lfile_ind), varid, "units"        , trim(cunit))
-                      rcode = pio_put_att(io_file(lfile_ind), varid, "standard_name", trim(name1))
-                      if (present(tavg)) then
-                         if (tavg) then
-                            rcode = pio_put_att(io_file(lfile_ind), varid, "cell_methods", "time: mean")
-                         endif
-                      endif
+             ! Create a new output variable for each element of the undistributed dimension
+             do n = 1,ungriddedUBound(1)
+                if (trim(itemc) /= "hgt") then
+                   write(cnumber,'(i0)') n
+                   name1 = trim(lpre)//'_'//trim(itemc)//trim(cnumber)
+                   call ESMF_LogWrite(trim(subname)//': defining '//trim(name1), ESMF_LOGMSG_INFO)
+                   if (luse_float) then
+                      rcode = pio_def_var(io_file(lfile_ind), trim(name1), PIO_REAL, dimid, varid)
+                      rcode = pio_put_att(io_file(lfile_ind), varid,"_FillValue",real(lfillvalue,r4))
+                   else
+                      rcode = pio_def_var(io_file(lfile_ind), trim(name1), PIO_DOUBLE, dimid, varid)
+                      rcode = pio_put_att(io_file(lfile_ind),varid,"_FillValue",lfillvalue)
                    end if
-                end do
-             else
-                name1 = trim(lpre)//'_'//trim(itemc)
-                call ESMF_LogWrite(trim(subname)//':'//trim(itemc)//':'//trim(name1),ESMF_LOGMSG_INFO)
-                if (luse_float) then
-                   rcode = pio_def_var(io_file(lfile_ind), trim(name1), PIO_REAL, dimid, varid)
-                   rcode = pio_put_att(io_file(lfile_ind), varid, "_FillValue", real(lfillvalue, r4))
-                else
-                   rcode = pio_def_var(io_file(lfile_ind), trim(name1), PIO_DOUBLE, dimid, varid)
-                   rcode = pio_put_att(io_file(lfile_ind), varid, "_FillValue", lfillvalue)
-                end if
-                if (chkerr(rc,__LINE__,u_FILE_u)) return
-                rcode = pio_put_att(io_file(lfile_ind), varid, "units", trim(cunit))
-                rcode = pio_put_att(io_file(lfile_ind), varid, "standard_name", trim(name1))
-                if (present(tavg)) then
-                   if (tavg) then
-                      rcode = pio_put_att(io_file(lfile_ind), varid, "cell_methods", "time: mean")
+                   if (chkerr(rc,__LINE__,u_FILE_u)) return
+                   rcode = pio_put_att(io_file(lfile_ind), varid, "units"        , trim(cunit))
+                   rcode = pio_put_att(io_file(lfile_ind), varid, "standard_name", trim(name1))
+                   if (present(tavg)) then
+                      if (tavg) then
+                         rcode = pio_put_att(io_file(lfile_ind), varid, "cell_methods", "time: mean")
+                      endif
                    endif
                 end if
+             end do
+          else
+             name1 = trim(lpre)//'_'//trim(itemc)
+             call ESMF_LogWrite(trim(subname)//':'//trim(itemc)//':'//trim(name1),ESMF_LOGMSG_INFO)
+             if (luse_float) then
+                rcode = pio_def_var(io_file(lfile_ind), trim(name1), PIO_REAL, dimid, varid)
+                rcode = pio_put_att(io_file(lfile_ind), varid, "_FillValue", real(lfillvalue, r4))
+             else
+                rcode = pio_def_var(io_file(lfile_ind), trim(name1), PIO_DOUBLE, dimid, varid)
+                rcode = pio_put_att(io_file(lfile_ind), varid, "_FillValue", lfillvalue)
+             end if
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
+             rcode = pio_put_att(io_file(lfile_ind), varid, "units", trim(cunit))
+             rcode = pio_put_att(io_file(lfile_ind), varid, "standard_name", trim(name1))
+             if (present(tavg)) then
+                if (tavg) then
+                   rcode = pio_put_att(io_file(lfile_ind), varid, "cell_methods", "time: mean")
+                endif
              end if
           end if
        end do
@@ -679,37 +672,34 @@ contains
                fldptr1=fldptr1, fldptr2=fldptr2, rank=rank, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-          ! TODO (mvertens, 2019-03-13): this is a temporary mod to NOT write hgt
-          if (trim(itemc) /= "hgt") then
-             if (rank == 2) then
+          if (rank == 2) then
 
-                ! Determine the size of the ungridded dimension and the index where the undistributed dimension is located
-                call ESMF_FieldBundleGet(FB, itemc,  field=lfield, rc=rc)
-                if (chkerr(rc,__LINE__,u_FILE_u)) return
-                call ESMF_FieldGet(lfield, ungriddedUBound=ungriddedUBound, gridToFieldMap=gridToFieldMap, rc=rc)
-                if (chkerr(rc,__LINE__,u_FILE_u)) return
+             ! Determine the size of the ungridded dimension and the index where the undistributed dimension is located
+             call ESMF_FieldBundleGet(FB, itemc,  field=lfield, rc=rc)
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
+             call ESMF_FieldGet(lfield, ungriddedUBound=ungriddedUBound, gridToFieldMap=gridToFieldMap, rc=rc)
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-                ! Output for each ungriddedUbound index
-                do n = 1,ungriddedUBound(1)
-                   write(cnumber,'(i0)') n
-                   name1 = trim(lpre)//'_'//trim(itemc)//trim(cnumber)
-                   rcode = pio_inq_varid(io_file(lfile_ind), trim(name1), varid)
-                   call pio_setframe(io_file(lfile_ind),varid,frame)
-
-                   if (gridToFieldMap(1) == 1) then
-                      call pio_write_darray(io_file(lfile_ind), varid, iodesc, fldptr2(:,n), rcode, fillval=lfillvalue)
-                   else if (gridToFieldMap(1) == 2) then
-                      call pio_write_darray(io_file(lfile_ind), varid, iodesc, fldptr2(n,:), rcode, fillval=lfillvalue)
-                   end if
-                end do
-             else if (rank == 1) then
-                name1 = trim(lpre)//'_'//trim(itemc)
+             ! Output for each ungriddedUbound index
+             do n = 1,ungriddedUBound(1)
+                write(cnumber,'(i0)') n
+                name1 = trim(lpre)//'_'//trim(itemc)//trim(cnumber)
                 rcode = pio_inq_varid(io_file(lfile_ind), trim(name1), varid)
                 call pio_setframe(io_file(lfile_ind),varid,frame)
-                call pio_write_darray(io_file(lfile_ind), varid, iodesc, fldptr1, rcode, fillval=lfillvalue)
-             end if  ! end if rank is 2 or 1
 
-          end if ! end if not "hgt"
+                if (gridToFieldMap(1) == 1) then
+                   call pio_write_darray(io_file(lfile_ind), varid, iodesc, fldptr2(:,n), rcode, fillval=lfillvalue)
+                else if (gridToFieldMap(1) == 2) then
+                   call pio_write_darray(io_file(lfile_ind), varid, iodesc, fldptr2(n,:), rcode, fillval=lfillvalue)
+                end if
+             end do
+          else if (rank == 1) then
+             name1 = trim(lpre)//'_'//trim(itemc)
+             rcode = pio_inq_varid(io_file(lfile_ind), trim(name1), varid)
+             call pio_setframe(io_file(lfile_ind),varid,frame)
+             call pio_write_darray(io_file(lfile_ind), varid, iodesc, fldptr1, rcode, fillval=lfillvalue)
+          end if  ! end if rank is 2 or 1
+
        end do  ! end loop over fields in FB
 
        ! Fill coordinate variables
@@ -1404,15 +1394,13 @@ contains
        call ESMF_DistGridGet(distgrid, minIndexPTile=minIndexPTile, &
             maxIndexPTile=maxIndexPTile, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-       !write(tmpstr,*) subname,' counts = ',dimcount,tilecount,minindexptile,maxindexptile
-       !call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
+       ! write(tmpstr,*) subname,' counts = ',dimcount,tilecount,minindexptile,maxindexptile
+       ! call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
 
        if (ng > maxval(maxIndexPTile)) then
           write(tmpstr,*) subname,' WARNING: dimensions do not match', lnx, lny, maxval(maxIndexPTile)
           call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
-          !TODO: this should not be an error for say CTSM which does not send a global grid
-          !rc = ESMF_Failure
-          !return
+          !This should not be an error for CTSM which does not send a global grid
        endif
 
        call ESMF_DistGridGet(distgrid, localDE=0, elementCount=ns, rc=rc)

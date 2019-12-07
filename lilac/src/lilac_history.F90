@@ -65,10 +65,10 @@ contains
     character(CS)           :: lilac_histfreq_option
     integer                 :: lilac_histfreq_n
     character(len=*), parameter :: subname='(lilac_history_init)'
+    !---------------------------------------
 
     namelist /lilac_run_input/ caseid, starttype
     namelist /lilac_io_input/ lilac_histfreq_n, lilac_histfreq_option
-    !---------------------------------------
 
     if (dbug_flag > 5) then
        call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO, rc=rc)

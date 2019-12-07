@@ -28,12 +28,15 @@ module lilac_atmcap
 
   private :: lilac_atmcap_add_fld
 
-  ! Input from host atmosphere
+  ! Time invariant input from host atmosphere
   integer, public, allocatable :: gindex_atm(:) ! global index space
   integer, public, allocatable :: atm_lons(:)   ! local longitudes
   integer, public, allocatable :: atm_lats(:)   ! local latitudes
   integer, public              :: atm_global_nx
   integer, public              :: atm_global_ny
+
+  ! Time variant input from host atmosphere
+  real(r8) :: nextsw_cday = 1.e36_r8  ! calendar day of the next sw calculation
 
   type :: atmcap_type
      character(len=CL)  :: fldname
@@ -168,7 +171,7 @@ contains
 
     ! local variables
     type(ESMF_VM)                :: vm
-    character(len=*), parameter  :: subname='(lilac_atmos_register): '
+    character(len=*), parameter  :: subname='(lilac_atmcap_register): '
     !-------------------------------------------------------------------------
 
     call ESMF_VMGetGlobal(vm=vm, rc=rc)
@@ -197,26 +200,34 @@ contains
 
 !========================================================================
 
-  subroutine lilac_atmcap_init (comp, lnd2atm_a_state, atm2lnd_a_state, clock, rc)
+  subroutine lilac_atmcap_init (comp, lnd2atm_state, atm2lnd_state, clock, rc)
 
     ! input/output variables
     type (ESMF_GridComp) :: comp
-    type (ESMF_State)    :: lnd2atm_a_state, atm2lnd_a_state
+    type (ESMF_State)    :: lnd2atm_state
+    type (ESMF_State)    :: atm2lnd_state
     type (ESMF_Clock)    :: clock
     integer, intent(out) :: rc
 
     ! local variables
-    integer                     :: fileunit
-    type(ESMF_Mesh)             :: atm_mesh
-    type(ESMF_DistGrid)         :: atm_distgrid
-    type(ESMF_Field)            :: field
-    type(ESMF_FieldBundle)      :: c2a_fb , a2c_fb
-    integer                     :: n, i, ierr
-    character(len=cl)           :: atm_mesh_filename
+    integer                :: fileunit
+    type(ESMF_Mesh)        :: atm_mesh
+    type(ESMF_DistGrid)    :: atm_distgrid
+    type(ESMF_Field)       :: field
+    type(ESMF_FieldBundle) :: c2a_fb , a2c_fb
+    integer                :: n, i, ierr
+    integer                :: lsize
+    character(len=cl)      :: atm_mesh_filename
+    character(len=cl)      :: cvalue
+    integer                :: spatialDim
+    integer                :: numOwnedElements
+    real(r8), pointer      :: ownedElemCoords(:)
+    real(r8)               :: mesh_lon, mesh_lat
+    real(r8)               :: tolerance = 1.e-5_r8
     character(len=*), parameter :: subname='(lilac_atmcap_init): '
+    !-------------------------------------------------------------------------
 
     namelist /lilac_atmcap_input/ atm_mesh_filename
-    !-------------------------------------------------------------------------
 
     ! Initialize return code
     rc = ESMF_SUCCESS
@@ -258,7 +269,42 @@ contains
     end if
 
     !-------------------------------------------------------------------------
-    ! Create a2c_fb field bundle and add to atm2lnd_a_state
+    ! Check that lons and lats from the host atmospere match those read
+    ! in from the atm mesh file
+    !-------------------------------------------------------------------------
+
+    call ESMF_MeshGet(atm_mesh, spatialDim=spatialDim, numOwnedElements=numOwnedElements, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    lsize = size(gindex_atm)
+    if (numOwnedElements /= lsize) then
+       print *, 'numOwnedElements in atm_mesh = ',numOwnedElements
+       print *, 'local size from gindex_atm from host atm = ',lsize
+       call shr_sys_abort('ERROR: numOwnedElements is not equal to lsize')
+    end if
+
+    allocate(ownedElemCoords(spatialDim*numOwnedElements))
+    call ESMF_MeshGet(atm_mesh, ownedElemCoords=ownedElemCoords, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    do n = 1, lsize
+       mesh_lon = ownedElemCoords(2*n-1)
+       mesh_lat = ownedElemCoords(2*n)
+       if ( abs(mesh_lon - atm_lons(n)) > tolerance) then
+          write(6,101),n, atm_lons(n), mesh_lon
+101       format('ERROR: lilac_atmcap: n, lon, mesh_lon = ',i6,2(f20.10,2x))
+          call shr_sys_abort()
+       end if
+       if ( abs(mesh_lat - atm_lats(n)) > tolerance) then
+          write(6,102),n, atm_lats(n), mesh_lat
+102       format('ERROR: lilac_atmcap: n, lat, mesh_lat = ',i6,2(f20.10,2x))
+          call shr_sys_abort()
+       end if
+    end do
+    deallocate(ownedElemCoords)
+
+    !-------------------------------------------------------------------------
+    ! Create a2c_fb field bundle and add to atm2lnd_state
     !-------------------------------------------------------------------------
 
     ! create empty field bundle "a2c_fb"
@@ -280,17 +326,21 @@ contains
        end if
     end do
 
-    ! add field bundle to atm2lnd_a_state
-    call ESMF_StateAdd(atm2lnd_a_state, (/a2c_fb/), rc=rc)
+    ! add field bundle to atm2lnd_state
+    call ESMF_StateAdd(atm2lnd_state, (/a2c_fb/), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_LogWrite(subname//"lilac a2c_fb fieldbundle created and added to atm2lnd_a_state", ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(subname//"lilac a2c_fb fieldbundle created and added to atm2lnd_state", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
-       print *, "lilac a2c_fb fieldbundle created and added to atm2lnd_a_state"
+       print *, "lilac a2c_fb fieldbundle created and added to atm2lnd_state"
     end if
 
+    ! add nextsw_cday attributes
+    write(cvalue,*) nextsw_cday
+    call ESMF_AttributeSet(atm2lnd_state, name="nextsw_cday", value=cvalue, rc=rc) 
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
     !-------------------------------------------------------------------------
-    ! Create c2a_fb field bundle and add to lnd2atm_a_state
-    ! Also add nextsw_cday attributes
+    ! Create c2a_fb field bundle and add to lnd2atm_state
     !-------------------------------------------------------------------------
 
     ! create empty field bundle "c2a_fb"
@@ -312,13 +362,10 @@ contains
        end if
     end do
 
-    ! add field bundle to lnd2atm_a_state
-    call ESMF_StateAdd(lnd2atm_a_state, (/c2a_fb/), rc=rc)
+    ! add field bundle to lnd2atm_state
+    call ESMF_StateAdd(lnd2atm_state, (/c2a_fb/), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_LogWrite(subname//"lilac c2a_fb fieldbundle is done and added to lnd2atm_a_state", ESMF_LOGMSG_INFO)
-
-    ! Set Attributes needed by land
-    call ESMF_AttributeSet(lnd2atm_a_state, name="nextsw_cday", value=11, rc=rc)  ! TODO: mv what in the world is this???
+    call ESMF_LogWrite(subname//"lilac c2a_fb fieldbundle is done and added to lnd2atm_state", ESMF_LOGMSG_INFO)
 
   end subroutine lilac_atmcap_init
 
@@ -348,7 +395,7 @@ contains
 
     ! local variables
     type (ESMF_FieldBundle) ::  import_fieldbundle, export_fieldbundle
-    character(len=*), parameter :: subname='( lilac_atmos_final): '
+    character(len=*), parameter :: subname='( lilac_atmcap_final): '
     !-------------------------------------------------------------------------
 
     ! Initialize return code
@@ -377,6 +424,7 @@ contains
     ! local variables
     integer :: n
     logical :: found
+    character(len=*), parameter  :: subname='(lilac_atmcap_atm2lnd)'
     ! --------------------------------------------
 
     found = .false.
@@ -384,7 +432,7 @@ contains
        if (trim(fldname) == atm2lnd(n)%fldname) then
           found = .true.
           if (size(data) /= size(atm2lnd(n)%dataptr)) then
-             ! call abort - TODO: what is the abort call in lilac
+             call shr_sys_abort(trim(subname) // 'size(data) not equal to size(atm2lnd(n)%dataptr')
           else
              atm2lnd(n)%dataptr(:) = data(:)
           end if
@@ -393,7 +441,7 @@ contains
        end if
     end do
     if (.not. found) then
-       ! abort
+       call shr_sys_abort(trim(subname) // 'atm2lnd field name ' // trim(fldname) //' not found')
     end if
 
   contains
@@ -414,14 +462,20 @@ contains
 
 !========================================================================
   subroutine lilac_atmcap_lnd2atm(fldname, data)
+
+    ! input/output variables
     character(len=*) , intent(in)  :: fldname
     real(r8)         , intent(out) :: data(:)
+
+    ! local variables
     integer :: n
+    character(len=*), parameter  :: subname='(lilac_atmcap_lnd2atm)'
+    ! --------------------------------------------
 
     do n = 1,size(lnd2atm)
        if (trim(fldname) == lnd2atm(n)%fldname) then
           if (size(data) /= size(lnd2atm(n)%dataptr)) then
-             ! call abort - TODO: what is the abort call in lilac
+             call shr_sys_abort(trim(subname) // 'size(data) not equal to size(lnd2atm(n)%dataptr')
           else
              data(:) = lnd2atm(n)%dataptr(:)
           end if

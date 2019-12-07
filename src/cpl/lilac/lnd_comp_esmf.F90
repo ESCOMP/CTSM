@@ -707,13 +707,14 @@ contains
 
        if (masterproc) then
           write(iulog,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-          write(iulog,F02) 'calday is   :  ', calday
-          write(iulog,F02) 'eccen is    :  ', eccen
-          write(iulog,F02) 'mvelpp is   :  ', mvelpp
-          write(iulog,F02) 'lambm0 is   :  ', lambm0
-          write(iulog,F02) 'obliqr is   :  ', obliqr
-          write(iulog,F02) 'declin is   :  ', declin
-          write(iulog,F02) 'declinp1 is :  ', declinp1
+          write(iulog,F02) 'nextsw_cday is :  ', nextsw_cday
+          write(iulog,F02) 'calday is      :  ', calday
+          write(iulog,F02) 'eccen is       :  ', eccen
+          write(iulog,F02) 'mvelpp is      :  ', mvelpp
+          write(iulog,F02) 'lambm0 is      :  ', lambm0
+          write(iulog,F02) 'obliqr is      :  ', obliqr
+          write(iulog,F02) 'declin is      :  ', declin
+          write(iulog,F02) 'declinp1 is    :  ', declinp1
           write(iulog,*  ) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
        end if
 

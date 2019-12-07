@@ -90,13 +90,11 @@ contains
     integer , pointer      :: idata(:)
     !-----------------------------------------------------------------------
 
-    rc = ESMF_SUCCESS
-
-    namelist /atmaero_stream/      &
-         stream_year_first, &
-         stream_year_last,  &
-         model_year_align,  &
+    namelist /atmaero_stream/ &
+         stream_year_first, stream_year_last, model_year_align,  &
          stream_fldfilename
+
+    rc = ESMF_SUCCESS
 
     ! default values for namelist
     stream_year_first  = 1                ! first year in stream to use
@@ -124,7 +122,6 @@ contains
        end if
        close(nunit)
     endif
-
     call shr_mpi_bcast(stream_year_first , mpicom)
     call shr_mpi_bcast(stream_year_last  , mpicom)
     call shr_mpi_bcast(model_year_align  , mpicom)
