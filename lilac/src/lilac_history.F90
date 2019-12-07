@@ -6,28 +6,28 @@ module lilac_history
 
   use ESMF
   use shr_kind_mod    , only : cx=>shr_kind_cx, cs=>shr_kind_cs, cl=>shr_kind_cl, r8=>shr_kind_r8
-  use lilac_constants , only : dbug_flag       => lilac_constants_dbug_flag
-  use lilac_constants , only : SecPerDay       => lilac_constants_SecPerDay
-  use lilac_methods   , only : FB_reset        => lilac_methods_FB_reset
-  use lilac_methods   , only : FB_diagnose     => lilac_methods_FB_diagnose
-  use lilac_methods   , only : FB_GetFldPtr    => lilac_methods_FB_GetFldPtr
-  use lilac_methods   , only : FB_accum        => lilac_methods_FB_accum
+  use shr_sys_mod     , only : shr_sys_abort
+  use lilac_atmcap    , only : atm_nx       => atm_global_nx
+  use lilac_atmcap    , only : atm_ny       => atm_global_ny
+  use lilac_constants , only : dbug_flag    => lilac_constants_dbug_flag
+  use lilac_constants , only : SecPerDay    => lilac_constants_SecPerDay
+  use lilac_time      , only : alarmInit    => lilac_time_alarmInit
+  use lilac_methods   , only : FB_reset     => lilac_methods_FB_reset
+  use lilac_methods   , only : FB_diagnose  => lilac_methods_FB_diagnose
+  use lilac_methods   , only : FB_GetFldPtr => lilac_methods_FB_GetFldPtr
+  use lilac_methods   , only : FB_accum     => lilac_methods_FB_accum
   use lilac_methods   , only : chkerr
-  use lilac_time      , only : alarmInit       => lilac_time_alarmInit
   use lilac_io        , only : lilac_io_write, lilac_io_wopen, lilac_io_enddef
   use lilac_io        , only : lilac_io_close, lilac_io_date2yyyymmdd, lilac_io_sec2hms
   use lilac_io        , only : lilac_io_ymd2date
 
-  ! For global domains 
-  ! TODO: need to generalize obtaining global domains via state attributes
-  use domainMod       , only : ldomain
-
   implicit none
   private
 
-  public :: lilac_history_alarm_init
+  public :: lilac_history_init
   public :: lilac_history_write
 
+  character(CL)           :: histfile_prefix
   type(ESMF_Alarm)        :: AlarmHist
   type(ESMF_Alarm)        :: AlarmHistAvg
   character(*), parameter :: u_FILE_u  = &
@@ -37,14 +37,14 @@ module lilac_history
 contains
 !===============================================================================
 
-  subroutine lilac_history_alarm_init(clock, hist_freq_n, hist_freq_option, rc)
+  subroutine lilac_history_init(clock, rc)
 
+    ! ------------------------------------------
     ! Initialize lilac history file alarm
+    ! ------------------------------------------
 
     ! input/output variables
     type(ESMF_Clock)               :: clock  ! lilac clock
-    integer          , intent(in)  :: hist_freq_n
-    character(len=*) , intent(in)  :: hist_freq_option
     integer          , intent(out) :: rc
 
     ! local variables
@@ -54,18 +54,43 @@ contains
     type(ESMF_Time)         :: nexttime
     type(ESMF_Calendar)     :: calendar       ! calendar type
     character(len=64)       :: currtimestr
-    character(CS)           :: histavg_option ! Histavg option units
     integer                 :: yr,mon,day,sec ! time units
     character(CL)           :: freq_option    ! freq_option setting (ndays, nsteps, etc)
     integer                 :: freq_n         ! freq_n setting relative to freq_option
     integer                 :: iam
-    character(len=*), parameter :: subname='(lilac_history_alarm_init)'
+    integer                 :: fileunit
+    integer                 :: ierr
+    character(CL)           :: caseid
+    character(CS)           :: starttype
+    character(CS)           :: lilac_histfreq_option
+    integer                 :: lilac_histfreq_n
+    character(len=*), parameter :: subname='(lilac_history_init)'
+
+    namelist /lilac_run_input/ caseid, starttype
+    namelist /lilac_io_input/ lilac_histfreq_n, lilac_histfreq_option
     !---------------------------------------
 
     if (dbug_flag > 5) then
        call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO, rc=rc)
     endif
     rc = ESMF_SUCCESS
+
+    ! read in caseid
+    open(newunit=fileunit, status="old", file="lilac_in")
+    read(fileunit, lilac_run_input, iostat=ierr)
+    if (ierr > 0) then
+       call shr_sys_abort(trim(subname) // 'error reading in lilac_run_input')
+    end if
+    close(fileunit)
+    write(histfile_prefix,"(2a)") trim(caseid),'.lilac.hi.'
+
+    ! read in history file output frequencies
+    open(newunit=fileunit, status="old", file="lilac_in")
+    read(fileunit, lilac_io_input, iostat=ierr)
+    if (ierr > 0) then
+       call shr_sys_abort(trim(subname) // 'error reading in lilac_io_input')
+    end if
+    close(fileunit)
 
     !---------------------------------------
     ! Get the clock info
@@ -85,10 +110,11 @@ contains
     ! Initialize thie history alarm
     !---------------------------------------
 
-    call alarmInit(clock, AlarmHist, option=freq_option, opt_n=freq_n, RefTime=RefTime, alarmname='history', rc=rc)
+    call alarmInit(clock, AlarmHist, option=lilac_histfreq_option, opt_n=lilac_histfreq_n, &
+         RefTime=RefTime, alarmname='lilac_history_alarm', rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-  end subroutine lilac_history_alarm_init
+  end subroutine lilac_history_init
 
   !===============================================================================
 
@@ -121,29 +147,24 @@ contains
     type(ESMF_TimeInterval)     :: timediff       ! Used to calculate curr_time
     type(ESMF_Calendar)         :: calendar       ! calendar type
     character(len=CS)           :: currtimestr
-    integer                     :: nx_atm, ny_atm
-    integer                     :: nx_lnd, ny_lnd
-    integer                     :: nx_rof, ny_rof
     character(len=CS)           :: nexttimestr
-    character(CS)               :: histavg_option ! Histavg option units
-    integer                     :: i,j,m,n,n1,ncnt
+    integer                     :: i,j,m,n
     integer                     :: start_ymd      ! Starting date YYYYMMDD
     integer                     :: start_tod      ! Starting time-of-day (s)
     integer                     :: nx,ny          ! global grid size
     integer                     :: yr,mon,day,sec ! time units
     real(r8)                    :: rval           ! real tmp value
     real(r8)                    :: dayssince      ! Time interval since reference time
-    integer                     :: fk             ! index
     character(CL)               :: time_units     ! units of time variable
-    character(CL)               :: case_name      ! case name
     character(CL)               :: hist_file      ! Local path to history filename
-    character(CS)               :: cpl_inst_tag   ! instance tag
     character(CL)               :: freq_option    ! freq_option setting (ndays, nsteps, etc)
     integer                     :: freq_n         ! freq_n setting relative to freq_option
     logical                     :: alarmIsOn      ! generic alarm flag
     real(r8)                    :: tbnds(2)       ! CF1.0 time bounds
     logical                     :: whead,wdata    ! for writing restart/history cdf files
-    integer                     :: dbrc
+    character(CL)               :: cvalue
+    integer                     :: lnd_nx, lnd_ny
+    integer                     :: rof_nx, rof_ny
     integer                     :: iam
     logical,save                :: first_call = .true.
     character(len=*), parameter :: subname='(lilac_history_write)'
@@ -201,17 +222,17 @@ contains
     ! --- History Alarms
     !---------------------------------------
 
-    ! if (ESMF_AlarmIsRinging(AlarmHist, rc=rc)) then
-    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    !    alarmIsOn = .true.
-    !    call ESMF_AlarmRingerOff( AlarmHist, rc=rc )
-    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! else
-    !    alarmisOn = .false.
-    ! endif
-    ! hard-wire for now
+    if (ESMF_AlarmIsRinging(AlarmHist, rc=rc)) then
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       alarmIsOn = .true.
+       call ESMF_AlarmRingerOff( AlarmHist, rc=rc )
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       alarmIsOn = .false.
+    endif
+
+    ! TODO: remove this hard-wiring
     alarmisOn = .true.
-    case_name = 'test_lilac'
 
     !---------------------------------------
     ! --- History File
@@ -220,7 +241,7 @@ contains
     !---------------------------------------
 
     if (alarmIsOn) then
-       write(hist_file,"(6a)") trim(case_name), '.lilac.hi.',trim(nexttimestr),'.nc'
+       write(hist_file,"(3a)") trim(histfile_prefix),trim(nexttimestr),'.nc'
        call ESMF_LogWrite(trim(subname)//": write "//trim(hist_file), ESMF_LOGMSG_INFO, rc=rc)
 
        call lilac_io_wopen(hist_file, vm, iam, clobber=.true.)
@@ -250,64 +271,73 @@ contains
              if (ChkErr(rc,__LINE__,u_FILE_u)) return
           endif
 
-          nx_atm = ldomain%ni
-          ny_atm = ldomain%nj
-          nx_lnd = ldomain%ni
-          ny_lnd = ldomain%nj
-          nx_rof = 720  !TODO: remove this hard-wiring
-          ny_rof = 360  !TODO: remove this hard-wiring
+          ! obtain global sizes for lnd_nx and lnd_ny
+          call ESMF_AttributeGet(lnd2cpl_state, name="lnd_nx", value=cvalue, rc=rc)
+          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+          read(cvalue,*) lnd_nx
+          call ESMF_LogWrite(subname//"got attribute lnd_nx "//trim(cvalue), ESMF_LOGMSG_INFO)
+          call ESMF_AttributeGet(lnd2cpl_state, name="lnd_ny", value=cvalue, rc=rc)
+          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+          read(cvalue,*) lnd_ny
+          call ESMF_LogWrite(subname//"got attribute lnd_nx "//trim(cvalue), ESMF_LOGMSG_INFO)
 
           call ESMF_StateGet(atm2cpl_state, 'a2c_fb', a2c_fb)         ! from atm
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call lilac_io_write(hist_file, iam, a2c_fb, &
-               nx=nx_atm, ny=ny_atm, nt=1, whead=whead, wdata=wdata, pre='atm_to_cpl', rc=rc)
+               nx=atm_nx, ny=atm_ny, nt=1, whead=whead, wdata=wdata, pre='atm_to_cpl', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           call ESMF_StateGet(cpl2atm_state, 'c2a_fb', c2a_fb)         ! to atm
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call lilac_io_write(hist_file, iam, c2a_fb, &
-               nx=nx_atm, ny=ny_atm, nt=1, whead=whead, wdata=wdata, pre='cpl_to_atm', rc=rc)
+               nx=atm_nx, ny=atm_ny, nt=1, whead=whead, wdata=wdata, pre='cpl_to_atm', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           call ESMF_StateGet(lnd2cpl_state, 'l2c_fb_atm', l2c_fb_atm) ! from lnd
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call lilac_io_write(hist_file, iam, l2c_fb_atm, &
-               nx=nx_lnd, ny=ny_lnd, nt=1, whead=whead, wdata=wdata, pre='lnd_to_cpl_atm', rc=rc)
+               nx=lnd_nx, ny=lnd_ny, nt=1, whead=whead, wdata=wdata, pre='lnd_to_cpl_atm', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           call ESMF_StateGet(lnd2cpl_state, 'l2c_fb_rof', l2c_fb_rof) ! from lnd
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call lilac_io_write(hist_file, iam, l2c_fb_rof, &
-               nx=nx_lnd, ny=ny_lnd, nt=1, whead=whead, wdata=wdata, pre='lnd_to_cpl_rof', rc=rc)
+               nx=lnd_nx, ny=lnd_ny, nt=1, whead=whead, wdata=wdata, pre='lnd_to_cpl_rof', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
           call ESMF_StateGet(cpl2lnd_state, 'c2l_fb_atm', c2l_fb_atm) ! to lnd
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call lilac_io_write(hist_file, iam, c2l_fb_atm, &
-               nx=nx_lnd, ny=ny_lnd, nt=1, whead=whead, wdata=wdata, pre='cpl_to_lnd_atm', rc=rc)
+               nx=lnd_nx, ny=lnd_ny, nt=1, whead=whead, wdata=wdata, pre='cpl_to_lnd_atm', rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-          if (present(rof2cpl_state)) then
-             call ESMF_StateGet(cpl2lnd_state, 'c2l_fb_rof', c2l_fb_rof) ! to lnd 
-             if (ChkErr(rc,__LINE__,u_FILE_u)) return
-             call lilac_io_write(hist_file, iam, c2l_fb_rof, &
-                  nx=nx_lnd, ny=ny_lnd, nt=1, whead=.true., wdata=wdata, pre='cpl_to_lnd_rof', rc=rc)
-             if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          end if
+          if (present(rof2cpl_state) .and. present(cpl2rof_state)) then
+             ! obtain global sizes for rof_nx and rof_ny
+             call ESMF_AttributeGet(rof2cpl_state, name="rof_nx", value=cvalue, rc=rc)
+             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+             read(cvalue,*) rof_nx
+             call ESMF_LogWrite(subname//"got attribute rof_nx "//trim(cvalue), ESMF_LOGMSG_INFO)
+             call ESMF_AttributeGet(rof2cpl_state, name="rof_ny", value=cvalue, rc=rc)
+             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+             read(cvalue,*) rof_ny
+             call ESMF_LogWrite(subname//"got attribute rof_nx "//trim(cvalue), ESMF_LOGMSG_INFO)
 
-          if (present(cpl2rof_state)) then
-             call ESMF_StateGet(cpl2rof_state, 'c2r_fb', c2r_fb)      ! to rof 
-             if (ChkErr(rc,__LINE__,u_FILE_u)) return
-             call lilac_io_write(hist_file, iam, c2r_fb, &
-                  nx=nx_rof, ny=ny_rof, nt=1, whead=whead, wdata=wdata, pre='cpl_to_rof', rc=rc)
-             if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          end if
-
-          if (present(rof2cpl_state)) then
              call ESMF_StateGet(rof2cpl_state, 'r2c_fb', r2c_fb)      ! from rof
              if (ChkErr(rc,__LINE__,u_FILE_u)) return
              call lilac_io_write(hist_file, iam, r2c_fb, &
-                  nx=nx_rof, ny=ny_rof, nt=1, whead=whead, wdata=wdata, pre='rof_to_cpl', rc=rc)
+                  nx=rof_nx, ny=rof_ny, nt=1, whead=whead, wdata=wdata, pre='rof_to_cpl', rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+             call ESMF_StateGet(cpl2rof_state, 'c2r_fb', c2r_fb)      ! to rof 
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             call lilac_io_write(hist_file, iam, c2r_fb, &
+                  nx=rof_nx, ny=rof_ny, nt=1, whead=whead, wdata=wdata, pre='cpl_to_rof', rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+             call ESMF_StateGet(cpl2lnd_state, 'c2l_fb_rof', c2l_fb_rof) ! to rof 
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             call lilac_io_write(hist_file, iam, c2l_fb_rof, &
+                  nx=lnd_nx, ny=lnd_ny, nt=1, whead=.true., wdata=wdata, pre='cpl_to_lnd_rof', rc=rc)
              if (ChkErr(rc,__LINE__,u_FILE_u)) return
           end if
 

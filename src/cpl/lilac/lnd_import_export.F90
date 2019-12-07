@@ -50,19 +50,18 @@ module lnd_import_export
 contains
 !===============================================================================
 
-  subroutine import_fields( gcomp, bounds, rc)
+  subroutine import_fields( importState, bounds, rc)
 
     !---------------------------------------------------------------------------
     ! Convert the input data from the lilac to the land model
     !---------------------------------------------------------------------------
 
     ! input/output variabes
-    type(ESMF_GridComp)             :: gcomp
+    type(ESMF_State)                :: importState
     type(bounds_type) , intent(in)  :: bounds       ! bounds
     integer           , intent(out) :: rc
 
     ! local variables
-    type(ESMF_State)          :: importState
     integer                   :: num
     integer                   :: begg, endg                             ! bounds
     integer                   :: g,i,k                                  ! indices
@@ -105,10 +104,6 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
-
-    ! Get import state
-    call ESMF_GridCompGet(gcomp, importState=importState, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Set bounds
     begg = bounds%begg; endg=bounds%endg
@@ -341,29 +336,24 @@ contains
 
   !==============================================================================
 
-  subroutine export_fields(gcomp, bounds, rc)
+  subroutine export_fields(exportState, bounds, rc)
 
     !-------------------------------
     ! Pack the export state
     !-------------------------------
 
     ! input/output variables
-    type(ESMF_GridComp)             :: gcomp
+    type(ESMF_State)                :: exportState
     type(bounds_type) , intent(in)  :: bounds       ! bounds
     integer           , intent(out) :: rc
 
     ! local variables
-    type(ESMF_State)            :: exportState
     integer                     :: i, g, num
     real(r8)                    :: array(bounds%begg:bounds%endg)
     character(len=*), parameter :: subname='(lnd_import_export:export_fields)'
     !---------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-
-    ! Get export state (ESMF)
-    call ESMF_GridCompGet(gcomp, exportState=exportState, rc=rc) ! do we need the clock now?
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------
     ! output to atm

@@ -34,7 +34,7 @@ module lnd_comp_esmf
   use clm_time_manager  , only : set_timemgr_init, advance_timestep
   use clm_time_manager  , only : set_nextsw_cday, update_rad_dtime
   use clm_time_manager  , only : get_nstep, get_step_size
-  use clm_time_manager  , only : get_curr_date, get_curr_calday, set_nextsw_cday
+  use clm_time_manager  , only : get_curr_date, get_curr_calday
   use clm_initializeMod , only : initialize1, initialize2
   use clm_driver        , only : clm_drv
   use lnd_import_export , only : import_fields, export_fields
@@ -117,14 +117,15 @@ contains
     integer                    :: lbnum                      ! input to memory diagnostic
     integer                    :: shrlogunit                 ! old values for log unit and log level
     type(bounds_type)          :: bounds                     ! bounds
+    character(len=CL)          :: cvalue
 
-                                                             ! generation of field bundles
+    ! generation of field bundles
     type(ESMF_State)           :: importState, exportState
     type(ESMF_FieldBundle)     :: c2l_fb_atm, c2l_fb_rof     ! field bundles in import state
     type(ESMF_FieldBundle)     :: l2c_fb_atm, l2c_fb_rof     ! field bundles in export state
     type(ESMF_Field)           :: lfield
 
-                                                             ! mesh generation
+    ! mesh generation
     type(ESMF_Mesh)            :: lnd_mesh
     character(ESMF_MAXSTR)     :: lnd_mesh_filename          ! full filepath of land mesh file
     integer                    :: nlnd, nocn                 ! local size ofarrays
@@ -134,7 +135,7 @@ contains
     type(ESMF_DistGrid)        :: distgrid
     integer                    :: fileunit
 
-                                                             ! clock info
+    ! clock info
     character(len=CL)          :: calendar                   ! calendar type name
     type(ESMF_CalKind_Flag)    :: caltype                    ! calendar type from lilac clock
     integer                    :: curr_tod, curr_ymd         ! current time info
@@ -152,7 +153,7 @@ contains
     type(ESMF_Time)            :: refTime                    ! Ref time
     type(ESMF_TimeInterval)    :: timeStep                   ! time step from lilac clock
 
-                                                             ! orbital info
+    ! orbital info
     integer                    :: orb_iyear_align            ! associated with model year
     integer                    :: orb_cyear                  ! orbital year for current orbital computation
     integer                    :: orb_iyear                  ! orbital year for current orbital computation
@@ -222,15 +223,7 @@ contains
     !orb_cyear = orb_iyear + (year - orb_iyear_align)
 
     orb_cyear = 2000
-    call shr_orb_params(orb_cyear, eccen, obliqr, mvelpp, &
-         obliqr, lambm0, mvelpp, masterproc)
-
-    ! for now hard-coding:
-    !nextsw_cday =  1.02083333333333
-    !eccen       =  1.670366039276560E-002
-    !mvelpp      =  4.93745779048816
-    !lambm0      =  -3.247249566152933E-0020
-    !obliqr      =  0.409101122579779
+    call shr_orb_params(orb_cyear, eccen, obliqr, mvelpp, obliqr, lambm0, mvelpp, masterproc)
 
     if (masterproc) then
        write(iulog,*) 'shr_obs_params is setting the following:'
@@ -445,7 +438,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !--------------------------------
-    ! Create export state
+    ! Create ctsm export state
     !--------------------------------
 
     ! create an empty field bundle for atm export fields
@@ -485,46 +478,46 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !--------------------------------
-    ! Fill in  land export state
+    ! Fill in ctsm export state
     !--------------------------------
 
-    call ESMF_LogWrite(subname//"Creating land export state", ESMF_LOGMSG_INFO)
+    call export_fields(export_state, bounds, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    ! Fill in export state at end of initialization
-    call export_fields(comp, bounds, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    write(cvalue,*) ldomain%ni
+    call ESMF_AttributeSet(export_state, name="lnd_nx", value=trim(cvalue), rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    call ESMF_LogWrite(subname//"set attribute lnd_nx to "//trim(cvalue), ESMF_LOGMSG_INFO)
 
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    write(cvalue,*) ldomain%nj
+    call ESMF_AttributeSet(export_state, name="lnd_ny", value=trim(cvalue), rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    call ESMF_LogWrite(subname//"set attribute lnd_ny to "//trim(cvalue), ESMF_LOGMSG_INFO)
 
-    call ESMF_LogWrite(subname//"Getting Calendar Day of nextsw calculation...", ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(subname//"Created land export state", ESMF_LOGMSG_INFO)
 
+    !--------------------------------
     ! Get calendar day of next sw (shortwave) calculation (nextsw_cday)
+    !--------------------------------
+
     if (nsrest == nsrStartup) then
        call ESMF_ClockGet( clock, currTime=currTime, rc=rc )
-       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        call ESMF_TimeGet( currTime, dayOfYear_r8=nextsw_cday, rc=rc )
-       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       ! TODO: get this from the import state nextsw_cday attribute
     end if
 
     ! Set nextsw_cday
-    call set_nextsw_cday( nextsw_cday )
+    call set_nextsw_cday(nextsw_cday_in=nextsw_cday)
 
+    write(cvalue,*) nextsw_cday
+    call ESMF_LogWrite(subname//"Calendar Day of nextsw calculation is "//trim(cvalue), ESMF_LOGMSG_INFO)
     if (masterproc) then
        write(iulog,*) 'TimeGet ... nextsw_cday is : ', nextsw_cday
     end if
-
-    ! Set Attributes
-    call ESMF_LogWrite(subname//"setting attribute!", ESMF_LOGMSG_INFO)
-
-    ! call ESMF_AttributeSet(export_state, name="lnd_nx", value=ldomain%ni, rc=rc)
-    ! if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    ! call ESMF_LogWrite(subname//"setting attribute lnd_nx", ESMF_LOGMSG_INFO)
-
-    ! call ESMF_AttributeSet(export_state, name="lnd_ny", value=ldomain%nj, rc=rc)
-    ! if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    ! call ESMF_LogWrite(subname//"setting attribute lnd_ny!", ESMF_LOGMSG_INFO)
 
     !--------------------------------
     ! diagnostics
@@ -667,7 +660,7 @@ contains
     !--------------------------------
 
     call t_startf ('lc_lnd_import')
-    call import_fields(gcomp, bounds, rc)
+    call import_fields(import_state, bounds, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call t_stopf ('lc_lnd_import')
 
@@ -813,7 +806,7 @@ contains
        !--------------------------------
 
        call t_startf ('lc_lnd_export')
-       call export_fields(gcomp, bounds,  rc)
+       call export_fields(export_state, bounds,  rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call t_stopf ('lc_lnd_export')
 

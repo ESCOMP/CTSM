@@ -18,6 +18,7 @@ module lilac_mod
   use lilac_io      , only : lilac_io_init
   use lilac_atmaero , only : lilac_atmaero_init, lilac_atmaero_interp
   use lilac_atmcap  , only : lilac_atmcap_init_vars
+  use lilac_history , only : lilac_history_init
   use lilac_history , only : lilac_history_write
   use lilac_methods , only : chkerr
 
@@ -421,18 +422,26 @@ contains
     end if
 
     !-------------------------------------------------------------------------
-    ! Initialize lilac_io_mod module data
-    !-------------------------------------------------------------------------
-
-    call lilac_io_init()
-    call ESMF_LogWrite(subname//"initialized lilac_io ...", ESMF_LOGMSG_INFO)
-
-    !-------------------------------------------------------------------------
     ! Initialize atmaero stream data (using share strearm capability from CIME)
     !-------------------------------------------------------------------------
 
     call lilac_atmaero_init(atm2cpl_state, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing lilac_atmaero_init")
+
+    !-------------------------------------------------------------------------
+    ! Initialize lilac_io_mod module data
+    !-------------------------------------------------------------------------
+
+    call lilac_io_init()
+    call ESMF_LogWrite(subname//"initialized lilac io ...", ESMF_LOGMSG_INFO)
+
+    !-------------------------------------------------------------------------
+    ! Initialize lilac history output
+    !-------------------------------------------------------------------------
+
+    call lilac_history_init(lilac_clock, rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing lilac_history_init")
+    call ESMF_LogWrite(subname//"initialized lilac history output ...", ESMF_LOGMSG_INFO)
 
   end subroutine lilac_init
 

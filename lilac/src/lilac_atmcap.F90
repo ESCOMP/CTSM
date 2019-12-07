@@ -214,6 +214,7 @@ contains
     integer                     :: n, i, ierr
     character(len=cl)           :: atm_mesh_filename
     character(len=*), parameter :: subname='(lilac_atmcap_init): '
+
     namelist /lilac_atmcap_input/ atm_mesh_filename
     !-------------------------------------------------------------------------
 
@@ -230,7 +231,7 @@ contains
     open(newunit=fileunit, status="old", file="lilac_in")
     read(fileunit, lilac_atmcap_input, iostat=ierr)
     if (ierr > 0) then
-       call shr_sys_abort(trim(subname) // 'error reading in lilac_atm_input')
+       call shr_sys_abort(trim(subname) // 'error reading in lilac_atmcap_input')
     end if
     close(fileunit)
 
