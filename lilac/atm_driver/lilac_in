@@ -3,8 +3,8 @@
  caseid = 'test_lilac'
 /
 &lilac_io_input
- lilac_histfreq_n = 4
  lilac_histfreq_option = 'nsteps'
+ lilac_histfreq_n = 4
 /
 &lilac_atmcap_input
  atm_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'

@@ -1,39 +1,39 @@
 module lilac_time
 
   use ESMF
-  use shr_kind_mod    , only : cx=>shr_kind_cx, cs=>shr_kind_cs, cl=>shr_kind_cl, r8=>shr_kind_r8
-  use lilac_constants , only : dbug_flag => lilac_constants_dbug_flag
-  use lilac_methods   , only : chkerr 
+  use shr_kind_mod  , only : cx=>shr_kind_cx, cs=>shr_kind_cs, cl=>shr_kind_cl, r8=>shr_kind_r8
+  use shr_sys_mod   , only : shr_sys_abort
+  use shr_cal_mod   , only : shr_cal_ymd2date
+  use lilac_io      , only : lilac_io_write, lilac_io_wopen, lilac_io_enddef
+  use lilac_io      , only : lilac_io_close, lilac_io_date2yyyymmdd, lilac_io_sec2hms
+  use lilac_methods , only : chkerr
+  use netcdf        , only : nf90_open, nf90_nowrite, nf90_noerr
+  use netcdf        , only : nf90_inq_varid, nf90_get_var, nf90_close
 
   implicit none
   private    ! default private
 
-  public  :: lilac_time_alarmInit  ! initialize an alarm
+  public :: lilac_time_clockinit     ! initialize the lilac clock
+  public :: lilac_time_alarminit     ! initialize an alarm
+  public :: lilac_time_restart_write ! only writes the time info
+  public :: lilac_time_restart_read  ! only reads the time info
 
   ! Clock and alarm options
   character(len=*), private, parameter :: &
        optNONE           = "none"      , &
        optNever          = "never"     , &
        optNSteps         = "nsteps"    , &
-       optNStep          = "nstep"     , &
        optNSeconds       = "nseconds"  , &
-       optNSecond        = "nsecond"   , &
        optNMinutes       = "nminutes"  , &
-       optNMinute        = "nminute"   , &
        optNHours         = "nhours"    , &
-       optNHour          = "nhour"     , &
        optNDays          = "ndays"     , &
-       optNDay           = "nday"      , &
        optNMonths        = "nmonths"   , &
-       optNMonth         = "nmonth"    , &
-       optNYears         = "nyears"    , &
-       optNYear          = "nyear"     , &
-       optMonthly        = "monthly"   , &
-       optYearly         = "yearly"    , &
-       optIfdays0        = "ifdays0"   , &
-       optGLCCouplingPeriod = "glc_coupling_period"
+       optNYears         = "nyears"    
 
   ! Module data
+  character(len=ESMF_MAXSTR)  :: caseid
+  type(ESMF_Calendar)         :: lilac_calendar
+  integer                     :: mytask
   integer, parameter          :: SecPerDay = 86400 ! Seconds per day
   character(len=*), parameter :: u_FILE_u = &
        __FILE__
@@ -42,11 +42,185 @@ module lilac_time
 contains
 !===============================================================================
 
-  subroutine lilac_time_alarmInit( clock, alarm, option, &
-       opt_n, opt_ymd, opt_tod, RefTime, alarmname, rc)
+  subroutine lilac_time_clockInit(caseid_in, starttype, atm_calendar, atm_timestep, &
+       atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
+       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, logunit, &
+       lilac_clock, rc)
 
-    ! !DESCRIPTION: Setup an alarm in a clock
-    ! Notes: The ringtime sent to AlarmCreate MUST be the next alarm
+    ! -------------------------------------------------
+    ! Initialize the lilac clock
+    ! -------------------------------------------------
+
+    ! input/output variables
+    character(len=*)    , intent(in)    :: caseid_in
+    character(len=*)    , intent(in)    :: starttype
+    character(len=*)    , intent(in)    :: atm_calendar
+    integer             , intent(in)    :: atm_timestep
+    integer             , intent(in)    :: atm_start_year !(yyyy)
+    integer             , intent(in)    :: atm_start_mon  !(mm)
+    integer             , intent(in)    :: atm_start_day
+    integer             , intent(in)    :: atm_start_secs
+    integer             , intent(in)    :: atm_stop_year  !(yyyy)
+    integer             , intent(in)    :: atm_stop_mon   !(mm)
+    integer             , intent(in)    :: atm_stop_day
+    integer             , intent(in)    :: atm_stop_secs
+    integer             , intent(in)    :: logunit
+    type(ESMF_Clock)    , intent(inout) :: lilac_clock
+    integer             , intent(out)   :: rc
+
+    ! local variables
+    type(ESMF_Alarm)        :: lilac_restart_alarm
+    type(ESMF_Alarm)        :: lilac_stop_alarm
+    type(ESMF_Clock)        :: clock
+    type(ESMF_VM)           :: vm
+    type(ESMF_Time)         :: StartTime           ! Start time
+    type(ESMF_Time)         :: CurrTime            ! Current time
+    type(ESMF_Time)         :: StopTime            ! Stop time
+    type(ESMF_Time)         :: Clocktime           ! Loop time
+    type(ESMF_TimeInterval) :: TimeStep            ! Clock time-step
+    integer                 :: start_ymd           ! Start date (YYYYMMDD)
+    integer                 :: start_tod           ! Start time of day (seconds)
+    integer                 :: curr_ymd            ! Current ymd (YYYYMMDD)
+    integer                 :: curr_tod            ! Current tod (seconds)
+    integer                 :: stop_n              ! Number until stop
+    integer                 :: stop_ymd            ! Stop date (YYYYMMDD)
+    integer                 :: stop_tod            ! Stop time-of-day
+    character(CS)           :: stop_option         ! Stop option units
+    character(len=CL)       :: restart_file
+    character(len=CL)       :: restart_pfile
+    integer                 :: yr, mon, day        ! Year, month, day as integers
+    integer                 :: unitn               ! unit number
+    integer                 :: ierr                ! Return code
+    integer                 :: tmp(2)              ! Array for Broadcast
+    character(len=*), parameter :: subname = '(lilactime_clockInit): '
+    !-------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    caseid = trim(caseid_in)
+
+    ! ------------------------------
+    ! get my task
+    ! ------------------------------
+
+    call ESMF_VMGetCurrent(vm=vm, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMGet(vm, localPet=mytask, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! ------------------------------
+    ! create lilac_calendar
+    ! ------------------------------
+
+    if (trim(atm_calendar) == 'NOLEAP') then
+       lilac_calendar = ESMF_CalendarCreate(name='NOLEAP', calkindflag=ESMF_CALKIND_NOLEAP, rc=rc )
+    else if (trim(atm_calendar) == 'GREGORIAN') then
+       lilac_calendar = ESMF_CalendarCreate(name='GREGORIAN', calkindflag=ESMF_CALKIND_GREGORIAN, rc=rc )
+    else
+       ! TODO: add supported calendars here
+    end if
+
+    ! ------------------------------
+    ! create and initialize lilac_clock
+    ! ------------------------------
+
+    call ESMF_TimeIntervalSet(TimeStep, s=atm_timestep, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_TimeSet(StartTime, yy=atm_start_year, mm=atm_start_mon, dd=atm_start_day , s=atm_start_secs, &
+         calendar=lilac_calendar, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_TimeSet(StopTime , yy=atm_stop_year , mm=atm_stop_mon , dd=atm_stop_day  , s=atm_stop_secs , &
+         calendar=lilac_calendar, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    ! Create the lilac clock (NOTE: the reference time is set to the start time)
+    lilac_clock = ESMF_ClockCreate(name='lilac_clock', TimeStep=TimeStep, startTime=StartTime, RefTime=StartTime, &
+         stopTime=stopTime, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+
+    ! ------------------------------
+    ! For a continue run - obtain current time from the lilac restart file and 
+    ! advance the clock to the current time for a continue run
+    ! ------------------------------
+
+    if (starttype == 'continue') then
+
+       ! Read the pointer file to obtain the restart file, read the restart file for curr_ymd and curr_tod
+       ! and then convert this to an esmf current time (currtime)
+       if ( len_trim(restart_pfile) == 0 ) then
+          call ESMF_LogWrite(trim(subname)//' ERROR restart_pfile must be defined', &
+               ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__)
+          rc = ESMF_FAILURE
+          return
+       end if
+       restart_pfile = trim(restart_pfile)
+       if (mytask == 0) then
+          call ESMF_LogWrite(trim(subname)//" reading rpointer file = "//trim(restart_pfile), ESMF_LOGMSG_INFO)
+          open(newunit=unitn, file=restart_pfile, form='FORMATTED', status='old',iostat=ierr)
+          if (ierr < 0) call shr_sys_abort(trim(subname)//' ERROR rpointer file open returns error')
+          read(unitn,'(a)', iostat=ierr) restart_file
+          if (ierr < 0) call shr_sys_abort(trim(subname)//' ERROR rpointer file read returns error') 
+          close(unitn)
+          call ESMF_LogWrite(trim(subname)//" read driver restart from "//trim(restart_file), ESMF_LOGMSG_INFO)
+
+          ! Read the restart file on mastertask and then broadcast the data
+          call lilac_time_restart_read(restart_file, curr_ymd, curr_tod, rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       endif
+       tmp(1) = curr_ymd  ; tmp(2) = curr_tod
+       call ESMF_VMBroadcast(vm, tmp, 4, 0, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       curr_ymd  = tmp(1) ; curr_tod  = tmp(2)
+
+       ! Determine current time
+       yr  = int(curr_ymd/10000)
+       mon = int( mod(curr_ymd,10000)/ 100)
+       day = mod(curr_ymd, 100)
+       call ESMF_TimeSet( currtime, yy=yr, mm=mon, dd=day, s=curr_tod, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! Advance the clock to the current time (in case of a restart)
+       call ESMF_ClockGet(clock, currTime=clocktime, rc=rc )
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       do while( clocktime < CurrTime)
+          call ESMF_ClockAdvance( clock, rc=rc )
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call ESMF_ClockGet( clock, currTime=clocktime, rc=rc )
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end do
+    end if
+
+    ! Write out diagnostic info
+    if (mytask == 0) then
+       print *, trim(subname) // "---------------------------------------"
+       call ESMF_CalendarPrint (lilac_calendar , rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_ClockPrint (lilac_clock, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       print *, trim(subname) // "---------------------------------------"
+    end if
+
+    ! Add a restart alarm and stop alarm to the clock
+    ! NTOE: The restart alarm and stop alarm will only go off at the end of the run
+    ! NOTE: The history alarm will be added in lilac_history_init and can go off multiple times during the run
+
+    lilac_restart_alarm = ESMF_AlarmCreate(lilac_clock, ringTime=StopTime, name='lilac_restart_alarm', rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in initializing restart alarm')
+
+    lilac_stop_alarm = ESMF_AlarmCreate(lilac_clock, ringTime=StopTime, name='lilac_stop_alarm', rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in initializing stop alarm')
+
+  end subroutine lilac_time_clockInit
+
+!===============================================================================
+
+  subroutine lilac_time_alarmInit( clock, alarm, alarmname, option, opt_n, rc)
+
+    ! Setup an alarm in a clock
+    ! The ringtime sent to AlarmCreate MUST be the next alarm
     ! time.  If you send an arbitrary but proper ringtime from the
     ! past and the ring interval, the alarm will always go off on the
     ! next clock advance and this will cause serious problems.  Even
@@ -57,22 +231,18 @@ contains
     ! advance it properly based on the ring interval.
 
     ! input/output variables
-    type(ESMF_Clock)            , intent(inout) :: clock     ! clock
-    type(ESMF_Alarm)            , intent(inout) :: alarm     ! alarm
-    character(len=*)            , intent(in)    :: option    ! alarm option
-    integer          , optional , intent(in)    :: opt_n     ! alarm freq
-    integer          , optional , intent(in)    :: opt_ymd   ! alarm ymd
-    integer          , optional , intent(in)    :: opt_tod   ! alarm tod (sec)
-    type(ESMF_Time)  , optional , intent(in)    :: RefTime   ! ref time
-    character(len=*) , optional , intent(in)    :: alarmname ! alarm name
-    integer                     , intent(inout) :: rc        ! Return code
+    type(ESMF_Clock) , intent(inout) :: clock     ! clock
+    type(ESMF_Alarm) , intent(inout) :: alarm     ! alarm
+    character(len=*) , intent(in)    :: alarmname ! alarm name
+    character(len=*) , intent(in)    :: option    ! alarm option
+    integer          , intent(in)    :: opt_n     ! alarm freq
+    integer          , intent(inout) :: rc        ! Return code
 
     ! local variables
     type(ESMF_Calendar)     :: cal              ! calendar
     integer                 :: lymd             ! local ymd
     integer                 :: ltod             ! local tod
     integer                 :: cyy,cmm,cdd,csec ! time info
-    character(len=64)       :: lalarmname       ! local alarm name
     logical                 :: update_nextalarm ! update next alarm
     type(ESMF_Time)         :: CurrTime         ! Current Time
     type(ESMF_Time)         :: NextAlarm        ! Next restart alarm time
@@ -83,13 +253,6 @@ contains
 
     rc = ESMF_SUCCESS
 
-    lalarmname = 'alarm_unknown'
-    if (present(alarmname)) lalarmname = trim(alarmname)
-    ltod = 0
-    if (present(opt_tod)) ltod = opt_tod
-    lymd = -1
-    if (present(opt_ymd)) lymd = opt_ymd
-
     call ESMF_ClockGet(clock, CurrTime=CurrTime, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -97,304 +260,45 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! initial guess of next alarm, this will be updated below
-    if (present(RefTime)) then
-       NextAlarm = RefTime
-    else
-       NextAlarm = CurrTime
-    endif
+    NextAlarm = CurrTime
 
     ! Get calendar from clock
     call ESMF_ClockGet(clock, calendar=cal)
 
     ! Determine inputs for call to create alarm
-    selectcase (trim(option))
+    if (trim(option) == optNone .or. trim(option) == optNever) then
 
-    case (optNONE)
        call ESMF_TimeIntervalSet(AlarmInterval, yy=9999, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_TimeSet( NextAlarm, yy=9999, mm=12, dd=1, s=0, calendar=cal, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        update_nextalarm  = .false.
 
-    case (optNever)
-       call ESMF_TimeIntervalSet(AlarmInterval, yy=9999, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_TimeSet( NextAlarm, yy=9999, mm=12, dd=1, s=0, calendar=cal, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       update_nextalarm  = .false.
+    else if ( trim(option) == optNSteps   .or. trim(option) == optNSeconds .or. &
+              trim(option) == optNMinutes .or. trim(option) == optNHours .or. trim(option) == optNDays) then    
 
-    case (optIfdays0)
-       if (.not. present(opt_ymd)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_ymd', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0)  then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, mm=1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_TimeSet( NextAlarm, yy=cyy, mm=cmm, dd=opt_n, s=0, calendar=cal, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       update_nextalarm  = .true.
+       write(6,*)'DEBUG: hist_option, hist_n= ',trim(option), opt_n
 
-    case (optNSteps)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
+       if (opt_n <= 0) call shr_sys_abort(subname//trim(option)//' invalid opt_n')
        call ESMF_ClockGet(clock, TimeStep=AlarmInterval, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        AlarmInterval = AlarmInterval * opt_n
        update_nextalarm  = .true.
 
-    case (optNStep)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0)  then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_ClockGet(clock, TimeStep=AlarmInterval, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
+    else
 
-    case (optNSeconds)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, s=1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optNSecond)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, s=1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optNMinutes)
-       call ESMF_TimeIntervalSet(AlarmInterval, s=60, rc=rc)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optNMinute)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, s=60, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optNHours)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, s=3600, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optNHour)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, s=3600, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optNDays)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, d=1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optNDay)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, d=1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optNMonths)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, mm=1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optNMonth)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, mm=1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optMonthly)
-       call ESMF_TimeIntervalSet(AlarmInterval, mm=1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_TimeSet( NextAlarm, yy=cyy, mm=cmm, dd=1, s=0, calendar=cal, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       update_nextalarm  = .true.
-
-    case (optNYears)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, yy=1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optNYear)
-       if (.not.present(opt_n)) then
-          call ESMF_LogWrite(subname//trim(option)//' requires opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       if (opt_n <= 0) then
-          call ESMF_LogWrite(subname//trim(option)//' invalid opt_n', ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-       call ESMF_TimeIntervalSet(AlarmInterval, yy=1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       AlarmInterval = AlarmInterval * opt_n
-       update_nextalarm  = .true.
-
-    case (optYearly)
-       call ESMF_TimeIntervalSet(AlarmInterval, yy=1, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_TimeSet( NextAlarm, yy=cyy, mm=1, dd=1, s=0, calendar=cal, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       update_nextalarm  = .true.
-
-    case default
        call ESMF_LogWrite(subname//'unknown option '//trim(option), ESMF_LOGMSG_INFO)
        rc = ESMF_FAILURE
        return
 
-    end select
+    end if
 
-    ! --------------------------------------------------------------------------------
-    ! --- AlarmInterval and NextAlarm should be set ---
-    ! --------------------------------------------------------------------------------
+    ! -------------------------------------------------
+    ! AlarmInterval and NextAlarm should be set 
+    ! -------------------------------------------------
 
-    ! --- advance Next Alarm so it won't ring on first timestep for
-    ! --- most options above. go back one alarminterval just to be careful
+    ! advance Next Alarm so it won't ring on first timestep for
+    ! most options above. go back one alarminterval just to be careful
 
     if (update_nextalarm) then
        NextAlarm = NextAlarm - AlarmInterval
@@ -403,27 +307,167 @@ contains
        enddo
     endif
 
-    alarm = ESMF_AlarmCreate( name=lalarmname, clock=clock, ringTime=NextAlarm, &
+    alarm = ESMF_AlarmCreate( name=alarmname, clock=clock, ringTime=NextAlarm, &
          ringInterval=AlarmInterval, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
   end subroutine lilac_time_alarmInit
 
+!===============================================================================
+
+  subroutine lilac_time_restart_write(clock, rc)
+
+    ! -------------------------------------------------
+    ! Write lilac restart time info
+    ! -------------------------------------------------
+
+    ! Input/output variables
+    type(ESMF_Clock)     :: clock
+    integer, intent(out) :: rc
+
+    ! local variables
+    type(ESMF_VM)              :: vm
+    type(ESMF_Time)            :: currtime, starttime, nexttime
+    type(ESMF_TimeInterval)    :: timediff       ! Used to calculate curr_time
+    type(ESMF_Calendar)        :: calendar
+    character(len=64)          :: currtimestr, nexttimestr
+    integer                    :: i,j,m,n,n1,ncnt
+    integer                    :: curr_ymd       ! Current date YYYYMMDD
+    integer                    :: curr_tod       ! Current time-of-day (s)
+    integer                    :: start_ymd      ! Starting date YYYYMMDD
+    integer                    :: start_tod      ! Starting time-of-day (s)
+    integer                    :: next_ymd       ! Starting date YYYYMMDD
+    integer                    :: next_tod       ! Starting time-of-day (s)
+    integer                    :: nx,ny          ! global grid size
+    integer                    :: yr,mon,day,sec ! time units
+    real(R8)                   :: dayssince      ! Time interval since reference time
+    integer                    :: unitn          ! unit number
+    character(ESMF_MAXSTR)     :: time_units     ! units of time variable
+    character(ESMF_MAXSTR)     :: restart_file   ! Local path to restart filename
+    character(ESMF_MAXSTR)     :: restart_pfile  ! Local path to restart pointer filename
+    character(ESMF_MAXSTR)     :: freq_option    ! freq_option setting (ndays, nsteps, etc)
+    integer                    :: freq_n         ! freq_n setting relative to freq_option
+    real(R8)                   :: tbnds(2)       ! CF1.0 time bounds
+    logical                    :: whead,wdata    ! for writing restart/restart cdf files
+    character(len=*), parameter :: subname='(lilac_time_phases_restart_write)'
+    !---------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    call ESMF_VMGetCurrent(vm=vm, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_ClockGet(clock, currtime=currtime, starttime=starttime, calendar=calendar, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_ClockGetNextTime(clock, nextTime=nexttime, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_TimeGet(currtime, yy=yr, mm=mon, dd=day, s=sec, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    write(currtimestr,'(i4.4,a,i2.2,a,i2.2,a,i5.5)') yr,'-',mon,'-',day,'-',sec
+    call ESMF_LogWrite(trim(subname)//": currtime = "//trim(currtimestr), ESMF_LOGMSG_INFO, rc=rc)
+
+    call ESMF_TimeGet(nexttime,yy=yr, mm=mon, dd=day, s=sec, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    write(nexttimestr,'(i4.4,a,i2.2,a,i2.2,a,i5.5)') yr,'-',mon,'-',day,'-',sec
+    call ESMF_LogWrite(trim(subname)//": nexttime = "//trim(nexttimestr), ESMF_LOGMSG_INFO, rc=rc)
+
+    timediff = nexttime - starttime
+    call ESMF_TimeIntervalGet(timediff, d=day, s=sec, rc=rc)
+    dayssince = day + sec/real(SecPerDay,R8)
+
+    call ESMF_TimeGet(starttime, yy=yr, mm=mon, dd=day, s=sec, rc=rc)
+    call shr_cal_ymd2date(yr,mon,day,start_ymd)
+    start_tod = sec
+    time_units = 'days since '//trim(lilac_io_date2yyyymmdd(start_ymd))//' '//lilac_io_sec2hms(start_tod, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_TimeGet(nexttime, yy=yr, mm=mon, dd=day, s=sec, rc=rc)
+    call shr_cal_ymd2date(yr,mon,day,next_ymd)
+    next_tod = sec
+
+    call ESMF_TimeGet(currtime, yy=yr, mm=mon, dd=day, s=sec, rc=rc)
+    call shr_cal_ymd2date(yr,mon,day,curr_ymd)
+    curr_tod = sec
+
+    !---------------------------------------
+    ! Write restart file
+    ! Use nexttimestr rather than currtimestr here since that is the time at the end of
+    ! the timestep and is preferred for restart file names
+    !---------------------------------------
+
+    write(restart_file,"(5a)") trim(caseid),'.lilac','.r.', trim(nexttimestr),'.nc'
+
+    if (mytask == 0) then
+       open(newunit=unitn, file="rpointer.lilac", form='FORMATTED')
+       write(unitn,'(a)') trim(restart_file)
+       close(unitn)
+       call ESMF_LogWrite(trim(subname)//" wrote lilac restart pointer file rpointer.lilac", ESMF_LOGMSG_INFO)
+    endif
+
+    call ESMF_LogWrite(trim(subname)//": write "//trim(restart_file), ESMF_LOGMSG_INFO)
+    call lilac_io_wopen(restart_file, vm, mytask, clobber=.true.)
+
+    do m = 1,2
+       if (m == 1) then
+          whead = .true.
+          wdata = .false.
+       else if (m == 2) then
+          whead = .false.
+          wdata = .true.
+       endif
+       if (wdata) then
+          call lilac_io_enddef(restart_file)
+       end if
+
+       tbnds = dayssince
+       call ESMF_LogWrite(trim(subname)//": time "//trim(time_units), ESMF_LOGMSG_INFO)
+       if (tbnds(1) >= tbnds(2)) then
+          call lilac_io_write(restart_file, iam=mytask, &
+               time_units=time_units, calendar=calendar, time_val=dayssince, &
+               whead=whead, wdata=wdata, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       else
+          call lilac_io_write(restart_file, iam=mytask, &
+               time_units=time_units, calendar=calendar, time_val=dayssince, &
+               whead=whead, wdata=wdata, tbnds=tbnds, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       endif
+
+       ! Write out next ymd/tod in place of curr ymd/tod because
+       ! the currently the restart represents the time at end of
+       ! the current timestep and that is where we want to start the next run.
+
+       call lilac_io_write(restart_file, mytask, start_ymd, 'start_ymd', whead=whead, wdata=wdata, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call lilac_io_write(restart_file, mytask, start_tod, 'start_tod', whead=whead, wdata=wdata, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call lilac_io_write(restart_file, mytask, next_ymd , 'curr_ymd' , whead=whead, wdata=wdata, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call lilac_io_write(restart_file, mytask, next_tod , 'curr_tod' , whead=whead, wdata=wdata, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call lilac_io_close(restart_file, mytask, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    end do
+
+  end subroutine lilac_time_restart_write
+
   !===============================================================================
 
-  subroutine lilac_time_read_restart(restart_file, &
-       start_ymd, start_tod, ref_ymd, ref_tod, curr_ymd, curr_tod, rc)
+  subroutine lilac_time_restart_read(restart_file, curr_ymd, curr_tod, rc)
 
-    use netcdf , only : nf90_open, nf90_nowrite, nf90_noerr
-    use netcdf , only : nf90_inq_varid, nf90_get_var, nf90_close
-    use ESMF   , only : ESMF_LogWrite, ESMF_LOGMSG_INFO
+    ! -------------------------------------------------
+    ! Read the restart time info needed to initialize the clock
+    ! -------------------------------------------------
 
     ! input/output variables
     character(len=*), intent(in) :: restart_file
-    integer, intent(out)         :: ref_ymd             ! Reference date (YYYYMMDD)
-    integer, intent(out)         :: ref_tod             ! Reference time of day (seconds)
-    integer, intent(out)         :: start_ymd           ! Start date (YYYYMMDD)
-    integer, intent(out)         :: start_tod           ! Start time of day (seconds)
     integer, intent(out)         :: curr_ymd            ! Current ymd (YYYYMMDD)
     integer, intent(out)         :: curr_tod            ! Current tod (seconds)
     integer, intent(out)         :: rc
@@ -431,111 +475,28 @@ contains
     ! local variables
     integer                 :: status, ncid, varid ! netcdf stuff
     character(CL)           :: tmpstr              ! temporary
-    character(len=*), parameter :: subname = "(lilac_time_read_restart)"
+    character(len=*), parameter :: subname = "(lilac_time_restart_read)"
     !----------------------------------------------------------------
 
     ! use netcdf here since it's serial
     status = nf90_open(restart_file, NF90_NOWRITE, ncid)
-    if (status /= nf90_NoErr) then
-       print *,__FILE__,__LINE__,trim(restart_file)
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_open', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    endif
-    status = nf90_inq_varid(ncid, 'start_ymd', varid)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_inq_varid start_ymd', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
-    status = nf90_get_var(ncid, varid, start_ymd)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_get_var start_ymd', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
-    status = nf90_inq_varid(ncid, 'start_tod', varid)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_inq_varid start_tod', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
-    status = nf90_get_var(ncid, varid, start_tod)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_get_var start_tod', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
-    status = nf90_inq_varid(ncid, 'ref_ymd', varid)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_inq_varid ref_ymd', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
-    status = nf90_get_var(ncid, varid, ref_ymd)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_get_var ref_ymd', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
-    status = nf90_inq_varid(ncid, 'ref_tod', varid)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_inq_varid ref_tod', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
-    status = nf90_get_var(ncid, varid, ref_tod)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_get_var ref_tod', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
+    if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_open')
     status = nf90_inq_varid(ncid, 'curr_ymd', varid)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_inq_varid curr_ymd', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
+    if (status /= nf90_NoErr) call shr_sys_abort('ERROR: nf90_inq_varid curr_ymd')
     status = nf90_get_var(ncid, varid, curr_ymd)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_get_var curr_ymd', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
+    if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_get_var curr_ymd')
     status = nf90_inq_varid(ncid, 'curr_tod', varid)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_inq_varid curr_tod', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
+    if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_inq_varid curr_tod')
     status = nf90_get_var(ncid, varid, curr_tod)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_get_var curr_tod', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
+    if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_get_var curr_tod')
     status = nf90_close(ncid)
-    if (status /= nf90_NoErr) then
-       call ESMF_LogWrite(trim(subname)//' ERROR: nf90_close', ESMF_LOGMSG_INFO)
-       rc = ESMF_FAILURE
-       return
-    end if
+    if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_close')
 
-    write(tmpstr,*) trim(subname)//" read start_ymd = ",start_ymd
-    call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
-    write(tmpstr,*) trim(subname)//" read start_tod = ",start_tod
-    call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
-    write(tmpstr,*) trim(subname)//" read ref_ymd   = ",ref_ymd
-    call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
-    write(tmpstr,*) trim(subname)//" read ref_tod   = ",ref_tod
-    call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
     write(tmpstr,*) trim(subname)//" read curr_ymd  = ",curr_ymd
     call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
     write(tmpstr,*) trim(subname)//" read curr_tod  = ",curr_tod
     call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
 
-  end subroutine lilac_time_read_restart
+  end subroutine lilac_time_restart_read
 
 end module lilac_time
-
-
