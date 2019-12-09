@@ -2369,9 +2369,9 @@ contains
      real(r8) :: irrig_layer             ! mm H2O
      !-----------------------------------------------------------------------
 
-     SHR_ASSERT_ALL((ubound(qflx_gw_demand) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(qflx_gw_uncon_irrig_lyr) == [bounds%endc, nlevsoi]), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(qflx_gw_con_irrig) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(qflx_gw_demand) == [bounds%endc]), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(qflx_gw_uncon_irrig_lyr) == [bounds%endc, nlevsoi]), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(qflx_gw_con_irrig) == [bounds%endc]), sourcefile, __LINE__)
 
      associate(                                                            & 
           nbedrock           =>    col%nbedrock                          , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)           

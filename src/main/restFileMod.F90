@@ -63,7 +63,7 @@ module restFileMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine restFile_write( bounds, file, rdate, noptr)
+  subroutine restFile_write( bounds, file, writing_finidat_interp_dest_file, rdate, noptr)
     !
     ! !DESCRIPTION:
     ! Define/write CLM restart file.
@@ -71,6 +71,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)           :: bounds          
     character(len=*)  , intent(in)           :: file  ! output netcdf restart file
+    logical           , intent(in)           :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file
     character(len=*)  , intent(in), optional :: rdate ! restart file time stamp for name
     logical           , intent(in), optional :: noptr ! if should NOT write to the restart pointer file
     !
@@ -100,7 +101,8 @@ contains
 
     call accumulRest( ncid, flag='define' )
 
-    call clm_instRest(bounds, ncid, flag='define')
+    call clm_instRest(bounds, ncid, flag='define', &
+         writing_finidat_interp_dest_file=writing_finidat_interp_dest_file)
 
     if (present(rdate)) then 
        call hist_restart_ncd (bounds, ncid, flag='define', rdate=rdate )
@@ -116,7 +118,8 @@ contains
 
     call accumulRest( ncid, flag='write' )
 
-    call clm_instRest(bounds, ncid, flag='write')
+    call clm_instRest(bounds, ncid, flag='write', &
+         writing_finidat_interp_dest_file=writing_finidat_interp_dest_file)
 
     call hist_restart_ncd (bounds, ncid, flag='write' )
 
@@ -191,7 +194,8 @@ contains
 
     call accumulRest( ncid, flag='read' )
 
-    call clm_instRest( bounds_proc, ncid, flag='read' )
+    call clm_instRest( bounds_proc, ncid, flag='read', &
+         writing_finidat_interp_dest_file=.false.)
 
     call restFile_set_derived(bounds_proc, glc_behavior)
 

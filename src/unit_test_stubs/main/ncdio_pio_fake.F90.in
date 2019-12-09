@@ -61,8 +61,11 @@ module ncdio_pio
   public :: ncd_inqdlen           ! stub: inquire size of a dimension
   public :: ncd_defvar            ! define variables
   public :: ncd_inqfdims          ! stub: inquire file dimensions
+  public :: ncd_inqnatts          ! stub: inquire number of global attributes
+  public :: ncd_inqattname        ! stub: inquire attribute name
   public :: ncd_getatt            ! stub: get attribute
   public :: ncd_putatt            ! stub: put attribute
+  public :: check_att             ! stub: check attribute
 
   interface file_desc_t
      module procedure constructor  ! initialize a new file_desc_t object
@@ -672,6 +675,47 @@ contains
   end subroutine ncd_inqfdims
 
   !-----------------------------------------------------------------------
+  subroutine ncd_inqnatts(ncid, nattributes)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement for ncd_inqnatts. This just returns 0.
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t), intent(inout) :: ncid ! netcdf file id
+    integer           , intent(out)   :: nattributes ! number of global attributes
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'ncd_inqnatts'
+    !-----------------------------------------------------------------------
+
+    nattributes = 0
+
+  end subroutine ncd_inqnatts
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_inqattname(ncid, varid, attnum, attname)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement for ncd_inqattname. This just returns an empty string.
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout) :: ncid   ! netcdf file id
+    integer            , intent(in)    :: varid  ! netcdf var id (can be ncd_global)
+    integer            , intent(in)    :: attnum ! attribute number
+    character(len=*)   , intent(out) :: attname
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'ncd_inqattname'
+    !-----------------------------------------------------------------------
+
+    attname = ' '
+
+  end subroutine ncd_inqattname
+
+
+  !-----------------------------------------------------------------------
   subroutine ncd_getatt_char(ncid,varid,attrib,value)
     !
     ! !DESCRIPTION:
@@ -768,6 +812,28 @@ contains
 
     ! Do nothing
   end subroutine ncd_putatt_real
+
+
+  !-----------------------------------------------------------------------
+  subroutine check_att(ncid, varid, attrib, att_found)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement for check_att. This just returns false.
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    logical           ,intent(out)   :: att_found ! true if the attribute was found
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'check_att'
+    !-----------------------------------------------------------------------
+
+    att_found = .false.
+
+  end subroutine check_att
 
 
   ! ======================================================================

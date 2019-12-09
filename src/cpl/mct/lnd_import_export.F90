@@ -266,7 +266,7 @@ contains
 
     end do
 
-    call glc2lnd_inst%set_glc2lnd_fields( &
+    call glc2lnd_inst%set_glc2lnd_fields_mct( &
          bounds = bounds, &
          glc_present = glc_present, &
          ! NOTE(wjs, 2017-12-13) the x2l argument doesn't have the typical bounds
