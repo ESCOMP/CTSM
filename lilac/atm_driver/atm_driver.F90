@@ -32,9 +32,10 @@ program atm_driver
   integer               :: my_start, my_end
   integer               :: i_local, i_global
   integer               :: nlocal, nglobal
-  integer               :: nstep         ! time step counter
   integer               :: g,i,k         ! indices
   integer               :: fileunit      ! for namelist input
+  integer               :: nstep         ! time step counter
+  integer               :: atm_nsteps    ! number of time steps of the simulation
 
   ! Namelist and related variables
   character(len=512) :: atm_mesh_file
@@ -43,22 +44,19 @@ program atm_driver
   character(len=128) :: atm_calendar
   integer            :: atm_timestep 
   integer            :: atm_start_year ! (yyyy)
-  integer            :: atm_start_mon  ! (mm)
-  integer            :: atm_start_day
-  integer            :: atm_start_secs
   integer            :: atm_stop_year  ! (yyyy)
+  integer            :: atm_start_mon  ! (mm)
   integer            :: atm_stop_mon   ! (mm)
+  integer            :: atm_start_day
   integer            :: atm_stop_day
+  integer            :: atm_start_secs
   integer            :: atm_stop_secs
-  integer            :: atm_timestep_start  ! for internal time loop only
-  integer            :: atm_timestep_stop   ! for internal time loop only
   character(len=32)  :: atm_starttype
 
   namelist /atm_driver_input/ atm_mesh_file, atm_global_nx, atm_global_ny, &
        atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, &
-       atm_timestep_start, atm_timestep_stop, atm_starttype
+       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, atm_starttype
   !------------------------------------------------------------------------
 
   !-----------------------------------------------------------------------------
@@ -164,11 +162,18 @@ program atm_driver
   ! Run lilac
   !------------------------------------------------------------------------
 
-  do nstep = atm_timestep_start, atm_timestep_stop
+  if ( atm_stop_year == atm_start_year .and. atm_stop_mon == atm_start_mon .and. &
+       atm_stop_secs == atm_start_secs) then
+     atm_nsteps = ((atm_stop_day - atm_start_day) * 86400.) / atm_timestep
+  else
+     call shr_sys_abort('not supporting start and stop years,months and secs to be different')
+  end if
+
+  do nstep = 1,atm_nsteps
      ! fill in the dataptr values in atm2lnd type in lilac_atmcap
      call atm_driver_to_lilac (atm_lons, atm_lats)
 
-     if (nstep == atm_timestep_stop) then
+     if (nstep == atm_nsteps) then
         call lilac_run(restart_alarm_is_ringing=.true., stop_alarm_is_ringing=.true.)
      else
         call lilac_run(restart_alarm_is_ringing=.false., stop_alarm_is_ringing=.false.)
