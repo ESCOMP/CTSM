@@ -5,6 +5,12 @@ SCRIP grid files to map from one grid to another. These mapping files
 are used by either CLM or mksurfdata_map to regrid from one resolution
 to another.
 
+We have generally moved to "nomask" grid and mapping files. These "nomask"
+files typically contain mask and frac equal to 1 everywhere. During remapping
+we now apply the source masks found in the raw datasets and ignore the
+masks found in the mapping files. Exception: we continue to use a masked
+grid file and mapping file to regrid the 1-km topography.
+
 The script uses ESMF and requires that ESMF be built and the path
 for ESMF binary files (using the program ESMF_RegridWeightGen) 
 be given as input to the script. You need to build at least

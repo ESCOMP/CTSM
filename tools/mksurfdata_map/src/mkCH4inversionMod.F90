@@ -172,6 +172,7 @@ subroutine mkCH4inversion(ldomain, mapfname, datfname, ndiag, &
   call domain_clean(tdomain) 
   call gridmap_clean(tgridmap)
   deallocate (data_i)
+  deallocate (frac_dst)
   deallocate (mask_r8)
 
   write (6,*) 'Successfully made inversion-derived CH4 parameters'

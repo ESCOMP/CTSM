@@ -7,6 +7,15 @@ module mkgridmapMod
 ! !DESCRIPTION:
 ! Module containing 2-d global surface boundary data information
 !
+! !NOTES:
+! Avoid using the frac_src and frac_dst found here, because they
+! are read from mapping files, and we have generally moved to "nomask"
+! mapping files. This means that mapping files now typically contain
+! mask and frac equal to 1 everywhere. So now during remapping we apply the
+! source masks found in the raw datasets and ignore the masks found in the
+! mapping files. Exception: we continue to use a masked mapping file to regrid
+! the 1-km topography.
+!
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
 
@@ -25,9 +34,6 @@ module mkgridmapMod
      real(r8), pointer :: xc_dst(:)     ! "degrees" 
      real(R8), pointer :: area_src(:)   ! area of a grid in map (radians)
      real(R8), pointer :: area_dst(:)   ! area of b grid in map (radians)
-     ! Generally avoid using frac_src and this version of frac_dst, because they
-     ! are read from mapping files and we have generally moved to "nomask"
-     ! mapping files
      real(r8), pointer :: frac_src(:)   ! "unitless" 
      real(r8), pointer :: frac_dst(:)   ! "unitless" 
      integer , pointer :: src_indx(:)   ! correpsonding column index
@@ -592,6 +598,13 @@ contains
 !
 ! !DESCRIPTION:
 ! This subroutine does an area average with the source mask
+!
+! !NOTES:
+! We have generally moved to "nomask" mapping files. This means that mapping
+! files now typically contain mask and frac equal to 1 everywhere. So now during
+! remapping we apply the source masks found in the raw datasets and ignore the
+! masks found in the mapping files. Exception: we continue to use a masked
+! mapping file to regrid the 1-km topography.
 !
 ! !ARGUMENTS:
      implicit none
