@@ -82,7 +82,7 @@ contains
   subroutine lilac_init(mpicom, atm_global_index, atm_lons, atm_lats, &
        atm_global_nx, atm_global_ny, atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs)
+       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, starttype_in)
 
     ! --------------------------------------------------------------------------------
     ! This is called by the host atmosphere
@@ -105,6 +105,7 @@ contains
     integer          , intent(in)    :: atm_stop_mon   !(mm)
     integer          , intent(in)    :: atm_stop_day
     integer          , intent(in)    :: atm_stop_secs
+    character(len=*) , intent(in)    :: starttype_in
 
     ! local variables
     character(ESMF_MAXSTR)      :: caseid
@@ -135,10 +136,15 @@ contains
     logical           :: comp_iamin(1) = (/.true./) ! for pio init2
     !------------------------------------------------------------------------
 
-    namelist /lilac_run_input/ caseid, starttype
+    namelist /lilac_run_input/ caseid
 
     ! Initialize return code
     rc = ESMF_SUCCESS
+
+    !-------------------------------------------------------------------------
+    ! Set module variable starttype
+    !-------------------------------------------------------------------------
+    starttype = starttype_in
 
     !-------------------------------------------------------------------------
     ! Initialize pio with first initialization
@@ -334,35 +340,44 @@ contains
     ! between components. (these are module variables)
     ! -------------------------------------------------------------------------
 
-    ! Initialze lilac_atm gridded component
+    ! Create import and export states for atm_gcomp
     atm2cpl_state = ESMF_StateCreate(name='state_from_atm', stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     cpl2atm_state = ESMF_StateCreate(name='state_to_atm', stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    ! Initialze lilac_atm gridded component
     call ESMF_GridCompInitialize(atm_gcomp, importState=cpl2atm_state, exportState=atm2cpl_state, &
          clock=lilac_clock, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing atmcap")
     call ESMF_LogWrite(subname//"lilac_atm gridded component initialized", ESMF_LOGMSG_INFO)
 
-    ! Initialze CTSM Gridded Component
+    ! Create import and export states for lnd_gcomp (i.e. CTSM)
     cpl2lnd_state = ESMF_StateCreate(name='state_to_land', stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     lnd2cpl_state = ESMF_StateCreate(name='state_fr_land', stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+    ! Add caseid and starttype as attributes of cpl2lnd_state
+    call ESMF_AttributeSet(cpl2lnd_state, name="caseid", value=trim(caseid), rc=rc) 
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_AttributeSet(cpl2lnd_state, name="starttype", value=trim(starttype), rc=rc) 
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Initialze CTSM Gridded Component
     call ESMF_GridCompInitialize(lnd_gcomp, importState=cpl2lnd_state, exportState=lnd2cpl_state, &
          clock=lilac_clock, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing ctsm")
     call ESMF_LogWrite(subname//"CTSM gridded component initialized", ESMF_LOGMSG_INFO)
 
     if (couple_to_river) then
-       ! Initialize MOSART Gridded Component
+       ! Create import and export states for rof_gcomp (i.e. MOSART)
        cpl2rof_state = ESMF_StateCreate(name='state_to_river', stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
        rof2cpl_state = ESMF_StateCreate(name='state_fr_river', stateintent=ESMF_STATEINTENT_IMPORT, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
 
+       ! Initialize MOSART Gridded Component
        call ESMF_GridCompInitialize(rof_gcomp, importState=cpl2rof_state, exportState=rof2cpl_state, &
             clock=lilac_clock, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing mosart")
@@ -458,10 +473,17 @@ contains
 
     ! Set the clock restart alarm if restart_alarm_ringing is true
     if (restart_alarm_is_ringing) then
+       ! Turn on lilac restart alarm (this will be needed by ctsm)
        call ESMF_ClockGetAlarm(lilac_clock, 'lilac_restart_alarm', lilac_restart_alarm, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in obtaining lilac_restart_alarm")
        call ESMF_AlarmRingerOn(lilac_restart_alarm, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running lilac atm_cap")
+       call ESMF_LogWrite(subname//"lilac restart alarm is ringing", ESMF_LOGMSG_INFO)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("Error in querying lilac restart alarm ring")
+
+       ! Write out lilac restart output if lilac_restart_alarm is ringing
+       call lilac_time_restart_write(lilac_clock, rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in restart write")
     end if
 
     ! Set the clock stop alarm if stop_alarm_ringing is true
@@ -470,6 +492,7 @@ contains
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in obtaining lilac_restart_alarm")
        call ESMF_AlarmRingerOn(lilac_stop_alarm, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running lilac atm_cap")
+       call ESMF_LogWrite(subname//"lilac stop alarm is ringing", ESMF_LOGMSG_INFO)
     end if
 
     ! Run lilac atmcap - update the cpl2atm_state
@@ -538,9 +561,9 @@ contains
     call ESMF_ClockGetAlarm(lilac_clock, 'lilac_history_alarm', lilac_history_alarm, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in obtaining lilac_history_alarm")
     if (ESMF_AlarmIsRinging(lilac_history_alarm, rc=rc)) then
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("Error in querying lilac history alarm ring")
        call ESMF_AlarmRingerOff( lilac_history_alarm, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("Error in turning ringer off in lilac history alarm")
        if (couple_to_river) then
           call lilac_history_write(atm2cpl_state, cpl2atm_state, lnd2cpl_state, cpl2lnd_state, &
                rof2cpl_state=rof2cpl_state, cpl2rof_state=cpl2rof_state, clock=lilac_clock, rc=rc)
@@ -552,13 +575,11 @@ contains
        end if
     end if
        
-    ! Write out lilac restart output if lilac_restart_alarm is ringing
-    if (ESMF_AlarmIsRinging(lilac_restart_alarm, rc=rc)) then
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (restart_alarm_is_ringing) then
+       call ESMF_ClockGetAlarm(lilac_clock, 'lilac_restart_alarm', lilac_restart_alarm, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in obtaining lilac_restart_alarm")
        call ESMF_AlarmRingerOff( lilac_restart_alarm, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call lilac_time_restart_write(lilac_clock, rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in restart write")
     end if
 
     ! Advance the lilac clock at the end of the time step

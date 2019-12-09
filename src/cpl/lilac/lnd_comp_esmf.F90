@@ -103,21 +103,22 @@ contains
     type(ESMF_Clock)     :: clock        ! ESMF synchronization clock
     integer, intent(out) :: rc           ! Return code
 
-    ! local variable
+    ! local variables
     integer                    :: ierr                       ! error code
     integer                    :: n,g,i,j                    ! indices
     logical                    :: exists                     ! true if file exists
-    real(r8)                   :: nextsw_cday                ! calday from clock of next radiation computation
     character(len=CL)          :: caseid                     ! case identifier name
-    character(len=CL)          :: ctitle                     ! case description title
     character(len=CL)          :: starttype                  ! start-type (startup, continue, branch, hybrid)
+    real(r8)                   :: nextsw_cday                ! calday next radiation computation
     integer                    :: nsrest                     ! clm restart type
-    logical                    :: brnch_retain_casename      ! flag if should retain the case name on a branch start type
-    logical                    :: atm_aero                   ! Flag if aerosol data sent from atm model
     integer                    :: lbnum                      ! input to memory diagnostic
     integer                    :: shrlogunit                 ! old values for log unit and log level
     type(bounds_type)          :: bounds                     ! bounds
     character(len=CL)          :: cvalue
+
+    ! communicator info
+    type(ESMF_VM)              :: vm
+    integer                    :: mpicom_vm
 
     ! generation of field bundles
     type(ESMF_State)           :: importState, exportState
@@ -159,15 +160,11 @@ contains
     integer                    :: orb_iyear                  ! orbital year for current orbital computation
     integer                    :: orb_eccen                  ! orbital year for current orbital computation
 
-    type(ESMF_VM)              :: vm
-    integer                    :: mpicom_vm
-
-    ! input namelist read for ctsm mesh and run info
-    namelist /lilac_lnd_input/ lnd_mesh_filename
-    namelist /lilac_run_input/ caseid, starttype
-
     character(len=*), parameter :: subname=trim(modName)//': (lnd_init) '
     !------------------------------------------------------------------------
+
+    ! input namelist read for ctsm mesh
+    namelist /lilac_lnd_input/ lnd_mesh_filename
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' is called!', ESMF_LOGMSG_INFO)
@@ -191,7 +188,7 @@ contains
     call ESMF_LogWrite(subname//"initialized model mpi info using spmd_init", ESMF_LOGMSG_INFO)
 
     !------------------------------------------------------------------------
-    !--- Log File ---
+    ! Initialize output log file
     !------------------------------------------------------------------------
 
     ! TODO: by default iulog = 6 in clm_varctl - this should be generalized so that we
@@ -244,13 +241,6 @@ contains
 
     if (masterproc) then
        open(newunit=fileunit, status="old", file="lilac_in")
-       call shr_nl_find_group_name(fileunit, 'lilac_run_input', ierr)
-       if (ierr == 0) then
-          read(fileunit, lilac_run_input, iostat=ierr)
-          if (ierr > 0) then
-             call shr_sys_abort( 'problem on read of lilac_run_input')
-          end if
-       end if
        call shr_nl_find_group_name(fileunit, 'lilac_lnd_input', ierr)
        if (ierr == 0) then
           read(fileunit, lilac_lnd_input, iostat=ierr)
@@ -261,8 +251,18 @@ contains
        close(fileunit)
     end if
     call mpi_bcast(lnd_mesh_filename, len(lnd_mesh_filename), MPI_CHARACTER, 0, mpicom, ierr)
-    call mpi_bcast(starttype, len(starttype), MPI_CHARACTER, 0, mpicom, ierr)
-    call mpi_bcast(caseid, len(caseid), MPI_CHARACTER, 0, mpicom, ierr)
+
+    !----------------------
+    ! Obtain caseid and start type from attributes in import state
+    !----------------------
+
+    call ESMF_AttributeGet(import_state, name="caseid", value=caseid, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    call ESMF_LogWrite(subname//"caseid is "//trim(caseid), ESMF_LOGMSG_INFO)
+
+    call ESMF_AttributeGet(import_state, name="starttype", value=starttype, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    call ESMF_LogWrite(subname//"starttype is "//trim(starttype), ESMF_LOGMSG_INFO)
 
     if (trim(starttype) == trim('startup')) then
        nsrest = nsrStartup
@@ -633,19 +633,19 @@ contains
     ! Obtain orbital values
     !----------------------
 
-    !call NUOPC_CompAttributeGet(gcomp, name='orb_eccen', value=cvalue, rc=rc)
+    !call ESMF_AttributeGet(gcomp, name='orb_eccen', value=cvalue, rc=rc)
     !if (ChkErr(rc,__LINE__,u_FILE_u)) return
     !read(cvalue,*) eccen
 
-    !call NUOPC_CompAttributeGet(gcomp, name='orb_obliqr', value=cvalue, rc=rc)
+    !call ESMF_AttributeGet(gcomp, name='orb_obliqr', value=cvalue, rc=rc)
     !if (ChkErr(rc,__LINE__,u_FILE_u)) return
     !read(cvalue,*) obliqr
 
-    !call NUOPC_CompAttributeGet(gcomp, name='orb_lambm0', value=cvalue, rc=rc)
+    !call ESMF_AttributeGet(gcomp, name='orb_lambm0', value=cvalue, rc=rc)
     !if (ChkErr(rc,__LINE__,u_FILE_u)) return
     !read(cvalue,*) lambm0
 
-    !call NUOPC_CompAttributeGet(gcomp, name='orb_mvelpp', value=cvalue, rc=rc)
+    !call ESMF_AttributeGet(gcomp, name='orb_mvelpp', value=cvalue, rc=rc)
     !if (ChkErr(rc,__LINE__,u_FILE_u)) return
     !read(cvalue,*) mvelpp
 

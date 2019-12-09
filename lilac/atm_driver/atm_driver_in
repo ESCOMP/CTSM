@@ -6,13 +6,13 @@
   atm_start_mon		= 1
   atm_start_day		= 1
   atm_start_secs	= 0
-  atm_stop_year		= 2000
-  atm_stop_mon		= 1
-  atm_stop_day		= 2
-  atm_stop_secs		= 0
   atm_timestep		= 1800
   atm_calendar		= 'NOLEAP'
+  atm_starttype         = 'startup'
+  atm_stop_year		= 2000
+  atm_stop_mon		= 1
+  atm_stop_day		= 3
+  atm_stop_secs		= 0
   atm_timestep_start	= 1
-  atm_timestep_stop	= 48
-
+  atm_timestep_stop	= 96
 /

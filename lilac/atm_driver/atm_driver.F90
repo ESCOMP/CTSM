@@ -52,12 +52,13 @@ program atm_driver
   integer            :: atm_stop_secs
   integer            :: atm_timestep_start  ! for internal time loop only
   integer            :: atm_timestep_stop   ! for internal time loop only
+  character(len=32)  :: atm_starttype
 
   namelist /atm_driver_input/ atm_mesh_file, atm_global_nx, atm_global_ny, &
        atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
        atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, &
-       atm_timestep_start, atm_timestep_stop
+       atm_timestep_start, atm_timestep_stop, atm_starttype
   !------------------------------------------------------------------------
 
   !-----------------------------------------------------------------------------
@@ -152,12 +153,12 @@ program atm_driver
   !------------------------------------------------------------------------
 
   if (mytask == 0 ) then
-     print *, " initializing lilac "
+     print *, " initializing lilac with start type ",trim(atm_starttype)
   end if
   call lilac_init(comp_comm, atm_global_index, atm_lons, atm_lats, &
        atm_global_nx, atm_global_ny, atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs)
+       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, atm_starttype)
 
   !------------------------------------------------------------------------
   ! Run lilac

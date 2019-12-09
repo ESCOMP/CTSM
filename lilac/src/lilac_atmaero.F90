@@ -48,14 +48,14 @@ module lilac_atmaero
 contains
 !==============================================================================
 
-  subroutine lilac_atmaero_init(atm2lnd_a_state, rc)
+  subroutine lilac_atmaero_init(atm2cpl_state, rc)
 
     ! ----------------------------------------
     ! Initialize data stream information.
     ! ----------------------------------------
 
     ! input/output variables
-    type(ESMF_State) , intent(inout) :: atm2lnd_a_state
+    type(ESMF_State) , intent(inout) :: atm2cpl_state
     integer          , intent(out)   :: rc
 
     ! local variables
@@ -161,7 +161,7 @@ contains
     ! obtain mesh lats, lons and areas
     ! ------------------------------
 
-    call ESMF_StateGet(atm2lnd_a_state, 'a2c_fb', lfieldbundle, rc=rc)
+    call ESMF_StateGet(atm2cpl_state, 'a2c_fb', lfieldbundle, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call lilac_methods_FB_getFieldN(lfieldbundle, fieldnum=1, field=lfield, rc=rc)
@@ -245,10 +245,10 @@ contains
 
   !================================================================
 
-  subroutine lilac_atmaero_interp(atm2lnd_a_state, clock, rc)
+  subroutine lilac_atmaero_interp(atm2cpl_state, clock, rc)
 
     ! input/output variables
-    type(ESMF_State)       :: atm2lnd_a_state
+    type(ESMF_State)       :: atm2cpl_state
     type(ESMF_Clock)       :: clock
     integer, intent(out)   :: rc
 
@@ -282,7 +282,7 @@ contains
     call shr_strdata_advance(sdat, curr_ymd, sec, mpicom, 'atmaero')
 
     ! set field bundle data
-    call ESMF_StateGet(atm2lnd_a_state, "a2c_fb", lfieldbundle, rc=rc)
+    call ESMF_StateGet(atm2cpl_state, "a2c_fb", lfieldbundle, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call set_fieldbundle_data('Faxa_bcphidry' , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return

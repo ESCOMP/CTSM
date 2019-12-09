@@ -56,20 +56,19 @@ contains
     character(len=*), parameter :: subname='(lilac_history_init)'
     !---------------------------------------
 
-    namelist /lilac_io_input/ lilac_histfreq_n, lilac_histfreq_option
+    namelist /lilac_history_input/ lilac_histfreq_n, lilac_histfreq_option
 
     rc = ESMF_SUCCESS
 
     ! read in history file output frequencies
     open(newunit=fileunit, status="old", file="lilac_in")
-    read(fileunit, lilac_io_input, iostat=ierr)
+    read(fileunit, lilac_history_input, iostat=ierr)
     if (ierr > 0) then
        call shr_sys_abort(trim(subname) // 'error reading in lilac_io_input')
     end if
     close(fileunit)
 
     write(histfile_prefix,"(2a)") trim(caseid),'.lilac.hi.'
-    write(6,*)'DEBUG: histfile_prefix = ',histfile_prefix
 
     !---------------------------------------
     ! Get the clock info

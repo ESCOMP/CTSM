@@ -1,8 +1,7 @@
 &lilac_run_input 
- starttype = 'startup'
  caseid = 'test_lilac'
 /
-&lilac_io_input
+&lilac_history_input
  lilac_histfreq_option = 'nsteps'
  lilac_histfreq_n = 4
 /

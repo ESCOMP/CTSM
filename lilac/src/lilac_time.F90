@@ -78,6 +78,7 @@ contains
     type(ESMF_Time)         :: StopTime            ! Stop time
     type(ESMF_Time)         :: Clocktime           ! Loop time
     type(ESMF_TimeInterval) :: TimeStep            ! Clock time-step
+    type(ESMF_TimeInterval) :: TimeStep_advance
     integer                 :: start_ymd           ! Start date (YYYYMMDD)
     integer                 :: start_tod           ! Start time of day (seconds)
     integer                 :: curr_ymd            ! Current ymd (YYYYMMDD)
@@ -88,7 +89,7 @@ contains
     character(CS)           :: stop_option         ! Stop option units
     character(len=CL)       :: restart_file
     character(len=CL)       :: restart_pfile
-    integer                 :: yr, mon, day        ! Year, month, day as integers
+    integer                 :: yr, mon, day, secs  ! Year, month, day, seconds as integers
     integer                 :: unitn               ! unit number
     integer                 :: ierr                ! Return code
     integer                 :: tmp(2)              ! Array for Broadcast
@@ -140,7 +141,6 @@ contains
          stopTime=stopTime, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-
     ! ------------------------------
     ! For a continue run - obtain current time from the lilac restart file and 
     ! advance the clock to the current time for a continue run
@@ -150,14 +150,8 @@ contains
 
        ! Read the pointer file to obtain the restart file, read the restart file for curr_ymd and curr_tod
        ! and then convert this to an esmf current time (currtime)
-       if ( len_trim(restart_pfile) == 0 ) then
-          call ESMF_LogWrite(trim(subname)//' ERROR restart_pfile must be defined', &
-               ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__)
-          rc = ESMF_FAILURE
-          return
-       end if
-       restart_pfile = trim(restart_pfile)
        if (mytask == 0) then
+          restart_pfile = 'rpointer.lilac'
           call ESMF_LogWrite(trim(subname)//" reading rpointer file = "//trim(restart_pfile), ESMF_LOGMSG_INFO)
           open(newunit=unitn, file=restart_pfile, form='FORMATTED', status='old',iostat=ierr)
           if (ierr < 0) call shr_sys_abort(trim(subname)//' ERROR rpointer file open returns error')
@@ -167,10 +161,10 @@ contains
           call ESMF_LogWrite(trim(subname)//" read driver restart from "//trim(restart_file), ESMF_LOGMSG_INFO)
 
           ! Read the restart file on mastertask and then broadcast the data
-          call lilac_time_restart_read(restart_file, curr_ymd, curr_tod, rc)
+          call lilac_time_restart_read(restart_file, start_ymd, start_tod, curr_ymd, curr_tod, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          tmp(1) = curr_ymd  ; tmp(2) = curr_tod
        endif
-       tmp(1) = curr_ymd  ; tmp(2) = curr_tod
        call ESMF_VMBroadcast(vm, tmp, 4, 0, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        curr_ymd  = tmp(1) ; curr_tod  = tmp(2)
@@ -182,15 +176,44 @@ contains
        call ESMF_TimeSet( currtime, yy=yr, mm=mon, dd=day, s=curr_tod, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       ! Advance the clock to the current time (in case of a restart)
-       call ESMF_ClockGet(clock, currTime=clocktime, rc=rc )
+       ! Determine the current time from the lilac clock
+       call ESMF_ClockGet(lilac_clock, currtime=clocktime, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do while( clocktime < CurrTime)
-          call ESMF_ClockAdvance( clock, rc=rc )
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call ESMF_ClockGet( clock, currTime=clocktime, rc=rc )
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       end do
+
+       ! Compute the time step difference from the current time from the restart file to the current lilac clock time
+       ! (which is really just the start time)
+
+       TimeStep_advance = currtime - clocktime
+       call ESMF_TimeIntervalGet(timestep_advance, s=secs, rc=rc)
+       if (mytask == 0) write(6,*)'DEBUG: time step advance is ',secs
+
+       ! Advance the clock to the current time (in case of a restart)
+       call ESMF_ClockAdvance (lilac_clock, timestep=timestep_advance, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in initializing restart alarm')
+
+       ! call ESMF_TimeGet(currtime, yy=cyr, mm=cmon, dd=cday, s=csecs, rc=rc )
+       ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       ! do while( clocktime < currtime)
+       !    call ESMF_ClockAdvance( lilac_clock, rc=rc )
+       !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       !    call ESMF_ClockGet( lilac_clock, currTime=clocktime, rc=rc )
+       !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !    !DEBUG
+       !    call ESMF_TimeGet(currtime, yy=cyr, mm=cmon, dd=cday, s=csecs, rc=rc )
+       !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       !    if (mytask == 0) write(6,*)'DEBUG: currtime yy,mm,dd,sec= ',cyr, cmon, cday, csecs
+
+       !    call ESMF_TimeGet(clocktime, yy=yr, mm=mon, dd=day, s=secs, rc=rc )
+       !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       !    if (mytask == 0) write(6,*)'DEBUG: clocktime yy,mm,dd,sec= ',yr, mon, day, secs
+
+       !    if (clocktime < currtime) then
+       !       if (mytask == 0) write(6,*)'DEBUG: clock time is less than current time'
+       !    end if
+       !    !DEBUG
+       ! end do
+
     end if
 
     ! Write out diagnostic info
@@ -277,8 +300,6 @@ contains
     else if ( trim(option) == optNSteps   .or. trim(option) == optNSeconds .or. &
               trim(option) == optNMinutes .or. trim(option) == optNHours .or. trim(option) == optNDays) then    
 
-       write(6,*)'DEBUG: hist_option, hist_n= ',trim(option), opt_n
-
        if (opt_n <= 0) call shr_sys_abort(subname//trim(option)//' invalid opt_n')
        call ESMF_ClockGet(clock, TimeStep=AlarmInterval, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -310,6 +331,7 @@ contains
     alarm = ESMF_AlarmCreate( name=alarmname, clock=clock, ringTime=NextAlarm, &
          ringInterval=AlarmInterval, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_LogWrite(subname//'created lilac alarm '//trim(alarmname), ESMF_LOGMSG_INFO)
 
   end subroutine lilac_time_alarmInit
 
@@ -347,8 +369,8 @@ contains
     character(ESMF_MAXSTR)     :: restart_pfile  ! Local path to restart pointer filename
     character(ESMF_MAXSTR)     :: freq_option    ! freq_option setting (ndays, nsteps, etc)
     integer                    :: freq_n         ! freq_n setting relative to freq_option
-    real(R8)                   :: tbnds(2)       ! CF1.0 time bounds
-    logical                    :: whead,wdata    ! for writing restart/restart cdf files
+    logical                    :: write_header   ! true => write netcdf header
+    logical                    :: write_data     ! true => write netcdf data
     character(len=*), parameter :: subname='(lilac_time_phases_restart_write)'
     !---------------------------------------
 
@@ -398,6 +420,7 @@ contains
     !---------------------------------------
 
     write(restart_file,"(5a)") trim(caseid),'.lilac','.r.', trim(nexttimestr),'.nc'
+    call ESMF_LogWrite(subname//"lilac restart file is "//trim(restart_file), ESMF_LOGMSG_INFO)
 
     if (mytask == 0) then
        open(newunit=unitn, file="rpointer.lilac", form='FORMATTED')
@@ -406,61 +429,50 @@ contains
        call ESMF_LogWrite(trim(subname)//" wrote lilac restart pointer file rpointer.lilac", ESMF_LOGMSG_INFO)
     endif
 
-    call ESMF_LogWrite(trim(subname)//": write "//trim(restart_file), ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(trim(subname)//": writing "//trim(restart_file), ESMF_LOGMSG_INFO)
     call lilac_io_wopen(restart_file, vm, mytask, clobber=.true.)
 
     do m = 1,2
        if (m == 1) then
-          whead = .true.
-          wdata = .false.
-       else if (m == 2) then
-          whead = .false.
-          wdata = .true.
+          write_header = .true.  ;  write_data = .false.
+       else 
+          write_header = .false. ;  write_data = .true.
        endif
-       if (wdata) then
+
+       if (write_data) then
           call lilac_io_enddef(restart_file)
        end if
 
-       tbnds = dayssince
        call ESMF_LogWrite(trim(subname)//": time "//trim(time_units), ESMF_LOGMSG_INFO)
-       if (tbnds(1) >= tbnds(2)) then
-          call lilac_io_write(restart_file, iam=mytask, &
-               time_units=time_units, calendar=calendar, time_val=dayssince, &
-               whead=whead, wdata=wdata, rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       else
-          call lilac_io_write(restart_file, iam=mytask, &
-               time_units=time_units, calendar=calendar, time_val=dayssince, &
-               whead=whead, wdata=wdata, tbnds=tbnds, rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       endif
+       call lilac_io_write(restart_file, iam=mytask, &
+            time_units=time_units, calendar=calendar, time_val=dayssince, &
+            whead=write_header, wdata=write_data, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! Write out next ymd/tod in place of curr ymd/tod because
        ! the currently the restart represents the time at end of
        ! the current timestep and that is where we want to start the next run.
 
-       call lilac_io_write(restart_file, mytask, start_ymd, 'start_ymd', whead=whead, wdata=wdata, rc=rc)
+       call lilac_io_write(restart_file, mytask, next_ymd , 'curr_ymd' , whead=write_header, wdata=write_data, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call lilac_io_write(restart_file, mytask, next_tod , 'curr_tod' , whead=write_header, wdata=write_data, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       call lilac_io_write(restart_file, mytask, start_tod, 'start_tod', whead=whead, wdata=wdata, rc=rc)
+       call lilac_io_write(restart_file, mytask, start_ymd , 'start_ymd' , whead=write_header, wdata=write_data, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call lilac_io_write(restart_file, mytask, next_ymd , 'curr_ymd' , whead=whead, wdata=wdata, rc=rc)
+       call lilac_io_write(restart_file, mytask, start_tod , 'start_tod' , whead=write_header, wdata=write_data, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call lilac_io_write(restart_file, mytask, next_tod , 'curr_tod' , whead=whead, wdata=wdata, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call lilac_io_close(restart_file, mytask, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     end do
+
+    call lilac_io_close(restart_file, mytask, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_LogWrite(trim(subname)//": closing "//trim(restart_file), ESMF_LOGMSG_INFO)
 
   end subroutine lilac_time_restart_write
 
   !===============================================================================
 
-  subroutine lilac_time_restart_read(restart_file, curr_ymd, curr_tod, rc)
+  subroutine lilac_time_restart_read(restart_file, start_ymd, start_tod, curr_ymd, curr_tod, rc)
 
     ! -------------------------------------------------
     ! Read the restart time info needed to initialize the clock
@@ -468,6 +480,8 @@ contains
 
     ! input/output variables
     character(len=*), intent(in) :: restart_file
+    integer, intent(out)         :: start_ymd           ! Current ymd (YYYYMMDD)
+    integer, intent(out)         :: start_tod           ! Current tod (seconds)
     integer, intent(out)         :: curr_ymd            ! Current ymd (YYYYMMDD)
     integer, intent(out)         :: curr_tod            ! Current tod (seconds)
     integer, intent(out)         :: rc
@@ -481,6 +495,7 @@ contains
     ! use netcdf here since it's serial
     status = nf90_open(restart_file, NF90_NOWRITE, ncid)
     if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_open')
+
     status = nf90_inq_varid(ncid, 'curr_ymd', varid)
     if (status /= nf90_NoErr) call shr_sys_abort('ERROR: nf90_inq_varid curr_ymd')
     status = nf90_get_var(ncid, varid, curr_ymd)
@@ -489,8 +504,24 @@ contains
     if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_inq_varid curr_tod')
     status = nf90_get_var(ncid, varid, curr_tod)
     if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_get_var curr_tod')
+
+    status = nf90_inq_varid(ncid, 'start_ymd', varid)
+    if (status /= nf90_NoErr) call shr_sys_abort('ERROR: nf90_inq_varid start_ymd')
+    status = nf90_get_var(ncid, varid, start_ymd)
+    if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_get_var start_ymd')
+    status = nf90_inq_varid(ncid, 'start_tod', varid)
+    if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_inq_varid start_tod')
+    status = nf90_get_var(ncid, varid, start_tod)
+    if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_get_var start_tod')
+
+
     status = nf90_close(ncid)
     if (status /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_close')
+
+    write(tmpstr,*) trim(subname)//" read start_ymd  = ",start_ymd
+    call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
+    write(tmpstr,*) trim(subname)//" read start_tod  = ",start_tod
+    call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
 
     write(tmpstr,*) trim(subname)//" read curr_ymd  = ",curr_ymd
     call ESMF_LogWrite(trim(tmpstr), ESMF_LOGMSG_INFO)
