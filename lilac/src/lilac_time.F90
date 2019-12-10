@@ -118,8 +118,10 @@ contains
     else if (trim(atm_calendar) == 'GREGORIAN') then
        lilac_calendar = ESMF_CalendarCreate(name='GREGORIAN', calkindflag=ESMF_CALKIND_GREGORIAN, rc=rc )
     else
-       ! TODO: add supported calendars here
+       call shr_sys_abort(trim(subname)//'ERROR: only NOLEAP and GREGORIAN calendars currently supported')
     end if
+    call ESMF_CalendarSetDefault(lilac_calendar, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort(trim(subname)//'ERROR: default calendar set error')
 
     ! ------------------------------
     ! create and initialize lilac_clock
@@ -139,7 +141,7 @@ contains
     ! Create the lilac clock (NOTE: the reference time is set to the start time)
     lilac_clock = ESMF_ClockCreate(name='lilac_clock', TimeStep=TimeStep, startTime=StartTime, RefTime=StartTime, &
          stopTime=stopTime, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort(trim(subname)//'error initializing lilac clock')
 
     ! ------------------------------
     ! For a continue run - obtain current time from the lilac restart file and 
