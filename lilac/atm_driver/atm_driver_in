@@ -11,6 +11,6 @@
   atm_start_secs	= 0
   atm_stop_secs		= 0
   atm_start_day		= 1
-  atm_stop_day		= 2
+  atm_stop_day		= 3
   atm_starttype         = 'startup'
 /

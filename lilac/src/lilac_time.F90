@@ -191,29 +191,6 @@ contains
        call ESMF_ClockAdvance (lilac_clock, timestep=timestep_advance, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in initializing restart alarm')
 
-       ! call ESMF_TimeGet(currtime, yy=cyr, mm=cmon, dd=cday, s=csecs, rc=rc )
-       ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       ! do while( clocktime < currtime)
-       !    call ESMF_ClockAdvance( lilac_clock, rc=rc )
-       !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       !    call ESMF_ClockGet( lilac_clock, currTime=clocktime, rc=rc )
-       !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       !    !DEBUG
-       !    call ESMF_TimeGet(currtime, yy=cyr, mm=cmon, dd=cday, s=csecs, rc=rc )
-       !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       !    if (mytask == 0) write(6,*)'DEBUG: currtime yy,mm,dd,sec= ',cyr, cmon, cday, csecs
-
-       !    call ESMF_TimeGet(clocktime, yy=yr, mm=mon, dd=day, s=secs, rc=rc )
-       !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       !    if (mytask == 0) write(6,*)'DEBUG: clocktime yy,mm,dd,sec= ',yr, mon, day, secs
-
-       !    if (clocktime < currtime) then
-       !       if (mytask == 0) write(6,*)'DEBUG: clock time is less than current time'
-       !    end if
-       !    !DEBUG
-       ! end do
-
     end if
 
     ! Write out diagnostic info

@@ -16,9 +16,12 @@ program atm_driver
   !   ESMF lilac_atmcap            ESMF CTSM cap     ESMF river cap (Mizzouroute, Mosart)
   !----------------------------------------------------------------------------
   
+  use netcdf      , only : nf90_open, nf90_nowrite, nf90_noerr, nf90_close
+  use netcdf      , only : nf90_inq_dimid, nf90_inquire_dimension, nf90_inq_varid, nf90_get_var  
   use mpi         , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
   use lilac_mod   , only : lilac_init, lilac_run, lilac_final
   use lilac_atmcap, only : lilac_atmcap_atm2lnd, lilac_atmcap_lnd2atm
+  use shr_cal_mod , only : shr_cal_date2ymd
   use shr_sys_mod , only : shr_sys_abort
 
   implicit none
@@ -36,6 +39,11 @@ program atm_driver
   integer               :: fileunit      ! for namelist input
   integer               :: nstep         ! time step counter
   integer               :: atm_nsteps    ! number of time steps of the simulation
+  character(len=512)    :: restart_file  ! local path to lilac restart filename
+  integer               :: idfile, varid
+  integer               :: atm_restart_ymd
+  integer               :: atm_restart_year, atm_restart_mon
+  integer               :: atm_restart_day, atm_restart_secs
 
   ! Namelist and related variables
   character(len=512) :: atm_mesh_file
@@ -162,11 +170,65 @@ program atm_driver
   ! Run lilac
   !------------------------------------------------------------------------
 
-  if ( atm_stop_year == atm_start_year .and. atm_stop_mon == atm_start_mon .and. &
-       atm_stop_secs == atm_start_secs) then
-     atm_nsteps = ((atm_stop_day - atm_start_day) * 86400.) / atm_timestep
-  else
-     call shr_sys_abort('not supporting start and stop years,months and secs to be different')
+  ! Assume that will always run for N days (no partial days)
+
+  if (atm_starttype == 'startup') then
+     
+     if ( atm_stop_year /= atm_start_year) then
+        call shr_sys_abort('not supporting start and stop years to be different')
+     else if (atm_stop_mon  /= atm_start_mon) then
+        call shr_sys_abort('not supporting start and stop months to be different')
+     else if (atm_stop_secs /= 0 .or. atm_start_secs /= 0) then
+        call shr_sys_abort('not supporting start and stop secs to be nonzero')
+     else
+        atm_nsteps = ((atm_stop_day - atm_start_day) * 86400.) / atm_timestep
+     end if
+
+  else ! continue
+
+     open(newunit=fileunit, file='rpointer.lilac', form='FORMATTED', status='old',iostat=ierr)
+     if (ierr < 0) call shr_sys_abort('Error opening rpointer.lilac')
+     read(fileunit,'(a)', iostat=ierr) restart_file
+     if (ierr < 0) call shr_sys_abort('Error reading rpointer.lilac')
+     close(fileunit)
+     if (mytask == 0) then
+        print *,'lilac restart_file = ',trim(restart_file)
+     end if
+
+     ierr = nf90_open(restart_file, NF90_NOWRITE, idfile)
+     if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_open')
+
+     ierr = nf90_inq_varid(idfile, 'curr_ymd', varid)
+     if (ierr /= nf90_NoErr) call shr_sys_abort('ERROR: nf90_inq_varid curr_ymd')
+     ierr = nf90_get_var(idfile, varid, atm_restart_ymd)
+     if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_get_var curr_ymd')
+
+     ierr = nf90_inq_varid(idfile, 'curr_tod', varid)
+     if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_inq_varid curr_tod')
+     ierr = nf90_get_var(idfile, varid, atm_restart_secs)
+     if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_get_var curr_tod')
+
+     ierr = nf90_close(idfile)
+     if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_close')
+
+     if (mytask == 0) then
+        print  *,'restart_ymd = ',atm_restart_ymd
+     end if
+     call shr_cal_date2ymd(atm_restart_ymd, atm_restart_year, atm_restart_mon, atm_restart_day)
+
+     if ( atm_stop_year /= atm_restart_year) then
+        write(6,*)'atm_stop_year = ',atm_stop_year,'atm_restart_year = ',atm_restart_year 
+        call shr_sys_abort('not supporting restart and stop years to be different')
+     else if (atm_stop_mon  /= atm_restart_mon) then
+        write(6,*)'atm_stop_mon = ',atm_stop_mon,'atm_restart_mon = ',atm_restart_mon 
+        call shr_sys_abort('not supporting restart and stop months to be different')
+     else if (atm_stop_secs /= 0 .or. atm_restart_secs /= 0) then
+        write(6,*)'atm_stop_secs = ',atm_stop_secs,'atm_restart_secs = ',atm_restart_secs 
+        call shr_sys_abort('not supporting restart and stop secs to be nonzero')
+     else
+        atm_nsteps = ((atm_stop_day - atm_restart_day) * 86400.) / atm_timestep
+     end if
+
   end if
 
   do nstep = 1,atm_nsteps
@@ -197,9 +259,6 @@ contains
 !=======================================================
 
   subroutine read_netcdf_mesh(filename, nglobal)
-
-    use netcdf
-    implicit none
 
     !  input/output variables
     character(*) , intent(in)  :: filename
@@ -248,6 +307,10 @@ contains
     call nc_check_err(ierr, "inq_varid centerCoords", filename)
     ierr = nf90_get_var(idfile, idvar_CenterCoords, centerCoords, start=(/1,1/), count=(/coordDim, nelem/))
     call nc_check_err(ierr,"get_var CenterCoords", filename)
+
+    ! Close the file
+    ierr = nf90_close(idfile)
+    if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_close')
 
     nglobal = nelem
 
