@@ -1,3 +1,7 @@
+========================================================================
+I. Building a CTSM / LILAC library for inclusion in an atmosphere model
+========================================================================
+
 1) check out the code (ctsm and lilac are now bundled together) and built as one library
 
    > git clone https://github.com/ESCOMP/ctsm.git
@@ -10,7 +14,6 @@
    > export LILAC_MODE='on'
    > export SRCROOT=`pwd`
    > export CASEDIR=/glade/scratch/mvertens/test_lilac
-   > export BLDDIR=$CASEDIR/bld
 
 3) build the ctsm/lilac library using a CIME case
 
@@ -21,14 +24,22 @@
    > ./case.setup
    > ./case.build --sharedlib-only
 
-4) To build the atm_driver executable on cheyenne
+========================================================================
+II. Building and running the test atmosphere driver
+========================================================================
 
+After following the above instructions for building a CTSM / LILAC
+library (I), do the following:
+
+1) To build the atm_driver executable on cheyenne (***CTSM_MKFILE IS CRITICAL for the operation of the atm_driver makefile)
+
+   > export CTSM_MKFILE=$CASEDIR/bld/ctsm.mk
    > cd $SRCROOT/lilac/atm_driver
    > make clean
    > source $CASEDIR/.env_mach_specific.sh
    > make atm_driver 
 
-5) to generate the input namelists
+2) to generate the input namelists
 
   - to customize the generated namelist - edit the file ctsm.cfg (in this directory)
   - to create the ctsm namelist FROM THIS DIRECTORY:
@@ -39,11 +50,11 @@
     THIS ONLY NEEDS TO BE DONE ONCE 
     to futher customize the lnd_in (say to adjust the ctsm history output) edit the generated lnd_in in this directory
 
-6) run the atm_driver on cheyenne
+3) run the atm_driver on cheyenne
   
   > qsub cheyenne.sub
 
-7) compare with latest baselines
+4) compare with latest baselines
 
    use something like this to compare the last clm and last cpl hist files:
 
@@ -51,8 +62,27 @@
    > cprnc test_lilac.clm2.h0.2000-01-02-00000.nc $basedir/test_lilac.clm2.h0.2000-01-02-00000.nc | tail -30
    > cprnc test_lilac.cpl.hi.2000-01-02-00000.nc $basedir/test_lilac.cpl.hi.2000-01-02-00000.nc | tail -30
 
-8) if there are differences, and those are intentional, then create new
+5) if there are differences, and those are intentional, then create new
    baselines
 
    copy all *.nc files, plus ctsm.cfg, lilac_in and lnd_in to the
    baseline directory
+
+========================================================================
+III. Linking the CTSM / LILAC library into another atmosphere model
+========================================================================
+
+After following the above instructions for building a CTSM / LILAC
+library (I), you should do the following, assuming that the atmosphere
+model is built using a makefile:
+
+1) Set some environment variable (e.g., CTSM_MKFILE) to point to the
+   ctsm.mk file generated in CTSM's bld directory.
+
+2) Modify the atmosphere model's makefile to include the file given by
+   the environment variable $CTSM_MAKEFILE.
+
+3) In the compilation line for the atmosphere model, add
+   $(CTSM_INCLUDES)
+
+4) In the link line for the atmosphere model, add $(CTSM_LIBS)
