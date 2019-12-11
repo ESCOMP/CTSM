@@ -30,6 +30,52 @@ def _get_osvar(key, default):
     return value
 
 ###############################################################################
+def _write_ctsm_mk(exeroot):
+    """Writes a ctsm.mk file in exeroot.
+
+    This file can be included by atmosphere model builds outside of cime.
+
+    NOTE: This currently has some hard-coded settings for cheyenne. Also, it assumes that
+    ESMFMKFILE is set in your environment.
+    """
+
+    ctsm_mk_path = os.path.join(exeroot, 'ctsm.mk')
+    esmfmkfile = os.environ['ESMFMKFILE']
+    with open(ctsm_mk_path, 'w') as ctsm_mk:
+        ctsm_mk.write("""
+# ======================================================================
+# Include this file to get makefile variables needed to include / link
+# LILAC/CTSM in an atmosphere model's build
+#
+# Variables of interest are:
+# - CTSM_INCLUDES: add this to the compilation line
+# - CTSM_LIBS: add this to the link line
+# ======================================================================
+
+# ======================================================================
+# The following settings are meant for internal use, and generally
+# should not be included directly in an atmosphere model's build.
+# ======================================================================
+
+include {esmfmkfile}
+
+SHARED_BLD_DIR = {exeroot}/intel/mpt/debug/nothreads/nuopc
+CTSM_BLD_DIR   = $(SHARED_BLD_DIR)/nuopc/esmf
+DEPENDS_LIB    = $(SHARED_BLD_DIR)/lib
+SHR_LIB        = $(SHARED_BLD_DIR)/nuopc/esmf/c1a1l1/lib
+CTSM_INC       = $(CTSM_BLD_DIR)/clm/obj
+
+LIBS = -L$(CTSM_BLD_DIR)/lib -lclm -L$(SHR_LIB) -lcsm_share -L$(DEPENDS_LIB) -lpiof -lpioc -lgptl -lmct -lmpeu -mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib -cxxlib -lrt -ldl -lnetcdff -lnetcdf -cxxlib
+
+# ======================================================================
+# The following settings should be included in an atmosphere model's build.
+# ======================================================================
+
+CTSM_INCLUDES = $(ESMF_F90COMPILEPATHS) -I$(CTSM_INC)
+CTSM_LIBS =  $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) $(ESMF_F90ESMFLINKLIBS) $(LIBS)
+""".format(exeroot=exeroot, esmfmkfile=esmfmkfile))
+
+###############################################################################
 def _main_func():
 ###############################################################################
 
@@ -46,6 +92,7 @@ def _main_func():
         lilac_mode = _get_osvar('LILAC_MODE', 'off')
         if lilac_mode == 'on':
             driver = "lilac"
+            _write_ctsm_mk(exeroot=case.get_value("EXEROOT"))
 
         #-------------------------------------------------------
         # create Filepath file
