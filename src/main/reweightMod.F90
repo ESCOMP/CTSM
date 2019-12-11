@@ -9,7 +9,6 @@ module reweightMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod   , only : r8 => shr_kind_r8
   !
   ! PUBLIC TYPES:
@@ -49,7 +48,7 @@ contains
     type(glc_behavior_type), intent(in) :: glc_behavior
     !------------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_CLUMP, sourcefile, __LINE__)
 
     call set_active(bounds, glc_behavior)
     call check_weights(bounds, active_only=.false.)

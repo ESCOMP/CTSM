@@ -11,6 +11,7 @@ module SatellitePhenologyMod
   use shr_strdata_mod , only : shr_strdata_print, shr_strdata_advance
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_kind_mod    , only : CL => shr_kind_CL
+  use shr_kind_mod    , only : CXX => shr_kind_CXX
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
@@ -102,7 +103,7 @@ contains
     character(*), parameter    :: F00 = "('(laidyn_init) ',4a)"
     character(*), parameter    :: laiString = "LAI"  ! base string for field string
     integer     , parameter    :: numLaiFields = 16  ! number of fields to build field string
-    character(SHR_KIND_CXX)    :: fldList            ! field string
+    character(len=CXX)         :: fldList            ! field string
     !-----------------------------------------------------------------------
     !
     ! deal with namelist variables here in init
@@ -408,7 +409,7 @@ contains
     !
     ! !USES:
     use clm_varctl      , only : fsurdat
-    use clm_time_manager, only : get_curr_date, get_step_size, get_nstep
+    use clm_time_manager, only : get_curr_date, get_step_size_real, get_nstep
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  
@@ -427,7 +428,7 @@ contains
          (/31,28,31,30,31,30,31,31,30,31,30,31/) !days per month
     !-----------------------------------------------------------------------
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     call get_curr_date(kyr, kmo, kda, ksec, offset=int(dtime))
 

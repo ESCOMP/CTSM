@@ -7,7 +7,6 @@ module CNVegComputeSeedMod
 #include "shr_assert.h"
 
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use pftconMod      , only : pftcon, noveg
   use clm_varcon     , only : c3_r2, c4_r2, c14ratio
@@ -99,15 +98,15 @@ contains
     begp = bounds%begp
     endp = bounds%endp
 
-    SHR_ASSERT_ALL((ubound(leaf_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(leaf_storage_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(leaf_xfer_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(compute_here_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ignore_current_state_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(seed_leaf_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(seed_leaf_storage_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(seed_leaf_xfer_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(seed_deadstem_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leaf_patch) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(leaf_storage_patch) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(leaf_xfer_patch) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(compute_here_patch) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ignore_current_state_patch) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(seed_leaf_patch) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(seed_leaf_storage_patch) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(seed_leaf_xfer_patch) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(seed_deadstem_patch) == (/endp/)), sourcefile, __LINE__)
 
 
     do fp = 1, num_soilp_with_inactive

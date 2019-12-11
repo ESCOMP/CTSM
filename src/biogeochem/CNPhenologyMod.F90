@@ -283,8 +283,8 @@ contains
     integer                        , intent(in)    :: phase
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
 
     ! each of the following phenology type routines includes a filter
     ! to operate only on the relevant patches
@@ -351,7 +351,7 @@ contains
     ! initialized, and after pftcon file is read in.
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size
+    use clm_time_manager, only: get_step_size_real
     use clm_varctl      , only: use_crop
     use clm_varcon      , only: secspday
     !
@@ -362,7 +362,7 @@ contains
     !
     ! Get time-step and what fraction of a day it is
     !
-    dt      = real( get_step_size(), r8 )
+    dt      = get_step_size_real()
     fracday = dt/secspday
 
     ! set constants for CNSeasonDecidPhenology 
@@ -2885,8 +2885,8 @@ contains
     integer :: fc,c,pi,p,j       ! indices
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
 
     associate(                                                                                & 
          leaf_prof                 => leaf_prof_patch                                       , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of leaves                         

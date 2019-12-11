@@ -26,9 +26,9 @@ module ncdio_pio
   use mct_mod        , only : mct_gsMap, mct_gsMap_lsize, mct_gsMap_gsize, mct_gsMap_orderedPoints
   use pio            , only : file_desc_t, io_desc_t, iosystem_desc_t
   use pio            , only : pio_bcast_error, pio_char, pio_clobber, pio_closefile, pio_createfile, pio_def_dim
-  use pio            , only : pio_def_var, pio_double, pio_enddef, pio_get_att, pio_get_var, pio_global, pio_initdecomp
+  use pio            , only : pio_def_var, pio_double, pio_redef, pio_enddef, pio_get_att, pio_get_var, pio_global, pio_initdecomp
   use pio            , only : pio_inq_att, pio_inq_dimid, pio_inq_dimlen, pio_inq_dimname, pio_inq_vardimid, pio_inq_varid
-  use pio            , only : pio_inq_varname, pio_inq_varndims, pio_inquire, pio_int, pio_internal_error
+  use pio            , only : pio_inq_attname, pio_inq_varname, pio_inq_varndims, pio_inquire, pio_int, pio_internal_error
   use pio            , only : pio_noclobber, pio_noerr, pio_nofill, pio_nowrite, pio_offset_kind, pio_openfile
   use pio            , only : pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling
   use pio            , only : pio_setframe, pio_unlimited, pio_write, pio_write_darray, var_desc_t
@@ -48,7 +48,10 @@ module ncdio_pio
   public :: ncd_pio_createfile ! create a new file
   public :: ncd_pio_closefile  ! close a file
   public :: ncd_pio_init       ! called from clm_comp
+  public :: ncd_redef          ! re-enter define mode
   public :: ncd_enddef         ! end define mode
+  public :: ncd_inqnatts       ! inquire number of global attributes
+  public :: ncd_inqattname     ! inquire attribute name, given attribute number
   public :: ncd_putatt         ! put attribute
   public :: ncd_getatt         ! get attribute
   public :: ncd_defdim         ! define dimension
@@ -369,6 +372,25 @@ contains
     end if
 
   end subroutine check_dim
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_redef(ncid)
+    !
+    ! !DESCRIPTION:
+    ! Re-enter define mode for this netcdf file
+    !
+    ! Remember to call ncd_enddef when finished
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    !
+    ! !LOCAL VARIABLES:
+    integer :: status   ! error status
+    !-----------------------------------------------------------------------
+
+    status = PIO_redef(ncid)
+
+  end subroutine ncd_redef
 
   !-----------------------------------------------------------------------
   subroutine ncd_enddef(ncid)
@@ -803,6 +825,47 @@ contains
 
   end subroutine ncd_inqvdname_byName
 
+  !-----------------------------------------------------------------------
+  subroutine ncd_inqnatts(ncid, nattributes)
+    !
+    ! !DESCRIPTION:
+    ! Inquire number of global attributes
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t), intent(inout) :: ncid ! netcdf file id
+    integer           , intent(out)   :: nattributes ! number of global attributes
+    !
+    ! !LOCAL VARIABLES:
+    integer :: status
+
+    character(len=*), parameter :: subname = 'ncd_inqnatts'
+    !-----------------------------------------------------------------------
+
+    status = PIO_inquire(ncid, nattributes=nattributes)
+
+  end subroutine ncd_inqnatts
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_inqattname(ncid, varid, attnum, attname)
+    !
+    ! !DESCRIPTION:
+    ! Inquire attribute name, given attribute number
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout) :: ncid   ! netcdf file id
+    integer            , intent(in)    :: varid  ! netcdf var id (can be ncd_global)
+    integer            , intent(in)    :: attnum ! attribute number
+    character(len=*)   , intent(out) :: attname
+    !
+    ! !LOCAL VARIABLES:
+    integer :: status
+
+    character(len=*), parameter :: subname = 'ncd_inqattname'
+    !-----------------------------------------------------------------------
+
+    status = PIO_inq_attname(ncid, varid, attnum, attname)
+
+  end subroutine ncd_inqattname
 
   !-----------------------------------------------------------------------
   subroutine ncd_putatt_int(ncid,varid,attrib,value,xtype)
@@ -1283,15 +1346,19 @@ contains
        if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 #if ({DIMS}==0)
-       start(1) = 1 ; count(1) = 1
-       if (present(nt)) start(1) = nt
        allocate(idata1d(1))
        if ( data )then
           idata1d(1) = 1
        else
           idata1d(1) = 0
        end if
-       status = pio_put_var(ncid, varid, start(1:1), count(1:1), idata1d)
+       if (present(nt)) then
+          start(1) = nt
+          count(1) = 1
+          status = pio_put_var(ncid, varid, start(1:1), count(1:1), idata1d)
+       else
+          status = pio_put_var(ncid, varid, idata1d)
+       end if
        deallocate(idata1d)
 #elif ({DIMS}==1)
        start(1) = 1 ; count(1) = size(data)
@@ -1390,10 +1457,14 @@ contains
        if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 #if ({DIMS}==0)
-       start(1) = 1  ; count(1) = 1
-       if (present(nt)) start(1) = nt
        temp(1) = data
-       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
+       if (present(nt)) then
+          start(1) = nt
+          count(1) = 1
+          status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
+       else
+          status = pio_put_var(ncid, varid, temp)
+       end if
 #elif ({DIMS}==1)
        start(1) = 1 ; count(1) = size(data)
        start(2) = 1 ; count(2) = 1

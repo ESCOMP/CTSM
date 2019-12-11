@@ -33,7 +33,7 @@ contains
       ! There are only two quantities that are the result of this routine, and its
       ! children:
       !   waterfluxbulk_inst%qflx_rootsoi_col(c,j)
-      !   soilstate_inst%rootr_col(c,j)
+      !   soilstate_inst%rootr_col(c,j) (SMS method only)
       !
       !
       ! ---------------------------------------------------------------------------------
@@ -177,7 +177,7 @@ contains
             qflx_tran_veg_col   => waterfluxbulk_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  
                                                                           ! vegetation transpiration (mm H2O/s) (+ = to atm)
             rootr_patch         => soilstate_inst%rootr_patch         , & ! Input:  [real(r8) (:,:) ]  
-                                                                          ! effective fraction of roots in each soil layer  
+                                                                          ! effective fraction of roots in each soil layer (SMS method only)  
             rootr_col           => soilstate_inst%rootr_col             & ! Output: [real(r8) (:,:) ]  
                                                                           !effective fraction of roots in each soil layer  
             )
@@ -289,10 +289,6 @@ contains
               qflx_rootsoi_col    => waterfluxbulk_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:)   ]
                                                                             ! col root and soil water 
                                                                             ! exchange [mm H2O/s] [+ into root]
-              rootr_col           => soilstate_inst%rootr_col           , & ! Input:  [real(r8) (:,:) ]
-                                                                            ! effective fraction of roots in each soil layer
-              rootr_patch         => soilstate_inst%rootr_patch         , & ! Input:  [real(r8) (:,:) ]  
-                                                                            ! effective fraction of roots in each soil layer
               smp                 => soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix pot. [mm]
               frac_veg_nosno      => canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)  ] 
                                                                             ! fraction of vegetation not 
@@ -325,14 +321,6 @@ contains
                 if (temp(c) < 0._r8) qflx_phs_neg_col(c) = qflx_phs_neg_col(c) + temp(c)
              end do
              
-             ! Back out the effective root density
-             if( sum(qflx_rootsoi_col(c,:))>0.0_r8 ) then
-                do j = 1, nlevsoi
-                   rootr_col(c,j) = qflx_rootsoi_col(c,j)/sum( qflx_rootsoi_col(c,:))
-                end do
-             else
-                rootr_col(c,:) = 0.0_r8
-             end if
           end do
           
         end associate
@@ -381,7 +369,7 @@ contains
           qflx_tran_veg_col   => waterfluxbulk_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  
                                                                         ! vegetation transpiration (mm H2O/s) (+ = to atm)
           rootr_patch         => soilstate_inst%rootr_patch         , & ! Input: [real(r8) (:,:) ]
-                                                                        ! effective fraction of roots in each soil layer  
+                                                                        ! effective fraction of roots in each soil layer (SMS method only) 
           rootr_col           => soilstate_inst%rootr_col             & ! Output: [real(r8) (:,:) ]  
                                                                         ! effective fraction of roots in each soil layer  
           )

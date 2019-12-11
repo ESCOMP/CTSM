@@ -172,9 +172,9 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begl = bounds%begl; endl= bounds%endl
 
-    SHR_ASSERT_ALL((ubound(snow_depth)  == (/endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(thick_wall)  == (/endl/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(thick_roof)  == (/endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(snow_depth)  == (/endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(thick_wall)  == (/endl/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(thick_roof)  == (/endl/)), sourcefile, __LINE__)
 
     ! Open surface dataset to read in data below 
 

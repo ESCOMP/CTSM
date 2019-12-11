@@ -71,13 +71,13 @@ contains
     !
     ! !USES:
     use spmdMod           , only : masterproc
-    use clm_time_manager  , only : get_step_size
+    use clm_time_manager  , only : get_step_size_real
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
     real(r8) :: dtime                    ! land model time step (sec)
     !-----------------------------------------------------------------------
-    dtime = get_step_size()
+    dtime = get_step_size_real()
     ! Skip a minimum of two time steps, but otherwise skip the number of time-steps in the skip_size rounded to the nearest integer
     skip_steps = max(2, nint( (skip_size / dtime) ) )
 
@@ -248,7 +248,7 @@ contains
      !
      ! !USES:
      use clm_varcon        , only : spval
-     use clm_time_manager  , only : get_step_size, get_nstep
+     use clm_time_manager  , only : get_step_size_real, get_nstep
      use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
      use CanopyStateType   , only : canopystate_type
      use subgridAveMod
@@ -375,7 +375,7 @@ contains
 
        nstep = get_nstep()
        DAnstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        ! Determine column level incoming snow and rain
        ! Assume no incident precipitation on urban wall columns (as in CanopyHydrologyMod.F90).

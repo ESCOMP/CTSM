@@ -9,7 +9,6 @@ module initInterpMultilevelCopy
 #include "shr_assert.h" 
 
   use shr_kind_mod             , only : r8 => shr_kind_r8
-  use shr_log_mod              , only : errMsg => shr_log_errMsg
   use initInterpMultilevelBase , only : interp_multilevel_type
 
   implicit none
@@ -105,7 +104,7 @@ contains
     character(len=*), parameter :: subname = 'interp_multilevel'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((size(data_source) == size(data_dest)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(data_source) == size(data_dest)), sourcefile, __LINE__)
 
     ! Note that it's safe to do whole-array assignment here because we never decompose
     ! along the level dimension (in contrast to the spatial dimension, where you need to

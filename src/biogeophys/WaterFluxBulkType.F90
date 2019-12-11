@@ -44,7 +44,6 @@ module WaterFluxBulkType
      real(r8), pointer :: qflx_infl_excess_col     (:)   ! col infiltration excess runoff (mm H2O /s)
      real(r8), pointer :: qflx_infl_excess_surf_col(:)   ! col surface runoff due to infiltration excess (mm H2O /s)
      real(r8), pointer :: qflx_h2osfc_surf_col     (:)   ! col surface water runoff (mm H2O /s)
-     real(r8), pointer :: qflx_rain_plus_snomelt_col(:)  ! col rain plus snow melt falling on the soil (mm/s)
      real(r8), pointer :: qflx_in_soil_col         (:)   ! col surface input to soil (mm/s)
      real(r8), pointer :: qflx_in_soil_limited_col (:)   ! col surface input to soil, limited by max infiltration rate (mm/s)
      real(r8), pointer :: qflx_h2osfc_drain_col    (:)   ! col bottom drainage from h2osfc (mm/s)
@@ -128,7 +127,6 @@ contains
     allocate(this%qflx_rootsoi_col         (begc:endc,1:nlevsoi))    ; this%qflx_rootsoi_col         (:,:) = nan
     allocate(this%qflx_sat_excess_surf_col (begc:endc))              ; this%qflx_sat_excess_surf_col (:)   = nan
     allocate(this%qflx_infl_excess_col     (begc:endc))              ; this%qflx_infl_excess_col     (:)   = nan
-    allocate(this%qflx_rain_plus_snomelt_col(begc:endc))             ; this%qflx_rain_plus_snomelt_col(:)  = nan
     allocate(this%qflx_in_soil_col         (begc:endc))              ; this%qflx_in_soil_col         (:)   = nan
     allocate(this%qflx_in_soil_limited_col (begc:endc))              ; this%qflx_in_soil_limited_col (:)   = nan
     allocate(this%qflx_h2osfc_drain_col    (begc:endc))              ; this%qflx_h2osfc_drain_col    (:)   = nan

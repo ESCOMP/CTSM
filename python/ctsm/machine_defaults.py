@@ -62,5 +62,17 @@ MACHINE_DEFAULTS = {
                 walltime='04:00:00',
                 extra_args='',
                 required_args='-l nodes=1:ppn=48 -r n')
+        }),
+    'izumi': MachineDefaults(
+        job_launcher_type=JOB_LAUNCHER_QSUB,
+        scratch_dir=os.path.join(os.path.sep, 'scratch', 'cluster', get_user()),
+        baseline_dir=os.path.join(os.path.sep, 'fs', 'cgd', 'csm', 'ccsm_baselines'),
+        account_required=False,
+        job_launcher_defaults={
+            JOB_LAUNCHER_QSUB: QsubDefaults(
+                queue='medium',
+                walltime='04:00:00',
+                extra_args='',
+                required_args='-l nodes=1:ppn=48 -r n')
         })
 }

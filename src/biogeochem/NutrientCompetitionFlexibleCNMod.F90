@@ -18,7 +18,6 @@ module NutrientCompetitionFlexibleCNMod
   !
   ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
-  use shr_log_mod         , only : errMsg => shr_log_errMsg
   use decompMod           , only : bounds_type
   use LandunitType        , only : lun
   use ColumnType          , only : col
@@ -196,7 +195,7 @@ contains
     use clm_varctl            , only : downreg_opt
     use clm_varctl            , only : CN_residual_opt
     use clm_varctl            , only : CN_partition_opt
-    use clm_time_manager       , only : get_step_size
+    use clm_time_manager       , only : get_step_size_real
     use CNVegStateType        , only : cnveg_state_type
     use CropType              , only : crop_type
     use CanopyStateType        , only : canopystate_type
@@ -298,11 +297,11 @@ contains
 
     ! -----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(aroot)   == (/bounds%endp/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(arepr)   == (/bounds%endp/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fpg_col) == (/bounds%endc/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(this%actual_storage_leafcn) >= (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((lbound(this%actual_storage_leafcn) <= (/bounds%begp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(aroot)   == (/bounds%endp/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(arepr)   == (/bounds%endp/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fpg_col) == (/bounds%endc/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(this%actual_storage_leafcn) >= (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((lbound(this%actual_storage_leafcn) <= (/bounds%begp/)), sourcefile, __LINE__)
 
     associate(                                                                                       &
          fpg                          => fpg_col                                                   , & ! Input:  [real(r8) (:)   ]  fraction of potential gpp (no units)
@@ -401,7 +400,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       ! patch loop to distribute the available N between the competing patches
       ! on the basis of relative demand, and allocate C and N to new growth and storage
@@ -1193,7 +1192,7 @@ contains
     use clm_varctl             , only : use_c13, use_c14
     use clm_varctl             , only : nscalar_opt, plant_ndemand_opt, substrate_term_opt, temp_scalar_opt
     use clm_varpar             , only : nlevdecomp
-    use clm_time_manager       , only : get_step_size
+    use clm_time_manager       , only : get_step_size_real
     use CanopyStateType        , only : canopystate_type
     use PhotosynthesisMod      , only : photosyns_type
     use CropType               , only : crop_type
@@ -1257,10 +1256,10 @@ contains
 
     ! -----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(aroot) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(arepr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(this%actual_leafcn) >= (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((lbound(this%actual_leafcn) <= (/bounds%begp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(aroot) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(arepr) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(this%actual_leafcn) >= (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((lbound(this%actual_leafcn) <= (/bounds%begp/)), sourcefile, __LINE__)
 
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type
@@ -1368,7 +1367,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       ! set number of days to recover negative cpool
       dayscrecover = params_inst%dayscrecover     ! loop over patches to assess the total plant N demand

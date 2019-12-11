@@ -314,7 +314,7 @@ contains
    ! seconds_per_year is the number of seconds in a year.
    !
    ! !USES:
-   use clm_time_manager     , only: get_step_size,get_days_per_year,get_curr_date
+   use clm_time_manager     , only: get_step_size_real,get_days_per_year,get_curr_date
    use clm_varpar           , only: max_patch_per_col
    use clm_varctl           , only: use_cndv, spinup_state
    use clm_varcon           , only: secspday
@@ -354,14 +354,14 @@ contains
    logical :: transient_landcover  ! whether this run has any prescribed transient landcover
    !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leaf_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(froot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(croot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(stem_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(totsomc_col)          == (/bounds%endc/))                               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_npools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(somc_fire_col)        == (/bounds%endc/))                               , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(froot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(croot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(stem_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(totsomc_col)          == (/bounds%endc/))                               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_npools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(somc_fire_col)        == (/bounds%endc/))                               , sourcefile, __LINE__)
 
    ! NOTE: VR      = Vertically Resolved
    !       conv.   = conversion
@@ -563,7 +563,7 @@ contains
 
      ! Get model step size
      ! calculate burned area fraction per sec
-     dt = real( get_step_size(), r8 )
+     dt = get_step_size_real()
 
      dayspyr = get_days_per_year()
      !

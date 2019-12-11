@@ -846,7 +846,6 @@ contains
     !
     ! !USES:
     use landunit_varcon	 , only : istsoil, istcrop 
-    use clm_time_manager , only : is_restart, get_nstep
     use clm_varctl, only : MM_Nuptake_opt    
     !
     ! !ARGUMENTS:
@@ -1001,31 +1000,6 @@ contains
        this%seedc_grc(g) = 0._r8
     end do
 
-    if ( .not. is_restart() .and. get_nstep() == 1 ) then
-
-       do p = bounds%begp,bounds%endp
-          if (pftcon%c3psn(patch%itype(p)) == 1._r8) then
-             this%grainc_patch(p)            = c12_cnveg_carbonstate_inst%grainc_patch(p)         * c3_r2
-             this%grainc_storage_patch(p)    = c12_cnveg_carbonstate_inst%grainc_storage_patch(p) * c3_r2
-             this%grainc_xfer_patch(p)       = c12_cnveg_carbonstate_inst%grainc_xfer_patch(p)    * c3_r2
-             this%dispvegc_patch(p)          = c12_cnveg_carbonstate_inst%dispvegc_patch(p)       * c3_r2
-             this%storvegc_patch(p)          = c12_cnveg_carbonstate_inst%storvegc_patch(p)       * c3_r2
-             this%totvegc_patch(p)           = c12_cnveg_carbonstate_inst%totvegc_patch(p)        * c3_r2
-             this%totc_patch(p)              = c12_cnveg_carbonstate_inst%totc_patch(p)           * c3_r2
-             this%woodc_patch(p)             = c12_cnveg_carbonstate_inst%woodc_patch(p)          * c3_r2
-          else
-             this%grainc_patch(p)            = c12_cnveg_carbonstate_inst%grainc_patch(p)         * c4_r2
-             this%grainc_storage_patch(p)    = c12_cnveg_carbonstate_inst%grainc_storage_patch(p) * c4_r2
-             this%grainc_xfer_patch(p)       = c12_cnveg_carbonstate_inst%grainc_xfer_patch(p)    * c4_r2
-             this%dispvegc_patch(p)          = c12_cnveg_carbonstate_inst%dispvegc_patch(p)       * c4_r2
-             this%storvegc_patch(p)          = c12_cnveg_carbonstate_inst%storvegc_patch(p)       * c4_r2
-             this%totvegc_patch(p)           = c12_cnveg_carbonstate_inst%totvegc_patch(p)        * c4_r2
-             this%totc_patch(p)              = c12_cnveg_carbonstate_inst%totc_patch(p)           * c4_r2
-             this%woodc_patch(p)             = c12_cnveg_carbonstate_inst%woodc_patch(p)          * c4_r2
-          end if
-       end do
-    end if
-
     ! initialize fields for special filters
 
     call this%SetValues (&
@@ -1046,7 +1020,7 @@ contains
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
     use clm_varcon       , only : c13ratio, c14ratio
     use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
-    use clm_time_manager , only : get_nstep, is_restart, get_nstep
+    use clm_time_manager , only : is_restart
     use landunit_varcon	 , only : istsoil, istcrop 
     use spmdMod          , only : mpicom
     use shr_mpi_mod      , only : shr_mpi_sum
@@ -1460,32 +1434,6 @@ contains
                    endif
                 end if
              end do
-             if ( .not. is_restart() .and. get_nstep() == 1 ) then
-
-                do p = bounds%begp,bounds%endp
-                  if (this%leafc_patch(p) .lt. 0.01_r8) then
-                   if (pftcon%c3psn(patch%itype(p)) == 1._r8) then
-                      this%grainc_patch(p)         = c12_cnveg_carbonstate_inst%grainc_patch(p)         * c3_r2
-                      this%grainc_storage_patch(p) = c12_cnveg_carbonstate_inst%grainc_storage_patch(p) * c3_r2
-                      this%grainc_xfer_patch(p)    = c12_cnveg_carbonstate_inst%grainc_xfer_patch(p)    * c3_r2
-                      this%dispvegc_patch(p)       = c12_cnveg_carbonstate_inst%dispvegc_patch(p)       * c3_r2
-                      this%storvegc_patch(p)       = c12_cnveg_carbonstate_inst%storvegc_patch(p)       * c3_r2
-                      this%totvegc_patch(p)        = c12_cnveg_carbonstate_inst%totvegc_patch(p)        * c3_r2
-                      this%totc_patch(p)           = c12_cnveg_carbonstate_inst%totc_patch(p)           * c3_r2
-                      this%woodc_patch(p)          = c12_cnveg_carbonstate_inst%woodc_patch(p)          * c3_r2
-                   else
-                      this%grainc_patch(p)         = c12_cnveg_carbonstate_inst%grainc_patch(p)         * c4_r2
-                      this%grainc_storage_patch(p) = c12_cnveg_carbonstate_inst%grainc_storage_patch(p) * c4_r2
-                      this%grainc_xfer_patch(p)    = c12_cnveg_carbonstate_inst%grainc_xfer_patch(p)    * c4_r2
-                      this%dispvegc_patch(p)       = c12_cnveg_carbonstate_inst%dispvegc_patch(p)       * c4_r2
-                      this%storvegc_patch(p)       = c12_cnveg_carbonstate_inst%storvegc_patch(p)       * c4_r2
-                      this%totvegc_patch(p)        = c12_cnveg_carbonstate_inst%totvegc_patch(p)        * c4_r2
-                      this%totc_patch(p)           = c12_cnveg_carbonstate_inst%totc_patch(p)           * c4_r2
-                      this%woodc_patch(p)          = c12_cnveg_carbonstate_inst%woodc_patch(p)          * c4_r2
-                   end if
-                  end if
-                end do
-             end if
              if ( present(num_reseed_patch) ) then
                 call shr_mpi_sum( num_reseed_patch, total_num_reseed_patch, mpicom )
                 if ( masterproc ) write(iulog,*) 'Total num_reseed, over all tasks = ', total_num_reseed_patch
@@ -2403,10 +2351,10 @@ contains
     integer  :: fp,fc           ! lake filter indices
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_cwdc_col)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_totlitc_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_totsomc_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_ctrunc_col)  == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_cwdc_col)    == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_totlitc_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_totsomc_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(soilbiogeochem_ctrunc_col)  == (/bounds%endc/)), sourcefile, __LINE__)
 
     ! calculate patch -level summary of carbon state
 
@@ -2561,14 +2509,14 @@ contains
     begp = bounds%begp
     endp = bounds%endp
 
-    SHR_ASSERT_ALL((ubound(conv_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wood_product_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(crop_product_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_frootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_livecrootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_deadcrootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_leafc_seed) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_deadstemc_seed) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(conv_cflux) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wood_product_cflux) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(crop_product_cflux) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_frootc_to_litter) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_livecrootc_to_litter) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_deadcrootc_to_litter) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_leafc_seed) == (/endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_deadstemc_seed) == (/endp/)), sourcefile, __LINE__)
 
     old_weight_was_zero = patch_state_updater%old_weight_was_zero(bounds)
     patch_grew = patch_state_updater%patch_grew(bounds)

@@ -23,6 +23,7 @@ module initInterpMod
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
   use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip, iflag_area
+  use IssueFixedMetadataHandler, only : copy_issue_fixed_metadata
   use glcBehaviorMod , only: glc_behavior_type
   use ncdio_utils    , only: find_var_on_file
   use ncdio_pio
@@ -39,6 +40,7 @@ module initInterpMod
 
   ! Private methods
 
+  private :: copy_metadata
   private :: check_dim_subgrid
   private :: check_dim_level
   private :: skip_var
@@ -233,6 +235,8 @@ contains
 
     call ncd_pio_openfile (ncidi, trim(filei) , 0)
     call ncd_pio_openfile (ncido, trim(fileo),  ncd_write)
+
+    call copy_metadata(ncidi, ncido)
 
     call check_interp_non_ciso_to_ciso(ncidi)
 
@@ -697,6 +701,28 @@ contains
   end subroutine initInterp
 
   !-----------------------------------------------------------------------
+  subroutine copy_metadata(ncidi, ncido)
+    !
+    ! !DESCRIPTION:
+    ! Copy any necessary global metadata from the input file to the output file
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncidi ! input (source) file
+    type(file_desc_t), intent(inout) :: ncido ! output (destination) file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'copy_metadata'
+    !-----------------------------------------------------------------------
+
+    call ncd_redef(ncido)
+    call copy_issue_fixed_metadata(ncidi, ncido)
+    call ncd_enddef(ncido)
+
+  end subroutine copy_metadata
+
+
+  !-----------------------------------------------------------------------
   function skip_var(iflag_interpinic)
     !
     ! !DESCRIPTION:
@@ -1066,11 +1092,11 @@ contains
     real(r8), pointer   :: rbuf2do_levelsi(:,:) ! array on output horiz grid, but input levels
     ! --------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2di%get_vec_beg() == begi, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2di%get_vec_end() == endi, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2do%get_vec_beg() == bego, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2do%get_vec_end() == endo, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(sgridindex) == (/endo/)), sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2di%get_vec_beg() == begi, sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2di%get_vec_end() == endi, sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2do%get_vec_beg() == bego, sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2do%get_vec_end() == endo, sourcefile, __LINE__)
 
     multilevel_interpolator => interp_multilevel_container%find_interpolator( &
          lev_dimname = var2do%get_lev_dimname(), &
