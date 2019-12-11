@@ -7,24 +7,23 @@
 #
 # Note: You must set the environment BLDDIR before running this - e.g.
 # export BLDDIR=/glade/scratch/sacks/test_lilac_1205a/bld
+#
+# ESMFMKFILE must also be set in the environment
 #================================================================================
 
-ESMFMKFILE   = /glade/work/turuncu/ESMF/8.0.0b50/lib/libg/Linux.intel.64.mpt.default/esmf.mk
-ESMF_LIB_DIR = /glade/work/turuncu/ESMF/8.0.0b50/lib/libg/Linux.intel.64.mpt.default
 include $(ESMFMKFILE)
 
 SHARED_BLD_DIR = $(BLDDIR)/intel/mpt/debug/nothreads/nuopc
 CTSM_BLD_DIR   = $(SHARED_BLD_DIR)/nuopc/esmf
 DEPENDS_LIB    = $(SHARED_BLD_DIR)/lib
 SHR_LIB        = $(SHARED_BLD_DIR)/nuopc/esmf/c1a1l1/lib
-SHR_INC        = $(SHARED_BLD_DIR)/nuopc/esmf/c1a1l1/csm_share
 CTSM_INC       = $(CTSM_BLD_DIR)/clm/obj
 
 FFLAGS  = -qno-opt-dynamic-align  -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source -qopt-report -xCORE_AVX2 -no-fma  -O0 -g -check uninit -check bounds -check pointers -fpe0 -check noarg_temp_created -DLINUX  -DFORTRANUNDERSCORE -DCPRINTEL -DDEBUG -DHAVE_MPI -DPIO1 -DHAVE_SLASHPROC -D_PNETCDF -DESMF_VERSION_MAJOR=7 -DESMF_VERSION_MINOR=1 -free
 
-LIBS = -L$(CTSM_BLD_DIR)/lib -lclm -L$(SHR_LIB) -lcsm_share -L$(DEPENDS_LIB) -lpiof -lpioc -lgptl -lmct -lmpeu -mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L$(ESMF_LIB_DIR) -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -Wl,-rpath,$(ESMF_LIB_DIR) -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf -cxxlib
+LIBS = -L$(CTSM_BLD_DIR)/lib -lclm -L$(SHR_LIB) -lcsm_share -L$(DEPENDS_LIB) -lpiof -lpioc -lgptl -lmct -lmpeu -mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L$(ESMF_LIBSDIR) -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -Wl,-rpath,$(ESMF_LIBSDIR) -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib  -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf -cxxlib
 
-INCLUDES  = -I$(CTSM_BLD_DIR)/include -I$(SHR_INC) -I$(CTSM_INC)
+INCLUDES  = -I$(CTSM_INC)
 
 #================================================================================
 # Compiler and linker rules using ESMF_ variables supplied by esmf.mk
