@@ -556,8 +556,8 @@ contains
     begc = bounds%begc; endc = bounds%endc
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(t_ref2m_patch)  == (/endp/))          , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno_col)   == (/endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(t_ref2m_patch)  == (/endp/))          , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno_col)   == (/endc,nlevgrnd/)) , sourcefile, __LINE__)
 
     dtime = get_step_size()
     nstep = get_nstep()

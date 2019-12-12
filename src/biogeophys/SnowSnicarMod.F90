@@ -313,15 +313,15 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(coszen)         == (/bounds%endc/)),                 errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osno_liq)     == (/bounds%endc, 0/)),              errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osno_ice)     == (/bounds%endc, 0/)),              errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osno_total)   == (/bounds%endc/)),                 errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(snw_rds)        == (/bounds%endc, 0/)),              errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(mss_cnc_aer_in) == (/bounds%endc, 0, sno_nbr_aer/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(albsfc)         == (/bounds%endc, numrad/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(albout)         == (/bounds%endc, numrad/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(flx_abs)        == (/bounds%endc, 1, numrad/)),      errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(coszen)         == (/bounds%endc/)),                 sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osno_liq)     == (/bounds%endc, 0/)),              sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osno_ice)     == (/bounds%endc, 0/)),              sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osno_total)   == (/bounds%endc/)),                 sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(snw_rds)        == (/bounds%endc, 0/)),              sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(mss_cnc_aer_in) == (/bounds%endc, 0, sno_nbr_aer/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(albsfc)         == (/bounds%endc, numrad/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(albout)         == (/bounds%endc, numrad/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(flx_abs)        == (/bounds%endc, 1, numrad/)),      sourcefile, __LINE__)
 
     associate(& 
          snl         =>   col%snl                           , & ! Input:  [integer (:)]  negative number of snow layers (col) [nbr]
@@ -1026,7 +1026,7 @@ contains
     !   I am aware.
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size, get_nstep
+    use clm_time_manager , only : get_step_size_real, get_nstep
     use clm_varpar       , only : nlevsno
     use clm_varcon       , only : spval
     use shr_const_mod    , only : SHR_CONST_RHOICE, SHR_CONST_PI
@@ -1097,7 +1097,7 @@ contains
   
 
       ! set timestep and step interval
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! loop over columns that have at least one snow layer
       do fc = 1, num_snowc

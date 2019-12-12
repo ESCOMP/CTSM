@@ -9,7 +9,6 @@ module LakeTemperatureMod
   !
   ! !USES
   use shr_kind_mod      , only : r8 => shr_kind_r8
-  use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use ch4Mod            , only : ch4_type
   use EnergyFluxType    , only : energyflux_type
@@ -115,7 +114,7 @@ contains
     use QSatMod            , only : QSat
     use TridiagonalMod     , only : Tridiagonal
     use clm_varpar         , only : nlevlak, nlevgrnd, nlevsno
-    use clm_time_manager   , only : get_step_size
+    use clm_time_manager   , only : get_step_size_real
     use clm_varcon         , only : hfus, cpliq, cpice, tkwat, tkice, denice
     use clm_varcon         , only : vkc, grav, denh2o, tfrz, cnfac
     use clm_varctl         , only : iulog, use_lch4
@@ -268,7 +267,7 @@ contains
     ! 1!) Initialization
     ! Determine step size
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! Initialize constants
     cwat = cpliq*denh2o ! water heat capacity per unit volume
@@ -1108,9 +1107,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(cv)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(tktopsoillay) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(cv)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(tktopsoillay) == (/bounds%endc/)),           sourcefile, __LINE__)
 
      associate(                                           & 
           snl         => col%snl                        , & ! Input:  [integer (:)]  number of snow layers                    
@@ -1266,7 +1265,7 @@ contains
      ! Errors will be trapped at the end of LakeTemperature.
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
+     use clm_time_manager , only : get_step_size_real
      use clm_varcon       , only : tfrz, hfus, denh2o, denice, cpliq, cpice
      use clm_varpar       , only : nlevsno, nlevgrnd, nlevlak
      !
@@ -1298,9 +1297,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(cv)      == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(cv_lake) == (/bounds%endc, nlevlak/)),  errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(lhabs)   == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(cv)      == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(cv_lake) == (/bounds%endc, nlevlak/)),  sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(lhabs)   == (/bounds%endc/)),           sourcefile, __LINE__)
 
      associate(                                                   & 
           dz_lake         => col%dz_lake                        , & ! Input:  [real(r8)  (:,:) ] lake layer thickness (m)              
@@ -1329,7 +1328,7 @@ contains
 
        ! Get step size
 
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        ! Initialization
 

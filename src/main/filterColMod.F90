@@ -13,7 +13,6 @@ module filterColMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_log_mod  , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   use GridcellType , only : grc
   use LandunitType , only : lun
@@ -116,8 +115,8 @@ contains
     character(len=*), parameter :: subname = 'col_filter_from_index_array'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL(indices_col >= bounds%begc, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL(indices_col <= bounds%endc, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL(indices_col >= bounds%begc, sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL(indices_col <= bounds%endc, sourcefile, __LINE__)
 
     filter = col_filter_empty(bounds)
 
@@ -147,7 +146,7 @@ contains
     character(len=*), parameter :: subname = 'col_filter_from_logical_array'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(logical_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(logical_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     filter = col_filter_empty(bounds)
 
@@ -181,7 +180,7 @@ contains
     character(len=*), parameter :: subname = 'col_filter_from_logical_array_active_only'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(logical_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(logical_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     filter = col_filter_empty(bounds)
 
@@ -255,7 +254,7 @@ contains
     character(len=*), parameter :: subname = 'col_filter_from_lunflags'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(lunflags) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(lunflags) == (/bounds%endl/)), sourcefile, __LINE__)
 
     filter = col_filter_empty(bounds)
 
@@ -299,7 +298,7 @@ contains
     character(len=*), parameter :: subname = 'col_filter_from_grcflags_ltypes'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(grcflags) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(grcflags) == (/bounds%endg/)), sourcefile, __LINE__)
 
     filter = col_filter_empty(bounds)
     
@@ -351,7 +350,7 @@ contains
     character(len=*), parameter :: subname = 'col_filter_from_filter_and_logical_array'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(logical_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(logical_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     filter = col_filter_empty(bounds)
 

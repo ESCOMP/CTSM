@@ -37,6 +37,7 @@ module WaterFluxType
      real(r8), pointer :: qflx_snow_unload_patch(:)      ! patch rate of canopy snow unloading (mm H2O/s)
      real(r8), pointer :: qflx_liq_grnd_col        (:)   ! col liquid (rain+irrigation) on ground after interception (mm H2O/s) [+]
      real(r8), pointer :: qflx_snow_grnd_col       (:)   ! col snow on ground after interception (mm H2O/s) [+]
+     real(r8), pointer :: qflx_rain_plus_snomelt_col(:)  ! col rain plus snow melt falling on the soil (mm/s)
      real(r8), pointer :: qflx_sub_snow_patch      (:)   ! patch sublimation rate from snow pack (mm H2O /s) [+]
      real(r8), pointer :: qflx_sub_snow_col        (:)   ! col sublimation rate from snow pack (mm H2O /s) [+]
      real(r8), pointer :: qflx_evap_soi_patch      (:)   ! patch soil evaporation (mm H2O/s) (+ = to atm)
@@ -90,6 +91,7 @@ module WaterFluxType
      real(r8), pointer :: qflx_h2osfc_to_ice_col   (:)   ! col conversion of h2osfc to ice
      real(r8), pointer :: qflx_snow_h2osfc_col     (:)   ! col snow falling on surface water
      real(r8), pointer :: qflx_too_small_h2osfc_to_soil_col(:) ! col h2osfc transferred to soil if h2osfc is below some threshold (mm H2O /s)
+     real(r8), pointer :: qflx_snow_percolation_col(:,:) ! col liquid percolation out of the bottom of snow layer j (mm H2O /s)
 
      ! Dynamic land cover change
      real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux
@@ -191,6 +193,9 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_snow_grnd_col, name = 'qflx_snow_grnd_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_rain_plus_snomelt_col, name = 'qflx_rain_plus_snomelt_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_sub_snow_col, name = 'qflx_sub_snow_col', &
@@ -326,6 +331,11 @@ contains
     call AllocateVar1d(var = this%qflx_too_small_h2osfc_to_soil_col, name = 'qflx_too_small_h2osfc_to_soil_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+
+    call AllocateVar2d(var = this%qflx_snow_percolation_col, name = 'qflx_snow_percolation_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         dim2beg = -nlevsno+1, dim2end = 0)
 
     call AllocateVar1d(var = this%qflx_liq_dynbal_grc, name = 'qflx_liq_dynbal_grc', &
          container = tracer_vars, &
@@ -619,7 +629,7 @@ contains
          units='mm/s',  &
          avgflag='A', &
          long_name=this%info%lname('canopy transpiration'), &
-         ptr_patch=this%qflx_tran_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
+         ptr_patch=this%qflx_tran_veg_patch, c2l_scale_type='urbanf')
 
     call hist_addfld1d ( &
          fname=this%info%fname('QSNOEVAP'), &
@@ -846,6 +856,11 @@ contains
     ! Other qflx_glcice fluxes intentionally remain unset (spval) outside the do_smb
     ! filter, so that they are flagged as missing value outside that filter.
     this%qflx_glcice_dyn_water_flux_col(bounds%begc:bounds%endc) = 0._r8
+
+    ! These fluxes are never set for non-vegetated landunits, but we want their values to
+    ! be 0 there, so initialize the fluxes to 0 everywhere
+    this%qflx_tran_veg_patch(bounds%begp:bounds%endp) = 0._r8
+    this%qflx_evap_veg_patch(bounds%begp:bounds%endp) = 0._r8
 
     ! needed for CNNLeaching 
     do c = bounds%begc, bounds%endc

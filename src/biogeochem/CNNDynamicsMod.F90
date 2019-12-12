@@ -156,7 +156,7 @@ contains
        waterfluxbulk_inst, soilbiogeochem_nitrogenflux_inst)
 
 
-    use clm_time_manager , only : get_days_per_year, get_step_size
+    use clm_time_manager , only : get_days_per_year
     use shr_sys_mod      , only : shr_sys_flush
     use clm_varcon       , only : secspday, spval
  
@@ -200,7 +200,7 @@ contains
     ! All N fixation goes to the soil mineral N pool.
     !
     ! !USES:
-    use clm_time_manager , only : get_days_per_year, get_step_size
+    use clm_time_manager , only : get_days_per_year
     use shr_sys_mod      , only : shr_sys_flush
     use clm_varcon       , only : secspday, spval
     use CNSharedParamsMod    , only: use_fun

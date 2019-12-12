@@ -165,13 +165,14 @@ OPTIONS
      -dynamic_vegetation      Toggle for dynamic vegetation model. (default is off)
                               (can ONLY be turned on when BGC type is 'cn' or 'bgc')
                               This turns on the namelist variable: use_cndv
+                              (Deprecated, this will be removed)
      -fire_emis               Produce a fire_emis_nl namelist that will go into the
                               "drv_flds_in" file for the driver to pass fire emissions to the atm.
                               (Note: buildnml copies the file for use by the driver)
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36]
                               (default is 0) (standard option with land-ice model is 10)
      -help [or -h]            Print usage to STDOUT.
-     -light_res <value>       Resolution of lightning dataset to use for CN fire (hcru or T62)
+     -light_res <value>       Resolution of lightning dataset to use for CN fire (360x720 or 94x192)
      -ignore_ic_date          Ignore the date on the initial condition files
                               when determining what input initial condition file to use.
      -ignore_ic_year          Ignore just the year part of the date on the initial condition files
@@ -1291,6 +1292,8 @@ sub setup_cmdl_dynamic_vegetation {
         my @valid_values   = $definition->get_valid_values( $var );
         $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
      }
+     $log->warning("The use_cndv=T option is deprecated. We do NOT recommend using it." . 
+                   " It's known to have issues and it's not calibrated.");
   }
 }
 #-------------------------------------------------------------------------------
@@ -1876,19 +1879,6 @@ sub setup_logic_start_type {
   my $var = "start_type";
   my $drv_start_type = $nl->get_value($var);
   my $my_start_type  = $nl_flags->{'clm_start_type'};
-  my $nsrest         = $nl->get_value('override_nsrest');
-
-  if ( defined($nsrest) ) {
-    if ( $nsrest == 0 ) { $my_start_type = "startup";  }
-    if ( $nsrest == 1 ) { $my_start_type = "continue"; }
-    if ( $nsrest == 3 ) { $my_start_type = "branch";   }
-    if ( "$my_start_type" eq "$drv_start_type" ) {
-      $log->fatal_error("no need to set override_nsrest to same as start_type.");
-    }
-    if ( "$drv_start_type" !~ /startup/ ) {
-      $log->fatal_error("can NOT set override_nsrest if driver is NOT a startup type.");
-    }
-  }
 
   if ( $my_start_type =~ /branch/ ) {
     if (not defined $nl->get_value('nrevsn')) {
@@ -2880,13 +2870,6 @@ sub setup_logic_methane {
         $log->fatal_error("lake_decomp_fact set without allowlakeprod=.true.");
       }
     }
-    my $anoxia = $nl->get_value('anoxia');
-    if ( ! defined($anoxia) ||
-         (defined($anoxia) && ! &value_is_true($anoxia)) ) {
-      if ( defined($nl->get_value('anoxia_wtsat')) ) {
-        $log->fatal_error("anoxia_wtsat set without anoxia=.true.");
-      }
-    }
     my $pftspec_rootprof = $nl->get_value('pftspecific_rootingprofile');
     if ( ! defined($pftspec_rootprof) ||
          (defined($pftspec_rootprof) && &value_is_true($pftspec_rootprof) ) ) {
@@ -2895,7 +2878,7 @@ sub setup_logic_methane {
       }
     }
   } else {
-    my @vars = ( "allowlakeprod", "anoxia", "anoxia_wtsat", "pftspecific_rootingprofile" );
+    my @vars = ( "allowlakeprod", "anoxia", "pftspecific_rootingprofile" );
     foreach my $var ( @vars ) {
       if ( defined($nl->get_value($var)) ) {
         $log->fatal_error("$var set without methane model configuration on (use_lch4)");
@@ -3580,6 +3563,48 @@ sub setup_logic_snowpack {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow_glc');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow_glc_ela');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmin_1');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmin_2');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_l_1');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_l_2');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_u_1');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_u_2');
+
+  my $dzmin1 = $nl->get_value('snow_dzmin_1');
+  my $dzmin2 = $nl->get_value('snow_dzmin_2');
+  my $dzmax_l1 = $nl->get_value('snow_dzmax_l_1');
+  my $dzmax_l2 = $nl->get_value('snow_dzmax_l_2');
+  my $dzmax_u1 = $nl->get_value('snow_dzmax_u_1');
+  my $dzmax_u2 = $nl->get_value('snow_dzmax_u_2');
+
+  if ($dzmin1 != 0.01 || $dzmin2 != 0.015 || $dzmax_u1 != 0.02 || $dzmax_u2 != 0.05 || $dzmax_l1 != 0.03 || $dzmax_l2 != 0.07) {
+     $log->warning("Setting any of the following namelist variables to NON DEFAULT values remains untested as of Sep 6, 2019: snow_dzmin_1 & 2, snow_dzmax_u_1 & 2, snow_dzmax_l_1 & 2." );
+     $log->warning("Leave these variables unspecified in user_nl_clm in order to use the default values." );
+  }
+  if ($dzmin1 <= 0.0 || $dzmin2 <= 0.0 || $dzmax_u1 <= 0.0 || $dzmax_u2 <= 0.0 || $dzmax_l1 <= 0.0 || $dzmax_l2 <= 0.0) {
+     $log->fatal_error('One or more of the snow_dzmin_* and/or snow_dzmax_* were set incorrectly to be <= 0');
+  }
+  if ($dzmin2 <= $dzmin1) {
+     $log->fatal_error('snow_dzmin_2 was set incorrectly to be <= snow_dzmin_1');
+  }
+  if ($dzmax_l2 <= $dzmax_l1) {
+     $log->fatal_error('snow_dzmax_l_2 was set incorrectly to be <= snow_dzmax_l_1');
+  }
+  if ($dzmax_u2 <= $dzmax_u1) {
+     $log->fatal_error('snow_dzmax_u_2 was set incorrectly to be <= snow_dzmax_u_1');
+  }
+  if ($dzmin1 >= $dzmax_u1) {
+     $log->fatal_error('snow_dzmin_1 was set incorrectly to be >= snow_dzmax_u_1');
+  }
+  if ($dzmin2 >= $dzmax_u2) {
+     $log->fatal_error('snow_dzmin_2 was set incorrectly to be >= snow_dzmax_u_2');
+  }
+  if ($dzmax_u1 >= $dzmax_l1) {
+     $log->fatal_error('snow_dzmax_u_1 was set incorrectly to be >= snow_dzmax_l_1');
+  }
+  if ($dzmax_u2 >= $dzmax_l2) {
+     $log->fatal_error('snow_dzmax_u_2 was set incorrectly to be >= snow_dzmax_l_2');
+  }
 
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_overburden_compaction_method')) eq 'Vionnet2012') {
      # overburden_compress_tfactor isn't used if we're using the Vionnet2012
