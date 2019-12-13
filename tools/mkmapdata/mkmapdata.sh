@@ -484,19 +484,21 @@ until ((nfile>${#INGRID[*]})); do
       echo "Skipping creation of ${OUTFILE[nfile]} as fast mode is on so skipping large files in NetCDF4 format"
    else
 
-      WD=/glade/work/slevis/git/mkmapdata_ocgis/tools/mkmapdata
+      PATH_PREFIX=/glade/work/slevis
+      WD=${PATH_PREFIX}/git/mkmapdata_ocgis/tools/mkmapdata
       SS_PATH=${WD}/subsets/spatial_subset.nc
       rm -rf ${SS_PATH}
       CHUNKDIR=${WD}/chunking
       rm -rf ${CHUNKDIR}
-      CRWG="ocli chunked-rwg"
+      OCLI_FILE=${PATH_PREFIX}/git_ocgis/ocgis/src/ocgis/ocli.py
+      CRWG="python ${OCLI_FILE} chunked-rwg"
 
       if [ "$type" = "global" ]; then
          NCHUNKS_DST=20
          cmd="$mpirun ${CRWG} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES}"
          runcmd $cmd
       else
-         NCHUNKS_DST=2
+         NCHUNKS_DST=1
          cmd="$mpirun ${CRWG} --source ${INGRID[nfile]} --destination ${GRIDFILE} --spatial_subset --no_genweights --spatial_subset_path ${SS_PATH} --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]}"
          runcmd $cmd
 
