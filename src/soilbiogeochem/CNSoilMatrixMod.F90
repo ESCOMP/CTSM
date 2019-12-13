@@ -586,11 +586,29 @@ contains
                soilmatrixc_cap(c,:,1) = -matmul(AKinv(1:ndecomp_pools_vr,1:ndecomp_pools_vr),cs_soil%in_acc(c,1:ndecomp_pools_vr))
                soilmatrixn_cap(c,:,1) = -matmul(AKinvn(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ns_soil%in_nacc(c,1:ndecomp_pools_vr))
             end do
-         
+
+            do i = 1,ndecomp_pools
+               do j = 1,nlevdecomp
+                  do fc = 1,num_soilc
+                     c = filter_soilc(fc)
+                     if(soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1) .lt. 0)then
+                        soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1) = 0._r8
+                     endif
+                     if(soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1) .lt. 0)then
+                        soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1) = 0._r8
+                     endif
+                  end do
+               end do
+            end do
+                        
+
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               if(any(soilmatrixc_cap(c,:,1) .lt. 0) .or. any(soilmatrixc_cap(c,:,1) .gt. 1.e+6_r8) &
-             .or. any(soilmatrixn_cap(c,:,1) .lt. 0) .or. any(soilmatrixn_cap(c,:,1) .gt. 1.e+6_r8))then
+!               if(any(soilmatrixc_cap(c,:,1) .lt. 0) .or. any(soilmatrixc_cap(c,:,1) .gt. 1.e+6_r8) &
+!             .or. any(soilmatrixn_cap(c,:,1) .lt. 0) .or. any(soilmatrixn_cap(c,:,1) .gt. 1.e+6_r8))then
+!               print*,'maxcap',minval(soilmatrixc_cap(c,:,1)),maxval(soilmatrixc_cap(c,:,1)),minval(soilmatrixn_cap(c,:,1)),maxval(soilmatrixn_cap(c,:,1))
+               if(any(soilmatrixc_cap(c,:,1) .gt. 1.e+10_r8) .or. any(soilmatrixn_cap(c,:,1) .gt. 1.e+10_r8))then
+!                  print*,'reset value'
                   soilmatrixc_cap(c,:,1) = matrix_Cinter%V(c,:)
                   soilmatrixn_cap(c,:,1) = matrix_Ninter%V(c,:)
                end if
@@ -598,11 +616,12 @@ contains
 
             ! If spin up is on, the capacity replaces the pool size with capacity.
             ! Copy the capacity into a 3D variable, and be ready to write to history files.
-            do i=1,ndecomp_pools
+            do i=1,ndecomp_pools 
                do j = 1,nlevdecomp
                   do fc = 1,num_soilc
                      c = filter_soilc(fc)
                      if(isspinup)then
+!                        print*,'resetting value to capacity',c,i,j,cs_soil%decomp_cpools_vr_col(c,j,i),soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
                         cs_soil%decomp_cpools_vr_col(c,j,i) =  soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
                         if(floating_cn_ratio_decomp_pools(i))then
                            ns_soil%decomp_npools_vr_col(c,j,i) =  soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)
