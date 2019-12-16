@@ -197,7 +197,7 @@ module CLMFatesInterfaceMod
    ! developer will at least question its usage (RGK)
    private :: hlm_bounds_to_fates_bounds
 
-   ! The GetAndSetFatesTime function is used to get the current time from the CLM 
+   ! The GetAndSetTime function is used to get the current time from the CLM 
    ! time procedures and then set to the fates global time variables during restart, 
    ! init_coldstart, and dynamics_driv function calls
    private :: GetAndSetTime
