@@ -674,6 +674,8 @@ contains
                matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + tranr/dt
                matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + tranr/dt
             end if
+         else
+            ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
          end if !use_matrixcn
          leafc_storage_to_xfer(p)  = tranr * leafc_storage(p)/dt    
          frootc_storage_to_xfer(p) = tranr * frootc_storage(p)/dt    
@@ -695,6 +697,8 @@ contains
               matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + tranr/dt
               matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + tranr/dt
            end if
+        else
+           ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
         end if !use_matrixcn  
         leafn_storage_to_xfer(p)  = tranr * leafn_storage(p)/dt    
         frootn_storage_to_xfer(p) = tranr * frootn_storage(p)/dt   
@@ -724,6 +728,9 @@ contains
               matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + t1
               matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + t1
            end if
+        else
+           ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+           !                                        and CNNStateUpdate1::NStateUpdate1
         end if !use_matrixcn
         leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)    
         frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)   
@@ -1065,6 +1072,9 @@ contains
                           matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
                           matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt
                      end if
+                  else
+                     ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+                     !                                        and CNNStateUpdate1::NStateUpdate1
                   end if  ! use_matrixcn
                   leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
                   frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
@@ -1476,6 +1486,9 @@ contains
                         matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
                         matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt 
                      end if
+                  else
+                     ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+                     !                                        and CNNStateUpdate1::NStateUpdate1
                   end if
                   leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
                   frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
@@ -1615,6 +1628,9 @@ contains
                     matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + bgtr(p) 
                     matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + bgtr(p)
                  end if
+              else
+                 ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+                 !                                        and CNNStateUpdate1::NStateUpdate1
               end if !use_matrixcn
                if (woody(ivt(p)) == 1.0_r8) then
                   livestemc_storage_to_xfer(p)  = livestemc_storage(p) * bgtr(p)
@@ -1638,6 +1654,9 @@ contains
                      matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + bgtr(p) 
                      matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + bgtr(p)
                   end if
+               else
+                 ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+                 !                                        and CNNStateUpdate1::NStateUpdate1
                end if !use_matrixcn
                if (woody(ivt(p)) == 1.0_r8) then
                   livestemn_storage_to_xfer(p)  = livestemn_storage(p) * bgtr(p)
@@ -2613,6 +2632,9 @@ contains
                   matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + t1
                   matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + t1
                end if
+            else
+               ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+               !                                        and CNNStateUpdate1::NStateUpdate1
             end if !use_matrixcn
             leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)
             frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)
@@ -2653,6 +2675,9 @@ contains
                   matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + 1.0_r8 / dt
                   matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + 1.0_r8 / dt
                end if
+            else
+               ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+               !                                        and CNNStateUpdate1::NStateUpdate1
             end if !use_matrixcn
             leafc_xfer_to_leafc(p)   = leafc_xfer(p) / dt
             frootc_xfer_to_frootc(p) = frootc_xfer(p) / dt
@@ -2820,6 +2845,9 @@ contains
                   else
                      frootc_to_litter(p) = 0
                   end if
+               else
+                  ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+                  !                                        and CNNStateUpdate1::NStateUpdate1
                end if ! use_matrixcn
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
@@ -2853,6 +2881,9 @@ contains
                      else
                         livestemc_to_litter(p) = 0
                      end if
+                  else
+                     ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+                     !                                        and CNNStateUpdate1::NStateUpdate1
                   end if ! use_matrixcn
                end if
             else
@@ -2871,6 +2902,9 @@ contains
                   else
                      frootc_to_litter(p) = 0
                   end if
+               else
+                  ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+                  !                                        and CNNStateUpdate1::NStateUpdate1
                end if !use_matrixcn
             end if
             
@@ -2883,6 +2917,8 @@ contains
                      else
                         leafc_to_litter(p) = 0
                      end if
+                  else
+                     ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                   end if !use_matrixcn 
                endif
                if(frootc_to_litter(p)*dt.gt.frootc(p))then
@@ -2893,6 +2929,8 @@ contains
                      else
                         frootc_to_litter(p) = 0
                      end if
+                  else
+                     ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                   end if !use_matrixcn
                endif
             end if
@@ -2920,6 +2958,9 @@ contains
                       leafn_to_litter(p)   = 0
                       leafn_to_retransn(p) = 0
                   end if
+               else
+                  ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+                  !                                        and CNNStateUpdate1::NStateUpdate1
                end if !use_matrixcn
                
                denom = ( leafn_to_retransn(p) + leafn_to_litter(p) )
@@ -2947,6 +2988,8 @@ contains
                       leafn_to_litter(p)   = 0
                       leafn_to_retransn(p) = 0
                   end if
+               else
+                  ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
             end if    
 
@@ -2958,6 +3001,8 @@ contains
                else
                   frootn_to_litter(p) = 0
                end if
+            else
+               ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
             end if !use_matrixcn
             
             if (CNratio_floating .eqv. .true.) then    
@@ -2989,6 +3034,8 @@ contains
                   else
                      frootn_to_litter(p) = 0
                   end if
+               else
+                  ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
             end if  
             
@@ -3153,6 +3200,8 @@ contains
                      matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p))/ leafn(p)
                      matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
+               else
+                  ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
 
                denom = ( leafn_to_retransn(p) + leafn_to_litter(p) )
@@ -3178,6 +3227,8 @@ contains
                      matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p)) / leafn(p)
                      matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
                   end if
+               else
+                  ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
             end if    
 
@@ -3201,6 +3252,8 @@ contains
                      leafn_to_litter(p)   = 0
                      leafn_to_retransn(p) = 0
                   end if
+               else
+                  ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
                if (frootc(p) == 0.0_r8) then    
                    frootn_to_litter(p) = 0.0_r8    
@@ -3219,6 +3272,8 @@ contains
                if(frootn(p) .ne. 0)then
                   matrix_nphtransfer(p,ifroot_to_iout_phn) = frootn_to_litter(p) / frootn(p)
                end if
+            else
+               ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
             end if !use_matrixcn
          end if
 
@@ -3335,6 +3390,9 @@ contains
             if(use_matrixcn)then
                matrix_phtransfer(p,ilivestem_to_ideadstem_phc)  = lwtop
                matrix_nphtransfer(p,ilivestem_to_ideadstem_phn) = lwtop / deadwdcn(ivt(p))
+            else
+               ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+               !                                        and CNNStateUpdate1::NStateUpdate1
             end if
             if (CNratio_floating .eqv. .true.) then    
                if (livestemc(p) == 0.0_r8) then    
@@ -3350,6 +3408,8 @@ contains
                   else
                      livestemn_to_deadstemn(p) = 0
                   end if
+               else
+                  ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if
             end if    
             
@@ -3365,6 +3425,9 @@ contains
             if(use_matrixcn)then
                matrix_phtransfer(p,ilivecroot_to_ideadcroot_phc)  = lwtop
                matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = lwtop / deadwdcn(ivt(p))
+            else
+               ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+               !                                        and CNNStateUpdate1::NStateUpdate1
             end if !use_matrixcn
             
             if (CNratio_floating .eqv. .true.) then    
@@ -3379,6 +3442,8 @@ contains
                   if (livecrootn(p) .ne.0.0_r8 )then
                      matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = livecrootn_to_deadcrootn(p) / livecrootn(p)
                   end if
+               else
+                  ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
             end if    
             

@@ -311,6 +311,7 @@ contains
                    + cf_veg%grainc_to_seed_patch(p) * dt
            end if
         else
+           ! NOTE: Other changes for matrix code are in CNPhenology EBK (11/26/2019)
            if (ivt(p) >= npcropmin) then
               cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
                    - cf_veg%crop_seedc_to_leaf_patch(p) * dt &
@@ -368,6 +369,8 @@ contains
            cs_veg%leafc_storage_patch(p)   = cs_veg%leafc_storage_patch(p)  + cf_veg%cpool_to_leafc_storage_patch(p)*dt
            cs_veg%frootc_patch(p)          = cs_veg%frootc_patch(p)         + cf_veg%cpool_to_frootc_patch(p)*dt
            cs_veg%frootc_storage_patch(p)  = cs_veg%frootc_storage_patch(p) + cf_veg%cpool_to_frootc_storage_patch(p)*dt
+         else
+           ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
          end if !not use_matrixcn
          if (woody(ivt(p)) == 1._r8) then
             if (carbon_resp_opt == 1) then
@@ -395,6 +398,8 @@ contains
                cs_veg%livecrootc_storage_patch(p) = cs_veg%livecrootc_storage_patch(p) + cf_veg%cpool_to_livecrootc_storage_patch(p)*dt
                cs_veg%deadcrootc_patch(p)         = cs_veg%deadcrootc_patch(p)         + cf_veg%cpool_to_deadcrootc_patch(p)*dt
                cs_veg%deadcrootc_storage_patch(p) = cs_veg%deadcrootc_storage_patch(p) + cf_veg%cpool_to_deadcrootc_storage_patch(p)*dt
+            else
+               ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
          end if
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
@@ -412,6 +417,8 @@ contains
                cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p)  + cf_veg%cpool_to_livestemc_storage_patch(p)*dt
                cs_veg%grainc_patch(p)             = cs_veg%grainc_patch(p)             + cf_veg%cpool_to_grainc_patch(p)*dt
                cs_veg%grainc_storage_patch(p)     = cs_veg%grainc_storage_patch(p)     + cf_veg%cpool_to_grainc_storage_patch(p)*dt
+            else
+               ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if  !not use_matrixcn
          end if
 
@@ -471,6 +478,8 @@ contains
           cs_veg%leafc_xfer_patch(p)     = cs_veg%leafc_xfer_patch(p)     + cf_veg%leafc_storage_to_xfer_patch(p)*dt
           cs_veg%frootc_storage_patch(p) = cs_veg%frootc_storage_patch(p) - cf_veg%frootc_storage_to_xfer_patch(p)*dt
           cs_veg%frootc_xfer_patch(p)    = cs_veg%frootc_xfer_patch(p)    + cf_veg%frootc_storage_to_xfer_patch(p)*dt
+         else
+           ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
          end if !not use_matrixcn
          if (woody(ivt(p)) == 1._r8) then
             cs_veg%gresp_storage_patch(p)      = cs_veg%gresp_storage_patch(p)     - cf_veg%gresp_storage_to_xfer_patch(p)*dt
@@ -484,6 +493,8 @@ contains
                cs_veg%livecrootc_xfer_patch(p)    = cs_veg%livecrootc_xfer_patch(p)   + cf_veg%livecrootc_storage_to_xfer_patch(p)*dt
                cs_veg%deadcrootc_storage_patch(p) = cs_veg%deadcrootc_storage_patch(p)- cf_veg%deadcrootc_storage_to_xfer_patch(p)*dt
                cs_veg%deadcrootc_xfer_patch(p)    = cs_veg%deadcrootc_xfer_patch(p)   + cf_veg%deadcrootc_storage_to_xfer_patch(p)*dt
+            else
+               ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
          end if
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
@@ -493,6 +504,8 @@ contains
                cs_veg%livestemc_xfer_patch(p)     = cs_veg%livestemc_xfer_patch(p)    + cf_veg%livestemc_storage_to_xfer_patch(p)*dt
                cs_veg%grainc_storage_patch(p)     = cs_veg%grainc_storage_patch(p)    - cf_veg%grainc_storage_to_xfer_patch(p)*dt
                cs_veg%grainc_xfer_patch(p)        = cs_veg%grainc_xfer_patch(p)       + cf_veg%grainc_storage_to_xfer_patch(p)*dt
+            else
+               ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
          end if
 
@@ -529,7 +542,7 @@ contains
          
       end do ! end of patch loop
     end if
-    
+
     end associate
   
   end subroutine CStateUpdate1

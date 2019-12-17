@@ -741,6 +741,9 @@ contains
            matrix_nfitransfer(p,ideadcrootst_to_iout_fin) = matrix_nfitransfer(p,ideadcrootst_to_iout_fin) + f * cc_other(patch%itype(p))
            matrix_nfitransfer(p,ideadcrootxf_to_iout_fin) = matrix_nfitransfer(p,ideadcrootxf_to_iout_fin) + f * cc_other(patch%itype(p))
            matrix_nfitransfer(p,iretransn_to_iout_fin)    = matrix_nfitransfer(p,iretransn_to_iout_fin)    + f * cc_other(patch%itype(p))
+        else
+           ! NOTE: The non matrix version of this is in CNCStateUpdate3::CStateUpdate3 EBK (11/26/2019)
+           !                                        and CNNStateUpdate3::NStateUpdate3
         end if
         ! mortality due to fire
         ! carbon pools
@@ -969,6 +972,9 @@ contains
              + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p)) 
            matrix_nfitransfer(p,iretransn_to_iout_fin)        = matrix_nfitransfer(p,iretransn_to_iout_fin) &
              + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p)) 
+        else
+           ! NOTE: The non matrix version of this is in CNCStateUpdate3::CStateUpdate3 EBK (11/26/2019)
+           !                                        and CNNStateUpdate3::NStateUpdate3
         end if
 
         if (use_cndv) then

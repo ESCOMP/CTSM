@@ -271,6 +271,7 @@ contains
          cnveg_carbonflux_inst%m_deadcrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%deadcrootc_xfer_patch(p)     * m
          cnveg_carbonflux_inst%m_gresp_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%gresp_xfer_patch(p)          * m
          if (use_matrixcn) then 
+           ! NOTE: The non-matrix version of this is in CNCStateUpdate2Mod CStateUpdate2 (EBK 11/25/2019)
          ! displayed pools
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc)         = m
             cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc)        = m
@@ -340,6 +341,7 @@ contains
          cnveg_nitrogenflux_inst%m_livecrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%livecrootn_xfer_patch(p)    * m
          cnveg_nitrogenflux_inst%m_deadcrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_xfer_patch(p)    * m
          if (use_matrixcn) then	 
+           ! NOTE: The non-matrix version of this is in CNNStateUpdate2Mod NStateUpdate2 (EBK 11/25/2019)
          ! displayed pools
             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileaf_to_iout_gmn)        = m
             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifroot_to_iout_gmn)       = m

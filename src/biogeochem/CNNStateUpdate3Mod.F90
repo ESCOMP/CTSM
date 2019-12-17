@@ -217,6 +217,8 @@ contains
               nf_veg%m_retransn_to_fire_patch(p) * dt
             ns_veg%retransn_patch(p) =  ns_veg%retransn_patch(p) -                     &
               nf_veg%m_retransn_to_litter_fire_patch(p) * dt
+         else
+            ! NOTE: The equivalent changes for matrix code are in CNFireBase and CNFireLi2014 codes EBK (11/26/2019)
          end if !.not. use_matrixcn
       end do
 

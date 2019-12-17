@@ -245,17 +245,35 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:20:00</option>
       <option name="comment"  >Run in DEBUG with the matrix solution on with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
     </options>
   </test>
-  <test name="ERS_D_Lm3" grid="f19_g17" compset="I2000Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
+  <test name="ERS_D_Lm3" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Run in DEBUG with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
+    </options>
+  </test>
+  <test name="ERS_Lm54_Mmpi-serial" grid="1x1_numaIA" compset="I1850Clm50BgcCropQianGs" testmods="clm/ciso_monthly_matrixcn_spinup">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+      <option name="comment"  >Run without DEBUG for a long period for a single-point case with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
+    </options>
+  </test>
+  <test name="LCISO_Lm13" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment"  >Run without DEBUG for a long period for a low resolution case with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f19_g17" compset="I2000Clm50BgcCruGs" testmods="clm/default">

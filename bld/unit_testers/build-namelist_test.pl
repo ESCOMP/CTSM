@@ -138,7 +138,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 943;
+my $ntests = 945;
 if ( defined($opts{'compare'}) ) {
    $ntests += 594;
 }
@@ -298,7 +298,7 @@ foreach my $options ( "-configuration nwp",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-namelist '&a use_matrixcn=F,use_soil_matrixcn=F,is_outmatrix=F,isspinup=F/' -bgc sp",
-                      "-namelist '&a use_matrixcn=T,use_soil_matrixcn=T,is_outmatrix=T,isspinup=T/' -bgc bgc -crop",
+                      "-namelist '&a use_matrixcn=T,use_soil_matrixcn=T,is_outmatrix=T,isspinup=T/' -bgc bgc -crop -clm_accelerated_spinup on",
                       "-envxml_dir . -infile myuser_nl_clm", 
                       "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
                       "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
@@ -793,6 +793,16 @@ my %failtest = (
                                    },
      "nyrforceWOspinup"          =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_soil_matrixcn=.true.,use_matrixcn=.false.,isspinup=F,nyr_forcing=20",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "matrixspinupWADmode"        =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup on",
+                                     namelst=>"use_soil_matrixcn=T,use_matrixcn=T,isspinup=T,spinup_state=2",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "matrixspinupWclmaccell"     =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup off",
+                                     namelst=>"use_soil_matrixcn=T,isspinup=T",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      phys=>"clm5_0",
                                    },

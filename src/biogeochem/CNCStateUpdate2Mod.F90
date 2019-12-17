@@ -143,6 +143,8 @@ contains
               - cf_veg%m_livecrootc_xfer_to_litter_patch(p) * dt
             cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p)       &
               - cf_veg%m_deadcrootc_xfer_to_litter_patch(p) * dt
+         else
+            ! NOTE: The matrix version of this is in CNGapMortality (EBK 11/25/2019)
          end if !not use_matrixcn
       end do ! end of patch loop
 
@@ -274,6 +276,8 @@ contains
               - cf_veg%hrv_livecrootc_xfer_to_litter_patch(p) * dt
             cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p)       &
               - cf_veg%hrv_deadcrootc_xfer_to_litter_patch(p) * dt
+         else
+            ! NOTE: The matrix equivalent of the above is in CNHarvest (EBK 11/25/2019)
          end if
 
       end do ! end of patch loop
