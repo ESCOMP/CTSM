@@ -149,9 +149,7 @@ program atm_driver
   do i = 1,nlocal
      i_global = atm_global_index(i)
      atm_lons(i) = centerCoords(1,i_global)
-     atm_lons(i) = real(nint(atm_lons(i))) ! rounding to nearest int
      atm_lats(i) = centerCoords(2,i_global)
-     atm_lats(i) = real(nint(atm_lats(i))) ! rounding to nearest int
   end do
 
   !------------------------------------------------------------------------
@@ -337,6 +335,8 @@ contains
     real, intent(in) :: lat(:)
 
     ! local variables
+    real, allocatable   :: lon_rounded(:)
+    real, allocatable   :: lat_rounded(:)
     integer             :: lsize
     real*8, allocatable :: data(:)
     integer             :: i
@@ -344,7 +344,14 @@ contains
     ! --------------------------------------------------------
 
     lsize = size(lon)
+    allocate(lon_rounded(lsize))
+    allocate(lat_rounded(lsize))
     allocate(data(lsize))
+
+    do i = 1, lsize
+       lon_rounded(i) = real(nint(lon(i)))
+       lat_rounded(i) = real(nint(lat(i)))
+    end do
 
     data(:) = 30.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
     call lilac_atmcap_atm2lnd('Sa_z', data)
