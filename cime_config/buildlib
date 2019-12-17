@@ -30,14 +30,23 @@ def _get_osvar(key, default):
     return value
 
 ###############################################################################
-def _write_ctsm_mk(exeroot):
+def _write_ctsm_mk(exeroot, debug):
     """Writes a ctsm.mk file in exeroot.
 
     This file can be included by atmosphere model builds outside of cime.
 
     NOTE: This currently has some hard-coded settings for cheyenne. Also, it assumes that
     ESMFMKFILE is set in your environment.
+
+    Arguments:
+    exeroot (str): path to build directory
+    debug (str): TRUE if building in debug mode, FALSE otherwise
     """
+
+    if debug.lower() == 'true':
+        debug_path = 'debug'
+    else:
+        debug_path = 'nodebug'
 
     ctsm_mk_path = os.path.join(exeroot, 'ctsm.mk')
     esmfmkfile = os.environ['ESMFMKFILE']
@@ -59,7 +68,7 @@ def _write_ctsm_mk(exeroot):
 
 include {esmfmkfile}
 
-SHARED_BLD_DIR = {exeroot}/intel/mpt/debug/nothreads/nuopc
+SHARED_BLD_DIR = {exeroot}/intel/mpt/{debug_path}/nothreads/nuopc
 CTSM_BLD_DIR   = $(SHARED_BLD_DIR)/nuopc/esmf
 DEPENDS_LIB    = $(SHARED_BLD_DIR)/lib
 SHR_LIB        = $(SHARED_BLD_DIR)/nuopc/esmf/c1a1l1/lib
@@ -74,7 +83,7 @@ LIBS = -L$(CTSM_BLD_DIR)/lib -lclm -L$(SHR_LIB) -lcsm_share -L$(DEPENDS_LIB) -lp
 
 CTSM_INCLUDES = $(ESMF_F90COMPILEPATHS) -I$(SHR_INC) -I$(CTSM_INC)
 CTSM_LIBS =  $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) $(ESMF_F90ESMFLINKLIBS) $(LIBS)
-""".format(exeroot=exeroot, esmfmkfile=esmfmkfile))
+""".format(esmfmkfile=esmfmkfile, exeroot=exeroot, debug_path=debug_path))
 
 ###############################################################################
 def _main_func():
@@ -93,7 +102,8 @@ def _main_func():
         lilac_mode = _get_osvar('LILAC_MODE', 'off')
         if lilac_mode == 'on':
             driver = "lilac"
-            _write_ctsm_mk(exeroot=case.get_value("EXEROOT"))
+            _write_ctsm_mk(exeroot=case.get_value("EXEROOT"),
+                           debug=case.get_value("DEBUG"))
 
         #-------------------------------------------------------
         # create Filepath file
