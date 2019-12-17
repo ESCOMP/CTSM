@@ -40,10 +40,10 @@ def _write_ctsm_mk(exeroot, debug):
 
     Arguments:
     exeroot (str): path to build directory
-    debug (str): TRUE if building in debug mode, FALSE otherwise
+    debug (logical): True if building in debug mode, False otherwise
     """
 
-    if debug.lower() == 'true':
+    if debug:
         debug_path = 'debug'
     else:
         debug_path = 'nodebug'
