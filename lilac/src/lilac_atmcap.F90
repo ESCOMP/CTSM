@@ -30,8 +30,8 @@ module lilac_atmcap
 
   ! Time invariant input from host atmosphere
   integer, public, allocatable :: gindex_atm(:) ! global index space
-  integer, public, allocatable :: atm_lons(:)   ! local longitudes
-  integer, public, allocatable :: atm_lats(:)   ! local latitudes
+  real   , public, allocatable :: atm_lons(:)   ! local longitudes
+  real   , public, allocatable :: atm_lats(:)   ! local latitudes
   integer, public              :: atm_global_nx
   integer, public              :: atm_global_ny
 
