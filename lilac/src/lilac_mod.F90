@@ -685,8 +685,9 @@ contains
        write(logunit,*) "end of Lilac Finalization routine"
     end if
 
-    ! Finalize ESMF
-    call ESMF_Finalize  ( )
+    ! Finalize ESMF; keep mpi alive so that atmosphere can do any finalization needed
+    ! before it calls MPI_Finalize
+    call ESMF_Finalize  (endflag=ESMF_END_KEEPMPI)
 
   end subroutine lilac_final
 
