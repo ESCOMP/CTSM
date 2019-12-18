@@ -273,8 +273,11 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
      allocate(novr(ns_o))
      novr(:) = 0
      do n = 1,tgridmap%ns
-        no = tgridmap%dst_indx(n)
-        novr(no) = novr(no) + 1
+        ni = tgridmap%src_indx(n)
+        if (tdomain%mask(ni) > 0) then
+           no = tgridmap%dst_indx(n)
+           novr(no) = novr(no) + 1
+        end if
      end do
      maxovr = maxval(novr(:))
      kmap_max = min(maxovr,max(kmap_max_min,km_mx_ns_prod/ns_o))
@@ -299,26 +302,27 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
         ni = tgridmap%src_indx(n)
         no = tgridmap%dst_indx(n)
         wt = tgridmap%wovr(n) * tdomain%mask(ni)
-        k = mapunit_i(ni) 
-        found = .false.
-        do l = 0,kmax(no)
-           if (k == kmap(l,no)) then
-              kwgt(l,no) = kwgt(l,no) + wt
-              kmap(l,no) = k
-              found = .true.
-              exit
+        if (wt > 0._r8) then
+           k = mapunit_i(ni) 
+           found = .false.
+           do l = 0,kmax(no)
+              if (k == kmap(l,no)) then
+                 kwgt(l,no) = kwgt(l,no) + wt
+                 found = .true.
+                 exit
+              end if
+           end do
+           if (.not. found) then
+              kmax(no) = kmax(no) + 1
+              if (kmax(no) > kmap_max) then
+                 write(6,*)'kmax is > kmap_max= ',kmax(no), 'kmap_max = ', &
+                            kmap_max,' for no = ',no
+                 write(6,*)'reset kmap_max in mksoilMod to a greater value'
+                 stop
+              end if
+              kmap(kmax(no),no) = k
+              kwgt(kmax(no),no) = wt
            end if
-        end do
-        if (.not. found) then
-           kmax(no) = kmax(no) + 1
-           if (kmax(no) > kmap_max) then
-              write(6,*)'kmax is > kmap_max= ',kmax(no), 'kmap_max = ', &
-                         kmap_max,' for no = ',no
-              write(6,*)'reset kmap_max in mksoilMod to a greater value'
-              stop
-           end if
-           kmap(kmax(no),no) = k
-           kwgt(kmax(no),no) = wt
         end if
      enddo
 

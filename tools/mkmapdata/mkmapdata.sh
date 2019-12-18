@@ -334,10 +334,10 @@ case $hostname in
      REGRID_PROC=36
   fi
   esmfvers=7.1.0r
-  intelvers=17.0.1
+  intelvers=18.0.5
   module load esmf_libs/$esmfvers
   module load intel/$intelvers
-  module load ncl/6.6.2
+  module load ncl
   module load nco
 
   if [ "$interactive" = "NO" ]; then

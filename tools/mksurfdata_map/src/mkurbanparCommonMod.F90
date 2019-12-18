@@ -93,6 +93,12 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o, frac_dst)
       write(6,*) 'ldomain%ns   = ', ldomain%ns
       stop
    end if
+   if (size(frac_dst) /= ldomain%ns) then
+      write(6,*) subname//' ERROR: array size inconsistencies'
+      write(6,*) 'size(frac_dst) = ', size(frac_dst)
+      write(6,*) 'ldomain%ns   = ', ldomain%ns
+      stop
+   end if
    
    ! Error checks for domain and map consistencies
    
@@ -192,7 +198,16 @@ subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, n
    real(r8) :: gurbn_o                         ! output grid: global urbn
    real(r8) :: garea_o                         ! output grid: global area
    integer  :: ni,no,k                         ! indices
+   character(len=*), parameter :: subname = 'mkurban_pct_diagnostics'
 !-----------------------------------------------------------------------
+
+   ! Error check inputs
+   if (size(frac_dst) /= ldomain%ns) then
+      write(6,*) subname//' ERROR: array size inconsistencies'
+      write(6,*) 'size(frac_dst) = ', size(frac_dst)
+      write(6,*) 'ldomain%ns   = ', ldomain%ns
+      stop
+   end if
 
    ! -----------------------------------------------------------------
    ! Error check2

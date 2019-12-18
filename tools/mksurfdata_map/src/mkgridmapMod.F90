@@ -552,6 +552,16 @@ contains
     character(*),parameter :: subName = '(gridmap_areaave_scs) '
 !EOP
 !------------------------------------------------------------------------------
+
+    ! Error check inputs and initialize local variables
+
+    if (size(frac_dst) /= size(dst_array)) then
+       write(6,*) subname//' ERROR: incorrect size of frac_dst'
+       write(6,*) 'size(frac_dst) = ', size(frac_dst)
+       write(6,*) 'size(dst_array) = ', size(dst_array)
+       call abort()
+    end if
+
     call gridmap_checkifset( gridmap, subname )
     allocate(sum_weights(size(dst_array)))
     sum_weights = 0._r8
@@ -624,8 +634,23 @@ contains
     character(*),parameter :: subName = '(gridmap_areaave_srcmask) '
 !EOP
 !------------------------------------------------------------------------------
-    call gridmap_checkifset( gridmap, subname )
+    ! Error check inputs and initialize local variables
+
     ns = size(dst_array)
+    if (size(frac_dst) /= ns) then
+       write(6,*) subname//' ERROR: incorrect size of frac_dst'
+       write(6,*) 'size(frac_dst) = ', size(frac_dst)
+       write(6,*) 'size(dst_array) = ', ns
+       call abort()
+    end if
+    if (size(mask_src) /= size(src_array)) then
+       write(6,*) subname//' ERROR: incorrect size of mask_src'
+       write(6,*) 'size(mask_src) = ', size(mask_src)
+       write(6,*) 'size(src_array) = ', size(src_array)
+       call abort()
+    end if
+
+    call gridmap_checkifset( gridmap, subname )
 
     dst_array = 0._r8
     do n = 1,gridmap%ns
@@ -813,7 +838,6 @@ contains
 !------------------------------------------------------------------------------
     call gridmap_checkifset( gridmap, subname )
     frac_dst(:) = 0._r8
-    ns = size(frac_dst)
 
     do n = 1,gridmap%ns
        ni = gridmap%src_indx(n)

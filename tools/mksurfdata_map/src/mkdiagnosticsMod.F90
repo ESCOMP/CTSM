@@ -83,6 +83,18 @@ subroutine output_diagnostics_area(data_i, data_o, gridmap, name, percent, ndiag
      write(6,*) 'ns_o         = ', ns_o
      stop
   end if
+  if (size(frac_dst) /= ns_o) then
+     write(6,*) subname//' ERROR: incorrect size of frac_dst'
+     write(6,*) 'size(frac_dst) = ', size(frac_dst)
+     write(6,*) 'ns_o = ', ns_o
+     call abort()
+  end if
+  if (size(mask_src) /= ns_i) then
+     write(6,*) subname//' ERROR: incorrect size of mask_src'
+     write(6,*) 'size(mask_src) = ', size(mask_src)
+     write(6,*) 'ns_i = ', ns_i
+     call abort()
+  end if
 
   ! Sums on input grid
 
@@ -184,6 +196,18 @@ subroutine output_diagnostics_continuous(data_i, data_o, gridmap, name, units, n
      write(6,*) 'size(data_o) = ', size(data_o)
      write(6,*) 'ns_o         = ', ns_o
      stop
+  end if
+  if (size(frac_dst) /= ns_o) then
+     write(6,*) subname//' ERROR: incorrect size of frac_dst'
+     write(6,*) 'size(frac_dst) = ', size(frac_dst)
+     write(6,*) 'ns_o = ', ns_o
+     call abort()
+  end if
+  if (size(mask_src) /= ns_i) then
+     write(6,*) subname//' ERROR: incorrect size of mask_src'
+     write(6,*) 'size(mask_src) = ', size(mask_src)
+     write(6,*) 'ns_i = ', ns_i
+     call abort()
   end if
 
   ! Sums on input grid
@@ -357,6 +381,18 @@ subroutine output_diagnostics_index(data_i, data_o, gridmap, name, &
      write(6,*) 'size(data_o) = ', size(data_o)
      write(6,*) 'ns_o         = ', ns_o
      stop
+  end if
+  if (size(frac_dst) /= ns_o) then
+     write(6,*) subname//' ERROR: incorrect size of frac_dst'
+     write(6,*) 'size(frac_dst) = ', size(frac_dst)
+     write(6,*) 'ns_o = ', ns_o
+     call abort()
+  end if
+  if (size(mask_src) /= ns_i) then
+     write(6,*) subname//' ERROR: incorrect size of mask_src'
+     write(6,*) 'size(mask_src) = ', size(mask_src)
+     write(6,*) 'ns_i = ', ns_i
+     call abort()
   end if
 
   ! Sum areas on input grid

@@ -118,6 +118,12 @@ subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, n
       write(6,*) 'gridmap%nb      = ', gridmap%nb
       call abort()
    end if
+   if (size(mask_src) /= size(src_array)) then
+      write(6,*) subname//' ERROR: incorrect size of mask_src'
+      write(6,*) 'size(mask_src) = ', size(mask_src)
+      write(6,*) 'size(src_array) = ', size(src_array)
+      call abort()
+   end if
 
    allocate(lfilter(gridmap%ns))
 
@@ -219,6 +225,12 @@ subroutine get_max_indices(gridmap, src_array, dst_array, nodata, mask_src)
       write(6,*) 'gridmap%na      = ', gridmap%na
       write(6,*) 'size(dst_array) = ', size(dst_array)
       write(6,*) 'gridmap%nb      = ', gridmap%nb
+      call abort()
+   end if
+   if (size(mask_src) /= size(src_array)) then
+      write(6,*) subname//' ERROR: incorrect size of mask_src'
+      write(6,*) 'size(mask_src) = ', size(mask_src)
+      write(6,*) 'size(src_array) = ', size(src_array)
       call abort()
    end if
 
