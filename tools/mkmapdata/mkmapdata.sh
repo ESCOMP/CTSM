@@ -279,6 +279,12 @@ else
 fi
 
 # Set timestamp for names below 
+# The flag `-d "-0 days"` can serve as a time saver as follows:
+# If the script aborted without creating all of the map_ files and
+# the user resubmits to create the remaining files on the next day,
+# the user could change -0 to -1 to prevent the script from
+# duplicating files already generated the day before.
+# 
 CDATE="c"`date -d "-0 days" +%y%m%d`
 
 # Set name of each output mapping file
