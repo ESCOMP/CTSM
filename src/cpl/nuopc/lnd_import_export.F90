@@ -22,7 +22,7 @@ module lnd_import_export
   use spmdMod               , only : masterproc
   use seq_drydep_mod        , only : seq_drydep_readnl, n_drydep, seq_drydep_init
   use shr_megan_mod         , only : shr_megan_readnl, shr_megan_mechcomps_n
-  use shr_fire_emis_mod     , only : shr_fire_emis_readnl, shr_fire_emis_mechcomps_n
+  use shr_fire_emis_mod     , only : shr_fire_emis_readnl
   use shr_carma_mod         , only : shr_carma_readnl
   use shr_ndep_mod          , only : shr_ndep_readnl
   use lnd_shr_methods       , only : chkerr
@@ -197,8 +197,7 @@ contains
 
     ! Fire emissions fluxes from land
     call shr_fire_emis_readnl('drv_flds_in', emis_nflds)
-    if (shr_fire_emis_mechcomps_n .ne. emis_nflds) call shr_sys_abort('ERROR: fire_emis field count mismatch')
-    if (shr_fire_emis_mechcomps_n > 0) then
+    if (emis_nflds > 0) then
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Fall_fire', ungridded_lbound=1, ungridded_ubound=emis_nflds)
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_fztop')
     end if
@@ -904,13 +903,13 @@ contains
     end do
 
     ! fire emis fluxes
-    do num = 1, emis_nflds
-       call state_setexport(exportState, 'Fall_fire', bounds, input=lnd2atm_inst%fireflx_grc(:,num), minus=.true., &
-            ungridded_index=num, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end do
     if (emis_nflds > 0) then
-       call state_setexport(exportState, 'Sl_fztopo', bounds, input=lnd2atm_inst%fireztop_grc, rc=rc)
+       do num = 1, emis_nflds
+          call state_setexport(exportState, 'Fall_fire', bounds, input=lnd2atm_inst%fireflx_grc(:,num), minus=.true., &
+               ungridded_index=num, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end do
+       call state_setexport(exportState, 'Sl_fztop', bounds, input=lnd2atm_inst%fireztop_grc, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
     ! sign convention is positive downward with hierarchy of atm/glc/lnd/rof/ice/ocn.
