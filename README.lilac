@@ -46,7 +46,7 @@ library (I), do the following:
 
     > $SRCROOT/lilac_config/buildnml
 
-  - this will now create the files lnd_in, drv_flds_in, and clm.input_data_list in this directory
+  - this will now create the files lnd_in and clm.input_data_list in this directory
     THIS ONLY NEEDS TO BE DONE ONCE 
     to futher customize the lnd_in (say to adjust the ctsm history output) edit the generated lnd_in in this directory
 
@@ -86,3 +86,22 @@ model is built using a makefile:
    $(CTSM_INCLUDES)
 
 4) In the link line for the atmosphere model, add $(CTSM_LIBS)
+
+========================================================================
+IV. Running CTSM / LILAC from another atmosphere model
+========================================================================
+
+After (III), the following steps are needed to stage the inputs needed
+for running the atmosphere model
+
+1) Generate the input namelists following the instructions given in part
+   (II).
+
+2) Copy the following files from $SRCROOT/lilac/atm_driver into the
+   directory from which the atmosphere model will be run:
+
+   - lilac_in
+   - lnd_in
+   - lnd_modelio.nml
+
+3) Run the atmosphere model
