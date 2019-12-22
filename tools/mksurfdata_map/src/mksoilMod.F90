@@ -182,6 +182,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
   real(r8), allocatable :: clay_i(:,:)      ! input grid: percent clay
   real(r8), allocatable :: mapunit_i(:)     ! input grid: igbp soil mapunits
   real(r8), allocatable :: frac_dst(:)      ! output fractions
+  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
   integer, parameter :: num=2               ! set soil mapunit number
   integer  :: wsti(num)                     ! index to 1st and 2nd largest wst
   integer, parameter :: nlsm=4              ! number of soil textures 
@@ -390,29 +391,10 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
 
      ! Global sum of output field 
 
-     sum_fldi = 0.0_r8
-     do ni = 1,ns_i
-        sum_fldi = sum_fldi + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
-     enddo
-
-     sum_fldo = 0.
-     do no = 1,ns_o
-        sum_fldo = sum_fldo + tgridmap%area_dst(no)*frac_dst(no)*re**2
-     end do
-
-     ! -----------------------------------------------------------------
-     ! Error check1
-     ! Compare global sum fld_o to global sum fld_i.
-     ! -----------------------------------------------------------------
-
-     if ( trim(mksrf_gridtype) == 'global') then
-        if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-           write (6,*) 'MKSOILTEX error: input field not conserved'
-           write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-           write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-           stop
-        end if
-     end if
+     allocate(mask_r8(tdomain%ns), stat=ier)
+     if (ier/=0) call abort()
+     mask_r8 = tdomain%mask
+     call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
      ! -----------------------------------------------------------------
      ! Error check2
@@ -515,6 +497,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
      deallocate (kmap, kwgt, kmax, wst)
      deallocate (sand_i,clay_i,mapunit_i)
      deallocate (frac_dst)
+     deallocate (mask_r8)
   end if
 
 
@@ -1024,6 +1007,7 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
   type(domain_type)    :: tdomain         ! local domain
   real(r8), allocatable :: fmax_i(:)       ! input grid: percent fmax
   real(r8), allocatable :: frac_dst(:)     ! output fractions
+  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
   real(r8) :: sum_fldi                     ! global sum of dummy input fld
   real(r8) :: sum_fldo                     ! global sum of dummy output fld
   real(r8) :: gfmax_i                      ! input  grid: global fmax
@@ -1094,29 +1078,10 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
   ! Global sum of output field -- must multiply by fraction of
   ! output grid that is land as determined by input grid
 
-  sum_fldi = 0.0_r8
-  do ni = 1,ns_i
-    sum_fldi = sum_fldi + tgridmap%area_src(ni) * tdomain%mask(ni)
-  enddo
-
-  sum_fldo = 0.
-  do no = 1,ns_o
-     sum_fldo = sum_fldo + tgridmap%area_dst(no) * frac_dst(no)
-  end do
-
-  ! -----------------------------------------------------------------
-  ! Error check1
-  ! Compare global sum fld_o to global sum fld_i.
-  ! -----------------------------------------------------------------
-
-  if ( trim(mksrf_gridtype) == 'global') then
-     if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-        write (6,*) 'MKFMAX error: input field not conserved'
-        write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-        write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-        stop
-     end if
-  end if
+  allocate(mask_r8(tdomain%ns), stat=ier)
+  if (ier/=0) call abort()
+  mask_r8 = tdomain%mask
+  call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
   ! -----------------------------------------------------------------
   ! Error check2
@@ -1172,6 +1137,7 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
   call gridmap_clean(tgridmap)
   deallocate (fmax_i)
   deallocate (frac_dst)
+  deallocate (mask_r8)
 
 end subroutine mkfmax
 

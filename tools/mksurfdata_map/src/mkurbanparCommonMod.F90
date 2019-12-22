@@ -75,6 +75,8 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o, frac_dst)
 !
 ! !LOCAL VARIABLES:
 !EOP
+   integer  :: ier  ! error status
+   real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
    real(r8) :: sum_fldi                        ! global sum of dummy input fld
    real(r8) :: sum_fldo                        ! global sum of dummy output fld
    integer  :: ni,no                           ! indices
@@ -124,31 +126,14 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o, frac_dst)
    ! Global sum of output field -- must multiply by fraction of
    ! output grid that is land as determined by input grid
 
-   sum_fldi = 0.0_r8
-   do ni = 1,tdomain%ns
-      sum_fldi = sum_fldi + tgridmap%area_src(ni) * tdomain%mask(ni)
-   enddo
-
-   sum_fldo = 0._r8
-   do no = 1, ldomain%ns
-      sum_fldo = sum_fldo + tgridmap%area_dst(no) * frac_dst(no)
-   end do
-
-   ! -----------------------------------------------------------------
-   ! Error check1
-   ! Compare global sum fld_o to global sum fld_i.
-   ! -----------------------------------------------------------------
-
-   if (trim(mksrf_gridtype) == 'global') then
-      if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
-         write (6,*) 'MKURBAN error: input field not conserved'
-         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-         write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-         stop
-      end if
-   end if
+   allocate(mask_r8(tdomain%ns), stat=ier)
+   if (ier/=0) call abort()
+   mask_r8 = tdomain%mask
+   call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
    ! (Error check2 in mkurban_pct_diagnostics, which should be called separately)
+
+   deallocate (mask_r8)
 
 end subroutine mkurban_pct
 !-----------------------------------------------------------------------

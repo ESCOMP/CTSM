@@ -487,12 +487,14 @@ contains
     
     sum_area_i = 0.0_r8
     do ni = 1,ns_i
-       sum_area_i = sum_area_i + gridmap%area_src(ni)*mask_src(ni)*re**2
+!      sum_area_i = sum_area_i + gridmap%area_src(ni)*mask_src(ni)*re**2
+       sum_area_i = sum_area_i + gridmap%area_src(ni)*gridmap%frac_src(ni)*re**2
     enddo
 
     sum_area_o = 0.
     do no = 1,ns_o
-       sum_area_o = sum_area_o + gridmap%area_dst(no)*frac_dst(no)*re**2
+!      sum_area_o = sum_area_o + gridmap%area_dst(no)*frac_dst(no)*re**2
+       sum_area_o = sum_area_o + gridmap%area_dst(no)*gridmap%frac_dst(no)*re**2
     end do
 
     ! -----------------------------------------------------------------

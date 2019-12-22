@@ -74,6 +74,7 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
   type(domain_type)    :: tdomain            ! local domain
   real(r8), allocatable :: lake_i(:)          ! input grid: percent lake
   real(r8), allocatable :: frac_dst(:)        ! output fractions
+  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
   real(r8) :: sum_fldi                        ! global sum of dummy input fld
   real(r8) :: sum_fldo                        ! global sum of dummy output fld
   real(r8) :: glake_i                         ! input  grid: global lake
@@ -140,29 +141,10 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
      ! output grid that is land as determined by input grid
      ! -----------------------------------------------------------------
 
-     sum_fldi = 0.0_r8
-     do ni = 1,ns_i
-       sum_fldi = sum_fldi + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
-     enddo
-
-     sum_fldo = 0.
-     do no = 1,ns_o
-        sum_fldo = sum_fldo + tgridmap%area_dst(no)*frac_dst(no)*re**2
-     end do
-
-     ! -----------------------------------------------------------------
-     ! Error check1
-     ! Compare global sum fld_o to global sum fld_i.
-     ! -----------------------------------------------------------------
-
-     if ( .not. zero_out .and. (trim(mksrf_gridtype) == 'global') ) then
-        if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-           write (6,*) 'MKLANWAT error: input field not conserved'
-           write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-           write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-           stop
-        end if
-     end if
+     allocate(mask_r8(tdomain%ns), stat=ier)
+     if (ier/=0) call abort()
+     mask_r8 = tdomain%mask
+     call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
      ! -----------------------------------------------------------------
      ! Error check2
@@ -218,6 +200,7 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
      call gridmap_clean(tgridmap)
      deallocate (lake_i)
      deallocate (frac_dst)
+     deallocate (mask_r8)
   end if
 
   write (6,*) 'Successfully made %lake'
@@ -267,6 +250,7 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
   type(domain_type)    :: tdomain            ! local domain
   real(r8), allocatable :: swmp_i(:)          ! input grid: percent swamp
   real(r8), allocatable :: frac_dst(:)        ! output fractions
+  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
   real(r8) :: sum_fldi                        ! global sum of dummy input fld
   real(r8) :: sum_fldo                        ! global sum of dummy output fld
   real(r8) :: gswmp_i                         ! input  grid: global swamp
@@ -333,29 +317,10 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
      ! output grid that is land as determined by input grid
      ! -----------------------------------------------------------------
 
-     sum_fldi = 0.0_r8
-     do ni = 1,ns_i
-       sum_fldi = sum_fldi + tgridmap%area_src(ni)*tdomain%mask(ni)*re**2
-     enddo
-
-     sum_fldo = 0.
-     do no = 1,ns_o
-        sum_fldo = sum_fldo + tgridmap%area_dst(no)*frac_dst(no)*re**2
-     end do
-
-     ! -----------------------------------------------------------------
-     ! Error check1
-     ! Compare global sum fld_o to global sum fld_i.
-     ! -----------------------------------------------------------------
-
-     if ( .not. zero_out .and. (trim(mksrf_gridtype) == 'global') ) then
-        if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-           write (6,*) 'MKLANWAT error: input field not conserved'
-           write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-           write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-           stop
-        end if
-     end if
+     allocate(mask_r8(tdomain%ns), stat=ier)
+     if (ier/=0) call abort()
+     mask_r8 = tdomain%mask
+     call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
      ! -----------------------------------------------------------------
      ! Error check2
@@ -411,6 +376,7 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
      call gridmap_clean(tgridmap)
      deallocate (swmp_i)
      deallocate (frac_dst)
+     deallocate (mask_r8)
   end if
 
   write (6,*) 'Successfully made %wetland'
