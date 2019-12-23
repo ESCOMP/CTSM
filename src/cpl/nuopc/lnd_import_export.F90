@@ -78,7 +78,7 @@ module lnd_import_export
 contains
 !===============================================================================
 
-  subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, rof_prognostic, rc)
+  subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, rc)
 
     use clm_varctl, only : ndep_from_cpl
 
@@ -86,6 +86,7 @@ contains
     type(ESMF_GridComp)            :: gcomp
     character(len=*) , intent(in)  :: flds_scalar_name
     logical          , intent(in)  :: glc_present
+    logical          , intent(in)  :: cism_evolve
     logical          , intent(in)  :: rof_prognostic
     integer          , intent(out) :: rc
 
@@ -208,7 +209,7 @@ contains
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_soilw') ! optional for carma
     end if
 
-    if (glc_present) then
+    if (glc_present .and. cism_evolve) then
        ! lnd->glc states from land all lnd->glc elevation classes (1:glc_nec) plus bare land (index 0).
        ! The following puts all of the elevation class fields as an
        ! undidstributed dimension in the export state field

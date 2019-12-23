@@ -37,13 +37,13 @@
 <!-- I single point forcing -->
 
   <compset>
-    <alias>I1PtClm50SpGs</alias>
-    <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <alias>I1PtClm50SpRsGs</alias>
+    <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>I1PtClm45SpGs</alias>
-    <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I1PtClm45SpRsGs</alias>
+    <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
 <!-- I CLM50 Compsets -->
@@ -158,6 +158,11 @@
   <compset>
     <alias>I2000Clm45BgcCropQianRsGs</alias>
     <lname>2000_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I2000Clm50BgcCruRsGs</alias>
+    <lname>2000_DATM%CRUv7_CLM50%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -326,7 +331,12 @@
     <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
-  <!-- Stub glacier needed for regional / single-point -->
+  <!-- Stub glacier / rtub rof needed for regional / single-point -->
+  <compset>
+    <alias>I2000Clm45FatesRsGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
   <compset>
     <alias>I2000Clm45FatesGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_RTM_SGLC_SWAV</lname>
