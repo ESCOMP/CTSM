@@ -109,7 +109,6 @@ contains
 
     call ESMF_MethodRemove(gcomp, label=model_label_SetRunClock, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     call NUOPC_CompSpecialize(gcomp, specLabel=model_label_SetRunClock, &
          specRoutine=ModelSetRunClock, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return

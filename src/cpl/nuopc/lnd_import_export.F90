@@ -386,25 +386,23 @@ contains
     real(r8), pointer         :: dataPtr(:)
     character(len=128)        :: fldname
     integer                   :: num
-    integer                   :: begg, endg                             ! bounds
-    integer                   :: g,i,k                                  ! indices
-    real(r8)                  :: e                                      ! vapor pressure (Pa)
-    real(r8)                  :: qsat                                   ! saturation specific humidity (kg/kg)
-    real(r8)                  :: co2_ppmv_diag(bounds%begg:bounds%endg) ! temporary
-    real(r8)                  :: co2_ppmv_prog(bounds%begg:bounds%endg) ! temporary
-    real(r8)                  :: co2_ppmv_val                           ! temporary
-    real(r8)                  :: esatw                                  ! saturation vapor pressure over water (Pa)
-    real(r8)                  :: esati                                  ! saturation vapor pressure over ice (Pa)
-    real(r8)                  :: a0,a1,a2,a3,a4,a5,a6                   ! coefficients for esat over water
-    real(r8)                  :: b0,b1,b2,b3,b4,b5,b6                   ! coefficients for esat over ice
-    real(r8)                  :: tdc, t                                 ! Kelvins to Celcius function and its input
-    real(r8)                  :: forc_t                                 ! atmospheric temperature (Kelvin)
-    real(r8)                  :: forc_q                                 ! atmospheric specific humidity (kg/kg)
-    real(r8)                  :: forc_pbot                              ! atmospheric pressure (Pa)
-    real(r8)                  :: forc_rainc(bounds%begg:bounds%endg)    ! rainxy Atm flux mm/s
-    real(r8)                  :: forc_rainl(bounds%begg:bounds%endg)    ! rainxy Atm flux mm/s
-    real(r8)                  :: forc_snowc(bounds%begg:bounds%endg)    ! snowfxy Atm flux  mm/s
-    real(r8)                  :: forc_snowl(bounds%begg:bounds%endg)    ! snowfxl Atm flux  mm/s
+    integer                   :: begg, endg                          ! bounds
+    integer                   :: g,i,k                               ! indices
+    real(r8)                  :: e                                   ! vapor pressure (Pa)
+    real(r8)                  :: qsat                                ! saturation specific humidity (kg/kg)
+    real(r8)                  :: esatw                               ! saturation vapor pressure over water (Pa)
+    real(r8)                  :: esati                               ! saturation vapor pressure over ice (Pa)
+    real(r8)                  :: a0,a1,a2,a3,a4,a5,a6                ! coefficients for esat over water
+    real(r8)                  :: b0,b1,b2,b3,b4,b5,b6                ! coefficients for esat over ice
+    real(r8)                  :: tdc, t                              ! Kelvins to Celcius function and its input
+    real(r8)                  :: forc_t                              ! atmospheric temperature (Kelvin)
+    real(r8)                  :: forc_q                              ! atmospheric specific humidity (kg/kg)
+    real(r8)                  :: forc_pbot                           ! atmospheric pressure (Pa)
+    real(r8)                  :: co2_ppmv_input(bounds%begg:bounds%endg)   ! temporary
+    real(r8)                  :: forc_rainc(bounds%begg:bounds%endg) ! rainxy Atm flux mm/s
+    real(r8)                  :: forc_rainl(bounds%begg:bounds%endg) ! rainxy Atm flux mm/s
+    real(r8)                  :: forc_snowc(bounds%begg:bounds%endg) ! snowfxy Atm flux  mm/s
+    real(r8)                  :: forc_snowl(bounds%begg:bounds%endg) ! snowfxl Atm flux  mm/s
     real(r8)                  :: forc_noy(bounds%begg:bounds%endg)
     real(r8)                  :: forc_nhx(bounds%begg:bounds%endg)
     real(r8)                  :: frac_grc(bounds%begg:bounds%endg, 0:glc_nec)
@@ -521,11 +519,11 @@ contains
     call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,4), &
          ungridded_index=1, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! bcphodry
+    ! ocphodry
     call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,5), &
          ungridded_index=2, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! bcphiwet
+    ! ocphiwet
     call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,6), &
          ungridded_index=3, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -576,56 +574,47 @@ contains
     ! Atmosphere co2
     !--------------------------
 
-    fldName = 'Sa_co2prog'
-    call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
-    if ( ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'prognostic') then
-       call shr_sys_abort( subname//' ERROR: must have nonzero Sa_co2prog for co2_type equal to prognostic' )
-    end if
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
-       call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          co2_ppmv_prog(g) = dataPtr(g-begg+1)   ! co2 atm prognostic
-       end do
-    else
-       do g = begg,endg
-          co2_ppmv_prog(g) = co2_ppmv
-       end do
-    end if
-
-    fldName = 'Sa_co2diag'
-    call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
-    if ( ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'diagnostic') then
-       call shr_sys_abort( subname//' ERROR: must have nonzero Sa_co2prog for co2_type equal to prognostic' )
-    end if
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
-       call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          co2_ppmv_diag(g) = dataPtr(g-begg+1)   ! co2 atm diagnostic
-       end do
-    else
-       do g = begg,endg
-          co2_ppmv_diag(g) = co2_ppmv
-       end do
+    ! Set default value to a constant and overwrite for prognostic and diagnostic
+    do g = begg,endg
+       co2_ppmv_input(g) = co2_ppmv
+    end do
+    if (co2_type == 'prognostic') then
+       fldName = 'Sa_co2prog'
+       call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
+       if ( ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'prognostic') then
+          call shr_sys_abort( subname//' ERROR: must have Sa_co2prog in import state if co2_type is prognostic' )
+       end if
+       if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
+          call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          do g = begg,endg
+             co2_ppmv_input(g) = dataPtr(g-begg+1)   ! co2 atm prognostic
+          end do
+       end if
+    else if (co2_type == 'diagnostic') then
+       fldName = 'Sa_co2diag'
+       call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
+       if ( ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'diagnostic') then
+          call shr_sys_abort( subname//' ERROR: must have Sa_co2diag in import state if co2_type equal diagnostic')
+       end if
+       if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
+          call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          do g = begg,endg
+             co2_ppmv_input(g) = dataPtr(g-begg+1)   ! co2 atm diagnostic
+          end do
+       end if
     end if
 
     ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
     ! Note that forc_pbot is in Pa
     do g = begg,endg
-       if (co2_type == 'prognostic') then
-          co2_ppmv_val = co2_ppmv_prog(g)
-       else if (co2_type == 'diagnostic') then
-          co2_ppmv_val = co2_ppmv_diag(g)
-       else
-          co2_ppmv_val = co2_ppmv
-       end if
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
-       atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv_val * 1.e-6_r8 * forc_pbot
+       atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv_input(g) * 1.e-6_r8 * forc_pbot
        if (use_c13) then
-          atm2lnd_inst%forc_pc13o2_grc(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * forc_pbot
+          atm2lnd_inst%forc_pc13o2_grc(g) = co2_ppmv_input(g) * c13ratio * 1.e-6_r8 * forc_pbot
        end if
     end do
 
@@ -1239,11 +1228,12 @@ contains
 
        ! TODO: if fillvalue = shr_const_spval the snowhl sent to the atm will have the spval over some points
        ! rather than 0 - this is very odd and needs to be understood
-       ! fldptr(:) = fillvalue
+       !fldptr1d(:) = fillvalue
 
        ! determine output array
        if (present(ungridded_index)) then
           fldptr2d(ungridded_index,:) = 0._r8
+          !fldptr2d(ungridded_index,:) = fillvalue
           do g = bounds%begg, bounds%endg
              n = g - bounds%begg + 1
              fldptr2d(ungridded_index,n) = input(g)
@@ -1253,6 +1243,7 @@ contains
           end if
        else
           fldptr1d(:) = 0._r8
+          !fldptr1d(:) = fillvalue
           do g = bounds%begg, bounds%endg
              n = g - bounds%begg + 1
              fldptr1d(n) = input(g)
