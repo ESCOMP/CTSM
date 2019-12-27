@@ -13,7 +13,7 @@ I. Building a CTSM / LILAC library for inclusion in an atmosphere model
 
    > export LILAC_MODE='on'
    > export SRCROOT=`pwd`
-   > export CASEDIR=/glade/scratch/mvertens/test_lilac
+   > export CASEDIR=/glade/scratch/$USER/test_lilac
 
 3) build the ctsm/lilac library using a CIME case
 
