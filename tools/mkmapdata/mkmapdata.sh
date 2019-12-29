@@ -280,7 +280,13 @@ else
 fi
 
 # Set timestamp for names below 
-CDATE="c"`date -d "0 days" +%y%m%d`
+# The flag `-d "-0 days"` can serve as a time saver as follows:
+# If the script aborted without creating all of the map_ files and
+# the user resubmits to create the remaining files on the next day,
+# the user could change -0 to -1 to prevent the script from
+# duplicating files already generated the day before.
+#
+CDATE="c"`date -d "-0 days" +%y%m%d`
 
 # Set name of each output mapping file
 # First determine the name of the input scrip grid file  
@@ -360,7 +366,7 @@ case $hostname in
   module load ncarcompilers/0.4.1
   module load python/3.6.8
   ncar_pylib
-  export PYTHONPATH="/glade/work/slevis/git_ocgis/ocgis/src/:/glade/work/slevis/git_esmf/esmf/src/addon/ESMPy/src/"
+  export PYTHONPATH="${dir}/../../../../git_ocgis/ocgis/src/:${dir}/../../../../git_esmf/esmf/src/addon/ESMPy/src/"
   ;;
 
   ## DAV
@@ -484,25 +490,23 @@ until ((nfile>${#INGRID[*]})); do
       echo "Skipping creation of ${OUTFILE[nfile]} as fast mode is on so skipping large files in NetCDF4 format"
    else
 
-      PATH_PREFIX=/glade/work/slevis
-      WD=${PATH_PREFIX}/git/mkmapdata_ocgis/tools/mkmapdata
-      SS_PATH=${WD}/subsets/spatial_subset.nc
-      rm -rf ${SS_PATH}
-      CHUNKDIR=${WD}/chunking
+      SUBSETS_PATH=${dir}/subsets/spatial_subset.nc
+      rm -rf ${SUBSETS_PATH}
+      CHUNKDIR=${dir}/chunking
       rm -rf ${CHUNKDIR}
-      OCLI_FILE=${PATH_PREFIX}/git_ocgis/ocgis/src/ocgis/ocli.py
-      CRWG="python ${OCLI_FILE} chunked-rwg"
+      OCLI_FILE=${dir}/../../../../git_ocgis/ocgis/src/ocgis/ocli.py
+      CLI_EXECUTABLE="python ${OCLI_FILE} chunked-rwg"
 
       if [ "$type" = "global" ]; then
          NCHUNKS_DST=20
-         cmd="$mpirun ${CRWG} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES}"
+         cmd="$mpirun ${CLI_EXECUTABLE} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES}"
          runcmd $cmd
       else
          NCHUNKS_DST=1
-         cmd="$mpirun ${CRWG} --source ${INGRID[nfile]} --destination ${GRIDFILE} --spatial_subset --no_genweights --spatial_subset_path ${SS_PATH} --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]}"
+         cmd="$mpirun ${CLI_EXECUTABLE} --source ${INGRID[nfile]} --destination ${GRIDFILE} --spatial_subset --no_genweights --spatial_subset_path ${SUBSETS_PATH} --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]}"
          runcmd $cmd
 
-         cmd="$mpirun ${CRWG} --source ${SS_PATH} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES}"
+         cmd="$mpirun ${CLI_EXECUTABLE} --source ${SUBSETS_PATH} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES}"
          runcmd $cmd
       fi
 
