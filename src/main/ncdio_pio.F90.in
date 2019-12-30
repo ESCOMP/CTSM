@@ -33,7 +33,7 @@ module ncdio_pio
   use pio            , only : pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling
   use pio            , only : pio_setframe, pio_unlimited, pio_write, pio_write_darray, var_desc_t
   use pio            , only : pio_iotask_rank, PIO_REARR_SUBSET, PIO_REARR_BOX
-  use pio            , only : pio_set_log_level, pio_inq_vartype
+  use pio            , only : pio_inq_vartype
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -1809,6 +1809,7 @@ contains
     integer           :: lb1,lb2
     integer           :: ub1,ub2
     integer           :: xtype      ! netcdf type of variable on file
+
     type(iodesc_plus_type) , pointer  :: iodesc_plus
     type(var_desc_t)                  :: vardesc
     character(len=*),parameter :: subname='ncd_io_2d_{TYPE}' ! subroutine name
@@ -1972,11 +1973,19 @@ contains
           call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=ispval)
        end if
 #else
-       if (present(switchdim)) then
-          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status, fillval=spval)
+       if (iodesc_plus%type == pio_double) then
+          if (present(switchdim)) then
+             call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status, fillval=spval)
+          else
+             call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=spval)
+          end if
        else
-          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=spval)
-       end if
+          if (present(switchdim)) then
+             call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, real(temp, kind=r4), status, fillval=real(spval, kind=r4))
+          else
+             call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, real(data, kind=r4), status, fillval=real(spval, kind=r4))
+          end if
+       endif
        if ( present(cnvrtnan2fill) )then
           do j = lb2,ub2
              do i = lb1,ub1
