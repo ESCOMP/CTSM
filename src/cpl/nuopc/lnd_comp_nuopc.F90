@@ -325,7 +325,7 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_Mesh)         :: mesh                 ! esmf mesh
+    type(ESMF_Mesh)         :: mesh, gridmesh        ! esmf mesh
     type(ESMF_DistGrid)     :: DistGrid              ! esmf global index space descriptor
     type(ESMF_Time)         :: currTime              ! Current time
     type(ESMF_Time)         :: startTime             ! Start time
@@ -574,7 +574,7 @@ contains
     ! generate the mesh and realize fields
     !--------------------------------
 
-    ! read in the mesh
+    ! determine if the mesh will be created or read in
     call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -621,14 +621,17 @@ contains
        maxcornerCoord(1) = xv(3,ni,nj) ! max lon
        maxcornerCoord(2) = yv(3,ni,nj) ! max lat
        deallocate(xv,yv)
-       write(6,*)'DEBUG: maxcornerCoord = ',maxcornerCoord
        lgrid = ESMF_GridCreateNoPeriDimUfrm (maxindex=maxindex, &
             mincornercoord=mincornercoord, maxcornercoord= maxcornercoord, &
             staggerloclist=(/ESMF_STAGGERLOC_CENTER, ESMF_STAGGERLOC_CORNER/), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! create the mesh from the grid
-       mesh =  ESMF_MeshCreate(lgrid, rc=rc)
+       gridmesh =  ESMF_MeshCreate(lgrid, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! Now redistribute the mesh to use the internal distrid
+       mesh = ESMF_MeshCreate(gridmesh, elementDistgrid=Distgrid, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
        ! read in the mesh from the file
