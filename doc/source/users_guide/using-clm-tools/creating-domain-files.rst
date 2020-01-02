@@ -14,7 +14,7 @@ Here we create domain files for a regular global domain.
 Global Domain file creation
 ===========================
 
-.. _Figure Global-Domain
+.. _Figure Global-Domain:
 
 .. figure:: GlobalDomain.jpeg
 
@@ -27,7 +27,7 @@ Note, that the SCRIP grid file used to start this process, is also used in **mkm
 Domain file creation using mknoocnmap.pl
 ========================================
 
-.. _Figure mknoocnmap.pl
+.. _Figure mknoocnmap.pl:
 
 .. figure:: mknoocnmap.jpeg
 

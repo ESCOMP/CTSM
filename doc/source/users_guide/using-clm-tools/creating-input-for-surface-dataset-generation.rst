@@ -105,7 +105,7 @@ mkmapdata.sh has a help option with the following
    **********************
 
 
-.. _Figure mkmapdata.sh
+.. _Figure mkmapdata.sh:
 
 .. figure:: mkmapdata_details.jpeg
 
