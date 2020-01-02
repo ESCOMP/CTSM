@@ -8,7 +8,7 @@
 
 When just creating a replacement file for an existing one, the relevant tool should be used directly to create the file. When you are creating a set of files for a new resolution there are some dependencies between the tools that you need to keep in mind when creating them. The main dependency is that you MUST create a SCRIP grid file first as the SCRIP grid dataset is then input into the other tools. Also look at `Table 3-1 <CLM-URL>`_ which gives information on the files required and when. :numref:`Figure Data_Flow` shows an overview of the general data-flow for creation of the fsurdat datasets.
 
-.. _Figure Data_Flow
+.. _Figure Data_Flow:
 
 .. figure:: mkmapdata_mksurfdata.jpeg
 
@@ -18,7 +18,7 @@ Starting from a SCRIP grid file that describes the grid you will run the model o
 
 :numref:`Figure Data_Flow_Legend` is the legend for this figure (:numref:`Figure Data_Flow`) and other figures in this chapter (:numref:`Figure Global_Domain`, :numref:`Figure mknoocnmap.pl` and :numref:`Figure mksurfdatamap`).
 
-.. _Figure Data_Flow_Legend
+.. _Figure Data_Flow_Legend:
 
 .. figure:: LegendCLMToolDataFlow.jpeg
 
