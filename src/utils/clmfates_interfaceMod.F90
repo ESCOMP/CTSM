@@ -1962,6 +1962,7 @@ contains
    use FatesIOVariableKindMod, only : patch_r8, patch_ground_r8, patch_size_pft_r8
    use FatesIOVariableKindMod, only : site_r8, site_ground_r8, site_size_pft_r8
    use FatesIOVariableKindMod, only : site_size_r8, site_pft_r8, site_age_r8
+   use FatesIOVariableKindMod, only : site_coage_r8, site_coage_pft_r8
    use FatesIOVariableKindMod, only : site_fuel_r8, site_cwdsc_r8, site_scag_r8
    use FatesIOVariableKindMod, only : site_scagpft_r8, site_agepft_r8
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
@@ -2072,6 +2073,9 @@ contains
         dk_index = this%fates_hist%hvars(ivar)%dim_kinds_index
         ioname = trim(this%fates_hist%dim_kinds(dk_index)%name)
         
+        write(iulog,*) 'attempt ioname: ', ioname
+        write(iulog,*) 'dk_index: ', dk_index
+
         select case(trim(ioname))
         case(patch_r8)
            call hist_addfld1d(fname=trim(vname),units=trim(vunits),         &
@@ -2097,11 +2101,14 @@ contains
                               ptr_patch=this%fates_hist%hvars(ivar)%r82d,    & 
                               default=trim(vdefault))
            
+        
         case(site_ground_r8, site_size_pft_r8, site_size_r8, site_pft_r8, &
-             site_age_r8, site_height_r8, site_fuel_r8, site_cwdsc_r8, &
-             site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, &
+             site_age_r8, site_height_r8, site_coage_r8,site_coage_pft_r8, &
+             site_fuel_r8, site_cwdsc_r8, &
+             site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, & 
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
              site_elcwd_r8, site_elage_r8)
+
 
            d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
            dim2name = this%fates_hist%dim_bounds(d_index)%name
@@ -2119,6 +2126,8 @@ contains
         end select
           
       end associate
+      write(iulog,*)'success: ', ioname
+
    end do
  end subroutine init_history_io
 
@@ -2376,7 +2385,7 @@ contains
  subroutine hlm_bounds_to_fates_bounds(hlm, fates)
 
    use FatesIODimensionsMod, only : fates_bounds_type
-   use FatesInterfaceMod, only : nlevsclass, nlevage
+   use FatesInterfaceMod, only : nlevsclass, nlevage, nlevcoage
    use FatesInterfaceMod, only : nlevheight
    use EDtypesMod,        only : nfsc
    use FatesLitterMod,    only : ncwd
@@ -2406,6 +2415,12 @@ contains
    
    fates%size_class_begin = 1
    fates%size_class_end = nlevsclass
+
+   fates%coagepf_class_begin = 1
+   fates%coagepf_class_end = nlevcoage * numpft_fates
+
+   fates%coage_class_begin = 1
+   fates%coage_class_end = nlevcoage
 
    fates%pft_class_begin = 1
    fates%pft_class_end = maxveg_ed
