@@ -22,7 +22,7 @@ module histFileMod
   use PatchType      , only : patch                
   use EDTypesMod     , only : nclmax
   use EDTypesMod     , only : nlevleaf
-  use FatesInterfaceMod , only : nlevsclass, nlevage
+  use FatesInterfaceMod , only : nlevsclass, nlevage, nlevcoage
   use FatesInterfaceMod , only : nlevheight
   use EDTypesMod        , only : nfsc
   use FatesLitterMod    , only : ncwd
@@ -911,6 +911,7 @@ contains
     integer :: numc                 ! total number of columns across all processors
     integer :: nump                 ! total number of pfts across all processors
     integer :: num2d                ! size of second dimension (e.g. .number of vertical levels)
+    character(len=hist_dim_name_length) :: type2d 
     integer :: beg1d_out,end1d_out  ! history output per-proc 1d beginning and ending indices
     integer :: beg1d,end1d          ! beginning and ending indices for this field (assume already set)
     integer :: num1d_out            ! history output 1d size
@@ -1045,6 +1046,9 @@ contains
        tape(t)%hlist(n)%avgflag = avgflag
     end if
 
+    type2d = tape(t)%hlist(n)%field%type2d
+    
+
   end subroutine htape_addfld
 
   !-----------------------------------------------------------------------
@@ -1069,6 +1073,7 @@ contains
     do t = 1,ntapes
 !$OMP PARALLEL DO PRIVATE (f, num2d)
        do f = 1,tape(t)%nflds
+
           numdims = tape(t)%hlist(f)%field%numdims
           
           if ( numdims == 1) then   
@@ -1390,6 +1395,7 @@ contains
     ! !USES:
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
     use decompMod       , only : BOUNDS_LEVEL_PROC
+    use clm_varctl      , only : iulog
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1440,6 +1446,7 @@ contains
     no_snow_behavior    =  tape(t)%hlist(f)%field%no_snow_behavior
     hpindex             =  tape(t)%hlist(f)%field%hpindex
 
+
     if (no_snow_behavior /= no_snow_unset) then
        ! For multi-layer snow fields, build a special output variable that handles
        ! missing snow layers appropriately
@@ -1459,6 +1466,7 @@ contains
        call hist_set_snow_field_2d(field, clmptr_ra(hpindex)%ptr, no_snow_behavior, type1d, &
             beg1d, end1d)
     else
+   
        field => clmptr_ra(hpindex)%ptr(:,1:num2d)
        field_allocated = .false.
     end if
@@ -2064,17 +2072,20 @@ contains
     call ncd_defdim(lnfid, 'scale_type_string_length', scale_type_strlen, dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
     
+
     if(use_fates)then
        call ncd_defdim(lnfid, 'fates_levscag', nlevsclass * nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levscagpf', nlevsclass * nlevage * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levagepft', nlevage * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levscls', nlevsclass, dimid)
+       call ncd_defdim(lnfid, 'fates_levcacls', nlevcoage, dimid)
        call ncd_defdim(lnfid, 'fates_levpft', numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levage', nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levheight', nlevheight, dimid)
        call ncd_defdim(lnfid, 'fates_levfuel', nfsc, dimid)
        call ncd_defdim(lnfid, 'fates_levcwdsc', ncwd, dimid)
        call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levcapf', nlevcoage*numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levcan', nclmax, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlf', nlevleaf * nclmax, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlfpf', nlevleaf * nclmax * numpft_fates, dimid)
@@ -2498,6 +2509,9 @@ contains
     use FatesInterfaceMod, only : fates_hdim_levsclass
     use FatesInterfaceMod, only : fates_hdim_pfmap_levscpf
     use FatesInterfaceMod, only : fates_hdim_scmap_levscpf
+    use FatesInterfaceMod, only : fates_hdim_levcoage
+    use FatesInterfaceMod, only : fates_hdim_pfmap_levcapf
+    use FatesInterfaceMod, only : fates_hdim_camap_levcapf
     use FatesInterfaceMod, only : fates_hdim_levage
     use FatesInterfaceMod, only : fates_hdim_levheight
     use FatesInterfaceMod, only : fates_hdim_levpft
@@ -2589,6 +2603,12 @@ contains
                   long_name='FATES pft index of the combined pft-size class dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_scmap_levscpf',xtype=ncd_int, dim1name='fates_levscpf', &
                   long_name='FATES size index of the combined pft-size class dimension', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_levcacls', xtype=tape(t)%ncprec, dim1name='fates_levcacls', &
+                  long_name='FATES cohort age class lower bound', units='years', ncid=nfid(t))
+             call ncd_defvar(varname='fates_pftmap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
+                  long_name='FATES pft index of the combined pft-cohort age class dimension', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_camap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
+                  long_name='FATES cohort age index of the combined pft-cohort age dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_levage',xtype=tape(t)%ncprec, dim1name='fates_levage', &
                   long_name='FATES patch age (yr)', ncid=nfid(t))
              call ncd_defvar(varname='fates_levheight',xtype=tape(t)%ncprec, dim1name='fates_levheight', &
@@ -2653,8 +2673,11 @@ contains
              call ncd_io(varname='fates_scmap_levscag',data=fates_hdim_scmap_levscag, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_agmap_levscag',data=fates_hdim_agmap_levscag, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levscls',data=fates_hdim_levsclass, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_levcacls',data=fates_hdim_levcoage, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_pftmap_levscpf',data=fates_hdim_pfmap_levscpf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_scmap_levscpf',data=fates_hdim_scmap_levscpf, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_pftmap_levcapf',data=fates_hdim_pfmap_levcapf, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_camap_levcapf',data=fates_hdim_camap_levcapf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levage',data=fates_hdim_levage, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levheight',data=fates_hdim_levheight, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levpft',data=fates_hdim_levpft, ncid=nfid(t), flag='write')
@@ -4832,6 +4855,8 @@ contains
        num2d = nlevdecomp_full
     case ('fates_levscls')
        num2d = nlevsclass
+    case('fates_levcacls')
+       num2d = nlevcoage
     case ('fates_levpft')
        num2d = numpft_fates
     case ('fates_levage')
@@ -4844,6 +4869,8 @@ contains
        num2d = ncwd
     case ('fates_levscpf')
        num2d = nlevsclass*numpft_fates
+    case ('fates_levcapf')
+       num2d = nlevcoage*numpft_fates
     case ('fates_levscag')
        num2d = nlevsclass*nlevage
     case ('fates_levscagpf')
@@ -4896,8 +4923,8 @@ contains
     end select
 
     ! History buffer pointer
-
     hpindex = pointer_index()
+   
 
     if (present(ptr_lnd)) then
        l_type1d = grlnd
@@ -4913,6 +4940,7 @@ contains
        l_type1d = namel
        l_type1d_out = namel
        clmptr_ra(hpindex)%ptr => ptr_lunit
+
        if (present(set_lake)) then
           do l = bounds%begl,bounds%endl
              if (lun%lakpoi(l)) ptr_lunit(l,:) = set_lake
@@ -4978,6 +5006,7 @@ contains
        l_type1d = namep
        l_type1d_out = namep
        clmptr_ra(hpindex)%ptr => ptr_patch
+
        if (present(set_lake)) then
           do p = bounds%begp,bounds%endp
              l =patch%landunit(p)
