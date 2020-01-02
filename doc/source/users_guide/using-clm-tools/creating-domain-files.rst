@@ -18,7 +18,7 @@ Global Domain file creation
 
 .. figure:: GlobalDomain.jpeg
 
-Global Domain file creation
+  Global Domain file creation
 
 Starting from SCRIP grid files for both your atmosphere and ocean, you use **$CIMEROOT/tools/mapping/gen_mapping_files/gen_cesm_maps.sh** to create a mapping file between the atmosphere and ocean. That mapping file is then used as input to **gen_domain** to create output domain files for both atmosphere and ocean. The atmosphere domain file is then used by both CLM and DATM for I compsets, while the ocean domain file is ignored. For this process you have to define your SCRIP grid files on your own. For a regional or single-point case that doesn't include ocean see :numref:`Figure mknoocnmap.pl`. (See :numref:`Figure Global-Domain` for the legend for this figure.)
 
@@ -31,7 +31,7 @@ Domain file creation using mknoocnmap.pl
 
 .. figure:: mknoocnmap.jpeg
 
-Domain file creation using mknoocnmap.pl
+  Domain file creation using mknoocnmap.pl
 
 For a regular latitude/longitude grid that can be used for regional or single point simulations -- you can use **mknoocnmap.pl**. It creates a SCRIP grid file that can then be used as input to **mkmapdata.sh** as well as a SCRIP mapping file that is then input to **gen_domain**. The output of **gen_domain** is a atmosphere domain file used by both CLM and DATM and a ocean domain file that is ignored. (See :numref:`Figure mknoocnmap.pl` for the legend for this figure.)
 
