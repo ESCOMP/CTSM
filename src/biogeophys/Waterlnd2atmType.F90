@@ -25,7 +25,7 @@ module Waterlnd2atmType
      class(water_info_base_type), pointer :: info
 
      real(r8), pointer :: q_ref2m_grc        (:)   ! 2m surface specific humidity (kg/kg)
-     real(r8), pointer :: h2osno_grc         (:)   ! snow water (mm H2O)
+     real(r8), pointer :: h2osno_grc         (:)   ! snow water (m H2O)
      real(r8), pointer :: qflx_evap_tot_grc  (:)   ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
      real(r8), pointer :: qflx_rofliq_grc         (:)   ! rof liq forcing
      real(r8), pointer :: qflx_rofliq_qsur_grc    (:)   ! rof liq -- surface runoff component
