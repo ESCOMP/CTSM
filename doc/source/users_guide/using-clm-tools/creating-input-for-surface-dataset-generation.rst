@@ -109,6 +109,6 @@ mkmapdata.sh has a help option with the following
 
 .. figure:: mkmapdata_details.jpeg
 
-Details of running mkmapdata.sh
+  Details of running mkmapdata.sh
 
 Each of the raw datasets for **mksurfdata_map** needs a mapping file to map from the output grid you are running on to the grid and land-mask for that dataset. This is what **mkmapdata.sh** does. To create the mapping files you need a SCRIP grid file to correspond with each resolution and land mask that you have a raw data file in **mksurfdata_map**. Some raw datasets share the same grid and land mask -- hence they can share the same SCRIP grid file. The output maps created here go into **mksurfdata_map** see :numref:`Figure mksurfdatamap`.
