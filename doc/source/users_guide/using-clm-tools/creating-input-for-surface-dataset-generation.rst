@@ -37,7 +37,7 @@ If you want to create a regular latitude/longitude single-point or regional grid
 	-nx <number>                   Number of longitudes (default is 1)
 	-ny <number>                   Number of latitudes  (default is 1)
 
-See `Figure 2-5 <CLM-URL>`_ for a visual representation of this process.
+See :numref:`Figure mknoocnmap.pl` for a visual representation of this process.
 
 
 2. Creating mapping files for mksurfdata_map
@@ -48,7 +48,7 @@ See `Figure 2-5 <CLM-URL>`_ for a visual representation of this process.
 The bash shell script ``$CTSMROOT/tools/mkmapgrids/mkmapdata.sh`` uses **ESMF_RegridWeightGen** to create a list of maps from the raw datasets that are input to **mksurfdata_map**. 
 Each dataset that has a different grid, or land-mask needs a different mapping file for it, but many different raw datasets share the same grid/land-mask as other files. 
 Hence, there doesn't need to be a different mapping file for EACH raw dataset -- just for each raw dataset that has a DIFFERENT grid or land-mask.. 
-See `Figure 2-3 <CLM-URL>`_ for a visual representation of how this works. 
+See :numref:`Figure mkmapdata.sh` for a visual representation of how this works. 
 The bash script figures out which mapping files it needs to create and then runs **ESMF_RegridWeightGen** for each one. 
 You can then either enter the datasets into the XML database (see `Chapter 3 <CLM-URL>`_ or leave the files in place, and use the "-res usrspec -usr_gname -usr_gdate" options to **mksurfdata_map** (see `the Section called Running mksurfdata.pl <CLM-URL>`_ below). 
 mkmapdata.sh has a help option with the following
@@ -105,8 +105,10 @@ mkmapdata.sh has a help option with the following
    **********************
 
 
-Figure 2-3. Details of running mkmapdata.sh
--------------------------------------------
-Insert figure 2-3
+.. _Figure mkmapdata.sh
 
-Each of the raw datasets for **mksurfdata_map** needs a mapping file to map from the output grid you are running on to the grid and land-mask for that dataset. This is what **mkmapdata.sh** does. To create the mapping files you need a SCRIP grid file to correspond with each resolution and land mask that you have a raw data file in **mksurfdata_map**. Some raw datasets share the same grid and land mask -- hence they can share the same SCRIP grid file. The output maps created here go into **mksurfdata_map** see `Figure 2-6 <CLM-URL>`_.
+.. figure:: mkmapdata_details.jpeg
+
+Details of running mkmapdata.sh
+
+Each of the raw datasets for **mksurfdata_map** needs a mapping file to map from the output grid you are running on to the grid and land-mask for that dataset. This is what **mkmapdata.sh** does. To create the mapping files you need a SCRIP grid file to correspond with each resolution and land mask that you have a raw data file in **mksurfdata_map**. Some raw datasets share the same grid and land mask -- hence they can share the same SCRIP grid file. The output maps created here go into **mksurfdata_map** see :numref:`Figure mksurfdatamap`.
