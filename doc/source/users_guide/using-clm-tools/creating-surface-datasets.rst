@@ -6,17 +6,23 @@
  Creating Surface Datasets
 ===========================
 
-When just creating a replacement file for an existing one, the relevant tool should be used directly to create the file. When you are creating a set of files for a new resolution there are some dependencies between the tools that you need to keep in mind when creating them. The main dependency is that you MUST create a SCRIP grid file first as the SCRIP grid dataset is then input into the other tools. Also look at `Table 3-1 <CLM-URL>`_ which gives information on the files required and when. `Figure 2-1 <CLM-URL>`_ shows an overview of the general data-flow for creation of the fsurdat datasets.
+When just creating a replacement file for an existing one, the relevant tool should be used directly to create the file. When you are creating a set of files for a new resolution there are some dependencies between the tools that you need to keep in mind when creating them. The main dependency is that you MUST create a SCRIP grid file first as the SCRIP grid dataset is then input into the other tools. Also look at `Table 3-1 <CLM-URL>`_ which gives information on the files required and when. :numref:`Figure Data_Flow` shows an overview of the general data-flow for creation of the fsurdat datasets.
 
-Figure 2-1. Data Flow for Creation of Surface Datasets from Raw SCRIP Grid Files
---------------------------------------------------------------------------------
-Insert figure 2-1
+.. _Figure Data_Flow
 
-Starting from a SCRIP grid file that describes the grid you will run the model on, you first run **mkmapdata.sh** to create a list of mapping files. See `Figure 2-3 <CLM-URL>`_ for a more detailed view of how **mkmapdata.sh** works. The mapping files tell **mksurfdata_map** how to map between the output grid and the raw datasets that it uses as input. The output of **mksurfdata_map** is a surface dataset that you then use for running the model. See `Figure 2-6 <CLM-URL>`_ for a more detailed view of how **mksurfdata_map** works.
+.. figure:: mkmapdata_mksurfdata.jpeg
 
-`Figure 2-2 <CLM-URL>`_ is the legend for this figure (`Figure 2-1 <CLM-URL>`_) and other figures in this chapter (`Figure 2-4 <CLM-URL>`_, `Figure 2-5 <CLM-URL>`_, and `Figure 2-6 <CLM-URL>`_).
-Figure 2-2. Legend for Data Flow Figures
-Insert figure 2-2
+Data Flow for Creation of Surface Datasets from Raw SCRIP Grid Files
+
+Starting from a SCRIP grid file that describes the grid you will run the model on, you first run **mkmapdata.sh** to create a list of mapping files. See :numref:`Figure mkmapdata.sh` for a more detailed view of how **mkmapdata.sh** works. The mapping files tell **mksurfdata_map** how to map between the output grid and the raw datasets that it uses as input. The output of **mksurfdata_map** is a surface dataset that you then use for running the model. See `Figure :numref:`Figure mksurfdatamap` for a more detailed view of how **mksurfdata_map** works.
+
+:numref:`Figure Data_Flow_Legend` is the legend for this figure (:numref:`Figure Data_Flow`) and other figures in this chapter (:numref:`Figure Global_Domain`, :numref:`Figure mknoocnmap.pl` and :numref:`Figure mksurfdatamap`).
+
+.. _Figure Data_Flow_Legend
+
+.. figure:: LegendCLMToolDataFlow.jpeg
+
+Legend for Data Flow Figures
 
 Green arrows define the input to a program, while red arrows define the output. Cylinders define files that are either created by a program or used as input for a program. Boxes are programs.
 
