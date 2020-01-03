@@ -98,7 +98,6 @@ contains
          frac_h2osfc             => waterdiagnosticbulk_inst%frac_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
          h2osoi_ice              => waterstatebulk_inst%h2osoi_ice_col          , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) (new)                
          h2osoi_liq              => waterstatebulk_inst%h2osoi_liq_col          , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) (new)            
-
          sabg_soil               => solarabs_inst%sabg_soil_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by soil (W/m**2)
          sabg_snow               => solarabs_inst%sabg_snow_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by snow (W/m**2)
          sabg                    => solarabs_inst%sabg_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by ground (W/m**2)
@@ -214,7 +213,6 @@ contains
          ! set ev_snow, ev_soil for urban landunits here
          l = patch%landunit(p)
          if (lun%urbpoi(l)) then
-            qflx_ev_snow(p) = qflx_evap_soi(p)
             qflx_ev_soil(p) = 0._r8
             qflx_ev_h2osfc(p) = 0._r8
          else
@@ -329,21 +327,44 @@ contains
          qflx_dew_snow(p) = 0._r8
          qflx_dew_grnd(p) = 0._r8
 
-         if (qflx_ev_snow(p) >= 0._r8) then
-            ! for evaporation partitioning between liquid evap and ice sublimation, 
-            ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
-            if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0.) then
-               qflx_evap_grnd(p) = max(qflx_ev_snow(p)*(h2osoi_liq(c,j)/(h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+         if (.not. lun%urbpoi(l)) then
+            if (qflx_ev_snow(p) >= 0._r8) then
+               ! for evaporation partitioning between liquid evap and ice sublimation, 
+               ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
+               if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
+                  qflx_evap_grnd(p) = max(qflx_ev_snow(p)*(h2osoi_liq(c,j)/(h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+               else
+                  qflx_evap_grnd(p) = 0._r8
+               end if
+               qflx_sub_snow(p) = qflx_ev_snow(p) - qflx_evap_grnd(p)
             else
-               qflx_evap_grnd(p) = 0.
+               if (t_grnd(c) < tfrz) then
+                  qflx_dew_snow(p) = abs(qflx_ev_snow(p))
+               else
+                  qflx_dew_grnd(p) = abs(qflx_ev_snow(p))
+               end if
             end if
-            qflx_sub_snow(p) = qflx_ev_snow(p) - qflx_evap_grnd(p)
-         else
-            if (t_grnd(c) < tfrz) then
-               qflx_dew_snow(p) = abs(qflx_ev_snow(p))
+
+         else ! Urban columns
+
+            if (qflx_evap_soi(p) >= 0._r8) then
+               ! for evaporation partitioning between liquid evap and ice sublimation, 
+               ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
+               if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
+                  qflx_evap_grnd(p) = max(qflx_evap_soi(p)*(h2osoi_liq(c,j)/(h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+                  qflx_sub_snow(p) = qflx_evap_soi(p) - qflx_evap_grnd(p)
+               else
+                  qflx_evap_grnd(p) = 0._r8
+                  qflx_sub_snow(p) = 0._r8
+               end if
             else
-               qflx_dew_grnd(p) = abs(qflx_ev_snow(p))
+               if (t_grnd(c) < tfrz) then
+                  qflx_dew_snow(p) = abs(qflx_evap_soi(p))
+               else
+                  qflx_dew_grnd(p) = abs(qflx_evap_soi(p))
+               end if
             end if
+
          end if
 
          ! Variables needed by history tape

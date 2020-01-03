@@ -188,6 +188,20 @@ contains
          ptr_col=this%qflx_rootsoi_col, set_spec=spval, l2g_scale_type='veg', default='inactive')
 
     this%qflx_ev_snow_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNOEVAP'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('evaporation from snow'), &
+         ptr_patch=this%qflx_ev_snow_patch, set_lake=0._r8, c2l_scale_type='urbanf')
+
+    this%qflx_ev_soil_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSOILEVAP'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('evaporation from soil'), &
+         ptr_patch=this%qflx_ev_soil_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
     this%qflx_snowindunload_patch(begp:endp) = spval
     call hist_addfld1d ( &

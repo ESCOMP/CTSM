@@ -631,13 +631,6 @@ contains
          long_name=this%info%lname('canopy transpiration'), &
          ptr_patch=this%qflx_tran_veg_patch, c2l_scale_type='urbanf')
 
-    call hist_addfld1d ( &
-         fname=this%info%fname('QSNOEVAP'), &
-         units='mm/s',  &
-         avgflag='A', &
-         long_name=this%info%lname('evaporation from snow'), &
-         ptr_patch=this%qflx_tran_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
-
     this%qflx_snwcp_liq_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QSNOCPLIQ'), &
