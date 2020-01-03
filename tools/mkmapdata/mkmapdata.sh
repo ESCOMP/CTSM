@@ -359,12 +359,12 @@ case $hostname in
      MPIEXEC="mpiexec_mpt -np $REGRID_PROC"
   fi
 
-  module load ncarenv/1.3
-  module load mpt/2.19
-  module load netcdf-mpi/4.6.1
-  module load pnetcdf/1.11.0
-  module load ncarcompilers/0.4.1
-  module load python/3.6.8
+  module load ncarenv
+  module load mpt
+  module load netcdf-mpi
+  module load pnetcdf
+  module load ncarcompilers
+  module load python
   ncar_pylib
   export PYTHONPATH="${dir}/../../../../git_ocgis/ocgis/src/:${dir}/../../../../git_esmf/esmf/src/addon/ESMPy/src/"
   ;;
