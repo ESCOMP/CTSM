@@ -257,10 +257,6 @@ contains
 
   end subroutine initialize1
 
-    if(use_soil_moisture_streams) then 
-       call PrescribedSoilMoistureInit(bounds_proc)
-    endif
-
   !-----------------------------------------------------------------------
   subroutine initialize2( )
     !

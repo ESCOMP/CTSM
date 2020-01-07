@@ -817,7 +817,7 @@ contains
        !
           do s = 1, this%fates(nc)%nsites
              c = this%f2hmap(nc)%fcolumn(s)
-             waterstate_inst%total_plant_stored_h2o_col(c) = &
+             waterdiagnosticbulk_inst%total_plant_stored_h2o_col(c) = &
                   this%fates(nc)%bc_out(s)%plant_stored_h2o_si
           end do
        end if
@@ -932,6 +932,7 @@ contains
      use FatesIOVariableKindMod, only : site_r8, site_int, cohort_r8, cohort_int
      use EDMainMod, only :        ed_update_site
      use FatesInterfaceMod, only:  fates_maxElementsPerSite
+     use FatesPlantHydraulicsMod, only : RestartHydrStates
 
       implicit none
 
@@ -1258,7 +1259,7 @@ contains
                       soilstate_inst%bsw_col(c,1:nlevsoil)
  
                  this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) = &
-                      waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
+                      waterstatebulk_inst%h2osoi_liq_col(c,1:nlevsoil)
  
                  this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoil) = &
                        soilstate_inst%hksat_col(c,1:nlevsoil)
