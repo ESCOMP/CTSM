@@ -1277,6 +1277,7 @@ foreach my $res ( @tran_res ) {
 # Transient ssp_rcp scenarios that work
 $phys = "clm5_0";
 $mode = "-phys $phys";
+&make_config_cache($phys);
 my @tran_res = ( "0.9x1.25", "1.9x2.5", "10x15" );
 foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient",
                       "1850-2100_SSP2-4.5_transient" ) {
