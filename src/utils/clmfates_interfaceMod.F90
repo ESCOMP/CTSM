@@ -908,7 +908,7 @@ contains
    ! ====================================================================================
 
    subroutine restart( this, bounds_proc, ncid, flag, waterdiagnosticbulk_inst, &
-                             canopystate_inst, frictionvel_inst, soilstate_inst )
+                             canopystate_inst, soilstate_inst )
 
       ! ---------------------------------------------------------------------------------
       ! The ability to restart the model is handled through three different types of calls
@@ -943,7 +943,6 @@ contains
       character(len=*)               , intent(in)    :: flag
       type(waterdiagnosticbulk_type)          , intent(inout) :: waterdiagnosticbulk_inst
       type(canopystate_type)         , intent(inout) :: canopystate_inst
-      type(frictionvel_type)         , intent(inout) :: frictionvel_inst
       type(soilstate_type)           , intent(inout) :: soilstate_inst
       
       ! Locals
@@ -1165,7 +1164,7 @@ contains
                ! Update diagnostics of FATES ecosystem structure used in HLM.
                ! ------------------------------------------------------------------------
                call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                     waterdiagnosticbulk_inst,canopystate_inst,frictionvel_inst)
+                     waterdiagnosticbulk_inst,canopystate_inst)
 
                ! ------------------------------------------------------------------------
                ! Update the 3D patch level radiation absorption fractions
