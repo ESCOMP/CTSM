@@ -853,7 +853,6 @@
   <test name="ERS_D_Ld3" grid="f19_g17_gl4" compset="I1850Clm50BgcCrop" testmods="clm/clm50dynroots">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="edison" compiler="intel" category="prebeta"/>
       <machine name="hobart" compiler="intel" category="prebeta"/>
       <machine name="hobart" compiler="pgi" category="prebeta"/>
     </machines>
@@ -1338,7 +1337,6 @@
   <test name="SMS_Ld1" grid="f19_g17" compset="I2000Clm50BgcCruGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
-      <machine name="edison" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1826,7 +1824,6 @@
   <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm45Fates" testmods="clm/FatesAllVars">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
@@ -1836,7 +1833,6 @@
   <test name="ERS_D_Ld3" grid="f19_g16" compset="I2000Clm50FatesCruGs" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="edison" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1861,7 +1857,6 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
@@ -1879,7 +1874,6 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm45Fates" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
