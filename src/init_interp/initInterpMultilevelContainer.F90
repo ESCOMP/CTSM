@@ -286,8 +286,8 @@ contains
     ! match can be found for the generic subprogram call "READVAR"'. So we
     ! explicitly call the specific routine, rather than calling readvar.
     call level_class_dest%readvar_int(level_class_data_dest)
-    SHR_ASSERT(level_class_dest%get_vec_beg() == beg_dest, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(level_class_dest%get_vec_end() == end_dest, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(level_class_dest%get_vec_beg() == beg_dest, sourcefile, __LINE__)
+    SHR_ASSERT_FL(level_class_dest%get_vec_end() == end_dest, sourcefile, __LINE__)
 
     ! NOTE(wjs, 2015-10-18) The following check is helpful while we still have old initial
     ! conditions files that do not have the necessary metadata. Once these old initial
@@ -329,9 +329,9 @@ contains
          ncid = ncid_source, &
          file_is_dest = .false., &
          bounds = bounds_source)
-    SHR_ASSERT(level_class_source%get_nlev() == nlev_source, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(level_class_source%get_vec_beg() == beg_source, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(level_class_source%get_vec_end() == end_source, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(level_class_source%get_nlev() == nlev_source, sourcefile, __LINE__)
+    SHR_ASSERT_FL(level_class_source%get_vec_beg() == beg_source, sourcefile, __LINE__)
+    SHR_ASSERT_FL(level_class_source%get_vec_end() == end_source, sourcefile, __LINE__)
     allocate(level_class_data_source(beg_dest:end_dest, nlev_source))
     allocate(level_class_data_source_sgrid_1d(beg_source:end_source))
     do level = 1, nlev_source

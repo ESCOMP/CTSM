@@ -8,7 +8,6 @@ module InfiltrationExcessRunoffMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use shr_log_mod      , only : errMsg => shr_log_errMsg
   use decompMod        , only : bounds_type
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog, use_vichydro
@@ -260,7 +259,7 @@ contains
     character(len=*), parameter :: subname = 'ComputeQinmaxHksat'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(qinmax_on_unsaturated_area) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(qinmax_on_unsaturated_area) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          icefrac          =>    soilhydrology_inst%icefrac_col      , & ! Input:  [real(r8) (:,:) ]  fraction of ice

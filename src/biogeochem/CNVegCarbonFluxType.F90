@@ -4062,7 +4062,7 @@ contains
     real(r8) :: dwt_conv_cflux_delta_grc(bounds%begg:bounds%endg)    ! dwt_conv_cflux_grc expressed as a total delta (not a flux) (gC/m2)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(product_closs_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(product_closs_grc) == (/bounds%endg/)), sourcefile, __LINE__)
 
     ! calculate patch-level summary carbon fluxes and states
 

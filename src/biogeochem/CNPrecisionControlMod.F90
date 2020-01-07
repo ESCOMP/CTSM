@@ -431,25 +431,25 @@ contains
     logical :: lcroponly, lallowneg
     integer :: fp, p
 
-    SHR_ASSERT_ALL((ubound(carbon_patch)   == (/bounds%endp/)), 'ubnd(carb)'//errMsg(sourcefile, lineno))
-    SHR_ASSERT_ALL((ubound(nitrogen_patch) == (/bounds%endp/)), 'ubnd(nitro)'//errMsg(sourcefile, lineno))
-    SHR_ASSERT_ALL((ubound(pc)             == (/bounds%endp/)), 'ubnd(pc)'//errMsg(sourcefile, lineno))
-    SHR_ASSERT_ALL((ubound(pn)             == (/bounds%endp/)), 'ubnd(pn)'//errMsg(sourcefile, lineno))
+    SHR_ASSERT_ALL_FL((ubound(carbon_patch)   == (/bounds%endp/)), 'ubnd(carb)'//sourcefile, lineno)
+    SHR_ASSERT_ALL_FL((ubound(nitrogen_patch) == (/bounds%endp/)), 'ubnd(nitro)'//sourcefile, lineno)
+    SHR_ASSERT_ALL_FL((ubound(pc)             == (/bounds%endp/)), 'ubnd(pc)'//sourcefile, lineno)
+    SHR_ASSERT_ALL_FL((ubound(pn)             == (/bounds%endp/)), 'ubnd(pn)'//sourcefile, lineno)
 #ifndef _OPENMP
     if ( present(c13) .and. use_c13 )then
-       SHR_ASSERT_ALL((lbound(c13)         == (/bounds%begp/)), 'lbnd(c13)'//errMsg(sourcefile, lineno))
-       SHR_ASSERT_ALL((ubound(c13)         == (/bounds%endp/)), 'ubnd(c13)'//errMsg(sourcefile, lineno))
+       SHR_ASSERT_ALL_FL((lbound(c13)         == (/bounds%begp/)), 'lbnd(c13)'//sourcefile, lineno)
+       SHR_ASSERT_ALL_FL((ubound(c13)         == (/bounds%endp/)), 'ubnd(c13)'//sourcefile, lineno)
     end if
     if ( present(c14) .and. use_c14 )then
-       SHR_ASSERT_ALL((lbound(c14)         == (/bounds%begp/)), 'lbnd(c14)'//errMsg(sourcefile, lineno))
-       SHR_ASSERT_ALL((ubound(c14)         == (/bounds%endp/)), 'ubnd(c14)'//errMsg(sourcefile, lineno))
+       SHR_ASSERT_ALL_FL((lbound(c14)         == (/bounds%begp/)), 'lbnd(c14)'//sourcefile, lineno)
+       SHR_ASSERT_ALL_FL((ubound(c14)         == (/bounds%endp/)), 'ubnd(c14)'//sourcefile, lineno)
     end if
 #endif
     if ( present(pc13) )then
-       SHR_ASSERT_ALL((ubound(pc13)        == (/bounds%endp/)), 'ubnd(pc13)'//errMsg(sourcefile, lineno))
+       SHR_ASSERT_ALL_FL((ubound(pc13)        == (/bounds%endp/)), 'ubnd(pc13)'//sourcefile, lineno)
     end if
     if ( present(pc14) )then
-       SHR_ASSERT_ALL((ubound(pc14)        == (/bounds%endp/)), 'ubnd(pc14)'//errMsg(sourcefile, lineno))
+       SHR_ASSERT_ALL_FL((ubound(pc14)        == (/bounds%endp/)), 'ubnd(pc14)'//sourcefile, lineno)
     end if
     ! patch loop
     lcroponly = .false.
@@ -520,23 +520,23 @@ contains
     logical :: lcroponly, lallowneg
     integer :: fp, p
 
-    SHR_ASSERT_ALL((ubound(carbon_patch)   == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(pc)             == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(carbon_patch)   == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(pc)             == (/bounds%endp/)), sourcefile, __LINE__)
 #ifndef _OPENMP
     if ( present(c13) .and. use_c13 )then
-       SHR_ASSERT_ALL((lbound(c13)         == (/bounds%begp/)), errMsg(sourcefile, __LINE__))
-       SHR_ASSERT_ALL((ubound(c13)         == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL_FL((lbound(c13)         == (/bounds%begp/)), sourcefile, __LINE__)
+       SHR_ASSERT_ALL_FL((ubound(c13)         == (/bounds%endp/)), sourcefile, __LINE__)
     end if
     if ( present(c14) .and. use_c14 )then
-       SHR_ASSERT_ALL((lbound(c14)         == (/bounds%begp/)), errMsg(sourcefile, __LINE__))
-       SHR_ASSERT_ALL((ubound(c14)         == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL_FL((lbound(c14)         == (/bounds%begp/)), sourcefile, __LINE__)
+       SHR_ASSERT_ALL_FL((ubound(c14)         == (/bounds%endp/)), sourcefile, __LINE__)
     end if
 #endif
     if ( present(pc13) )then
-       SHR_ASSERT_ALL((ubound(pc13)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL_FL((ubound(pc13)        == (/bounds%endp/)), sourcefile, __LINE__)
     end if
     if ( present(pc14) )then
-       SHR_ASSERT_ALL((ubound(pc14)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL_FL((ubound(pc14)        == (/bounds%endp/)), sourcefile, __LINE__)
     end if
     if ( -ccrit < cnegcrit )then
         call endrun(msg='ERROR: cnegcrit should be less than -ccrit: '//errMsg(sourcefile, lineno))
@@ -597,8 +597,8 @@ contains
 
     integer :: fp, p
 
-    SHR_ASSERT_ALL((ubound(nitrogen_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(pn)             == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(nitrogen_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(pn)             == (/bounds%endp/)), sourcefile, __LINE__)
     do fp = 1,num_soilp
        p = filter_soilp(fp)
        if ( nitrogen_patch(p) < nnegcrit ) then
