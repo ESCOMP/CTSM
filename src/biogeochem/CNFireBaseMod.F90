@@ -986,6 +986,7 @@ contains
    type(mct_ggrid)    :: dom_clm                     ! domain information 
    character(len=CL)  :: stream_fldFileName_popdens  ! population density streams filename
    character(len=CL)  :: popdensmapalgo = 'bilinear' ! mapping alogrithm for population density
+   character(len=CL)  :: popdens_tintalgo = 'nearest'! time interpolation alogrithm for population density
    character(*), parameter :: subName = "('hdmdyn_init')"
    character(*), parameter :: F00 = "('(hdmdyn_init) ',4a)"
    !-----------------------------------------------------------------------
@@ -995,7 +996,8 @@ contains
         stream_year_last_popdens,   &
         model_year_align_popdens,   &
         popdensmapalgo,             &
-        stream_fldFileName_popdens
+        stream_fldFileName_popdens, &
+        popdens_tintalgo
 
    ! Default values for namelist
    stream_year_first_popdens  = 1       ! first year in stream to use
@@ -1022,6 +1024,7 @@ contains
    call shr_mpi_bcast(stream_year_last_popdens, mpicom)
    call shr_mpi_bcast(model_year_align_popdens, mpicom)
    call shr_mpi_bcast(stream_fldFileName_popdens, mpicom)
+   call shr_mpi_bcast(popdens_tintalgo, mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
@@ -1030,6 +1033,7 @@ contains
       write(iulog,*) '  stream_year_last_popdens   = ',stream_year_last_popdens   
       write(iulog,*) '  model_year_align_popdens   = ',model_year_align_popdens   
       write(iulog,*) '  stream_fldFileName_popdens = ',stream_fldFileName_popdens
+      write(iulog,*) '  popdens_tintalgo           = ',popdens_tintalgo
       write(iulog,*) ' '
    endif
 
@@ -1059,7 +1063,7 @@ contains
         fillalgo='none',                               &
         mapalgo=popdensmapalgo,                        &
         calendar=get_calendar(),                       &
-        tintalgo='nearest',                            &
+        tintalgo=popdens_tintalgo,                     &
         taxmode='extend'                           )
 
    if (masterproc) then
@@ -1138,6 +1142,7 @@ contains
   integer            :: nml_error                  ! namelist i/o error flag
   type(mct_ggrid)    :: dom_clm                    ! domain information 
   character(len=CL)  :: stream_fldFileName_lightng ! lightning stream filename to read
+  character(len=CL)  :: lightng_tintalgo = 'linear'! time interpolation alogrithm
   character(len=CL)  :: lightngmapalgo = 'bilinear'! Mapping alogrithm
   character(*), parameter :: subName = "('lnfmdyn_init')"
   character(*), parameter :: F00 = "('(lnfmdyn_init) ',4a)"
@@ -1148,7 +1153,8 @@ contains
         stream_year_last_lightng,   &
         model_year_align_lightng,   &
         lightngmapalgo,             &
-        stream_fldFileName_lightng
+        stream_fldFileName_lightng, &
+        lightng_tintalgo
 
    ! Default values for namelist
     stream_year_first_lightng  = 1      ! first year in stream to use
@@ -1175,6 +1181,7 @@ contains
    call shr_mpi_bcast(stream_year_last_lightng, mpicom)
    call shr_mpi_bcast(model_year_align_lightng, mpicom)
    call shr_mpi_bcast(stream_fldFileName_lightng, mpicom)
+   call shr_mpi_bcast(lightng_tintalgo, mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
@@ -1183,6 +1190,7 @@ contains
       write(iulog,*) '  stream_year_last_lightng   = ',stream_year_last_lightng   
       write(iulog,*) '  model_year_align_lightng   = ',model_year_align_lightng   
       write(iulog,*) '  stream_fldFileName_lightng = ',stream_fldFileName_lightng
+      write(iulog,*) '  lightng_tintalgo           = ',lightng_tintalgo
       write(iulog,*) ' '
    endif
 
@@ -1210,6 +1218,7 @@ contains
         fldListFile='lnfm',                           &
         fldListModel='lnfm',                          &
         fillalgo='none',                              &
+        tintalgo=lightng_tintalgo,                    &
         mapalgo=lightngmapalgo,                       &
         calendar=get_calendar(),                      &
         taxmode='cycle'                            )

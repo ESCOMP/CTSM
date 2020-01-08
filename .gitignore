@@ -90,6 +90,9 @@ clm.input_data_list
 clm.input_data_list.previous
 *.stdout.txt.o*
 
+# mksurfdata unit tests
+unit_test_build
+
 # Tools executables
 /tools/mksurfdata_map/mksurfdata_map
 /tools/mkprocdata_map/mkprocdata_map

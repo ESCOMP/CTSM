@@ -1011,36 +1011,23 @@ sub setup_cmdl_maxpft {
   }
   $nl_flags->{'maxpft'} = $val;
 
-  if ( ($nl_flags->{'bgc_mode'} ne "sp") && ($nl_flags->{'maxpft'} != $maxpatchpft{$nl_flags->{'use_crop'}}) ) {
-     $log->fatal_error("** For CN or BGC mode you MUST set max patch PFT's to $maxpatchpft{$nl_flags->{'use_crop'}}\n" .
-                       "**\n" .
-                       "** When the crop model is on then it must be set to $maxpatchpft{'crop'} otherwise to $maxpatchpft{'nocrop'}\n" .
-                       "** Set the bgc mode, crop and maxpft by the following means from highest to lowest precedence:\n" .
-                       "** * by the command-line options -bgc, -crop and -maxpft\n" .
-                       "** * by a default configuration file, specified by -defaults\n" .
-                       "**");
-  }
-  if ( $nl_flags->{'maxpft'} > $maxpatchpft{$nl_flags->{'use_crop'}} ) {
-     $log->fatal_error("** Max patch PFT's can NOT exceed $maxpatchpft{$nl_flags->{'use_crop'}}\n" .
-                       "**\n" .
-                       "** Set maxpft by the following means from highest to lowest precedence:\n" .
-                       "** * by the command-line options -maxpft\n" .
-                       "** * by a default configuration file, specified by -defaults\n" .
-                       "**");
-  }
-  if ( $nl_flags->{'maxpft'} != $maxpatchpft{$nl_flags->{'use_crop'}} ) {
-     $log->warning("running with maxpft NOT equal to $maxpatchpft{$nl_flags->{'use_crop'}} is " .
-                   "NOT validated / scientifically supported." );
-  }
-  $log->verbose_message("Using $nl_flags->{'maxpft'} for maxpft.");
-
   $var = "maxpatch_pft";
-  $val = $nl_flags->{'maxpft'};
   my $group = $definition->get_group_name($var);
-  $nl->set_variable_value($group, $var, $val);
-  if (  ! $definition->is_valid_value( $var, $val ) ) {
-     my @valid_values   = $definition->get_valid_values( $var );
-     $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
+  if ( ! defined($nl->get_variable_value($group, $var)) ) {
+    $val = $nl_flags->{'maxpft'};
+    $nl->set_variable_value($group, $var, $val);
+  }
+  $val = $nl->get_variable_value($group, $var);
+  my @valid_values   = ($maxpatchpft{'.true.'}, $maxpatchpft{'.false.'}  );
+  my $found = 0;
+  foreach my $valid_val ( @valid_values ) {
+     if ( $val == $valid_val ) {
+       $found = 1;
+       last;
+     }
+  }
+  if ( ! $found ) {
+     $log->warning("$var has a value ($val) that is normally NOT valid. Normal valid values are: @valid_values");
   }
 }
 
@@ -1859,6 +1846,12 @@ sub setup_logic_start_type {
   if ( $my_start_type =~ /branch/ ) {
     if (not defined $nl->get_value('nrevsn')) {
       $log->fatal_error("nrevsn is required for a branch type.");
+    }
+    if (defined $nl->get_value('use_init_interp')) {
+       if ( &value_is_true($nl->get_value('use_init_interp') ) ) {
+         # Always print this warning, but don't stop if it happens
+         print "\nWARNING: use_init_interp will NOT happen for a branch case.\n\n";
+       }
     }
   } else {
     if (defined $nl->get_value('nrevsn')) {
@@ -3254,9 +3247,10 @@ sub setup_logic_popd_streams {
      if ( defined($nl->get_value('stream_year_first_popdens')) ||
           defined($nl->get_value('stream_year_last_popdens'))  ||
           defined($nl->get_value('model_year_align_popdens'))  ||
+          defined($nl->get_value('popdens_tintalgo'        ))  ||
           defined($nl->get_value('stream_fldfilename_popdens'))   ) {
         $log->fatal_error("When bgc is SP (NOT CN or BGC) or fire_method==nofire none of: stream_year_first_popdens,\n" .
-                          "stream_year_last_popdens, model_year_align_popdens, nor\n" .
+                          "stream_year_last_popdens, model_year_align_popdens, popdens_tintalgo nor\n" .
                           "stream_fldfilename_popdens can be set!");
      }
   }
@@ -3315,9 +3309,10 @@ sub setup_logic_lightning_streams {
      if ( defined($nl->get_value('stream_year_first_lightng')) ||
           defined($nl->get_value('stream_year_last_lightng'))  ||
           defined($nl->get_value('model_year_align_lightng'))  ||
+          defined($nl->get_value('lightng_tintalgo'        ))  ||
           defined($nl->get_value('stream_fldfilename_lightng'))   ) {
         $log->fatal_error("When bgc is SP (NOT CN or BGC) or fire_method==nofire none of: stream_year_first_lightng,\n" .
-                          "stream_year_last_lightng, model_year_align_lightng, nor\n" .
+                          "stream_year_last_lightng, model_year_align_lightng, lightng_tintalgo nor\n" .
                           "stream_fldfilename_lightng can be set!");
      }
   }
@@ -3398,6 +3393,8 @@ sub setup_logic_soilm_streams {
       if ( &value_is_true( $nl->get_value('use_soil_moisture_streams') ) ) {
          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_tintalgo',
                      'hgrid'=>$nl_flags->{'res'} );
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_offset',
+                     'hgrid'=>$nl_flags->{'res'} );
          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_soilm', 'phys'=>$nl_flags->{'phys'},
                      'sim_year'=>$nl_flags->{'sim_year'},
                      'sim_year_range'=>$nl_flags->{'sim_year_range'});
@@ -3413,13 +3410,21 @@ sub setup_logic_soilm_streams {
          }
          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_soilm', 'phys'=>$nl_flags->{'phys'},
                      'hgrid'=>$nl_flags->{'res'} );
+         if ( ($opts->{'use_case'} =~ /_transient$/) &&
+              (remove_leading_and_trailing_quotes($nl->get_value("soilm_tintalgo")) eq "linear") ) {
+             $log->warning("For a transient case, soil moisture streams, should NOT use soilm_tintalgo='linear'" .
+                           " since vegetated areas could go from missing to not missing or vice versa" );
+         }
       } else {
          if ( defined($nl->get_value('stream_year_first_soilm')) ||
               defined($nl->get_value('model_year_align_soilm')) ||
               defined($nl->get_value('stream_fldfilename_soilm')) ||
+              defined($nl->get_value('soilm_tintalgo')) ||
+              defined($nl->get_value('soilm_offset')) ||
               defined($nl->get_value('stream_year_last_soilm')) ) {
              $log->fatal_error("One of the soilm streams namelist items (stream_year_first_soilm, " . 
                                 " model_year_align_soilm, stream_fldfilename_soilm, stream_fldfilename_soilm)" . 
+                                " soilm_tintalgo soilm_offset" .
                                 " is defined, but use_soil_moisture_streams option NOT set to true");
          }
       }
@@ -3462,9 +3467,10 @@ sub setup_logic_lai_streams {
      if ( defined($nl->get_value('stream_year_first_lai')) ||
           defined($nl->get_value('stream_year_last_lai'))  ||
           defined($nl->get_value('model_year_align_lai'))  ||
+          defined($nl->get_value('lai_tintalgo'        ))  ||
           defined($nl->get_value('stream_fldfilename_lai'))   ) {
         $log->fatal_error("When bgc is NOT SP none of the following can be set: stream_year_first_lai,\n" .
-                          "stream_year_last_lai, model_year_align_lai, nor\n" .
+                          "stream_year_last_lai, model_year_align_lai, lai_tintalgo nor\n" .
                           "stream_fldfilename_lai (eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
      }
   }

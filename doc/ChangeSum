@@ -1,5 +1,24 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.29    erik 11/19/2019 Some answer changes needed for prescribed soil-moisture and clm4_5 defaults (1850-ndep, and urbantv settings)
+release-clm5.0.28    erik 11/14/2019 Several bit-for-bit fixes especially around soil-moisture streams
+release-clm5.0.27    erik 08/13/2019 Add presoribed soil moisture streams as an option, and a few fixes
+release-clm5.0.26   sacks 07/29/2019 Add a CN precision control call to fix problems related to small negative values
+release-clm5.0.25    erik 05/29/2019 Change two files from NetCDF-4 format to NetCDF-3 (because some machines have trouble with NetCDF-4 in pnetcdf)
+release-clm5.0.25    erik 05/29/2019 Change two files from NetCDF-4 format to NetCDF-3 (because some machines have trouble with NetCDF-4 in pnetcdf)
+release-clm5.0.24    erik 05/22/2019 Correct ndep end year for SSPs, 2-degree CMIP6WACCMDECK with C-isotopes off, fixes mksurfdata for high resolution
+release-clm5.0.23    erik 05/15/2019 Update cime to bring in CO2 transient files for the CMIP6 SSP's as well as presaero for three of them
+release-clm5.0.22    erik 05/08/2019 Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
+release-clm5.0.22    erik 05/08/2019 Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
+release-clm5.0.21    erik 05/03/2019 New ndep files, update fates, fix some issues
+release-clm5.0.20    erik 03/12/2019 Update all fsurdat files and bring in files for future scenarios, remove CMIP5 rcp options, bring in some bug fixes
+release-clm5.0.19    erik 03/08/2019 SKIPPED ON MASTER -- Update cime version
+release-clm5.0.18    erik 02/13/2019 Add NoAnthro compset, reduce fields on fsurdat in mksurfdata_map, initial add of tools/contrib directory
+release-clm5.0.17   sacks 01/23/2019 History fields for vertically-resolved sums of soil C and N, and minor fixes
+release-clm5.0.16    erik 01/15/2019 PtVg and ssp_rcp future scenario options and Antarctica wetlands fix to mksurfdata, and option to dribble crop harvest XSMRPOOL flux to atmosphere 
+release-clm5.0.15   sacks 12/06/2018 SKIPPED ON MASTER -- Option for rain-to-snow
+release-clm5.0.14    erik 11/29/2018 Update cime and fix surface dataset for f05 1850 non-crop case
+release-clm5.0.13    erik 11/14/2018 Update externals with new CO2/presearo/rtm/mosart, add science_support, change testing
   ctsm1.0.dev080    sacks 12/02/2019 Update externals, minor fixes to work with latest cime, get nuopc cap working
   ctsm1.0.dev079    sacks 11/04/2019 Change a few uses of shr_kind
   ctsm1.0.dev078   oleson 10/31/2019 Fix rootr calculation with use_hydrstress true

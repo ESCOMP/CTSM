@@ -1,5 +1,7 @@
 module SatellitePhenologyMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! CLM Satelitte Phenology model (SP) ecosystem dynamics (phenology, vegetation). 
@@ -40,16 +42,18 @@ module SatellitePhenologyMod
   public :: SatellitePhenologyInit ! Dynamically allocate memory
   public :: interpMonthlyVeg       ! interpolate monthly vegetation data
   public :: readAnnualVegetation   ! Read in annual vegetation (needed for Dry-deposition)
+  public :: lai_advance            ! Advance the LAI streams (outside of a Open-MP threading loop)
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: readMonthlyVegetation   ! read monthly vegetation data for two months
-  private :: lai_init    ! position datasets for LAI
-  private :: lai_interp  ! interpolates between two years of LAI data
+  private :: lai_init                ! position datasets for LAI
+  private :: lai_interp              ! interpolates between two years of LAI data (when LAI streams are being used)
 
   ! !PRIVATE MEMBER DATA:
   type(shr_strdata_type) :: sdat_lai           ! LAI input data stream
   !
   ! !PRIVATE TYPES:
+  integer, allocatable :: g_to_ig(:)            ! Array matching gridcell index to data index
   integer , private :: InterpMonths1            ! saved month index
   real(r8), private :: timwt(2)                 ! time weights for month 1 and month 2
   real(r8), private, allocatable :: mlai2t(:,:) ! lai for interpolation (2 months)
@@ -98,6 +102,7 @@ contains
     type(mct_ggrid)    :: dom_clm                    ! domain information 
     character(len=CL)  :: stream_fldFileName_lai     ! lai stream filename to read
     character(len=CL)  :: lai_mapalgo = 'bilinear'   ! Mapping alogrithm
+    character(len=CL)  :: lai_tintalgo = 'linear'    ! Time interpolation alogrithm
 
     character(*), parameter    :: subName = "('laidyn_init')"
     character(*), parameter    :: F00 = "('(laidyn_init) ',4a)"
@@ -113,7 +118,8 @@ contains
          stream_year_last_lai,     &
          model_year_align_lai,     &
          lai_mapalgo,              &
-         stream_fldFileName_lai
+         stream_fldFileName_lai,   &
+         lai_tintalgo
 
     ! Default values for namelist
     stream_year_first_lai     = 1      ! first year in stream to use
@@ -142,6 +148,7 @@ contains
     call shr_mpi_bcast(stream_year_last_lai, mpicom)
     call shr_mpi_bcast(model_year_align_lai, mpicom)
     call shr_mpi_bcast(stream_fldFileName_lai, mpicom)
+    call shr_mpi_bcast(lai_tintalgo, mpicom)
 
     if (masterproc) then
 
@@ -151,6 +158,7 @@ contains
        write(iulog,*) '  stream_year_last_lai   = ',stream_year_last_lai   
        write(iulog,*) '  model_year_align_lai   = ',model_year_align_lai   
        write(iulog,*) '  stream_fldFileName_lai = ',trim(stream_fldFileName_lai)
+       write(iulog,*) '  lai_tintalgo           = ',trim(lai_tintalgo)
 
     endif
 
@@ -184,6 +192,7 @@ contains
          fldListModel=fldList,                         &
          fillalgo='none',                              &
          mapalgo=lai_mapalgo,                          &
+         tintalgo=lai_tintalgo,                        &
          calendar=get_calendar(),                      &
          taxmode='cycle'                               )
 
@@ -195,6 +204,48 @@ contains
 
   !-----------------------------------------------------------------------
   !
+  ! lai_advance
+  !
+  !-----------------------------------------------------------------------
+  subroutine lai_advance( bounds )
+    !
+    ! Advance LAI streams
+    !
+    ! !USES:
+    use clm_time_manager, only : get_curr_date
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type)      , intent(in)    :: bounds                          
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g, ig   ! Indices
+    integer :: year    ! year (0, ...) for nstep+1
+    integer :: mon     ! month (1, ..., 12) for nstep+1
+    integer :: day     ! day of month (1, ..., 31) for nstep+1
+    integer :: sec     ! seconds into current date for nstep+1
+    integer :: mcdate  ! Current model date (yyyymmdd)
+    !-----------------------------------------------------------------------
+
+    call get_curr_date(year, mon, day, sec)
+    mcdate = year*10000 + mon*100 + day
+
+    call shr_strdata_advance(sdat_lai, mcdate, sec, mpicom, 'laidyn')
+    if ( .not. allocated(g_to_ig) )then
+       allocate (g_to_ig(bounds%begg:bounds%endg) )
+
+       ig = 0
+       do g = bounds%begg,bounds%endg
+          ig = ig+1
+          g_to_ig(g) = ig
+       end do
+    end if
+
+  end subroutine lai_advance
+
+
+  !-----------------------------------------------------------------------
+  !
   ! lai_interp
   !
   !-----------------------------------------------------------------------
@@ -203,7 +254,6 @@ contains
     ! Interpolate data stream information for Lai.
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date
     use pftconMod       , only : noveg
     !
     ! !ARGUMENTS:
@@ -212,20 +262,13 @@ contains
     type(canopystate_type) , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: ivt, p, g, ip, ig, gpft
-    integer :: year    ! year (0, ...) for nstep+1
-    integer :: mon     ! month (1, ..., 12) for nstep+1
-    integer :: day     ! day of month (1, ..., 31) for nstep+1
-    integer :: sec     ! seconds into current date for nstep+1
-    integer :: mcdate  ! Current model date (yyyymmdd)
+    integer :: ivt, p, ip, ig
     character(len=CL)  :: stream_var_name
     !-----------------------------------------------------------------------
-
-    call get_curr_date(year, mon, day, sec)
-    mcdate = year*10000 + mon*100 + day
-
-    call shr_strdata_advance(sdat_lai, mcdate, sec, mpicom, 'laidyn')
-
+    SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(sdat_lai%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(sdat_lai%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
     do p = bounds%begp, bounds%endp
        ivt = patch%itype(p)
        if (ivt /= noveg) then     ! vegetated pft
@@ -233,17 +276,7 @@ contains
           stream_var_name = 'LAI_'//trim(adjustl(stream_var_name))
           ip = mct_aVect_indexRA(sdat_lai%avs(1),trim(stream_var_name))
        endif
-       gpft = patch%gridcell(p)
-
-       !
-       ! Determine vector index corresponding to gpft
-       !
-       ig = 0
-       do g = bounds%begg,bounds%endg
-          ig = ig+1
-          if (g == gpft) exit
-       end do
-
+       ig = g_to_ig(patch%gridcell(p))
        !
        ! Set lai for each gridcell/patch combination
        !
@@ -336,6 +369,7 @@ contains
       if (use_lai_streams) then
          call lai_interp(bounds, canopystate_inst)
       endif
+
 
       do fp = 1, num_nolakep
          p = filter_nolakep(fp)
