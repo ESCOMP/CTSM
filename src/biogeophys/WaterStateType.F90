@@ -12,7 +12,7 @@ module WaterStateType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN
+  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
   use clm_varctl     , only : use_bedrock, iulog
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
   use clm_varcon     , only : spval, namec
@@ -119,7 +119,7 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
          dim2beg = 1, dim2end = nlevgrnd)
-    call AllocateVar2d(var = this%h2osoi_vol_col, name = 'h2osoi_vol_prs_grc', &
+    call AllocateVar2d(var = this%h2osoi_vol_prs_grc, name = 'h2osoi_vol_prs_grc', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
          dim2beg = 1, dim2end = nlevgrnd)
@@ -184,7 +184,6 @@ contains
          avgflag='A', &
          long_name=this%info%lname('Snow liquid water content'), &
          ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
-       data2dptr => this%h2osoi_liq_col(:,-nlevsno+1:0)
 
     data2dptr => this%h2osoi_ice_col(:,-nlevsno+1:0)
     call hist_addfld2d ( &
