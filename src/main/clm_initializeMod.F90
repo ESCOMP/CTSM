@@ -270,13 +270,12 @@ contains
     !
     ! !USES:
     use shr_orb_mod           , only : shr_orb_decl
-    use shr_scam_mod          , only : shr_scam_getCloseLatLon
     use seq_drydep_mod        , only : n_drydep, drydep_method, DD_XLND
     use accumulMod            , only : print_accum_fields
     use clm_varpar            , only : nlevsno
     use clm_varcon            , only : spval
     use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
-    use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
+    use clm_varctl            , only : use_century_decomp, use_cn, use_fates
     use clm_varctl            , only : use_crop, ndep_from_cpl
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size_real, get_curr_calday
@@ -426,14 +425,6 @@ contains
     call hist_addfld1d (fname='ZII', units='m', &
          avgflag='A', long_name='convective boundary height', &
          ptr_col=col%zii, default='inactive')
-
-    ! If single-column determine closest latitude and longitude
-
-    if (single_column) then
-       call getfil (fsurdat, locfn, 0)
-       call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &
-            closelat, closelon, closelatidx, closelonidx)
-    end if
 
     ! Initialize instances of all derived types as well as time constant variables
 

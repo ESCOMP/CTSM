@@ -592,6 +592,9 @@ contains
              co2_ppmv_input(g) = dataPtr(g-begg+1)   ! co2 atm prognostic
           end do
        end if
+       if (masterproc) then
+          write(iulog,*)'DEBUG: nstep, Sa_co2diag= ',get_nstep(),co2_ppmv_input(begg)
+       end if
     else if (co2_type == 'diagnostic') then
        fldName = 'Sa_co2diag'
        call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
@@ -605,6 +608,9 @@ contains
           do g = begg,endg
              co2_ppmv_input(g) = dataPtr(g-begg+1)   ! co2 atm diagnostic
           end do
+       end if
+       if (masterproc) then
+          write(iulog,*)'DEBUG: nstep, Sa_co2prog= ',get_nstep(),co2_ppmv_input(begg)
        end if
     end if
 
