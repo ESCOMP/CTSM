@@ -168,7 +168,7 @@ contains
     character(len=*), parameter :: subname = 'init_subgrid_weights_mod'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
 
     ! ------------------------------------------------------------------------
     ! Allocate variables in subgrid_weights_diagnostics

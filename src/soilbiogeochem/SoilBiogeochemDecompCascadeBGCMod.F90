@@ -16,12 +16,11 @@ module SoilBiogeochemDecompCascadeBGCMod
   use decompMod                          , only : bounds_type
   use spmdMod                            , only : masterproc
   use abortutils                         , only : endrun
-  use CNSharedParamsMod                  , only : CNParamsShareInst, anoxia_wtsat, nlev_soildecomp_standard 
+  use CNSharedParamsMod                  , only : CNParamsShareInst, nlev_soildecomp_standard 
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilStateType                      , only : soilstate_type
-  use CanopyStateType                    , only : canopystate_type
   use TemperatureType                    , only : temperature_type 
   use ch4Mod                             , only : ch4_type
   use ColumnType                         , only : col                
@@ -309,7 +308,6 @@ contains
     !  written by C. Koven 
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
@@ -714,8 +712,13 @@ contains
   end subroutine set_cultivation_levels
 
   !-----------------------------------------------------------------------
+<<<<<<< HEAD
   subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst,cnveg_state_inst)
+=======
+  subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
+       soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+>>>>>>> fbc767fb4a21a18c285df050b177bb09eefb6c5d
     !
     ! MWGraham - added num_soilp, filter_soilp for cultivation!!
     ! !DESCRIPTION:
@@ -731,9 +734,12 @@ contains
     type(bounds_type)                    , intent(in)    :: bounds          
     integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
+<<<<<<< HEAD
     integer                              , intent(in)    :: num_soilp       ! number of soil pfts in filter !!!!!!!!!!!!!! added for cultivation code
     integer                              , intent(in)    :: filter_soilp(:) ! filter for soil pfts !!!!!!!!!!!!!! added for cultivation co
     type(canopystate_type)               , intent(in)    :: canopystate_inst
+=======
+>>>>>>> fbc767fb4a21a18c285df050b177bb09eefb6c5d
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
     type(temperature_type)               , intent(in)    :: temperature_inst
     type(ch4_type)                       , intent(in)    :: ch4_inst
@@ -788,8 +794,6 @@ contains
          minpsi         => params_inst%minpsi_bgc                      , & ! Input:  [real(r8)         ]  minimum soil suction (mm)
          maxpsi         => params_inst%maxpsi_bgc                      , & ! Input:  [real(r8)         ]  maximum soil suction (mm)
          soilpsi        => soilstate_inst%soilpsi_col                  , & ! Input:  [real(r8) (:,:)   ]  soil water potential in each soil layer (MPa)          
-
-         alt_indx       => canopystate_inst%alt_indx_col               , & ! Input:  [integer  (:)     ]  current depth of thaw                                     
 
          t_soisno       => temperature_inst%t_soisno_col               , & ! Input:  [real(r8) (:,:)   ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)       
 
@@ -993,17 +997,6 @@ contains
          end do
 
          if (use_lch4) then
-            if (anoxia_wtsat) then ! Adjust for saturated fraction if unfrozen
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
-                  if (alt_indx(c) >= nlev_soildecomp_standard .and. t_soisno(c,1) > SHR_CONST_TKFRZ) then
-                     w_scalar(c,1) = w_scalar(c,1)*(1._r8 - finundated(c)) + finundated(c)
-                  end if
-               end do
-            end if
-         end if
-
-         if (use_lch4) then
             ! Calculate ANOXIA
             if (anoxia) then
                ! Check for anoxia w/o LCH4 now done in controlMod.
@@ -1014,13 +1007,7 @@ contains
 
                      if (j==1) o_scalar(c,:) = 0._r8
 
-                     if (.not. anoxia_wtsat) then
-                        o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * max(o2stress_unsat(c,j), mino2lim)
-                     else
-                        o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * &
-                             (max(o2stress_unsat(c,j), mino2lim)*(1._r8 - finundated(c)) + &
-                             max(o2stress_sat(c,j), mino2lim)*finundated(c) )
-                     end if
+                     o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * max(o2stress_unsat(c,j), mino2lim)
                   end do
                end do
             else
@@ -1084,11 +1071,6 @@ contains
                else
                   w_scalar(c,j) = 0._r8
                end if
-               if (use_lch4) then
-                  if (anoxia_wtsat .and. t_soisno(c,j) > SHR_CONST_TKFRZ) then ! wet area will have w_scalar of 1 if unfrozen
-                     w_scalar(c,j) = w_scalar(c,j)*(1._r8 - finundated(c)) + finundated(c)
-                  end if
-               end if
             end do
          end do
 
@@ -1101,12 +1083,7 @@ contains
                   do fc = 1,num_soilc
                      c = filter_soilc(fc)
 
-                     if (.not. anoxia_wtsat) then
-                        o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
-                     else
-                        o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim) * (1._r8 - finundated(c)) + &
-                             max(o2stress_sat(c,j), mino2lim) * finundated(c)
-                     end if
+                     o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
                   end do
                end do
             else

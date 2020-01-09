@@ -10,7 +10,7 @@ module CNProductsMod
   use shr_log_mod             , only : errMsg => shr_log_errMsg
   use decompMod               , only : bounds_type
   use abortutils              , only : endrun
-  use clm_time_manager        , only : get_step_size
+  use clm_time_manager        , only : get_step_size_real
   use SpeciesBaseType         , only : species_base_type
   use PatchType               , only : patch
   !
@@ -487,12 +487,19 @@ contains
     real(r8) :: kprod100 ! decay constant for 100-year product pool
     !-----------------------------------------------------------------------
 
+<<<<<<< HEAD
     SHR_ASSERT_ALL((ubound(dwt_wood_product_gain_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(wood_harvest_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dwt_crop_product_gain_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(grain_to_cropprod_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(livestem_to_cropprod_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__)) !added livestem MWGraham
     SHR_ASSERT_ALL((ubound(leaf_to_cropprod_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__)) !added leaf MWGraham
+=======
+    SHR_ASSERT_ALL_FL((ubound(dwt_wood_product_gain_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wood_harvest_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dwt_crop_product_gain_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(grain_to_cropprod_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+>>>>>>> fbc767fb4a21a18c285df050b177bb09eefb6c5d
 
     call this%PartitionWoodFluxes(bounds, &
          num_soilp, filter_soilp, &
@@ -521,7 +528,7 @@ contains
     end do
 
     ! set time steps
-    dt = real( get_step_size(), r8 )
+    dt = get_step_size_real()
 
     ! update product state variables
     do g = bounds%begg, bounds%endg

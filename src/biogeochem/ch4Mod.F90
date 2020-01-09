@@ -16,7 +16,7 @@ module ch4Mod
   use clm_varcon                     , only : denh2o, denice, tfrz, grav, spval, rgas, grlnd
   use clm_varcon                     , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
   use landunit_varcon                , only : istsoil, istcrop, istdlak
-  use clm_time_manager               , only : get_step_size, get_nstep
+  use clm_time_manager               , only : get_step_size_real, get_nstep
   use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4
   use abortutils                     , only : endrun
   use decompMod                      , only : bounds_type
@@ -686,7 +686,8 @@ contains
 
     this%ch4_dfsat_flux_col(begc:endc) = spval
     call hist_addfld1d (fname='FCH4_DFSAT', units='kgC/m2/s',  &
-         avgflag='A', long_name='CH4 additional flux due to changing fsat, vegetated landunits only', &
+         avgflag='A', &
+         long_name='CH4 additional flux due to changing fsat, natural vegetated and crop landunits only', &
          ptr_col=this%ch4_dfsat_flux_col)
 
     this%zwt_ch4_unsat_col(begc:endc) = spval
@@ -761,7 +762,7 @@ contains
     logical               :: readvar     ! If read variable from file or not
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(cellorg_col) == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cellorg_col) == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
 
     !----------------------------------------
     ! Initialize time constant variables
@@ -1702,10 +1703,10 @@ contains
     character(len=32) :: subname='ch4'                 ! subroutine name
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(agnpp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bgnpp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(annsum_npp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rr) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                                 & 
          dz                   =>   col%dz                                    , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       
@@ -1787,7 +1788,7 @@ contains
       qflxlagd          = params_inst%qflxlagd
       highlatfact       = params_inst%highlatfact
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       nstep = get_nstep()
       dtime_ch4 = dtime
       redoxlags = redoxlag*secspday ! days --> s
@@ -2343,8 +2344,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(rr) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                    & 
          wtcol          =>    patch%wtcol                                         , & ! Input:  [real(r8) (:)    ]  weight (relative to column)                       
@@ -2389,7 +2390,7 @@ contains
          co2_decomp_depth => ch4_inst%co2_decomp_depth_sat_col   ! Output: [real(r8) (:,:)]  CO2 production during decomposition in each soil layer (nlevsoi) (mol/m3/s)
       endif
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       q10ch4           = params_inst%q10ch4
       q10ch4base       = params_inst%q10ch4base
@@ -2614,7 +2615,7 @@ contains
     ! Oxidation will be limited by available oxygen in ch4_tran.
     
     ! !USES:
-    use clm_time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size_real
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in) :: bounds    
@@ -2661,7 +2662,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                          & 
          h2osoi_vol => waterstatebulk_inst%h2osoi_vol_col , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
@@ -2689,7 +2690,7 @@ contains
       endif
 
       ! Get land model time step
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Set oxidation parameters
       vmax_ch4_oxid   = params_inst%vmax_ch4_oxid
@@ -2771,7 +2772,7 @@ contains
 
     ! !USES:
     use clm_varcon       , only : rpi
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use pftconMod        , only : nc3_arctic_grass, nc3_nonarctic_grass, nc4_grass, noveg, pftcon
     use ch4varcon        , only : transpirationloss, use_aereoxid_prog
     !
@@ -2829,8 +2830,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(annsum_npp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                              & 
          z             =>    col%z                                        , & ! Input:  [real(r8) (:,:)  ]  layer depth (m) (-nlevsno+1:nlevsoi)            
@@ -2842,7 +2843,7 @@ contains
          t_soisno      =>    temperature_inst%t_soisno_col                , & ! Input:  [real(r8) (:,:)  ]  soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
 
          watsat        =>    soilstate_inst%watsat_col                    , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water at saturation (porosity)   
-         rootr         =>    soilstate_inst%rootr_patch                   , & ! Input:  [real(r8) (:,:)  ]  effective fraction of roots in each soil layer  (nlevgrnd)
+         rootr         =>    soilstate_inst%rootr_patch                   , & ! Input:  [real(r8) (:,:)  ]  effective fraction of roots in each soil layer (SMS method only) (nlevgrnd)
          rootfr        =>    soilstate_inst%rootfr_patch                  , & ! Input:  [real(r8) (:,:)  ]  fraction of roots in each soil layer  (nlevsoi) 
 
          h2osoi_vol    =>    waterstatebulk_inst%h2osoi_vol_col               , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
@@ -2877,7 +2878,7 @@ contains
          ch4_prod_depth   =>  ch4_inst%ch4_prod_depth_sat_col   ! Input:  [real(r8) (:,:)]  production of CH4 in each soil layer (nlevsoi) (mol/m3/s)
       endif
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Set aerenchyma parameters
       aereoxid           = params_inst%aereoxid
@@ -3022,7 +3023,7 @@ contains
     ! Bubbles are released to the water table surface in ch4_tran.
 
     ! !USES:
-    use clm_time_manager   , only : get_step_size
+    use clm_time_manager   , only : get_step_size_real
     use LakeCon           
     !
     ! !ARGUMENTS:
@@ -3062,7 +3063,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                      & 
          z            =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  soil layer depth (m)                            
@@ -3098,7 +3099,7 @@ contains
       endif
 
       ! Get land model time step
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       vgc_max = params_inst%vgc_max
 
       bubble_f = 0.57_r8 ! CH4 content in gas bubbles (Kellner et al. 2006)
@@ -3167,7 +3168,7 @@ contains
     ! Then CH4 diffusive flux is calculated and consistency is checked.
 
     ! !USES:
-    use clm_time_manager   , only : get_step_size, get_nstep
+    use clm_time_manager   , only : get_step_size_real, get_nstep
     use TridiagonalMod     , only : Tridiagonal
     use ch4varcon          , only : ch4frzout, use_aereoxid_prog
     !
@@ -3259,7 +3260,7 @@ contains
     character(len=32) :: subname='ch4_tran' ! subroutine name
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                 & 
          z             =>    col%z                           , & ! Input:  [real(r8) (:,:) ]  soil layer depth (m)                            
@@ -3324,7 +3325,7 @@ contains
       endif
 
       ! Get land model time step
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       nstep = get_nstep()
 
       ! Set transport parameters
@@ -3979,7 +3980,7 @@ contains
     integer  :: fc       ! filter column index
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                          & 
          watsat     => soilstate_inst%watsat_col      , & ! Input:  [real(r8) (:,:)  ] volumetric soil water at saturation (porosity)   
@@ -4030,7 +4031,7 @@ contains
     ! !DESCRIPTION: Annual mean fields.
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size, get_days_per_year, get_nstep
+    use clm_time_manager, only: get_step_size_real, get_days_per_year, get_nstep
     use clm_varcon      , only: secspday
     !
     ! !ARGUMENTS:
@@ -4052,8 +4053,8 @@ contains
     real(r8):: secsperyear
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(agnpp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bgnpp) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                           & 
          somhr          =>    soilbiogeochem_carbonflux_inst%somhr_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) soil organic matter heterotrophic respiration
@@ -4071,7 +4072,7 @@ contains
          )
 
       ! set time steps
-      dt = real(get_step_size(), r8)
+      dt = get_step_size_real()
       secsperyear = real( get_days_per_year() * secspday, r8)
 
       do fc = 1,num_methc
@@ -4156,7 +4157,7 @@ contains
     character(len=*), parameter       :: subname = 'ch4_totcolch4'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(totcolch4) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(totcolch4) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          dz             =>   col%dz                      , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       

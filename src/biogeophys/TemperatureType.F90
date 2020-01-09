@@ -415,7 +415,7 @@ contains
 
     this%t_soisno_col(begc:endc,:) = spval
     call hist_addfld2d (fname='TSOI',  units='K', type2d='levgrnd', &
-         avgflag='A', long_name='soil temperature (vegetated landunits only)', &
+         avgflag='A', long_name='soil temperature (natural vegetated and crop landunits only)', &
          ptr_col=this%t_soisno_col, l2g_scale_type='veg')
 
     call hist_addfld2d (fname='TSOI_ICE',  units='K', type2d='levgrnd', &
@@ -429,7 +429,8 @@ contains
 
     this%tsl_col(begc:endc) = spval
     call hist_addfld1d (fname='TSL',  units='K', &
-         avgflag='A', long_name='temperature of near-surface soil layer (vegetated landunits only)', &
+         avgflag='A', &
+         long_name='temperature of near-surface soil layer (natural vegetated and crop landunits only)', &
          ptr_col=this%tsl_col, l2g_scale_type='veg')
     this%t_sno_mul_mss_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOTXMASS',  units='K kg/m2', &
@@ -508,7 +509,8 @@ contains
          avgflag='A', long_name='initial gridcell total heat content', &
          ptr_lnd=this%heat1_grc)
     call hist_addfld1d (fname='HEAT_CONTENT1_VEG',  units='J/m^2',  &
-         avgflag='A', long_name='initial gridcell total heat content - vegetated landunits only', &
+         avgflag='A', &
+         long_name='initial gridcell total heat content - natural vegetated and crop landunits only', &
          ptr_lnd=this%heat1_grc, l2g_scale_type='veg', default='inactive')
 
     this%heat2_grc(begg:endg) = spval
@@ -656,10 +658,10 @@ contains
     integer  :: lev
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(em_roof_lun)    == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_wall_lun)    == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_improad_lun) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_perroad_lun) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(em_roof_lun)    == (/bounds%endl/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(em_wall_lun)    == (/bounds%endl/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(em_improad_lun) == (/bounds%endl/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(em_perroad_lun) == (/bounds%endl/)), sourcefile, __LINE__)
 
     associate(snl => col%snl) ! Output: [integer (:)    ]  number of snow layers
 
@@ -1121,7 +1123,7 @@ contains
     !
     ! !USES
     use accumulMod       , only : init_accum_field
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     !
     ! !ARGUMENTS:
@@ -1133,7 +1135,7 @@ contains
     integer, parameter :: not_used = huge(1)
     !---------------------------------------------------------------------
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     this%t_veg24_patch(bounds%begp:bounds%endp) = spval
     call init_accum_field (name='T_VEG24', units='K',                                              &

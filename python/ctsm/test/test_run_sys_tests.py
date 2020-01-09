@@ -100,7 +100,8 @@ class TestRunSysTests(unittest.TestCase):
         (1) The use of a testlist argument
 
         (2) The standard arguments to create_test (the path to create_test, the arguments
-        --test-id and --output-root, and the absence of --compare and --generate)
+        --test-id and --output-root, the absence of --compare and --generate, and (on this
+        unknown machine) the absence of --baseline-root)
 
         (3) That a cs.status.fails file was created
         """
@@ -121,6 +122,7 @@ class TestRunSysTests(unittest.TestCase):
         six.assertRegex(self, command, r'test1 +test2(\s|$)')
         assertNotRegex(self, command, r'--compare\s')
         assertNotRegex(self, command, r'--generate\s')
+        assertNotRegex(self, command, r'--baseline-root\s')
 
         expected_cs_status = os.path.join(self._scratch,
                                           self._expected_testroot(),

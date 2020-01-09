@@ -188,7 +188,10 @@ module clm_varctl
   !----------------------------------------------------------
 
   ! use subgrid fluxes
-  integer,  public :: subgridflag = 1                   
+  logical,  public :: use_subgrid_fluxes = .true.
+
+  ! which snow cover fraction parameterization to use
+  character(len=64), public :: snow_cover_fraction_method
 
   ! true => write global average diagnostics to std out
   logical,  public :: wrtdia       = .false.            
@@ -264,7 +267,9 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical,           public :: use_bedrock = .false. ! true => use spatially variable soil depth
-  character(len=16), public :: soil_layerstruct = '10SL_3.5m'
+  character(len=16), public :: soil_layerstruct_predefined = 'UNSET'
+  real(r8), public :: soil_layerstruct_userdefined(99) = rundef
+  integer, public :: soil_layerstruct_userdefined_nlevsoi = iundef
 
   !----------------------------------------------------------
   ! plant hydraulic stress switch
