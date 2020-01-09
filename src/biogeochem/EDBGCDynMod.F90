@@ -180,13 +180,8 @@ contains
     !--------------------------------------------
 
     if (use_century_decomp) then
-<<<<<<< HEAD
        call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
             canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
-=======
-       call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
-            soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
->>>>>>> fbc767fb4a21a18c285df050b177bb09eefb6c5d
     else
        call decomp_rate_constants_cn(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
