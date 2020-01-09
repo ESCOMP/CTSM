@@ -712,13 +712,8 @@ contains
   end subroutine set_cultivation_levels
 
   !-----------------------------------------------------------------------
-<<<<<<< HEAD
   subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst,cnveg_state_inst)
-=======
-  subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
-       soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
->>>>>>> fbc767fb4a21a18c285df050b177bb09eefb6c5d
     !
     ! MWGraham - added num_soilp, filter_soilp for cultivation!!
     ! !DESCRIPTION:
@@ -734,12 +729,9 @@ contains
     type(bounds_type)                    , intent(in)    :: bounds          
     integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
-<<<<<<< HEAD
     integer                              , intent(in)    :: num_soilp       ! number of soil pfts in filter !!!!!!!!!!!!!! added for cultivation code
     integer                              , intent(in)    :: filter_soilp(:) ! filter for soil pfts !!!!!!!!!!!!!! added for cultivation co
     type(canopystate_type)               , intent(in)    :: canopystate_inst
-=======
->>>>>>> fbc767fb4a21a18c285df050b177bb09eefb6c5d
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
     type(temperature_type)               , intent(in)    :: temperature_inst
     type(ch4_type)                       , intent(in)    :: ch4_inst
