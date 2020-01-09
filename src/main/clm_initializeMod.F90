@@ -640,7 +640,6 @@ contains
     end if
 
     ! ------------------------------------------------------------------------
-<<<<<<< HEAD
     ! Crop and cultivation
     ! ------------------------------------------------------------------------
     if ( use_cn .and. use_century_decomp .and. use_crop .and. use_vertsoilc)then
@@ -657,9 +656,6 @@ contains
 
     ! ------------------------------------------------------------------------
     ! Initialize active history fields. 
-=======
-    ! Initialize active history fields.
->>>>>>> fbc767fb4a21a18c285df050b177bb09eefb6c5d
     ! ------------------------------------------------------------------------
 
     ! This is only done if not a restart run. If a restart run, then this
