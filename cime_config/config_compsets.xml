@@ -37,12 +37,12 @@
 <!-- I single point forcing -->
 
   <compset>
-    <alias>I1PtClm50SpRsGs</alias>
+    <alias>I1PtClm50SpGs</alias>
     <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>I1PtClm45SpRsGs</alias>
+    <alias>I1PtClm45SpGs</alias>
     <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
@@ -51,6 +51,16 @@
   <compset>
     <alias>I2000Clm50Sp</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing -->
+  <compset>
+    <alias>IHistClm50BgcRsGs</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+  <compset>
+    <alias>IHistClm50SpRsGs</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <!-- Primarily for testing -->

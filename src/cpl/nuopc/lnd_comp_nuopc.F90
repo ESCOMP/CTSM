@@ -66,7 +66,7 @@ module lnd_comp_nuopc
 
   logical                :: glc_present 
   logical                :: rof_prognostic
-  integer, parameter     :: dbug = 1
+  integer, parameter     :: dbug = 0
   character(*),parameter :: modName =  "(lnd_comp_nuopc)"
   character(*),parameter :: u_FILE_u = &
        __FILE__
