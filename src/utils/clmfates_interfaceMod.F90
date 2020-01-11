@@ -2181,7 +2181,21 @@ contains
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
        nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
+
+       ! This is the water removed from the soil layers by roots (or added)
        waterflux_inst%qflx_rootsoi_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(1:nlevsoil)
+
+       ! This is the total amount of water transferred to surface runoff
+       ! (this is generated potentially from supersaturating soils, or from water lost
+       !  during mortality and litter fall)
+       ! This array is set in HydrologyNoDrainage()->Infiltration()
+       ! This subroutine (ComputeRootSoilFlux()) is (conveniently) called right
+       ! after that in HydrologyNoDrainage()
+
+       waterflux_inst%qflx_h2osfc_surf_col(c) = waterflux_inst%qflx_h2osfc_surf_col(c) + & 
+             this%fates(nc)%bc_out(s)%qflx_surf_ro_si
+
+
     end do
     
  end subroutine ComputeRootSoilFlux
