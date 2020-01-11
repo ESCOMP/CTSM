@@ -74,7 +74,13 @@ contains
     ! Description
     ! Determine global index space value for target array at given clmlevel
     !
+    ! Example from histFileMod.F90:
+    ! ilarr = GetGlobalIndexArray(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
+    ! Note that the last argument (clmlevel) is set to nameg, which corresponds
+    ! to the "gridcell" not the "lun" of the first argument.
+    !
     ! Uses:
+#include "shr_assert.h"
     use shr_log_mod, only: errMsg => shr_log_errMsg
     use decompMod  , only: bounds_type, get_clmlevel_gsmap, get_proc_bounds
     use spmdMod    , only: iam
@@ -83,11 +89,11 @@ contains
     use mct_mod
     !
     ! Arguments 
-    integer                 , intent(in) :: bounds1
-    integer                 , intent(in) :: bounds2
-    integer, dimension(bounds1:bounds2), intent(in) :: decomp_index
+    integer, intent(in) :: bounds1  ! lower bound of the input & returned arrays
+    integer, intent(in) :: bounds2  ! upper bound of the input & returned arrays
+    integer, intent(in) :: decomp_index(bounds1:)
     character(len=*)        , intent(in) :: clmlevel
-    integer, dimension(bounds1:bounds2)  :: GetGlobalIndexArray
+    integer :: GetGlobalIndexArray(bounds1:bounds2)
     !
     ! Local Variables:
     type(bounds_type)             :: bounds_proc   ! processor bounds
@@ -97,6 +103,7 @@ contains
     integer                       :: i
     !----------------------------------------------------------------
 
+    SHR_ASSERT_ALL_FL((ubound(decomp_index) == (/bounds2/)), sourcefile, __LINE__)
     call get_proc_bounds(bounds_proc)
 
     if (trim(clmlevel) == nameg) then
