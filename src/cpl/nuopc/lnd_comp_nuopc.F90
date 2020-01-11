@@ -517,7 +517,7 @@ contains
     call clm_orbital_init(gcomp, iulog, masterproc, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call  clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
+    call clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
@@ -1322,6 +1322,8 @@ contains
     integer           :: year     ! model year at current time 
     integer           :: orb_year ! orbital year for current orbital computation
     character(len=CL) :: msgstr   ! temporary
+    logical           :: lprint
+    logical           :: first_time = .true.
     character(len=*) , parameter :: subname = "(clm_orbital_update)"
     !-------------------------------------------
 
@@ -1331,12 +1333,19 @@ contains
        call ESMF_TimeGet(CurrTime, yy=year, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
        orb_year = orb_iyear + (year - orb_iyear_align)
+       lprint = mastertask
     else
        orb_year = orb_iyear 
+       if (first_time) then
+          lprint = mastertask
+          first_time = .false.
+       else
+          lprint = .false.
+       end if
     end if
 
     eccen = orb_eccen
-    call shr_orb_params(orb_year, eccen, orb_obliq, orb_mvelp, obliqr, lambm0, mvelpp, mastertask)
+    call shr_orb_params(orb_year, eccen, orb_obliq, orb_mvelp, obliqr, lambm0, mvelpp, lprint)
 
     if ( eccen  == SHR_ORB_UNDEF_REAL .or. obliqr == SHR_ORB_UNDEF_REAL .or. &
          mvelpp == SHR_ORB_UNDEF_REAL .or. lambm0 == SHR_ORB_UNDEF_REAL) then

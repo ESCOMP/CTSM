@@ -592,9 +592,6 @@ contains
              co2_ppmv_input(g) = dataPtr(g-begg+1)   ! co2 atm prognostic
           end do
        end if
-       if (masterproc) then
-          write(iulog,*)'DEBUG: nstep, Sa_co2diag= ',get_nstep(),co2_ppmv_input(begg)
-       end if
     else if (co2_type == 'diagnostic') then
        fldName = 'Sa_co2diag'
        call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
@@ -608,9 +605,6 @@ contains
           do g = begg,endg
              co2_ppmv_input(g) = dataPtr(g-begg+1)   ! co2 atm diagnostic
           end do
-       end if
-       if (masterproc) then
-          write(iulog,*)'DEBUG: nstep, Sa_co2prog= ',get_nstep(),co2_ppmv_input(begg)
        end if
     end if
 
@@ -1169,7 +1163,7 @@ contains
        end if
 
        ! write debug output if appropriate
-       if (masterproc .and. debug > 0 .and. get_nstep() < 5) then
+       if (masterproc .and. debug > 0 .and. get_nstep() < 48) then
           do g = bounds%begg,bounds%endg
              i = 1 + g - bounds%begg
              write(iulog,F01)'import: nstep, n, '//trim(fldname)//' = ',get_nstep(),i,output(g)
@@ -1260,7 +1254,7 @@ contains
        end if
 
        ! write debug output if appropriate
-       if (masterproc .and. debug > 0 .and. get_nstep() < 5) then
+       if (masterproc .and. debug > 0 .and. get_nstep() < 48) then
           do g = bounds%begg,bounds%endg
              i = 1 + g - bounds%begg
              write(iulog,F01)'export: nstep, n, '//trim(fldname)//' = ',get_nstep(),i,input(g)
