@@ -1436,6 +1436,10 @@ contains
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
     use pftconMod        , only : nirrig_trp_corn, nirrig_sugarcane, nirrig_trp_soybean
     use pftconMod        , only : nirrig_cotton, nirrig_rice
+    
+    ! Y. Cheng
+    use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
+    
     use clm_varcon       , only : spval, secspday
     use clm_varctl       , only : use_fertilizer 
     use clm_varctl       , only : use_c13, use_c14
@@ -1728,9 +1732,13 @@ contains
                        ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
                      gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
                   end if
+                  
+                  ! Y. Cheng, add switchgrass and Miscanthus
                   if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                       ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
-                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane) then
+                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+                      ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+                      ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
                      gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
                      gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
                   end if
@@ -1777,9 +1785,13 @@ contains
                       ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
                      gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
                   end if
+                  
+                  ! Y. Cheng, add switchgrass and Miscanthus
                   if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                       ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
-                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane) then
+                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+                      ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+                      ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
                      gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
                   end if
                   if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
@@ -1838,9 +1850,12 @@ contains
             ! calculate linear relationship between huigrain fraction and relative
             ! maturity rating for maize
 
+            ! Y. Cheng, add switchgrass and Miscanthus
             if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                 ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
-                ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane) then
+                ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+                ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+                ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
                ! the following estimation of crmcorn from gddmaturity is based on a linear
                ! regression using data from Pioneer-brand corn hybrids (Kucharik, 2003,
                ! Earth Interactions 7:1-33: fig. 2)
@@ -2373,6 +2388,9 @@ contains
     !
     ! !USES:
     use pftconMod        , only : npcropmin
+    ! Y. Cheng
+    use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
+    
     use CNSharedParamsMod, only : use_fun
     use clm_varctl       , only : CNratio_floating    
     !
@@ -2452,8 +2470,22 @@ contains
 
             if (offset_counter(p) == dt) then
                t1 = 1.0_r8 / dt
-               leafc_to_litter(p)  = t1 * leafc(p)  + cpool_to_leafc(p)
+               !leafc_to_litter(p)  = t1 * leafc(p)  + cpool_to_leafc(p)
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
+               
+               ! Y. Cheng, cut 70% AGB for switchgrass and Miscanthus and move to grainc_to_food
+               if (ivt(p)==nmiscanthus .or. ivt(p)==nirrig_miscanthus .or. ivt(p)==nswitchgrass .or. ivt(p)==nirrig_switchgrass) then
+               	   leafc_to_litter(p)  = t1 * leafc(p)*0.3  + cpool_to_leafc(p)
+               	   grainc_to_food(p) =grainc_to_food(p)+ t1 * leafc(p) * 0.7 
+               	   grainn_to_food(p) =grainn_to_food(p)+ t1 * leafn(p) * 0.7
+               	   
+!                	   leafc_to_litter(p)  = (t1 * leafc(p)  + cpool_to_leafc(p))*0.3
+!                	   grainc_to_food(p) =grainc_to_food(p)+ (t1 * leafc(p)  + cpool_to_leafc(p))*0.7
+!                	   grainn_to_food(p) =grainn_to_food(p)+ t1 * leafn(p) * 0.7
+               else
+               	   leafc_to_litter(p)  = t1 * leafc(p)  + cpool_to_leafc(p)
+               end if
+               
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
                if (ivt(p) >= npcropmin) then
@@ -2464,8 +2496,15 @@ contains
                   grainc_to_seed(p) = t1 * min(-cropseedc_deficit(p), grainc(p))
                   grainn_to_seed(p) = t1 * min(-cropseedn_deficit(p), grainn(p))
                   ! Send the remaining grain to the food product pool
-                  grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) - grainc_to_seed(p)
-                  grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p) - grainn_to_seed(p)
+                  
+                  ! Y. Cheng, because I calculated grainc_to_food and grainn_to_food earlier
+                  if (ivt(p)==nmiscanthus .or. ivt(p)==nirrig_miscanthus .or. ivt(p)==nswitchgrass .or. ivt(p)==nirrig_switchgrass) then
+                  	grainc_to_food(p) = grainc_to_food(p) + t1 * grainc(p)  + cpool_to_grainc(p) - grainc_to_seed(p)
+                  	grainn_to_food(p) = grainn_to_food(p) + t1 * grainn(p)  + npool_to_grainn(p) - grainn_to_seed(p)
+				  else
+				  	grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) - grainc_to_seed(p)
+                  	grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p) - grainn_to_seed(p)
+				  end if
 
                   livestemc_to_litter(p) = t1 * livestemc(p)  + cpool_to_livestemc(p)
                end if
@@ -2556,6 +2595,17 @@ contains
             prev_leafc_to_litter(p)  = leafc_to_litter(p)
             prev_frootc_to_litter(p) = frootc_to_litter(p)
 
+         
+         ! Y. Cheng, cut 70% AGB for switchgrass and Miscanthus
+         if (offset_counter(p) == dt) then
+         	 if (ivt(p)==nmiscanthus .or. ivt(p)==nirrig_miscanthus .or. ivt(p)==nswitchgrass .or. ivt(p)==nirrig_switchgrass) then
+				   grainc(p) = grainc(p) + leafc(p)*0.7
+				   leafc(p)  = leafc(p) * 0.3
+				   grainn(p) = grainn(p) + leafn(p)*0.7
+				   leafn(p)  = leafn(p) * 0.3
+			 end if
+         end if
+         
          end if ! end if offset period
 
       end do ! end patch loop

@@ -41,6 +41,9 @@ contains
     use pftconMod        , only : ntmp_corn, nirrig_tmp_corn
     use pftconMod        , only : ntrp_corn, nirrig_trp_corn
     use pftconMod        , only : nsugarcane, nirrig_sugarcane
+    ! Y. Cheng
+    use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
+    
     use pftconMod        , only : pftcon
     use clm_varctl       , only : spinup_state
     use clm_time_manager , only : get_rad_step_size
@@ -230,9 +233,12 @@ contains
 
                if (tlai(p) >= laimx(ivt(p))) peaklai(p) = 1 ! used in CNAllocation
 
+               ! Y. Cheng, add switchgrass and Miscanthus
                if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                    ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
-                   ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane) then
+                   ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+                   ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+                   ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
                   tsai(p) = 0.1_r8 * tlai(p)
                else
                   tsai(p) = 0.2_r8 * tlai(p)
