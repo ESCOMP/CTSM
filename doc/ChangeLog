@@ -1,13 +1,13 @@
 ===============================================================
 Tag name:  ctsm1.0.dev081
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
-Date:  Tue Jan  7 21:24:54 MST 2020
+Date:  Mon Jan 13 15:37:07 MST 2020
 One-line Summary: Speed up restart writes
 
 Purpose of changes
 ------------------
 
- E3SM#3163 makes some changes to speed up restart writes. I use E3SM#3163
+ E3SM#3163 made some changes to speed up restart writes. I use E3SM#3163
  function GetGlobalIndexArray in place of GetGlobalIndex so as to get
  global indices by array rather than looping over every element.
 
@@ -43,7 +43,7 @@ Changes made to namelist defaults (e.g., changed parameter values): none
 
 Changes to the datasets (e.g., parameter, surface or initial files): none
 
-Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+Substantial timing or memory changes: Limited testing did not show substantial timing changes
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
@@ -54,21 +54,10 @@ Caveats for developers (e.g., code that is duplicated that requires double maint
 Changes to tests or testing: none
 
 Code reviewed by:
-
+ @billsacks
+ @bishtgautam
 
 CTSM testing:
-
-[... Remove before making master tag.  Available test levels:
-
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CTSM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
-
-... ]
 
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
@@ -101,6 +90,13 @@ Answer changes
 
 Changes answers relative to baseline:
  No
+
+ @billsacks recommended running a global test in the branch vs. in master (i.e.
+ with vs. without the code mods) to compare restart files because the test suite
+ does not compare restart files and an error in the subgrid indices on the
+ restart file might go undetected. I ran this test:
+ ERS_D_Ld6.f10_f10_musgs.I1850Clm45BgcCrop.cheyenne_intel.clm-clm50CMIP6frc
+ and got identical values for all variables in the two restart files.
 
 Detailed list of changes
 ------------------------
