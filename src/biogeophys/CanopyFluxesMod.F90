@@ -21,7 +21,6 @@ module CanopyFluxesMod
   use decompMod             , only : bounds_type
   use PhotosynthesisMod     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
   use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
-  use EDBtranMod            , only : btran_ed
   use SoilMoistStressMod    , only : calc_effective_soilporosity, calc_volumetric_h2oliq
   use SoilMoistStressMod    , only : calc_root_moist_stress, set_perchroot_opt
   use SimpleMathMod         , only : array_div_vector
@@ -1278,7 +1277,7 @@ contains
          
          
          call clm_fates%wrap_accumulatefluxes(nc,fn,filterp(1:fn))
-         call clm_fates%wrap_hydraulics_drive(bounds,nc,soilstate_inst, &
+         call clm_fates%wrap_hydraulics_drive(bounds,nc,fn,filterp(1:fn),soilstate_inst, &
                waterstate_inst,waterflux_inst,solarabs_inst,energyflux_inst)
 
       else
