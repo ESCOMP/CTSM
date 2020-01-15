@@ -689,11 +689,11 @@ contains
 
     this%qflx_liqevap_from_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_EVAP_GRND'), &
+         fname=this%info%fname('QFLX_LIQEVAP_FROM_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
          long_name=this%info%lname('rate of liquid water evaporated from top soil or snow layer'), &
-         ptr_patch=this%qflx_liqevap_from_top_layer_patch, default='inactive', c2l_scale_type='urbanf')
+         ptr_patch=this%qflx_liqevap_from_top_layer_patch, c2l_scale_type='urbanf')
 
     this%qflx_evap_veg_patch(begp:endp) = spval
     call hist_addfld1d ( &
@@ -713,7 +713,7 @@ contains
 
     this%qflx_soliddew_to_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_DEW_GRND'), &
+         fname=this%info%fname('QFLX_SOLIDDEW_TO_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
          long_name=this%info%lname('rate of solid water deposited on top soil or snow layer (frost)'), &
@@ -721,14 +721,14 @@ contains
 
     this%qflx_solidevap_from_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_SUB_SNOW'), &
+         fname=this%info%fname('QFLX_SOLIDEVAP_FROM_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
          long_name=this%info%lname('rate of ice evaporated from top soil or snow layer (sublimation) (also includes bare ice sublimation from glacier columns)'), &
          ptr_patch=this%qflx_solidevap_from_top_layer_patch, c2l_scale_type='urbanf')
 
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_SUB_SNOW_ICE'), &
+         fname=this%info%fname('QFLX_SOLIDEVAP_FROM_TOP_LAYER_ICE'), &
          units='mm H2O/s', &
          avgflag='A', &
          long_name=this%info%lname('rate of ice evaporated from top soil or snow layer (sublimation) (also includes bare ice sublimation from glacier columns) '// &
@@ -738,10 +738,10 @@ contains
 
     this%qflx_liqdew_to_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_DEW_SNOW'), &
+         fname=this%info%fname('QFLX_LIQDEW_TO_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('surface dew added to snow pacK'), &
+         long_name=this%info%lname('rate of liquid water deposited on top soil or snow layer (dew)'), &
          ptr_patch=this%qflx_liqdew_to_top_layer_patch, c2l_scale_type='urbanf')
 
     this%qflx_rsub_sat_col(begc:endc) = spval
