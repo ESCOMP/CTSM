@@ -131,10 +131,10 @@ contains
          qflx_evap_veg           => waterfluxbulk_inst%qflx_evap_veg_patch      , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)
          qflx_tran_veg           => waterfluxbulk_inst%qflx_tran_veg_patch      , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
          qflx_evap_tot           => waterfluxbulk_inst%qflx_evap_tot_patch      , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-         qflx_evap_grnd          => waterfluxbulk_inst%qflx_evap_grnd_patch     , & ! Output: [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
-         qflx_sub_snow           => waterfluxbulk_inst%qflx_sub_snow_patch      , & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
-         qflx_dew_snow           => waterfluxbulk_inst%qflx_dew_snow_patch      , & ! Output: [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
-         qflx_dew_grnd           => waterfluxbulk_inst%qflx_dew_grnd_patch      , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
+         qflx_liqevap_from_top_layer   => waterfluxbulk_inst%qflx_liqevap_from_top_layer_patch  , & ! Output: [real(r8) (:)   ]  rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
+         qflx_solidevap_from_top_layer => waterfluxbulk_inst%qflx_solidevap_from_top_layer_patch, & ! Output: [real(r8) (:)   ]  rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]
+         qflx_liqdew_to_top_layer      => waterfluxbulk_inst%qflx_liqdew_to_top_layer_patch     , & ! Output: [real(r8) (:)   ]  rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
+         qflx_soliddew_to_top_layer    => waterfluxbulk_inst%qflx_soliddew_to_top_layer_patch   , & ! Output: [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
          qflx_ev_snow            => waterfluxbulk_inst%qflx_ev_snow_patch       , & ! In/Out: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
          qflx_ev_soil            => waterfluxbulk_inst%qflx_ev_soil_patch       , & ! In/Out: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
          qflx_ev_h2osfc          => waterfluxbulk_inst%qflx_ev_h2osfc_patch     , & ! In/Out: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
@@ -323,26 +323,27 @@ contains
          ! Assign ground evaporation to sublimation from soil ice or to dew
          ! on snow or ground
 
-         qflx_evap_grnd(p) = 0._r8
-         qflx_sub_snow(p) = 0._r8
-         qflx_dew_snow(p) = 0._r8
-         qflx_dew_grnd(p) = 0._r8
+         qflx_liqevap_from_top_layer(p)   = 0._r8
+         qflx_solidevap_from_top_layer(p) = 0._r8
+         qflx_liqdew_to_top_layer(p)      = 0._r8
+         qflx_soliddew_to_top_layer(p)    = 0._r8
 
          if (.not. lun%urbpoi(l)) then
             if (qflx_ev_snow(p) >= 0._r8) then
                ! for evaporation partitioning between liquid evap and ice sublimation, 
                ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
                if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
-                  qflx_evap_grnd(p) = max(qflx_ev_snow(p)*(h2osoi_liq(c,j)/(h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+                  qflx_liqevap_from_top_layer(p) = max(qflx_ev_snow(p)*(h2osoi_liq(c,j)/ &
+                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
                else
-                  qflx_evap_grnd(p) = 0._r8
+                  qflx_liqevap_from_top_layer(p) = 0._r8
                end if
-               qflx_sub_snow(p) = qflx_ev_snow(p) - qflx_evap_grnd(p)
+               qflx_solidevap_from_top_layer(p) = qflx_ev_snow(p) - qflx_liqevap_from_top_layer(p)
             else
                if (t_grnd(c) < tfrz) then
-                  qflx_dew_snow(p) = abs(qflx_ev_snow(p))
+                  qflx_liqdew_to_top_layer(p) = abs(qflx_ev_snow(p))
                else
-                  qflx_dew_grnd(p) = abs(qflx_ev_snow(p))
+                  qflx_soliddew_to_top_layer(p) = abs(qflx_ev_snow(p))
                end if
             end if
 
@@ -352,17 +353,18 @@ contains
                ! for evaporation partitioning between liquid evap and ice sublimation, 
                ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
                if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
-                  qflx_evap_grnd(p) = max(qflx_evap_soi(p)*(h2osoi_liq(c,j)/(h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
-                  qflx_sub_snow(p) = qflx_evap_soi(p) - qflx_evap_grnd(p)
+                  qflx_liqevap_from_top_layer(p) = max(qflx_evap_soi(p)*(h2osoi_liq(c,j)/ &
+                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+                  qflx_solidevap_from_top_layer(p) = qflx_evap_soi(p) - qflx_liqevap_from_top_layer(p)
                else
-                  qflx_evap_grnd(p) = 0._r8
-                  qflx_sub_snow(p) = 0._r8
+                  qflx_liqevap_from_top_layer(p) = 0._r8
+                  qflx_solidevap_from_top_layer(p) = 0._r8
                end if
             else
                if (t_grnd(c) < tfrz) then
-                  qflx_dew_snow(p) = abs(qflx_evap_soi(p))
+                  qflx_liqdew_to_top_layer(p) = abs(qflx_evap_soi(p))
                else
-                  qflx_dew_grnd(p) = abs(qflx_evap_soi(p))
+                  qflx_soliddew_to_top_layer(p) = abs(qflx_evap_soi(p))
                end if
             end if
 
