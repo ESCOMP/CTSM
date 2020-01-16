@@ -55,9 +55,8 @@ determine default values for namelists.
 <!-- Default simulation year range -->
 <sim_year_range>constant</sim_year_range>
 
-<!-- Check resolution and land/mask before continuing -->
-<chk_res mode="clm_stndln" >1</chk_res>
-<chk_res mode="ext_cesm"   >0</chk_res>
+<!-- Check resolution and land/mask in the local resolution list before continuing - normally turned off -->
+<chk_res>0</chk_res>
 
 <!-- Add note to namelist files documenting the options given to build-namelist -->
 <note mode="clm_stndln" >1</note>
