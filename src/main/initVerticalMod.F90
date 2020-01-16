@@ -41,7 +41,6 @@ module initVerticalMod
   public :: initVertical
 
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: ReadNL
   private :: hasBedrock  ! true if the given column type includes bedrock layers
   !
 
@@ -52,60 +51,6 @@ module initVerticalMod
   !------------------------------------------------------------------------
 
 contains
-
-  !------------------------------------------------------------------------
-  subroutine ReadNL( )
-    !
-    ! !DESCRIPTION:
-    ! Read namelist for SoilStateType
-    !
-    ! !USES:
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use fileutils      , only : getavu, relavu, opnfil
-    use clm_nlUtilsMod , only : find_nlgroup_name
-    use clm_varctl     , only : iulog
-    use spmdMod        , only : mpicom, masterproc
-    use controlMod     , only : NLFilename
-    !
-    ! !ARGUMENTS:
-    !
-    ! !LOCAL VARIABLES:
-    integer :: ierr                 ! error code
-    integer :: unitn                ! unit for namelist file
-    character(len=32) :: subname = 'InitVertical_readnl'  ! subroutine name
-    !-----------------------------------------------------------------------
-
-    character(len=*), parameter :: nl_name  = 'clm_inparm'  ! Namelist name
-                                                                      
-    ! MUST agree with name in namelist and read
-    namelist /clm_inparm/ use_bedrock
-
-    ! preset values
-
-    use_bedrock = .false.
-
-    if ( masterproc )then
-
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nl_name//' namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call find_nlgroup_name(unitn, nl_name, status=ierr)
-       if (ierr == 0) then
-          read(unit=unitn, nml=clm_inparm, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading '//nl_name//' namelist"//errmsg(sourcefile, __LINE__))
-          end if
-       else
-          call endrun(msg="ERROR finding '//nl_name//' namelist"//errmsg(sourcefile, __LINE__))
-       end if
-       call relavu( unitn )
-
-    end if
-
-    call shr_mpi_bcast(use_bedrock, mpicom)
-
-  end subroutine ReadNL
 
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
