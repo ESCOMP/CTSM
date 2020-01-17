@@ -435,7 +435,6 @@ contains
     SHR_ASSERT_ALL_FL((ubound(nitrogen_patch) == (/bounds%endp/)), 'ubnd(nitro)'//sourcefile, lineno)
     SHR_ASSERT_ALL_FL((ubound(pc)             == (/bounds%endp/)), 'ubnd(pc)'//sourcefile, lineno)
     SHR_ASSERT_ALL_FL((ubound(pn)             == (/bounds%endp/)), 'ubnd(pn)'//sourcefile, lineno)
-#ifndef _OPENMP
     if ( present(c13) .and. use_c13 )then
        SHR_ASSERT_ALL_FL((lbound(c13)         == (/bounds%begp/)), 'lbnd(c13)'//sourcefile, lineno)
        SHR_ASSERT_ALL_FL((ubound(c13)         == (/bounds%endp/)), 'ubnd(c13)'//sourcefile, lineno)
@@ -444,7 +443,6 @@ contains
        SHR_ASSERT_ALL_FL((lbound(c14)         == (/bounds%begp/)), 'lbnd(c14)'//sourcefile, lineno)
        SHR_ASSERT_ALL_FL((ubound(c14)         == (/bounds%endp/)), 'ubnd(c14)'//sourcefile, lineno)
     end if
-#endif
     if ( present(pc13) )then
        SHR_ASSERT_ALL_FL((ubound(pc13)        == (/bounds%endp/)), 'ubnd(pc13)'//sourcefile, lineno)
     end if
@@ -522,7 +520,6 @@ contains
 
     SHR_ASSERT_ALL_FL((ubound(carbon_patch)   == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(pc)             == (/bounds%endp/)), sourcefile, __LINE__)
-#ifndef _OPENMP
     if ( present(c13) .and. use_c13 )then
        SHR_ASSERT_ALL_FL((lbound(c13)         == (/bounds%begp/)), sourcefile, __LINE__)
        SHR_ASSERT_ALL_FL((ubound(c13)         == (/bounds%endp/)), sourcefile, __LINE__)
@@ -531,7 +528,6 @@ contains
        SHR_ASSERT_ALL_FL((lbound(c14)         == (/bounds%begp/)), sourcefile, __LINE__)
        SHR_ASSERT_ALL_FL((ubound(c14)         == (/bounds%endp/)), sourcefile, __LINE__)
     end if
-#endif
     if ( present(pc13) )then
        SHR_ASSERT_ALL_FL((ubound(pc13)        == (/bounds%endp/)), sourcefile, __LINE__)
     end if
