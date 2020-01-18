@@ -56,16 +56,14 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: fert_u1_col(:)                      ! col (gN/m2) total urea N in FAN pool U1
      real(r8), pointer :: fert_u2_col(:)                      ! col (gN/m2) total urea N in FAN pool U2
      
-     real(r8), pointer :: man_u_grz_col(:)                     ! col (gN/m2) unavailable organic N, grazing
-     real(r8), pointer :: man_a_grz_col(:)                     ! col (gN/m2) available organic N, grazing
-     real(r8), pointer :: man_r_grz_col(:)                     ! col (gN/m2) resistant organic N, grazing
+     real(r8), pointer :: manure_u_grz_col(:)                     ! col (gN/m2) unavailable organic N, grazing
+     real(r8), pointer :: manure_a_grz_col(:)                     ! col (gN/m2) available organic N, grazing
+     real(r8), pointer :: manure_r_grz_col(:)                     ! col (gN/m2) resistant organic N, grazing
 
-     real(r8), pointer :: man_u_app_col(:)                     ! col (gN/m2) unavailable organic N, application
-     real(r8), pointer :: man_a_app_col(:)                     ! col (gN/m2) available organic N, application
-     real(r8), pointer :: man_r_app_col(:)                     ! col (gN/m2) resistant organic N, application
+     real(r8), pointer :: manure_u_app_col(:)                     ! col (gN/m2) unavailable organic N, application
+     real(r8), pointer :: manure_a_app_col(:)                     ! col (gN/m2) available organic N, application
+     real(r8), pointer :: manure_r_app_col(:)                     ! col (gN/m2) resistant organic N, application
 
-     real(r8), pointer :: man_n_stored_col(:)                  ! col (gN/m2) manure N in storage
-     real(r8), pointer :: man_tan_stored_col(:)                ! col (gN/m2) manure TAN in storage
      real(r8), pointer :: fan_grz_fract_col(:)                 ! col unitless fraction of animals grazing
 
      real(r8), pointer :: fan_totn_col(:)                      ! col (gN/m2) total N in FAN pools
@@ -181,16 +179,14 @@ contains
        allocate(this%fert_u1_col(begc:endc)) ; this%fert_u1_col(:) = nan
        allocate(this%fert_u2_col(begc:endc)) ; this%fert_u2_col(:) = nan
 
-       allocate(this%man_u_grz_col(begc:endc)) ; this%man_u_grz_col(:) = nan
-       allocate(this%man_a_grz_col(begc:endc)) ; this%man_a_grz_col(:) = nan
-       allocate(this%man_r_grz_col(begc:endc)) ; this%man_r_grz_col(:) = nan
+       allocate(this%manure_u_grz_col(begc:endc)) ; this%manure_u_grz_col(:) = nan
+       allocate(this%manure_a_grz_col(begc:endc)) ; this%manure_a_grz_col(:) = nan
+       allocate(this%manure_r_grz_col(begc:endc)) ; this%manure_r_grz_col(:) = nan
 
-       allocate(this%man_u_app_col(begc:endc)) ; this%man_u_app_col(:) = nan
-       allocate(this%man_a_app_col(begc:endc)) ; this%man_a_app_col(:) = nan
-       allocate(this%man_r_app_col(begc:endc)) ; this%man_r_app_col(:) = nan
+       allocate(this%manure_u_app_col(begc:endc)) ; this%manure_u_app_col(:) = nan
+       allocate(this%manure_a_app_col(begc:endc)) ; this%manure_a_app_col(:) = nan
+       allocate(this%manure_r_app_col(begc:endc)) ; this%manure_r_app_col(:) = nan
 
-       allocate(this%man_n_stored_col(begc:endc)) ; this%man_n_stored_col(:) = nan
-       allocate(this%man_tan_stored_col(begc:endc)) ; this%man_tan_stored_col(:) = nan
        allocate(this%fan_grz_fract_col(begc:endc)) ; this%fan_grz_fract_col(:) = nan
 
     end if
@@ -421,45 +417,35 @@ contains
             avgflag='A', long_name='Total ammoniacal nitrogen in FAN pool S3', &
             ptr_col=this%tan_s3_col, default=fanpools_default)
 
-       this%man_u_grz_col(begc:endc) = spval
-       call hist_addfld1d (fname='MAN_U_GRZ', units='gN/m^2', &
+       this%manure_u_grz_col(begc:endc) = spval
+       call hist_addfld1d (fname='MANURE_U_GRZ', units='gN/m^2', &
             avgflag='A', long_name='Unavailable manure nitrogen, grazing', &
-            ptr_col=this%man_u_grz_col, default=fanpools_default)
+            ptr_col=this%manure_u_grz_col, default=fanpools_default)
 
-       this%man_a_grz_col(begc:endc) = spval
-       call hist_addfld1d (fname='MAN_A_GRZ', units='gN/m^2', &
+       this%manure_a_grz_col(begc:endc) = spval
+       call hist_addfld1d (fname='MANURE_A_GRZ', units='gN/m^2', &
             avgflag='A', long_name='Available manure nitrogen, grazing', &
-            ptr_col=this%man_a_grz_col, default=fanpools_default)
+            ptr_col=this%manure_a_grz_col, default=fanpools_default)
        
-       this%man_r_grz_col(begc:endc) = spval
-       call hist_addfld1d (fname='MAN_R_GRZ', units='gN/m^2', &
+       this%manure_r_grz_col(begc:endc) = spval
+       call hist_addfld1d (fname='MANURE_R_GRZ', units='gN/m^2', &
             avgflag='A', long_name='Resistant manure nitrogen, grazing', &
-            ptr_col=this%man_r_grz_col, default=fanpools_default)
+            ptr_col=this%manure_r_grz_col, default=fanpools_default)
 
-       this%man_u_app_col(begc:endc) = spval
-       call hist_addfld1d (fname='MAN_U_APP', units='gN/m^2', &
+       this%manure_u_app_col(begc:endc) = spval
+       call hist_addfld1d (fname='MANURE_U_APP', units='gN/m^2', &
             avgflag='A', long_name='Unavailable manure nitrogen, application', &
-            ptr_col=this%man_u_app_col, default=fanpools_default)
+            ptr_col=this%manure_u_app_col, default=fanpools_default)
 
-       this%man_a_app_col(begc:endc) = spval
-       call hist_addfld1d (fname='MAN_A_APP', units='gN/m^2', &
+       this%manure_a_app_col(begc:endc) = spval
+       call hist_addfld1d (fname='MANURE_A_APP', units='gN/m^2', &
             avgflag='A', long_name='Available manure nitrogen, application', &
-            ptr_col=this%man_a_app_col, default=fanpools_default)
+            ptr_col=this%manure_a_app_col, default=fanpools_default)
        
-       this%man_r_app_col(begc:endc) = spval
-       call hist_addfld1d (fname='MAN_R_APP', units='gN/m^2', &
+       this%manure_r_app_col(begc:endc) = spval
+       call hist_addfld1d (fname='MANURE_R_APP', units='gN/m^2', &
             avgflag='A', long_name='Resistant manure nitrogen, application', &
-            ptr_col=this%man_r_app_col, default=fanpools_default)
-
-       this%man_n_stored_col(begc:endc) = spval
-       call hist_addfld1d (fname='MAN_N_STORED', units='gN/m^2', &
-            avgflag='A', long_name='Manure nitrogen in storage', &
-            ptr_col=this%man_n_stored_col, default=fanpools_default)
-       
-       this%man_tan_stored_col(begc:endc) = spval
-       call hist_addfld1d (fname='MAN_TAN_STORED', units='gN/m^2', &
-            avgflag='A', long_name='Manure ammoniacal nitrogen in storage', &
-            ptr_col=this%man_tan_stored_col, default=fanpools_default)
+            ptr_col=this%manure_r_app_col, default=fanpools_default)
 
        this%fan_grz_fract_col(begc:endc) = spval
        call hist_addfld1d (fname='FAN_GRZ_FRACT', units='', &
@@ -574,17 +560,15 @@ contains
              this%fert_u1_col(c) = 0.0_r8
              this%fert_u2_col(c) = 0.0_r8
 
-             this%man_u_grz_col(c) = 0.0_r8
-             this%man_a_grz_col(c) = 0.0_r8
-             this%man_r_grz_col(c) = 0.0_r8
+             this%manure_u_grz_col(c) = 0.0_r8
+             this%manure_a_grz_col(c) = 0.0_r8
+             this%manure_r_grz_col(c) = 0.0_r8
              
-             this%man_u_app_col(c) = 0.0_r8
-             this%man_a_app_col(c) = 0.0_r8
-             this%man_r_app_col(c) = 0.0_r8
+             this%manure_u_app_col(c) = 0.0_r8
+             this%manure_a_app_col(c) = 0.0_r8
+             this%manure_r_app_col(c) = 0.0_r8
 
-             this%man_tan_stored_col(c) = 0.0_r8
              this%fan_grz_fract_col(c) = 0.0_r8
-             this%man_n_stored_col(c) = 0.0_r8
              
           end if
           this%fan_totn_col(c) = 0.0_r8
@@ -764,32 +748,26 @@ contains
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%fert_u2_col)
 
-       call restartvar(ncid=ncid, flag=flag, varname='man_u_grz', xtype=ncd_double, &
+       call restartvar(ncid=ncid, flag=flag, varname='manure_u_grz', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%man_u_grz_col)
-       call restartvar(ncid=ncid, flag=flag, varname='man_a_grz', xtype=ncd_double, &
+                     interpinic_flag='interp', readvar=readvar, data=this%manure_u_grz_col)
+       call restartvar(ncid=ncid, flag=flag, varname='manure_a_grz', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%man_a_grz_col)
-       call restartvar(ncid=ncid, flag=flag, varname='man_r_grz', xtype=ncd_double, &
+                     interpinic_flag='interp', readvar=readvar, data=this%manure_a_grz_col)
+       call restartvar(ncid=ncid, flag=flag, varname='manure_r_grz', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%man_r_grz_col)
+                     interpinic_flag='interp', readvar=readvar, data=this%manure_r_grz_col)
 
-       call restartvar(ncid=ncid, flag=flag, varname='man_u_app', xtype=ncd_double, &
+       call restartvar(ncid=ncid, flag=flag, varname='manure_u_app', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%man_u_app_col)
-       call restartvar(ncid=ncid, flag=flag, varname='man_a_app', xtype=ncd_double, &
+                     interpinic_flag='interp', readvar=readvar, data=this%manure_u_app_col)
+       call restartvar(ncid=ncid, flag=flag, varname='manure_a_app', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%man_a_app_col)
-       call restartvar(ncid=ncid, flag=flag, varname='man_r_app', xtype=ncd_double, &
+                     interpinic_flag='interp', readvar=readvar, data=this%manure_a_app_col)
+       call restartvar(ncid=ncid, flag=flag, varname='manure_r_app', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%man_r_app_col)
+                     interpinic_flag='interp', readvar=readvar, data=this%manure_r_app_col)
 
-       call restartvar(ncid=ncid, flag=flag, varname='man_tan_stored', xtype=ncd_double, &
-                     dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%man_tan_stored_col)
-       call restartvar(ncid=ncid, flag=flag, varname='man_n_stored', xtype=ncd_double, &
-                     dim1name='column', long_name='', units='', &
-                     interpinic_flag='interp', readvar=readvar, data=this%man_n_stored_col)
        call restartvar(ncid=ncid, flag=flag, varname='fan_grz_fract', xtype=ncd_double, &
                      dim1name='column', long_name='', units='', &
                      interpinic_flag='interp', readvar=readvar, data=this%fan_grz_fract_col)
@@ -1005,12 +983,12 @@ contains
           this%tan_f4_col(i)   = value_column
           this%fert_u1_col(i)  = value_column
           this%fert_u2_col(i)  = value_column
-          this%man_u_grz_col(i) = value_column
-          this%man_a_grz_col(i) = value_column
-          this%man_r_grz_col(i) = value_column
-          this%man_u_app_col(i) = value_column
-          this%man_a_app_col(i) = value_column
-          this%man_r_app_col(i) = value_column
+          this%manure_u_grz_col(i) = value_column
+          this%manure_a_grz_col(i) = value_column
+          this%manure_r_grz_col(i) = value_column
+          this%manure_u_app_col(i) = value_column
+          this%manure_a_app_col(i) = value_column
+          this%manure_r_app_col(i) = value_column
        end if
     end do
     
