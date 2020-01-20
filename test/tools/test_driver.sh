@@ -40,15 +40,15 @@ input_file="tests_pretag_cheyenne_nompi"
 c_threads=36
 
 
-export INITMODULES="/glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/sh"
+export INITMODULES="/glade/u/apps/ch/opt/lmod/8.1.7/lmod/lmod/init/sh"
 . \$INITMODULES
 
 module purge
-module load ncarenv/1.0
-module load intel/17.0.1
+module load ncarenv
+module load intel
 module load mkl
-module load ncarcompilers/0.3.5
-module load netcdf/4.4.1.1
+module load ncarcompilers
+module load netcdf
 
 module load nco
 module load python
@@ -88,7 +88,7 @@ EOF
     ;;
 
     ## DAV cluster
-     geyser* | caldera* | pronghorn*)
+     casper* | pronghorn*)
     submit_script="test_driver_dav${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -101,16 +101,16 @@ input_file="tests_posttag_dav_mpi"
 c_threads=36
 
 
-export INITMODULES="/glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/sh"
+export INITMODULES="/glade/u/apps/ch/opt/lmod/8.1.7/lmod/lmod/init/sh"
 . \$INITMODULES
 
 module purge
-module load ncarenv/1.0
-module load intel/12.1.5
+module load ncarenv
+module load intel
 module load mkl
 module load ncarcompilers
-module load netcdf/4.3.3.1
-module load mpich-slurm/3.2.1
+module load netcdf
+module load openmpi
 
 module load nco
 module load python
@@ -210,9 +210,9 @@ export INITMODULES="/usr/share/Modules/init/sh"
 
 . \$INITMODULES
 module purge
-module load compiler/intel/18.0.3
-module load tool/nco/4.7.5
-module load tool/netcdf/4.6.1/intel
+module load compiler/intel
+module load tool/nco
+module load tool/netcdf
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
@@ -290,9 +290,9 @@ export INITMODULES="/usr/share/Modules/init/sh"
 
 . \$INITMODULES
 module purge
-module load compiler/intel/19.0.1
-module load tool/nco/4.7.5
-module load tool/netcdf/4.6.1/intel
+module load compiler/intel
+module load tool/nco
+module load tool/netcdf
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
