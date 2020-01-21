@@ -619,6 +619,7 @@ contains
      real(r8) :: q_perch
      real(r8) :: q_perch_max
      real(r8) :: dflag=0._r8
+     real(r8) :: qflx_solidevap_from_top_layer_save      ! temporary
      !-----------------------------------------------------------------------
 
      associate(                                                            & 
@@ -637,7 +638,7 @@ contains
 
           qflx_soliddew_to_top_layer => waterfluxbulk_inst%qflx_soliddew_to_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]      
           qflx_liqdew_to_top_layer   => waterfluxbulk_inst%qflx_liqdew_to_top_layer_col  , & ! Input:  [real(r8) (:)   ]  rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]    
-
+          qflx_ev_snow       =>    waterfluxbulk_inst%qflx_ev_snow_col   , & ! In/Out: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
           bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"                        
           hksat              =>    soilstate_inst%hksat_col              , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
           sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)                       
@@ -835,7 +836,10 @@ contains
              h2osoi_liq(c,1) = h2osoi_liq(c,1) + (1._r8 - frac_h2osfc(c))*qflx_soliddew_to_top_layer(c) * dtime
              h2osoi_ice(c,1) = h2osoi_ice(c,1) + (1._r8 - frac_h2osfc(c))*qflx_liqdew_to_top_layer(c) * dtime
              if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
+                qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
                 qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
+                qflx_ev_snow(c) = qflx_ev_snow(c) - (qflx_solidevap_from_top_layer_save &
+                                       - qflx_solidevap_from_top_layer(c))
                 h2osoi_ice(c,1) = 0._r8
              else
                 h2osoi_ice(c,1) = h2osoi_ice(c,1) - (1._r8 - frac_h2osfc(c)) * qflx_solidevap_from_top_layer(c) * dtime
@@ -853,7 +857,10 @@ contains
                 h2osoi_liq(c,1) = h2osoi_liq(c,1) + qflx_soliddew_to_top_layer(c) * dtime
                 h2osoi_ice(c,1) = h2osoi_ice(c,1) + (qflx_liqdew_to_top_layer(c) * dtime)
                 if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
+                   qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
                    qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
+                   qflx_ev_snow(c) = qflx_ev_snow(c) - (qflx_solidevap_from_top_layer_save &
+                                          - qflx_solidevap_from_top_layer(c))
                    h2osoi_ice(c,1) = 0._r8
                 else
                    h2osoi_ice(c,1) = h2osoi_ice(c,1) - (qflx_solidevap_from_top_layer(c) * dtime)
@@ -2272,6 +2279,7 @@ contains
      ! !LOCAL VARIABLES:
      integer  :: c,j,fc,i                                ! indices
      real(r8) :: dtime                                   ! land model time step (sec)
+     real(r8) :: qflx_solidevap_from_top_layer_save      ! temporary
      !-----------------------------------------------------------------------
 
      associate(                                                            & 
@@ -2281,6 +2289,7 @@ contains
           frac_h2osfc        =>    waterdiagnosticbulk_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ]                                                    
           qflx_soliddew_to_top_layer    => waterfluxbulk_inst%qflx_soliddew_to_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]      
           qflx_liqdew_to_top_layer      => waterfluxbulk_inst%qflx_liqdew_to_top_layer_col  , & ! Input:  [real(r8) (:)   ]  rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]    
+          qflx_ev_snow                  => waterfluxbulk_inst%qflx_ev_snow_col    , & ! In/Out: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
           qflx_solidevap_from_top_layer => waterfluxbulk_inst%qflx_solidevap_from_top_layer_col & ! Output: [real(r8) (:)   ]  rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]   
           )
 
@@ -2299,7 +2308,10 @@ contains
              h2osoi_liq(c,1) = h2osoi_liq(c,1) + (1._r8 - frac_h2osfc(c))*qflx_soliddew_to_top_layer(c) * dtime
              h2osoi_ice(c,1) = h2osoi_ice(c,1) + (1._r8 - frac_h2osfc(c))*qflx_liqdew_to_top_layer(c) * dtime
              if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
+                qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
                 qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
+                qflx_ev_snow(c) = qflx_ev_snow(c) - (qflx_solidevap_from_top_layer_save &
+                                       - qflx_solidevap_from_top_layer(c))
                 h2osoi_ice(c,1) = 0._r8
              else
                 h2osoi_ice(c,1) = h2osoi_ice(c,1) - (1._r8 - frac_h2osfc(c)) * qflx_solidevap_from_top_layer(c) * dtime
@@ -2318,7 +2330,10 @@ contains
                 h2osoi_liq(c,1) = h2osoi_liq(c,1) + qflx_soliddew_to_top_layer(c) * dtime
                 h2osoi_ice(c,1) = h2osoi_ice(c,1) + (qflx_liqdew_to_top_layer(c) * dtime)
                 if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
+                   qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
                    qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
+                   qflx_ev_snow(c) = qflx_ev_snow(c) - (qflx_solidevap_from_top_layer_save &
+                                          - qflx_solidevap_from_top_layer(c))
                    h2osoi_ice(c,1) = 0._r8
                 else
                    h2osoi_ice(c,1) = h2osoi_ice(c,1) - (qflx_solidevap_from_top_layer(c) * dtime)

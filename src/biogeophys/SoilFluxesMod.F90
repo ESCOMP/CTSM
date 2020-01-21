@@ -210,10 +210,9 @@ contains
          eflx_sh_grnd(p) = eflx_sh_grnd(p) + tinc(c)*cgrnds(p)
          qflx_evap_soi(p) = qflx_evap_soi(p) + tinc(c)*cgrndl(p)
 
-         ! set ev_snow, ev_soil, ev_h2osfc for urban landunits here
+         ! set ev_soil, ev_h2osfc for urban landunits here
          l = patch%landunit(p)
          if (lun%urbpoi(l)) then
-            qflx_ev_snow(p) = 0._r8
             qflx_ev_soil(p) = 0._r8
             qflx_ev_h2osfc(p) = 0._r8
          else
@@ -276,6 +275,11 @@ contains
             qflx_ev_h2osfc(p) = qflx_ev_h2osfc(p) * egirat(c)
          end if
 
+         ! set ev_snow for urban landunits here
+         if (lun%urbpoi(l)) then
+            qflx_ev_snow(p) = qflx_evap_soi(p)
+         end if
+
          ! Ground heat flux
          
          if (.not. lun%urbpoi(l)) then
@@ -320,14 +324,24 @@ contains
             eflx_sh_tot_u(p)= eflx_sh_tot(p)
          end if
 
-         ! Assign ground evaporation to sublimation from soil ice or to dew
-         ! on snow or ground
-
          qflx_liqevap_from_top_layer(p)   = 0._r8
          qflx_solidevap_from_top_layer(p) = 0._r8
          qflx_liqdew_to_top_layer(p)      = 0._r8
          qflx_soliddew_to_top_layer(p)    = 0._r8
 
+         ! Partition the evaporation from snow/soil surface into liquid evaporation, 
+         ! solid evaporation (sublimation), liquid dew, or solid dew.  Note that the variables
+         ! affected here are all related to the snow subgrid patch only because of the use of qflx_ev_snow.
+         ! In the situations where there are snow layers or there is snow without an explicit snow layer, 
+         ! the partitioned variables will represent the components of snow evaporation 
+         ! (qflx_ev_snow = qflx_liqevap_from_top_layer + qflx_solidevap_from_top_layer 
+         ! - qflx_liqdew_to_top_layer - qflx_soliddew_to_top_layer).
+         ! In the case of no snow, qflx_ev_snow has already been set equal to qflx_ev_soil (the evaporation 
+         ! from the subgrid soil patch) and the partitioned variables will then represent evaporation from the 
+         ! subgrid soil patch.
+         ! In the case of urban columns (and lake columns - see LakeHydrologyMod), there are no subgrid 
+         ! patches and qflx_evap_soi is used. qflx_evap_soi = qflx_liqevap_from_top_layer + qflx_solidevap_from_top_layer 
+         ! - qflx_liqdew_to_top_layer - qflx_soliddew_to_top_layer.
          if (.not. lun%urbpoi(l)) then
             if (qflx_ev_snow(p) >= 0._r8) then
                ! for evaporation partitioning between liquid evap and ice sublimation, 
@@ -355,11 +369,10 @@ contains
                if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
                   qflx_liqevap_from_top_layer(p) = max(qflx_evap_soi(p)*(h2osoi_liq(c,j)/ &
                        (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
-                  qflx_solidevap_from_top_layer(p) = qflx_evap_soi(p) - qflx_liqevap_from_top_layer(p)
                else
                   qflx_liqevap_from_top_layer(p) = 0._r8
-                  qflx_solidevap_from_top_layer(p) = 0._r8
                end if
+               qflx_solidevap_from_top_layer(p) = qflx_evap_soi(p) - qflx_liqevap_from_top_layer(p)
             else
                if (t_grnd(c) < tfrz) then
                   qflx_liqdew_to_top_layer(p) = abs(qflx_evap_soi(p))

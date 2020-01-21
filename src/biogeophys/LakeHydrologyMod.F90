@@ -197,6 +197,8 @@ contains
          qflx_soliddew_to_top_layer_col    =>  b_waterflux_inst%qflx_soliddew_to_top_layer_col  , & ! Output: [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
          qflx_liqdew_to_top_layer_col      => b_waterflux_inst%qflx_liqdew_to_top_layer_col     , & ! Output: [real(r8) (:)   ]  rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
          qflx_solidevap_from_top_layer_col => b_waterflux_inst%qflx_solidevap_from_top_layer_col, & ! Output: [real(r8) (:)   ]  rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]
+         qflx_ev_snow         =>  b_waterflux_inst%qflx_ev_snow_patch     , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
+         qflx_ev_snow_col     =>  b_waterflux_inst%qflx_ev_snow_col       , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
          qflx_evap_tot_col    =>  b_waterflux_inst%qflx_evap_tot_col      , & ! Output: [real(r8) (:)   ]  pft quantity averaged to the column (assuming one pft)
          qflx_snwcp_ice       =>  b_waterflux_inst%qflx_snwcp_ice_col     , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
          qflx_snwcp_discarded_ice => b_waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Input: [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
@@ -278,6 +280,7 @@ contains
        qflx_solidevap_from_top_layer(p) = 0._r8
        qflx_liqdew_to_top_layer(p)      = 0._r8
        qflx_soliddew_to_top_layer(p)    = 0._r8
+       qflx_ev_snow(p)                  = qflx_evap_soi(p)
 
        if (jtop <= 0) then ! snow layers
           j = jtop
@@ -290,6 +293,7 @@ contains
              ! Since we're not limiting evap over lakes, but still can't remove more from top
              ! snow layer than there is there, create temp. limited evap_soi.
              qflx_evap_soi_lim = min(qflx_evap_soi(p), (h2osoi_liq(c,j)+h2osoi_ice(c,j))/dtime)
+             qflx_ev_snow(p) = qflx_evap_soi_lim
              if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
                 qflx_liqevap_from_top_layer(p) = max(qflx_evap_soi_lim*(h2osoi_liq(c,j)/ &
                      (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
@@ -378,6 +382,7 @@ contains
        qflx_soliddew_to_top_layer_col(c)    = qflx_soliddew_to_top_layer(p)
        qflx_liqdew_to_top_layer_col(c)      = qflx_liqdew_to_top_layer(p)
        qflx_solidevap_from_top_layer_col(c) = qflx_solidevap_from_top_layer(p)
+       qflx_ev_snow_col(c)                  = qflx_ev_snow(p)
     enddo
 
     ! BUG(wjs, 2019-07-12, ESCOMP/ctsm#762) This is needed so that we can test the
