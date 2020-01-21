@@ -358,7 +358,9 @@ contains
          g = col%gridcell(c)
          ig = g_to_ig(g)
             
-         if ( (lun%itype(col%landunit(c)) == istsoil) .or. (lun%itype(col%landunit(c)) == istcrop) ) then
+         ! EBK Jan/2020, also check weights on gridcell (See https://github.com/ESCOMP/CTSM/issues/847)
+         if ( (lun%itype(col%landunit(c)) == istsoil) .or. (lun%itype(col%landunit(c)) == istcrop) .and. &
+              (col%wtgcell(c) /= 0._r8) ) then
             !       this is a 2d field (gridcell/nlevsoi) !
             do j = 1, nlevsoi
                
