@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-release-clm5.0.30     erik 11/19/2019 Update FATES to sci.1.30.0_api.8.0.0
+release-clm5.0.30     erik 01/21/2020 Update FATES to sci.1.30.0_api.8.0.0
 release-clm5.0.29     erik 11/19/2019 Some answer changes needed for prescribed soil-moisture and clm4_5 defaults (1850-ndep, and urbantv settings)
 release-clm5.0.28     erik 11/14/2019 Several bit-for-bit fixes especially around soil-moisture streams
 release-clm5.0.27     erik 08/13/2019 Add presoribed soil moisture streams as an option, and a few fixes
