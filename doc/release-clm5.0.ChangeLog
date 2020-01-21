@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.30
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Tue Jan 21 13:46:01 MST 2020
+Date: Tue Jan 21 13:50:48 MST 2020
 One-line Summary: Update FATES to sci.1.30.0_api.8.0.0
 
 Purpose of this version:
@@ -19,8 +19,9 @@ CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
 Summary of changes:
 -------------------
 
-Issues fixed (include CTSM Issue #): #847
-  #847 -- issues with prescribed soil moisture
+Issues fixed (include CTSM Issue #): #847 #871
+  Fixes #847 -- issues with prescribed soil moisture
+  Fixes #871 -- don't check for valid resolution for CESM cases by default
 
 Science changes since: release-clm5.0.28
   FATES science update from sci-1.27.1  to sci.1.30.0
