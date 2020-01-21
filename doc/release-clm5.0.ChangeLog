@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.30
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Tue Nov 19 16:34:38 MST 2019
+Date: Tue Jan 21 13:27:16 MST 2020
 One-line Summary: Update FATES to sci.1.30.0_api.8.0.0
 
 Purpose of this version:
@@ -10,12 +10,19 @@ Purpose of this version:
 Update FATES to sci.1.30.0_api.8.0.0, and point to the NGEET version, rather
 than NCAR/fates-release version.
 
+One change to soil-moisture (also check if gridcell weight is non-zero, before specifying prescribed soil moisture.
+Also update mosart with cold start bug fix. Update rtm, cism, and cime to versions on cesm2.1.2 release tag. 
+Fix some issues with PTCLM.
+
+Fixes #847
+
 CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
 
 Summary of changes:
 -------------------
 
-Issues fixed (include CTSM Issue #): None
+Issues fixed (include CTSM Issue #): #847
+  #847 -- issues with prescribed soil moisture
 
 Science changes since: release-clm5.0.28
   FATES science update from sci-1.27.1  to sci.1.30.0
@@ -41,11 +48,11 @@ Testing:
 
   tools-tests (components/clm/test/tools):
 
-    cheyenne - NOT run
+    cheyenne - PASS
 
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
-     cheyenne - NOT run
+     cheyenne - OK
 
   regular tests (aux_clm):
 
@@ -70,12 +77,12 @@ Changes answers relative to baseline: Yes, but only when running with FATES
 Detailed list of changes:
 ------------------------
 
-Externals being used: FATES updated
+Externals being used: all externals updated
 
-   cism:   release-cesm2.0.04
-   rtm:    release-cesm2.0.03
-   mosart: release-cesm2.0.03
-   cime:   cim5.6.25
+   cism:   cism-release-cesm2.1.2_01
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.28
    FATES:  sci.1.30.0_api.8.0.0
    PTCLM:  PTCLM2_180611
 
