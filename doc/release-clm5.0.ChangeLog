@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.30
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Tue Jan 21 13:27:16 MST 2020
+Date: Tue Jan 21 13:46:01 MST 2020
 One-line Summary: Update FATES to sci.1.30.0_api.8.0.0
 
 Purpose of this version:
@@ -13,8 +13,6 @@ than NCAR/fates-release version.
 One change to soil-moisture (also check if gridcell weight is non-zero, before specifying prescribed soil moisture.
 Also update mosart with cold start bug fix. Update rtm, cism, and cime to versions on cesm2.1.2 release tag. 
 Fix some issues with PTCLM.
-
-Fixes #847
 
 CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
 
@@ -84,7 +82,7 @@ Externals being used: all externals updated
    mosart: release-cesm2.0.04
    cime:   cim5.6.28
    FATES:  sci.1.30.0_api.8.0.0
-   PTCLM:  PTCLM2_180611
+   PTCLM:  PTCLM2_20200121
 
 CTSM Tag versions pulled over from master development branch: None
 
