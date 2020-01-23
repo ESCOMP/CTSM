@@ -636,8 +636,8 @@ contains
           h2osoi_vol         =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
           frac_h2osfc        =>    waterdiagnosticbulk_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ]                                                    
 
-          qflx_soliddew_to_top_layer => waterfluxbulk_inst%qflx_soliddew_to_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]      
           qflx_liqdew_to_top_layer   => waterfluxbulk_inst%qflx_liqdew_to_top_layer_col  , & ! Input:  [real(r8) (:)   ]  rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]    
+          qflx_soliddew_to_top_layer => waterfluxbulk_inst%qflx_soliddew_to_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]      
           qflx_ev_snow       =>    waterfluxbulk_inst%qflx_ev_snow_col   , & ! In/Out: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
           bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"                        
           hksat              =>    soilstate_inst%hksat_col              , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
@@ -833,8 +833,8 @@ contains
           if (snl(c)+1 >= 1) then
 
              ! make consistent with how evap_grnd removed in infiltration
-             h2osoi_liq(c,1) = h2osoi_liq(c,1) + (1._r8 - frac_h2osfc(c))*qflx_soliddew_to_top_layer(c) * dtime
-             h2osoi_ice(c,1) = h2osoi_ice(c,1) + (1._r8 - frac_h2osfc(c))*qflx_liqdew_to_top_layer(c) * dtime
+             h2osoi_liq(c,1) = h2osoi_liq(c,1) + (1._r8 - frac_h2osfc(c))*qflx_liqdew_to_top_layer(c) * dtime
+             h2osoi_ice(c,1) = h2osoi_ice(c,1) + (1._r8 - frac_h2osfc(c))*qflx_soliddew_to_top_layer(c) * dtime
              if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
                 qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
                 qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
@@ -854,8 +854,8 @@ contains
 
           if (col%itype(c) == icol_roof .or. col%itype(c) == icol_road_imperv) then
              if (snl(c)+1 >= 1) then
-                h2osoi_liq(c,1) = h2osoi_liq(c,1) + qflx_soliddew_to_top_layer(c) * dtime
-                h2osoi_ice(c,1) = h2osoi_ice(c,1) + (qflx_liqdew_to_top_layer(c) * dtime)
+                h2osoi_liq(c,1) = h2osoi_liq(c,1) + qflx_liqdew_to_top_layer(c) * dtime
+                h2osoi_ice(c,1) = h2osoi_ice(c,1) + (qflx_soliddew_to_top_layer(c) * dtime)
                 if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
                    qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
                    qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
@@ -987,8 +987,8 @@ contains
           
           qflx_snwcp_liq     =>    waterfluxbulk_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
           qflx_ice_runoff_xs =>    waterfluxbulk_inst%qflx_ice_runoff_xs_col , & ! Output: [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s) [+]
-          qflx_soliddew_to_top_layer    => waterfluxbulk_inst%qflx_soliddew_to_top_layer_col   , & ! Output: [real(r8) (:)   ] rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]      
           qflx_liqdew_to_top_layer      => waterfluxbulk_inst%qflx_liqdew_to_top_layer_col     , & ! Output: [real(r8) (:)   ] rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]    
+          qflx_soliddew_to_top_layer    => waterfluxbulk_inst%qflx_soliddew_to_top_layer_col   , & ! Output: [real(r8) (:)   ] rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]      
           qflx_solidevap_from_top_layer => waterfluxbulk_inst%qflx_solidevap_from_top_layer_col, & ! Output: [real(r8) (:)   ] rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]   
           qflx_drain         =>    waterfluxbulk_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ] sub-surface runoff (mm H2O /s)                    
           qflx_qrgwl         =>    waterfluxbulk_inst%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ] qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
@@ -2029,8 +2029,8 @@ contains
           
           qflx_snwcp_liq     =>    waterfluxbulk_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess rainfall due to snow capping (mm H2O /s) [+]
           qflx_ice_runoff_xs =>    waterfluxbulk_inst%qflx_ice_runoff_xs_col , & ! Output: [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s) [+]
-          qflx_soliddew_to_top_layer    => waterfluxbulk_inst%qflx_soliddew_to_top_layer_col   , & ! Output: [real(r8) (:)   ] rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]      
           qflx_liqdew_to_top_layer      => waterfluxbulk_inst%qflx_liqdew_to_top_layer_col     , & ! Output: [real(r8) (:)   ] rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]    
+          qflx_soliddew_to_top_layer    => waterfluxbulk_inst%qflx_soliddew_to_top_layer_col   , & ! Output: [real(r8) (:)   ] rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]      
           qflx_solidevap_from_top_layer => waterfluxbulk_inst%qflx_solidevap_from_top_layer_col, & ! Output: [real(r8) (:)   ] rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]   
           qflx_drain         =>    waterfluxbulk_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ] sub-surface runoff (mm H2O /s)                    
           qflx_qrgwl         =>    waterfluxbulk_inst%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ] qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
@@ -2287,8 +2287,8 @@ contains
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
           h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
           frac_h2osfc        =>    waterdiagnosticbulk_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ]                                                    
-          qflx_soliddew_to_top_layer    => waterfluxbulk_inst%qflx_soliddew_to_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]      
           qflx_liqdew_to_top_layer      => waterfluxbulk_inst%qflx_liqdew_to_top_layer_col  , & ! Input:  [real(r8) (:)   ]  rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]    
+          qflx_soliddew_to_top_layer    => waterfluxbulk_inst%qflx_soliddew_to_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]      
           qflx_ev_snow                  => waterfluxbulk_inst%qflx_ev_snow_col    , & ! In/Out: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
           qflx_solidevap_from_top_layer => waterfluxbulk_inst%qflx_solidevap_from_top_layer_col & ! Output: [real(r8) (:)   ]  rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]   
           )
@@ -2305,8 +2305,8 @@ contains
           if (snl(c)+1 >= 1) then
 
              ! make consistent with how evap_grnd removed in infiltration
-             h2osoi_liq(c,1) = h2osoi_liq(c,1) + (1._r8 - frac_h2osfc(c))*qflx_soliddew_to_top_layer(c) * dtime
-             h2osoi_ice(c,1) = h2osoi_ice(c,1) + (1._r8 - frac_h2osfc(c))*qflx_liqdew_to_top_layer(c) * dtime
+             h2osoi_liq(c,1) = h2osoi_liq(c,1) + (1._r8 - frac_h2osfc(c))*qflx_liqdew_to_top_layer(c) * dtime
+             h2osoi_ice(c,1) = h2osoi_ice(c,1) + (1._r8 - frac_h2osfc(c))*qflx_soliddew_to_top_layer(c) * dtime
              if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
                 qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
                 qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
@@ -2327,8 +2327,8 @@ contains
 
           if (col%itype(c) == icol_roof .or. col%itype(c) == icol_road_imperv) then
              if (snl(c)+1 >= 1) then
-                h2osoi_liq(c,1) = h2osoi_liq(c,1) + qflx_soliddew_to_top_layer(c) * dtime
-                h2osoi_ice(c,1) = h2osoi_ice(c,1) + (qflx_liqdew_to_top_layer(c) * dtime)
+                h2osoi_liq(c,1) = h2osoi_liq(c,1) + qflx_liqdew_to_top_layer(c) * dtime
+                h2osoi_ice(c,1) = h2osoi_ice(c,1) + (qflx_soliddew_to_top_layer(c) * dtime)
                 if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
                    qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
                    qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime

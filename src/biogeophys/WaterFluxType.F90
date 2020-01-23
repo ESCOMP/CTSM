@@ -64,10 +64,10 @@ module WaterFluxType
 
      real(r8), pointer :: qflx_tran_veg_patch      (:)   ! patch vegetation transpiration (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_tran_veg_col        (:)   ! col vegetation transpiration (mm H2O/s) (+ = to atm)
-     real(r8), pointer :: qflx_liqdew_to_top_layer_patch(:)   ! patch rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
-     real(r8), pointer :: qflx_liqdew_to_top_layer_col(:)     ! col rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
      real(r8), pointer :: qflx_soliddew_to_top_layer_patch(:) ! patch rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
      real(r8), pointer :: qflx_soliddew_to_top_layer_col(:)   ! col rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+] (+ = to atm); usually eflx_bot >= 0)
+     real(r8), pointer :: qflx_liqdew_to_top_layer_patch(:)   ! patch rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
+     real(r8), pointer :: qflx_liqdew_to_top_layer_col(:)     ! col rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
 
      real(r8), pointer :: qflx_infl_col            (:)   ! col infiltration (mm H2O /s)
      real(r8), pointer :: qflx_surf_col            (:)   ! col total surface runoff (mm H2O /s)
@@ -182,10 +182,10 @@ contains
     call AllocateVar1d(var = this%qflx_tran_veg_patch, name = 'qflx_tran_veg_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_soliddew_to_top_layer_patch, name = 'qflx_soliddew_to_top_layer_patch', &
+    call AllocateVar1d(var = this%qflx_liqdew_to_top_layer_patch, name = 'qflx_liqdew_to_top_layer_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_liqdew_to_top_layer_patch, name = 'qflx_liqdew_to_top_layer_patch', &
+    call AllocateVar1d(var = this%qflx_soliddew_to_top_layer_patch, name = 'qflx_soliddew_to_top_layer_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
 
@@ -244,10 +244,10 @@ contains
     call AllocateVar1d(var = this%qflx_liqevap_from_top_layer_col, name = 'qflx_liqevap_from_top_layer_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_soliddew_to_top_layer_col, name = 'qflx_soliddew_to_top_layer_col', &
+    call AllocateVar1d(var = this%qflx_liqdew_to_top_layer_col, name = 'qflx_liqdew_to_top_layer_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_liqdew_to_top_layer_col, name = 'qflx_liqdew_to_top_layer_col', &
+    call AllocateVar1d(var = this%qflx_soliddew_to_top_layer_col, name = 'qflx_soliddew_to_top_layer_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_evap_veg_patch, name = 'qflx_evap_veg_patch', &
@@ -711,13 +711,13 @@ contains
          long_name=this%info%lname('qflx_evap_soi + qflx_evap_can + qflx_tran_veg'), &
          ptr_patch=this%qflx_evap_tot_patch, c2l_scale_type='urbanf')
 
-    this%qflx_soliddew_to_top_layer_patch(begp:endp) = spval
+    this%qflx_liqdew_to_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_SOLIDDEW_TO_TOP_LAYER'), &
+         fname=this%info%fname('QFLX_LIQDEW_TO_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('rate of solid water deposited on top soil or snow layer (frost)'), &
-         ptr_patch=this%qflx_soliddew_to_top_layer_patch, c2l_scale_type='urbanf')
+         long_name=this%info%lname('rate of liquid water deposited on top soil or snow layer (dew)'), &
+         ptr_patch=this%qflx_liqdew_to_top_layer_patch, c2l_scale_type='urbanf')
 
     this%qflx_solidevap_from_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
@@ -736,13 +736,13 @@ contains
          ptr_patch=this%qflx_solidevap_from_top_layer_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
 
-    this%qflx_liqdew_to_top_layer_patch(begp:endp) = spval
+    this%qflx_soliddew_to_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_LIQDEW_TO_TOP_LAYER'), &
+         fname=this%info%fname('QFLX_SOLIDDEW_TO_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('rate of liquid water deposited on top soil or snow layer (dew)'), &
-         ptr_patch=this%qflx_liqdew_to_top_layer_patch, c2l_scale_type='urbanf')
+         long_name=this%info%lname('rate of solid water deposited on top soil or snow layer (frost)'), &
+         ptr_patch=this%qflx_soliddew_to_top_layer_patch, c2l_scale_type='urbanf')
 
     this%qflx_rsub_sat_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -824,8 +824,8 @@ contains
     this%qflx_snow_unload_patch(bounds%begp:bounds%endp)      = 0.0_r8
 
     this%qflx_liqevap_from_top_layer_patch(bounds%begp:bounds%endp) = 0.0_r8
-    this%qflx_soliddew_to_top_layer_patch (bounds%begp:bounds%endp) = 0.0_r8
     this%qflx_liqdew_to_top_layer_patch(bounds%begp:bounds%endp)    = 0.0_r8
+    this%qflx_soliddew_to_top_layer_patch (bounds%begp:bounds%endp) = 0.0_r8
 
     this%qflx_sfc_irrig_col (bounds%begc:bounds%endc)         = 0.0_r8
     this%qflx_gw_uncon_irrig_col (bounds%begc:bounds%endc)    = 0.0_r8
@@ -835,8 +835,8 @@ contains
     this%qflx_irrig_sprinkler_patch (bounds%begp:bounds%endp) = 0.0_r8
     
     this%qflx_liqevap_from_top_layer_col(bounds%begc:bounds%endc) = 0.0_r8
-    this%qflx_soliddew_to_top_layer_col (bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_liqdew_to_top_layer_col(bounds%begc:bounds%endc)    = 0.0_r8
+    this%qflx_soliddew_to_top_layer_col (bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_snow_drain_col(bounds%begc:bounds%endc)  = 0._r8
 
     ! This variable only gets set in the hydrology filter; need to initialize it to 0 for

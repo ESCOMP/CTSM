@@ -1486,16 +1486,16 @@ contains
          waterfluxbulk_inst%qflx_evap_soi_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_soliddew_to_top_layer_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_soliddew_to_top_layer_col(bounds%begc:bounds%endc))
+         waterfluxbulk_inst%qflx_liqdew_to_top_layer_patch(bounds%begp:bounds%endp), &
+         waterfluxbulk_inst%qflx_liqdew_to_top_layer_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
          waterfluxbulk_inst%qflx_solidevap_from_top_layer_patch(bounds%begp:bounds%endp), &
          waterfluxbulk_inst%qflx_solidevap_from_top_layer_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_liqdew_to_top_layer_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_liqdew_to_top_layer_col(bounds%begc:bounds%endc))
+         waterfluxbulk_inst%qflx_soliddew_to_top_layer_patch(bounds%begp:bounds%endp), &
+         waterfluxbulk_inst%qflx_soliddew_to_top_layer_col(bounds%begc:bounds%endc))
 
   end subroutine clm_drv_patch2col
 

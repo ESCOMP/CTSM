@@ -326,8 +326,8 @@ contains
 
          qflx_liqevap_from_top_layer(p)   = 0._r8
          qflx_solidevap_from_top_layer(p) = 0._r8
-         qflx_liqdew_to_top_layer(p)      = 0._r8
          qflx_soliddew_to_top_layer(p)    = 0._r8
+         qflx_liqdew_to_top_layer(p)      = 0._r8
 
          ! Partition the evaporation from snow/soil surface into liquid evaporation, 
          ! solid evaporation (sublimation), liquid dew, or solid dew.  Note that the variables
@@ -355,9 +355,9 @@ contains
                qflx_solidevap_from_top_layer(p) = qflx_ev_snow(p) - qflx_liqevap_from_top_layer(p)
             else
                if (t_grnd(c) < tfrz) then
-                  qflx_liqdew_to_top_layer(p) = abs(qflx_ev_snow(p))
-               else
                   qflx_soliddew_to_top_layer(p) = abs(qflx_ev_snow(p))
+               else
+                  qflx_liqdew_to_top_layer(p) = abs(qflx_ev_snow(p))
                end if
             end if
 
@@ -375,9 +375,9 @@ contains
                qflx_solidevap_from_top_layer(p) = qflx_evap_soi(p) - qflx_liqevap_from_top_layer(p)
             else
                if (t_grnd(c) < tfrz) then
-                  qflx_liqdew_to_top_layer(p) = abs(qflx_evap_soi(p))
-               else
                   qflx_soliddew_to_top_layer(p) = abs(qflx_evap_soi(p))
+               else
+                  qflx_liqdew_to_top_layer(p) = abs(qflx_evap_soi(p))
                end if
             end if
 
