@@ -210,7 +210,7 @@ contains
          fname=this%info%fname('QSNOEVAP'), &
          units='mm/s',  &
          avgflag='A', &
-         long_name=this%info%lname('evaporation from snow'), &
+         long_name=this%info%lname('evaporation from snow (only when snl<0, otherwise it is equal to qflx_ev_soil'), &
          ptr_col=this%qflx_ev_snow_col, c2l_scale_type='urbanf')
 
     this%qflx_h2osfc_surf_col(begc:endc) = spval
