@@ -210,11 +210,12 @@ contains
          eflx_sh_grnd(p) = eflx_sh_grnd(p) + tinc(c)*cgrnds(p)
          qflx_evap_soi(p) = qflx_evap_soi(p) + tinc(c)*cgrndl(p)
 
-         ! set ev_soil, ev_h2osfc for urban landunits here
+         ! Set ev_soil, ev_h2osfc, ev_snow for urban landunits here
          l = patch%landunit(p)
          if (lun%urbpoi(l)) then
             qflx_ev_soil(p) = 0._r8
             qflx_ev_h2osfc(p) = 0._r8
+            qflx_ev_snow(p) = qflx_evap_soi(p)
          else
             qflx_ev_snow(p) = qflx_ev_snow(p) + tinc(c)*cgrndl(p)
             qflx_ev_soil(p) = qflx_ev_soil(p) + tinc(c)*cgrndl(p)
@@ -275,7 +276,7 @@ contains
             qflx_ev_h2osfc(p) = qflx_ev_h2osfc(p) * egirat(c)
          end if
 
-         ! set ev_snow for urban landunits here
+         ! Update ev_snow for urban landunits here
          if (lun%urbpoi(l)) then
             qflx_ev_snow(p) = qflx_evap_soi(p)
          end if
