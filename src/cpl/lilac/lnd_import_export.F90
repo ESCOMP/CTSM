@@ -448,6 +448,10 @@ contains
          input=lnd2atm_inst%fv_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    call state_setexport(exportState, 'l2c_fb_atm', 'Sl_z0m', bounds, &
+         input=lnd2atm_inst%z0m_grc, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
     ! methanem
     ! call state_setexport(exportState, 'l2c_fb_atm', 'Fall_methane', bounds, &
     !    input=lnd2atm_inst%flux_ch4_grc, minus=.true., rc=rc)

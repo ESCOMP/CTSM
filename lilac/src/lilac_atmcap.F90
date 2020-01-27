@@ -143,6 +143,7 @@ contains
     call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_u10'       , units='unknown', lsize=lsize)
     call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_fv'        , units='unknown', lsize=lsize)
     call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_ram1'      , units='unknown', lsize=lsize)
+    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_z0m'       , units='m'      , lsize=lsize)
     call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_taux'    , units='unknown', lsize=lsize)
     call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_tauy'    , units='unknown', lsize=lsize)
     call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_lat'     , units='unknown', lsize=lsize)
