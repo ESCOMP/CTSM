@@ -1900,7 +1900,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
-          <option name="wallclock">0:30</option>
+          <option name="wallclock">0:30:00</option>
           <option name="comment">Include a test of the NUOPC cap</option>
         </options>
       </machine>
