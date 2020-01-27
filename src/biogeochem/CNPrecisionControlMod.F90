@@ -413,20 +413,20 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type)              , intent (in) :: bounds          ! bounds
-    integer  , intent (in) :: num_soilp       ! number of soil patchs in filter
-    integer  , intent (in) :: filter_soilp(:) ! filter for soil patches
-    real(r8) , intent (inout)                     :: carbon_patch(bounds%begp:)
-    real(r8) , intent (inout)                     :: nitrogen_patch(bounds%begp:)
-    real(r8) , intent (inout)                     :: pc(bounds%begp:)
-    real(r8) , intent (inout)                     :: pn(bounds%begp:)
-    integer  , intent (in)                        :: lineno
-    real(r8) , intent (inout), optional           :: c13 (bounds%begp:)
-    real(r8) , intent (inout), optional           :: c14 (bounds%begp:)
-    real(r8) , intent (inout), optional           :: pc13(bounds%begp:)
-    real(r8) , intent (inout), optional           :: pc14(bounds%begp:)
-    logical  , intent (in)   , optional           :: croponly
-    logical  , intent (in)   , optional           :: allowneg
+    type(bounds_type), intent (in)      :: bounds          ! bounds
+    integer  ,         intent (in)      :: num_soilp       ! number of soil patchs in filter
+    integer  ,         intent (in)      :: filter_soilp(:) ! filter for soil patches
+    real(r8) , intent (inout)           :: carbon_patch(bounds%begp:)
+    real(r8) , intent (inout)           :: nitrogen_patch(bounds%begp:)
+    real(r8) , intent (inout)           :: pc(bounds%begp:)
+    real(r8) , intent (inout)           :: pn(bounds%begp:)
+    integer  , intent (in)              :: lineno
+    real(r8) , intent (inout), optional :: c13 (bounds%begp:)
+    real(r8) , intent (inout), optional :: c14 (bounds%begp:)
+    real(r8) , intent (inout), optional :: pc13(bounds%begp:)
+    real(r8) , intent (inout), optional :: pc14(bounds%begp:)
+    logical  , intent (in)   , optional :: croponly
+    logical  , intent (in)   , optional :: allowneg
 
     logical :: lcroponly, lallowneg
     integer :: fp, p
@@ -521,11 +521,9 @@ contains
     SHR_ASSERT_ALL_FL((ubound(carbon_patch)   == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(pc)             == (/bounds%endp/)), sourcefile, __LINE__)
     if ( present(c13) .and. use_c13 )then
-       SHR_ASSERT_ALL_FL((lbound(c13)         == (/bounds%begp/)), sourcefile, __LINE__)
        SHR_ASSERT_ALL_FL((ubound(c13)         == (/bounds%endp/)), sourcefile, __LINE__)
     end if
     if ( present(c14) .and. use_c14 )then
-       SHR_ASSERT_ALL_FL((lbound(c14)         == (/bounds%begp/)), sourcefile, __LINE__)
        SHR_ASSERT_ALL_FL((ubound(c14)         == (/bounds%endp/)), sourcefile, __LINE__)
     end if
     if ( present(pc13) )then
