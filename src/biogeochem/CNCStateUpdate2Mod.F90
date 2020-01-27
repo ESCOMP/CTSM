@@ -412,6 +412,8 @@ contains
                  - cf_veg%gru_livecrootc_xfer_to_atm_patch(p) * dt
             cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p)       &
                  - cf_veg%gru_deadcrootc_xfer_to_atm_patch(p) * dt
+         else
+            ! NOTE: The matrix equivalent of the above is in CNHarvest (EBK 12/18/2019)
          end if
 
       end do ! end of patch loop

@@ -21,6 +21,7 @@ module dynGrossUnrepMod
   use SoilBiogeochemStateType , only : soilbiogeochem_state_type
   use pftconMod               , only : pftcon
   use clm_varcon              , only : grlnd
+  use clm_varctl              , only : use_matrixcn
   use clm_varpar              , only : natpft_size
   use ColumnType              , only : col                
   use PatchType               , only : patch                
@@ -177,6 +178,8 @@ contains
     real(r8):: cm                        ! rate for carbon grossunrep mortality (gC/m2/yr)
     real(r8):: am                        ! rate for fractional grossunrep mortality (1/yr)
     real(r8):: m                         ! rate for fractional grossunrep mortality (1/s)
+    real(r8):: m_x_convfrac              ! rate for fractional grossunrep mortality multipled by conversion to atm fraction (1/s) 
+    real(r8):: m_x_1_minus_convfrac      ! rate for fractional grossunrep mortality multipled by 1 minus conversion to atm fraction (1/s) 
     real(r8):: dtime                     ! model time step (s)
     !-----------------------------------------------------------------------
 
@@ -296,6 +299,9 @@ contains
                m = 0._r8
             end if
 
+            m_x_convfrac         = m * convfrac(ivt(p))
+            m_x_1_minus_convfrac = m * (1._r8 - convfrac(ivt(p)))
+
             ! patch-level gross unrepresented landcover change carbon fluxes
             ! displayed pools
             gru_leafc_to_litter(p)               = leafc(p)               * m
@@ -324,7 +330,7 @@ contains
             gru_livecrootc_xfer_to_atm(p)        = livecrootc_xfer(p)     * m
             gru_deadcrootc_xfer_to_atm(p)        = deadcrootc_xfer(p)     * m
             gru_gresp_xfer_to_atm(p)             = gresp_xfer(p)          * m
-	    
+
             ! patch-level gross unrepresented landcover change mortality nitrogen fluxes
             ! displayed pools
             gru_leafn_to_litter(p)               = leafn(p)               * m
@@ -352,10 +358,112 @@ contains
             gru_livecrootn_xfer_to_atm(p)        = livecrootn_xfer(p)     * m
             gru_deadcrootn_xfer_to_atm(p)        = deadcrootn_xfer(p)     * m
 
+            ! NOTE: The non-matrix part of this update is in CStateUpdate2g (EBK 01/23/2020)
+            !   and for Nitrogen The non-matrix part of this update is in NStateUpdate2g (EBK 01/23/2020) 
+            if ( use_matrixcn ) then
+               ! patch-level gross unrepresented landcover change mortality carbon fluxes
+               ! displayed pools
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc)          = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc)          + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc)         = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc)         + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc)      = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc)      + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)      = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)      + m_x_convfrac
+               !cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc?)   = &     ! This needs to be for gru_wood_product_gain
+               !     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)     + m_x_1_minus_convfrac
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc)     = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc)     + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)     = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)     + m
+               !cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    = &    ! This needs to be for xsmrpool
+               !     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    + m
+               ! storage pools
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc)        = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc)        + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootst_to_iout_gmc)       = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootst_to_iout_gmc)       + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemst_to_iout_gmc)    = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemst_to_iout_gmc)    + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemst_to_iout_gmc)    = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemst_to_iout_gmc)    + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootst_to_iout_gmc)   = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootst_to_iout_gmc)   + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc)   = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc)   + m
+               !cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc)  = & ! This needs to be for gresp_storage
+               !     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc)  + m
+               ! transfer pools
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc)        = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc)        + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootxf_to_iout_gmc)       = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootxf_to_iout_gmc)       + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemxf_to_iout_gmc)    = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemxf_to_iout_gmc)    + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemxf_to_iout_gmc)    = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemxf_to_iout_gmc)    + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc)   = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc)   + m
+               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc)   = &
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc)   + m
+               !cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc)  = &   ! This needs to be for gresp_xfer
+               !     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc)  + m
+
+               ! patch-level gross unrepresented landcover change mortality nitrogen fluxes
+               ! displayed pools
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileaf_to_iout_gmn)       = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileaf_to_iout_gmn)       + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifroot_to_iout_gmn)      = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifroot_to_iout_gmn)      + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestem_to_iout_gmn)   = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestem_to_iout_gmn)   + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)   = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)   + m_x_convfrac
+               !cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn) = &  ! This needs to be for wood_product
+                    !cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn)   + m_x_1_minus_convfrac
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn)  = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn)  + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)  = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)  + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iretransn_to_iout_gmn)   = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iretransn_to_iout_gmn)   + m
+               ! storage pools
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileafst_to_iout_gmn      = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileafst_to_iout_gmn)     + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifrootst_to_iout_gmn     = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifrootst_to_iout_gmn)    + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestemst_to_iout_gmn  = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestemst_to_iout_gmn) + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstemst_to_iout_gmn  = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstemst_to_iout_gmn) + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecrootst_to_iout_gmn = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecrootst_to_iout_gmn)+ m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcrootst_to_iout_gmn = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcrootst_to_iout_gmn)+ m
+               ! transfer pools
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileafxf_to_iout_gmn)     = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileafxf_to_iout_gmn)     + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifrootxf_to_iout_gmn)    = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifrootxf_to_iout_gmn)    + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestemxf_to_iout_gmn) = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestemxf_to_iout_gmn) + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstemxf_to_iout_gmn) = &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstemxf_to_iout_gmn) + m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecrootxf_to_iout_gmn)= &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecrootxf_to_iout_gmn)+ m
+               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcrootxf_to_iout_gmn)= &
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcrootxf_to_iout_gmn)+ m
+            end if
+
          end if  ! end tree block
 
       end do ! end of pft loop
 
+      ! dynHarvest had a change here for zeroing out harvest to litter of fine-root-c of trees under harvest
+      ! This should NOT need to be done here...
+      if ( use_matrixcn ) then
+      end if
       ! gather all patch-level litterfall fluxes from grossunrep to the column
       ! for litter C and N inputs
 
