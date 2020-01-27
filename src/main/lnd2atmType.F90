@@ -270,6 +270,14 @@ contains
          ptr_lnd=this%net_carbon_exchange_grc, &
          default='inactive')
 
+    ! No need to set this to spval (or 0) because it is a gridcell-level field, so should
+    ! have valid values everywhere
+    call hist_addfld1d(fname='Z0M_TO_COUPLER', units='m', &
+         avgflag='A', &
+         long_name='roughness length, momentum: gridcell average sent to coupler', &
+         ptr_lnd=this%z0m_grc, &
+         default='inactive')
+
     if (use_lch4) then
        this%flux_ch4_grc(begg:endg) = 0._r8
        call hist_addfld1d (fname='FCH4', units='kgC/m2/s', &
