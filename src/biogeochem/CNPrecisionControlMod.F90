@@ -413,20 +413,20 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type)              , intent(in)    :: bounds          ! bounds
-    integer                        , intent(in)    :: num_soilp       ! number of soil patchs in filter
-    integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    real(r8), intent(inout) :: carbon_patch(bounds%begp:)
-    real(r8), intent(inout) :: nitrogen_patch(bounds%begp:)
-    real(r8), intent(inout) :: pc(bounds%begp:)
-    real(r8), intent(inout) :: pn(bounds%begp:)
-    integer,  intent(in)    :: lineno
-    real(r8), intent(inout), optional, pointer :: c13(:)
-    real(r8), intent(inout), optional, pointer :: c14(:)
-    real(r8), intent(inout), optional :: pc13(bounds%begp:)
-    real(r8), intent(inout), optional :: pc14(bounds%begp:)
-    logical , intent(in)   , optional :: croponly
-    logical , intent(in)   , optional :: allowneg
+    type(bounds_type)              , intent(in) :: bounds          ! bounds
+    integer                        , intent(in) :: num_soilp       ! number of soil patchs in filter
+    integer                        , intent(in) :: filter_soilp(:) ! filter for soil patches
+    real(r8), intent(inout)                     :: carbon_patch(bounds%begp:)
+    real(r8), intent(inout)                     :: nitrogen_patch(bounds%begp:)
+    real(r8), intent(inout)                     :: pc(bounds%begp:)
+    real(r8), intent(inout)                     :: pn(bounds%begp:)
+    integer,  intent(in)                        :: lineno
+    real(r8), intent(inout), optional           :: c13 (bounds%begp:)
+    real(r8), intent(inout), optional           :: c14 (bounds%begp:)
+    real(r8), intent(inout), optional           :: pc13(bounds%begp:)
+    real(r8), intent(inout), optional           :: pc14(bounds%begp:)
+    logical , intent(in)   , optional           :: croponly
+    logical , intent(in)   , optional           :: allowneg
 
     logical :: lcroponly, lallowneg
     integer :: fp, p
@@ -502,18 +502,18 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in)    :: bounds          ! bounds
-    integer          , intent(in)    :: num_soilp       ! number of soil patchs in filter
-    integer          , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    real(r8)         , intent(inout) :: carbon_patch(bounds%begp:)
-    real(r8)         , intent(inout) :: pc(bounds%begp:)
-    integer          , intent(in)    :: lineno
-    real(r8)         , intent(inout), optional, pointer :: c13(:)
-    real(r8)         , intent(inout), optional, pointer :: c14(:)
-    real(r8)         , intent(inout), optional :: pc13(bounds%begp:)
-    real(r8)         , intent(inout), optional :: pc14(bounds%begp:)
-    logical          , intent(in)   , optional :: croponly
-    logical          , intent(in)   , optional :: allowneg
+    type(bounds_type), intent (in)              :: bounds          ! bounds
+    integer          , intent (in)              :: num_soilp       ! number of soil patchs in filter
+    integer          , intent (in)              :: filter_soilp(:) ! filter for soil patches
+    real(r8)         , intent (inout)           :: carbon_patch(bounds%begp:)
+    real(r8)         , intent (inout)           :: pc(bounds%begp:)
+    integer          , intent (in)              :: lineno
+    real(r8)         , intent (inout), optional :: c13 (bounds%begp:)
+    real(r8)         , intent (inout), optional :: c14 (bounds%begp:)
+    real(r8)         , intent (inout), optional :: pc13(bounds%begp:)
+    real(r8)         , intent (inout), optional :: pc14(bounds%begp:)
+    logical          , intent (in)   , optional :: croponly
+    logical          , intent (in)   , optional :: allowneg
 
     logical :: lcroponly, lallowneg
     integer :: fp, p
