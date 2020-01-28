@@ -369,10 +369,10 @@ contains
                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc)         + m
                cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc)      = &
                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc)      + m
+               ! Technically the deadstem change includes both deadstem_to_atm as well as wood_productc_gain
+               ! But, the sum of those two is m*confrc + m*(1 - convfrac) which simplifies to m
                cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)      = &
-                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)      + m_x_convfrac
-               !cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc?)   = &     ! This needs to be for gru_wood_product_gain
-               !     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)     + m_x_1_minus_convfrac
+                    cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)      + m
                cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc)     = &
                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc)     + m
                cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)     = &
@@ -415,10 +415,10 @@ contains
                     cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifroot_to_iout_gmn)      + m
                cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestem_to_iout_gmn)   = &
                     cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestem_to_iout_gmn)   + m
+               ! Technically the deadstem change includes both deadstem_to_atm as well as wood_productn_gain
+               ! But, the sum of those two is m*confrc + m*(1 - convfrac) which simplifies to m
                cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)   = &
-                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)   + m_x_convfrac
-               !cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn) = &  ! This needs to be for wood_product
-                    !cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn)   + m_x_1_minus_convfrac
+                    cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)   + m
                cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn)  = &
                     cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn)  + m
                cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)  = &
