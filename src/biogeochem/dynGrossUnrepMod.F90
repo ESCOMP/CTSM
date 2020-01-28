@@ -377,8 +377,7 @@ contains
                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc)     + m
                cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)     = &
                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)     + m
-               !cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    = &    ! This needs to be for xsmrpool
-               !     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    + m
+               ! xsmrpool is handled in the CNCStateUpdate2Mod.F90 for both matrix on and off
                ! storage pools
                cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc)        = &
                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc)        + m
@@ -392,8 +391,7 @@ contains
                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootst_to_iout_gmc)   + m
                cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc)   = &
                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc)   + m
-               !cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc)  = & ! This needs to be for gresp_storage
-               !     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc)  + m
+               ! gresp_storage is handled in the CNCStateUpdate2Mod.F90 for both matrix on and off
                ! transfer pools
                cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc)        = &
                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc)        + m
@@ -407,8 +405,7 @@ contains
                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc)   + m
                cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc)   = &
                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc)   + m
-               !cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc)  = &   ! This needs to be for gresp_xfer
-               !     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc)  + m
+               ! gresp_xfer is handled in the CNCStateUpdate2Mod.F90 for both matrix on and off
 
                ! patch-level gross unrepresented landcover change mortality nitrogen fluxes
                ! displayed pools
