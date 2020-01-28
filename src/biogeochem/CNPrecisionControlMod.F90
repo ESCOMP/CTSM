@@ -210,13 +210,13 @@ contains
 
       ! leaf storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_storage_patch(bounds%begp:bounds%endp), &
-                                ns%leafn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), __LINE__, &
+                                ns%leafn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), __LINE__, &
                                 c13=c13cs%leafc_storage_patch(bounds%begp:bounds%endp), c14=c14cs%leafc_storage_patch(bounds%begp:bounds%endp), &
                                 pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! leaf transfer C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_xfer_patch(bounds%begp:bounds%endp), &
-                                ns%leafn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), __LINE__, &
+                                ns%leafn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), __LINE__, &
                                 c13=c13cs%leafc_xfer_patch(bounds%begp:bounds%endp), c14=c14cs%leafc_xfer_patch(bounds%begp:bounds%endp), &
                                 pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
@@ -225,46 +225,46 @@ contains
       ! it to be negative is important for C4 crops (otherwise they die) Jun/3/2016
       if ( prec_control_for_froot ) then
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%frootc_patch(bounds%begp:bounds%endp),  &
-                                   ns%frootn_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), __LINE__, &
+                                   ns%frootn_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), __LINE__, &
                                    c13=c13cs%frootc_patch(bounds%begp:bounds%endp), c14=c14cs%frootc_patch(bounds%begp:bounds%endp),  &
                                    pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp), allowneg=.true. )
       end if
 
       ! froot storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%frootc_storage_patch(bounds%begp:bounds%endp), &
-                      ns%frootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), &
+                      ns%frootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                       __LINE__, c13=c13cs%frootc_storage_patch(bounds%begp:bounds%endp), c14=c14cs%frootc_storage_patch(bounds%begp:bounds%endp), &
                       pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! froot transfer C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%frootc_xfer_patch(bounds%begp:bounds%endp), &
-                                ns%frootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), __LINE__, &
+                                ns%frootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), __LINE__, &
                                 c13=c13cs%frootc_xfer_patch(bounds%begp:bounds%endp), c14=c14cs%frootc_xfer_patch(bounds%begp:bounds%endp), &
                                 pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       if ( use_crop )then
          ! grain C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_patch(bounds%begp:bounds%endp), &
-                                   ns%grainn_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), __LINE__, &
+                                   ns%grainn_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), __LINE__, &
                                    c13=c13cs%grainc_patch(bounds%begp:bounds%endp), c14=c14cs%grainc_patch(bounds%begp:bounds%endp), &
                                    pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp), croponly=.true. )
 
          ! grain storage C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_storage_patch(bounds%begp:bounds%endp), &
-                                   ns%grainn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), &
+                                   ns%grainn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                                    __LINE__, c13=c13cs%grainc_storage_patch(bounds%begp:bounds%endp), c14=c14cs%grainc_storage_patch(bounds%begp:bounds%endp), &
                                    pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp), croponly=.true. )
 
          ! grain transfer C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_xfer_patch(bounds%begp:bounds%endp), &
-                                   ns%grainn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), __LINE__, &
+                                   ns%grainn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), __LINE__, &
                                    c13=c13cs%grainc_xfer_patch(bounds%begp:bounds%endp), c14=c14cs%grainc_xfer_patch(bounds%begp:bounds%endp), &
                                    pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp), croponly=.true. )
 
          ! grain transfer C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), &
-                                   ns%cropseedn_deficit_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), &
-                                   pn(bounds%begc:bounds%endc), __LINE__, &
+                                   ns%cropseedn_deficit_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), &
+                                   pn(bounds%begp:bounds%endp), __LINE__, &
                                    c13=c13cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), c14=c14cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), &
                                    pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp), allowneg=.true., croponly=.true. )
 
@@ -272,90 +272,90 @@ contains
 
       ! livestem C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livestemc_patch(bounds%begp:bounds%endp), &
-                                ns%livestemn_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), __LINE__, &
+                                ns%livestemn_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), __LINE__, &
                                 c13=c13cs%livestemc_patch(bounds%begp:bounds%endp), c14=c14cs%livestemc_patch(bounds%begp:bounds%endp), &
                                 pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! livestem storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livestemc_storage_patch(bounds%begp:bounds%endp), &
-                      ns%livestemn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), &
+                      ns%livestemn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                       __LINE__, c13=c13cs%livestemc_storage_patch(bounds%begp:bounds%endp), c14=c14cs%livestemc_storage_patch(bounds%begp:bounds%endp), &
                       pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! livestem transfer C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livestemc_xfer_patch(bounds%begp:bounds%endp), &
-                      ns%livestemn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), &
+                      ns%livestemn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                       __LINE__, c13=c13cs%livestemc_xfer_patch(bounds%begp:bounds%endp), c14=c14cs%livestemc_xfer_patch(bounds%begp:bounds%endp), &
                       pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! deadstem C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadstemc_patch(bounds%begp:bounds%endp), &
-                                ns%deadstemn_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), __LINE__, &
+                                ns%deadstemn_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), __LINE__, &
                                 c13=c13cs%deadstemc_patch(bounds%begp:bounds%endp), c14=c14cs%deadstemc_patch(bounds%begp:bounds%endp), &
                                 pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
       ! deadstem storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadstemc_storage_patch(bounds%begp:bounds%endp), &
-                      ns%deadstemn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), &
+                      ns%deadstemn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                       __LINE__, c13=c13cs%deadstemc_storage_patch(bounds%begp:bounds%endp), c14=c14cs%deadstemc_storage_patch(bounds%begp:bounds%endp), &
                       pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! deadstem transfer C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadstemc_xfer_patch(bounds%begp:bounds%endp), &
-                      ns%deadstemn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), &
+                      ns%deadstemn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                       __LINE__, c13=c13cs%deadstemc_xfer_patch(bounds%begp:bounds%endp), c14=c14cs%deadstemc_xfer_patch(bounds%begp:bounds%endp), &
                       pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! livecroot C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livecrootc_patch(bounds%begp:bounds%endp), &
-                                ns%livecrootn_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), __LINE__, &
+                                ns%livecrootn_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), __LINE__, &
                                 c13=c13cs%livecrootc_patch(bounds%begp:bounds%endp), c14=c14cs%livecrootc_patch(bounds%begp:bounds%endp), &
                                 pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! livecroot storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livecrootc_storage_patch(bounds%begp:bounds%endp), &
-                      ns%livecrootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), &
+                      ns%livecrootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                       __LINE__, c13=c13cs%livecrootc_storage_patch(bounds%begp:bounds%endp), c14=c14cs%livecrootc_storage_patch(bounds%begp:bounds%endp), &
                       pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! livecroot transfer C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livecrootc_xfer_patch(bounds%begp:bounds%endp), &
-                      ns%livecrootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), &
+                      ns%livecrootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                       __LINE__, c13=c13cs%livecrootc_xfer_patch(bounds%begp:bounds%endp), c14=c14cs%livecrootc_xfer_patch(bounds%begp:bounds%endp), &
                       pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! deadcroot C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadcrootc_patch(bounds%begp:bounds%endp), &
-                                ns%deadcrootn_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), __LINE__, &
+                                ns%deadcrootn_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), __LINE__, &
                                 c13=c13cs%deadcrootc_patch(bounds%begp:bounds%endp), c14=c14cs%deadcrootc_patch(bounds%begp:bounds%endp), &
                                 pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! deadcroot storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadcrootc_storage_patch(bounds%begp:bounds%endp), &
-                      ns%deadcrootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), &
+                      ns%deadcrootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                       __LINE__, c13=c13cs%deadcrootc_storage_patch(bounds%begp:bounds%endp), c14=c14cs%deadcrootc_storage_patch(bounds%begp:bounds%endp), &
                       pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! deadcroot transfer C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadcrootc_xfer_patch(bounds%begp:bounds%endp), &
-                      ns%deadcrootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begc:bounds%endc), pn(bounds%begc:bounds%endc), &
+                      ns%deadcrootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                       __LINE__, c13=c13cs%deadcrootc_xfer_patch(bounds%begp:bounds%endp), c14=c14cs%deadcrootc_xfer_patch(bounds%begp:bounds%endp), &
                       pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! gresp_storage (C only)
       call TruncateCStates( bounds, filter_soilp, num_soilp, cs%gresp_storage_patch(bounds%begp:bounds%endp), &
-                            pc(bounds%begc:bounds%endc), __LINE__, &
+                            pc(bounds%begp:bounds%endp), __LINE__, &
                             c13=c13cs%gresp_storage_patch(bounds%begp:bounds%endp), c14=c14cs%gresp_storage_patch(bounds%begp:bounds%endp), &
                             pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! gresp_xfer(c only)
       call TruncateCStates( bounds, filter_soilp, num_soilp, cs%gresp_xfer_patch(bounds%begp:bounds%endp), &
-                            pc(bounds%begc:bounds%endc), __LINE__, &
+                            pc(bounds%begp:bounds%endp), __LINE__, &
                             c13=c13cs%gresp_xfer_patch(bounds%begp:bounds%endp), c14=c14cs%gresp_xfer_patch(bounds%begp:bounds%endp), &
                             pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
       ! cpool (C only)
       call TruncateCStates( bounds, filter_soilp, num_soilp, cs%cpool_patch(bounds%begp:bounds%endp), &
-                            pc(bounds%begc:bounds%endc), __LINE__, &
+                            pc(bounds%begp:bounds%endp), __LINE__, &
                             c13=c13cs%cpool_patch(bounds%begp:bounds%endp), c14=c14cs%cpool_patch(bounds%begp:bounds%endp), &
                             pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp) )
 
@@ -363,18 +363,18 @@ contains
          ! xsmrpool (C only)
          ! xsmr is a pool to balance the budget and as such can be freely negative
          call TruncateCStates( bounds, filter_soilp, num_soilp, cs%xsmrpool_patch(bounds%begp:bounds%endp), &
-                               pc(bounds%begc:bounds%endc), __LINE__, &
+                               pc(bounds%begp:bounds%endp), __LINE__, &
                                c13=c13cs%xsmrpool_patch(bounds%begp:bounds%endp), c14=c14cs%xsmrpool_patch(bounds%begp:bounds%endp), &
                                pc13=pc13(bounds%begp:bounds%endp), pc14=pc14(bounds%begp:bounds%endp), allowneg=.true., croponly=.true. )
 
       end if
 
       ! retransn (N only)
-      call TruncateNStates( bounds, filter_soilp, num_soilp, ns%retransn_patch(bounds%begp:bounds%endp), pn(bounds%begc:bounds%endc), &
+      call TruncateNStates( bounds, filter_soilp, num_soilp, ns%retransn_patch(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                             __LINE__ )
 
       ! npool (N only)
-      call TruncateNStates( bounds, filter_soilp, num_soilp, ns%npool_patch(bounds%begp:bounds%endp), pn(bounds%begc:bounds%endc), &
+      call TruncateNStates( bounds, filter_soilp, num_soilp, ns%npool_patch(bounds%begp:bounds%endp), pn(bounds%begp:bounds%endp), &
                             __LINE__ )
 
       ! patch loop
