@@ -29,7 +29,7 @@ program atm_driver
   integer               :: comp_comm
   integer               :: ierr
   real    , allocatable :: centerCoords(:,:)
-  real    , allocatable :: atm_lons(:), atm_lats(:)
+  real*8  , allocatable :: atm_lons(:), atm_lats(:)
   integer , allocatable :: atm_global_index(:)
   integer               :: mytask, ntasks
   integer               :: my_start, my_end
@@ -333,8 +333,8 @@ contains
   subroutine atm_driver_to_lilac (lon, lat)
 
     ! input/output variables
-    real, intent(in) :: lon(:)
-    real, intent(in) :: lat(:)
+    real*8, intent(in) :: lon(:)
+    real*8, intent(in) :: lat(:)
 
     ! local variables
     real, allocatable   :: lon_rounded(:)

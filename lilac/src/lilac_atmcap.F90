@@ -29,11 +29,11 @@ module lilac_atmcap
   private :: lilac_atmcap_add_fld
 
   ! Time invariant input from host atmosphere
-  integer, public, allocatable :: gindex_atm(:) ! global index space
-  real   , public, allocatable :: atm_lons(:)   ! local longitudes
-  real   , public, allocatable :: atm_lats(:)   ! local latitudes
-  integer, public              :: atm_global_nx
-  integer, public              :: atm_global_ny
+  integer , public, allocatable :: gindex_atm(:) ! global index space
+  real(r8), public, allocatable :: atm_lons(:)   ! local longitudes
+  real(r8), public, allocatable :: atm_lats(:)   ! local latitudes
+  integer , public              :: atm_global_nx
+  integer , public              :: atm_global_ny
 
   ! Time variant input from host atmosphere
   real(r8) :: nextsw_cday = 1.e36_r8  ! calendar day of the next sw calculation
@@ -61,8 +61,8 @@ contains
 
     ! input/output variables
     integer , intent(in) :: atm_gindex_in(:)
-    real    , intent(in) :: atm_lons_in(:)
-    real    , intent(in) :: atm_lats_in(:)
+    real(r8), intent(in) :: atm_lons_in(:)
+    real(r8), intent(in) :: atm_lats_in(:)
     integer , intent(in) :: atm_global_nx_in
     integer , intent(in) :: atm_global_ny_in
 

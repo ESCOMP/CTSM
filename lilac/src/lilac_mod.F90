@@ -13,6 +13,7 @@ module lilac_mod
   ! shr code routines
   use shr_pio_mod   , only : shr_pio_init1, shr_pio_init2
   use shr_sys_mod   , only : shr_sys_abort
+  use shr_kind_mod  , only : r8 => shr_kind_r8
 
   ! lilac routines
   use lilac_io      , only : lilac_io_init
@@ -91,8 +92,8 @@ contains
     ! input/output variables
     integer          , intent(inout) :: mpicom  ! input commiunicator from atm
     integer          , intent(in)    :: atm_global_index(:)
-    real             , intent(in)    :: atm_lons(:)
-    real             , intent(in)    :: atm_lats(:)
+    real(r8)         , intent(in)    :: atm_lons(:)
+    real(r8)         , intent(in)    :: atm_lats(:)
     integer          , intent(in)    :: atm_global_nx
     integer          , intent(in)    :: atm_global_ny
     character(len=*) , intent(in)    :: atm_calendar
