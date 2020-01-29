@@ -1036,7 +1036,7 @@ contains
     flux_avail = flux_avail - flux_barn
     flux_avail_tan = flux_avail_tan - flux_barn
 
-    if (flux_avail < abstol .or. flux_avail_tan < abstol) then
+    if (flux_avail < -abstol .or. flux_avail_tan < -abstol) then
        status = err_negative_flux*10000
        return
     end if
