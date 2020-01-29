@@ -361,9 +361,6 @@ contains
     ! Close restart file and write restart pointer file if
     ! in write mode, otherwise just close restart file if in read mode
     !
-    ! !USES:
-    use clm_time_manager, only : is_last_step
-    !
     ! !ARGUMENTS:
     character(len=*) , intent(in) :: file  ! local output filename
     !

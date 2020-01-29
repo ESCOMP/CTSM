@@ -21,7 +21,6 @@ module clm_time_manager
         timemgr_restart,          &! restart the time manager using info from timemgr_restart
         timemgr_datediff,         &! calculate difference between two time instants
         advance_timestep,         &! increment timestep number
-        get_clock,                &! get the clock from the time-manager
         get_curr_ESMF_Time,       &! get current time in terms of the ESMF_Time
         get_step_size,            &! return step size in seconds
         get_step_size_real,       &! return step size in seconds, real-valued
@@ -54,7 +53,6 @@ module clm_time_manager
         is_end_curr_month,        &! return true on last timestep in current month
         is_beg_curr_year,         &! return true on first timestep in current year
         is_end_curr_year,         &! return true on last timestep in current year
-        is_last_step,             &! return true on last timestep
         is_perpetual,             &! return true if perpetual calendar is in use
         is_near_local_noon,       &! return true if near local noon
         is_restart,               &! return true if this is a restart run
@@ -111,7 +109,6 @@ module clm_time_manager
    logical, save :: tm_first_restart_step = .false.    ! true for first step of a restart or branch run
    logical, save :: tm_perp_calendar      = .false.    ! true when using perpetual calendar
    logical, save :: timemgr_set           = .false.    ! true when timemgr initialized
-   integer, save :: nestep                = uninit_int ! ending time-step
    !
    ! Next short-wave radiation calendar day
    ! 
@@ -126,7 +123,6 @@ module clm_time_manager
    private :: timemgr_spmdbcast
    private :: init_calendar
    private :: init_clock
-   private :: calc_nestep
    private :: timemgr_print
    private :: TimeGetymd
    private :: check_timemgr_initialized
@@ -646,10 +642,6 @@ contains
 
     tm_first_restart_step = .true.
 
-    ! Calculate ending time step
-
-    call calc_nestep( )
-
     ! Print configuration summary to log file (stdout).
 
     if (masterproc) call timemgr_print()
@@ -657,33 +649,6 @@ contains
     timemgr_set = .true.
 
   end subroutine timemgr_restart
-
-  !=========================================================================================
-
-  subroutine calc_nestep()
-    !---------------------------------------------------------------------------------
-    !
-    ! Calculate ending timestep number
-    ! Calculation of ending timestep number (nestep) assumes a constant stepsize.
-    !
-    character(len=*), parameter :: sub = 'clm::calc_nestep'
-    integer :: ntspday               ! Number of time-steps per day
-    type(ESMF_TimeInterval) :: diff  !
-    type(ESMF_Time) :: start_date    ! start date for run
-    type(ESMF_Time) :: stop_date     ! stop date for run
-    integer :: ndays, nsecs          ! Number of days, seconds to ending time
-    integer :: rc                    ! return code
-    !---------------------------------------------------------------------------------
-
-    call ESMF_ClockGet( tm_clock, stopTime=stop_date, startTime=start_date, rc=rc )
-    call chkrc(rc, sub//': error return from ESMF_ClockGet')
-    ntspday = isecspday/dtime
-    diff = stop_date - start_date
-    call ESMF_TimeIntervalGet( diff, d=ndays, s=nsecs, rc=rc )
-    call chkrc(rc, sub//': error return from ESMF_TimeIntervalGet calculating nestep')
-    nestep = ntspday*ndays + nsecs/dtime
-    if ( mod(nsecs,dtime) /= 0 ) nestep = nestep + 1
-  end subroutine calc_nestep
 
   !=========================================================================================
 
@@ -781,7 +746,6 @@ contains
     write(iulog,*)'  Reference date (yr mon day tod): ', ref_yr, ref_mon, &
          ref_day, ref_tod
     write(iulog,*)'  Current step number:      ', nstep
-    write(iulog,*)'  Ending step number:       ', nestep
     write(iulog,*)'  Current date (yr mon day tod):   ', curr_yr, curr_mon, &
          curr_day, curr_tod
 
@@ -811,30 +775,6 @@ contains
     tm_first_restart_step = .false.
 
   end subroutine advance_timestep
-
-  !=========================================================================================
-
-  subroutine get_clock( clock )
-
-    ! Return the ESMF clock
-
-    type(ESMF_Clock), intent(inout) :: clock
-
-    character(len=*), parameter :: sub = 'clm::get_clock'
-    type(ESMF_TimeInterval) :: step_size
-    type(ESMF_Time) :: start_date, stop_date, ref_date
-    integer :: rc
-
-    if ( .not. check_timemgr_initialized(sub) ) return
-
-    call ESMF_ClockGet( tm_clock, timeStep=step_size, startTime=start_date, &
-         stoptime=stop_date, reftime=ref_date, rc=rc )
-    call chkrc(rc, sub//': error return from ESMF_ClockGet')
-    call ESMF_ClockSet(clock, timeStep=step_size, startTime=start_date, &
-         stoptime=stop_date, reftime=ref_date, rc=rc)
-    call chkrc(rc, sub//': error return from ESMF_ClockSet')
-
-  end subroutine get_clock
 
   !=========================================================================================
 
@@ -1780,34 +1720,6 @@ contains
 
   !=========================================================================================
 
-  logical function is_last_step()
-
-    !---------------------------------------------------------------------------------
-    ! Return true on last timestep.
-
-    ! Local variables
-    character(len=*), parameter :: sub = 'clm::is_last_step'
-    type(ESMF_Time) :: stop_date
-    type(ESMF_Time) :: curr_date
-    type(ESMF_TimeInterval) :: time_step
-    integer :: rc
-    !---------------------------------------------------------------------------------
-
-    if ( .not. check_timemgr_initialized(sub) ) return
-
-    call ESMF_ClockGet( tm_clock, stopTime=stop_date, &
-         currTime=curr_date, TimeStep=time_step, rc=rc )
-    call chkrc(rc, sub//': error return from ESMF_ClockGet')
-    if ( curr_date+time_step > stop_date ) then
-       is_last_step = .true.
-    else
-       is_last_step = .false.
-    end if
-
-  end function is_last_step
-
-  !=========================================================================================
-
   logical function is_perpetual()
 
     ! Return true on last timestep.
@@ -2004,7 +1916,6 @@ contains
     tm_first_restart_step = .false.
     tm_perp_calendar      = .false.
     timemgr_set           = .false.
-    nestep                = uninit_int
 
     nextsw_cday = uninit_r8
     
