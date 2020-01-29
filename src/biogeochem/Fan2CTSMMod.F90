@@ -314,14 +314,14 @@ contains
        if (.not. col%active(c) .or. col%wtgcell(c) < 1e-6) cycle
        g = col%gridcell(c)
        if (lun%itype(l) == istsoil) then
-          nf%man_n_grz_col(c) &
+          nf%manure_n_grz_col(c) &
                = atm2lnd_inst%forc_ndep_grz_grc(g) / col%wtgcell(c) * 1e3 ! kg to g 
-          if (nf%man_n_appl_col(c) > 0) then
-             write(iulog, *) 'man_n_appl_col:', nf%man_n_appl_col(c)
+          if (nf%manure_n_appl_col(c) > 0) then
+             write(iulog, *) 'manure_n_appl_col:', nf%manure_n_appl_col(c)
              call endrun(msg='Found fertilizer in soil column')
           end if
        else
-          nf%man_n_grz_col(c) = 0.0
+          nf%manure_n_grz_col(c) = 0.0
        end if
     end do
 
@@ -413,19 +413,19 @@ contains
 
        ! grazing
        !
-       ngrz = nf%man_n_grz_col(c)
+       ngrz = nf%manure_n_grz_col(c)
        ndep_org(ind_avail) = ngrz * (1.0_r8-fract_tan) * fract_avail
        ndep_org(ind_resist) = ngrz * (1.0_r8-fract_tan) * fract_resist
        ndep_org(ind_unavail) = ngrz * (1.0_r8-fract_tan) * fract_unavail
 
-       orgpools(ind_avail) = ns%man_a_grz_col(c)
-       orgpools(ind_resist) = ns%man_r_grz_col(c)
-       orgpools(ind_unavail) = ns%man_u_grz_col(c)
+       orgpools(ind_avail) = ns%manure_a_grz_col(c)
+       orgpools(ind_resist) = ns%manure_r_grz_col(c)
+       orgpools(ind_unavail) = ns%manure_u_grz_col(c)
        call update_org_n(ndep_org, tg, soilpsi, orgpools, dt, dz_layer_grz, &
             tanprod, soilflux_org, status)
-       ns%man_a_grz_col(c) = orgpools(ind_avail)
-       ns%man_r_grz_col(c) = orgpools(ind_resist) 
-       ns%man_u_grz_col(c) = orgpools(ind_unavail)
+       ns%manure_a_grz_col(c) = orgpools(ind_avail)
+       ns%manure_r_grz_col(c) = orgpools(ind_resist) 
+       ns%manure_u_grz_col(c) = orgpools(ind_unavail)
 
        tanpools(1) = ns%tan_g1_col(c)
        tanpools(2) = ns%tan_g2_col(c)
@@ -485,14 +485,14 @@ contains
        ndep_org(ind_resist) = org_n_tot * fract_resist 
        ndep_org(ind_unavail) = org_n_tot * fract_unavail 
 
-       orgpools(ind_avail) = ns%man_a_app_col(c)
-       orgpools(ind_resist) = ns%man_r_app_col(c)
-       orgpools(ind_unavail) = ns%man_u_app_col(c)
+       orgpools(ind_avail) = ns%manure_a_app_col(c)
+       orgpools(ind_resist) = ns%manure_r_app_col(c)
+       orgpools(ind_unavail) = ns%manure_u_app_col(c)
        call update_org_n(ndep_org, tg, soilpsi, orgpools, dt, dz_layer_slr, &
             tanprod, soilflux_org, status)
-       ns%man_a_app_col(c) = orgpools(ind_avail)
-       ns%man_r_app_col(c) = orgpools(ind_resist)
-       ns%man_u_app_col(c) = orgpools(ind_unavail)
+       ns%manure_a_app_col(c) = orgpools(ind_avail)
+       ns%manure_r_app_col(c) = orgpools(ind_resist)
+       ns%manure_u_app_col(c) = orgpools(ind_unavail)
        
        tanpools(1) = ns%tan_s0_col(c)
        tanpools(2) = ns%tan_s1_col(c)
@@ -508,14 +508,14 @@ contains
        do ind_substep = 1, num_substeps
           call update_4pool(tg, ratm, theta, thetasat, infiltr_m_s, evap_m_s, &
                wateratm2lndbulk_inst%forc_q_downscaled_col(c), watertend, &
-               runoff_m_s, nf%man_tan_appl_col(c), sum(tanprod), bsw, depth_slurry, &
+               runoff_m_s, nf%manure_tan_appl_col(c), sum(tanprod), bsw, depth_slurry, &
                poolranges_slr, tanpools(1:num_cls_slr), Hconc_slr, &
                fluxes(1:num_fluxes, 1:num_cls_slr), &
                n_residual, dt / num_substeps, dz_layer_slr, status)
           if (status /= 0) then
              write(iulog, *) 'status and tanpools: ', status, tanpools(1:num_cls_slr)
              write(iulog, *) 'tg, ratm, theta, thetasat:', tg, ratm, theta, thetasat
-             write(iulog, *) 'tanfluxes:', nf%man_tan_appl_col(c), tanprod, fluxes(1:num_fluxes,1:num_cls_slr)
+             write(iulog, *) 'tanfluxes:', nf%manure_tan_appl_col(c), tanprod, fluxes(1:num_fluxes,1:num_cls_slr)
              call endrun(msg='update_4pool status /= 0')
           end if
           fluxes_tmp = fluxes_tmp + sum(fluxes(:,1:num_cls_slr), dim=2)
@@ -624,7 +624,7 @@ contains
 
        nf%nh3_fert_col(c) = fluxes_tmp(iflx_air)
        nf%fert_nh4_runoff_col(c) = fluxes_tmp(iflx_roff)
-       nf%fert_no3_prod_col(c) = fluxes_tmp(iflx_no3) + fert_no3
+       nf%fert_no3_to_soil_col(c) = fluxes_tmp(iflx_no3) + fert_no3
        nf%fert_nh4_to_soil_col(c) = fluxes_tmp(iflx_soild) + fluxes_tmp(iflx_soilq) &
             + n_residual_total/dt + fert_inc_tan
 
@@ -752,23 +752,23 @@ contains
     real(r8), intent(in) :: dt ! timestep, sec
     
     ! N excreted in manure, gN/m2:
-    real(r8), intent(in) :: ndep_sgrz_grc(:) ! seasonally grazing animals
-    real(r8), intent(in) :: ndep_ngrz_grc(:) ! non-grazing animals
+    real(r8), intent(in) :: ndep_sgrz_grc(bounds%begg:) ! seasonally grazing animals
+    real(r8), intent(in) :: ndep_ngrz_grc(bounds%begg:) ! non-grazing animals
     ! N, TAN spread on grasslands, gN/m2/s:
-    real(r8), intent(inout) :: n_manure_spread_col(:) 
-    real(r8), intent(inout) :: tan_manure_spread_col(:) ! output, calculated from the above and stored manure
+    real(r8), intent(inout) :: n_manure_spread_col(bounds%begc:) 
+    real(r8), intent(inout) :: tan_manure_spread_col(bounds%begc:) ! output, calculated from the above and stored manure
     ! N excreted by animals allocated to mixed production systems temporarily grazing on grasslands:
-    real(r8), intent(inout) :: n_manure_graze_col(:)
+    real(r8), intent(inout) :: n_manure_graze_col(bounds%begc:)
     ! N excreted by animals in mixed systems, total
-    real(r8), intent(inout) :: n_manure_mixed_col(:)
+    real(r8), intent(inout) :: n_manure_mixed_col(bounds%begc:)
     ! NH3 emission fluxes from manure storage and housings, gN/m2/s
-    real(r8), intent(inout) :: nh3_flux_stores(:), nh3_flux_barns(bounds%begc:bounds%endc)
+    real(r8), intent(inout) :: nh3_flux_stores(bounds%begc:), nh3_flux_barns(bounds%begc:)
     ! total nitrogen flux transferred out of a crop column (manure spreading + temporary grazing)
-    real(r8), intent(inout) :: man_n_transf(:)
+    real(r8), intent(inout) :: man_n_transf(bounds%begc:)
     ! Total nitrogen excreted in barns
-    real(r8), intent(inout) :: man_n_barns(:)
+    real(r8), intent(inout) :: man_n_barns(bounds%begc:)
     ! fraction of manure excreted when grazing
-    real(r8), intent(inout) :: grz_fract(:)
+    real(r8), intent(inout) :: grz_fract(bounds%begc:)
     ! TAN fraction in excreted N
     real(r8), intent(in) :: tan_fract_excr
     integer, intent(in)    :: num_soilc       ! number of soil columns in filter
@@ -803,8 +803,10 @@ contains
 
     ! Auxiliary and index variables:
     logical :: is_grass
-    integer :: begg, endg, g, l, c, il, counter, col_grass, status, p
+    integer :: begg, endg, g, l, c, il, counter, col_grass, status, p, fc
     real(r8) :: cumflux, totalinput 
+
+    begg = bounds%begg; endg = bounds%endg
 
     associate(&
       t_ref2m => temperature_inst%t_ref2m_patch, & ! 2m temperature, K
@@ -813,6 +815,13 @@ contains
     
     totalinput = 0.0
     cumflux = 0.0
+
+    do fc = 1, num_soilc
+       ! Zero the manure N spread arrays because the nat veg columns receive N additively (see below)
+       c = filter_soilc(fc)
+       tan_manure_spread_col(c) = 0.0_r8
+       n_manure_spread_col(c) = 0.0_r8
+    end do
 
     do g = begg, endg
        ! First find out if there are grasslands in this cell. If yes, a fraction of
@@ -871,6 +880,7 @@ contains
              counter = 0
              if (col_grass == c) call endrun('Something wrong with the indices')
              if (col%patchi(c) /= col%patchf(c)) then
+                print *, 'wtf', c, col%patchi(c), col%patchf(c), l, g
                 call endrun(msg="ERROR crop column has multiple patches")
              end if
 
@@ -882,7 +892,7 @@ contains
              nh3_flux_stores(c) = 0.0
 
              if (flux_avail_rum < 0) then 
-                write(iulog, *) 'flux:', flux_avail_rum
+                write(iulog, *) 'flux:', flux_avail_rum, ndep_sgrz_grc(g), (1.0_r8 - max_grazing_fract) * kg_to_g * invscale
                 call endrun(msg='negat flux_avail for ruminants')
              end if
 
@@ -941,7 +951,7 @@ contains
           if (tan_manure_spread_col(col_grass) > 1) then
              ! In principle this could happen if col%wtgcell(col_grass) is very small.
              write(iulog, *) 'Warning (FAN): suspicious manure N spread flux to natural vegetation column; flux, icol:', &
-                  flux_grass_spread_tan, col_grass
+                  flux_grass_spread_tan, col_grass, tan_manure_spread_col(col_grass)
           end if
        else if (flux_grass_spread > 0) then
           ! There was no column that had a grass pft:
