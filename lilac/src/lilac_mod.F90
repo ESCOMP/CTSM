@@ -489,8 +489,8 @@ contains
 
     ! Set the clock stop alarm if stop_alarm_ringing is true
     if (stop_alarm_is_ringing) then
-       call ESMF_ClockGetAlarm(lilac_clock, 'lilac_restart_alarm', lilac_stop_alarm, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in obtaining lilac_restart_alarm")
+       call ESMF_ClockGetAlarm(lilac_clock, 'lilac_stop_alarm', lilac_stop_alarm, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in obtaining lilac_stop_alarm")
        call ESMF_AlarmRingerOn(lilac_stop_alarm, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running lilac atm_cap")
        call ESMF_LogWrite(subname//"lilac stop alarm is ringing", ESMF_LOGMSG_INFO)
