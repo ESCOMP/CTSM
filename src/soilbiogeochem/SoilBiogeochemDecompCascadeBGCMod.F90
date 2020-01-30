@@ -27,6 +27,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   use CNVegstateType                     , only : cnveg_state_type
+  use CanopyStateType                    , only : canopystate_type !MWGraham added Jan 26 2020
   !
   implicit none
   private
@@ -97,7 +98,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
-  logical :: cultivate = .true. ! If crop is on -- should soil be cultivated? !!!!!!!!!!!!!! added for cultivation code
+  logical :: cultivate = .false. ! If crop is on -- should soil be cultivated? !!!!!!!!!!!!!! added for cultivation code
   real(r8), allocatable :: developed(:) ! If grid cell is developed or not !!!!!!!!!!!!!! added for cultivation code
   !-----------------------------------------------------------------------
 
