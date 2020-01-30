@@ -1421,6 +1421,13 @@ contains
      do s = 1, this%fates(nc)%nsites
         ! filter flag == 1 means that this patch has not been called for photosynthesis
         this%fates(nc)%bc_in(s)%filter_photo_pa(:) = 1
+
+        ! set transpiration input boundary condition to zero. The exposed
+        ! vegetation filter may not even call every patch.
+        if (use_fates_planthydro) then
+            this%fates(nc)%bc_in(s)%qflx_transp_pa(:) = 0._r8
+        end if
+
      end do
   end subroutine prep_canopyfluxes
 
