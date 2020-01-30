@@ -120,6 +120,8 @@ contains
     ! !LOCAL VARIABLES:
     integer :: p,j,k                             ! indices
     integer :: fp                                ! filter indices
+    integer :: num_truncatep                     ! number of points in filter_truncatep
+    integer :: filter_truncatep(bounds%endp-bounds%begp+1) ! filter for points that need truncation
     real(r8):: pc(bounds%begp:bounds%endp)       ! truncation terms for patch-level corrections Carbon
     real(r8):: pn(bounds%begp:bounds%endp)       ! truncation terms for patch-level corrections nitrogen
     real(r8):: pc13(bounds%begp:bounds%endp)     ! truncation terms for patch-level corrections
@@ -205,8 +207,17 @@ contains
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_patch(bounds%begp:bounds%endp), &
                                 ns%leafn_patch(bounds%begp:bounds%endp), &
                                 pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
-                                c13=c13cs%leafc_patch, c14=c14cs%leafc_patch, &
-                                pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:) )
+                                num_truncatep, filter_truncatep)
+      if (use_c13) then
+         call TruncateAdditional(num_truncatep, filter_truncatep, &
+              c13cs%leafc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+              __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional(num_truncatep, filter_truncatep, &
+              c14cs%leafc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+              __LINE__)
+      end if
 
       ! leaf storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_storage_patch(bounds%begp:bounds%endp), &
@@ -397,8 +408,8 @@ contains
 
  end subroutine CNPrecisionControl
 
- subroutine TruncateCandNStates( bounds, filter_soilp, num_soilp, carbon_patch, nitrogen_patch, pc, pn, lineno, c13, c14, &
-                                 pc13, pc14, croponly, allowneg )
+ subroutine TruncateCandNStates( bounds, filter_soilp, num_soilp, carbon_patch, nitrogen_patch, pc, pn, lineno, &
+                                 num_truncatep, filter_truncatep, croponly, allowneg )
     !
     ! !DESCRIPTION:
     ! Truncate paired Carbon and Nitrogen states. If a paired carbon and nitrogen state iare too small truncate 
@@ -406,7 +417,7 @@ contains
     !
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use clm_varctl , only : use_c13, use_c14, use_nguardrail
+    use clm_varctl , only : use_nguardrail
     use clm_varctl , only : iulog
     use pftconMod  , only : nc3crop
     use decompMod  , only : bounds_type
@@ -421,10 +432,8 @@ contains
     real(r8), intent(inout) :: pc(bounds%begp:)
     real(r8), intent(inout) :: pn(bounds%begp:)
     integer,  intent(in)    :: lineno
-    real(r8), intent(inout), optional, pointer :: c13(:)
-    real(r8), intent(inout), optional, pointer :: c14(:)
-    real(r8), intent(inout), optional :: pc13(bounds%begp:)
-    real(r8), intent(inout), optional :: pc14(bounds%begp:)
+    integer,  intent(out)   :: num_truncatep       ! number of points in filter_truncatep
+    integer,  intent(out)   :: filter_truncatep(:) ! filter for points that need truncation
     logical , intent(in)   , optional :: croponly
     logical , intent(in)   , optional :: allowneg
 
@@ -435,22 +444,6 @@ contains
     SHR_ASSERT_ALL_FL((ubound(nitrogen_patch) == (/bounds%endp/)), 'ubnd(nitro)'//sourcefile, lineno)
     SHR_ASSERT_ALL_FL((ubound(pc)             == (/bounds%endp/)), 'ubnd(pc)'//sourcefile, lineno)
     SHR_ASSERT_ALL_FL((ubound(pn)             == (/bounds%endp/)), 'ubnd(pn)'//sourcefile, lineno)
-#ifndef _OPENMP
-    if ( present(c13) .and. use_c13 )then
-       SHR_ASSERT_ALL_FL((lbound(c13)         == (/bounds%begp/)), 'lbnd(c13)'//sourcefile, lineno)
-       SHR_ASSERT_ALL_FL((ubound(c13)         == (/bounds%endp/)), 'ubnd(c13)'//sourcefile, lineno)
-    end if
-    if ( present(c14) .and. use_c14 )then
-       SHR_ASSERT_ALL_FL((lbound(c14)         == (/bounds%begp/)), 'lbnd(c14)'//sourcefile, lineno)
-       SHR_ASSERT_ALL_FL((ubound(c14)         == (/bounds%endp/)), 'ubnd(c14)'//sourcefile, lineno)
-    end if
-#endif
-    if ( present(pc13) )then
-       SHR_ASSERT_ALL_FL((ubound(pc13)        == (/bounds%endp/)), 'ubnd(pc13)'//sourcefile, lineno)
-    end if
-    if ( present(pc14) )then
-       SHR_ASSERT_ALL_FL((ubound(pc14)        == (/bounds%endp/)), 'ubnd(pc14)'//sourcefile, lineno)
-    end if
     ! patch loop
     lcroponly = .false.
     if ( present(croponly) )then
@@ -460,6 +453,8 @@ contains
     if ( present(allowneg) )then
       if (  allowneg ) lallowneg = .true.
     end if
+
+    num_truncatep = 0
     do fp = 1,num_soilp
        p = filter_soilp(fp)
 
@@ -469,20 +464,14 @@ contains
              write(iulog,*) 'ERROR: limits = ', cnegcrit, nnegcrit
              call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))
           else if ( abs(carbon_patch(p)) < ccrit .or. (use_nguardrail .and. abs(nitrogen_patch(p)) < ncrit) ) then
+             num_truncatep = num_truncatep + 1
+             filter_truncatep(num_truncatep) = p
+
              pc(p) = pc(p) + carbon_patch(p)
              carbon_patch(p) = 0._r8
       
              pn(p) = pn(p) + nitrogen_patch(p)
              nitrogen_patch(p) = 0._r8
-   
-             if ( use_c13 .and. present(c13) .and. present(pc13) ) then
-                pc13(p) = pc13(p) + c13(p)
-                c13(p) = 0._r8
-             endif
-             if ( use_c14 .and. present(c14) .and. present(pc14)) then
-                pc14(p) = pc14(p) + c14(p)
-                c14(p) = 0._r8
-             endif
           end if
        end if
     end do
@@ -611,5 +600,37 @@ contains
        end if
     end do
  end subroutine TruncateNStates
+
+ !-----------------------------------------------------------------------
+ subroutine TruncateAdditional(num_truncatep, filter_truncatep, &
+      state_patch, truncation_patch, lineno)
+   !
+   ! !DESCRIPTION:
+   ! Given a filter of points for which we have already determined that truncation should
+   ! occur, do the truncation for the given patch-level state, putting the truncation
+   ! amount in truncation_patch.
+   !
+   ! !ARGUMENTS:
+   integer, intent(in) :: num_truncatep       ! number of points in filter_truncatep
+   integer, intent(in) :: filter_truncatep(:) ! filter for points that need truncation
+   real(r8), intent(inout) :: state_patch(bounds%begp: )
+   real(r8), intent(inout) :: truncation_patch(bounds%begp: )
+   integer, intent(in) :: lineno
+   !
+   ! !LOCAL VARIABLES:
+
+   character(len=*), parameter :: subname = 'TruncateAdditional'
+   !-----------------------------------------------------------------------
+
+   SHR_ASSERT_FL((ubound(state_patch, 1) == bounds%endp), 'state_patch '//sourcefile, lineno)
+   SHR_ASSERT_FL((ubound(truncation_patch, 1) == bounds%endp), 'truncation_patch '//sourcefile, lineno)
+
+   do fp = 1, num_truncatep
+      p = filter_truncatep(fp)
+      truncation_patch(p) = truncation_patch(p) + state_patch(p)
+      state_patch(p) = 0._r8
+   end do
+
+ end subroutine TruncateAdditional
 
 end module CNPrecisionControlMod
