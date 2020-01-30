@@ -457,9 +457,23 @@ contains
 
       end do ! end of pft loop
 
-      ! dynHarvest had a change here for zeroing out harvest to litter of fine-root-c of trees under harvest
-      ! This should NOT need to be done here...
-      if ( use_matrixcn ) then
+      !
+      ! For matrix, for natural vegetation when gross unrepresented land-use change is active reset GRU fine-root carbon to litter to zero as well as gmtransfer
+      ! (Technically only happens when phtransfer >= 1/dt, but CNCStateUpdate1 sets it to 1/dt)
+      !
+      if(use_matrixcn)then
+         do fp = 1,num_soilp
+            p = filter_soilp(fp)
+            if (ivt(p) > noveg .and. ivt(p) <= nc4_grass) then
+
+               if (do_grossunrep) then
+                  if(cnveg_carbonflux_inst%matrix_phtransfer_patch(p,cnveg_carbonflux_inst%ifroot_to_iout_ph) .ge. 1._r8 / dtime)then
+                     gru_frootc_to_litter(p)              = 0.
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc) = 0._r8
+                  end if
+               end if
+            end if
+         end do
       end if
       ! gather all patch-level litterfall fluxes from grossunrep to the column
       ! for litter C and N inputs
