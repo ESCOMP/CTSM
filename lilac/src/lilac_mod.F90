@@ -83,7 +83,7 @@ contains
   subroutine lilac_init(mpicom, atm_global_index, atm_lons, atm_lats, &
        atm_global_nx, atm_global_ny, atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, starttype_in)
+       starttype_in)
 
     ! --------------------------------------------------------------------------------
     ! This is called by the host atmosphere
@@ -102,18 +102,12 @@ contains
     integer          , intent(in)    :: atm_start_mon  !(mm)
     integer          , intent(in)    :: atm_start_day
     integer          , intent(in)    :: atm_start_secs
-    integer          , intent(in)    :: atm_stop_year  !(yyyy)
-    integer          , intent(in)    :: atm_stop_mon   !(mm)
-    integer          , intent(in)    :: atm_stop_day
-    integer          , intent(in)    :: atm_stop_secs
     character(len=*) , intent(in)    :: starttype_in
 
     ! local variables
     character(ESMF_MAXSTR)      :: caseid
     type(ESMF_TimeInterval)     :: timeStep
     type(ESMF_Time)             :: startTime
-    type(ESMF_Time)             :: stopTime
-    type(ESMF_Alarm)            :: EAlarm_stop, EAlarm_rest
     integer                     :: yy,mm,dd,sec
     integer                     :: lsize
     type(ESMF_State)            :: importState, exportState
@@ -329,8 +323,7 @@ contains
 
     call lilac_time_clockInit(caseid, starttype, atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, logunit, &
-       lilac_clock, rc)
+       logunit, lilac_clock, rc)
 
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing clock")
     call ESMF_LogWrite(subname//"lilac_clock initialized", ESMF_LOGMSG_INFO)
@@ -447,11 +440,11 @@ contains
 
   !========================================================================
 
-  subroutine lilac_run(restart_alarm_is_ringing, stop_alarm_is_ringing)
+  subroutine lilac_run(write_restarts_now, stop_now)
 
     ! input/output variables
-    logical, intent(in) :: restart_alarm_is_ringing
-    logical, intent(in) :: stop_alarm_is_ringing
+    logical, intent(in) :: write_restarts_now ! if true, CTSM will write restarts at end of time step
+    logical, intent(in) :: stop_now           ! if true, CTSM will do some finalization at end of time step
 
     ! local variables
     type(ESMF_Alarm)            :: lilac_history_alarm
@@ -473,7 +466,7 @@ contains
     ! listen to the restart and stop alarms on the lilac clock
 
     ! Set the clock restart alarm if restart_alarm_ringing is true
-    if (restart_alarm_is_ringing) then
+    if (write_restarts_now) then
        ! Turn on lilac restart alarm (this will be needed by ctsm)
        call ESMF_ClockGetAlarm(lilac_clock, 'lilac_restart_alarm', lilac_restart_alarm, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in obtaining lilac_restart_alarm")
@@ -488,7 +481,7 @@ contains
     end if
 
     ! Set the clock stop alarm if stop_alarm_ringing is true
-    if (stop_alarm_is_ringing) then
+    if (stop_now) then
        call ESMF_ClockGetAlarm(lilac_clock, 'lilac_stop_alarm', lilac_stop_alarm, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in obtaining lilac_stop_alarm")
        call ESMF_AlarmRingerOn(lilac_stop_alarm, rc=rc)
@@ -576,7 +569,7 @@ contains
        end if
     end if
        
-    if (restart_alarm_is_ringing) then
+    if (write_restarts_now) then
        call ESMF_ClockGetAlarm(lilac_clock, 'lilac_restart_alarm', lilac_restart_alarm, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in obtaining lilac_restart_alarm")
        call ESMF_AlarmRingerOff( lilac_restart_alarm, rc=rc )

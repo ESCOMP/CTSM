@@ -1422,12 +1422,6 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_LogWrite(trim(lstring)//": startime = "//trim(timestr), ESMF_LOGMSG_INFO)
 
-    call ESMF_ClockGet(clock,stoptime=time,rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_TimeGet(time,timestring=timestr,rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_LogWrite(trim(lstring)//": stoptime = "//trim(timestr), ESMF_LOGMSG_INFO)
-
     call ESMF_ClockGet(clock,timestep=timestep,rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_TimeIntervalGet(timestep,timestring=timestr,rc=rc)

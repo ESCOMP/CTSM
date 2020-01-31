@@ -162,7 +162,7 @@ program atm_driver
   call lilac_init(comp_comm, atm_global_index, atm_lons, atm_lats, &
        atm_global_nx, atm_global_ny, atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, atm_starttype)
+       atm_starttype)
 
   !------------------------------------------------------------------------
   ! Run lilac
@@ -234,9 +234,9 @@ program atm_driver
      call atm_driver_to_lilac (atm_lons, atm_lats)
 
      if (nstep == atm_nsteps) then
-        call lilac_run(restart_alarm_is_ringing=.true., stop_alarm_is_ringing=.true.)
+        call lilac_run(write_restarts_now=.true., stop_now=.true.)
      else
-        call lilac_run(restart_alarm_is_ringing=.false., stop_alarm_is_ringing=.false.)
+        call lilac_run(write_restarts_now=.false., stop_now=.false.)
      end if
   end do
 

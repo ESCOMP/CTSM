@@ -10,7 +10,7 @@ module lilac_atmcap
   !      call lilac_init()
   ! the host atm run phase will be
   !     call lilac_atm2lnd(fldname, data1d)
-  !     call lilac_run(restart_alarm_is_ringing, stop_alarm_is_ringing)
+  !     call lilac_run(write_restarts_now, stop_now)
   !     call lilac_lnd2atm(fldname, data1d)
   !-----------------------------------------------------------------------
 

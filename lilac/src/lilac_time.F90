@@ -35,6 +35,10 @@ module lilac_time
   type(ESMF_Calendar)         :: lilac_calendar
   integer                     :: mytask
   integer, parameter          :: SecPerDay = 86400 ! Seconds per day
+
+  ! We'll use this really big year to effectively mean infinitely into the future.
+  integer,  parameter :: really_big_year = 999999999
+
   character(len=*), parameter :: u_FILE_u = &
        __FILE__
 
@@ -44,8 +48,7 @@ contains
 
   subroutine lilac_time_clockInit(caseid_in, starttype, atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, logunit, &
-       lilac_clock, rc)
+       logunit, lilac_clock, rc)
 
     ! -------------------------------------------------
     ! Initialize the lilac clock
@@ -60,10 +63,6 @@ contains
     integer             , intent(in)    :: atm_start_mon  !(mm)
     integer             , intent(in)    :: atm_start_day
     integer             , intent(in)    :: atm_start_secs
-    integer             , intent(in)    :: atm_stop_year  !(yyyy)
-    integer             , intent(in)    :: atm_stop_mon   !(mm)
-    integer             , intent(in)    :: atm_stop_day
-    integer             , intent(in)    :: atm_stop_secs
     integer             , intent(in)    :: logunit
     type(ESMF_Clock)    , intent(inout) :: lilac_clock
     integer             , intent(out)   :: rc
@@ -75,7 +74,6 @@ contains
     type(ESMF_VM)           :: vm
     type(ESMF_Time)         :: StartTime           ! Start time
     type(ESMF_Time)         :: CurrTime            ! Current time
-    type(ESMF_Time)         :: StopTime            ! Stop time
     type(ESMF_Time)         :: Clocktime           ! Loop time
     type(ESMF_TimeInterval) :: TimeStep            ! Clock time-step
     type(ESMF_TimeInterval) :: TimeStep_advance
@@ -83,10 +81,6 @@ contains
     integer                 :: start_tod           ! Start time of day (seconds)
     integer                 :: curr_ymd            ! Current ymd (YYYYMMDD)
     integer                 :: curr_tod            ! Current tod (seconds)
-    integer                 :: stop_n              ! Number until stop
-    integer                 :: stop_ymd            ! Stop date (YYYYMMDD)
-    integer                 :: stop_tod            ! Stop time-of-day
-    character(CS)           :: stop_option         ! Stop option units
     character(len=CL)       :: restart_file
     character(len=CL)       :: restart_pfile
     integer                 :: yr, mon, day, secs  ! Year, month, day, seconds as integers
@@ -134,13 +128,11 @@ contains
          calendar=lilac_calendar, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    call ESMF_TimeSet(StopTime , yy=atm_stop_year , mm=atm_stop_mon , dd=atm_stop_day  , s=atm_stop_secs , &
-         calendar=lilac_calendar, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    ! Create the lilac clock (NOTE: the reference time is set to the start time)
+    ! Create the lilac clock
+    ! NOTE: the reference time is set to the start time
+    ! NOTE: no stop time is given. Stopping will be determined via an argument passed to lilac_run.
     lilac_clock = ESMF_ClockCreate(name='lilac_clock', TimeStep=TimeStep, startTime=StartTime, RefTime=StartTime, &
-         stopTime=stopTime, rc=rc)
+         rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort(trim(subname)//'error initializing lilac clock')
 
     ! ------------------------------
@@ -205,15 +197,20 @@ contains
        print *, trim(subname) // "---------------------------------------"
     end if
 
-    ! Add a restart alarm and stop alarm to the clock
-    ! NTOE: The restart alarm and stop alarm will only go off at the end of the run
+    ! Add a restart alarm and stop alarm to the clock.
+    !
+    ! These alarms are initially set up to never go off, but they are turned on by
+    ! arguments passed to lilac_run.
+    !
     ! NOTE: The history alarm will be added in lilac_history_init and can go off multiple times during the run
 
-    lilac_restart_alarm = ESMF_AlarmCreate(lilac_clock, ringTime=StopTime, name='lilac_restart_alarm', rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in initializing restart alarm')
+    call lilac_time_alarmInit(lilac_clock, lilac_restart_alarm, 'lilac_restart_alarm', &
+         option = optNever, opt_n = -1)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    lilac_stop_alarm = ESMF_AlarmCreate(lilac_clock, ringTime=StopTime, name='lilac_stop_alarm', rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in initializing stop alarm')
+    call lilac_time_alarmInit(lilac_clock, lilac_stop_alarm, 'lilac_stop_alarm', &
+         option = optNever, opt_n = -1)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
   end subroutine lilac_time_clockInit
 
@@ -237,7 +234,7 @@ contains
     type(ESMF_Alarm) , intent(inout) :: alarm     ! alarm
     character(len=*) , intent(in)    :: alarmname ! alarm name
     character(len=*) , intent(in)    :: option    ! alarm option
-    integer          , intent(in)    :: opt_n     ! alarm freq
+    integer          , intent(in)    :: opt_n     ! alarm freq (ignored for option of optNone or optNever)
     integer          , intent(inout) :: rc        ! Return code
 
     ! local variables
@@ -270,9 +267,9 @@ contains
     ! Determine inputs for call to create alarm
     if (trim(option) == optNone .or. trim(option) == optNever) then
 
-       call ESMF_TimeIntervalSet(AlarmInterval, yy=9999, rc=rc)
+       call ESMF_TimeIntervalSet(AlarmInterval, yy=really_big_year, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_TimeSet( NextAlarm, yy=9999, mm=12, dd=1, s=0, calendar=cal, rc=rc )
+       call ESMF_TimeSet( NextAlarm, yy=really_big_year, mm=12, dd=1, s=0, calendar=cal, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        update_nextalarm  = .false.
 
