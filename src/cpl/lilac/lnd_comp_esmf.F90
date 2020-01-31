@@ -146,11 +146,8 @@ contains
     integer                    :: ref_tod                    ! reference time of day (sec)
     integer                    :: start_ymd                  ! start date (YYYYMMDD)
     integer                    :: start_tod                  ! start time of day (sec)
-    integer                    :: stop_ymd                   ! stop date (YYYYMMDD)
-    integer                    :: stop_tod                   ! stop time of day (sec)
     type(ESMF_Time)            :: currTime                   ! Current time
     type(ESMF_Time)            :: startTime                  ! Start time
-    type(ESMF_Time)            :: stopTime                   ! Stop time
     type(ESMF_Time)            :: refTime                    ! Ref time
     type(ESMF_TimeInterval)    :: timeStep                   ! time step from lilac clock
 
@@ -277,7 +274,7 @@ contains
     !----------------------
 
     call ESMF_ClockGet( clock, &
-         currTime=currTime, startTime=startTime, stopTime=stopTime, refTime=RefTime, timeStep=timeStep, rc=rc)
+         currTime=currTime, startTime=startTime, refTime=RefTime, timeStep=timeStep, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_TimeGet( currTime, yy=yy, mm=mm, dd=dd, s=curr_tod, rc=rc )
@@ -287,10 +284,6 @@ contains
     call ESMF_TimeGet( startTime, yy=yy, mm=mm, dd=dd, s=start_tod, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call shr_cal_ymd2date(yy,mm,dd,start_ymd)
-
-    call ESMF_TimeGet( stopTime, yy=yy, mm=mm, dd=dd, s=stop_tod, rc=rc )
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call shr_cal_ymd2date(yy,mm,dd,stop_ymd)
 
     call ESMF_TimeGet( refTime, yy=yy, mm=mm, dd=dd, s=ref_tod, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -313,7 +306,7 @@ contains
 
     call set_timemgr_init( &
          calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
-         ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd, stop_tod_in=stop_tod)
+         ref_ymd_in=ref_ymd, ref_tod_in=ref_tod)
 
     !----------------------
     ! Read namelist, grid and surface data

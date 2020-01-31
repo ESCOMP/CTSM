@@ -100,8 +100,6 @@ contains
     integer :: ref_tod                               ! reference time of day (sec)
     integer :: start_ymd                             ! start date (YYYYMMDD)
     integer :: start_tod                             ! start time of day (sec)
-    integer :: stop_ymd                              ! stop date (YYYYMMDD)
-    integer :: stop_tod                              ! stop time of day (sec)
     logical :: brnch_retain_casename                 ! flag if should retain the case name on a branch start type
     integer :: lbnum                                 ! input to memory diagnostic
     integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
@@ -167,8 +165,7 @@ contains
     call seq_timemgr_EClockGetData(EClock,                               &
                                    start_ymd=start_ymd,                  &
                                    start_tod=start_tod, ref_ymd=ref_ymd, &
-                                   ref_tod=ref_tod, stop_ymd=stop_ymd,   &
-                                   stop_tod=stop_tod,                    &
+                                   ref_tod=ref_tod, &
                                    calendar=calendar )
     call seq_infodata_GetData(infodata, case_name=caseid,    &
                               case_desc=ctitle, single_column=single_column,    &
@@ -177,8 +174,7 @@ contains
                               start_type=starttype, model_version=version,      &
                               hostname=hostname, username=username )
     call set_timemgr_init( calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
-                           ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd,         &
-                           stop_tod_in=stop_tod)
+                           ref_ymd_in=ref_ymd, ref_tod_in=ref_tod)
     if (     trim(starttype) == trim(seq_infodata_start_type_start)) then
        nsrest = nsrStartup
     else if (trim(starttype) == trim(seq_infodata_start_type_cont) ) then
@@ -439,7 +435,7 @@ contains
        end if
        call update_rad_dtime(doalb)
 
-       ! Determine if time to write cam restart and stop
+       ! Determine if time to write restart and stop
 
        rstwr = .false.
        if (rstwr_sync .and. dosend) rstwr = .true.
