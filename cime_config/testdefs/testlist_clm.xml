@@ -100,7 +100,6 @@
   </test>
   <test name="ERI_Ld9" grid="f19_g16" compset="I2000Clm40SpCruGs" testmods="clm/40default">
     <machines>
-      <machine name="edison" compiler="intel" category="prebeta"/>
       <machine name="hobart" compiler="intel" category="prebeta"/>
       <machine name="hobart" compiler="pgi" category="prebeta"/>
     </machines>
@@ -1390,7 +1389,6 @@
   <test name="SMS_Ld1" grid="f19_g17" compset="I2000Clm50BgcCruGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
-      <machine name="edison" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1467,14 +1465,6 @@
     <machines>
       <machine name="cheyenne" compiler="gnu" category="prebeta"/>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_Ld5" grid="f45_f45_mg37" compset="I2000Clm40SpCruGs" testmods="clm/40ptsROA">
-    <machines>
-      <machine name="edison" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1810,7 +1800,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_Ld3" grid="f09_g16" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
+  <test name="ERP_Ld3" grid="f09_g16" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -1822,7 +1812,6 @@
   <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesAllVars">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
@@ -1833,7 +1822,6 @@
   <test name="ERS_D_Ld3" grid="f19_g16" compset="I2000Clm50FatesCruGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="gnu" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
@@ -1862,7 +1850,6 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
@@ -1882,7 +1869,6 @@
   <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/FatesHydro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
@@ -1902,7 +1888,6 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="gnu" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -1953,6 +1938,7 @@
   <test name="SMS_Lm6" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="cheyenne" compiler="gnu" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
