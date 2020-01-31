@@ -1782,7 +1782,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_Ld3" grid="f09_g16" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
+  <test name="ERP_Ld3" grid="f09_g16" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
@@ -1794,6 +1794,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1802,6 +1803,8 @@
   <test name="ERS_D_Ld3" grid="f19_g16" compset="I2000Clm50FatesCruGs" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="cheyenne" compiler="gnu" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1827,6 +1830,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1844,6 +1848,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1860,6 +1865,8 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm45Fates" testmods="clm/FatesST3">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="cheyenne" compiler="gnu" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
