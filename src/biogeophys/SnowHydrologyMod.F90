@@ -989,11 +989,11 @@ contains
             dtime          = dtime, &
             snl            = col%snl(begc:endc), &
             frac_sno_eff   = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
-            qflx_dew_snow  = w%waterflux_inst%qflx_dew_snow_col(begc:endc), &
-            qflx_sub_snow  = w%waterflux_inst%qflx_sub_snow_col(begc:endc), &
-            qflx_liq_grnd  = w%waterflux_inst%qflx_liq_grnd_col(begc:endc), &
-            qflx_dew_grnd  = w%waterflux_inst%qflx_dew_grnd_col(begc:endc), &
-            qflx_evap_grnd = w%waterflux_inst%qflx_evap_grnd_col(begc:endc), &
+            qflx_soliddew_to_top_layer    = w%waterflux_inst%qflx_soliddew_to_top_layer_col(begc:endc), &
+            qflx_solidevap_from_top_layer = w%waterflux_inst%qflx_solidevap_from_top_layer_col(begc:endc), &
+            qflx_liq_grnd                 = w%waterflux_inst%qflx_liq_grnd_col(begc:endc), &
+            qflx_liqdew_to_top_layer      = w%waterflux_inst%qflx_liqdew_to_top_layer_col(begc:endc), &
+            qflx_liqevap_from_top_layer   = w%waterflux_inst%qflx_liqevap_from_top_layer_col(begc:endc), &
             ! Outputs
             h2osoi_ice     = w%waterstate_inst%h2osoi_ice_col(begc:endc,:), &
             h2osoi_liq     = w%waterstate_inst%h2osoi_liq_col(begc:endc,:))
@@ -1060,10 +1060,10 @@ contains
          ! Inputs
          dtime            = dtime, &
          frac_sno_eff     = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
-         qflx_dew_snow    = b_waterflux_inst%qflx_dew_snow_col(begc:endc), &
-         qflx_dew_grnd    = b_waterflux_inst%qflx_dew_grnd_col(begc:endc), &
-         qflx_liq_grnd    = b_waterflux_inst%qflx_liq_grnd_col(begc:endc), &
-         h2osno_no_layers = b_waterstate_inst%h2osno_no_layers_col(begc:endc), &
+         qflx_soliddew_to_top_layer = b_waterflux_inst%qflx_soliddew_to_top_layer_col(begc:endc), &
+         qflx_liqdew_to_top_layer   = b_waterflux_inst%qflx_liqdew_to_top_layer_col(begc:endc), &
+         qflx_liq_grnd              = b_waterflux_inst%qflx_liq_grnd_col(begc:endc), &
+         h2osno_no_layers           = b_waterstate_inst%h2osno_no_layers_col(begc:endc), &
          ! Outputs
          int_snow         = b_waterstate_inst%int_snow_col(begc:endc), &
          frac_sno         = b_waterdiagnostic_inst%frac_sno_col(begc:endc), &
@@ -1090,8 +1090,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine UpdateState_TopLayerFluxes(bounds, num_snowc, filter_snowc, &
        name, dtime, snl, frac_sno_eff, &
-       qflx_dew_snow, qflx_sub_snow, qflx_liq_grnd, qflx_dew_grnd, qflx_evap_grnd, &
-       h2osoi_ice, h2osoi_liq)
+       qflx_soliddew_to_top_layer, qflx_solidevap_from_top_layer, qflx_liq_grnd, &
+       qflx_liqdew_to_top_layer, qflx_liqevap_from_top_layer, h2osoi_ice, h2osoi_liq)
     !
     ! !DESCRIPTION:
     ! Update top layer of snow pack with various fluxes into and out of the top layer,
@@ -1106,11 +1106,11 @@ contains
     real(r8)         , intent(in) :: dtime                          ! land model time step (sec)
     integer          , intent(in) :: snl( bounds%begc: )            ! negative number of snow layers
     real(r8)         , intent(in) :: frac_sno_eff( bounds%begc: )   ! eff. fraction of ground covered by snow (0 to 1)
-    real(r8)         , intent(in) :: qflx_dew_snow( bounds%begc: )  ! surface dew added to snow pack (mm H2O /s)
-    real(r8)         , intent(in) :: qflx_sub_snow( bounds%begc: )  ! sublimation rate from snow pack (mm H2O /s)
+    real(r8)         , intent(in) :: qflx_liqdew_to_top_layer( bounds%begc: ) ! rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s)
+    real(r8)         , intent(in) :: qflx_solidevap_from_top_layer( bounds%begc: ) ! rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s)
     real(r8)         , intent(in) :: qflx_liq_grnd( bounds%begc: )  ! liquid on ground after interception (mm H2O/s)
-    real(r8)         , intent(in) :: qflx_dew_grnd( bounds%begc: )  ! ground surface dew formation (mm H2O /s)
-    real(r8)         , intent(in) :: qflx_evap_grnd( bounds%begc: ) ! ground surface evaporation rate (mm H2O/s)
+    real(r8)         , intent(in) :: qflx_soliddew_to_top_layer( bounds%begc: ) ! rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s)
+    real(r8)         , intent(in) :: qflx_liqevap_from_top_layer( bounds%begc: ) ! rate of liquid water evaporated from top soil or snow layer (mm H2O/s)
 
     real(r8) , intent(inout) :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
     real(r8) , intent(inout) :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
@@ -1126,11 +1126,11 @@ contains
 
     SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(qflx_dew_snow, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(qflx_sub_snow, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_soliddew_to_top_layer, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_solidevap_from_top_layer, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(qflx_liq_grnd, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(qflx_dew_grnd, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(qflx_evap_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_liqdew_to_top_layer, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_liqevap_from_top_layer, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osoi_ice, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osoi_liq, 1) == bounds%endc), sourcefile, __LINE__)
 
@@ -1145,11 +1145,12 @@ contains
        h2osoi_liq_top_orig(c) = h2osoi_liq(c,lev_top(c))
 
        h2osoi_ice(c,lev_top(c)) = h2osoi_ice(c,lev_top(c)) &
-            + frac_sno_eff(c) * (qflx_dew_snow(c) - qflx_sub_snow(c)) * dtime
+            + frac_sno_eff(c) * (qflx_soliddew_to_top_layer(c) &
+            - qflx_solidevap_from_top_layer(c)) * dtime
 
        h2osoi_liq(c,lev_top(c)) = h2osoi_liq(c,lev_top(c)) +  &
-            frac_sno_eff(c) * (qflx_liq_grnd(c) + qflx_dew_grnd(c) &
-            - qflx_evap_grnd(c)) * dtime
+            frac_sno_eff(c) * (qflx_liq_grnd(c) + qflx_liqdew_to_top_layer(c) &
+            - qflx_liqevap_from_top_layer(c)) * dtime
     end do
 
     ! If states were supposed to go to 0 but instead ended up near-0 (positive or
@@ -1185,8 +1186,8 @@ contains
           write(iulog,*) "h2osoi_ice_top_orig = ", h2osoi_ice_top_orig(c)
           write(iulog,*) "h2osoi_ice          = ", h2osoi_ice(c,lev_top(c))
           write(iulog,*) "frac_sno_eff        = ", frac_sno_eff(c)
-          write(iulog,*) "qflx_dew_snow*dtime = ", qflx_dew_snow(c)*dtime
-          write(iulog,*) "qflx_sub_snow*dtime = ", qflx_sub_snow(c)*dtime
+          write(iulog,*) "qflx_soliddew_to_top_layer*dtime = ", qflx_soliddew_to_top_layer(c)*dtime
+          write(iulog,*) "qflx_solidevap_from_top_layer*dtime = ", qflx_solidevap_from_top_layer(c)*dtime
           call endrun("In UpdateState_TopLayerFluxes, h2osoi_ice has gone significantly negative")
        end if
 
@@ -1198,8 +1199,8 @@ contains
           write(iulog,*) "h2osoi_liq           = ", h2osoi_liq(c,lev_top(c))
           write(iulog,*) "frac_sno_eff         = ", frac_sno_eff(c)
           write(iulog,*) "qflx_liq_grnd*dtime  = ", qflx_liq_grnd(c)*dtime
-          write(iulog,*) "qflx_dew_grnd*dtime  = ", qflx_dew_grnd(c)*dtime
-          write(iulog,*) "qflx_evap_grnd*dtime = ", qflx_evap_grnd(c)*dtime
+          write(iulog,*) "qflx_liqdew_to_top_layer*dtime  = ", qflx_liqdew_to_top_layer(c)*dtime
+          write(iulog,*) "qflx_liqevap_from_top_layer*dtime = ", qflx_liqevap_from_top_layer(c)*dtime
           call endrun("In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative")
        end if
 
@@ -1645,8 +1646,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine BulkDiag_SnowWaterAccumulatedSnow(bounds, &
        num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
-       dtime, frac_sno_eff, qflx_dew_snow, qflx_dew_grnd, qflx_liq_grnd, h2osno_no_layers, &
-       int_snow, frac_sno, snow_depth)
+       dtime, frac_sno_eff, qflx_soliddew_to_top_layer, qflx_liqdew_to_top_layer, &
+       qflx_liq_grnd, h2osno_no_layers, int_snow, frac_sno, snow_depth)
     !
     ! !DESCRIPTION:
     ! Update int_snow, and reset accumulated snow when no snow present
@@ -1660,8 +1661,8 @@ contains
 
     real(r8) , intent(in)    :: dtime                            ! land model time step (sec)
     real(r8) , intent(in)    :: frac_sno_eff( bounds%begc: )     ! eff. fraction of ground covered by snow (0 to 1)
-    real(r8) , intent(in)    :: qflx_dew_snow( bounds%begc: )    ! surface dew added to snow pack (mm H2O /s)
-    real(r8) , intent(in)    :: qflx_dew_grnd( bounds%begc: )    ! ground surface dew formation (mm H2O /s)
+    real(r8) , intent(in)    :: qflx_soliddew_to_top_layer( bounds%begc: ) ! rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s)
+    real(r8) , intent(in)    :: qflx_liqdew_to_top_layer( bounds%begc: ) ! rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s)
     real(r8) , intent(in)    :: qflx_liq_grnd( bounds%begc: )    ! liquid on ground after interception (mm H2O/s)
     real(r8) , intent(in)    :: h2osno_no_layers( bounds%begc: ) ! snow that is not resolved into layers (kg/m2)
 
@@ -1676,8 +1677,8 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(qflx_dew_snow, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(qflx_dew_grnd, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_soliddew_to_top_layer, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(qflx_liqdew_to_top_layer, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(qflx_liq_grnd, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osno_no_layers, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(int_snow, 1) == bounds%endc), sourcefile, __LINE__)
@@ -1688,7 +1689,8 @@ contains
        c = filter_snowc(fc)
 
        int_snow(c) = int_snow(c) + frac_sno_eff(c) &
-            * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_liq_grnd(c)) * dtime
+            * (qflx_soliddew_to_top_layer(c) + qflx_liqdew_to_top_layer(c) &
+            + qflx_liq_grnd(c)) * dtime
     end do
 
     do fc = 1, num_nosnowc

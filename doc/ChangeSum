@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev082   oleson 02/01/2020 Rename variables to avoid confusion; fix QSNOEVAP diagnostic
   ctsm1.0.dev081   slevis 01/13/2020 Speed up restart writes
   ctsm1.0.dev080    sacks 12/02/2019 Update externals, minor fixes to work with latest cime, get nuopc cap working
   ctsm1.0.dev079    sacks 11/04/2019 Change a few uses of shr_kind
