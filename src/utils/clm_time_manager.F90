@@ -177,7 +177,6 @@ contains
     !
     character(len=*), parameter :: sub = 'clm::timemgr_init'
     integer :: rc                            ! return code
-    integer :: yr, mon, day, tod             ! Year, month, day, and second as integers
     type(ESMF_Time) :: start_date            ! start date for run
     type(ESMF_Time) :: curr_date             ! temporary date used in logic
     type(ESMF_Time) :: ref_date              ! reference date for time coordinate
@@ -253,6 +252,7 @@ contains
     type(ESMF_Time)             :: stop_date         ! stop date for run
     type(ESMF_TimeInterval)     :: step_size         ! timestep size
     type(ESMF_Time)             :: current           ! current date (from clock)
+    integer                     :: yr, mon, day, tod ! Year, month, day, and second as integers
     integer                     :: rc                ! return code
     !---------------------------------------------------------------------------------
 

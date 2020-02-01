@@ -205,11 +205,11 @@ contains
     ! NOTE: The history alarm will be added in lilac_history_init and can go off multiple times during the run
 
     call lilac_time_alarmInit(lilac_clock, lilac_restart_alarm, 'lilac_restart_alarm', &
-         option = optNever, opt_n = -1)
+         option = optNever, opt_n = -1, rc = rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call lilac_time_alarmInit(lilac_clock, lilac_stop_alarm, 'lilac_stop_alarm', &
-         option = optNever, opt_n = -1)
+         option = optNever, opt_n = -1, rc = rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
   end subroutine lilac_time_clockInit
