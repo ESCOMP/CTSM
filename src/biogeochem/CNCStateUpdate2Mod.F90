@@ -368,7 +368,7 @@ contains
          cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p)                     &
               - cf_veg%gru_xsmrpool_to_atm_patch(p) * dt
 
-         if (.not. use_soil_matrixcn)then
+         if (.not. use_matrixcn)then
             ! displayed pools
             cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p)                           &
                  - cf_veg%gru_leafc_to_litter_patch(p) * dt
