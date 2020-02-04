@@ -359,10 +359,6 @@ contains
     ! output to atm
     ! -----------------------
 
-    call state_setexport(exportState, 'l2c_fb_atm', 'Sl_lfrin', bounds, &
-         input=ldomain%frac, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     call state_setexport(exportState, 'l2c_fb_atm', 'Sl_t', bounds, &
          input=lnd2atm_inst%t_rad_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return

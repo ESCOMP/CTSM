@@ -131,7 +131,6 @@ contains
        atm2lnd(n)%provided_by_atm = .false.
     end do
 
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_lfrin'     , units='unknown', lsize=lsize)
     call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_t'         , units='unknown', lsize=lsize)
     call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_tref'      , units='unknown', lsize=lsize)
     call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_qref'      , units='unknown', lsize=lsize)

@@ -419,7 +419,6 @@ contains
     lsize = size(atm_global_index)
     allocate(data(lsize))
 
-    call lilac_atmcap_lnd2atm('Sl_lfrin' , data)
     call lilac_atmcap_lnd2atm('Sl_t'     , data)
     call lilac_atmcap_lnd2atm('Sl_tref'  , data)
     call lilac_atmcap_lnd2atm('Sl_qref'  , data)
