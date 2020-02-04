@@ -544,15 +544,9 @@ contains
 
     ! local variables
     integer                   :: g, i,n
-    integer                   :: fieldcount
     real(R8), pointer         :: fldptr1d(:)
     real(R8), pointer         :: fldptr2d(:,:)
-    type(ESMF_StateItem_Flag) :: itemFlag
     character(len=cs)         :: cvalue
-    type (ESMF_FieldBundle)   :: field
-    type(ESMF_Field)          :: lfield
-    type (ESMF_FieldBundle)   :: fieldBundle
-    logical                   :: isPresent
     character(len=*), parameter :: subname='(lnd_import_export:state_getimport)'
     ! ----------------------------------------------
 
@@ -565,14 +559,6 @@ contains
        call ESMF_StatePrint(state, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
-
-    ! Get the field bundle
-    call ESMF_StateGet(state, trim(fb), fieldBundle, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("ERROR: fb "//trim(fb)//" not found in import state")
-
-    ! Get the field
-    call ESMF_FieldBundleGet(fieldBundle,fieldName=trim(fldname), field=lfield,  rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Get the pointer to data in the field
     if (present(ungridded_index)) then
