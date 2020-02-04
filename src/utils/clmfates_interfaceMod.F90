@@ -2193,7 +2193,7 @@ contains
        ! after that in HydrologyNoDrainage()
 
        waterflux_inst%qflx_h2osfc_surf_col(c) = waterflux_inst%qflx_h2osfc_surf_col(c) + & 
-             this%fates(nc)%bc_out(s)%qflx_surf_ro_si
+             this%fates(nc)%bc_out(s)%qflx_ro_si
 
 
     end do
