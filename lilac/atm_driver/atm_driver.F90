@@ -231,7 +231,7 @@ program atm_driver
 
   do nstep = 1,atm_nsteps
      ! fill in the dataptr values in atm2lnd type in lilac_atmcap
-     call atm_driver_to_lilac (atm_lons, atm_lats)
+     call atm_driver_to_lilac (atm_lons, atm_lats, nstep, atm_nsteps)
 
      if (nstep == atm_nsteps) then
         call lilac_run(write_restarts_now=.true., stop_now=.true.)
@@ -330,14 +330,18 @@ contains
   end subroutine nc_check_err
 
   !========================================================================
-  subroutine atm_driver_to_lilac (lon, lat)
+  subroutine atm_driver_to_lilac (lon, lat, nstep, atm_nsteps)
 
     ! input/output variables
     real*8, intent(in) :: lon(:)
     real*8, intent(in) :: lat(:)
+    integer, intent(in) :: nstep      ! current step number
+    integer, intent(in) :: atm_nsteps ! total number of steps in simulation
 
     ! local variables
     integer             :: lsize
+    real*8              :: time_midpoint
+    real*8              :: time_perturbation
     real*8, allocatable :: space_time_perturbation(:)
     real*8, allocatable :: data(:)
     integer             :: i
@@ -348,7 +352,10 @@ contains
     allocate(space_time_perturbation(lsize))
     allocate(data(lsize))
 
-    space_time_perturbation(:) = lat(:)*0.01d0 + lon(:)*0.01d0
+    ! The time perturbation will range from about -0.5 to 0.5
+    time_midpoint = atm_nsteps / 2.d0
+    time_perturbation = 0.5d0 * (nstep - time_midpoint)/time_midpoint
+    space_time_perturbation(:) = time_perturbation + lat(:)*0.01d0 + lon(:)*0.01d0
 
     ! We don't have a good way to set a land mask / fraction in this demo driver. Since it
     ! is okay for the atmosphere to call a point ocean when CTSM calls it land, but not
