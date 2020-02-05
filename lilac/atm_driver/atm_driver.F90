@@ -337,23 +337,13 @@ contains
     real*8, intent(in) :: lat(:)
 
     ! local variables
-    real, allocatable   :: lon_rounded(:)
-    real, allocatable   :: lat_rounded(:)
     integer             :: lsize
     real*8, allocatable :: data(:)
-    integer             :: i
     integer             :: i_local
     ! --------------------------------------------------------
 
     lsize = size(lon)
-    allocate(lon_rounded(lsize))
-    allocate(lat_rounded(lsize))
     allocate(data(lsize))
-
-    do i = 1, lsize
-       lon_rounded(i) = real(nint(lon(i)))
-       lat_rounded(i) = real(nint(lat(i)))
-    end do
 
     ! We don't have a good way to set a land mask / fraction in this demo driver. Since it
     ! is okay for the atmosphere to call a point ocean when CTSM calls it land, but not
