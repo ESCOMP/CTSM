@@ -102,7 +102,7 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : allocate_bcout
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
-   use FatesInterfaceMod     , only : InitPARTEHGlobals
+
 
    use FatesHistoryInterfaceMod, only : fates_history_interface_type
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
@@ -116,6 +116,7 @@ module CLMFatesInterfaceMod
    use EDInitMod             , only : init_site_vars
    use EDInitMod             , only : init_patches
    use EDInitMod             , only : set_site_properties
+   use EDInitMod             , only : InitFatesGlobals
    use EDPftVarcon           , only : EDpftvarcon_inst
    use EDSurfaceRadiationMod , only : ED_SunShadeFracs, ED_Norman_Radiation
    use EDBtranMod            , only : btran_ed, &
@@ -502,13 +503,10 @@ contains
       end do
       !$OMP END PARALLEL DO
 
-      ! This will initialize all globals associated with the chosen
-      ! Plant Allocation and Reactive Transport hypothesis. This includes
-      ! mapping tables and global variables. These will be read-only
-      ! and only required once per machine instance (thus no requirements
-      ! to have it instanced on each thread
+      ! This will initialize all FATES globals,
+      ! particular PARTEH and HYDRO globals
       
-      call InitPARTEHGlobals()
+      call InitFatesGlobals(masterproc)
       
 
       
