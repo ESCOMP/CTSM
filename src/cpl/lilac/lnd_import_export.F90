@@ -112,7 +112,10 @@ contains
     if (first_call) then
        ! We only do this for the first call because we assume that the atmosphere's land
        ! mask is constant in time. To allow for a varying land mask in the atmosphere
-       ! (doing checking each time), remove this first_call conditional.
+       ! (doing checking each time), remove this first_call conditional. (It would be
+       ! more straightforward to pass this and check it in initialization, but that would
+       ! require atm-land communication in initialization, which currently isn't done
+       ! with the LILAC coupler.)
        call check_atm_landfrac(importState, bounds, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
