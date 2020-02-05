@@ -365,6 +365,10 @@ contains
     data(:) = 0.d0
     call lilac_atmcap_atm2lnd('Sa_landfrac', data)
 
+    ! In the following, try to have each field have different values, in order to catch
+    ! mis-matches (e.g., if foo and bar were accidentally swapped in CTSM, we couldn't
+    ! catch that if they both had the same value).
+
     data(:) = 30.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
     call lilac_atmcap_atm2lnd('Sa_z', data)
 
@@ -377,7 +381,7 @@ contains
     data(:) = 40.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
     call lilac_atmcap_atm2lnd('Sa_v', data)
 
-    data(:) = 280.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 280.1d0 + lat(:)*0.01d0 + lon(:)*0.01d0
     call lilac_atmcap_atm2lnd('Sa_ptem', data)
 
     data(:) = 100100.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
@@ -386,22 +390,22 @@ contains
     data(:) = 280.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
     call lilac_atmcap_atm2lnd('Sa_tbot', data)
 
-    data(:) = 0.0004d0   !+(lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
+    data(:) = 0.0004d0 + (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
     call lilac_atmcap_atm2lnd('Sa_shum', data)
 
     data(:) = 200.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
     call lilac_atmcap_atm2lnd('Faxa_lwdn', data)
 
-    data(:) = 0.0d0
+    data(:) = 1.0d-8 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
     call lilac_atmcap_atm2lnd('Faxa_rainc', data)
 
-    data(:) = 3.0d-8 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
+    data(:) = 2.0d-8 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
     call lilac_atmcap_atm2lnd('Faxa_rainl', data)
 
-    data(:) = 1.0d-8 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
+    data(:) = 1.0d-9 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-9
     call lilac_atmcap_atm2lnd('Faxa_snowc', data)
 
-    data(:) = 2.0d-8 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
+    data(:) = 2.0d-9 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-9
     call lilac_atmcap_atm2lnd('Faxa_snowl', data)
 
     data(:) = 100.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
@@ -410,10 +414,10 @@ contains
     data(:) = 50.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
     call lilac_atmcap_atm2lnd('Faxa_swvdr', data)
 
-    data(:) = 20.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 25.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
     call lilac_atmcap_atm2lnd('Faxa_swndf', data)
 
-    data(:) = 40.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 45.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
     call lilac_atmcap_atm2lnd('Faxa_swvdf', data)
 
   end subroutine atm_driver_to_lilac
