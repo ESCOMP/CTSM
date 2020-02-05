@@ -1,2 +1,3 @@
 add_subdirectory(clm_time_manager_test)
 add_subdirectory(annual_flux_dribbler_test)
+add_subdirectory(quadratic_test)

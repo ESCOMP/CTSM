@@ -1,1 +1,1 @@
--s US-UMB -d CSMDATA --mydatadir . --map_gdate 171024
+-s US-UMB -d CSMDATA --mydatadir . --map_gdate 171024 --ctsm_root CTSM_ROOT --cime_root CIME_ROOT

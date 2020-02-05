@@ -35,7 +35,6 @@ add_subdirectory(${CLM_ROOT}/src/biogeophys clm_biogeophys)
 add_subdirectory(${CLM_ROOT}/src/dyn_subgrid clm_dyn_subgrid)
 add_subdirectory(${CLM_ROOT}/src/main clm_main)
 add_subdirectory(${CLM_ROOT}/src/init_interp clm_init_interp)
-add_subdirectory(${CLM_ROOT}/src/fates/main fates_main)
 
 # Add general unit test directories (stubbed out files, etc.)
 add_subdirectory(unit_test_stubs)

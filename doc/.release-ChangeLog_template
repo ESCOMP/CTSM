@@ -1,0 +1,101 @@
+===============================================================
+Tag name: 
+Originator(s): 
+Date: 
+One-line Summary:
+
+Purpose of this version:
+------------------------
+
+[Fill this in with details]
+
+
+CTSM Master Tag This Corresponds To:
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): [If none, remove this line]
+CIME Issues fixed (include issue #): [If none, remove this line]
+
+Science changes since: 
+
+Software changes since: 
+
+Changes to User Interface since: 
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  unit-tests (components/clm/src):
+
+    cheyenne - 
+    hobart ---
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - 
+    hobart ---
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - 
+     hobart ---
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- 
+    cheyenne_gnu ------ 
+    hobart_nag -------- 
+    hobart_pgi -------- 
+    hobart_intel ------ 
+
+  regular tests (prealpha):
+
+    cheyenne_intel -
+    cheyenne_gnu ---
+    hobart_nag -----
+
+  regular tests (prebeta):
+
+    cheyenne_intel -
+    cheyenne_gnu ---
+    hobart_nag -----
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+  URL for LMWG diagnostics output for new climate:
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+  (This will likely be true if the LII tests failed)
+
+Detailed list of changes:
+------------------------
+
+Externals being used:
+
+CTSM Tag versions pulled over from master development branch:
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================

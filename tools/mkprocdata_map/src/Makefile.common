@@ -190,8 +190,8 @@ ifeq ($(FC),ifort)
      FFLAGS    += -O2
   endif
   ifeq ($(SMP),TRUE)
-    FFLAGS    += -openmp
-    LDFLAGS   += -openmp
+    FFLAGS    += -qopenmp
+    LDFLAGS   += -qopenmp
   endif
 endif
 
@@ -215,7 +215,7 @@ endif
 ifeq ($(CC),icc)
    CFLAGS     += -m64 -g
    ifeq ($(SMP),TRUE)
-     CFLAGS    += -openmp
+     CFLAGS    += -qopenmp
    endif
 endif
 ifeq ($(CC),pgcc)
@@ -307,9 +307,9 @@ ifeq ($(UNAMES),Linux)
        FFLAGS    += -O2
     endif
     ifeq ($(SMP),TRUE)
-      FFLAGS    += -openmp
-      CFLAGS    += -openmp
-      LDFLAGS   += -openmp
+      FFLAGS    += -qopenmp
+      CFLAGS    += -qopenmp
+      LDFLAGS   += -qopenmp
     endif
   endif
   FFLAGS += -c -I$(INC_NETCDF) $(CPPDEF) $(cpp_path)

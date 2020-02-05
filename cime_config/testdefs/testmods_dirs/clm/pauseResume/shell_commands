@@ -1,0 +1,4 @@
+# Test PAUSE/RESUME functionality which is used for Data Assimulation (DA)
+./xmlchange LND_PAUSE_ACTIVE=TRUE
+# Set calendar, just because Gregorian is ussually used for DA
+./xmlchange CALENDAR=GREGORIAN
