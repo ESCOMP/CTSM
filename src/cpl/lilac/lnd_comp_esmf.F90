@@ -608,6 +608,7 @@ contains
     real(r8)               :: eccf           ! earth orbit eccentricity factor
     type(bounds_type)      :: bounds         ! bounds
     character(len=32)      :: rdate          ! date char string for restart file names
+    logical                :: first_call = .true.  ! true if and only if this is the first time this routine is called in this execution
     character(*)    , parameter :: F02 = "('[lnd_comp_esmf] ',a, d26.19)"
     character(len=*), parameter :: subname=trim(modName)//':[lnd_run] '
     !-------------------------------------------------------------------------------
@@ -653,7 +654,7 @@ contains
     !--------------------------------
 
     call t_startf ('lc_lnd_import')
-    call import_fields(import_state, bounds, rc)
+    call import_fields(import_state, bounds, first_call, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call t_stopf ('lc_lnd_import')
 
@@ -865,6 +866,8 @@ contains
        call memmon_reset_addr()
     endif
 #endif
+
+    first_call = .false.
 
   end subroutine lnd_run
 

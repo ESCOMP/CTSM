@@ -90,6 +90,7 @@ contains
     ! should it pass an array of character strings or a colon deliminited set of fields
     ! to specify the fields it will not provide - and then these are checked against those fields
 
+    call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_landfrac'   , units='fraction', required_fr_atm=.true. , lsize=lsize)
     call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_z'          , units='unknown', required_fr_atm=.true.  , lsize=lsize)
     call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_topo'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
     call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_u'          , units='unknown', required_fr_atm=.true.  , lsize=lsize)

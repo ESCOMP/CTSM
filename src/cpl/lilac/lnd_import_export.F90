@@ -50,15 +50,16 @@ module lnd_import_export
 contains
 !===============================================================================
 
-  subroutine import_fields( importState, bounds, rc)
+  subroutine import_fields( importState, bounds, first_call, rc)
 
     !---------------------------------------------------------------------------
-    ! Convert the input data from the lilac to the land model
+    ! Convert the input data from lilac to the land model
     !---------------------------------------------------------------------------
 
-    ! input/output variabes
+    ! input/output variables
     type(ESMF_State)                :: importState
     type(bounds_type) , intent(in)  :: bounds       ! bounds
+    logical           , intent(in)  :: first_call   ! true if and only if this is the first time we're calling import_fields from the run method
     integer           , intent(out) :: rc
 
     ! local variables
@@ -107,6 +108,14 @@ contains
 
     ! Set bounds
     begg = bounds%begg; endg=bounds%endg
+
+    if (first_call) then
+       ! We only do this for the first call because we assume that the atmosphere's land
+       ! mask is constant in time. To allow for a varying land mask in the atmosphere
+       ! (doing checking each time), remove this first_call conditional.
+       call check_atm_landfrac(importState, bounds, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
 
     ! Note: precipitation fluxes received  from the coupler
     ! are in units of kg/s/m^2. To convert these precipitation rates
@@ -333,6 +342,56 @@ contains
     ! atm2lnd_inst%forc_rh_grc(g) = max(   0.0_r8, atm2lnd_inst%forc_rh_grc(g) )
 
   end subroutine import_fields
+
+  !===============================================================================
+
+  subroutine check_atm_landfrac(importState, bounds, rc)
+
+    ! ------------------------------------------------------------------------
+    ! Import Sa_landfrac and check it against CTSM's internal land mask.
+    !
+    ! We require that CTSM's internal land mask contains all of the atmosphere's land
+    ! points (defined as points with landfrac > 0). It is okay for CTSM to include some
+    ! points that the atmosphere considers to be ocean, but not the reverse.
+    ! ------------------------------------------------------------------------
+
+    ! input/output variables
+    type(ESMF_State)                :: importState
+    type(bounds_type) , intent(in)  :: bounds
+    integer           , intent(out) :: rc
+
+    ! local variables
+    real(r8), pointer :: atm_landfrac(:)
+    integer :: last_land_index
+    integer :: n
+
+    character(len=*), parameter :: subname='(check_atm_landfrac)'
+    !---------------------------------------------------------------------------
+
+    ! Implementation notes: The CTSM decomposition is set up so that ocean points appear
+    ! at the end of the vectors received from the coupler. Thus, in order to check if
+    ! there are any points that the atmosphere considers land but CTSM considers ocean,
+    ! it is sufficient to check the points following the typical ending bounds in the
+    ! vectors received from the coupler.
+    !
+    ! Note that we can't use state_getimport here, because that only gets points from
+    ! bounds%begg:bounds%endg, whereas we want the points following bounds%endg.
+
+    call state_getfldptr(importState, 'c2l_fb_atm', 'Sa_landfrac', fldptr1d=atm_landfrac, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    last_land_index = bounds%endg - bounds%begg + 1
+    do n = last_land_index + 1, ubound(atm_landfrac, 1)
+       if (atm_landfrac(n) > 0._r8) then
+          write(iulog,*) 'At point ', n, ' atm landfrac = ', atm_landfrac(n)
+          write(iulog,*) 'but CTSM thinks this is ocean.'
+          write(iulog,*) "Make sure the mask on CTSM's fatmlndfrc file agrees with the atmosphere's land mask"
+          call shr_sys_abort( subname//&
+               ' ERROR: atm landfrac > 0 for a point that CTSM thinks is ocean')
+       end if
+    end do
+
+  end subroutine check_atm_landfrac
 
   !==============================================================================
 

@@ -355,6 +355,16 @@ contains
        lat_rounded(i) = real(nint(lat(i)))
     end do
 
+    ! We don't have a good way to set a land mask / fraction in this demo driver. Since it
+    ! is okay for the atmosphere to call a point ocean when CTSM calls it land, but not
+    ! the reverse, here we call all points ocean. In a real atmosphere, the atmosphere
+    ! should set landfrac to > 0 for any point for which it needs land input, to ensure
+    ! that CTSM is running over all of the necessary points. Note that this landfrac
+    ! variable doesn't actually impact the running of CTSM, but it is used for
+    ! consistency checking.
+    data(:) = 0.d0
+    call lilac_atmcap_atm2lnd('Sa_landfrac', data)
+
     data(:) = 30.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
     call lilac_atmcap_atm2lnd('Sa_z', data)
 
