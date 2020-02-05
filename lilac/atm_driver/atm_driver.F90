@@ -338,12 +338,17 @@ contains
 
     ! local variables
     integer             :: lsize
+    real*8, allocatable :: space_time_perturbation(:)
     real*8, allocatable :: data(:)
+    integer             :: i
     integer             :: i_local
     ! --------------------------------------------------------
 
     lsize = size(lon)
+    allocate(space_time_perturbation(lsize))
     allocate(data(lsize))
+
+    space_time_perturbation(:) = lat(:)*0.01d0 + lon(:)*0.01d0
 
     ! We don't have a good way to set a land mask / fraction in this demo driver. Since it
     ! is okay for the atmosphere to call a point ocean when CTSM calls it land, but not
@@ -359,55 +364,55 @@ contains
     ! mis-matches (e.g., if foo and bar were accidentally swapped in CTSM, we couldn't
     ! catch that if they both had the same value).
 
-    data(:) = 30.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 30.0d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Sa_z', data)
 
-    data(:) = 10.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 10.0d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Sa_topo', data)
 
-    data(:) = 20.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 20.0d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Sa_u', data)
 
-    data(:) = 40.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 40.0d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Sa_v', data)
 
-    data(:) = 280.1d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 280.1d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Sa_ptem', data)
 
-    data(:) = 100100.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 100100.0d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Sa_pbot', data)
 
-    data(:) = 280.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 280.0d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Sa_tbot', data)
 
-    data(:) = 0.0004d0 + (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
+    data(:) = 0.0004d0 + space_time_perturbation(:)*1.0e-8
     call lilac_atmcap_atm2lnd('Sa_shum', data)
 
-    data(:) = 200.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 200.0d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Faxa_lwdn', data)
 
-    data(:) = 1.0d-8 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
+    data(:) = 1.0d-8 +  space_time_perturbation(:)*1.0e-8
     call lilac_atmcap_atm2lnd('Faxa_rainc', data)
 
-    data(:) = 2.0d-8 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-8
+    data(:) = 2.0d-8 +  space_time_perturbation(:)*1.0e-8
     call lilac_atmcap_atm2lnd('Faxa_rainl', data)
 
-    data(:) = 1.0d-9 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-9
+    data(:) = 1.0d-9 +  space_time_perturbation(:)*1.0e-9
     call lilac_atmcap_atm2lnd('Faxa_snowc', data)
 
-    data(:) = 2.0d-9 +  (lat(:)*0.01d0 + lon(:)*0.01d0)*1.0e-9
+    data(:) = 2.0d-9 +  space_time_perturbation(:)*1.0e-9
     call lilac_atmcap_atm2lnd('Faxa_snowl', data)
 
-    data(:) = 100.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 100.0d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Faxa_swndr', data)
 
-    data(:) = 50.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 50.0d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Faxa_swvdr', data)
 
-    data(:) = 25.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 25.0d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Faxa_swndf', data)
 
-    data(:) = 45.0d0 + lat(:)*0.01d0 + lon(:)*0.01d0
+    data(:) = 45.0d0 + space_time_perturbation(:)
     call lilac_atmcap_atm2lnd('Faxa_swvdf', data)
 
   end subroutine atm_driver_to_lilac
