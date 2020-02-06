@@ -1,0 +1,8 @@
+This testmods directory is for tests where we want to use the
+out-of-the-box output options, but still want the minimal changes that
+we apply for nearly all tests.
+
+("default" would probably be a good name for this, but we already use
+"default" to mean "the standard output changes that are applied for most
+tests" (adding some streams and fields, double precision, etc.). We may
+want to consider renaming that one and using "default" for this one.)

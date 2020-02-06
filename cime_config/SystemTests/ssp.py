@@ -62,6 +62,7 @@ class SSP(SystemTestsCommon):
 
         dout_sr = clone.get_value("DOUT_S_ROOT")
         # No history files expected, set suffix=None to avoid compare error
+        self._skip_pnl = False
         self.run_indv(suffix=None, st_archive=True)
 
         #-------------------------------------------------------------------

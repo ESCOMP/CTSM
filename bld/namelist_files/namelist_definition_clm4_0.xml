@@ -649,6 +649,16 @@ Horizontal grid resolutions for mksurfdata input files
 Check that the resolution and land-mask is valid before continuing.
 </entry>
 
+<entry id="ssp_rcp" type="char*8" category="default_settings"
+       group="default_settings"  
+       valid_values="hist">
+Shared Socioeconomic Pathway (SSP) and Representative Concentration Pathway (RCP) combination for future scenarios 
+The form is SSPn-m.m Where n is the SSP number and m.m is RCP radiative forcing at peak or 2100 in W/m^2
+n is just the whole number of the specific SSP scenario. The lower numbers have higher mitigation
+- the higher numbers less mitigation, more than one SSP can result in the same RCP forcing
+hist means do NOT use a future scenario, just use historical data.
+</entry>
+
 <entry id="note" type="integer"  category="default_settings"
        group="default_settings" valid_values="0,1" >
 Add a note to the output namelist about the options given to build-namelist
@@ -673,16 +683,9 @@ Horizontal resolutions
 Note: 0.1x0.1, 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 
 
-<entry id="rcp" type="real" category="default_settings"
-       group="default_settings"  
-       valid_values="-999.9,2.6,4.5,6,8.5">
-Representative concentration pathway for future scenarios [radiative forcing at peak or 2100 in W/m^2]
--999.9 means do NOT use a future scenario, just use historical data.
-</entry> 
-
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v7,gx1v6,gz1v7,navy,test,tx0.1v2,tx1v1,T62,cruncep">
+       valid_values="USGS,gx3v7,gx1v6,gx1v7,navy,test,tx0.1v2,tx1v1,T62,cruncep">
 Land mask description
 </entry> 
 
@@ -715,12 +718,11 @@ If TRUE, irrigation will be active (find surface datasets with active irrigation
 If 1, turn on the MEGAN model for BVOC's (Biogenic Volitile Organic Compounds)
 </entry> 
 
-<entry id="sim_year" type="integer" category="default_settings"
+<entry id="sim_year" type="char*4" category="default_settings"
        group="default_settings" valid_values=
-"1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1985,1995,2000,2005,2015,2025,2035,2045,2055,2065,2075,2085,2095,2105">
+"1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1985,1995,2000,2005">
 Year to simulate and to provide datasets for (such as surface datasets, initial conditions, aerosol-deposition, Nitrogen deposition rates etc.)
 A sim_year of 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
-A sim_year greater than 2005 corresponds to rcp scenario data
 Most years are only used for clm_tools and there aren't CLM datasets that correspond to them.
 CLM datasets exist for years: 1000 (for testing), 1850, and 2000
 </entry> 

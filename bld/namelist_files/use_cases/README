@@ -1,6 +1,8 @@
-Naming Convention for CLM use-cases                       Jan/2011
+$CTSMROOT/namelist_files/use_cases/README                   Jun/08/2018
 
-It's important that this naming convention be followed so that the PTCLM.py
+Naming Convention for CLM use-cases
+
+It's important that this naming convention be followed so that the PTCLMmkdata.py
 utility can parse the use-cases appropriately. The build-namelist script also
 checks for conformance with these conventions and won't work for names that
 don't follow the convention.
@@ -9,7 +11,7 @@ Ending suffix requires one of these endings: _transient, _control or _pd
 
 Transient cases:
 
-   yyyy-yyyy_$rcp$desc_transient (for example 1850-2100_rcp8.5_transient)
+   yyyy-yyyy_$ssp_rcp$desc_transient (for example 1850-2100_SSP5-8.5_transient)
 
    or
 
@@ -28,9 +30,9 @@ Where
 
 yyyy      = Simulation year (such as 1850 or 2000).
 yyyy-yyyy = Range of simulation years to run over (i.e.. 1850-2000).
-$rcp      = Representative concentration pathway (rcp) description string
+$ssp_rcp  = Shared Socieconomic Pathway (SSP) Representative concentration pathway (RCP) description string
             for future scenarios:
-            rcp#.# (for example: rcp8.5, rcp6, rcp4.5, rcp2.6)
+            SSP#-#.# (for example: SSP5-8.5, SSP1-2.6, SSP4-6.0
             [can be blank for historical cases].
 $desc     = Description of anything else -- alpha-numeric.
             Should start with an underscore ("_") if not by itself 

@@ -1,0 +1,849 @@
+module test_set_mindist
+
+  ! Tests of initInterpMindist: set_mindist
+
+  use pfunit_mod
+  use initInterpMindist
+  use initInterpMindistTestUtils, only : create_subgrid_info, create_glc_behavior
+  use initInterpMindistTestUtils, only : subgrid_special_indices, ilun_special
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use clm_varcon   , only: spval
+  use unittestSimpleSubgridSetupsMod
+  use unittestSubgridMod
+  use glcBehaviorMod, only: glc_behavior_type
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestSetMindist
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestSetMindist
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  ! ========================================================================
+  ! Utility routines
+  ! ========================================================================
+
+
+  subroutine setUp(this)
+    class(TestSetMindist), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestSetMindist), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
+  end subroutine tearDown
+
+  subroutine wrap_set_mindist(subgridi, subgrido, mindist_index, activei, activeo, &
+       glc_behavior, glc_elevclasses_same, fill_missing_with_natveg)
+    ! Wrap the call to set_mindist.
+    !
+    ! If activei / activeo are not provided, they are assumed to be .true. for all points.
+    !
+    ! If glc_behavior is not present, it is assumed to have collapse_to_atm_topo false
+    ! for all grid cells.
+    !
+    ! If glc_elevclasses_same is not present, it is assumed to be true.
+    !
+    ! If fill_missing_with_natveg is not provided, it is assumed to be false
+
+    ! Arguments:
+    type(subgrid_type), intent(in) :: subgridi
+    type(subgrid_type), intent(in) :: subgrido
+    integer, intent(out) :: mindist_index(:)
+    logical, intent(in), optional :: activei(:)
+    logical, intent(in), optional :: activeo(:)
+    type(glc_behavior_type), intent(in), optional :: glc_behavior
+    logical, intent(in), optional :: glc_elevclasses_same
+    logical, intent(in), optional :: fill_missing_with_natveg
+
+    ! Local variables:
+    integer :: npts_i, npts_o
+    integer :: bego, endo
+    logical, allocatable :: l_activei(:)
+    logical, allocatable :: l_activeo(:)
+    type(glc_behavior_type) :: l_glc_behavior
+    logical :: l_glc_elevclasses_same
+    logical :: l_fill_missing_with_natveg
+
+    !-----------------------------------------------------------------------
+
+    npts_i = size(subgridi%lon)
+    npts_o = size(subgrido%lon)
+    bego = lbound(subgrido%lon, 1)
+    endo = ubound(subgrido%lon, 1)
+
+    @assertEqual(npts_o, size(mindist_index))
+
+    if (present(activei)) then
+       @assertEqual(npts_i, size(activei))
+       l_activei = activei
+    else
+       allocate(l_activei(npts_i))
+       l_activei = .true.
+    end if
+
+    if (present(activeo)) then
+       @assertEqual(npts_o, size(activeo))
+       l_activeo = activeo
+    else
+       allocate(l_activeo(npts_o))
+       l_activeo = .true.
+    end if
+
+    if (present(glc_behavior)) then
+       l_glc_behavior = glc_behavior
+    else
+       l_glc_behavior = create_glc_behavior(collapse_to_atm_topo = .false.)
+    end if
+
+    if (present(glc_elevclasses_same)) then
+       l_glc_elevclasses_same = glc_elevclasses_same
+    else
+       l_glc_elevclasses_same = .true.
+    end if
+
+    if (present(fill_missing_with_natveg)) then
+       l_fill_missing_with_natveg = fill_missing_with_natveg
+    else
+       l_fill_missing_with_natveg = .false.
+    end if
+
+    call set_mindist(begi = 1, endi = npts_i, bego = bego, endo = endo, &
+         activei = l_activei, activeo = l_activeo, subgridi = subgridi, subgrido = subgrido, &
+         subgrid_special_indices = subgrid_special_indices, &
+         glc_behavior = l_glc_behavior, &
+         glc_elevclasses_same = l_glc_elevclasses_same, &
+         fill_missing_with_natveg = l_fill_missing_with_natveg, &
+         mindist_index = mindist_index)
+
+  end subroutine wrap_set_mindist
+
+  !-----------------------------------------------------------------------
+  subroutine setup_and_run_glcmec(ptype_o, ctype_o, topoglc_o, &
+       ptype_i, ctype_i, topoglc_i, &
+       collapse_to_atm_topo, glc_elevclasses_same, &
+       mindist_index_p, mindist_index_c, &
+       ltype_diff_i)
+    !
+    ! !DESCRIPTION:
+    ! Does all the work needed to setup and run wrap_set_mindist for a single glcmec
+    ! output point.
+    !
+    ! Gives both the mindist patch and column for that output point.
+    !
+    ! Some assumptions:
+    ! - All input points are from the same gridcell, with the same lat/lon as the output
+    !   point
+    ! - There is one patch for each column
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: ptype_o  ! patch type of the output point
+    integer, intent(in) :: ctype_o  ! col type of the output point
+    real(r8), intent(in) :: topoglc_o  ! topographic height of the output point
+    integer, intent(in) :: ptype_i(:)  ! patch type of each input point
+    integer, intent(in) :: ctype_i(:)  ! col type of each input point
+    real(r8), intent(in) :: topoglc_i(:)  ! topographic height of each input point
+    logical, intent(in) :: collapse_to_atm_topo
+    logical, intent(in) :: glc_elevclasses_same
+    integer, intent(out) :: mindist_index_p
+    integer, intent(out) :: mindist_index_c
+
+    ! If present, this gives the difference in ltype from ltype_glcmec for each input
+    ! point. So, for example, if this is an array [-1, 0, 1] then the input ltypes will
+    ! be [ltype_glcmec-1, ltype_glcmec, ltype_glcmec+1]. If absent, all input points have
+    ! type ltype_glcmec.
+    integer, intent(in), optional :: ltype_diff_i(:)
+
+    !
+    ! !LOCAL VARIABLES:
+    integer, parameter :: ltype_glcmec = subgrid_special_indices%ilun_landice_multiple_elevation_classes
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: num_i
+    integer, allocatable :: ltype_i(:)
+    real(r8), allocatable :: lat_i(:)
+    real(r8), allocatable :: lon_i(:)
+    type(subgrid_type) :: subgridi_c, subgrido_c, subgridi_p, subgrido_p
+    type(glc_behavior_type) :: glc_behavior
+    integer :: mindist_index_p_arr(1)
+    integer :: mindist_index_c_arr(1)
+
+    character(len=*), parameter :: subname = 'setup_and_run_glcmec'
+    !-----------------------------------------------------------------------
+
+    ! Note that we assume the same number of patches as columns (i.e., one patch per
+    ! column)
+    num_i = size(ptype_i)
+    @assertEqual(num_i, size(ctype_i))
+    @assertEqual(num_i, size(topoglc_i))
+    if (present(ltype_diff_i)) then
+       @assertEqual(num_i, size(ltype_diff_i))
+    end if
+
+    call setup_landunit_ncols(ltype=ltype_glcmec, &
+         ctypes=[ctype_o], &
+         cweights=[1._r8], &
+         ptype=ptype_o)
+
+    subgrido_c = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begc, &
+         name = 'column', &
+         ctype = [ctype_o], &
+         ltype = [ltype_glcmec], &
+         lat = [my_lat], &
+         lon = [my_lon], &
+         topoglc = [topoglc_o])
+    subgrido_p = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begp, &
+         name = 'pft', &
+         ptype = [ptype_o], &
+         ctype = [ctype_o], &
+         ltype = [ltype_glcmec], &
+         lat = [my_lat], &
+         lon = [my_lon], &
+         topoglc = [topoglc_o])
+
+    allocate(ltype_i(num_i))
+    allocate(lat_i(num_i))
+    allocate(lon_i(num_i))
+    if (present(ltype_diff_i)) then
+       ltype_i(:) = ltype_glcmec + ltype_diff_i(:)
+    else
+       ltype_i(:) = ltype_glcmec
+    end if
+    lat_i(:) = my_lat
+    lon_i(:) = my_lon
+
+    subgridi_c = create_subgrid_info( &
+         npts = num_i, &
+         name = 'column', &
+         ctype = ctype_i, &
+         ltype = ltype_i, &
+         lat = lat_i, &
+         lon = lon_i, &
+         topoglc = topoglc_i)
+    subgridi_p = create_subgrid_info( &
+         npts = num_i, &
+         name = 'pft', &
+         ptype = ptype_i, &
+         ctype = ctype_i, &
+         ltype = ltype_i, &
+         lat = lat_i, &
+         lon = lon_i, &
+         topoglc = topoglc_i)
+
+    glc_behavior = create_glc_behavior(collapse_to_atm_topo)
+
+    call wrap_set_mindist(subgridi_c, subgrido_c, mindist_index_c_arr, &
+         glc_behavior = glc_behavior, glc_elevclasses_same = glc_elevclasses_same)
+    call wrap_set_mindist(subgridi_p, subgrido_p, mindist_index_p_arr, &
+         glc_behavior = glc_behavior, glc_elevclasses_same = glc_elevclasses_same)
+
+    mindist_index_c = mindist_index_c_arr(1)
+    mindist_index_p = mindist_index_p_arr(1)
+
+  end subroutine setup_and_run_glcmec
+
+
+  ! ========================================================================
+  ! Tests
+  ! ========================================================================
+
+
+  @Test
+  subroutine multipleTypes_findsSameType(this)
+    ! If there are multiple types in the input, all equidistant from the target point,
+    ! then make sure we find the point with the same type.
+    !
+    ! This tests a column-level point
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ltype = 8
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: i
+    integer :: mindist_index(1)
+
+    call setup_landunit_ncols(ltype=my_ltype, &
+         ctypes=[my_ctype], &
+         cweights=[1._r8])
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begc, &
+         name = 'column', &
+         ctype = [my_ctype], &
+         ltype = [my_ltype], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    ! Input points differ in either column type or landunit type
+    subgridi = create_subgrid_info( &
+         npts = 5, &
+         name = 'column', &
+         ctype = [my_ctype-1, my_ctype,   my_ctype, my_ctype,   my_ctype + 1], &
+         ltype = [my_ltype,   my_ltype-1, my_ltype, my_ltype+1, my_ltype], &
+         lat = [(my_lat, i=1,5)], &
+         lon = [(my_lon, i=1,5)])
+
+    call wrap_set_mindist(subgridi, subgrido, mindist_index)
+
+    @assertEqual(3, mindist_index(1))
+
+  end subroutine multipleTypes_findsSameType
+
+  @Test
+  subroutine glcmec_elevclassesSame_findsSameColType(this)
+    ! When glc elevation classes are the same between input and output: Choose
+    ! column/patch from the same column type, even if it isn't the one with the closest
+    ! topographic height.
+    !
+    ! This tests both column-level and patch-level
+    class(TestSetMindist), intent(inout) :: this
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ptype = 25
+    real(r8), parameter :: my_topo = 1000._r8
+    integer :: i
+    integer :: mindist_index_c, mindist_index_p
+
+    ! Note that:
+    ! - all input ptypes are the same as output ptype
+    ! - all input ctypes are different, with one of them matching the output ctype
+    ! - the matching input ctype has the most different topographic height
+    call setup_and_run_glcmec( &
+         ptype_o = my_ptype, &
+         ctype_o = my_ctype, &
+         topoglc_o = my_topo, &
+         ptype_i = [my_ptype, my_ptype, my_ptype, my_ptype], &
+         ctype_i = [my_ctype-2, my_ctype-1, my_ctype, my_ctype+1], &
+         topoglc_i = [my_topo - 10._r8, my_topo - 1._r8, my_topo + 100._r8, my_topo], &
+         collapse_to_atm_topo = .false., &
+         glc_elevclasses_same = .true., &
+         mindist_index_p = mindist_index_p, &
+         mindist_index_c = mindist_index_c)
+
+    @assertEqual(3, mindist_index_c)
+    @assertEqual(3, mindist_index_p)
+  end subroutine glcmec_elevclassesSame_findsSameColType
+
+  @Test
+  subroutine glcmec_elevclassesSame_findsSamePatchType(this)
+    ! When glc elevation classes are the same between input and output: Choose patch from
+    ! the same patch type, even if it isn't the one with the closest topographic height.
+    !
+    ! This tests just patch-level
+    class(TestSetMindist), intent(inout) :: this
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ptype = 25
+    real(r8), parameter :: my_topo = 1000._r8
+    integer :: i
+    integer :: mindist_index_c, mindist_index_p
+
+    ! Note that:
+    ! - all input ptypes are different, with one of them matching the output ptype
+    ! - all input ctypes are the same as output ctype (this probably shouldn't happen in
+    !   practice, but is useful for testing the code logic)
+    ! - the matching input ptype has the most different topographic height
+    call setup_and_run_glcmec( &
+         ptype_o = my_ptype, &
+         ctype_o = my_ctype, &
+         topoglc_o = my_topo, &
+         ptype_i = [my_ptype-2, my_ptype-1, my_ptype, my_ptype+1], &
+         ctype_i = [my_ctype, my_ctype, my_ctype, my_ctype], &
+         topoglc_i = [my_topo - 10._r8, my_topo - 1._r8, my_topo + 100._r8, my_topo], &
+         collapse_to_atm_topo = .false., &
+         glc_elevclasses_same = .true., &
+         mindist_index_p = mindist_index_p, &
+         mindist_index_c = mindist_index_c)
+
+    ! Note that we don't assert anything about mindist_index_c in this case: the behavior
+    ! of mindist_index_c is not defined, since there are multiple input columns with the
+    ! same type. (We don't expect this situation of having multiple input columns with
+    ! the same type to arise in practice, so we haven't defined the behavior of this
+    ! case.)
+    @assertEqual(3, mindist_index_p)
+  end subroutine glcmec_elevclassesSame_findsSamePatchType
+
+  @Test
+  subroutine glcmec_elevclassesDiffer_findsClosestHeight(this)
+    ! When glc elevation classes differ between input and output: Ignore column and pft
+    ! types; if there are multiple glc_mec points that are equidistant in space, pick the
+    ! one with the closest height
+    !
+    ! This tests both column-level and patch-level
+    class(TestSetMindist), intent(inout) :: this
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ptype = 25
+    real(r8), parameter :: my_topo = 1000._r8
+    integer :: i
+    integer :: mindist_index_c, mindist_index_p
+
+    ! Note that we use different ptype and ctype values for the target point: these should
+    ! be ignored in this case. However, ltype should *not* be ignored (and thus we should
+    ! *not* pick the third point).
+    call setup_and_run_glcmec( &
+         ptype_o = my_ptype, &
+         ctype_o = my_ctype, &
+         topoglc_o = my_topo, &
+         ptype_i = [my_ptype, my_ptype-1, my_ptype, my_ptype], &
+         ctype_i = [my_ctype, my_ctype-1, my_ctype, my_ctype], &
+         ltype_diff_i = [0, 0, -1, 0], &
+         topoglc_i = [my_topo - 10._r8, my_topo - 1._r8, my_topo, my_topo + 100._r8], &
+         collapse_to_atm_topo = .false., &
+         glc_elevclasses_same = .false., &
+         mindist_index_p = mindist_index_p, &
+         mindist_index_c = mindist_index_c)
+
+    @assertEqual(2, mindist_index_c)
+    @assertEqual(2, mindist_index_p)
+  end subroutine glcmec_elevclassesDiffer_findsClosestHeight
+
+  @Test
+  subroutine glcmec_collapseToAtmTopo_findsClosestHeight(this)
+    ! For an output glcmec point with the collapse_to_atm_topo behavior: Ignore column and
+    ! pft types; if there are multiple glc_mec points that are equidistant in space, pick
+    ! the one with the closest height
+    !
+    ! This tests both column-level and patch-level
+    class(TestSetMindist), intent(inout) :: this
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ptype = 25
+    real(r8), parameter :: my_topo = 1000._r8
+    integer :: i
+    integer :: mindist_index_c, mindist_index_p
+
+    ! Note that we use different ptype and ctype values for the target point: these should
+    ! be ignored in this case. However, ltype should *not* be ignored (and thus we should
+    ! *not* pick the third point).
+    call setup_and_run_glcmec( &
+         ptype_o = my_ptype, &
+         ctype_o = my_ctype, &
+         topoglc_o = my_topo, &
+         ptype_i = [my_ptype, my_ptype-1, my_ptype, my_ptype], &
+         ctype_i = [my_ctype, my_ctype-1, my_ctype, my_ctype], &
+         ltype_diff_i = [0, 0, -1, 0], &
+         topoglc_i = [my_topo - 10._r8, my_topo - 1._r8, my_topo, my_topo + 100._r8], &
+         collapse_to_atm_topo = .true., &
+         glc_elevclasses_same = .true., &
+         mindist_index_p = mindist_index_p, &
+         mindist_index_c = mindist_index_c)
+
+    @assertEqual(2, mindist_index_c)
+    @assertEqual(2, mindist_index_p)
+  end subroutine glcmec_collapseToAtmTopo_findsClosestHeight
+
+  @Test
+  subroutine glcmec_elevclassesDiffer_findsClosestLatlon(this)
+    ! For glc_mec, if we have some points closer in topographic height, but others closer
+    ! in x-y space, pick the closer point in x-y space
+
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    type(glc_behavior_type) :: glc_behavior
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ltype = subgrid_special_indices%ilun_landice_multiple_elevation_classes
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    real(r8), parameter :: my_topo = 1000._r8
+    integer :: i
+    integer :: mindist_index(1)
+
+    call setup_landunit_ncols(ltype=my_ltype, &
+         ctypes=[my_ctype], &
+         cweights=[1._r8])
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begc, &
+         name = 'column', &
+         ctype = [my_ctype], &
+         ltype = [my_ltype], &
+         lat = [my_lat], &
+         lon = [my_lon], &
+         topoglc = [my_topo])
+
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'column', &
+         ctype = [my_ctype, my_ctype, my_ctype], &
+         ltype = [my_ltype, my_ltype, my_ltype], &
+         lat = [my_lat - 10._r8, my_lat - 1._r8, my_lat + 10._r8], &
+         lon = [(my_lon, i=1,3)], &
+         topoglc = [my_topo, my_topo - 100._r8, my_topo])
+
+    glc_behavior = create_glc_behavior(collapse_to_atm_topo = .false.)
+
+    call wrap_set_mindist(subgridi, subgrido, mindist_index, &
+         glc_behavior = glc_behavior, glc_elevclasses_same = .false.)
+
+    @assertEqual(2, mindist_index(1))
+  end subroutine glcmec_elevclassesDiffer_findsClosestLatlon
+
+  @Test
+  subroutine noncropToCrop_patchVariable_usesCorrectPft(this)
+    ! For interpolation from a non-crop case to a crop case, ensure that a patch-level
+    ! variable takes its input from the correct pft. This simulates what happens to the
+    ! generic crop type in this case.
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ptype = 5
+    integer :: my_ctype
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: i
+    integer :: mindist_index(1)
+
+    associate( &
+         icol_natveg => subgrid_special_indices%icol_vegetated_or_bare_soil, &
+         ilun_natveg => subgrid_special_indices%ilun_vegetated_or_bare_soil, &
+         ilun_crop   => subgrid_special_indices%ilun_crop &
+         )
+
+    my_ctype = icol_natveg + 1  ! arbitrary; we just want this to differ from icol_natveg
+
+    call setup_landunit_ncols(ltype=ilun_crop, &
+         ctypes=[my_ctype], &
+         cweights=[1._r8], &
+         ptype=my_ptype)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begp, &
+         name = 'pft', &
+         ptype = [my_ptype], &
+         ctype = [my_ctype], &
+         ltype = [ilun_crop], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    ! Input point #2 has the same ptype, but a different ctype and ltype. This one should
+    ! be chosen. Other input points differ in ptype.
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'pft', &
+         ptype = [my_ptype - 1, my_ptype, my_ptype + 1], &
+         ctype = [icol_natveg, icol_natveg, icol_natveg], &
+         ltype = [ilun_natveg, ilun_natveg, ilun_natveg], &
+         lat = [(my_lat, i=1,3)], &
+         lon = [(my_lon, i=1,3)])
+
+    call wrap_set_mindist(subgridi, subgrido, mindist_index)
+
+    @assertEqual(2, mindist_index(1))
+
+    end associate
+  end subroutine noncropToCrop_patchVariable_usesCorrectPft
+
+  @Test
+  subroutine cropToNoncrop_patchVariable_usesCorrectPft(this)
+    ! For interpolation from a crop case to a non-crop case, ensure that a patch-level
+    ! variable takes its input from the correct pft. This simulates what happens to the
+    ! generic crop type in this case.
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ptype = 5
+    integer :: input_ctype
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: i
+    integer :: mindist_index(1)
+
+    associate( &
+         icol_natveg => subgrid_special_indices%icol_vegetated_or_bare_soil, &
+         ilun_natveg => subgrid_special_indices%ilun_vegetated_or_bare_soil, &
+         ilun_crop   => subgrid_special_indices%ilun_crop &
+         )
+
+    call setup_landunit_ncols(ltype=ilun_natveg, &
+         ctypes=[icol_natveg], &
+         cweights=[1._r8], &
+         ptype=my_ptype)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begp, &
+         name = 'pft', &
+         ptype = [my_ptype], &
+         ctype = [icol_natveg], &
+         ltype = [ilun_natveg], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    input_ctype = icol_natveg + 1  ! arbitrary; we just want this to differ from icol_natveg
+
+    ! Input point #2 has the same ptype, but a different ctype and ltype. This one should
+    ! be chosen. Other input points differ in ptype.
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'pft', &
+         ptype = [my_ptype - 1, my_ptype, my_ptype + 1], &
+         ctype = [input_ctype, input_ctype, input_ctype], &
+         ltype = [ilun_crop, ilun_crop, ilun_crop], &
+         lat = [(my_lat, i=1,3)], &
+         lon = [(my_lon, i=1,3)])
+
+    call wrap_set_mindist(subgridi, subgrido, mindist_index)
+
+    @assertEqual(2, mindist_index(1))
+
+    end associate
+  end subroutine cropToNoncrop_patchVariable_usesCorrectPft
+
+  @Test
+  subroutine noncropToCrop_specificCropFromNatveg(this)
+    ! For interpolation from a non-crop case to a crop case, ensure that crop columns
+    ! take their info from the natural veg column in the input.
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer :: my_ctype
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: i
+    integer :: mindist_index(1)
+
+    associate( &
+         icol_natveg => subgrid_special_indices%icol_vegetated_or_bare_soil, &
+         ilun_natveg => subgrid_special_indices%ilun_vegetated_or_bare_soil, &
+         ilun_crop   => subgrid_special_indices%ilun_crop &
+         )
+
+    my_ctype = icol_natveg + 1  ! arbitrary; we just want this to differ from icol_natveg
+
+    call setup_landunit_ncols(ltype=ilun_crop, &
+         ctypes=[my_ctype], &
+         cweights=[1._r8])
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begc, &
+         name = 'column', &
+         ctype = [my_ctype], &
+         ltype = [ilun_crop], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'column', &
+         ctype = [icol_natveg - 2, icol_natveg, icol_natveg - 1], &
+         ltype = [ilun_natveg - 2, ilun_natveg, ilun_natveg - 1], &
+         lat = [(my_lat, i=1,3)], &
+         lon = [(my_lon, i=1,3)])
+
+    ! For most landunits, we would need to set fill_missing_with_natveg to accomplish
+    ! this. However, it should be done for a crop output point even with
+    ! fill_missing_with_natveg .false.
+    call wrap_set_mindist(subgridi, subgrido, mindist_index, &
+         fill_missing_with_natveg = .false.)
+
+    @assertEqual(2, mindist_index(1))
+
+    end associate
+  end subroutine noncropToCrop_specificCropFromNatveg
+
+  @Test
+  subroutine newveg_usesBaresoil(this)
+    ! If there's a new vegetation (patch) type, this should take inputs from the closest
+    ! bare soil point.
+    !
+    ! In terms of code coverage, this is largely redundant with
+    ! noncropToCrop_specificCropFromNatveg. But I'm keeping it for now since it tests a
+    ! different use case.
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ptype = 5
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: i
+    integer :: mindist_index(1)
+
+    associate( &
+         ipft_bare   => subgrid_special_indices%ipft_not_vegetated, &
+         icol_natveg => subgrid_special_indices%icol_vegetated_or_bare_soil, &
+         ilun_natveg => subgrid_special_indices%ilun_vegetated_or_bare_soil &
+         )
+
+    call setup_landunit_ncols(ltype=ilun_natveg, &
+         ctypes=[icol_natveg], &
+         cweights=[1._r8], &
+         ptype=my_ptype)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begp, &
+         name = 'pft', &
+         ptype = [my_ptype], &
+         ctype = [icol_natveg], &
+         ltype = [ilun_natveg], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'pft', &
+         ptype = [ipft_bare + 1, ipft_bare, ipft_bare + 2], &
+         ctype = [(icol_natveg, i=1,3)], &
+         ltype = [(ilun_natveg, i=1,3)], &
+         lat = [(my_lat, i=1,3)], &
+         lon = [(my_lon, i=1,3)])
+
+    ! For most landunits, we would need to set fill_missing_with_natveg to accomplish
+    ! this. However, it should be done for a natural veg output point even with
+    ! fill_missing_with_natveg .false.
+    call wrap_set_mindist(subgridi, subgrido, mindist_index, &
+         fill_missing_with_natveg = .false.)
+
+    @assertEqual(2, mindist_index(1))
+
+    end associate
+  end subroutine newveg_usesBaresoil
+
+  @Test
+  subroutine baresoil_ignoresSpecialLandunits(this)
+    ! This test ensures that, when finding a match for a bare soil patch, we ignore
+    ! special landunits. This is important because special landunits also have pft type =
+    ! noveg.
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: i
+    integer :: mindist_index(1)
+
+    associate( &
+         ipft_bare => subgrid_special_indices%ipft_not_vegetated, &
+         icol_veg => subgrid_special_indices%icol_vegetated_or_bare_soil, &
+         ilun_veg => subgrid_special_indices%ilun_vegetated_or_bare_soil &
+    )
+
+    call setup_landunit_ncols(ltype=ilun_veg, &
+         ctypes=[icol_veg], &
+         cweights=[1._r8], &
+         ptype=ipft_bare)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begp, &
+         name = 'pft', &
+         ptype = [ipft_bare], &
+         ctype = [icol_veg], &
+         ltype = [ilun_veg], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    ! In the inputs, we use icol_veg even for special landunits, to make sure that even a
+    ! patch whose pft and column type indicate natural veg is ignored if its landunit
+    ! type is wrong.
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'pft', &
+         ptype = [ipft_bare, ipft_bare, ipft_bare], &
+         ctype = [icol_veg, icol_veg, icol_veg], &
+         ltype = [ilun_special, ilun_veg, ilun_special], &
+         lat = [(my_lat, i=1,3)], &
+         lon = [(my_lon, i=1,3)])
+
+    call wrap_set_mindist(subgridi, subgrido, mindist_index)
+
+    @assertEqual(2, mindist_index(1))
+
+    end associate
+  end subroutine baresoil_ignoresSpecialLandunits
+
+  @Test
+  subroutine fillMissing_usesNatveg(this)
+    ! This test ensures that, when using fill_missing_with_natveg, the code finds a point
+    ! from the natural veg landunit. This is especially important to check for
+    ! patch-level variables, for which special landunits also use the noveg (0) pft type.
+    ! So here we just check a patch-level variable.
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ptype = 5
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ltype = ilun_special
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: i
+    integer :: mindist_index(1)
+
+    associate( &
+         ipft_bare => subgrid_special_indices%ipft_not_vegetated, &
+         icol_veg => subgrid_special_indices%icol_vegetated_or_bare_soil, &
+         ilun_veg => subgrid_special_indices%ilun_vegetated_or_bare_soil &
+    )
+
+    call setup_landunit_ncols(ltype=my_ltype, &
+         ctypes=[my_ctype], &
+         cweights=[1._r8], &
+         ptype=my_ptype)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begp, &
+         name = 'pft', &
+         ptype = [my_ptype], &
+         ctype = [my_ctype], &
+         ltype = [my_ltype], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    ! None of the input points match the output (in ptype, ctype or ltype). The 2nd point
+    ! is a bare ground point, though, and so should be used as the template if we specify
+    ! fill_missing_with_natveg.
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'pft', &
+         ptype = [ipft_bare, ipft_bare, ipft_bare], &
+         ctype = [icol_veg, icol_veg, icol_veg], &
+         ltype = [my_ltype + 1, ilun_veg, my_ltype + 1], &
+         lat = [(my_lat, i=1,3)], &
+         lon = [(my_lon, i=1,3)])
+
+    call wrap_set_mindist(subgridi, subgrido, mindist_index, fill_missing_with_natveg = .true.)
+    
+    @assertEqual(2, mindist_index(1))
+    
+    end associate
+  end subroutine fillMissing_usesNatveg
+
+  @Test
+  subroutine gridcell_findsClosestLatlon(this)
+    ! For gridcell-level variables, should find closest gridcell in lat-lon space
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer :: i
+    integer :: mindist_index(1)
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+
+    call setup_single_veg_patch(pft_type=1)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begg, &
+         name = 'gridcell', &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'gridcell', &
+         lat = [my_lat - 10._r8, my_lat - 1._r8, my_lat + 10._r8], &
+         lon = [(my_lon, i=1,3)])
+
+    call wrap_set_mindist(subgridi, subgrido, mindist_index)
+
+    @assertEqual(2, mindist_index(1))
+  end subroutine gridcell_findsClosestLatlon
+
+end module test_set_mindist

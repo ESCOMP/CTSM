@@ -23,10 +23,11 @@
 cur_time=`date '+%H:%M:%S'`
 
 hostname=`hostname`
+echo $hostname
 case $hostname in
 
     ##cheyenne
-     cheyenne*)
+     cheyenne* | r*i*n*)
     submit_script="test_driver_cheyenne${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -39,15 +40,15 @@ input_file="tests_pretag_cheyenne_nompi"
 c_threads=36
 
 
-export INITMODULES="/glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/sh"
+export INITMODULES="/glade/u/apps/ch/opt/lmod/8.1.7/lmod/lmod/init/sh"
 . \$INITMODULES
 
 module purge
-module load ncarenv/1.0
-module load intel/17.0.1
+module load ncarenv
+module load intel
 module load mkl
-module load ncarcompilers/0.3.5
-module load netcdf/4.4.1.1
+module load ncarcompilers
+module load netcdf
 
 module load nco
 module load python
@@ -86,8 +87,70 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
+    ## DAV cluster
+     casper* | pronghorn*)
+    submit_script="test_driver_dav${cur_time}.sh"
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+interactive="YES"
+input_file="tests_posttag_dav_mpi"
+c_threads=36
+
+
+export INITMODULES="/glade/u/apps/ch/opt/lmod/8.1.7/lmod/lmod/init/sh"
+. \$INITMODULES
+
+module purge
+module load ncarenv
+module load intel
+module load mkl
+module load ncarcompilers
+module load netcdf
+module load openmpi
+
+module load nco
+module load python
+module load ncl
+
+
+##omp threads
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=\$c_threads
+fi
+
+# Stop on first failed test
+if [ -z "\$CLM_SOFF" ]; then   #CLM_SOFF NOT set
+   export CLM_SOFF=FALSE
+fi
+
+export CESM_MACH="cheyenne"
+export CESM_COMP="intel"
+
+export NETCDF_DIR=\$NETCDF
+export INC_NETCDF=\$NETCDF/include
+export LIB_NETCDF=\$NETCDF/lib
+export MAKE_CMD="gmake -j "
+export CFG_STRING=""
+export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CPPDEFS=-DLINUX"
+export MACH_WORKSPACE="/glade/scratch"
+export CPRNC_EXE="$CESMDATAROOT/tools/cime/tools/cprnc/cprnc.cheyenne"
+dataroot="$CESMDATAROOT"
+export TOOLSLIBS=""
+export TOOLS_CONF_STRING="--mpilib mpich"
+
+
+echo_arg=""
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+
     ## hobart
-    hobart* ) 
+    hobart* | h*.cgd.ucar.edu) 
     submit_script="test_driver_hobart_${cur_time}.sh"
     export PATH=/cluster/torque/bin:${PATH}
 
@@ -136,8 +199,8 @@ export P4_GLOBMEMSIZE=500000000
 
 export CESM_MACH="hobart"
 
-limit stacksize unlimited
-limit coredumpsize unlimited
+ulimit -s unlimited
+ulimit -c unlimited
 
 export CESM_COMP="intel"
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_CC=icc "
@@ -147,14 +210,16 @@ export INITMODULES="/usr/share/Modules/init/sh"
 
 . \$INITMODULES
 module purge
-module load compiler/intel/15.0.2.164
+module load compiler/intel
+module load tool/nco
+module load tool/netcdf
 
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
 export LIB_NETCDF=\${NETCDF_PATH}/lib
 export MAKE_CMD="gmake -j 5"   ##using hyper-threading on hobart
 export MACH_WORKSPACE="/scratch/cluster"
-export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_hobart/cprnc
+export CPRNC_EXE=/fs/cgd/csm/tools/cprnc/cprnc
 export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 export TOOLSSLIBS=""
@@ -164,16 +229,40 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##yong
-    yong* | vpn* )
-    submit_script="test_driver_yong_${cur_time}.sh"
+    ## izumi
+    izumi* | i*.unified.ucar.edu) 
+    submit_script="test_driver_izumi_${cur_time}.sh"
+    export PATH=/cluster/torque/bin:${PATH}
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
 #!/bin/sh
 #
 
-interactive="YES"
+# Name of the queue (CHANGE THIS if needed)
+#PBS -q long
+# Number of nodes (CHANGE THIS if needed)
+#PBS -l nodes=1:ppn=24
+# output file base name
+#PBS -N test_dr
+# Put standard error and standard out in same file
+#PBS -j oe
+# Export all Environment variables
+#PBS -V
+# End of options
+
+if [ -n "\$PBS_JOBID" ]; then    #batch job
+    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
+    initdir=\${PBS_O_WORKDIR}
+fi
+
+if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
+    interactive="NO"
+    input_file="tests_posttag_izumi"
+else
+    interactive="YES"
+    input_file="tests_posttag_izumi_nompi"
+fi
 
 ##omp threads
 if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
@@ -182,44 +271,46 @@ fi
 export CLM_RESTART_THREADS=1
 
 ##mpi tasks
-export CLM_TASKS=2
-export CLM_RESTART_TASKS=1
+export CLM_TASKS=24
+export CLM_RESTART_TASKS=20
 
-export CESM_MACH="generic_Darwin"
-if [ "\$CLM_FC" = "PGI" ]; then
-   export CESM_COMP="pgi"
-   export NETCDF_PATH=/usr/local/netcdf-3.6.3-pgi-10.9
-   export CFG_STRING=""
-   export TOOLS_MAKE_STRING=""
-else
-   export CESM_COMP="intel"
-   export NETCDF_PATH=/usr/local/netcdf-3.6.3-intel-11.1
-   export MPICH_PATH=/usr/local/mpich2-1.3.1-intel-11.1
-   export PATH="\$MPICH_PATH/bin:$PATH"
-   export CFG_STRING=""
-   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CC=icc "
-   export DYLD_LIBRARY_PATH=/opt/intel/Compiler/11.1/067/lib
-fi
+export P4_GLOBMEMSIZE=500000000
+
+
+export CESM_MACH="izumi"
+
+ulimit -s unlimited
+ulimit -c unlimited
+
+export CESM_COMP="intel"
+export TOOLS_MAKE_STRING="USER_FC=ifort USER_CC=icc "
+export TOOLS_CONF_STRING=" -mpilib mpi-serial"
+export CFG_STRING=""
+export INITMODULES="/usr/share/Modules/init/sh"
+
+. \$INITMODULES
+module purge
+module load compiler/intel
+module load tool/nco
+module load tool/netcdf
+
 export NETCDF_DIR=\$NETCDF_PATH
-export INC_NETCDF=\$NETCDF_PATH/include
-export LIB_NETCDF=\$NETCDF_PATH/lib
-export MAKE_CMD="make -j 4"
-export MACH_WORKSPACE="/glade/scratch"
-export CPRNC_EXE=$HOME/bin/newcprnc
-export DATM_QIAN_DATA_DIR="/fis/cgd/cseg/csm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
-export ESMFBIN_PATH=\
-"/usr/local/esmf_5_2_0/DEFAULTINSTALLDIR/bin/binO/Darwin.intel.64.mpiuni.default"
-dataroot="/fis/cgd/cseg/csm"
-echo_arg=""
-input_file="tests_posttag_yong"
-export TOOLSLIBS=""
-export TOOLS_CONF_STRING="-scratchroot \$MACH_WORKSPACE/$USER -max_tasks_per_node 2 -din_loc_root \$dataroot/inputdata"
+export INC_NETCDF=\${NETCDF_PATH}/include
+export LIB_NETCDF=\${NETCDF_PATH}/lib
+export MAKE_CMD="gmake -j 5"   ##using hyper-threading on izumi
+export MACH_WORKSPACE="/scratch/cluster"
+export CPRNC_EXE=/fs/cgd/csm/tools/cprnc/cprnc.izumi
+export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
+dataroot="/fs/cgd/csm"
+export TOOLSSLIBS=""
+echo_arg="-e"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
+
     * )
-    echo "Only setup to work on: cheyenne, yellowstone, hobart, and yong"
+    echo "Only setup to work on: cheyenne, hobart and izumi"
     exit
  
 
@@ -255,6 +346,16 @@ fi
 if [ -f \${initdir}/test_driver.sh ]; then
     export CLM_SCRIPTDIR=\`cd \${initdir}; pwd \`
     export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../..; pwd \`
+    export CTSM_ROOT=\${CLM_ROOT}
+    if [ -d \${CLM_ROOT}/cime ]; then
+       export CIME_ROOT=\${CLM_ROOT}/cime
+    else
+       export CIME_ROOT=\${CLM_ROOT}/../../cime
+    fi
+    if [ ! -d \${CIME_ROOT} ]; then
+       echo "ERROR: trouble finding the CIME_ROOT directory: \$CIME_ROOT"
+       exit 3
+    fi
 else
     if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/test/tools/test_driver.sh ]; then
 	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/test/tools; pwd \`
@@ -521,7 +622,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on yellowstone, hobart, and yongi: "
+    echo "usage on cheyenne, hobart, and izumi: "
     echo "./test_driver.sh -i"
     echo ""
     echo "valid arguments: "

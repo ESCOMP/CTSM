@@ -36,6 +36,7 @@ contains
     use shr_const_mod   , only : shr_const_pi
     use shr_spfn_mod    , only : shr_spfn_erf
     use abortutils      , only : endrun
+    use spmdMod         , only : masterproc
     use clm_varctl      , only : fsurdat, paramfile, iulog, use_vichydro, soil_layerstruct
     use clm_varpar      , only : nlevsoifl, toplev_equalspace 
     use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb, nlayer, nlayert 
@@ -232,6 +233,9 @@ contains
        enddo
        zisoifl(nlevsoifl) = zsoifl(nlevsoifl) + 0.5_r8*dzsoifl(nlevsoifl)
 
+       if ( masterproc )then
+          if ( soil_layerstruct /= '10SL_3.5m' ) write(iulog,*) 'Setting clay, sand, organic, in Soil Hydrology for VIC'
+       end if
        do c = bounds%begc, bounds%endc
           g = col%gridcell(c)
           l = col%landunit(c)
@@ -244,7 +248,6 @@ contains
              else
                 do lev = 1,nlevgrnd
                    if ( soil_layerstruct /= '10SL_3.5m' )then
-                      write(iulog,*) 'Setting clay, sand, organic, in Soil Hydrology for VIC'
                       if (lev .eq. 1) then
                          clay    = clay3d(g,1)
                          sand    = sand3d(g,1)
