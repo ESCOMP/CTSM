@@ -365,10 +365,10 @@ contains
           end if
 
          ! grain transfer C and N
-!         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), &
-!                                   ns%cropseedn_deficit_patch(bounds%begp:bounds%endp), pc(bounds%begp:), &
-!                                   pn(bounds%begp:), __LINE__, &
-!                                   num_truncatep, filter_truncatep)
+         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), &
+                                   ns%cropseedn_deficit_patch(bounds%begp:bounds%endp), pc(bounds%begp:), &
+                                   pn(bounds%begp:), __LINE__, &
+                                   num_truncatep, filter_truncatep)
                                    !c13=c13cs%cropseedc_deficit_patch, c14=c14cs%cropseedc_deficit_patch, &
                                    !pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), allowneg=.true., croponly=.true. )
           if (use_c13) then
