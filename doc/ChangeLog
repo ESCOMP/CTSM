@@ -11,11 +11,11 @@ Resolved issues:
 
 ESCOMP/ctsm#683 :  Writing out FATES parameters only on masterproc.
 ESCOMP/ctsm#874 :  Changing the number of timesteps to run for
-				   SMS_P720x1_Ln3.hcru_hcru.I2000Clm50BgcCruGs.cheyenne_intel.clm-coldStar
-				   to prevent failing with CMEPS.
+                   SMS_P720x1_Ln3.hcru_hcru.I2000Clm50BgcCruGs.cheyenne_intel.clm-coldStar
+                   to prevent failing with CMEPS.
 ESCOMP/ctsm#878 :  Removing the unused atm2lnd field.
 ESCOMP/ctsm#885 :  Changing the defaults for br_root in namelist_defaults to
-				   enable FUN with CLM4.5.
+                   enable FUN with CLM4.5.
 ESCOMP/ctsm#745 :  Removing ReadNL private subroutine from initVerticalMod.F90.
 ESCOMP/ctsm#838 :  Clarifying ZISNO in the variable long name.
 
@@ -52,14 +52,14 @@ Notes of particular relevance for users
 
 Caveats for users (e.g., need to interpolate initial conditions): none
 
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
 
-Changes made to namelist defaults (e.g., changed parameter values): 
+Changes made to namelist defaults (e.g., changed parameter values):
 	Not any changes in parameter values.
 	changing the default for br_root in namelist_defaults to enable FUN with
 	CLM4.5.
 
-Changes to the datasets (e.g., parameter, surface or initial files):
+Changes to the datasets (e.g., parameter, surface or initial files): none
 
 Substantial timing or memory changes: none
 
@@ -67,7 +67,7 @@ Notes of particular relevance for developers: (including Code reviews and testin
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
 
 Changes to tests or testing: 
 	Changed the number of timesteps from Ln3 to Ln6 for
@@ -82,19 +82,19 @@ CTSM testing:
 
   build-namelist tests:
 
-    cheyenne - 
+    cheyenne - not run
 
   tools-tests (test/tools):
 
-    cheyenne - 
+    cheyenne - not run
 
   PTCLM testing (tools/shared/PTCLM/test):
 
-    cheyenne - 
+    cheyenne - not run
 
   python testing (see instructions in python/README.md; document testing done):
 
-    (any machine) - 
+    (any machine) - not run
 
   regular tests (aux_clm):
 
@@ -107,33 +107,15 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: 
-
-   URL for LMWG diagnostics output used to validate new climate:
-	
+Changes answers relative to baseline: NO
 
 Detailed list of changes
 ------------------------
 
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
 
 Pull Requests that document the changes (include PR ids):
-(https://github.com/ESCOMP/ctsm/pull)
+https://github.com/ESCOMP/CTSM/pull/897
 
 ===============================================================
 ===============================================================
