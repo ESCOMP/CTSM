@@ -547,29 +547,71 @@ contains
 
       ! gresp_storage (C only)
       call TruncateCStates( bounds, filter_soilp, num_soilp, cs%gresp_storage_patch(bounds%begp:bounds%endp), &
-                            pc(bounds%begp:), __LINE__, &
-                            c13=c13cs%gresp_storage_patch, c14=c14cs%gresp_storage_patch, &
-                            pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:) )
+                            pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep) 
+          if (use_c13) then
+             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
+                  c13cs%gresp_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                  __LINE__)
+          end if
+          if (use_c14) then
+             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
+                  c14cs%gresp_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                  __LINE__)
+          end if
 
       ! gresp_xfer(c only)
       call TruncateCStates( bounds, filter_soilp, num_soilp, cs%gresp_xfer_patch(bounds%begp:bounds%endp), &
-                            pc(bounds%begp:), __LINE__, &
-                            c13=c13cs%gresp_xfer_patch, c14=c14cs%gresp_xfer_patch, &
-                            pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:) )
+                            pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep) 
+                            !pc(bounds%begp:), __LINE__, &
+                            !c13=c13cs%gresp_xfer_patch, c14=c14cs%gresp_xfer_patch, &
+                            !pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:) )
+          if (use_c13) then
+             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
+                  c13cs%gresp_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                  __LINE__)
+          end if
+          if (use_c14) then
+             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
+                  c14cs%gresp_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                  __LINE__)
+          end if
 
       ! cpool (C only)
       call TruncateCStates( bounds, filter_soilp, num_soilp, cs%cpool_patch(bounds%begp:bounds%endp), &
-                            pc(bounds%begp:), __LINE__, &
-                            c13=c13cs%cpool_patch, c14=c14cs%cpool_patch, &
-                            pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:) )
+                            pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep) 
+                            !pc(bounds%begp:), __LINE__, &
+                            !c13=c13cs%cpool_patch, c14=c14cs%cpool_patch, &
+                            !pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:) )
+          if (use_c13) then
+             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
+                  c13cs%cpool_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                  __LINE__)
+          end if
+          if (use_c14) then
+             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
+                  c14cs%cpool_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                  __LINE__)
+          end if
 
       if ( use_crop )then
          ! xsmrpool (C only)
          ! xsmr is a pool to balance the budget and as such can be freely negative
          call TruncateCStates( bounds, filter_soilp, num_soilp, cs%xsmrpool_patch(bounds%begp:bounds%endp), &
-                               pc(bounds%begp:), __LINE__, &
-                               c13=c13cs%xsmrpool_patch, c14=c14cs%xsmrpool_patch, &
-                               pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), allowneg=.true., croponly=.true. )
+                                pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep, &
+                                allowneg=.true., croponly=.true. )
+                               !pc(bounds%begp:), __LINE__, &
+                               !c13=c13cs%xsmrpool_patch, c14=c14cs%xsmrpool_patch, &
+                               !pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), allowneg=.true., croponly=.true. )
+          if (use_c13) then
+             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
+                  c13cs%xsmrpool_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                  __LINE__)
+          end if
+          if (use_c14) then
+             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
+                  c14cs%xsmrpool_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                  __LINE__)
+          end if
 
       end if
 
@@ -698,7 +740,8 @@ contains
     end do
  end subroutine TruncateCandNStates
 
- subroutine TruncateCStates( bounds, filter_soilp, num_soilp, carbon_patch, pc, lineno, c13, c14, pc13, pc14, croponly, allowneg )
+ subroutine TruncateCStates( bounds, filter_soilp, num_soilp, carbon_patch, pc, lineno,  &
+                                 num_truncatep, filter_truncatep, croponly, allowneg )
     !
     ! !DESCRIPTION:
     ! Truncate Carbon states. If a carbon state is too small truncate it to
@@ -720,10 +763,8 @@ contains
     real(r8)         , intent(inout) :: carbon_patch(bounds%begp:)
     real(r8)         , intent(inout) :: pc(bounds%begp:)
     integer          , intent(in)    :: lineno
-    real(r8)         , intent(inout), optional, pointer :: c13(:)
-    real(r8)         , intent(inout), optional, pointer :: c14(:)
-    real(r8)         , intent(inout), optional :: pc13(bounds%begp:)
-    real(r8)         , intent(inout), optional :: pc14(bounds%begp:)
+    integer          ,  intent(out)  :: num_truncatep       ! number of points in filter_truncatep
+    integer          ,  intent(out)  :: filter_truncatep(:) ! filter for points that need truncation
     logical          , intent(in)   , optional :: croponly
     logical          , intent(in)   , optional :: allowneg
 
@@ -732,25 +773,25 @@ contains
 
     SHR_ASSERT_ALL_FL((ubound(carbon_patch)   == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(pc)             == (/bounds%endp/)), sourcefile, __LINE__)
-#ifndef _OPENMP
-    if ( present(c13) .and. use_c13 )then
-       SHR_ASSERT_ALL_FL((lbound(c13)         == (/bounds%begp/)), sourcefile, __LINE__)
-       SHR_ASSERT_ALL_FL((ubound(c13)         == (/bounds%endp/)), sourcefile, __LINE__)
-    end if
-    if ( present(c14) .and. use_c14 )then
-       SHR_ASSERT_ALL_FL((lbound(c14)         == (/bounds%begp/)), sourcefile, __LINE__)
-       SHR_ASSERT_ALL_FL((ubound(c14)         == (/bounds%endp/)), sourcefile, __LINE__)
-    end if
-#endif
-    if ( present(pc13) )then
-       SHR_ASSERT_ALL_FL((ubound(pc13)        == (/bounds%endp/)), sourcefile, __LINE__)
-    end if
-    if ( present(pc14) )then
-       SHR_ASSERT_ALL_FL((ubound(pc14)        == (/bounds%endp/)), sourcefile, __LINE__)
-    end if
-    if ( -ccrit < cnegcrit )then
-        call endrun(msg='ERROR: cnegcrit should be less than -ccrit: '//errMsg(sourcefile, lineno))
-    end if
+!#ifndef _OPENMP
+!    if ( present(c13) .and. use_c13 )then
+!       SHR_ASSERT_ALL_FL((lbound(c13)         == (/bounds%begp/)), sourcefile, __LINE__)
+!       SHR_ASSERT_ALL_FL((ubound(c13)         == (/bounds%endp/)), sourcefile, __LINE__)
+!    end if
+!    if ( present(c14) .and. use_c14 )then
+!       SHR_ASSERT_ALL_FL((lbound(c14)         == (/bounds%begp/)), sourcefile, __LINE__)
+!       SHR_ASSERT_ALL_FL((ubound(c14)         == (/bounds%endp/)), sourcefile, __LINE__)
+!    end if
+!#endif
+!    if ( present(pc13) )then
+!       SHR_ASSERT_ALL_FL((ubound(pc13)        == (/bounds%endp/)), sourcefile, __LINE__)
+!    end if
+!    if ( present(pc14) )then
+!       SHR_ASSERT_ALL_FL((ubound(pc14)        == (/bounds%endp/)), sourcefile, __LINE__)
+!    end if
+!    if ( -ccrit < cnegcrit )then
+!        call endrun(msg='ERROR: cnegcrit should be less than -ccrit: '//errMsg(sourcefile, lineno))
+!    end if
     lcroponly = .false.
     if ( present(croponly) )then
       if ( croponly ) lcroponly = .true.
@@ -771,14 +812,14 @@ contains
              pc(p) = pc(p) + carbon_patch(p)
              carbon_patch(p) = 0._r8
    
-             if ( use_c13 .and. present(c13) .and. present(pc13) ) then
-                pc13(p) = pc13(p) + c13(p)
-                c13(p) = 0._r8
-             endif
-             if ( use_c14 .and. present(c14)  .and. present(pc14)) then
-                pc14(p) = pc14(p) + c14(p)
-                c14(p) = 0._r8
-             endif
+             !if ( use_c13 .and. present(c13) .and. present(pc13) ) then
+             !   pc13(p) = pc13(p) + c13(p)
+             !   c13(p) = 0._r8
+             !endif
+             !if ( use_c14 .and. present(c14)  .and. present(pc14)) then
+             !   pc14(p) = pc14(p) + c14(p)
+             !   c14(p) = 0._r8
+             !endif
           end if
        end if
     end do
