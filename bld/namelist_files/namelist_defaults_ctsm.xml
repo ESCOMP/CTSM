@@ -954,7 +954,7 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
 <use_fun phys="clm5_0" use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
 <use_fun                                                           >.false.</use_fun>
 
-<br_root phys="clm5_0" use_cn=".true." use_fun=".true.">0.83d-06</br_root>
+<br_root>0.83d-06</br_root>
 
 <!-- Scalar of leaf respiration to vcmax (used for SP mode and with luna)-->
 <leaf_mr_vcm phys="clm5_0" >0.015d00</leaf_mr_vcm>

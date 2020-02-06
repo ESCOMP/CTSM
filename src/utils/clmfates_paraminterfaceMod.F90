@@ -172,11 +172,12 @@ contains
  !-----------------------------------------------------------------------
  subroutine ParametersFromNetCDF(filename, is_host_file, fates_params)
 
-   use shr_kind_mod, only: r8 => shr_kind_r8
-   use abortutils, only : endrun
-   use fileutils  , only : getfil
-   use ncdio_pio  , only : file_desc_t, ncd_pio_closefile, ncd_pio_openfile
-   use paramUtilMod, only : readNcdio
+   use shr_kind_mod , only : r8 => shr_kind_r8
+   use abortutils   , only : endrun
+   use fileutils    , only : getfil
+   use ncdio_pio    , only : file_desc_t , ncd_pio_closefile , ncd_pio_openfile
+   use paramUtilMod , only : readNcdio
+   use spmdMod      , only : masterproc
 
    use FatesParametersInterface, only : fates_parameters_type
    use FatesParametersInterface, only : param_string_length, max_dimensions, max_used_dimensions
@@ -227,7 +228,9 @@ contains
             call endrun(msg='unsupported number of dimensions reading parameters.')
 
          end select
-         write(fates_log(), *) 'clmfates_interfaceMod.F90:: reading '//trim(name)
+         if (masterproc) then
+            write(fates_log(), *) 'clmfates_interfaceMod.F90:: reading '//trim(name)
+         end if
          call readNcdio(ncid, name, dimension_shape, dimension_names, subname, data(1:size_dim_1, 1:size_dim_2))
          call fates_params%SetData(i, data(1:size_dim_1, 1:size_dim_2))
       end if
