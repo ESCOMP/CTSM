@@ -1,4 +1,5 @@
 &atm_driver_input
+  caseid                = 'test_lilac'      
   atm_mesh_file    	= '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
   atm_global_nx         = 72
   atm_global_ny         = 46

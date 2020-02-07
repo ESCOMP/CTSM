@@ -16,9 +16,12 @@ program atm_driver
   !   ESMF lilac_atmcap            ESMF CTSM cap     ESMF river cap (Mizzouroute, Mosart)
   !----------------------------------------------------------------------------
   
-  use netcdf      , only : nf90_open, nf90_nowrite, nf90_noerr, nf90_close
-  use netcdf      , only : nf90_inq_dimid, nf90_inquire_dimension, nf90_inq_varid, nf90_get_var  
+  use netcdf      , only : nf90_open, nf90_create, nf90_enddef, nf90_close
+  use netcdf      , only : nf90_clobber, nf90_write, nf90_nowrite, nf90_noerr, nf90_double
+  use netcdf      , only : nf90_def_dim, nf90_def_var, nf90_put_var
+  use netcdf      , only : nf90_inq_dimid, nf90_inquire_dimension, nf90_inq_varid, nf90_get_var
   use mpi         , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
+  use mpi         , only : MPI_GATHER, MPI_DOUBLE
   use lilac_mod   , only : lilac_init, lilac_run, lilac_final
   use lilac_atmcap, only : lilac_atmcap_atm2lnd, lilac_atmcap_lnd2atm
   use shr_cal_mod , only : shr_cal_date2ymd
@@ -32,6 +35,7 @@ program atm_driver
   real*8  , allocatable :: atm_lons(:), atm_lats(:)
   integer , allocatable :: atm_global_index(:)
   integer               :: mytask, ntasks
+  logical               :: masterproc
   integer               :: my_start, my_end
   integer               :: i_local, i_global
   integer               :: nlocal, nglobal
@@ -46,6 +50,7 @@ program atm_driver
   integer               :: atm_restart_day, atm_restart_secs
 
   ! Namelist and related variables
+  character(len=512) :: caseid
   character(len=512) :: atm_mesh_file
   integer            :: atm_global_nx
   integer            :: atm_global_ny
@@ -61,7 +66,7 @@ program atm_driver
   integer            :: atm_stop_secs
   character(len=32)  :: atm_starttype
 
-  namelist /atm_driver_input/ atm_mesh_file, atm_global_nx, atm_global_ny, &
+  namelist /atm_driver_input/ caseid, atm_mesh_file, atm_global_nx, atm_global_ny, &
        atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
        atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, atm_starttype
@@ -80,8 +85,13 @@ program atm_driver
   comp_comm = MPI_COMM_WORLD
   call MPI_COMM_RANK(comp_comm, mytask, ierr)
   call MPI_COMM_SIZE(comp_comm, ntasks, ierr)
+  if (mytask == 0) then
+     masterproc = .true.
+  else
+     masterproc = .false.
+  end if
 
-  if (mytask == 0 ) then
+  if (masterproc ) then
      print *, "MPI initialization done ..., ntasks=", ntasks
   end if
 
@@ -89,7 +99,7 @@ program atm_driver
   ! Read in namelist file ...
   !-----------------------------------------------------------------------------
 
-  if (mytask == 0) then
+  if (masterproc) then
      print *,"---------------------------------------"
      print *, "MPI initialized in atm_driver ..."
   end if
@@ -115,7 +125,7 @@ program atm_driver
      print *, " atm global nx, ny, nglobal = ",atm_global_nx, atm_global_ny, nglobal
      call shr_sys_abort("Error atm_nx*atm_ny is not equal to nglobal")
   end if
-  if (mytask == 0 ) then
+  if (masterproc ) then
      print *, " atm_driver mesh file ",trim(atm_mesh_file)
      print *, " atm global nx = ",atm_global_nx
      print *, " atm global nx = ",atm_global_ny
@@ -124,6 +134,10 @@ program atm_driver
 
   !-----------------------------------------------------------------------------
   ! atmosphere domain decomposition
+  !
+  ! Note that other code in this module relies on this simple decomposition, where we
+  ! assign the first points to task 0, then the next points to task 1, etc. Specifically,
+  ! code in write_lilac_to_atm_driver_fields relies on this decomposition.
   !-----------------------------------------------------------------------------
 
   nlocal = nglobal / ntasks
@@ -156,7 +170,7 @@ program atm_driver
   ! Initialize lilac
   !------------------------------------------------------------------------
 
-  if (mytask == 0 ) then
+  if (masterproc ) then
      print *, " initializing lilac with start type ",trim(atm_starttype)
   end if
   call lilac_init(comp_comm, atm_global_index, atm_lons, atm_lats, &
@@ -189,7 +203,7 @@ program atm_driver
      read(fileunit,'(a)', iostat=ierr) restart_file
      if (ierr < 0) call shr_sys_abort('Error reading rpointer.lilac')
      close(fileunit)
-     if (mytask == 0) then
+     if (masterproc) then
         print *,'lilac restart_file = ',trim(restart_file)
      end if
 
@@ -209,7 +223,7 @@ program atm_driver
      ierr = nf90_close(idfile)
      if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_close')
 
-     if (mytask == 0) then
+     if (masterproc) then
         print  *,'restart_ymd = ',atm_restart_ymd
      end if
      call shr_cal_date2ymd(atm_restart_ymd, atm_restart_year, atm_restart_mon, atm_restart_day)
@@ -240,13 +254,20 @@ program atm_driver
      end if
   end do
 
+  call write_lilac_to_atm_driver_fields( &
+       caseid = caseid, &
+       nlocal = nlocal, &
+       atm_global_nx = atm_global_nx, &
+       atm_global_ny = atm_global_ny, &
+       masterproc = masterproc)
+
   !------------------------------------------------------------------------
   ! Finalize lilac
   !------------------------------------------------------------------------
 
   call lilac_final( )
 
-  if (mytask == 0 ) then
+  if (masterproc ) then
      print *,  "======================================="
      print *,  " ............. DONE ..................."
      print *,  "======================================="
@@ -293,7 +314,7 @@ contains
     ierr = nf90_inquire_dimension(idfile, dimid_coordDim, string, coordDim)
     call nc_check_err(ierr, "inq_dim coordDim", filename)
 
-    if (mytask == 0 ) then
+    if (masterproc ) then
        print *,  "======================================="
        print *, "number of elements is : ", nelem
        print *, "coordDim is :", coordDim
@@ -425,28 +446,96 @@ contains
   end subroutine atm_driver_to_lilac
 
   !========================================================================
-  subroutine lilac_to_atm_driver
+  subroutine write_lilac_to_atm_driver_fields(caseid, nlocal, atm_global_nx, atm_global_ny, masterproc)
+
+    ! Fetch lnd2atm fields from LILAC and write them out.
+    !
+    ! This should only be called once, at the end of the run. (Calling it multiple times
+    ! will lead to the output file being overwritten.)
+
+    ! input/output variables
+    character(len=*), intent(in) :: caseid
+    integer, intent(in) :: nlocal
+    integer, intent(in) :: atm_global_nx
+    integer, intent(in) :: atm_global_ny
+    logical, intent(in) :: masterproc
 
     ! local variables
-    integer :: lsize
+    integer, parameter :: field_name_len = 64
+    integer :: ierr
+    integer :: ncid
+    integer :: dimid_x
+    integer :: dimid_y
+    integer :: nglobal
+    integer :: i
+    integer, allocatable :: varids(:)
+    character(len=field_name_len) :: field_name
     real*8, allocatable :: data(:)
+    real*8, allocatable :: data_global(:)
+    real*8, allocatable :: data_2d(:,:)
+
+    character(len=field_name_len), parameter :: fields(23) = [character(len=field_name_len) :: &
+         'Sl_t', 'Sl_tref', 'Sl_qref', 'Sl_avsdr', 'Sl_anidr', 'Sl_avsdf', 'Sl_anidf', &
+         'Sl_snowh', 'Sl_u10', 'Sl_fv', 'Sl_ram1', 'Sl_z0m', &
+         'Fall_taux', 'Fall_tauy', 'Fall_lat', 'Fall_sen', 'Fall_lwup', 'Fall_evap', 'Fall_swnet', &
+         'Fall_flxdst1', 'Fall_flxdst2', 'Fall_flxdst3', 'Fall_flxdst4']
     ! --------------------------------------------
 
-    lsize = size(atm_global_index)
-    allocate(data(lsize))
+    if (masterproc) then
+       ! Use an arbitrary time rather than trying to figure out the correct time stamp. This
+       ! works because this subroutine is only called once, at the end of the run
+       ierr = nf90_create(trim(caseid)//'.atm.h0.0001-01.nc', nf90_clobber, ncid)
+       if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_create atm driver output file')
 
-    call lilac_atmcap_lnd2atm('Sl_t'     , data)
-    call lilac_atmcap_lnd2atm('Sl_tref'  , data)
-    call lilac_atmcap_lnd2atm('Sl_qref'  , data)
-    call lilac_atmcap_lnd2atm('Sl_avsdr' , data)
-    call lilac_atmcap_lnd2atm('Sl_anidr' , data)
-    call lilac_atmcap_lnd2atm('Sl_avsdf' , data)
-    call lilac_atmcap_lnd2atm('Sl_anidf' , data)
-    call lilac_atmcap_lnd2atm('Sl_snowh' , data)
-    call lilac_atmcap_lnd2atm('Sl_u10'   , data)
-    call lilac_atmcap_lnd2atm('Sl_fv'    , data)
-    call lilac_atmcap_lnd2atm('Sl_ram1'  , data)
+       ierr = nf90_def_dim(ncid, 'atm_nx', atm_global_nx, dimid_x)
+       if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_def_dim nx atm driver output file')
+       ierr = nf90_def_dim(ncid, 'atm_ny', atm_global_ny, dimid_y)
+       if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_def_dim ny atm driver output file')
 
-  end subroutine lilac_to_atm_driver
+       allocate(varids(size(fields)))
+       do i = 1, size(fields)
+          field_name = fields(i)
+          ierr = nf90_def_var(ncid, field_name, nf90_double, [dimid_x, dimid_y], varids(i))
+          if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_def_var atm driver output file: '//trim(field_name))
+       end do
+
+       ierr = nf90_enddef(ncid)
+       if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_enddef atm driver output file')
+    end if
+
+    allocate(data(nlocal))
+    nglobal = atm_global_nx * atm_global_ny
+    if (masterproc) then
+       allocate(data_global(nglobal))
+       allocate(data_2d(atm_global_nx, atm_global_ny))
+    end if
+
+    do i = 1, size(fields)
+       field_name = fields(i)
+       call lilac_atmcap_lnd2atm(field_name, data)
+
+       ! Because of the way we set up the decomposition, we can use a simple mpi_gather
+       ! without needing to worry about any rearrangement, and points will appear in the
+       ! correct order on the master proc. Specifically, we rely on the fact that the
+       ! first points are assigned to task 0, then the next points to task 1, etc.
+       call mpi_gather(data, size(data), mpi_double, data_global, nglobal, mpi_double, 0, &
+            mpi_comm_world, ierr)
+       if (ierr .ne. MPI_SUCCESS) then
+          call shr_sys_abort(' ERROR in mpi_gather for ' // trim(field_name))
+       end if
+
+       if (masterproc) then
+          data_2d = reshape(data_global, [atm_global_nx, atm_global_ny])
+          ierr = nf90_put_var(ncid, varids(i), data_2d)
+          if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_put_var atm driver output file: '//trim(field_name))
+       end if
+    end do
+
+    if (masterproc) then
+       ierr = nf90_close(ncid)
+       if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_close atm driver output file')
+    end if
+
+  end subroutine write_lilac_to_atm_driver_fields
 
 end program
