@@ -674,22 +674,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(nitrogen_patch) == (/bounds%endp/)), 'ubnd(nitro)'//sourcefile, lineno)
     SHR_ASSERT_ALL_FL((ubound(pc)             == (/bounds%endp/)), 'ubnd(pc)'//sourcefile, lineno)
     SHR_ASSERT_ALL_FL((ubound(pn)             == (/bounds%endp/)), 'ubnd(pn)'//sourcefile, lineno)
-!#ifndef _OPENMP
-!    if ( present(c13) .and. use_c13 )then
-!       SHR_ASSERT_ALL_FL((lbound(c13)         == (/bounds%begp/)), 'lbnd(c13)'//sourcefile, lineno)
-!       SHR_ASSERT_ALL_FL((ubound(c13)         == (/bounds%endp/)), 'ubnd(c13)'//sourcefile, lineno)
-!    end if
-!    if ( present(c14) .and. use_c14 )then
-!       SHR_ASSERT_ALL_FL((lbound(c14)         == (/bounds%begp/)), 'lbnd(c14)'//sourcefile, lineno)
-!       SHR_ASSERT_ALL_FL((ubound(c14)         == (/bounds%endp/)), 'ubnd(c14)'//sourcefile, lineno)
-!    end if
-!#endif
-!    if ( present(pc13) )then
-!       SHR_ASSERT_ALL_FL((ubound(pc13)        == (/bounds%endp/)), 'ubnd(pc13)'//sourcefile, lineno)
-!    end if
-!    if ( present(pc14) )then
-!       SHR_ASSERT_ALL_FL((ubound(pc14)        == (/bounds%endp/)), 'ubnd(pc14)'//sourcefile, lineno)
-!    end if
+
     ! patch loop
     lcroponly = .false.
     if ( present(croponly) )then
@@ -718,15 +703,6 @@ contains
 
              pn(p) = pn(p) + nitrogen_patch(p)
              nitrogen_patch(p) = 0._r8
-   
-             !if ( use_c13 .and. present(c13) .and. present(pc13) ) then
-             !   pc13(p) = pc13(p) + c13(p)
-             !   c13(p) = 0._r8
-             !endif
-             !if ( use_c14 .and. present(c14) .and. present(pc14)) then
-             !   pc14(p) = pc14(p) + c14(p)
-             !   c14(p) = 0._r8
-             !endif
           end if
        end if
     end do
@@ -765,25 +741,7 @@ contains
 
     SHR_ASSERT_ALL_FL((ubound(carbon_patch)   == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(pc)             == (/bounds%endp/)), sourcefile, __LINE__)
-!#ifndef _OPENMP
-!    if ( present(c13) .and. use_c13 )then
-!       SHR_ASSERT_ALL_FL((lbound(c13)         == (/bounds%begp/)), sourcefile, __LINE__)
-!       SHR_ASSERT_ALL_FL((ubound(c13)         == (/bounds%endp/)), sourcefile, __LINE__)
-!    end if
-!    if ( present(c14) .and. use_c14 )then
-!       SHR_ASSERT_ALL_FL((lbound(c14)         == (/bounds%begp/)), sourcefile, __LINE__)
-!       SHR_ASSERT_ALL_FL((ubound(c14)         == (/bounds%endp/)), sourcefile, __LINE__)
-!    end if
-!#endif
-!    if ( present(pc13) )then
-!       SHR_ASSERT_ALL_FL((ubound(pc13)        == (/bounds%endp/)), sourcefile, __LINE__)
-!    end if
-!    if ( present(pc14) )then
-!       SHR_ASSERT_ALL_FL((ubound(pc14)        == (/bounds%endp/)), sourcefile, __LINE__)
-!    end if
-!    if ( -ccrit < cnegcrit )then
-!        call endrun(msg='ERROR: cnegcrit should be less than -ccrit: '//errMsg(sourcefile, lineno))
-!    end if
+
     lcroponly = .false.
     if ( present(croponly) )then
       if ( croponly ) lcroponly = .true.
@@ -803,15 +761,6 @@ contains
           else if ( abs(carbon_patch(p)) < ccrit) then
              pc(p) = pc(p) + carbon_patch(p)
              carbon_patch(p) = 0._r8
-   
-             !if ( use_c13 .and. present(c13) .and. present(pc13) ) then
-             !   pc13(p) = pc13(p) + c13(p)
-             !   c13(p) = 0._r8
-             !endif
-             !if ( use_c14 .and. present(c14)  .and. present(pc14)) then
-             !   pc14(p) = pc14(p) + c14(p)
-             !   c14(p) = 0._r8
-             !endif
           end if
        end if
     end do
