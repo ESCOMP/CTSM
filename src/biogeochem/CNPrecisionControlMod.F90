@@ -208,15 +208,16 @@ contains
                                 ns%leafn_patch(bounds%begp:bounds%endp), &
                                 pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
+
       if (use_c13) then
-         call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-              c13cs%leafc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-              __LINE__)
-      end if
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%leafc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+                         end if
       if (use_c14) then
-         call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-              c14cs%leafc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-              __LINE__)
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%leafc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
       end if
 
 
@@ -225,14 +226,14 @@ contains
                                 ns%leafn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
       if (use_c13) then
-         call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-              c13cs%leafc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-              __LINE__)
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%leafc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
       end if
       if (use_c14) then
-         call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-              c14cs%leafc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-              __LINE__)
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                 c14cs%leafc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                 __LINE__)
       end if
 
       ! leaf transfer C and N
@@ -240,14 +241,14 @@ contains
                                 ns%leafn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
       if (use_c13) then
-         call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-              c13cs%leafc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-              __LINE__)
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%leafc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
       end if
       if (use_c14) then
-         call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-              c14cs%leafc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-              __LINE__)
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%leafc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
       end if
 
       ! froot C and N
@@ -258,30 +259,30 @@ contains
                                    ns%frootn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                    num_truncatep, filter_truncatep, allowneg=.true.)
           if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%frootc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c13cs%frootc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                      __LINE__)
           end if
           if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%frootc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c14cs%frootc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                      __LINE__)
           end if
       end if
 
       ! froot storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%frootc_storage_patch(bounds%begp:bounds%endp), &
-                      ns%frootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
-                      __LINE__, num_truncatep, filter_truncatep)
+                                ns%frootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
+                                __LINE__, num_truncatep, filter_truncatep)
       if (use_c13) then
-         call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-              c13cs%frootc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-              __LINE__)
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%frootc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
       end if
       if (use_c14) then
-         call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-              c14cs%frootc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-              __LINE__)
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%frootc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
       end if
 
       ! froot transfer C and N
@@ -289,14 +290,14 @@ contains
                                 ns%frootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
       if (use_c13) then
-         call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-              c13cs%frootc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-              __LINE__)
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%frootc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
       end if
       if (use_c14) then
-         call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-              c14cs%frootc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-              __LINE__)
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%frootc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
       end if
 
       if ( use_crop )then
@@ -304,47 +305,47 @@ contains
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_patch(bounds%begp:bounds%endp), &
                                    ns%grainn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                    num_truncatep, filter_truncatep, croponly=.true. )
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%grainc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%grainc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+         if (use_c13) then
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c13cs%grainc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                      __LINE__)
+         end if
+         if (use_c14) then
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c14cs%grainc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                      __LINE__)
+         end if
 
          ! grain storage C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_storage_patch(bounds%begp:bounds%endp), &
                                    ns%grainn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
                                    __LINE__, num_truncatep, filter_truncatep, croponly=.true. )
 
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%grainc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%grainc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+         if (use_c13) then
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c13cs%grainc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                      __LINE__)
+         end if
+         if (use_c14) then
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c14cs%grainc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                      __LINE__)
+         end if
 
          ! grain transfer C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%grainc_xfer_patch(bounds%begp:bounds%endp), &
                                    ns%grainn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                    num_truncatep, filter_truncatep, croponly=.true.)
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%grainc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%grainc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+         if (use_c13) then
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c13cs%grainc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                      __LINE__)
+         end if
+         if (use_c14) then
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c14cs%grainc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                      __LINE__)
+         end if
 
          ! grain transfer C and N
          call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), &
@@ -353,14 +354,14 @@ contains
                                    num_truncatep, filter_truncatep, &
                                    allowneg=.true., croponly=.true. )
           if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c13cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                      __LINE__)
           end if
           if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c14cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                      __LINE__)
           end if
 
       end if
@@ -369,229 +370,223 @@ contains
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livestemc_patch(bounds%begp:bounds%endp), &
                                 ns%livestemn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%livestemc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%livestemc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%livestemc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%livestemc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! livestem storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livestemc_storage_patch(bounds%begp:bounds%endp), &
-                      ns%livestemn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
-                      __LINE__, num_truncatep, filter_truncatep)
+                                ns%livestemn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
+                                __LINE__, num_truncatep, filter_truncatep)
 
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%livestemc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%livestemc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%livestemc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%livestemc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
       ! livestem transfer C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livestemc_xfer_patch(bounds%begp:bounds%endp), &
-                      ns%livestemn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
-                      __LINE__, num_truncatep, filter_truncatep)
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%livestemc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%livestemc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+                                ns%livestemn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
+                                __LINE__, num_truncatep, filter_truncatep)
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%livestemc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%livestemc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! deadstem C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadstemc_patch(bounds%begp:bounds%endp), &
                                 ns%deadstemn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%deadstemc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%deadstemc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%deadstemc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%deadstemc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
       ! deadstem storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadstemc_storage_patch(bounds%begp:bounds%endp), &
-                      ns%deadstemn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
-                      __LINE__, num_truncatep, filter_truncatep)
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%deadstemc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%deadstemc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+                                ns%deadstemn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
+                                __LINE__, num_truncatep, filter_truncatep)
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%deadstemc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%deadstemc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! deadstem transfer C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadstemc_xfer_patch(bounds%begp:bounds%endp), &
-                      ns%deadstemn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
-                      __LINE__, num_truncatep, filter_truncatep)
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%deadstemc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%deadstemc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+                                ns%deadstemn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
+                                __LINE__, num_truncatep, filter_truncatep)
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%deadstemc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%deadstemc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! livecroot C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livecrootc_patch(bounds%begp:bounds%endp), &
                                 ns%livecrootn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
-                                   num_truncatep, filter_truncatep)
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%livecrootc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%livecrootc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+                                num_truncatep, filter_truncatep)
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%livecrootc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%livecrootc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! livecroot storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livecrootc_storage_patch(bounds%begp:bounds%endp), &
-                      ns%livecrootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
-                      __LINE__, num_truncatep, filter_truncatep)
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%livecrootc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%livecrootc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+                                ns%livecrootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
+                                __LINE__, num_truncatep, filter_truncatep)
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%livecrootc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%livecrootc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! livecroot transfer C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livecrootc_xfer_patch(bounds%begp:bounds%endp), &
-                      ns%livecrootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
-                      __LINE__, num_truncatep, filter_truncatep)
+                                ns%livecrootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
+                                __LINE__, num_truncatep, filter_truncatep)
 
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%livecrootc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%livecrootc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%livecrootc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%livecrootc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! deadcroot C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadcrootc_patch(bounds%begp:bounds%endp), &
                                 ns%deadcrootn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%deadcrootc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%deadcrootc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%deadcrootc_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%deadcrootc_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! deadcroot storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadcrootc_storage_patch(bounds%begp:bounds%endp), &
-                      ns%deadcrootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
-                      __LINE__, num_truncatep, filter_truncatep)
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%deadcrootc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%deadcrootc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+                                ns%deadcrootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
+                                __LINE__, num_truncatep, filter_truncatep)
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%deadcrootc_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%deadcrootc_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! deadcroot transfer C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadcrootc_xfer_patch(bounds%begp:bounds%endp), &
-                      ns%deadcrootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
-                      __LINE__, num_truncatep, filter_truncatep)
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%deadcrootc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%deadcrootc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+                                ns%deadcrootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
+                                __LINE__, num_truncatep, filter_truncatep)
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%deadcrootc_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%deadcrootc_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! gresp_storage (C only)
       call TruncateCStates( bounds, filter_soilp, num_soilp, cs%gresp_storage_patch(bounds%begp:bounds%endp), &
-                            pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep) 
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%gresp_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%gresp_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+                            pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep)
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%gresp_storage_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%gresp_storage_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! gresp_xfer(c only)
       call TruncateCStates( bounds, filter_soilp, num_soilp, cs%gresp_xfer_patch(bounds%begp:bounds%endp), &
-                            pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep) 
-                            !pc(bounds%begp:), __LINE__, &
-                            !c13=c13cs%gresp_xfer_patch, c14=c14cs%gresp_xfer_patch, &
-                            !pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:) )
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%gresp_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%gresp_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+                            pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep)
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%gresp_xfer_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%gresp_xfer_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       ! cpool (C only)
       call TruncateCStates( bounds, filter_soilp, num_soilp, cs%cpool_patch(bounds%begp:bounds%endp), &
-                            pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep) 
-                            !pc(bounds%begp:), __LINE__, &
-                            !c13=c13cs%cpool_patch, c14=c14cs%cpool_patch, &
-                            !pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:) )
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%cpool_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%cpool_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+                            pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep)
+      if (use_c13) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c13cs%cpool_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
+      if (use_c14) then
+         call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                  c14cs%cpool_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                  __LINE__)
+      end if
 
       if ( use_crop )then
          ! xsmrpool (C only)
@@ -599,19 +594,16 @@ contains
          call TruncateCStates( bounds, filter_soilp, num_soilp, cs%xsmrpool_patch(bounds%begp:bounds%endp), &
                                 pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep, &
                                 allowneg=.true., croponly=.true. )
-                               !pc(bounds%begp:), __LINE__, &
-                               !c13=c13cs%xsmrpool_patch, c14=c14cs%xsmrpool_patch, &
-                               !pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), allowneg=.true., croponly=.true. )
-          if (use_c13) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c13cs%xsmrpool_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
-          if (use_c14) then
-             call TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-                  c14cs%xsmrpool_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
-                  __LINE__)
-          end if
+         if (use_c13) then
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c13cs%xsmrpool_patch(bounds%begp:bounds%endp), pc13(bounds%begp:bounds%endp), &
+                                      __LINE__)
+         end if
+         if (use_c14) then
+             call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                      c14cs%xsmrpool_patch(bounds%begp:bounds%endp), pc14(bounds%begp:bounds%endp), &
+                                      __LINE__)
+         end if
 
       end if
 
@@ -763,8 +755,8 @@ contains
     real(r8)         , intent(inout) :: carbon_patch(bounds%begp:)
     real(r8)         , intent(inout) :: pc(bounds%begp:)
     integer          , intent(in)    :: lineno
-    integer          ,  intent(out)  :: num_truncatep       ! number of points in filter_truncatep
-    integer          ,  intent(out)  :: filter_truncatep(:) ! filter for points that need truncation
+    integer          , intent(out)   :: num_truncatep       ! number of points in filter_truncatep
+    integer          , intent(out)   :: filter_truncatep(:) ! filter for points that need truncation
     logical          , intent(in)   , optional :: croponly
     logical          , intent(in)   , optional :: allowneg
 
