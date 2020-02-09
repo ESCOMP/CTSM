@@ -380,18 +380,16 @@ contains
           if (patchcounter > 0) then
              ratm = ratm / patchcounter
           else
-             ! grass not found, take something.
-             ! TODO change to average over everything
+             ! grass not found, take average over everything
              do p = col%patchi(c), col%patchf(c)
                 if (.not. patch%active(p) .or. ram1(p) == spval .or. rb1(p) == spval) cycle
-                ratm = ram1(p) + rb1(p)
-                exit
+                ratm = ratm + ram1(p) + rb1(p)
+                patchcounter = patchcounter + 1
              end do
-             if (p == col%patchf(c) + 1) then
+             if (patchcounter == 0) then
                 call endrun(msg='Could not find any useful pft for ram1')
-                ! Nothing found. We shouldn't be here.
-                ratm = 150.0_r8
              end if
+             ratm = ratm / patchcounter
           end if
           ns%fan_grz_fract_col(c) = 1.0_r8 ! for crops handled by handle_storage
        end if
@@ -824,25 +822,21 @@ contains
     end do
 
     do g = begg, endg
-       ! First find out if there are grasslands in this cell. If yes, a fraction of
-       ! manure can be diverted to them before storage.
+       ! First find out if there are grasslands in this cell. If yes, a fraction of manure
+       ! can be diverted to them before storage. At this time, we assume that the
+       ! grasslands are always found in the natural vegetation column.
        col_grass = ispval
-       do il = 1, max_lunit
-          l = grc%landunit_indices(il, g)
-          if (l == ispval) cycle
-          if (lun%itype(l) == istsoil) then
-             do p = lun%patchi(l), lun%patchf(l)
-                is_grass = patch%itype(p) == nc4_grass &
-                     .or. patch%itype(p) == nc3_nonarctic_grass &
-                     .or. patch%itype(p) == nc3_arctic_grass
-                if (is_grass .and. col%wtgcell(patch%column(p)) > 1e-6) then
-                   col_grass = patch%column(p)
-                   exit
-                end if
-             end do
+       l = grc%landunit_indices(istsoil, g)
+       do c = lun%coli(l), lun%colf(l)
+          if (col%itype(c) == istsoil) then
+             col_grass = c
+             exit
           end if
-          if (col_grass /= ispval) exit
        end do
+       if (col_grass == ispval) then
+          call endrun(msg='Failed to find net veg column')
+       end if
+
        ! Transfer of manure from all crop columns to the natural vegetation column:
        flux_grass_graze = 0.0_r8
        flux_grass_spread = 0.0_r8
@@ -880,7 +874,6 @@ contains
              counter = 0
              if (col_grass == c) call endrun('Something wrong with the indices')
              if (col%patchi(c) /= col%patchf(c)) then
-                print *, 'wtf', c, col%patchi(c), col%patchf(c), l, g
                 call endrun(msg="ERROR crop column has multiple patches")
              end if
 
