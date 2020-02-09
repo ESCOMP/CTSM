@@ -287,13 +287,12 @@ contains
     dt = real(get_step_size(), r8)
     do_balance_checks = balance_check_freq > 0 .and. mod(get_nstep(), balance_check_freq) == 0
 
-    ! TODO rename forc_ndep_nitr_grz to fract_no3_grc
     associate(&
          ns => soilbiogeochem_nitrogenstate_inst, &
          nf => soilbiogeochem_nitrogenflux_inst, &
          cnv_nf => cnveg_nitrogenflux_inst, &
-         fract_urea => atm2lnd_inst%forc_ndep_urea_grc, & ! Fraction of urea in fertilizer N
-         fract_no3 => atm2lnd_inst%forc_ndep_nitr_grc, &   ! Fraction of NO3 in fertilizer N
+         forc_ndep_urea => atm2lnd_inst%forc_ndep_urea_grc, & ! Fraction of urea in fertilizer N
+         forc_ndep_no3 => atm2lnd_inst%forc_ndep_nitr_grc, &   ! Fraction of NO3 in fertilizer N
          ram1 => frictionvel_inst%ram1_patch, & ! Aerodynamic resistance, s/m
          rb1 => frictionvel_inst%rb1_patch)     ! Quasi-laminar layer resistance, s/m
       
@@ -536,24 +535,24 @@ contains
        ! Fertilizer
        ! split fertilizer N berween urea, no3 and the remaining other ammonium-N.
        fert_total = nf%fert_n_appl_col(c)
-       !fract_urea = atm2lnd_inst%forc_ndep_urea_grc(g)
-       !fract_no3 = atm2lnd_inst%forc_ndep_nitr_grc(g)
+       !forc_ndep_urea = atm2lnd_inst%forc_ndep_urea_grc(g)
+       !forc_ndep_no3 = atm2lnd_inst%forc_ndep_nitr_grc(g)
 
        ! A fraction of fertilizer N is made unavailable by mechanical incorporation, this
        ! will be added directly to the to-soil flux (tan) or no3 production (no3) below.
-       fert_inc_tan = fert_total * fert_incorp_reduct * (1.0 - fract_no3(g))
+       fert_inc_tan = fert_total * fert_incorp_reduct * (1.0 - forc_ndep_no3(g))
        
-       if (fract_urea(g) < 0 .or. fract_no3(g) < 0 .or. fract_urea(g) + fract_no3(g) > 1) then
+       if (forc_ndep_urea(g) < 0 .or. forc_ndep_no3(g) < 0 .or. forc_ndep_urea(g) + forc_ndep_no3(g) > 1) then
           call endrun('bad fertilizer fractions')
        end if
-       fert_urea = fert_total * fract_urea(g) * (1.0_r8 - fert_incorp_reduct)
+       fert_urea = fert_total * forc_ndep_urea(g) * (1.0_r8 - fert_incorp_reduct)
        
        ! Fertilizer nitrate goes straight to the no3_prod, incorporated or not.
-       fert_no3 = fert_total * fract_no3(g)
-       fert_generic = fert_total * (1.0_r8 - fract_urea(g) - fract_no3(g)) &
+       fert_no3 = fert_total * forc_ndep_no3(g)
+       fert_generic = fert_total * (1.0_r8 - forc_ndep_urea(g) - forc_ndep_no3(g)) &
                                  * (1.0_r8 - fert_incorp_reduct)
        ! Below also includes the incorporated N:
-       nf%otherfert_n_appl_col(c) = fert_total * (1.0_r8 - fract_urea(g)) 
+       nf%otherfert_n_appl_col(c) = fert_total * (1.0_r8 - forc_ndep_urea(g)) 
        
        ! Urea decomposition 
        ! 
