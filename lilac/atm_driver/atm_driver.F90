@@ -508,6 +508,8 @@ contains
     if (masterproc) then
        allocate(data_global(nglobal))
        allocate(data_2d(atm_global_nx, atm_global_ny))
+    else
+       allocate(data_global(1))
     end if
 
     do i = 1, size(fields)
