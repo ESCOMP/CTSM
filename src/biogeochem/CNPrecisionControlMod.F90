@@ -637,9 +637,6 @@ contains
 
  subroutine TruncateCandNStates( bounds, filter_soilp, num_soilp, carbon_patch, nitrogen_patch, pc, pn, lineno, &
                                  num_truncatep, filter_truncatep, croponly, allowneg )
-
- !subroutine TruncateCandNStates( bounds, filter_soilp, num_soilp, carbon_patch, nitrogen_patch, pc, pn, lineno, c13, c14, &
- !                                pc13, pc14, croponly, allowneg )
     !
     ! !DESCRIPTION:
     ! Truncate paired Carbon and Nitrogen states. If a paired carbon and nitrogen state iare too small truncate 
