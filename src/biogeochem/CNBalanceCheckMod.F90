@@ -223,6 +223,7 @@ contains
          write(iulog,*)'col_fire_closs           = ',col_fire_closs(c)*dt
          write(iulog,*)'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
+         write(iulog,*)'gru_wood_productc_gain   = ',gru_wood_productc_gain(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
          call endrun(msg=errMsg(sourcefile, __LINE__))
