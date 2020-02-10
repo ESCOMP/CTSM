@@ -61,6 +61,7 @@ library (I), do the following:
    > basedir=/glade/p/cgd/tss/ctsm_baselines/lilac_20191202
    > cprnc test_lilac.clm2.h0.2000-01-03-00000.nc $basedir/test_lilac.clm2.h0.2000-01-03-00000.nc | tail -30
    > cprnc test_lilac.lilac.hi.2000-01-02-81000.nc $basedir/test_lilac.lilac.hi.2000-01-02-81000.nc | tail -30
+   > cprnc test_lilac.atm.h0.0001-01.nc $basedir/test_lilac.atm.h0.0001-01.nc | tail -30
 
 5) if there are differences, and those are intentional, then create new
    baselines
