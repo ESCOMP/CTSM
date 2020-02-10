@@ -21,7 +21,7 @@ program atm_driver
   use netcdf      , only : nf90_def_dim, nf90_def_var, nf90_put_var
   use netcdf      , only : nf90_inq_dimid, nf90_inquire_dimension, nf90_inq_varid, nf90_get_var
   use mpi         , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
-  use mpi         , only : MPI_GATHER, MPI_DOUBLE
+  use mpi         , only : MPI_GATHER, MPI_INT, MPI_DOUBLE
   use lilac_mod   , only : lilac_init, lilac_run, lilac_final
   use lilac_atmcap, only : lilac_atmcap_atm2lnd, lilac_atmcap_lnd2atm
   use shr_cal_mod , only : shr_cal_date2ymd
@@ -259,6 +259,7 @@ program atm_driver
        nlocal = nlocal, &
        atm_global_nx = atm_global_nx, &
        atm_global_ny = atm_global_ny, &
+       ntasks = ntasks, &
        masterproc = masterproc)
 
   !------------------------------------------------------------------------
@@ -446,7 +447,8 @@ contains
   end subroutine atm_driver_to_lilac
 
   !========================================================================
-  subroutine write_lilac_to_atm_driver_fields(caseid, nlocal, atm_global_nx, atm_global_ny, masterproc)
+  subroutine write_lilac_to_atm_driver_fields(caseid, nlocal, atm_global_nx, &
+       atm_global_ny, ntasks, masterproc)
 
     ! Fetch lnd2atm fields from LILAC and write them out.
     !
@@ -458,6 +460,7 @@ contains
     integer, intent(in) :: nlocal
     integer, intent(in) :: atm_global_nx
     integer, intent(in) :: atm_global_ny
+    integer, intent(in) :: ntasks
     logical, intent(in) :: masterproc
 
     ! local variables
@@ -470,6 +473,8 @@ contains
     integer :: i
     integer, allocatable :: varids(:)
     character(len=field_name_len) :: field_name
+    integer, allocatable :: counts(:)
+    integer, allocatable :: displacements(:)
     real*8, allocatable :: data(:)
     real*8, allocatable :: data_global(:)
     real*8, allocatable :: data_2d(:,:)
@@ -480,6 +485,10 @@ contains
          'Fall_taux', 'Fall_tauy', 'Fall_lat', 'Fall_sen', 'Fall_lwup', 'Fall_evap', 'Fall_swnet', &
          'Fall_flxdst1', 'Fall_flxdst2', 'Fall_flxdst3', 'Fall_flxdst4']
     ! --------------------------------------------
+
+    ! ------------------------------------------------------------------------
+    ! Set up output file
+    ! ------------------------------------------------------------------------
 
     if (masterproc) then
        ! Use an arbitrary time rather than trying to figure out the correct time stamp. This
@@ -503,27 +512,52 @@ contains
        if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_enddef atm driver output file')
     end if
 
+    ! ------------------------------------------------------------------------
+    ! Determine number of points on each processor and set up arrays needed for gathering
+    ! data to master proc
+    ! ------------------------------------------------------------------------
+
     allocate(data(nlocal))
     nglobal = atm_global_nx * atm_global_ny
     if (masterproc) then
+       allocate(counts(ntasks))
+       allocate(displacements(ntasks))
        allocate(data_global(nglobal))
        allocate(data_2d(atm_global_nx, atm_global_ny))
     else
+       allocate(counts(1))
+       allocate(displacements(1))
        allocate(data_global(1))
     end if
+
+    call mpi_gather(nlocal, 1, mpi_int, counts, 1, mpi_int, 0, mpi_comm_world, ierr)
+    if (ierr .ne. MPI_SUCCESS) then
+       call shr_sys_abort(' ERROR in mpi_gather for counts')
+    end if
+
+    if (masterproc) then
+       displacements(1) = 0
+       do i = 2, ntasks
+          displacements(i) = displacements(i-1) + counts(i-1)
+       end do
+    end if
+
+    ! ------------------------------------------------------------------------
+    ! Retrieve data for each field, gather to master and write to file
+    ! ------------------------------------------------------------------------
 
     do i = 1, size(fields)
        field_name = fields(i)
        call lilac_atmcap_lnd2atm(field_name, data)
 
-       ! Because of the way we set up the decomposition, we can use a simple mpi_gather
+       ! Because of the way we set up the decomposition, we can use a simple mpi_gatherv
        ! without needing to worry about any rearrangement, and points will appear in the
        ! correct order on the master proc. Specifically, we rely on the fact that the
        ! first points are assigned to task 0, then the next points to task 1, etc.
-       call mpi_gather(data, size(data), mpi_double, data_global, nglobal, mpi_double, 0, &
-            mpi_comm_world, ierr)
+       call mpi_gatherv(data, size(data), mpi_double, data_global, counts, displacements, &
+            mpi_double, 0, mpi_comm_world, ierr)
        if (ierr .ne. MPI_SUCCESS) then
-          call shr_sys_abort(' ERROR in mpi_gather for ' // trim(field_name))
+          call shr_sys_abort(' ERROR in mpi_gatherv for ' // trim(field_name))
        end if
 
        if (masterproc) then
