@@ -2059,8 +2059,8 @@ contains
     
     if(use_fates)then
        call ncd_defdim(lnfid, 'fates_levscag', nlevsclass * nlevage, dimid)
-       call ncd_defdim(lnfid, 'fates_levscagpf', nlevsclass * nlevage * numpft_ed, dimid)
-       call ncd_defdim(lnfid, 'fates_levagepft', nlevage * numpft_ed, dimid)
+       call ncd_defdim(lnfid, 'fates_levscagpf', nlevsclass * nlevage * maxveg_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levagepft', nlevage * maxveg_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levscls', nlevsclass, dimid)
        call ncd_defdim(lnfid, 'fates_levpft', maxveg_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levage', nlevage, dimid)
@@ -4888,9 +4888,9 @@ contains
     case ('fates_levscag')
        num2d = nlevsclass*nlevage
     case ('fates_levscagpf')
-       num2d = nlevsclass*nlevage*numpft_ed
+       num2d = nlevsclass*nlevage*maxveg_fates
     case ('fates_levagepft')
-       num2d = nlevage*numpft_ed
+       num2d = nlevage*maxveg_fates
     case ('fates_levcan')
        num2d = nclmax
     case ('fates_levcnlf')
