@@ -321,7 +321,7 @@ contains
        call ESMF_StateGet(state, itemName=lfieldnamelist(n), field=lfield, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-       call field_getfldptr(lfield, fldptr1=dataPtr1d, fldptr2=dataPtr2d, rank=lrank, rc=rc)
+       call field_getfldptr(lfield, rc=rc, fldptr1=dataPtr1d, fldptr2=dataPtr2d, rank=lrank)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
 
        if (lrank == 0) then
@@ -354,7 +354,7 @@ contains
 
 !===============================================================================
 
-  subroutine field_getfldptr(field, fldptr1, fldptr2, rank, abort, rc)
+  subroutine field_getfldptr(field, rc, fldptr1, fldptr2, rank, abort)
 
     ! ----------------------------------------------
     ! for a field, determine rank and return fldptr1 or fldptr2
@@ -364,11 +364,11 @@ contains
 
     ! input/output variables
     type(ESMF_Field)  , intent(in)              :: field
+    integer           , intent(out)             :: rc
     real(r8), pointer , intent(inout), optional :: fldptr1(:)
     real(r8), pointer , intent(inout), optional :: fldptr2(:,:)
     integer           , intent(out)  , optional :: rank
     logical           , intent(in)   , optional :: abort
-    integer           , intent(out)  , optional :: rc
 
     ! local variables
     type(ESMF_GeomType_Flag)    :: geomtype
@@ -378,13 +378,6 @@ contains
     logical                     :: labort
     character(len=*), parameter :: subname='(field_getfldptr)'
     ! ----------------------------------------------
-
-    if (.not.present(rc)) then
-       call ESMF_LogWrite(trim(subname)//": ERROR rc not present ", &
-            ESMF_LOGMSG_ERROR, line=__LINE__, file=u_FILE_u)
-       rc = ESMF_FAILURE
-       return
-    endif
 
     rc = ESMF_SUCCESS
 

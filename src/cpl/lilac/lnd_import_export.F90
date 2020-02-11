@@ -683,6 +683,7 @@ contains
     integer             , intent(out)   :: rc
 
     ! local variables
+    logical                     :: l_minus  ! local version of minus
     integer                     :: g, i, n
     real(R8), pointer           :: fldptr1d(:)
     real(R8), pointer           :: fldptr2d(:,:)
@@ -691,6 +692,11 @@ contains
     ! ----------------------------------------------
 
     rc = ESMF_SUCCESS
+
+    l_minus = .false.
+    if (present(minus)) then
+       l_minus = minus
+    end if
 
     ! get field pointer
     if (present(ungridded_index)) then
@@ -715,7 +721,7 @@ contains
           n = g - bounds%begg + 1
           fldptr2d(ungridded_index,n) = input(g)
        end do
-       if (present(minus)) then
+       if (l_minus) then
           fldptr2d(ungridded_index,:) = -fldptr2d(ungridded_index,:)
        end if
     else
@@ -724,7 +730,7 @@ contains
           n = g - bounds%begg + 1
           fldptr1d(n) = input(g)
        end do
-       if (present(minus)) then
+       if (l_minus) then
           fldptr1d(:) = -fldptr1d(:)
        end if
     end if
