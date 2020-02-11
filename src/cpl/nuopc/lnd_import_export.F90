@@ -989,7 +989,7 @@ contains
     if (num > fldsMax) then
        call ESMF_LogWrite(trim(subname)//": ERROR num > fldsMax "//trim(stdname), &
             ESMF_LOGMSG_ERROR, line=__LINE__, file=__FILE__)
-       return
+       call shr_sys_abort(trim(subname)//": ERROR: num > fldsMax")
     endif
     fldlist(num)%stdname = trim(stdname)
 
