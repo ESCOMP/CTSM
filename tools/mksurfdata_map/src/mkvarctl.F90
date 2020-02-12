@@ -22,6 +22,8 @@ module mkvarctl
   logical, public    :: outnc_double          ! output ALL data in files as 64-bit
   integer, public    :: outnc_dims = 2        ! only applicable to lat/lon grids
   logical, public    :: outnc_1d              ! true => output file is 1d  
+  logical, public    :: outnc_vic             ! true => output VIC fields
+  logical, public    :: outnc_3dglc           ! true => output 3D glacier fields
 
   character(len= 32), public :: mksrf_gridnm     = ' '  ! name of grid to use on output file
   character(len=256), public :: mksrf_fgrid      = ' '  ! land grid file name to use 
@@ -72,6 +74,7 @@ module mkvarctl
   character(len=256), public :: map_ftopostats  = ' ' ! Mapping file for topography statistics
   character(len=256), public :: map_fvic        = ' ' ! Mapping file for VIC parameters
   character(len=256), public :: map_fch4        = ' ' ! Mapping file for inversion-derived CH4 parameters
+  character(len=80) , public :: gitdescribe     = ' ' ! Description of model version from git
 !
 ! Variables to override data read in with
 ! (all_urban is mostly for single-point mode, but could be used for sensitivity studies)

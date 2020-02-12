@@ -215,7 +215,6 @@ end subroutine domain_clean
     write(iulog,*) '  domain_check decomped  = ',domain%decomped
     write(iulog,*) '  domain_check ns        = ',domain%ns
     write(iulog,*) '  domain_check ni,nj     = ',domain%ni,domain%nj
-    write(iulog,*) '  domain_check clmlevel  = ',trim(domain%clmlevel)
     write(iulog,*) '  domain_check nbeg,nend = ',domain%nbeg,domain%nend
     write(iulog,*) '  domain_check lonc      = ',minval(domain%lonc),maxval(domain%lonc)
     write(iulog,*) '  domain_check latc      = ',minval(domain%latc),maxval(domain%latc)

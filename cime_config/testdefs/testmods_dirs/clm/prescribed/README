@@ -1,0 +1,7 @@
+This test-mods turns on using the prescribed moisture streams file
+(rather than prognosing it in the model). And it turns on the lai streams
+to test that's working as well.
+
+The only resolution we currently have data for is f09, so this must be done
+at 0.9x1.25 resolution. And it makes the most sense for present day and
+Satellite Phenology (Sp).

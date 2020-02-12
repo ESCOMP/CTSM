@@ -22,6 +22,7 @@ module atm2lndMod
   use LandunitType   , only : lun                
   use ColumnType     , only : col
   use landunit_varcon, only : istice_mec
+  use glcBehaviorMod , only : glc_behavior_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -31,17 +32,17 @@ module atm2lndMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: downscale_forcings           ! Downscale atm forcing fields from gridcell to column
 
-  ! The following routines are public for the sake of unit testing; they should not be
+  ! The following routine is public for the sake of unit testing; it should not be
   ! called by production code outside this module
-  public :: partition_precip              ! Partition precipitation into rain/snow
-  public :: sens_heat_from_precip_conversion  ! Compute sensible heat flux needed to compensate for rain-snow conversion
+  public :: partition_precip             ! Partition precipitation into rain/snow
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: rhos  ! calculate atmospheric density
-  private :: repartition_rain_snow_one_col ! Re-partition precipitation for a single column
-  private :: downscale_longwave          ! Downscale longwave radiation from gridcell to column
-  private :: build_normalization         ! Compute normalization factors so that downscaled fields are conservative
-  private :: check_downscale_consistency ! Check consistency of downscaling
+  private :: rhos                             ! calculate atmospheric density
+  private :: repartition_rain_snow_one_col    ! Re-partition precipitation for a single column
+  private :: sens_heat_from_precip_conversion ! Compute sensible heat flux needed to compensate for rain-snow conversion
+  private :: downscale_longwave               ! Downscale longwave radiation from gridcell to column
+  private :: build_normalization              ! Compute normalization factors so that downscaled fields are conservative
+  private :: check_downscale_consistency      ! Check consistency of downscaling
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -51,7 +52,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine downscale_forcings(bounds, &
-       topo_inst, atm2lnd_inst, eflx_sh_precip_conversion)
+       topo_inst, glc_behavior, atm2lnd_inst, &
+       eflx_sh_precip_conversion, qflx_runoff_rain_to_snow_conversion)
     !
     ! !DESCRIPTION:
     ! Downscale atmospheric forcing fields from gridcell to column.
@@ -76,8 +78,10 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in)    :: bounds  
     class(topo_type)   , intent(in)    :: topo_inst
+    type(glc_behavior_type), intent(in) :: glc_behavior
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
     real(r8)           , intent(out)   :: eflx_sh_precip_conversion(bounds%begc:) ! sensible heat flux from precipitation conversion (W/m**2) [+ to atm]
+    real(r8)           , intent(inout) :: qflx_runoff_rain_to_snow_conversion(bounds%begc:) ! runoff flux from rain-to-snow conversion, when this conversion leads to immediate runoff rather than snow (mm H2O /s)
     !
     ! !LOCAL VARIABLES:
     integer :: g, l, c, fc         ! indices
@@ -96,6 +100,7 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_runoff_rain_to_snow_conversion) == [bounds%endc]), errMsg(sourcefile, __LINE__))
 
     associate(&
          ! Parameters:
@@ -207,8 +212,9 @@ contains
 
       end do
 
-      call partition_precip(bounds, atm2lnd_inst, &
-           eflx_sh_precip_conversion(bounds%begc:bounds%endc))
+      call partition_precip(bounds, glc_behavior, atm2lnd_inst, &
+           eflx_sh_precip_conversion(bounds%begc:bounds%endc), &
+           qflx_runoff_rain_to_snow_conversion(bounds%begc:bounds%endc))
 
       call downscale_longwave(bounds, downscale_filter_c, topo_inst, atm2lnd_inst)
 
@@ -245,7 +251,8 @@ contains
   end function rhos
 
   !-----------------------------------------------------------------------
-  subroutine partition_precip(bounds, atm2lnd_inst, eflx_sh_precip_conversion)
+  subroutine partition_precip(bounds, glc_behavior, atm2lnd_inst, &
+       eflx_sh_precip_conversion, qflx_runoff_rain_to_snow_conversion)
     !
     ! !DESCRIPTION:
     ! Partition precipitation into rain/snow based on temperature.
@@ -254,9 +261,11 @@ contains
     ! all points - not just those within the downscale filter.
     !
     ! !ARGUMENTS:
-    type(bounds_type)  , intent(in)    :: bounds  
+    type(bounds_type)  , intent(in)    :: bounds
+    type(glc_behavior_type), intent(in) :: glc_behavior
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
     real(r8), intent(inout) :: eflx_sh_precip_conversion(bounds%begc:) ! sensible heat flux from precipitation conversion (W/m**2) [+ to atm]
+    real(r8)           , intent(inout) :: qflx_runoff_rain_to_snow_conversion(bounds%begc:) ! runoff flux from rain-to-snow conversion, when this conversion leads to immediate runoff rather than snow (mm H2O /s)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,g      ! indices
@@ -269,6 +278,7 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_runoff_rain_to_snow_conversion) == [bounds%endc]), errMsg(sourcefile, __LINE__))
 
     associate(&
          ! Gridcell-level non-downscaled fields:
@@ -288,6 +298,7 @@ contains
           forc_rain_c(c)  = forc_rain_g(g)
           forc_snow_c(c)  = forc_snow_g(g)
           eflx_sh_precip_conversion(c) = 0._r8
+          qflx_runoff_rain_to_snow_conversion(c) = 0._r8
        end if
     end do
 
@@ -296,6 +307,7 @@ contains
        do c = bounds%begc, bounds%endc
           if (col%active(c)) then
              l = col%landunit(c)
+             g = col%gridcell(c)
              rain_old = forc_rain_c(c)
              snow_old = forc_snow_c(c)
              if (lun%itype(l) == istice_mec) then
@@ -311,11 +323,21 @@ contains
                   frac_rain_slope = frac_rain_slope, &
                   rain = forc_rain_c(c), &
                   snow = forc_snow_c(c))
+             if (glc_behavior%rain_to_snow_runs_off_grc(g)) then
+                ! Note that, despite being a flag in glc_behavior, this actually applies
+                ! to all landunits
+                if (forc_snow_c(c) > snow_old) then
+                   ! Instead of converting rain to snow, make it run off immediately
+                   qflx_runoff_rain_to_snow_conversion(c) = forc_snow_c(c) - snow_old
+                   forc_snow_c(c) = snow_old
+                end if
+             end if
              call sens_heat_from_precip_conversion(&
                   rain_old = rain_old, &
                   snow_old = snow_old, &
                   rain_new = forc_rain_c(c), &
                   snow_new = forc_snow_c(c), &
+                  rain_to_snow_runoff = qflx_runoff_rain_to_snow_conversion(c), &
                   sens_heat_flux = eflx_sh_precip_conversion(c))
           end if
        end do
@@ -361,7 +383,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine sens_heat_from_precip_conversion(rain_old, snow_old, rain_new, snow_new, &
-       sens_heat_flux)
+       rain_to_snow_runoff, sens_heat_flux)
     !
     ! !DESCRIPTION:
     ! Given old and new rain and snow amounts, compute the sensible heat flux needed to
@@ -374,6 +396,7 @@ contains
     real(r8), intent(in)  :: snow_old        ! [(mm water equivalent)/s]
     real(r8), intent(in)  :: rain_new        ! [mm/s]
     real(r8), intent(in)  :: snow_new        ! [(mm water equivalent)/s]
+    real(r8), intent(in)  :: rain_to_snow_runoff ! rain that, rather than being converted to snow, instead immediately runs off [mm/s]
     real(r8), intent(out) :: sens_heat_flux  ! [W/m^2]
     !
     ! !LOCAL VARIABLES:
@@ -388,10 +411,18 @@ contains
     !-----------------------------------------------------------------------
 
     total_old = rain_old + snow_old
-    total_new = rain_new + snow_new
+    total_new = rain_new + snow_new + rain_to_snow_runoff
     SHR_ASSERT(abs(total_new - total_old) <= (tol * total_old), subname//' ERROR: mismatch between old and new totals')
 
-    ! rain to snow releases energy, so results in a positive heat flux to atm
+    ! Rain to snow releases energy, so results in a positive heat flux to atm.
+    !
+    ! While perhaps not immediately obvious, we can calculate the energy flux entirely
+    ! based on the change in snow. This is because there are three possible conversions:
+    ! (1) snow to rain, (2) rain to snow, and (3) rain to runoff. (1) and (2) have a
+    ! change in rain that is exactly opposite the change in snow (so the difference in
+    ! snow is all we need to know); (3) doesn't result in any change in snow and also
+    ! doesn't result in any necessary heat flux, so just considering the change in snow
+    ! is again correct.
     rain_to_snow = snow_new - snow_old
     sens_heat_flux = rain_to_snow * mm_to_m * denh2o * hfus
 

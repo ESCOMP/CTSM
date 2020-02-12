@@ -9,7 +9,7 @@ module CNVegCarbonStateType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use pftconMod	     , only : noveg, npcropmin, pftcon
+  use pftconMod	     , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
   use clm_varctl     , only : iulog, use_cndv, use_crop
   use decompMod      , only : bounds_type
@@ -58,6 +58,7 @@ module CNVegCarbonStateType
      real(r8), pointer :: gresp_xfer_patch         (:) ! (gC/m2) growth respiration transfer
      real(r8), pointer :: cpool_patch              (:) ! (gC/m2) temporary photosynthate C pool
      real(r8), pointer :: xsmrpool_patch           (:) ! (gC/m2) abstract C pool to meet excess MR demand
+     real(r8), pointer :: xsmrpool_loss_patch      (:) ! (gC/m2) abstract C pool to meet excess MR demand loss
      real(r8), pointer :: ctrunc_patch             (:) ! (gC/m2) patch-level sink for C truncation
      real(r8), pointer :: woodc_patch              (:) ! (gC/m2) wood C
      real(r8), pointer :: leafcmax_patch           (:) ! (gC/m2) ann max leaf C
@@ -83,6 +84,7 @@ module CNVegCarbonStateType
      real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool
      real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
 
+     logical, private  :: dribble_crophrv_xsmrpool_2atm
    contains
 
      procedure , public  :: Init   
@@ -115,17 +117,20 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, carbon_type, ratio, NLFilename, &
-                  c12_cnveg_carbonstate_inst)
+                  dribble_crophrv_xsmrpool_2atm, c12_cnveg_carbonstate_inst)
 
     class(cnveg_carbonstate_type)                       :: this
     type(bounds_type)            , intent(in)           :: bounds  
     real(r8)                     , intent(in)           :: ratio
     character(len=*)             , intent(in)           :: carbon_type                ! Carbon isotope type C12, C13 or C1
     character(len=*)             , intent(in)           :: NLFilename                 ! Namelist filename
+    logical                      , intent(in)           :: dribble_crophrv_xsmrpool_2atm
     type(cnveg_carbonstate_type) , intent(in), optional :: c12_cnveg_carbonstate_inst ! cnveg_carbonstate for C12 (if C13 or C14)
     !-----------------------------------------------------------------------
 
     this%species = species_from_string(carbon_type)
+
+    this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
 
     call this%InitAllocate ( bounds)
     call this%InitReadNML  ( NLFilename )
@@ -239,6 +244,7 @@ contains
     allocate(this%gresp_xfer_patch         (begp:endp)) ; this%gresp_xfer_patch         (:) = nan
     allocate(this%cpool_patch              (begp:endp)) ; this%cpool_patch              (:) = nan
     allocate(this%xsmrpool_patch           (begp:endp)) ; this%xsmrpool_patch           (:) = nan
+    allocate(this%xsmrpool_loss_patch      (begp:endp)) ; this%xsmrpool_loss_patch      (:) = nan
     allocate(this%ctrunc_patch             (begp:endp)) ; this%ctrunc_patch             (:) = nan
     allocate(this%dispvegc_patch           (begp:endp)) ; this%dispvegc_patch           (:) = nan
     allocate(this%storvegc_patch           (begp:endp)) ; this%storvegc_patch           (:) = nan
@@ -312,6 +318,11 @@ contains
           call hist_addfld1d (fname='CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch)
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='XSMRPOOL_LOSS', units='gC/m^2', &
+               avgflag='A', long_name='temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
        
        this%woodc_patch(begp:endp) = spval
@@ -495,7 +506,7 @@ contains
        this%leafc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LEAFC', units='gC13/m^2', &
             avgflag='A', long_name='C13 leaf C', &
-            ptr_patch=this%leafc_patch)
+            ptr_patch=this%leafc_patch, default='inactive')
 
        this%leafc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LEAFC_STORAGE', units='gC13/m^2', &
@@ -515,7 +526,7 @@ contains
        this%frootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_FROOTC', units='gC13/m^2', &
             avgflag='A', long_name='C13 fine root C', &
-            ptr_patch=this%frootc_patch)
+            ptr_patch=this%frootc_patch, default='inactive')
 
        this%frootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_FROOTC_STORAGE', units='gC13/m^2', &
@@ -530,7 +541,7 @@ contains
        this%livestemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LIVESTEMC', units='gC13/m^2', &
             avgflag='A', long_name='C13 live stem C', &
-            ptr_patch=this%livestemc_patch)
+            ptr_patch=this%livestemc_patch, default='inactive')
 
        this%livestemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LIVESTEMC_STORAGE', units='gC13/m^2', &
@@ -545,7 +556,7 @@ contains
        this%deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DEADSTEMC', units='gC13/m^2', &
             avgflag='A', long_name='C13 dead stem C', &
-            ptr_patch=this%deadstemc_patch)
+            ptr_patch=this%deadstemc_patch, default='inactive')
 
        this%deadstemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DEADSTEMC_STORAGE', units='gC13/m^2', &
@@ -560,7 +571,7 @@ contains
        this%livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LIVECROOTC', units='gC13/m^2', &
             avgflag='A', long_name='C13 live coarse root C', &
-            ptr_patch=this%livecrootc_patch)
+            ptr_patch=this%livecrootc_patch, default='inactive')
 
        this%livecrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LIVECROOTC_STORAGE', units='gC13/m^2', &
@@ -575,7 +586,7 @@ contains
        this%deadcrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DEADCROOTC', units='gC13/m^2', &
             avgflag='A', long_name='C13 dead coarse root C', &
-            ptr_patch=this%deadcrootc_patch)
+            ptr_patch=this%deadcrootc_patch, default='inactive')
 
        this%deadcrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DEADCROOTC_STORAGE', units='gC13/m^2', &
@@ -600,12 +611,12 @@ contains
        this%cpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_CPOOL', units='gC13/m^2', &
             avgflag='A', long_name='C13 temporary photosynthate C pool', &
-            ptr_patch=this%cpool_patch)
+            ptr_patch=this%cpool_patch, default='inactive')
 
        this%xsmrpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_XSMRPOOL', units='gC13/m^2', &
             avgflag='A', long_name='C13 temporary photosynthate C pool', &
-            ptr_patch=this%xsmrpool_patch)
+            ptr_patch=this%xsmrpool_patch, default='inactive')
 
        this%ctrunc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_PFT_CTRUNC', units='gC13/m^2', &
@@ -615,12 +626,12 @@ contains
        this%dispvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DISPVEGC', units='gC13/m^2', &
             avgflag='A', long_name='C13 displayed veg carbon, excluding storage and cpool', &
-            ptr_patch=this%dispvegc_patch)
+            ptr_patch=this%dispvegc_patch, default='inactive')
 
        this%storvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_STORVEGC', units='gC13/m^2', &
             avgflag='A', long_name='C13 stored vegetation carbon, excluding cpool', &
-            ptr_patch=this%storvegc_patch)
+            ptr_patch=this%storvegc_patch, default='inactive')
 
        this%totvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_TOTVEGC', units='gC13/m^2', &
@@ -630,17 +641,17 @@ contains
        this%totc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_TOTPFTC', units='gC13/m^2', &
             avgflag='A', long_name='C13 total patch-level carbon, including cpool', &
-            ptr_patch=this%totc_patch)
+            ptr_patch=this%totc_patch, default='inactive')
 
        this%seedc_grc(begg:endg) = spval
        call hist_addfld1d (fname='C13_SEEDC', units='gC13/m^2', &
             avgflag='A', long_name='C13 pool for seeding new PFTs via dynamic landcover', &
-            ptr_gcell=this%seedc_grc)
+            ptr_gcell=this%seedc_grc, default='inactive')
 
        this%totc_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_TOTCOLC', units='gC13/m^2', &
             avgflag='A', long_name='C13 total column carbon, incl veg and cpool but excl product pools', &
-            ptr_col=this%totc_col)
+            ptr_col=this%totc_col, default='inactive')
 
        this%totecosysc_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_TOTECOSYSC', units='gC13/m^2', &
@@ -651,11 +662,16 @@ contains
           this%grainc_patch(begp:endp) = spval
           call hist_addfld1d (fname='C13_GRAINC', units='gC/m^2', &
                avgflag='A', long_name='C13 grain C (does not equal yield)', &
-               ptr_patch=this%grainc_patch)
+               ptr_patch=this%grainc_patch, default='inactive')
           this%cropseedc_deficit_patch(begp:endp) = spval
           call hist_addfld1d (fname='C13_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C13 C used for crop seed that needs to be repaid', &
-               ptr_patch=this%cropseedc_deficit_patch)
+               ptr_patch=this%cropseedc_deficit_patch, default='inactive')
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_XSMRPOOL_LOSS', units='gC13/m^2', &
+               avgflag='A', long_name='C13 temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
 
@@ -670,7 +686,7 @@ contains
        this%leafc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LEAFC', units='gC14/m^2', &
             avgflag='A', long_name='C14 leaf C', &
-            ptr_patch=this%leafc_patch)
+            ptr_patch=this%leafc_patch, default='inactive')
 
        this%leafc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LEAFC_STORAGE', units='gC14/m^2', &
@@ -690,7 +706,7 @@ contains
        this%frootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_FROOTC', units='gC14/m^2', &
             avgflag='A', long_name='C14 fine root C', &
-            ptr_patch=this%frootc_patch)
+            ptr_patch=this%frootc_patch, default='inactive')
 
        this%frootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_FROOTC_STORAGE', units='gC14/m^2', &
@@ -705,7 +721,7 @@ contains
        this%livestemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LIVESTEMC', units='gC14/m^2', &
             avgflag='A', long_name='C14 live stem C', &
-            ptr_patch=this%livestemc_patch)
+            ptr_patch=this%livestemc_patch, default='inactive')
 
        this%livestemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LIVESTEMC_STORAGE', units='gC14/m^2', &
@@ -720,7 +736,7 @@ contains
        this%deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DEADSTEMC', units='gC14/m^2', &
             avgflag='A', long_name='C14 dead stem C', &
-            ptr_patch=this%deadstemc_patch)
+            ptr_patch=this%deadstemc_patch, default='inactive')
 
        this%deadstemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DEADSTEMC_STORAGE', units='gC14/m^2', &
@@ -735,7 +751,7 @@ contains
        this%livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LIVECROOTC', units='gC14/m^2', &
             avgflag='A', long_name='C14 live coarse root C', &
-            ptr_patch=this%livecrootc_patch)
+            ptr_patch=this%livecrootc_patch, default='inactive')
 
        this%livecrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LIVECROOTC_STORAGE', units='gC14/m^2', &
@@ -750,7 +766,7 @@ contains
        this%deadcrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DEADCROOTC', units='gC14/m^2', &
             avgflag='A', long_name='C14 dead coarse root C', &
-            ptr_patch=this%deadcrootc_patch)
+            ptr_patch=this%deadcrootc_patch, default='inactive')
 
        this%deadcrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DEADCROOTC_STORAGE', units='gC14/m^2', &
@@ -775,27 +791,27 @@ contains
        this%cpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_CPOOL', units='gC14/m^2', &
             avgflag='A', long_name='C14 temporary photosynthate C pool', &
-            ptr_patch=this%cpool_patch)
+            ptr_patch=this%cpool_patch, default='inactive')
 
        this%xsmrpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_XSMRPOOL', units='gC14/m^2', &
             avgflag='A', long_name='C14 temporary photosynthate C pool', &
-            ptr_patch=this%xsmrpool_patch)
+            ptr_patch=this%xsmrpool_patch, default='inactive')
 
        this%ctrunc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PFT_CTRUNC', units='gC14/m^2', &
             avgflag='A', long_name='C14 patch-level sink for C truncation', &
-            ptr_patch=this%ctrunc_patch)
+            ptr_patch=this%ctrunc_patch, default='inactive')
 
        this%dispvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DISPVEGC', units='gC14/m^2', &
             avgflag='A', long_name='C14 displayed veg carbon, excluding storage and cpool', &
-            ptr_patch=this%dispvegc_patch)
+            ptr_patch=this%dispvegc_patch, default='inactive')
 
        this%storvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_STORVEGC', units='gC14/m^2', &
             avgflag='A', long_name='C14 stored vegetation carbon, excluding cpool', &
-            ptr_patch=this%storvegc_patch)
+            ptr_patch=this%storvegc_patch, default='inactive')
 
        this%totvegc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_TOTVEGC', units='gC14/m^2', &
@@ -805,17 +821,17 @@ contains
        this%totc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_TOTPFTC', units='gC14/m^2', &
             avgflag='A', long_name='C14 total patch-level carbon, including cpool', &
-            ptr_patch=this%totc_patch)
+            ptr_patch=this%totc_patch, default='inactive')
 
        this%seedc_grc(begg:endg) = spval
        call hist_addfld1d (fname='C14_SEEDC', units='gC14/m^2', &
             avgflag='A', long_name='C14 pool for seeding new PFTs via dynamic landcover', &
-            ptr_gcell=this%seedc_grc)
+            ptr_gcell=this%seedc_grc, default='inactive')
 
        this%totc_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_TOTCOLC', units='gC14/m^2', &
             avgflag='A', long_name='C14 total column carbon, incl veg and cpool but excl product pools', &
-            ptr_col=this%totc_col)
+            ptr_col=this%totc_col, default='inactive')
 
        this%totecosysc_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_TOTECOSYSC', units='gC14/m^2', &
@@ -826,11 +842,16 @@ contains
           this%grainc_patch(begp:endp) = spval
           call hist_addfld1d (fname='C14_GRAINC', units='gC/m^2', &
                avgflag='A', long_name='C14 grain C (does not equal yield)', &
-               ptr_patch=this%grainc_patch)
+               ptr_patch=this%grainc_patch, default='inactive')
           this%cropseedc_deficit_patch(begp:endp) = spval
           call hist_addfld1d (fname='C14_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C14 C used for crop seed that needs to be repaid', &
-               ptr_patch=this%cropseedc_deficit_patch)
+               ptr_patch=this%cropseedc_deficit_patch, default='inactive')
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_XSMRPOOL_LOSS', units='gC14/m^2', &
+               avgflag='A', long_name='C14 temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
 
@@ -974,6 +995,7 @@ contains
              this%grainc_storage_patch(p) = 0._r8 
              this%grainc_xfer_patch(p)    = 0._r8 
              this%cropseedc_deficit_patch(p)  = 0._r8
+             this%xsmrpool_loss_patch(p)  = 0._r8 
           end if
 
        endif
@@ -1077,6 +1099,7 @@ contains
     ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
     integer            :: restart_file_spinup_state
     integer            :: total_num_reseed_patch      ! Total number of patches to reseed across all processors
+    real(r8), parameter:: totvegcthresh = 1.0_r8      ! Total vegetation carbon threshold to reseed dead vegetation
 
     !------------------------------------------------------------------------
 
@@ -1204,6 +1227,13 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='xsmrpool', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_patch) 
+
+       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+       if (flag == 'read' .and. (.not. readvar) ) then
+           this%xsmrpool_loss_patch(bounds%begp:bounds%endp) = 0._r8
+       end if
 
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -1338,12 +1368,12 @@ contains
 
        if (  flag == 'read' .and. (enter_spinup .or. (reseed_dead_plants .and. .not. is_restart())) .and. .not. use_cndv) then
              if ( masterproc ) write(iulog, *) 'Reseeding dead plants for CNVegCarbonState'
-             ! If a pft is dead (indicated by totvegc = 0) then we reseed that
+             ! If a pft is dead or near-dead (indicated by totvegc <= totvegcthresh) then we reseed that
              ! pft according to the cold start protocol in the InitCold subroutine.
              ! Thus, the variable totvegc is required to be read before here
              ! so that if it is zero for a given pft, the pft can be reseeded.
              do i = bounds%begp,bounds%endp
-                if (this%totvegc_patch(i) .le. 0.0_r8) then
+                if (this%totvegc_patch(i) .le. totvegcthresh) then
                    !-----------------------------------------------
                    ! initialize patch-level carbon state variables
                    !-----------------------------------------------
@@ -1351,7 +1381,7 @@ contains
                    this%leafcmax_patch(i) = 0._r8
 
                    l = patch%landunit(i)
-                   if (lun%itype(l) == istsoil )then
+                   if (lun%itype(l) == istsoil  .or. patch%itype(i) == nc3crop .or. patch%itype(i) == nc3irrig)then
                       if ( present(num_reseed_patch) ) then
                          num_reseed_patch = num_reseed_patch + 1
                          filter_reseed_patch(num_reseed_patch) = i
@@ -1421,6 +1451,7 @@ contains
                          this%grainc_storage_patch(i) = 0._r8 
                          this%grainc_xfer_patch(i)    = 0._r8 
                          this%cropseedc_deficit_patch(i)  = 0._r8
+                         this%xsmrpool_loss_patch(i)  = 0._r8 
                       end if
 
                       ! calculate totvegc explicitly so that it is available for the isotope 
@@ -1810,6 +1841,21 @@ contains
           end do
        end if
 
+       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss_13', xtype=ncd_double,  &
+            dim1name='pft', &
+            long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+       if (flag=='read' .and. .not. readvar) then
+          if ( masterproc ) write(iulog,*) 'initializing this%xsmrpool_loss with atmospheric c13 value'
+          do i = bounds%begp,bounds%endp
+             if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c3_r2
+             else
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c4_r2
+             endif
+          end do
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc_13', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
@@ -2100,6 +2146,18 @@ contains
           end do
        end if
 
+       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss_14', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+       if (flag=='read' .and. .not. readvar) then
+          if ( masterproc ) write(iulog,*) 'initializing this%xsmrpool_loss_patch with atmospheric c14 value'
+          do i = bounds%begp,bounds%endp
+             if (this%xsmrpool_loss_patch(i) /= spval .and. .not. isnan(this%xsmrpool_loss_patch(i)) ) then
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c14ratio
+             endif
+          end do
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc_14', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
@@ -2330,6 +2388,7 @@ contains
           this%grainc_storage_patch(i)  = value_patch
           this%grainc_xfer_patch(i)     = value_patch
           this%cropseedc_deficit_patch(i)  = value_patch
+          this%xsmrpool_loss_patch(i)   = value_patch
        end if
     end do
 
@@ -2463,7 +2522,8 @@ contains
             this%ctrunc_patch(p)
 
        if (use_crop) then 
-          this%totc_patch(p) = this%totc_patch(p) + this%cropseedc_deficit_patch(p)
+          this%totc_patch(p) = this%totc_patch(p) + this%cropseedc_deficit_patch(p) + &
+               this%xsmrpool_loss_patch(p)
        end if
 
        ! (WOODC) - wood C
@@ -2710,13 +2770,15 @@ contains
             var = this%grainc_xfer_patch(begp:endp), &
             flux_out_grc_area = conv_cflux(begp:endp))
 
-       if (use_crop) then
-          ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
-          ! of the atmosphere.
-          call update_patch_state( &
-               var = this%cropseedc_deficit_patch(begp:endp), &
-               flux_out_grc_area = conv_cflux(begp:endp))
-       end if
+       ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
+       ! of the atmosphere.
+       call update_patch_state( &
+            var = this%cropseedc_deficit_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
+
+       call update_patch_state( &
+            var = this%xsmrpool_loss_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
     end if
 
   contains

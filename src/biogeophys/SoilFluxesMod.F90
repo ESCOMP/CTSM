@@ -35,6 +35,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SoilFluxes (bounds, num_urbanl, filter_urbanl, &
+       num_urbanp, filter_urbanp, &
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
        atm2lnd_inst, solarabs_inst, temperature_inst, canopystate_inst, &
        waterstate_inst, energyflux_inst, waterflux_inst)            
@@ -55,6 +56,8 @@ contains
     integer                , intent(in)    :: filter_nolakec(:)                ! column filter for non-lake points
     integer                , intent(in)    :: num_urbanl                       ! number of urban landunits in clump
     integer                , intent(in)    :: filter_urbanl(:)                 ! urban landunit filter
+    integer                , intent(in)    :: num_urbanp                       ! number of urban pfts in clump
+    integer                , intent(in)    :: filter_urbanp(:)                 ! urban pft filter
     integer                , intent(in)    :: num_nolakep                      ! number of column non-lake points in pft filter
     integer                , intent(in)    :: filter_nolakep(:)                ! patch filter for non-lake points
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
@@ -99,6 +102,9 @@ contains
          sabg                    => solarabs_inst%sabg_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by ground (W/m**2)
 
          emg                     => temperature_inst%emg_col                , & ! Input:  [real(r8) (:)   ]  ground emissivity                       
+!         emv                     => temperature_inst%emv_patch              , & ! Input:  [real(r8) (:)   ]  vegetation emissivity
+!         t_veg                   => temperature_inst%t_veg_patch            , & ! Output: [real(r8) (:)   ]  vegetation temperature (Kelvin) 
+         t_skin_patch            => temperature_inst%t_skin_patch           , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)
          t_h2osfc                => temperature_inst%t_h2osfc_col           , & ! Input:  [real(r8) (:)   ]  surface water temperature               
          tssbef                  => temperature_inst%t_ssbef_col            , & ! Input:  [real(r8) (:,:) ]  soil/snow temperature before update   
          t_h2osfc_bef            => temperature_inst%t_h2osfc_bef_col       , & ! Input:  [real(r8) (:)   ]  saved surface water temperature         
@@ -405,6 +411,17 @@ contains
                  + (1-frac_veg_nosno(p))*emg(c)*sb*lw_grnd &
                  + 4._r8*emg(c)*sb*t_grnd0(c)**3*tinc(c)
 
+
+            ! Calculate the skin temperature as a weighted sum of all the surface contributions (surface water table, snow, etc...)
+            ! Note: This is the bare ground calculation of skin temperature
+            !       The Urban and Vegetation are done in other place.  Urban=Later in this function Veg=CanopyFluxMod
+!            t_skin_patch(p) = ((1._r8 - emv(p))*(1-frac_veg_nosno(p)) * sqrt(sqrt(lw_grnd)))  +  emv(p)*t_veg(p)
+!            if( frac_veg_nosno(p).eq.0 ) then
+!               t_skin_patch(p) = ((1._r8 - emv(p))*(1-frac_veg_nosno(p)) * sqrt(sqrt(lw_grnd)))  +  &
+!                                           emv(p) *   frac_veg_nosno(p)  * t_veg(p)
+!            end if
+             if(frac_veg_nosno(p).eq.0)  t_skin_patch(p) = sqrt(sqrt(lw_grnd))
+
             eflx_lwrad_net(p) = eflx_lwrad_out(p) - forc_lwrad(c)
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                eflx_lwrad_net_r(p) = eflx_lwrad_out(p) - forc_lwrad(c)
@@ -424,6 +441,15 @@ contains
       call p2c(bounds, num_nolakec, filter_nolakec, &
            errsoi_patch(bounds%begp:bounds%endp), &
            errsoi_col(bounds%begc:bounds%endc))
+
+      ! Assign column-level t_soisno(snl+1) to t_skin for each urban pft
+      do fp = 1, num_urbanp
+         p = filter_urbanp(fp)         
+         c = patch%column(p)
+         
+         t_skin_patch(p) = t_soisno(c,col%snl(c)+1)
+  
+      end do
 
       call t_stopf('bgp2_loop_4')
 

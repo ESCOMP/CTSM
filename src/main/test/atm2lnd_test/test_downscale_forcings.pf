@@ -11,6 +11,7 @@ module test_downscale_forcings
   use atm2lndType, only : atm2lnd_type, atm2lnd_params_type
   use TopoMod, only : topo_type
   use decompMod, only : bounds_type
+  use glcBehaviorMod, only : glc_behavior_type
   use filterColMod
 
   implicit none
@@ -24,7 +25,9 @@ module test_downscale_forcings
   type, extends(TestCase) :: TestDownscaleForcings
      type(atm2lnd_type) :: atm2lnd_inst
      type(topo_type_always_downscale) :: topo_inst
+     type(glc_behavior_type) :: glc_behavior
      real(r8), allocatable :: eflx_sh_precip_conversion(:)
+     real(r8), allocatable :: rain_to_snow_runoff(:)
    contains
      procedure :: setUp
      procedure :: tearDown
@@ -194,12 +197,16 @@ contains
   subroutine call_downscale_forcings(this)
     ! Wraps the call to downscale_forcings
     !
-    ! Modifies this%atm2lnd_inst and this%eflx_sh_precip_conversion
+    ! Modifies this%atm2lnd_inst, this%eflx_sh_precip_conversion, and this%rain_to_snow_runoff
     class(TestDownscaleForcings), intent(inout) :: this
 
     this%eflx_sh_precip_conversion = col_array()
-    call downscale_forcings(bounds, this%topo_inst, this%atm2lnd_inst, &
-         this%eflx_sh_precip_conversion)
+    this%rain_to_snow_runoff = col_array()
+    call this%glc_behavior%InitSetDirectly( &
+         begg = bounds%begg, &
+         endg = bounds%endg)
+    call downscale_forcings(bounds, this%topo_inst, this%glc_behavior, this%atm2lnd_inst, &
+         this%eflx_sh_precip_conversion, this%rain_to_snow_runoff)
   end subroutine call_downscale_forcings
 
   ! ========================================================================

@@ -1,0 +1,11 @@
+!----------------------------------------------------------------------------------
+! Settings from output_bgc_highfreq
+!----------------------------------------------------------------------------------
+
+! h5 stream (daily average, gridcell-level)
+hist_fincl6 += 'GPP', 'NPP', 'AR', 'HR', 'ALT'
+
+! h7 stream (3-hourly average, gridcell-level)
+! E3hr requires GPP, AR, HR for time mean
+hist_fincl8 += 'GPP','AR','HR'
+

@@ -1,0 +1,42 @@
+$CTSMROOT/tools/contrib/README                                                    Jan/24/2019
+
+The purpose of this directory is for users of CTSM to contribute scripts for pre or post processing or
+case management of CTSM that others might find useful.  The script should have some documentation made 
+available before adding it. These scripts may not be as well tested or supported as other CTSM
+tools. They are also ONLY assumed to work on the NCAR supercomputer. So paths will be hardwired to
+assume NCAR directory structures.
+
+The python scripts require the following settings before running on cheyenne:
+(Currently that's the singlept and subset_surfdata scripts)
+
+module load python/2.7.14
+ncar_pylib
+
+Brief description of scripts:
+
+run_clm_historical
+	does all the setup and submission required to do a 1850-2010 CLM 
+	historical simulation in three separate submissions
+        v1 - Andrew Slater+Dave Lawrence, 8/2015
+
+subset_surfdata
+	create regional domain, surface data, and rtm directional files by 
+	extracting data from global datasets 
+	v1 - Sean Swenson 8/2015
+
+singlept
+	create single point domain, surface data, and datm forcing files by 
+        extracting data from global datasets
+	v1 - Sean Swenson 8/2015
+
+SpinupStability.ncl
+        This script assesses the equilibrium state of a spinup run
+        works on either monthly or annual mean history files - Keith Oleson 7/2016
+
+run_clmtowers
+        This script will run any number of flux tower sites.
+        It's based on having created surface datasets with PTCLM.
+        v1 - Keith Oleson, 8/2015
+
+
+
