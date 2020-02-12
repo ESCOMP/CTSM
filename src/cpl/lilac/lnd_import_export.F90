@@ -17,7 +17,7 @@ module lnd_import_export
   use lnd2glcMod            , only : lnd2glc_type
   use atm2lndType           , only : atm2lnd_type
   use lnd_shr_methods       , only : chkerr
-  use shr_megan_mod         , only : shr_megan_mechcomps_n  ! TODO: need to add a namelist read nere
+  use shr_megan_mod         , only : shr_megan_mechcomps_n  ! TODO: need to add a namelist read here (see https://github.com/ESCOMP/CTSM/issues/926)
 
   implicit none
   private ! except

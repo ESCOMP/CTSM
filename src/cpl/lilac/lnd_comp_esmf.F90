@@ -190,6 +190,8 @@ contains
 
     ! TODO: by default iulog = 6 in clm_varctl - this should be generalized so that we
     ! can control the output log file for ctsm running with a lilac driver
+    !
+    ! See also https://github.com/ESCOMP/CTSM/issues/861
 
     inst_name  = 'LND'; inst_index  = 1; inst_suffix = ""
 
@@ -212,6 +214,8 @@ contains
 
     ! TODO: orbital values should be provided by lilac - but for now lets use defaults
     !! hard wire these these in and we can decide on maybe having a namelist/
+    !
+    ! See also https://github.com/ESCOMP/CTSM/issues/865
 
     !call shr_cal_date2ymd(ymd,year,month,day)
     !orb_cyear = orb_iyear + (year - orb_iyear_align)
@@ -501,6 +505,8 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
        ! TODO: get this from the import state nextsw_cday attribute
+       !
+       ! See also https://github.com/ESCOMP/CTSM/issues/860
     end if
 
     ! Set nextsw_cday
@@ -666,8 +672,12 @@ contains
     dosend = .false.
     do while(.not. dosend)
 
-       ! TODO: This is currently hard-wired - is there a better way for nuopc?
-       ! Note that the model clock is updated at the end of the time step not at the beginning
+       ! We assume that the land model time step matches the coupling interval. However,
+       ! we still need this while loop to handle the initial time step (time 0). We may
+       ! want to get rid of this time step 0 in the lilac coupling, at which point we
+       ! should be able to remove this while loop and dosend variable.
+       !
+       ! See also https://github.com/ESCOMP/CTSM/issues/925
        nstep = get_nstep()
        if (nstep > 0) then
           dosend = .true.
@@ -686,6 +696,8 @@ contains
 
        ! TODO(NS): nextsw_cday should come directly from atmosphere!
        ! For now I am setting nextsw_cday to be the same caldayp1
+       !
+       ! See also https://github.com/ESCOMP/CTSM/issues/860
 
        nextsw_cday = calday
        if (masterproc) then
