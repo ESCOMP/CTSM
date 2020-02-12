@@ -123,11 +123,15 @@ def buildnml(rundir, bldnmldir):
     with open(env_lilac, 'w') as tempfile:
         tempfile.write(env_lilac_text)
 
+    # remove any existing clm.input_data_list file
+    inputdatalist_path = os.path.join(rundir, "clm.input_data_list")
+    os.remove(inputdatalist_path)
+
     # call build-namelist
     cmd = os.path.abspath(os.path.join(bldnmldir, os.pardir, "bld", "build-namelist"))
     command = [cmd,
                '-csmdata', din_loc_root,
-               '-inputdata', os.path.join(rundir, "clm.input_data_list"),
+               '-inputdata', inputdatalist_path,
                '-namelist', '&clm_inparm  start_ymd={} {}/'.format(start_ymd, clm_namelist_opts),
                '-use_case', use_case,
                '-ignore_ic_year', # For now, we assume ignore_ic_year, not ignore_ic_date
