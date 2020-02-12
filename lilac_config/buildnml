@@ -1,37 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 CTSM namelist creator
 """
 
-import sys, os, shutil, subprocess, logging, argparse
-import six
-from argparse import RawTextHelpFormatter
+import sys, os, subprocess, argparse
 
-try:
-    # python2
-    from ConfigParser import SafeConfigParser as config_parser
-    from ConfigParser import MissingSectionHeaderError
-    from ConfigParser import NoSectionError, NoOptionError
-
-    def config_string_cleaner(text):
-        """convert strings into unicode
-        """
-        return text.decode('utf-8')
-except ImportError:
-    # python3
-    from configparser import ConfigParser as config_parser
-    from configparser import MissingSectionHeaderError
-    from configparser import NoSectionError, NoOptionError
-
-    def config_string_cleaner(text):
-        """Python3 already uses unicode strings, so just return the string
-        without modification.
-
-        """
-        return text
-
-logger = logging.getLogger(__name__)
+from configparser import ConfigParser
+from configparser import NoSectionError, NoOptionError
 
 _config_cache_template = """
 <?xml version="1.0"?>
@@ -41,7 +17,7 @@ _config_cache_template = """
 </config_definition>
 """
 
-# Note the following is needed in env_lilac.xml otherwise the following error appers in the call to build_namelist
+# Note the following is needed in env_lilac.xml otherwise the following error appears in the call to build_namelist
 #err=ERROR : CLM build-namelist::CLMBuildNamelist::logical_to_fortran() : Unexpected value in logical_to_fortran:
 
 _env_lilac_template = """
@@ -62,10 +38,10 @@ _hack=object()
 def parse_command_line(args, description):
 ###############################################################################
 
-    parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, description=description)
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=description)
 
     parser.add_argument("--rundir", type=str, default=os.getcwd(),
-                        help="(required) specify the full path of the run directory)")
+                        help="specify the full path of the run directory")
 
     arguments = parser.parse_args(args)
 
@@ -76,81 +52,6 @@ def parse_command_line(args, description):
     return arguments.rundir
 
 ###############################################################################
-def run_cmd(cmd, input_str=None, from_dir=None, verbose=None,
-            arg_stdout=_hack, arg_stderr=_hack, env=None, combine_output=False):
-###############################################################################
-
-    """
-    Wrapper around subprocess to make it much more convenient to run shell commands
-
-    >>> run_cmd('ls file_i_hope_doesnt_exist')[0] != 0
-    True
-    """
-    import subprocess # Not safe to do globally, module not available in older pythons
-
-    # Real defaults for these value should be subprocess.PIPE
-    if arg_stdout is _hack:
-        arg_stdout = subprocess.PIPE
-    elif isinstance(arg_stdout, six.string_types):
-        arg_stdout = _convert_to_fd(arg_stdout, from_dir)
-
-    if arg_stderr is _hack:
-        arg_stderr = subprocess.STDOUT if combine_output else subprocess.PIPE
-    elif isinstance(arg_stderr, six.string_types):
-        arg_stderr = _convert_to_fd(arg_stdout, from_dir)
-
-    if (verbose != False and (verbose or logger.isEnabledFor(logging.DEBUG))):
-        logger.info("RUN: {}\nFROM: {}".format(cmd, os.getcwd() if from_dir is None else from_dir))
-
-    if (input_str is not None):
-        stdin = subprocess.PIPE
-    else:
-        stdin = None
-
-    proc = subprocess.Popen(cmd,
-                            shell=True,
-                            stdout=arg_stdout,
-                            stderr=arg_stderr,
-                            stdin=stdin,
-                            cwd=from_dir,
-                            env=env)
-
-    output, errput = proc.communicate(input_str)
-    if output is not None:
-        try:
-            output = output.decode('utf-8', errors='ignore').strip()
-        except AttributeError:
-            pass
-    if errput is not None:
-        try:
-            errput = errput.decode('utf-8', errors='ignore').strip()
-        except AttributeError:
-            pass
-
-    stat = proc.wait()
-    if six.PY2:
-        if isinstance(arg_stdout, file): # pylint: disable=undefined-variable
-            arg_stdout.close() # pylint: disable=no-member
-        if isinstance(arg_stderr, file) and arg_stderr is not arg_stdout: # pylint: disable=undefined-variable
-            arg_stderr.close() # pylint: disable=no-member
-    else:
-        if isinstance(arg_stdout, io.IOBase):
-            arg_stdout.close() # pylint: disable=no-member
-        if isinstance(arg_stderr, io.IOBase) and arg_stderr is not arg_stdout:
-            arg_stderr.close() # pylint: disable=no-member
-
-
-    if (verbose != False and (verbose or logger.isEnabledFor(logging.DEBUG))):
-        if stat != 0:
-            logger.info("  stat: {:d}\n".format(stat))
-        if output:
-            logger.info("  output: {}\n".format(output))
-        if errput:
-            logger.info("  errput: {}\n".format(errput))
-
-    return stat, output, errput
-
-###############################################################################
 def buildnml(rundir, bldnmldir):
 ###############################################################################
 
@@ -159,8 +60,8 @@ def buildnml(rundir, bldnmldir):
     file_path = os.path.join(rundir,'ctsm.cfg') 
 
     # read the config file
-    config = config_parser()
-    config.read(file_path) # TODO: add the code in externals_description.py to get the error checks
+    config = ConfigParser()
+    config.read(file_path)
 
     clm_phys          = config.get('buildnml_input', 'clm_phys')
     start_type        = config.get('buildnml_input', 'start_type')
@@ -201,8 +102,8 @@ def buildnml(rundir, bldnmldir):
     command = [cmd,
                '-csmdata', din_loc_root, 
                '-inputdata', os.path.join(rundir, "clm.input_data_list"), 
-               '-namelist', '\'&clm_inparm  start_ymd={} {}/\''.format(start_ymd, clm_namelist_opts),
-               '-use_case',use_case, 
+               '-namelist', '&clm_inparm  start_ymd={} {}/'.format(start_ymd, clm_namelist_opts),
+               '-use_case',use_case,
                '-res', lnd_grid, 
                '-clm_start_type', start_type, 
                '-l_ncpl', str(1),  # this will not be used in lilac - but is needed as input
@@ -215,15 +116,13 @@ def buildnml(rundir, bldnmldir):
                '-clm_accelerated_spinup', spinup,
                '-lnd_tuning_mode',lnd_tuning_mode,
                '-config',os.path.join(rundir, "config_cache.xml"),
-               '-envxml_dir', rundir, 
-               clm_bldnml_opts]
+               '-envxml_dir', rundir]
+    command.extend(clm_bldnml_opts.split())
     if gridmask != 'null' and gridmask != 'UNSET':
         command.extend(['-mask', gridmask])
 
-    cmd = ' '.join(command)
-    rc, out, err = run_cmd(cmd, from_dir=os.getcwd())
-    if rc > 0:
-        raise Exception("Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
+    subprocess.check_call(command,
+                          universal_newlines=True)
 
     # remove temporary files in rundir
     os.remove(os.path.join(rundir, "config_cache.xml"))
