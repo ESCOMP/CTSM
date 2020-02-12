@@ -86,7 +86,6 @@ def buildnml(rundir, bldnmldir):
     start_type        = get_config_value(config, 'buildnml_input', 'start_type', file_path)
     start_ymd         = get_config_value(config, 'buildnml_input', 'start_ymd', file_path)
     startfile_type    = get_config_value(config, 'buildnml_input', 'startfile_type', file_path)
-    ignore            = get_config_value(config, 'buildnml_input', 'ignore', file_path)
     configuration     = get_config_value(config, 'buildnml_input', 'configuration', file_path)
     structure         = get_config_value(config, 'buildnml_input', 'structure', file_path)
     ccsm_co2_ppmv     = get_config_value(config, 'buildnml_input', 'ccsm_co2_ppmv', file_path)
@@ -123,6 +122,7 @@ def buildnml(rundir, bldnmldir):
                '-inputdata', os.path.join(rundir, "clm.input_data_list"), 
                '-namelist', '&clm_inparm  start_ymd={} {}/'.format(start_ymd, clm_namelist_opts),
                '-use_case',use_case,
+               '-ignore_ic_year', # For now, we assume ignore_ic_year, not ignore_ic_date
                '-res', lnd_grid, 
                '-clm_start_type', start_type, 
                '-l_ncpl', str(1),  # this will not be used in lilac - but is needed as input
