@@ -142,6 +142,7 @@ def buildnml(rundir, bldnmldir):
                '-co2_type', clm_co2_type,
                '-clm_accelerated_spinup', spinup,
                '-lnd_tuning_mode', lnd_tuning_mode,
+               '-no-megan',
                '-config', os.path.join(rundir, "config_cache.xml"),
                '-envxml_dir', rundir]
     command.extend(clm_bldnml_opts.split())
