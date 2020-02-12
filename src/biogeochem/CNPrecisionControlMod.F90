@@ -739,6 +739,9 @@ contains
     SHR_ASSERT_ALL_FL((ubound(carbon_patch)   == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(pc)             == (/bounds%endp/)), sourcefile, __LINE__)
 
+    if ( -ccrit < cnegcrit )then
+        call endrun(msg='ERROR: cnegcrit should be less than -ccrit: '//errMsg(sourcefile, lineno))
+    end if
     lcroponly = .false.
     if ( present(croponly) )then
       if ( croponly ) lcroponly = .true.
