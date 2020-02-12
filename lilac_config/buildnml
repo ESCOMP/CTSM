@@ -47,9 +47,28 @@ def parse_command_line(args, description):
 
     # check if rundir exists
     if not os.path.isdir(arguments.rundir):
-        raise Exception("rundir %s does not exist".format(arguments.rundir))
+        raise RuntimeError("rundir %s does not exist".format(arguments.rundir))
 
     return arguments.rundir
+
+###############################################################################
+def get_config_value(config, section, item, file_path):
+    """Get a given item from a given section of the config object
+
+    Give a helpful error message if we can't find the given section or item
+
+    Note that the file_path argument is only used for the sake of the error message
+    """
+    try:
+        val = config.get(section, item)
+    except NoSectionError:
+        print("ERROR: Config file {} must contain section '{}'\n".format(file_path, section))
+        raise
+    except NoOptionError:
+        print("ERROR: Config file {} must contain item '{}' in section '{}'\n".format(
+            file_path, item, section))
+        raise
+    return val
 
 ###############################################################################
 def buildnml(rundir, bldnmldir):
@@ -63,25 +82,25 @@ def buildnml(rundir, bldnmldir):
     config = ConfigParser()
     config.read(file_path)
 
-    clm_phys          = config.get('buildnml_input', 'clm_phys')
-    start_type        = config.get('buildnml_input', 'start_type')
-    start_ymd         = config.get('buildnml_input', 'start_ymd')
-    startfile_type    = config.get('buildnml_input', 'startfile_type')
-    ignore            = config.get('buildnml_input', 'ignore')
-    configuration     = config.get('buildnml_input', 'configuration')
-    structure         = config.get('buildnml_input', 'structure')
-    ccsm_co2_ppmv     = config.get('buildnml_input', 'ccsm_co2_ppmv')
-    clm_co2_type      = config.get('buildnml_input', 'clm_co2_type')
-    clm_bldnml_opts   = config.get('buildnml_input', 'clm_bldnml_opts')
-    use_case          = config.get('buildnml_input', 'use_case')
-    lnd_tuning_mode   = config.get('buildnml_input', 'lnd_tuning_mode')
-    spinup            = config.get('buildnml_input', 'spinup')
-    gridmask          = config.get('buildnml_input', 'gridmask')
-    lnd_grid          = config.get('buildnml_input', 'lnd_grid')
-    lnd_domain_file   = config.get('buildnml_input', 'lnd_domain_file')
-    lnd_domain_path   = config.get('buildnml_input', 'lnd_domain_path')
-    din_loc_root      = config.get('buildnml_input', 'din_loc_root')
-    clm_namelist_opts = config.get('buildnml_input', 'clm_namelist_opts')
+    clm_phys          = get_config_value(config, 'buildnml_input', 'clm_phys', file_path)
+    start_type        = get_config_value(config, 'buildnml_input', 'start_type', file_path)
+    start_ymd         = get_config_value(config, 'buildnml_input', 'start_ymd', file_path)
+    startfile_type    = get_config_value(config, 'buildnml_input', 'startfile_type', file_path)
+    ignore            = get_config_value(config, 'buildnml_input', 'ignore', file_path)
+    configuration     = get_config_value(config, 'buildnml_input', 'configuration', file_path)
+    structure         = get_config_value(config, 'buildnml_input', 'structure', file_path)
+    ccsm_co2_ppmv     = get_config_value(config, 'buildnml_input', 'ccsm_co2_ppmv', file_path)
+    clm_co2_type      = get_config_value(config, 'buildnml_input', 'clm_co2_type', file_path)
+    clm_bldnml_opts   = get_config_value(config, 'buildnml_input', 'clm_bldnml_opts', file_path)
+    use_case          = get_config_value(config, 'buildnml_input', 'use_case', file_path)
+    lnd_tuning_mode   = get_config_value(config, 'buildnml_input', 'lnd_tuning_mode', file_path)
+    spinup            = get_config_value(config, 'buildnml_input', 'spinup', file_path)
+    gridmask          = get_config_value(config, 'buildnml_input', 'gridmask', file_path)
+    lnd_grid          = get_config_value(config, 'buildnml_input', 'lnd_grid', file_path)
+    lnd_domain_file   = get_config_value(config, 'buildnml_input', 'lnd_domain_file', file_path)
+    lnd_domain_path   = get_config_value(config, 'buildnml_input', 'lnd_domain_path', file_path)
+    din_loc_root      = get_config_value(config, 'buildnml_input', 'din_loc_root', file_path)
+    clm_namelist_opts = get_config_value(config, 'buildnml_input', 'clm_namelist_opts', file_path)
 
     # create config_cache.xml file 
     # Note that build-namelist utilizes the contents of the config_cache.xml file in 
