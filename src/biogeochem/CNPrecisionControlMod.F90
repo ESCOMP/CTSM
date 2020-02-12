@@ -747,6 +747,8 @@ contains
     if ( present(allowneg) )then
       if (  allowneg ) lallowneg = .true.
     end if
+
+    num_truncatep = 0
     do fp = 1,num_soilp
        p = filter_soilp(fp)
 
@@ -756,6 +758,10 @@ contains
              write(iulog,*) 'ERROR: limit = ', cnegcrit
              call endrun(msg='ERROR: carbon state critically negative '//errMsg(sourcefile, lineno))
           else if ( abs(carbon_patch(p)) < ccrit) then
+
+             num_truncatep = num_truncatep + 1
+             filter_truncatep(num_truncatep) = p
+
              pc(p) = pc(p) + carbon_patch(p)
              carbon_patch(p) = 0._r8
           end if
