@@ -207,7 +207,7 @@ contains
             units='mm3/mm3', type2d='levsoi',  &
             avgflag='A', &
             long_name=this%info%lname('volumetric soil water prescribed (vegetated landunits only)'), &
-            ptr_col=this%h2osoi_vol_prs_grc, l2g_scale_type='veg',  default='inactive')
+            ptr_gcell=this%h2osoi_vol_prs_grc, l2g_scale_type='veg',  default='inactive')
     end if
 
     ! this%h2osoi_liq_col(begc:endc,:) = spval
