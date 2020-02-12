@@ -706,7 +706,7 @@ contains
  end subroutine TruncateCandNStates
 
  subroutine TruncateCStates( bounds, filter_soilp, num_soilp, carbon_patch, pc, lineno,  &
-                                 num_truncatep, filter_truncatep, croponly, allowneg )
+                             num_truncatep, filter_truncatep, croponly, allowneg )
     !
     ! !DESCRIPTION:
     ! Truncate Carbon states. If a carbon state is too small truncate it to
@@ -808,8 +808,8 @@ contains
  end subroutine TruncateNStates
 
  !-----------------------------------------------------------------------
- subroutine TruncateAdditional(bounds, num_truncatep, filter_truncatep, &
-      state_patch, truncation_patch, lineno)
+ subroutine TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
+                                state_patch, truncation_patch, lineno)
    !
    ! !DESCRIPTION:
    ! Given a filter of points for which we have already determined that truncation should
@@ -819,20 +819,19 @@ contains
    use decompMod  , only : bounds_type
    ! !ARGUMENTS:
    implicit none
-   type(bounds_type)              , intent(in)    :: bounds          ! bounds
-   integer, intent(in) :: num_truncatep       ! number of points in filter_truncatep
-   integer, intent(in) :: filter_truncatep(:) ! filter for points that need truncation
-   real(r8), intent(inout) :: state_patch(bounds%begp: )
-   real(r8), intent(inout) :: truncation_patch(bounds%begp: )
-   integer, intent(in) :: lineno
+   type(bounds_type) , intent (in)    :: bounds              ! bounds
+   integer           , intent (in)    :: num_truncatep       ! number of points in filter_truncatep
+   integer           , intent (in)    :: filter_truncatep(:) ! filter for points that need truncation
+   real(r8)          , intent (inout) :: state_patch(bounds%begp: )
+   real(r8)          , intent (inout) :: truncation_patch(bounds%begp: )
+   integer           , intent (in)    :: lineno
    !
    ! !LOCAL VARIABLES:
-
-   integer :: fp, p
+   integer                     :: fp, p
    character(len=*), parameter :: subname = 'TruncateAdditional'
    !-----------------------------------------------------------------------
 
-   SHR_ASSERT_FL((ubound(state_patch, 1) == bounds%endp), 'state_patch '//sourcefile, lineno)
+   SHR_ASSERT_FL((ubound(state_patch, 1)      == bounds%endp), 'state_patch '     //sourcefile, lineno)
    SHR_ASSERT_FL((ubound(truncation_patch, 1) == bounds%endp), 'truncation_patch '//sourcefile, lineno)
 
    do fp = 1, num_truncatep
