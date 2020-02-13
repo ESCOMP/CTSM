@@ -892,8 +892,9 @@ contains
     if ( (ymd /= ymd_sync) .or. (tod /= tod_sync) ) then
        write(iulog,*)'ctsm ymd=',ymd     ,' ctsm tod= ',tod
        write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
-       rc = ESMF_FAILURE
        call ESMF_LogWrite(subname//" CTSM clock not in sync with Master Sync clock",ESMF_LOGMSG_ERROR)
+       rc = ESMF_FAILURE
+       return
     end if
 
     !--------------------------------

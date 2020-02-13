@@ -852,8 +852,9 @@ contains
     if ( (ymd /= ymd_lilac) .or. (tod /= tod_lilac) ) then
        write(iulog,*)'ctsm  ymd=',ymd      ,' ctsm  tod= ',tod
        write(iulog,*)'lilac ymd=',ymd_lilac,' lilac tod= ',tod_lilac
-       rc = ESMF_FAILURE
        call ESMF_LogWrite(subname//" CTSM clock not in sync with lilac clock",ESMF_LOGMSG_ERROR)
+       rc = ESMF_FAILURE
+       return
     end if
 
     !--------------------------------
