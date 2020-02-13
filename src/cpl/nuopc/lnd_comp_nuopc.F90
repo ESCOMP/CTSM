@@ -889,7 +889,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call shr_cal_ymd2date(yr_sync, mon_sync, day_sync, ymd_sync)
 
-    if ( (ymd /= ymd_sync) .and. (tod /= tod_sync) ) then
+    if ( (ymd /= ymd_sync) .or. (tod /= tod_sync) ) then
        write(iulog,*)'ctsm ymd=',ymd     ,' ctsm tod= ',tod
        write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
        rc = ESMF_FAILURE

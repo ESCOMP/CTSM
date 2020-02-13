@@ -849,7 +849,7 @@ contains
     ! Note that the driver clock has not been updated yet - so at this point
     ! CTSM is actually 1 coupling intervals ahead of the driver clock
 
-    if ( (ymd /= ymd_lilac) .and. (tod /= tod_lilac) ) then
+    if ( (ymd /= ymd_lilac) .or. (tod /= tod_lilac) ) then
        write(iulog,*)'ctsm  ymd=',ymd      ,' ctsm  tod= ',tod
        write(iulog,*)'lilac ymd=',ymd_lilac,' lilac tod= ',tod_lilac
        rc = ESMF_FAILURE
