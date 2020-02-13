@@ -96,7 +96,7 @@ module WaterfluxType
      real(r8), pointer :: qflx_rsub_sat_col        (:)   ! col soil saturation excess [mm/s]
      real(r8), pointer :: qflx_snofrz_lyr_col      (:,:) ! col snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
      real(r8), pointer :: qflx_snofrz_col          (:)   ! col column-integrated snow freezing rate (positive definite) (col) [kg m-2 s-1]
-     real(r8), pointer :: qflx_drain_vr_col        (:,:) ! col liquid water losted as drainage (m /time step)
+     real(r8), pointer :: qflx_drain_vr_col        (:,:) ! col liquid water losted as drainage [mm H2O/s] (used by FATES)
      real(r8), pointer :: snow_sources_col         (:)   ! col snow sources (mm H2O/s)
      real(r8), pointer :: snow_sinks_col           (:)   ! col snow sinks (mm H2O/s)
 
@@ -211,7 +211,7 @@ contains
     allocate( this%qflx_ev_h2osfc_patch    (begp:endp))              ; this%qflx_ev_h2osfc_patch     (:)   = nan
     allocate( this%qflx_ev_h2osfc_col      (begc:endc))              ; this%qflx_ev_h2osfc_col       (:)   = nan
 
-    allocate(this%qflx_drain_vr_col      (begc:endc,1:nlevsoi))      ; this%qflx_drain_vr_col        (:,:) = nan
+    allocate(this%qflx_drain_vr_col        (begc:endc,1:nlevsoi))    ; this%qflx_drain_vr_col        (:,:) = 0._r8
     allocate(this%qflx_adv_col             (begc:endc,0:nlevsoi))    ; this%qflx_adv_col             (:,:) = nan
     allocate(this%qflx_rootsoi_col         (begc:endc,1:nlevsoi))    ; this%qflx_rootsoi_col         (:,:) = nan
     allocate(this%qflx_infl_col            (begc:endc))              ; this%qflx_infl_col            (:)   = nan
@@ -685,6 +685,7 @@ contains
     this%qflx_h2osfc_surf_col(bounds%begc:bounds%endc) = 0._r8
     this%qflx_snow_drain_col(bounds%begc:bounds%endc)  = 0._r8
 
+    this%qflx_drain_vr_col(bounds%begc:bounds%endc,:) = 0._r8
     ! This variable only gets set in the hydrology filter; need to initialize it to 0 for
     ! the sake of columns outside this filter
     this%qflx_ice_runoff_xs_col(bounds%begc:bounds%endc) = 0._r8
