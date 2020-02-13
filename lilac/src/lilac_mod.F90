@@ -154,9 +154,6 @@ contains
 
     ! NOTE: the default calendar is set to GREGORIAN and is reset below in the initialization of
     ! the lilac clock
-    ! TODO: ensure that CTSM queries the lilac_clock for the calendar and initializes its own
-    ! internal clock accordingly
-    ! TODO: the same is true for the datm time manager that reads in prescribed data
     call ESMF_Initialize(mpiCommunicator=mpicom, defaultCalKind=ESMF_CALKIND_GREGORIAN, &
          logappendflag=.false., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
