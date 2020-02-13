@@ -2207,15 +2207,10 @@ contains
        waterfluxbulk_inst%qflx_rootsoi_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(1:nlevsoil)
 
        ! This is the total amount of water transferred to surface runoff
-       ! (this is generated potentially from supersaturating soils, or from water lost
-       !  during mortality and litter fall)
-       ! This array is set in HydrologyNoDrainage()->Infiltration()
-       ! This subroutine (ComputeRootSoilFlux()) is (conveniently) called right
-       ! after that in HydrologyNoDrainage()
+       ! (this is generated potentially from supersaturating soils
 
-       waterfluxbulk_inst%qflx_h2osfc_surf_col(c) = waterfluxbulk_inst%qflx_h2osfc_surf_col(c) + & 
-             this%fates(nc)%bc_out(s)%qflx_surf_ro_si
-
+       waterflux_inst%qflx_drain_vr_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_ro_sisl(1:nlevsoil)
+       
 
     end do
     

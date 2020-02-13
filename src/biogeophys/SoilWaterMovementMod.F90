@@ -572,6 +572,7 @@ contains
          qflx_infl         =>    waterfluxbulk_inst%qflx_infl_col       , & ! Input:  [real(r8) (:)   ]  infiltration (mm H2O /s)                          
 
          qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:,:) ]  vegetation/soil water exchange (mm H2O/s) (+ = to atm)
+         qflx_drain_vr_col =>    waterfluxbulk_inst%qflx_drain_vr_col   , & ! Input:  [real(r8) (:,:) ]  drainage from soil layers due to plant induced
          t_soisno          =>    temperature_inst%t_soisno_col        & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
          )
 
@@ -774,7 +775,7 @@ contains
          qout(c,j)   = -hk(c,j)*num/den
          dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
          dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-         rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j)
+         rmx(c,j) =  qin(c,j) - qout(c,j) - (qflx_rootsoi_col(c,j) + qflx_drain_vr_col(c,j))
          amx(c,j) =  0._r8
          bmx(c,j) =  dzmm(c,j)*(sdamp+1._r8/dtime) + dqodw1(c,j)
          cmx(c,j) =  dqodw2(c,j)
@@ -798,7 +799,7 @@ contains
             qout(c,j)   = -hk(c,j)*num/den
             dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
             dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-            rmx(c,j)    =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j)
+            rmx(c,j)    =  qin(c,j) - qout(c,j) - (qflx_rootsoi_col(c,j)+qflx_drain_vr_col(c,j))
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  dqodw2(c,j)
@@ -820,7 +821,7 @@ contains
             dqidw1(c,j) = -( hk(c,j-1)*dsmpdw(c,j)   + num*dhkdw(c,j-1))/den
             qout(c,j)   =  0._r8
             dqodw1(c,j) =  0._r8
-            rmx(c,j)    =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j)
+            rmx(c,j)    =  qin(c,j) - qout(c,j) - (qflx_rootsoi_col(c,j)+qflx_drain_vr_col(c,j))
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  0._r8
@@ -863,7 +864,7 @@ contains
             dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
             dqodw2(c,j) = -( hk(c,j)*dsmpdw1 + num*dhkdw(c,j))/den
 
-            rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j)
+            rmx(c,j) =  qin(c,j) - qout(c,j) - (qflx_rootsoi_col(c,j)+qflx_drain_vr_col(c,j))
             amx(c,j) = -dqidw0(c,j)
             bmx(c,j) =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j) =  dqodw2(c,j)
@@ -1153,7 +1154,8 @@ contains
          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)                   
          h2osoi_ice        =>    waterstatebulk_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)                               
          h2osoi_liq        =>    waterstatebulk_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-         qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col      &
+         qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col    , &
+         qflx_drain_vr_col =>    waterfluxbulk_inst%qflx_drain_vr_col     &
          )  ! end associate statement
 
       ! Get time step
@@ -1220,7 +1222,7 @@ contains
 
             ! RHS of system of equations
             call compute_RHS_moisture_form(c, nlayers, &           
-                 qflx_rootsoi_col(c,1:nlayers), &
+                 (qflx_rootsoi_col(c,1:nlayers) + qflx_drain_vr_col(c,1:nlayers)), & 
                  vwc_liq(c,1:nlayers), &
                  qin(c,1:nlayers), &
                  qout(c,1:nlayers), &
@@ -1313,7 +1315,7 @@ contains
                   endif
 
                   ! compute the net flux
-                  fluxNet0(j) = qin_test - qout_test - qflx_rootsoi_col(c,j) 
+                  fluxNet0(j) = qin_test - qout_test - (qflx_rootsoi_col(c,j) + qflx_drain_vr_col(c,j))
 
                ! flux calculation is inexpensive
                else
@@ -1324,7 +1326,7 @@ contains
                endif  ! switch between the expensive and inexpensive fluxcalculations
 
                ! compute the net flux at the start of the sub-step
-               fluxNet1(j) = qin(c,j) - qout(c,j) - qflx_rootsoi_col(c,j)
+               fluxNet1(j) = qin(c,j) - qout(c,j) - (qflx_rootsoi_col(c,j)+qflx_drain_vr_col(c,j))
 
             end do  ! looping through layers
 
