@@ -475,7 +475,7 @@ contains
          call this%init_soil_depths(nc)
          
          if (use_fates_planthydro) then
-            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in,maxveg_ed)
+            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in)
          end if
 
 
