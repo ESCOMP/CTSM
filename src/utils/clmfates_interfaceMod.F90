@@ -2224,8 +2224,8 @@ contains
 
        ! This is the total amount of water transferred to surface runoff
        ! (this is generated potentially from supersaturating soils
-
-       waterfluxbulk_inst%qflx_drain_vr_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_ro_sisl(1:nlevsoil)
+       ! (currently this is unnecessary)
+       ! waterflux_inst%qflx_drain_vr_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_ro_sisl(1:nlevsoil)
        
 
     end do
