@@ -37,6 +37,4 @@
  
 <ndep_taxmode            phys="clm5_0" use_cn=".true." >cycle</ndep_taxmode>
 
-<ndep_varlist            phys="clm5_0" use_cn=".true." >NDEP_month</ndep_varlist>
-
 </namelist_defaults>
