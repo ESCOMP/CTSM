@@ -38,11 +38,19 @@ module BalanceCheckMod
   ! !PUBLIC TYPES:
   implicit none
   save
+  private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
 
+  public :: BalanceCheckInit         ! Initialization of Water and energy balance check
   public :: BeginWaterBalance        ! Initialize water balance check
   public :: BalanceCheck             ! Water and energy balance check
+  public :: GetBalanceCheckSkipSteps ! Get the number of steps to skip for the balance check
+  public :: BalanceCheckClean        ! Clean up for BalanceCheck
+
+  ! !PRIVATE MEMBER DATA:
+  real(r8), private, parameter :: skip_size = 3600.0_r8   ! Time steps to skip the balance check at startup (sec)
+  integer,  private            :: skip_steps = -999       ! Number of time steps to skip the balance check for
 
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -244,6 +252,7 @@ contains
      use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
      use clm_instMod       , only : surfalb_inst
      use CanopyStateType   , only : canopystate_type
+     use SurfaceAlbedoType , only : surfalb_type
      use subgridAveMod
      !
      ! !ARGUMENTS:
