@@ -4951,7 +4951,7 @@ contains
     case ('fates_levelem')
        num2d = num_elements_fates
     case ('fates_levelpft')
-       num2d = num_elements_fates*numpft_fates
+       num2d = num_elements_fates*maxveg_fates
     case ('fates_levelcwd')
        num2d = num_elements_fates*ncwd
     case ('fates_levelage')

@@ -2399,7 +2399,7 @@ contains
    fates%elem_end   = num_elements
 
    fates%elpft_begin = 1
-   fates%elpft_end   = num_elements * numpft_fates
+   fates%elpft_end   = num_elements * maxveg_ed
 
    fates%elcwd_begin = 1
    fates%elcwd_end   = num_elements * ncwd
