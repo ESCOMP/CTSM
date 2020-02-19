@@ -1155,7 +1155,23 @@ contains
                      nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
                      this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoil) = &
                           soilstate_inst%hksat_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%watsat_sisl(1:nlevsoil) = &
+                          soilstate_inst%watsat_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%watres_sisl(1:nlevsoil) = &
+                          soilstate_inst%watres_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%sucsat_sisl(1:nlevsoil) = &
+                          soilstate_inst%sucsat_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%bsw_sisl(1:nlevsoil) = &
+                          soilstate_inst%bsw_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) = &
+                        waterdiagnosticbulk_inst%waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
                   end do
+
 
                   call RestartHydrStates(this%fates(nc)%sites,  &
                                          this%fates(nc)%nsites, &
@@ -2209,7 +2225,7 @@ contains
        ! This is the total amount of water transferred to surface runoff
        ! (this is generated potentially from supersaturating soils
 
-       waterflux_inst%qflx_drain_vr_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_ro_sisl(1:nlevsoil)
+       waterfluxbulk_inst%qflx_drain_vr_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_ro_sisl(1:nlevsoil)
        
 
     end do
@@ -2249,13 +2265,15 @@ contains
 
  subroutine wrap_hydraulics_drive(this, bounds_clump, nc, &
                                  soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, &
-                                 solarabs_inst, energyflux_inst)
+                                 fn, filterp, solarabs_inst, energyflux_inst)
 
 
    implicit none
    class(hlm_fates_interface_type), intent(inout) :: this
    type(bounds_type),intent(in)                   :: bounds_clump
    integer,intent(in)                             :: nc
+   integer, intent(in)                            :: fn
+   integer, intent(in)                            :: filterp(fn)
    type(soilstate_type)    , intent(inout)        :: soilstate_inst
    type(waterstatebulk_type)   , intent(inout)        :: waterstatebulk_inst
    type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
@@ -2269,7 +2287,8 @@ contains
    integer :: j
    integer :: ifp
    integer :: p
-   integer :: nlevsoil
+   integer :: f
+   integer :: nlevsoil 
    real(r8) :: dtime
 
 
@@ -2306,8 +2325,19 @@ contains
          p = ifp+col%patchi(c)
          this%fates(nc)%bc_in(s)%swrad_net_pa(ifp) = solarabs_inst%fsa_patch(p)
          this%fates(nc)%bc_in(s)%lwrad_net_pa(ifp) = energyflux_inst%eflx_lwrad_net_patch(p)
-         this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterfluxbulk_inst%qflx_tran_veg_patch(p)
       end do
+   end do
+
+   ! The exposed vegetation filter "filterp" dictates which patches
+   ! had their transpiration updated during canopy_fluxes(). Patches
+   ! not in the filter had been zero'd during prep_canopyfluxes().
+   
+   do f = 1,fn
+      p = filterp(f)
+      c = patch%column(p)
+      s = this%f2hmap(nc)%hsites(c)
+      ifp = p - col%patchi(c)
+      this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterfluxbulk_inst%qflx_tran_veg_patch(p)
    end do
 
    ! Call Fates Hydraulics
