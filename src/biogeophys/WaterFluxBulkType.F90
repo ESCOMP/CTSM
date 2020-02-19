@@ -179,6 +179,13 @@ contains
          ptr_col=data2dptr, c2l_scale_type='urbanf',no_snow_behavior=no_snow_normal, &
          l2g_scale_type='ice', default='inactive')
 
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNOEVAP'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('evaporation from snow'), &
+         ptr_patch=this%qflx_ev_snow_patch, set_lake=0._r8, c2l_scale_type='urbanf')
+
 
     call hist_addfld2d ( &
          fname=this%info%fname('QROOTSINK'),  &

@@ -131,6 +131,7 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : UpdateH2OVeg
+   use FatesPlantHydraulicsMod, only : RestartHydrStates
 
    implicit none
    
@@ -241,7 +242,7 @@ contains
       logical                                        :: verbose_output
       integer                                        :: pass_masterproc
       integer                                        :: pass_vertsoilc
-      integer                                        :: pass_spitfire     
+      integer                                        :: pass_spitfire 
       integer                                        :: pass_ed_st3
       integer                                        :: pass_ed_prescribed_phys
       integer                                        :: pass_logging

@@ -304,7 +304,7 @@ foreach my $options ( "-configuration nwp",
                      ) {
    my $file = $startfile;
    &make_env_run();
-   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+   eval{ system( "$bldnml -res 0.9x1.25 -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
    $cfiles->shownmldiff( "default", $mode );

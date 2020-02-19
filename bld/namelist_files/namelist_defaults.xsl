@@ -28,7 +28,7 @@
        <li>Site specific point name (sitespf_pt)</li>
        <li>Crop model (crop)</li>
        <li>Data model forcing source (forcing)</li>
-       <li>Representative concentration pathway for future scenarios (rcp)</li>
+       <li>Representative concentration pathway for future scenarios (SSP-rcp)</li>
        <li>New good wood harvest (newwoodharv)</li>
        <li>CN Spin-up mode (spinup)</li>
        <li>Type of file (type)</li>
