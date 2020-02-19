@@ -2286,10 +2286,11 @@ sub setup_logic_initial_conditions {
     my $try = 0;
     my $done = 2;
     my $use_init_interp_default = $nl->get_value($useinitvar);
-    if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
-      $use_init_interp_default = ".false.";
-    }
     $settings{$useinitvar} = $use_init_interp_default;
+    if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
+      $use_init_interp_default = $defaults->get_value($useinitvar, \%settings);
+      $settings{$useinitvar} = ".false.";
+    }
     do {
        $try++;
        add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, %settings );

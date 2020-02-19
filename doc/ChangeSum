@@ -17,6 +17,7 @@ release-clm5.0.16    erik 01/15/2019 PtVg and ssp_rcp future scenario options an
 release-clm5.0.15   sacks 12/06/2018 SKIPPED ON MASTER -- Option for rain-to-snow
 release-clm5.0.14    erik 11/29/2018 Update cime and fix surface dataset for f05 1850 non-crop case
 release-clm5.0.13    erik 11/14/2018 Update externals with new CO2/presearo/rtm/mosart, add science_support, change testing
+release-clm5.0.12    erik 11/03/2018 New IC files for clm45/clm50 coupled cases, add 2010 compset (IC FILES UPDATE SKIPPED ON MASTER)
   ctsm1.0.dev080    sacks 12/02/2019 Update externals, minor fixes to work with latest cime, get nuopc cap working
   ctsm1.0.dev079    sacks 11/04/2019 Change a few uses of shr_kind
   ctsm1.0.dev078   oleson 10/31/2019 Fix rootr calculation with use_hydrstress true
