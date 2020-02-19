@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev084   negins 02/19/2020 Bounds assertion for C istopoes when threading is on
   ctsm1.0.dev083   negins 02/06/2020 Some BFB Fixes: Resolve issues #683, # 874, #878, # 885, # 745, #838
   ctsm1.0.dev082   oleson 02/01/2020 Rename variables to avoid confusion; fix QSNOEVAP diagnostic
   ctsm1.0.dev081   slevis 01/13/2020 Speed up restart writes
