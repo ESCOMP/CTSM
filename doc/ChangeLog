@@ -1,4 +1,124 @@
 ===============================================================
+Tag name:  ctsm1.0.dev083
+Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
+Date: Thu Feb  6 12:12:26 MST 2020
+One-line Summary: Some BFB Fixes: Resolve issues #683, # 874, #878, # 885, # 745, #838
+
+Purpose of changes
+------------------
+
+Resolved issues: 
+
+ESCOMP/ctsm#683 :  Writing out FATES parameters only on masterproc.
+ESCOMP/ctsm#874 :  Changing the number of timesteps to run for
+                   SMS_P720x1_Ln3.hcru_hcru.I2000Clm50BgcCruGs.cheyenne_intel.clm-coldStar
+                   to prevent failing with CMEPS.
+ESCOMP/ctsm#878 :  Removing the unused atm2lnd field.
+ESCOMP/ctsm#885 :  Changing the defaults for br_root in namelist_defaults to
+                   enable FUN with CLM4.5.
+ESCOMP/ctsm#745 :  Removing ReadNL private subroutine from initVerticalMod.F90.
+ESCOMP/ctsm#838 :  Clarifying ZISNO in the variable long name.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+Resolves :
+	- ESCOMP/ctsm#683
+	- ESCOMP/ctsm#874
+	- ESCOMP/ctsm#878
+	- ESCOMP/ctsm#885
+	- ESCOMP/ctsm#745
+	- ESCOMP/ctsm#838
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values):
+	Not any changes in parameter values.
+	changing the default for br_root in namelist_defaults to enable FUN with
+	CLM4.5.
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: 
+	Changed the number of timesteps from Ln3 to Ln6 for
+	SMS_P720x1_Ln3.hcru_hcru.I2000Clm50BgcCruGs.cheyenne_intel.clm-coldStar
+
+Code reviewed by: Bill Sacks
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/897
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev082
 Originator(s):  oleson (Keith Oleson)
 Date:  Sat Feb  1 09:28:41 MST 2020
