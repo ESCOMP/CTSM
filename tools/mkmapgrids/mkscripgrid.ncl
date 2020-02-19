@@ -36,6 +36,8 @@ begin
 
   outfilename = getenv("GRIDFILE");           ; Get filename from env variable
 
+  gitdescribe = getenv("GITDES");             ; Git describe from the source clone
+
   if ( ismissing(nx) )then
      nx = 1;
   end if
@@ -80,6 +82,10 @@ begin
            outfilename = "SCRIPgrid_"+name+"_mask_c"+cdate+".nc";
         end if
      end if
+  end if
+
+  if ( ismissing(gitdescribe) )then
+     gitdescribe = systemfunc( "git describe" )
   end if
 
   system( "/bin/rm -f "+outfilename );
@@ -156,7 +162,7 @@ end
   nc = addfile( outfilename, "w" );
   nc@history = ldate+": create using mkscripgrid.ncl";
   nc@comment = "Ocean is assumed to non-existant at this point";
-  nc@Version = systemfunc( "git describe" );
+  nc@Version = gitdescribe;
   if ( printn )then
     print( "================================================================================================" );
     print( "Successfully created SCRIP grid file: "+outfilename);

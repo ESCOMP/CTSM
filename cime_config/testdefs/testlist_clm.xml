@@ -1896,6 +1896,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Run a short non-Fates test (without land-ice model) in the fates test list, to make sure fates changes do not mess up the standard model</option>
     </options>
   </test>
   <test name="SMS_Ly2" grid="1x1_brazil" compset="I2000Clm45FatesGs" testmods="clm/Fates">
@@ -1923,7 +1924,7 @@
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:60:00</option>
       <option name="comment"  >The main point of this test is simply to make sure that the CMIP6WACCMDECK modifier works for
 2-degree since that resolution turns off Carbon isotopes </option>
     </options>
