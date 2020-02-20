@@ -2,7 +2,7 @@
 Tag name:  ctsm1.0.dev084
 Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
 Date: Wed Feb 19 15:05:03 MST 2020
-One-line Summary: Bounds assertion for C istopoes when threading is on
+One-line Summary: Bounds assertion for C isotopes when threading is on
 
 Purpose of changes
 ------------------
