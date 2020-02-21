@@ -112,7 +112,7 @@ contains
     integer                     :: lsize
     type(ESMF_State)            :: importState, exportState
     type(ESMF_VM)               :: vm
-    integer                     :: rc
+    integer                     :: user_rc, rc
     character(len=ESMF_MAXSTR)  :: cname   !components or cpl names
     integer                     :: ierr
     integer                     :: n, i
@@ -259,7 +259,8 @@ contains
     !-------------------------------------------------------------------------
 
     ! Register section -- set services -- atmcap
-    call ESMF_GridCompSetServices(atm_gcomp, userRoutine=lilac_atmcap_register, rc=rc)
+    call ESMF_GridCompSetServices(atm_gcomp, userRoutine=lilac_atmcap_register, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('atm_gcomp register failure')
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('atm_gcomp register failure')
     call ESMF_LogWrite(subname//"  atmos SetServices finished!", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -267,7 +268,8 @@ contains
     end if
 
     ! Register section -- set services -- ctsm
-    call ESMF_GridCompSetServices(lnd_gcomp, userRoutine=lnd_register, rc=rc)
+    call ESMF_GridCompSetServices(lnd_gcomp, userRoutine=lnd_register, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('lnd_gcomp register failure')
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('lnd_gcomp register failure')
     call ESMF_LogWrite(subname//"CSTM SetServices finished!", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -275,7 +277,8 @@ contains
     end if
 
     ! Register section -- set services -- mosart
-    call ESMF_GridCompSetServices(rof_gcomp, userRoutine=rof_register, rc=rc)
+    call ESMF_GridCompSetServices(rof_gcomp, userRoutine=rof_register, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('rof_gcomp register failure')
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('rof_gcomp register failure')
     call ESMF_LogWrite(subname//"MOSART SetServices finished!", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -283,7 +286,8 @@ contains
     end if
 
     ! Register section -- set services -- coupler atmosphere to land
-    call ESMF_CplCompSetServices(cpl_atm2lnd_comp, userRoutine=cpl_atm2lnd_register, rc=rc)
+    call ESMF_CplCompSetServices(cpl_atm2lnd_comp, userRoutine=cpl_atm2lnd_register, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_atm2lnd_comp register failure')
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_atm2lnd_comp register failure')
     call ESMF_LogWrite(subname//"Coupler from atmosphere to land  SetServices finished!", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -291,7 +295,8 @@ contains
     end if
 
     ! Register section -- set services -- river to land
-    call ESMF_CplCompSetServices(cpl_rof2lnd_comp, userRoutine=cpl_rof2lnd_register, rc=rc)
+    call ESMF_CplCompSetServices(cpl_rof2lnd_comp, userRoutine=cpl_rof2lnd_register, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_rof2lnd_comp register failure')
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_rof2lnd_comp register failure')
     call ESMF_LogWrite(subname//"Coupler from river to land  SetServices finished!", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -299,7 +304,8 @@ contains
     end if
 
     ! Register section -- set services -- coupler land to atmosphere
-    call ESMF_CplCompSetServices(cpl_lnd2atm_comp, userRoutine=cpl_lnd2atm_register, rc=rc)
+    call ESMF_CplCompSetServices(cpl_lnd2atm_comp, userRoutine=cpl_lnd2atm_register, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_lnd2atm_comp register failure')
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_lnd2atm_comp register failure')
     call ESMF_LogWrite(subname//"Coupler from land to atmosphere SetServices finished!", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -307,7 +313,8 @@ contains
     end if
 
     ! Register section -- set services -- coupler land to river
-    call ESMF_CplCompSetServices(cpl_lnd2rof_comp, userRoutine=cpl_lnd2rof_register, rc=rc)
+    call ESMF_CplCompSetServices(cpl_lnd2rof_comp, userRoutine=cpl_lnd2rof_register, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_lnd2rof_comp register failure')
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_lnd2rof_comp register failure')
     call ESMF_LogWrite(subname//"Coupler from land to river SetServices finished!", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -339,7 +346,8 @@ contains
 
     ! Initialze lilac_atm gridded component
     call ESMF_GridCompInitialize(atm_gcomp, importState=cpl2atm_state, exportState=atm2cpl_state, &
-         clock=lilac_clock, rc=rc)
+         clock=lilac_clock, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing atmcap")
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing atmcap")
     call ESMF_LogWrite(subname//"lilac_atm gridded component initialized", ESMF_LOGMSG_INFO)
 
@@ -357,7 +365,8 @@ contains
 
     ! Initialze CTSM Gridded Component
     call ESMF_GridCompInitialize(lnd_gcomp, importState=cpl2lnd_state, exportState=lnd2cpl_state, &
-         clock=lilac_clock, rc=rc)
+         clock=lilac_clock, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing ctsm")
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing ctsm")
     call ESMF_LogWrite(subname//"CTSM gridded component initialized", ESMF_LOGMSG_INFO)
 
@@ -370,7 +379,8 @@ contains
 
        ! Initialize MOSART Gridded Component
        call ESMF_GridCompInitialize(rof_gcomp, importState=cpl2rof_state, exportState=rof2cpl_state, &
-            clock=lilac_clock, rc=rc)
+            clock=lilac_clock, userRc=user_rc, rc=rc)
+       if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing mosart")
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing mosart")
        call ESMF_LogWrite(subname//"MOSART gridded component initialized", ESMF_LOGMSG_INFO)
     end if
@@ -383,26 +393,30 @@ contains
     ! one for the river and one for the atm -
     ! The following fills in the atm field bundle in cpl2lnd_state
     call ESMF_CplCompInitialize(cpl_atm2lnd_comp, importState=atm2cpl_state, exportState=cpl2lnd_state, &
-         clock=lilac_clock, rc=rc)
+         clock=lilac_clock, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_atm2lnd component")
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_atm2lnd component")
     call ESMF_LogWrite(subname//"coupler :: cpl_atm2lnd_comp initialized", ESMF_LOGMSG_INFO)
 
     ! The following maps the atm field bundle in lnd2cpl_state to the atm mesh
     call ESMF_CplCompInitialize(cpl_lnd2atm_comp, importState=lnd2cpl_state, exportState=cpl2atm_state, &
-         clock=lilac_clock, rc=rc)
+         clock=lilac_clock, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_lnd2atm component")
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_lnd2atm component")
     call ESMF_LogWrite(subname//"coupler :: cpl_lnd2atm_comp initialized", ESMF_LOGMSG_INFO)
 
     if (couple_to_river) then
        ! The following maps the rof field bundle in lnd2cpl_state to the rof mesh
        call ESMF_CplCompInitialize(cpl_lnd2rof_comp, importState=lnd2cpl_state, exportState=cpl2rof_state, &
-            clock=lilac_clock, rc=rc)
+            clock=lilac_clock, userRc=user_rc, rc=rc)
+       if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_lnd2rof component")
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_lnd2rof component")
        call ESMF_LogWrite(subname//"coupler :: cpl_atm2lnd_comp initialized", ESMF_LOGMSG_INFO)
 
        ! The following fills in the rof field bundle in cpl2lnd_state
        call ESMF_CplCompInitialize(cpl_rof2lnd_comp, importState=rof2cpl_state, exportState=cpl2lnd_state, &
-            clock=lilac_clock, rc=rc)
+            clock=lilac_clock, userRc=user_rc, rc=rc)
+       if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_lnd2atm component")
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing cpl_lnd2atm component")
        call ESMF_LogWrite(subname//"coupler :: cpl_lnd2atm_comp initialized", ESMF_LOGMSG_INFO)
     end if
@@ -447,7 +461,7 @@ contains
     type(ESMF_Alarm)            :: lilac_history_alarm
     type(ESMF_Alarm)            :: lilac_restart_alarm
     type(ESMF_State)            :: importState, exportState
-    integer                     :: rc
+    integer                     :: user_rc, rc
     character(len=*), parameter :: subname=trim(modname)//': [lilac_run] '
     !------------------------------------------------------------------------
 
@@ -490,7 +504,8 @@ contains
     call ESMF_LogWrite(subname//"running lilac atmos_cap", ESMF_LOGMSG_INFO)
     if (mytask == 0) write(logunit,*) "Running atmos_cap gridded component , rc =", rc
     call ESMF_GridCompRun(atm_gcomp, importState=cpl2atm_state, exportState=atm2cpl_state, &
-         clock=lilac_clock, rc=rc)
+         clock=lilac_clock, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running lilac atm_cap")
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running lilac atm_cap")
 
     ! Update prescribed aerosols  atm2cpl_a_state
@@ -501,7 +516,8 @@ contains
     call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
     if (mytask == 0) write(logunit,*) "Running coupler component..... cpl_atm2lnd_comp"
     call ESMF_CplCompRun(cpl_atm2lnd_comp, importState=atm2cpl_state, exportState=cpl2lnd_state, &
-         clock=lilac_clock, rc=rc)
+         clock=lilac_clock, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running cpl_atm2lnd")
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running cpl_atm2lnd")
 
     ! Run ctsm
@@ -510,7 +526,8 @@ contains
     call ESMF_LogWrite(subname//"running ctsm", ESMF_LOGMSG_INFO)
     if (mytask == 0) write(logunit,*) "Running ctsm"
     call ESMF_GridCompRun(lnd_gcomp,  importState=cpl2lnd_state, exportState=lnd2cpl_state, &
-         clock=lilac_clock, rc=rc)
+         clock=lilac_clock, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running ctsm")
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running ctsm")
 
     ! Run cpl_lnd2atm
@@ -519,7 +536,8 @@ contains
        write(logunit,*) "Running coupler component..... cpl_lnd2atm_comp , rc =", rc
     end if
     call ESMF_CplCompRun(cpl_lnd2atm_comp, importState=lnd2cpl_state, exportState=cpl2atm_state, &
-         clock=lilac_clock, rc=rc)
+         clock=lilac_clock, userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in cpl_lnd2atm")
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in cpl_lnd2atm")
 
     if (couple_to_river) then
@@ -527,7 +545,8 @@ contains
        call ESMF_LogWrite(subname//"running cpl_lnd2rof_comp ", ESMF_LOGMSG_INFO)
        if (mytask == 0) write(logunit,*) "Running coupler component..... cpl_lnd2rof_comp"
        call ESMF_CplCompRun(cpl_lnd2rof_comp, importState=lnd2cpl_state, exportState=cpl2rof_state, &
-            clock=lilac_clock, rc=rc)
+            clock=lilac_clock, userRc=user_rc, rc=rc)
+       if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running cpl_lnd2rof")
        if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running cpl_lnd2rof")
 
        ! Run mosart
@@ -536,15 +555,17 @@ contains
        call ESMF_LogWrite(subname//"running mosart", ESMF_LOGMSG_INFO)
        if (mytask == 0) write(logunit,*) "Running mosart"
        call ESMF_GridCompRun(rof_gcomp, importState=cpl2rof_state, exportState=rof2cpl_state, &
-            clock=lilac_clock, rc=rc)
-       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running ctsm")
+            clock=lilac_clock, userRc=user_rc, rc=rc)
+       if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running rof")
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running rof")
 
        ! Run cpl_rof2lnd
        ! TODO: uncommenting this needs to be tested
        ! call ESMF_LogWrite(subname//"running cpl_rof2lnd_comp ", ESMF_LOGMSG_INFO)
        ! if (mytask == 0) write(logunit,*) "Running coupler component..... cpl_rof2lnd_comp"
        ! call ESMF_CplCompRun(cpl_rof2lnd_comp, importState=rof2cpl_state, exportState=cpl2lnd_state, &
-       !      clock=lilac_clock, rc=rc)
+       !      clock=lilac_clock, userRc=user_rc, rc=rc)
+       ! if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running cpl_rof2lnd")
        ! if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running cpl_rof2lnd")
     end if
 
@@ -589,7 +610,7 @@ contains
 
     ! local variables
     type(ESMF_State)            :: importState, exportState
-    integer                     :: rc, userRC
+    integer                     :: rc, user_rc
     character(len=*), parameter :: subname=trim(modname)//': [lilac_final] '
     !------------------------------------------------------------------------
 
@@ -603,7 +624,9 @@ contains
     end if
 
     ! Gridded Component Finalizing!     ---       atmosphere
-    call ESMF_GridCompFinalize(atm_gcomp, importState=cpl2atm_state, exportState=atm2cpl_state, clock=lilac_clock, rc=rc)
+    call ESMF_GridCompFinalize(atm_gcomp, importState=cpl2atm_state, exportState=atm2cpl_state, clock=lilac_clock, &
+         userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) return
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_LogWrite(subname//"atmos_cap or atm_gcomp is running", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -611,7 +634,9 @@ contains
     end if
 
     ! Coupler component Finalizing     ---    coupler atmos to land
-    call ESMF_CplCompFinalize(cpl_atm2lnd_comp, importState=atm2cpl_state, exportState=cpl2lnd_state, clock=lilac_clock, rc=rc)
+    call ESMF_CplCompFinalize(cpl_atm2lnd_comp, importState=atm2cpl_state, exportState=cpl2lnd_state, clock=lilac_clock, &
+         userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) return
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -619,7 +644,9 @@ contains
     end if
 
     ! Gridded Component Finalizing!     ---       land
-    call ESMF_GridCompFinalize(lnd_gcomp,  importState=cpl2lnd_state, exportState=lnd2cpl_state, clock=lilac_clock, rc=rc)
+    call ESMF_GridCompFinalize(lnd_gcomp,  importState=cpl2lnd_state, exportState=lnd2cpl_state, clock=lilac_clock, &
+         userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) return
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_LogWrite(subname//"lnd_cap or lnd_gcomp is running", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
@@ -627,7 +654,9 @@ contains
     end if
 
     ! Coupler component Finalizing     ---    coupler land to atmos
-    call ESMF_CplCompFinalize(cpl_lnd2atm_comp, importState=cpl2lnd_state, exportState=cpl2atm_state, clock=lilac_clock, rc=rc)
+    call ESMF_CplCompFinalize(cpl_lnd2atm_comp, importState=cpl2lnd_state, exportState=cpl2atm_state, clock=lilac_clock, &
+         userRc=user_rc, rc=rc)
+    if (chkerr(user_rc,__LINE__,u_FILE_u)) return
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_LogWrite(subname//"running cpl_lnd2atm_comp ", ESMF_LOGMSG_INFO)
     if (mytask == 0) then
