@@ -7,7 +7,7 @@ module lnd_comp_esmf
 
   ! external libraries
   use ESMF
-  use mpi               , only : MPI_BCAST, MPI_CHARACTER
+  use shr_mpi_mod       , only : shr_mpi_bcast
   use perf_mod          , only : t_startf, t_stopf, t_barrierf
 
   ! lilac code
@@ -251,7 +251,7 @@ contains
        end if
        close(fileunit)
     end if
-    call mpi_bcast(lnd_mesh_filename, len(lnd_mesh_filename), MPI_CHARACTER, 0, mpicom, ierr)
+    call shr_mpi_bcast(lnd_mesh_filename, mpicom)
 
     !----------------------
     ! Obtain caseid and start type from attributes in import state
