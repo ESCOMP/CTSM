@@ -243,7 +243,7 @@ program atm_driver
   end if
 
   do nstep = 1,atm_nsteps
-     ! fill in the dataptr values in atm2lnd type in lilac_atmcap
+     ! fill in the dataptr in lilac_coupling_fields
      call atm_driver_to_lilac (atm_lons, atm_lats, nstep, atm_nsteps)
 
      if (nstep == atm_nsteps) then
