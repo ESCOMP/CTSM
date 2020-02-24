@@ -134,6 +134,7 @@ module pftconMod
      real(r8), allocatable :: slatop        (:)   ! SLA at top of canopy [m^2/gC]
      real(r8), allocatable :: dsladlai      (:)   ! dSLA/dLAI [m^2/gC]
      real(r8), allocatable :: leafcn        (:)   ! leaf C:N [gC/gN]
+     real(r8), allocatable :: harvfrac      (:)   ! cut fraction for harvest [-]
      real(r8), allocatable :: flnr          (:)   ! fraction of leaf N in Rubisco [no units]
      real(r8), allocatable :: woody         (:)   ! woody lifeform flag (0 or 1)
      real(r8), allocatable :: lflitcn       (:)   ! leaf litter C:N (gC/gN)
@@ -356,7 +357,8 @@ contains
     allocate( this%fnitr         (0:mxpft) )       
     allocate( this%slatop        (0:mxpft) )      
     allocate( this%dsladlai      (0:mxpft) )    
-    allocate( this%leafcn        (0:mxpft) )      
+    allocate( this%leafcn        (0:mxpft) )  
+    allocate( this%harvfrac      (0:mxpft) )  
     allocate( this%flnr          (0:mxpft) )        
     allocate( this%woody         (0:mxpft) )       
     allocate( this%lflitcn       (0:mxpft) )      
@@ -657,6 +659,10 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('leafcn', this%leafcn, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    
+    ! Y. Cheng, harvest fraction for crops during offset period
+    call ncd_io('harvfrac', this%harvfrac, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('flnr', this%flnr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
@@ -1282,6 +1288,7 @@ contains
     deallocate( this%slatop)
     deallocate( this%dsladlai)
     deallocate( this%leafcn)
+    deallocate( this%harvfrac)
     deallocate( this%flnr)
     deallocate( this%woody)
     deallocate( this%lflitcn)
