@@ -35,8 +35,10 @@ library (I), do the following:
 
    > export CTSM_MKFILE=$CASEDIR/bld/ctsm.mk
    > cd $SRCROOT/lilac/atm_driver
+   > $SRCROOT/cime/tools/configure --comp-interface nuopc --macros-format Makefile --clean
    > make clean
-   > source $CASEDIR/.env_mach_specific.sh
+   > source ./.env_mach_specific.sh
+   > export DEBUG=TRUE
    > make atm_driver 
 
 2) to generate the input namelists
