@@ -3,11 +3,22 @@
 #================================================================================
 
 #================================================================================
-# Note: You must set the environment variable CTSM_MKFILE before running this - e.g.
-# export CTSM_MKFILE=/glade/scratch/sacks/test_lilac_1205a/bld/ctsm.mk
+# NOTE: Before running this, you must:
 #
-# ESMFMKFILE must also be set in the environment
+# (1) Run cime's configure tool in order to generate a Macros.make file
+#
+# (2) Source the .env_mach_specific.sh file created by the configure
+#     tool in order to set up the environment correctly. Among other
+#     things, this should set the environment variable ESMFMKFILE. (See
+#     notes below about the need for this.)
+#
+# (3) Set the environment variable CTSM_MKFILE - e.g.
+#
+#     export CTSM_MKFILE=/glade/scratch/sacks/test_lilac_1205a/bld/ctsm.mk
+#
 #================================================================================
+
+include Macros.make
 
 include $(CTSM_MKFILE)
 
@@ -16,8 +27,6 @@ include $(CTSM_MKFILE)
 # building atm_driver.o. (This is a bit of a kludge that we should
 # change later.)
 include $(ESMFMKFILE)
-
-FFLAGS  = -qno-opt-dynamic-align  -convert big_endian -assume byterecl -ftz -traceback -assume realloc_lhs -fp-model source -qopt-report -xCORE_AVX2 -no-fma  -O0 -g -check uninit -check bounds -check pointers -fpe0 -check noarg_temp_created -DLINUX  -DFORTRANUNDERSCORE -DCPRINTEL -DDEBUG -DHAVE_MPI -DPIO1 -DHAVE_SLASHPROC -D_PNETCDF -DESMF_VERSION_MAJOR=7 -DESMF_VERSION_MINOR=1 -free
 
 #================================================================================
 # Compiler and linker rules using ESMF_ variables supplied by esmf.mk

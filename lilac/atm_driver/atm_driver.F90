@@ -15,19 +15,18 @@ program atm_driver
   !         |                              |                 |
   !   ESMF lilac_atmcap            ESMF CTSM cap     ESMF river cap (Mizzouroute, Mosart)
   !----------------------------------------------------------------------------
-  
+
   use netcdf      , only : nf90_open, nf90_create, nf90_enddef, nf90_close
   use netcdf      , only : nf90_clobber, nf90_write, nf90_nowrite, nf90_noerr, nf90_double
   use netcdf      , only : nf90_def_dim, nf90_def_var, nf90_put_var
   use netcdf      , only : nf90_inq_dimid, nf90_inquire_dimension, nf90_inq_varid, nf90_get_var
-  use mpi         , only : MPI_COMM_WORLD, MPI_COMM_NULL, MPI_Init, MPI_FINALIZE, MPI_SUCCESS
-  use mpi         , only : MPI_GATHER, MPI_INT, MPI_DOUBLE
   use lilac_mod   , only : lilac_init, lilac_run, lilac_final
   use lilac_atmcap, only : lilac_atmcap_atm2lnd, lilac_atmcap_lnd2atm
   use shr_cal_mod , only : shr_cal_date2ymd
   use shr_sys_mod , only : shr_sys_abort
 
   implicit none
+#include <mpif.h>
 
   integer               :: comp_comm
   integer               :: ierr

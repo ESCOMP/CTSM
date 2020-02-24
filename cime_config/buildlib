@@ -30,26 +30,37 @@ def _get_osvar(key, default):
     return value
 
 ###############################################################################
-def _write_ctsm_mk(exeroot, debug):
+def _write_ctsm_mk(exeroot, libroot, machine):
     """Writes a ctsm.mk file in exeroot.
 
     This file can be included by atmosphere model builds outside of cime.
 
-    NOTE: This currently has some hard-coded settings for cheyenne. Also, it assumes that
-    ESMFMKFILE is set in your environment.
+    NOTE: This currently only supports the machines cheyenne (intel) and bishorn
+    (gnu). Also, it assumes that ESMFMKFILE is set in your environment.
 
     Arguments:
     exeroot (str): path to build directory
-    debug (logical): True if building in debug mode, False otherwise
+    libroot (str): path to directory containing libclm.a
+    machine (str): name of machine
     """
 
-    if debug:
-        debug_path = 'debug'
-    else:
-        debug_path = 'nodebug'
-
     ctsm_mk_path = os.path.join(exeroot, 'ctsm.mk')
+    ctsm_bld_dir = os.path.abspath(os.path.join(libroot, os.pardir))
+    shared_bld_dir = os.path.abspath(os.path.join(ctsm_bld_dir, os.pardir, os.pardir))
     esmfmkfile = os.environ['ESMFMKFILE']
+
+    # Set machine-specific libs for machines we currently support. Note there are a lot of
+    # hard-coded assumptions here, regarding the compiler, paths to libraries, etc.
+    #
+    # ESMF library doesn't need to be included here, because the necessary elements of the
+    # link line for that are included elsewhere.
+    if machine == 'cheyenne':
+        machine_specific_libs = '-mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib -cxxlib -lrt -ldl -lnetcdff -lnetcdf -cxxlib'
+    elif machine == 'bishorn':
+        machine_specific_libs = '-L/usr/local/lib -lnetcdff -lnetcdf -framework Accelerate'
+    else:
+        expect(False, "Unknown machine for LILAC's ctsm.mk file: {}".format(machine))
+
     with open(ctsm_mk_path, 'w') as ctsm_mk:
         ctsm_mk.write("""
 # ======================================================================
@@ -68,14 +79,14 @@ def _write_ctsm_mk(exeroot, debug):
 
 include {esmfmkfile}
 
-SHARED_BLD_DIR = {exeroot}/intel/mpt/{debug_path}/nothreads/nuopc
-CTSM_BLD_DIR   = $(SHARED_BLD_DIR)/nuopc/esmf
+SHARED_BLD_DIR = {shared_bld_dir}
+CTSM_BLD_DIR   = {ctsm_bld_dir}
 DEPENDS_LIB    = $(SHARED_BLD_DIR)/lib
-SHR_LIB        = $(SHARED_BLD_DIR)/nuopc/esmf/c1a1l1/lib
-SHR_INC        = $(SHARED_BLD_DIR)/nuopc/esmf/c1a1l1/csm_share
+SHR_LIB        = $(CTSM_BLD_DIR)/c1a1l1/lib
+SHR_INC        = $(CTSM_BLD_DIR)/c1a1l1/csm_share
 CTSM_INC       = $(CTSM_BLD_DIR)/clm/obj
 
-LIBS = -L$(CTSM_BLD_DIR)/lib -lclm -L$(SHR_LIB) -lcsm_share -L$(DEPENDS_LIB) -lpiof -lpioc -lgptl -lmct -lmpeu -mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib -cxxlib -lrt -ldl -lnetcdff -lnetcdf -cxxlib
+LIBS = -L$(CTSM_BLD_DIR)/lib -lclm -L$(SHR_LIB) -lcsm_share -L$(DEPENDS_LIB) -lpiof -lpioc -lgptl -lmct -lmpeu {machine_specific_libs}
 
 # ======================================================================
 # The following settings should be included in an atmosphere model's build.
@@ -83,7 +94,8 @@ LIBS = -L$(CTSM_BLD_DIR)/lib -lclm -L$(SHR_LIB) -lcsm_share -L$(DEPENDS_LIB) -lp
 
 CTSM_INCLUDES = $(ESMF_F90COMPILEPATHS) -I$(SHR_INC) -I$(CTSM_INC)
 CTSM_LIBS =  $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) $(ESMF_F90ESMFLINKLIBS) $(LIBS)
-""".format(esmfmkfile=esmfmkfile, exeroot=exeroot, debug_path=debug_path))
+""".format(esmfmkfile=esmfmkfile, shared_bld_dir=shared_bld_dir, ctsm_bld_dir=ctsm_bld_dir,
+           machine_specific_libs=machine_specific_libs))
 
 ###############################################################################
 def _main_func():
@@ -102,8 +114,10 @@ def _main_func():
         lilac_mode = _get_osvar('LILAC_MODE', 'off')
         if lilac_mode == 'on':
             driver = "lilac"
+            machine = case.get_value('MACH')
             _write_ctsm_mk(exeroot=case.get_value("EXEROOT"),
-                           debug=case.get_value("DEBUG"))
+                           libroot=libroot,
+                           machine=machine)
 
         #-------------------------------------------------------
         # create Filepath file

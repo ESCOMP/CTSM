@@ -125,7 +125,8 @@ def buildnml(rundir, bldnmldir):
 
     # remove any existing clm.input_data_list file
     inputdatalist_path = os.path.join(rundir, "clm.input_data_list")
-    os.remove(inputdatalist_path)
+    if os.path.exists(inputdatalist_path):
+        os.remove(inputdatalist_path)
 
     # call build-namelist
     cmd = os.path.abspath(os.path.join(bldnmldir, os.pardir, "bld", "build-namelist"))
