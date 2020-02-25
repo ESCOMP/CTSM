@@ -215,7 +215,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc</mksrf_forganic>
 
 <mksrf_fmax     hgrid="0.125x0.125"   lmask="nomask"
->lnd/clm2/rawdata/mksrf_fmax_3x3min_USGS_c120911.nc</mksrf_fmax>
+>lnd/clm2/rawdata/mksrf_fmax_0.125x0.125_c200220.nc</mksrf_fmax>
 
 <!-- Lake and wetlands -->
 <mksrf_flakwat  hgrid="3x3min"   lmask="nomask"
