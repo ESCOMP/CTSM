@@ -81,22 +81,19 @@ for res in $resols; do
        echo "regional"
        # For regional and (especially) single-point grids, we can get
        # errors when trying to use multiple processors - so just use 1.
-       # We also do NOT set batch mode in this case, because some
-       # machines (e.g., yellowstone) do not listen to REGRID_PROC, so to
-       # get a single processor, we need to run mkmapdata.sh in
-       # interactive mode.
        regrid_num_proc=1
    else
        echo "global"
        regrid_num_proc=8
-       if [ ! -z "$LSFUSER" ]; then
-           echo "batch"
-	   cmdargs="$cmdargs -b"
-       fi
-       if [ ! -z "$PBS_O_WORKDIR" ]; then
-           cd $PBS_O_WORKDIR
-	   cmdargs="$cmdargs -b"
-       fi
+   fi
+
+   if [ ! -z "$LSFUSER" ]; then
+       echo "batch"
+       cmdargs="$cmdargs -b"
+   fi
+   if [ ! -z "$PBS_O_WORKDIR" ]; then
+       cd $PBS_O_WORKDIR
+       cmdargs="$cmdargs -b"
    fi
 
    echo "args: $cmdargs"

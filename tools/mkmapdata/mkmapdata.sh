@@ -339,11 +339,15 @@ case $hostname in
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=36
   fi
-  esmfvers=7.1.0r
-  intelvers=18.0.5
-  module load esmf_libs/$esmfvers
+  esmfvers=8.0.0
+  intelvers=19.0.2
+  module purge
+  module load ncarenv/1.3
   module load intel/$intelvers
-  module load ncl
+  module load esmf_libs/$esmfvers
+  module load mpt/2.19
+  module load netcdf-mpi/4.7.1
+  module load ncarcompilers/0.5.0
   module load nco
 
   if [ "$interactive" = "NO" ]; then
@@ -353,7 +357,8 @@ case $hostname in
      mpi=uni
      mpitype="mpiuni"
   fi
-  module load esmf-${esmfvers}-ncdfio-${mpi}-O
+  module use /glade/work/turuncu/PROGS/modulefiles/esmfpkgs/intel/$intelvers
+  module load esmf-8.1.0b08-ncdfio-mpt-O
   if [ -z "$ESMFBIN_PATH" ]; then
      ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
   fi
@@ -527,7 +532,23 @@ until ((nfile>${#INGRID[*]})); do
       runcmd "ncatted -a history,global,a,c,"$history"  ${OUTFILE[nfile]}"
       runcmd "ncatted -a hostname,global,a,c,$HOST   -h ${OUTFILE[nfile]}"
       runcmd "ncatted -a logname,global,a,c,$LOGNAME -h ${OUTFILE[nfile]}"
+   fi
 
+   nfile=nfile+1
+done
+
+intelvers=18.0.5
+module purge
+module load intel/$intelvers
+module load ncl
+
+declare -i nfile=1
+until ((nfile>${#INGRID[*]})); do
+
+   # Skip if large file and Fast mode is on
+   if [ "$fast" = "YES" ] && [ "${SRC_LRGFIL[nfile]}" = "netcdf4" ]; then
+      echo "Skipping ${OUTFILE[nfile]} as fast mode is on so skipping large files in NetCDF4 format"
+   else
       # check for duplicate mapping weights
       newfile="rmdups_${OUTFILE[nfile]}"
       runcmd "rm -f $newfile"
