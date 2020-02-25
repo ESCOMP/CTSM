@@ -8,7 +8,6 @@ module SoilTemperatureMod
   !
   ! !USES:
   use shr_kind_mod      , only : r8 => shr_kind_r8
-  use shr_log_mod       , only : errMsg => shr_log_errMsg
   use shr_infnan_mod    , only : nan => shr_infnan_nan, assignment(=)
   use decompMod         , only : bounds_type
   use abortutils        , only : endrun
@@ -142,7 +141,7 @@ contains
     !   results in a tridiagonal system equation.
     !
     ! !USES:
-    use clm_time_manager         , only : get_step_size
+    use clm_time_manager         , only : get_step_size_real
     use clm_varpar               , only : nlevsno, nlevgrnd, nlevurb
     use clm_varctl               , only : iulog
     use clm_varcon               , only : cnfac, cpice, cpliq, denh2o
@@ -276,7 +275,7 @@ contains
 
       ! Get step size
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       if ( IsSimpleBuildTemp() ) call BuildingHAC( bounds, num_urbanl, &
                                            filter_urbanl, temperature_inst, &
@@ -537,7 +536,7 @@ contains
 
          else
             if(frac_h2osfc(c) /= 0._r8) then
-               t_grnd(c) = (1 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)
+               t_grnd(c) = (1._r8 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)
             else
                t_grnd(c) = t_soisno(c,1)
             end if
@@ -628,9 +627,9 @@ contains
     call t_startf( 'SoilThermProp' )
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(cv)        == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)        == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk_h2osfc) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cv)        == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)        == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc) == (/bounds%endc/)),           sourcefile, __LINE__)
 
     associate(                                                 & 
          nbedrock     =>    col%nbedrock                     , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)                                 
@@ -780,7 +779,7 @@ contains
             else if (lun%itype(l) /= istwet .AND. lun%itype(l) /= istice_mec &
                  .AND. col%itype(c) /= icol_sunwall .AND. col%itype(c) /= icol_shadewall .AND. &
                  col%itype(c) /= icol_roof) then
-               cv(c,j) = csol(c,j)*(1-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
+               cv(c,j) = csol(c,j)*(1._r8-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
                if (j > nbedrock(c)) cv(c,j) = csol_bedrock*dz(c,j)
             else if (lun%itype(l) == istwet) then 
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
@@ -824,7 +823,7 @@ contains
     ! Only freezing is considered.  When water freezes, move ice to bottom snow layer.
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use clm_varcon       , only : tfrz, hfus, grav, denice, cnfac, cpice, cpliq
     use clm_varpar       , only : nlevsno, nlevgrnd
     use clm_varctl       , only : iulog
@@ -859,7 +858,7 @@ contains
     call t_startf( 'PhaseChangeH2osfc' )
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                   & 
           eflx_h2osfc_to_snow_col  => energyflux_inst%eflx_h2osfc_to_snow_col  , & ! Output: [real(r8) (:)   ] col snow melt to h2osfc heat flux (W/m**2)
@@ -885,7 +884,7 @@ contains
 
       ! Get step size
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Initialization
 
@@ -1062,7 +1061,7 @@ contains
     ! (3) Re-adjust the ice and liquid mass, and the layer temperature
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use clm_varpar       , only : nlevsno, nlevgrnd,nlevurb
     use clm_varctl       , only : iulog
     use clm_varcon       , only : tfrz, hfus, grav
@@ -1101,7 +1100,7 @@ contains
     call t_startf( 'PhaseChangebeta' )
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                        & 
          snl              =>    col%snl                             , & ! Input:  [integer  (:)   ] number of snow layers                    
@@ -1137,7 +1136,7 @@ contains
 
       ! Get step size
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Initialization
 
@@ -1479,12 +1478,12 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_h2osfc)     == (/bounds%endc/)),   errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hs_top_snow)   == (/bounds%endc/)),   errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hs_soil)       == (/bounds%endc/)),   errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hs_top)        == (/bounds%endc/)),   errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)         == (/bounds%endc/)),   errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col)  == (/bounds%endc,1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_h2osfc)     == (/bounds%endc/)),   sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hs_top_snow)   == (/bounds%endc/)),   sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hs_soil)       == (/bounds%endc/)),   sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hs_top)        == (/bounds%endc/)),   sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)         == (/bounds%endc/)),   sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col)  == (/bounds%endc,1/)), sourcefile, __LINE__)
 
     associate(                                                                &
          snl                     => col%snl                                 , & ! Input:  [integer (:)    ]  number of snow layers
@@ -1565,21 +1564,21 @@ contains
                if (patch%active(p)) then
                   if (.not. lun%urbpoi(l)) then
                      eflx_gnet(p) = sabg(p) + dlrad(p) &
-                          + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit(c) &
+                          + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit(c) &
                           - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
                      ! save sabg for balancecheck, in case frac_sno is set to zero later
                      sabg_chk(p) = frac_sno_eff(c) * sabg_snow(p) + (1._r8 - frac_sno_eff(c) ) * sabg_soil(p)
 
                      eflx_gnet_snow = sabg_snow(p) + dlrad(p) &
-                          + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_snow(c) &
+                          + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_snow(c) &
                           - (eflx_sh_snow(p)+qflx_ev_snow(p)*htvp(c))
 
                      eflx_gnet_soil = sabg_soil(p) + dlrad(p) &
-                          + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_soil(c) &
+                          + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_soil(c) &
                           - (eflx_sh_soil(p)+qflx_ev_soil(p)*htvp(c))
 
                      eflx_gnet_h2osfc = sabg_soil(p) + dlrad(p) &
-                          + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_h2osfc(c) &
+                          + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_h2osfc(c) &
                           - (eflx_sh_h2osfc(p)+qflx_ev_h2osfc(p)*htvp(c))
                   else
                      ! For urban columns we use the net longwave radiation (eflx_lwrad_net) because of
@@ -1645,15 +1644,15 @@ contains
                   l = patch%landunit(p)
                   if (.not. lun%urbpoi(l)) then
 
-                     eflx_gnet_top = sabg_lyr(p,lyr_top) + dlrad(p) + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
+                     eflx_gnet_top = sabg_lyr(p,lyr_top) + dlrad(p) + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
                           - lwrad_emit(c) - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
 
                      hs_top(c) = hs_top(c) + eflx_gnet_top*patch%wtcol(p)
 
-                     eflx_gnet_snow = sabg_lyr(p,lyr_top) + dlrad(p) + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
+                     eflx_gnet_snow = sabg_lyr(p,lyr_top) + dlrad(p) + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
                           - lwrad_emit_snow(c) - (eflx_sh_snow(p)+qflx_ev_snow(p)*htvp(c))
 
-                     eflx_gnet_soil = sabg_lyr(p,lyr_top) + dlrad(p) + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
+                     eflx_gnet_soil = sabg_lyr(p,lyr_top) + dlrad(p) + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
                           - lwrad_emit_soil(c) - (eflx_sh_soil(p)+qflx_ev_soil(p)*htvp(c))
 
                      hs_top_snow(c) = hs_top_snow(c) + eflx_gnet_snow*patch%wtcol(p)
@@ -1714,10 +1713,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)   == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cv)   == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)   == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)   == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cv)   == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)   == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(&
          zi         => col%zi                          , & ! Input: [real(r8) (:,:) ] interface level below a "z" level (m)
@@ -1849,19 +1848,19 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hs_top_snow)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dz_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rvector)      == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hs_top_snow)  == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hs_soil)      == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hs_top)       == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rvector)      == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(                                              &
          t_soisno     => temperature_inst%t_soisno_col    , & ! Input: [real(r8) (:,:) ]  soil temperature (Kelvin)      
@@ -1956,15 +1955,15 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_top_snow)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_top_snow)  == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hs_top)       == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, -1/)),       sourcefile, __LINE__)
 
     associate(                    &
          begc =>    bounds%begc , & ! Input:  [integer ] beginning column index
@@ -2034,15 +2033,15 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_top_snow)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_top_snow)  == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hs_top)       == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, -1/)),       sourcefile, __LINE__)
 
     associate(                &
          begc => bounds%begc, & ! Input:  [integer        ] beginning column index
@@ -2111,14 +2110,14 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_top_snow)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_top_snow)  == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hs_top)       == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, -1/)),       sourcefile, __LINE__)
 
     associate(        &
          z => col%z   & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -2194,15 +2193,15 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_top_snow)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_top_snow)  == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hs_top)       == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, -1/)),       sourcefile, __LINE__)
 
     associate(         &
          z  => col%z   & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -2276,14 +2275,14 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_top_snow)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hs_top)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, -1/)),       errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_top_snow)  == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hs_top)       == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, -1/)),       sourcefile, __LINE__)
 
     associate(       &
          z => col%z  & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -2356,15 +2355,15 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dz_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc,1/)),         errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc,1/)),         sourcefile, __LINE__)
 
     ! Initialize
     rt(bounds%begc:bounds%endc, : ) = nan
@@ -2420,17 +2419,17 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_h2osfc)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_soil)      == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_h2osfc)  == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff) == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(&
          begc     => bounds%begc  , & ! Input:  [integer ] beginning column index
@@ -2523,16 +2522,16 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_soil)      == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff) == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(                                      &
          begc =>    bounds%begc                   , & ! Input:  [integer ] beginning column index
@@ -2606,15 +2605,15 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_soil)      == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(                                      &
          z        => col%z                          & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -2698,16 +2697,16 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_soil)      == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff) == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(                                              &
          z            => col%z                              & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -2785,16 +2784,16 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_soil)      == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff) == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(       &
          z  => col%z & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -2870,16 +2869,16 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(hs_soil)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dhsdT)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fn_h2osfc)    == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_h2osfc)     == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_h2osfc)  == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(hs_soil)      == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sabg_lyr_col) == (/bounds%endc, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)         == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fn_h2osfc)    == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_h2osfc)  == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     !
     ! surface water  -----------------------------------------------------------------
@@ -2953,13 +2952,13 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)     == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)        == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk_h2osfc) == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)      == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_h2osfc)  == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dz_h2osfc) == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)     == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)        == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc) == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)      == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)  == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc) == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix)   == (/bounds%endc, nband, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(                                              &
          z            => col%z                            , & ! Input: [real(r8) (:,:) ]  layer thickness (m)
@@ -3110,14 +3109,14 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(bmatrix_snow)        == (/bounds%endc, nband, -1/)),       errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_ssw)         == (/bounds%endc, nband, 0/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)        == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)),       errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_ssw_soil)    == (/bounds%endc, nband, 0/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil_ssw)    == (/bounds%endc, nband, 1/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix)             == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow)        == (/bounds%endc, nband, -1/)),       sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_ssw)         == (/bounds%endc, nband, 0/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil)        == (/bounds%endc, nband, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)),       sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_ssw_soil)    == (/bounds%endc, nband, 0/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil_ssw)    == (/bounds%endc, nband, 1/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix)             == (/bounds%endc, nband, nlevgrnd/)), sourcefile, __LINE__)
 
     ! Assemble the full matrix
 
@@ -3180,11 +3179,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),             errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),   errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),   errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),             errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)),  errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)          == (/bounds%endc/)),             sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),   sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),   sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff)   == (/bounds%endc/)),             sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)),  sourcefile, __LINE__)
 
     associate(&
          begc =>    bounds%begc                   , & ! Input:  [integer ] beginning column index
@@ -3237,10 +3236,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)          == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
 
     associate(& 
          begc =>    bounds%begc                   , & ! Input:  [integer ] beginning column index
@@ -3296,10 +3295,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),            errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)          == (/bounds%endc/)),            sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
 
     associate(& 
          z  => col%z  & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -3319,7 +3318,7 @@ contains
                      if (j == col%snl(c)+1) then
                         dzp     = z(c,j+1)-z(c,j)
                         bmatrix_snow(c,4,j-1) = 0._r8
-                        bmatrix_snow(c,3,j-1) = 1+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                        bmatrix_snow(c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
                         if ( j /= 0) then
                            bmatrix_snow(c,2,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
                         end if
@@ -3375,10 +3374,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),            errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)          == (/bounds%endc/)),            sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
 
     associate(& 
          z => col%z & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -3397,7 +3396,7 @@ contains
                      if (j == col%snl(c)+1) then
                         dzp     = z(c,j+1)-z(c,j)
                         bmatrix_snow(c,4,j-1) = 0._r8
-                        bmatrix_snow(c,3,j-1) = 1+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                        bmatrix_snow(c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
                         if ( j /= 0) then
                            bmatrix_snow(c,2,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
                         end if
@@ -3452,10 +3451,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),            errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)          == (/bounds%endc/)),            sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
 
     associate(& 
          z => col%z  & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -3473,7 +3472,7 @@ contains
                   if (j == col%snl(c)+1) then
                      dzp     = z(c,j+1)-z(c,j)
                      bmatrix_snow(c,4,j-1) = 0._r8
-                     bmatrix_snow(c,3,j-1) = 1+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                     bmatrix_snow(c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
                      if ( j /= 0) then
                         bmatrix_snow(c,2,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
                      end if
@@ -3519,9 +3518,9 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
 
     associate(& 
          begc                      =>    bounds%begc                   , & ! Input:  [integer ] beginning column index
@@ -3569,9 +3568,9 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
 
     associate(& 
          begc => bounds%begc                   , & ! Input:  [integer ] beginning column index
@@ -3623,9 +3622,9 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
 
     associate(& 
          z  => col%z  & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -3690,9 +3689,9 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
 
     associate(& 
          z  => col%z  & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -3757,9 +3756,9 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)                == (/bounds%endc, nlevgrnd/)),  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
 
     associate(&
          z => col%z & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -3826,14 +3825,14 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_h2osfc)    == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)          == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_h2osfc)    == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(                                           &
          begc        => bounds%begc                    , & ! Input:  [integer ] beginning column index
@@ -3910,13 +3909,13 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)          == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(& 
          begc =>    bounds%begc                   , & ! Input:  [integer ] beginning column index
@@ -3978,12 +3977,12 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)          == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(               &
          zi   =>    col%zi , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m)
@@ -4006,7 +4005,7 @@ contains
                         if (j /= 1) then
                            bmatrix_soil(c,4,j) = 0._r8
                         end if
-                        bmatrix_soil(c,3,j) = 1+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                        bmatrix_soil(c,3,j) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
                         bmatrix_soil(c,2,j) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
                      else if (j <= nlevurb-1) then
                         dzm     = (z(c,j)-z(c,j-1))
@@ -4071,13 +4070,13 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)          == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(       &
          z => col%z  & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -4098,7 +4097,7 @@ contains
                         if (j /= 1) then
                            bmatrix_soil(c,4,j) = 0._r8
                         end if
-                        bmatrix_soil(c,3,j) = 1+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                        bmatrix_soil(c,3,j) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
                         bmatrix_soil(c,2,j) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
                      else if (j == 1) then
                         ! this is the snow/soil interface layer
@@ -4168,13 +4167,13 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)          == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)             == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)      == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)      == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),        sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff)   == (/bounds%endc/)),                  sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil)   == (/bounds%endc, nband, nlevgrnd/)), sourcefile, __LINE__)
 
     associate(       &
          z  => col%z & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -4194,7 +4193,7 @@ contains
                      if (j /= 1) then
                         bmatrix_soil(c,4,j) = 0._r8
                      end if
-                     bmatrix_soil(c,3,j) = 1+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                     bmatrix_soil(c,3,j) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
                      bmatrix_soil(c,2,j) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
                   else if (j == 1) then
                      ! this is the snow/soil interface layer
@@ -4255,10 +4254,10 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)              == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil_snow) == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)                == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)              == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff)      == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil_snow) == (/bounds%endc, nband, 1/)), sourcefile, __LINE__)
 
     associate(                 &
          begc => bounds%begc , & ! Input:  [integer ] beginning column index
@@ -4310,10 +4309,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff)        == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff)        == (/bounds%endc/))          , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), sourcefile, __LINE__)
 
     associate(& 
          begc =>    bounds%begc , & ! Input:  [integer ] beginning column index
@@ -4366,9 +4365,9 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), sourcefile, __LINE__)
 
     associate(           &
          z  => col%z     & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -4433,10 +4432,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), sourcefile, __LINE__)
 
     associate(& 
          z => col%z & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -4505,10 +4504,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_sno_eff)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil_snow)   == (/bounds%endc, nband, 1/)), sourcefile, __LINE__)
 
     associate(&
          z => col%z  & ! Input:  [real(r8) (:,:)]  layer thickness (m)
@@ -4577,13 +4576,13 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(dhsdT)          == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk)             == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk_h2osfc)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_h2osfc)       == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dz_h2osfc)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_ssw)   == (/bounds%endc, nband, 0/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dhsdT)          == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)             == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)      == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)       == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)      == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_ssw)   == (/bounds%endc, nband, 0/)), sourcefile, __LINE__)
 
     ! Initialize
     bmatrix_ssw(bounds%begc:bounds%endc, :, :) = 0.0_r8
@@ -4594,7 +4593,7 @@ contains
        ! surface water layer has two coefficients
        dzm=(0.5*dz_h2osfc(c)+col%z(c,1))
 
-       bmatrix_ssw(c,3,0)= 1+(1._r8-cnfac)*(dtime/c_h2osfc(c)) &
+       bmatrix_ssw(c,3,0)= 1._r8+(1._r8-cnfac)*(dtime/c_h2osfc(c)) &
             *tk_h2osfc(c)/dzm -(dtime/c_h2osfc(c))*dhsdT(c) !interaction from atm
 
     enddo
@@ -4634,12 +4633,12 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tk_h2osfc)           == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_h2osfc)            == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dz_h2osfc)           == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_ssw_soil)   == (/bounds%endc, nband, 0/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)           == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)            == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)           == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_ssw_soil)   == (/bounds%endc, nband, 0/)), sourcefile, __LINE__)
 
     ! Initialize
     bmatrix_ssw_soil(bounds%begc:bounds%endc, :, :) = 0.0_r8
@@ -4687,11 +4686,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk_h2osfc)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fact)             == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dz_h2osfc)        == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_h2osfc)      == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bmatrix_soil_ssw) == (/bounds%endc, nband, 1/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fact)             == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)        == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_h2osfc)      == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil_ssw) == (/bounds%endc, nband, 1/)), sourcefile, __LINE__)
 
     ! Initialize
     bmatrix_soil_ssw(bounds%begc:bounds%endc, :, :) = 0.0_r8
@@ -4740,8 +4739,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(cool_on)  == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(heat_on)  == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cool_on)  == (/bounds%endl/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(heat_on)  == (/bounds%endl/)), sourcefile, __LINE__)
 
     associate(& 
     urbpoi         => lun%urbpoi                         , & ! Input:  [logical (:)]  true => landunit is an urban point       

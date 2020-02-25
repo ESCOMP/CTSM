@@ -14,7 +14,6 @@ module dynColumnTemplateMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod    , only : r8 => shr_kind_r8
-  use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use GridcellType    , only : grc
   use LandunitType    , only : lun
@@ -88,7 +87,7 @@ contains
     character(len=*), parameter :: subname = 'template_col_from_landunit'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT_ALL((ubound(cactive) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cactive) == (/bounds%endc/)), sourcefile, __LINE__)
 
     found = .false.
     g = col%gridcell(c_target)
@@ -153,8 +152,8 @@ contains
     character(len=*), parameter :: subname = 'template_col_from_natveg_array'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(cactive) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_templates) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cactive) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c_templates) == (/bounds%endc/)), sourcefile, __LINE__)
 
     do c = bounds%begc, bounds%endc
        c_templates(c) = template_col_from_landunit(bounds, c, istsoil, &

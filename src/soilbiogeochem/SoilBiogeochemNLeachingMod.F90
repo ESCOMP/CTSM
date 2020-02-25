@@ -82,7 +82,7 @@ contains
     !
     ! !USES:
     use clm_varpar       , only : nlevdecomp, nlevsoi
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -120,7 +120,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       if (.not. use_nitrif_denitrif) then
          ! set constant sf 

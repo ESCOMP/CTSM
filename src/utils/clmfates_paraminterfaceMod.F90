@@ -3,7 +3,7 @@ module CLMFatesParamInterfaceMod
   ! interface module because of circular dependancies with pftvarcon.
 
   use FatesGlobals, only : fates_log
-  
+
   implicit none
 
   ! NOTE(bja, 2017-01) these methods can NOT be part of the clmi-fates
@@ -19,9 +19,9 @@ module CLMFatesParamInterfaceMod
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
-  
+
 contains
-  
+
  !-----------------------------------------------------------------------
  subroutine FatesReadParameters()
 
@@ -225,7 +225,7 @@ contains
          case default
             write(fates_log(),*) 'dimension shape:',dimension_shape
             call endrun(msg='unsupported number of dimensions reading parameters.')
-            
+
          end select
          write(fates_log(), *) 'clmfates_interfaceMod.F90:: reading '//trim(name)
          call readNcdio(ncid, name, dimension_shape, dimension_names, subname, data(1:size_dim_1, 1:size_dim_2))

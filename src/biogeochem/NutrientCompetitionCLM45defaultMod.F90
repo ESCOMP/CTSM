@@ -11,7 +11,6 @@ module NutrientCompetitionCLM45defaultMod
   !
   ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
-  use shr_log_mod         , only : errMsg => shr_log_errMsg
   use decompMod           , only : bounds_type
   use LandunitType        , only : lun                
   use ColumnType          , only : col                
@@ -180,9 +179,9 @@ contains
     real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes 
    !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(aroot)   == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(arepr)   == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(fpg_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(aroot)   == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(arepr)   == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(fpg_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                                       &
          fpg                          => fpg_col                                                   , & ! Input:  [real(r8) (:)   ]  fraction of potential gpp (no units)    
@@ -625,7 +624,7 @@ contains
     use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
     use clm_varcon             , only : secspday
     use clm_varctl             , only : use_c13, use_c14, use_matrixcn
-    use clm_time_manager       , only : get_step_size
+    use clm_time_manager       , only : get_step_size_real
     use CanopyStateType        , only : canopystate_type
     use PhotosynthesisMod      , only : photosyns_type
     use CropType               , only : crop_type
@@ -676,8 +675,8 @@ contains
 
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(aroot) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(arepr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(aroot) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(arepr) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type                                
@@ -785,7 +784,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       ! set number of days to recover negative cpool
       dayscrecover = params_inst%dayscrecover

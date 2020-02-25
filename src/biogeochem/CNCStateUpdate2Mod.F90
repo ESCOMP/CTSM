@@ -8,7 +8,7 @@ module CNCStateUpdate2Mod
   use shr_kind_mod                   , only : r8 => shr_kind_r8
   use shr_log_mod                    , only : errMsg => shr_log_errMsg
   use abortutils                     , only : endrun
-  use clm_time_manager               , only : get_step_size
+  use clm_time_manager               , only : get_step_size_real
   use clm_varpar                     , only : nlevdecomp, i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use CNvegCarbonStateType           , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType            , only : cnveg_carbonflux_type
@@ -60,7 +60,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       ! column level carbon fluxes from gap-phase mortality
       do j = 1,nlevdecomp
@@ -142,6 +142,8 @@ contains
               - cf_veg%m_livecrootc_xfer_to_litter_patch(p) * dt
             cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p)       &
               - cf_veg%m_deadcrootc_xfer_to_litter_patch(p) * dt
+         else
+            ! NOTE: The matrix version of this is in CNGapMortality (EBK 11/25/2019)
          end if !not use_matrixcn
       end do ! end of patch loop
 
@@ -182,7 +184,7 @@ contains
          )
      
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       ! column level carbon fluxes from harvest mortality
       do j = 1, nlevdecomp
@@ -273,6 +275,8 @@ contains
               - cf_veg%hrv_livecrootc_xfer_to_litter_patch(p) * dt
             cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p)       &
               - cf_veg%hrv_deadcrootc_xfer_to_litter_patch(p) * dt
+         else
+            ! NOTE: The matrix equivalent of the above is in CNHarvest (EBK 11/25/2019)
          end if
 
       end do ! end of patch loop

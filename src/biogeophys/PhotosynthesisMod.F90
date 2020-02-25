@@ -89,7 +89,6 @@ module  PhotosynthesisMod
      real(r8), allocatable, private :: kmax               (:,:)
      real(r8), allocatable, private :: psi50              (:,:)
      real(r8), allocatable, private :: ck                 (:,:)
-     real(r8), allocatable, public  :: psi_soil_ref       (:)
      real(r8), allocatable, private :: lmr_intercept_atkin(:)
   contains
      procedure, private :: allocParams
@@ -464,12 +463,12 @@ contains
     this%rssun_patch(begp:endp) = spval
     call hist_addfld1d (fname='RSSUN', units='s/m',  &
          avgflag='M', long_name='sunlit leaf stomatal resistance', &
-         ptr_patch=this%rssun_patch, set_lake=spval, set_urb=spval)
+         ptr_patch=this%rssun_patch, l2g_scale_type='veg')
 
     this%rssha_patch(begp:endp) = spval
     call hist_addfld1d (fname='RSSHA', units='s/m',  &
          avgflag='M', long_name='shaded leaf stomatal resistance', &
-         ptr_patch=this%rssha_patch, set_lake=spval, set_urb=spval)
+         ptr_patch=this%rssha_patch, l2g_scale_type='veg')
 
     this%gs_mol_sun_patch(begp:endp,:) = spval
     this%gs_mol_sha_patch(begp:endp,:) = spval
@@ -618,7 +617,6 @@ contains
     allocate( this%kmax        (0:mxpft,nvegwcs) )  ; this%kmax(:,:)       = nan
     allocate( this%psi50       (0:mxpft,nvegwcs) )  ; this%psi50(:,:)      = nan
     allocate( this%ck          (0:mxpft,nvegwcs) )  ; this%ck(:,:)         = nan
-    allocate( this%psi_soil_ref(0:mxpft) )          ; this%psi_soil_ref(:) = nan
 
     if ( use_hydrstress .and. nvegwcs /= 4 )then
        call endrun(msg='Error:: the Plant Hydraulics Stress methodology is for the spacA function is hardcoded for nvegwcs==4' &
@@ -657,10 +655,6 @@ contains
     call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%krmax=temp1d
-    tString = "psi_soil_ref"
-    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%psi_soil_ref=temp1d
     tString = "lmr_intercept_atkin"
     call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -976,7 +970,7 @@ contains
     ! !USES:
     use clm_varcon        , only : rgas, tfrz, spval
     use GridcellType      , only : grc
-    use clm_time_manager  , only : get_step_size, is_near_local_noon
+    use clm_time_manager  , only : get_step_size_real, is_near_local_noon
     use clm_varctl     , only : cnallocate_carbon_only
     use clm_varctl     , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use pftconMod      , only : nbrdlf_dcd_tmp_shrub, npcropmin
@@ -1130,14 +1124,14 @@ contains
 
     ! Enforce expected array sizes
 
-    SHR_ASSERT_ALL((ubound(esat_tv)     == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(oair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rb)          == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(btran)       == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dayl_factor) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(leafn)       == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(esat_tv)     == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(oair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rb)          == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(btran)       == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dayl_factor) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(leafn)       == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                 &
          c3psn      => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3
@@ -1233,7 +1227,7 @@ contains
 
       ! Determine seconds of current time step
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Activation energy, from:
       ! Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
@@ -1931,7 +1925,7 @@ contains
     real(r8) :: ci
     !------------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(downreg) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(downreg) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                  &
          forc_pbot   => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)
@@ -2443,7 +2437,7 @@ contains
     ! !USES:
     use clm_varcon        , only : rgas, tfrz, rpi, spval
     use GridcellType      , only : grc
-    use clm_time_manager  , only : get_step_size, is_near_local_noon
+    use clm_time_manager  , only : get_step_size_real, is_near_local_noon
     use clm_varctl        , only : cnallocate_carbon_only
     use clm_varctl        , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use clm_varpar        , only : nlevsoi
@@ -2662,17 +2656,17 @@ contains
 
     ! Enforce expected array sizes
 
-    SHR_ASSERT_ALL((ubound(esat_tv)     == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(oair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cair)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rb)          == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsun)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsha)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(btran)       == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(dayl_factor) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qsatl)       == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qaf)         == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(esat_tv)     == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(oair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cair)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rb)          == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsun)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsha)        == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(btran)       == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dayl_factor) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qsatl)       == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qaf)         == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                 &
          k_soil_root  => soilstate_inst%k_soil_root_patch    , & ! Input:  [real(r8) (:,:) ]  soil-root interface conductance (mm/s)
@@ -2787,7 +2781,7 @@ contains
 
       ! Determine seconds off current time step
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Activation energy, from:
       ! Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
@@ -4639,7 +4633,6 @@ contains
          tsai          => canopystate_inst%tsai_patch           , & ! Input:  [real(r8) (:)   ]  patch canopy one-sided stem area index, no burying by snow
          smp           => soilstate_inst%smp_l_col              , & ! Input: [real(r8) (:,:) ]  soil matrix potential [mm]
          ivt           => patch%itype                           , & ! Input:  [integer  (:)   ]  patch vegetation type
-         qflx_tran_veg => waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
          z             => col%z                                   & ! Input:  [real(r8) (:,:) ]  layer node depth (m)
          )
     

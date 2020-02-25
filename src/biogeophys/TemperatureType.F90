@@ -658,10 +658,10 @@ contains
     integer  :: lev
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(em_roof_lun)    == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_wall_lun)    == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_improad_lun) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_perroad_lun) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(em_roof_lun)    == (/bounds%endl/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(em_wall_lun)    == (/bounds%endl/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(em_improad_lun) == (/bounds%endl/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(em_perroad_lun) == (/bounds%endl/)), sourcefile, __LINE__)
 
     associate(snl => col%snl) ! Output: [integer (:)    ]  number of snow layers
 
@@ -1123,7 +1123,7 @@ contains
     !
     ! !USES
     use accumulMod       , only : init_accum_field
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     !
     ! !ARGUMENTS:
@@ -1135,7 +1135,7 @@ contains
     integer, parameter :: not_used = huge(1)
     !---------------------------------------------------------------------
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     this%t_veg24_patch(bounds%begp:bounds%endp) = spval
     call init_accum_field (name='T_VEG24', units='K',                                              &

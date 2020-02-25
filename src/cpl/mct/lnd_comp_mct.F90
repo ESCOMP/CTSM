@@ -1,5 +1,5 @@
 module lnd_comp_mct
-  
+
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
   !  Interface of the active land model component of CESM the CLM (Community Land Model)
@@ -119,7 +119,7 @@ contains
 
     call clm_cpl_indices_set()
 
-    ! Initialize clm MPI communicator 
+    ! Initialize clm MPI communicator
 
     call spmd_init( mpicom_lnd, LNDID )
 
@@ -128,7 +128,7 @@ contains
        lbnum=1
        call memmon_dump_fort('memmon.out','lnd_init_mct:start::',lbnum)
     endif
-#endif                      
+#endif
 
     inst_name   = seq_comm_name(LNDID)
     inst_index  = seq_comm_inst(LNDID)
@@ -150,19 +150,19 @@ contains
 
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (iulog)
-    
+
     ! Use infodata to set orbital values
 
     call seq_infodata_GetData( infodata, orb_eccen=eccen, orb_mvelpp=mvelpp, &
          orb_lambm0=lambm0, orb_obliqr=obliqr )
 
-    ! Consistency check on namelist filename	
+    ! Consistency check on namelist filename
 
     call control_setNL("lnd_in"//trim(inst_suffix))
 
     ! Initialize clm
-    ! initialize1 reads namelist, grid and surface data (need this to initialize gsmap) 
-    ! initialize2 performs rest of initialization	
+    ! initialize1 reads namelist, grid and surface data (need this to initialize gsmap)
+    ! initialize2 performs rest of initialization
 
     call seq_timemgr_EClockGetData(EClock,                               &
                                    start_ymd=start_ymd,                  &
@@ -218,7 +218,7 @@ contains
 
     call get_proc_bounds( bounds )
 
-    call lnd_SetgsMap_mct( bounds, mpicom_lnd, LNDID, gsMap_lnd ) 	
+    call lnd_SetgsMap_mct( bounds, mpicom_lnd, LNDID, gsMap_lnd )
     lsize = mct_gsMap_lsize(gsMap_lnd, mpicom_lnd)
 
     call lnd_domain_mct( bounds, lsize, gsMap_lnd, dom_l )
@@ -247,7 +247,7 @@ contains
        call endrun( sub//' ERROR: time out of sync' )
     end if
 
-    ! Create land export state 
+    ! Create land export state
 
     call lnd_export(bounds, water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, l2x_l%rattr)
 
@@ -395,7 +395,7 @@ contains
     ! Map MCT to land data type
     ! Perform downscaling if appropriate
 
-    
+
     ! Map to clm (only when state and/or fluxes need to be updated)
 
     call t_startf ('lc_lnd_import')
@@ -431,11 +431,11 @@ contains
        nstep = get_nstep()
        caldayp1 = get_curr_calday(offset=dtime)
        if (nstep == 0) then
-	  doalb = .false. 	
-       else if (nstep == 1) then 
-          doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8) 
+	  doalb = .false.
+       else if (nstep == 1) then
+          doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
        else
-          doalb = (nextsw_cday >= -0.5_r8) 
+          doalb = (nextsw_cday >= -0.5_r8)
        end if
        call update_rad_dtime(doalb)
 
@@ -446,7 +446,7 @@ contains
        nlend = .false.
        if (nlend_sync .and. dosend) nlend = .true.
 
-       ! Run clm 
+       ! Run clm
 
        call t_barrierf('sync_clm_run1', mpicom)
        call t_startf ('clm_run')
@@ -459,13 +459,13 @@ contains
        call t_stopf ('clm_run')
 
        ! Create l2x_l export state - add river runoff input to l2x_l if appropriate
-       
+
        call t_startf ('lc_lnd_export')
        call lnd_export(bounds, water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, l2x_l%rattr)
        call t_stopf ('lc_lnd_export')
 
        ! Advance clm time step
-       
+
        call t_startf ('lc_clm2_adv_timestep')
        call advance_timestep()
        call t_stopf ('lc_clm2_adv_timestep')
@@ -483,12 +483,12 @@ contains
        write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
        call endrun( sub//":: CLM clock not in sync with Master Sync clock" )
     end if
-    
+
     ! Reset shr logging to my original values
 
     call shr_file_setLogUnit (shrlogunit)
     call shr_file_setLogLevel(shrloglev)
-  
+
 #if (defined _MEMTRACE)
     if(masterproc) then
        lbnum=1
@@ -552,7 +552,7 @@ contains
     ! Build the land grid numbering for MCT
     ! NOTE:  Numbering scheme is: West to East and South to North
     ! starting at south pole.  Should be the same as what's used in SCRIP
-    
+
     allocate(gindex(bounds%begg:bounds%endg),stat=ier)
 
     ! number the local grid
@@ -584,7 +584,7 @@ contains
     use mct_mod     , only: mct_gGrid_importRAttr, mct_gGrid_init, mct_gsMap_orderedPoints
     use seq_flds_mod, only: seq_flds_dom_coord, seq_flds_dom_other
     !
-    ! !ARGUMENTS: 
+    ! !ARGUMENTS:
     type(bounds_type), intent(in)  :: bounds  ! bounds
     integer        , intent(in)    :: lsize   ! land model domain data size
     type(mct_gsMap), intent(inout) :: gsMap_l ! Output land model MCT GS map
@@ -599,7 +599,7 @@ contains
     ! Initialize mct domain type
     ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
     ! Note that in addition land carries around landfrac for the purposes of domain checking
-    ! 
+    !
     call mct_gGrid_init( GGrid=dom_l, CoordChars=trim(seq_flds_dom_coord), &
        OtherChars=trim(seq_flds_dom_other), lsize=lsize )
     !
@@ -615,13 +615,13 @@ contains
     ! Determine domain (numbering scheme is: West to East and South to North to South pole)
     ! Initialize attribute vector with special value
     !
-    data(:) = -9999.0_R8 
-    call mct_gGrid_importRAttr(dom_l,"lat"  ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_l,"lon"  ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_l,"area" ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_l,"aream",data,lsize) 
-    data(:) = 0.0_R8     
-    call mct_gGrid_importRAttr(dom_l,"mask" ,data,lsize) 
+    data(:) = -9999.0_R8
+    call mct_gGrid_importRAttr(dom_l,"lat"  ,data,lsize)
+    call mct_gGrid_importRAttr(dom_l,"lon"  ,data,lsize)
+    call mct_gGrid_importRAttr(dom_l,"area" ,data,lsize)
+    call mct_gGrid_importRAttr(dom_l,"aream",data,lsize)
+    data(:) = 0.0_R8
+    call mct_gGrid_importRAttr(dom_l,"mask" ,data,lsize)
     !
     ! Fill in correct values for domain components
     ! Note aream will be filled in in the atm-lnd mapper
@@ -630,31 +630,31 @@ contains
        i = 1 + (g - bounds%begg)
        data(i) = ldomain%lonc(g)
     end do
-    call mct_gGrid_importRattr(dom_l,"lon",data,lsize) 
+    call mct_gGrid_importRattr(dom_l,"lon",data,lsize)
 
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = ldomain%latc(g)
     end do
-    call mct_gGrid_importRattr(dom_l,"lat",data,lsize) 
+    call mct_gGrid_importRattr(dom_l,"lat",data,lsize)
 
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = ldomain%area(g)/(re*re)
     end do
-    call mct_gGrid_importRattr(dom_l,"area",data,lsize) 
+    call mct_gGrid_importRattr(dom_l,"area",data,lsize)
 
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = real(ldomain%mask(g), r8)
     end do
-    call mct_gGrid_importRattr(dom_l,"mask",data,lsize) 
+    call mct_gGrid_importRattr(dom_l,"mask",data,lsize)
 
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = real(ldomain%frac(g), r8)
     end do
-    call mct_gGrid_importRattr(dom_l,"frac",data,lsize) 
+    call mct_gGrid_importRattr(dom_l,"frac",data,lsize)
 
     deallocate(data)
     deallocate(idata)
@@ -682,7 +682,7 @@ contains
     ! assimilation
     call seq_cdata_setptrs(cdata_l, post_assimilation=resume_from_data_assim)
     if ( resume_from_data_assim ) call update_DA_nstep()
- 
+
   end subroutine lnd_handle_resume
 
 end module lnd_comp_mct

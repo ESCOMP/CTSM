@@ -124,7 +124,7 @@ contains
    type(mct_ggrid)    :: dom_clm                              ! domain information 
    character(len=CL)  :: stream_fldFileName_urbantv           ! urban tv streams filename
    character(len=CL)  :: urbantvmapalgo = 'nn'                ! mapping alogrithm for urban ac
-   character(SHR_KIND_CL)  :: fldList                         ! field string
+   character(len=CL)  :: fldList                              ! field string
    character(*), parameter :: urbantvString = "tbuildmax_"    ! base string for field string
    character(*), parameter :: subName = "('urbantv_init')"
    character(*), parameter :: F00 = "('(urbantv_init) ',4a)"

@@ -290,9 +290,9 @@ contains
     real(r8)           :: ratio
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osno_input_col)     == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(watsat_col)           == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno_col)         == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osno_input_col)     == (/bounds%endc/))          , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col)           == (/bounds%endc,nlevgrnd/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno_col)         == (/bounds%endc,nlevgrnd/)) , sourcefile, __LINE__)
 
     ratio = this%info%get_ratio()
 
@@ -518,7 +518,7 @@ contains
     real(r8) :: totwat       ! total soil water (mm)
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevgrnd/)) , sourcefile, __LINE__)
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('H2OSFC'), &
@@ -696,7 +696,7 @@ contains
     character(len=*), parameter :: subname = 'CalculateTotalH2osno'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osno_total, 1) == bounds%endc), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
 
 #ifndef NDEBUG
     call this%CheckSnowConsistency(num_c, filter_c, caller)

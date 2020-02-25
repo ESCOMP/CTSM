@@ -7,12 +7,11 @@ module SurfaceWaterMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod                , only : r8 => shr_kind_r8
-  use shr_log_mod                 , only : errMsg => shr_log_errMsg
   use shr_const_mod               , only : shr_const_pi
   use shr_spfn_mod                , only : erf => shr_spfn_erf
   use clm_varcon                  , only : denh2o, denice, roverg, wimp, tfrz, pc, mu, rpi
   use clm_varpar                  , only : nlevsno, nlevgrnd
-  use clm_time_manager            , only : get_step_size
+  use clm_time_manager            , only : get_step_size_real
   use column_varcon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
   use decompMod                   , only : bounds_type
   use ColumnType                  , only : col
@@ -85,7 +84,7 @@ contains
          b_waterdiagnostic_inst => water_inst%waterdiagnosticbulk_inst &
          )
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! ------------------------------------------------------------------------
     ! Update diagnostics for bulk water
@@ -354,7 +353,7 @@ contains
          h2osfcflag       =>    soilhydrology_inst%h2osfcflag         & ! Input:  integer
          )
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     call QflxH2osfcSurf(bounds, num_hydrologyc, filter_hydrologyc, &
          h2osfcflag = h2osfcflag, &
@@ -432,13 +431,13 @@ contains
     character(len=*), parameter :: subname = 'QflxH2osfcSurf'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osfc) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osfc_thresh) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_h2osfc_nosnow) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(topo_slope) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_h2osfc_surf) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osfc) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osfc_thresh) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_h2osfc_nosnow) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(topo_slope) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_h2osfc_surf) == (/bounds%endc/)), sourcefile, __LINE__)
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
@@ -499,12 +498,12 @@ contains
     character(len=*), parameter :: subname = 'QflxH2osfcDrain'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osfc) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_h2osfc) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qinmax) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_h2osfc_drain) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osfc) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_h2osfc) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qinmax) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_h2osfc_drain) == (/bounds%endc/)), sourcefile, __LINE__)
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)

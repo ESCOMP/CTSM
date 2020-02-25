@@ -11,7 +11,7 @@ module CNBalanceCheckMod
   use decompMod                       , only : bounds_type
   use abortutils                      , only : endrun
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
-  use clm_time_manager                , only : get_step_size
+  use clm_time_manager                , only : get_step_size_real
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
@@ -61,21 +61,9 @@ contains
     call this%InitAllocate(bounds)
 
     this%cwarning = 1.e-8_r8
-    if(use_matrixcn .or. use_soil_matrixcn)then
-       this%nwarning = 1.e-7_r8
-       this%nerror   = 1.e-3_r8
-       this%cerror   = 1.e-7_r8
-    else
-       this%nwarning = 1.e-7_r8
-       this%nerror   = 1.e-3_r8
-       this%cerror   = 1.e-7_r8
-    end if
-    if ( isspinup )then
-       this%nwarning = 1.e-5_r8
-       this%nerror   = 1.e-1_r8
-       this%cwarning = 1.e-6_r8
-       this%cerror   = 1.e-3_r8
-    end if
+    this%nwarning = 1.e-7_r8
+    this%nerror   = 1.e-3_r8
+    this%cerror   = 1.e-7_r8
   end subroutine Init
 
   !-----------------------------------------------------------------------
@@ -175,7 +163,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       err_found = .false.
       do fc = 1,num_soilc
@@ -294,7 +282,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       err_found = .false.
       do fc = 1,num_soilc

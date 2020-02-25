@@ -247,7 +247,6 @@ contains
      ! USES
      use shr_kind_mod    , only : r8 => shr_kind_r8     
      use shr_const_mod   , only : SHR_CONST_PI
-     use shr_log_mod     , only : errMsg => shr_log_errMsg   
      use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
      use decompMod       , only : bounds_type
      use clm_varcon      , only : denh2o, denice
@@ -270,7 +269,7 @@ contains
      real(r8) :: fac, fac_fc, wx      !temporary variables
      integer  :: c, l, fc     !indices
 
-     SHR_ASSERT_ALL((ubound(soilbeta)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(soilbeta)    == (/bounds%endc/)), sourcefile, __LINE__)
 
      associate(                                              &
           watsat      =>    soilstate_inst%watsat_col      , & ! Input:  [real(r8) (:,:)] volumetric soil water at saturation (porosity)
@@ -345,7 +344,6 @@ contains
      ! USES
      use shr_kind_mod    , only : r8 => shr_kind_r8     
      use shr_const_mod   , only : SHR_CONST_PI
-     use shr_log_mod     , only : errMsg => shr_log_errMsg   
      use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
      use decompMod       , only : bounds_type
      use clm_varcon      , only : denh2o, denice
@@ -370,8 +368,8 @@ contains
      real(r8) :: eff_por_top
      integer  :: c, l, fc     !indices
      
-     SHR_ASSERT_ALL((ubound(dsl)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(soilresis)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(dsl)    == (/bounds%endc/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(soilresis)    == (/bounds%endc/)), sourcefile, __LINE__)
 
      associate(                                              &
           dz                =>    col%dz                             , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)                             

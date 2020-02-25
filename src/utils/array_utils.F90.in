@@ -14,7 +14,6 @@ module array_utils
 #include "shr_assert.h"
   use shr_kind_mod, only : r8 => shr_kind_r8, i4=>shr_kind_i4
   use abortutils  , only : endrun
-  use shr_log_mod  , only : errMsg => shr_log_errMsg
 
   implicit none
   private
@@ -58,7 +57,7 @@ contains
     character(len=*), parameter :: subname = 'find_k_max_indices'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((size(max_indices) == k), errMsg(subname, __LINE__))
+    SHR_ASSERT_FL((size(max_indices) == k), subname, __LINE__)
 
     if (k < 1 .or. k > size(data)) then
        call endrun(subname//': must have 1 <= k <= size(data)')

@@ -53,6 +53,18 @@
     <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
+  <!-- Primarily for testing -->
+  <compset>
+    <alias>I2000Clm50SpRsGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing -->
+  <compset>
+    <alias>I2000Clm50SpRtmGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+  </compset>
+
   <compset>
     <alias>I2000Clm50BgcCru</alias>
     <lname>2000_DATM%CRUv7_CLM50%BGC_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
@@ -133,6 +145,11 @@
   <compset>
     <alias>I2000Clm50BgcCropQianGs</alias>
     <lname>2000_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm50BgcCropQianGs</alias>
+    <lname>1850_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <!-- Primarily for testing - when we want builds and runs to be as
