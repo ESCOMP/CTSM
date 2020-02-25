@@ -42,7 +42,7 @@ module CNVegMatrixMod
   use CNVegNitrogenFluxType          , only : cnveg_nitrogenflux_type
   use CNVegStateType                 , only : cnveg_state_type
   use SoilBiogeochemNitrogenFluxType , only : soilbiogeochem_nitrogenflux_type
-  use clm_varctl                     , only : isspinup, is_outmatrix, nyr_forcing
+  use clm_varctl                     , only : isspinup, is_outmatrix, nyr_forcing, nyr_SASU, iloop_avg 
   use clm_varctl                     , only : use_c13, use_c14 
   use SPMMod                         , only : sparse_matrix_type,diag_matrix_type,vector_type
   use MatrixMod                      , only : inverse
@@ -128,6 +128,7 @@ contains
      logical, save             :: list_ready_phgmn     = .false.
 
      integer, save             :: iyr=0
+     integer, save             :: iloop=0
 
   ! Temporary variables are only used at end of the year to calculate C and N storage capacity
      real(r8),dimension(:)     :: matrix_calloc_acc    (1:nvegcpool)
@@ -198,6 +199,48 @@ contains
     grainn_storage        => cnveg_nitrogenstate_inst%grainn_storage_patch      , & ! In/Output:  [real(r8) (:) ]    (gN/m2) grain storage N
     grainn_xfer           => cnveg_nitrogenstate_inst%grainn_xfer_patch         , & ! In/Output:  [real(r8) (:) ]    (gN/m2) grain transfer N
     retransn              => cnveg_nitrogenstate_inst%retransn_patch            , & ! In/Output:  [real(r8) (:) ]    (gN/m2) plant retranslocated N
+
+    leafc_SASUsave                => cnveg_carbonstate_inst%leafc_SASUsave_patch                 , & ! In/Output:  [real(r8) (:) ]    (gC/m2) leaf C for SASU
+    leafc_storage_SASUsave        => cnveg_carbonstate_inst%leafc_storage_SASUsave_patch         , & ! In/Output:  [real(r8) (:) ]    (gC/m2) leaf C for SASU
+    leafc_xfer_SASUsave           => cnveg_carbonstate_inst%leafc_xfer_SASUsave_patch            , & ! In/Output:  [real(r8) (:) ]    (gC/m2) leaf C for SASU
+    frootc_SASUsave               => cnveg_carbonstate_inst%frootc_SASUsave_patch                , & ! In/Output:  [real(r8) (:) ]    (gC/m2) froot C for SASU
+    frootc_storage_SASUsave       => cnveg_carbonstate_inst%frootc_storage_SASUsave_patch        , & ! In/Output:  [real(r8) (:) ]    (gC/m2) froot C for SASU
+    frootc_xfer_SASUsave          => cnveg_carbonstate_inst%frootc_xfer_SASUsave_patch           , & ! In/Output:  [real(r8) (:) ]    (gC/m2) froot C for SASU
+    livestemc_SASUsave            => cnveg_carbonstate_inst%livestemc_SASUsave_patch             , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livestem C for SASU
+    livestemc_storage_SASUsave    => cnveg_carbonstate_inst%livestemc_storage_SASUsave_patch     , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livestem C for SASU
+    livestemc_xfer_SASUsave       => cnveg_carbonstate_inst%livestemc_xfer_SASUsave_patch        , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livestem C for SASU
+    deadstemc_SASUsave            => cnveg_carbonstate_inst%deadstemc_SASUsave_patch             , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadstem C for SASU
+    deadstemc_storage_SASUsave    => cnveg_carbonstate_inst%deadstemc_storage_SASUsave_patch     , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadstem C for SASU
+    deadstemc_xfer_SASUsave       => cnveg_carbonstate_inst%deadstemc_xfer_SASUsave_patch        , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadstem C for SASU
+    livecrootc_SASUsave           => cnveg_carbonstate_inst%livecrootc_SASUsave_patch            , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livecroot C for SASU
+    livecrootc_storage_SASUsave   => cnveg_carbonstate_inst%livecrootc_storage_SASUsave_patch    , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livecroot C for SASU
+    livecrootc_xfer_SASUsave      => cnveg_carbonstate_inst%livecrootc_xfer_SASUsave_patch       , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livecroot C for SASU
+    deadcrootc_SASUsave           => cnveg_carbonstate_inst%deadcrootc_SASUsave_patch            , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadcroot C for SASU
+    deadcrootc_storage_SASUsave   => cnveg_carbonstate_inst%deadcrootc_storage_SASUsave_patch    , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadcroot C for SASU
+    deadcrootc_xfer_SASUsave      => cnveg_carbonstate_inst%deadcrootc_xfer_SASUsave_patch       , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadcroot C for SASU
+    grainc_SASUsave               => cnveg_carbonstate_inst%grainc_SASUsave_patch                , & ! In/Output:  [real(r8) (:) ]    (gC/m2) grain C for SASU
+    grainc_storage_SASUsave       => cnveg_carbonstate_inst%grainc_storage_SASUsave_patch        , & ! In/Output:  [real(r8) (:) ]    (gC/m2) grain storage C for SASU
+
+    leafn_SASUsave                => cnveg_nitrogenstate_inst%leafn_SASUsave_patch               , & ! In/Output:  [real(r8) (:) ]    (gC/m2) leaf N for SASU
+    leafn_storage_SASUsave        => cnveg_nitrogenstate_inst%leafn_storage_SASUsave_patch       , & ! In/Output:  [real(r8) (:) ]    (gC/m2) leaf N for SASU
+    leafn_xfer_SASUsave           => cnveg_nitrogenstate_inst%leafn_xfer_SASUsave_patch          , & ! In/Output:  [real(r8) (:) ]    (gC/m2) leaf N for SASU
+    frootn_SASUsave               => cnveg_nitrogenstate_inst%frootn_SASUsave_patch              , & ! In/Output:  [real(r8) (:) ]    (gC/m2) froot N for SASU
+    frootn_storage_SASUsave       => cnveg_nitrogenstate_inst%frootn_storage_SASUsave_patch      , & ! In/Output:  [real(r8) (:) ]    (gC/m2) froot N for SASU
+    frootn_xfer_SASUsave          => cnveg_nitrogenstate_inst%frootn_xfer_SASUsave_patch         , & ! In/Output:  [real(r8) (:) ]    (gC/m2) froot N for SASU
+    livestemn_SASUsave            => cnveg_nitrogenstate_inst%livestemn_SASUsave_patch           , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livestem N for SASU
+    livestemn_storage_SASUsave    => cnveg_nitrogenstate_inst%livestemn_storage_SASUsave_patch   , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livestem N for SASU
+    livestemn_xfer_SASUsave       => cnveg_nitrogenstate_inst%livestemn_xfer_SASUsave_patch      , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livestem N for SASU
+    deadstemn_SASUsave            => cnveg_nitrogenstate_inst%deadstemn_SASUsave_patch           , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadstem N for SASU
+    deadstemn_storage_SASUsave    => cnveg_nitrogenstate_inst%deadstemn_storage_SASUsave_patch   , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadstem N for SASU
+    deadstemn_xfer_SASUsave       => cnveg_nitrogenstate_inst%deadstemn_xfer_SASUsave_patch      , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadstem N for SASU
+    livecrootn_SASUsave           => cnveg_nitrogenstate_inst%livecrootn_SASUsave_patch          , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livecroot N for SASU
+    livecrootn_storage_SASUsave   => cnveg_nitrogenstate_inst%livecrootn_storage_SASUsave_patch  , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livecroot N for SASU
+    livecrootn_xfer_SASUsave      => cnveg_nitrogenstate_inst%livecrootn_xfer_SASUsave_patch     , & ! In/Output:  [real(r8) (:) ]    (gC/m2) livecroot N for SASU
+    deadcrootn_SASUsave           => cnveg_nitrogenstate_inst%deadcrootn_SASUsave_patch          , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadcroot N for SASU
+    deadcrootn_storage_SASUsave   => cnveg_nitrogenstate_inst%deadcrootn_storage_SASUsave_patch  , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadcroot N for SASU
+    deadcrootn_xfer_SASUsave      => cnveg_nitrogenstate_inst%deadcrootn_xfer_SASUsave_patch     , & ! In/Output:  [real(r8) (:) ]    (gC/m2) deadcroot N for SASU
+    grainn_SASUsave               => cnveg_nitrogenstate_inst%grainn_SASUsave_patch              , & ! In/Output:  [real(r8) (:) ]    (gC/m2) grain N for SASU
+    grainn_storage_SASUsave       => cnveg_nitrogenstate_inst%grainn_storage_SASUsave_patch      , & ! In/Output:  [real(r8) (:) ]    (gC/m2) grain storage N for SASU
 
   ! Vegetation capacity variables "matrix_cap_*", save the capacity of each vegetation compartment.
     matrix_cap_leafc              => cnveg_carbonstate_inst%matrix_cap_leafc_patch               ,&!Output:[real(r8)(:)] (gC/m2) leaf C capacity
@@ -1212,7 +1255,10 @@ contains
   ! Save *c0* and *n0* variables at begin of each year.
       if (is_beg_curr_year())then
          iyr = iyr + 1
-         if(.not. isspinup .or. isspinup .and. iyr .eq. 1)then
+         if(mod(iyr-1,nyr_forcing) .eq. 0)then
+            iloop = iloop + 1
+         end if
+         if(.not. isspinup .or. isspinup .and. mod(iyr-1,nyr_SASU) .eq. 0)then
             do fp = 1,num_soilp
                p = filter_soilp(fp)
                leafc0(p)                = max(leafc(p),  epsi)
@@ -2001,8 +2047,7 @@ contains
 
   ! Calculate C storage capacity. 2D matrix instead of sparse matrix is still used when calculating the inverse
          if(isspinup .or. is_outmatrix)then
-            if((.not. isspinup .and. is_end_curr_year()) .or. (isspinup .and. is_end_curr_year() .and. iyr .eq. nyr_forcing))then
-               iyr = 0
+            if((.not. isspinup .and. is_end_curr_year()) .or. (isspinup .and. is_end_curr_year() .and. mod(iyr,nyr_SASU) .eq. 0))then
                do fp = 1,num_soilp
                   call t_startf('CN veg matrix-prepare AK^-1')
                   p = filter_soilp(fp)
@@ -2220,64 +2265,160 @@ contains
                   call inverse(matrix_ntransfer_acc(1:nvegnpool,1:nvegnpool),AKinvn(1:nvegnpool,1:nvegnpool),nvegnpool)
                   vegmatrixn_rt(:) = -matmul(AKinvn(1:nvegnpool,1:nvegnpool),matrix_nalloc_acc(1:nvegnpool))
 
+                  do i=1,nvegcpool
+                     if(vegmatrixc_rt(i) .lt. 0)vegmatrixc_rt(i) = epsi
+                  end do
+                  do i=1,nvegnpool
+                     if(vegmatrixn_rt(i) .lt. 0)vegmatrixn_rt(i) = epsi
+                  end do
+
                   call t_stopf('CN veg matrix-inv matrix operation')
  
                   call t_startf('CN veg matrix-finalize spinup')
                   
                   if(isspinup .and. .not. is_first_step_of_this_run_segment())then
-  ! if spin up is true, set C storage to capacity. Not tested yet
-!                     leafc(p)                  = vegmatrixc_rt(ileaf)
-!                     leafc_storage(p)          = vegmatrixc_rt(ileaf_st)
-!                     leafc_xfer(p)             = vegmatrixc_rt(ileaf_xf)
-!                     frootc(p)                 = vegmatrixc_rt(ifroot)
-!                     frootc_storage(p)         = vegmatrixc_rt(ifroot_st)
-!                     frootc_xfer(p)            = vegmatrixc_rt(ifroot_xf)
-!                     livestemc(p)              = vegmatrixc_rt(ilivestem)
-!                     livestemc_storage(p)      = vegmatrixc_rt(ilivestem_st)
-!                     livestemc_xfer(p)         = vegmatrixc_rt(ilivestem_xf)
-!                     deadstemc(p)              = vegmatrixc_rt(ideadstem)
-                     deadstemc(p)               = -(matrix_ctransfer_acc(ideadstem,ideadstem_xf)*deadstemc0_xfer(p) &
-                                                + matrix_ctransfer_acc(ideadstem,ilivestem)*livestemc0(p)) / matrix_ctransfer_acc(ideadstem,ideadstem)
-!                     deadstemc_storage(p)      = vegmatrixc_rt(ideadstem_st)
-!                     deadstemc_xfer(p)         = vegmatrixc_rt(ideadstem_xf)
-!                     livecrootc(p)             = vegmatrixc_rt(ilivecroot)
-!                     livecrootc_storage(p)     = vegmatrixc_rt(ilivecroot_st)
-!                     livecrootc_xfer(p)        = vegmatrixc_rt(ilivecroot_xf)   
-!                     deadcrootc(p)             = vegmatrixc_rt(ideadcroot)
-                     deadcrootc(p)              = -(matrix_ctransfer_acc(ideadcroot,ideadcroot_xf)*deadcrootc0_xfer(p) &
-                                                + matrix_ctransfer_acc(ideadcroot,ilivecroot)*livecrootc0(p)) / matrix_ctransfer_acc(ideadcroot,ideadcroot)
-!                     deadcrootc_storage(p)     = vegmatrixc_rt(ideadcroot_st)
-!                     deadcrootc_xfer(p)        = vegmatrixc_rt(ideadcroot_xf) 
-!                     if(ivt(p) >= npcropmin)then
-!                        grainc(p)              = vegmatrixc_rt(igrain)
-!                        grainc_storage(p)      = vegmatrixc_rt(igrain_st)
-!                     end if
-!                     leafn(p)                  = vegmatrixn_rt(ileaf)
-!                     leafn_storage(p)          = vegmatrixn_rt(ileaf_st)
-!                     leafn_xfer(p)             = vegmatrixn_rt(ileaf_xf)
-!                     frootn(p)                 = vegmatrixn_rt(ifroot)
-!                     frootn_storage(p)         = vegmatrixn_rt(ifroot_st)
-!                     frootn_xfer(p)            = vegmatrixn_rt(ifroot_xf)
-!                     livestemn(p)              = vegmatrixn_rt(ilivestem)
-!                     livestemn_storage(p)      = vegmatrixn_rt(ilivestem_st)
-!                     livestemn_xfer(p)         = vegmatrixn_rt(ilivestem_xf)
-                     deadstemn(p)               = -(matrix_ntransfer_acc(ideadstem,ideadstem_xf)*deadstemn0_xfer(p) &
-                                                + matrix_ntransfer_acc(ideadstem,ilivestem)*livestemn0(p) &
-                                                + matrix_ntransfer_acc(ideadstem,iretransn)*retransn0(p)) / matrix_ntransfer_acc(ideadstem,ideadstem)
-!                     deadstemn_storage(p)      = vegmatrixn_rt(ideadstem_st)
-!                     deadstemn_xfer(p)         = vegmatrixn_rt(ideadstem_xf)
-!                     livecrootn(p)             = vegmatrixn_rt(ilivecroot)
-!                     livecrootn_storage(p)     = vegmatrixn_rt(ilivecroot_st)
-!                     livecrootn_xfer(p)        = vegmatrixn_rt(ilivecroot_xf)   
-                     deadcrootn(p)              = -(matrix_ntransfer_acc(ideadcroot,ideadcroot_xf)*deadcrootn0_xfer(p) &
-                                                + matrix_ntransfer_acc(ideadcroot,ilivecroot)*livecrootn0(p) &
-                                                + matrix_ntransfer_acc(ideadcroot,iretransn)*retransn0(p)) / matrix_ntransfer_acc(ideadcroot,ideadcroot)
-!                     deadcrootn(p)             = vegmatrixn_rt(ideadcroot)
-!                     deadcrootn_storage(p)     = vegmatrixn_rt(ideadcroot_st)
-!                     deadcrootn_xfer(p)        = vegmatrixn_rt(ideadcroot_xf)
-!                     if(ivt(p) >= npcropmin)then
-!                        grainn(p)              = vegmatrixn_rt(igrain)
-!                     end if
+                     deadstemc(p)              = vegmatrixc_rt(ideadstem)
+                     deadstemc_storage(p)      = vegmatrixc_rt(ideadstem_st)
+                     deadcrootc(p)             = vegmatrixc_rt(ideadcroot)
+                     deadcrootc_storage(p)     = vegmatrixc_rt(ideadcroot_st)
+                     deadstemn(p)              = vegmatrixn_rt(ideadstem)
+                     deadstemn_storage(p)      = vegmatrixn_rt(ideadstem_st)
+                     deadcrootn(p)             = vegmatrixn_rt(ideadcroot)
+                     deadcrootn_storage(p)     = vegmatrixn_rt(ideadcroot_st)
+
+                     if(iloop .eq. iloop_avg)then
+                        leafc_SASUsave(p)              = leafc_SASUsave(p)              + leafc(p)
+                        leafc_storage_SASUsave(p)      = leafc_storage_SASUsave(p)      + leafc_storage(p)
+                        leafc_xfer_SASUsave(p)         = leafc_xfer_SASUsave(p)         + leafc_xfer(p)
+                        frootc_SASUsave(p)             = frootc_SASUsave(p)             + frootc(p)
+                        frootc_storage_SASUsave(p)     = frootc_storage_SASUsave(p)     + frootc_storage(p)
+                        frootc_xfer_SASUsave(p)        = frootc_xfer_SASUsave(p)        + frootc_xfer(p)
+                        livestemc_SASUsave(p)          = livestemc_SASUsave(p)          + livestemc(p)
+                        livestemc_storage_SASUsave(p)  = livestemc_storage_SASUsave(p)  + livestemc_storage(p)
+                        livestemc_xfer_SASUsave(p)     = livestemc_xfer_SASUsave(p)     + livestemc_xfer(p)
+                        deadstemc_SASUsave(p)          = deadstemc_SASUsave(p)          + deadstemc(p)
+                        deadstemc_storage_SASUsave(p)  = deadstemc_storage_SASUsave(p)  + deadstemc_storage(p)
+                        deadstemc_xfer_SASUsave(p)     = deadstemc_xfer_SASUsave(p)     + deadstemc_xfer(p)
+                        livecrootc_SASUsave(p)         = livecrootc_SASUsave(p)         + livecrootc(p)
+                        livecrootc_storage_SASUsave(p) = livecrootc_storage_SASUsave(p) + livecrootc_storage(p)
+                        livecrootc_xfer_SASUsave(p)    = livecrootc_xfer_SASUsave(p)    + livecrootc_xfer(p)
+                        deadcrootc_SASUsave(p)         = deadcrootc_SASUsave(p)         + deadcrootc(p)
+                        deadcrootc_storage_SASUsave(p) = deadcrootc_storage_SASUsave(p) + deadcrootc_storage(p)
+                        deadcrootc_xfer_SASUsave(p)    = deadcrootc_xfer_SASUsave(p)    + deadcrootc_xfer(p)
+                        if(ivt(p)  >= npcropmin)then
+                           grainc_SASUsave(p)          = grainc_SASUsave(p)             + grainc(p)
+                           grainc_storage_SASUsave(p)  = grainc_storage_SASUsave(p)     + grainc_storage(p)
+                        end if
+                        leafn_SASUsave(p)              = leafn_SASUsave(p)              + leafn(p)
+                        leafn_storage_SASUsave(p)      = leafn_storage_SASUsave(p)      + leafn_storage(p)
+                        leafn_xfer_SASUsave(p)         = leafn_xfer_SASUsave(p)         + leafn_xfer(p)
+                        frootn_SASUsave(p)             = frootn_SASUsave(p)             + frootn(p)
+                        frootn_storage_SASUsave(p)     = frootn_storage_SASUsave(p)     + frootn_storage(p)
+                        frootn_xfer_SASUsave(p)        = frootn_xfer_SASUsave(p)        + frootn_xfer(p)
+                        livestemn_SASUsave(p)          = livestemn_SASUsave(p)          + livestemn(p)
+                        livestemn_storage_SASUsave(p)  = livestemn_storage_SASUsave(p)  + livestemn_storage(p)
+                        livestemn_xfer_SASUsave(p)     = livestemn_xfer_SASUsave(p)     + livestemn_xfer(p)
+                        deadstemn_SASUsave(p)          = deadstemn_SASUsave(p)          + deadstemn(p)
+                        deadstemn_storage_SASUsave(p)  = deadstemn_storage_SASUsave(p)  + deadstemn_storage(p)
+                        deadstemn_xfer_SASUsave(p)     = deadstemn_xfer_SASUsave(p)     + deadstemn_xfer(p)
+                        livecrootn_SASUsave(p)         = livecrootn_SASUsave(p)         + livecrootn(p)
+                        livecrootn_storage_SASUsave(p) = livecrootn_storage_SASUsave(p) + livecrootn_storage(p)
+                        livecrootn_xfer_SASUsave(p)    = livecrootn_xfer_SASUsave(p)    + livecrootn_xfer(p)
+                        deadcrootn_SASUsave(p)         = deadcrootn_SASUsave(p)         + deadcrootn(p)
+                        deadcrootn_storage_SASUsave(p) = deadcrootn_storage_SASUsave(p) + deadcrootn_storage(p)
+                        deadcrootn_xfer_SASUsave(p)    = deadcrootn_xfer_SASUsave(p)    + deadcrootn_xfer(p)
+                        if(ivt(p)  >= npcropmin)then
+                           grainn_SASUsave(p)          = grainn_SASUsave(p)             + grainn(p)
+                        end if
+                        if(iyr .eq. nyr_forcing)then
+                           leafc(p)              = leafc_SASUsave(p)                    / (nyr_forcing/nyr_SASU)
+                           leafc_storage(p)      = leafc_storage_SASUsave(p)            / (nyr_forcing/nyr_SASU)
+                           leafc_xfer(p)         = leafc_xfer_SASUsave(p)               / (nyr_forcing/nyr_SASU)
+                           frootc(p)             = frootc_SASUsave(p)                   / (nyr_forcing/nyr_SASU)
+                           frootc_storage(p)     = frootc_storage_SASUsave(p)           / (nyr_forcing/nyr_SASU)
+                           frootc_xfer(p)        = frootc_xfer_SASUsave(p)              / (nyr_forcing/nyr_SASU)
+                           livestemc(p)          = livestemc_SASUsave(p)                / (nyr_forcing/nyr_SASU)
+                           livestemc_storage(p)  = livestemc_storage_SASUsave(p)        / (nyr_forcing/nyr_SASU)
+                           livestemc_xfer(p)     = livestemc_xfer_SASUsave(p)           / (nyr_forcing/nyr_SASU)
+                           deadstemc(p)          = deadstemc_SASUsave(p)                / (nyr_forcing/nyr_SASU)
+                           deadstemc_storage(p)  = deadstemc_storage_SASUsave(p)        / (nyr_forcing/nyr_SASU)
+                           deadstemc_xfer(p)     = deadstemc_xfer_SASUsave(p)           / (nyr_forcing/nyr_SASU)
+                           livecrootc(p)         = livecrootc_SASUsave(p)               / (nyr_forcing/nyr_SASU)
+                           livecrootc_storage(p) = livecrootc_storage_SASUsave(p)       / (nyr_forcing/nyr_SASU)
+                           livecrootc_xfer(p)    = livecrootc_xfer_SASUsave(p)          / (nyr_forcing/nyr_SASU)
+                           deadcrootc(p)         = deadcrootc_SASUsave(p)               / (nyr_forcing/nyr_SASU)
+                           deadcrootc_storage(p) = deadcrootc_storage_SASUsave(p)       / (nyr_forcing/nyr_SASU)
+                           deadcrootc_xfer(p)    = deadcrootc_xfer_SASUsave(p)          / (nyr_forcing/nyr_SASU)
+                           if(ivt(p)  >= npcropmin)then
+                              grainc(p)          = grainc_SASUsave(p)                   / (nyr_forcing/nyr_SASU)
+                              grainc_storage(p)  = grainc_storage_SASUsave(p)           / (nyr_forcing/nyr_SASU)
+                           end if
+                           leafn(p)              = leafn_SASUsave(p)                    / (nyr_forcing/nyr_SASU)
+                           leafn_storage(p)      = leafn_storage_SASUsave(p)            / (nyr_forcing/nyr_SASU)
+                           leafn_xfer(p)         = leafn_xfer_SASUsave(p)               / (nyr_forcing/nyr_SASU)
+                           frootn(p)             = frootn_SASUsave(p)                   / (nyr_forcing/nyr_SASU)
+                           frootn_storage(p)     = frootn_storage_SASUsave(p)           / (nyr_forcing/nyr_SASU)
+                           frootn_xfer(p)        = frootn_xfer_SASUsave(p)              / (nyr_forcing/nyr_SASU)
+                           livestemn(p)          = livestemn_SASUsave(p)                / (nyr_forcing/nyr_SASU)
+                           livestemn_storage(p)  = livestemn_storage_SASUsave(p)        / (nyr_forcing/nyr_SASU)
+                           livestemn_xfer(p)     = livestemn_xfer_SASUsave(p)           / (nyr_forcing/nyr_SASU)
+                           deadstemn(p)          = deadstemn_SASUsave(p)                / (nyr_forcing/nyr_SASU)
+                           deadstemn_storage(p)  = deadstemn_storage_SASUsave(p)        / (nyr_forcing/nyr_SASU)
+                           deadstemn_xfer(p)     = deadstemn_xfer_SASUsave(p)           / (nyr_forcing/nyr_SASU)
+                           livecrootn(p)         = livecrootn_SASUsave(p)               / (nyr_forcing/nyr_SASU)
+                           livecrootn_storage(p) = livecrootn_storage_SASUsave(p)       / (nyr_forcing/nyr_SASU)
+                           livecrootn_xfer(p)    = livecrootn_xfer_SASUsave(p)          / (nyr_forcing/nyr_SASU)
+                           deadcrootn(p)         = deadcrootn_SASUsave(p)               / (nyr_forcing/nyr_SASU)
+                           deadcrootn_storage(p) = deadcrootn_storage_SASUsave(p)       / (nyr_forcing/nyr_SASU)
+                           deadcrootn_xfer(p)    = deadcrootn_xfer_SASUsave(p)          / (nyr_forcing/nyr_SASU)
+                           if(ivt(p)  >= npcropmin)then
+                              grainn(p)          = grainn_SASUsave(p)                   / (nyr_forcing/nyr_SASU)
+                           end if
+                           leafc_SASUsave(p)              = 0
+                           leafc_storage_SASUsave(p)      = 0
+                           leafc_xfer_SASUsave(p)         = 0
+                           frootc_SASUsave(p)             = 0
+                           frootc_storage_SASUsave(p)     = 0
+                           frootc_xfer_SASUsave(p)        = 0
+                           livestemc_SASUsave(p)          = 0
+                           livestemc_storage_SASUsave(p)  = 0
+                           livestemc_xfer_SASUsave(p)     = 0
+                           deadstemc_SASUsave(p)          = 0
+                           deadstemc_storage_SASUsave(p)  = 0
+                           deadstemc_xfer_SASUsave(p)     = 0
+                           livecrootc_SASUsave(p)         = 0
+                           livecrootc_storage_SASUsave(p) = 0
+                           livecrootc_xfer_SASUsave(p)    = 0
+                           deadcrootc_SASUsave(p)         = 0
+                           deadcrootc_storage_SASUsave(p) = 0
+                           deadcrootc_xfer_SASUsave(p)    = 0
+                           if(ivt(p)  >= npcropmin)then
+                              grainc_SASUsave(p)          = 0
+                              grainc_storage_SASUsave(p)  = 0
+                           end if
+                           leafn_SASUsave(p)              = 0
+                           leafn_storage_SASUsave(p)      = 0
+                           leafn_xfer_SASUsave(p)         = 0
+                           frootn_SASUsave(p)             = 0
+                           frootn_storage_SASUsave(p)     = 0
+                           frootn_xfer_SASUsave(p)        = 0
+                           livestemn_SASUsave(p)          = 0
+                           livestemn_storage_SASUsave(p)  = 0
+                           livestemn_xfer_SASUsave(p)     = 0
+                           deadstemn_SASUsave(p)          = 0
+                           deadstemn_storage_SASUsave(p)  = 0
+                           deadstemn_xfer_SASUsave(p)     = 0
+                           livecrootn_SASUsave(p)         = 0
+                           livecrootn_storage_SASUsave(p) = 0
+                           livecrootn_xfer_SASUsave(p)    = 0
+                           deadcrootn_SASUsave(p)         = 0
+                           deadcrootn_storage_SASUsave(p) = 0
+                           deadcrootn_xfer_SASUsave(p)    = 0
+                           if(ivt(p)  >= npcropmin)then
+                              grainn_SASUsave(p)          = 0
+                           end if
+                        end if
+                     end if
                      call update_DA_nstep()
                   end if
 
@@ -2479,6 +2620,8 @@ contains
 
                   call t_stopf('CN veg matrix-finalize spinup')
                end do 
+               if(iloop .eq. iloop_avg .and. iyr .eq. nyr_forcing)iloop = 0
+               if(iyr .eq. nyr_forcing)iyr=0
             end if
          end if
    

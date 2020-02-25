@@ -19,7 +19,7 @@ module CNSoilMatrixMod
   use decompMod                          , only : bounds_type  
   use abortutils                         , only : endrun
   use clm_time_manager                   , only : get_step_size, is_end_curr_month,get_curr_date,update_DA_nstep
-  use clm_time_manager                   , only : is_first_restart_step,is_beg_curr_year,is_end_curr_year
+  use clm_time_manager                   , only : is_first_restart_step,is_beg_curr_year,is_end_curr_year,is_first_step_of_this_run_segment
   use clm_varpar                         , only : ndecomp_pools, nlevdecomp, ndecomp_pools_vr        !number of biogeochemically active soil layers
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_cascade_outtransitions
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
@@ -34,7 +34,7 @@ module CNSoilMatrixMod
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type  
   use CNSharedParamsMod                  , only : CNParamsShareInst
   use SoilStateType                      , only : soilstate_type  
-  use clm_varctl                         , only : isspinup, use_soil_matrixcn, is_outmatrix, nyr_forcing
+  use clm_varctl                         , only : isspinup, use_soil_matrixcn, is_outmatrix, nyr_forcing, nyr_SASU, iloop_avg
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use clm_varctl                         , only : use_c13, use_c14
@@ -106,6 +106,7 @@ contains
     logical,save :: init_readyAsoiln = .False.
     logical isbegofyear
     integer,save :: iyr=0
+    integer,save :: iloop=0                   ! The iloop^th forcing loop
 
     !-----------------------------------------------------------------------
     begc = bounds%begc; endc = bounds%endc
@@ -192,7 +193,7 @@ contains
       dt = real( get_step_size(), r8 )
 
       Ntrans = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
-      epsi = 1.e-30_r8 
+      epsi = 1.e-8_r8 
 
       isbegofyear = is_beg_curr_year()
 
@@ -244,12 +245,8 @@ contains
       call t_stopf('CN Soil matrix-assign matrix-a-na')
 
       ! Update the turnover rate matrix K with N limitation (fpi_vr)
-      call t_startf('CN Soil matrix-assign matrix-in')
-
-      call t_stopf('CN Soil matrix-assign matrix-in')
 
       ! Assign old value to vector, and be ready for matrix operation
-      call t_startf('CN Soil matrix-assign matrix-in')
       call t_startf('CN Soil matrix-assign matrix-inter')
       do i = 1,ndecomp_pools
          do j = 1, nlevdecomp
@@ -291,7 +288,10 @@ contains
       call t_startf('CN Soil matrix-assign matrix-decomp0')
       if (is_beg_curr_year())then  
          iyr = iyr + 1
-         if(.not. isspinup .or. isspinup .and. iyr .eq. 1)then
+         if(mod(iyr-1,nyr_forcing) .eq. 0)then
+            iloop = iloop + 1
+         end if
+         if(.not. isspinup .or. isspinup .and. mod(iyr-1,nyr_SASU) .eq. 0)then
             do i = 1,ndecomp_pools
                do j = 1, nlevdecomp
                   do fc = 1,num_soilc
@@ -526,10 +526,9 @@ contains
 
 
          call t_startf('CN Soil matrix-calc. C capacity')
-         if((.not. isspinup .and. is_end_curr_year()) .or. (isspinup .and. is_end_curr_year() .and. iyr .eq. nyr_forcing))then
+         if((.not. isspinup .and. is_end_curr_year()) .or. (isspinup .and. is_end_curr_year() .and. mod(iyr,nyr_SASU) .eq. 0))then
             ! Copy C transfers from sparse matrix to 2D temporary variables tran_acc and tran_nacc
             ! Calculate the C and N transfer rate by dividing CN transfer by base value saved at begin of each year.
-            iyr = 0
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                cs_soil%tran_acc (c,1:ndecomp_pools_vr,1:ndecomp_pools_vr) = 0._r8
@@ -589,11 +588,7 @@ contains
 
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-!               if(any(soilmatrixc_cap(c,:,1) .lt. 0) .or. any(soilmatrixc_cap(c,:,1) .gt. 1.e+6_r8) &
-!             .or. any(soilmatrixn_cap(c,:,1) .lt. 0) .or. any(soilmatrixn_cap(c,:,1) .gt. 1.e+6_r8))then
-!               print*,'maxcap',minval(soilmatrixc_cap(c,:,1)),maxval(soilmatrixc_cap(c,:,1)),minval(soilmatrixn_cap(c,:,1)),maxval(soilmatrixn_cap(c,:,1))
                if(any(soilmatrixc_cap(c,:,1) .gt. 1.e+10_r8) .or. any(soilmatrixn_cap(c,:,1) .gt. 1.e+10_r8))then
-!                  print*,'reset value'
                   soilmatrixc_cap(c,:,1) = matrix_Cinter%V(c,:)
                   soilmatrixn_cap(c,:,1) = matrix_Ninter%V(c,:)
                end if
@@ -605,13 +600,22 @@ contains
                do j = 1,nlevdecomp
                   do fc = 1,num_soilc
                      c = filter_soilc(fc)
-                     if(isspinup)then
-!                        print*,'resetting value to capacity',c,i,j,cs_soil%decomp_cpools_vr_col(c,j,i),soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
+                     if(isspinup .and. .not. is_first_step_of_this_run_segment())then
                         cs_soil%decomp_cpools_vr_col(c,j,i) =  soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
                         if(floating_cn_ratio_decomp_pools(i))then
                            ns_soil%decomp_npools_vr_col(c,j,i) =  soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)
                         else
                            ns_soil%decomp_npools_vr_col(c,j,i) = cs_soil%decomp_cpools_vr_col(c,j,i) / cn_decomp_pools(c,j,i)
+                        end if
+                        if(iloop .eq. iloop_avg)then
+                           cs_soil%decomp_cpools_vr_SASUsave_col(c,j,i) = cs_soil%decomp_cpools_vr_SASUsave_col(c,j,i) + cs_soil%decomp_cpools_vr_col(c,j,i)
+                           ns_soil%decomp_npools_vr_SASUsave_col(c,j,i) = ns_soil%decomp_npools_vr_SASUsave_col(c,j,i) + ns_soil%decomp_npools_vr_col(c,j,i)
+                           if(iyr .eq. nyr_forcing)then
+                              cs_soil%decomp_cpools_vr_col(c,j,i) = cs_soil%decomp_cpools_vr_SASUsave_col(c,j,i) / (nyr_forcing/nyr_SASU)
+                              ns_soil%decomp_npools_vr_col(c,j,i) = ns_soil%decomp_npools_vr_SASUsave_col(c,j,i) / (nyr_forcing/nyr_SASU)
+                              cs_soil%decomp_cpools_vr_SASUsave_col(c,j,i) = 0._r8
+                              ns_soil%decomp_npools_vr_SASUsave_col(c,j,i) = 0._r8
+                           end if
                         end if
                      end if
                      cs_soil%matrix_cap_decomp_cpools_vr_col(c,j,i) = soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
@@ -621,6 +625,8 @@ contains
             end do
          
             if(isspinup)call update_DA_nstep()
+            if(iloop .eq. iloop_avg .and. iyr .eq. nyr_forcing)iloop = 0
+            if(iyr .eq. nyr_forcing)iyr = 0
 
             ! Reset to accumulation variables to 0 at end of each year
             do j=1,n_all_entries

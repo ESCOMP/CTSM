@@ -192,6 +192,26 @@ module CNVegNitrogenStateType
      real(r8), pointer :: matrix_nturnover_grainxf_acc_patch                    (:) ! (gN/m2/year) N turnover from grain transfer 
      real(r8), pointer :: matrix_nturnover_retransn_acc_patch                   (:) ! (gN/m2/year) N turnover from retranslocation transfer
 
+     real(r8), pointer :: grainn_SASUsave_patch               (:) ! (gC/m2) grain C (crop model)
+     real(r8), pointer :: grainn_storage_SASUsave_patch       (:) ! (gC/m2) grain C storage (crop model)
+     real(r8), pointer :: leafn_SASUsave_patch                (:) ! (gC/m2) leaf C
+     real(r8), pointer :: leafn_storage_SASUsave_patch        (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: leafn_xfer_SASUsave_patch           (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: frootn_SASUsave_patch               (:) ! (gC/m2) fine root C
+     real(r8), pointer :: frootn_storage_SASUsave_patch       (:) ! (gC/m2) fine root C storage
+     real(r8), pointer :: frootn_xfer_SASUsave_patch          (:) ! (gC/m2) fine root C transfer
+     real(r8), pointer :: livestemn_SASUsave_patch            (:) ! (gC/m2) live stem C
+     real(r8), pointer :: livestemn_storage_SASUsave_patch    (:) ! (gC/m2) live stem C storage
+     real(r8), pointer :: livestemn_xfer_SASUsave_patch       (:) ! (gC/m2) live stem C transfer
+     real(r8), pointer :: deadstemn_SASUsave_patch            (:) ! (gC/m2) dead stem C
+     real(r8), pointer :: deadstemn_storage_SASUsave_patch    (:) ! (gC/m2) dead stem C storage
+     real(r8), pointer :: deadstemn_xfer_SASUsave_patch       (:) ! (gC/m2) dead stem C transfer
+     real(r8), pointer :: livecrootn_SASUsave_patch           (:) ! (gC/m2) live coarse root C
+     real(r8), pointer :: livecrootn_storage_SASUsave_patch   (:) ! (gC/m2) live coarse root C storage
+     real(r8), pointer :: livecrootn_xfer_SASUsave_patch      (:) ! (gC/m2) live coarse root C transfer
+     real(r8), pointer :: deadcrootn_SASUsave_patch           (:) ! (gC/m2) dead coarse root C
+     real(r8), pointer :: deadcrootn_storage_SASUsave_patch   (:) ! (gC/m2) dead coarse root C storage
+     real(r8), pointer :: deadcrootn_xfer_SASUsave_patch      (:) ! (gC/m2) dead coarse root C transfer
    contains
 
      procedure , public  :: Init   
@@ -340,6 +360,27 @@ contains
        allocate(this%grainn0_storage_patch               (begp:endp)) ; this%grainn0_storage_patch               (:) = nan     
        allocate(this%grainn0_xfer_patch                  (begp:endp)) ; this%grainn0_xfer_patch                  (:) = nan     
        allocate(this%retransn0_patch                     (begp:endp)) ; this%retransn0_patch                     (:) = nan
+
+       allocate(this%leafn_SASUsave_patch                (begp:endp)) ; this%leafn_SASUsave_patch               (:) = nan
+       allocate(this%leafn_storage_SASUsave_patch        (begp:endp)) ; this%leafn_storage_SASUsave_patch       (:) = nan
+       allocate(this%leafn_xfer_SASUsave_patch           (begp:endp)) ; this%leafn_xfer_SASUsave_patch          (:) = nan
+       allocate(this%frootn_SASUsave_patch               (begp:endp)) ; this%frootn_SASUsave_patch              (:) = nan
+       allocate(this%frootn_storage_SASUsave_patch       (begp:endp)) ; this%frootn_storage_SASUsave_patch      (:) = nan
+       allocate(this%frootn_xfer_SASUsave_patch          (begp:endp)) ; this%frootn_xfer_SASUsave_patch         (:) = nan
+       allocate(this%livestemn_SASUsave_patch            (begp:endp)) ; this%livestemn_SASUsave_patch           (:) = nan
+       allocate(this%livestemn_storage_SASUsave_patch    (begp:endp)) ; this%livestemn_storage_SASUsave_patch   (:) = nan
+       allocate(this%livestemn_xfer_SASUsave_patch       (begp:endp)) ; this%livestemn_xfer_SASUsave_patch      (:) = nan
+       allocate(this%deadstemn_SASUsave_patch            (begp:endp)) ; this%deadstemn_SASUsave_patch           (:) = nan
+       allocate(this%deadstemn_storage_SASUsave_patch    (begp:endp)) ; this%deadstemn_storage_SASUsave_patch   (:) = nan
+       allocate(this%deadstemn_xfer_SASUsave_patch       (begp:endp)) ; this%deadstemn_xfer_SASUsave_patch      (:) = nan
+       allocate(this%livecrootn_SASUsave_patch           (begp:endp)) ; this%livecrootn_SASUsave_patch          (:) = nan
+       allocate(this%livecrootn_storage_SASUsave_patch   (begp:endp)) ; this%livecrootn_storage_SASUsave_patch  (:) = nan
+       allocate(this%livecrootn_xfer_SASUsave_patch      (begp:endp)) ; this%livecrootn_xfer_SASUsave_patch     (:) = nan
+       allocate(this%deadcrootn_SASUsave_patch           (begp:endp)) ; this%deadcrootn_SASUsave_patch          (:) = nan
+       allocate(this%deadcrootn_storage_SASUsave_patch   (begp:endp)) ; this%deadcrootn_storage_SASUsave_patch  (:) = nan
+       allocate(this%deadcrootn_xfer_SASUsave_patch      (begp:endp)) ; this%deadcrootn_xfer_SASUsave_patch     (:) = nan
+       allocate(this%grainn_SASUsave_patch               (begp:endp)) ; this%grainn_SASUsave_patch              (:) = nan
+       allocate(this%grainn_storage_SASUsave_patch       (begp:endp)) ; this%grainn_storage_SASUsave_patch      (:) = nan
 
        allocate(this%matrix_nalloc_leaf_acc_patch        (begp:endp)) ; this%matrix_nalloc_leaf_acc_patch        (:) = nan 
        allocate(this%matrix_nalloc_leafst_acc_patch      (begp:endp)) ; this%matrix_nalloc_leafst_acc_patch      (:) = nan
@@ -927,6 +968,27 @@ contains
              this%grainn0_xfer_patch(p)        = 1.e-30_r8
              this%retransn0_patch(p)           = 1.e-30_r8
 
+             this%leafn_SASUsave_patch(p)              = 0._r8
+             this%leafn_storage_SASUsave_patch(p)      = 0._r8
+             this%leafn_xfer_SASUsave_patch(p)         = 0._r8
+             this%frootn_SASUsave_patch(p)             = 0._r8
+             this%frootn_storage_SASUsave_patch(p)     = 0._r8
+             this%frootn_xfer_SASUsave_patch(p)        = 0._r8
+             this%livestemn_SASUsave_patch(p)          = 0._r8
+             this%livestemn_storage_SASUsave_patch(p)  = 0._r8
+             this%livestemn_xfer_SASUsave_patch(p)     = 0._r8
+             this%deadstemn_SASUsave_patch(p)          = 0._r8
+             this%deadstemn_storage_SASUsave_patch(p)  = 0._r8
+             this%deadstemn_xfer_SASUsave_patch(p)     = 0._r8
+             this%livecrootn_SASUsave_patch(p)         = 0._r8
+             this%livecrootn_storage_SASUsave_patch(p) = 0._r8
+             this%livecrootn_xfer_SASUsave_patch(p)    = 0._r8
+             this%deadcrootn_SASUsave_patch(p)         = 0._r8
+             this%deadcrootn_storage_SASUsave_patch(p) = 0._r8
+             this%deadcrootn_xfer_SASUsave_patch(p)    = 0._r8
+             this%grainn_SASUsave_patch(p)             = 0._r8
+             this%grainn_storage_SASUsave_patch(p)     = 0._r8
+             
              this%matrix_nalloc_leaf_acc_patch                          (p) = 0._r8 
              this%matrix_nalloc_leafst_acc_patch                        (p) = 0._r8
              this%matrix_nalloc_froot_acc_patch                         (p) = 0._r8

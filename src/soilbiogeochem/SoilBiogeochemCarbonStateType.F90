@@ -27,6 +27,7 @@ module SoilBiogeochemCarbonStateType
      ! all c pools involved in decomposition
      real(r8), pointer :: decomp_cpools_vr_col (:,:,:) ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
      real(r8), pointer :: decomp0_cpools_vr_col(:,:,:) ! (gC/m3) vertically-resolved C baseline (initial value of this year) in decomposing (litter, cwd, soil) pools in dimension (col,nlev,npools)
+     real(r8), pointer :: decomp_cpools_vr_SASUsave_col(:,:,:) ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
      real(r8), pointer :: decomp_soilc_vr_col  (:,:)   ! (gC/m3) vertically-resolved decomposing total soil c pool
      real(r8), pointer :: ctrunc_vr_col        (:,:)   ! (gC/m3) vertically-resolved column-level sink for C truncation
 
@@ -127,6 +128,8 @@ contains
        this%matrix_cap_decomp_cpools_vr_col(:,:,:)= nan
        allocate(this%decomp0_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))  
        this%decomp0_cpools_vr_col(:,:,:)= nan
+       allocate(this%decomp_cpools_vr_SASUsave_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))  
+       this%decomp_cpools_vr_SASUsave_col(:,:,:)= nan
        allocate(this%in_acc(begc:endc,1:nlevdecomp*ndecomp_pools))
        this%in_acc(:,:)= nan
        allocate(this%tran_acc(begc:endc,1:nlevdecomp*ndecomp_pools,1:nlevdecomp*ndecomp_pools))
@@ -583,6 +586,7 @@ contains
                    this%vert_down_tran_acc(c,j,k) = 0._r8
                    this%exit_acc(c,j,k) = 0._r8
                    this%decomp0_cpools_vr_col(c,j,k) = max(this%decomp_cpools_vr_col(c,j,k),1.e-30_r8)
+                   this%decomp_cpools_vr_SASUsave_col(c,j,k) = 0._r8
                 end do
                 do k = 1, ndecomp_cascade_transitions
                    this%hori_tran_acc(c,j,k) = 0._r8
