@@ -5,12 +5,14 @@ import os, sys
 class mksrfDataEntry_prog:
 
    # Class data
-   year_start = 850
-   year_end   = 1849
+   year_start = 1850
+   year_end   = 2015
    ssp_rcp    = "hist"
-   subdir     = "pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012"
-   cdate      = 171012
-   desc       = "histclm50_LUH2"
+   subdir     = "pftcftdynharv.0.25x0.25.CMIP5.histsimyr1850-2015.c20200212"
+   #subdir     = "pftcftdynharv.0.25x0.25.CMIP5.RCP8.5.simyr2015-2100.c20200212"
+   cdate      = 200212
+   #desc       = "rcpclm50_RCP85"
+   desc       = "histclm50_CMIP5"
 
    def parse_cmdline_args( self ):
       "Parse the command line arguments for create data entry list"
@@ -41,9 +43,9 @@ class mksrfDataEntry_prog:
 
    def printentry( self, year ):
       "Print a single entry"
-      print '<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="%s" sim_year="%d" crop="on"' % (self.ssp_rcp, year)
-      print '>lnd/clm2/rawdata/%s/mksrf_landuse_%s_%s.c%s.nc' % (self.subdir, self.desc, year, self.cdate)
-      print '</mksrf_fvegtyp>\n'
+      print( '<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="%s" sim_year="%d" crop="on"' % (self.ssp_rcp, year) )
+      print( '>lnd/clm2/rawdata/%s/mksrf_landuse_%s_%s.c%s.nc' % (self.subdir, self.desc, year, self.cdate) )
+      print( '</mksrf_fvegtyp>\n' )
 
 entry = mksrfDataEntry_prog()
 entry.parse_cmdline_args()
