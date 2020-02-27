@@ -18,15 +18,13 @@ module lilac_atmcap
   use shr_kind_mod  , only : r8 => shr_kind_r8, CL => shr_kind_cl, CS => shr_kind_cs
   use shr_sys_mod   , only : shr_sys_abort
   use lilac_methods , only : chkerr
+  use lilac_constants, only : logunit
+  use ctsm_LilacCouplingFields, only : a2l_fields, l2a_fields
 
   implicit none
 
   public :: lilac_atmcap_init
-  public :: lilac_atmcap_atm2lnd
-  public :: lilac_atmcap_lnd2atm
   public :: lilac_atmcap_register
-
-  private :: lilac_atmcap_add_fld
 
   ! Time invariant input from host atmosphere
   integer , public, allocatable :: gindex_atm(:) ! global index space
@@ -37,16 +35,6 @@ module lilac_atmcap
 
   ! Time variant input from host atmosphere
   real(r8) :: nextsw_cday = 1.e36_r8  ! calendar day of the next sw calculation
-
-  type :: atmcap_type
-     character(len=CL)  :: fldname
-     real(r8), pointer  :: dataptr(:)
-     character(len=CS)  :: units
-     logical            :: provided_by_atm
-     logical            :: required_fr_atm
-  end type atmcap_type
-  type(atmcap_type), pointer, public :: atm2lnd(:)
-  type(atmcap_type), pointer, public :: lnd2atm(:)
 
   integer                 :: mytask
   integer     , parameter :: debug = 0 ! internal debug level
@@ -81,85 +69,6 @@ contains
     atm_lats(:)   = atm_lats_in(:)
     atm_global_nx = atm_global_nx_in
     atm_global_ny = atm_global_ny_in
-
-    !-------------------------------------------------------------------------
-    ! Set module arrays atm2lnd and lnd2atm
-    !-------------------------------------------------------------------------
-
-    ! TODO: how is the atm going to specify which fields are not provided =
-    ! should it pass an array of character strings or a colon deliminited set of fields
-    ! to specify the fields it will not provide - and then these are checked against those fields
-
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_landfrac'   , units='fraction', required_fr_atm=.true. , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_z'          , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_topo'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_u'          , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_v'          , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_ptem'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_pbot'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_tbot'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_shum'       , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_lwdn'     , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_rainc'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_rainl'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_snowc'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_snowl'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_swndr'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_swvdr'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_swndf'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_swvdf'    , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_bcphidry' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_bcphodry' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_bcphiwet' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_ocphidry' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_ocphodry' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_ocphiwet' , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_dstwet1'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_dstdry1'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_dstwet2'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_dstdry2'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_dstwet3'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_dstdry3'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_dstwet4'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-    call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_dstdry4'  , units='unknown', required_fr_atm=.true.  , lsize=lsize)
-  ! call lilac_atmcap_add_fld (atm2lnd, fldname='Sa_methane'    , units='unknown', required_fr_atm=.false. , lsize=lsize)
-  ! call lilac_atmcap_add_fld (atm2lnd, fldname='Faxa_bcph'     , units='unknown', required_fr_atm=.false. , lsize=lsize)
-
-    ! now add dataptr memory for all of the fields and set default values of provided_by_atm to false
-    do n = 1,size(atm2lnd)
-       allocate(atm2lnd(n)%dataptr(lsize))
-       atm2lnd(n)%provided_by_atm = .false.
-    end do
-
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_t'         , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_tref'      , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_qref'      , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_avsdr'     , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_anidr'     , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_avsdf'     , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_anidf'     , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_snowh'     , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_u10'       , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_fv'        , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_ram1'      , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Sl_z0m'       , units='m'      , lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_taux'    , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_tauy'    , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_lat'     , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_sen'     , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_lwup'    , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_evap'    , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_swnet'   , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_flxdst1' , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_flxdst2' , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_flxdst3' , units='unknown', lsize=lsize)
-    call lilac_atmcap_add_fld (lnd2atm , fldname='Fall_flxdst4' , units='unknown', lsize=lsize)
-
-    ! now add dataptr memory for all of the fields
-    do n = 1,size(lnd2atm)
-       allocate(lnd2atm(n)%dataptr(lsize))
-    end do
 
   end subroutine lilac_atmcap_init_vars
 
@@ -292,12 +201,12 @@ contains
        mesh_lon = ownedElemCoords(2*n-1)
        mesh_lat = ownedElemCoords(2*n)
        if ( abs(mesh_lon - atm_lons(n)) > tolerance) then
-          write(6,101),n, atm_lons(n), mesh_lon
+          write(logunit,101),n, atm_lons(n), mesh_lon
 101       format('ERROR: lilac_atmcap: n, lon, mesh_lon = ',i6,2(f20.10,2x))
           call shr_sys_abort()
        end if
        if ( abs(mesh_lat - atm_lats(n)) > tolerance) then
-          write(6,102),n, atm_lats(n), mesh_lat
+          write(logunit,102),n, atm_lats(n), mesh_lat
 102       format('ERROR: lilac_atmcap: n, lat, mesh_lat = ',i6,2(f20.10,2x))
           call shr_sys_abort()
        end if
@@ -313,9 +222,10 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! create fields and add to field bundle
-    do n = 1, size(atm2lnd)
+    do n = 1, a2l_fields%num_fields()
        field = ESMF_FieldCreate(atm_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
-            name=trim(atm2lnd(n)%fldname), farrayPtr=atm2lnd(n)%dataptr, rc=rc)
+            name=a2l_fields%get_fieldname(n), farrayPtr=a2l_fields%get_dataptr(n), &
+            rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        call ESMF_FieldBundleAdd(a2c_fb, (/field/), rc=rc)
@@ -349,9 +259,10 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! create fields and add to field bundle
-    do n = 1, size(lnd2atm)
+    do n = 1, l2a_fields%num_fields()
        field = ESMF_FieldCreate(atm_mesh, meshloc=ESMF_MESHLOC_ELEMENT, &
-            name=trim(lnd2atm(n)%fldname), farrayPtr=lnd2atm(n)%dataptr, rc=rc)
+            name=l2a_fields%get_fieldname(n), farrayPtr=l2a_fields%get_dataptr(n), &
+            rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        call ESMF_FieldBundleAdd(c2a_fb, (/field/), rc=rc)
@@ -414,146 +325,5 @@ contains
     call ESMF_LogWrite(subname//"Finished lilac_atmcap_final", ESMF_LOGMSG_INFO)
 
   end subroutine lilac_atmcap_final
-
-!========================================================================
-  subroutine lilac_atmcap_atm2lnd(fldname, data)
-
-    ! input/output variables
-    character(len=*), intent(in) :: fldname
-    real(r8), intent(in)         :: data(:)
-
-    ! local variables
-    integer :: n
-    logical :: found
-    character(len=*), parameter  :: subname='(lilac_atmcap_atm2lnd)'
-    ! --------------------------------------------
-
-    found = .false.
-    do n = 1,size(atm2lnd)
-       if (trim(fldname) == atm2lnd(n)%fldname) then
-          found = .true.
-          if (size(data) /= size(atm2lnd(n)%dataptr)) then
-             call shr_sys_abort(trim(subname) // 'size(data) not equal to size(atm2lnd(n)%dataptr')
-          else
-             atm2lnd(n)%dataptr(:) = data(:)
-          end if
-          atm2lnd(n)%provided_by_atm = .true.
-          exit
-       end if
-    end do
-    if (.not. found) then
-       call shr_sys_abort(trim(subname) // 'atm2lnd field name ' // trim(fldname) //' not found')
-    end if
-
-  contains
-
-    subroutine lilac_atm2lnd_check()
-      integer :: n    ! if there are fields that the atmosphere does not provide but
-      ! that are required - then abort
-      do n = 1,size(atm2lnd)
-         if (atm2lnd(n)%required_fr_atm .and. (.not. atm2lnd(n)%provided_by_atm)) then
-            ! call abort or provide default values?
-         else if (.not. atm2lnd(n)%provided_by_atm) then
-            ! create default values
-         end if
-      end do
-    end subroutine lilac_atm2lnd_check
-
-  end subroutine lilac_atmcap_atm2lnd
-
-!========================================================================
-  subroutine lilac_atmcap_lnd2atm(fldname, data)
-
-    ! input/output variables
-    character(len=*) , intent(in)  :: fldname
-    real(r8)         , intent(out) :: data(:)
-
-    ! local variables
-    integer :: n
-    character(len=*), parameter  :: subname='(lilac_atmcap_lnd2atm)'
-    ! --------------------------------------------
-
-    do n = 1,size(lnd2atm)
-       if (trim(fldname) == lnd2atm(n)%fldname) then
-          if (size(data) /= size(lnd2atm(n)%dataptr)) then
-             call shr_sys_abort(trim(subname) // 'size(data) not equal to size(lnd2atm(n)%dataptr')
-          else
-             data(:) = lnd2atm(n)%dataptr(:)
-          end if
-       end if
-    end do
-  end subroutine lilac_atmcap_lnd2atm
-
-!========================================================================
-  subroutine lilac_atmcap_add_fld(flds, fldname, units, lsize, required_fr_atm)
-
-    ! ----------------------------------------------
-    ! Add an entry to to the flds array
-    ! Use pointers to create an extensible allocatable array.
-    ! to allow the size of flds to grow, the process for
-    ! adding a new field is:
-    ! 1) allocate newflds to be N (one element larger than flds)
-    ! 2) copy flds into first N-1 elements of newflds
-    ! 3) newest flds entry is Nth element of newflds
-    ! 4) deallocate / nullify flds
-    ! 5) point flds => newflds
-    ! ----------------------------------------------
-
-    type(atmcap_type), pointer   :: flds(:)
-    character(len=*) , intent(in) :: fldname
-    character(len=*) , intent(in) :: units
-    integer          , intent(in) :: lsize
-    logical, optional, intent(in) :: required_fr_atm
-
-    ! local variables
-    integer :: n,oldsize,newsize
-    type(atmcap_type), pointer :: newflds(:)
-    character(len=*), parameter :: subname='(lilac_atmcap_atm2lnd_fld)'
-    ! ----------------------------------------------
-
-    if (associated(flds)) then
-       oldsize = size(flds)
-    else
-       oldsize = 0
-    end if
-    newsize = oldsize + 1
-
-    if (oldsize > 0) then
-       ! 1) allocate newfld to be size (one element larger than input flds)
-       allocate(newflds(newsize))
-
-       ! 2) copy flds into first N-1 elements of newflds
-       do n = 1,oldsize
-          newflds(n)%fldname    =  flds(n)%fldname
-          newflds(n)%units      =  flds(n)%units
-          newflds(n)%required_fr_atm = flds(n)%required_fr_atm
-       end do
-
-       ! 3) deallocate / nullify flds
-       if (oldsize >  0) then
-          deallocate(flds)
-          nullify(flds)
-       end if
-
-       ! 4) point flds => new_flds
-       flds => newflds
-
-       ! 5) update flds information for new entry
-       flds(newsize)%fldname   = trim(fldname)
-       flds(newsize)%units     = trim(units)
-       if (present(required_fr_atm)) then
-          flds(newsize)%required_fr_atm = required_fr_atm
-       end if
-
-    else
-       allocate(flds(newsize))
-       flds(newsize)%fldname   = trim(fldname)
-       flds(newsize)%units     = trim(units)
-       if (present(required_fr_atm)) then
-          flds(newsize)%required_fr_atm = required_fr_atm
-       end if
-    end if
-
-  end subroutine lilac_atmcap_add_fld
 
 end module lilac_atmcap

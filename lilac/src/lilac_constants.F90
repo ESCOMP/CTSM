@@ -12,5 +12,7 @@ module lilac_constants
   integer,  parameter :: lilac_constants_ispval_mask     = -987987 ! spval for RH mask values
   integer,  parameter :: lilac_constants_SecPerDay       = 86400   ! Seconds per day
   integer             :: lilac_constants_dbug_flag       = 0
+  integer,  parameter :: field_index_unset               = -1
+  integer             :: logunit                         = 6       ! TODO: fix/generalize this
 
 end module lilac_constants

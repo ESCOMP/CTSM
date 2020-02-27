@@ -11,6 +11,7 @@ module lilac_io
   use shr_pio_mod     , only : shr_pio_getiosys, shr_pio_getiotype, shr_pio_getioformat
   use shr_sys_mod     , only : shr_sys_abort
   use lilac_constants , only : dbug_flag    => lilac_constants_dbug_flag
+  use lilac_constants , only : logunit
   use lilac_methods   , only : FB_getFieldN => lilac_methods_FB_getFieldN
   use lilac_methods   , only : FB_getFldPtr => lilac_methods_FB_getFldPtr
   use lilac_methods   , only : FB_getNameN  => lilac_methods_FB_getNameN
@@ -31,8 +32,6 @@ module lilac_io
 
   implicit none
   private
-
-  integer :: logunit = 6 ! TODO: fix this
 
   ! public member functions:
   public :: lilac_io_wopen

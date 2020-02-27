@@ -20,8 +20,13 @@ program atm_driver
   use netcdf      , only : nf90_clobber, nf90_write, nf90_nowrite, nf90_noerr, nf90_double
   use netcdf      , only : nf90_def_dim, nf90_def_var, nf90_put_var
   use netcdf      , only : nf90_inq_dimid, nf90_inquire_dimension, nf90_inq_varid, nf90_get_var
-  use lilac_mod   , only : lilac_init, lilac_run, lilac_final
-  use lilac_atmcap, only : lilac_atmcap_atm2lnd, lilac_atmcap_lnd2atm
+  use lilac_mod   , only : lilac_init1, lilac_init2, lilac_run, lilac_final
+  use ctsm_LilacCouplingFieldIndices
+  use ctsm_LilacCouplingFields, only : lilac_atm2lnd, lilac_lnd2atm
+  ! A real atmosphere should not use l2a_fields directly. We use it here just for
+  ! convenience of writing every lnd -> atm field to a diagnostic output file.
+  use ctsm_LilacCouplingFields, only : l2a_fields
+
   use shr_cal_mod , only : shr_cal_date2ymd
   use shr_sys_mod , only : shr_sys_abort
 
@@ -172,10 +177,28 @@ program atm_driver
   if (masterproc ) then
      print *, " initializing lilac with start type ",trim(atm_starttype)
   end if
-  call lilac_init(comp_comm, atm_global_index, atm_lons, atm_lats, &
-       atm_global_nx, atm_global_ny, atm_calendar, atm_timestep, &
-       atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       atm_starttype)
+  call lilac_init1()
+  call lilac_init2( &
+       mpicom = comp_comm, &
+       atm_global_index = atm_global_index, &
+       atm_lons = atm_lons, &
+       atm_lats = atm_lats, &
+       atm_global_nx = atm_global_nx, &
+       atm_global_ny = atm_global_ny, &
+       atm_calendar = atm_calendar, &
+       atm_timestep = atm_timestep, &
+       atm_start_year = atm_start_year, &
+       atm_start_mon = atm_start_mon, &
+       atm_start_day = atm_start_day, &
+       atm_start_secs = atm_start_secs, &
+       starttype_in = atm_starttype, &
+       fields_needed_from_data = [ &
+       lilac_a2l_Faxa_bcphidry, lilac_a2l_Faxa_bcphodry, lilac_a2l_Faxa_bcphiwet, &
+       lilac_a2l_Faxa_ocphidry, lilac_a2l_Faxa_ocphodry, lilac_a2l_Faxa_ocphiwet, &
+       lilac_a2l_Faxa_dstwet1, lilac_a2l_Faxa_dstdry1, &
+       lilac_a2l_Faxa_dstwet2, lilac_a2l_Faxa_dstdry2, &
+       lilac_a2l_Faxa_dstwet3, lilac_a2l_Faxa_dstdry3, &
+       lilac_a2l_Faxa_dstwet4, lilac_a2l_Faxa_dstdry4])
 
   !------------------------------------------------------------------------
   ! Run lilac
@@ -386,62 +409,62 @@ contains
     ! variable doesn't actually impact the running of CTSM, but it is used for
     ! consistency checking.
     data(:) = 0.d0
-    call lilac_atmcap_atm2lnd('Sa_landfrac', data)
+    call lilac_atm2lnd(lilac_a2l_Sa_landfrac, data)
 
     ! In the following, try to have each field have different values, in order to catch
     ! mis-matches (e.g., if foo and bar were accidentally swapped in CTSM, we couldn't
     ! catch that if they both had the same value).
 
     data(:) = 30.0d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Sa_z', data)
+    call lilac_atm2lnd(lilac_a2l_Sa_z, data)
 
     data(:) = 10.0d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Sa_topo', data)
+    call lilac_atm2lnd(lilac_a2l_Sa_topo, data)
 
     data(:) = 20.0d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Sa_u', data)
+    call lilac_atm2lnd(lilac_a2l_Sa_u, data)
 
     data(:) = 40.0d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Sa_v', data)
+    call lilac_atm2lnd(lilac_a2l_Sa_v, data)
 
     data(:) = 280.1d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Sa_ptem', data)
+    call lilac_atm2lnd(lilac_a2l_Sa_ptem, data)
 
     data(:) = 100100.0d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Sa_pbot', data)
+    call lilac_atm2lnd(lilac_a2l_Sa_pbot, data)
 
     data(:) = 280.0d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Sa_tbot', data)
+    call lilac_atm2lnd(lilac_a2l_Sa_tbot, data)
 
     data(:) = 0.0004d0 + space_time_perturbation(:)*1.0e-8
-    call lilac_atmcap_atm2lnd('Sa_shum', data)
+    call lilac_atm2lnd(lilac_a2l_Sa_shum, data)
 
     data(:) = 200.0d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Faxa_lwdn', data)
+    call lilac_atm2lnd(lilac_a2l_Faxa_lwdn, data)
 
     data(:) = 1.0d-8 +  space_time_perturbation(:)*1.0e-8
-    call lilac_atmcap_atm2lnd('Faxa_rainc', data)
+    call lilac_atm2lnd(lilac_a2l_Faxa_rainc, data)
 
     data(:) = 2.0d-8 +  space_time_perturbation(:)*1.0e-8
-    call lilac_atmcap_atm2lnd('Faxa_rainl', data)
+    call lilac_atm2lnd(lilac_a2l_Faxa_rainl, data)
 
     data(:) = 1.0d-9 +  space_time_perturbation(:)*1.0e-9
-    call lilac_atmcap_atm2lnd('Faxa_snowc', data)
+    call lilac_atm2lnd(lilac_a2l_Faxa_snowc, data)
 
     data(:) = 2.0d-9 +  space_time_perturbation(:)*1.0e-9
-    call lilac_atmcap_atm2lnd('Faxa_snowl', data)
+    call lilac_atm2lnd(lilac_a2l_Faxa_snowl, data)
 
     data(:) = 100.0d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Faxa_swndr', data)
+    call lilac_atm2lnd(lilac_a2l_Faxa_swndr, data)
 
     data(:) = 50.0d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Faxa_swvdr', data)
+    call lilac_atm2lnd(lilac_a2l_Faxa_swvdr, data)
 
     data(:) = 25.0d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Faxa_swndf', data)
+    call lilac_atm2lnd(lilac_a2l_Faxa_swndf, data)
 
     data(:) = 45.0d0 + space_time_perturbation(:)
-    call lilac_atmcap_atm2lnd('Faxa_swvdf', data)
+    call lilac_atm2lnd(lilac_a2l_Faxa_swvdf, data)
 
   end subroutine atm_driver_to_lilac
 
@@ -463,7 +486,7 @@ contains
     logical, intent(in) :: masterproc
 
     ! local variables
-    integer, parameter :: field_name_len = 64
+    integer :: nfields
     integer :: ierr
     integer :: ncid
     integer :: dimid_x
@@ -471,19 +494,22 @@ contains
     integer :: nglobal
     integer :: i
     integer, allocatable :: varids(:)
-    character(len=field_name_len) :: field_name
+    character(len=:), allocatable :: field_name
     integer, allocatable :: counts(:)
     integer, allocatable :: displacements(:)
     real*8, allocatable :: data(:)
     real*8, allocatable :: data_global(:)
     real*8, allocatable :: data_2d(:,:)
 
-    character(len=field_name_len), parameter :: fields(23) = [character(len=field_name_len) :: &
-         'Sl_t', 'Sl_tref', 'Sl_qref', 'Sl_avsdr', 'Sl_anidr', 'Sl_avsdf', 'Sl_anidf', &
-         'Sl_snowh', 'Sl_u10', 'Sl_fv', 'Sl_ram1', 'Sl_z0m', &
-         'Fall_taux', 'Fall_tauy', 'Fall_lat', 'Fall_sen', 'Fall_lwup', 'Fall_evap', 'Fall_swnet', &
-         'Fall_flxdst1', 'Fall_flxdst2', 'Fall_flxdst3', 'Fall_flxdst4']
     ! --------------------------------------------
+
+    ! Implementation note: for convenience and ease of maintenance, we directly leverage
+    ! l2a_fields in this subroutine, and loop through all available indices in that
+    ! list. A real atmosphere should not use that variable directly; instead, it should
+    ! use the indices defined in ctsm_LilacCouplingFieldIndices, similarly to what is done
+    ! above in atm_driver_to_lilac.
+
+    nfields = l2a_fields%num_fields()
 
     ! ------------------------------------------------------------------------
     ! Set up output file
@@ -500,9 +526,9 @@ contains
        ierr = nf90_def_dim(ncid, 'atm_ny', atm_global_ny, dimid_y)
        if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_def_dim ny atm driver output file')
 
-       allocate(varids(size(fields)))
-       do i = 1, size(fields)
-          field_name = fields(i)
+       allocate(varids(nfields))
+       do i = 1, nfields
+          field_name = l2a_fields%get_fieldname(i)
           ierr = nf90_def_var(ncid, field_name, nf90_double, [dimid_x, dimid_y], varids(i))
           if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_def_var atm driver output file: '//trim(field_name))
        end do
@@ -545,9 +571,13 @@ contains
     ! Retrieve data for each field, gather to master and write to file
     ! ------------------------------------------------------------------------
 
-    do i = 1, size(fields)
-       field_name = fields(i)
-       call lilac_atmcap_lnd2atm(field_name, data)
+    do i = 1, nfields
+       field_name = l2a_fields%get_fieldname(i)
+       ! See implementation note above: typically a host atmosphere should NOT loop
+       ! through fields, accessing them anonymously by index as is done here. Instead,
+       ! typically the host atmosphere would access specific fields using the indices
+       ! defined in ctsm_LilacCouplingFieldIndices.
+       call lilac_lnd2atm(i, data)
 
        ! Because of the way we set up the decomposition, we can use a simple mpi_gatherv
        ! without needing to worry about any rearrangement, and points will appear in the

@@ -11,7 +11,7 @@ module lnd_comp_esmf
   use perf_mod          , only : t_startf, t_stopf, t_barrierf
 
   ! lilac code
-  use lilac_atmcap      , only : atm2lnd, lnd2atm
+  use ctsm_LilacCouplingFields, only : a2l_fields, l2a_fields
 
   ! cime share code
   use shr_kind_mod      , only : r8 => shr_kind_r8, cl=>shr_kind_cl
@@ -407,9 +407,9 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! now add atm import fields on lnd_mesh to this field bundle
-    do n = 1, size(atm2lnd)
+    do n = 1, a2l_fields%num_fields()
        lfield = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT, &
-            name=trim(atm2lnd(n)%fldname), rc=rc)
+            name=a2l_fields%get_fieldname(n), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_FieldBundleAdd(c2l_fb_atm, (/lfield/), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -443,9 +443,9 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! now add atm export fields on lnd_mesh to this field bundle
-    do n = 1, size(lnd2atm)
+    do n = 1, l2a_fields%num_fields()
        lfield = ESMF_FieldCreate(lnd_mesh, ESMF_TYPEKIND_R8 , meshloc=ESMF_MESHLOC_ELEMENT, &
-            name=trim(lnd2atm(n)%fldname), rc=rc)
+            name=l2a_fields%get_fieldname(n), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_FieldBundleAdd(l2c_fb_atm, (/lfield/), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return

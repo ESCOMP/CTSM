@@ -7,6 +7,7 @@ module lilac_time
   use lilac_io      , only : lilac_io_write, lilac_io_wopen, lilac_io_enddef
   use lilac_io      , only : lilac_io_close, lilac_io_date2yyyymmdd, lilac_io_sec2hms
   use lilac_methods , only : chkerr
+  use lilac_constants, only : logunit
   use netcdf        , only : nf90_open, nf90_nowrite, nf90_noerr
   use netcdf        , only : nf90_inq_varid, nf90_get_var, nf90_close
 
@@ -48,7 +49,7 @@ contains
 
   subroutine lilac_time_clockInit(caseid_in, starttype, atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       logunit, lilac_clock, rc)
+       lilac_clock, rc)
 
     ! -------------------------------------------------
     ! Initialize the lilac clock
@@ -63,7 +64,6 @@ contains
     integer             , intent(in)    :: atm_start_mon  !(mm)
     integer             , intent(in)    :: atm_start_day
     integer             , intent(in)    :: atm_start_secs
-    integer             , intent(in)    :: logunit
     type(ESMF_Clock)    , intent(inout) :: lilac_clock
     integer             , intent(out)   :: rc
 
@@ -179,7 +179,7 @@ contains
 
        TimeStep_advance = currtime - clocktime
        call ESMF_TimeIntervalGet(timestep_advance, s=secs, rc=rc)
-       if (mytask == 0) write(6,*)'DEBUG: time step advance is ',secs
+       if (mytask == 0) write(logunit,*)'DEBUG: time step advance is ',secs
 
        ! Advance the clock to the current time (in case of a restart)
        call ESMF_ClockAdvance (lilac_clock, timestep=timestep_advance, rc=rc)

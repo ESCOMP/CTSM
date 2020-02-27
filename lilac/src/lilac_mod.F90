@@ -15,7 +15,7 @@ module lilac_mod
   use shr_sys_mod   , only : shr_sys_abort
   use shr_kind_mod  , only : r8 => shr_kind_r8
 
-  ! lilac routines
+  ! lilac routines and data
   use lilac_io      , only : lilac_io_init
   use lilac_time    , only : lilac_time_clockinit, lilac_time_alarminit
   use lilac_time    , only : lilac_time_restart_write, lilac_time_restart_read
@@ -24,6 +24,10 @@ module lilac_mod
   use lilac_history , only : lilac_history_init
   use lilac_history , only : lilac_history_write
   use lilac_methods , only : chkerr
+  use lilac_constants, only : logunit
+  use ctsm_LilacCouplingFields, only : create_a2l_field_list, create_l2a_field_list
+  use ctsm_LilacCouplingFields, only : complete_a2l_field_list, complete_l2a_field_list
+  use ctsm_LilacCouplingFields, only : a2l_fields
 
   ! lilac register phaes
   use lilac_atmcap  , only : lilac_atmcap_register
@@ -38,7 +42,8 @@ module lilac_mod
 
   implicit none
 
-  public :: lilac_init
+  public :: lilac_init1
+  public :: lilac_init2
   public :: lilac_run
   public :: lilac_final
 
@@ -74,19 +79,32 @@ module lilac_mod
   character(*), parameter    :: u_FILE_u = &
        __FILE__
 
-  integer :: logunit = 6 ! TODO: generalize this
-
 !========================================================================
 contains
 !========================================================================
 
-  subroutine lilac_init(mpicom, atm_global_index, atm_lons, atm_lats, &
-       atm_global_nx, atm_global_ny, atm_calendar, atm_timestep, &
-       atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       starttype_in)
+  subroutine lilac_init1()
 
     ! --------------------------------------------------------------------------------
-    ! This is called by the host atmosphere
+    ! This is called by the host atmosphere. This is phase 1 of the lilac initialization.
+    !
+    ! Indices defined in lilac_coupling_fields (lilac_a2l_* and lilac_l2a_*) are not
+    ! valid until this is called.
+    ! --------------------------------------------------------------------------------
+
+    call create_a2l_field_list()
+    call create_l2a_field_list()
+
+  end subroutine lilac_init1
+
+
+  subroutine lilac_init2(mpicom, atm_global_index, atm_lons, atm_lats, &
+       atm_global_nx, atm_global_ny, atm_calendar, atm_timestep, &
+       atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
+       starttype_in, fields_needed_from_data)
+
+    ! --------------------------------------------------------------------------------
+    ! This is called by the host atmosphere. This is phase 2 of the lilac initialization.
     ! --------------------------------------------------------------------------------
 
     ! input/output variables
@@ -103,6 +121,12 @@ contains
     integer          , intent(in)    :: atm_start_day
     integer          , intent(in)    :: atm_start_secs
     character(len=*) , intent(in)    :: starttype_in
+
+    ! List of field indices that need to be read from data, because the host atmosphere
+    ! isn't going to provide them. These should be indices given in
+    ! ctsm_LilacCouplingFields (lilac_a2l_Faxa_bcphidry). This can be an empty list if no
+    ! fields need to be read from data.
+    integer          , intent(in)    :: fields_needed_from_data(:)
 
     ! local variables
     character(ESMF_MAXSTR)      :: caseid
@@ -140,6 +164,13 @@ contains
     ! Set module variable starttype
     !-------------------------------------------------------------------------
     starttype = starttype_in
+
+    ! ------------------------------------------------------------------------
+    ! Complete setup of field lists started in lilac_init1, now that we know the number
+    ! of atm points.
+    ! ------------------------------------------------------------------------
+    call complete_a2l_field_list(size(atm_global_index), fields_needed_from_data)
+    call complete_l2a_field_list(size(atm_global_index))
 
     !-------------------------------------------------------------------------
     ! Initialize pio with first initialization
@@ -327,7 +358,7 @@ contains
 
     call lilac_time_clockInit(caseid, starttype, atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       logunit, lilac_clock, rc)
+       lilac_clock, rc)
 
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing clock")
     call ESMF_LogWrite(subname//"lilac_clock initialized", ESMF_LOGMSG_INFO)
@@ -447,7 +478,7 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing lilac_history_init")
     call ESMF_LogWrite(subname//"initialized lilac history output ...", ESMF_LOGMSG_INFO)
 
-  end subroutine lilac_init
+  end subroutine lilac_init2
 
   !========================================================================
 
@@ -511,6 +542,11 @@ contains
     ! Update prescribed aerosols  atm2cpl_a_state
     call lilac_atmaero_interp(atm2cpl_state, lilac_clock, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running lilac_atmaero_interp")
+
+    ! Make sure all atm2lnd fields have been set
+    ! FIXME(wjs, 2020-02-27) Uncomment this once data model functionality has been
+    ! properly hooked up
+    ! call a2l_fields%check_all_set()
 
     ! Run cpl_atm2lnd
     call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)
@@ -593,6 +629,9 @@ contains
        call ESMF_AlarmRingerOff( lilac_restart_alarm, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
+
+    ! Reset atm2lnd provided flags for next time step
+    call a2l_fields%reset_provided()
 
     ! Advance the lilac clock at the end of the time step
     call ESMF_ClockAdvance(lilac_clock, rc=rc)
