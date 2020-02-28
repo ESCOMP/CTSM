@@ -591,7 +591,7 @@ contains
                       rcode = pio_put_att(io_file(lfile_ind),varid,"_FillValue",lfillvalue)
                    end if
                    if (chkerr(rc,__LINE__,u_FILE_u)) return
-                   rcode = pio_put_att(io_file(lfile_ind), varid, "units"        , trim(cunit))
+                   ! rcode = pio_put_att(io_file(lfile_ind), varid, "units"        , trim(cunit))
                    rcode = pio_put_att(io_file(lfile_ind), varid, "standard_name", trim(name1))
                    if (present(tavg)) then
                       if (tavg) then
@@ -611,7 +611,7 @@ contains
                 rcode = pio_put_att(io_file(lfile_ind), varid, "_FillValue", lfillvalue)
              end if
              if (chkerr(rc,__LINE__,u_FILE_u)) return
-             rcode = pio_put_att(io_file(lfile_ind), varid, "units", trim(cunit))
+             ! rcode = pio_put_att(io_file(lfile_ind), varid, "units", trim(cunit))
              rcode = pio_put_att(io_file(lfile_ind), varid, "standard_name", trim(name1))
              if (present(tavg)) then
                 if (tavg) then
