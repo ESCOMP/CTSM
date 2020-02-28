@@ -2,16 +2,6 @@ module lilac_atmcap
 
   !-----------------------------------------------------------------------
   ! This is an ESMF lilac cap for the host atmosphere
-  !
-  ! THE HOST ATMOSPHERE IS RESPONSIBLE for calling lilac_init() and in turn
-  ! lilac_init() calls the initialization routines for atm2lnd and lnd2atm
-  !
-  ! the host atm init call will be
-  !      call lilac_init()
-  ! the host atm run phase will be
-  !     call lilac_atm2lnd(fldname, data1d)
-  !     call lilac_run(write_restarts_now, stop_now)
-  !     call lilac_lnd2atm(fldname, data1d)
   !-----------------------------------------------------------------------
 
   use ESMF
