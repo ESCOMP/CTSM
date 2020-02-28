@@ -438,22 +438,22 @@ contains
     data(:) = 280.0d0 + space_time_perturbation(:)
     call lilac_atm2lnd(lilac_a2l_Sa_tbot, data)
 
-    data(:) = 0.0004d0 + space_time_perturbation(:)*1.0e-8
+    data(:) = 0.0004d0 + space_time_perturbation(:)*1.0d-8
     call lilac_atm2lnd(lilac_a2l_Sa_shum, data)
 
     data(:) = 200.0d0 + space_time_perturbation(:)
     call lilac_atm2lnd(lilac_a2l_Faxa_lwdn, data)
 
-    data(:) = 1.0d-8 +  space_time_perturbation(:)*1.0e-8
+    data(:) = 1.0d-8 +  space_time_perturbation(:)*1.0d-9
     call lilac_atm2lnd(lilac_a2l_Faxa_rainc, data)
 
-    data(:) = 2.0d-8 +  space_time_perturbation(:)*1.0e-8
+    data(:) = 2.0d-8 +  space_time_perturbation(:)*1.0d-9
     call lilac_atm2lnd(lilac_a2l_Faxa_rainl, data)
 
-    data(:) = 1.0d-9 +  space_time_perturbation(:)*1.0e-9
+    data(:) = 1.0d-9 +  space_time_perturbation(:)*1.0d-10
     call lilac_atm2lnd(lilac_a2l_Faxa_snowc, data)
 
-    data(:) = 2.0d-9 +  space_time_perturbation(:)*1.0e-9
+    data(:) = 2.0d-9 +  space_time_perturbation(:)*1.0d-10
     call lilac_atm2lnd(lilac_a2l_Faxa_snowl, data)
 
     data(:) = 100.0d0 + space_time_perturbation(:)
@@ -471,7 +471,7 @@ contains
     ! This field has the potential to be read from data. We're setting it here to provide
     ! a test of the logic that says that a field should only be read from data if
     ! explicitly requested by the host atmosphere.
-    data(:) = 1.0d-13 + space_time_perturbation(:)*1.0e-14
+    data(:) = 1.0d-13 + space_time_perturbation(:)*1.0d-14
     call lilac_atm2lnd(lilac_a2l_Faxa_bcphidry, data)
 
   end subroutine atm_driver_to_lilac
