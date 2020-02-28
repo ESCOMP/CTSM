@@ -193,7 +193,9 @@ program atm_driver
        atm_start_secs = atm_start_secs, &
        starttype_in = atm_starttype, &
        fields_needed_from_data = [ &
-       lilac_a2l_Faxa_bcphidry, lilac_a2l_Faxa_bcphodry, lilac_a2l_Faxa_bcphiwet, &
+       ! Deliberately excluding bcphidry to test the logic that says that a field should
+       ! only be read from data if explicitly requested by the host atmosphere.
+       lilac_a2l_Faxa_bcphodry, lilac_a2l_Faxa_bcphiwet, &
        lilac_a2l_Faxa_ocphidry, lilac_a2l_Faxa_ocphodry, lilac_a2l_Faxa_ocphiwet, &
        lilac_a2l_Faxa_dstwet1, lilac_a2l_Faxa_dstdry1, &
        lilac_a2l_Faxa_dstwet2, lilac_a2l_Faxa_dstdry2, &
@@ -465,6 +467,12 @@ contains
 
     data(:) = 45.0d0 + space_time_perturbation(:)
     call lilac_atm2lnd(lilac_a2l_Faxa_swvdf, data)
+
+    ! This field has the potential to be read from data. We're setting it here to provide
+    ! a test of the logic that says that a field should only be read from data if
+    ! explicitly requested by the host atmosphere.
+    data(:) = 1.0d-13 + space_time_perturbation(:)*1.0e-14
+    call lilac_atm2lnd(lilac_a2l_Faxa_bcphidry, data)
 
   end subroutine atm_driver_to_lilac
 
