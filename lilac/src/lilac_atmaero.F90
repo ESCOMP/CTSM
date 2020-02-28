@@ -16,6 +16,7 @@ module lilac_atmaero
   use shr_mpi_mod      , only : shr_mpi_bcast
   use shr_strdata_mod  , only : shr_strdata_type, shr_strdata_create
   use shr_strdata_mod  , only : shr_strdata_print, shr_strdata_advance
+  use shr_string_mod   , only : shr_string_listAppend
   use shr_cal_mod      , only : shr_cal_ymd2date
   use shr_pio_mod      , only : shr_pio_getiotype
   use mct_mod          , only : mct_avect_indexra, mct_gsmap, mct_ggrid
@@ -31,15 +32,29 @@ module lilac_atmaero
   use lilac_atmcap     , only : gindex_atm
   use lilac_methods    , only : chkerr
   use lilac_methods    , only : lilac_methods_FB_getFieldN
+  use lilac_constants  , only : field_index_unset
+  use ctsm_LilacCouplingFields, only : a2l_fields, lilac_atm2lnd
+  use ctsm_LilacCouplingFieldIndices
 
   implicit none
   private
+
+  type, private :: field_mapping_type
+     character(len=:), allocatable :: field_name
+     integer :: field_index = field_index_unset
+  end type field_mapping_type
 
   public :: lilac_atmaero_init  ! initialize stream data type sdat
   public :: lilac_atmaero_interp   ! interpolates between two years of ndep file data
 
   ! module data
   type(shr_strdata_type) :: sdat  ! input data stream
+
+  ! The first num_fields_to_read in the fields_to_read list are the fields that this
+  ! module will read from data. This is set up to have the same ordering as the fields in
+  ! sdat.
+  integer :: num_fields_to_read
+  type(field_mapping_type), allocatable :: fields_to_read(:)
 
   character(*),parameter :: u_file_u = &
        __FILE__
@@ -65,9 +80,11 @@ contains
     type(ESMF_Field)       :: lfield
     type(mct_ggrid)        :: ggrid_atm                  ! domain information
     type(mct_gsmap)        :: gsmap_atm                  ! decompositoin info
+    type(field_mapping_type), allocatable :: all_fields(:) ! all fields that can possibly be read from data
     integer                :: mytask                     ! mpi task number
     integer                :: mpicom                     ! mpi communicator
-    integer                :: n,i,j                      ! index
+    integer                :: n                          ! index
+    integer                :: field_index
     integer                :: lsize                      ! local size
     integer                :: gsize                      ! global size
     integer                :: nunit                      ! namelist input unit
@@ -76,7 +93,7 @@ contains
     character(len=CL)      :: mapalgo = 'bilinear'       ! type of 2d mapping
     character(len=CS)      :: taxmode = 'extend'         ! time extrapolation
     character(len=CL)      :: fldlistFile                ! name of fields in input stream file
-    character(len=CL)      :: fldlistModel               ! name of fields in data stream code
+    character(len=CL)      :: fldlistModel               ! name of fields in model
     integer                :: stream_year_first  ! first year in stream to use
     integer                :: stream_year_last   ! last year in stream to use
     integer                :: model_year_align   ! align stream_year_first with model year
@@ -95,6 +112,40 @@ contains
          stream_fldfilename
 
     rc = ESMF_SUCCESS
+
+    all_fields = [ &
+         field_mapping_type('BCDEPWET', lilac_a2l_Faxa_bcphiwet), &
+         field_mapping_type('BCPHODRY', lilac_a2l_Faxa_bcphodry), &
+         field_mapping_type('BCPHIDRY', lilac_a2l_Faxa_bcphidry), &
+         field_mapping_type('OCDEPWET', lilac_a2l_Faxa_ocphiwet), &
+         field_mapping_type('OCPHIDRY', lilac_a2l_Faxa_ocphidry), &
+         field_mapping_type('OCPHODRY', lilac_a2l_Faxa_ocphodry), &
+         field_mapping_type('DSTX01WD', lilac_a2l_Faxa_dstwet1), &
+         field_mapping_type('DSTX01DD', lilac_a2l_Faxa_dstdry1), &
+         field_mapping_type('DSTX02WD', lilac_a2l_Faxa_dstwet2), &
+         field_mapping_type('DSTX02DD', lilac_a2l_Faxa_dstdry2), &
+         field_mapping_type('DSTX03WD', lilac_a2l_Faxa_dstwet3), &
+         field_mapping_type('DSTX03DD', lilac_a2l_Faxa_dstdry3), &
+         field_mapping_type('DSTX04WD', lilac_a2l_Faxa_dstwet4), &
+         field_mapping_type('DSTX04DD', lilac_a2l_Faxa_dstdry4)]
+
+    num_fields_to_read = 0
+    allocate(fields_to_read(size(all_fields)))
+    fldlistFile = ' '
+    fldlistModel = ' '
+    do n = 1, size(all_fields)
+       field_index = all_fields(n)%field_index
+       if (a2l_fields%is_needed_from_data(field_index)) then
+          num_fields_to_read = num_fields_to_read + 1
+          fields_to_read(num_fields_to_read) = all_fields(n)
+          call shr_string_listAppend(fldlistFile, fields_to_read(num_fields_to_read)%field_name)
+          call shr_string_listAppend(fldlistModel, a2l_fields%get_fieldname(field_index))
+       end if
+    end do
+
+    if (num_fields_to_read == 0) then
+       return
+    end if
 
     ! default values for namelist
     stream_year_first  = 1                ! first year in stream to use
@@ -136,19 +187,6 @@ contains
        print *, '  stream_fldFileName = ',stream_fldFileName
        print *, ' '
     endif
-
-    ! ------------------------------
-    ! create the field list for these urbantv fields...use in shr_strdata_create
-    ! ------------------------------
-    fldlistFile =                      'BCDEPWET:BCPHODRY:BCPHIDRY:'
-    fldlistFile = trim(fldlistFile) // 'OCDEPWET:OCPHIDRY:OCPHODRY:DSTX01WD:'
-    fldlistFile = trim(fldlistFile) // 'DSTX01DD:DSTX02WD:DSTX02DD:DSTX03WD:'
-    fldlistFile = trim(fldlistFile) // 'DSTX03DD:DSTX04WD:DSTX04DD'
-
-    fldlistModel =                       'Faxa_bcphiwet:Faxa_bcphodry:Faxa_bcphidry:'
-    fldlistModel = trim(fldlistModel) // 'Faxa_ocphiwet:Faxa_ocphidry:Faxa_ocphodry:'
-    fldlistModel = trim(fldlistModel) // 'Faxa_dstwet1:Faxa_dstdry1:Faxa_dstwet2:Faxa_dstdry2:'
-    fldlistModel = trim(fldlistModel) // 'Faxa_dstwet3:Faxa_dstdry3:Faxa_dstwet4:Faxa_dstdry4'
 
     ! ------------------------------
     ! create the mct gsmap
@@ -245,10 +283,9 @@ contains
 
   !================================================================
 
-  subroutine lilac_atmaero_interp(atm2cpl_state, clock, rc)
+  subroutine lilac_atmaero_interp(clock, rc)
 
     ! input/output variables
-    type(ESMF_State)       :: atm2cpl_state
     type(ESMF_Clock)       :: clock
     integer, intent(out)   :: rc
 
@@ -259,10 +296,15 @@ contains
     type(ESMF_FieldBundle) :: lfieldbundle
     type(ESMF_Time)        :: currTime
     integer                :: yy, mm, dd, sec, curr_ymd
+    integer                :: n
     character(len=*), parameter :: subname='lilac_atmaero: [lilac_atmaero_interp]'
     !-----------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
+
+    if (num_fields_to_read == 0) then
+       return
+    end if
 
     ! get mytask and mpicom
     call ESMF_VMGetCurrent(vm, rc=rc)
@@ -281,60 +323,26 @@ contains
     ! advance the streams
     call shr_strdata_advance(sdat, curr_ymd, sec, mpicom, 'atmaero')
 
-    ! set field bundle data
-    call ESMF_StateGet(atm2cpl_state, "a2c_fb", lfieldbundle, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call set_fieldbundle_data('Faxa_bcphidry' , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_bcphodry' , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_bcphiwet' , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_ocphidry' , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_ocphodry' , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_ocphiwet' , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_dstwet1'  , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_dstdry1'  , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_dstwet2'  , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_dstdry2'  , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_dstwet3'  , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_dstdry3'  , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_dstwet4'  , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call set_fieldbundle_data('Faxa_dstdry4'  , lfieldbundle, rc) ; if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do n = 1, num_fields_to_read
+       call set_field(n)
+    end do
 
   end subroutine lilac_atmaero_interp
 
   !==============================================================================
 
-  subroutine set_fieldbundle_data(fldname, fieldbundle, rc)
+  subroutine set_field(fieldnum)
 
     ! input/output data
-    character(len=*)       , intent(in)    :: fldname
-    type(ESMF_FieldBundle) , intent(inout) :: fieldbundle
-    integer                , intent(out)   :: rc
+    integer, intent(in) :: fieldnum  ! index into fields_to_read and sdat (which are assumed to have the same ordering)
 
     ! local data
-    type(ESMF_field)  :: lfield
-    integer           :: nfld, i
-    real(r8), pointer :: fldptr1d(:)
+    integer :: field_index ! index in a2l_fields
     !-----------------------------------------------------------------------
 
-    rc = ESMF_SUCCESS
+    field_index = fields_to_read(fieldnum)%field_index
+    call lilac_atm2lnd(field_index, sdat%avs(1)%rAttr(fieldnum,:))
 
-    call ESMF_FieldBundleGet(fieldBundle, fieldName=trim(fldname), field=lfield, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_FieldGet(lfield, farrayPtr=fldptr1d, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! error check
-    if (size(fldptr1d) /= size(sdat%avs(1)%rAttr, dim=2)) then
-       call shr_sys_abort("ERROR: size of fldptr1d and sdat%avs(1)%rattr dim2 are not equal")
-    end if
-
-    nfld = mct_avect_indexra(sdat%avs(1),trim(fldname))
-    do i = 1, size(fldptr1d)
-       fldptr1d(i)= sdat%avs(1)%rAttr(nfld,i)
-    end do
-
-  end subroutine set_fieldbundle_data
+  end subroutine set_field
 
 end module lilac_atmaero

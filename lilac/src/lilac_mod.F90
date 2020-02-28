@@ -540,13 +540,11 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running lilac atm_cap")
 
     ! Update prescribed aerosols  atm2cpl_a_state
-    call lilac_atmaero_interp(atm2cpl_state, lilac_clock, rc=rc)
+    call lilac_atmaero_interp(lilac_clock, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in running lilac_atmaero_interp")
 
     ! Make sure all atm2lnd fields have been set
-    ! FIXME(wjs, 2020-02-27) Uncomment this once data model functionality has been
-    ! properly hooked up
-    ! call a2l_fields%check_all_set()
+    call a2l_fields%check_all_set()
 
     ! Run cpl_atm2lnd
     call ESMF_LogWrite(subname//"running cpl_atm2lnd_comp ", ESMF_LOGMSG_INFO)

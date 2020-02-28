@@ -335,6 +335,12 @@ contains
        ! This can typically happen in one of two ways:
        ! - A component tries to re-set a field that has already been set
        ! - reset_provided hasn't been called in between times
+       write(logunit,*) subname//' ERROR: attempt to set an already-set field: ', this%fields(field_index)%fieldname
+       if (this%fields(field_index)%needed_from_data) then
+          write(logunit,*) "This field was marked as being needed from data."
+          write(logunit,*) "A possible cause of this error is that it is being set by both"
+          write(logunit,*) "the host atmosphere and LILAC's internal data atmosphere."
+       end if
        call shr_sys_abort(subname//' attempt to set an already-set field: '//this%fields(field_index)%fieldname)
     end if
 
