@@ -554,7 +554,7 @@ EOF
    }
 
    # CMIP series input data is corresponding to
-   my $cmip_series = "CMIP6";
+   my $cmip_series = "CMIP5";
    # Check if soil set
    if ( defined($opts{'soil_cly'}) || 
         defined($opts{'soil_snd'}) ) {
