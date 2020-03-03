@@ -1857,7 +1857,7 @@ Note: 0.1x0.1, 0.25x0.25, 0.5x0.5, 5x5min, 10x10min, 3x3min, 1km-merge-10min and
 
 <entry id="ssp_rcp" type="char*8" category="default_settings"
        group="default_settings"  
-       valid_values="hist,SSP1-2.6,SSP2-4.5,SSP4-6.0,SSP5-8.5">
+       valid_values="hist,SSP5-8.5">
 Shared Socioeconomic Pathway (SSP) and Representative Concentration Pathway (RCP) combination for future scenarios 
 The form is SSPn-m.m Where n is the SSP number and m.m is RCP radiative forcing at peak or 2100 in W/m^2
 n is just the whole number of the specific SSP scenario. The lower numbers have higher mitigation

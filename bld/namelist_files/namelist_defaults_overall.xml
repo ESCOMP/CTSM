@@ -50,7 +50,7 @@ determine default values for namelists.
 <res sitespf_pt="1x1_smallvilleIA"   >1x1_smallvilleIA</res>
 
 <!-- Default simulation year -->
-<sim_year>2000</sim_year>
+<sim_year>1850</sim_year>
 
 <!-- Default simulation year range -->
 <sim_year_range>constant</sim_year_range>
