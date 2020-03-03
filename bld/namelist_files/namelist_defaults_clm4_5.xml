@@ -751,7 +751,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_4x5_hist_78pfts_CMIP5_simyr1850
 
 <!-- SSP5-RCP8.5 - relative to {csmdata}) -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2100" ssp_rcp="SSP5-8.5"
- use_crop=".true."   >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_0.9x1.25_SSP5-8.5_78pfts_CMIP5_simyr1850-2100_c200302.nc</flanduse_timeseries>
+ use_crop=".true."   >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_0.9x1.25_SSP5-8.5_78pfts_CMIP5_simyr1850-2100_c200303.nc</flanduse_timeseries>
 
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
 <use_fun phys="clm5_0" use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
