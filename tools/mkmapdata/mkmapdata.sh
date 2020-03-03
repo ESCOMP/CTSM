@@ -378,7 +378,6 @@ case $hostname in
   #intelvers=12.1.5
   module purge
   module load intel/$intelvers
-  module load ncl
   module load nco
   #module load impi
   module load mpich-slurm
@@ -532,30 +531,6 @@ until ((nfile>${#INGRID[*]})); do
       runcmd "ncatted -a history,global,a,c,"$history"  ${OUTFILE[nfile]}"
       runcmd "ncatted -a hostname,global,a,c,$HOST   -h ${OUTFILE[nfile]}"
       runcmd "ncatted -a logname,global,a,c,$LOGNAME -h ${OUTFILE[nfile]}"
-   fi
-
-   nfile=nfile+1
-done
-
-intelvers=18.0.5
-module purge
-module load intel/$intelvers
-module load ncl
-
-declare -i nfile=1
-until ((nfile>${#INGRID[*]})); do
-
-   # Skip if large file and Fast mode is on
-   if [ "$fast" = "YES" ] && [ "${SRC_LRGFIL[nfile]}" = "netcdf4" ]; then
-      echo "Skipping ${OUTFILE[nfile]} as fast mode is on so skipping large files in NetCDF4 format"
-   else
-      # check for duplicate mapping weights
-      newfile="rmdups_${OUTFILE[nfile]}"
-      runcmd "rm -f $newfile"
-      runcmd "env MAPFILE=${OUTFILE[nfile]} NEWMAPFILE=$newfile ncl $dir/rmdups.ncl"
-      if [ -f "$newfile" ]; then
-         runcmd "mv $newfile ${OUTFILE[nfile]}"
-      fi
    fi
 
    nfile=nfile+1

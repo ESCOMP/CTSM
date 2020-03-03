@@ -141,7 +141,7 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
      ! output grid that is land as determined by input grid
      ! -----------------------------------------------------------------
 
-     allocate(mask_r8(tdomain%ns), stat=ier)
+     allocate(mask_r8(ns_i), stat=ier)
      if (ier/=0) call abort()
      mask_r8 = tdomain%mask
      call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
@@ -317,7 +317,7 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
      ! output grid that is land as determined by input grid
      ! -----------------------------------------------------------------
 
-     allocate(mask_r8(tdomain%ns), stat=ier)
+     allocate(mask_r8(ns_i), stat=ier)
      if (ier/=0) call abort()
      mask_r8 = tdomain%mask
      call gridmap_check( tgridmap, mask_r8, frac_dst, subname )

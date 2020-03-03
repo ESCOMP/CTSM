@@ -186,7 +186,7 @@ subroutine mkvocef(ldomain, mapfname, datfname, ndiag, &
   ! Global sum of output field -- must multiply by fraction of
   ! output grid that is land as determined by input grid
 
-  allocate(mask_r8(tdomain%ns), stat=ier)
+  allocate(mask_r8(ns_i), stat=ier)
   if (ier/=0) call abort()
   mask_r8 = tdomain%mask
   call gridmap_check( tgridmap, mask_r8, frac_dst, subname )

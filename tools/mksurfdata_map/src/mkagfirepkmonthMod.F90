@@ -113,14 +113,13 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   if (ier/=0) call abort()
   call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
 
-  allocate(mask_r8(tdomain%ns), stat=ier)
+  ns_i = tdomain%ns
+  allocate(mask_r8(ns_i), stat=ier)
   if (ier/=0) call abort()
   mask_r8 = tdomain%mask
   call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
   call domain_checksame( tdomain, ldomain, tgridmap )
-
-  ns_i = tdomain%ns
 
   ! -----------------------------------------------------------------
   ! Open input file, allocate memory for input data

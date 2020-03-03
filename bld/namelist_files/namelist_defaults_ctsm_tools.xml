@@ -97,25 +97,25 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- UNSTRUCT grid data files -->
 <!--scripgriddata frm_hgrid="0.5x0.5"   lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c110308.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c200129.nc</scripgriddata>
 <scripgriddata_type frm_hgrid="0.5x0.5" lmask="nomask">UNSTRUCT</scripgriddata_type>
 <scripgriddata frm_hgrid="0.25x0.25" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c191014.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</scripgriddata>
 <scripgriddata_type frm_hgrid="0.25x0.25" lmask="nomask">UNSTRUCT</scripgriddata_type>
 <scripgriddata frm_hgrid="0.125x0.125" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.125x0.125_nomask_c140702.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.125x0.125_nomask_c200129.nc</scripgriddata>
 <scripgriddata_type frm_hgrid="0.125x0.125" lmask="nomask">UNSTRUCT</scripgriddata_type>
 <scripgriddata frm_hgrid="10x10min" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_c110228.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_c200129.nc</scripgriddata>
 <scripgriddata_type frm_hgrid="10x10min" lmask="nomask">UNSTRUCT</scripgriddata_type>
 <scripgriddata frm_hgrid="5x5min"    lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c191107.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c200129.nc</scripgriddata>
 <scripgriddata_type frm_hgrid="5x5min" lmask="nomask">UNSTRUCT</scripgriddata_type>
 <scripgriddata frm_hgrid="3x3min"    lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c191102.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c200129.nc</scripgriddata>
 <scripgriddata_type frm_hgrid="3x3min" lmask="nomask">UNSTRUCT</scripgriddata_type>
 <scripgriddata frm_hgrid="0.9x1.25"  lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.9x1.25_nomask_c191014.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.9x1.25_nomask_c200129.nc</scripgriddata>
 <scripgriddata_type frm_hgrid="0.9x1.25" lmask="nomask">UNSTRUCT</scripgriddata_type-->
 
 <!-- land masks for different types of mksurfdata_map input files -->
