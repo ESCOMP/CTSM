@@ -837,11 +837,11 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_4x5_hist_78pfts_CMIP5_simyr1850
 >lnd/clm2/ndepdata/fndep_clm_rcp8.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 
 <ndep_taxmode            phys="clm5_0" use_cn=".true.">cycle</ndep_taxmode>
-<ndep_varlist            phys="clm5_0" use_cn=".true.">NDEP_month</ndep_varlist>
+<ndep_varlist            phys="clm5_0" use_cn=".true.">NDEP_year</ndep_varlist>
 <ndep_taxmode            phys="clm5_0" use_cn=".true.">limit</ndep_taxmode>
 
 <ndep_taxmode            phys="clm4_5" use_cn=".true.">cycle</ndep_taxmode>
-<ndep_varlist            phys="clm4_5" use_cn=".true.">NDEP_month</ndep_varlist>
+<ndep_varlist            phys="clm4_5" use_cn=".true.">NDEP_year</ndep_varlist>
 <ndep_taxmode            phys="clm4_5" use_cn=".true.">limit</ndep_taxmode>
 
 <ndepmapalgo                use_cn=".true." >bilinear</ndepmapalgo>
