@@ -956,6 +956,20 @@ Number of years to average the storage capacitance over for the soil Matrix solu
 Normally should be the same as the number of years the atmospheric forcing is run over
 </entry>
 
+<entry id="nyr_sasu" type="integer" category="bgc"
+       group="clm_inparm" valid_values="" value="1">
+length of each semi-analytic solution. eg. nyr_SASU=5, analytic solutions will be calculated every five years.
+nyr_SASU=1: the fastest SASU, but inaccurate; nyr_SASU=nyr_forcing(eg. 20): the lowest SASU but accurate
+</entry>
+
+<entry id="iloop_avg" type="integer" category="bgc"
+       group="clm_inparm" valid_values="" value="-999">
+The restart file will be based on the average of all analytic solutions within the iloop_avg^th loop. 
+eg. if nyr_forcing = 20, iloop_avg = 8, the restart file in yr 160 will be based on analytic solutions from yr 141 to 160.
+The number of the analytic solutions within one loop depends on ratio between nyr_forcing and nyr_SASU.
+eg. if nyr_forcing = 20, nyr_SASU = 5, number of analytic solutions is 20/5=4
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
 <!-- ========================================================================================  -->

@@ -3783,15 +3783,17 @@ sub setup_logic_cnmatrix {
          }
       }
     }
-    # if soil matrix is on and spinup is on, set nyr_forcing
-    my $var = "nyr_forcing";
-    if ( &value_is_true($nl_flags->{"use_soil_matrixcn"}) && &value_is_true($nl_flags->{'isspinup'}) ) {
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                 , 'phys'=>$nl_flags->{'phys'}, 'isspinup'=>$nl_flags->{'isspinup'} );
-    } else {
-       my $val = $nl->get_value($var);
-       if ( defined($val) ) {
-          $log->fatal_error("$var can NOT be set when use_soil_matrixcn and isspsinup are off" );
+    # if soil matrix is on and spinup is on, set spinup specific variables
+    my @spinup_vars = ( "nyr_forcing", "nyr_sasu", "iloop_avg" );
+    foreach my $var ( @spinup_vars ) {
+       if ( &value_is_true($nl_flags->{"use_soil_matrixcn"}) && &value_is_true($nl_flags->{'isspinup'}) ) {
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                    , 'phys'=>$nl_flags->{'phys'}, 'isspinup'=>$nl_flags->{'isspinup'} );
+       } else {
+          my $val = $nl->get_value($var);
+          if ( defined($val) ) {
+             $log->fatal_error("$var can NOT be set when use_soil_matrixcn and isspsinup are off" );
+          }
        }
     }
 }
