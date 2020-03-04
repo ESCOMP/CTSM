@@ -3789,11 +3789,22 @@ sub setup_logic_cnmatrix {
        if ( &value_is_true($nl_flags->{"use_soil_matrixcn"}) && &value_is_true($nl_flags->{'isspinup'}) ) {
           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                     , 'phys'=>$nl_flags->{'phys'}, 'isspinup'=>$nl_flags->{'isspinup'} );
+          my $val = $nl->get_value($var);
+          if ( $val < 1 ) {
+            $log->fatal_error("$var can NOT be negative or zero" );
+          }
        } else {
           my $val = $nl->get_value($var);
           if ( defined($val) ) {
              $log->fatal_error("$var can NOT be set when use_soil_matrixcn and isspsinup are off" );
           }
+       }
+    }
+    if ( &value_is_true($nl_flags->{"use_soil_matrixcn"}) && &value_is_true($nl_flags->{'isspinup'}) ) {
+       my $nyr_forcing = $nl->get_value('nyr_forcing');
+       my $nyr_sasu    = $nl->get_value('nyr_sasu');
+       if ( $nyr_sasu > $nyr_forcing ) {
+          $log->fatal_error("nyr_sasu can NOT be greater than nyr_forcing" );
        }
     }
 }

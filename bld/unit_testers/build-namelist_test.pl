@@ -138,7 +138,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 944;
+my $ntests = 946;
 if ( defined($opts{'compare'}) ) {
    $ntests += 594;
 }
@@ -796,8 +796,13 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      phys=>"clm5_0",
                                    },
-     "nyrsasusTnyrforce"         =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup on",
+     "nyrsasuGTnyrforce"         =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup on",
                                      namelst=>"use_soil_matrixcn=.true.,use_matrixcn=.false.,isspinup=T,nyr_forcing=20,nyr_sasu=21",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm5_0",
+                                   },
+     "iloopNegative"             =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup on",
+                                     namelst=>"use_soil_matrixcn=.true.,use_matrixcn=.false.,isspinup=T,iloop_avg=0",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      phys=>"clm5_0",
                                    },
