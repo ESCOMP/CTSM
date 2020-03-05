@@ -497,7 +497,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <nyr_sasu                                                           >1</nyr_sasu>
 <nyr_sasu     isspinup=".true."           use_soil_matrixcn=".true.">1</nyr_sasu>
 <iloop_avg                                                          >-999</iloop_avg>
-<iloop_avg    isspinup=".true."           use_soil_matrixcn=".true.">20</iloop_avg>
+<iloop_avg    isspinup=".true."           use_soil_matrixcn=".true.">-999</iloop_avg>
 
 <!--
 

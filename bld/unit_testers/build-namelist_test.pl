@@ -801,7 +801,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      phys=>"clm5_0",
                                    },
-     "iloopNegative"             =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup on",
+     "iloopZero"                 =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup on",
                                      namelst=>"use_soil_matrixcn=.true.,use_matrixcn=.false.,isspinup=T,iloop_avg=0",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      phys=>"clm5_0",

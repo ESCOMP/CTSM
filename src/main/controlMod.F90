@@ -191,7 +191,7 @@ contains
 
     ! CN Matrix solution
     namelist /clm_inparm / &
-         use_matrixcn, use_soil_matrixcn, is_outmatrix, isspinup, nyr_forcing
+         use_matrixcn, use_soil_matrixcn, is_outmatrix, isspinup, nyr_forcing, nyr_susu, iloop_avg
 
     ! lake_melt_icealb is of dimension numrad
 
@@ -762,6 +762,8 @@ contains
     call mpi_bcast (is_outmatrix, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (isspinup, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (nyr_forcing, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (nyr_sasu, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (iloop_avg, 1, MPI_INTEGER, 0, mpicom, ier)
 
     if (use_cn .and. use_vertsoilc) then
        ! vertical soil mixing variables

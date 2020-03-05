@@ -3790,6 +3790,7 @@ sub setup_logic_cnmatrix {
           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                     , 'phys'=>$nl_flags->{'phys'}, 'isspinup'=>$nl_flags->{'isspinup'} );
           my $val = $nl->get_value($var);
+          if ( $val == -999 && ($var eq "iloop_avg") ) { next; }  # iloop_avg can be special flag value
           if ( $val < 1 ) {
             $log->fatal_error("$var can NOT be negative or zero" );
           }
