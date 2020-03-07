@@ -25,6 +25,7 @@ if __name__ == '__main__':
 from Tools.standard_script_setup import *
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
+from CIME.SystemTests.test_utils import user_nl_utils
 
 
 logger = logging.getLogger(__name__)
@@ -64,22 +65,43 @@ class SSP_MatrixCN(SystemTestsCommon):
 
 
     def __logger__(self, n=0):
+        "Log info on this step"
+
         logger.info("Step {}: {}: doing a {} run for {} years".format( self.steps[n], self.run[n], self.desc[n], self.stop_n[n] )  )
         if ( n+1 < self.n_steps() ):
            logger.info("  writing restarts at end of run")
            logger.info("  short term archiving is on ")
 
     def n_steps(self):
+        "Total number of steps"
+
         return( len(self.steps) )
 
     def total_years(self):
+        "Total number of years needed to do the full spinup"
+
         ysum = 0
         for nyr in self.stop_n:
            ysum = ysum + nyr
 
         return( ysum )
 
+    def append_user_nl(self, caseroot, n=0):
+        "Append needed settings to the user_nl files"
+
+        if ( self.spin[n] ):
+            contents_to_append = " isspinup = .true."
+            contents_to_append = contents_to_append + " nyr_sasu = " + self.sasu[n]
+            if ( self.iloop[n] != -999 ):
+               contents_to_append = contents_to_append + " iloop_avg = " + self.iloop[n]
+
+            user_nl_utils.append_to_user_nl_files(caseroot = caseroot,
+                                              component = "clm",
+                                              contents = contents_to_append)
+
     def run_phase(self):
+        "Run phase"
+
         caseroot = self._case.get_value("CASEROOT")
         orig_case = self._case
         orig_casevar = self._case.get_value("CASE")
@@ -126,6 +148,8 @@ class SSP_MatrixCN(SystemTestsCommon):
 
               for item in glob.glob("{}/*rpointer*".format(rest_path)):
                   shutil.copy(item, rundir)
+
+              self.append_user_nl( clone_path, n )
            #
            # Run the case (Archiving off)
            #
