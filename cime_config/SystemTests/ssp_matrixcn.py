@@ -97,9 +97,9 @@ class SSP_MatrixCN(SystemTestsCommon):
         self.check_n( n )
         if ( self.spin[n] ):
             contents_to_append = " isspinup = .true."
-            contents_to_append = contents_to_append + ", nyr_sasu = " + self.sasu[n]
+            contents_to_append = contents_to_append + ", nyr_sasu = " + str(self.sasu[n])
             if ( self.iloop[n] != -999 ):
-               contents_to_append = contents_to_append + ", iloop_avg = " + self.iloop[n]
+               contents_to_append = contents_to_append + ", iloop_avg = " + str(self.iloop[n])
 
             user_nl_utils.append_to_user_nl_files(caseroot = caseroot,
                                               component = "clm",
@@ -238,6 +238,19 @@ class test_ssp_matrixcn(unittest.TestCase):
 
    def test_n_too_big( self ):
        self.assertRaises(SystemExit, self.ssp.check_n, self.ssp.n_steps()  )
+
+   def test_append_user_nl_step2( self ):
+       ufile = "user_nl_clm"
+       if not os.path.exists(ufile):
+         os.mknod(ufile)
+       else:
+         expect( 0, ufile+" file already exists, not overwritting it" )
+
+       self.ssp.append_user_nl( caseroot=".", n=2)
+       print( ufile+" for step 2" )
+       log = open(ufile, "r").read()
+       print( log )
+       os.remove(ufile)
 
 
 if __name__ == '__main__':
