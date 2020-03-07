@@ -64,9 +64,14 @@ class SSP_MatrixCN(SystemTestsCommon):
           SystemTestsCommon.__init__(self, case)
 
 
+    def check_n( self, n):
+        "Check if n is within range"
+        expect( ( (n >= 0) and (n < self.n_steps()) ), "Step number is out of range = " + str(n) )
+
     def __logger__(self, n=0):
         "Log info on this step"
 
+        self.check_n( n )
         logger.info("Step {}: {}: doing a {} run for {} years".format( self.steps[n], self.run[n], self.desc[n], self.stop_n[n] )  )
         if ( n+1 < self.n_steps() ):
            logger.info("  writing restarts at end of run")
@@ -89,11 +94,12 @@ class SSP_MatrixCN(SystemTestsCommon):
     def append_user_nl(self, caseroot, n=0):
         "Append needed settings to the user_nl files"
 
+        self.check_n( n )
         if ( self.spin[n] ):
             contents_to_append = " isspinup = .true."
-            contents_to_append = contents_to_append + " nyr_sasu = " + self.sasu[n]
+            contents_to_append = contents_to_append + ", nyr_sasu = " + self.sasu[n]
             if ( self.iloop[n] != -999 ):
-               contents_to_append = contents_to_append + " iloop_avg = " + self.iloop[n]
+               contents_to_append = contents_to_append + ", iloop_avg = " + self.iloop[n]
 
             user_nl_utils.append_to_user_nl_files(caseroot = caseroot,
                                               component = "clm",
@@ -222,6 +228,17 @@ class test_ssp_matrixcn(unittest.TestCase):
 
    def test_n_steps( self ):
        self.assertTrue( self.ssp.n_steps() == 5)
+
+   def test_valid_n( self ):
+       for n in range(self.ssp.n_steps()):
+          self.ssp.check_n(n)
+    
+   def test_negative_n( self ):
+       self.assertRaises(SystemExit, self.ssp.check_n, -1 )
+
+   def test_n_too_big( self ):
+       self.assertRaises(SystemExit, self.ssp.check_n, self.ssp.n_steps()  )
+
 
 if __name__ == '__main__':
      unittest.main()
