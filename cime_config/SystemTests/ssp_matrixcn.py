@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 class SSP_MatrixCN(SystemTestsCommon):
 
     # Class data
-    nyr_forcing = 3
+    nyr_forcing = 2
     # Get different integer multiples of the number of forcing years
     full   = nyr_forcing
     twice  = 2 * nyr_forcing
@@ -184,8 +184,14 @@ class test_ssp_matrixcn(unittest.TestCase):
      stream_handler = logging.StreamHandler(sys.stdout)
      logger.addHandler(stream_handler)
      logger.level = logging.DEBUG
+     logger.info( "nyr_forcing = {}".format(self.ssp.nyr_forcing) )
      for n in range(self.ssp.n_steps()):
        self.ssp.__logger__(n)
+       if ( self.ssp.spin[n] ):
+          logger.info( "  isspinup = .true." )
+          logger.info( "  nyr_sasu = {}".format(self.ssp.sasu[n]) )
+          if ( self.ssp.iloop[n] != -999 ):
+             logger.info( "  iloop_avg = {}".format(self.ssp.iloop[n]) )
 
      logger.info( "Total number of years {}".format( self.ssp.total_years() ) )
      logger.removeHandler(stream_handler)
