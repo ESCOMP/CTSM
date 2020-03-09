@@ -138,7 +138,6 @@ def buildnml(rundir, bldnmldir):
                '-ignore_ic_year', # For now, we assume ignore_ic_year, not ignore_ic_date
                '-res', lnd_grid,
                '-clm_start_type', start_type,
-               '-l_ncpl', str(1),  # this will not be used in lilac - but is needed as input
                '-configuration', configuration,
                '-structure', structure,
                '-lnd_frac', os.path.join(lnd_domain_path, lnd_domain_file),

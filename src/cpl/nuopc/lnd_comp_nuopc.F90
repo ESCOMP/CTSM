@@ -325,7 +325,6 @@ contains
     integer                 :: curr_ymd              ! Start date (YYYYMMDD)
     integer                 :: curr_tod              ! Start time of day (sec)
     integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
-    integer                 :: dtime_clm             ! ctsm time-step
     integer, pointer        :: gindex(:)             ! global index space for land and ocean points
     integer, pointer        :: gindex_lnd(:)         ! global index space for just land points
     integer, pointer        :: gindex_ocn(:)         ! global index space for just ocean points
@@ -482,16 +481,26 @@ contains
        call shr_sys_abort( subname//'ERROR:: bad calendar for ESMF' )
     end if
 
+    call ESMF_TimeIntervalGet( timeStep, s=dtime_sync, rc=rc )
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (masterproc) then
+       write(iulog,*)'dtime = ', dtime_sync
+    end if
+
     !----------------------
     ! Initialize CTSM time manager
     !----------------------
 
+    ! Note that we assume that CTSM's internal dtime matches the coupling time step.
+    ! i.e., we currently do NOT allow sub-cycling within a coupling time step.
     call set_timemgr_init(       &
          calendar_in=calendar,   &
          start_ymd_in=start_ymd, &
          start_tod_in=start_tod, &
          ref_ymd_in=ref_ymd,     &
-         ref_tod_in=ref_tod)
+         ref_tod_in=ref_tod,     &
+         dtime_in=dtime_sync)
 
     !----------------------
     ! Read namelist, grid and surface data
@@ -508,7 +517,7 @@ contains
          username_in=username)
 
     ! note that the memory for gindex_ocn will be allocated in the following call
-    call initialize1(gindex_ocn)
+    call initialize1(dtime=dtime_sync, gindex_ocn=gindex_ocn)
 
     ! obtain global index array for just land points which includes mask=0 or ocean points
     call get_proc_bounds( bounds )
@@ -562,26 +571,6 @@ contains
     !--------------------------------
 
     call initialize2()
-
-    !--------------------------------
-    ! Check that ctsm internal dtime aligns with ctsm coupling interval
-    !--------------------------------
-
-    call ESMF_ClockGet( clock, timeStep=timeStep, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_TimeIntervalGet( timeStep, s=dtime_sync, rc=rc )
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    dtime_clm = get_step_size()
-
-    if (masterproc) then
-       write(iulog,*)'dtime_sync= ',dtime_sync,' dtime_ctsm= ',dtime_clm,' mod = ',mod(dtime_sync,dtime_clm)
-    end if
-    if (mod(dtime_sync,dtime_clm) /= 0) then
-       write(iulog,*)'ctsm dtime ',dtime_clm,' and clock dtime ',dtime_sync,' never align'
-       rc = ESMF_FAILURE
-       return
-    end if
 
     !--------------------------------
     ! Create land export state

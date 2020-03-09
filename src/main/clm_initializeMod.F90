@@ -39,7 +39,7 @@ module clm_initializeMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine initialize1(gindex_ocn, dtime_driver)
+  subroutine initialize1(dtime, gindex_ocn)
     !
     ! !DESCRIPTION:
     ! CLM initialization first phase
@@ -61,13 +61,14 @@ contains
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
     !
     ! !ARGUMENTS
+    integer, intent(in) :: dtime    ! model time step (seconds)
+
     ! COMPILER_BUG(wjs, 2020-02-20, intel18.0.3) Although gindex_ocn could be
     ! intent(out), intel18.0.3 generates a runtime segmentation fault in runs that don't
     ! have this argument present when this is declared intent(out). (It works fine on
     ! intel 19.0.2 when declared as intent(out).) See also
     ! https://github.com/ESCOMP/CTSM/issues/930.
     integer, pointer, optional, intent(inout) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
-    integer, intent(in), optional :: dtime_driver 
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
@@ -99,7 +100,7 @@ contains
        call shr_sys_flush(iulog)
     endif
 
-    call control_init(dtime_driver)
+    call control_init(dtime)
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
     call clm_varpar_init(actual_maxsoil_patches, actual_numcft)

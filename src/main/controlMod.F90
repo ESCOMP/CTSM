@@ -110,13 +110,12 @@ contains
 
   !------------------------------------------------------------------------
 
-  subroutine control_init(dtime_driver)
+  subroutine control_init(dtime)
     !
     ! !DESCRIPTION:
     ! Initialize CLM run control information
     !
     ! !USES:
-    use clm_time_manager                 , only : set_timemgr_init
     use CNMRespMod                       , only : CNMRespReadNML
     use LunaMod                          , only : LunaReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
@@ -125,23 +124,18 @@ contains
     use landunit_varcon                  , only : max_lunit
     !
     ! ARGUMENTS
-    integer, intent(in), optional :: dtime_driver
+    integer, intent(in) :: dtime    ! model time step (seconds)
 
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
-    integer :: dtime                ! Integer time-step
     logical :: use_init_interp      ! Apply initInterp to the file given by finidat
     !------------------------------------------------------------------------
 
     ! ----------------------------------------------------------------------
     ! Namelist Variables
     ! ----------------------------------------------------------------------
-
-    ! Time step
-    namelist / clm_inparm/ &
-    dtime
 
     ! CLM namelist settings
 
@@ -341,18 +335,6 @@ contains
        ! ----------------------------------------------------------------------
        ! Process some namelist variables, and perform consistency checks
        ! ----------------------------------------------------------------------
-
-       if (present(dtime_driver)) then
-          ! overwrite dtime with dtime_in - instead of what is being used in the namelist
-          if (masterproc) then
-             write(iulog,*) 'WARNING: using dtime from cap rather than what is being read in from namelist'
-          end if
-          dtime = dtime_driver
-       end if
-
-       ! Now initialize the module variable dtime in clm_time_manger - this will be utilized to create the 
-       ! internal clm clock
-       call set_timemgr_init( dtime_in=dtime )
 
        ! History and restart files (dependent on settings of dtime)
        do i = 1, max_tapes

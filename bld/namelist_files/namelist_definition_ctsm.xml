@@ -619,11 +619,6 @@ The maximum value to use for zeta under stable conditions
 baseline proportion of nitrogen allocated for electron transport (J)
 </entry>
 
-<entry id="dtime" type="real"  category="clm_physics" 
-       group="clm_inparm" valid_values="">
-Time step (seconds)
-</entry>
-
 <entry id="use_fates" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the FATES model

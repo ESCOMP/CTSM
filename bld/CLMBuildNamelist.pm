@@ -189,7 +189,6 @@ OPTIONS
                                form \$CASEDIR/user_nl_clm/user_nl_clm_????)
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
                               file specified.
-     -l_ncpl "LND_NCPL"       Number of CLM coupling time-steps in a day.
      -lnd_tuning_mode "value" Use the parameters tuned for the given configuration (CLM version and atmospheric forcing)
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
                               "-mask list" to list valid land masks.
@@ -254,7 +253,6 @@ sub process_commandline {
                help                  => 0,
                glc_nec               => "default",
                light_res             => "default",
-               l_ncpl                => undef,
                lnd_tuning_mode       => "default",
                lnd_frac              => undef,
                dir                   => "$cwd",
@@ -306,7 +304,6 @@ sub process_commandline {
              "infile=s"                  => \$opts{'infile'},
              "lnd_frac=s"                => \$opts{'lnd_frac'},
              "lnd_tuning_mode=s"         => \$opts{'lnd_tuning_mode'},
-             "l_ncpl=i"                  => \$opts{'l_ncpl'},
              "inputdata=s"               => \$opts{'inputdata'},
              "mask=s"                    => \$opts{'mask'},
              "namelist=s"                => \$opts{'namelist'},
@@ -1491,7 +1488,6 @@ sub process_namelist_inline_logic {
   setup_logic_co2_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_start_type($opts, $nl_flags, $nl);
-  setup_logic_delta_time($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_decomp_performance($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_snow($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref);
@@ -1846,28 +1842,6 @@ sub setup_logic_start_type {
     if (defined $nl->get_value('nrevsn')) {
       $log->fatal_error("nrevsn should ONLY be set for a branch type.");
     }
-  }
-}
-
-#-------------------------------------------------------------------------------
-
-sub setup_logic_delta_time {
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
-
-  if ( defined($opts->{'l_ncpl'}) ) {
-    my $l_ncpl = $opts->{'l_ncpl'};
-    if ( $l_ncpl <= 0 ) {
-      $log->fatal_error("bad value for -l_ncpl option.");
-    }
-    my $val = ( 3600 * 24 ) / $l_ncpl;
-    my $dtime = $nl->get_value('dtime');
-    if ( ! defined($dtime)  ) {
-      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtime', 'val'=>$val);
-    } elsif ( $dtime ne $val ) {
-      $log->fatal_error("can NOT set both -l_ncpl option (via LND_NCPL env variable) AND dtime namelist variable.");
-    }
-  } else {
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtime', 'hgrid'=>$nl_flags->{'res'});
   }
 }
 

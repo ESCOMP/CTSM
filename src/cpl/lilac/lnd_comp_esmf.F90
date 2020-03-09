@@ -304,13 +304,22 @@ contains
        call shr_sys_abort( subname//'ERROR:: bad calendar for ESMF' )
     end if
 
+    call ESMF_TimeIntervalGet(timeStep, s=dtime_lilac, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (masterproc) then
+       write(iulog,*)'dtime = ',dtime_lilac
+    end if
+
     ! The following sets the module variables in clm_time_mamanger.F90 - BUT DOES NOT intialize the
     ! clock. Routine timemgr_init (called by initialize1) initializes the clock using the module variables
     ! that have been set via calls to set_timemgr_init.
 
+    ! Note that we assume that CTSM's internal dtime matches the coupling time step.
+    ! i.e., we currently do NOT allow sub-cycling within a coupling time step.
     call set_timemgr_init( &
          calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
-         ref_ymd_in=ref_ymd, ref_tod_in=ref_tod)
+         ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, dtime_in=dtime_lilac)
 
     !----------------------
     ! Read namelist, grid and surface data
@@ -330,19 +339,9 @@ contains
     ! Call initialize1
     !----------------------
 
-    call ESMF_TimeIntervalGet(timeStep, s=dtime_lilac, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! Note that the memory for gindex_ocn will be allocated in the following call
 
-    if (masterproc) then
-       write(iulog,*)'dtime_lilac= ',dtime_lilac
-    end if
-
-    ! Note that routine controlMod.F90 will initialze the dtime module
-    ! variable in clm_time_manager to the dtime_lilac AND NOT the
-    ! dtime read in from the clm_inparm namelist in this case.  Note
-    ! that the memory for gindex_ocn will be allocated in the following call
-
-    call initialize1(gindex_ocn=gindex_ocn, dtime_driver=dtime_lilac)
+    call initialize1(dtime=dtime_lilac, gindex_ocn=gindex_ocn)
 
     call ESMF_LogWrite(subname//"ctsm time manager initialized....", ESMF_LOGMSG_INFO)
     call ESMF_LogWrite(subname//"ctsm initialize1 done...", ESMF_LOGMSG_INFO)
