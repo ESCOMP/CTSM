@@ -710,29 +710,27 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
-    ! TODO: if fillvalue = shr_const_spval the snowhl sent to the atm will have the spval over some points
-    ! rather than 0 - this is very odd and needs to be understood
-    ! fldptr(:) = fillvalue
-
     ! determine output array
     if (present(ungridded_index)) then
-       fldptr2d(ungridded_index,:) = 0._r8
+       fldptr2d(ungridded_index,:) = fillvalue
        do g = bounds%begg, bounds%endg
           n = g - bounds%begg + 1
-          fldptr2d(ungridded_index,n) = input(g)
+          if (l_minus) then
+             fldptr2d(ungridded_index,n) = -input(g)
+          else
+             fldptr2d(ungridded_index,n) = input(g)
+          end if
        end do
-       if (l_minus) then
-          fldptr2d(ungridded_index,:) = -fldptr2d(ungridded_index,:)
-       end if
     else
-       fldptr1d(:) = 0._r8
+       fldptr1d(:) = fillvalue
        do g = bounds%begg, bounds%endg
           n = g - bounds%begg + 1
-          fldptr1d(n) = input(g)
+          if (l_minus) then
+             fldptr1d(n) = -input(g)
+          else
+             fldptr1d(n) = input(g)
+          end if
        end do
-       if (l_minus) then
-          fldptr1d(:) = -fldptr1d(:)
-       end if
     end if
 
     ! write debug output if appropriate
