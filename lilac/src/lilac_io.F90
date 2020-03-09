@@ -7,10 +7,10 @@ module lilac_io
   use ESMF
   use shr_kind_mod    , only : cx=>shr_kind_cx, cs=>shr_kind_cs, cl=>shr_kind_cl
   use shr_kind_mod    , only : r4=>shr_kind_r4, i8=>shr_kind_i8, r8=>shr_kind_r8
-  use shr_const_mod   , only : fillvalue => SHR_CONST_SPVAL
   use shr_pio_mod     , only : shr_pio_getiosys, shr_pio_getiotype, shr_pio_getioformat
   use shr_sys_mod     , only : shr_sys_abort
   use lilac_constants , only : dbug_flag    => lilac_constants_dbug_flag
+  use lilac_constants , only : fillvalue => lilac_constants_fillvalue
   use lilac_constants , only : logunit
   use lilac_methods   , only : FB_getFieldN => lilac_methods_FB_getFieldN
   use lilac_methods   , only : FB_getFldPtr => lilac_methods_FB_getFldPtr

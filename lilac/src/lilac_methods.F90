@@ -9,7 +9,6 @@ module lilac_methods
   use shr_kind_mod    , only : CX=>SHR_KIND_CX, CS=>SHR_KIND_CS, CL=>SHR_KIND_CL, R8=>SHR_KIND_R8
   use lilac_constants , only : dbug_flag => lilac_constants_dbug_flag
   use lilac_constants , only : czero => lilac_constants_czero
-  use lilac_constants , only : spval_init => lilac_constants_spval_init
 
   implicit none
   private

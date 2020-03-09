@@ -18,9 +18,10 @@ program atm_driver
 
   use netcdf      , only : nf90_open, nf90_create, nf90_enddef, nf90_close
   use netcdf      , only : nf90_clobber, nf90_write, nf90_nowrite, nf90_noerr, nf90_double
-  use netcdf      , only : nf90_def_dim, nf90_def_var, nf90_put_var
+  use netcdf      , only : nf90_def_dim, nf90_def_var, nf90_put_att, nf90_put_var
   use netcdf      , only : nf90_inq_dimid, nf90_inquire_dimension, nf90_inq_varid, nf90_get_var
   use lilac_mod   , only : lilac_init1, lilac_init2, lilac_run, lilac_final
+  use lilac_constants , only : fillvalue => lilac_constants_fillvalue
   use ctsm_LilacCouplingFieldIndices
   use ctsm_LilacCouplingFields, only : lilac_atm2lnd, lilac_lnd2atm
   ! A real atmosphere should not use l2a_fields directly. We use it here just for
@@ -555,6 +556,8 @@ contains
           field_name = l2a_fields%get_fieldname(i)
           ierr = nf90_def_var(ncid, field_name, nf90_double, [dimid_x, dimid_y], varids(i))
           if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_def_var atm driver output file: '//trim(field_name))
+          ierr = nf90_put_att(ncid, varids(i), '_FillValue', fillvalue)
+          if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_put_att atm driver output file: '//trim(field_name))
        end do
 
        ierr = nf90_enddef(ncid)
