@@ -388,6 +388,7 @@ contains
     integer             :: lsize
     real*8              :: time_midpoint
     real*8              :: time_perturbation
+    real*8, allocatable :: space_perturbation(:)
     real*8, allocatable :: space_time_perturbation(:)
     real*8, allocatable :: data(:)
     integer             :: i
@@ -395,13 +396,15 @@ contains
     ! --------------------------------------------------------
 
     lsize = size(lon)
+    allocate(space_perturbation(lsize))
     allocate(space_time_perturbation(lsize))
     allocate(data(lsize))
 
     ! The time perturbation will range from about -0.5 to 0.5
     time_midpoint = atm_nsteps / 2.d0
     time_perturbation = 0.5d0 * (nstep - time_midpoint)/time_midpoint
-    space_time_perturbation(:) = time_perturbation + lat(:)*0.01d0 + lon(:)*0.01d0
+    space_perturbation(:) = lat(:)*0.01d0 + lon(:)*0.01d0
+    space_time_perturbation(:) = time_perturbation + space_perturbation(:)
 
     ! Only set landfrac in the first time step, similar to what most real atmospheres
     ! will probably do.
