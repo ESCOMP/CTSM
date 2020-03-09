@@ -191,7 +191,7 @@ contains
 
     ! CN Matrix solution
     namelist /clm_inparm / &
-         use_matrixcn, use_soil_matrixcn, is_outmatrix, isspinup, nyr_forcing, nyr_susu, iloop_avg
+         use_matrixcn, use_soil_matrixcn, is_outmatrix, isspinup, nyr_forcing, nyr_sasu, iloop_avg
 
     ! lake_melt_icealb is of dimension numrad
 

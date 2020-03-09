@@ -22,7 +22,6 @@ if __name__ == '__main__':
    sys.path.append(os.path.join( CIMEROOT, "scripts", "lib"))
    sys.path.append(os.path.join( CIMEROOT, "scripts" ) )
 
-from Tools.standard_script_setup import *
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 from CIME.SystemTests.test_utils import user_nl_utils
@@ -30,7 +29,7 @@ from CIME.SystemTests.test_utils import user_nl_utils
 
 logger = logging.getLogger(__name__)
 
-class SSP_MatrixCN(SystemTestsCommon):
+class SSPMATRIXCN(SystemTestsCommon):
 
     # Class data
     nyr_forcing = 2
@@ -50,7 +49,7 @@ class SSP_MatrixCN(SystemTestsCommon):
 
     def __init__(self, case=None):
         """
-        initialize an object interface to the SSP_MatrixCN system test
+        initialize an object interface to the SSPMATRIXCN system test
         """
         expect ( len(self.steps) == len(self.sasu),   "length of steps must be the same as sasu" )
         expect ( len(self.steps) == len(self.spin),   "length of steps must be the same as spin" )
@@ -207,7 +206,7 @@ from argparse  import RawTextHelpFormatter
 class test_ssp_matrixcn(unittest.TestCase):
 
    def setUp( self ):
-     self.ssp = SSP_MatrixCN()
+     self.ssp = SSPMATRIXCN()
 
    def test_logger( self ):
      # Test the logger
