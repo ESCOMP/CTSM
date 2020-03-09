@@ -425,14 +425,19 @@ contains
     ! mis-matches (e.g., if foo and bar were accidentally swapped in CTSM, we couldn't
     ! catch that if they both had the same value).
 
+    ! Sa_z is allowed to be time-constant, but we're keeping it time-varying here in
+    ! order to test the ability to have an allowed-to-be-time-constant field actually be
+    ! time-varying.
     data(:) = 30.0d0 + space_time_perturbation(:)
     call lilac_atm2lnd(lilac_a2l_Sa_z, data)
 
     ! Use a time-constant topo field (which may be typical of atmospheres), in order to
     ! test the infrastructure that allows fields to be just set once, in the first time
     ! step.
-    data(:) = 10.0d0 + space_perturbation(:)
-    call lilac_atm2lnd(lilac_a2l_Sa_topo, data)
+    if (nstep == 1) then
+       data(:) = 10.0d0 + space_perturbation(:)
+       call lilac_atm2lnd(lilac_a2l_Sa_topo, data)
+    end if
 
     data(:) = 20.0d0 + space_time_perturbation(:)
     call lilac_atm2lnd(lilac_a2l_Sa_u, data)
