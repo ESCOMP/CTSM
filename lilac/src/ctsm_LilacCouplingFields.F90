@@ -52,7 +52,7 @@ contains
     ! !DESCRIPTION:
     ! Set a single atm -> lnd field
     !
-    ! field_index should be one of the lilac_a2l_* indices defined in this module
+    ! field_index should be one of the lilac_a2l_* indices defined in ctsm_LilacCouplingFieldIndices
     !
     ! !ARGUMENTS:
     integer, intent(in) :: field_index
@@ -73,7 +73,7 @@ contains
     ! !DESCRIPTION:
     ! Get a single lnd -> atm field
     !
-    ! field_index should be one of the lilac_l2a_* indices defined in this module
+    ! field_index should be one of the lilac_l2a_* indices defined in ctsm_LilacCouplingFieldIndices
     !
     ! !ARGUMENTS:
     integer, intent(in) :: field_index
