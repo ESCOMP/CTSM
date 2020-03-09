@@ -50,6 +50,7 @@ module ctsm_LilacAtm2LndFieldListType
      character(len=:), allocatable :: fieldname
      character(len=:), allocatable :: units
      logical :: available_from_data  ! whether this field can be obtained from data if not provided by the sending component
+     logical :: can_be_time_const    ! if true, it's okay for this field to be set just once, in the first time step, keeping its same value for the entire run (e.g., a landfrac field that doesn't vary in time)
 
      ! Metadata set later in initialization
      logical :: needed_from_data ! whether the host atmosphere wants LILAC to read this field from data
@@ -58,6 +59,7 @@ module ctsm_LilacAtm2LndFieldListType
      ! Data set each time step
      real(r8), pointer :: dataptr(:)
      logical :: provided_this_time   ! whether this variable has been set this time step
+     logical :: provided_ever        ! whether this variable has ever been set
   end type lilac_atm2lnd_field_type
 
   ! Define a dynamic vector for lilac_atm2lnd_field_type
@@ -103,7 +105,7 @@ contains
 #include "dynamic_vector_procdef.inc"
 
   !-----------------------------------------------------------------------
-  function new_lilac_atm2lnd_field_type(fieldname, units, available_from_data) result(this)
+  function new_lilac_atm2lnd_field_type(fieldname, units, available_from_data, can_be_time_const) result(this)
     !
     ! !DESCRIPTION:
     ! Initialize a new lilac_atm2lnd_field_type object
@@ -113,6 +115,7 @@ contains
     character(len=*), intent(in) :: fieldname
     character(len=*), intent(in) :: units
     logical, intent(in) :: available_from_data ! whether this field can be obtained from data if not provided by the sending component
+    logical, intent(in) :: can_be_time_const   ! if true, it's okay for this field to be set just once, in the first time step, keeping its same value for the entire run (e.g., a landfrac field that doesn't vary in time)
     !
     ! !LOCAL VARIABLES:
 
@@ -122,6 +125,7 @@ contains
     this%fieldname = fieldname
     this%units = units
     this%available_from_data = available_from_data
+    this%can_be_time_const = can_be_time_const
 
     ! Assume false until told otherwise
     this%needed_from_data = .false.
@@ -131,6 +135,7 @@ contains
 
     nullify(this%dataptr)
     this%provided_this_time = .false.
+    this%provided_ever      = .false.
 
   end function new_lilac_atm2lnd_field_type
 
@@ -153,7 +158,7 @@ contains
   end subroutine init
 
   !-----------------------------------------------------------------------
-  subroutine add_var(this, fieldname, units, available_from_data, field_index)
+  subroutine add_var(this, fieldname, units, available_from_data, can_be_time_const, field_index)
     !
     ! !DESCRIPTION:
     ! Add the given field to this list
@@ -167,6 +172,7 @@ contains
     character(len=*), intent(in) :: fieldname
     character(len=*), intent(in) :: units
     logical, intent(in) :: available_from_data ! whether this field can be obtained from data if not provided by the sending component
+    logical, intent(in) :: can_be_time_const   ! if true, it's okay for this field to be set just once, in the first time step, keeping its same value for the entire run (e.g., a landfrac field that doesn't vary in time)
     integer, intent(inout) :: field_index
     !
     ! !LOCAL VARIABLES:
@@ -192,7 +198,8 @@ contains
     one_field = lilac_atm2lnd_field_type( &
          fieldname = trim(fieldname), &
          units = trim(units), &
-         available_from_data = available_from_data)
+         available_from_data = available_from_data, &
+         can_be_time_const = can_be_time_const)
 
     call this%field_vec%push_back(one_field)
 
@@ -346,6 +353,7 @@ contains
 
     this%fields(field_index)%dataptr(:) = data(:)
     this%fields(field_index)%provided_this_time = .true.
+    this%fields(field_index)%provided_ever = .true.
 
   end subroutine set_field
 
@@ -365,8 +373,15 @@ contains
     !-----------------------------------------------------------------------
 
     do i = 1, this%num_fields()
-       if (this%fields(i)%required_by_lnd .and. .not. this%fields(i)%provided_this_time) then
-          call shr_sys_abort(trim(this%fields(i)%fieldname)//' required but not provided')
+       if (this%fields(i)%required_by_lnd) then
+          if (.not. this%fields(i)%provided_ever) then
+             call shr_sys_abort(trim(this%fields(i)%fieldname)//' required but never provided')
+          end if
+          if (.not. this%fields(i)%can_be_time_const) then
+             if (.not. this%fields(i)%provided_this_time) then
+                call shr_sys_abort(trim(this%fields(i)%fieldname)//' required but not provided this time')
+             end if
+          end if
        end if
     end do
 

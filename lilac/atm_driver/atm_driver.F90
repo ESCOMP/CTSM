@@ -403,6 +403,9 @@ contains
     time_perturbation = 0.5d0 * (nstep - time_midpoint)/time_midpoint
     space_time_perturbation(:) = time_perturbation + lat(:)*0.01d0 + lon(:)*0.01d0
 
+    ! Only set landfrac in the first time step, similar to what most real atmospheres
+    ! will probably do.
+    !
     ! We don't have a good way to set a land mask / fraction in this demo driver. Since it
     ! is okay for the atmosphere to call a point ocean when CTSM calls it land, but not
     ! the reverse, here we call all points ocean. In a real atmosphere, the atmosphere
@@ -410,8 +413,10 @@ contains
     ! that CTSM is running over all of the necessary points. Note that this landfrac
     ! variable doesn't actually impact the running of CTSM, but it is used for
     ! consistency checking.
-    data(:) = 0.d0
-    call lilac_atm2lnd(lilac_a2l_Sa_landfrac, data)
+    if (nstep == 1) then
+       data(:) = 0.d0
+       call lilac_atm2lnd(lilac_a2l_Sa_landfrac, data)
+    end if
 
     ! In the following, try to have each field have different values, in order to catch
     ! mis-matches (e.g., if foo and bar were accidentally swapped in CTSM, we couldn't

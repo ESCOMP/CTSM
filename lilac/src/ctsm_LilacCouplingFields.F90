@@ -107,70 +107,70 @@ contains
     call a2l_fields%init()
 
     call a2l_fields%add_var(fieldname='Sa_landfrac'   , units='fraction', available_from_data=.false., &
-         field_index=lilac_a2l_Sa_landfrac)
+         can_be_time_const=.true., field_index=lilac_a2l_Sa_landfrac)
     call a2l_fields%add_var(fieldname='Sa_z'          , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Sa_z)
+         can_be_time_const=.true., field_index=lilac_a2l_Sa_z)
     call a2l_fields%add_var(fieldname='Sa_topo'       , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Sa_topo)
+         can_be_time_const=.true., field_index=lilac_a2l_Sa_topo)
     call a2l_fields%add_var(fieldname='Sa_u'          , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Sa_u)
+         can_be_time_const=.false., field_index=lilac_a2l_Sa_u)
     call a2l_fields%add_var(fieldname='Sa_v'          , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Sa_v)
+         can_be_time_const=.false., field_index=lilac_a2l_Sa_v)
     call a2l_fields%add_var(fieldname='Sa_ptem'       , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Sa_ptem)
+         can_be_time_const=.false., field_index=lilac_a2l_Sa_ptem)
     call a2l_fields%add_var(fieldname='Sa_pbot'       , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Sa_pbot)
+         can_be_time_const=.false., field_index=lilac_a2l_Sa_pbot)
     call a2l_fields%add_var(fieldname='Sa_tbot'       , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Sa_tbot)
+         can_be_time_const=.false., field_index=lilac_a2l_Sa_tbot)
     call a2l_fields%add_var(fieldname='Sa_shum'       , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Sa_shum)
+         can_be_time_const=.false., field_index=lilac_a2l_Sa_shum)
     call a2l_fields%add_var(fieldname='Faxa_lwdn'     , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Faxa_lwdn)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_lwdn)
     call a2l_fields%add_var(fieldname='Faxa_rainc'    , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Faxa_rainc)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_rainc)
     call a2l_fields%add_var(fieldname='Faxa_rainl'    , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Faxa_rainl)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_rainl)
     call a2l_fields%add_var(fieldname='Faxa_snowc'    , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Faxa_snowc)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_snowc)
     call a2l_fields%add_var(fieldname='Faxa_snowl'    , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Faxa_snowl)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_snowl)
     call a2l_fields%add_var(fieldname='Faxa_swndr'    , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Faxa_swndr)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_swndr)
     call a2l_fields%add_var(fieldname='Faxa_swvdr'    , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Faxa_swvdr)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_swvdr)
     call a2l_fields%add_var(fieldname='Faxa_swndf'    , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Faxa_swndf)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_swndf)
     call a2l_fields%add_var(fieldname='Faxa_swvdf'    , units='unknown', available_from_data=.false., &
-         field_index=lilac_a2l_Faxa_swvdf)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_swvdf)
 
     call a2l_fields%add_var(fieldname='Faxa_bcphidry' , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_bcphidry)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_bcphidry)
     call a2l_fields%add_var(fieldname='Faxa_bcphodry' , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_bcphodry)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_bcphodry)
     call a2l_fields%add_var(fieldname='Faxa_bcphiwet' , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_bcphiwet)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_bcphiwet)
     call a2l_fields%add_var(fieldname='Faxa_ocphidry' , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_ocphidry)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_ocphidry)
     call a2l_fields%add_var(fieldname='Faxa_ocphodry' , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_ocphodry)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_ocphodry)
     call a2l_fields%add_var(fieldname='Faxa_ocphiwet' , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_ocphiwet)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_ocphiwet)
     call a2l_fields%add_var(fieldname='Faxa_dstwet1'  , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_dstwet1)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_dstwet1)
     call a2l_fields%add_var(fieldname='Faxa_dstdry1'  , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_dstdry1)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_dstdry1)
     call a2l_fields%add_var(fieldname='Faxa_dstwet2'  , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_dstwet2)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_dstwet2)
     call a2l_fields%add_var(fieldname='Faxa_dstdry2'  , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_dstdry2)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_dstdry2)
     call a2l_fields%add_var(fieldname='Faxa_dstwet3'  , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_dstwet3)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_dstwet3)
     call a2l_fields%add_var(fieldname='Faxa_dstdry3'  , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_dstdry3)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_dstdry3)
     call a2l_fields%add_var(fieldname='Faxa_dstwet4'  , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_dstwet4)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_dstwet4)
     call a2l_fields%add_var(fieldname='Faxa_dstdry4'  , units='unknown', available_from_data=.true., &
-         field_index=lilac_a2l_Faxa_dstdry4)
+         can_be_time_const=.false., field_index=lilac_a2l_Faxa_dstdry4)
 
   end subroutine create_a2l_field_list
 
