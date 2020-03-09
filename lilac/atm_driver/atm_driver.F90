@@ -428,7 +428,10 @@ contains
     data(:) = 30.0d0 + space_time_perturbation(:)
     call lilac_atm2lnd(lilac_a2l_Sa_z, data)
 
-    data(:) = 10.0d0 + space_time_perturbation(:)
+    ! Use a time-constant topo field (which may be typical of atmospheres), in order to
+    ! test the infrastructure that allows fields to be just set once, in the first time
+    ! step.
+    data(:) = 10.0d0 + space_perturbation(:)
     call lilac_atm2lnd(lilac_a2l_Sa_topo, data)
 
     data(:) = 20.0d0 + space_time_perturbation(:)
