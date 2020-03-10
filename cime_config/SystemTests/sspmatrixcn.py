@@ -40,7 +40,7 @@ class SSPMATRIXCN(SystemTestsCommon):
     # Define the settings that will be used for each step
     steps  = ["0",       "1",      "2",      "3",      "4"      ]
     desc   = ["cold",    "fast",   "trans",  "slow",   "normal" ]
-    runtyp = ["startup", "hybrid", "hybrid", "hybrid", "hybrid" ]
+    runtyp = ["startup", "branch", "branch", "branch", "branch" ]
     spin   = [False,     True,     True,     True,     False    ]
     stop_n = [5,         thrice,   twice,    thrice,   thrice   ]
     cold   = [True,      False,    False,    False,    False    ]
@@ -61,7 +61,13 @@ class SSPMATRIXCN(SystemTestsCommon):
 
         if __name__ != '__main__':
            SystemTestsCommon.__init__(self, case)
+           ystart = self._case.get_value("DATM_CLMNCEP_YR_START")
+           yend   = self._case.get_value("DATM_CLMNCEP_YR_END")
+        else:
+           ystart = 2000
+           yend   = 2001
 
+        expect( yend-ystart+1 == self.nyr_forcing, "Number of years run over MUST correspond to nyr_forcing" )
 
     def check_n( self, n):
         "Check if n is within range"
@@ -94,8 +100,10 @@ class SSPMATRIXCN(SystemTestsCommon):
         "Append needed settings to the user_nl files"
 
         self.check_n( n )
+        contents_to_append = "hist_nhtfrq = -8760"
+        contents_to_append = contents_to_append + ", hist_mfilt = "+str(self.nyr_forcing)
         if ( self.spin[n] ):
-            contents_to_append = " isspinup = .true."
+            contents_to_append = contents_to_append + ", isspinup = .true."
             contents_to_append = contents_to_append + ", nyr_sasu = " + str(self.sasu[n])
             if ( self.iloop[n] != -999 ):
                contents_to_append = contents_to_append + ", iloop_avg = " + str(self.iloop[n])
@@ -155,6 +163,7 @@ class SSPMATRIXCN(SystemTestsCommon):
                  expect( "refcase" in locals(), "refcase was NOT previously set" )
                  clone.set_value("RUN_REFCASE", refcase )
                  expect( "refdate" in locals(), "refdate was NOT previously set" )
+                 clone.set_value("RUN_STARTDATE", refdate )
                  clone.set_value("RUN_REFDATE", refdate )
                  for item in glob.glob("{}/*{}*".format(rest_path, refdate)):
                      linkfile = os.path.join(rundir, os.path.basename(item))
@@ -170,7 +179,7 @@ class SSPMATRIXCN(SystemTestsCommon):
            # Run the case (Archiving on)
            #
            self._case.flush()
-           self.run_indv(suffix=self.steps[n], st_archive=True)
+           self.run_indv(suffix="step{}".format(self.steps[n]), st_archive=True)
 
            #
            # Get the reference case from this step for the next step
@@ -199,6 +208,7 @@ class SSPMATRIXCN(SystemTestsCommon):
         self._case.set_value("RUN_REFCASE", refcase)
         expect( "refdate" in locals(), "refdate was NOT previously set" )
         self._case.set_value("RUN_REFDATE", refdate)
+        self._case.set_value("RUN_STARTDATE", refdate )
         for item in glob.glob("{}/*{}*".format(rest_path, refdate)):
             linkfile = os.path.join(rundir, os.path.basename(item))
             if os.path.exists(linkfile):
@@ -215,7 +225,7 @@ class SSPMATRIXCN(SystemTestsCommon):
         # Run the case (short term archiving is off)
         #
         self._case.flush()
-        self.run_indv( st_archive=False )
+        self.run_indv( suffix="step{}".format(self.steps[n]), st_archive=False )
 
 #
 # Unit testing for above
