@@ -122,6 +122,7 @@ contains
     use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
+    use CNSoilMatrixMod                  , only : CNSoilMatrixInit
     !
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
@@ -557,6 +558,10 @@ contains
        call DecompCascadeBGCreadNML( NLFilename )
     end if
 
+    ! CN soil matrix
+
+    call CNSoilMatrixInit()
+
     ! ----------------------------------------------------------------------
     ! consistency checks
     ! ----------------------------------------------------------------------
@@ -859,6 +864,7 @@ contains
     ! clump decomposition variables
 
     call mpi_bcast (clump_pproc, 1, MPI_INTEGER, 0, mpicom, ier)
+
 
   end subroutine control_spmd
 

@@ -46,10 +46,38 @@ module CNSoilMatrixMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
+  public:: CNSoilMatrixInit        ! Initialization for CN Soil Matrix solution
   public:: CNSoilMatrix
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine CNSoilMatrixInit( )
+    ! !DESCRIPTION: Initialization for CN soil Matrix solution
+    ! !ARGUMENTS:
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    if ( use_soil_matrixcn ) then
+       write(iulog,*) 'CN Soil matrix solution is on'
+       write(iulog,*) '*****************************'
+       if ( isspinup ) then
+          write(iulog,*) '   Matrix spinup is on'
+          write(iulog,*) '   *******************'
+          write(iulog,*) '   nyr_forcing = ', nyr_forcing
+          write(iulog,*) '   nyr_SASU    = ', nyr_SASU
+          write(iulog,*) '   iloop_avg   = ', iloop_avg
+       end if
+       if ( is_outmatrix )then
+          write(iulog,*) '   Extra matrix solution tracability output is turned on'
+       else
+          write(iulog,*) '   no extra matrix solution tracability output'
+       end if
+    else
+       write(iulog,*) 'CN Soil matrix solution is off'
+    end if
+  end subroutine CNSoilMatrixInit
 
   !-----------------------------------------------------------------------
   subroutine CNSoilMatrix(bounds,num_soilc, filter_soilc, num_actfirec, filter_actfirec,&
