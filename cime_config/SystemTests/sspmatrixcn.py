@@ -40,7 +40,7 @@ class SSPMATRIXCN(SystemTestsCommon):
     # Define the settings that will be used for each step
     steps  = ["0",       "1",      "2",      "3",      "4"      ]
     desc   = ["cold",    "fast",   "trans",  "slow",   "normal" ]
-    run    = ["startup", "hybrid", "hybrid", "hybrid", "hybrid" ]
+    runtyp = ["startup", "hybrid", "hybrid", "hybrid", "hybrid" ]
     spin   = [False,     True,     True,     True,     False    ]
     stop_n = [5,         thrice,   twice,    thrice,   thrice   ]
     cold   = [True,      False,    False,    False,    False    ]
@@ -55,12 +55,12 @@ class SSPMATRIXCN(SystemTestsCommon):
         expect ( len(self.steps) == len(self.spin),   "length of steps must be the same as spin" )
         expect ( len(self.steps) == len(self.desc),   "length of steps must be the same as desc" )
         expect ( len(self.steps) == len(self.cold),   "length of steps must be the same as cold" )
-        expect ( len(self.steps) == len(self.run),    "length of steps must be the same as run" )
+        expect ( len(self.steps) == len(self.runtyp), "length of steps must be the same as runtyp" )
         expect ( len(self.steps) == len(self.iloop),  "length of steps must be the same as iloop" )
         expect ( len(self.steps) == len(self.stop_n), "length of steps must be the same as stop_n" )
 
-        if case is not None:
-          SystemTestsCommon.__init__(self, case)
+        if __name__ != '__main__':
+           SystemTestsCommon.__init__(self, case)
 
 
     def check_n( self, n):
@@ -71,7 +71,7 @@ class SSPMATRIXCN(SystemTestsCommon):
         "Log info on this step"
 
         self.check_n( n )
-        logger.info("Step {}: {}: doing a {} run for {} years".format( self.steps[n], self.run[n], self.desc[n], self.stop_n[n] )  )
+        logger.info("Step {}: {}: doing a {} run for {} years".format( self.steps[n], self.runtyp[n], self.desc[n], self.stop_n[n] )  )
         if ( n+1 < self.n_steps() ):
            logger.info("  writing restarts at end of run")
            logger.info("  short term archiving is on ")
@@ -118,60 +118,70 @@ class SSPMATRIXCN(SystemTestsCommon):
            #
            # Clone the main case, and get it setup for the next step
            #
-           clone_path( "{}.step{}".format(caseroot,steps[n]) )
+           clone_path =  "{}.step{}".format(caseroot,self.steps[n])
            if os.path.exists(clone_path):
                shutil.rmtree(clone_path)
+           if ( n > 0 ): 
+             del clone
+           self._set_active_case(orig_case)
            clone = self._case.create_clone(clone_path, keepexe=True)
            os.chdir(clone_path)
            self._set_active_case(clone)
 
            self.__logger__(n)
 
-           clone.set_value("RUN_TYPE", run[n] )
-           clone.set_value("STOP_N", stop_n[n] )
-           if ( cold[n] ):
-              clone.set_value("CLM_FORCE_COLDSTART", "on" )
-           else:
-              clone.set_value("CLM_FORCE_COLDSTART", "off" )
-           if ( spin[n] ):
-              clone.set_value("CLM_ACCELERATED_SPINUP", "on" )
-           else:
-              clone.set_value("CLM_ACCELERATED_SPINUP", "off" )
+           with clone:
+              clone.set_value("RUN_TYPE", self.runtyp[n] )
+              clone.set_value("STOP_N", self.stop_n[n] )
+              if ( self.cold[n] ):
+                 clone.set_value("CLM_FORCE_COLDSTART", "on" )
+              else:
+                 clone.set_value("CLM_FORCE_COLDSTART", "off" )
+              if ( self.spin[n] ):
+                 clone.set_value("CLM_ACCELERATED_SPINUP", "on" )
+              else:
+                 clone.set_value("CLM_ACCELERATED_SPINUP", "off" )
 
            dout_sr = clone.get_value("DOUT_S_ROOT")
+
            self._skip_pnl = False
            #
            # Start up from the previous case
            #
            rundir = clone.get_value("RUNDIR")
-           if ( n > 0 ):
-              clone.set_value("GET_REFCASE", False)
-              clone.set_value("RUN_REFCASE", refcase)
-              clone.set_value("RUN_REFDATE", refdate)
-              for item in glob.glob("{}/*{}*".format(rest_path, refdate)):
-                  os.symlink(item, os.path.join(rundir, os.path.basename(item)))
-
-              for item in glob.glob("{}/*rpointer*".format(rest_path)):
-                  shutil.copy(item, rundir)
-
-              self.append_user_nl( clone_path, n )
+           with clone:
+              if ( n > 0 ):
+                 clone.set_value("GET_REFCASE", False)
+                 expect( "refcase" in locals(), "refcase was NOT previously set" )
+                 clone.set_value("RUN_REFCASE", refcase )
+                 expect( "refdate" in locals(), "refdate was NOT previously set" )
+                 clone.set_value("RUN_REFDATE", refdate )
+                 for item in glob.glob("{}/*{}*".format(rest_path, refdate)):
+                     linkfile = os.path.join(rundir, os.path.basename(item))
+                     if os.path.exists(linkfile):
+                         os.remove( linkfile )
+                     os.symlink(item, linkfile )
+   
+                 for item in glob.glob("{}/*rpointer*".format(rest_path)):
+                     shutil.copy(item, rundir)
+   
+                 self.append_user_nl( clone_path, n )
            #
-           # Run the case (Archiving off)
+           # Run the case (Archiving on)
            #
-           self._case.set_value("DOUT_S", False)
            self._case.flush()
-           self.run_indv(suffix=steps[n], st_archive=True)
+           self.run_indv(suffix=self.steps[n], st_archive=True)
 
            #
            # Get the reference case from this step for the next step
            #
-           refcase = clone.get_value("CASENAME")
+           refcase = clone.get_value("CASE")
            refdate = run_cmd_no_fail(r'ls -1dt {}/rest/*-00000* | head -1 | sed "s/-00000.*//" | sed "s/^.*rest\///"'.format(dout_sr))
-           rest_path = os.path.join(dout_sr, "rest", "{}-{}".format(refdate, refsec))
            refsec = "00000"
+           rest_path = os.path.join(dout_sr, "rest", "{}-{}".format(refdate, refsec))
 
         #
-        # Last step on original case
+        # Last step in original case
         #
         n = self.n_steps() - 1
         #
@@ -180,20 +190,32 @@ class SSPMATRIXCN(SystemTestsCommon):
         os.chdir(caseroot)
         self._set_active_case(orig_case)
         self.__logger__(n)
+        self._case.set_value("DOUT_S", False)
+        self._case.set_value("RUN_TYPE", self.runtyp[n] )
+        self._case.set_value("STOP_N", self.stop_n[n] )
         rundir = self._case.get_value("RUNDIR")
         self._case.set_value("GET_REFCASE", False)
+        expect( "refcase" in locals(), "refcase was NOT previously set" )
         self._case.set_value("RUN_REFCASE", refcase)
+        expect( "refdate" in locals(), "refdate was NOT previously set" )
         self._case.set_value("RUN_REFDATE", refdate)
         for item in glob.glob("{}/*{}*".format(rest_path, refdate)):
-            os.symlink(item, os.path.join(rundir, os.path.basename(item)))
+            linkfile = os.path.join(rundir, os.path.basename(item))
+            if os.path.exists(linkfile):
+               os.remove( linkfile )
+            os.symlink(item, linkfile )
 
         for item in glob.glob("{}/*rpointer*".format(rest_path)):
             shutil.copy(item, rundir)
         #
+        # Don't need to append to user_nl_clm nor set COLDSTART or ACCEL_SPINUP
+        #
+
+        #
         # Run the case (short term archiving is off)
         #
-        self.run_indv()
-
+        self._case.flush()
+        self.run_indv( st_archive=False )
 
 #
 # Unit testing for above
