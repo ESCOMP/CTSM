@@ -100,15 +100,15 @@ class SSPMATRIXCN(SystemTestsCommon):
         "Append needed settings to the user_nl files"
 
         self.check_n( n )
-        contents_to_append = "nyr_forcing = "+str(self.nyr_forcing)
         # For all set output to yearly
-        contents_to_append = contents_to_append + ", hist_nhtfrq = -8760"
+        contents_to_append = "hist_nhtfrq = -8760"
         contents_to_append = contents_to_append + ", hist_mfilt = "+str(self.nyr_forcing)
         # For all but last step turn extra matrix output to off
         if ( n < 4 ):
            contents_to_append = contents_to_append + ", is_outmatrix = .False."
         # For matrix spinup steps, set the matrix spinup and other variables associated with it
         if ( self.spin[n] ):
+            contents_to_append = contents_to_append + ", nyr_forcing = "+str(self.nyr_forcing)
             contents_to_append = contents_to_append + ", isspinup = .True."
             contents_to_append = contents_to_append + ", nyr_sasu = " + str(self.sasu[n])
             if ( self.iloop[n] != -999 ):
