@@ -100,15 +100,22 @@ class SSPMATRIXCN(SystemTestsCommon):
         "Append needed settings to the user_nl files"
 
         self.check_n( n )
-        contents_to_append = "hist_nhtfrq = -8760"
+        contents_to_append = "nyr_forcing = "+str(self.nyr_forcing)
+        # For all set output to yearly
+        contents_to_append = contents_to_append + ", hist_nhtfrq = -8760"
         contents_to_append = contents_to_append + ", hist_mfilt = "+str(self.nyr_forcing)
+        # For all but last step turn extra matrix output to off
+        if ( n < 4 ):
+           contents_to_append = contents_to_append + ", is_outmatrix = .False."
+        # For matrix spinup steps, set the matrix spinup and other variables associated with it
         if ( self.spin[n] ):
-            contents_to_append = contents_to_append + ", isspinup = .true."
+            contents_to_append = contents_to_append + ", isspinup = .True."
             contents_to_append = contents_to_append + ", nyr_sasu = " + str(self.sasu[n])
             if ( self.iloop[n] != -999 ):
                contents_to_append = contents_to_append + ", iloop_avg = " + str(self.iloop[n])
 
-            user_nl_utils.append_to_user_nl_files(caseroot = caseroot,
+        # Always append to the end
+        user_nl_utils.append_to_user_nl_files(caseroot = caseroot,
                                               component = "clm",
                                               contents = contents_to_append)
 
@@ -145,10 +152,13 @@ class SSPMATRIXCN(SystemTestsCommon):
                  clone.set_value("CLM_FORCE_COLDSTART", "on" )
               else:
                  clone.set_value("CLM_FORCE_COLDSTART", "off" )
+
               if ( self.spin[n] ):
                  clone.set_value("CLM_ACCELERATED_SPINUP", "on" )
               else:
                  clone.set_value("CLM_ACCELERATED_SPINUP", "off" )
+
+              self.append_user_nl( clone_path, n )
 
            dout_sr = clone.get_value("DOUT_S_ROOT")
 
@@ -174,7 +184,6 @@ class SSPMATRIXCN(SystemTestsCommon):
                  for item in glob.glob("{}/*rpointer*".format(rest_path)):
                      shutil.copy(item, rundir)
    
-                 self.append_user_nl( clone_path, n )
            #
            # Run the case (Archiving on)
            #
@@ -217,8 +226,10 @@ class SSPMATRIXCN(SystemTestsCommon):
 
         for item in glob.glob("{}/*rpointer*".format(rest_path)):
             shutil.copy(item, rundir)
+
+        self.append_user_nl( clone_path, n )
         #
-        # Don't need to append to user_nl_clm nor set COLDSTART or ACCEL_SPINUP
+        # Don't need to set COLDSTART or ACCEL_SPINUP
         #
 
         #
