@@ -156,13 +156,6 @@ contains
     call seq_infodata_GetData( infodata, orb_eccen=eccen, orb_mvelpp=mvelpp, &
          orb_lambm0=lambm0, orb_obliqr=obliqr )
 
-    if (masterproc) then
-       write(iulog,*)' orb_eccen  = ',eccen
-       write(iulog,*)' orb_obliqr = ',obliqr
-       write(iulog,*)' orb_lambm0 = ',lambm0
-       write(iulog,*)' orb_mvelpp = ',mvelpp
-    end if
-
     ! Consistency check on namelist filename
 
     call control_setNL("lnd_in"//trim(inst_suffix))
