@@ -218,7 +218,7 @@ contains
     ! !ARGUMENTS:
     class(file_desc_t), intent(inout) :: file   ! PIO file handle to close
     !-----------------------------------------------------------------------
-    integer :: ierr
+
     call pio_closefile(file)
 
   end subroutine ncd_pio_closefile
@@ -2531,7 +2531,6 @@ contains
 
     deallocate(gsmOP)
 
-!    call pio_initdecomp(pio_subsystem, baseTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc)
     call pio_initdecomp(pio_subsystem, xTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc)
 
     deallocate(compDOF)
