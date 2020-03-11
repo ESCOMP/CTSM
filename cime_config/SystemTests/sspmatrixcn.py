@@ -45,7 +45,7 @@ class SSPMATRIXCN(SystemTestsCommon):
     stop_n = [5,         thrice,   twice,    thrice,   thrice   ]
     cold   = [True,      False,    False,    False,    False    ]
     iloop  = [-999,      -999,     2,        -999,     -999     ]
-    sasu   = [-999,      1,        full,     full,     -999     ]
+    sasu   = [-999,      1,        1,        full,     -999     ]
 
     def __init__(self, case=None):
         """
