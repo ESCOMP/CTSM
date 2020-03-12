@@ -51,6 +51,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_parteh_mode
    use clm_varctl        , only : use_fates_spitfire
    use clm_varctl        , only : use_fates_planthydro
+   use clm_varctl        , only : use_fates_cohort_age_tracking
    use clm_varctl        , only : use_fates_ed_st3
    use clm_varctl        , only : use_fates_ed_prescribed_phys
    use clm_varctl        , only : use_fates_logging
@@ -248,6 +249,7 @@ contains
       integer                                        :: pass_ed_prescribed_phys
       integer                                        :: pass_logging
       integer                                        :: pass_planthydro
+      integer                                        :: pass_cohort_age_tracking
       integer                                        :: pass_inventory_init
       integer                                        :: pass_is_restart
       integer                                        :: nc        ! thread index
@@ -341,6 +343,13 @@ contains
          pass_planthydro = 0
       end if
       call set_fates_ctrlparms('use_planthydro',ival=pass_planthydro)
+
+      if(use_fates_cohort_age_tracking) then
+         pass_cohort_age_tracking = 1
+      else
+         pass_cohort_age_tracking = 0
+      end if
+      call set_fates_ctrlparms('use_cohort_age_tracking',ival=pass_cohort_age_tracking)
 
       if(use_fates_logging) then
          pass_logging = 1
