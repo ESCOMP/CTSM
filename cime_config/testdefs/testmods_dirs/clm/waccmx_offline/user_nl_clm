@@ -1,0 +1,5 @@
+! Add in an initial condition file that isn't in equilibrium and will need to be brought into equilibrium.
+! We purposely want to add a shock to ensure the model can properly respond to it, skipping balance checks
+! at the beginning and then coming into balance after enough time.
+ finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.IG1850CLM45SP.1850-01-01.1.9x2.5_gx1v7_gl4_simyr1850_c170608.nc'
+ use_init_interp = .true.

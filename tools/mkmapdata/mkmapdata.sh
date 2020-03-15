@@ -41,9 +41,6 @@ default_res="10x15"
 if [ -z "$CSMDATA" ]; then
    CSMDATA=/glade/p/cesm/cseg/inputdata
 fi
-if [ -z "$REGRID_PROC" ]; then
-   REGRID_PROC=36
-fi
 #----------------------------------------------------------------------
 # Usage subroutine
 usage() {
@@ -80,6 +77,8 @@ usage() {
   echo "     Displays this help message"
   echo "[-v|--verbose]"
   echo "     Toggle verbose usage -- log more information on what is happening "
+  echo "[--fast]"
+  echo "     Toggle fast maps only -- only create the maps that can be done quickly "
   echo ""
   echo " You can also set the following env variables:"
   echo "  ESMFBIN_PATH - Path to ESMF binaries "
@@ -91,7 +90,7 @@ usage() {
   echo "  REGRID_PROC -- Number of MPI processors to use"
   echo "                 (default is $REGRID_PROC)"
   echo ""
-  echo "**defaults can be determined on the machines: cheyenne, yellowstone, or edison"
+  echo "**defaults can be determined on the machines: cheyenne or casper"
   echo ""
   echo "**pass environment variables by preceding above commands "
   echo "  with 'env var1=setting var2=setting '"
@@ -137,6 +136,7 @@ verbose="no"
 list="no"
 outgrid=""
 gridfile="default"
+fast="no"
 
 while [ $# -gt 0 ]; do
    case $1 in
@@ -148,6 +148,9 @@ while [ $# -gt 0 ]; do
 	   ;;
        -d|--debug)
 	   debug="YES"
+	   ;;
+       --fast)
+	   fast="YES"
 	   ;;
        -l|--list)
 	   debug="YES"
@@ -264,6 +267,7 @@ if [ "$phys" = "clm4_5" ]; then
            "0.25x0.25_MODIS"   \
            "0.5x0.5_MODIS"     \
            "3x3min_LandScan2004" \
+           "3x3min_MODISv2"    \
            "3x3min_MODIS-wCsp" \
            "3x3min_USGS"       \
            "5x5min_nomask"     \
@@ -336,74 +340,79 @@ case $hostname in
   ##cheyenne
   cheyenne* | r* )
   . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
-  esmfvers=7.0.0
-  intelvers=16.0.3
+  if [ -z "$REGRID_PROC" ]; then
+     REGRID_PROC=36
+  fi
+  esmfvers=7.1.0r
+  intelvers=18.0.5    # Could also use intel/19.0.2 EBK 10/4/2019
   module load esmf_libs/$esmfvers
   module load intel/$intelvers
   module load ncl
   module load nco
-  #export MPI_USE_ARRAY=false
 
+  if [[ $REGRID_PROC > 1 ]]; then
+     mpi=mpi
+  else
+     mpi=uni
+  fi
+  module load esmf-${esmfvers}-ncdfio-${mpi}-O
   if [ -z "$ESMFBIN_PATH" ]; then
-     if [ "$interactive" = "NO" ]; then
-        mpi=ncdfio-mpi
-        mpitype="mpi"
-     else
-        mpi=ncdfio
-        mpitype="mpiuni"
-     fi
-     ESMFBIN_PATH=/glade/u/apps/ch/opt/esmf/${esmfvers}-${mpi}/intel/$intelvers/bin/binO/Linux.intel.64.${mpitype}.default
+     ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
   fi
   if [ -z "$MPIEXEC" ]; then
-     #MPIEXEC="mpirun -np $REGRID_PROC"
      MPIEXEC="mpiexec_mpt -np $REGRID_PROC"
   fi
   ;;
 
-  ##yellowstone
-  ys* | caldera* | geyser* )
-  . /glade/apps/opt/lmod/lmod/init/bash
-  module load esmf
+  ## DAV
+  pronghorn* | casper* )
+  . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
+  if [ -z "$REGRID_PROC" ]; then
+     REGRID_PROC=8
+  fi
+  echo "REGRID_PROC=$REGRID_PROC"
+  esmfvers=7.1.0r
+  intelvers=17.0.1
+  module purge
+  module load intel/$intelvers
+  if [ $? != 0 ]; then
+    echo "Error doing module load: intel/$intelvers"
+    exit 1
+  fi
   module load ncl
   module load nco
+  module load netcdf
+  module load ncarcompilers
 
-  if [ -z "$ESMFBIN_PATH" ]; then
-     if [ "$interactive" = "NO" ]; then
-        mpi=mpi
-        mpitype="mpich2"
-     else
-        mpi=uni
-        mpitype="mpiuni"
-     fi
-     ESMFBIN_PATH=/glade/apps/opt/esmf/6.3.0-ncdfio/intel/12.1.5/bin/binO/Linux.intel.64.${mpitype}.default
+  module load esmflibs/$esmfvers
+  if [ $? != 0 ]; then
+    echo "Error doing module load: esmflibs/$esmfvers"
+    exit 1
   fi
+
+  if [[ $REGRID_PROC > 1 ]]; then
+     mpi=mpi
+     echo "MPI option is NOT currently available"
+     exit 1
+  else
+     mpi=uni
+  fi
+  module load esmf-${esmfvers}-ncdfio-${mpi}-O
+  if [ $? != 0 ]; then
+    echo "Error doing module load: esmf-${esmfvers}-ncdfio-${mpi}-O"
+    exit 1
+  fi
+  if [ -z "$ESMFBIN_PATH" ]; then
+     ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
+  fi
+  echo "ESMFMKFILE: $ESMFMKFILE"
+  echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+
   if [ -z "$MPIEXEC" ]; then
-     MPIEXEC="mpirun.lsf"
+     MPIEXEC="mpiexec -n $REGRID_PROC"
   fi
   ;;
 
-  ## edison
-  edison* )
-  .  /opt/modules/default/init/bash
-  module load ncl/6.1.1
-  module load nco
-  if [ -z "$ESMFBIN_PATH" ]; then
-     module use -a /project/projectdirs/ccsm1/modulefiles/edison
-     if [ "$interactive" = "NO" ]; then
-        mpi=mpi
-        mpitype="mpi"
-     else
-        mpi=uni
-        mpitype="mpiuni"
-     fi
-     module load esmf/6.3.0r-ncdfio-${mpitype}-O
-     ESMFBIN_PATH=$ESMF_LIBDIR/../bin
-  fi
-  if [ -z "$MPIEXEC" ]; then
-    MPIEXEC="aprun -n $REGRID_PROC"
-  fi
-
-  ;;
   ##no other machine currently supported    
   *)
   echo "Machine $hostname NOT recognized"
@@ -500,6 +509,9 @@ until ((nfile>${#INGRID[*]})); do
    # Skip if file already exists
    if [ -f "${OUTFILE[nfile]}" ]; then
       echo "Skipping creation of ${OUTFILE[nfile]} as already exists"
+   # Skip if large file and Fast mode is on
+   elif [ "$fast" = "YES" ] && [ "${SRC_LRGFIL[nfile]}" = "netcdf4" ]; then
+      echo "Skipping creation of ${OUTFILE[nfile]} as fast mode is on so skipping large files in NetCDF4 format"
    else
 
       cmd="$mpirun $ESMF_REGRID --ignore_unmapped -s ${INGRID[nfile]} "

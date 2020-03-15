@@ -12,10 +12,11 @@ module clm_driver
   use clm_varctl             , only : wrtdia, iulog, use_fates
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, ndep_from_cpl
-  use clm_varctl             , only : is_cold_start, is_interpolated_start
+  use clm_varctl             , only : use_soil_moisture_streams
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
+  use clm_varorb             , only : obliqr
   use spmdMod                , only : masterproc, mpicom
   use decompMod              , only : get_proc_clumps, get_clump_bounds, get_proc_bounds, bounds_type
   use filterMod              , only : filter, filter_inactive_and_active
@@ -79,6 +80,7 @@ module clm_driver
   use clm_instMod
   use clm_initializeMod      , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
+  use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -106,7 +108,9 @@ contains
     ! the calling tree is given in the description of this module.
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date    
+    use clm_time_manager     , only : get_curr_date
+    use clm_varctl           , only : use_lai_streams
+    use SatellitePhenologyMod, only : lai_advance
     !
     ! !ARGUMENTS:
     implicit none
@@ -131,10 +135,6 @@ contains
     integer              :: mon                     ! month (1, ..., 12)
     integer              :: day                     ! day of month (1, ..., 31)
     integer              :: sec                     ! seconds of the day
-    integer              :: yr_prev                 ! year (0, ...) at start of timestep
-    integer              :: mon_prev                ! month (1, ..., 12) at start of timestep
-    integer              :: day_prev                ! day of month (1, ..., 31) at start of timestep
-    integer              :: sec_prev                ! seconds of the day at start of timestep
     character(len=256)   :: filer                   ! restart file name
     integer              :: ier                     ! error code
     logical              :: need_glacier_initialization ! true if we need to initialize glacier areas in this time step
@@ -165,14 +165,19 @@ contains
     nclumps = get_proc_clumps()
 
     ! ========================================================================
-    ! In the first time step of a run that used cold start or init_interp, glacier areas
-    ! will start at whatever is specified on the surface dataset, because coupling fields
-    ! from GLC aren't received until the run loop. Thus, CLM will see a potentially large,
-    ! fictitious glacier area change in the first time step after cold start or
-    ! init_interp. We don't want this fictitious area change to result in any state or
-    ! flux adjustments. Thus, we apply this area change here, at the start of the driver
-    ! loop, so that in dynSubgrid_driver, it will look like there is no glacier area
-    ! change in the first time step.
+    ! In the first time step of a startup or hybrid run, we want to update CLM's glacier
+    ! areas to match those given by GLC. This is because, in initialization, we do not yet
+    ! know GLC's glacier areas, so CLM's glacier areas are based on the surface dataset
+    ! (for a cold start or init_interp run) or the initial conditions file (in a
+    ! non-init_interp, non-cold start run) - which may not match GLC's glacier areas for
+    ! this configuration. (Coupling fields from GLC aren't received until the run loop.)
+    ! Thus, CLM will see a potentially large, fictitious glacier area change in the first
+    ! time step. We don't want this fictitious area change to result in any state or flux
+    ! adjustments. Thus, we apply this area change here, at the start of the driver loop,
+    ! so that in dynSubgrid_driver, it will look like there is no glacier area change in
+    ! the first time step. (See
+    ! https://github.com/ESCOMP/ctsm/issues/340#issuecomment-410483131 for more
+    ! discussion on this.)
     !
     ! This needs to happen very early in the run loop, before any balance checks are
     ! initialized, because - by design - this doesn't conserve mass at the grid cell
@@ -196,8 +201,7 @@ contains
     ! are passed to CLM in initialization, then this code block can be removed.
     ! ========================================================================
 
-    need_glacier_initialization = (is_first_step() .and. &
-         (is_cold_start .or. is_interpolated_start))
+    need_glacier_initialization = is_first_step()
 
     if (need_glacier_initialization) then
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
@@ -314,6 +318,15 @@ contains
     call t_stopf('dyn_subgrid')
 
     ! ============================================================================
+    ! If soil moisture is prescribed from data streams set it here
+    ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe).
+    ! ============================================================================
+    if (use_soil_moisture_streams) then
+       call t_startf('prescribed_sm')
+       call PrescribedSoilMoistureAdvance( bounds_proc )
+       call t_stopf('prescribed_sm')
+    endif
+    ! ============================================================================
     ! Initialize the column-level mass balance checks for water, carbon & nitrogen.
     !
     ! For water: Currently, I believe this needs to be done after weights are updated for
@@ -332,6 +345,12 @@ contains
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
+       if (use_soil_moisture_streams) then
+          call t_startf('prescribed_sm')
+          call PrescribedSoilMoistureInterp(bounds_clump, soilstate_inst, &
+                  waterstate_inst)
+          call t_stopf('prescribed_sm')
+       endif
        call t_startf('begwbal')
        call BeginWaterBalance(bounds_clump,                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
@@ -381,6 +400,12 @@ contains
     ! Get time varying urban data
     call urbantv_inst%urbantv_interp(bounds_proc)
 
+    ! When LAI streams are being used
+    ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe)
+    if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then 
+       call lai_advance( bounds_proc )
+    endif
+
     ! ============================================================================
     ! Initialize variables from previous time step, downscale atm forcings, and
     ! Determine canopy interception and precipitation onto ground surface.
@@ -389,16 +414,13 @@ contains
     ! snow accumulation exceeds 10 mm.
     ! ============================================================================
 
-    ! Get time as of beginning of time step
-    call get_prev_date(yr_prev, mon_prev, day_prev, sec_prev)
-
     !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch, froot_carbon, croot_carbon)
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
        call t_startf('drvinit')
 
-       call UpdateDaylength(bounds_clump, declin)
+       call UpdateDaylength(bounds_clump, declin=declin, obliquity=obliqr)
 
        ! Initialze variables needed for new driver time step 
        call clm_drv_init(bounds_clump, &
@@ -413,8 +435,11 @@ contains
             atm_topo = atm2lnd_inst%forc_topo_grc(bounds_clump%begg:bounds_clump%endg))
 
        call downscale_forcings(bounds_clump, &
-            topo_inst, atm2lnd_inst, &
-            eflx_sh_precip_conversion = energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc))
+            topo_inst, glc_behavior, atm2lnd_inst, &
+            eflx_sh_precip_conversion = &
+            energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc), &
+            qflx_runoff_rain_to_snow_conversion = &
+            waterflux_inst%qflx_runoff_rain_to_snow_conversion_col(bounds_clump%begc:bounds_clump%endc))
 
        ! Update filters that depend on variables set in clm_drv_init
        
@@ -592,7 +617,6 @@ contains
             bounds             = bounds_clump, &
             num_exposedvegp    = filter(nc)%num_exposedvegp, &
             filter_exposedvegp = filter(nc)%exposedvegp, &
-            time_prev          = sec_prev, &
             elai               = canopystate_inst%elai_patch(bounds_clump%begp:bounds_clump%endp), &
             t_soisno           = temperature_inst%t_soisno_col(bounds_clump%begc:bounds_clump%endc  , 1:nlevgrnd), &
             eff_porosity       = soilstate_inst%eff_porosity_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
@@ -662,6 +686,7 @@ contains
        call t_startf('bgp2')
        call SoilFluxes(bounds_clump,                                                          &
             filter(nc)%num_urbanl,  filter(nc)%urbanl,                                        &
+            filter(nc)%num_urbanp,  filter(nc)%urbanp,                                        &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                                       &
             filter(nc)%num_nolakep, filter(nc)%nolakep,                                       &
             atm2lnd_inst, solarabs_inst, temperature_inst, canopystate_inst, waterstate_inst, &
@@ -924,6 +949,7 @@ contains
        call BalanceCheck(bounds_clump, &
             atm2lnd_inst, solarabs_inst, waterflux_inst, &
             waterstate_inst, irrigation_inst, glacier_smb_inst, &
+            surfalb_inst, &
             energyflux_inst, canopystate_inst)
        call t_stopf('balchk')
 

@@ -146,11 +146,13 @@ subroutine mkglcmec(ldomain, mapfname, &
 ! variables in an arbitrary way.
 !
 ! !USES:
+  use shr_sys_mod, only : shr_sys_abort
   use mkdomainMod, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkutilsMod, only : slightly_below, slightly_above
   use mkncdio
+  use mkvarctl  , only : outnc_3dglc
 !
 ! !ARGUMENTS:
   implicit none
@@ -160,10 +162,10 @@ subroutine mkglcmec(ldomain, mapfname, &
   integer           , intent(in) :: ndiag                     ! unit number for diag out
   real(r8)          , intent(out):: pctglcmec_o (:,:)         ! % for each elevation class on output glacier grid (% of landunit)
   real(r8)          , intent(out):: topoglcmec_o(:,:)         ! mean elevation for each elevation classs on output glacier grid
-  real(r8)          , intent(out):: pctglcmec_gic_o(:,:)      ! % glc gic on output grid, by elevation class (% of landunit)
-  real(r8)          , intent(out):: pctglcmec_icesheet_o(:,:) ! % glc ice sheet on output grid, by elevation class (% of landunit)
-  real(r8)          , intent(out):: pctglc_gic_o(:)           ! % glc gic on output grid, summed across elevation classes (% of landunit)
-  real(r8)          , intent(out):: pctglc_icesheet_o(:)      ! % glc ice sheet on output grid, summed across elevation classes (% of landunit)
+  real(r8), optional, intent(out):: pctglcmec_gic_o(:,:)      ! % glc gic on output grid, by elevation class (% of landunit)
+  real(r8), optional, intent(out):: pctglcmec_icesheet_o(:,:) ! % glc ice sheet on output grid, by elevation class (% of landunit)
+  real(r8), optional, intent(out):: pctglc_gic_o(:)           ! % glc gic on output grid, summed across elevation classes (% of landunit)
+  real(r8), optional, intent(out):: pctglc_icesheet_o(:)      ! % glc ice sheet on output grid, summed across elevation classes (% of landunit)
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
@@ -209,10 +211,16 @@ subroutine mkglcmec(ldomain, mapfname, &
 
   pctglcmec_o(:,:)          = 0.
   topoglcmec_o(:,:)         = 0.
-  pctglcmec_gic_o(:,:)      = 0.
-  pctglcmec_icesheet_o(:,:) = 0.
-  pctglc_gic_o(:)           = 0.
-  pctglc_icesheet_o(:)      = 0.
+  if ( outnc_3dglc )then
+      if ( (.not. present(pctglcmec_gic_o)) .or. (.not. present(pctglcmec_icesheet_o)) .or. &
+           (.not. present(pctglc_gic_o)   ) .or. (.not. present(pctglc_icesheet_o)   ) )then
+         call shr_sys_abort( subname//' ERROR: 3D glacier fields were NOT sent in and they are required' )
+      end if
+      pctglcmec_gic_o(:,:)      = 0.
+      pctglcmec_icesheet_o(:,:) = 0.
+      pctglc_gic_o(:)           = 0.
+      pctglc_icesheet_o(:)      = 0.
+  end if
 
   ! Set number of output points
 
@@ -314,8 +322,10 @@ subroutine mkglcmec(ldomain, mapfname, &
         if (frac > 0) then
            pctglc_i = pctglc_gic_i(ni) + pctglc_icesheet_i(ni)
            pctglcmec_o(no,m)          = pctglcmec_o(no,m)          + wt*pctglc_i / frac
-           pctglcmec_gic_o(no,m)      = pctglcmec_gic_o(no,m)      + wt*pctglc_gic_i(ni) / frac
-           pctglcmec_icesheet_o(no,m) = pctglcmec_icesheet_o(no,m) + wt*pctglc_icesheet_i(ni) / frac
+           if ( outnc_3dglc )then
+              pctglcmec_gic_o(no,m)      = pctglcmec_gic_o(no,m)      + wt*pctglc_gic_i(ni) / frac
+              pctglcmec_icesheet_o(no,m) = pctglcmec_icesheet_o(no,m) + wt*pctglc_icesheet_i(ni) / frac
+           end if
 
            ! note that, by weighting the following by pctglc_i, we are getting something
            ! like the average topographic height over glaciated areas - NOT the average
@@ -371,20 +381,26 @@ subroutine mkglcmec(ldomain, mapfname, &
      
      if (pctglc_tot_o(no) > 0._r8) then
         pctglcmec_o(no,:)          = pctglcmec_o(no,:) / pctglc_tot_o(no) * 100._r8
-        pctglcmec_gic_o(no,:)      = pctglcmec_gic_o(no,:) / pctglc_tot_o(no) * 100._r8
-        pctglcmec_icesheet_o(no,:) = pctglcmec_icesheet_o(no,:) / pctglc_tot_o(no) * 100._r8
+        if ( outnc_3dglc )then
+           pctglcmec_gic_o(no,:)      = pctglcmec_gic_o(no,:) / pctglc_tot_o(no) * 100._r8
+           pctglcmec_icesheet_o(no,:) = pctglcmec_icesheet_o(no,:) / pctglc_tot_o(no) * 100._r8
+        end if
         
      else
         ! Division of landunit is ambiguous. Apply the rule that all area is assigned to
         ! the lowest elevation class, and all GIC.
         pctglcmec_o(no,1) = 100._r8
-        pctglcmec_gic_o(no,1) = 100._r8
+        if ( outnc_3dglc )then
+           pctglcmec_gic_o(no,1) = 100._r8
+        end if
      end if
   end do
 
   ! Set pctglc_gic_o to sum of pctglcmec_gic_o across elevation classes, and similarly for pctglc_icesheet_o
-  pctglc_gic_o      = sum(pctglcmec_gic_o, dim=2)
-  pctglc_icesheet_o = sum(pctglcmec_icesheet_o, dim=2)
+  if ( outnc_3dglc )then
+     pctglc_gic_o      = sum(pctglcmec_gic_o, dim=2)
+     pctglc_icesheet_o = sum(pctglcmec_icesheet_o, dim=2)
+  end if
 
   ! -------------------------------------------------------------------- 
   ! Perform various sanity checks
@@ -402,27 +418,29 @@ subroutine mkglcmec(ldomain, mapfname, &
   end do
      
   ! Confirm that GIC + ICESHEET = 100%
-  do no = 1,ns_o
-     if (abs((pctglc_gic_o(no) + pctglc_icesheet_o(no)) - 100._r8) > eps) then
-        write(6,*)'GIC + ICESHEET differs from 100% at no,pctglc_gic,pctglc_icesheet,lon,lat=', &
-             no,pctglc_gic_o(no),pctglc_icesheet_o(no),&
-             tgridmap%xc_dst(no),tgridmap%yc_dst(no)
-        errors = .true.
-     end if
-  end do
-     
-  ! Check that GIC + ICESHEET = total glacier at each elevation class
-  do m = 1, nglcec
+  if ( outnc_3dglc )then
      do no = 1,ns_o
-        if (abs((pctglcmec_gic_o(no,m) + pctglcmec_icesheet_o(no,m)) - &
-                pctglcmec_o(no,m)) > eps) then
-           write(6,*)'GIC + ICESHEET differs from total GLC '
-           write(6,*)'at no,m,pctglcmec,pctglcmec_gic,pctglcmec_icesheet = '
-           write(6,*) no,m,pctglcmec_o(no,m),pctglcmec_gic_o(no,m),pctglcmec_icesheet_o(no,m)
+        if (abs((pctglc_gic_o(no) + pctglc_icesheet_o(no)) - 100._r8) > eps) then
+           write(6,*)'GIC + ICESHEET differs from 100% at no,pctglc_gic,pctglc_icesheet,lon,lat=', &
+                no,pctglc_gic_o(no),pctglc_icesheet_o(no),&
+                tgridmap%xc_dst(no),tgridmap%yc_dst(no)
            errors = .true.
         end if
      end do
-  end do
+
+     ! Check that GIC + ICESHEET = total glacier at each elevation class
+     do m = 1, nglcec
+        do no = 1,ns_o
+           if (abs((pctglcmec_gic_o(no,m) + pctglcmec_icesheet_o(no,m)) - &
+                   pctglcmec_o(no,m)) > eps) then
+              write(6,*)'GIC + ICESHEET differs from total GLC '
+              write(6,*)'at no,m,pctglcmec,pctglcmec_gic,pctglcmec_icesheet = '
+              write(6,*) no,m,pctglcmec_o(no,m),pctglcmec_gic_o(no,m),pctglcmec_icesheet_o(no,m)
+              errors = .true.
+           end if
+        end do
+     end do
+  end if
 
 
   ! Error check: are all elevations within elevation class range

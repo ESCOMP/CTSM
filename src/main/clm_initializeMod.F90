@@ -13,6 +13,7 @@ module clm_initializeMod
   use clm_varctl      , only : is_cold_start, is_interpolated_start
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
+  use clm_varctl      , only : use_soil_moisture_streams
   use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
@@ -25,7 +26,8 @@ module clm_initializeMod
   use filterMod       , only : allocFilters, filter
   use FatesInterfaceMod, only : set_fates_global_elements
 
-  use clm_instMod       
+  use clm_instMod
+  use SoilMoistureStreamMod, only : PrescribedSoilMoistureInit
   ! 
   implicit none
   public   ! By default everything is public 
@@ -43,12 +45,12 @@ contains
     ! CLM initialization first phase 
     !
     ! !USES:
-    use clm_varpar       , only: clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
+    use clm_varpar       , only: clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec, nlevsoi
     use clm_varcon       , only: clm_varcon_init
     use landunit_varcon  , only: landunit_varcon_init, max_lunit
     use clm_varctl       , only: fsurdat, fatmlndfrc, noland, version  
     use pftconMod        , only: pftcon       
-    use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
+    use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp, decompInit_lnd3D
     use domainMod        , only: domain_check, ldomain, domain_init
     use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data 
     use controlMod       , only: control_init, control_print, NLFilename
@@ -122,6 +124,7 @@ contains
     call decompInit_lnd(ni, nj, amask)
     deallocate(amask)
 
+    if(use_soil_moisture_streams) call decompInit_lnd3D(ni, nj, nlevsoi)
     ! *** Get JUST gridcell processor bounds ***
     ! Remaining bounds (landunits, columns, patches) will be determined 
     ! after the call to decompInit_glcp - so get_proc_bounds is called
@@ -272,7 +275,7 @@ contains
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
     use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
-    use DaylengthMod          , only : InitDaylength, daylength
+    use DaylengthMod          , only : InitDaylength
     use dynSubgridDriverMod   , only : dynSubgrid_init
     use fileutils             , only : getfil
     use initInterpMod         , only : initInterp
@@ -289,11 +292,12 @@ contains
     use NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
+    use BalanceCheckMod       , only : BalanceCheckInit
     !
     ! !ARGUMENTS    
     !
     ! !LOCAL VARIABLES:
-    integer               :: c,i,g,j,k,l,p! indices
+    integer               :: c,i,j,k,l,p! indices
     integer               :: yr           ! current year (0, ...)
     integer               :: mon          ! current month (1 -> 12)
     integer               :: day          ! current day (1 -> 31)
@@ -316,7 +320,6 @@ contains
     logical               :: lexist
     integer               :: closelatidx,closelonidx
     real(r8)              :: closelat,closelon
-    real(r8)              :: max_decl      ! temporary, for calculation of max_dayl
     integer               :: begp, endp
     integer               :: begc, endc
     integer               :: begl, endl
@@ -372,17 +375,11 @@ contains
 
     call t_stopf('init_orbd')
     
-    call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1)
+    call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
+
+    ! Initialize Balance checking (after time-manager)
+    call BalanceCheckInit()
              
-    ! Initialize maximum daylength, based on latitude and maximum declination
-    ! given by the obliquity use negative value for S. Hem
-
-    do g = bounds_proc%begg,bounds_proc%endg
-       max_decl = obliqr
-       if (grc%lat(g) < 0._r8) max_decl = -max_decl
-       grc%max_dayl(g) = daylength(grc%lat(g), max_decl)
-    end do
-
     ! History file variables
 
     if (use_cn) then
@@ -478,6 +475,9 @@ contains
        call SatellitePhenologyInit(bounds_proc)
     end if
 
+    if(use_soil_moisture_streams) then 
+       call PrescribedSoilMoistureInit(bounds_proc)
+    endif
 
     
 

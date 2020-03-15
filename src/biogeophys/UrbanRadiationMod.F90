@@ -12,7 +12,7 @@ module UrbanRadiationMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use clm_varpar        , only : numrad
-  use clm_varcon        , only : isecspday, degpsec, namel
+  use clm_varcon        , only : namel
   use clm_varctl        , only : iulog
   use abortutils        , only : endrun  
   use UrbanParamsType   , only : urbanparams_type
@@ -61,7 +61,7 @@ contains
     use clm_varcon          , only : spval, sb, tfrz
     use column_varcon       , only : icol_road_perv, icol_road_imperv
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager    , only : get_curr_date, get_step_size
+    use clm_time_manager    , only : get_step_size
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds    
@@ -83,10 +83,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: fp,fl,p,c,l,g              ! indices
-    integer  :: local_secp1                ! seconds into current date in local time
     real(r8) :: dtime                      ! land model time step (sec)
-    integer  :: year,month,day             ! temporaries (not used)
-    integer  :: secs                       ! seconds into current date
 
     real(r8), parameter :: mpe    = 1.e-06_r8 ! prevents overflow for division by zero
     real(r8), parameter :: snoem  = 0.97_r8   ! snow emissivity (should use value from Biogeophysics1)
@@ -250,7 +247,6 @@ contains
       end if
 
       dtime = get_step_size()
-      call get_curr_date (year, month, day, secs)
 
       ! Determine variables needed for history output and communication with atm
       ! Loop over urban patches in clump

@@ -7,7 +7,8 @@ module initInterpMod
 
 #include "shr_assert.h"
   use initInterpBounds, only : interp_bounds_type
-  use initInterpMindist, only: set_mindist, subgrid_type, subgrid_special_indices_type
+  use initInterpMindist, only: set_mindist, set_single_match
+  use initInterpMindist, only: subgrid_type, subgrid_special_indices_type
   use initInterp1dData, only : interp_1d_data
   use initInterp2dvar, only: interp_2dvar_type
   use initInterpMultilevelBase, only : interp_multilevel_type
@@ -21,7 +22,7 @@ module initInterpMod
   use clm_varctl     , only: iulog
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
-  use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip
+  use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip, iflag_area
   use glcBehaviorMod , only: glc_behavior_type
   use ncdio_utils    , only: find_var_on_file
   use ncdio_pio
@@ -40,6 +41,7 @@ module initInterpMod
 
   private :: check_dim_subgrid
   private :: check_dim_level
+  private :: skip_var
   private :: findMinDist
   private :: set_subgrid_info
   private :: interp_0d_copy
@@ -47,10 +49,25 @@ module initInterpMod
   private :: interp_1d_int
   private :: interp_2d_double
   private :: limit_snlsno
+  private :: check_interp_non_ciso_to_ciso
 
   ! Private data
  
   character(len=8) :: created_glacier_mec_landunits
+
+  ! Allowable interpolation methods
+  ! - interp_method_general: The general-purpose method
+  ! - interp_method_finidat_areas: Take areas and other related fields from the finidat
+  !   file, rather than maintaining them at the values from the surface dataset. This
+  !   only works for interpolation from one resolution to the same resolution, and with
+  !   basically the same configuration. This also triggers different logic for finding
+  !   matching points, assuring that we find exactly one match in the input for each
+  !   output point.
+  integer, parameter :: interp_method_general = 1
+  integer, parameter :: interp_method_finidat_areas = 2
+
+  ! One of the above methods
+  integer :: interp_method
 
   ! If true, fill missing types with closest natural veg column (using bare soil for
   ! patch-level variables)
@@ -81,14 +98,16 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
+    character(len=64) :: init_interp_method
 
     character(len=*), parameter :: subname = 'initInterp_readnl'
     !-----------------------------------------------------------------------
 
     namelist /clm_initinterp_inparm/ &
-         init_interp_fill_missing_with_natveg
+         init_interp_method, init_interp_fill_missing_with_natveg
 
     ! Initialize options to default values, in case they are not specified in the namelist
+    init_interp_method = ' '
     init_interp_fill_missing_with_natveg = .false.
 
     if (masterproc) then
@@ -107,6 +126,7 @@ contains
        call relavu( unitn )
     end if
 
+    call shr_mpi_bcast (init_interp_method, mpicom)
     call shr_mpi_bcast (init_interp_fill_missing_with_natveg, mpicom)
 
     if (masterproc) then
@@ -115,6 +135,32 @@ contains
        write(iulog,nml=clm_initinterp_inparm)
        write(iulog,*) ' '
     end if
+
+    call translate_options(init_interp_method)
+    call check_nl_consistency()
+
+  contains
+    subroutine translate_options(init_interp_method)
+      ! Translate string options into integer parameters
+      character(len=*), intent(in) :: init_interp_method
+
+      select case (init_interp_method)
+      case ('general')
+         interp_method = interp_method_general
+      case ('use_finidat_areas')
+         interp_method = interp_method_finidat_areas
+      case default
+         write(iulog,*) 'Unknown value for init_interp_method: ', trim(init_interp_method)
+         call endrun('Unknown value for init_interp_method')
+      end select
+    end subroutine translate_options
+
+    subroutine check_nl_consistency()
+      if (interp_method == interp_method_finidat_areas .and. &
+           init_interp_fill_missing_with_natveg) then
+         call endrun(msg='init_interp_method = use_finidat_areas is incompatible with init_interp_fill_missing_with_natveg')
+      end if
+    end subroutine check_nl_consistency
 
   end subroutine initInterp_readnl
 
@@ -182,11 +228,13 @@ contains
     end if
 
     ! --------------------------------------------
-    ! Open input and output initial conditions files (both just for reading now)
+    ! Open input and output initial conditions files
     ! --------------------------------------------
 
     call ncd_pio_openfile (ncidi, trim(filei) , 0)
     call ncd_pio_openfile (ncido, trim(fileo),  ncd_write)
+
+    call check_interp_non_ciso_to_ciso(ncidi)
 
     ! --------------------------------------------
     ! Determine dimensions and error checks on dimensions
@@ -396,7 +444,7 @@ contains
 
        status = pio_inq_varid (ncido, trim(varname), vardesc)
        status = pio_get_att(ncido, vardesc, 'interpinic_flag', iflag_interpinic)
-       if (iflag_interpinic == iflag_skip) then
+       if (skip_var(iflag_interpinic)) then
           if (masterproc) then
              write (iulog,*) 'Skipping     : ', trim(varname)
           end if
@@ -505,6 +553,14 @@ contains
 
              if (masterproc) then
                 write(iulog,*) 'Skipping     : ',trim(varname)
+             end if
+
+          else
+
+             if (masterproc) then
+                write(iulog,*) 'Bad interpinic flag for scalar variable ', trim(varname), &
+                     ': ', iflag_interpinic
+                call endrun(msg='Bad interpinic flag for scalar variable'//errMsg(sourcefile, __LINE__))
              end if
 
           end if
@@ -640,6 +696,40 @@ contains
 
   end subroutine initInterp
 
+  !-----------------------------------------------------------------------
+  function skip_var(iflag_interpinic)
+    !
+    ! !DESCRIPTION:
+    ! Logical function saying whether we should skip a given variable given
+    ! iflag_interpinic and interp_method
+    !
+    ! !ARGUMENTS:
+    logical :: skip_var  ! function result
+    integer, intent(in) :: iflag_interpinic
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'skip_var'
+    !-----------------------------------------------------------------------
+
+    if (iflag_interpinic == iflag_skip) then
+       skip_var = .true.
+    else if (iflag_interpinic == iflag_area) then
+       select case (interp_method)
+       case (interp_method_general)
+          skip_var = .true.
+       case (interp_method_finidat_areas)
+          skip_var = .false.
+       case default
+          call endrun(msg='Unhandled interp_method'//errMsg(sourcefile, __LINE__))
+       end select
+    else
+       skip_var = .false.
+    end if
+
+  end function skip_var
+
+
   !=======================================================================
 
   subroutine findMinDist( dimname, begi, endi, bego, endo, ncidi, ncido, &
@@ -680,16 +770,32 @@ contains
     call set_subgrid_info(beg=bego, end=endo, dimname=dimname, use_glob=.false., &
          ncid=ncido, active=activeo, subgrid=subgrido)
 
-    if (masterproc) then
-       write(iulog,*)'calling set_mindist for ',trim(dimname)
-    end if
-    call set_mindist(begi=begi, endi=endi, bego=bego, endo=endo, &
-         activei=activei, activeo=activeo, subgridi=subgridi, subgrido=subgrido, &
-         subgrid_special_indices=subgrid_special_indices, &
-         glc_behavior=glc_behavior, &
-         glc_elevclasses_same=glc_elevclasses_same, &
-         fill_missing_with_natveg=init_interp_fill_missing_with_natveg, &
-         mindist_index=minindx)
+    select case (interp_method)
+    case (interp_method_general)
+       if (masterproc) then
+          write(iulog,*) 'calling set_mindist for ',trim(dimname)
+       end if
+       call set_mindist(begi=begi, endi=endi, bego=bego, endo=endo, &
+            activei=activei, activeo=activeo, subgridi=subgridi, subgrido=subgrido, &
+            subgrid_special_indices=subgrid_special_indices, &
+            glc_behavior=glc_behavior, &
+            glc_elevclasses_same=glc_elevclasses_same, &
+            fill_missing_with_natveg=init_interp_fill_missing_with_natveg, &
+            mindist_index=minindx)
+    case (interp_method_finidat_areas)
+       if (masterproc) then
+          write(iulog,*) 'calling set_single_match for ',trim(dimname)
+       end if
+       call set_single_match(begi=begi, endi=endi, bego=bego, endo=endo, &
+            activeo=activeo, subgridi=subgridi, subgrido=subgrido, &
+            subgrid_special_indices=subgrid_special_indices, &
+            glc_behavior=glc_behavior, &
+            glc_elevclasses_same=glc_elevclasses_same, &
+            mindist_index=minindx)
+    case default
+       write(iulog,*) 'findMinDist: unhandled interp_method: ', interp_method
+       call endrun('Unhandled interp_method'//errMsg(sourcefile, __LINE__))
+    end select
 
     deallocate(subgridi%lat, subgridi%lon, subgridi%coslat)
     deallocate(subgrido%lat, subgrido%lon, subgrido%coslat)
@@ -1154,5 +1260,85 @@ contains
          dim1name=trim(vec_dimname))
     deallocate(snlsno)
   end subroutine limit_snlsno
+
+  !-----------------------------------------------------------------------
+  subroutine check_interp_non_ciso_to_ciso(ncidi)
+    !
+    ! !DESCRIPTION:
+    ! BUG(wjs, 2018-10-25, ESCOMP/ctsm#67) There is a bug that causes incorrect values for
+    ! C isotopes if running init_interp from a case without C isotopes to a case with C
+    ! isotopes (https://github.com/ESCOMP/ctsm/issues/67). Here we check that the user
+    ! isn't trying to do an interpolation in that case. This check should be removed once
+    ! bug #67 is resolved.
+    !
+    ! !USES:
+    use clm_varctl, only : use_c13, use_c14, for_testing_allow_interp_non_ciso_to_ciso
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncidi
+    !
+    ! !LOCAL VARIABLES:
+    type(Var_desc_t)   :: vardesc         ! pio variable descriptor
+    integer            :: status          ! return code
+    logical            :: missing_ciso    ! whether C isotope fields are missing from the input file, despite the run containing C isotopes
+
+    character(len=*), parameter :: subname = 'check_interp_non_ciso_to_ciso'
+    !-----------------------------------------------------------------------
+
+    missing_ciso = .false.
+
+    if (use_c13) then
+       call pio_seterrorhandling(ncidi, PIO_BCAST_ERROR)
+       ! arbitrarily check leafc_13 (we could pick any c13 restart field)
+       status = pio_inq_varid(ncidi, name='leafc_13', vardesc=vardesc)
+       call pio_seterrorhandling(ncidi, PIO_INTERNAL_ERROR)
+       if (status /= PIO_noerr) then
+          if (masterproc) then
+             write(iulog,*) 'Cannot interpolate from a run without c13 to a run with c13,'
+             write(iulog,*) 'due to <https://github.com/ESCOMP/ctsm/issues/67>.'
+             write(iulog,*) 'Either use an input initial conditions file with c13 information,'
+             write(iulog,*) 'or re-spinup from cold start.'
+          end if
+          missing_ciso = .true.
+       end if
+    end if
+
+    if (use_c14) then
+       call pio_seterrorhandling(ncidi, PIO_BCAST_ERROR)
+       ! arbitrarily check leafc_14 (we could pick any c14 restart field)
+       status = pio_inq_varid(ncidi, name='leafc_14', vardesc=vardesc)
+       call pio_seterrorhandling(ncidi, PIO_INTERNAL_ERROR)
+       if (status /= PIO_noerr) then
+          if (masterproc) then
+             write(iulog,*) 'Cannot interpolate from a run without c14 to a run with c14,'
+             write(iulog,*) 'due to <https://github.com/ESCOMP/ctsm/issues/67>.'
+             write(iulog,*) 'Either use an input initial conditions file with c14 information,'
+             write(iulog,*) 'or re-spinup from cold start.'
+          end if
+          missing_ciso = .true.
+       end if
+    end if
+
+    if (for_testing_allow_interp_non_ciso_to_ciso) then
+       if (missing_ciso) then
+          write(iulog,*) ' '
+          write(iulog,*) 'Proceeding despite missing c13 and/or c14 fields on input finidat file,'
+          write(iulog,*) 'because for_testing_allow_interp_non_ciso_to_ciso is set.'
+          write(iulog,*) ' '
+       else
+          write(iulog,*) ' '
+          write(iulog,*) 'for_testing_allow_interp_non_ciso_to_ciso is .true., but it appears to be unnecessary in this run'
+          write(iulog,*) '(this is informational only - it does not indicate a problem)'
+          write(iulog,*) ' '
+       end if
+    else
+       if (missing_ciso) then
+          call endrun(msg='Cannot interpolate from a run without c13/c14 to a run with c13/c14', &
+               additional_msg=errMsg(sourcefile, __LINE__))
+       end if
+    end if
+
+  end subroutine check_interp_non_ciso_to_ciso
+
 
 end module initInterpMod
