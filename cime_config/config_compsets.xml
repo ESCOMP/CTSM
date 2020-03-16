@@ -55,26 +55,6 @@
 
   <!-- Primarily for testing -->
   <compset>
-    <alias>IHistClm50BgcRsGs</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IHistClm50SpRsGs</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
-  </compset>
-
-  <!-- Primarily for testing -->
-  <compset>
-    <alias>IHistClm50BgcRsGs</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>IHistClm50SpRsGs</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
-  </compset>
-
-  <!-- Primarily for testing -->
-  <compset>
     <alias>I2000Clm50SpRsGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
