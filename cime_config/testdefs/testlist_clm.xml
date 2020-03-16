@@ -1896,7 +1896,7 @@
       </machine>
     </machines>
   </test>
-  <test name="SMS_D_Vnuopc" grid="f10_f10_musgs" compset="I2000Clm50SpRsGs" testmods="clm/default">
+  <test name="SMS_D_Ld5_Vnuopc" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
