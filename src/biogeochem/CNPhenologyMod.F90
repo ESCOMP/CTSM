@@ -2411,7 +2411,6 @@ contains
 
          leafcn                =>    pftcon%leafcn                                     , & ! Input:  leaf C:N (gC/gN) 
          
-         ! Y. Cheng, add a new cut fraction for harvest parameter for bioenergy crops (miscanthus and switchgrass)
          harvfrac              =>    pftcon%harvfrac                                   , & ! Input:  cut fraction for harvest (-) 
                                           
          lflitcn               =>    pftcon%lflitcn                                    , & ! Input:  leaf litter C:N (gC/gN)                           
