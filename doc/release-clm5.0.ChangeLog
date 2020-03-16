@@ -1,4 +1,449 @@
 ===============================================================
+Tag name:  release-clm5.0.30
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Jan 21 13:50:48 MST 2020
+One-line Summary: Update FATES to sci.1.30.0_api.8.0.0
+
+Purpose of this version:
+------------------------
+
+Update FATES to sci.1.30.0_api.8.0.0, and point to the NGEET version, rather
+than NCAR/fates-release version.
+
+One change to soil-moisture (also check if gridcell weight is non-zero, before specifying prescribed soil moisture.
+Also update mosart with cold start bug fix. Update rtm, cism, and cime to versions on cesm2.1.2 release tag. 
+Fix some issues with PTCLM.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #847 #871
+  Fixes #847 -- issues with prescribed soil moisture
+  Fixes #871 -- don't check for valid resolution for CESM cases by default
+
+Science changes since: release-clm5.0.28
+  FATES science update from sci-1.27.1  to sci.1.30.0
+
+Software changes since: release-clm5.0.28
+  FATES API update from api.7.3.0 to api.8.0.0
+
+Changes to User Interface since: release-clm5.0.28
+  fates paramfile is updated
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (35 tests are different because of fates param file update)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: Yes, but only when running with FATES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: with FATES active
+    - what platforms/compilers: all
+    - nature of change: similar climate
+
+Detailed list of changes:
+------------------------
+
+Externals being used: all externals updated
+
+   cism:   cism-release-cesm2.1.2_01
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.28
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200121
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #846
+(https://github.com/ESCOMP/ctsm/pull)
+   #846 -- Update to fates sci.1.30.0_api.8.0.0
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.29
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Nov 19 12:14:02 MST 2019
+One-line Summary: Some answer changes needed for prescribed soil-moisture and clm4_5 defaults (1850-ndep, and urbantv settings)
+
+Purpose of this version:
+------------------------
+
+Some answer changes needed for prescribed soil-moisture. And clm4_5 defaults for 1850 Nitrogen deposition and or urbantv
+settings were made to be consistent with clm5_0.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #175, #817, #832 #833
+
+   Fixes #817 -- Have clm4_5 use the same ndep file as clm5_0 for 1850
+   Fixes #175 -- Have clm4_5 use the same settings for urbantv years as clm5_0
+   Fixes #832 -- don't override with missing value, let the model set it
+   Fixes #833 -- time interpolation of soilm causes bad values for some missing points
+
+Science changes since: release-clm5.0.28
+
+   Defaults for clm4_5, prescribed soil-moisture
+
+   Some defaults were changed for clm4_5 to be consistent with clm5_0 (use of the same 1850-ndep file, 
+   and changes in the urbantv year settings)
+
+   Prescribed soil-moisture was changes so that if time-interpolation produces large values, they
+   will be marked as missing (spval). Also points where the input prescribed soil moisture is missing
+   are now ignored (and run normally).
+
+Software changes since:  release-clm5.0.28
+
+
+Changes to User Interface since: release-clm5.0.28
+
+  Behavior of soilm_ignore_data_if_missing changes!
+
+  Behavior of soilm_ignore_data_if_missing changes. Now if true will ignore any points
+  where the prescribed soil moisture dataset is missing. So for these points the model
+  will run normally (as if prescribed soil moisture was off). Before it would mark them
+  as missing, but modify h2osoi_ice/liq in an odd fashion.
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (10 tests are different)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - NOT run
+    hobart --- NOT run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - NOT run
+     hobart --- NOT run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: Yes for some! prescribed soil-moisture and clm4_5 (1850-ndep, and urbantv settings)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: prescribed soil-moisture, or clm4_5 due to default changes in 1850-ndep and urbantv
+    - what platforms/compilers: all
+    - nature of change:  similar climate
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+
+Detailed list of changes:
+------------------------
+
+Externals being used: No changes
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.03
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.25
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #841
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #841 -- Some answer changes for release branch
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.28
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Nov 14 23:03:39 MST 2019
+One-line Summary: Several bit-for-bit fixes especially around soil-moisture streams
+
+Purpose of this version:
+------------------------
+
+A list of several bit-for-bit fixes. Some very minor and other's more extensive.
+
+mksurfdata_map was extended so that when you specify vegetation types, you can let it use the natural and crop coverage
+from the input datasets. This allows you to for example run a global simulation with all vegetation types in every grid cell.
+This can be useful in seeing what types of vegetation grow in each grid cell. Also simplify some of the logic that allowed
+for old format PFT datasets that didn't include crop information. Since, we don't have or need to work with such datasets
+this complex logic could be removed. Also added some new unit tests for mksurfdata and the defining PFT values.
+
+Add time interpolation alogrithm type to most of the stream files, so it can be changed via namelist. Add historical data to the
+Nitrogen deposition future scenario datasets.
+
+Add namelist control variables for soilm_offset, and tint_algo for most of the streams. tint_algo allows you to control the time
+interpolation and change it to a simpler one (like upper) in order to show that the streams output agrees with the streams data
+input. soilm_offset allows the user to change the time-stamp offset if the time-stamp isn't at the middle of averaging interval.
+This is important for the soil moisture streams for a case where you want to use the output of a CTSM simulation for soil-moisture
+as normally the time-stamp is the end of the interval (so you could use -1296000 to roughly compensate for the time-stamps to be
+at the end of the month rather than mid-month). Add a namelist item to continue when soil moisture is prescribed and a gridpoint
+is missing on the input streams file, but required for the simulation running. Also add an optional history field H2OSOI_PRESCRIBED_GRC
+that corresponds to the input soil moisture streams, so you can ensure the prescribe soil moisture is working correctly and agrees
+with the input dataset.
+
+Fix the threading bug for soil-moisture and LAI streams. This is done by adding a new "advance" subroutine that does the streams
+advance part of the calculation in a non-OpenMP area of the CLM driver, while the "interp" subroutine remains in the Open-MP 
+loop.
+
+Include missing prescribed testmods directory. Allow branches with use_init_interp=T with a log message about it. 
+Move tests from hobart to izumi.
+
+This is bit-for-bit
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #809, #804, #786, #702, #791, #150 #830, #831, #832, #836
+  Fixes #809 -- mkmapdata old version of intel
+  Fixes #804 -- allow mksurfdata_map to prescribe vegetation cover for globe
+  Fixes #786 -- allow use_init_interp for a branch
+  Fixes #702 -- add historical period to start of ndep SSP files
+  Fixes #791 -- fix threading for prescribed LAI and soil-moisture
+  Fixes #150 -- remove extra logic in mksurfdata_map for old format and missing crops
+  Fixes #830 -- time offset is assumed to be zero for soil moisture streams
+  Fixes #831 -- add namelist tint_algo settings for input streams
+  partial for  #832 -- an option to override if soil moisture stream has missing data where needed
+  Fixes #836 -- add izumi as a place that can run tools tests
+
+Science changes since: release-clm6.0.27
+   None, answers are the same. Some more flexibility was added with namelist control as follows in the next section.
+
+Software changes since: release-clm6.0.27
+   New namelist items: ndep_tintalgo, soilm_offset, soilm_ignore_data_if_missing, lai_tintalgo, lightng_tintalgo, popdens_tintalgo
+                       urbantv_tintalgo
+   If maxpatch_pft's is not set to a regular value (with or without crops) will now abort, with an option to override if needed
+
+   Move tests from hobart to izumi. prescribed test-mod directory that wasn't there before is now there.
+   Add some assert debug checking for lai and soilm streams.
+   Add some new unit tests for mksurfdata_map
+
+Changes to User Interface since: release-clm6.0.27
+   Note, that streams text files are now legitimate XML files
+
+Testing:  regular
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+    izumi ---- Not working (needs a cime update)
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+    hobart --- OK
+    izumi ---- OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_intel ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK (fail on run needs some cime updates)
+    izumi_intel ------- OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No (bit-for-bit) (other than two tests on hobart because of cime issue #3302)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: Update cime
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.03
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.25
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #814
+(https://github.com/ESCOMP/ctsm/pull)
+   #814 -- A few fixes and extend mksurfdata to set PFT/CFT fractions but use veg-cover from dataset
+
+===============================================================
+===============================================================
+Tag name:  release-clm5.0.27
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Aug 13 14:31:50 MDT 2019
+One-line Summary: Add presoribed soil moisture streams as an option, and a few fixes
+
+Purpose of this version:
+------------------------
+
+Add new prescribed moisture streams feature from Sean Swenson. This allows the user
+to specify a steams file for soil moisture and use it in place of the model prognostically
+determining soil moisture. To turn it on set use_soil_moisture_streams=T. You can also 
+set the filename to use with stream_fldfilename_soilm, and there are other _soilm namelist
+items to control the years to run over. The file MUST be on the same grid as the model resolution.
+
+Update 0.125x0.125 mapping and surfdata data, and fix hirespft data issues. Update cime 
+with SSP1-2.6 presaero data. So now can run the SSP1-2.6 CMIP6 future scenario.
+Update rtm release branch to rtm1_0_69, which brings in a fix for cold starts.
+
+Move mksurfdata changes from ctsm1.0.dev053 over, which fixes a rare soil color bug.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #757 #629 #343 #276
+  Fixes #757 -- Softlinks in inputdata repo saved as a link rather than a datafile
+  Fixes #629 -- Remove unused fields on surface datasets (add option for glc fields)
+  Fixes #343 -- Move config_archive to ctsm
+  Fixes #276 -- Add some CLM tests for CESM to run
+
+CIME Issues fixed (include issue #): #3163 #3170
+ #3170 -- fixes creation of empty file from inputdata download
+ #3163 -- JOB_WALLCLOCK error
+
+Science changes since: release-clm5.0.26
+   Add SSP1-2.6 prescribed aerosol
+   Fix soil color bug in mksurfdata_map
+
+Software changes since: release-clm5.0.26
+   Add ability to run with prescribed soil moisture streams
+
+Changes to User Interface since: release-clm5.0.26
+   New soil_moisture_streams namelist
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+    hobart --- OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - OK
+     hobart --- OK
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used: Update cime and rtm
+
+   cism:   release-cesm2.0.04
+   rtm:    release-cesm2.0.03
+   mosart: release-cesm2.0.03
+   cime:   cim5.6.20
+   FATES:  fates_s1.21.0_a7.0.0_br_rev2
+   PTCLM:  PTCLM2_180611
+
+CTSM Tag versions pulled over from master development branch: ctsm1.0.dev053
+
+Pull Requests that document the changes (include PR ids): #781
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #781 -- Prescribed soil moisture on release branch and some other updates and fixes
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.26
 Originator(s):  sacks (Bill Sacks)
 Date: Mon Jul 29 18:11:26 MDT 2019

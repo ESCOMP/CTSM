@@ -52,6 +52,7 @@ my $CSMDATA = "/glade/p/cesm/cseg/inputdata";
 my %opts = ( 
                hgrid=>"all", 
                vic=>0,
+               glc=>0,
                ssp_rcp=>"hist", 
                debug=>0,
                exedir=>undef,
@@ -146,6 +147,7 @@ OPTIONS
      -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
 
      -vic                          Add the fields required for the VIC model
+     -glc                          Add the optional 3D glacier fields for verification of the glacier model
 
       NOTE: years, res, and ssp_rcp can be comma delimited lists.
 
@@ -365,6 +367,11 @@ EOF
  outnc_vic = .true.
 EOF
   }
+  if ( $opts{'glc'} ) {
+    print $fh <<"EOF";
+ outnc_3dglc = .true.
+EOF
+  }
   if ( ! $opts{'fast_maps'} ) {
     print $fh <<"EOF";
  map_ftopostats   = '$map->{'topostats'}'
@@ -383,6 +390,7 @@ EOF
   }
   if ( defined($opts{'pft_override'}) ) {
     print $fh <<"EOF";
+ all_veg      = .true.
  pft_frc      = $opts{'pft_frc'}
  pft_idx      = $opts{'pft_idx'}
 EOF
@@ -457,6 +465,7 @@ EOF
         "pft_idx=s"    => \$opts{'pft_idx'},
         "ssp_rcp=s"    => \$opts{'ssp_rcp'},
         "vic!"         => \$opts{'vic'},
+        "glc!"         => \$opts{'glc'},
         "rundir=s"     => \$opts{'rundir'},
         "soil_col=i"   => \$opts{'soil_col'},
         "soil_fmx=f"   => \$opts{'soil_fmx'},
