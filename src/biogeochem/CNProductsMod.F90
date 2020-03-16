@@ -192,7 +192,7 @@ contains
          long_name = '1-yr grain product ' // this%species%get_species(), &
          ptr_gcell = this%cropprod1_grc, default=active_if_non_isotope)
 
-	this%biofuelprod1_grc(begg:endg) = spval
+    this%biofuelprod1_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('BIOFUELPROD1'), &
          units = 'g' // this%species%get_species() // '/m^2', &
@@ -264,7 +264,7 @@ contains
          long_name = 'loss from 1-yr grain product pool', &
          ptr_gcell = this%cropprod1_loss_grc, default=active_if_non_isotope)
 
-	this%biofuelprod1_loss_grc(begg:endg) = spval
+    this%biofuelprod1_loss_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('BIOFUELPROD1', suffix='_LOSS'), &
          units = 'g' // this%species%get_species() // '/m^2/s', &
