@@ -385,13 +385,6 @@ contains
          xtype=ncd_double, dim1name='gridcell', &
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%cropprod1_grc)
-         
-    call restartvar(ncid=ncid, flag=flag, &
-         varname=this%species%rest_fname('biofuelprod1', suffix='_g'), &
-         xtype=ncd_double, dim1name='gridcell', &
-         long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%biofuelprod1_grc)
-         
     if (flag == 'read' .and. .not. readvar) then
        ! BACKWARDS_COMPATIBILITY(wjs, 2016-03-31) If the gridcell-level field isn't
        ! present, try to find a column-level field (which may be present on an older
@@ -403,24 +396,24 @@ contains
             data_grc = this%cropprod1_grc, &
             readvar = readvar)
 
-	   call set_grc_field_from_col_field( &
-            bounds = bounds, &
-            ncid = ncid, &
-            varname = this%species%rest_fname('biofuelprod1'), &
-            data_grc = this%biofuelprod1_grc, &
-            readvar = readvar)
-
        ! If we still haven't found an appropriate field on the restart file, then set
        ! this field from the template, if provided
        if (.not. readvar .and. template_provided) then
           call set_missing_from_template(this%cropprod1_grc, &
                template_for_missing_fields%cropprod1_grc, &
                multiplier = template_multiplier)
-       
-       	  call set_missing_from_template(this%biofuelprod1_grc, &
-               template_for_missing_fields%biofuelprod1_grc, &
-               multiplier = template_multiplier)
        end if
+    end if
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%species%rest_fname('biofuelprod1', suffix='_g'), &
+         xtype=ncd_double, dim1name='gridcell', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%biofuelprod1_grc)
+    if (.not. readvar .and. template_provided) then
+       call set_missing_from_template(this%biofuelprod1_grc, &
+            template_for_missing_fields%biofuelprod1_grc, &
+            multiplier = template_multiplier)
     end if
 
     call restartvar(ncid=ncid, flag=flag, &
