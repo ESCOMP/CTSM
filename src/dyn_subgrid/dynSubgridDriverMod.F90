@@ -129,8 +129,9 @@ contains
     
     ! Initialize stuff for prescribed transient lakes
 	! error if keyword argument like for dynamical land units above: dynlake_filename=get_flanduse_timeseries()
-    call dynlake_init(bounds_proc, dynlake_filename=get_flanduse_timeseries())
-    
+    if (get_do_transient_lakes()) then
+        call dynlake_init(bounds_proc, dynlake_filename=get_flanduse_timeseries())
+    end if
     
     ! ------------------------------------------------------------------------
     ! Set initial subgrid weights for aspects that are read from file. This is relevant
