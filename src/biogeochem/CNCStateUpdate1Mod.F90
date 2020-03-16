@@ -171,6 +171,7 @@ contains
          ivt                   => patch%itype                                , & ! Input:  [integer  (:)     ]  patch vegetation type                                
 
          woody                 => pftcon%woody                             , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
+         harvfrac              => pftcon%harvfrac                          , & ! Input:  cut fraction for harvest (-) 
 
          cascade_donor_pool    => decomp_cascade_con%cascade_donor_pool    , & ! Input:  [integer  (:)     ]  which pool is C taken from for a given decomposition step
          cascade_receiver_pool => decomp_cascade_con%cascade_receiver_pool , & ! Input:  [integer  (:)     ]  which pool is C added to for a given decomposition step
@@ -274,10 +275,8 @@ contains
 
          ! phenology: litterfall fluxes
          cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) - cf_veg%leafc_to_litter_patch(p)*dt
+         cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) - cf_veg%leafc_to_biofuelc_patch(p)*dt
          cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) - cf_veg%frootc_to_litter_patch(p)*dt
-         
-        
-        
 
          ! livewood turnover fluxes
          if (woody(ivt(p)) == 1._r8) then
@@ -288,6 +287,7 @@ contains
          end if
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_litter_patch(p)*dt
+            cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_biofuelc_patch(p)*dt
             cs_veg%grainc_patch(p)     = cs_veg%grainc_patch(p) &
                  - (cf_veg%grainc_to_food_patch(p) + cf_veg%grainc_to_seed_patch(p))*dt
             cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
