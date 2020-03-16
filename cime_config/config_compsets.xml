@@ -331,7 +331,7 @@
     <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
-  <!-- Stub glacier / rtub rof needed for regional / single-point -->
+  <!-- Stub glacier / stub rof needed for regional / single-point -->
   <compset>
     <alias>I2000Clm45FatesRsGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
