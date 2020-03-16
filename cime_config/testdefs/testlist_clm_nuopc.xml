@@ -1,5 +1,3 @@
-PET_P36x1_D_Vnuopc.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_intel.clm-default
-
 <?xml version="1.0"?>
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_musgs" compset="I1850Clm50Bgc" testmods="clm/default">

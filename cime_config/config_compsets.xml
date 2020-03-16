@@ -37,12 +37,12 @@
 <!-- I single point forcing -->
 
   <compset>
-    <alias>I1PtClm50SpGs</alias>
+    <alias>I1PtClm50SpRsGs</alias>
     <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>I1PtClm45SpGs</alias>
+    <alias>I1PtClm45SpRsGs</alias>
     <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
