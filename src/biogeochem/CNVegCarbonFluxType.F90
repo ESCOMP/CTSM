@@ -135,9 +135,8 @@ module CNVegCarbonFluxType
      real(r8), pointer :: livestemc_to_litter_patch                 (:)     ! live stem C litterfall (gC/m2/s)
      real(r8), pointer :: grainc_to_food_patch                      (:)     ! grain C to food for prognostic crop(gC/m2/s)
      
-     ! Y. Cheng
-     real(r8), pointer :: biofuelc_harvest_patch                    (:)     ! biofuel C for bioenergy crops that are harvested (gC/m2/s)
-     
+     real(r8), pointer :: leafc_to_biofuelc_patch                   (:)     ! leaf C to biofuel C (gC/m2/s)
+     real(r8), pointer :: livestemc_to_biofuelc_patch               (:)     ! livestem C to biofuel C (gC/m2/s)
      real(r8), pointer :: grainc_to_seed_patch                      (:)     ! grain C to seed for prognostic crop(gC/m2/s)
 
      ! maintenance respiration fluxes     
@@ -249,6 +248,8 @@ module CNVegCarbonFluxType
      real(r8), pointer :: harvest_c_to_cwdc_col                     (:,:)   ! C fluxes associated with harvest to CWD pool (gC/m3/s)
      real(r8), pointer :: grainc_to_cropprodc_patch                 (:)     ! grain C to crop product pool (gC/m2/s)
      real(r8), pointer :: grainc_to_cropprodc_col                   (:)     ! grain C to crop product pool (gC/m2/s)
+     real(r8), pointer :: biofuelc_to_cropprodc_patch               (:)     ! biofuel C to crop product pool (gC/m2/s)
+     real(r8), pointer :: biofuelc_to_cropprodc_col                 (:)     ! biofuel C to crop product pool (gC/m2/s)
 
      ! fire fluxes
      real(r8), pointer :: m_decomp_cpools_to_fire_vr_col            (:,:,:) ! vertically-resolved decomposing C fire loss (gC/m3/s)
@@ -600,7 +601,8 @@ contains
     allocate(this%cpool_to_grainc_storage_patch             (begp:endp)) ; this%cpool_to_grainc_storage_patch             (:) = nan
     allocate(this%livestemc_to_litter_patch                 (begp:endp)) ; this%livestemc_to_litter_patch                 (:) = nan
     allocate(this%grainc_to_food_patch                      (begp:endp)) ; this%grainc_to_food_patch                      (:) = nan
-    allocate(this%biofuelc_harvest_patch                    (begp:endp)) ; this%biofuelc_harvest_patch                    (:) = nan
+    allocate(this%leafc_to_biofuelc_patch                   (begp:endp)) ; this%leafc_to_biofuelc_patch                   (:) = nan
+    allocate(this%livestemc_to_biofuelc_patch               (begp:endp)) ; this%livestemc_to_biofuelc_patch               (:) = nan
     allocate(this%grainc_to_seed_patch                      (begp:endp)) ; this%grainc_to_seed_patch                      (:) = nan
     allocate(this%grainc_xfer_to_grainc_patch               (begp:endp)) ; this%grainc_xfer_to_grainc_patch               (:) = nan
     allocate(this%cpool_grain_gr_patch                      (begp:endp)) ; this%cpool_grain_gr_patch                      (:) = nan
@@ -664,6 +666,12 @@ contains
 
     allocate(this%grainc_to_cropprodc_col(begc:endc))
     this%grainc_to_cropprodc_col(:) = nan
+    
+    allocate(this%biofuelc_to_cropprodc_patch(begp:endp))
+    this%biofuelc_to_cropprodc_patch(:) = nan
+
+    allocate(this%biofuelc_to_cropprodc_col(begc:endc))
+    this%biofuelc_to_cropprodc_col(:) = nan
 
     allocate(this%m_decomp_cpools_to_fire_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                
     this%m_decomp_cpools_to_fire_vr_col(:,:,:)= nan
@@ -830,12 +838,15 @@ contains
                avgflag='A', long_name='grain C to food', &
                ptr_patch=this%grainc_to_food_patch)
 
-		  ! Y. Cheng
-		  this%biofuelc_harvest_patch(begp:endp) = spval
-          call hist_addfld1d (fname='BIOFUELC_HARVEST', units='gC/m^2/s', &
-               avgflag='A', long_name='biofuel C harvest', &
-               ptr_patch=this%biofuelc_harvest_patch)
+		  this%leafc_to_biofuelc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_TO_BIOFUELC', units='gC/m^2/s', &
+               avgflag='A', long_name='leaf C to biofuel C', &
+               ptr_patch=this%leafc_to_biofuelc_patch)
 
+		  this%livestemc_to_biofuelc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_TO_BIOFUELC', units='gC/m^2/s', &
+               avgflag='A', long_name='livestem C to biofuel C', &
+               ptr_patch=this%livestemc_to_biofuelc_patch)
 
           this%grainc_to_seed_patch(begp:endp) = spval
           call hist_addfld1d (fname='GRAINC_TO_SEED', units='gC/m^2/s', &
@@ -3523,14 +3534,17 @@ contains
             dim1name='pft', &
             long_name='grain C to food', units='gC/m2/s', &
             interpinic_flag='interp', readvar=readvar, data=this%grainc_to_food_patch)
-            
-            
-       ! Y. Cheng
-       call restartvar(ncid=ncid, flag=flag,  varname='biofuelc_harvest', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='biofuelc harvest', units='gC/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%biofuelc_harvest_patch)
 
+       call restartvar(ncid=ncid, flag=flag,  varname='leafc_to_biofuelc', xtype=ncd_double,  &
+            dim1name='pft', &
+            long_name='leaf C to biofuel C', units='gC/m2/s', &
+            interpinic_flag='interp', readvar=readvar, data=this%leafc_to_biofuelc_patch)
+
+	   call restartvar(ncid=ncid, flag=flag,  varname='livestemc_to_biofuelc', xtype=ncd_double,  &
+            dim1name='pft', &
+            long_name='livestem C to biofuel C', units='gC/m2/s', &
+            interpinic_flag='interp', readvar=readvar, data=this%livestemc_to_biofuelc_patch)
+            
        call restartvar(ncid=ncid, flag=flag,  varname='cpool_to_grainc', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='allocation to grain C', units='gC/m2/s', &
@@ -3859,6 +3873,7 @@ contains
 
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
        this%grainc_to_cropprodc_patch(i)                 = value_patch
+       this%biofuelc_to_cropprodc_patch(i)               = value_patch
     end do
 
     if ( use_crop )then
@@ -3868,7 +3883,8 @@ contains
           this%livestemc_to_litter_patch(i)     = value_patch
           this%grainc_to_food_patch(i)          = value_patch
 
-          this%biofuelc_harvest_patch(i)        = value_patch
+          this%leafc_to_biofuelc_patch(i)       = value_patch
+          this%livestemc_to_biofuelc_patch(i)   = value_patch
           
           this%grainc_to_seed_patch(i)          = value_patch
           this%grainc_xfer_to_grainc_patch(i)   = value_patch
@@ -3927,6 +3943,7 @@ contains
        i = filter_column(fi)
 
        this%grainc_to_cropprodc_col(i)       = value_column
+       this%biofuelc_to_cropprodc_col(i)     = value_column
        this%cwdc_hr_col(i)                   = value_column
        this%cwdc_loss_col(i)                 = value_column
        this%litterc_loss_col(i)              = value_column
@@ -4314,8 +4331,7 @@ contains
           if (.not. use_grainproduct) then
              this%litfall_patch(p) = &
                   this%litfall_patch(p) + &
-                  this%grainc_to_food_patch(p) + &
-                  this%biofuelc_harvest_patch(p) !Y.Cheng
+                  this%grainc_to_food_patch(p)
           end if
        end if
 
