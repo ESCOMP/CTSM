@@ -34,6 +34,7 @@ module CNProductsMod
 
      ! States
      real(r8), pointer :: cropprod1_grc(:)    ! (g[C or N]/m2) grain product pool, 1-year lifespan
+     real(r8), pointer :: biofuelprod1_grc(:) ! (g[C or N]/m2) biofuel product pool, 1-year lifespan
      real(r8), pointer :: prod10_grc(:)       ! (g[C or N]/m2) wood product pool, 10-year lifespan
      real(r8), pointer :: prod100_grc(:)      ! (g[C or N]/m2) wood product pool, 100-year lifespan
      real(r8), pointer :: tot_woodprod_grc(:) ! (g[C or N]/m2) total wood product pool
@@ -49,9 +50,12 @@ module CNProductsMod
      real(r8), pointer :: hrv_deadstem_to_prod100_grc(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
      real(r8), pointer :: grain_to_cropprod1_patch(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
      real(r8), pointer :: grain_to_cropprod1_grc(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
+     real(r8), pointer :: biofuel_to_cropprod1_patch(:) ! (g[C or N]/m2/s) biofuel to 1-year crop product pool
+     real(r8), pointer :: biofuel_to_cropprod1_grc(:) ! (g[C or N]/m2/s) biofuel to 1-year crop product pool
 
      ! Fluxes: losses
      real(r8), pointer :: cropprod1_loss_grc(:)    ! (g[C or N]/m2/s) decomposition loss from 1-yr grain product pool
+     real(r8), pointer :: biofuelprod1_loss_grc(:) ! (g[C or N]/m2/s) decomposition loss from 1-yr biofuel product pool
      real(r8), pointer :: prod10_loss_grc(:)       ! (g[C or N]/m2/s) decomposition loss from 10-yr wood product pool
      real(r8), pointer :: prod100_loss_grc(:)      ! (g[C or N]/m2/s) decomposition loss from 100-yr wood product pool
      real(r8), pointer :: tot_woodprod_loss_grc(:) ! (g[C or N]/m2/s) decompomposition loss from all wood product pools
@@ -123,6 +127,7 @@ contains
     endg = bounds%endg
 
     allocate(this%cropprod1_grc(begg:endg)) ; this%cropprod1_grc(:) = nan
+    allocate(this%biofuelprod1_grc(begg:endg)) ; this%biofuelprod1_grc(:) = nan
     allocate(this%prod10_grc(begg:endg)) ; this%prod10_grc(:) = nan
     allocate(this%prod100_grc(begg:endg)) ; this%prod100_grc(:) = nan
     allocate(this%tot_woodprod_grc(begg:endg)) ; this%tot_woodprod_grc(:) = nan
@@ -141,8 +146,11 @@ contains
 
     allocate(this%grain_to_cropprod1_patch(begp:endp)) ; this%grain_to_cropprod1_patch(:) = nan
     allocate(this%grain_to_cropprod1_grc(begg:endg)) ; this%grain_to_cropprod1_grc(:) = nan
+    allocate(this%biofuel_to_cropprod1_patch(begp:endp)) ; this%biofuel_to_cropprod1_patch(:) = nan
+    allocate(this%biofuel_to_cropprod1_grc(begg:endg)) ; this%biofuel_to_cropprod1_grc(:) = nan
 
     allocate(this%cropprod1_loss_grc(begg:endg)) ; this%cropprod1_loss_grc(:) = nan
+    allocate(this%biofuelprod1_loss_grc(begg:endg)) ; this%biofuelprod1_loss_grc(:) = nan
     allocate(this%prod10_loss_grc(begg:endg)) ; this%prod10_loss_grc(:) = nan
     allocate(this%prod100_loss_grc(begg:endg)) ; this%prod100_loss_grc(:) = nan
     allocate(this%tot_woodprod_loss_grc(begg:endg)) ; this%tot_woodprod_loss_grc(:) = nan
@@ -183,6 +191,14 @@ contains
          avgflag = 'A', &
          long_name = '1-yr grain product ' // this%species%get_species(), &
          ptr_gcell = this%cropprod1_grc, default=active_if_non_isotope)
+
+	this%biofuelprod1_grc(begg:endg) = spval
+    call hist_addfld1d( &
+         fname = this%species%hist_fname('BIOFUELPROD1'), &
+         units = 'g' // this%species%get_species() // '/m^2', &
+         avgflag = 'A', &
+         long_name = '1-yr biofuel product ' // this%species%get_species(), &
+         ptr_gcell = this%biofuelprod1_grc, default=active_if_non_isotope)
 
     this%prod10_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -248,6 +264,14 @@ contains
          long_name = 'loss from 1-yr grain product pool', &
          ptr_gcell = this%cropprod1_loss_grc, default=active_if_non_isotope)
 
+	this%biofuelprod1_loss_grc(begg:endg) = spval
+    call hist_addfld1d( &
+         fname = this%species%hist_fname('BIOFUELPROD1', suffix='_LOSS'), &
+         units = 'g' // this%species%get_species() // '/m^2/s', &
+         avgflag = 'A', &
+         long_name = 'loss from 1-yr biofuel product pool', &
+         ptr_gcell = this%biofuelprod1_loss_grc, default=active_if_non_isotope)
+
     this%prod10_loss_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('PROD10', suffix='_LOSS'), &
@@ -288,6 +312,7 @@ contains
 
     do g = bounds%begg, bounds%endg
        this%cropprod1_grc(g) = 0._r8
+       this%biofuelprod1_grc(g) = 0._r8
        this%prod10_grc(g) = 0._r8
        this%prod100_grc(g) = 0._r8
        this%tot_woodprod_grc(g) = 0._r8
@@ -299,6 +324,7 @@ contains
        this%hrv_deadstem_to_prod10_patch(p) = 0._r8
        this%hrv_deadstem_to_prod100_patch(p) = 0._r8
        this%grain_to_cropprod1_patch(p) = 0._r8
+       this%biofuel_to_cropprod1_patch(p) = 0._r8
     end do
 
   end subroutine InitCold
@@ -359,6 +385,13 @@ contains
          xtype=ncd_double, dim1name='gridcell', &
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%cropprod1_grc)
+         
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%species%rest_fname('biofuelprod1', suffix='_g'), &
+         xtype=ncd_double, dim1name='gridcell', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%biofuelprod1_grc)
+         
     if (flag == 'read' .and. .not. readvar) then
        ! BACKWARDS_COMPATIBILITY(wjs, 2016-03-31) If the gridcell-level field isn't
        ! present, try to find a column-level field (which may be present on an older
@@ -370,11 +403,22 @@ contains
             data_grc = this%cropprod1_grc, &
             readvar = readvar)
 
+	   call set_grc_field_from_col_field( &
+            bounds = bounds, &
+            ncid = ncid, &
+            varname = this%species%rest_fname('biofuelprod1'), &
+            data_grc = this%biofuelprod1_grc, &
+            readvar = readvar)
+
        ! If we still haven't found an appropriate field on the restart file, then set
        ! this field from the template, if provided
        if (.not. readvar .and. template_provided) then
           call set_missing_from_template(this%cropprod1_grc, &
                template_for_missing_fields%cropprod1_grc, &
+               multiplier = template_multiplier)
+       
+       	  call set_missing_from_template(this%biofuelprod1_grc, &
+               template_for_missing_fields%biofuelprod1_grc, &
                multiplier = template_multiplier)
        end if
     end if
@@ -437,7 +481,8 @@ contains
        dwt_wood_product_gain_patch, &
        wood_harvest_patch, &
        dwt_crop_product_gain_patch, &
-       grain_to_cropprod_patch)
+       grain_to_cropprod_patch, &
+       biofuel_to_cropprod_patch)
     !
     ! !DESCRIPTION:
     ! Update all loss fluxes from wood and grain product pools, and update product pool
@@ -462,6 +507,9 @@ contains
 
     ! grain to crop product pool (g/m2/s) [patch]
     real(r8), intent(in) :: grain_to_cropprod_patch( bounds%begp: )
+    
+    ! biofuel to crop product pool (g/m2/s) [patch]
+    real(r8), intent(in) :: biofuel_to_cropprod_patch( bounds%begp: )
     !
     ! !LOCAL VARIABLES:
     integer  :: g        ! indices
@@ -475,6 +523,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(wood_harvest_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(dwt_crop_product_gain_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(grain_to_cropprod_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(biofuel_to_cropprod_patch) == (/bounds%endp/)), sourcefile, __LINE__)
 
     call this%PartitionWoodFluxes(bounds, &
          num_soilp, filter_soilp, &
@@ -484,7 +533,8 @@ contains
     call this%PartitionGrainFluxes(bounds, &
          num_soilp, filter_soilp, &
          dwt_crop_product_gain_patch(bounds%begp:bounds%endp), &
-         grain_to_cropprod_patch(bounds%begp:bounds%endp))
+         grain_to_cropprod_patch(bounds%begp:bounds%endp), &
+         biofuel_to_cropprod_patch(bounds%begp:bounds%endp))
 
     ! calculate losses from product pools
     ! the following (1/s) rate constants result in ~90% loss of initial state over 1, 10 and 100 years,
@@ -496,6 +546,7 @@ contains
     do g = bounds%begg, bounds%endg
        ! calculate fluxes out of product pools (1/sec)
        this%cropprod1_loss_grc(g) = this%cropprod1_grc(g) * kprod1
+       this%biofuelprod1_loss_grc(g) = this%biofuelprod1_grc(g) * kprod1
        this%prod10_loss_grc(g)    = this%prod10_grc(g)    * kprod10
        this%prod100_loss_grc(g)   = this%prod100_grc(g)   * kprod100
     end do
@@ -513,11 +564,13 @@ contains
 
        ! fluxes into wood & grain product pools, from harvest
        this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%grain_to_cropprod1_grc(g)*dt
+       this%biofuelprod1_grc(g) = this%biofuelprod1_grc(g) + this%biofuel_to_cropprod1_grc(g)*dt
        this%prod10_grc(g)    = this%prod10_grc(g)    + this%hrv_deadstem_to_prod10_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   + this%hrv_deadstem_to_prod100_grc(g)*dt
 
        ! fluxes out of wood & grain product pools, from decomposition
        this%cropprod1_grc(g) = this%cropprod1_grc(g) - this%cropprod1_loss_grc(g)*dt
+       this%biofuelprod1_grc(g) = this%biofuelprod1_grc(g) - this%biofuelprod1_loss_grc(g)*dt
        this%prod10_grc(g)    = this%prod10_grc(g)    - this%prod10_loss_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   - this%prod100_loss_grc(g)*dt
 
@@ -632,7 +685,8 @@ contains
   subroutine PartitionGrainFluxes(this, bounds, &
        num_soilp, filter_soilp, &
        dwt_crop_product_gain_patch, &
-       grain_to_cropprod_patch)
+       grain_to_cropprod_patch, &
+       biofuel_to_cropprod_patch)
     !
     ! !DESCRIPTION:
     ! Partition input grain fluxes into crop product pools
@@ -657,6 +711,9 @@ contains
 
     ! grain to crop product pool(s) (g/m2/s) [patch]
     real(r8)                , intent(in)    :: grain_to_cropprod_patch( bounds%begp: )
+    
+    ! biofuel to crop product pool(s) (g/m2/s) [patch]
+    real(r8)                , intent(in)    :: biofuel_to_cropprod_patch( bounds%begp: )
     !
     ! !LOCAL VARIABLES:
     integer :: fp
@@ -673,6 +730,7 @@ contains
 
        ! For now all crop product is put in the 1-year crop product pool
        this%grain_to_cropprod1_patch(p) = grain_to_cropprod_patch(p)
+       this%biofuel_to_cropprod1_patch(p) = biofuel_to_cropprod_patch(p)
     end do
 
     call p2g(bounds, &
@@ -682,6 +740,13 @@ contains
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
 
+
+	call p2g(bounds, &
+         this%biofuel_to_cropprod1_patch(bounds%begp:bounds%endp), &
+         this%biofuel_to_cropprod1_grc(bounds%begg:bounds%endg), &
+         p2c_scale_type = 'unity', &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
     ! Determine gains from dynamic landcover
 
     do g = bounds%begg, bounds%endg
@@ -735,7 +800,8 @@ contains
        this%product_loss_grc(g) = &
             this%cropprod1_loss_grc(g) + &
             this%prod10_loss_grc(g) + &
-            this%prod100_loss_grc(g)
+            this%prod100_loss_grc(g) + &
+            this%biofuelprod1_loss_grc(g)
 
        this%dwt_woodprod_gain_grc(g) = &
             this%dwt_prod100_gain_grc(g) + &
