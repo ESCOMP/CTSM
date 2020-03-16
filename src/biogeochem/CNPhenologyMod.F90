@@ -1436,8 +1436,6 @@ contains
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
     use pftconMod        , only : nirrig_trp_corn, nirrig_sugarcane, nirrig_trp_soybean
     use pftconMod        , only : nirrig_cotton, nirrig_rice
-    
-    ! Y. Cheng
     use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
     
     use clm_varcon       , only : spval, secspday
@@ -1733,7 +1731,6 @@ contains
                      gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
                   end if
                   
-                  ! Y. Cheng, add switchgrass and Miscanthus
                   if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                       ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
                       ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
@@ -1786,7 +1783,6 @@ contains
                      gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
                   end if
                   
-                  ! Y. Cheng, add switchgrass and Miscanthus
                   if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                       ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
                       ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
@@ -1850,7 +1846,6 @@ contains
             ! calculate linear relationship between huigrain fraction and relative
             ! maturity rating for maize
 
-            ! Y. Cheng, add switchgrass and Miscanthus
             if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                 ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
                 ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
@@ -2388,7 +2383,6 @@ contains
     !
     ! !USES:
     use pftconMod        , only : npcropmin
-    ! Y. Cheng
     use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
     
     use CNSharedParamsMod, only : use_fun
@@ -2446,19 +2440,18 @@ contains
          leafc_to_litter       =>    cnveg_carbonflux_inst%leafc_to_litter_patch       , & ! Output: [real(r8) (:) ]  leaf C litterfall (gC/m2/s)                       
          frootc_to_litter      =>    cnveg_carbonflux_inst%frootc_to_litter_patch      , & ! Output: [real(r8) (:) ]  fine root C litterfall (gC/m2/s)                  
          livestemc_to_litter   =>    cnveg_carbonflux_inst%livestemc_to_litter_patch   , & ! Output: [real(r8) (:) ]  live stem C litterfall (gC/m2/s)                  
-         grainc_to_food        =>    cnveg_carbonflux_inst%grainc_to_food_patch        , & ! Output: [real(r8) (:) ]  grain C to food (gC/m2/s) 
-         
-         ! Y. Cheng, put the cut fraction during offset period for bioenergy crops to this biofuelc_harvest flux
-         biofuelc_harvest      =>    cnveg_carbonflux_inst%biofuelc_harvest_patch      , & ! Output: [real(r8) (:) ]  biofuel C that was cutted at harvest (gC/m2/s)   
-                            
+         grainc_to_food        =>    cnveg_carbonflux_inst%grainc_to_food_patch        , & ! Output: [real(r8) (:) ]  grain C to food (gC/m2/s)             
          grainc_to_seed        =>    cnveg_carbonflux_inst%grainc_to_seed_patch        , & ! Output: [real(r8) (:) ]  grain C to seed (gC/m2/s)
+         leafc_to_biofuelc     =>    cnveg_carbonflux_inst%leafc_to_biofuelc_patch     , & ! Output: [real(r8) (:) ]  leaf C to biofuel C (gC/m2/s)
+         livestemc_to_biofuelc =>    cnveg_carbonflux_inst%livestemc_to_biofuelc_patch , & ! Output: [real(r8) (:) ]  livestem C to biofuel C (gC/m2/s)
          leafn                 =>    cnveg_nitrogenstate_inst%leafn_patch              , & ! Input:  [real(r8) (:) ]  (gN/m2) leaf N      
          frootn                =>    cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:) ]  (gN/m2) fine root N                        
 
          livestemn_to_litter   =>    cnveg_nitrogenflux_inst%livestemn_to_litter_patch , & ! Output: [real(r8) (:) ]  livestem N to litter (gN/m2/s)                    
-         grainn_to_food        =>    cnveg_nitrogenflux_inst%grainn_to_food_patch      , & ! Output: [real(r8) (:) ]  grain N to food (gN/m2/s) 
-         biofueln_harvest      =>    cnveg_nitrogenflux_inst%biofueln_harvest_patch      , & ! Output: [real(r8) (:) ]  biofuel N that was cutted (gC/m2/s)                                   
-         grainn_to_seed        =>    cnveg_nitrogenflux_inst%grainn_to_seed_patch      , & ! Output: [real(r8) (:) ]  grain N to seed (gN/m2/s)        
+         grainn_to_food        =>    cnveg_nitrogenflux_inst%grainn_to_food_patch      , & ! Output: [real(r8) (:) ]  grain N to food (gN/m2/s)                                   
+         grainn_to_seed        =>    cnveg_nitrogenflux_inst%grainn_to_seed_patch      , & ! Output: [real(r8) (:) ]  grain N to seed (gN/m2/s)
+         leafn_to_biofueln     =>    cnveg_nitrogenflux_inst%leafn_to_biofueln_patch   , & ! Output: [real(r8) (:) ]  leaf N to biofuel N (gN/m2/s)
+         livestemn_to_biofueln =>    cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch, & ! Output: [real(r8) (:) ]  livestem N to biofuel N (gN/m2/s)     
          leafn_to_litter       =>    cnveg_nitrogenflux_inst%leafn_to_litter_patch     , & ! Output: [real(r8) (:) ]  leaf N litterfall (gN/m2/s)                       
          leafn_to_retransn     =>    cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Input: [real(r8) (:) ]  leaf N to retranslocated N pool (gN/m2/s)         
          free_retransn_to_npool=>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch  , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
@@ -2481,11 +2474,11 @@ contains
                t1 = 1.0_r8 / dt
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
                
-               ! Cut a certain fraction (i.e., harvfrac(ivt(p))) (e.g., harvfrac(ivt(p)=70% for bioenergy crops) of leafc for harvest 
-			   ! and move this cut fration to the biofuelc_harvest flux, rather than move it to litter
+               ! Cut a certain fraction (i.e., harvfrac(ivt(p))) (e.g., harvfrac(ivt(p)=70% for bioenergy crops) of leaf C
+			   ! and move this fration of leaf C to biofuel C, rather than move it to litter
 			   leafc_to_litter(p)  = t1 * leafc(p)*(1._r8-harvfrac(ivt(p)))  + cpool_to_leafc(p)
-			   biofuelc_harvest(p) = t1 * leafc(p) * harvfrac(ivt(p))
-			   biofueln_harvest(p) = t1 * leafn(p) * harvfrac(ivt(p))
+			   leafc_to_biofuelc(p) = t1 * leafc(p) * harvfrac(ivt(p))
+			   leafn_to_biofueln(p) = t1 * leafn(p) * harvfrac(ivt(p))
                
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
@@ -2500,7 +2493,11 @@ contains
 				  grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) - grainc_to_seed(p)
                   grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p) - grainn_to_seed(p)
 
-                  livestemc_to_litter(p) = t1 * livestemc(p)  + cpool_to_livestemc(p)                 
+				  ! Cut a certain fraction (i.e., harvfrac(ivt(p))) (e.g., harvfrac(ivt(p)=70% for bioenergy crops) of livestem C
+			      ! and move this fration of leaf C to biofuel C, rather than move it to litter
+                  livestemc_to_litter(p) = t1 * livestemc(p)*(1._r8-harvfrac(ivt(p)))  + cpool_to_livestemc(p)
+                  livestemc_to_biofuelc(p) = t1 * livestemc(p) * harvfrac(ivt(p))
+			   	  livestemn_to_biofueln(p) = t1 * livestemn(p) * harvfrac(ivt(p))           
                end if
             else
                t1 = dt * 2.0_r8 / (offset_counter(p) * offset_counter(p))
@@ -2874,6 +2871,10 @@ contains
                cnveg_carbonflux_inst%grainc_to_food_patch(p)
           cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = &
                cnveg_nitrogenflux_inst%grainn_to_food_patch(p)
+          cnveg_carbonflux_inst%biofuelc_to_cropprodc_patch(p) = &
+               cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p)+cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p)
+          cnveg_nitrogenflux_inst%biofueln_to_cropprodn_patch(p) = &
+               cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p)+cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p)
        end do
 
        call p2c (bounds, num_soilc, filter_soilc, &
@@ -2883,6 +2884,14 @@ contains
        call p2c (bounds, num_soilc, filter_soilc, &
             cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(bounds%begp:bounds%endp), &
             cnveg_nitrogenflux_inst%grainn_to_cropprodn_col(bounds%begc:bounds%endc))
+            
+       call p2c (bounds, num_soilc, filter_soilc, &
+            cnveg_carbonflux_inst%biofuelc_to_cropprodc_patch(bounds%begp:bounds%endp), &
+            cnveg_carbonflux_inst%biofuelc_to_cropprodc_col(bounds%begc:bounds%endc))
+
+       call p2c (bounds, num_soilc, filter_soilc, &
+            cnveg_nitrogenflux_inst%biofueln_to_cropprodn_patch(bounds%begp:bounds%endp), &
+            cnveg_nitrogenflux_inst%biofueln_to_cropprodn_col(bounds%begc:bounds%endc))
     end if
 
     ! No else clause: if use_grainproduct is false, then the grain*_to_cropprod fluxes
@@ -2938,17 +2947,13 @@ contains
          leafc_to_litter           => cnveg_carbonflux_inst%leafc_to_litter_patch           , & ! Input:  [real(r8) (:)   ]  leaf C litterfall (gC/m2/s)                       
          frootc_to_litter          => cnveg_carbonflux_inst%frootc_to_litter_patch          , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  
          livestemc_to_litter       => cnveg_carbonflux_inst%livestemc_to_litter_patch       , & ! Input:  [real(r8) (:)   ]  live stem C litterfall (gC/m2/s)                  
-         grainc_to_food            => cnveg_carbonflux_inst%grainc_to_food_patch            , & ! Input:  [real(r8) (:)   ]  grain C to food (gC/m2/s) 
-         
-         biofuelc_harvest          => cnveg_carbonflux_inst%biofuelc_harvest_patch            , & ! Input:  [real(r8) (:)   ]  biofuel C (gC/m2/s) 
-                                 
+         grainc_to_food            => cnveg_carbonflux_inst%grainc_to_food_patch            , & ! Input:  [real(r8) (:)   ]  grain C to food (gC/m2/s)                            
          phenology_c_to_litr_met_c => cnveg_carbonflux_inst%phenology_c_to_litr_met_c_col   , & ! Output: [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
          phenology_c_to_litr_cel_c => cnveg_carbonflux_inst%phenology_c_to_litr_cel_c_col   , & ! Output: [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
          phenology_c_to_litr_lig_c => cnveg_carbonflux_inst%phenology_c_to_litr_lig_c_col   , & ! Output: [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
 
          livestemn_to_litter       => cnveg_nitrogenflux_inst%livestemn_to_litter_patch     , & ! Input:  [real(r8) (:)   ]  livestem N to litter (gN/m2/s)                    
          grainn_to_food            => cnveg_nitrogenflux_inst%grainn_to_food_patch          , & ! Input:  [real(r8) (:)   ]  grain N to food (gN/m2/s) 
-         biofueln_harvest          => cnveg_nitrogenflux_inst%biofueln_harvest_patch        , & ! Input:  [real(r8) (:)   ]  biofuel N (gN/m2/s)                       
          leafn_to_litter           => cnveg_nitrogenflux_inst%leafn_to_litter_patch         , & ! Input:  [real(r8) (:)   ]  leaf N litterfall (gN/m2/s)                       
          frootn_to_litter          => cnveg_nitrogenflux_inst%frootn_to_litter_patch        , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  
          phenology_n_to_litr_met_n => cnveg_nitrogenflux_inst%phenology_n_to_litr_met_n_col , & ! Output: [real(r8) (:,:) ]  N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)
@@ -3022,25 +3027,19 @@ contains
                         if (.not. use_grainproduct) then
                          ! grain litter carbon fluxes
                          phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                              + grainc_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j) &
-                              + biofuelc_harvest(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)  ! biofuel
+                              + grainc_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                          phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                              + grainc_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j) &
-                              + biofuelc_harvest(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j) ! biofuel
+                              + grainc_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                          phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                              + grainc_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j) &
-                              + biofuelc_harvest(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j) ! biofuel
+                              + grainc_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
  
                          ! grain litter nitrogen fluxes
                          phenology_n_to_litr_met_n(c,j) = phenology_n_to_litr_met_n(c,j) &
-                              + grainn_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j) &
-                              + biofueln_harvest(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j) ! biofuel
+                              + grainn_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                          phenology_n_to_litr_cel_n(c,j) = phenology_n_to_litr_cel_n(c,j) &
-                              + grainn_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j) &
-                              + biofueln_harvest(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j) ! biofuel
+                              + grainn_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                          phenology_n_to_litr_lig_n(c,j) = phenology_n_to_litr_lig_n(c,j) &
-                              + grainn_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j) &
-                              + biofueln_harvest(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j) ! biofuel
+                              + grainn_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                         end if
 
 
