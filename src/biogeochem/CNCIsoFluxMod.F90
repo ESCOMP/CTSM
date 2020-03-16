@@ -404,12 +404,15 @@ contains
               iso_cnveg_cs%grainc_patch                        , cnveg_cs%grainc_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope)
 
-		 ! Y. Cheng
 		 call CIsoFluxCalc(&
-              iso_cnveg_cf%biofuelc_harvest_patch              , cnveg_cf%biofuelc_harvest_patch, &
-              iso_cnveg_cs%grainc_patch                        , cnveg_cs%grainc_patch, &
+              iso_cnveg_cf%leafc_to_biofuelc_patch             , cnveg_cf%leafc_to_biofuelc_patch, &
+              iso_cnveg_cs%leafc_patch                         , cnveg_cs%leafc_patch, &
               num_soilp                                        , filter_soilp, 1._r8, 0, isotope) 
 
+		 call CIsoFluxCalc(&
+              iso_cnveg_cf%livestemc_to_biofuelc_patch         , cnveg_cf%livestemc_to_biofuelc_patch, &
+              iso_cnveg_cs%livestemc_patch                     , cnveg_cs%livestemc_patch, &
+              num_soilp                                        , filter_soilp, 1._r8, 0, isotope) 
 
          call CIsoFluxCalc(&
               iso_cnveg_cf%grainc_to_seed_patch                , cnveg_cf%grainc_to_seed_patch, &
@@ -470,6 +473,7 @@ contains
             do fp = 1,num_soilp
                p = filter_soilp(fp)
                iso_cnveg_cf%grainc_to_cropprodc_patch(p) = iso_cnveg_cf%grainc_to_food_patch(p)
+               iso_cnveg_cf%biofuelc_to_cropprodc_patch(p) = iso_cnveg_cf%leafc_to_biofuelc_patch(p)+iso_cnveg_cf%livestemc_to_biofuelc_patch(p)
                iso_cnveg_cf%grain_mr_patch(p) = iso_cnveg_cf%grain_xsmr_patch(p) + iso_cnveg_cf%grain_curmr_patch(p)
             end do
          endif
@@ -1200,9 +1204,8 @@ contains
 !DML
          livestemc_to_litter       => iso_cnveg_carbonflux_inst%livestemc_to_litter_patch     , & ! Input:  [real(r8) (:)   ]
          grainc_to_food            => iso_cnveg_carbonflux_inst%grainc_to_food_patch          , & ! Input:  [real(r8) (:)   ]
-         
-         ! Y. Cheng
-         biofuelc_harvest          => iso_cnveg_carbonflux_inst%biofuelc_harvest_patch        , & ! Input:  [real(r8) (:)   ]
+         leafc_to_biofuelc         => iso_cnveg_carbonflux_inst%leafc_to_biofuelc_patch       , & ! Input:  [real(r8) (:)   ]
+         livestemc_to_biofuelc     => iso_cnveg_carbonflux_inst%livestemc_to_biofuelc_patch   , & ! Input:  [real(r8) (:)   ]
 !DML
          phenology_c_to_litr_met_c => iso_cnveg_carbonflux_inst%phenology_c_to_litr_met_c_col , & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
          phenology_c_to_litr_cel_c => iso_cnveg_carbonflux_inst%phenology_c_to_litr_cel_c_col , & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
@@ -1242,18 +1245,15 @@ contains
                              + livestemc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                         phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
                              + livestemc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-						! Y. Cheng
+
                         if (.not. use_grainproduct) then
                          ! grain litter carbon fluxes
                            phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                              + grainc_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j) &
-                              + biofuelc_harvest(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                              + grainc_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                            phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                              + grainc_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j) &
-                              + biofuelc_harvest(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                              + grainc_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                            phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                              + grainc_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j) &
-                              + biofuelc_harvest(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                              + grainc_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                         end if
 
                      end if
