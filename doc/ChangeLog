@@ -80,12 +80,16 @@ CTSM testing:
     cheyenne ---- ok
     izumi ------- pass
 
-Two test failures:
+  Two test failures:
 
     PEND SMS_D_Vnuopc.f10_f10_musgs.I2000Clm50SpRsGs.cheyenne_intel.clm-default SHAREDLIB_BUILD
        I have added this to the expected fails list for now
     FAIL SMS_P720x1_Ln6.hcru_hcru.I2000Clm50BgcCruGs.cheyenne_intel.clm-coldStart BASELINE ctsm1.0.dev084: ERROR BFAIL baseline directory '/glade/p/cgd/tss/ctsm_baselines/ctsm1.0.dev084/SMS_P720x1_Ln6.hcru_hcru.I2000Clm50BgcCruGs.cheyenne_intel.clm-coldStart' does not exist
        This test was added in the previous tag, but apparently wasn't run from there
+
+  Note: I did testing using cime hash
+  4f1880756a66ff12d304937d3c166d451ea50cf9, then updated to the tag
+  (cime5.8.17). The two are identical except for the cime ChangeLog.
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
