@@ -661,7 +661,6 @@ contains
     call ncd_io('leafcn', this%leafcn, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     
-    ! Y. Cheng, harvest fraction for crops during offset period
     call ncd_io('harvfrac', this%harvfrac, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
