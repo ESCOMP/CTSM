@@ -562,9 +562,9 @@ contains
     ! The mediator is sending ndep in units if kgN/m2/s - and ctsm uses units of gN/m2/sec
     ! so the following conversion needs to happen
 
-    call state_getimport(importState, 'Faxa_nhx', bounds, output=forc_nhx, ungridded_index=1, rc=rc )
+    call state_getimport(importState, 'Faxa_ndep', bounds, output=forc_nhx, ungridded_index=1, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport(importState, 'Faxa_noy', bounds, output=forc_noy, ungridded_index=2, rc=rc )
+    call state_getimport(importState, 'Faxa_ndep', bounds, output=forc_noy, ungridded_index=2, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do g = begg,endg
        atm2lnd_inst%forc_ndep_grc(g) = (forc_nhx(g) + forc_noy(g))*1000._r8
@@ -1027,7 +1027,7 @@ contains
                   ESMF_LOGMSG_INFO)
              ! Create the scalar field
              call SetScalarField(field, flds_scalar_name, flds_scalar_num, rc=rc)
-             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
           else
              ! Create the field
              if (fldlist(n)%ungridded_lbound > 0 .and. fldlist(n)%ungridded_ubound > 0) then
@@ -1038,7 +1038,7 @@ contains
                 if (ChkErr(rc,__LINE__,u_FILE_u)) return
              else
                 field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name=stdname, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-                if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+                if (ChkErr(rc,__LINE__,u_FILE_u)) return
              end if
              call ESMF_LogWrite(trim(subname)//trim(tag)//" Field = "//trim(stdname)//" is connected using mesh", &
                   ESMF_LOGMSG_INFO)
@@ -1046,13 +1046,13 @@ contains
 
           ! NOW call NUOPC_Realize
           call NUOPC_Realize(state, field=field, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
        else
           if (stdname /= trim(flds_scalar_name)) then
              call ESMF_LogWrite(subname // trim(tag) // " Field = "// trim(stdname) // " is not connected.", &
                   ESMF_LOGMSG_INFO)
              call ESMF_StateRemove(state, (/stdname/), rc=rc)
-             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
           end if
        end if
     end do
