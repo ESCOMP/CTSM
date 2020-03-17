@@ -328,7 +328,7 @@ contains
        call CNLivewoodTurnover(num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
-       call CNGrainToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
+       call CNCropHarvestToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
             cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        ! gather all patch-level litterfall fluxes to the column for litter C and N inputs
@@ -2474,11 +2474,11 @@ contains
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
                
                ! Cut a certain fraction (i.e., harvfrac(ivt(p))) (e.g., harvfrac(ivt(p)=70% for bioenergy crops) of leaf C
-			   ! and move this fration of leaf C to biofuel C, rather than move it to litter
-			   leafc_to_litter(p)  = t1 * leafc(p)*(1._r8-harvfrac(ivt(p)))  + cpool_to_leafc(p)
-			   leafc_to_biofuelc(p) = t1 * leafc(p) * harvfrac(ivt(p))
-			   leafn_to_biofueln(p) = t1 * leafn(p) * harvfrac(ivt(p))
-               
+               ! and move this fration of leaf C to biofuel C, rather than move it to litter
+               leafc_to_litter(p)  = t1 * leafc(p)*(1._r8-harvfrac(ivt(p)))  + cpool_to_leafc(p)
+               leafc_to_biofuelc(p) = t1 * leafc(p) * harvfrac(ivt(p))
+               leafn_to_biofueln(p) = t1 * leafn(p) * harvfrac(ivt(p))
+
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
                if (ivt(p) >= npcropmin) then
@@ -2489,14 +2489,14 @@ contains
                   grainc_to_seed(p) = t1 * min(-cropseedc_deficit(p), grainc(p))
                   grainn_to_seed(p) = t1 * min(-cropseedn_deficit(p), grainn(p))
                   ! Send the remaining grain to the food product pool
-				  grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) - grainc_to_seed(p)
+                  grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) - grainc_to_seed(p)
                   grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p) - grainn_to_seed(p)
 
-				  ! Cut a certain fraction (i.e., harvfrac(ivt(p))) (e.g., harvfrac(ivt(p)=70% for bioenergy crops) of livestem C
-			      ! and move this fration of leaf C to biofuel C, rather than move it to litter
+                  ! Cut a certain fraction (i.e., harvfrac(ivt(p))) (e.g., harvfrac(ivt(p)=70% for bioenergy crops) of livestem C
+                  ! and move this fration of leaf C to biofuel C, rather than move it to litter
                   livestemc_to_litter(p) = t1 * livestemc(p)*(1._r8-harvfrac(ivt(p)))  + cpool_to_livestemc(p)
                   livestemc_to_biofuelc(p) = t1 * livestemc(p) * harvfrac(ivt(p))
-			   	  livestemn_to_biofueln(p) = t1 * livestemn(p) * harvfrac(ivt(p))           
+                  livestemn_to_biofueln(p) = t1 * livestemn(p) * harvfrac(ivt(p))           
                end if
             else
                t1 = dt * 2.0_r8 / (offset_counter(p) * offset_counter(p))
@@ -2833,12 +2833,12 @@ contains
   end subroutine CNLivewoodTurnover
 
   !-----------------------------------------------------------------------
-  subroutine CNGrainToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
+  subroutine CNCropHarvestToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
-    ! If using prognostic crop along with use_grainproduct, then move the patch-level
-    ! grain-to-food fluxes into the column-level grain-to-cropprod fluxes
+    ! If using prognostic crop, then move any necessary harvested amounts into fluxes
+    ! destined for the product pools.
     !
     ! !USES:
     use clm_varctl    , only : use_crop
@@ -2857,19 +2857,12 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fp, p
 
-    character(len=*), parameter :: subname = 'CNGrainToProductPools'
+    character(len=*), parameter :: subname = 'CNCropHarvestToProductPools'
     !-----------------------------------------------------------------------
 
-    ! Explicitly checking use_crop is probably unnecessary here (because presumably
-    ! use_grainproduct is only true if use_crop is true), but we do it for safety because
-    ! the grain*_to_food_patch fluxes are not set if use_crop is false.
-    if (use_crop .and. use_grainproduct) then
+    if (use_crop) then
        do fp = 1, num_soilp
           p = filter_soilp(fp)
-          cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = &
-               cnveg_carbonflux_inst%grainc_to_food_patch(p)
-          cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = &
-               cnveg_nitrogenflux_inst%grainn_to_food_patch(p)
           cnveg_carbonflux_inst%biofuelc_to_cropprodc_patch(p) = &
                cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p)+cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p)
           cnveg_nitrogenflux_inst%biofueln_to_cropprodn_patch(p) = &
@@ -2877,26 +2870,36 @@ contains
        end do
 
        call p2c (bounds, num_soilc, filter_soilc, &
-            cnveg_carbonflux_inst%grainc_to_cropprodc_patch(bounds%begp:bounds%endp), &
-            cnveg_carbonflux_inst%grainc_to_cropprodc_col(bounds%begc:bounds%endc))
-
-       call p2c (bounds, num_soilc, filter_soilc, &
-            cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(bounds%begp:bounds%endp), &
-            cnveg_nitrogenflux_inst%grainn_to_cropprodn_col(bounds%begc:bounds%endc))
-            
-       call p2c (bounds, num_soilc, filter_soilc, &
             cnveg_carbonflux_inst%biofuelc_to_cropprodc_patch(bounds%begp:bounds%endp), &
             cnveg_carbonflux_inst%biofuelc_to_cropprodc_col(bounds%begc:bounds%endc))
 
        call p2c (bounds, num_soilc, filter_soilc, &
             cnveg_nitrogenflux_inst%biofueln_to_cropprodn_patch(bounds%begp:bounds%endp), &
             cnveg_nitrogenflux_inst%biofueln_to_cropprodn_col(bounds%begc:bounds%endc))
+
+       if (use_grainproduct) then
+          do fp = 1, num_soilp
+             p = filter_soilp(fp)
+             cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = &
+                  cnveg_carbonflux_inst%grainc_to_food_patch(p)
+             cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = &
+                  cnveg_nitrogenflux_inst%grainn_to_food_patch(p)
+          end do
+
+          call p2c (bounds, num_soilc, filter_soilc, &
+               cnveg_carbonflux_inst%grainc_to_cropprodc_patch(bounds%begp:bounds%endp), &
+               cnveg_carbonflux_inst%grainc_to_cropprodc_col(bounds%begc:bounds%endc))
+
+          call p2c (bounds, num_soilc, filter_soilc, &
+               cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(bounds%begp:bounds%endp), &
+               cnveg_nitrogenflux_inst%grainn_to_cropprodn_col(bounds%begc:bounds%endc))
+       end if
+       ! No else clause: if use_grainproduct is false, then the grain*_to_cropprod fluxes
+       ! will remain at their initial value (0).
+
     end if
 
-    ! No else clause: if use_grainproduct is false, then the grain*_to_cropprod fluxes
-    ! will remain at their initial value (0).
-
-  end subroutine CNGrainToProductPools
+  end subroutine CNCropHarvestToProductPools
 
   !-----------------------------------------------------------------------
   subroutine CNLitterToColumn (bounds, num_soilc, filter_soilc,         &
