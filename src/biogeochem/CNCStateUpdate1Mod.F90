@@ -171,7 +171,6 @@ contains
          ivt                   => patch%itype                                , & ! Input:  [integer  (:)     ]  patch vegetation type                                
 
          woody                 => pftcon%woody                             , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
-         harvfrac              => pftcon%harvfrac                          , & ! Input:  cut fraction for harvest (-) 
 
          cascade_donor_pool    => decomp_cascade_con%cascade_donor_pool    , & ! Input:  [integer  (:)     ]  which pool is C taken from for a given decomposition step
          cascade_receiver_pool => decomp_cascade_con%cascade_receiver_pool , & ! Input:  [integer  (:)     ]  which pool is C added to for a given decomposition step
