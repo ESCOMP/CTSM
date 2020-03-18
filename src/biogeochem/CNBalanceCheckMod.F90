@@ -221,6 +221,7 @@ contains
          write(iulog,*)'--- Outputs ---'
          write(iulog,*)'er                       = ',er(c)*dt
          write(iulog,*)'col_fire_closs           = ',col_fire_closs(c)*dt
+         write(iulog,*)'gru_conv_cflux           = ',gru_conv_cflux(c)*dt
          write(iulog,*)'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'gru_wood_productc_gain   = ',gru_wood_productc_gain(c)*dt
