@@ -37,13 +37,13 @@
 <!-- I single point forcing -->
 
   <compset>
-    <alias>I1PtClm50SpGs</alias>
-    <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <alias>I1PtClm50SpRsGs</alias>
+    <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>I1PtClm45SpGs</alias>
-    <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I1PtClm45SpRsGs</alias>
+    <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
 <!-- I CLM50 Compsets -->
@@ -74,6 +74,12 @@
   <compset>
     <alias>I2000Clm50BgcCropRtm</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing; used in the RTM test suite -->
+  <compset>
+    <alias>I2000Clm50BgcCropRtmGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -185,6 +191,11 @@
   <compset>
     <alias>I2000Clm50FatesGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I2000Clm50FatesRsGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -326,7 +337,12 @@
     <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
-  <!-- Stub glacier needed for regional / single-point -->
+  <!-- Stub glacier / stub rof needed for regional / single-point -->
+  <compset>
+    <alias>I2000Clm45FatesRsGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
   <compset>
     <alias>I2000Clm45FatesGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_RTM_SGLC_SWAV</lname>
