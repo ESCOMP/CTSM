@@ -3163,6 +3163,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use column_varcon  , only : icol_road_perv, icol_road_imperv
     use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
     !
     ! !ARGUMENTS:
@@ -3176,6 +3177,12 @@ contains
     real(r8), intent(in)  :: fact( bounds%begc: , -nlevsno+1: )           ! used in computing tridiagonal matrix [col, lev]
     real(r8), intent(in)  :: frac_sno_eff(bounds%begc: )          ! fraction of ground covered by snow (0 to 1)
     real(r8), intent(out) :: bmatrix_snow(bounds%begc: , 1:, -nlevsno: )  ! matrix enteries
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: j,c,l                                                       ! indices
+    integer  :: fc                                                          ! lake filtered column indices
+    real(r8) :: dzm                                                         ! used in computing tridiagonal matrix
+    real(r8) :: dzp                                                         ! used in computing tridiagonal matrix
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -3187,23 +3194,124 @@ contains
 
     associate(&
          begc =>    bounds%begc                   , & ! Input:  [integer ] beginning column index
-         endc =>    bounds%endc                     & ! Input:  [integer ] ending column index
+         endc =>    bounds%endc                   ,  & ! Input:  [integer ] ending column index
+         z    =>    col%z  & ! Input:  [real(r8) (:,:)]  layer thickness (m)
          )
 
       ! Initialize
       bmatrix_snow(begc:endc, :, :) = 0.0_r8
 
-      call SetMatrix_SnowUrban(bounds, num_nolakec, filter_nolakec, nband, &
-           dhsdT( begc:endc ),                                             &
-           tk( begc:endc, -nlevsno+1: ),                                   &
-           fact( begc:endc, -nlevsno+1: ),                                 &
-           bmatrix_snow( begc:endc, 1:, -nlevsno: ))
+   !   call SetMatrix_SnowUrban(bounds, num_nolakec, filter_nolakec, nband, &
+   !        dhsdT( begc:endc ),                                             &
+   !       tk( begc:endc, -nlevsno+1: ),                                   &
+   !        fact( begc:endc, -nlevsno+1: ),                                 &
+   !        bmatrix_snow( begc:endc, 1:, -nlevsno: ))
 
-      call SetMatrix_SnowNonUrban(bounds, num_nolakec, filter_nolakec, nband, &
-           dhsdT( begc:endc ),                                                &
-           tk( begc:endc, -nlevsno+1: ),                                      &
-           fact( begc:endc, -nlevsno+1: ),                                    &
-           bmatrix_snow( begc:endc, 1:, -nlevsno: ))
+   !   call SetMatrix_SnowNonUrban(bounds, num_nolakec, filter_nolakec, nband, &
+   !        dhsdT( begc:endc ),                                                &
+   !        tk( begc:endc, -nlevsno+1: ),                                      &
+   !        fact( begc:endc, -nlevsno+1: ),                                    &
+   !        bmatrix_snow( begc:endc, 1:, -nlevsno: ))
+
+   !SNOW
+   ! snow non-urban columns
+      ! call SetMatrix_SnowUrbanNonRoad
+      ! urban non-road columns ---------------------------------------------------------
+      !
+      do j = -nlevsno+1,0
+        do fc = 1,num_nolakec
+           c = filter_nolakec(fc)
+           l = col%landunit(c)
+           if (lun%urbpoi(l)) then
+              if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
+                   .or. col%itype(c) == icol_roof)) then
+                 if (j >= col%snl(c)+1) then
+                    if (j == col%snl(c)+1) then
+                       dzp     = z(c,j+1)-z(c,j)
+                       bmatrix_snow(c,4,j-1) = 0._r8
+                       bmatrix_snow(c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                       if ( j /= 0) then
+                          bmatrix_snow(c,2,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                       end if
+                    else if (j <= nlevurb-1) then
+                       dzm     = (z(c,j)-z(c,j-1))
+                       dzp     = (z(c,j+1)-z(c,j))
+                       bmatrix_snow(c,4,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
+                       bmatrix_snow(c,3,j-1) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+                       if (j /= 0) then
+                          bmatrix_snow(c,2,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
+                       end if
+                    end if
+                 end if
+              end if
+           end if
+        enddo
+     end do
+
+           !
+      ! urban road columns -------------------------------------------------------------
+      !
+     do j = -nlevsno+1,0
+        do fc = 1,num_nolakec
+           c = filter_nolakec(fc)
+           l = col%landunit(c)
+           if (lun%urbpoi(l)) then
+              if (col%itype(c) == icol_road_imperv .or. col%itype(c) == icol_road_perv) then
+                 if (j >= col%snl(c)+1) then
+                    if (j == col%snl(c)+1) then
+                       dzp     = z(c,j+1)-z(c,j)
+                       bmatrix_snow(c,4,j-1) = 0._r8
+                       bmatrix_snow(c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                       if ( j /= 0) then
+                          bmatrix_snow(c,2,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                       end if
+                    else if (j <= nlevgrnd-1) then
+                       dzm     = (z(c,j)-z(c,j-1))
+                       dzp     = (z(c,j+1)-z(c,j))
+                       bmatrix_snow(c,4,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
+                       bmatrix_snow(c,3,j-1) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+                       if ( j /= 0) then
+                          bmatrix_snow(c,2,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
+                       end if
+                    end if
+                 end if
+              end if
+           end if
+        enddo
+     end do
+
+      ! 
+      ! non-urban landunits ------------------------------------------------------------
+      !
+     do j = -nlevsno+1,0
+        do fc = 1,num_nolakec
+           c = filter_nolakec(fc)
+           l = col%landunit(c)
+           if (.not. lun%urbpoi(l)) then
+              if (j >= col%snl(c)+1) then
+                 if (j == col%snl(c)+1) then
+                    dzp     = z(c,j+1)-z(c,j)
+                    bmatrix_snow(c,4,j-1) = 0._r8
+                    bmatrix_snow(c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                    if ( j /= 0) then
+                       bmatrix_snow(c,2,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                    end if
+                 else if (j <= nlevgrnd-1) then
+                    dzm     = (z(c,j)-z(c,j-1))
+                    dzp     = (z(c,j+1)-z(c,j))
+                    bmatrix_snow(c,4,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
+                    bmatrix_snow(c,3,j-1) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+                    if ( j /= 0) then
+                       bmatrix_snow(c,2,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
+                    end if
+                 end if
+              end if
+           end if
+        enddo
+     end do
+
+
+
 
     end associate
 
