@@ -4038,10 +4038,10 @@ contains
                         ! this is the snow/soil interface layer
                         dzm     = (z(c,j)-z(c,j-1))
                         dzp     = (z(c,j+1)-z(c,j))
-                        if (j /= 1) then
-                           bmatrix_soil(c,4,j) =   - frac_sno_eff(c) * (1._r8-cnfac) * fact(c,j) &
-                                * tk(c,j-1)/dzm
-                        end if
+                        !if (j /= 1) then
+                        !   bmatrix_soil(c,4,j) =   - frac_sno_eff(c) * (1._r8-cnfac) * fact(c,j) &
+                        !        * tk(c,j-1)/dzm
+                        !end if
                         bmatrix_soil(c,3,j) = 1._r8 + (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp &
                              + frac_sno_eff(c) * tk(c,j-1)/dzm) &
                              - (1._r8 - frac_sno_eff(c))*fact(c,j)*dhsdT(c)
@@ -4084,10 +4084,10 @@ contains
                      ! this is the snow/soil interface layer
                      dzm     = (z(c,j)-z(c,j-1))
                      dzp     = (z(c,j+1)-z(c,j))
-                     if (j /= 1) then
-                        bmatrix_soil(c,4,j) =   - frac_sno_eff(c) * (1._r8-cnfac) * fact(c,j) &
-                             * tk(c,j-1)/dzm
-                     end if
+                     !if (j /= 1) then
+                     !   bmatrix_soil(c,4,j) =   - frac_sno_eff(c) * (1._r8-cnfac) * fact(c,j) &
+                     !        * tk(c,j-1)/dzm
+                     !end if
                      bmatrix_soil(c,3,j) = 1._r8 + (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp &
                           + frac_sno_eff(c) * tk(c,j-1)/dzm) &
                           - (1._r8 - frac_sno_eff(c))*fact(c,j)*dhsdT(c)
