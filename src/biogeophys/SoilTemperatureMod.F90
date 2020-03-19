@@ -3928,6 +3928,7 @@ contains
     ! !USES:
     use clm_varcon     , only : cnfac
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use column_varcon  , only : icol_road_perv, icol_road_imperv
     use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
     !
     ! !ARGUMENTS:
@@ -3964,29 +3965,168 @@ contains
 
     associate(                                           &
          begc        => bounds%begc                    , & ! Input:  [integer ] beginning column index
-         endc        => bounds%endc                      & ! Input:  [integer ] ending column index
+         endc        => bounds%endc                 ,   & ! Input:  [integer ] ending column index
+         zi   =>    col%zi , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m)
+         z    =>    col%z    & ! Input:  [real(r8) (:,:)]  layer thickness (m)
          )
-
       ! Initialize
       bmatrix_soil(begc:endc, :, :) = 0.0_r8
 
-      call SetMatrix_SoilUrban(bounds, num_nolakec, filter_nolakec, nband, &
-           dhsdT( begc:endc ),                                             &
-           tk( begc:endc, -nlevsno+1: ),                                   &
-           tk_h2osfc( begc:endc ),                                         &
-           dz_h2osfc( begc:endc ),                                         &
-           fact( begc:endc, -nlevsno+1: ),                                 &
-           frac_sno_eff(begc:endc),                                        &     
-           bmatrix_soil( begc:endc, 1:, 1: ))
 
-      call SetMatrix_SoilNonUrban(bounds, num_nolakec, filter_nolakec, nband, &
-           dhsdT( begc:endc ),                                                &
-           tk( begc:endc, -nlevsno+1: ),                                      &
-           tk_h2osfc( begc:endc ),                                            &
-           dz_h2osfc( begc:endc ),                                            &
-           fact( begc:endc, -nlevsno+1: ),                                    &
-           frac_sno_eff(begc:endc),                                           &     
-           bmatrix_soil( begc:endc, 1:, 1: ))
+      !SetMatrix_SoilUrbanNonRoad
+
+      !
+      ! urban non-road columns ---------------------------------------------------------
+      !
+      do j = 1,nlevurb
+         do fc = 1,num_nolakec
+            c = filter_nolakec(fc)
+            l = col%landunit(c)
+            if (lun%urbpoi(l)) then
+               if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
+                    .or. col%itype(c) == icol_roof)) then
+                  if (j >= col%snl(c)+1) then
+                     if (j == col%snl(c)+1) then
+                        dzp     = z(c,j+1)-z(c,j)
+                        if (j /= 1) then
+                           bmatrix_soil(c,4,j) = 0._r8
+                        end if
+                        bmatrix_soil(c,3,j) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                        bmatrix_soil(c,2,j) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                     else if (j <= nlevurb-1) then
+                        dzm     = (z(c,j)-z(c,j-1))
+                        dzp     = (z(c,j+1)-z(c,j))
+                        if (j /= 1) then
+                           bmatrix_soil(c,4,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
+                        end if
+                        bmatrix_soil(c,3,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+                        bmatrix_soil(c,2,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
+                     else if (j == nlevurb) then
+                        ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
+                      ! the bottom "soil" layer and the equations are derived assuming a prognostic inner
+                      ! surface temperature.
+                        dzm     = ( z(c,j)-z(c,j-1))
+                        dzp     = (zi(c,j)-z(c,j))
+                        bmatrix_soil(c,4,j) =   - (1._r8-cnfac)*fact(c,j)*(tk(c,j-1)/dzm)
+                        bmatrix_soil(c,3,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j-1)/dzm + tk(c,j)/dzp)
+                        bmatrix_soil(c,2,j) = 0._r8
+                     end if
+                  end if
+               end if
+            end if
+         enddo
+      enddo
+
+      !
+      ! urban road columns -------------------------------------------------------------
+      !
+      do j = 1,nlevgrnd
+         do fc = 1,num_nolakec
+            c = filter_nolakec(fc)
+            l = col%landunit(c)
+            if (lun%urbpoi(l)) then
+               if (col%itype(c) == icol_road_imperv .or. col%itype(c) == icol_road_perv) then
+                  if (j >= col%snl(c)+1) then
+                     if (j == col%snl(c)+1) then
+                        dzp     = z(c,j+1)-z(c,j)
+                        if (j /= 1) then
+                           bmatrix_soil(c,4,j) = 0._r8
+                        end if
+                        bmatrix_soil(c,3,j) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                        bmatrix_soil(c,2,j) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                     else if (j == 1) then
+                        ! this is the snow/soil interface layer
+                        dzm     = (z(c,j)-z(c,j-1))
+                        dzp     = (z(c,j+1)-z(c,j))
+                        if (j /= 1) then
+                           bmatrix_soil(c,4,j) =   - frac_sno_eff(c) * (1._r8-cnfac) * fact(c,j) &
+                                * tk(c,j-1)/dzm
+                        end if
+                        bmatrix_soil(c,3,j) = 1._r8 + (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp &
+                             + frac_sno_eff(c) * tk(c,j-1)/dzm) &
+                             - (1._r8 - frac_sno_eff(c))*fact(c,j)*dhsdT(c)
+                        bmatrix_soil(c,2,j) = - (1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                     else if (j <= nlevgrnd-1) then
+                        dzm     = (z(c,j)-z(c,j-1))
+                        dzp     = (z(c,j+1)-z(c,j))
+                        bmatrix_soil(c,4,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
+                        bmatrix_soil(c,3,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+                        bmatrix_soil(c,2,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
+                     else if (j == nlevgrnd) then
+                        dzm     = (z(c,j)-z(c,j-1))
+                        bmatrix_soil(c,4,j) =   - (1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
+                        bmatrix_soil(c,3,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
+                        bmatrix_soil(c,2,j) = 0._r8
+                     end if
+                  end if
+               end if
+            end if
+         enddo
+      end do
+
+     !
+      ! non-urban columns --------------------------------------------------------------
+      !
+      do j = 1,nlevgrnd
+         do fc = 1,num_nolakec
+            c = filter_nolakec(fc)
+            l = col%landunit(c)
+            if (.not. lun%urbpoi(l)) then
+               if (j >= col%snl(c)+1) then
+                  if (j == col%snl(c)+1) then
+                     dzp     = z(c,j+1)-z(c,j)
+                     if (j /= 1) then
+                        bmatrix_soil(c,4,j) = 0._r8
+                     end if
+                     bmatrix_soil(c,3,j) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                     bmatrix_soil(c,2,j) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                  else if (j == 1) then
+                     ! this is the snow/soil interface layer
+                     dzm     = (z(c,j)-z(c,j-1))
+                     dzp     = (z(c,j+1)-z(c,j))
+                     if (j /= 1) then
+                        bmatrix_soil(c,4,j) =   - frac_sno_eff(c) * (1._r8-cnfac) * fact(c,j) &
+                             * tk(c,j-1)/dzm
+                     end if
+                     bmatrix_soil(c,3,j) = 1._r8 + (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp &
+                          + frac_sno_eff(c) * tk(c,j-1)/dzm) &
+                          - (1._r8 - frac_sno_eff(c))*fact(c,j)*dhsdT(c)
+                     bmatrix_soil(c,2,j) = - (1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                  else if (j <= nlevgrnd-1) then
+                     dzm     = (z(c,j)-z(c,j-1))
+                     dzp     = (z(c,j+1)-z(c,j))
+                     bmatrix_soil(c,4,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
+                     bmatrix_soil(c,3,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+                     bmatrix_soil(c,2,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
+                  else if (j == nlevgrnd) then
+                     dzm     = (z(c,j)-z(c,j-1))
+                     bmatrix_soil(c,4,j) =   - (1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
+                     bmatrix_soil(c,3,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
+                     bmatrix_soil(c,2,j) = 0._r8
+                  end if
+               end if
+            end if
+         enddo
+      end do
+
+
+      !call SetMatrix_SoilUrban(bounds, num_nolakec, filter_nolakec, nband, &
+      !     dhsdT( begc:endc ),                                             &
+      !     tk( begc:endc, -nlevsno+1: ),                                   &
+      !     tk_h2osfc( begc:endc ),                                         &
+      !     dz_h2osfc( begc:endc ),                                         &
+      !     fact( begc:endc, -nlevsno+1: ),                                 &
+      !     frac_sno_eff(begc:endc),                                        &     
+      !     bmatrix_soil( begc:endc, 1:, 1: ))
+
+      !call SetMatrix_SoilNonUrban(bounds, num_nolakec, filter_nolakec, nband, &
+      !     dhsdT( begc:endc ),                                                &
+      !     tk( begc:endc, -nlevsno+1: ),                                      &
+      !     tk_h2osfc( begc:endc ),                                            &
+      !     dz_h2osfc( begc:endc ),                                            &
+      !     fact( begc:endc, -nlevsno+1: ),                                    &
+      !     frac_sno_eff(begc:endc),                                           &     
+      !     bmatrix_soil( begc:endc, 1:, 1: ))
 
       ! the solution will be organized as (snow:h2osfc:soil) to minimize
       !     bandwidth; this requires a 5-element band instead of 3
