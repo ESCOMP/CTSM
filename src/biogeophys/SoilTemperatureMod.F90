@@ -2975,12 +2975,13 @@ contains
            tk( begc:endc, -nlevsno+1: ),                              &
            fact( begc:endc, -nlevsno+1: ),                            &
            frac_sno_eff(begc:endc),                                   &
-           bmatrix_snow( begc:endc, 1:, -nlevsno: ))
-
-      call SetMatrix_Snow_Soil(bounds, num_nolakec, filter_nolakec, nband, &
-           tk( begc:endc, -nlevsno+1: ),                                   &
-           fact( begc:endc, -nlevsno+1: ),                                 &
+           bmatrix_snow( begc:endc, 1:, -nlevsno: ),                   &
            bmatrix_snow_soil( begc:endc, 1:, -1: ))
+
+      !call SetMatrix_Snow_Soil(bounds, num_nolakec, filter_nolakec, nband, &
+      !     tk( begc:endc, -nlevsno+1: ),                                   &
+      !     fact( begc:endc, -nlevsno+1: ),                                 &
+      !     bmatrix_snow_soil( begc:endc, 1:, -1: ))
 
       call SetMatrix_Soil(bounds, num_nolakec, filter_nolakec, nband, &
            dhsdT( begc:endc ),                                        &
@@ -3155,7 +3156,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SetMatrix_Snow(bounds, num_nolakec, filter_nolakec, nband, &
-       dhsdT, tk, fact, frac_sno_eff, bmatrix_snow)
+       dhsdT, tk, fact, frac_sno_eff, bmatrix_snow, bmatrix_snow_soil)
     !
     ! !DESCRIPTION:
     ! Setup the matrix entries corresponding to internal snow layers
@@ -3177,6 +3178,7 @@ contains
     real(r8), intent(in)  :: fact( bounds%begc: , -nlevsno+1: )           ! used in computing tridiagonal matrix [col, lev]
     real(r8), intent(in)  :: frac_sno_eff(bounds%begc: )          ! fraction of ground covered by snow (0 to 1)
     real(r8), intent(out) :: bmatrix_snow(bounds%begc: , 1:, -nlevsno: )  ! matrix enteries
+    real(r8), intent(out) :: bmatrix_snow_soil(bounds%begc: , 1:,-1: )    ! matrix enteries
     !
     ! !LOCAL VARIABLES:
     integer  :: j,c,l                                                       ! indices
@@ -3191,7 +3193,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(fact)           == (/bounds%endc, nlevgrnd/)),   sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(frac_sno_eff)   == (/bounds%endc/)),             sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(bmatrix_snow)   == (/bounds%endc, nband, -1/)),  sourcefile, __LINE__)
-
+    SHR_ASSERT_ALL_FL((ubound(bmatrix_snow_soil)   == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
     associate(&
          begc =>    bounds%begc                   , & ! Input:  [integer ] beginning column index
          endc =>    bounds%endc                   ,  & ! Input:  [integer ] ending column index
@@ -3200,6 +3202,8 @@ contains
 
       ! Initialize
       bmatrix_snow(begc:endc, :, :) = 0.0_r8
+      bmatrix_snow_soil(begc:endc, :, :) = 0.0_r8
+
 
    !   call SetMatrix_SnowUrban(bounds, num_nolakec, filter_nolakec, nband, &
    !        dhsdT( begc:endc ),                                             &
@@ -3230,6 +3234,9 @@ contains
                        dzp     = z(c,j+1)-z(c,j)
                        bmatrix_snow(c,4,j-1) = 0._r8
                        bmatrix_snow(c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                       if ( j == 0) then
+                           bmatrix_snow_soil(c,1,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                       end if
                        if ( j /= 0) then
                           bmatrix_snow(c,2,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
                        end if
@@ -3238,6 +3245,9 @@ contains
                        dzp     = (z(c,j+1)-z(c,j))
                        bmatrix_snow(c,4,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
                        bmatrix_snow(c,3,j-1) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+                       if ( j == 0) then
+                           bmatrix_snow_soil(c,1,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
+                       end if
                        if (j /= 0) then
                           bmatrix_snow(c,2,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
                        end if
@@ -3262,6 +3272,9 @@ contains
                        dzp     = z(c,j+1)-z(c,j)
                        bmatrix_snow(c,4,j-1) = 0._r8
                        bmatrix_snow(c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                       if ( j == 0) then
+                           bmatrix_snow_soil(c,1,j-1) = -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                       end if
                        if ( j /= 0) then
                           bmatrix_snow(c,2,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
                        end if
@@ -3270,6 +3283,9 @@ contains
                        dzp     = (z(c,j+1)-z(c,j))
                        bmatrix_snow(c,4,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
                        bmatrix_snow(c,3,j-1) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+                       if ( j == 0) then
+                           bmatrix_snow_soil(c,1,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
+                       end if
                        if ( j /= 0) then
                           bmatrix_snow(c,2,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
                        end if
@@ -3293,6 +3309,9 @@ contains
                     dzp     = z(c,j+1)-z(c,j)
                     bmatrix_snow(c,4,j-1) = 0._r8
                     bmatrix_snow(c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                    if ( j == 0) then
+                        bmatrix_snow_soil(c,1,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                    end if
                     if ( j /= 0) then
                        bmatrix_snow(c,2,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
                     end if
@@ -3301,6 +3320,9 @@ contains
                     dzp     = (z(c,j+1)-z(c,j))
                     bmatrix_snow(c,4,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
                     bmatrix_snow(c,3,j-1) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+                    if ( j == 0) then
+                        bmatrix_snow_soil(c,1,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
+                    end if
                     if ( j /= 0) then
                        bmatrix_snow(c,2,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
                     end if
@@ -3309,8 +3331,6 @@ contains
            end if
         enddo
      end do
-
-
 
 
     end associate
