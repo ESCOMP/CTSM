@@ -532,7 +532,7 @@ contains
     end if
     call restartvar(ncid=ncid, flag=flag, varname='ZISNO', xtype=ncd_double,  & 
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno, upperb2=-1, &
-         long_name='snow interface depth', units='m', &
+         long_name='snow interface depth at the top of the given layer', units='m', &
          interpinic_flag='interp', readvar=readvar, data=temp2d)
     if (flag == 'read') then
        col%zi(bounds%begc:bounds%endc,-nlevsno:-1) = temp2d(bounds%begc:bounds%endc,-nlevsno:-1) 
