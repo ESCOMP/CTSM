@@ -299,7 +299,7 @@ contains
 
        call CNSeasonDecidPhenology(num_soilp, filter_soilp, &
             temperature_inst, cnveg_state_inst, dgvs_inst, &
-            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, waterstatebulk_inst)
 
        call CNStressDecidPhenology(num_soilp, filter_soilp,   &
             soilstate_inst, temperature_inst, atm2lnd_inst, wateratm2lndbulk_inst, cnveg_state_inst, &
@@ -670,7 +670,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp       , &
        temperature_inst, cnveg_state_inst, dgvs_inst , &
-       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+       waterstatebulk_inst)
     !
     ! !DESCRIPTION:
     ! For coupled carbon-nitrogen code (CN).
@@ -692,12 +693,15 @@ contains
     type(cnveg_nitrogenstate_type) , intent(inout) :: cnveg_nitrogenstate_inst
     type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
+    type(waterstatebulk_type)      , intent(in)    :: waterstatebulk_inst 
     !
     ! !LOCAL VARIABLES:
     integer :: g,c,p          !indices
     integer :: fp             !lake filter patch index
     real(r8):: ws_flag        !winter-summer solstice flag (0 or 1)
     real(r8):: crit_onset_gdd !critical onset growing degree-day sum
+    real(r8):: crit_daylbirch !latitudinal gradient in arctic-boreal
+    real(r8):: onset_thresh   !lbirch: flag onset threshold
     real(r8):: soilt
     !-----------------------------------------------------------------------
 
@@ -780,7 +784,10 @@ contains
          livestemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%livestemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          deadstemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%deadstemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
-         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch      & ! Output:  [real(r8) (:)   ]                                                    
+         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
+         t10                                 =>    temperature_inst%soila10_patch                              , & ! Output:  [real(r8) (:)   ] 
+         tmin10                              =>    temperature_inst%t_a10min_patch                             , & ! Output:  [real(r8) (:)   ] 
+         snow_depth                          =>    waterstate_inst%snow_10day                                    & ! Output:  [real(r8) (:)   ] 
          )
 
       ! start patch loop
@@ -907,13 +914,21 @@ contains
                if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
                   onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
                end if
+               !seperate into Arctic boreal and lower latitudes
+               if (onset_gdd(p) > crit_onset_gdd .and. abs(grc%latdeg(g))<45.0_r8) then
+                  onset_thresh=1.0_r8
+               else if (onset_gddflag(p) == 1.0_r8 .and. t10(p) > SHR_CONST_TKFRZ .and. tmin10(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. dayl(g)>(crit_dayl/2.0_r8) .and. snow_depth(c)<0.1_r8) then
+                  onset_thresh=1.0_r8
+               end if
+
 
                ! set onset_flag if critical growing degree-day sum is exceeded
-               if (onset_gdd(p) > crit_onset_gdd) then
+               if (onset_thresh == 1.0_r8) then
                   onset_flag(p) = 1.0_r8
                   dormant_flag(p) = 0.0_r8
                   onset_gddflag(p) = 0.0_r8
                   onset_gdd(p) = 0.0_r8
+                  onset_thresh = 0.0_r8
                   onset_counter(p) = ndays_on * secspday
 
                   ! move all the storage pools into transfer pools,
@@ -954,9 +969,15 @@ contains
                   days_active(p) = days_active(p) + fracday
                   if (days_active(p) > 355._r8) pftmayexist(p) = .false.
                end if
-
+               ! use 15 hr max to ~11hours in temperate regions
                ! only begin to test for offset daylength once past the summer sol
-               if (ws_flag == 0._r8 .and. dayl(g) < crit_dayl) then
+               crit_daylbirch=54000-360*(65-grc%latdeg(g))
+               if (crit_daylbirch < crit_dayl) then
+                  crit_daylbirch = crit_dayl
+               end if
+
+               !print*,'lbirch',crit_daylbirch
+               if (ws_flag == 0._r8 .and. dayl(g) < crit_daylbirch) then
                   offset_flag(p) = 1._r8
                   offset_counter(p) = ndays_off * secspday
                   prev_leafc_to_litter(p) = 0._r8
