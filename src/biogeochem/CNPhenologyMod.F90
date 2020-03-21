@@ -786,7 +786,7 @@ contains
          livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
          deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
          t10                                 =>    temperature_inst%soila10_patch                              , & ! Output:  [real(r8) (:)   ] 
-         tmin10                              =>    temperature_inst%t_a10min_patch                             , & ! Output:  [real(r8) (:)   ] 
+         tmin5                               =>    temperature_inst%t_a5min_patch                             , & ! Output:  [real(r8) (:)   ] 
          snow_depth                          =>    waterstate_inst%snow_10day                                    & ! Output:  [real(r8) (:)   ] 
          )
 
@@ -917,7 +917,7 @@ contains
                !seperate into Arctic boreal and lower latitudes
                if (onset_gdd(p) > crit_onset_gdd .and. abs(grc%latdeg(g))<45.0_r8) then
                   onset_thresh=1.0_r8
-               else if (onset_gddflag(p) == 1.0_r8 .and. t10(p) > SHR_CONST_TKFRZ .and. tmin10(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. dayl(g)>(crit_dayl/2.0_r8) .and. snow_depth(c)<0.1_r8) then
+               else if (onset_gddflag(p) == 1.0_r8 .and. t10(p) > SHR_CONST_TKFRZ .and. tmin5(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. dayl(g)>(crit_dayl/2.0_r8) .and. snow_depth(c)<0.1_r8) then
                   onset_thresh=1.0_r8
                end if
 
