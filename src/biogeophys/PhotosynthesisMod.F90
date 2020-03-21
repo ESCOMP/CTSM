@@ -183,6 +183,8 @@ module  PhotosynthesisMod
      ! LUNA specific variables
      real(r8), pointer, public  :: vcmx25_z_patch    (:,:) ! patch  leaf Vc,max25 (umol CO2/m**2/s) for canopy layer 
      real(r8), pointer, public  :: jmx25_z_patch     (:,:) ! patch  leaf Jmax25 (umol electron/m**2/s) for canopy layer 
+     real(r8), pointer, public  :: vcmx_prevyr       (:,:) ! patch  leaf Vc,max25 previous year avg
+     real(r8), pointer, public  :: jmx2_prevyr       (:,:) ! patch  leaf Jmax25 previous year avg
      real(r8), pointer, public  :: pnlc_z_patch      (:,:) ! patch proportion of leaf nitrogen allocated for light capture for canopy layer
      real(r8), pointer, public  :: enzs_z_patch      (:,:) ! enzyme decay status 1.0-fully active; 0-all decayed during stress
      real(r8), pointer, public  :: fpsn24_patch      (:)   ! 24 hour mean patch photosynthesis (umol CO2/m**2 ground/day)
@@ -328,6 +330,8 @@ contains
       ! statements.
       allocate(this%vcmx25_z_patch  (begp:endp,1:nlevcan)) ; this%vcmx25_z_patch    (:,:) = 30._r8
       allocate(this%jmx25_z_patch   (begp:endp,1:nlevcan)) ; this%jmx25_z_patch     (:,:) = 60._r8 
+      allocate(this%vcmx_prevyr     (begp:endp,1:nlevcan)) ; this%vcmx_prevyr       (:,:) = 30._r8
+      allocate(this%jmx_prevyr      (begp:endp,1:nlevcan)) ; this%jmx_prevyr        (:,:) = 60._r8
       allocate(this%pnlc_z_patch    (begp:endp,1:nlevcan)) ; this%pnlc_z_patch      (:,:) = 0.01_r8
       allocate(this%fpsn24_patch    (begp:endp))           ; this%fpsn24_patch      (:)   = nan
       allocate(this%enzs_z_patch    (begp:endp,1:nlevcan)) ; this%enzs_z_patch      (:,:) = 1._r8
@@ -833,6 +837,14 @@ contains
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='Maximum carboxylation rate at 25 celcius for canopy layers', units='umol CO2/m**2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%jmx25_z_patch)
+      call restartvar(ncid=ncid, flag=flag, varname='vcmx_prevyr', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
+         long_name='avg carboxylation rate at 25 celcius for canopy layers', units='umol CO2/m**2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%vcmx_prevyr)
+      call restartvar(ncid=ncid, flag=flag, varname='jmx_prevyr', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
+         long_name='avg carboxylation rate at 25 celcius for canopy layers', units='umol CO2/m**2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%jmx_prevyr)
       call restartvar(ncid=ncid, flag=flag, varname='pnlc_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='proportion of leaf nitrogen allocated for light capture', units='unitless', &
@@ -2791,18 +2803,18 @@ contains
       kcha    = 79430._r8
       koha    = 36380._r8
       cpha    = 37830._r8
-      vcmaxha = 72000._r8
-      jmaxha  = 50000._r8
-      tpuha   = 72000._r8
+      vcmaxha = 73637._r8
+      jmaxha  = 50300._r8
+      tpuha   = 73637._r8
       lmrha   = 46390._r8
 
       ! High temperature deactivation, from:
       ! Leuning (2002) Plant, Cell and Environment 25:1205-1210
       ! The factor "c" scales the deactivation to a value of 1.0 at 25C
 
-      vcmaxhd = 200000._r8
-      jmaxhd  = 200000._r8
-      tpuhd   = 200000._r8
+      vcmaxhd = 149252._r8
+      jmaxhd  = 152044._r8
+      tpuhd   = 149252._r8
       lmrhd   = 150650._r8
       lmrse   = 490._r8
       lmrc    = fth25 (lmrhd, lmrse)
@@ -3162,9 +3174,10 @@ contains
                kp25_sha = kp25top * nscaler_sha
 
                ! Adjust for temperature
-
-               vcmaxse = 668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
-               jmaxse  = 659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
+               vcmaxse = 486.0_r8
+               jmaxse  = 495.0_r8
+               !vcmaxse = 668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
+               !jmaxse  = 659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
                tpuse = vcmaxse
                vcmaxc = fth25 (vcmaxhd, vcmaxse)
                jmaxc  = fth25 (jmaxhd, jmaxse)
