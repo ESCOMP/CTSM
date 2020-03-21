@@ -254,15 +254,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_P720x1_Ln6" grid="hcru_hcru" compset="I2000Clm50BgcCruGs" testmods="clm/coldStart">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:10:00</option>
-      <option name="comment"  >Very short test at the hcru resolution just to make sure we can run a case at this resolution. Cold start to avoid the cost of interpolating initial conditions.</option>
-    </options>
-  </test>
   <test name="ERP_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50Sp" testmods="clm/decStart">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
