@@ -453,13 +453,17 @@ contains
     call hist_addfld1d (fname='T10', units='K',  &
          avgflag='A', long_name='10-day running mean of 2-m temperature', &
          ptr_patch=this%t_a10_patch, default='inactive')
-
-    if (use_cn .and.  use_crop )then
-       this%t_a5min_patch(begp:endp) = spval
-       call hist_addfld1d (fname='A5TMIN', units='K',  &
-            avgflag='A', long_name='5-day running mean of min 2-m temperature', &
-            ptr_patch=this%t_a5min_patch, default='inactive')
-    end if
+    
+    this%soila10_patch(begp:endp) = spval
+    call hist_addfld1d (fname='SOIL10', units='K',  &
+         avgflag='A', long_name='10-day running mean of 3rd layer soil', &
+         ptr_patch=this%soila10_patch, default='inactive')
+    !if (use_cn .and.  use_crop )then
+    this%t_a5min_patch(begp:endp) = spval
+    call hist_addfld1d (fname='A5TMIN', units='K',  &
+         avgflag='A', long_name='5-day running mean of min 2-m temperature', &
+         ptr_patch=this%t_a5min_patch, default='inactive')
+    !end if
 
     if (use_cn .and. use_crop )then
        this%t_a10min_patch(begp:endp) = spval
@@ -1163,6 +1167,12 @@ contains
     call init_accum_field (name='T10', units='K', &
          desc='10-day running mean of 2-m temperature', accum_type='runmean', accum_period=-10, &
          subgrid_type='pft', numlev=1,init_value=SHR_CONST_TKFRZ+20._r8)
+    call init_accum_field (name='SOIL10', units='K', &
+         desc='10-day running mean of 3rd layer soil temp.', accum_type='runmean', accum_period=-10, &
+         subgrid_type='pft', numlev=1,init_value=SHR_CONST_TKFRZ)
+    call init_accum_field (name='TDM5', units='K', &
+         desc='5-day running mean of min 2-m temperature', accum_type='runmean', accum_period=-5, &
+         subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
 
     if ( use_crop )then
        call init_accum_field (name='TDM10', units='K', &
@@ -1248,7 +1258,12 @@ contains
 
     call extract_accum_field ('T10', rbufslp, nstep)
     this%t_a10_patch(begp:endp) = rbufslp(begp:endp)
+    
+    call extract_accum_field ('SOIL10', rbufslp, nstep)
+    this%t_a10_patch(begp:endp) = rbufslp(begp:endp)
 
+    call extract_accum_field ('TDM5', rbufslp, nstep)
+    this%t_a5min_patch(begp:endp) = rbufslp(begp:endp)
     if (use_crop) then
        call extract_accum_field ('TDM10', rbufslp, nstep)
        this%t_a10min_patch(begp:endp)= rbufslp(begp:endp)
@@ -1432,6 +1447,22 @@ contains
 
     call update_accum_field  ('T10', this%t_ref2m_patch, nstep)
     call extract_accum_field ('T10', this%t_a10_patch, nstep)
+    
+    do p = begp,endp    
+       c = patch%column(p)  
+       rbufslp(p) = this%t_soisno_col(c,3)      
+    end do
+    call update_accum_field  ('SOIL10', rbufslp, nstep)
+    call extract_accum_field ('SOIL10', this%soila10_patch, nstep)
+    
+    ! Accumulate and extract TDM5
+
+    do p = begp,endp
+       rbufslp(p) = min(this%t_ref2m_min_patch(p),this%t_ref2m_min_inst_patch(p)) !slevis: ok choice?
+       if (rbufslp(p) > 1.e30_r8) rbufslp(p) = SHR_CONST_TKFRZ !and were 'min'&
+    end do                                         !'min_inst' not initialized?
+    call update_accum_field  ('TDM5', rbufslp, nstep)
+    call extract_accum_field ('TDM5', this%t_a5min_patch, nstep)
 
     if ( use_crop )then
        ! Accumulate and extract TDM10
@@ -1443,14 +1474,7 @@ contains
        call update_accum_field  ('TDM10', rbufslp, nstep)
        call extract_accum_field ('TDM10', this%t_a10min_patch, nstep)
 
-       ! Accumulate and extract TDM5
 
-       do p = begp,endp
-          rbufslp(p) = min(this%t_ref2m_min_patch(p),this%t_ref2m_min_inst_patch(p)) !slevis: ok choice?
-          if (rbufslp(p) > 1.e30_r8) rbufslp(p) = SHR_CONST_TKFRZ !and were 'min'&
-       end do                                         !'min_inst' not initialized?
-       call update_accum_field  ('TDM5', rbufslp, nstep)
-       call extract_accum_field ('TDM5', this%t_a5min_patch, nstep)
 
        ! Accumulate and extract GDD0
 

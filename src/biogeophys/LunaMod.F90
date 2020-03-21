@@ -306,7 +306,9 @@ module LunaMod
     vcmx25_z      => photosyns_inst%vcmx25_z_patch                    , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 (umol/m2 leaf/s) for canopy layer 
     jmx25_z       => photosyns_inst%jmx25_z_patch                     , & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 (umol electron/m**2/s) for canopy layer
     pnlc_z        => photosyns_inst%pnlc_z_patch                      , & ! Output: [real(r8) (:,:) ] patch proportion of leaf nitrogen allocated for light capture for canopy layer 
-    enzs_z        => photosyns_inst%enzs_z_patch                        & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
+    enzs_z        => photosyns_inst%enzs_z_patch                      , & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
+    vcmx_prevyr   => photosyns_inst%vcmx_prevyr                       , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 from previous year avg
+    jmx_prevyr    => photosyns_inst%jmx_prevyr                          & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from previous year avg
     )  
     !----------------------------------------------------------------------------------------------------------------------------------------------------------
     !set timestep
@@ -332,7 +334,7 @@ module LunaMod
          hourpd = dayl(g) / 3600._r8             
          tleafd10 = t_veg10_day(p) - tfrz
          tleafn10 = t_veg10_night(p) - tfrz
-         tleaf10  = (dayl(g)*tleafd10 +(86400._r8-dayl(g)) * tleafd10)/86400._r8 	     
+         tleaf10  = (dayl(g)*tleafd10 +(86400._r8-dayl(g)) * tleafn10)/86400._r8 	     
          tair10 = t10(p)- tfrz
          relh10 = min(1.0_r8, rh10_p(p))  
 	 rb10v = rb10_p(p)	     
@@ -409,11 +411,15 @@ module LunaMod
                           
                          chg = vcmx25_opt-vcmx25_z(p, z)
                          chg_constrn = min(abs(chg),vcmx25_z(p, z)*max_daily_pchg)
+                         vcmx_prevyr(p,z) = vcmx25_z(p,z)
                          vcmx25_z(p, z)  = vcmx25_z(p, z)+sign(1.0_r8,chg)*chg_constrn
-                          
+                         vcmx_prevyr(p,z) = (vcmx_prevyr(p,z)+vcmx25_z(p,z))/2.0_r8
+ 
                          chg = jmx25_opt-jmx25_z(p, z)
                          chg_constrn = min(abs(chg),jmx25_z(p, z)*max_daily_pchg)
+                         jmx_prevyr(p,z) = jmx25_z(p,z)
                          jmx25_z(p, z)  = jmx25_z(p, z)+sign(1.0_r8,chg)*chg_constrn 
+                         jmx_prevyr(p,z) = (jmx_prevyr(p,z)+jmx25_z(p,z))/2.0_r8
 
                          PNlc_z(p, z)= PNlcopt
 
@@ -472,8 +478,8 @@ module LunaMod
                 endif !if not C3 plants                   
          else
             do z = 1 , nrad(p)
-               jmx25_z(p, z) = 85._r8
-               vcmx25_z(p, z) = 50._r8
+               jmx25_z(p, z) = jmx_prevyr(p,z)
+               vcmx25_z(p, z) = vcmx_prevyr(p,z)
             end do
          endif !checking for LAI and LNC
      endif !the first daycheck 
@@ -792,7 +798,7 @@ end subroutine Clear24_Climate_LUNA
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
      Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp,&
      PNlcold, PNetold, PNrespold, PNcbold, &
-     PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
+     PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt, dayl_factor)
   implicit none
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
   real(r8), intent (in) :: forc_pbot10                !10-day mean air pressure (Pa)
@@ -819,7 +825,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (out):: PNetopt                    !optimal proportion of nitrogen for electron transport 
   real(r8), intent (out):: PNrespopt                  !optimal proportion of nitrogen for respiration 
   real(r8), intent (out):: PNcbopt                    !optial proportion of nitrogen for carboxyaltion  
- 
+  real(r8), intent(in)  :: dayl_factor                !lbirch: added to scaled light: 
   !-------------------------------------------------------------------------------------------------------------------------------
   !intermediate variables
   real(r8) :: Carboncost1                             !absolute amount of carbon cost associated with maintenance respiration due to deccrease in light capture nitrogen(g dry mass per day) 
@@ -897,11 +903,11 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   tleafd10c = min(max(tleafd10, Trange1), Trange2)    !constrain the physiological range
   tleafn10c = min(max(tleafn10, Trange1), Trange2)    !constrain the physiological range
   ci = 0.7_r8 * CO2a10 
-  JmaxCoef = Jmaxb1 * ((hourpd / 12.0_r8)**2.0_r8) * (1.0_r8 - exp(-relhExp * max(relh10 - minrelh, 0.0_r8) / &
+  JmaxCoef = Jmaxb1 * dayl_factor * (1.0_r8 - exp(-relhExp * max(relh10 - minrelh, 0.0_r8) / &
        (1.0_r8 - minrelh)))
   do while (PNlcoldi .NE. PNlc .and. jj < 100)      
-     Fc = VcmxTKattge(tair10, tleafd10c) * Fc25
-     Fj = JmxTKattge(tair10, tleafd10c) * Fj25
+     Fc = VcmxTLeuning(tair10, tleafd10c) * Fc25
+     Fj = JmxTLeuning(tair10, tleafd10c) * Fj25
      NUEr = Cv * NUEr25 * (RespTBernacchi(tleafd10c) * hourpd + RespTBernacchi(tleafn10c) * (24.0_r8 - hourpd)) !nitrogen use efficiency for respiration (g biomass/m2/day/g N)
      !****************************************************
      !Nitrogen Allocation Scheme: store the initial value
@@ -1054,7 +1060,7 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
     A = (1.0_r8 - theta_cj) * max(Wc, Wj) + theta_cj * min(Wc, Wj) 
   endif
   PSN = Cv * A * hourpd
-  Vcmaxnight = VcmxTKattge(tair10, tleafn10) / VcmxTKattge(tair10, tleafd10) * Vcmax
+  Vcmaxnight = VcmxTLeuning(tair10, tleafn10) / VcmxTLeuning(tair10, tleafd10) * Vcmax
   RESP = Cv * leaf_mr_vcm * (Vcmax * hourpd + Vcmaxnight * (24.0_r8 - hourpd))
   Net = Jmax / Fj
   Ncb = Vcmax / Fc
@@ -1209,8 +1215,8 @@ subroutine NUEref(NUEjref,NUEcref,Kj2Kcref)
 
   tgrow   = 25.0_r8
   tleaf   = 25.0_r8
-  Fc = VcmxTKattge(tgrow, tleaf) * Fc25
-  Fj = JmxTKattge(tgrow, tleaf) * Fj25
+  Fc = VcmxTLeuning(tgrow, tleaf) * Fc25
+  Fj = JmxTLeuning(tgrow, tleaf) * Fj25
   CO2c = co2ref * forc_pbot_ref * 1.0e-6_r8 !pa
   O2c = O2ref * forc_pbot_ref * 1.0e-6_r8   !pa
   k_c = params_inst%kc25_coef * exp((79430.0_r8 / (rgas*1.e-3_r8 * (25.0_r8 + tfrz))) * (1.0_r8 - (tfrz + 25.0_r8) / (tfrz + tleaf)))
@@ -1250,8 +1256,8 @@ subroutine NUE(O2a, ci, tgrow, tleaf, NUEj,NUEc,Kj2Kc)
   real(r8) :: awc                                     !second deminator term for rubsico limited carboxylation rate based on Farquhar model
   real(r8) :: c_p                                     !CO2 compenstation point (Pa)
   
-  Fc = VcmxTKattge(tgrow, tleaf) * Fc25
-  Fj = JmxTKattge(tgrow, tleaf) * Fj25
+  Fc = VcmxTLenuning(tgrow, tleaf) * Fc25
+  Fj = JmxTLeuning(tgrow, tleaf) * Fj25
   k_c = params_inst%kc25_coef * exp((79430.0_r8 / (rgas*1.e-3_r8 * (25.0_r8 + tfrz))) * (1.0_r8 - (tfrz + 25.0_r8) / (tfrz + tleaf)))
   k_o = params_inst%ko25_coef * exp((36380.0_r8 / (rgas*1.e-3_r8 * (25.0_r8 + tfrz))) * (1.0_r8 - (tfrz + 25.0_r8) / (tfrz + tleaf)))
   c_p = params_inst%cp25_yr2000 * exp((37830.0_r8 / (rgas*1.e-3_r8 * (25.0_r8 + tfrz))) * (1.0_r8 - (tfrz + 25.0_r8) / (tfrz + tleaf)))
