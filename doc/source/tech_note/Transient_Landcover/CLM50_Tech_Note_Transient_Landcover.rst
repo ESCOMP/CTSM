@@ -347,18 +347,18 @@ data files in the mksurfdata_map tool.
 
 .. _Figure Schematic of land cover change:
 
-.. figure:: image1.png
+.. figure:: ../../../images/tech_note/Transient_Landcover/image1.png
 
  Schematic of land cover change impacts on CLM carbon pools and fluxes.
 
 .. _Figure Schematic of translation of annual LUH2 land units:
 
-.. figure:: image2.png
+.. figure:: ../../../images/tech_note/Transient_Landcover/image2.png
 
  Schematic of translation of annual LUH2 land units to CLM5 plant and crop functional types.
  
 .. _Figure Workflow of CLM5 Land Use Data Tool and Mksurfdata_map Tool:
 
-.. figure:: image3.png
+.. figure:: ../../../images/tech_note/Transient_Landcover/image3.png
 
  Workflow of CLM5 Land Use Data Tool and Mksurfdata_map Tool

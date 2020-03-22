@@ -76,18 +76,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = [
-   "clm5.0/manage_externals",
-   "clm5.0/components",
-   "clm5.0/cime/scripts",
-   "clm5.0/cime/doc",
-   "clm5.0/cime/config",
-   "clm5.0/cime/tools/statistical_ensemble_test",
-   "clm5.0/cime/src",
-   "clm5.0/cime/utils",
-   "**/README_EXTERNALS.rst",
-   "clm5.0/README.rst"
-]
+exclude_patterns = []
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'

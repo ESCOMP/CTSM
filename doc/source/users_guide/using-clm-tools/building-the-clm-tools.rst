@@ -99,7 +99,7 @@ More details on each environment variable.
 
 The *README.filecopies* (which can be found in ``$CTSMROOT/tools``) is repeated here.
 
-.. include:: ../../clm5.0/tools/README.filecopies
+.. include:: ../../../../tools/README.filecopies
    :literal:
 
 ================================================================

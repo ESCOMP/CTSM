@@ -159,7 +159,7 @@ on leaf water potential.
 
 .. _Figure Plant hydraulic circuit:
 
-.. figure:: circuit.jpg
+.. figure:: ../../../images/tech_note/Plant_Hydraulics/circuit.jpg
 
  Circuit diagram of plant hydraulics scheme
 
@@ -714,6 +714,6 @@ The outermost level of iteration works towards convergence of leaf temperature, 
 
 .. _Figure PHS Flow Diagram:
 
-.. figure:: flow.png
+.. figure:: ../../../images/tech_note/Plant_Hydraulics/flow.png
 
  Flow diagram of leaf flux calculations

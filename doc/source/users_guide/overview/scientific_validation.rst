@@ -27,5 +27,5 @@ The IMPORTANT_NODES file goes into more details on this.
 
 The IMPORTANT_NOTES (which can be found in ``$CTSMROOT/doc``) is repeated here.
 
-.. include:: ../../clm5.0/doc/IMPORTANT_NOTES
+.. include:: ../../../IMPORTANT_NOTES
    :literal:
