@@ -12,7 +12,7 @@ total ecosystem carbon disequilibrium takes the longest to satisfy due to slow s
 
 .. _Figure BGC AD spinup plot for 1850 GSWP3:
 
-.. figure:: image3.png
+.. figure:: ../../../images/users_guide/running-special-cases/image3.png
 
  BGC AD spinup plot for a year 1850 case with GSWP3 atmospheric forcing. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
 
@@ -24,7 +24,7 @@ criteria depending on their application.
 
 .. _Figure BGC pAD spinup plot for 1850 GSWP3:
 
-.. figure:: image4.png
+.. figure:: ../../../images/users_guide/running-special-cases/image4.png
 
  BGC pAD spinup plot for a year 1850 case with GSWP3 atmospheric forcing and initialization from the end of the BGC AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
 
@@ -35,7 +35,7 @@ such as TLAI (total leaf area index), GPP (gross primary production), and TWS (t
 
 .. _Figure BGC initialized spinup plot for 1850:
 
-.. figure:: image5.png
+.. figure:: ../../../images/users_guide/running-special-cases/image5.png
 
  BGC initialized spinup plot for year 1850. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
 
@@ -44,7 +44,7 @@ Again, it takes about 10 years to reach equilibrium for TLAI, GPP, and TWS.
 
 .. _Figure BGC initialized spinup plot for 2000 CO2:
 
-.. figure:: image6.png
+.. figure:: ../../../images/users_guide/running-special-cases/image6.png
 
  BGC initialized spinup plot for year 2000 CO2.  Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
 

@@ -47,7 +47,7 @@ and discharges the water to its downstream spatial unit or the ocean.
 
 .. _Figure MOSART conceptual diagram:
 
-.. figure:: mosart_diagram.png
+.. figure:: ../../../images/tech_note/MOSART/mosart_diagram.png
     :width: 800px
     :height: 400px
 

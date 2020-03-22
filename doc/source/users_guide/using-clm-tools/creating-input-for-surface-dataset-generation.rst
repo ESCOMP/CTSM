@@ -107,7 +107,7 @@ mkmapdata.sh has a help option with the following
 
 .. _Figure mkmapdata.sh:
 
-.. figure:: mkmapdata_details.jpeg
+.. figure:: ../../../images/users_guide/using-clm-tools/mkmapdata_details.jpeg
 
   Details of running mkmapdata.sh
 

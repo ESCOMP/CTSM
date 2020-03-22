@@ -153,7 +153,7 @@ README file describing |version|
 
 The README (which can be found in ``$CTSMROOT/doc``) is repeated here.
 
-.. include:: ../../clm5.0/README
+.. include:: ../../../../README
    :literal:
 
 .. _best-practices-for-usage:

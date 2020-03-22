@@ -118,7 +118,7 @@ Where :math:`{NF}_{nfix,sminn}` (gN m\ :sup:`-2` s\ :sup:`-1`) is the rate of fr
 
 .. _Figure Biological nitrogen fixation:
 
-.. figure:: image1.png
+.. figure:: ../../../images/tech_note/External_Nitrogen_Cycle/image1.png
 
  Free-living nitrogen fixation as a function of annual evapotranspiration. Results here show annual N inputs from free-living N fixations, but the model actually calculates inputs on a per second basis.
 

@@ -36,7 +36,7 @@ depth of direct beam per unit leaf and stem area (section :numref:`Canopy Radiat
 
 .. _Figure Radiation Schematic:
 
-.. figure:: image1.png
+.. figure:: ../../../images/tech_note/Radiative_Fluxes/image1.png
 
  Schematic diagram of (a) direct beam radiation, (b) diffuse
  solar radiation, and (c) longwave radiation absorbed, transmitted, and
