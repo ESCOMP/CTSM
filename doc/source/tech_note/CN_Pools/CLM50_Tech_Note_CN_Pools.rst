@@ -35,7 +35,7 @@ variables for vegetation carbon, and 22 for vegetation nitrogen.
 
 .. _Figure Vegetation fluxes and pools:
 
-.. figure:: CLMCN_pool_structure_v2_lores.png
+.. figure:: ../../../images/tech_note/CN_Pools/CLMCN_pool_structure_v2_lores.png
     :width: 753px
     :height: 513px
 

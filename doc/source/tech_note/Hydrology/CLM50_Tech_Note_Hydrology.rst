@@ -38,7 +38,7 @@ al. 2008) <Lawrenceetal2008>` and :math:`\Delta t` is the time step (s).
 
 .. _Figure Hydrologic processes:
 
-.. Figure:: hydrologic.processes.png
+.. Figure:: ../../../images/tech_note/Hydrology/hydrologic.processes.png
 
  Hydrologic processes represented in CLM.
 
@@ -798,7 +798,7 @@ the effective root fraction :math:`r_{e,\, i}`
 
 .. _Figure Water flux schematic:
 
-.. Figure:: image2.png
+.. Figure:: ../../../images/tech_note/Hydrology/image2.png
 
  Schematic diagram of numerical scheme used to solve for soil water fluxes.
 

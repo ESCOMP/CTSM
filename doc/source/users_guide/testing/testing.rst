@@ -29,13 +29,13 @@ see the `CTSM Wiki on Testing <https://github.com/ESCOMP/ctsm/wiki/System-Testin
 CTSM Tools Testing
 ==================
 
-.. include:: ../../clm5.0/test/tools/README
+.. include:: ../../../../test/tools/README
    :literal:
 
 CTSM Fortran Unit Tests
 =======================
 
-.. include:: ../../clm5.0/src/README.unit_testing
+.. include:: ../../../../src/README.unit_testing
    :literal:
 
 CTSM Build-namelist Tests
@@ -51,11 +51,11 @@ Run the following perl tester that
 Testing PTCLM
 =============
 
-.. include:: ../../clm5.0/tools/PTCLM/README
+.. include:: ../../../../tools/PTCLM/README
    :literal:
 
 To run on cheyenne, you do the following:
 
 
-.. include:: ../../clm5.0/tools/PTCLM/test/README.run_cheyenne
+.. include:: ../../../../tools/PTCLM/test/README.run_cheyenne
    :literal:

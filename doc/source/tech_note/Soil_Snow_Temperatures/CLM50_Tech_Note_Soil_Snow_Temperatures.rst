@@ -223,7 +223,7 @@ interface of two layers
 
 .. _Figure Soil Temperature Schematic:
 
-.. figure:: image1.png
+.. figure:: ../../../images/tech_note/Soil_Snow_Temperatures/image1.png
 
  Schematic diagram of numerical scheme used to solve for soil temperature.
 

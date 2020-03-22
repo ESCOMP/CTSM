@@ -10,7 +10,7 @@ When just creating a replacement file for an existing one, the relevant tool sho
 
 .. _Figure Data_Flow:
 
-.. figure:: mkmapdata_mksurfdata.jpeg
+.. figure:: ../../../images/users_guide/using-clm-tools/mkmapdata_mksurfdata.jpeg
 
   Data Flow for Creation of Surface Datasets from Raw SCRIP Grid Files
 
@@ -20,7 +20,7 @@ Starting from a SCRIP grid file that describes the grid you will run the model o
 
 .. _Figure Data_Flow_Legend:
 
-.. figure:: LegendCLMToolDataFlow.jpeg
+.. figure:: ../../../images/users_guide/using-clm-tools/LegendCLMToolDataFlow.jpeg
 
   Legend for Data Flow Figures
 
@@ -52,6 +52,6 @@ Creating a Complete Set of Files for Input to CLM
 
 The ``$CTSMROOT/tools/README`` goes through the complete process for creating input files needed to run CLM. We repeat that file here:
 
-.. include:: ../../clm5.0/tools/README
+.. include:: ../../../../tools/README
    :literal:
 

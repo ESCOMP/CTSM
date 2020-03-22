@@ -53,7 +53,7 @@ classes.
 
 .. _Figure CLM subgrid hierarchy:
 
-.. Figure:: image1.png
+.. Figure:: ../../../images/tech_note/Ecosystem/image1.png
 
   Configuration of the CLM subgrid hierarchy.  Box in upper right shows hypothetical subgrid distribution for a single grid cell.  Note that the Crop land unit is only used when the model is run with the crop model active. Abbreviations: TBD – Tall Building District; HD – High Density; MD – Medium Density, G – Glacier, L – Lake, U – Urban, C – Crop, V – Vegetated, PFT – Plant Functional Type, Irr – Irrigated, UIrr – Unirrigated.  Red arrows indicate allowed land unit transitions.  Purple arrows indicate allowed patch-level transitions.  
 

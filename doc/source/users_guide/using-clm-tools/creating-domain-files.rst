@@ -16,7 +16,7 @@ Global Domain file creation
 
 .. _Figure Global-Domain:
 
-.. figure:: GlobalDomain.jpeg
+.. figure:: ../../../images/users_guide/using-clm-tools/GlobalDomain.jpeg
 
   Global Domain file creation
 
@@ -29,7 +29,7 @@ Domain file creation using mknoocnmap.pl
 
 .. _Figure mknoocnmap.pl:
 
-.. figure:: mknoocnmap.jpeg
+.. figure:: ../../../images/users_guide/using-clm-tools/mknoocnmap.jpeg
 
   Domain file creation using mknoocnmap.pl
 

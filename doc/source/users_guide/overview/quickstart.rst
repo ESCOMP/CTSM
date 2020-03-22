@@ -31,5 +31,5 @@ Note other directories have README files that explain different components and t
 
 The Quickstart.GUIDE (which can be found in ``$CTSMROOT/doc``) is repeated here.
 
-.. include:: ../../clm5.0/doc/Quickstart.GUIDE
+.. include:: ../../../Quickstart.GUIDE
    :literal:
