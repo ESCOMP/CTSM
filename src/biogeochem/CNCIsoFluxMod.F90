@@ -1209,8 +1209,6 @@ contains
 !DML
          livestemc_to_litter       => iso_cnveg_carbonflux_inst%livestemc_to_litter_patch     , & ! Input:  [real(r8) (:)   ]
          grainc_to_food            => iso_cnveg_carbonflux_inst%grainc_to_food_patch          , & ! Input:  [real(r8) (:)   ]
-         leafc_to_biofuelc         => iso_cnveg_carbonflux_inst%leafc_to_biofuelc_patch       , & ! Input:  [real(r8) (:)   ]
-         livestemc_to_biofuelc     => iso_cnveg_carbonflux_inst%livestemc_to_biofuelc_patch   , & ! Input:  [real(r8) (:)   ]
 !DML
          phenology_c_to_litr_met_c => iso_cnveg_carbonflux_inst%phenology_c_to_litr_met_c_col , & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
          phenology_c_to_litr_cel_c => iso_cnveg_carbonflux_inst%phenology_c_to_litr_cel_c_col , & ! InOut:  [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
