@@ -838,12 +838,12 @@ contains
                avgflag='A', long_name='grain C to food', &
                ptr_patch=this%grainc_to_food_patch)
 
-		  this%leafc_to_biofuelc_patch(begp:endp) = spval
+          this%leafc_to_biofuelc_patch(begp:endp) = spval
           call hist_addfld1d (fname='LEAFC_TO_BIOFUELC', units='gC/m^2/s', &
                avgflag='A', long_name='leaf C to biofuel C', &
                ptr_patch=this%leafc_to_biofuelc_patch)
 
-		  this%livestemc_to_biofuelc_patch(begp:endp) = spval
+          this%livestemc_to_biofuelc_patch(begp:endp) = spval
           call hist_addfld1d (fname='LIVESTEMC_TO_BIOFUELC', units='gC/m^2/s', &
                avgflag='A', long_name='livestem C to biofuel C', &
                ptr_patch=this%livestemc_to_biofuelc_patch)
@@ -3534,16 +3534,6 @@ contains
             dim1name='pft', &
             long_name='grain C to food', units='gC/m2/s', &
             interpinic_flag='interp', readvar=readvar, data=this%grainc_to_food_patch)
-
-       call restartvar(ncid=ncid, flag=flag,  varname='leafc_to_biofuelc', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='leaf C to biofuel C', units='gC/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%leafc_to_biofuelc_patch)
-
-	   call restartvar(ncid=ncid, flag=flag,  varname='livestemc_to_biofuelc', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='livestem C to biofuel C', units='gC/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%livestemc_to_biofuelc_patch)
             
        call restartvar(ncid=ncid, flag=flag,  varname='cpool_to_grainc', xtype=ncd_double,  &
             dim1name='pft', &
