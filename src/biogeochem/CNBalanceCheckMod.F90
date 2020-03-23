@@ -272,7 +272,7 @@ contains
          col_fire_nloss      => cnveg_nitrogenflux_inst%fire_nloss_col                   , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total column-level fire N loss 
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
          grainn_to_cropprodn => cnveg_nitrogenflux_inst%grainn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) grain N to 1-year crop product pool
-	     biofueln_to_cropprodn => cnveg_nitrogenflux_inst%biofueln_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) biofuel N to 1-year crop product pool
+         biofueln_to_cropprodn => cnveg_nitrogenflux_inst%biofueln_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) biofuel N to 1-year crop product pool
          totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
          )
 
