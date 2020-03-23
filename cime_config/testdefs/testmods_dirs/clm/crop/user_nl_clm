@@ -1,8 +1,0 @@
- hist_fincl1   += 'GDD0', 'GDD8', 'GDD10', 
-                  'GDD020', 'GDD820', 'GDD1020',
-                  'GDDPLANT', 'GDDTSOI', 'A5TMIN', 'A10TMIN'
-
-! The main point of including this field is to test the SUM history field infrastructure
-! This is in the crop testmods because this field is mainly useful in transient crop runs
-! This is on history tape 2 because this field is not meaningful at the gridcell level
-hist_fincl2  += 'DYN_COL_SOIL_ADJUSTMENTS_C'

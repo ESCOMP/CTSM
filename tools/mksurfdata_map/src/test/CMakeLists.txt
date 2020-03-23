@@ -1,4 +1,0 @@
-add_subdirectory(mkpctPftType_test)
-add_subdirectory(mkpftUtils_test)
-add_subdirectory(mkgridmap_test)
-add_subdirectory(mkindexmap_test)

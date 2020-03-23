@@ -1,3 +1,0 @@
-add_subdirectory(unittestArray_test)
-add_subdirectory(unittestSubgrid_test)
-add_subdirectory(unittestFilterBuilder_test)

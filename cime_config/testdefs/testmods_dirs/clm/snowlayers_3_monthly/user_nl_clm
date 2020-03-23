@@ -1,4 +1,0 @@
-nlevsno = 3
-
-! Need to set use_init_interp because initial conditions file has 5 snow layers
-use_init_interp = .true.

@@ -1,1 +1,0 @@
-add_subdirectory(ACSpinup_test)

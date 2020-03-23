@@ -1,6 +1,0 @@
-limit_irrigation_if_rof_enabled = .false.
-leaf_mr_vcm = 0.015d00
-use_bedrock = .true.
-use_luna = .true.
-use_flexibleCN = .true.
-use_fun = .true.
