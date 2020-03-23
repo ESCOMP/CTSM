@@ -145,7 +145,7 @@ interior building temperature at yearly time resolution.
 
 .. _Figure schematic of THESIS urban properties tool:
 
-.. Figure:: ../../../images/tech_note/Urban/image3.gif
+.. Figure:: ../../../images/tech_note/Urban/image3.png
 
  Schematic of THESIS urban properties tool.  Executable scripts are in orange, input files are blue, and output files are green.  Items within the black box outline are either read in as input, executed, or output by the driver script (urban_prop.csh).  
 
