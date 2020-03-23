@@ -20,7 +20,7 @@ module lnd_import_export
   use glc2lndMod            , only : glc2lnd_type
   use domainMod             , only : ldomain
   use spmdMod               , only : masterproc
-  use seq_drydep_mod        , only : seq_drydep_readnl, n_drydep, seq_drydep_init
+  use seq_drydep_mod        , only : seq_drydep_readnl, n_drydep
   use shr_megan_mod         , only : shr_megan_readnl, shr_megan_mechcomps_n
   use shr_fire_emis_mod     , only : shr_fire_emis_readnl
   use shr_carma_mod         , only : shr_carma_readnl
@@ -187,7 +187,6 @@ contains
     if (drydep_nflds > 0) then
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_ddvel', ungridded_lbound=1, ungridded_ubound=drydep_nflds)
     end if
-    call seq_drydep_init( )
 
     ! MEGAN VOC emissions fluxes from land
     call shr_megan_readnl('drv_flds_in', megan_nflds)
