@@ -1380,20 +1380,6 @@ contains
     end if
     
     if (use_crop) then
-       call restartvar(ncid=ncid, flag=flag,  varname='leafn_to_biofueln', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='leaf N to biofuel N', units='gN/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%leafn_to_biofueln_patch)
-    end if
-    
-    if (use_crop) then
-       call restartvar(ncid=ncid, flag=flag,  varname='livestemn_to_biofueln', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='livestem N to biofuel N', units='gN/m2/s', &
-            interpinic_flag='interp', readvar=readvar, data=this%livestemn_to_biofueln_patch)
-    end if
-
-    if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='npool_to_grainn', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='allocation to grain N', units='gN/m2/s', &
