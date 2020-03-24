@@ -23,12 +23,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <dtime>1800</dtime>
 
 <!-- CO2 volume mixing ratio -->
-<co2_ppmv sim_year="1000"      >379.0</co2_ppmv>
-<co2_ppmv sim_year="2000"      >379.0</co2_ppmv>
-<co2_ppmv sim_year="2010"      >388.8</co2_ppmv>
-<co2_ppmv sim_year="2015"      >397.5</co2_ppmv>
-<co2_ppmv sim_year="1850"      >284.7</co2_ppmv>
-<co2_ppmv sim_year="PtVg"      >284.7</co2_ppmv>
+<co2_ppmv sim_year="1000"                    >379.0</co2_ppmv>
+<co2_ppmv sim_year="2000"                    >379.0</co2_ppmv>
+<co2_ppmv sim_year="2010"                    >388.8</co2_ppmv>
+<co2_ppmv sim_year="2015"                    >397.5</co2_ppmv>
+<co2_ppmv sim_year="2100" ssp_rcp="SSP5-8.5" >1141.9</co2_ppmv>
+<co2_ppmv sim_year="1850"                    >284.7</co2_ppmv>
+<co2_ppmv sim_year="PtVg"                    >284.7</co2_ppmv>
 
 <!-- CO2 type -->
 <co2_type>constant</co2_type>
@@ -817,6 +818,11 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <fsurdat hgrid="0.9x1.25"     sim_year="PtVg" use_crop=".false." irrigate=".false."
 >lnd/clm2/surfdata_map/surfdata_0.9x1.25_hist_16pfts_nourb_CMIP6_simyrPtVg_c181114.nc</fsurdat>
 
+
+<!-- Extension surface datasets at 2100 -->
+<fsurdat hgrid="0.9x1.25"  sim_year="2100" use_crop=".true." ssp_rcp="SSP5-8.5" >
+lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
+
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000" irrigate=".true."
@@ -927,6 +933,12 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2100" ssp_rcp="SSP5-3.4"
  use_crop=".true."   >lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_10x15_SSP5-3.4_78pfts_CMIP6_simyr1850-2100_c190228.nc</flanduse_timeseries>
 
+<!-- Extensions of future scenarios - landuse time series files with crop on -->
+
+<!-- SSP5-RCP8.5 - relative to {csmdata}) -->
+<flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="2100-2300" ssp_rcp="SSP5-8.5"
+ use_crop=".true."   >lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c190214.nc</flanduse_timeseries>
+
 <!-- Future scenarios - landuse time series files with crop off -->
 
 <!-- SSP5-RCP8.5 - relative to {csmdata}) -->
@@ -1032,6 +1044,14 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <stream_year_first_ndep phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_ndep>
 <model_year_align_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
+
+<stream_year_first_ndep phys="clm4_5" use_cn=".true." sim_year_range="2100-2300"  >2101</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm4_5" use_cn=".true." sim_year_range="2100-2300"  >2101</stream_year_last_ndep>
+<model_year_align_ndep  phys="clm4_5" use_cn=".true." sim_year_range="2100-2300"  >2101</model_year_align_ndep>
+
+<stream_year_first_ndep phys="clm5_0" use_cn=".true." sim_year_range="2100-2300"  >2101</stream_year_first_ndep>
+<stream_year_last_ndep  phys="clm5_0" use_cn=".true." sim_year_range="2100-2300"  >2101</stream_year_last_ndep>
+<model_year_align_ndep  phys="clm5_0" use_cn=".true." sim_year_range="2100-2300"  >2101</model_year_align_ndep>
 
 <stream_year_first_ndep use_cn=".true."   sim_year="2010" >2010</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   sim_year="2010" >2010</stream_year_last_ndep>
@@ -1160,6 +1180,14 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <stream_year_last_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
 <model_year_align_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >2015</model_year_align_popdens>
 
+<stream_year_first_popdens phys="clm4_5" cnfireson=".true." sim_year_range="2100-2300"  >2100</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="2100-2300"  >2100</stream_year_last_popdens>
+<model_year_align_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="2100-2300"  >2100</model_year_align_popdens>
+
+<stream_year_first_popdens phys="clm5_0" cnfireson=".true." sim_year_range="2100-2300"  >2100</stream_year_first_popdens>
+<stream_year_last_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="2100-2300"  >2100</stream_year_last_popdens>
+<model_year_align_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="2100-2300"  >2100</model_year_align_popdens>
+
 <stream_year_first_popdens use_cn=".true."   sim_year="2010" >2010</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="2010" >2010</stream_year_last_popdens>
 
@@ -1214,6 +1242,14 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <stream_year_first_urbantv phys="clm4_5" sim_year_range="1850-2100" >2015</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm4_5" sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
 <model_year_align_urbantv  phys="clm4_5" sim_year_range="1850-2100" >2015</model_year_align_urbantv>
+
+<stream_year_first_urbantv phys="clm5_0" sim_year_range="2100-2300" >2100</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm5_0" sim_year_range="2100-2300" >2106</stream_year_last_urbantv>
+<model_year_align_urbantv  phys="clm5_0" sim_year_range="2100-2300" >2100</model_year_align_urbantv>
+
+<stream_year_first_urbantv phys="clm4_5" sim_year_range="2100-2300" >2100</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm4_5" sim_year_range="2100-2300" >2106</stream_year_last_urbantv>
+<model_year_align_urbantv  phys="clm4_5" sim_year_range="2100-2300" >2100</model_year_align_urbantv>
 
 <stream_year_first_urbantv phys="clm5_0" sim_year="2000" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="2000" >2000</stream_year_last_urbantv>

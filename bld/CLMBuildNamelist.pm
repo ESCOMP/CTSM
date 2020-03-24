@@ -1893,7 +1893,8 @@ sub setup_logic_co2_type {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, $opts->{$var});
     } else {
-      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'sim_year'=>$nl_flags->{'sim_year'} );
+      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'sim_year'=>$nl_flags->{'sim_year'},
+                  'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
     }
   }
 }
