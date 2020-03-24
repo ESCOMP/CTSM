@@ -3272,9 +3272,17 @@ sub setup_logic_nitrogen_deposition {
                 'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                 'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
     if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+       # Also check at f19 resolution
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+       # If not found report an error
+       if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+          $log->warning("Did NOT find the Nitrogen-deposition forcing file (stream_fldfilename_ndep) for this ssp_rcp\n" .
+                        "One way to get around this is to point to a file for another existing ssp_rcp in your user_nl_clm file.\n" .
+                        "If you are running with CAM and WACCM chemistry Nitrogen deposition will come through the coupler.\n" .
+                        "This file won't be used, so it doesn't matter what it points to -- but it's required to point to something.\n" )
+       }
     }
   } else {
     # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
