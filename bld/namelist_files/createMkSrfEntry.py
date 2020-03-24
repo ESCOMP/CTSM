@@ -5,12 +5,12 @@ import os, sys
 class mksrfDataEntry_prog:
 
    # Class data
-   year_start = 850
-   year_end   = 1849
-   ssp_rcp    = "hist"
-   subdir     = "pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012"
-   cdate      = 171012
-   desc       = "histclm50_LUH2"
+   year_start = 2101
+   year_end   = 2300
+   ssp_rcp    = "SSP5-8.5"
+   subdir     = "pftcftdynharv.0.25x0.25.SSP5-8.5.simyr2101-2300.c20200320"
+   cdate      = "200320"
+   desc       = "SSP5RCP85x_clm5"
 
    def parse_cmdline_args( self ):
       "Parse the command line arguments for create data entry list"
