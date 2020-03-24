@@ -3176,8 +3176,6 @@ contains
                ! Adjust for temperature
                vcmaxse = 486.0_r8
                jmaxse  = 495.0_r8
-               !vcmaxse = 668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
-               !jmaxse  = 659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
                tpuse = vcmaxse
                vcmaxc = fth25 (vcmaxhd, vcmaxse)
                jmaxc  = fth25 (jmaxhd, jmaxse)

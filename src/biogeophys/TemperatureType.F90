@@ -55,6 +55,7 @@ module TemperatureType
      real(r8), pointer :: thv_col                  (:)   ! col virtual potential temperature (kelvin)
      real(r8), pointer :: thm_patch                (:)   ! patch intermediate variable (forc_t+0.0098*forc_hgt_t_patch)
      real(r8), pointer :: t_a10_patch              (:)   ! patch 10-day running mean of the 2 m temperature (K)
+     real(r8), pointer :: soila10_patch            (:)   ! patch 10-day running mean of the soil layer 3 temperature (K)
      real(r8), pointer :: t_a10min_patch           (:)   ! patch 10-day running mean of min 2-m temperature
      real(r8), pointer :: t_a5min_patch            (:)   ! patch 5-day running mean of min 2-m temperature
 
@@ -1260,7 +1261,7 @@ contains
     this%t_a10_patch(begp:endp) = rbufslp(begp:endp)
     
     call extract_accum_field ('SOIL10', rbufslp, nstep)
-    this%t_a10_patch(begp:endp) = rbufslp(begp:endp)
+    this%soila10_patch(begp:endp) = rbufslp(begp:endp)
 
     call extract_accum_field ('TDM5', rbufslp, nstep)
     this%t_a5min_patch(begp:endp) = rbufslp(begp:endp)

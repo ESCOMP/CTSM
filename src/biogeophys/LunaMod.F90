@@ -820,12 +820,12 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: PNetold                    !old value of the proportion of nitrogen allocated to electron transport (unitless)
   real(r8), intent (in) :: PNrespold                  !old value of the proportion of nitrogen allocated to respiration (unitless)
   real(r8), intent (in) :: PNcbold                    !old value of the proportion of nitrogen allocated to carboxylation (unitless)  
+  real(r8), intent (in) :: dayl_factor                !daylight scale factor
   real(r8), intent (out):: PNstoreopt                 !optimal proportion of nitrogen for storage 
   real(r8), intent (out):: PNlcopt                    !optimal proportion of nitrogen for light capture 
   real(r8), intent (out):: PNetopt                    !optimal proportion of nitrogen for electron transport 
   real(r8), intent (out):: PNrespopt                  !optimal proportion of nitrogen for respiration 
   real(r8), intent (out):: PNcbopt                    !optial proportion of nitrogen for carboxyaltion  
-  real(r8), intent(in)  :: dayl_factor                !lbirch: added to scaled light: 
   !-------------------------------------------------------------------------------------------------------------------------------
   !intermediate variables
   real(r8) :: Carboncost1                             !absolute amount of carbon cost associated with maintenance respiration due to deccrease in light capture nitrogen(g dry mass per day) 
@@ -1256,7 +1256,7 @@ subroutine NUE(O2a, ci, tgrow, tleaf, NUEj,NUEc,Kj2Kc)
   real(r8) :: awc                                     !second deminator term for rubsico limited carboxylation rate based on Farquhar model
   real(r8) :: c_p                                     !CO2 compenstation point (Pa)
   
-  Fc = VcmxTLenuning(tgrow, tleaf) * Fc25
+  Fc = VcmxTLeuning(tgrow, tleaf) * Fc25
   Fj = JmxTLeuning(tgrow, tleaf) * Fj25
   k_c = params_inst%kc25_coef * exp((79430.0_r8 / (rgas*1.e-3_r8 * (25.0_r8 + tfrz))) * (1.0_r8 - (tfrz + 25.0_r8) / (tfrz + tleaf)))
   k_o = params_inst%ko25_coef * exp((36380.0_r8 / (rgas*1.e-3_r8 * (25.0_r8 + tfrz))) * (1.0_r8 - (tfrz + 25.0_r8) / (tfrz + tleaf)))
