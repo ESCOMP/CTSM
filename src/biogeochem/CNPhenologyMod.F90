@@ -700,8 +700,8 @@ contains
     integer :: fp             !lake filter patch index
     real(r8):: ws_flag        !winter-summer solstice flag (0 or 1)
     real(r8):: crit_onset_gdd !critical onset growing degree-day sum
-    real(r8):: crit_daylbirch !latitudinal gradient in arctic-boreal
-    real(r8):: onset_thresh   !lbirch: flag onset threshold
+    real(r8):: crit_daylat    !latitudinal light gradient in arctic-boreal
+    real(r8):: onset_thresh   !flag onset threshold
     real(r8):: soilt
     !-----------------------------------------------------------------------
 
@@ -714,6 +714,9 @@ contains
          season_decid                        =>    pftcon%season_decid                                         , & ! Input:  binary flag for seasonal-deciduous leaf habit (0 or 1)
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
+         t10                                 =>    temperature_inst%soila10_patch                              , & ! Input:  [real(r8) (:)   ] 
+         tmin10                              =>    temperature_inst%t_a10min_patch                             , & ! input:  [real(r8) (:)   ] 
+         snow5d                              =>    waterdiagnosticbulk_inst%snow_5day                          , & ! input:  [real(r8) (:)   ] 
          
          pftmayexist                         =>    dgvs_inst%pftmayexist_patch                                 , & ! Output: [logical   (:)   ]  exclude seasonal decid patches from tropics           
 
@@ -784,10 +787,7 @@ contains
          livestemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%livestemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          deadstemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%deadstemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
-         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
-         t10                                 =>    temperature_inst%soila10_patch                              , & ! Output:  [real(r8) (:)   ] 
-         tmin5                               =>    temperature_inst%t_a5min_patch                             , & ! Output:  [real(r8) (:)   ] 
-         snow_depth                          =>    waterstate_inst%snow_10day                                    & ! Output:  [real(r8) (:)   ] 
+         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch      & ! Output:  [real(r8) (:)   ]                                                    
          )
 
       ! start patch loop
@@ -914,10 +914,12 @@ contains
                if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
                   onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
                end if
-               !seperate into Arctic boreal and lower latitudes
+               !separate into Arctic boreal and lower latitudes
                if (onset_gdd(p) > crit_onset_gdd .and. abs(grc%latdeg(g))<45.0_r8) then
                   onset_thresh=1.0_r8
-               else if (onset_gddflag(p) == 1.0_r8 .and. t10(p) > SHR_CONST_TKFRZ .and. tmin5(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. dayl(g)>(crit_dayl/2.0_r8) .and. snow_depth(c)<0.1_r8) then
+               else if (onset_gddflag(p) == 1.0_r8 .and. t10(p) > SHR_CONST_TKFRZ &
+                       .and. tmin10(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 &
+                       .and. dayl(g)>(crit_dayl/2.0_r8) .and. snow5d(c)<0.1_r8) then
                   onset_thresh=1.0_r8
                end if
 
@@ -971,13 +973,12 @@ contains
                end if
                ! use 15 hr max to ~11hours in temperate regions
                ! only begin to test for offset daylength once past the summer sol
-               crit_daylbirch=54000-360*(65-grc%latdeg(g))
-               if (crit_daylbirch < crit_dayl) then
-                  crit_daylbirch = crit_dayl
+               crit_daylat=54000-360*(65-grc%latdeg(g))
+               if (crit_daylat < crit_dayl) then
+                  crit_daylat = crit_dayl
                end if
 
-               !print*,'lbirch',crit_daylbirch
-               if (ws_flag == 0._r8 .and. dayl(g) < crit_daylbirch) then
+               if (ws_flag == 0._r8 .and. dayl(g) < crit_daylat) then
                   offset_flag(p) = 1._r8
                   offset_counter(p) = ndays_off * secspday
                   prev_leafc_to_litter(p) = 0._r8
