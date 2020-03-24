@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 838;
+my $ntests = 839;
 if ( defined($opts{'compare'}) ) {
    $ntests += 504;
 }
@@ -972,6 +972,11 @@ my %failtest = (
                                      conopts=>"-phys clm5_0",
                                    },
      "envxml_not_dir"            =>{ options=>"-envxml_dir myuser_nl_clm",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"",
+                                   },
+     "missing_ndep_file"         =>{ options=>"-envxml_dir . -bgc bgc -ssp_rcp SSP5-3.4",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"",
