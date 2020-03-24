@@ -109,17 +109,20 @@ SYNOPSIS
                                    Default: $opts{'usr_mapdir'}
 
 OPTIONS
+     NOTE: The three critical options are (-years, -glc_nec, and -ssp_rcp) they are marked as such.
+
      -allownofile                  Allow the script to run even if one of the input files
                                    does NOT exist.
      -dinlc [or -l]                Enter the directory location for inputdata 
                                    (default $opts{'csmdata'})
      -debug [or -d]                Do not actually run -- just print out what 
                                    would happen if ran.
-     -dynpft "filename"            Dynamic PFT/harvesting file to use 
-                                   (rather than create it on the fly) 
-                                   (must be consistent with first year)
+     -dynpft "filename"            Dynamic PFT/harvesting file to use if you have a manual list you want to use
+                                   (rather than create it on the fly, must be consistent with first year)
+                                   (Normally NOT used)
      -fast_maps                    Toggle fast mode which doesn't use the large mapping files
      -glc_nec "number"             Number of glacier elevation classes to use (by default $opts{'glc_nec'})
+                                   (CRITICAL OPTION)
      -merge_gis                    If you want to use the glacier dataset that merges in
                                    the Greenland Ice Sheet data that CISM uses (typically
                                    used only if consistency with CISM is important)
@@ -134,7 +137,8 @@ OPTIONS
      -no_surfdata                  Do not output a surface dataset
                                    This is useful if you only want a landuse_timeseries file
      -years [or -y] "years"        Simulation year(s) to run over (by default $opts{'years'}) 
-                                   (can also be a simulation year range: i.e. 1850-2000)
+                                   (can also be a simulation year range: i.e. 1850-2000 or 1850-2100 for ssp_rcp future scenarios)
+                                   (CRITICAL OPTION)
      -help  [or -h]                Display this help.
 
      -rundir "directory"           Directory to run in
@@ -143,6 +147,8 @@ OPTIONS
      -ssp_rcp "scenario-name"      Shared Socioeconomic Pathway and Representative Concentration Pathway Scenario name(s).
                                    "hist" for historical, otherwise in form of SSPn-m.m where n is the SSP number
                                    and m.m is the radiative forcing in W/m^2 at the peak or 2100.
+                                   (normally use thiw with -years 1850-2100)
+                                   (CRITICAL OPTION)
      
      -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
 
