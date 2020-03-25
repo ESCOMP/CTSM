@@ -1286,6 +1286,30 @@ foreach my $res ( @glc_res ) {
       &cleanup();
    }
 }
+# Extensions at one degree with crop on
+$mode = "-phys clm5_0";
+system( "../configure -s $mode" );
+@glc_res = ( "0.9x1.25" );
+my @use_cases = ( "2100-2300_SSP5-8.5_transient",
+                );
+foreach my $res ( @glc_res ) {
+   foreach my $usecase ( @usecases ) {
+      $options = "-bgc bgc -res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
+      &make_env_run();
+      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+      is( $@, '', "$options" );
+      $cfiles->checkfilesexist( "$options", $mode );
+      $cfiles->shownmldiff( "default", "standard" );
+      if ( defined($opts{'compare'}) ) {
+         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+      }
+      if ( defined($opts{'generate'}) ) {
+         $cfiles->copyfiles( "$options", $mode );
+      }
+      &cleanup();
+   }
+}
 # Transient 20th Century simulations
 $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
