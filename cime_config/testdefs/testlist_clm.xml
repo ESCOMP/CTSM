@@ -1889,7 +1889,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Lm1" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesSizeAgeMort">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesSizeAgeMort">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
