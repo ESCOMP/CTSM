@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import sys
+import os
 import string
 import subprocess
 import datetime as date
@@ -44,6 +45,18 @@ This script creates CLM anomaly forcing data
 #--  end of function definitions  ---------------------------------
 #0
 
+# Input and output directories make sure they exist
+datapath = "/glade/p/cesm/sdwg_dev/thesis/data/cesm_tools/anomalyforcing"
+spath                 = './'
+if ( os.path.exists(datapath) ):
+   print( "Input data directory:"+datapath )
+else:
+   sys.exit( "Could not find input directory: "+datapath )
+if ( os.path.exists(spath) ):
+   print( "Output data directory:"+spath )
+else:
+   sys.exit( "Could not find output directory: "+spath )
+
 sspnum = 3
 smoothsize = 5
 
@@ -66,7 +79,12 @@ if sspnum == 3:
     hist_case = 'b.e21.BHIST.f09_g17.CMIP6-historical.010'
     fut_case = 'b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.001'
 
-spath                 = './'
+outdir = spath + sspoutdir
+if ( not os.path.exists(outdir) ):
+   os.mkdir( outdir )
+
+print( "Output specific data directory :"+outdir )
+
 
 hist_yrstart          = 2000
 hist_yrend            = 2014
@@ -94,13 +112,22 @@ futnm                 = nmo*fut_nyrs
 totnm                 = nmo*tot_nyrs
 outnm                 = nmo*fut_nyrs
 
-dpath                 = './historyfiles/'
+dpath                 = datapath + '/historyfiles/'
 dfile                 = '/lnd/proc/tseries/month_1/'
 hdir                  = dpath+hist_case+dfile
 fdir                  = dpath+fut_case+dfile
 
+# Check that directories exist
+if ( os.path.exists(hdir) ):
+   print( "Data file directory:"+hdir )
+else:
+   sys.exit( "Could not find directory: "+hdir )
+if ( os.path.exists(fdir) ):
+   print( "Data file directory:"+fdir )
+else:
+   sys.exit( "Could not find directory: "+fdir )
+
 # needed to use QBOT and U10, not using V and U(for sfcwind)
-#field_in              = ['TREFHT','PRECT','FSDS','FLDS','QBOT','PS','U10','U10']
 field_in              = [   'TBOT',        'RAIN',        'SNOW',        'FSDS',        'FLDS',   'QBOT',   'PBOT']
 field_combine         = [        0,             1,             1,             0,             0,        0,        0]
 field_out             = [    'tas',          'pr',          'pr',        'rsds',        'rlds',   'huss',     'ps']
@@ -112,7 +139,11 @@ nfields               = len(field_in)
 
 #--  Read coordinates
 landfile              = hdir+hist_case+'.clm2.h0.TBOT.'+str(hist_yrstart)+'01-'+str(hist_yrend)+'12.nc'
-print 'Land File: ' + landfile
+if ( os.path.exists(landfile) ):
+   print( "Land File: "+landfile )
+else:
+   sys.exit( "Could not find land file: "+landfile )
+
 f1 = netcdf4.Dataset(landfile, 'r')
 landfrac=np.asfarray(f1.variables['landfrac'][:,:],np.float64)
 landmask=np.asfarray(f1.variables['landmask'][:,:],np.float64)
@@ -141,19 +172,19 @@ for f in range(nfields):
         ff2 = netcdf4.Dataset(fvarfile2, 'r')
         hvarvalues1 = np.asfarray(hf1.variables[infieldname1][:],np.float64)
         htime1 = np.asfarray(hf1.variables['time'][:],np.float64)
-        print 'Reading: ' + hvarfile1
+        print( 'Reading: ' + hvarfile1 )
         fvarvalues1 = np.asfarray(ff1.variables[infieldname1][:],np.float64)
         ftime1 = np.asfarray(ff1.variables['time'][:],np.float64)
         long_name = ff1.variables[field_in[f]].long_name
-        print 'Reading: ' + fvarfile1
+        print( 'Reading: ' + fvarfile1 )
         fvarvalues2 = np.asfarray(ff2.variables[infieldname1][:],np.float64)
         ftime2 = np.asfarray(ff2.variables['time'][:],np.float64)
-        print 'Reading: ' + fvarfile2
+        print( 'Reading: ' + fvarfile2 )
         hf1.close()
-	ff1.close()
+        ff1.close()
         ff2.close()
-	if (infieldcombine1 == 1):
-	    infieldname2 = field_in[f+1]
+        if (infieldcombine1 == 1):
+            infieldname2 = field_in[f+1]
             infieldcombine2 = field_combine[f+1]
             hvarfile2 = hdir+hist_case+'.clm2.h0.'+infieldname2+'.'+str(hist_yrstart)+'01-'+str(hist_yrend)+'12.nc'
             fvarfile3 = fdir+fut_case+'.clm2.h0.'+infieldname2+'.'+str(fut1_yrstart)+'01-'+str(fut1_yrend)+'12.nc'
@@ -162,20 +193,20 @@ for f in range(nfields):
             ff3 = netcdf4.Dataset(fvarfile3, 'r')
             ff4 = netcdf4.Dataset(fvarfile4, 'r')
             hvarvalues1 = hvarvalues1 + np.asfarray(hf2.variables[infieldname2][:],np.float64)
-            print 'Reading: ' + hvarfile2
+            print( 'Reading: ' + hvarfile2 )
             fvarvalues1 = fvarvalues1 + np.asfarray(ff3.variables[infieldname2][:],np.float64)
-            print 'Reading: ' + fvarfile3
+            print( 'Reading: ' + fvarfile3 )
             fvarvalues2 = fvarvalues2 + np.asfarray(ff4.variables[infieldname2][:],np.float64)
-            print 'Reading: ' + fvarfile4
+            print( 'Reading: ' + fvarfile4 )
             hf2.close()
-	    ff3.close()
+            ff3.close()
             ff4.close()
             fieldskip = 1
 
         allvarvalues = np.concatenate((hvarvalues1,fvarvalues1,fvarvalues2),axis=0)
         alltime = np.concatenate((htime1,ftime1,ftime2),axis=0)
         ftime = np.concatenate((ftime1,ftime2),axis=0)
-	outtime = ftime - 16
+        outtime = ftime - 16
         histavgvalues = np.zeros((nmo,nlat,nlon))
         histavgcount = np.zeros((nmo))
         runningavgvalues = np.zeros((nlat,nlon))
@@ -189,12 +220,10 @@ for f in range(nfields):
             histavgvalues[havgmonthindex,:,:] = histavgvalues[havgmonthindex,:,:] + allvarvalues[hmonthindex,:,:]
             histavgcount[havgmonthindex] = histavgcount[havgmonthindex] + 1.0
             histavgvalues[havgmonthindex,:,:] = histavgvalues[havgmonthindex,:,:] / histavgcount[havgmonthindex]
-#            if (havgmonthindex == 0):
-#            print 'Climo: ' + str(hmonthindex) + ' ' + str( havgmonthindex) +' ' + str(hmonthindex) + ' vars ' + str(histavgvalues[havgmonthindex,150,200]) + ' orig ' + str(allvarvalues[hmonthindex,150,200])
 
         for fmonthindex in range(futnm):
             allmonthindex = fmonthindex + histnm
-            allyearindex = allmonthindex / nmo
+            allyearindex = int(allmonthindex / nmo)
             favgmonthnum = (allmonthindex) % 12 + 1
             favgmonthindex = favgmonthnum - 1
 
@@ -211,8 +240,6 @@ for f in range(nfields):
                 runningavgvalues = runningavgvalues + allvarvalues[smonthindex,:,:]
                 runningavgcount = runningavgcount + 1.0
                 runningavgvalues = runningavgvalues / runningavgcount
-#                if (favgmonthindex == 0):
-#                    print 'Search window ' + str(smonthindex) + ' for ' + str(allmonthindex) + ' year ' + str(allyearindex) + ' month ' + str(favgmonthindex) + ' values ' + str(allvarvalues[smonthindex,150,200]) + ' ' + str(runningavgvalues[150,200]) + ' compared to ' + str(histavgvalues[havgmonthindex,150,200])
 
             climoavgvalues = histavgvalues[favgmonthindex,:,:]
             if anomsf[f] == 'anomaly':
@@ -234,8 +261,8 @@ for f in range(nfields):
 
         # create netcdf file  ---------------------------------
 
-        outfilename = spath + sspoutdir + '/'+'af.'+field_out[f]+'.cesm2.'+ssptag+'.'+str(fut_yrstart)+'-'+str(fut_yrend)+'.nc'
-        print 'Creating: ' + outfilename
+        outfilename = outdir + '/'+'af.'+field_out[f]+'.cesm2.'+ssptag+'.'+str(fut_yrstart)+'-'+str(fut_yrend)+'.nc'
+        print( 'Creating: ' + outfilename )
         outfile = netcdf4.Dataset(outfilename, 'w')
 
 #        timetag = date.today()
@@ -278,7 +305,7 @@ for f in range(nfields):
         wmask.long_name = 'Grid cell land mask'
 
         wtime.calendar = 'noleap'
-	
+      
         # write to file  --------------------------------------------
         #wtime[:]   = month
         wtime[:]   = outtime
@@ -288,8 +315,6 @@ for f in range(nfields):
         wfrac[:,:] = landfrac
         warea[:,:] = area
         wvar[:,:,:] = outputvarvalues
-
-
 
     else:
         fieldskip = 0
