@@ -30,7 +30,7 @@
 
   <!-- aux_clm test suite failures -->
 
-  <test name="ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropGs.cheyenne_gnu.clm-monthly">
+  <test name="ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianGs.cheyenne_gnu.clm-monthly">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#158</issue>
