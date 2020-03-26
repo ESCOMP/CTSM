@@ -1,4 +1,9 @@
 #! /usr/bin/env python
+#
+#  ssp_anomaly_forcing_smooth
+#
+# Create anomoly forcing datasets for SSP scenarios that can be used by CESM datm model
+#
 import sys
 import os
 import string
@@ -45,8 +50,9 @@ This script creates CLM anomaly forcing data
 #--  end of function definitions  ---------------------------------
 #0
 
+print( "Create anomoly forcing data that can be used by CTSM in CESM" )
 # Input and output directories make sure they exist
-datapath = "/glade/p/cesm/sdwg_dev/thesis/data/cesm_tools/anomalyforcing"
+datapath = "/glade/p/cesm/sdwg_dev/thesis/data/cesm_tools/anomalyforcing"   # Path on cheyenne
 spath                 = './'
 if ( os.path.exists(datapath) ):
    print( "Input data directory:"+datapath )
@@ -129,6 +135,8 @@ if ( os.path.exists(fdir) ):
    print( "Data file directory:"+fdir )
 else:
    sys.exit( "Could not find directory: "+fdir )
+
+print( "\n\n\n" )
 
 # needed to use QBOT and U10, not using V and U(for sfcwind)
 field_in              = [   'TBOT',        'RAIN',        'SNOW',        'FSDS',        'FLDS',   'QBOT',   'PBOT']
@@ -268,13 +276,19 @@ for f in range(nfields):
         print( 'Creating: ' + outfilename )
         outfile = netcdf4.Dataset(outfilename, 'w')
 
-        outfile.source_file = spath
+        outfile.source_file1 = hvarfile1
+        outfile.source_file2 = fvarfile1
+        outfile.source_file3 = fvarfile2
         outfile.title = 'anomaly forcing data'
         outfile.note1 = 'Anomaly/scale factors calculated relative to ' \
         +str(hist_yrstart)+'-'+str(hist_yrend) \
         +' climatology from CESM2 historical simulation (case name: '+hist_case+')'
         outfile.note2 = ssptag+' '+str(fut_yrstart)+'-'+str(fut_yrend) \
         +' from CESM simulations (case names: '+fut_case[0]+' and '+fut_case[1]+')'
+        outfile.smoothsize = str(smoothsize)
+        outfile.history = historydate + ": created by "+sys.argv[0]
+        stdout = os.popen( "git describe" )
+        outfile.gitdescribe = stdout.read().rstrip()
 
         outfile.createDimension('lat', size=int(nlat))
         outfile.createDimension('lon', size=int(nlon))
@@ -320,3 +334,5 @@ for f in range(nfields):
     else:
         fieldskip = 0
     
+
+print( "\n\nSuccessfully made anomoly forcing datasets\n" )
