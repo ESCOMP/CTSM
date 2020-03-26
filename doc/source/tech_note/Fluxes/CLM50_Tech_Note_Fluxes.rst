@@ -961,14 +961,14 @@ height :math:`z_{0h} ^{{'} }`  and the canopy air at height
 
 .. _Figure Schematic diagram of sensible heat fluxes:
 
-.. figure:: ../../../images/tech_note/Fluxes/image1.png
+.. figure:: image1.png
 
  Figure Schematic diagram of sensible heat fluxes for (a)
  non-vegetated surfaces and (b) vegetated surfaces.
 
 .. _Figure Schematic diagram of latent heat fluxes:
 
-.. figure:: ../../../images/tech_note/Fluxes/image2.png
+.. figure:: image2.png
 
  Figure Schematic diagram of water vapor fluxes for (a)
  non-vegetated surfaces and (b) vegetated surfaces.

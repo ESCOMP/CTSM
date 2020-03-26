@@ -89,7 +89,7 @@ into the inundated concentration when the inundated fraction increases.
 
 .. _Figure Methane Schematic:
 
-.. figure:: ../../../images/tech_note/Methane/image1.png
+.. figure:: image1.png
 
  Schematic representation of biological and physical
  processes integrated in CLM that affect the net CH\ :sub:`4`
