@@ -914,7 +914,6 @@ contains
     integer :: numc                 ! total number of columns across all processors
     integer :: nump                 ! total number of pfts across all processors
     integer :: num2d                ! size of second dimension (e.g. .number of vertical levels)
-    character(len=hist_dim_name_length) :: type2d 
     integer :: beg1d_out,end1d_out  ! history output per-proc 1d beginning and ending indices
     integer :: beg1d,end1d          ! beginning and ending indices for this field (assume already set)
     integer :: num1d_out            ! history output 1d size
@@ -1048,9 +1047,6 @@ contains
     else
        tape(t)%hlist(n)%avgflag = avgflag
     end if
-
-    type2d = tape(t)%hlist(n)%field%type2d
-    
 
   end subroutine htape_addfld
 
