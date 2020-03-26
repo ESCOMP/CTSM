@@ -1,4 +1,97 @@
 ===============================================================
+Tag name:  release-clm5.0.31
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Mar 26 00:55:38 MDT 2020
+One-line Summary: Bring in raw datasets for 2100-2300 extension for SSP5-8.5/3.5 and SSP1-2.6, some other misc. changes
+
+Purpose of this version:
+------------------------
+
+New Raw datasets to 2300 for SSP1-2.6, SSP5-3.4 and SSP5-8.5.
+Fix the pgi build on izumi.  Bring in anomaly forcing script to create af forcing that can be used by datm
+to run anomoly forcing to get SSP like forcing.  Update manage_externals that fixes the python 3.8 bug.
+
+Update cime and cism-wrapper.
+
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #921 #922 #933 #946
+
+  Fixes #921 -- PGI build
+  Sets up the script to use for #922
+  Fixes #933 -- Notes about creating SSP landuse files
+  Fixes #946 -- Better error message for missing ndep files
+
+Science changes since: release-clm5.0.30
+  Raw datasets for the 2100-2300 extenstion for SSP1-2.6, SSP5-3.4 and SSP5-8.5
+
+Software changes since: release-clm5.0.30
+  Fix pgi build on izumi
+  Update manage_externals
+
+Changes to User Interface since: 
+  Add ssp_anomaly_forcing script to contrib
+  Improve error message when a ndep file can't be found (tell user what to do, allow -ignore_warnings to override it)
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test): None
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- 
+    cheyenne_gnu ------ 
+    izumi_nag --------- 
+    izumi_pgi --------- 
+    izumi_intel ------- 
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes:
+------------------------
+
+Externals being used: update cism and cime
+
+   cism:   cism-release-cesm2.1.2_04
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.32
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200121
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #949
+(https://github.com/ESCOMP/ctsm/pull)
+
+ #949 -- surface dataset creation for 2100-2300 SSP extensions (SSP1-2.6, SSP5-3.4, SSP5-8.5
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.30
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue Jan 21 13:50:48 MST 2020
