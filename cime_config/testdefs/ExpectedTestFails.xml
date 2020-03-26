@@ -6,8 +6,6 @@
     <entry issue="#158"            >FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianGs.cheyenne_intel.clm-monthly RUN</entry>
     <entry issue="#442"            >FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
     <entry issue="#442"            >FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
-    <entry issue="#442"            >FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop RUN</entry>
-    <entry issue="#442"            >FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop RUN</entry>
     <entry issue="#840"            >FAIL PEPEM_Ld1.f10_f10_musgs.I2000Clm50BgcCrop.hobart_intel.clm-crop RUN</entry>
   </category>
   <category name="fates">
