@@ -128,7 +128,7 @@ interior building temperature at yearly time resolution.
 
 .. _Figure schematic representation of the urban landunit:
 
-.. figure:: ../../../images/tech_note/Urban/image1.png
+.. figure:: image1.png
 
  Schematic representation of the urban land unit. See the text for description of notation. Incident, reflected, and net solar and longwave radiation are calculated for each individual surface but are not shown for clarity.
 
@@ -137,7 +137,7 @@ interior building temperature at yearly time resolution.
 
 .. _Figure schematic of urban and atmospheric model coupling:
 
-.. Figure:: ../../../images/tech_note/Urban/image2.png
+.. Figure:: image2.png
 
  Schematic of urban and atmospheric model coupling.  The urban model is forced by the atmospheric model wind (:math:`u_{atm}` ), temperature (:math:`T_{atm}` ), specific humidity (:math:`q_{atm}` ), precipitation (:math:`P_{atm}` ), solar (:math:`S_{atm} \, \downarrow` ) and longwave (:math:`L_{atm} \, \downarrow` ) radiation at reference height :math:`z'_{atm}`  (section :numref:`Atmospheric Coupling`). Fluxes from the urban landunit to the atmosphere are turbulent sensible (:math:`H`) and latent heat (:math:`\lambda E`), momentum (:math:`\tau` ), albedo (:math:`I\uparrow` ), emitted longwave (:math:`L\uparrow` ), and absorbed shortwave (:math:`\vec{S}`) radiation. Air temperature (:math:`T_{ac}` ), specific humidity (:math:`q_{ac}` ), and wind speed (:math:`u_{c}` ) within the urban canopy layer are diagnosed by the urban model. :math:`H` is the average building height.
 
@@ -145,7 +145,7 @@ interior building temperature at yearly time resolution.
 
 .. _Figure schematic of THESIS urban properties tool:
 
-.. Figure:: ../../../images/tech_note/Urban/image3.png
+.. Figure:: image3.png
 
  Schematic of THESIS urban properties tool.  Executable scripts are in orange, input files are blue, and output files are green.  Items within the black box outline are either read in as input, executed, or output by the driver script (urban_prop.csh).  
 

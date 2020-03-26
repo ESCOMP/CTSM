@@ -10,7 +10,7 @@ When just creating a replacement file for an existing one, the relevant tool sho
 
 .. _Figure Data_Flow:
 
-.. figure:: ../../../images/users_guide/using-clm-tools/mkmapdata_mksurfdata.jpeg
+.. figure:: mkmapdata_mksurfdata.jpeg
 
   Data Flow for Creation of Surface Datasets from Raw SCRIP Grid Files
 
@@ -20,7 +20,7 @@ Starting from a SCRIP grid file that describes the grid you will run the model o
 
 .. _Figure Data_Flow_Legend:
 
-.. figure:: ../../../images/users_guide/using-clm-tools/LegendCLMToolDataFlow.jpeg
+.. figure:: LegendCLMToolDataFlow.jpeg
 
   Legend for Data Flow Figures
 

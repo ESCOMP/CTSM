@@ -33,7 +33,7 @@ storage over the course of a single growing season.
 
 .. _Figure annual phenology cycle:
 
-.. figure:: ../../../images/tech_note/Vegetation_Phenology_Turnover/image1.png
+.. figure:: image1.png
 
  Example of annual phenology cycle for seasonal deciduous.
 

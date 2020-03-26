@@ -20,7 +20,7 @@ calculations (see Section  :numref:`Soil Layers` for soil layering).
 
 .. _Figure Schematic of decomposition model in CLM:
 
-.. figure:: ../../../images/tech_note/Decomposition/CLM4_vertsoil_soilstruct_drawing.png
+.. figure:: CLM4_vertsoil_soilstruct_drawing.png
 
  Schematic of decomposition model in CLM.
 
@@ -65,7 +65,7 @@ structures is in :ref:`Koven et al. (2013) <Kovenetal2013>`.
 
 .. _Figure Pool structure:
 
-.. figure:: ../../../images/tech_note/Decomposition/soil_C_pools_CN_century.png
+.. figure:: soil_C_pools_CN_century.png
 
  Pool structure, transitions, respired fractions (numbers at 
  end of arrows), and turnover times (numbers in boxes) for the 2

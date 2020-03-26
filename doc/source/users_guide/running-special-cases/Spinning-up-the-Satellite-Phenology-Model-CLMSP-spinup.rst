@@ -19,7 +19,7 @@ a specified equilibrium state (denoted by the dotted lines) due to the different
 
 .. _Figure SP spinup plot for 1850:
 
-.. figure:: ../../../images/users_guide/running-special-cases/image1.png
+.. figure:: image1.png
 
  SP spinup plot for year 1850. Variables examined are FSH (sensible heat flux), EFLX_LH_TOT (latent heat flux), GPP (photosynthesis), TWS (total water storage), H2OSOI (volumetric soil water in layer 8) and TSOI (soil temperature in layer 10). Generated using .../tools/contrib/SpinupStability_SP.ncl.
 
@@ -28,6 +28,6 @@ Again, it takes about 10 years to reach equilibrium.
 
 .. _Figure SP spinup plot for 2000 CO2:
 
-.. figure:: ../../../images/users_guide/running-special-cases/image2.png
+.. figure:: image2.png
 
  SP spinup plot for year 2000 CO2. Variables examined are FSH (sensible heat flux), EFLX_LH_TOT (latent heat flux), GPP (photosynthesis), TWS (total water storage), H2OSOI (volumetric soil water in layer 8) and TSOI (soil temperature in layer 10). Generated using .../tools/contrib/SpinupStability_SP.ncl.

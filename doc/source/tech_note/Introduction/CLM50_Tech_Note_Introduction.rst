@@ -627,6 +627,6 @@ processes simulated include (:numref:`Figure Land processes`):
 
 .. _Figure Land processes:
 
-.. figure:: ../../../images/tech_note/Introduction/image1.png
+.. figure:: image1.png
 
  Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from :ref:`Lawrence et al. (2011)<Lawrenceetal2011>` for CLM5.0).

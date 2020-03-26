@@ -18,7 +18,7 @@ snow pack.
 
 .. _Figure three layer snow pack:
 
-.. Figure:: ../../../images/tech_note/Snow_Hydrology/image1.png
+.. Figure:: image1.png
 
  Example of three layer snow pack (:math:`snl=-3`).
 
