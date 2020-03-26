@@ -2082,9 +2082,6 @@ contains
         dk_index = this%fates_hist%hvars(ivar)%dim_kinds_index
         ioname = trim(this%fates_hist%dim_kinds(dk_index)%name)
         
-        write(iulog,*) 'attempt ioname: ', ioname
-        write(iulog,*) 'dk_index: ', dk_index
-
         select case(trim(ioname))
         case(patch_r8)
            call hist_addfld1d(fname=trim(vname),units=trim(vunits),         &
@@ -2135,7 +2132,6 @@ contains
         end select
           
       end associate
-      write(iulog,*)'success: ', ioname
 
    end do
  end subroutine init_history_io
