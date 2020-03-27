@@ -629,9 +629,26 @@ contains
             end do
                         
 
+            do i = 1,ndecomp_pools
+               do j = 1,nlevdecomp
+                  do fc = 1,num_soilc
+                     c = filter_soilc(fc)
+                     if(nyr_SASU .eq. nyr_forcing .and. &
+                                     (soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)/cs_soil%decomp0_cpools_vr_col(c,j,i) .gt. 100 .and. soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1) .gt. 1.e+5_r8  &
+                                 .or. soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)/ns_soil%decomp0_npools_vr_col(c,j,i) .gt. 100 .and. soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1) .gt. 1.e+3_r8) &
+                   .or. nyr_SASU .lt. nyr_forcing .and. i .eq. i_cwd .and. &
+                                     (soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)/cs_soil%decomp0_cpools_vr_col(c,j,i) .gt. 100 .and. soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1) .gt. 1.e+5_r8  &
+                                 .or. soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)/ns_soil%decomp0_npools_vr_col(c,j,i) .gt. 100 .and. soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1) .gt. 1.e+3_r8) )then
+                        soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1) = matrix_Cinter%V(c,j+(i-1)*nlevdecomp)
+                        soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1) = matrix_Ninter%V(c,j+(i-1)*nlevdecomp)
+                     end if
+                  end do
+               end do
+            end do
+
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               if(any(soilmatrixc_cap(c,:,1) .gt. 1.e+10_r8) .or. any(soilmatrixn_cap(c,:,1) .gt. 1.e+10_r8))then
+               if(any(soilmatrixc_cap(c,:,1) .gt. 1.e+8_r8) .or. any(soilmatrixn_cap(c,:,1) .gt. 1.e+8_r8))then
                   soilmatrixc_cap(c,:,1) = matrix_Cinter%V(c,:)
                   soilmatrixn_cap(c,:,1) = matrix_Ninter%V(c,:)
                end if
