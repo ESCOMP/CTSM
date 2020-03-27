@@ -1,0 +1,9 @@
+Daniel Kennedy provided the original file,
+phs_iteration_schematic.svg. This can be used to generate the html
+documentation. Bill Sacks then converted it to pdf using Inkscape
+(simply using "save as" and saving it as a pdf); the pdf is needed when
+generating a pdf (since latexpdf cannot use svg files).
+
+Note that the figure is referenced in the rst as
+phs_iteration_schematic.*; each builder then uses the appropriate file
+(svg or pdf as needed).
