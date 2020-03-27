@@ -714,6 +714,6 @@ The outermost level of iteration works towards convergence of leaf temperature, 
 
 .. _Figure PHS Flow Diagram:
 
-.. figure:: phs_iteration_schematic.svg
+.. figure:: phs_iteration_schematic.*
 
  Flow diagram of leaf flux calculations
