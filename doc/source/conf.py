@@ -16,8 +16,11 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
+import os
+import sys
+# Note that we need a specific version of sphinx_rtd_theme. This can be obtained with:
+# pip install git+https://github.com/esmci/sphinx_rtd_theme.git@version-dropdown-with-fixes
+import sphinx_rtd_theme
 # sys.path.insert(0, os.path.abspath('.'))
 
 
@@ -88,13 +91,20 @@ imgmath_image_format = 'svg'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'bizstyle'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+# The 'versions' option needs to have at least two versions to work, but it doesn't need
+# to have all versions: others will be added dynamically. Note that this maps from version
+# names to html links. The current version can link to the current location (i.e., do
+# nothing). For the other version, we just add a place-holder; its name and value are
+# unimportant because these versions will get replaced dynamically.
+html_theme_options = {}
+html_theme_options['versions'] = {version: ''}
+html_theme_options['versions']['[placeholder]'] = ''
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
