@@ -1972,11 +1972,7 @@ contains
                ! the onset_counter would change from dt and you'd need to make
                ! changes to the offset subroutine below
 
-            else if ((idpp >= mxmat(ivt(p)) .and. (ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
-                      ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass)) .or. &
-                      ((hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))) .and. & 
-                      (ivt(p) /= nmiscanthus .and. ivt(p) /= nirrig_miscanthus .and. &
-                      ivt(p) /= nswitchgrass .and. ivt(p) /= nirrig_switchgrass))) then
+            else if (hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8
@@ -2415,7 +2411,7 @@ contains
 
          leafcn                =>    pftcon%leafcn                                     , & ! Input:  leaf C:N (gC/gN) 
          
-         harvfrac              =>    pftcon%harvfrac                                   , & ! Input:  cut fraction for harvest (-) 
+         biofuel_harvfrac      =>    pftcon%biofuel_harvfrac                           , & ! Input:  cut fraction for biofuel (-) 
                                           
          lflitcn               =>    pftcon%lflitcn                                    , & ! Input:  leaf litter C:N (gC/gN)                           
          frootcn               =>    pftcon%frootcn                                    , & ! Input:  fine root C:N (gC/gN)                             
@@ -2477,8 +2473,8 @@ contains
                t1 = 1.0_r8 / dt
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
                
-               ! harvfrac is only non-zero for prognostic crops.
-               leafc_to_litter(p)  = t1 * leafc(p)*(1._r8-harvfrac(ivt(p)))  + cpool_to_leafc(p)
+               ! biofuel_harvfrac is only non-zero for prognostic crops.
+               leafc_to_litter(p)  = t1 * leafc(p)*(1._r8-biofuel_harvfrac(ivt(p)))  + cpool_to_leafc(p)
 
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
@@ -2493,16 +2489,16 @@ contains
                   grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) - grainc_to_seed(p)
                   grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p) - grainn_to_seed(p)
                   
-                  ! Cut a certain fraction (i.e., harvfrac(ivt(p))) (e.g., harvfrac(ivt(p)=70% for bioenergy crops) of leaf C
+                  ! Cut a certain fraction (i.e., biofuel_harvfrac(ivt(p))) (e.g., biofuel_harvfrac(ivt(p)=70% for bioenergy crops) of leaf C
                   ! and move this fration of leaf C to biofuel C, rather than move it to litter
-                  leafc_to_biofuelc(p) = t1 * leafc(p) * harvfrac(ivt(p))
-                  leafn_to_biofueln(p) = t1 * leafn(p) * harvfrac(ivt(p))
+                  leafc_to_biofuelc(p) = t1 * leafc(p) * biofuel_harvfrac(ivt(p))
+                  leafn_to_biofueln(p) = t1 * leafn(p) * biofuel_harvfrac(ivt(p))
 
-                  ! Cut a certain fraction (i.e., harvfrac(ivt(p))) (e.g., harvfrac(ivt(p)=70% for bioenergy crops) of livestem C
+                  ! Cut a certain fraction (i.e., biofuel_harvfrac(ivt(p))) (e.g., biofuel_harvfrac(ivt(p)=70% for bioenergy crops) of livestem C
                   ! and move this fration of leaf C to biofuel C, rather than move it to litter
-                  livestemc_to_litter(p)   = t1 * livestemc(p)*(1._r8-harvfrac(ivt(p)))  + cpool_to_livestemc(p)
-                  livestemc_to_biofuelc(p) = t1 * livestemc(p) * harvfrac(ivt(p))
-                  livestemn_to_biofueln(p) = t1 * livestemn(p) * harvfrac(ivt(p))
+                  livestemc_to_litter(p)   = t1 * livestemc(p)*(1._r8-biofuel_harvfrac(ivt(p)))  + cpool_to_livestemc(p)
+                  livestemc_to_biofuelc(p) = t1 * livestemc(p) * biofuel_harvfrac(ivt(p))
+                  livestemn_to_biofueln(p) = t1 * livestemn(p) * biofuel_harvfrac(ivt(p))
                end if
             else
                t1 = dt * 2.0_r8 / (offset_counter(p) * offset_counter(p))
@@ -2584,7 +2580,7 @@ contains
                ! NOTE(slevis, 2014-12) results in -ve livestemn and -ve totpftn
                !X! livestemn_to_litter(p) = livestemc_to_litter(p) / livewdcn(ivt(p))
                ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
-               livestemn_to_litter(p) = livestemn(p) / dt * (1 - harvfrac(ivt(p)))
+               livestemn_to_litter(p) = livestemn(p) / dt * (1 - biofuel_harvfrac(ivt(p)))
             end if
 
             ! save the current litterfall fluxes
@@ -2869,37 +2865,29 @@ contains
     if (use_crop) then
        do fp = 1, num_soilp
           p = filter_soilp(fp)
-          cnveg_carbonflux_inst%biofuelc_to_cropprodc_patch(p) = &
+          cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = &
                cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p)+cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p)
-          cnveg_nitrogenflux_inst%biofueln_to_cropprodn_patch(p) = &
+          cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = &
                cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p)+cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p)
        end do
-
-       call p2c (bounds, num_soilc, filter_soilc, &
-            cnveg_carbonflux_inst%biofuelc_to_cropprodc_patch(bounds%begp:bounds%endp), &
-            cnveg_carbonflux_inst%biofuelc_to_cropprodc_col(bounds%begc:bounds%endc))
-
-       call p2c (bounds, num_soilc, filter_soilc, &
-            cnveg_nitrogenflux_inst%biofueln_to_cropprodn_patch(bounds%begp:bounds%endp), &
-            cnveg_nitrogenflux_inst%biofueln_to_cropprodn_col(bounds%begc:bounds%endc))
 
        if (use_grainproduct) then
           do fp = 1, num_soilp
              p = filter_soilp(fp)
-             cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = &
+             cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) + &
                   cnveg_carbonflux_inst%grainc_to_food_patch(p)
-             cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = &
+             cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) + &
                   cnveg_nitrogenflux_inst%grainn_to_food_patch(p)
           end do
-
-          call p2c (bounds, num_soilc, filter_soilc, &
-               cnveg_carbonflux_inst%grainc_to_cropprodc_patch(bounds%begp:bounds%endp), &
-               cnveg_carbonflux_inst%grainc_to_cropprodc_col(bounds%begc:bounds%endc))
-
-          call p2c (bounds, num_soilc, filter_soilc, &
-               cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(bounds%begp:bounds%endp), &
-               cnveg_nitrogenflux_inst%grainn_to_cropprodn_col(bounds%begc:bounds%endc))
        end if
+       
+       call p2c (bounds, num_soilc, filter_soilc, &
+            cnveg_carbonflux_inst%grainc_to_cropprodc_patch(bounds%begp:bounds%endp), &
+            cnveg_carbonflux_inst%grainc_to_cropprodc_col(bounds%begc:bounds%endc))
+
+       call p2c (bounds, num_soilc, filter_soilc, &
+            cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(bounds%begp:bounds%endp), &
+            cnveg_nitrogenflux_inst%grainn_to_cropprodn_col(bounds%begc:bounds%endc))
        ! No else clause: if use_grainproduct is false, then the grain*_to_cropprod fluxes
        ! will remain at their initial value (0).
 
