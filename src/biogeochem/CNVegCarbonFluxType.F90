@@ -248,8 +248,6 @@ module CNVegCarbonFluxType
      real(r8), pointer :: harvest_c_to_cwdc_col                     (:,:)   ! C fluxes associated with harvest to CWD pool (gC/m3/s)
      real(r8), pointer :: grainc_to_cropprodc_patch                 (:)     ! grain C to crop product pool (gC/m2/s)
      real(r8), pointer :: grainc_to_cropprodc_col                   (:)     ! grain C to crop product pool (gC/m2/s)
-     real(r8), pointer :: biofuelc_to_cropprodc_patch               (:)     ! biofuel C to crop product pool (gC/m2/s)
-     real(r8), pointer :: biofuelc_to_cropprodc_col                 (:)     ! biofuel C to crop product pool (gC/m2/s)
 
      ! fire fluxes
      real(r8), pointer :: m_decomp_cpools_to_fire_vr_col            (:,:,:) ! vertically-resolved decomposing C fire loss (gC/m3/s)
@@ -666,12 +664,6 @@ contains
 
     allocate(this%grainc_to_cropprodc_col(begc:endc))
     this%grainc_to_cropprodc_col(:) = nan
-    
-    allocate(this%biofuelc_to_cropprodc_patch(begp:endp))
-    this%biofuelc_to_cropprodc_patch(:) = nan
-
-    allocate(this%biofuelc_to_cropprodc_col(begc:endc))
-    this%biofuelc_to_cropprodc_col(:) = nan
 
     allocate(this%m_decomp_cpools_to_fire_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                
     this%m_decomp_cpools_to_fire_vr_col(:,:,:)= nan
@@ -3863,7 +3855,6 @@ contains
 
        this%crop_seedc_to_leaf_patch(i)                  = value_patch
        this%grainc_to_cropprodc_patch(i)                 = value_patch
-       this%biofuelc_to_cropprodc_patch(i)               = value_patch
     end do
 
     if ( use_crop )then
@@ -3933,7 +3924,6 @@ contains
        i = filter_column(fi)
 
        this%grainc_to_cropprodc_col(i)       = value_column
-       this%biofuelc_to_cropprodc_col(i)     = value_column
        this%cwdc_hr_col(i)                   = value_column
        this%cwdc_loss_col(i)                 = value_column
        this%litterc_loss_col(i)              = value_column
