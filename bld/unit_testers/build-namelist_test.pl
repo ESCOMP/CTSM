@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 838;
+my $ntests = 841;
 if ( defined($opts{'compare'}) ) {
    $ntests += 504;
 }
@@ -1032,6 +1032,11 @@ my %warntest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
+     "missing_ndep_file"         =>{ options=>"-envxml_dir . -bgc bgc -ssp_rcp SSP5-3.4",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
      "bad_megan_spec"            =>{ options=>"-envxml_dir . -bgc bgc -megan",
                                      namelst=>"megan_specifier='ZZTOP=zztop'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1266,6 +1271,30 @@ my @use_cases = ( "1850-2100_SSP1-2.6_transient",
 foreach my $res ( @glc_res ) {
    foreach my $usecase ( @usecases ) {
       $options = "-bgc bgc -res $res -use_case $usecase -envxml_dir . ";
+      &make_env_run();
+      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+      is( $@, '', "$options" );
+      $cfiles->checkfilesexist( "$options", $mode );
+      $cfiles->shownmldiff( "default", "standard" );
+      if ( defined($opts{'compare'}) ) {
+         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+      }
+      if ( defined($opts{'generate'}) ) {
+         $cfiles->copyfiles( "$options", $mode );
+      }
+      &cleanup();
+   }
+}
+# Extensions at one degree with crop on
+$mode = "-phys clm5_0";
+system( "../configure -s $mode" );
+@glc_res = ( "0.9x1.25" );
+my @use_cases = ( "2100-2300_SSP5-8.5_transient",
+                );
+foreach my $res ( @glc_res ) {
+   foreach my $usecase ( @usecases ) {
+      $options = "-bgc bgc -res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
       &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );

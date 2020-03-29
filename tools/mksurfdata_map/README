@@ -52,6 +52,9 @@ and generate the surface dataset:
    For supported model resolution (<res>)
    > mksurfdata.pl -res <res> [options]	
 
+   For supported model resolutions for SSP scenarios
+   > mksurfdata.pl -res <res> -ssp_rcp <scenario> -years 1850-2100
+
    For unsupported, user specified model resolutions	
    > mksurfdata.pl -res usrspec -usr_gname <res> -usr_gdate <user grid date>
 
