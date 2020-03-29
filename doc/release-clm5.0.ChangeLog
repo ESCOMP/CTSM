@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-clm5.0.31
 Originator(s):  erik (Erik Kluzek)
-Date: Thu Mar 26 00:55:38 MDT 2020
+Date: Sun Mar 29 15:09:19 MDT 2020
 One-line Summary: Bring in raw datasets for 2100-2300 extension for SSP5-8.5/3.5 and SSP1-2.6, some other misc. changes
 
 Purpose of this version:
@@ -58,11 +58,11 @@ Testing:
 
   regular tests (aux_clm):
 
-    cheyenne_intel ---- 
-    cheyenne_gnu ------ 
-    izumi_nag --------- 
-    izumi_pgi --------- 
-    izumi_intel ------- 
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- OK
 
 Summary of Answer changes:
 -------------------------
