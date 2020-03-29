@@ -471,14 +471,15 @@ contains
 
          do fp = 1,num_soilp
             p = filter_soilp(fp)
-            iso_cnveg_cf%biofuelc_to_cropprodc_patch(p) = iso_cnveg_cf%leafc_to_biofuelc_patch(p) + &
+            iso_cnveg_cf%grainc_to_cropprodc_patch(p) = iso_cnveg_cf%leafc_to_biofuelc_patch(p) + &
                  iso_cnveg_cf%livestemc_to_biofuelc_patch(p)
          end do
 
          if (use_grainproduct) then
             do fp = 1,num_soilp
                p = filter_soilp(fp)
-               iso_cnveg_cf%grainc_to_cropprodc_patch(p) = iso_cnveg_cf%grainc_to_food_patch(p)
+               iso_cnveg_cf%grainc_to_cropprodc_patch(p) = iso_cnveg_cf%grainc_to_cropprodc_patch(p) + &
+                    iso_cnveg_cf%grainc_to_food_patch(p)
                iso_cnveg_cf%grain_mr_patch(p) = iso_cnveg_cf%grain_xsmr_patch(p) + iso_cnveg_cf%grain_curmr_patch(p)
             end do
          endif
