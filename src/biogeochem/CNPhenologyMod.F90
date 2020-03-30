@@ -2865,10 +2865,10 @@ contains
     if (use_crop) then
        do fp = 1, num_soilp
           p = filter_soilp(fp)
-          cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = &
-               cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p)+cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p)
-          cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = &
-               cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p)+cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p)
+          cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p) + &
+               cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p)
+          cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p) + &
+               cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p)
        end do
 
        if (use_grainproduct) then
