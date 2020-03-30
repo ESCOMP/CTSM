@@ -2411,7 +2411,7 @@ contains
 
          leafcn                =>    pftcon%leafcn                                     , & ! Input:  leaf C:N (gC/gN) 
          
-         biofuel_harvfrac      =>    pftcon%biofuel_harvfrac                           , & ! Input:  cut fraction for biofuel (-) 
+         biofuel_harvfrac      =>    pftcon%biofuel_harvfrac                           , & ! Input:  cut a fraction of leaf & stem for biofuel (-) 
                                           
          lflitcn               =>    pftcon%lflitcn                                    , & ! Input:  leaf litter C:N (gC/gN)                           
          frootcn               =>    pftcon%frootcn                                    , & ! Input:  fine root C:N (gC/gN)                             
