@@ -27,7 +27,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <co2_ppmv sim_year="2000"                    >379.0</co2_ppmv>
 <co2_ppmv sim_year="2010"                    >388.8</co2_ppmv>
 <co2_ppmv sim_year="2015"                    >397.5</co2_ppmv>
-<co2_ppmv sim_year="2100" ssp_rcp="SSP5-8.5" >1141.9</co2_ppmv>
+<co2_ppmv sim_year="2100" ssp_rcp="SSP5-8.5" >1135.2</co2_ppmv>
+<co2_ppmv sim_year="2100" ssp_rcp="SSP5-3.4" >496.6</co2_ppmv>
+<co2_ppmv sim_year="2100" ssp_rcp="SSP1-2.6" >445.6</co2_ppmv>
 <co2_ppmv sim_year="1850"                    >284.7</co2_ppmv>
 <co2_ppmv sim_year="PtVg"                    >284.7</co2_ppmv>
 
@@ -820,8 +822,12 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 
 
 <!-- Extension surface datasets at 2100 -->
+<fsurdat hgrid="0.9x1.25"  sim_year="2100" use_crop=".true." ssp_rcp="SSP1-2.6" >
+lnd/clm2/surfdata_map/release-clm5.0.31/surfdata_0.9x1.25_SSP1-2.6_78pfts_CMIP6_simyr2100_c200329.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="2100" use_crop=".true." ssp_rcp="SSP5-8.5" >
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
+lnd/clm2/surfdata_map/release-clm5.0.31/surfdata_0.9x1.25_SSP5-8.5_78pfts_CMIP6_simyr2100_c200329.nc</fsurdat>
+<fsurdat hgrid="0.9x1.25"  sim_year="2100" use_crop=".true." ssp_rcp="SSP5-3.4" >
+lnd/clm2/surfdata_map/release-clm5.0.31/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_simyr2100_c200329.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 
@@ -935,9 +941,12 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_78pfts_CMIP6_simy
 
 <!-- Extensions of future scenarios - landuse time series files with crop on -->
 
-<!-- SSP5-RCP8.5 - relative to {csmdata}) -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="2100-2300" ssp_rcp="SSP5-8.5"
- use_crop=".true."   >lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c190214.nc</flanduse_timeseries>
+ use_crop=".true." >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_0.9x1.25_SSP5-8.5_78pfts_CMIP6_simyr2100-2300_c200329.n</flanduse_timeseries>
+<flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="2100-2300" ssp_rcp="SSP5-3.4"
+ use_crop=".true." >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_0.9x1.25_SSP5-3.4_78pfts_CMIP6_simyr2100-2300_c200329.n</flanduse_timeseries>
+<flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="2100-2300" ssp_rcp="SSP1-2.6"
+ use_crop=".true." >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_0.9x1.25_SSP1-2.6_78pfts_CMIP6_simyr2100-2300_c200329.n</flanduse_timeseries>
 
 <!-- Future scenarios - landuse time series files with crop off -->
 
