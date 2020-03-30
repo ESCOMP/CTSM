@@ -3558,7 +3558,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Initialize
-    bmatrix_ssw(bounds%begc:bounds%endc, :, :) = 0.0_r8
+    bmatrix_ssw(bounds%begc:bounds%endc, :, :)      = 0.0_r8
     bmatrix_ssw_soil(bounds%begc:bounds%endc, :, :) = 0.0_r8
     bmatrix_soil_ssw(bounds%begc:bounds%endc, :, :) = 0.0_r8
 
@@ -3571,37 +3571,15 @@ contains
        bmatrix_ssw(c,3,0)= 1._r8+(1._r8-cnfac)*(dtime/c_h2osfc(c)) &
             *tk_h2osfc(c)/dzm -(dtime/c_h2osfc(c))*dhsdT(c) !interaction from atm
 
-    enddo
-
-
-    ! Initialize
-    bmatrix_ssw_soil(bounds%begc:bounds%endc, :, :) = 0.0_r8
-
-    do fc = 1,num_nolakec
-       c = filter_nolakec(fc)
-
-       ! surface water layer has two coefficients
-       dzm=(0.5*dz_h2osfc(c)+col%z(c,1))
-
        bmatrix_ssw_soil(c,2,0)= -(1._r8-cnfac)*(dtime/c_h2osfc(c))*tk_h2osfc(c)/dzm !flux to top soil layer
-
-    enddo
-
-    ! Initialize
-    bmatrix_soil_ssw(bounds%begc:bounds%endc, :, :) = 0.0_r8
-
-    do fc = 1,num_nolakec
-       c = filter_nolakec(fc)
-
-       ! surface water layer has two coefficients
-       dzm=(0.5*dz_h2osfc(c)+col%z(c,1))
 
        ! top soil layer has sub coef shifted to 2nd super diagonal
        if ( frac_h2osfc(c) /= 0.0_r8 )then
           bmatrix_soil_ssw(c,4,1)=  - frac_h2osfc(c) * (1._r8-cnfac) * fact(c,1) &
                * tk_h2osfc(c)/dzm !flux from h2osfc
        end if
-    enddo
+       enddo
+
 
 
   end subroutine SetMatrix_StandingSurfaceWater
