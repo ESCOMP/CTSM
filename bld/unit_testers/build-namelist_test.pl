@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 841;
+my $ntests = 916;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 504;
+   $ntests += 558;
 }
 plan( tests=>$ntests );
 
@@ -1037,6 +1037,11 @@ my %warntest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
+     "ext_SSP5-3.4"              =>{ options=>"-res 0.9x1.25 -envxml_dir . -bgc bgc -crop -use_case 2100-2300_SSP5-3.4_transient",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
      "bad_megan_spec"            =>{ options=>"-envxml_dir . -bgc bgc -megan",
                                      namelst=>"megan_specifier='ZZTOP=zztop'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1258,7 +1263,7 @@ print "==================================================\n";
 # of the different use cases.
 $mode = "-phys clm4_5";
 system( "../configure -s $mode" );
-my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" );
+my @glc_res = ( "0.9x1.25", "1.9x2.5" );
 my @use_cases = ( "1850-2100_SSP1-2.6_transient",
                   "1850-2100_SSP2-4.5_transient",
                   "1850-2100_SSP3-7.0_transient",
@@ -1269,7 +1274,7 @@ my @use_cases = ( "1850-2100_SSP1-2.6_transient",
                   "20thC_transient",
                  );
 foreach my $res ( @glc_res ) {
-   foreach my $usecase ( @usecases ) {
+   foreach my $usecase ( @use_cases ) {
       $options = "-bgc bgc -res $res -use_case $usecase -envxml_dir . ";
       &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
@@ -1291,9 +1296,10 @@ $mode = "-phys clm5_0";
 system( "../configure -s $mode" );
 @glc_res = ( "0.9x1.25" );
 my @use_cases = ( "2100-2300_SSP5-8.5_transient",
+                  "2100-2300_SSP1-2.6_transient",
                 );
 foreach my $res ( @glc_res ) {
-   foreach my $usecase ( @usecases ) {
+   foreach my $usecase ( @use_cases ) {
       $options = "-bgc bgc -res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
       &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
