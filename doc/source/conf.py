@@ -180,3 +180,6 @@ numfig_format = {'figure': 'Figure %s',
                  'section': '%s',
                 }
 numfig_secnum_depth = 2
+
+def setup(app):
+    app.add_stylesheet('css/custom.css')
