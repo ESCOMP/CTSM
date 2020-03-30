@@ -3282,49 +3282,6 @@ contains
         enddo
      end do
 
-!!           !
-!!      ! urban road columns -------------------------------------------------------------
-!!      !
-!!     do j = -nlevsno+1,0
-!!        do fc = 1,num_nolakec
-!!           c = filter_nolakec(fc)
-!!           l = col%landunit(c)
-!!           nlev_thresh(c) = nlevgrnd
-!!
-!!           !if (lun%urbpoi(l)) then
-!!              if ((col%itype(c) == icol_road_imperv &
-!!                  .or. col%itype(c) == icol_road_perv) &
-!!                  .or. (.not. lun%urbpoi(l))) then
-!!                 nlev_thresh(c) = nlevurb
-!!                 if (j >= col%snl(c)+1) then
-!!                    if (j == col%snl(c)+1) then
-!!                       dzp     = z(c,j+1)-z(c,j)
-!!                       bmatrix_snow(c,4,j-1) = 0._r8
-!!                       bmatrix_snow(c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
-!!                       if ( j == 0) then
-!!                           bmatrix_snow_soil(c,1,j-1) = -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
-!!                       end if
-!!                       if ( j /= 0) then
-!!                          bmatrix_snow(c,2,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
-!!                       end if
-!!                    else if (j <= nlevgrnd-1) then
-!!                       dzm     = (z(c,j)-z(c,j-1))
-!!                       dzp     = (z(c,j+1)-z(c,j))
-!!                       bmatrix_snow(c,4,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
-!!                       bmatrix_snow(c,3,j-1) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
-!!                       if ( j == 0) then
-!!                           bmatrix_snow_soil(c,1,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
-!!                       end if
-!!                       if ( j /= 0) then
-!!                          bmatrix_snow(c,2,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
-!!                       end if
-!!                    end if
-!!                 end if
-!!              end if
-!!           !end if
-!!        enddo
-!!     end do
-
     end associate
 
   end subroutine SetMatrix_Snow
@@ -3578,121 +3535,12 @@ contains
           bmatrix_soil_ssw(c,4,1)=  - frac_h2osfc(c) * (1._r8-cnfac) * fact(c,1) &
                * tk_h2osfc(c)/dzm !flux from h2osfc
        end if
-       enddo
+    enddo
 
 
 
   end subroutine SetMatrix_StandingSurfaceWater
 
-  !-----------------------------------------------------------------------
-  subroutine SetMatrix_StandingSurfaceWater_Soil(bounds, num_nolakec, filter_nolakec, dtime, nband, &
-       tk, tk_h2osfc, fact, c_h2osfc, dz_h2osfc, bmatrix_ssw_soil)
-    !
-    ! !DESCRIPTION:
-    ! Setup the matrix entries corresponding to standing surface water-soil layer interaction
-    !
-    ! !USES:
-    use clm_varcon     , only : cnfac
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(bounds_type), intent(in) :: bounds                             ! bounds
-    integer , intent(in)  :: num_nolakec                                ! number of column non-lake points in column filter
-    integer , intent(in)  :: filter_nolakec(:)                          ! column filter for non-lake points
-    real(r8), intent(in)  :: dtime                                      ! land model time step (sec)
-    integer , intent(in)  :: nband                                      ! number of bands of the tridigonal matrix
-    real(r8), intent(in)  :: tk(bounds%begc: ,-nlevsno+1: )             ! thermal conductivity [W/(m K)]
-    real(r8), intent(in)  :: tk_h2osfc(bounds%begc: )                   ! thermal conductivity [W/(m K)]
-    real(r8), intent(in)  :: fact( bounds%begc: , -nlevsno+1: )         ! used in computing tridiagonal matrix [col, lev]
-    real(r8), intent(in)  :: c_h2osfc( bounds%begc: )                   ! heat capacity of surface water [col]
-    real(r8), intent(in)  :: dz_h2osfc(bounds%begc: )                   ! Thickness of standing water [m]
-    real(r8), intent(out) :: bmatrix_ssw_soil(bounds%begc: , 1: ,0: )   ! matrix enteries
-    !
-    ! !LOCAL VARIABLES:
-    integer  :: c                                                       ! indices
-    integer  :: fc                                                      ! lake filtered column indices
-    real(r8) :: dzm                                                     ! used in computing tridiagonal matrix
-    !-----------------------------------------------------------------------
-
-    ! Enforce expected array sizes
-    SHR_ASSERT_ALL_FL((ubound(tk)                  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)           == (/bounds%endc/)),           sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(fact)                == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(c_h2osfc)            == (/bounds%endc/)),           sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)           == (/bounds%endc/)),           sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(bmatrix_ssw_soil)   == (/bounds%endc, nband, 0/)), sourcefile, __LINE__)
-
-    ! Initialize
-    bmatrix_ssw_soil(bounds%begc:bounds%endc, :, :) = 0.0_r8
-
-    do fc = 1,num_nolakec
-       c = filter_nolakec(fc)
-
-       ! surface water layer has two coefficients
-       dzm=(0.5*dz_h2osfc(c)+col%z(c,1))
-
-       bmatrix_ssw_soil(c,2,0)= -(1._r8-cnfac)*(dtime/c_h2osfc(c))*tk_h2osfc(c)/dzm !flux to top soil layer
-
-    enddo
-
-  end subroutine SetMatrix_StandingSurfaceWater_Soil
-
-  !-----------------------------------------------------------------------
-  subroutine SetMatrix_Soil_StandingSurfaceWater(bounds, num_nolakec, filter_nolakec, nband, &
-       tk_h2osfc, fact, dz_h2osfc, frac_h2osfc, bmatrix_soil_ssw)
-    !
-    ! !DESCRIPTION:
-    ! Setup the matrix entries corresponding to soil layer-standing surface water interaction
-    !
-    ! !USES:
-    use clm_varcon     , only : cnfac
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(bounds_type), intent(in) :: bounds                             ! bounds
-    integer , intent(in)  :: num_nolakec                                ! number of column non-lake points in column filter
-    integer , intent(in)  :: filter_nolakec(:)                          ! column filter for non-lake points
-    integer , intent(in)  :: nband                                      ! number of bands of the tridigonal matrix
-    real(r8), intent(in)  :: tk_h2osfc(bounds%begc: )                   ! thermal conductivity [W/(m K)]
-    real(r8), intent(in)  :: fact( bounds%begc: , -nlevsno+1: )         ! used in computing tridiagonal matrix [col, lev]
-    real(r8), intent(in)  :: dz_h2osfc(bounds%begc: )                   ! Thickness of standing water [m]
-    real(r8), intent(in)  :: frac_h2osfc(bounds%begc: )                 ! fractional area with surface water greater than zero
-    real(r8), intent(out) :: bmatrix_soil_ssw(bounds%begc: , 1:, 1: )   ! matrix enteries
-    !
-    ! !LOCAL VARIABLES:
-    integer  :: c                                                       ! indices
-    integer  :: fc                                                      ! lake filtered column indices
-    real(r8) :: dzm                                                     ! used in computing tridiagonal matrix
-    !-----------------------------------------------------------------------
-
-    ! Enforce expected array sizes
-    SHR_ASSERT_ALL_FL((ubound(tk_h2osfc)        == (/bounds%endc/)),           sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(fact)             == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(dz_h2osfc)        == (/bounds%endc/)),           sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(frac_h2osfc)      == (/bounds%endc/)),           sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(bmatrix_soil_ssw) == (/bounds%endc, nband, 1/)), sourcefile, __LINE__)
-
-    ! Initialize
-    bmatrix_soil_ssw(bounds%begc:bounds%endc, :, :) = 0.0_r8
-
-    do fc = 1,num_nolakec
-       c = filter_nolakec(fc)
-
-       ! surface water layer has two coefficients
-       dzm=(0.5*dz_h2osfc(c)+col%z(c,1))
-
-       ! top soil layer has sub coef shifted to 2nd super diagonal
-       if ( frac_h2osfc(c) /= 0.0_r8 )then
-          bmatrix_soil_ssw(c,4,1)=  - frac_h2osfc(c) * (1._r8-cnfac) * fact(c,1) &
-               * tk_h2osfc(c)/dzm !flux from h2osfc
-       end if
-    enddo
-
-  end subroutine SetMatrix_Soil_StandingSurfaceWater
 
   !-----------------------------------------------------------------------
   !BOP
