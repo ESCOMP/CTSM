@@ -748,13 +748,13 @@ EOF
             # determine simulation year to use for the surface dataset:
             my $sim_yr_surfdat = "$sim_yr0";
             
-            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year='${sim_yr_surfdat}'$mkcrop -var mksrf_fvegtyp -namelist clmexp";
+            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year='${sim_yr_surfdat}'$mkcrop,ssp_rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp";
             my $vegtyp = `$cmd`;
             chomp( $vegtyp );
             if ( $vegtyp eq "" ) {
                die "** trouble getting vegtyp file with: $cmd\n";
             }
-            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year='${sim_yr_surfdat}'$mkcrop -var mksrf_fvegtyp -namelist clmexp";
+            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year='${sim_yr_surfdat}'$mkcrop,ssp_rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp";
             my $hrvtyp = `$cmd`;
             chomp( $hrvtyp );
             if ( $hrvtyp eq "" ) {
