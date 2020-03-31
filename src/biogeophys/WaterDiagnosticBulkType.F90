@@ -38,7 +38,7 @@ module WaterDiagnosticBulkType
 
      real(r8), pointer :: h2osno_total_col       (:)   ! col total snow water (mm H2O)
      real(r8), pointer :: snow_depth_col         (:)   ! col snow height of snow covered area (m)
-     real(r8), pointer :: snow_5day              (:)   ! col snow height 5 day avg
+     real(r8), pointer :: snow_5day_col          (:)   ! col snow height 5 day avg
      real(r8), pointer :: snowdp_col             (:)   ! col area-averaged snow height (m)
      real(r8), pointer :: snow_layer_unity_col   (:,:) ! value 1 for each snow layer, used for history diagnostics
      real(r8), pointer :: bw_col                 (:,:) ! col partial density of water in the snow pack (ice + liquid) [kg/m3] 
@@ -180,7 +180,7 @@ contains
 
     allocate(this%h2osno_total_col       (begc:endc))                     ; this%h2osno_total_col       (:)   = nan
     allocate(this%snow_depth_col         (begc:endc))                     ; this%snow_depth_col         (:)   = nan
-    allocate(this%snow_5day              (begc:endc))                     ; this%snow_5day             (:)   = nan
+    allocate(this%snow_5day_col          (begc:endc))                     ; this%snow_5day             (:)   = nan
     allocate(this%snowdp_col             (begc:endc))                     ; this%snowdp_col             (:)   = nan
     allocate(this%snow_layer_unity_col   (begc:endc,-nlevsno+1:0))        ; this%snow_layer_unity_col   (:,:) = nan
     allocate(this%bw_col                 (begc:endc,-nlevsno+1:0))        ; this%bw_col                 (:,:) = nan   
@@ -561,22 +561,16 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer  :: begc, endc
     integer  :: nstep
     integer  :: ier
-    real(r8), pointer :: rbufslp(:)  ! temporary
     !---------------------------------------------------------------------
-    begc = bounds%begc; endc = bounds%endc
 
     ! Allocate needed dynamic memory for single level patch field
-    allocate(rbufslp(begc:endc), stat=ier)
 
     ! Determine time step
     nstep = get_nstep()
-    call extract_accum_field ('SNOW_5D', rbufslp, nstep)
-    this%snow_5day(begc:endc) = rbufslp(begc:endc)
+    call extract_accum_field ('SNOW_5D', this%snow_5day_col, nstep)
 
-    deallocate(rbufslp)
 
   end subroutine InitAccVars
 
@@ -596,23 +590,18 @@ contains
     integer :: dtime                     ! timestep size [seconds]
     integer :: nstep                     ! timestep number
     integer :: ier                       ! error status
-    integer :: begc, endc
-    real(r8), pointer :: rbufslp(:)      ! temporary single level - patch level
     !---------------------------------------------------------------------
-    begc = bounds%begc; endc = bounds%endc
 
     nstep = get_nstep()
 
     ! Allocate needed dynamic memory for single level patch field
 
-    allocate(rbufslp(begc:endc), stat=ier)
 
        ! Accumulate and extract snow 10 day
     call update_accum_field  ('SNOW_5D', this%snow_depth_col, nstep)
-    call extract_accum_field ('SNOW_5D', this%snow_5day, nstep)
+    call extract_accum_field ('SNOW_5D', this%snow_5day_col, nstep)
 
 
-    deallocate(rbufslp)
 
   end subroutine UpdateAccVars
 
@@ -766,13 +755,6 @@ contains
          long_name=this%info%lname('snow depth'), &
          units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%snow_depth_col) 
-    call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('SNOW_5D'), &
-         xtype=ncd_double,  &
-         dim1name='column', &
-         long_name=this%info%lname('5 day snow height'), &
-         units='m', &
-         interpinic_flag='interp', readvar=readvar, data=this%snow_5day)
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('frac_sno_eff'), &

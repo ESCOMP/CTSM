@@ -1245,7 +1245,6 @@ contains
       ! Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
       ! Bernacchi et al (2003) Plant, Cell and Environment 26:1419-1430
       ! except TPU from: Harley et al (1992) Plant, Cell and Environment 15:271-282
-
       kcha    = 79430._r8
       koha    = 36380._r8
       cpha    = 37830._r8

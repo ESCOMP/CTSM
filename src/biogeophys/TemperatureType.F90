@@ -459,12 +459,11 @@ contains
     call hist_addfld1d (fname='SOIL10', units='K',  &
          avgflag='A', long_name='10-day running mean of 3rd layer soil', &
          ptr_patch=this%soila10_patch, default='inactive')
-    !if (use_cn .and.  use_crop )then
+    
     this%t_a5min_patch(begp:endp) = spval
     call hist_addfld1d (fname='A5TMIN', units='K',  &
          avgflag='A', long_name='5-day running mean of min 2-m temperature', &
          ptr_patch=this%t_a5min_patch, default='inactive')
-    !end if
 
     if (use_cn .and. use_crop )then
        this%t_a10min_patch(begp:endp) = spval
@@ -1180,9 +1179,6 @@ contains
             desc='10-day running mean of min 2-m temperature', accum_type='runmean', accum_period=-10, &
             subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
 
-       call init_accum_field (name='TDM5', units='K', &
-            desc='5-day running mean of min 2-m temperature', accum_type='runmean', accum_period=-5, &
-            subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
     end if
 
     if ( use_crop )then
@@ -1269,8 +1265,6 @@ contains
        call extract_accum_field ('TDM10', rbufslp, nstep)
        this%t_a10min_patch(begp:endp)= rbufslp(begp:endp)
 
-       call extract_accum_field ('TDM5', rbufslp, nstep)
-       this%t_a5min_patch(begp:endp) = rbufslp(begp:endp)
     end if
 
     ! Initialize variables that are to be time accumulated
