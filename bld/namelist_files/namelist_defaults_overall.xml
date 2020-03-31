@@ -27,11 +27,13 @@ determine default values for namelists.
 <clm_start_type bgc_spinup="on"                 >cold</clm_start_type> <!-- CLM 4.5 -->
 
 <clm_start_type sim_year_range="1850-2100">arb_ic</clm_start_type>
+<clm_start_type sim_year_range="2100-2300">arb_ic</clm_start_type>
 
 
 <!-- For transient cases, turn on demand to set flanduse_timeseries -->
 <clm_demand sim_year_range="1850-2000">flanduse_timeseries</clm_demand>
 <clm_demand sim_year_range="1850-2100">flanduse_timeseries</clm_demand>
+<clm_demand sim_year_range="2100-2300">flanduse_timeseries</clm_demand>
 
 
 <!-- Default location of {csmdata} -->
