@@ -298,8 +298,8 @@ contains
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        call CNSeasonDecidPhenology(num_soilp, filter_soilp, &
-            temperature_inst, cnveg_state_inst, dgvs_inst, &
-            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, waterstatebulk_inst)
+            temperature_inst, waterstatebulk_inst, cnveg_state_inst, dgvs_inst, &
+            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        call CNStressDecidPhenology(num_soilp, filter_soilp,   &
             soilstate_inst, temperature_inst, atm2lnd_inst, wateratm2lndbulk_inst, cnveg_state_inst, &
@@ -669,9 +669,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp       , &
-       temperature_inst, cnveg_state_inst, dgvs_inst , &
-       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
-       waterstatebulk_inst)
+       temperature_inst, waterstatebulk_inst, cnveg_state_inst, dgvs_inst , &
+       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
     ! For coupled carbon-nitrogen code (CN).
@@ -687,13 +686,13 @@ contains
     integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(temperature_type)         , intent(in)    :: temperature_inst
+    type(waterstatebulk_type)      , intent(in)    :: waterstatebulk_inst
     type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
     type(dgvs_type)                , intent(inout) :: dgvs_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
     type(cnveg_nitrogenstate_type) , intent(inout) :: cnveg_nitrogenstate_inst
     type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
-    type(waterstatebulk_type)      , intent(in)    :: waterstatebulk_inst 
     !
     ! !LOCAL VARIABLES:
     integer :: g,c,p          !indices
@@ -714,9 +713,9 @@ contains
          season_decid                        =>    pftcon%season_decid                                         , & ! Input:  binary flag for seasonal-deciduous leaf habit (0 or 1)
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-         t10                                 =>    temperature_inst%soila10_patch                              , & ! Input:  [real(r8) (:)   ] 
-         tmin10                              =>    temperature_inst%t_a10min_patch                             , & ! input:  [real(r8) (:)   ] 
-         snow5d                              =>    waterdiagnosticbulk_inst%snow_5day                          , & ! input:  [real(r8) (:)   ] 
+         soila10                             =>    temperature_inst%soila10_patch                              , & ! Input:  [real(r8) (:)   ] 
+         t_a10min                            =>    temperature_inst%t_a10min_patch                             , & ! input:  [real(r8) (:)   ] 
+         snow_5day                           =>    waterdiagnosticbulk_inst%snow_5day                          , & ! input:  [real(r8) (:)   ] 
          
          pftmayexist                         =>    dgvs_inst%pftmayexist_patch                                 , & ! Output: [logical   (:)   ]  exclude seasonal decid patches from tropics           
 
@@ -917,9 +916,9 @@ contains
                !separate into Arctic boreal and lower latitudes
                if (onset_gdd(p) > crit_onset_gdd .and. abs(grc%latdeg(g))<45.0_r8) then
                   onset_thresh=1.0_r8
-               else if (onset_gddflag(p) == 1.0_r8 .and. t10(p) > SHR_CONST_TKFRZ &
-                       .and. tmin10(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 &
-                       .and. dayl(g)>(crit_dayl/2.0_r8) .and. snow5d(c)<0.1_r8) then
+               else if (onset_gddflag(p) == 1.0_r8 .and. soila10(p) > SHR_CONST_TKFRZ &
+                       .and. t_a10min(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 &
+                       .and. dayl(g)>(crit_dayl/2.0_r8) .and. snow_5day(c)<0.1_r8) then
                   onset_thresh=1.0_r8
                end if
 
@@ -971,13 +970,12 @@ contains
                   days_active(p) = days_active(p) + fracday
                   if (days_active(p) > 355._r8) pftmayexist(p) = .false.
                end if
-               ! use 15 hr max to ~11hours in temperate regions
-               ! only begin to test for offset daylength once past the summer sol
-               crit_daylat=54000-360*(65-grc%latdeg(g))
+               ! use 15 hr at 65N from eitel 2019, to ~11hours in temperate regions
+               crit_daylat=54000-720*(65-abs(grc%latdeg(g)))
                if (crit_daylat < crit_dayl) then
                   crit_daylat = crit_dayl
                end if
-
+               ! only begin to test for offset daylength once past the summer sol 
                if (ws_flag == 0._r8 .and. dayl(g) < crit_daylat) then
                   offset_flag(p) = 1._r8
                   offset_counter(p) = ndays_off * secspday
