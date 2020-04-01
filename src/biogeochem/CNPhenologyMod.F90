@@ -2888,8 +2888,6 @@ contains
        call p2c (bounds, num_soilc, filter_soilc, &
             cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(bounds%begp:bounds%endp), &
             cnveg_nitrogenflux_inst%grainn_to_cropprodn_col(bounds%begc:bounds%endc))
-       ! No else clause: if use_grainproduct is false, then the grain*_to_cropprod fluxes
-       ! will remain at their initial value (0).
 
     end if
 
