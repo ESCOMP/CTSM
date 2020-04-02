@@ -402,7 +402,7 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp, PNlcold, PNetold, PNrespold, &
+                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp, PNlcold, PNetold, PNrespold, dayl_factor(p), &
                               PNcbold, PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
@@ -791,7 +791,7 @@ end subroutine Clear24_Climate_LUNA
 !Use the LUNA model to calculate the Nitrogen partioning 
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
      Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp,&
-     PNlcold, PNetold, PNrespold, PNcbold, &
+     PNlcold, PNetold, PNrespold, PNcbold, dayl_factor &
      PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
   implicit none
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
@@ -814,6 +814,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: PNetold                    !old value of the proportion of nitrogen allocated to electron transport (unitless)
   real(r8), intent (in) :: PNrespold                  !old value of the proportion of nitrogen allocated to respiration (unitless)
   real(r8), intent (in) :: PNcbold                    !old value of the proportion of nitrogen allocated to carboxylation (unitless)  
+  real(r8), intent (in) :: dayl_factor                !daylight scale factor
   real(r8), intent (out):: PNstoreopt                 !optimal proportion of nitrogen for storage 
   real(r8), intent (out):: PNlcopt                    !optimal proportion of nitrogen for light capture 
   real(r8), intent (out):: PNetopt                    !optimal proportion of nitrogen for electron transport 
@@ -897,7 +898,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   tleafd10c = min(max(tleafd10, Trange1), Trange2)    !constrain the physiological range
   tleafn10c = min(max(tleafn10, Trange1), Trange2)    !constrain the physiological range
   ci = 0.7_r8 * CO2a10 
-  JmaxCoef = Jmaxb1 * ((hourpd / 12.0_r8)**2.0_r8) * (1.0_r8 - exp(-relhExp * max(relh10 - minrelh, 0.0_r8) / &
+  JmaxCoef = Jmaxb1 * dayl_factor * (1.0_r8 - exp(-relhExp * max(relh10 - minrelh, 0.0_r8) / &
        (1.0_r8 - minrelh)))
   do while (PNlcoldi .NE. PNlc .and. jj < 100)      
      Fc = VcmxTKattge(tair10, tleafd10c) * Fc25
