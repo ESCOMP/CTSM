@@ -36,37 +36,37 @@ Testing:
   unit-tests (components/clm/src):
 
     cheyenne - 
-    hobart ---
+    izumi ----
 
   tools-tests (components/clm/test/tools):
 
     cheyenne - 
-    hobart ---
+    izumi ----
 
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
      cheyenne - 
-     hobart ---
+     izumi ----
 
   regular tests (aux_clm):
 
     cheyenne_intel ---- 
     cheyenne_gnu ------ 
-    hobart_nag -------- 
-    hobart_pgi -------- 
-    hobart_intel ------ 
+    izumi_nag --------- 
+    izumi_pgi --------- 
+    izumi_intel ------- 
 
   regular tests (prealpha):
 
     cheyenne_intel -
     cheyenne_gnu ---
-    hobart_nag -----
+    izumi_nag ------
 
   regular tests (prebeta):
 
     cheyenne_intel -
     cheyenne_gnu ---
-    hobart_nag -----
+    izumi_nag ------
 
 Summary of Answer changes:
 -------------------------
