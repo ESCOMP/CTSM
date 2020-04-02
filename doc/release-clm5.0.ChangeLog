@@ -1,4 +1,92 @@
 ===============================================================
+Tag name:  release-clm5.0.32
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Apr  2 00:23:04 MDT 2020
+One-line Summary: Extensions to 2300 for SSP5-8.5,SSP5-3.4, and SSP1-2.6
+
+Purpose of this version:
+------------------------
+
+Add 2100 surface datasets, landuse.timeseries files for 2100-2300 for SSP5-3.4, SSP5-8.5, and SSP1-2.6. 
+Also add compsets to run them and the build-namelist use-cases for them. Only for f09 resolution with crop on.
+
+Updates cime as a cime update was needed to run the extensions in I compsets (for presaero and CO2). 
+Add a test for it. Add -ignore_warnings to cmip6_waccm_deck user-mod which is required for the 
+fully coupled compset for BWSSP534osext as the ndep file doesn't exist for it, but WACCM is 
+providing ndep. Get more of the build-namelist unit tester tests working, which previously weren't running.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #944, #955
+   Fixes #944 -- extensions to 2300
+   Fixes #955 -- surface dataset creation bug for 2100
+
+Science changes since: release-clm5.0.31
+   Add 2100 surface datasets and transient extensions from 2100-2300
+
+Software changes since: release-clm5.0.31
+   Fix bug with creation of 2100 surface datasets
+
+Changes to User Interface since: release-clm5.0.31
+
+   New compsets: ISSP585ExtClm50BgcCrop, ISSP534xtClm50BgcCrop, ISSP126ExtClm50BgcCrop
+   New CLM_NML_USE_CASE: 2100-2300_SSP5-8.5_transient, 2100-2300_SSP5-3.4_transient, 2100-2300_SSP1-2.6_transient
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools): None
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test): None
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- PASS
+    izumi_pgi --------- PASS
+    izumi_intel ------- PASS
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: cime updated
+
+   cism:   cism-release-cesm2.1.2_04
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.33
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200121
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #959
+(https://github.com/ESCOMP/ctsm/pull)
+   #959 -- Add surface datasets/landuse-timeseries/compsets/use-cases for extensions to 2300
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.31
 Originator(s):  erik (Erik Kluzek)
 Date: Sun Mar 29 15:09:19 MDT 2020

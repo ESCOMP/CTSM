@@ -1,0 +1,3 @@
+#!/bin/bash
+# Turn ignore-warnings on, so won't abort on missing ndep file, as WACCM should provide it
+./xmlchange --append CLM_BLDNML_OPTS="--ignore_warnings"
