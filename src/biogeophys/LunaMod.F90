@@ -332,7 +332,7 @@ module LunaMod
          hourpd = dayl(g) / 3600._r8             
          tleafd10 = t_veg10_day(p) - tfrz
          tleafn10 = t_veg10_night(p) - tfrz
-         tleaf10  = (dayl(g)*tleafd10 +(86400._r8-dayl(g)) * tleafd10)/86400._r8 	     
+         tleaf10  = (dayl(g)*tleafd10 +(86400._r8-dayl(g)) * tleafn10)/86400._r8
          tair10 = t10(p)- tfrz
          relh10 = min(1.0_r8, rh10_p(p))  
 	 rb10v = rb10_p(p)	     
