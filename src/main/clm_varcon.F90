@@ -27,6 +27,7 @@ module clm_varcon
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: clm_varcon_init  ! initialize constants in clm_varcon
+  public :: clm_varcon_clean ! deallocate variables allocated by clm_varcon_init
   !
   ! !REVISION HISTORY:
   ! Created by Mariana Vertenstein
@@ -289,5 +290,28 @@ contains
     end if
 
   end subroutine clm_varcon_init
+
+  !-----------------------------------------------------------------------
+  subroutine clm_varcon_clean()
+    !
+    ! !DESCRIPTION:
+    ! Deallocate variables allocated by clm_varcon_init
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'clm_varcon_clean'
+    !-----------------------------------------------------------------------
+
+    deallocate(zlak)
+    deallocate(dzlak)
+    deallocate(zsoi)
+    deallocate(dzsoi)
+    deallocate(zisoi)
+    deallocate(dzsoi_decomp)
+    deallocate(nlvic)
+    deallocate(dzvic)
+
+  end subroutine clm_varcon_clean
+
 
 end module clm_varcon
