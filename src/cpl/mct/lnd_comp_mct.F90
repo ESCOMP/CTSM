@@ -28,6 +28,7 @@ module lnd_comp_mct
   private :: lnd_domain_mct    ! set the land model domain information
   private :: lnd_handle_resume ! handle pause/resume signals from the coupler
   !---------------------------------------------------------------------------
+  integer, private      :: LNDID	     ! Land identifyer
 
 contains
 
@@ -59,13 +60,14 @@ contains
     use seq_infodata_mod , only : seq_infodata_type, seq_infodata_GetData, seq_infodata_PutData, &
                                   seq_infodata_start_type_start, seq_infodata_start_type_cont,   &
                                   seq_infodata_start_type_brnch
-    use seq_comm_mct     , only : seq_comm_suffix, seq_comm_inst, seq_comm_name
+    use seq_comm_mct     , only : seq_comm_suffix, seq_comm_inst, seq_comm_name, seq_comm_setptrs
     use seq_flds_mod     , only : seq_flds_x2l_fields, seq_flds_l2x_fields
     use spmdMod          , only : masterproc, spmd_init
     use clm_varctl       , only : nsrStartup, nsrContinue, nsrBranch
     use clm_cpl_indices  , only : clm_cpl_indices_set
     use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap_lsize
     use ESMF
+!$  use omp_lib         , only : omp_set_num_threads
     !
     ! !ARGUMENTS:
     type(ESMF_Clock),           intent(inout) :: EClock           ! Input synchronization clock
@@ -74,7 +76,6 @@ contains
     character(len=*), optional, intent(in)    :: NLFilename       ! Namelist filename to read
     !
     ! !LOCAL VARIABLES:
-    integer                          :: LNDID	     ! Land identifyer
     integer                          :: mpicom_lnd   ! MPI communicator
     type(mct_gsMap),         pointer :: GSMap_lnd    ! Land model MCT GS map
     type(mct_gGrid),         pointer :: dom_l        ! Land model domain
@@ -83,6 +84,7 @@ contains
     integer  :: g,i,j                                ! indices
     integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
     integer  :: dtime_clm                            ! clm time-step
+    integer  :: nthreads
     logical  :: exists                               ! true if file exists
     logical  :: atm_aero                             ! Flag if aerosol data sent from atm model
     real(r8) :: scmlat                               ! single-column latitude
@@ -115,6 +117,9 @@ contains
     call seq_cdata_setptrs(cdata_l, ID=LNDID, mpicom=mpicom_lnd, &
          gsMap=GSMap_lnd, dom=dom_l, infodata=infodata)
 
+    call seq_comm_setptrs(LNDID, nthreads=nthreads)
+!$  call omp_set_num_threads(nthreads)
+
     ! Determine attriute vector indices
 
     call clm_cpl_indices_set()
@@ -122,6 +127,8 @@ contains
     ! Initialize clm MPI communicator
 
     call spmd_init( mpicom_lnd, LNDID )
+
+
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -305,6 +312,8 @@ contains
     use perf_mod        ,  only : t_startf, t_stopf, t_barrierf
     use shr_orb_mod     ,  only : shr_orb_decl
     use ESMF
+    use seq_comm_mct    , only : seq_comm_setptrs
+!$  use omp_lib         , only : omp_set_num_threads
     !
     ! !ARGUMENTS:
     type(ESMF_Clock) , intent(inout) :: EClock    ! Input synchronization clock from driver
@@ -338,6 +347,7 @@ contains
     integer      :: shrlogunit,shrloglev ! old values for share log unit and log level
     integer      :: lbnum                ! input to memory diagnostic
     integer      :: g,i,lsize            ! counters
+    integer      :: nthreads             ! number of threads in a task
     real(r8)     :: calday               ! calendar day for nstep
     real(r8)     :: declin               ! solar declination angle in radians for nstep
     real(r8)     :: declinp1             ! solar declination angle in radians for nstep+1
@@ -350,6 +360,9 @@ contains
     character(len=32)               :: rdate                ! date char string for restart file names
     character(len=32), parameter    :: sub = "lnd_run_mct"
     !---------------------------------------------------------------------------
+    ! set number of openmp threads
+    call seq_comm_setptrs(LNDID, nthreads=nthreads)
+!$  call omp_set_num_threads(nthreads)
 
     ! Determine processor bounds
 
