@@ -68,7 +68,7 @@ contains
     use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap_lsize
     use ESMF
 #ifdef _OPENMP
-    use omp_lib          , only : omp_set_num_threads
+    use omp_lib          , only : omp_set_num_threads, omp_get_max_threads
 #endif
     !
     ! !ARGUMENTS:
@@ -86,6 +86,7 @@ contains
     integer  :: g,i,j                                ! indices
     integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
     integer  :: dtime_clm                            ! clm time-step
+    integer  :: nthreads_orig                        ! original number of threads at start of call
     integer  :: nthreads_lnd                         ! number of OpenMP threads for the land model
     logical  :: exists                               ! true if file exists
     logical  :: atm_aero                             ! Flag if aerosol data sent from atm model
@@ -120,6 +121,7 @@ contains
          gsMap=GSMap_lnd, dom=dom_l, infodata=infodata)
 
 #ifdef _OPENMP
+    nthreads_orig = omp_get_max_threads()
     call seq_comm_setptrs(LNDID, nthreads=nthreads_lnd)
     call omp_set_num_threads(nthreads_lnd)
 #endif
@@ -287,6 +289,10 @@ contains
     endif
 #endif
 
+#ifdef _OPENMP
+    call omp_set_num_threads(nthreads_orig)
+#endif
+
   end subroutine lnd_init_mct
 
   !====================================================================================
@@ -318,7 +324,7 @@ contains
     use ESMF
     use seq_comm_mct    , only : seq_comm_setptrs
 #ifdef _OPENMP
-    use omp_lib         , only : omp_set_num_threads
+    use omp_lib         , only : omp_set_num_threads, omp_get_max_threads
 #endif
     !
     ! !ARGUMENTS:
@@ -353,6 +359,7 @@ contains
     integer      :: shrlogunit,shrloglev ! old values for share log unit and log level
     integer      :: lbnum                ! input to memory diagnostic
     integer      :: g,i,lsize            ! counters
+    integer      :: nthreads_orig        ! original number of threads at start of call
     integer      :: nthreads_lnd         ! number of OpenMP threads for the land model
     real(r8)     :: calday               ! calendar day for nstep
     real(r8)     :: declin               ! solar declination angle in radians for nstep
@@ -368,6 +375,7 @@ contains
     !---------------------------------------------------------------------------
 #ifdef _OPENMP
     ! set number of openmp threads
+    nthreads_orig = omp_get_max_threads()
     call seq_comm_setptrs(LNDID, nthreads=nthreads_lnd)
     call omp_set_num_threads(nthreads_lnd)
 #endif
@@ -519,6 +527,10 @@ contains
 #endif
 
     first_call  = .false.
+
+#ifdef _OPENMP
+    call omp_set_num_threads(nthreads_orig)
+#endif
 
   end subroutine lnd_run_mct
 
