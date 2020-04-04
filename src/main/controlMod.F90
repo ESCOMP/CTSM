@@ -50,6 +50,9 @@ module controlMod
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use seq_drydep_mod                   , only: drydep_method, DD_XLND, n_drydep
   use clm_varctl
+#ifdef _OPENMP
+  use omp_lib                          , only: omp_get_max_threads
+#endif
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -66,10 +69,6 @@ module controlMod
   ! !PRIVATE TYPES:
   character(len=  7) :: runtyp(4)                        ! run type
   character(len=SHR_KIND_CL) :: NLFilename = 'lnd.stdin' ! Namelist filename
-
-#if (defined _OPENMP)
-  integer, external :: omp_get_max_threads  ! max number of threads that can execute concurrently in a single parallel region
-#endif
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -293,7 +292,7 @@ contains
 
     ! Set clumps per procoessor
 
-#if (defined _OPENMP)
+#ifdef _OPENMP
     clump_pproc = omp_get_max_threads()
 #else
     clump_pproc = 1
