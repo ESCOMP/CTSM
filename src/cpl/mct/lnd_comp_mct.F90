@@ -67,7 +67,9 @@ contains
     use clm_cpl_indices  , only : clm_cpl_indices_set
     use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap_lsize
     use ESMF
-!$  use omp_lib         , only : omp_set_num_threads
+#ifdef _OPENMP
+    use omp_lib          , only : omp_set_num_threads
+#endif
     !
     ! !ARGUMENTS:
     type(ESMF_Clock),           intent(inout) :: EClock           ! Input synchronization clock
@@ -84,7 +86,7 @@ contains
     integer  :: g,i,j                                ! indices
     integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
     integer  :: dtime_clm                            ! clm time-step
-    integer  :: nthreads
+    integer  :: nthreads_lnd                         ! number of OpenMP threads for the land model
     logical  :: exists                               ! true if file exists
     logical  :: atm_aero                             ! Flag if aerosol data sent from atm model
     real(r8) :: scmlat                               ! single-column latitude
@@ -117,8 +119,10 @@ contains
     call seq_cdata_setptrs(cdata_l, ID=LNDID, mpicom=mpicom_lnd, &
          gsMap=GSMap_lnd, dom=dom_l, infodata=infodata)
 
-    call seq_comm_setptrs(LNDID, nthreads=nthreads)
-!$  call omp_set_num_threads(nthreads)
+#ifdef _OPENMP
+    call seq_comm_setptrs(LNDID, nthreads=nthreads_lnd)
+    call omp_set_num_threads(nthreads_lnd)
+#endif
 
     ! Determine attriute vector indices
 
@@ -313,7 +317,9 @@ contains
     use shr_orb_mod     ,  only : shr_orb_decl
     use ESMF
     use seq_comm_mct    , only : seq_comm_setptrs
-!$  use omp_lib         , only : omp_set_num_threads
+#ifdef _OPENMP
+    use omp_lib         , only : omp_set_num_threads
+#endif
     !
     ! !ARGUMENTS:
     type(ESMF_Clock) , intent(inout) :: EClock    ! Input synchronization clock from driver
@@ -347,7 +353,7 @@ contains
     integer      :: shrlogunit,shrloglev ! old values for share log unit and log level
     integer      :: lbnum                ! input to memory diagnostic
     integer      :: g,i,lsize            ! counters
-    integer      :: nthreads             ! number of threads in a task
+    integer      :: nthreads_lnd         ! number of OpenMP threads for the land model
     real(r8)     :: calday               ! calendar day for nstep
     real(r8)     :: declin               ! solar declination angle in radians for nstep
     real(r8)     :: declinp1             ! solar declination angle in radians for nstep+1
@@ -360,9 +366,11 @@ contains
     character(len=32)               :: rdate                ! date char string for restart file names
     character(len=32), parameter    :: sub = "lnd_run_mct"
     !---------------------------------------------------------------------------
+#ifdef _OPENMP
     ! set number of openmp threads
-    call seq_comm_setptrs(LNDID, nthreads=nthreads)
-!$  call omp_set_num_threads(nthreads)
+    call seq_comm_setptrs(LNDID, nthreads=nthreads_lnd)
+    call omp_set_num_threads(nthreads_lnd)
+#endif
 
     ! Determine processor bounds
 
