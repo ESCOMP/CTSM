@@ -23,6 +23,7 @@ list(APPEND clm_sources
   glc2lndMod.F90
   glcBehaviorMod.F90
   initSubgridMod.F90
+  initVerticalMod.F90
   landunit_varcon.F90
   lnd2glcMod.F90
   ncdio_utils.F90
