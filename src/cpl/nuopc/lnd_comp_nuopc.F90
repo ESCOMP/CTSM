@@ -19,7 +19,7 @@ module lnd_comp_nuopc
   use shr_file_mod           , only : shr_file_getlogunit, shr_file_setlogunit
   use shr_orb_mod            , only : shr_orb_decl, shr_orb_params, SHR_ORB_UNDEF_REAL, SHR_ORB_UNDEF_INT
   use shr_cal_mod            , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
-  use spmdMod                , only : masterproc, mpicom, spmd_init
+  use spmdMod                , only : masterproc, mpicom, spmd_init, npes
   use decompMod              , only : bounds_type, ldecomp, get_proc_bounds
   use domainMod              , only : ldomain
   use controlMod             , only : control_setNL
@@ -178,6 +178,7 @@ contains
     character(len=CL)  :: logmsg
     logical            :: isPresent, isSet
     logical            :: cism_evolve
+    integer            :: ierror, commsize
     character(len=*), parameter :: subname=trim(modName)//':(InitializeAdvertise) '
     character(len=*), parameter :: format = "('("//trim(subname)//") :',A)"
     !-------------------------------------------------------------------------------
@@ -201,13 +202,14 @@ contains
 
     call mpi_comm_dup(lmpicom, mpicom, ierr)
 
+
     ! Note still need compid for those parts of the code that use the data model
     ! functionality through subroutine calls
     call NUOPC_CompAttributeGet(gcomp, name='MCTID', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) compid  ! convert from string to integer
 
-    call spmd_init( mpicom, compid )
+    call spmd_init(mpicom, compid)
 
     !----------------------------------------------------------------------------
     ! determine instance information
@@ -331,7 +333,8 @@ contains
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
 
     use clm_instMod, only : lnd2atm_inst, lnd2glc_inst, water_inst
-
+!$  use omp_lib, only : omp_set_num_threads
+    use ESMF, only : ESMF_VM, ESMF_VMGet
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
     type(ESMF_State)     :: importState
@@ -342,6 +345,7 @@ contains
     ! local variables
     type(ESMF_Mesh)         :: mesh, gridmesh        ! esmf mesh
     type(ESMF_DistGrid)     :: DistGrid              ! esmf global index space descriptor
+    type(ESMF_VM)           :: vm
     type(ESMF_Time)         :: currTime              ! Current time
     type(ESMF_Time)         :: startTime             ! Start time
     type(ESMF_Time)         :: stopTime              ! Stop time
@@ -360,6 +364,8 @@ contains
     integer                 :: curr_tod              ! Start time of day (sec)
     integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
     integer                 :: dtime_clm             ! ctsm time-step
+    integer                 :: localPet
+    integer                 :: localpecount
     integer, pointer        :: gindex(:)             ! global index space for land and ocean points
     integer, pointer        :: gindex_lnd(:)         ! global index space for just land points
     integer, pointer        :: gindex_ocn(:)         ! global index space for just ocean points
@@ -410,13 +416,19 @@ contains
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_setLogUnit (iulog)
-
 #if (defined _MEMTRACE)
     if (masterproc) then
        lbnum=1
        call memmon_dump_fort('memmon.out','lnd_comp_nuopc_InitializeRealize:start::',lbnum)
     endif
 #endif
+
+    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+!$  call omp_set_num_threads(localPeCount)
 
     !----------------------
     ! Obtain attribute values
@@ -789,6 +801,8 @@ contains
     !------------------------
 
     use clm_instMod, only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
+!$  use omp_lib, only : omp_set_num_threads
+    use ESMF, only : ESMF_VM, ESMF_VMGet
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -800,6 +814,7 @@ contains
     type(ESMF_Time)        :: currTime
     type(ESMF_Time)        :: nextTime
     type(ESMF_State)       :: importState, exportState
+    type(ESMF_VM)          :: vm
     character(ESMF_MAXSTR) :: cvalue
     character(ESMF_MAXSTR) :: case_name      ! case name
     integer                :: ymd            ! CTSM current date (YYYYMMDD)
@@ -814,6 +829,8 @@ contains
     integer                :: tod_sync       ! Sync current time of day (sec)
     integer                :: dtime          ! time step increment (sec)
     integer                :: nstep          ! time step index
+    integer                :: localPet
+    integer                :: localpecount
     logical                :: rstwr          ! .true. ==> write restart file before returning
     logical                :: nlend          ! .true. ==> last time-step
     logical                :: dosend         ! true => send data back to driver
@@ -834,6 +851,13 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+!$  call omp_set_num_threads(localPeCount)
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_setLogUnit (iulog)
