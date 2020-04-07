@@ -48,6 +48,8 @@ program atm_driver
   integer               :: fileunit      ! for namelist input
   integer               :: nstep         ! time step counter
   integer               :: atm_nsteps    ! number of time steps of the simulation
+  integer               :: nsteps_prev_segs ! number of steps run in previous run segments
+  integer               :: atm_nsteps_all_segs ! number of time steps of the simulation, across all run segments (see comment below about atm_ndays_all_segs)
   character(len=512)    :: restart_file  ! local path to lilac restart filename
   integer               :: idfile, varid
   integer               :: atm_restart_ymd
@@ -70,11 +72,20 @@ program atm_driver
   integer            :: atm_start_secs
   integer            :: atm_stop_secs
   character(len=32)  :: atm_starttype
+  ! atm_ndays_all_segs is used for generating the fake data. This should give the total
+  ! number of days that will be run across all restart segments. If this isn't exactly
+  ! right, it's not a big deal: it just means that the fake data won't be symmetrical in
+  ! time. It's just important that we have some rough measure of the run length for the
+  ! generation of temporal variability, and that this measure be independent of the
+  ! number of restart segments that the run is broken into (so that we can get the same
+  ! answers in a restart run as in a straight-through run).
+  integer :: atm_ndays_all_segs
 
   namelist /atm_driver_input/ caseid, atm_mesh_file, atm_global_nx, atm_global_ny, &
        atm_calendar, atm_timestep, &
        atm_start_year, atm_start_mon, atm_start_day, atm_start_secs, &
-       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, atm_starttype
+       atm_stop_year, atm_stop_mon, atm_stop_day, atm_stop_secs, atm_starttype, &
+       atm_ndays_all_segs
   !------------------------------------------------------------------------
 
   !-----------------------------------------------------------------------------
@@ -220,6 +231,7 @@ program atm_driver
      else
         atm_nsteps = ((atm_stop_day - atm_start_day) * 86400.) / atm_timestep
      end if
+     nsteps_prev_segs = 0
 
   else ! continue
 
@@ -253,24 +265,32 @@ program atm_driver
      end if
      call shr_cal_date2ymd(atm_restart_ymd, atm_restart_year, atm_restart_mon, atm_restart_day)
 
-     if ( atm_stop_year /= atm_restart_year) then
-        write(6,*)'atm_stop_year = ',atm_stop_year,'atm_restart_year = ',atm_restart_year 
-        call shr_sys_abort('not supporting restart and stop years to be different')
-     else if (atm_stop_mon  /= atm_restart_mon) then
-        write(6,*)'atm_stop_mon = ',atm_stop_mon,'atm_restart_mon = ',atm_restart_mon 
-        call shr_sys_abort('not supporting restart and stop months to be different')
-     else if (atm_stop_secs /= 0 .or. atm_restart_secs /= 0) then
-        write(6,*)'atm_stop_secs = ',atm_stop_secs,'atm_restart_secs = ',atm_restart_secs 
-        call shr_sys_abort('not supporting restart and stop secs to be nonzero')
+     if ( atm_stop_year /= atm_restart_year .or. atm_restart_year /= atm_start_year) then
+        write(6,*)'atm_stop_year, atm_restart_year, atm_start_year = ',&
+             atm_stop_year, atm_restart_year, atm_start_year
+        call shr_sys_abort('not supporting restart, stop and start years to be different')
+     else if (atm_stop_mon /= atm_restart_mon .or. atm_restart_mon /= atm_start_mon) then
+        write(6,*)'atm_stop_mon, atm_restart_mon, atm_start_mon = ',&
+             atm_stop_mon, atm_restart_mon, atm_start_mon
+        call shr_sys_abort('not supporting restart, stop and start months to be different')
+     else if (atm_stop_secs /= 0 .or. atm_restart_secs /= 0 .or. atm_start_secs /= 0) then
+        write(6,*)'atm_stop_secs, atm_restart_secs, atm_start_secs = ',&
+             atm_stop_secs, atm_restart_secs, atm_start_secs
+        call shr_sys_abort('not supporting restart, stop or start secs to be nonzero')
      else
         atm_nsteps = ((atm_stop_day - atm_restart_day) * 86400.) / atm_timestep
+        ! The following calculation of nsteps_prev_segs is why we need to check the start
+        ! time in the above error checks.
+        nsteps_prev_segs = ((atm_restart_day - atm_start_day) * 86400.) / atm_timestep
      end if
 
   end if
 
+  atm_nsteps_all_segs = atm_ndays_all_segs * (86400 / atm_timestep)
+
   do nstep = 1,atm_nsteps
      ! fill in the dataptr in lilac_coupling_fields
-     call atm_driver_to_lilac (atm_lons, atm_lats, nstep, atm_nsteps)
+     call atm_driver_to_lilac (atm_lons, atm_lats, nstep, nsteps_prev_segs, atm_nsteps_all_segs)
 
      if (nstep == atm_nsteps) then
         call lilac_run(write_restarts_now=.true., stop_now=.true.)
@@ -377,13 +397,14 @@ contains
   end subroutine nc_check_err
 
   !========================================================================
-  subroutine atm_driver_to_lilac (lon, lat, nstep, atm_nsteps)
+  subroutine atm_driver_to_lilac (lon, lat, nstep, nsteps_prev_segs, atm_nsteps_all_segs)
 
     ! input/output variables
     real*8, intent(in) :: lon(:)
     real*8, intent(in) :: lat(:)
     integer, intent(in) :: nstep      ! current step number
-    integer, intent(in) :: atm_nsteps ! total number of steps in simulation
+    integer, intent(in) :: nsteps_prev_segs ! number of time steps in previous run segments
+    integer, intent(in) :: atm_nsteps_all_segs ! total number of steps in simulation
 
     ! local variables
     integer             :: lsize
@@ -402,8 +423,8 @@ contains
     allocate(data(lsize))
 
     ! The time perturbation will range from about -0.5 to 0.5
-    time_midpoint = atm_nsteps / 2.d0
-    time_perturbation = 0.5d0 * (nstep - time_midpoint)/time_midpoint
+    time_midpoint = atm_nsteps_all_segs / 2.d0
+    time_perturbation = 0.5d0 * ((nstep + nsteps_prev_segs) - time_midpoint)/time_midpoint
     space_perturbation(:) = lat(:)*0.01d0 + lon(:)*0.01d0
     space_time_perturbation(:) = time_perturbation + space_perturbation(:)
 

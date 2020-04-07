@@ -14,4 +14,5 @@
   atm_start_day		= 1
   atm_stop_day		= 3
   atm_starttype         = 'startup'
+  atm_ndays_all_segs    = 2
 /
