@@ -1,4 +1,143 @@
 ===============================================================
+Tag name:  ctsm1.0.dev089
+Originator(s):  sacks (Bill Sacks)
+Date:  Tue Apr  7 12:01:59 MDT 2020
+One-line Summary: Bring documentation source to master
+
+Purpose of changes
+------------------
+
+1. Bring documentation source to master: Pulls in the source from
+   https://github.com/escomp/ctsm-docs. This is important so that
+   documentation can remain in sync with changes in the model
+   code. Images are stored here using git-lfs (Git Large File
+   Storage). I also made some minor fixes to get the pdf build of the
+   tech note working.
+
+2. Use a different documentation theme that supports a version dropdown
+   menu, and add the code needed to support this versioning on the
+   documentation web pages. At a high level, the way the versioned
+   documentation works is to have separate subdirectories in the
+   gh-pages branch of the ctsm-docs repository for each version of the
+   documentation we want to support. There is then a bit of JavaScript
+   code which uses a json file in the gh-pages branch to determine which
+   versions exist and how these should be named in the dropdown
+   menu. Most of these changes were borrowed from ESMCI/cime#3439, which
+   in turn borrowed from ESCOMP/CISM-wrapper#23, which in turn was a
+   slight modification of an implementation provided by @mnlevy1981 for
+   the MARBL documentation, which in turn borrowed from an
+   implementation put together by Unidata (credit where credit is due).
+
+   I am not aware of out-of-the-box support for a version pull-down in
+   out-of-the-box sphinx themes (though the last time I looked was in
+   Fall, 2018, so there may be something available now). However,
+   support for a version dropdown exists in an open PR in the sphinx
+   readthedocs theme repository: readthedocs/sphinx_rtd_theme#438. I
+   have pushed this branch to a new repository in ESMCI
+   (https://github.com/ESMCI/sphinx_rtd_theme) to facilitate long-term
+   maintenance of this branch in case it disappears from the official
+   sphinx_rtd_theme repository. I have also cherry-picked a commit onto
+   that branch, which is needed to fix search functionality in sphinx1.8
+   (from readthedocs/sphinx_rtd_theme#672) (which is another reason for
+   maintaining our own copy of this branch). The branch in this
+   repository is now named version-dropdown-with-fixes (branching off of
+   the version-dropdown branch in the sphinx_rtd_theme repository). In
+   the long-term, I am a little concerned about using this theme that
+   isn't showing any signs of being merged to the main branch of the
+   readthedocs theme, but this has been working for us in other projects
+   for the last 2 years, so I feel this is a reasonable approach in the
+   short-medium term.
+
+The new process for building the documentation is given here:
+https://github.com/ESCOMP/CTSM/wiki/Directions-for-editing-CLM-documentation-on-github-and-sphinx
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/ctsm#239 (Move documentation source to master)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- not run!
+    izumi ------- not run!
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/954
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev088
 Originator(s):  sacks (Bill Sacks)
 Date:  Tue Apr  7 10:43:03 MDT 2020
