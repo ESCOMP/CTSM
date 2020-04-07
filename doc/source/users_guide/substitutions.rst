@@ -1,4 +1,4 @@
-.. |cesmrelease| replace:: CESM2.2 beta
+.. |cesmrelease| replace:: CESM2.1
 
 .. |ctsm_gh| replace:: https://github.com/ESCOMP/ctsm
 
