@@ -78,7 +78,7 @@ module lnd_import_export
 contains
 !===============================================================================
 
-  subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, rof_prognostic, rc)
+  subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, rc)
 
     use clm_varctl, only : ndep_from_cpl
 
@@ -86,6 +86,7 @@ contains
     type(ESMF_GridComp)            :: gcomp
     character(len=*) , intent(in)  :: flds_scalar_name
     logical          , intent(in)  :: glc_present
+    logical          , intent(in)  :: cism_evolve
     logical          , intent(in)  :: rof_prognostic
     integer          , intent(out) :: rc
 
@@ -208,7 +209,7 @@ contains
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_soilw') ! optional for carma
     end if
 
-    if (glc_present) then
+    if (glc_present .and. cism_evolve) then
        ! lnd->glc states from land all lnd->glc elevation classes (1:glc_nec) plus bare land (index 0).
        ! The following puts all of the elevation class fields as an
        ! undidstributed dimension in the export state field
@@ -385,25 +386,23 @@ contains
     real(r8), pointer         :: dataPtr(:)
     character(len=128)        :: fldname
     integer                   :: num
-    integer                   :: begg, endg                             ! bounds
-    integer                   :: g,i,k                                  ! indices
-    real(r8)                  :: e                                      ! vapor pressure (Pa)
-    real(r8)                  :: qsat                                   ! saturation specific humidity (kg/kg)
-    real(r8)                  :: co2_ppmv_diag(bounds%begg:bounds%endg) ! temporary
-    real(r8)                  :: co2_ppmv_prog(bounds%begg:bounds%endg) ! temporary
-    real(r8)                  :: co2_ppmv_val                           ! temporary
-    real(r8)                  :: esatw                                  ! saturation vapor pressure over water (Pa)
-    real(r8)                  :: esati                                  ! saturation vapor pressure over ice (Pa)
-    real(r8)                  :: a0,a1,a2,a3,a4,a5,a6                   ! coefficients for esat over water
-    real(r8)                  :: b0,b1,b2,b3,b4,b5,b6                   ! coefficients for esat over ice
-    real(r8)                  :: tdc, t                                 ! Kelvins to Celcius function and its input
-    real(r8)                  :: forc_t                                 ! atmospheric temperature (Kelvin)
-    real(r8)                  :: forc_q                                 ! atmospheric specific humidity (kg/kg)
-    real(r8)                  :: forc_pbot                              ! atmospheric pressure (Pa)
-    real(r8)                  :: forc_rainc(bounds%begg:bounds%endg)    ! rainxy Atm flux mm/s
-    real(r8)                  :: forc_rainl(bounds%begg:bounds%endg)    ! rainxy Atm flux mm/s
-    real(r8)                  :: forc_snowc(bounds%begg:bounds%endg)    ! snowfxy Atm flux  mm/s
-    real(r8)                  :: forc_snowl(bounds%begg:bounds%endg)    ! snowfxl Atm flux  mm/s
+    integer                   :: begg, endg                          ! bounds
+    integer                   :: g,i,k                               ! indices
+    real(r8)                  :: e                                   ! vapor pressure (Pa)
+    real(r8)                  :: qsat                                ! saturation specific humidity (kg/kg)
+    real(r8)                  :: esatw                               ! saturation vapor pressure over water (Pa)
+    real(r8)                  :: esati                               ! saturation vapor pressure over ice (Pa)
+    real(r8)                  :: a0,a1,a2,a3,a4,a5,a6                ! coefficients for esat over water
+    real(r8)                  :: b0,b1,b2,b3,b4,b5,b6                ! coefficients for esat over ice
+    real(r8)                  :: tdc, t                              ! Kelvins to Celcius function and its input
+    real(r8)                  :: forc_t                              ! atmospheric temperature (Kelvin)
+    real(r8)                  :: forc_q                              ! atmospheric specific humidity (kg/kg)
+    real(r8)                  :: forc_pbot                           ! atmospheric pressure (Pa)
+    real(r8)                  :: co2_ppmv_input(bounds%begg:bounds%endg)   ! temporary
+    real(r8)                  :: forc_rainc(bounds%begg:bounds%endg) ! rainxy Atm flux mm/s
+    real(r8)                  :: forc_rainl(bounds%begg:bounds%endg) ! rainxy Atm flux mm/s
+    real(r8)                  :: forc_snowc(bounds%begg:bounds%endg) ! snowfxy Atm flux  mm/s
+    real(r8)                  :: forc_snowl(bounds%begg:bounds%endg) ! snowfxl Atm flux  mm/s
     real(r8)                  :: forc_noy(bounds%begg:bounds%endg)
     real(r8)                  :: forc_nhx(bounds%begg:bounds%endg)
     real(r8)                  :: frac_grc(bounds%begg:bounds%endg, 0:glc_nec)
@@ -520,11 +519,11 @@ contains
     call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,4), &
          ungridded_index=1, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! bcphodry
+    ! ocphodry
     call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,5), &
          ungridded_index=2, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! bcphiwet
+    ! ocphiwet
     call state_getimport(importState, 'Faxa_ocph', bounds, output=atm2lnd_inst%forc_aer_grc(:,6), &
          ungridded_index=3, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -563,9 +562,9 @@ contains
     ! The mediator is sending ndep in units if kgN/m2/s - and ctsm uses units of gN/m2/sec
     ! so the following conversion needs to happen
 
-    call state_getimport(importState, 'Faxa_nhx', bounds, output=forc_nhx, ungridded_index=1, rc=rc )
+    call state_getimport(importState, 'Faxa_ndep', bounds, output=forc_nhx, ungridded_index=1, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport(importState, 'Faxa_noy', bounds, output=forc_noy, ungridded_index=2, rc=rc )
+    call state_getimport(importState, 'Faxa_ndep', bounds, output=forc_noy, ungridded_index=2, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do g = begg,endg
        atm2lnd_inst%forc_ndep_grc(g) = (forc_nhx(g) + forc_noy(g))*1000._r8
@@ -575,56 +574,47 @@ contains
     ! Atmosphere co2
     !--------------------------
 
-    fldName = 'Sa_co2prog'
-    call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
-    if ( ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'prognostic') then
-       call shr_sys_abort( subname//' ERROR: must have nonzero Sa_co2prog for co2_type equal to prognostic' )
-    end if
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
-       call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          co2_ppmv_prog(g) = dataPtr(g-begg+1)   ! co2 atm prognostic
-       end do
-    else
-       do g = begg,endg
-          co2_ppmv_prog(g) = co2_ppmv
-       end do
-    end if
-
-    fldName = 'Sa_co2diag'
-    call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
-    if ( ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'diagnostic') then
-       call shr_sys_abort( subname//' ERROR: must have nonzero Sa_co2prog for co2_type equal to prognostic' )
-    end if
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
-       call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg,endg
-          co2_ppmv_diag(g) = dataPtr(g-begg+1)   ! co2 atm diagnostic
-       end do
-    else
-       do g = begg,endg
-          co2_ppmv_diag(g) = co2_ppmv
-       end do
+    ! Set default value to a constant and overwrite for prognostic and diagnostic
+    do g = begg,endg
+       co2_ppmv_input(g) = co2_ppmv
+    end do
+    if (co2_type == 'prognostic') then
+       fldName = 'Sa_co2prog'
+       call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
+       if ( ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'prognostic') then
+          call shr_sys_abort( subname//' ERROR: must have Sa_co2prog in import state if co2_type is prognostic' )
+       end if
+       if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
+          call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          do g = begg,endg
+             co2_ppmv_input(g) = dataPtr(g-begg+1)   ! co2 atm prognostic
+          end do
+       end if
+    else if (co2_type == 'diagnostic') then
+       fldName = 'Sa_co2diag'
+       call ESMF_StateGet(importState, trim(fldname), itemFlag, rc=rc)
+       if ( ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (itemflag == ESMF_STATEITEM_NOTFOUND .and. co2_type == 'diagnostic') then
+          call shr_sys_abort( subname//' ERROR: must have Sa_co2diag in import state if co2_type equal diagnostic')
+       end if
+       if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
+          call state_getfldptr(importState, trim(fldname), dataPtr, rc=rc )
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          do g = begg,endg
+             co2_ppmv_input(g) = dataPtr(g-begg+1)   ! co2 atm diagnostic
+          end do
+       end if
     end if
 
     ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
     ! Note that forc_pbot is in Pa
     do g = begg,endg
-       if (co2_type == 'prognostic') then
-          co2_ppmv_val = co2_ppmv_prog(g)
-       else if (co2_type == 'diagnostic') then
-          co2_ppmv_val = co2_ppmv_diag(g)
-       else
-          co2_ppmv_val = co2_ppmv
-       end if
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
-       atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv_val * 1.e-6_r8 * forc_pbot
+       atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv_input(g) * 1.e-6_r8 * forc_pbot
        if (use_c13) then
-          atm2lnd_inst%forc_pc13o2_grc(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * forc_pbot
+          atm2lnd_inst%forc_pc13o2_grc(g) = co2_ppmv_input(g) * c13ratio * 1.e-6_r8 * forc_pbot
        end if
     end do
 
@@ -1037,7 +1027,7 @@ contains
                   ESMF_LOGMSG_INFO)
              ! Create the scalar field
              call SetScalarField(field, flds_scalar_name, flds_scalar_num, rc=rc)
-             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
           else
              ! Create the field
              if (fldlist(n)%ungridded_lbound > 0 .and. fldlist(n)%ungridded_ubound > 0) then
@@ -1048,7 +1038,7 @@ contains
                 if (ChkErr(rc,__LINE__,u_FILE_u)) return
              else
                 field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name=stdname, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-                if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+                if (ChkErr(rc,__LINE__,u_FILE_u)) return
              end if
              call ESMF_LogWrite(trim(subname)//trim(tag)//" Field = "//trim(stdname)//" is connected using mesh", &
                   ESMF_LOGMSG_INFO)
@@ -1056,13 +1046,13 @@ contains
 
           ! NOW call NUOPC_Realize
           call NUOPC_Realize(state, field=field, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
        else
           if (stdname /= trim(flds_scalar_name)) then
              call ESMF_LogWrite(subname // trim(tag) // " Field = "// trim(stdname) // " is not connected.", &
                   ESMF_LOGMSG_INFO)
              call ESMF_StateRemove(state, (/stdname/), rc=rc)
-             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
           end if
        end if
     end do
@@ -1173,7 +1163,7 @@ contains
        end if
 
        ! write debug output if appropriate
-       if (masterproc .and. debug > 0 .and. get_nstep() < 5) then
+       if (masterproc .and. debug > 0 .and. get_nstep() < 48) then
           do g = bounds%begg,bounds%endg
              i = 1 + g - bounds%begg
              write(iulog,F01)'import: nstep, n, '//trim(fldname)//' = ',get_nstep(),i,output(g)
@@ -1238,11 +1228,12 @@ contains
 
        ! TODO: if fillvalue = shr_const_spval the snowhl sent to the atm will have the spval over some points
        ! rather than 0 - this is very odd and needs to be understood
-       ! fldptr(:) = fillvalue
+       !fldptr1d(:) = fillvalue
 
        ! determine output array
        if (present(ungridded_index)) then
           fldptr2d(ungridded_index,:) = 0._r8
+          !fldptr2d(ungridded_index,:) = fillvalue
           do g = bounds%begg, bounds%endg
              n = g - bounds%begg + 1
              fldptr2d(ungridded_index,n) = input(g)
@@ -1252,6 +1243,7 @@ contains
           end if
        else
           fldptr1d(:) = 0._r8
+          !fldptr1d(:) = fillvalue
           do g = bounds%begg, bounds%endg
              n = g - bounds%begg + 1
              fldptr1d(n) = input(g)
@@ -1262,7 +1254,7 @@ contains
        end if
 
        ! write debug output if appropriate
-       if (masterproc .and. debug > 0 .and. get_nstep() < 5) then
+       if (masterproc .and. debug > 0 .and. get_nstep() < 48) then
           do g = bounds%begg,bounds%endg
              i = 1 + g - bounds%begg
              write(iulog,F01)'export: nstep, n, '//trim(fldname)//' = ',get_nstep(),i,input(g)
