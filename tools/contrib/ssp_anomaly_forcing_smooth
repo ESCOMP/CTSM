@@ -52,7 +52,7 @@ This script creates CLM anomaly forcing data
 
 print( "Create anomoly forcing data that can be used by CTSM in CESM" )
 # Input and output directories make sure they exist
-datapath = "/glade/p/cesm/sdwg_dev/thesis/data/cesm_tools/anomalyforcing"   # Path on cheyenne
+datapath = "/glade/p/cgd/tss/historyfiles/"   # Path on cheyenne
 spath                 = './'
 if ( os.path.exists(datapath) ):
    print( "Input data directory:"+datapath )
@@ -67,24 +67,29 @@ else:
 today = datetime.date.today()
 creationdate = "_c"+today.strftime( "%Y%m%d" )
 historydate = today.strftime( "%a %b %d %Y" ) 
-sspnum = 3
+sspnum = 4
 smoothsize = 5
+
+hist_case = 'b.e21.BHIST.f09_g17.CMIP6-historical.010'
 
 if sspnum == 1:
     # SSP1-26
     ssptag = 'SSP1-2.6'
-    hist_case = 'b.e21.BHIST.f09_g17.CMIP6-historical.010'
     fut_case = 'b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.001'
-if sspnum == 2:
+elif sspnum == 2:
     # SSP3-70
     ssptag = 'SSP3-7.0'
-    hist_case = 'b.e21.BHIST.f09_g17.CMIP6-historical.010'
     fut_case = 'b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.001'
-if sspnum == 3:
+elif sspnum == 3:
     # SSP5-85
     ssptag = 'SSP5-8.5'
-    hist_case = 'b.e21.BHIST.f09_g17.CMIP6-historical.010'
     fut_case = 'b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.001'
+elif sspnum == 4:
+    # SSP2-45
+    ssptag = 'SSP2-4.5'
+    fut_case = 'b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.001'
+else:
+    sys.exit( "sspnum is out of range: "+sspnum )
 
 sspoutdir = 'anomaly_forcing/CMIP6-'+ssptag
 
@@ -121,7 +126,7 @@ futnm                 = nmo*fut_nyrs
 totnm                 = nmo*tot_nyrs
 outnm                 = nmo*fut_nyrs
 
-dpath                 = datapath + '/historyfiles/'
+dpath                 = datapath
 dfile                 = '/lnd/proc/tseries/month_1/'
 hdir                  = dpath+hist_case+dfile
 fdir                  = dpath+fut_case+dfile
