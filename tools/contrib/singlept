@@ -116,7 +116,7 @@ datm_eyr=2014
 #--  Modify landunit structure
 overwrite_single_pft = True
 dominant_pft         = 7 #BETr
-zero_nonveg_pfts     = True
+zero_nonveg_landunits= True
 uniform_snowpack     = True
 no_saturation_excess = True
 
@@ -204,7 +204,7 @@ if create_surfdata:
     if overwrite_single_pft:
         f3['PCT_NAT_PFT'][:,:,:] = 0
         f3['PCT_NAT_PFT'][:,:,dominant_pft] = 100
-    if zero_nonveg_pfts:
+    if zero_nonveg_landunits:
         f3['PCT_NATVEG'][:,:]  = 100
         f3['PCT_CROP'][:,:]    = 0
         f3['PCT_LAKE'][:,:]    = 0.
@@ -233,7 +233,7 @@ if create_surfdata:
         f1.to_netcdf(path='~/junk.nc', mode='w')
         #f1.to_netcdf(path=fsurf2, mode='w')
         f1.close()
-    if zero_nonveg_pfts:
+    if zero_nonveg_landunits:
         #f1  = xr.open_dataset(fsurf2)
         f1  = xr.open_dataset('~/junk.nc')
         f1['PCT_NATVEG']  = 100

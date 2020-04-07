@@ -112,6 +112,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <irrigate use_crop=".true." phys="clm5_0" use_cndv=".false." sim_year_range="1850-2100">.true.</irrigate>
 <irrigate use_crop=".true." phys="clm5_0" use_cndv=".true."  sim_year_range="1850-2100">.false.</irrigate>
 <irrigate use_crop=".true." phys="clm4_5"                    sim_year_range="1850-2100">.false.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false." sim_year_range="2100-2300">.true.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true."  sim_year_range="2100-2300">.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5"                    sim_year_range="2100-2300">.false.</irrigate>
 
 <irrigate use_crop=".true." >.false.</irrigate>
 <irrigate use_crop=".false.">.true.</irrigate>
