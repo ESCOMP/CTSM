@@ -1,4 +1,95 @@
 ===============================================================
+Tag name:  release-clm5.0.33
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Apr  7 13:21:28 MDT 2020
+One-line Summary: Turn irrigation on for 2300 SSP extensions
+
+Purpose of this version:
+------------------------
+
+Irrigation was turned off for the 2300 extensions. This turns it on. Also add SSP2-4.5 to the
+anomaly forcing script.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #974 #972 #966
+  #974 -- Python3 problem in SSP test
+  #972 -- Irrigate is turned off for the 2300 extensions
+  #966 -- Units for a few history fields needs to change for ILAMB
+
+Science changes since: release-clm5.0.32
+  Irrigation is now properly turned on for the 2100-2300 SSP extensions
+  Change some units of history fields
+
+Software changes since: release-clm5.0.32
+  Anomaly forcing script can now do SSP2-4.5
+  Small changes to anomoly forcing script and singlept script
+
+Changes to User Interface since: release-clm5.0.32
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (two tests are different than before because of irrigate)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools): None
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test): None
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- PASS
+    izumi_pgi --------- PASS
+    izumi_intel ------- PASS
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers: All
+    - nature of change: Climate changing as irrigation is on
+
+  Will new REFCASES need to be made for cesm and/or CAM?: No
+  (This will likely be true if the LII tests failed)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: No updates
+
+   cism:   cism-release-cesm2.1.2_04
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.33
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200121
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #975
+(https://github.com/ESCOMP/ctsm/pull)
+  #975 -- fix irrigate for 2300 extensions
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.32
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Apr  2 00:23:04 MDT 2020
