@@ -29,13 +29,13 @@ module CNPhenologyMod
   use pftconMod                       , only : pftcon
   use SoilStateType                   , only : soilstate_type
   use TemperatureType                 , only : temperature_type
-  use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
-  use Wateratm2lndBulkType                  , only : wateratm2lndbulk_type
-  use ColumnType                      , only : col                
+  use WaterDiagnosticBulkType         , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType            , only : wateratm2lndbulk_type
+  use initVerticalMod                 , only : find_soil_layer_containing_depth
+  use ColumnType                      , only : col
   use GridcellType                    , only : grc                
   use PatchType                       , only : patch   
   use atm2lndType                     , only : atm2lnd_type             
-  use atm2lndType                     , only : atm2lnd_type
   !
   implicit none
   private
@@ -59,6 +59,7 @@ module CNPhenologyMod
      real(r8) :: crit_offset_swi ! critical number of water stress days to initiate offset
      real(r8) :: soilpsi_off     ! critical soil water potential for leaf offset
      real(r8) :: lwtop   	 ! live wood turnover proportion (annual fraction)
+     real(r8) :: phenology_soil_depth ! soil depth used for measuring states for phenology triggers
   end type params_type
 
   type(params_type) :: params_inst
@@ -76,6 +77,7 @@ module CNPhenologyMod
   real(r8) :: crit_offset_swi               ! water stress days for offset trigger
   real(r8) :: soilpsi_off                   ! water potential for offset trigger (MPa)
   real(r8) :: lwtop                         ! live wood turnover proportion (annual fraction)
+  integer  :: phenology_soil_layer          ! soil layer used for measuring states for phenology triggers
 
   ! CropPhenology variables and constants
   real(r8) :: p1d, p1v                      ! photoperiod factor constants for crop vernalization
@@ -164,77 +166,29 @@ contains
     ! !DESCRIPTION:
     !
     ! !USES:
-    use ncdio_pio    , only: file_desc_t,ncd_io
+    use ncdio_pio    , only: file_desc_t
+    use paramUtilMod , only : readNcdioScalar
 
     ! !ARGUMENTS:
     implicit none
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNPhenolParamsType'
-    character(len=100) :: errCode = '-Error reading in parameters file:'
-    logical            :: readv ! has variable been read in or not
-    real(r8)           :: tempr ! temporary to read in parameter
-    character(len=100) :: tString ! temp. var for reading
+    character(len=*), parameter  :: subname = 'readParams_CNPhenology'
     !-----------------------------------------------------------------------
 
-    !
-    ! read in parameters
-    !   
-    tString='crit_dayl'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%crit_dayl=tempr
-
-    tString='ndays_on'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%ndays_on=tempr
-
-    tString='ndays_off'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%ndays_off=tempr
-
-    tString='fstor2tran'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%fstor2tran=tempr
-
-    tString='crit_onset_fdd'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%crit_onset_fdd=tempr
-
-    tString='crit_onset_swi'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%crit_onset_swi=tempr
-
-    tString='soilpsi_on'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%soilpsi_on=tempr
-
-    tString='crit_offset_fdd'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%crit_offset_fdd=tempr
-
-    tString='crit_offset_swi'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%crit_offset_swi=tempr
-
-    tString='soilpsi_off'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%soilpsi_off=tempr
-
-    tString='lwtop_ann'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%lwtop=tempr   
+    call readNcdioScalar(ncid, 'crit_dayl', subname, params_inst%crit_dayl)
+    call readNcdioScalar(ncid, 'ndays_on', subname, params_inst%ndays_on)
+    call readNcdioScalar(ncid, 'ndays_off', subname, params_inst%ndays_off)
+    call readNcdioScalar(ncid, 'fstor2tran', subname, params_inst%fstor2tran)
+    call readNcdioScalar(ncid, 'crit_onset_fdd', subname, params_inst%crit_onset_fdd)
+    call readNcdioScalar(ncid, 'crit_onset_swi', subname, params_inst%crit_onset_swi)
+    call readNcdioScalar(ncid, 'soilpsi_on', subname, params_inst%soilpsi_on)
+    call readNcdioScalar(ncid, 'crit_offset_fdd', subname, params_inst%crit_offset_fdd)
+    call readNcdioScalar(ncid, 'crit_offset_swi', subname, params_inst%crit_offset_swi)
+    call readNcdioScalar(ncid, 'soilpsi_off', subname, params_inst%soilpsi_off)
+    call readNcdioScalar(ncid, 'lwtop_ann', subname, params_inst%lwtop)
+    call readNcdioScalar(ncid, 'phenology_soil_depth', subname, params_inst%phenology_soil_depth)
 
   end subroutine readParams
 
@@ -375,6 +329,10 @@ contains
 
     ! set transfer parameters
     fstor2tran=params_inst%fstor2tran
+
+    call find_soil_layer_containing_depth( &
+         depth = params_inst%phenology_soil_depth, &
+         layer = phenology_soil_layer)
 
     ! -----------------------------------------
     ! Constants for CNStressDecidPhenology
@@ -903,7 +861,7 @@ contains
                ! if the gdd flag is set, and if the soil is above freezing
                ! then accumulate growing degree days for onset trigger
 
-               soilt = t_soisno(c,3)
+               soilt = t_soisno(c, phenology_soil_layer)
                if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
                   onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
                end if
@@ -1120,8 +1078,8 @@ contains
          g = patch%gridcell(p)
 
          if (stress_decid(ivt(p)) == 1._r8) then
-            soilt = t_soisno(c,3)
-            psi = soilpsi(c,3)
+            soilt = t_soisno(c, phenology_soil_layer)
+            psi = soilpsi(c, phenology_soil_layer)
 
             ! onset gdd sum from Biome-BGC, v4.1.2
             crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))

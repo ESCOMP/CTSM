@@ -39,9 +39,9 @@ module initVerticalMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: initVertical
+  public :: find_soil_layer_containing_depth
 
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: ReadNL
   private :: hasBedrock  ! true if the given column type includes bedrock layers
   !
 
@@ -52,60 +52,6 @@ module initVerticalMod
   !------------------------------------------------------------------------
 
 contains
-
-  !------------------------------------------------------------------------
-  subroutine ReadNL( )
-    !
-    ! !DESCRIPTION:
-    ! Read namelist for SoilStateType
-    !
-    ! !USES:
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use fileutils      , only : getavu, relavu, opnfil
-    use clm_nlUtilsMod , only : find_nlgroup_name
-    use clm_varctl     , only : iulog
-    use spmdMod        , only : mpicom, masterproc
-    use controlMod     , only : NLFilename
-    !
-    ! !ARGUMENTS:
-    !
-    ! !LOCAL VARIABLES:
-    integer :: ierr                 ! error code
-    integer :: unitn                ! unit for namelist file
-    character(len=32) :: subname = 'InitVertical_readnl'  ! subroutine name
-    !-----------------------------------------------------------------------
-
-    character(len=*), parameter :: nl_name  = 'clm_inparm'  ! Namelist name
-                                                                      
-    ! MUST agree with name in namelist and read
-    namelist /clm_inparm/ use_bedrock
-
-    ! preset values
-
-    use_bedrock = .false.
-
-    if ( masterproc )then
-
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nl_name//' namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call find_nlgroup_name(unitn, nl_name, status=ierr)
-       if (ierr == 0) then
-          read(unit=unitn, nml=clm_inparm, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading '//nl_name//' namelist"//errmsg(sourcefile, __LINE__))
-          end if
-       else
-          call endrun(msg="ERROR finding '//nl_name//' namelist"//errmsg(sourcefile, __LINE__))
-       end if
-       call relavu( unitn )
-
-    end if
-
-    call shr_mpi_bcast(use_bedrock, mpicom)
-
-  end subroutine ReadNL
 
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
@@ -741,6 +687,54 @@ contains
     call ncd_pio_closefile(ncid)
 
   end subroutine initVertical
+
+  !-----------------------------------------------------------------------
+  subroutine find_soil_layer_containing_depth(depth, layer)
+    !
+    ! !DESCRIPTION:
+    ! Find the soil layer that contains the given depth
+    !
+    ! Aborts if the given depth doesn't exist in the soil profile
+    !
+    ! We consider the interface between two layers to belong to the layer *above* that
+    ! interface. This implies that the top interface (at exactly 0 m) is not considered
+    ! to be part of the soil profile.
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(in)  :: depth  ! target depth, m
+    integer , intent(out) :: layer  ! layer containing target depth
+    !
+    ! !LOCAL VARIABLES:
+    logical :: found
+    integer :: i
+
+    character(len=*), parameter :: subname = 'find_soil_layer_containing_depth'
+    !-----------------------------------------------------------------------
+
+    if (depth <= zisoi(0)) then
+       write(iulog,*) subname, ': ERROR: depth above top of soil'
+       write(iulog,*) 'depth = ', depth
+       write(iulog,*) 'zisoi = ', zisoi
+       call endrun(msg=subname//': depth above top of soil')
+    end if
+
+    found = .false.
+    do i = 1, nlevgrnd
+       if (depth <= zisoi(i)) then
+          layer = i
+          found = .true.
+          exit
+       end if
+    end do
+
+    if (.not. found) then
+       write(iulog,*) subname, ': ERROR: depth below bottom of soil'
+       write(iulog,*) 'depth = ', depth
+       write(iulog,*) 'zisoi = ', zisoi
+       call endrun(msg=subname//': depth below bottom of soil')
+    end if
+
+  end subroutine find_soil_layer_containing_depth
 
   !-----------------------------------------------------------------------
   logical function hasBedrock(col_itype, lun_itype)

@@ -23,6 +23,11 @@ and
 
 https://github.com/ESCOMP/ctsm/wiki/Recommended-git-setup
 
+For support with model use, troubleshooting, etc., please use the CTSM forum (or other
+appropriate forum) here:
+
+https://xenforo.cgd.ucar.edu/cesm/
+
 To get updates on CTSM tags and important notes on CTSM developments
 join our low traffic email list:
 
