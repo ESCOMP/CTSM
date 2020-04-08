@@ -19,6 +19,11 @@ release-clm5.0.15   sacks 12/06/2018 SKIPPED ON MASTER -- Option for rain-to-sno
 release-clm5.0.14    erik 11/29/2018 Update cime and fix surface dataset for f05 1850 non-crop case
 release-clm5.0.13    erik 11/14/2018 Update externals with new CO2/presearo/rtm/mosart, add science_support, change testing
 release-clm5.0.12    erik 11/03/2018 New IC files for clm45/clm50 coupled cases, add 2010 compset (IC FILES UPDATE SKIPPED ON MASTER)
+  ctsm1.0.dev089    sacks 04/07/2020 Bring documentation source to master
+  ctsm1.0.dev088    sacks 04/07/2020 Fix bug in snow aerosol numerics (causes occasional HUGE aerosol values)
+  ctsm1.0.dev087    sacks 04/06/2020 Change hard-coded soil layers in phenology to use a target depth
+  ctsm1.0.dev086 mvertens 03/19/2020 Updates to NUOPC cap and minor fixes to ncdio_pio
+  ctsm1.0.dev085    sacks 03/16/2020 Update cime
   ctsm1.0.dev084   negins 02/19/2020 Bounds assertion for C isotopes when threading is on
   ctsm1.0.dev083   negins 02/06/2020 Some BFB Fixes: Resolve issues #683, # 874, #878, # 885, # 745, #838
   ctsm1.0.dev082   oleson 02/01/2020 Rename variables to avoid confusion; fix QSNOEVAP diagnostic
