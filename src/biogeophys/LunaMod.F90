@@ -402,8 +402,8 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp, PNlcold, PNetold, PNrespold, dayl_factor(p), &
-                              PNcbold, PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
+                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor(p), &
+                              PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
                           
