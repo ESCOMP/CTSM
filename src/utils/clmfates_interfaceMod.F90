@@ -2086,7 +2086,7 @@ contains
            call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
                               type2d=trim(dim2name),                        &
                               avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_patch=this%fates_hist%hvars(ivar)%r82d,    & 
+                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
                               default=trim(vdefault))
 
 
