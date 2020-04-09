@@ -1285,7 +1285,7 @@ module CLMFatesInterfaceMod
            end do
            
            call set_site_properties(this%fates(nc)%nsites, &
-                                    this%fates(nc)%sites)
+                                    this%fates(nc)%sites,this%fates(nc)%bc_in)
 
            ! ----------------------------------------------------------------------------
            ! Initialize Hydraulics Code if turned on
