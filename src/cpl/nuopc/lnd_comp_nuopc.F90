@@ -36,8 +36,8 @@ module lnd_comp_nuopc
   use clm_driver             , only : clm_drv
   use lnd_import_export      , only : advertise_fields, realize_fields
   use lnd_import_export      , only : import_fields, export_fields
-  use lnd_shr_methods        , only : chkerr, state_setscalar, state_getscalar, state_diagnose, alarmInit
-  use lnd_shr_methods        , only : set_component_logging, get_component_instance, log_clock_advance
+  use nuopc_shr_methods      , only : chkerr, state_setscalar, state_getscalar, state_diagnose, alarmInit
+  use nuopc_shr_methods      , only : set_component_logging, get_component_instance, log_clock_advance
   use perf_mod               , only : t_startf, t_stopf, t_barrierf
   use netcdf                 , only : nf90_open, nf90_nowrite, nf90_noerr, nf90_close, nf90_strerror
   use netcdf                 , only : nf90_inq_dimid, nf90_inq_varid, nf90_get_var
@@ -429,7 +429,7 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
 !$  call omp_set_num_threads(localPeCount)
-
+    print *,__FILE__,__LINE__,localPeCount
     !----------------------
     ! Obtain attribute values
     !----------------------
@@ -781,7 +781,7 @@ contains
 
 #if (defined _MEMTRACE)
     if(masterproc) then
-       write(iulog,*) TRIM(Sub) // ':end::'
+       write(iulog,*) TRIM(subname) // ':end::'
        lbnum=1
        call memmon_dump_fort('memmon.out','lnd_comp_nuopc_InitializeRealize:end::',lbnum)
        call memmon_reset_addr()
