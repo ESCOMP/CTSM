@@ -963,7 +963,6 @@ contains
    ! Initialize data stream information for population density.
    !
    ! !USES:
-   use clm_varctl       , only : inst_name
    use clm_time_manager , only : get_calendar
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
@@ -1039,7 +1038,7 @@ contains
    endif
    call shr_strdata_create(this%sdat_hdm,name="clmhdm",     &
         pio_subsystem=pio_subsystem,                   &
-        pio_iotype=shr_pio_getiotype(inst_name),       &
+        pio_iotype=shr_pio_getiotype('LND'),       &
         mpicom=mpicom, compid=comp_id,                 &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,        &
         nxg=ldomain%ni, nyg=ldomain%nj,                &
@@ -1118,7 +1117,6 @@ contains
   ! Initialize data stream information for Lightning.
   !
   ! !USES:
-  use clm_varctl       , only : inst_name
   use clm_time_manager , only : get_calendar
   use ncdio_pio        , only : pio_subsystem
   use shr_pio_mod      , only : shr_pio_getiotype
@@ -1194,7 +1192,7 @@ contains
    endif
    call shr_strdata_create(this%sdat_lnfm,name="clmlnfm",  &
         pio_subsystem=pio_subsystem,                  &
-        pio_iotype=shr_pio_getiotype(inst_name),      &
+        pio_iotype=shr_pio_getiotype('LND'),      &
         mpicom=mpicom, compid=comp_id,                &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,       &
         nxg=ldomain%ni, nyg=ldomain%nj,               &
