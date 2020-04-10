@@ -7,7 +7,6 @@ module GlacierSurfaceMassBalanceMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use clm_varcon     , only : secspday
   use clm_varpar     , only : nlevgrnd
@@ -273,8 +272,8 @@ contains
     character(len=*), parameter :: subname = 'AdjustRunoffTerms'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(qflx_qrgwl) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_ice_runoff_snwcp) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(qflx_qrgwl) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_ice_runoff_snwcp) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          qflx_glcice_frz        => waterfluxbulk_inst%qflx_glcice_frz_col         , & ! Input: [real(r8) (:)] ice growth (positive definite) (mm H2O/s)

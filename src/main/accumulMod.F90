@@ -22,7 +22,6 @@ module accumulMod
 #include "shr_assert.h"
   use shr_kind_mod, only: r8 => shr_kind_r8
   use shr_sys_mod , only: shr_sys_abort
-  use shr_log_mod , only: errMsg => shr_log_errMsg
   use abortutils  , only: endrun
   use clm_varctl  , only: iulog, nsrest, nsrStartup
   use clm_varcon  , only: spval, ispval
@@ -347,7 +346,7 @@ contains
     call find_field(field_name=name, caller_name=subname, field_index=nf)
 
     numlev = accum(nf)%numlev
-    SHR_ASSERT(numlev == 1, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(numlev == 1, sourcefile, __LINE__)
 
     call accum(nf)%extract_accum_field_func( &
          level = 1, &
@@ -382,7 +381,7 @@ contains
     call find_field(field_name=name, caller_name=subname, field_index=nf)
 
     numlev = accum(nf)%numlev
-    SHR_ASSERT((size(field, 2) == numlev), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field, 2) == numlev), sourcefile, __LINE__)
 
     do j = 1,numlev
        call accum(nf)%extract_accum_field_func( &
@@ -413,7 +412,7 @@ contains
 
     begi = this%beg1d
     endi = this%end1d
-    SHR_ASSERT((size(field) == endi-begi+1), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
     do k = begi, endi
        kf = k - begi + 1
@@ -442,7 +441,7 @@ contains
 
     begi = this%beg1d
     endi = this%end1d
-    SHR_ASSERT((size(field) == endi-begi+1), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
     if (mod(nstep,this%period) == 0) then
        do k = begi, endi
@@ -484,7 +483,7 @@ contains
     call find_field(field_name=name, caller_name=subname, field_index=nf)
 
     numlev = accum(nf)%numlev
-    SHR_ASSERT(numlev == 1, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(numlev == 1, sourcefile, __LINE__)
 
     call accum(nf)%update_accum_field_func( &
          level = 1, &
@@ -518,7 +517,7 @@ contains
     call find_field(field_name=name, caller_name=subname, field_index=nf)
 
     numlev = accum(nf)%numlev
-    SHR_ASSERT((size(field, 2) == numlev), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field, 2) == numlev), sourcefile, __LINE__)
 
     do j = 1,numlev
        call accum(nf)%update_accum_field_func( &
@@ -550,7 +549,7 @@ contains
 
     begi = this%beg1d
     endi = this%end1d
-    SHR_ASSERT((size(field) == endi-begi+1), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
     ! time average field: reset every accumulation period; normalize at end of
     ! accumulation period
@@ -604,7 +603,7 @@ contains
 
     begi = this%beg1d
     endi = this%end1d
-    SHR_ASSERT((size(field) == endi-begi+1), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
     do k = begi,endi
        if (this%active(k)) then
@@ -645,7 +644,7 @@ contains
 
     begi = this%beg1d
     endi = this%end1d
-    SHR_ASSERT((size(field) == endi-begi+1), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(field) == endi-begi+1), sourcefile, __LINE__)
 
     !running accumulation field; reset at trigger -99999
 

@@ -1,7 +1,5 @@
 module initGridCellsMod
 
-#include "shr_assert.h"
-
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Initializes sub-grid mapping for each land grid cell. This module handles the high-
@@ -190,9 +188,9 @@ contains
        end do
 
        ! Ensure that we have set the expected number of patchs, cols and landunits for this clump
-       SHR_ASSERT(li == bounds_clump%endl, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(ci == bounds_clump%endc, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(pi == bounds_clump%endp, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(li == bounds_clump%endl, sourcefile, __LINE__)
+       SHR_ASSERT_FL(ci == bounds_clump%endc, sourcefile, __LINE__)
+       SHR_ASSERT_FL(pi == bounds_clump%endp, sourcefile, __LINE__)
 
        ! Set some other gridcell-level variables
 
@@ -277,9 +275,9 @@ contains
        end do
     end if
 
-    SHR_ASSERT(nlunits_added == nlunits, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(ncols_added == ncols, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(npatches_added == npatches, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(nlunits_added == nlunits, sourcefile, __LINE__)
+    SHR_ASSERT_FL(ncols_added == ncols, sourcefile, __LINE__)
+    SHR_ASSERT_FL(npatches_added == npatches, sourcefile, __LINE__)
 
   end subroutine set_landunit_veg_compete
 
@@ -451,7 +449,7 @@ contains
     character(len=*), parameter :: subname = 'set_landunit_ice_mec'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(ltype == istice_mec, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(ltype == istice_mec, sourcefile, __LINE__)
 
     call subgrid_get_info_glacier_mec(gi, atm_topo, glc_behavior, &
          npatches=npatches, ncols=ncols, nlunits=nlunits)
@@ -565,9 +563,9 @@ contains
 
     end if
 
-    SHR_ASSERT(nlunits_added == nlunits, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(ncols_added == ncols, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(npatches_added == npatches, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(nlunits_added == nlunits, sourcefile, __LINE__)
+    SHR_ASSERT_FL(ncols_added == ncols, sourcefile, __LINE__)
+    SHR_ASSERT_FL(npatches_added == npatches, sourcefile, __LINE__)
 
   end subroutine set_landunit_crop_noncompete
 

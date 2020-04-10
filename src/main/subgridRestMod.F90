@@ -15,7 +15,7 @@ module subgridRestMod
   use clm_varpar         , only : nlevsno, nlevgrnd
   use pio                , only : file_desc_t
   use ncdio_pio          , only : ncd_int, ncd_double
-  use GetGlobalValuesMod , only : GetGlobalIndex
+  use GetGlobalValuesMod , only : GetGlobalIndexArray
   use GridcellType       , only : grc                
   use LandunitType       , only : lun                
   use ColumnType         , only : col                
@@ -197,9 +197,7 @@ contains
          long_name='2d latitude index of corresponding landunit',                  &
          interpinic_flag='skip', readvar=readvar, data=ilarr)
 
-    do l=bounds%begl,bounds%endl
-       ilarr(l) = GetGlobalIndex(decomp_index=lun%gridcell(l), clmlevel=nameg)
-    end do
+    ilarr = GetGlobalIndexArray(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
     call restartvar(ncid=ncid, flag=flag, varname='land1d_gridcell_index', xtype=ncd_int, &
          dim1name='landunit',                                                             &
          long_name='gridcell index of corresponding landunit',                            &
@@ -262,17 +260,13 @@ contains
          long_name='2d latitude index of corresponding column', units=' ',          &
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
-    do c= bounds%begc, bounds%endc
-       icarr(c) = GetGlobalIndex(decomp_index=col%gridcell(c), clmlevel=nameg)
-    end do
+    icarr = GetGlobalIndexArray(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=nameg)
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_gridcell_index', xtype=ncd_int, &
          dim1name='column',                                                               &
          long_name='gridcell index of corresponding column',                              &
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
-    do c= bounds%begc, bounds%endc
-       icarr(c) = GetGlobalIndex(decomp_index=col%landunit(c), clmlevel=namel)
-    end do
+    icarr = GetGlobalIndexArray(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=namel)
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_landunit_index', xtype=ncd_int, &
          dim1name='column',                                                               &
          long_name='landunit index of corresponding column',                              &
@@ -356,25 +350,19 @@ contains
          long_name='2d latitude index of corresponding pft', units='',         &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    do p=bounds%begp,bounds%endp
-       iparr(p) = GetGlobalIndex(decomp_index=patch%gridcell(p), clmlevel=nameg)
-    enddo
+    iparr = GetGlobalIndexArray(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=nameg)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_gridcell_index', xtype=ncd_int, &
          dim1name='pft',                                                                  &
          long_name='gridcell index of corresponding pft',                                 &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    do p=bounds%begp,bounds%endp
-       iparr(p) = GetGlobalIndex(decomp_index=patch%landunit(p), clmlevel=namel)
-    enddo
+    iparr = GetGlobalIndexArray(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namel)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_landunit_index', xtype=ncd_int, &
          dim1name='pft',                                                                  &
          long_name='landunit index of corresponding pft',                                 &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    do p=bounds%begp,bounds%endp
-       iparr(p) = GetGlobalIndex(decomp_index=patch%column(p), clmlevel=namec)
-    enddo
+    iparr = GetGlobalIndexArray(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namec)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_column_index', xtype=ncd_int,   &
          dim1name='pft',                                                                  &
          long_name='column index of corresponding pft',                                   &
@@ -544,7 +532,7 @@ contains
     end if
     call restartvar(ncid=ncid, flag=flag, varname='ZISNO', xtype=ncd_double,  & 
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno, upperb2=-1, &
-         long_name='snow interface depth', units='m', &
+         long_name='snow interface depth at the top of the given layer', units='m', &
          interpinic_flag='interp', readvar=readvar, data=temp2d)
     if (flag == 'read') then
        col%zi(bounds%begc:bounds%endc,-nlevsno:-1) = temp2d(bounds%begc:bounds%endc,-nlevsno:-1) 

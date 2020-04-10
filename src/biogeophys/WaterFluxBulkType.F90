@@ -187,8 +187,6 @@ contains
          long_name=this%info%lname('water flux from soil to root in each soil-layer'), &
          ptr_col=this%qflx_rootsoi_col, set_spec=spval, l2g_scale_type='veg', default='inactive')
 
-    this%qflx_ev_snow_patch(begp:endp) = spval
-
     this%qflx_snowindunload_patch(begp:endp) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QSNO_WINDUNLOAD'), &
@@ -204,6 +202,16 @@ contains
          avgflag='A', &
          long_name=this%info%lname('canopy snow temp unloading'), &
          ptr_patch=this%qflx_snotempunload_patch, set_lake=0._r8, c2l_scale_type='urbanf')
+
+    ! QSNOEVAP is evaporation from snow but only when snow is present (snl<0), otherwise, it is 
+    ! equivalent to qflx_ev_soil   
+    this%qflx_ev_snow_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNOEVAP'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('evaporation from snow (only when snl<0, otherwise it is equal to qflx_ev_soil)'), &
+         ptr_col=this%qflx_ev_snow_col, c2l_scale_type='urbanf')
 
     this%qflx_h2osfc_surf_col(begc:endc) = spval
     call hist_addfld1d ( &
