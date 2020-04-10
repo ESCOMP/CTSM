@@ -483,6 +483,117 @@
       </pes>
     </mach>
   </grid>
+  <grid name="l%C96" >
+    <mach name="any">
+      <pes pesize="any" compset="any">
+	<comment>none</comment>
+	<ntasks>
+	  <ntasks_atm>1152</ntasks_atm>
+	  <ntasks_lnd>864</ntasks_lnd>
+	  <ntasks_rof>864</ntasks_rof>
+	  <ntasks_ice>288</ntasks_ice>
+	  <ntasks_ocn>256</ntasks_ocn>
+	  <ntasks_glc>1152</ntasks_glc>
+	  <ntasks_wav>32</ntasks_wav>
+	  <ntasks_cpl>1152</ntasks_cpl>
+	</ntasks>
+	<nthrds>
+	  <nthrds_atm>3</nthrds_atm>
+	  <nthrds_lnd>3</nthrds_lnd>
+	  <nthrds_rof>3</nthrds_rof>
+	  <nthrds_ice>3</nthrds_ice>
+	  <nthrds_ocn>3</nthrds_ocn>
+	  <nthrds_glc>3</nthrds_glc>
+	  <nthrds_wav>3</nthrds_wav>
+	  <nthrds_cpl>3</nthrds_cpl>
+	</nthrds>
+	<rootpe>
+	  <rootpe_atm>0</rootpe_atm>
+	  <rootpe_lnd>0</rootpe_lnd>
+	  <rootpe_rof>0</rootpe_rof>
+	  <rootpe_ice>864</rootpe_ice>
+	  <rootpe_ocn>1152</rootpe_ocn>
+	  <rootpe_glc>0</rootpe_glc>
+	  <rootpe_wav>1408</rootpe_wav>
+	  <rootpe_cpl>0</rootpe_cpl>
+	</rootpe>
+      </pes>
+    </mach>
+  </grid>
+  <grid name="l%C192" >
+    <mach name="any">
+      <pes pesize="any" compset="any">
+	<comment>none</comment>
+	<ntasks>
+	  <ntasks_atm>1152</ntasks_atm>
+	  <ntasks_lnd>864</ntasks_lnd>
+	  <ntasks_rof>864</ntasks_rof>
+	  <ntasks_ice>288</ntasks_ice>
+	  <ntasks_ocn>256</ntasks_ocn>
+	  <ntasks_glc>1152</ntasks_glc>
+	  <ntasks_wav>32</ntasks_wav>
+	  <ntasks_cpl>1152</ntasks_cpl>
+	</ntasks>
+	<nthrds>
+	  <nthrds_atm>3</nthrds_atm>
+	  <nthrds_lnd>3</nthrds_lnd>
+	  <nthrds_rof>3</nthrds_rof>
+	  <nthrds_ice>3</nthrds_ice>
+	  <nthrds_ocn>3</nthrds_ocn>
+	  <nthrds_glc>3</nthrds_glc>
+	  <nthrds_wav>3</nthrds_wav>
+	  <nthrds_cpl>3</nthrds_cpl>
+	</nthrds>
+	<rootpe>
+	  <rootpe_atm>0</rootpe_atm>
+	  <rootpe_lnd>0</rootpe_lnd>
+	  <rootpe_rof>0</rootpe_rof>
+	  <rootpe_ice>864</rootpe_ice>
+	  <rootpe_ocn>1152</rootpe_ocn>
+	  <rootpe_glc>0</rootpe_glc>
+	  <rootpe_wav>1408</rootpe_wav>
+	  <rootpe_cpl>0</rootpe_cpl>
+	</rootpe>
+      </pes>
+    </mach>
+  </grid>
+  <grid name="l%C384">
+    <mach name="any">
+      <pes pesize="any" compset="any">
+	<comment>none</comment>
+	<ntasks>
+	  <ntasks_atm>3456</ntasks_atm>
+	  <ntasks_lnd>3456</ntasks_lnd>
+	  <ntasks_rof>3456</ntasks_rof>
+	  <ntasks_ice>3456</ntasks_ice>
+	  <ntasks_ocn>3456</ntasks_ocn>
+	  <ntasks_glc>3456</ntasks_glc>
+	  <ntasks_wav>3456</ntasks_wav>
+	  <ntasks_cpl>3456</ntasks_cpl>
+	</ntasks>
+	<nthrds>
+	  <nthrds_atm>1</nthrds_atm>
+	  <nthrds_lnd>1</nthrds_lnd>
+	  <nthrds_rof>1</nthrds_rof>
+	  <nthrds_ice>1</nthrds_ice>
+	  <nthrds_ocn>1</nthrds_ocn>
+	  <nthrds_glc>1</nthrds_glc>
+	  <nthrds_wav>1</nthrds_wav>
+	  <nthrds_cpl>1</nthrds_cpl>
+	</nthrds>
+	<rootpe>
+	  <rootpe_atm>0</rootpe_atm>
+	  <rootpe_lnd>0</rootpe_lnd>
+	  <rootpe_rof>0</rootpe_rof>
+	  <rootpe_ice>0</rootpe_ice>
+	  <rootpe_ocn>0</rootpe_ocn>
+	  <rootpe_glc>0</rootpe_glc>
+	  <rootpe_wav>0</rootpe_wav>
+	  <rootpe_cpl>0</rootpe_cpl>
+	</rootpe>
+      </pes>
+    </mach>
+  </grid>
   <grid name="l%1x1|l%CLM_USRDAT" >
     <mach name="any">
       <pes pesize="any" compset="any">
