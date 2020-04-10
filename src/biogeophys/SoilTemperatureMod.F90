@@ -159,6 +159,7 @@ contains
     logical  :: heat_on(bounds%begl:bounds%endl)                         ! is urban heating on?
     real(r8) :: fn_h2osfc(bounds%begc:bounds%endc)                       ! heat diffusion through standing-water/soil interface [W/m2]
     real(r8) :: dz_h2osfc(bounds%begc:bounds%endc)                       ! height of standing surface water [m]
+    integer, parameter :: nband=5
     real(r8) :: bmatrix(bounds%begc:bounds%endc,nband,-nlevsno:nlevgrnd) ! banded matrix for numerical solution of temperature
     real(r8) :: tvector(bounds%begc:bounds%endc,-nlevsno:nlevgrnd)       ! initial temperature solution [K]
     real(r8) :: rvector(bounds%begc:bounds%endc,-nlevsno:nlevgrnd)       ! RHS vector for numerical solution of temperature
@@ -168,7 +169,6 @@ contains
     real(r8) :: hs_top_snow(bounds%begc:bounds%endc)                     ! heat flux on top snow layer [W/m2]
     real(r8) :: hs_h2osfc(bounds%begc:bounds%endc)                       ! heat flux on standing water [W/m2]
     integer  :: jbot(bounds%begc:bounds%endc)                            ! bottom level at each column
-    integer, parameter :: nband=5
     !-----------------------------------------------------------------------
 
     associate(                                                                &
@@ -324,7 +324,6 @@ contains
 
       ! Set up right-hand side vecor (vector r).
 
-      call t_startf ('SetRHSVec perf yyyy')
       call SetRHSVec(bounds, num_nolakec, filter_nolakec, &
            dtime,                                         &
            hs_h2osfc( begc:endc ),                        &
@@ -343,11 +342,7 @@ contains
            waterdiagnosticbulk_inst,                      &
            rvector( begc:endc, -nlevsno: ))
       
-      call t_stopf ('SetRHSVec perf yyyy')
-
       ! Set up the banded diagonal matrix
-
-      call t_startf ('SetMatrix perf zzzz')
 
       call SetMatrix(bounds, num_nolakec, filter_nolakec, &
            dtime,                                         &
@@ -360,8 +355,6 @@ contains
            dz_h2osfc( begc:endc ),                        &
            waterdiagnosticbulk_inst,                      &
            bmatrix( begc:endc, 1:, -nlevsno: ))
-
-      call t_stopf ('SetMatrix perf zzzz')
 
       ! initialize initial temperature vector
 
