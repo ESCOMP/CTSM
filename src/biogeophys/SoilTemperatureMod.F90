@@ -1962,10 +1962,9 @@ contains
             hs_top_lev(c) = hs_top_snow(c) 
 
             ! urban road columns
-            if (lun%urbpoi(l) .and.                 &
-               (col%itype(c) == icol_sunwall   .or. &
+            if (col%itype(c) == icol_sunwall   .or. &
                 col%itype(c) == icol_shadewall .or. &
-                col%itype(c) == icol_roof)) then
+                col%itype(c) == icol_roof) then
 
                 hs_top_lev(c) = hs_top(c)
 
@@ -2128,11 +2127,10 @@ contains
         do fc = 1,num_nolakec
            c = filter_nolakec(fc)
            l = col%landunit(c)
-           if ((lun%urbpoi(l)) &
-            .and.  &
-            (col%itype(c) == icol_sunwall &
-            .or. col%itype(c) == icol_shadewall &
-            .or. col%itype(c) == icol_roof)) then
+           if (col%itype(c) == icol_sunwall  .or. &
+               col%itype(c) == icol_shadewall .or. &
+               col%itype(c) == icol_roof) then
+
               if (j >= col%snl(c)+1) then
                  if (j == col%snl(c)+1) then
                     ! changed hs to hs_top
@@ -2164,29 +2162,29 @@ contains
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             l = col%landunit(c)
-               if ((.not. lun%urbpoi(l)) .or. & 
-                  (col%itype(c) == icol_road_imperv .or. &
-                   col%itype(c) == icol_road_perv)) then
+            if ((.not. lun%urbpoi(l)) .or. & 
+               (col%itype(c) == icol_road_imperv .or. &
+                col%itype(c) == icol_road_perv)) then
 
-                  if (j == col%snl(c)+1) then
-                     rt(c,j) = t_soisno(c,j) +  fact(c,j)*( hs_top_snow(c) &
-                          - dhsdT(c)*t_soisno(c,j) + cnfac*fn(c,j) )
-                  else if (j == 1) then
-                     ! this is the snow/soil interface layer
-                     rt(c,j) = t_soisno(c,j) + fact(c,j) &
-                          *((1._r8-frac_sno_eff(c))*(hs_soil(c) - dhsdT(c)*t_soisno(c,j)) &
-                          + cnfac*(fn(c,j) - frac_sno_eff(c) * fn(c,j-1)))
+               if (j == col%snl(c)+1) then
+                  rt(c,j) = t_soisno(c,j) +  fact(c,j)*( hs_top_snow(c) &
+                       - dhsdT(c)*t_soisno(c,j) + cnfac*fn(c,j) )
+               else if (j == 1) then
+                  ! this is the snow/soil interface layer
+                  rt(c,j) = t_soisno(c,j) + fact(c,j) &
+                       *((1._r8-frac_sno_eff(c))*(hs_soil(c) - dhsdT(c)*t_soisno(c,j)) &
+                       + cnfac*(fn(c,j) - frac_sno_eff(c) * fn(c,j-1)))
 
-                     rt(c,j) = rt(c,j) +  frac_sno_eff(c)*fact(c,j)*sabg_lyr_col(c,j)
+                  rt(c,j) = rt(c,j) +  frac_sno_eff(c)*fact(c,j)*sabg_lyr_col(c,j)
 
-                  else if (j <= nlevgrnd-1) then
-                     rt(c,j) = t_soisno(c,j) + cnfac*fact(c,j)*( fn(c,j) - fn(c,j-1) )
+               else if (j <= nlevgrnd-1) then
+                  rt(c,j) = t_soisno(c,j) + cnfac*fact(c,j)*( fn(c,j) - fn(c,j-1) )
 
-                  else if (j == nlevgrnd) then
-                     rt(c,j) = t_soisno(c,j) - cnfac*fact(c,j)*fn(c,j-1) + fact(c,j)*fn(c,j)
-                  end if
-
+               else if (j == nlevgrnd) then
+                  rt(c,j) = t_soisno(c,j) - cnfac*fact(c,j)*fn(c,j-1) + fact(c,j)*fn(c,j)
                end if
+
+            end if
          end do
       end do
 
@@ -2501,11 +2499,9 @@ contains
             nlev_thresh(fc) = nlevgrnd
 
             ! urban road columns
-            if ((lun%urbpoi(l)) &
-               .and.  &
-               (col%itype(c) == icol_sunwall &
-               .or. col%itype(c) == icol_shadewall &
-               .or. col%itype(c) == icol_roof)) then
+            if (col%itype(c) == icol_sunwall  .or. & 
+                col%itype(c) == icol_shadewall.or. &
+                col%itype(c) == icol_roof) then
 
                nlev_thresh(fc) = nlevurb
 
@@ -2614,41 +2610,41 @@ end subroutine SetMatrix_Snow
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             l = col%landunit(c)
-            if (lun%urbpoi(l)) then
-               if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
-                    .or. col%itype(c) == icol_roof)) then
-                  if (j >= col%snl(c)+1) then
-                     if (j == col%snl(c)+1) then
-                        dzp     = z(c,j+1)-z(c,j)
-                        if (j /= 1) then
-                           bmatrix_soil(c,4,j) = 0._r8
-                        else !if (j == 1)
-                           bmatrix_soil_snow(c,5,j) = 0._r8
-                        end if
-                        bmatrix_soil(c,3,j) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
-                        bmatrix_soil(c,2,j) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
-                     else if (j <= nlevurb-1) then
-                        dzm     = (z(c,j)-z(c,j-1))
-                        dzp     = (z(c,j+1)-z(c,j))
-                        if (j /= 1) then
-                           bmatrix_soil(c,4,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
-                        else !if (j == 1) then
-                           bmatrix_soil_snow(c,5,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
-                        end if
-                        bmatrix_soil(c,3,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
-                        bmatrix_soil(c,2,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
-                     else if (j == nlevurb) then
-                        ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
-                        ! the bottom "soil" layer and the equations are derived assuming a prognostic inner
-                        ! surface temperature.
-                        dzm     = ( z(c,j)-z(c,j-1))
-                        dzp     = (zi(c,j)-z(c,j))
-                        bmatrix_soil(c,4,j) =   - (1._r8-cnfac)*fact(c,j)*(tk(c,j-1)/dzm)
-                        bmatrix_soil(c,3,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j-1)/dzm + tk(c,j)/dzp)
-                        bmatrix_soil(c,2,j) = 0._r8
-                     end if
-                  end if
-               end if
+            if ( col%itype(c) == icol_sunwall   .or. &
+                 col%itype(c) == icol_shadewall .or. &
+                 col%itype(c) == icol_roof) then
+
+              if (j >= col%snl(c)+1) then
+                 if (j == col%snl(c)+1) then
+                    dzp     = z(c,j+1)-z(c,j)
+                    if (j /= 1) then
+                       bmatrix_soil(c,4,j) = 0._r8
+                     else
+                       bmatrix_soil_snow(c,5,j) = 0._r8
+                    end if
+                    bmatrix_soil(c,3,j) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+                    bmatrix_soil(c,2,j) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                 else if (j <= nlevurb-1) then
+                    dzm     = (z(c,j)-z(c,j-1))
+                    dzp     = (z(c,j+1)-z(c,j))
+                    if (j /= 1) then
+                       bmatrix_soil(c,4,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
+                     else
+                       bmatrix_soil_snow(c,5,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
+                    end if
+                    bmatrix_soil(c,3,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+                    bmatrix_soil(c,2,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
+                 else if (j == nlevurb) then
+                    ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
+                    ! the bottom "soil" layer and the equations are derived assuming a prognostic inner
+                    ! surface temperature.
+                    dzm     = ( z(c,j)-z(c,j-1))
+                    dzp     = (zi(c,j)-z(c,j))
+                    bmatrix_soil(c,4,j) =   - (1._r8-cnfac)*fact(c,j)*(tk(c,j-1)/dzm)
+                    bmatrix_soil(c,3,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j-1)/dzm + tk(c,j)/dzp)
+                    bmatrix_soil(c,2,j) = 0._r8
+                 end if
+              end if
             end if
          enddo
       enddo
@@ -2660,15 +2656,16 @@ end subroutine SetMatrix_Snow
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             l = col%landunit(c)
-            if ((col%itype(c) == icol_road_imperv) .or. & 
-                (col%itype(c) == icol_road_perv)   .or.  &
+            if ((col%itype(c) == icol_road_imperv) .or. &
+                (col%itype(c) == icol_road_perv)   .or. &
                 (.not. lun%urbpoi(l))) then
+
                if (j >= col%snl(c)+1) then
                   if (j == col%snl(c)+1) then
                      dzp     = z(c,j+1)-z(c,j)
                      if (j /= 1) then
                         bmatrix_soil(c,4,j) = 0._r8
-                     else !if ( j== 1) 
+                      else 
                         bmatrix_soil_snow(c,5,j) = 0._r8
                      end if
                      bmatrix_soil(c,3,j) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
@@ -2677,10 +2674,6 @@ end subroutine SetMatrix_Snow
                      ! this is the snow/soil interface layer
                      dzm     = (z(c,j)-z(c,j-1))
                      dzp     = (z(c,j+1)-z(c,j))
-                     !if (j /= 1) then
-                     !   bmatrix_soil(c,4,j) =   - frac_sno_eff(c) * (1._r8-cnfac) * fact(c,j) &
-                     !        * tk(c,j-1)/dzm
-                     !end if
                      bmatrix_soil(c,2,j) = - (1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
                      bmatrix_soil(c,3,j) = 1._r8 + (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp &
                           + frac_sno_eff(c) * tk(c,j-1)/dzm) &
@@ -2740,7 +2733,7 @@ end subroutine SetMatrix_Snow
     type(bounds_type), intent(in) :: bounds                           ! bounds
     integer , intent(in)  :: num_nolakec                              ! number of column non-lake points in column filter
     integer , intent(in)  :: filter_nolakec(:)                        ! column filter for non-lake points
-    real(r8), intent(in)  :: dtime                                    ! land model time step (sec)
+    real(r8), intent(in)  :: dtime                                    ! land model time step [sec]
     integer , intent(in)  :: nband                                    ! number of bands of the tridigonal matrix
     real(r8), intent(in)  :: dhsdT(bounds%begc: )                     ! temperature derivative of "hs" [col]
     real(r8), intent(in)  :: tk(bounds%begc: ,-nlevsno+1: )           ! thermal conductivity [W/(m K)]
