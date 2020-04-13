@@ -2510,25 +2510,19 @@ contains
         do fc = 1,num_nolakec
            c = filter_nolakec(fc)
            if (j >= col%snl(c)+1) then
+              dzp     = z(c,j+1)-z(c,j)    
               if (j == col%snl(c)+1) then
-                 dzp     = z(c,j+1)-z(c,j)    
-                 bmatrix_snow (c,4,j-1) = 0._r8                                                        ! at
-                 bmatrix_snow (c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c) ! bt
-                 if ( j /= 0) then
-                    bmatrix_snow(c,2,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp                      !ct
-                 else   !if ( j == 0) then
-                    bmatrix_snow_soil(c,1,j-1) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
-                 end if
-              else if (j <= nlev_thresh(fc)-1) then
+                 bmatrix_snow (c,4,j-1) = 0._r8                                                        
+                 bmatrix_snow (c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
+              else
                  dzm     = (z(c,j)-z(c,j-1))
-                 dzp     = (z(c,j+1)-z(c,j))
-                 bmatrix_snow(c,4,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm !at
-                 bmatrix_snow(c,3,j-1) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm) !bt
-                 if (j /= 0) then
-                    bmatrix_snow(c,2,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp !ct
-                 else !if ( j == 0)
-                    bmatrix_snow_soil(c,1,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
-                 end if
+                 bmatrix_snow(c,4,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
+                 bmatrix_snow(c,3,j-1) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+              end if
+              if (j /= 0) then
+                 bmatrix_snow(c,2,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp !ct
+              else !if ( j == 0)
+                 bmatrix_snow_soil(c,1,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
               end if
            end if
         enddo
