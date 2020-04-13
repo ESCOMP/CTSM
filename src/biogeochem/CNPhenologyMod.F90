@@ -929,10 +929,11 @@ contains
                   if (days_active(p) > 355._r8) pftmayexist(p) = .false.
                end if
 
-               ! use 15 hr at 65N from eitel 2019, to ~11hours in temperate regions
+               ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
+               ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
                crit_daylat=54000-720*(65-abs(grc%latdeg(g)))
                if (crit_daylat < crit_dayl) then
-                  crit_daylat = crit_dayl
+                  crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
                end if
                
                ! only begin to test for offset daylength once past the summer sol
