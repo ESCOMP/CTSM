@@ -9,7 +9,7 @@ module ncdio_pio
   ! Generic interfaces to write fields to netcdf files for CLM
   !
   ! !USES:
-  use shr_kind_mod   , only : r8 => shr_kind_r8, i4=>shr_kind_i4, shr_kind_cl
+  use shr_kind_mod   , only : r8 => shr_kind_r8, i4=>shr_kind_i4, shr_kind_cl, r4 => shr_kind_r4
   use shr_infnan_mod , only : nan => shr_infnan_nan,  isnan => shr_infnan_isnan, assignment(=)
   use shr_sys_mod    , only : shr_sys_abort
   use shr_file_mod   , only : shr_file_getunit, shr_file_freeunit
@@ -33,6 +33,7 @@ module ncdio_pio
   use pio            , only : pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling
   use pio            , only : pio_setframe, pio_unlimited, pio_write, pio_write_darray, var_desc_t
   use pio            , only : pio_iotask_rank, PIO_REARR_SUBSET, PIO_REARR_BOX
+  use pio            , only : pio_inq_vartype
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -1457,13 +1458,13 @@ contains
        if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 #if ({DIMS}==0)
-       temp(1) = data
        if (present(nt)) then
+          temp(1) = data
           start(1) = nt
           count(1) = 1
           status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
        else
-          status = pio_put_var(ncid, varid, temp)
+          status = pio_put_var(ncid, varid, data)
        end if
 #elif ({DIMS}==1)
        start(1) = 1 ; count(1) = size(data)
@@ -1611,6 +1612,7 @@ contains
     integer                          :: count(3)   ! netcdf count index
     integer                          :: status     ! error code
     logical                          :: varpresent ! if true, variable is on tape
+    integer                          :: xtype      ! type of var in file
     integer                , pointer :: idata(:)   ! Temporary integer data to send to file
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
@@ -1683,13 +1685,11 @@ contains
              do n = 1,ndims_iod
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
-#if ({ITYPE}==TYPELOGICAL)
+             status = pio_inq_vartype(ncid, vardesc, xtype)
+
              call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                  PIO_INT, iodnum)
-#else
-             call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                  PIO_{TYPE}, iodnum)
-#endif
+                  xtype, iodnum)
+
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
@@ -1729,13 +1729,9 @@ contains
        do n = 1,ndims_iod
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
-#if ({ITYPE}==TYPELOGICAL)
+       status = pio_inq_vartype(ncid, vardesc, xtype)
        call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-            PIO_INT, iodnum)
-#else
-       call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-            PIO_{TYPE}, iodnum)
-#endif
+            xtype, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
@@ -1752,7 +1748,11 @@ contains
 #elif ({ITYPE}==TYPEINT)
        call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=ispval)
 #elif ({ITYPE}==TYPEDOUBLE)
-       call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=spval)
+       if (iodesc_plus%type == pio_double) then
+          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=spval)
+       else
+          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, real(data,kind=r4), status, fillval=real(spval,kind=r4))
+       endif
 #endif
     else
 
@@ -1808,6 +1808,8 @@ contains
     logical           :: varpresent ! if true, variable is on tape
     integer           :: lb1,lb2
     integer           :: ub1,ub2
+    integer           :: xtype      ! netcdf type of variable on file
+
     type(iodesc_plus_type) , pointer  :: iodesc_plus
     type(var_desc_t)                  :: vardesc
     character(len=*),parameter :: subname='ncd_io_2d_{TYPE}' ! subroutine name
@@ -1890,12 +1892,13 @@ contains
              do n = 1,ndims_iod
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
+             status = pio_inq_vartype(ncid, vardesc, xtype)
              if (present(switchdim)) then
                 call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                     PIO_{TYPE}, iodnum, switchdim=.true.)
+                     xtype, iodnum, switchdim=.true.)
              else
                 call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                     PIO_{TYPE}, iodnum)
+                     xtype, iodnum)
              end if
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
@@ -1944,12 +1947,13 @@ contains
        do n = 1,ndims_iod
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
+       status = pio_inq_vartype(ncid, vardesc, xtype)
        if (present(switchdim)) then
           call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-               PIO_{TYPE}, iodnum, switchdim=.true.)
+               xtype, iodnum, switchdim=.true.)
        else
           call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-               PIO_{TYPE}, iodnum)
+               xtype, iodnum)
        end if
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
@@ -1969,11 +1973,19 @@ contains
           call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=ispval)
        end if
 #else
-       if (present(switchdim)) then
-          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status, fillval=spval)
+       if (iodesc_plus%type == pio_double) then
+          if (present(switchdim)) then
+             call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status, fillval=spval)
+          else
+             call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=spval)
+          end if
        else
-          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=spval)
-       end if
+          if (present(switchdim)) then
+             call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, real(temp, kind=r4), status, fillval=real(spval, kind=r4))
+          else
+             call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, real(data, kind=r4), status, fillval=real(spval, kind=r4))
+          end if
+       endif
        if ( present(cnvrtnan2fill) )then
           do j = lb2,ub2
              do i = lb1,ub1
@@ -2031,6 +2043,7 @@ contains
     integer                          :: iodnum     ! iodesc num in list
     integer                          :: start(5)   ! netcdf start index
     integer                          :: count(5)   ! netcdf count index
+    integer                          :: xtype      ! netcdf type of variable on file
     logical                          :: varpresent ! if true, variable is on tape
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
@@ -2087,8 +2100,9 @@ contains
              do n = 1,ndims_iod
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
+             status = pio_inq_vartype(ncid, vardesc, xtype)
              call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                  PIO_{TYPE}, iodnum)
+                  xtype, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
@@ -2116,8 +2130,9 @@ contains
        do n = 1,ndims_iod
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
+       status = pio_inq_vartype(ncid, vardesc, xtype)
        call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-            PIO_{TYPE}, iodnum)
+            xtype, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
@@ -2516,10 +2531,9 @@ contains
 
     deallocate(gsmOP)
 
-    call pio_initdecomp(pio_subsystem, baseTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc)
+    call pio_initdecomp(pio_subsystem, xTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc)
 
     deallocate(compDOF)
-
     iodesc_list(iodnum)%type  = xtype
     iodesc_list(iodnum)%ndims = ndims
     iodesc_list(iodnum)%dims  = 0
