@@ -5,38 +5,42 @@ module lnd_comp_nuopc
   !----------------------------------------------------------------------------
 
   use ESMF
-  use NUOPC             , only : NUOPC_CompDerive, NUOPC_CompSetEntryPoint, NUOPC_CompSpecialize
-  use NUOPC             , only : NUOPC_CompFilterPhaseMap, NUOPC_CompAttributeGet, NUOPC_CompAttributeSet
-  use NUOPC_Model       , only : model_routine_SS           => SetServices
-  use NUOPC_Model       , only : model_label_Advance        => label_Advance
-  use NUOPC_Model       , only : model_label_DataInitialize => label_DataInitialize
-  use NUOPC_Model       , only : model_label_SetRunClock    => label_SetRunClock
-  use NUOPC_Model       , only : model_label_Finalize       => label_Finalize
-  use NUOPC_Model       , only : NUOPC_ModelGet
-  use shr_kind_mod      , only : r8 => shr_kind_r8, cl=>shr_kind_cl
-  use shr_sys_mod       , only : shr_sys_abort
-  use shr_file_mod      , only : shr_file_getlogunit, shr_file_setlogunit
-  use shr_orb_mod       , only : shr_orb_decl
-  use shr_cal_mod       , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
-  use spmdMod           , only : masterproc, mpicom, spmd_init
-  use decompMod         , only : bounds_type, ldecomp, get_proc_bounds
-  use domainMod         , only : ldomain
-  use controlMod        , only : control_setNL
-  use clm_varorb        , only : eccen, obliqr, lambm0, mvelpp
-  use clm_varctl        , only : inst_index, inst_suffix, inst_name
-  use clm_varctl        , only : single_column, clm_varctl_set, iulog
-  use clm_varctl        , only : nsrStartup, nsrContinue, nsrBranch
-  use clm_time_manager  , only : set_timemgr_init, advance_timestep
-  use clm_time_manager  , only : set_nextsw_cday, update_rad_dtime
-  use clm_time_manager  , only : get_nstep, get_step_size
-  use clm_time_manager  , only : get_curr_date, get_curr_calday
-  use clm_initializeMod , only : initialize1, initialize2
-  use clm_driver        , only : clm_drv
-  use perf_mod          , only : t_startf, t_stopf, t_barrierf
-  use lnd_import_export , only : advertise_fields, realize_fields
-  use lnd_import_export , only : import_fields, export_fields
-  use lnd_shr_methods   , only : chkerr, state_setscalar, state_getscalar, state_diagnose, alarmInit
-  use lnd_shr_methods   , only : set_component_logging, get_component_instance, log_clock_advance
+  use NUOPC                  , only : NUOPC_CompDerive, NUOPC_CompSetEntryPoint, NUOPC_CompSpecialize
+  use NUOPC                  , only : NUOPC_CompFilterPhaseMap, NUOPC_CompAttributeGet, NUOPC_CompAttributeSet
+  use NUOPC_Model            , only : model_routine_SS           => SetServices
+  use NUOPC_Model            , only : model_label_Advance        => label_Advance
+  use NUOPC_Model            , only : model_label_DataInitialize => label_DataInitialize
+  use NUOPC_Model            , only : model_label_SetRunClock    => label_SetRunClock
+  use NUOPC_Model            , only : model_label_Finalize       => label_Finalize
+  use NUOPC_Model            , only : NUOPC_ModelGet
+  use shr_kind_mod           , only : r8 => shr_kind_r8, cl=>shr_kind_cl
+  use shr_sys_mod            , only : shr_sys_abort
+  use shr_file_mod           , only : shr_file_getlogunit, shr_file_setlogunit
+  use shr_orb_mod            , only : shr_orb_decl, shr_orb_params, SHR_ORB_UNDEF_REAL, SHR_ORB_UNDEF_INT
+  use shr_cal_mod            , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
+  use spmdMod                , only : masterproc, mpicom, spmd_init
+  use decompMod              , only : bounds_type, ldecomp, get_proc_bounds
+  use domainMod              , only : ldomain
+  use controlMod             , only : control_setNL
+  use clm_varorb             , only : eccen, obliqr, lambm0, mvelpp
+  use clm_varctl             , only : inst_index, inst_suffix, inst_name
+  use clm_varctl             , only : single_column, clm_varctl_set, iulog
+  use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
+  use clm_varcon             , only : re
+  use clm_time_manager       , only : set_timemgr_init, advance_timestep
+  use clm_time_manager       , only : set_nextsw_cday, update_rad_dtime
+  use clm_time_manager       , only : get_nstep, get_step_size
+  use clm_time_manager       , only : get_curr_date, get_curr_calday
+  use clm_initializeMod      , only : initialize1, initialize2
+  use clm_driver             , only : clm_drv
+  use lnd_import_export      , only : advertise_fields, realize_fields
+  use lnd_import_export      , only : import_fields, export_fields
+  use lnd_shr_methods        , only : chkerr, state_setscalar, state_getscalar, state_diagnose, alarmInit
+  use lnd_shr_methods        , only : set_component_logging, get_component_instance, log_clock_advance
+  use perf_mod               , only : t_startf, t_stopf, t_barrierf
+  use netcdf                 , only : nf90_open, nf90_nowrite, nf90_noerr, nf90_close, nf90_strerror
+  use netcdf                 , only : nf90_inq_dimid, nf90_inq_varid, nf90_get_var  
+  use netcdf                 , only : nf90_inquire_dimension, nf90_inquire_variable
 
   implicit none
   private ! except
@@ -49,6 +53,8 @@ module lnd_comp_nuopc
   private :: ModelSetRunClock
   private :: ModelAdvance
   private :: ModelFinalize
+  private :: clm_orbital_init
+  private :: clm_orbital_update
 
   !--------------------------------------------------------------------------
   ! Private module data
@@ -62,10 +68,21 @@ module lnd_comp_nuopc
 
   logical                :: glc_present 
   logical                :: rof_prognostic
-  integer, parameter     :: dbug = 1
+  integer, parameter     :: dbug = 0
   character(*),parameter :: modName =  "(lnd_comp_nuopc)"
   character(*),parameter :: u_FILE_u = &
        __FILE__
+
+  character(len=CL)      :: orb_mode        ! attribute - orbital mode
+  integer                :: orb_iyear       ! attribute - orbital year
+  integer                :: orb_iyear_align ! attribute - associated with model year
+  real(R8)               :: orb_obliq       ! attribute - obliquity in degrees
+  real(R8)               :: orb_mvelp       ! attribute - moving vernal equinox longitude
+  real(R8)               :: orb_eccen       ! attribute and update-  orbital eccentricity
+
+  character(len=*) , parameter :: orb_fixed_year       = 'fixed_year'
+  character(len=*) , parameter :: orb_variable_year    = 'variable_year'
+  character(len=*) , parameter :: orb_fixed_parameters = 'fixed_parameters'
 
 !===============================================================================
 contains
@@ -105,7 +122,6 @@ contains
 
     call ESMF_MethodRemove(gcomp, label=model_label_SetRunClock, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     call NUOPC_CompSpecialize(gcomp, specLabel=model_label_SetRunClock, &
          specRoutine=ModelSetRunClock, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -159,6 +175,7 @@ contains
     character(len=CL)  :: cvalue
     character(len=CL)  :: logmsg
     logical            :: isPresent, isSet
+    logical            :: cism_evolve
     character(len=*), parameter :: subname=trim(modName)//':(InitializeAdvertise) '
     character(len=*), parameter :: format = "('("//trim(subname)//") :',A)"
     !-------------------------------------------------------------------------------
@@ -277,13 +294,25 @@ contains
     if (trim(cvalue) == 'sglc') then
        glc_present = .false.
     else
-       glc_present = .true.
+       glc_present = .true. 
+       cism_evolve = .true.
+       call NUOPC_CompAttributeGet(gcomp, name="cism_evolve", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (isPresent .and. isSet) then
+          call ESMF_LogWrite(trim(subname)//' cism_evolve = '//trim(cvalue), ESMF_LOGMSG_INFO)
+          write (cism_evolve,*) cvalue
+       else
+          call shr_sys_abort(subname//'Need to set cism_evolve if glc is present')
+       endif
     end if
 
-    write(iulog,*)' rof_prognostic = ',rof_prognostic
-    write(iulog,*)' glc_present    = ',glc_present
+    if (masterproc) then
+       write(iulog,*)' rof_prognostic = ',rof_prognostic
+       write(iulog,*)' glc_present    = ',glc_present
+       if (glc_present) write(iulog,*)' cism_evolve    = ',cism_evolve
+    end if
 
-    call advertise_fields(gcomp, flds_scalar_name, glc_present, rof_prognostic, rc)
+    call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------------------------------------------------------------
@@ -309,7 +338,7 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_Mesh)         :: Emesh, EMeshTemp      ! esmf meshes
+    type(ESMF_Mesh)         :: mesh, gridmesh        ! esmf mesh
     type(ESMF_DistGrid)     :: DistGrid              ! esmf global index space descriptor
     type(ESMF_Time)         :: currTime              ! Current time
     type(ESMF_Time)         :: startTime             ! Start time
@@ -349,8 +378,24 @@ contains
     logical                 :: brnch_retain_casename ! flag if should retain the case name on a branch start type
     integer                 :: lbnum                 ! input to memory diagnostic
     type(bounds_type)       :: bounds                ! bounds
-    integer                 :: shrlogunit ! original log unit
-    character(ESMF_MAXSTR)  :: convCIM, purpComp
+    integer                 :: shrlogunit            ! original log unit
+    real(r8)                :: mesh_lon, mesh_lat, mesh_area
+    real(r8)                :: tolerance_latlon = 1.e-5
+    real(r8)                :: tolerance_area   = 1.e-3
+    integer                 :: spatialDim
+    integer                 :: numOwnedElements
+    real(R8), pointer       :: ownedElemCoords(:)
+    real(r8), pointer       :: areaPtr(:)
+    type(ESMF_Field)        :: areaField
+    integer                 :: dimid_ni, dimid_nj, dimid_nv
+    integer                 :: ncid, ierr
+    integer                 :: ni, nj, nv
+    integer                 :: varid_xv, varid_yv
+    real(r8), allocatable   :: xv(:,:,:), yv(:,:,:)
+    integer                 :: maxIndex(2)
+    real(r8)                :: mincornerCoord(2)
+    real(r8)                :: maxcornerCoord(2)
+    type(ESMF_Grid)         :: lgrid 
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
@@ -375,34 +420,10 @@ contains
     ! Obtain attribute values
     !----------------------
 
-    ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
-
-    call NUOPC_CompAttributeGet(gcomp, name='orb_eccen', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) eccen
-
-    call NUOPC_CompAttributeGet(gcomp, name='orb_obliqr', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) obliqr
-
-    call NUOPC_CompAttributeGet(gcomp, name='orb_lambm0', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) lambm0
-
-    call NUOPC_CompAttributeGet(gcomp, name='orb_mvelpp', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) mvelpp
-
     call NUOPC_CompAttributeGet(gcomp, name='case_name', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) caseid
-
-    !TODO: case_desc does not appear in the esm_AddAttributes in esm.F90
-    ! just hard-wire from now - is this even needed?
-    ! call NUOPC_CompAttributeGet(gcomp, name='case_desc', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! read(cvalue,*) ctitle
-    ctitle='UNSET'
+    ctitle= trim(caseid)
 
     call NUOPC_CompAttributeGet(gcomp, name='scmlon', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -490,6 +511,16 @@ contains
     end if
 
     !----------------------
+    ! Initialize module orbital values and update orbital
+    !----------------------
+
+    call clm_orbital_init(gcomp, iulog, masterproc, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    !----------------------
     ! Initialize CTSM time manager
     !----------------------
 
@@ -518,6 +549,12 @@ contains
 
     ! note that the memory for gindex_ocn will be allocated in the following call
     call initialize1(gindex_ocn)
+
+    ! If no land then abort for now
+    ! TODO: need to handle the case of noland with CMEPS
+    ! if ( noland ) then
+    !    call shr_sys_abort(trim(subname)//"ERROR: Currently cannot handle case of single column with non-land") 
+    ! end if
 
     ! obtain global index array for just land points which includes mask=0 or ocean points
     call get_proc_bounds( bounds )
@@ -548,22 +585,86 @@ contains
     ! generate the mesh and realize fields
     !--------------------------------
 
-    ! read in the mesh
+    ! determine if the mesh will be created or read in
     call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (single_column) cvalue = 'create_mesh'
 
-    EMeshTemp = ESMF_MeshCreate(filename=trim(cvalue), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (masterproc) then
-       write(iulog,*)'mesh file for domain is ',trim(cvalue)
+    if (cvalue == 'create_mesh') then
+       ! get the datm grid from the domain file
+       call NUOPC_CompAttributeGet(gcomp, name='domain_lnd', value=cvalue, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       ! open file
+       ierr = nf90_open(cvalue, NF90_NOWRITE, ncid)
+       call nc_check_err(ierr, 'nf90_open', trim(cvalue))
+       ! get dimension ids
+       ierr = nf90_inq_dimid(ncid, 'ni', dimid_ni)
+       call nc_check_err(ierr, 'nf90_inq_dimid for ni', trim(cvalue))
+       ierr = nf90_inq_dimid(ncid, 'nj', dimid_nj)
+       call nc_check_err(ierr, 'nf90_inq_dimid for nj', trim(cvalue))
+       ierr = nf90_inq_dimid(ncid, 'nv', dimid_nv)
+       call nc_check_err(ierr, 'nf90_inq_dimid for nv', trim(cvalue))
+       ! get dimension values
+       ierr = nf90_inquire_dimension(ncid, dimid_ni, len=ni)
+       call nc_check_err(ierr, 'nf90_inq_dimension for ni', trim(cvalue))
+       ierr = nf90_inquire_dimension(ncid, dimid_nj, len=nj)
+       call nc_check_err(ierr, 'nf90_inq_dimension for nj', trim(cvalue))
+       ierr = nf90_inquire_dimension(ncid, dimid_nv, len=nv)
+       call nc_check_err(ierr, 'nf90_inq_dimension for nv', trim(cvalue))
+       ! get variable ids
+       ierr = nf90_inq_varid(ncid, 'xv', varid_xv)
+       call nc_check_err(ierr, 'nf90_inq_varid for xv', trim(cvalue))
+       ierr = nf90_inq_varid(ncid, 'yv', varid_yv)
+       call nc_check_err(ierr, 'nf90_inq_varid for yv', trim(cvalue))
+       ! allocate memory for variables and get variable values
+       allocate(xv(nv,ni,nj), yv(nv,ni,nj))
+       ierr = nf90_get_var(ncid, varid_xv, xv)
+       call nc_check_err(ierr, 'nf90_get_var for xv', trim(cvalue))
+       ierr = nf90_get_var(ncid, varid_yv, yv)
+       call nc_check_err(ierr, 'nf90_get_var for yv', trim(cvalue))
+       ! close file
+       ierr = nf90_close(ncid)
+       call nc_check_err(ierr, 'nf90_close', trim(cvalue))
+       ! create the grid
+       maxIndex(1)       = ni          ! number of lons
+       maxIndex(2)       = nj          ! number of lats
+       mincornerCoord(1) = xv(1,1,1)   ! min lon
+       mincornerCoord(2) = yv(1,1,1)   ! min lat
+       maxcornerCoord(1) = xv(3,ni,nj) ! max lon
+       maxcornerCoord(2) = yv(3,ni,nj) ! max lat
+       deallocate(xv,yv)
+       lgrid = ESMF_GridCreateNoPeriDimUfrm (maxindex=maxindex, &
+            mincornercoord=mincornercoord, maxcornercoord= maxcornercoord, &
+            staggerloclist=(/ESMF_STAGGERLOC_CENTER, ESMF_STAGGERLOC_CORNER/), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! create the mesh from the grid
+       gridmesh =  ESMF_MeshCreate(lgrid, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! Now redistribute the mesh to use the internal distrid
+       mesh = ESMF_MeshCreate(gridmesh, elementDistgrid=Distgrid, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       ! read in the mesh from the file
+       mesh = ESMF_MeshCreate(filename=trim(cvalue), fileformat=ESMF_FILEFORMAT_ESMFMESH, &
+            elementDistgrid=Distgrid, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (masterproc) then
+          write(iulog,*)'mesh file for domain is ',trim(cvalue)
+       end if
     end if
 
-    ! recreate the mesh using the above distGrid
-    EMesh = ESMF_MeshCreate(EMeshTemp, elementDistgrid=Distgrid, rc=rc)
+    ! Determine the areas on the mesh
+    areaField = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name='mesh_areas', meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_FieldRegridGetArea(areaField, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_FieldGet(areaField, farrayPtr=areaPtr, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! realize the actively coupled fields
-    call realize_fields(gcomp,  Emesh, flds_scalar_name, flds_scalar_num, rc)
+    call realize_fields(gcomp,  mesh, flds_scalar_name, flds_scalar_num, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !--------------------------------
@@ -571,6 +672,39 @@ contains
     !--------------------------------
 
     call initialize2()
+
+    !--------------------------------
+    ! Check that lats, lons and areas on mesh are the same as those internal to ctsm
+    ! obtain mesh lats and lons
+    !--------------------------------
+
+    call ESMF_MeshGet(mesh, spatialDim=spatialDim, numOwnedElements=numOwnedElements, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate(ownedElemCoords(spatialDim*numOwnedElements))
+    call ESMF_MeshGet(mesh, ownedElemCoords=ownedElemCoords)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do g = bounds%begg,bounds%endg
+       n = 1 + (g - bounds%begg)
+       mesh_lon = ownedElemCoords(2*n-1)
+       mesh_lat = ownedElemCoords(2*n)
+       mesh_area = areaPtr(n)
+       if (abs(mesh_lon - ldomain%lonc(g)) > tolerance_latlon) then
+          write(6,100)'ERROR: clm_lon, mesh_lon, diff_lon = ',&
+               ldomain%lonc(g), mesh_lon, abs(mesh_lon - ldomain%lonc(g))
+          !call shr_sys_abort()
+       end if
+       if (abs(mesh_lat - ldomain%latc(g)) > tolerance_latlon) then
+          write(6,100)'ERROR: clm_lat, mesh_lat, diff_lat = ',&
+               ldomain%latc(g), mesh_lat, abs(mesh_lat - ldomain%latc(g))
+          !call shr_sys_abort()
+       end if
+       if (abs(mesh_area - ldomain%area(g)/(re*re)) > tolerance_area) then
+          write(6,100)'ERROR: clm_area, mesh_area, diff_area = ',&
+               ldomain%area(g)/(re*re), mesh_area, abs(mesh_area - ldomain%area(g)/(re*re))
+          !call shr_sys_abort()
+       end if
+    end do
+100 format(a,3(d13.5,2x))
 
     !--------------------------------
     ! Check that ctsm internal dtime aligns with ctsm coupling interval
@@ -631,20 +765,6 @@ contains
 
     call shr_file_setLogUnit (shrlogunit)
 
-#ifdef USE_ESMF_METADATA
-    convCIM  = "CIM"
-    purpComp = "Model Component Simulation Description"
-    call ESMF_AttributeAdd(comp, convention=convCIM, purpose=purpComp, rc=rc)
-    call ESMF_AttributeSet(comp, "ShortName", "CTSM", convention=convCIM, purpose=purpComp, rc=rc)
-    call ESMF_AttributeSet(comp, "LongName", "Community Land Model", convention=convCIM, purpose=purpComp, rc=rc)
-    call ESMF_AttributeSet(comp, "Description", "Community Land Model", convention=convCIM, purpose=purpComp, rc=rc)
-    call ESMF_AttributeSet(comp, "ReleaseDate", "2017", convention=convCIM, purpose=purpComp, rc=rc)
-    call ESMF_AttributeSet(comp, "ModelType", "Terrestrial", convention=convCIM, purpose=purpComp, rc=rc)
-    call ESMF_AttributeSet(comp, "Name", "TBD", convention=convCIM, purpose=purpComp, rc=rc)
-    call ESMF_AttributeSet(comp, "EmailAddress", TBD, convention=convCIM, purpose=purpComp, rc=rc)
-    call ESMF_AttributeSet(comp, "ResponsiblePartyRole", "contact", convention=convCIM, purpose=purpComp, rc=rc)
-#endif
-
 #if (defined _MEMTRACE)
     if(masterproc) then
        write(iulog,*) TRIM(Sub) // ':end::'
@@ -666,7 +786,7 @@ contains
     ! Run CTSM
     !------------------------
     
-    use clm_instMod        , only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
+    use clm_instMod, only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -740,24 +860,9 @@ contains
     call set_nextsw_cday( nextsw_cday )
 
     !----------------------
-    ! Obtain orbital values
+    ! Get orbital values
     !----------------------
 
-    call NUOPC_CompAttributeGet(gcomp, name='orb_eccen', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) eccen
-
-    call NUOPC_CompAttributeGet(gcomp, name='orb_obliqr', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) obliqr
-
-    call NUOPC_CompAttributeGet(gcomp, name='orb_lambm0', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) lambm0
-
-    call NUOPC_CompAttributeGet(gcomp, name='orb_mvelpp', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) mvelpp
 
     !--------------------------------
     ! Unpack import state
@@ -841,6 +946,11 @@ contains
        call t_barrierf('sync_ctsm_run1', mpicom)
 
        call t_startf ('shr_orb_decl')
+
+       ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
+       call  clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
        calday = get_curr_calday()
        call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
        call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
@@ -1090,5 +1200,174 @@ contains
   end subroutine ModelFinalize
 
   !===============================================================================
+
+  subroutine clm_orbital_init(gcomp, logunit, mastertask, rc)
+
+    !----------------------------------------------------------
+    ! Initialize orbital related values
+    !----------------------------------------------------------
+
+    ! input/output variables
+    type(ESMF_GridComp) , intent(in)    :: gcomp
+    integer             , intent(in)    :: logunit
+    logical             , intent(in)    :: mastertask 
+    integer             , intent(out)   :: rc              ! output error
+
+    ! local variables
+    character(len=CL) :: msgstr          ! temporary
+    character(len=CL) :: cvalue          ! temporary
+    character(len=*) , parameter :: subname = "(clm_orbital_init)"
+    !-------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Determine orbital attributes from input
+    call NUOPC_CompAttributeGet(gcomp, name="orb_mode", value=cvalue, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) orb_mode
+
+    call NUOPC_CompAttributeGet(gcomp, name="orb_iyear", value=cvalue, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) orb_iyear
+
+    call NUOPC_CompAttributeGet(gcomp, name="orb_iyear_align", value=cvalue, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) orb_iyear_align
+
+    call NUOPC_CompAttributeGet(gcomp, name="orb_obliq", value=cvalue, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) orb_obliq
+
+    call NUOPC_CompAttributeGet(gcomp, name="orb_eccen", value=cvalue, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) orb_eccen
+
+    call NUOPC_CompAttributeGet(gcomp, name="orb_mvelp", value=cvalue, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) orb_mvelp
+
+    ! Error checks
+    if (trim(orb_mode) == trim(orb_fixed_year)) then
+       orb_obliq = SHR_ORB_UNDEF_REAL
+       orb_eccen = SHR_ORB_UNDEF_REAL
+       orb_mvelp = SHR_ORB_UNDEF_REAL
+       if (orb_iyear == SHR_ORB_UNDEF_INT) then
+          if (mastertask) then
+             write(logunit,*) trim(subname),' ERROR: invalid settings orb_mode =',trim(orb_mode)
+             write(logunit,*) trim(subname),' ERROR: fixed_year settings = ',orb_iyear
+             write (msgstr, *) ' ERROR: invalid settings for orb_mode '//trim(orb_mode)
+          end if
+          call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+          return  ! bail out
+       endif
+    elseif (trim(orb_mode) == trim(orb_variable_year)) then
+       orb_obliq = SHR_ORB_UNDEF_REAL
+       orb_eccen = SHR_ORB_UNDEF_REAL
+       orb_mvelp = SHR_ORB_UNDEF_REAL
+       if (orb_iyear == SHR_ORB_UNDEF_INT .or. orb_iyear_align == SHR_ORB_UNDEF_INT) then
+          if (mastertask) then
+             write(logunit,*) trim(subname),' ERROR: invalid settings orb_mode =',trim(orb_mode)
+             write(logunit,*) trim(subname),' ERROR: variable_year settings = ',orb_iyear, orb_iyear_align
+             write (msgstr, *) subname//' ERROR: invalid settings for orb_mode '//trim(orb_mode)
+          end if
+          call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+          return  ! bail out
+       endif
+    elseif (trim(orb_mode) == trim(orb_fixed_parameters)) then
+       !-- force orb_iyear to undef to make sure shr_orb_params works properly
+       orb_iyear = SHR_ORB_UNDEF_INT
+       orb_iyear_align = SHR_ORB_UNDEF_INT
+       if (orb_eccen == SHR_ORB_UNDEF_REAL .or. &
+           orb_obliq == SHR_ORB_UNDEF_REAL .or. &
+           orb_mvelp == SHR_ORB_UNDEF_REAL) then
+          if (mastertask) then
+             write(logunit,*) trim(subname),' ERROR: invalid settings orb_mode =',trim(orb_mode)
+             write(logunit,*) trim(subname),' ERROR: orb_eccen = ',orb_eccen
+             write(logunit,*) trim(subname),' ERROR: orb_obliq = ',orb_obliq
+             write(logunit,*) trim(subname),' ERROR: orb_mvelp = ',orb_mvelp
+             write (msgstr, *) subname//' ERROR: invalid settings for orb_mode '//trim(orb_mode)
+          end if
+          call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+          return  ! bail out
+       endif
+    else
+       write (msgstr, *) subname//' ERROR: invalid orb_mode '//trim(orb_mode)
+       call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+       rc = ESMF_FAILURE
+       return  ! bail out
+    endif
+
+  end subroutine clm_orbital_init
+
+  !===============================================================================
+
+  subroutine clm_orbital_update(clock, logunit,  mastertask, eccen, obliqr, lambm0, mvelpp, rc)
+
+    !----------------------------------------------------------
+    ! Update orbital settings 
+    !----------------------------------------------------------
+
+    ! input/output variables
+    type(ESMF_Clock) , intent(in)    :: clock
+    integer          , intent(in)    :: logunit 
+    logical          , intent(in)    :: mastertask
+    real(R8)         , intent(inout) :: eccen  ! orbital eccentricity
+    real(R8)         , intent(inout) :: obliqr ! Earths obliquity in rad
+    real(R8)         , intent(inout) :: lambm0 ! Mean long of perihelion at vernal equinox (radians)
+    real(R8)         , intent(inout) :: mvelpp ! moving vernal equinox longitude of perihelion plus pi (radians)
+    integer          , intent(out)   :: rc     ! output error
+
+    ! local variables
+    type(ESMF_Time)   :: CurrTime ! current time
+    integer           :: year     ! model year at current time 
+    integer           :: orb_year ! orbital year for current orbital computation
+    character(len=CL) :: msgstr   ! temporary
+    logical           :: lprint
+    logical           :: first_time = .true.
+    character(len=*) , parameter :: subname = "(clm_orbital_update)"
+    !-------------------------------------------
+
+    if (trim(orb_mode) == trim(orb_variable_year)) then
+       call ESMF_ClockGet(clock, CurrTime=CurrTime, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_TimeGet(CurrTime, yy=year, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       orb_year = orb_iyear + (year - orb_iyear_align)
+       lprint = mastertask
+    else
+       orb_year = orb_iyear 
+       if (first_time) then
+          lprint = mastertask
+          first_time = .false.
+       else
+          lprint = .false.
+       end if
+    end if
+
+    eccen = orb_eccen
+    call shr_orb_params(orb_year, eccen, orb_obliq, orb_mvelp, obliqr, lambm0, mvelpp, lprint)
+
+    if ( eccen  == SHR_ORB_UNDEF_REAL .or. obliqr == SHR_ORB_UNDEF_REAL .or. &
+         mvelpp == SHR_ORB_UNDEF_REAL .or. lambm0 == SHR_ORB_UNDEF_REAL) then
+       write (msgstr, *) subname//' ERROR: orb params incorrect'
+       call ESMF_LogSetError(ESMF_RC_NOT_VALID, msg=msgstr, line=__LINE__, file=__FILE__, rcToReturn=rc)
+       return  ! bail out
+    endif
+
+  end subroutine clm_orbital_update
+
+  !===============================================================================
+
+  subroutine nc_check_err(ierror, description, filename)
+    integer     , intent(in) :: ierror
+    character(*), intent(in) :: description
+    character(*), intent(in) :: filename
+
+    if (ierror /= nf90_noerr) then
+       write (*,'(6a)') 'ERROR ', trim(description),'. NetCDF file : "', trim(filename),&
+            '". Error message:', trim(nf90_strerror(ierror))
+       call shr_sys_abort()
+    endif
+  end subroutine nc_check_err
 
 end module lnd_comp_nuopc
