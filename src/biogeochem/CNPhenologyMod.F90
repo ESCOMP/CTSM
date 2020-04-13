@@ -29,13 +29,13 @@ module CNPhenologyMod
   use pftconMod                       , only : pftcon
   use SoilStateType                   , only : soilstate_type
   use TemperatureType                 , only : temperature_type
-  use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
-  use Wateratm2lndBulkType                  , only : wateratm2lndbulk_type
-  use ColumnType                      , only : col                
+  use WaterDiagnosticBulkType         , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType            , only : wateratm2lndbulk_type
+  use initVerticalMod                 , only : find_soil_layer_containing_depth
+  use ColumnType                      , only : col
   use GridcellType                    , only : grc                
   use PatchType                       , only : patch   
   use atm2lndType                     , only : atm2lnd_type             
-  use atm2lndType                     , only : atm2lnd_type
   !
   implicit none
   private
@@ -59,6 +59,7 @@ module CNPhenologyMod
      real(r8) :: crit_offset_swi ! critical number of water stress days to initiate offset
      real(r8) :: soilpsi_off     ! critical soil water potential for leaf offset
      real(r8) :: lwtop   	 ! live wood turnover proportion (annual fraction)
+     real(r8) :: phenology_soil_depth ! soil depth used for measuring states for phenology triggers
   end type params_type
 
   type(params_type) :: params_inst
@@ -76,6 +77,7 @@ module CNPhenologyMod
   real(r8) :: crit_offset_swi               ! water stress days for offset trigger
   real(r8) :: soilpsi_off                   ! water potential for offset trigger (MPa)
   real(r8) :: lwtop                         ! live wood turnover proportion (annual fraction)
+  integer  :: phenology_soil_layer          ! soil layer used for measuring states for phenology triggers
 
   ! CropPhenology variables and constants
   real(r8) :: p1d, p1v                      ! photoperiod factor constants for crop vernalization
@@ -164,77 +166,29 @@ contains
     ! !DESCRIPTION:
     !
     ! !USES:
-    use ncdio_pio    , only: file_desc_t,ncd_io
+    use ncdio_pio    , only: file_desc_t
+    use paramUtilMod , only : readNcdioScalar
 
     ! !ARGUMENTS:
     implicit none
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNPhenolParamsType'
-    character(len=100) :: errCode = '-Error reading in parameters file:'
-    logical            :: readv ! has variable been read in or not
-    real(r8)           :: tempr ! temporary to read in parameter
-    character(len=100) :: tString ! temp. var for reading
+    character(len=*), parameter  :: subname = 'readParams_CNPhenology'
     !-----------------------------------------------------------------------
 
-    !
-    ! read in parameters
-    !   
-    tString='crit_dayl'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%crit_dayl=tempr
-
-    tString='ndays_on'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%ndays_on=tempr
-
-    tString='ndays_off'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%ndays_off=tempr
-
-    tString='fstor2tran'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%fstor2tran=tempr
-
-    tString='crit_onset_fdd'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%crit_onset_fdd=tempr
-
-    tString='crit_onset_swi'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%crit_onset_swi=tempr
-
-    tString='soilpsi_on'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%soilpsi_on=tempr
-
-    tString='crit_offset_fdd'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%crit_offset_fdd=tempr
-
-    tString='crit_offset_swi'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%crit_offset_swi=tempr
-
-    tString='soilpsi_off'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%soilpsi_off=tempr
-
-    tString='lwtop_ann'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%lwtop=tempr   
+    call readNcdioScalar(ncid, 'crit_dayl', subname, params_inst%crit_dayl)
+    call readNcdioScalar(ncid, 'ndays_on', subname, params_inst%ndays_on)
+    call readNcdioScalar(ncid, 'ndays_off', subname, params_inst%ndays_off)
+    call readNcdioScalar(ncid, 'fstor2tran', subname, params_inst%fstor2tran)
+    call readNcdioScalar(ncid, 'crit_onset_fdd', subname, params_inst%crit_onset_fdd)
+    call readNcdioScalar(ncid, 'crit_onset_swi', subname, params_inst%crit_onset_swi)
+    call readNcdioScalar(ncid, 'soilpsi_on', subname, params_inst%soilpsi_on)
+    call readNcdioScalar(ncid, 'crit_offset_fdd', subname, params_inst%crit_offset_fdd)
+    call readNcdioScalar(ncid, 'crit_offset_swi', subname, params_inst%crit_offset_swi)
+    call readNcdioScalar(ncid, 'soilpsi_off', subname, params_inst%soilpsi_off)
+    call readNcdioScalar(ncid, 'lwtop_ann', subname, params_inst%lwtop)
+    call readNcdioScalar(ncid, 'phenology_soil_depth', subname, params_inst%phenology_soil_depth)
 
   end subroutine readParams
 
@@ -298,7 +252,7 @@ contains
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        call CNSeasonDecidPhenology(num_soilp, filter_soilp, &
-            temperature_inst, waterstatebulk_inst, cnveg_state_inst, dgvs_inst, &
+            temperature_inst, waterdiagnosticbulk_inst, cnveg_state_inst, dgvs_inst, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        call CNStressDecidPhenology(num_soilp, filter_soilp,   &
@@ -375,6 +329,10 @@ contains
 
     ! set transfer parameters
     fstor2tran=params_inst%fstor2tran
+
+    call find_soil_layer_containing_depth( &
+         depth = params_inst%phenology_soil_depth, &
+         layer = phenology_soil_layer)
 
     ! -----------------------------------------
     ! Constants for CNStressDecidPhenology
@@ -669,7 +627,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp       , &
-       temperature_inst, waterstatebulk_inst, cnveg_state_inst, dgvs_inst , &
+       temperature_inst, waterdiagnosticbulk_inst, cnveg_state_inst, dgvs_inst , &
        cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
@@ -686,7 +644,7 @@ contains
     integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(temperature_type)         , intent(in)    :: temperature_inst
-    type(waterstatebulk_type)      , intent(in)    :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)          , intent(in)    :: waterdiagnosticbulk_inst
     type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
     type(dgvs_type)                , intent(inout) :: dgvs_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
@@ -699,7 +657,7 @@ contains
     integer :: fp             !lake filter patch index
     real(r8):: ws_flag        !winter-summer solstice flag (0 or 1)
     real(r8):: crit_onset_gdd !critical onset growing degree-day sum
-    real(r8):: crit_daylat    !latitudinal light gradient in arctic-boreal
+    real(r8):: crit_daylat    !latitudinal light gradient in arctic-boreal 
     real(r8):: onset_thresh   !flag onset threshold
     real(r8):: soilt
     !-----------------------------------------------------------------------
@@ -714,9 +672,9 @@ contains
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
          soila10                             =>    temperature_inst%soila10_patch                              , & ! Input:  [real(r8) (:)   ] 
-         t_a10min                            =>    temperature_inst%t_a10min_patch                             , & ! input:  [real(r8) (:)   ] 
-         snow_5day                           =>    waterdiagnosticbulk_inst%snow_5day                          , & ! input:  [real(r8) (:)   ] 
-         
+         t_a5min                            =>    temperature_inst%t_a5min_patch                             , & ! input:  [real(r8) (:)   ]
+         snow_5day                           =>    waterdiagnosticbulk_inst%snow_5day_col                      , & ! input:  [real(r8) (:)   ] 
+
          pftmayexist                         =>    dgvs_inst%pftmayexist_patch                                 , & ! Output: [logical   (:)   ]  exclude seasonal decid patches from tropics           
 
          annavg_t2m                          =>    cnveg_state_inst%annavg_t2m_patch                           , & ! Input:  [real(r8)  (:)   ]  annual average 2m air temperature (K)             
@@ -790,6 +748,8 @@ contains
          )
 
       ! start patch loop
+
+
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)
@@ -886,7 +846,7 @@ contains
 
             ! test for switching from dormant period to growth period
             if (dormant_flag(p) == 1.0_r8) then
-
+               onset_thresh = 0.0_r8
                ! Test to turn on growing degree-day sum, if off.
                ! switch on the growing degree day sum on the winter solstice
 
@@ -909,20 +869,18 @@ contains
                ! if the gdd flag is set, and if the soil is above freezing
                ! then accumulate growing degree days for onset trigger
 
-               soilt = t_soisno(c,3)
+               soilt = t_soisno(c, phenology_soil_layer)
                if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
                   onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
                end if
                !separate into Arctic boreal and lower latitudes
                if (onset_gdd(p) > crit_onset_gdd .and. abs(grc%latdeg(g))<45.0_r8) then
                   onset_thresh=1.0_r8
-               else if (onset_gddflag(p) == 1.0_r8 .and. soila10(p) > SHR_CONST_TKFRZ &
-                       .and. t_a10min(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 &
-                       .and. dayl(g)>(crit_dayl/2.0_r8) .and. snow_5day(c)<0.1_r8) then
+               else if (onset_gddflag(p) == 1.0_r8 .and. soila10(p) > SHR_CONST_TKFRZ .and. &
+                       t_a5min(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
+                       dayl(g)>(crit_dayl/2.0_r8) .and. snow_5day(c)<0.1_r8) then
                   onset_thresh=1.0_r8
-               end if
-
-
+               end if              
                ! set onset_flag if critical growing degree-day sum is exceeded
                if (onset_thresh == 1.0_r8) then
                   onset_flag(p) = 1.0_r8
@@ -970,12 +928,14 @@ contains
                   days_active(p) = days_active(p) + fracday
                   if (days_active(p) > 355._r8) pftmayexist(p) = .false.
                end if
+
                ! use 15 hr at 65N from eitel 2019, to ~11hours in temperate regions
                crit_daylat=54000-720*(65-abs(grc%latdeg(g)))
                if (crit_daylat < crit_dayl) then
                   crit_daylat = crit_dayl
                end if
-               ! only begin to test for offset daylength once past the summer sol 
+               
+               ! only begin to test for offset daylength once past the summer sol
                if (ws_flag == 0._r8 .and. dayl(g) < crit_daylat) then
                   offset_flag(p) = 1._r8
                   offset_counter(p) = ndays_off * secspday
@@ -1140,8 +1100,8 @@ contains
          g = patch%gridcell(p)
 
          if (stress_decid(ivt(p)) == 1._r8) then
-            soilt = t_soisno(c,3)
-            psi = soilpsi(c,3)
+            soilt = t_soisno(c, phenology_soil_layer)
+            psi = soilpsi(c, phenology_soil_layer)
 
             ! onset gdd sum from Biome-BGC, v4.1.2
             crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
