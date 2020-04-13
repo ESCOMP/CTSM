@@ -87,9 +87,9 @@ module WaterDiagnosticBulkType
      procedure, private :: InitBulkAllocate 
      procedure, private :: InitBulkHistory  
      procedure, private :: InitBulkCold     
-     procedure, private :: InitAccBuffer
-     procedure, private :: InitAccVars
-     procedure, private :: UpdateAccVars
+     procedure, public :: InitAccBuffer
+     procedure, public :: InitAccVars
+     procedure, public :: UpdateAccVars
      procedure, private :: RestartBackcompatIssue783
 
   end type waterdiagnosticbulk_type
@@ -180,7 +180,7 @@ contains
 
     allocate(this%h2osno_total_col       (begc:endc))                     ; this%h2osno_total_col       (:)   = nan
     allocate(this%snow_depth_col         (begc:endc))                     ; this%snow_depth_col         (:)   = nan
-    allocate(this%snow_5day_col          (begc:endc))                     ; this%snow_5day             (:)   = nan
+    allocate(this%snow_5day_col          (begc:endc))                     ; this%snow_5day_col          (:)   = nan
     allocate(this%snowdp_col             (begc:endc))                     ; this%snowdp_col             (:)   = nan
     allocate(this%snow_layer_unity_col   (begc:endc,-nlevsno+1:0))        ; this%snow_layer_unity_col   (:,:) = nan
     allocate(this%bw_col                 (begc:endc,-nlevsno+1:0))        ; this%bw_col                 (:,:) = nan   
@@ -405,13 +405,13 @@ contains
          avgflag='A', &
          long_name=this%info%lname('snow height of snow covered area'), &
          ptr_col=this%snow_depth_col, c2l_scale_type='urbanf')
-    this%snow_5day(begc:endc) = spval
+    this%snow_5day_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('SNOW_5D'),  &
          units='m',  &
          avgflag='A', &
          long_name=this%info%lname('5day snow avg'), &
-         ptr_col=this%snow_5day, c2l_scale_type='urbanf')
+         ptr_col=this%snow_5day_col, c2l_scale_type='urbanf')
 
     call hist_addfld1d ( &
          fname=this%info%fname('SNOW_DEPTH_ICE'), &
@@ -533,10 +533,11 @@ contains
     use accumulMod  , only : init_accum_field
     !
     ! !ARGUMENTS:
-    class(waterdiagnosticbulk_type) :: this
+    class(waterdiagnosticbulk_type)  :: this
     type(bounds_type), intent(in) :: bounds
     !---------------------------------------------------------------------
 
+    this%snow_5day_col(bounds%begc:bounds%endc) = spval
     call init_accum_field (name='SNOW_5D', units='m', &
             desc='5-day running mean of snowdepth', accum_type='runmean', accum_period=-5, &
             subgrid_type='column', numlev=1, init_value=0._r8)
@@ -561,16 +562,22 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
+    integer  :: begc, endc
     integer  :: nstep
     integer  :: ier
+    real(r8), pointer :: rbufslp(:)  ! temporary
     !---------------------------------------------------------------------
+    begc = bounds%begc; endc = bounds%endc
 
     ! Allocate needed dynamic memory for single level patch field
+    allocate(rbufslp(begc:endc), stat=ier)
 
     ! Determine time step
     nstep = get_nstep()
-    call extract_accum_field ('SNOW_5D', this%snow_5day_col, nstep)
+    call extract_accum_field ('SNOW_5D', rbufslp, nstep)
+    this%snow_5day_col(begc:endc) = rbufslp(begc:endc)
 
+    deallocate(rbufslp)
 
   end subroutine InitAccVars
 
@@ -582,8 +589,8 @@ contains
     use accumulMod      , only : update_accum_field, extract_accum_field
     !
     ! !ARGUMENTS:
-    class(waterdiagnosticbulk_type)     :: this
-    type(bounds_type)      , intent(in) :: bounds
+    class(waterdiagnosticbulk_type) :: this
+    type(bounds_type)              , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: c                         ! indices

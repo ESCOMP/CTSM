@@ -229,6 +229,7 @@ contains
     allocate(this%thv_col                  (begc:endc))                      ; this%thv_col                  (:)   = nan
     allocate(this%thm_patch                (begp:endp))                      ; this%thm_patch                (:)   = nan
     allocate(this%t_a10_patch              (begp:endp))                      ; this%t_a10_patch              (:)   = nan
+    allocate(this%soila10_patch            (begp:endp))                      ; this%soila10_patch            (:)   = nan
     allocate(this%t_a10min_patch           (begp:endp))                      ; this%t_a10min_patch           (:)   = nan
     allocate(this%t_a5min_patch            (begp:endp))                      ; this%t_a5min_patch            (:)   = nan
 
@@ -1261,6 +1262,7 @@ contains
 
     call extract_accum_field ('TDM5', rbufslp, nstep)
     this%t_a5min_patch(begp:endp) = rbufslp(begp:endp)
+    
     if (use_crop) then
        call extract_accum_field ('TDM10', rbufslp, nstep)
        this%t_a10min_patch(begp:endp)= rbufslp(begp:endp)

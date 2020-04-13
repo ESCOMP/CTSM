@@ -404,22 +404,20 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp, PNlcold, PNetold, PNrespold, dayl_factor(p),&
-                              PNcbold, PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
+                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp, PNlcold, PNetold, PNrespold, PNcbold, &
+                              dayl_factor(p), PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
                           
                          chg = vcmx25_opt-vcmx25_z(p, z)
                          chg_constrn = min(abs(chg),vcmx25_z(p, z)*max_daily_pchg)
-                         vcmx_prevyr(p,z) = vcmx25_z(p,z)
                          vcmx25_z(p, z)  = vcmx25_z(p, z)+sign(1.0_r8,chg)*chg_constrn
-                         vcmx_prevyr(p,z) = (vcmx_prevyr(p,z)+vcmx25_z(p,z))/2.0_r8
+                         vcmx_prevyr(p,z) = vcmx25_z(p,z)
  
                          chg = jmx25_opt-jmx25_z(p, z)
                          chg_constrn = min(abs(chg),jmx25_z(p, z)*max_daily_pchg)
-                         jmx_prevyr(p,z) = jmx25_z(p,z)
                          jmx25_z(p, z)  = jmx25_z(p, z)+sign(1.0_r8,chg)*chg_constrn 
-                         jmx_prevyr(p,z) = (jmx_prevyr(p,z)+jmx25_z(p,z))/2.0_r8
+                         jmx_prevyr(p,z) = jmx25_z(p,z)
 
                          PNlc_z(p, z)= PNlcopt
 
@@ -902,7 +900,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   jj = 1
   tleafd10c = min(max(tleafd10, Trange1), Trange2)    !constrain the physiological range
   tleafn10c = min(max(tleafn10, Trange1), Trange2)    !constrain the physiological range
-  ci = 0.7_r8 * CO2a10 
+  ci = 0.7_r8 * CO2a10
   JmaxCoef = Jmaxb1 * dayl_factor * (1.0_r8 - exp(-relhExp * max(relh10 - minrelh, 0.0_r8) / &
        (1.0_r8 - minrelh)))
   do while (PNlcoldi .NE. PNlc .and. jj < 100)      
