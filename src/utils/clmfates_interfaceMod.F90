@@ -64,7 +64,7 @@ module CLMFatesInterfaceMod
    use clm_varcon        , only : denice
    use clm_varcon        , only : ispval
 
-   use clm_varpar        , only : natpft_size
+   use clm_varpar        , only : natpft_size, natpft_ub, natpft_lb
    use clm_varpar        , only : numrad
    use clm_varpar        , only : ivis
    use clm_varpar        , only : inir
@@ -375,7 +375,8 @@ module CLMFatesInterfaceMod
      
       use FatesInterfaceTypesMod, only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
-
+      use subgridMod, only :  natveg_patch_exists
+       use clm_instur      , only : wt_nat_patch
       implicit none
       
       ! Input Arguments
@@ -400,6 +401,8 @@ module CLMFatesInterfaceMod
       integer                                        :: c         ! HLM column index
       integer                                        :: l         ! HLM LU index
       integer                                        :: g         ! HLM grid index
+      integer                                        :: m         ! HLM PFT index
+      integer                                        :: ft       ! FATES PFT index
       integer                                        :: pi,pf
       integer, allocatable                           :: collist (:)
       type(bounds_type)                              :: bounds_clump
@@ -517,12 +520,22 @@ module CLMFatesInterfaceMod
             this%fates(nc)%sites(s)%lat = grc%latdeg(g)
             this%fates(nc)%sites(s)%lon = grc%londeg(g)
 
-         end do
 
+            ! initialize static layers for reduced complexity FATES versions from HLM 
+            ! maybe make this into a subroutine of it's own later. 
+            do m = natpft_lb,natpft_ub
+               ft = m-natpft_lb+1 
+               if (natveg_patch_exists(g, m)) then
+                  this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,m)
+               else 
+                  this%fates(nc)%bc_in(s)%pft_areafrac(ft)=0._r8
+               end if
+            end do
 
-         ! Initialize site-level static quantities dictated by the HLM
-         ! currently ground layering depth
+          end do !site
 
+        ! Initialize site-level static quantities dictated by the HLM                                                                            
+        ! currently ground layering depth
          call this%init_soil_depths(nc)
          
          if (use_fates_planthydro) then
