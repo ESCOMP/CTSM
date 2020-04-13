@@ -1957,7 +1957,6 @@ contains
       do j = -nlevsno+1,0
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
-            l = col%landunit(c)
             ! urban non-road and non-urban columns
             hs_top_lev(c) = hs_top_snow(c) 
 
@@ -1976,7 +1975,6 @@ contains
       do j = -nlevsno+1,0
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
-            l = col%landunit(c)
             if (j == col%snl(c)+1) then
                dzp     = z(c,j+1)-z(c,j)
                rt(c,j-1) = t_soisno(c,j) +  fact(c,j)*( hs_top_lev(c) &
@@ -2126,7 +2124,6 @@ contains
       do j = 1,nlevurb
         do fc = 1,num_nolakec
            c = filter_nolakec(fc)
-           l = col%landunit(c)
            if (col%itype(c) == icol_sunwall  .or. &
                col%itype(c) == icol_shadewall .or. &
                col%itype(c) == icol_roof) then
@@ -2494,7 +2491,6 @@ contains
       do j = -nlevsno+1,0
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
-            l = col%landunit(c)
             ! urban non-road and non-urban columns
             nlev_thresh(fc) = nlevgrnd
 
@@ -2513,7 +2509,6 @@ contains
       do j = -nlevsno+1,0
         do fc = 1,num_nolakec
            c = filter_nolakec(fc)
-           l = col%landunit(c)
            if (j >= col%snl(c)+1) then
               if (j == col%snl(c)+1) then
                  dzp     = z(c,j+1)-z(c,j)    
@@ -2609,7 +2604,6 @@ end subroutine SetMatrix_Snow
       do j = 1,nlevurb
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
-            l = col%landunit(c)
             if ( col%itype(c) == icol_sunwall   .or. &
                  col%itype(c) == icol_shadewall .or. &
                  col%itype(c) == icol_roof) then
