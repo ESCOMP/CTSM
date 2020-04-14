@@ -57,6 +57,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_ed_prescribed_phys
    use clm_varctl        , only : use_fates_logging
    use clm_varctl        , only : use_fates_inventory_init
+   use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : fates_inventory_ctrl_filename
  
    use clm_varcon        , only : tfrz
@@ -396,6 +397,7 @@ module CLMFatesInterfaceMod
       integer                                        :: pass_cohort_age_tracking
       integer                                        :: pass_inventory_init
       integer                                        :: pass_is_restart
+      integer                                        :: pass_biogeog
       integer                                        :: nc        ! thread index
       integer                                        :: s         ! FATES site index
       integer                                        :: c         ! HLM column index
