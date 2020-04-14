@@ -1,2 +1,3 @@
+ finidat ='/glade/p/cgd/tss/people/dll/TRENDY2019_Forcing/Restarts/0601-01-01-00000/TRENDY2019_SpinPostAD.clm2.r.0601-01-01-00000.nc'
  fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/release-clm5.0.24/surfdata_0.9x1.25_hist_78pfts_TRENDY_simyr1700_c190814.nc"
  flanduse_timeseries = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/release-clm5.0.24/landuse.timeseries_0.9x1.25_hist_78pfts_TRENDY_simyr1700-2018_c190814.nc"
