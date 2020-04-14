@@ -52,6 +52,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_ed_prescribed_phys
    use clm_varctl        , only : use_fates_logging
    use clm_varctl        , only : use_fates_inventory_init
+   use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : fates_inventory_ctrl_filename
  
    use clm_varcon        , only : tfrz
@@ -249,6 +250,7 @@ contains
       integer                                        :: pass_cohort_age_tracking
       integer                                        :: pass_inventory_init
       integer                                        :: pass_is_restart
+      integer                                        :: pass_biogeog
       integer                                        :: nc        ! thread index
       integer                                        :: s         ! FATES site index
       integer                                        :: c         ! HLM column index
@@ -322,6 +324,13 @@ contains
          pass_spitfire = 0
       end if
       call set_fates_ctrlparms('use_spitfire',ival=pass_spitfire)
+
+      if(use_fates_fixed_biogeog)then
+        pass_biogeog = 1
+      else 
+        pass_biogeog = 0
+      end if 
+      call set_fates_ctrlparms('use_fixed_biogeog',ival=pass_biogeog)
 
       if(use_fates_ed_st3) then
         pass_ed_st3 = 1
