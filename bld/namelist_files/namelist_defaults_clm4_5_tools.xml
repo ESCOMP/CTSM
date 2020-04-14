@@ -257,6 +257,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_furban   hgrid="3x3min"   lmask="LandScan2004"
 >lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c120621.nc</mksrf_furban>
 
+<mksrf_furban   hgrid="3x3min"   lmask="LandScan2004" sim_year="PtVg"
+>lnd/clm2/rawdata/mksrf_urban_0.05x0.05_zerourbanpct.c181014.nc</mksrf_furban>
+
 <!-- mksrf_fglacier % glacier land-unit -->
 <!-- WJS (9-26-12): 
      There are two versions of this dataset: the "standard" version uses
