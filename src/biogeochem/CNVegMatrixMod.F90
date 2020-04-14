@@ -935,7 +935,7 @@ contains
       AKinvc (:,:) = 0._r8
       AKinvn (:,:) = 0._r8
       
-      epsi = 1.e-30_r8     ! small number   
+      epsi = 1.e-15_r8     ! small number   
       
       call t_stopf('CN veg matrix-init')
 
