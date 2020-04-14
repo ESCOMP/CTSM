@@ -306,7 +306,9 @@ module LunaMod
     vcmx25_z      => photosyns_inst%vcmx25_z_patch                    , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 (umol/m2 leaf/s) for canopy layer 
     jmx25_z       => photosyns_inst%jmx25_z_patch                     , & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 (umol electron/m**2/s) for canopy layer
     pnlc_z        => photosyns_inst%pnlc_z_patch                      , & ! Output: [real(r8) (:,:) ] patch proportion of leaf nitrogen allocated for light capture for canopy layer 
-    enzs_z        => photosyns_inst%enzs_z_patch                        & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
+    enzs_z        => photosyns_inst%enzs_z_patch                      , & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
+    vcmx_prevyr   => photosyns_inst%vcmx_prevyr                       , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 from previous year avg
+    jmx_prevyr    => photosyns_inst%jmx_prevyr                          & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from previous year avg
     )  
     !----------------------------------------------------------------------------------------------------------------------------------------------------------
     !set timestep
@@ -410,10 +412,12 @@ module LunaMod
                          chg = vcmx25_opt-vcmx25_z(p, z)
                          chg_constrn = min(abs(chg),vcmx25_z(p, z)*max_daily_pchg)
                          vcmx25_z(p, z)  = vcmx25_z(p, z)+sign(1.0_r8,chg)*chg_constrn
+                         vcmx_prevyr(p,z) = vcmx25_z(p,z)
                           
                          chg = jmx25_opt-jmx25_z(p, z)
                          chg_constrn = min(abs(chg),jmx25_z(p, z)*max_daily_pchg)
                          jmx25_z(p, z)  = jmx25_z(p, z)+sign(1.0_r8,chg)*chg_constrn 
+                         jmx_prevyr(p,z) = jmx25_z(p,z)
 
                          PNlc_z(p, z)= PNlcopt
 
@@ -472,8 +476,8 @@ module LunaMod
                 endif !if not C3 plants                   
          else
             do z = 1 , nrad(p)
-               jmx25_z(p, z) = 85._r8
-               vcmx25_z(p, z) = 50._r8
+               jmx25_z(p, z) = jmx_prevyr(p,z)
+               vcmx25_z(p, z) = vcmx_prevyr(p,z)
             end do
          endif !checking for LAI and LNC
      endif !the first daycheck 
