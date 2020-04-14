@@ -1,1 +1,2 @@
  finidat ='/glade/p/cgd/tss/people/dll/TRENDY2019_Forcing/Restarts/0601-01-01-00000/TRENDY2019_SpinPostAD.clm2.r.0601-01-01-00000.nc'
+ use_init_interp = T
