@@ -81,7 +81,7 @@ contains
     nlunits  = 0
     ncohorts = 0
 
-    call subgrid_get_info_natveg(gi, npatches_temp, ncols_temp, nlunits_temp, use_individual_pft_soil_column)
+    call subgrid_get_info_natveg(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
 
     call subgrid_get_info_urban_tbd(gi, npatches_temp, ncols_temp, nlunits_temp)
@@ -123,18 +123,17 @@ contains
   end subroutine subgrid_get_gcellinfo
 
   !-----------------------------------------------------------------------
-  subroutine subgrid_get_info_natveg(gi, npatches, ncols, nlunits, sesc)
+  subroutine subgrid_get_info_natveg(gi, npatches, ncols, nlunits)
     !
     ! !DESCRIPTION:
     ! Obtain properties for natural vegetated landunit in this grid cell
     !
     ! !USES
     use clm_varpar, only : natpft_lb, natpft_ub
+    use clm_varctl, only : use_individual_pft_soil_column
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
-    logical, intent(in)  :: sesc      ! switch for separated soil columns of natural vegetation
-
     integer, intent(out) :: npatches  ! number of nat veg patches in this grid cell
     integer, intent(out) :: ncols     ! number of nat veg columns in this grid cell
     integer, intent(out) :: nlunits   ! number of nat veg landunits in this grid cell
@@ -154,7 +153,7 @@ contains
     end do
 
     if (npatches > 0) then
-       if(sesc) then
+       if(use_individual_pft_soil_column) then
              ! Assume one soil column for each patch
              ncols = npatches
        else

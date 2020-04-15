@@ -149,7 +149,7 @@ module pftconMod
      real(r8), allocatable :: dbh  (:)            ! diameter at breast height (m)
      real(r8), allocatable :: fbw  (:)            ! fraction of biomass that is water
      real(r8), allocatable :: nstem  (:)          ! stem density (#/m2)
-     real(r8), allocatable :: rstem  (:)          ! stem resistance (s/m)
+     real(r8), allocatable :: rstem  (:)          ! stem resistance per dbh (s/m/m)
      real(r8), allocatable :: wood_density  (:)   ! wood density (kg/m3)
 
      !  crop
@@ -1032,8 +1032,7 @@ contains
     else
        this%dbh = 0.0
        this%fbw = 0.0
-       call ncd_io('nstem',this%nstem, 'read', ncid, readvar=readv)
-       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+       this%nstem = 0.1 
        this%rstem = 0.0
        this%wood_density = 0.0
     end if

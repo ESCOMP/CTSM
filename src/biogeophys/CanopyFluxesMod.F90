@@ -433,19 +433,18 @@ contains
     SHR_ASSERT_ALL_FL((ubound(downreg_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(leafn_patch) == (/bounds%endp/)), sourcefile, __LINE__)
 
-    associate(                                                               & 
+    associate(                                                                    & 
          t_stem                 => temperature_inst%t_stem_patch                , & ! Output: [real(r8) (:)   ]  stem temperature (Kelvin)                                       
-         hs_canopy              => energyflux_inst%hs_canopy_patch              , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm]                    
-         soilresis            => soilstate_inst%soilresis_col                   , & ! Input:  [real(r8) (:)   ]  soil evaporative resistance
-         snl                  => col%snl                                        , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
-         dayl                 => grc%dayl                                       , & ! Input:  [real(r8) (:)   ]  daylength (s)
-         max_dayl             => grc%max_dayl                                   , & ! Input:  [real(r8) (:)   ]  maximum daylength for this grid cell (s)
-
+         dhsdt_canopy           => energyflux_inst%dhsdt_canopy_patch           , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm]                    
+         soilresis              => soilstate_inst%soilresis_col                 , & ! Input:  [real(r8) (:)   ]  soil evaporative resistance
+         snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
+         dayl                   => grc%dayl                                     , & ! Input:  [real(r8) (:)   ]  daylength (s)
+         max_dayl               => grc%max_dayl                                 , & ! Input:  [real(r8) (:)   ]  maximum daylength for this grid cell (s)
          dleaf                  => pftcon%dleaf                                 , & ! Input:  characteristic leaf dimension (m)
          dbh_param              => pftcon%dbh                                   , & ! Input:  diameter at brest height (m)
          fbw                    => pftcon%fbw                                   , & ! Input:  fraction of biomass that is water
          nstem                  => pftcon%nstem                                 , & ! Input:  stem number density (#ind/m2)
-         rstem                  => pftcon%rstem                                 , & ! Input:  stem restistance per stem diameter (s/m**2) 
+         rstem                  => pftcon%rstem                                 , & ! Input:  stem resistance per stem diameter (s/m**2) 
          wood_density           => pftcon%wood_density                          , & ! Input:  dry wood density (kg/m3)
 
          forc_lwrad             => atm2lnd_inst%forc_lwrad_downscaled_col       , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)                       
@@ -579,7 +578,7 @@ contains
          ulrad                  => energyflux_inst%ulrad_patch                  , & ! Output: [real(r8) (:)   ]  upward longwave radiation above the canopy [W/m2]                     
          cgrnd                  => energyflux_inst%cgrnd_patch                  , & ! Output: [real(r8) (:)   ]  deriv. of soil energy flux wrt to soil temp [w/m2/k]                  
          eflx_sh_snow           => energyflux_inst%eflx_sh_snow_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from snow (W/m**2) [+ to atm]                      
-         eflx_sh_h2osfc         => energyflux_inst%eflx_sh_h2osfc_patch         , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
+         eflx_sh_h2osfc         => energyflux_inst%eflx_sh_h2osfc_patch         , & ! Output: [real(r8) (:)   ]  sensible heat flux from surface water (W/m**2) [+ to atm]                      
          eflx_sh_soil           => energyflux_inst%eflx_sh_soil_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
          eflx_sh_stem           => energyflux_inst%eflx_sh_stem_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from stems (W/m**2) [+ to atm]                    
          eflx_sh_veg            => energyflux_inst%eflx_sh_veg_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from leaves (W/m**2) [+ to atm]                    
@@ -676,7 +675,7 @@ contains
          obuold(p) = 0._r8
          btran(p)  = btran0
          btran2(p)  = btran0
-         hs_canopy(p) = 0._r8
+         dhsdt_canopy(p) = 0._r8
          eflx_sh_stem(p) = 0._r8
       end do
 
@@ -998,7 +997,7 @@ contains
 
             !! Sakaguchi changes for stability formulation ends here
 
-            if (use_undercanopy_stability) then
+            if (use_biomass_heat_storage) then
                ! use uuc for ground fluxes (keep uaf for canopy terms)
                rah(p,2) = 1._r8/(csoilcn*uuc(p))
             else
@@ -1116,8 +1115,7 @@ contains
                canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(elai(p), 0.01_r8)
             end if
 
-! should be the same expression used in Photosynthesis/getqflx
-            efpot = forc_rho(c)*elai(p)/rb(p)*(qsatl(p)-qaf(p))
+            efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p)*(qsatl(p)-qaf(p))
             h2ocan = liqcan(p) + snocan(p)
 
             ! When the hydraulic stress parameterization is active calculate rpp
@@ -1159,7 +1157,7 @@ contains
             ! Moved the original subroutine in-line...
 
             wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
-            wtlq    = frac_veg_nosno(p)*elai(p)/rb(p) * rpp   ! leaf
+            wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
 
             !Litter layer resistance. Added by K.Sakaguchi
             snow_depth_c = params_inst%z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
@@ -1239,7 +1237,7 @@ contains
             ! result in an imbalance in "hvap*qflx_evap_veg" and
             ! "efe + dc2*wtgaq*qsatdt_veg"
 
-            efpot = forc_rho(c)*elai(p)/rb(p) &
+            efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p) &
                  *(wtgaq*(qsatl(p)+qsatldT(p)*dt_veg(p)) &
                  -wtgq0*qg(c)-wtaq0(p)*forc_q(c))
             qflx_evap_veg(p) = rpp*efpot
@@ -1381,7 +1379,7 @@ contains
                dt_stem(p) = 0._r8
             endif
             
-            hs_canopy(p) = dt_stem(p)*cp_stem(p)/dtime &
+            dhsdt_canopy(p) = dt_stem(p)*cp_stem(p)/dtime &
                  +(t_veg(p)-tl_ini(p))*cp_veg(p)/dtime
             
             t_stem(p) =  t_stem(p) + dt_stem(p)
