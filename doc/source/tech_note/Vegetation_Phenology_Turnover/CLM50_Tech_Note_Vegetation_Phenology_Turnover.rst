@@ -156,8 +156,8 @@ is the harvested fraction of aboveground biomass (leaf & livestem) for bioenergy
 The special case for fluxes in the final litterfall timestep
 (:math:`{t}_{offset}` = :math:`\Delta t`\ ) ensures that a fraction (:math:`1-biofuel\_harvfrac`) of the
 displayed growth is sent to the litter pools for deciduous plant types, while the remaining fraction (:math:`biofuel\_harvfrac`) 
-of leaf biomass goes to the biofuel feedstock pools (Equation :eq:`25.9`). Modifications on livestem carbon pools can be found 
-in section :numref:`Harvest to food and seed` in Equations :eq:`25.9`-:eq:`25.14`.
+of leaf biomass goes to the biofuel feedstock pools (Equation :eq:`25.9`). Modifications on livestem carbon pools for prognostic crops 
+can be found in section :numref:`Harvest to food and seed` in Equations :eq:`25.9`-:eq:`25.14`.
 
 Corresponding nitrogen fluxes during litterfall take into account retranslocation of nitrogen out of the displayed leaf pool prior to
 litterfall (:math:`{NF}_{leaf,retrans}`, gN m\ :sup:`-2` s\ :sup:`-1`). Retranslocation of nitrogen out of fine roots is
