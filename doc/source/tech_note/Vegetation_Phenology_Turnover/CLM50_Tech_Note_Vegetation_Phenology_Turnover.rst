@@ -5,8 +5,8 @@ Vegetation Phenology and Turnover
 
 The CLM phenology model consists of several algorithms controlling the
 transfer of stored carbon and nitrogen out of storage pools for the
-display of new growth and into litter pools for losses of displayed
-growth. PFTs are classified into three distinct phenological types that
+display of new growth, into litter pools for losses of displayed
+growth, and into biofuel pools for bioenergy. PFTs are classified into three distinct phenological types that
 are represented by separate algorithms: an evergreen type, for which
 some fraction of annual leaf growth persists in the displayed pool for
 longer than one year; a seasonal-deciduous type with a single growing
@@ -132,12 +132,16 @@ periods as:
 .. math::
    :label: 20.14) 
 
-   CF_{leaf,litter}^{n} =\left\{\begin{array}{l} {CF_{leaf,litter}^{n-1} +r_{xfer\_ off} \left(CS_{leaf} -CF_{leaf,litter}^{n-1} {\kern 1pt} t_{offset} \right)\qquad {\rm for\; }t_{offset} \ne \Delta t} \\ {\left({CS_{leaf} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} \right)+CF_{alloc,leaf} \qquad \qquad \qquad \qquad {\rm for\; }t_{offset} =\Delta t} \end{array}\right.
+   CF_{leaf,litter}^{n} =\left\{\begin{array}{l} {CF_{leaf,litter}^{n-1} + r_{xfer\_ off} \left(CS_{leaf} -CF_{leaf,litter}^{n-1} {\kern 1pt} t_{offset} \right)\qquad {\rm for\; }t_{offset} \ne \Delta t} 
+   \\ {\left({CS_{leaf} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} \right)
+   \left( 1-biofuel\_harvfrac  \right) 
+   +CF_{alloc,leaf} \qquad {\rm for\; }t_{offset} =\Delta t} \end{array}\right.
 
 .. math::
    :label: 20.15) 
 
-   CF_{froot,litter}^{n} =\left\{\begin{array}{l} {CF_{froot,litter}^{n-1} +r_{xfer\_ off} \left(CS_{froot} -CF_{froot,litter}^{n-1} {\kern 1pt} t_{offset} \right)\qquad {\rm for\; }t_{offset} \ne \Delta t} \\ {\left({CS_{froot} \mathord{\left/ {\vphantom {CS_{froot}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} \right)+CF_{alloc,\, froot} \qquad \qquad \qquad {\rm for\; }t_{offset} =\Delta t} \end{array}\right.
+   CF_{froot,litter}^{n} =\left\{\begin{array}{l} {CF_{froot,litter}^{n-1} +
+   r_{xfer\_ off} \left(CS_{froot} -CF_{froot,litter}^{n-1} {\kern 1pt} t_{offset} \right)\qquad {\rm for\; }t_{offset} \ne \Delta t} \\ {\left({CS_{froot} \mathord{\left/ {\vphantom {CS_{froot}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} \right)+CF_{alloc,\, froot} \qquad \qquad \qquad {\rm for\; }t_{offset} =\Delta t} \end{array}\right.
 
 .. math::
    :label: 20.16) 
@@ -146,10 +150,14 @@ periods as:
 
 where superscripts *n* and *n-1* refer to fluxes on the current and
 previous timesteps, respectively. The rate coefficient :math:`{r}_{xfer\_off}` varies with time to produce a linearly
-increasing litterfall rate throughout the offset period, and the special
-case for fluxes in the final litterfall timestep
-(:math:`{t}_{offset}` = :math:`\Delta t`\ ) ensures that all of the
-displayed growth is sent to the litter pools for deciduous plant types.
+increasing litterfall rate throughout the offset period. 
+The :math:`biofuel\_harvfrac` (:numref:`Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy crops`) 
+is the harvested fraction of aboveground biomass (leaf & livestem) for bioenergy crops. It is only non-zero for prognostic crops.
+The special case for fluxes in the final litterfall timestep
+(:math:`{t}_{offset}` = :math:`\Delta t`\ ) ensures that a fraction (:math:`1-biofuel\_harvfrac`) of the
+displayed growth is sent to the litter pools for deciduous plant types, while the remaining fraction (:math:`biofuel\_harvfrac`) 
+of leaf biomass goes to the biofuel feedstock pools (Equation :eq:`25.9`). Modifications on livestem carbon pools can be found 
+in section :numref:`Harvest to food and seed` in Equations :eq:`25.9`-:eq:`25.14`.
 
 Corresponding nitrogen fluxes during litterfall take into account retranslocation of nitrogen out of the displayed leaf pool prior to
 litterfall (:math:`{NF}_{leaf,retrans}`, gN m\ :sup:`-2` s\ :sup:`-1`). Retranslocation of nitrogen out of fine roots is

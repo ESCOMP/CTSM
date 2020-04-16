@@ -42,7 +42,7 @@ These updates appear in detail in the sections below. Many also appear in
 
 .. _The crop model:
 
-The crop model
+The crop model: stable and bioenergy crops
 -------------------
 
 Introduction
@@ -102,18 +102,26 @@ Intercomparison Project (LUMIP), which is part of CMIP6 Land use timeseries
 (:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`). For more details about how
 crop distributions are determined, see Chapter :numref:`rst_Transient Landcover Change`. 
 
-CLM5 includes eight actively managed crop types
+CLM5 includes ten actively managed crop types
 (temperate soybean, tropical soybean, temperate corn, tropical 
-corn, spring wheat, cotton, rice, and sugarcane) that are chosen 
+corn, spring wheat, cotton, rice, sugarcane, miscanthus, and switchgrass) that are chosen 
 based on the availability of corresponding algorithms in AgroIBIS and as 
 developed by :ref:`Badger and Dirmeyer (2015)<BadgerandDirmeyer2015>` and
-described by :ref:`Levis et al. (2016)<Levisetal2016>`. The representations of
-sugarcane, rice, cotton, tropical corn, and tropical soy are new in CLM5.
+described by :ref:`Levis et al. (2016)<Levisetal2016>` and :ref:`Cheng et al. (2019)<Chengetal2019>`. 
+The representations of sugarcane, rice, cotton, tropical corn, tropical soy, miscanthus, and switchgrass are new in CLM5.
 Sugarcane and tropical corn are both C4 plants and are therefore represented
 using the temperate corn functional form. Tropical soybean uses the temperate
 soybean functional form, while rice and cotton use the wheat functional form.
 In tropical regions, parameter values were developed for the Amazon Basin, and planting
 date window is shifted by six months relative to the Northern Hemisphere. 
+Plantation areas of bioenergy crops are projected to expand throughout the 21st century as a major energy source to 
+replace fossil fuels and mitigate climate changes. Miscanthus and switchgrass are perennial bioenergy crops and 
+have quite different physiological traits and land management practices than annual crops, 
+such as longer growing seasons, higher productivity, and less demands for nutrients and water. 
+About 70% of their aboveground biomass (leaf & livestem) is removed at harvest for biofuels. Parameter values were developed by using 
+observation data collected at the University of Illinois Energy Farm 
+located in Central Midwestern United States (:ref:`Cheng et al., 2019<Chengetal2019>`).
+
 
 In addition, CLM’s default list of plant functional types (pfts) includes an
 irrigated and unirrigated unmanaged C3 crop (:numref:`Table Crop plant functional types`) treated as a second C3 grass.
@@ -197,10 +205,10 @@ managed crop types that are using the same parameter set.
   68  irrigated sugarcane          active            irrigated sugarcane        
   69  rainfed sunflower            inactive          rainfed spring wheat       
   70  irrigated sunflower          inactive          irrigated spring wheat     
-  71  rainfed miscanthus           inactive          rainfed tropical corn      
-  72  irrigated miscanthus         inactive          irrigated tropical corn    
-  73  rainfed switchgrass          inactive          rainfed tropical corn      
-  74  irrigated switchgrass        inactive          irrigated tropical corn    
+  71  rainfed miscanthus           active            rainfed miscanthus      
+  72  irrigated miscanthus         active            irrigated miscanthus    
+  73  rainfed switchgrass          active            rainfed switchgrass      
+  74  irrigated switchgrass        active            irrigated switchgrass    
   75  rainfed tropical corn        active            rainfed tropical corn      
   76  irrigated tropical corn      active            irrigated tropical corn    
   77  rainfed tropical soybean     active            rainfed tropical soybean   
@@ -347,27 +355,27 @@ Harvest occurs in one time step using the BGC leaf offset algorithm.
 
 .. table:: Crop phenology and morphology parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
 
- ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================
- \                                    temperate corn             spring wheat                temperatue soybean          cotton                      rice                        sugarcane                  tropical corn              tropical soybean          
- ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================
- IVT                                  17, 18                     19, 20                      23, 24                      41, 42                      61, 62                      67, 68                     75, 76                     77, 78                    
- :math:`Date_{planting}^{min}`        April 1                    April 1                     May 1                       April 1                     Janurary 1                  Janurary 1                 March 20                   April 15                      
- :math:`Date_{planting}^{max}`        June 15                    June  15                    June 15                     May 31                      Feburary 28                 March 31                   April 15                   June 31                      
- :math:`T_{p}`\(K)                    283.15                     280.15                      286.15                      294.15                      294.15                      294.15                     294.15                     294.15                    
- :math:`T_{p}^{ min }`\(K)            279.15                     272.15                      279.15                      283.15                      283.15                      283.15                     283.15                     283.15                    
- :math:`{GDD}_{min}`\(ºdays)          50                         50                          50                          50                          50                          50                         50                         50                        
- base temperature for GDD (ºC)        8                          0                           10                          10                          10                          10                         10                         10                        
- :math:`{GDD}_{mat}`\(ºdays)          950-1850                   :math:`\mathrm{\le}`\ 1700  :math:`\mathrm{\le}`\ 1900  :math:`\mathrm{\le}`\ 1700  :math:`\mathrm{\le}`\ 2100  950-1850                   950-1850                   :math:`\mathrm{\le}`\ 2100
- Phase 2 % :math:`{GDD}_{mat}`        0.03                       0.05                        0.03                        0.03                        0.01                        0.03                       0.03                       0.03                      
- Phase 3 % :math:`{GDD}_{mat}`        0.65                       0.6                         0.5                         0.5                         0.4                         0.65                       0.5                        0.5                       
- Harvest: days past planting          :math:`\mathrm{\le}`\ 165  :math:`\mathrm{\le}`\ 150   :math:`\mathrm{\le}`\ 150   :math:`\mathrm{\le}`\ 160   :math:`\mathrm{\le}`\ 150   :math:`\mathrm{\le}`\ 300  :math:`\mathrm{\le}`\ 160  :math:`\mathrm{\le}`\ 150 
- :math:`z_{top}^{\max }` (m)          2.5                        1.2                         0.75                        1.5                         1.8                         4                          2.5                        1                         
- SLA (m :sup:`2` leaf g :sup:`-1` C)  0.05                       0.035                       0.035                       0.035                       0.035                       0.05                       0.05                       0.035                     
- :math:`\chi _{L}` index              -0.5                       -0.5                        -0.5                        -0.5                        -0.5                        -0.5                       -0.5                       -0.5                      
- grperc                               0.11                       0.11                        0.11                        0.11                        0.11                        0.11                       0.11                       0.11                      
- flnr                                 0.293                      0.41                        0.41                        0.41                        0.41                        0.293                      0.293                      0.41                      
- fcur                                 1                          1                           1                           1                           1                           1                          1                          1                         
- ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================
+ ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================  ==========================  ==========================
+ \                                    temperate corn             spring wheat                temperatue soybean          cotton                      rice                        sugarcane                  tropical corn              tropical soybean            miscanthus                  switchgrass
+ ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================  ==========================  ==========================
+ IVT                                  17, 18                     19, 20                      23, 24                      41, 42                      61, 62                      67, 68                     75, 76                     77, 78                      71, 72                      73, 74                    
+ :math:`Date_{planting}^{min}`        April 1                    April 1                     May 1                       April 1                     Janurary 1                  Janurary 1                 March 20                   April 15                    April 1                     April 1                   
+ :math:`Date_{planting}^{max}`        June 15                    June  15                    June 15                     May 31                      Feburary 28                 March 31                   April 15                   June 31                     June 15                     June 15                   
+ :math:`T_{p}`\(K)                    283.15                     280.15                      286.15                      294.15                      294.15                      294.15                     294.15                     294.15                      283.15                      283.15                    
+ :math:`T_{p}^{ min }`\(K)            279.15                     272.15                      279.15                      283.15                      283.15                      283.15                     283.15                     283.15                      279.15                      279.15                    
+ :math:`{GDD}_{min}`\(ºdays)          50                         50                          50                          50                          50                          50                         50                         50                          50                          50                        
+ base temperature for GDD (ºC)        8                          0                           10                          10                          10                          10                         10                         10                          8                           8                         
+ :math:`{GDD}_{mat}`\(ºdays)          950-1850                   :math:`\mathrm{\le}`\ 1700  :math:`\mathrm{\le}`\ 1900  :math:`\mathrm{\le}`\ 1700  :math:`\mathrm{\le}`\ 2100  950-1850                   950-1850                   :math:`\mathrm{\le}`\ 2100  950-1850                    950-1850                  
+ Phase 2 % :math:`{GDD}_{mat}`        0.03                       0.05                        0.03                        0.03                        0.01                        0.03                       0.03                       0.03                        0.03                        0.03                     
+ Phase 3 % :math:`{GDD}_{mat}`        0.65                       0.6                         0.5                         0.5                         0.4                         0.65                       0.5                        0.5                         0.4                         0.4                      
+ Harvest: days past planting          :math:`\mathrm{\le}`\ 165  :math:`\mathrm{\le}`\ 150   :math:`\mathrm{\le}`\ 150   :math:`\mathrm{\le}`\ 160   :math:`\mathrm{\le}`\ 150   :math:`\mathrm{\le}`\ 300  :math:`\mathrm{\le}`\ 160  :math:`\mathrm{\le}`\ 150   :math:`\mathrm{\le}`\ 210   :math:`\mathrm{\le}`\ 210 
+ :math:`z_{top}^{\max }` (m)          2.5                        1.2                         0.75                        1.5                         1.8                         4                          2.5                        1                           2.5                         2.5
+ SLA (m :sup:`2` leaf g :sup:`-1` C)  0.05                       0.035                       0.035                       0.035                       0.035                       0.05                       0.05                       0.035                       0.057                       0.049                    
+ :math:`\chi _{L}` index              -0.5                       -0.5                        -0.5                        -0.5                        -0.5                        -0.5                       -0.5                       -0.5                        -0.5                        -0.5                     
+ grperc                               0.11                       0.11                        0.11                        0.11                        0.11                        0.11                       0.11                       0.11                        0.11                        0.11                      
+ flnr                                 0.293                      0.41                        0.41                        0.41                        0.41                        0.293                      0.293                      0.41                        0.293                       0.293                     
+ fcur                                 1                          1                           1                           1                           1                           1                          1                          1                           1                           1                         
+ ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================  ==========================  ==========================
 
 Notes: :math:`Date_{planting}^{min}` and :math:`Date_{planting}^{max}` are
 the minimum and maximum planting date in the Northern Hemisphere, the corresponding dates
@@ -535,24 +543,125 @@ fulfill plant nitrogen demands.
 Harvest
 ''''''''''''''''''''''''''''''
 
-Variables track the flow of grain C and
-N to food and of all other plant pools, including live stem C and N, to litter. Putting live
-stem C and N into the litter pool is in contrast to the approach for unmanaged PFTs which
-puts live stem C and N into dead stem pools first. Leaf and root C and N pools
-are routed to the litter pools in the same manner as natural vegetation. Whereas food C and N
-was formerly transferred to the litter pool, CLM5 routes food C and N
+Variables track the flow of grain C and N to food and of all other plant pools, including live stem C and N, to litter, and to biofuel feedstock.
+A fraction (determined by :math:`biofuel\_harvfrac`) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels 
+(Equations :eq:`25.9`, :eq:`25.10`, :eq:`25.12`, and :eq:`25.13`),
+with the remaining portions go to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`).
+Putting live stem C and N into the litter and biofuel pools is in contrast to the approach for unmanaged PFTs which
+puts live stem C and N into dead stem pools first. 
+Leaf C and N pools are routed to the little and biofuel pools, contrast to that of unmanaged PFTs which put leaf C and N to litter pools only.
+Root C and N pools are routed to the litter pools in the same manner as natural vegetation.
+  
+.. math::
+   :label: 25.9
+
+     CF_{leaf,biofuel} = \left({CS_{leaf} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     \right) * biofuel\_harvfrac
+     
+.. math::
+   :label: 25.10
+
+     CF_{livestem,biofuel} = \left({CS_{livestem} \mathord{\left/ {\vphantom {CS_{leaf}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     \right) * biofuel\_harvfrac 
+     
+.. math::
+   :label: 25.11
+
+     CF_{livestem,litter} = \left({CS_{livestem} \mathord{\left/ {\vphantom {CS_{livestem}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     \right) * \left( 1-biofuel\_harvfrac  \right) +CF_{alloc,livestem}
+
+with corresponding nitrogen fluxes:
+
+.. math::
+   :label: 25.12
+
+     NF_{leaf,biofuel} = \left({NS_{leaf} \mathord{\left/ {\vphantom {NS_{leaf}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     \right) * biofuel\_harvfrac
+     
+.. math::
+   :label: 25.13
+
+     NF_{livestem,biofuel} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     \right) *  biofuel\_harvfrac
+     
+.. math::
+   :label: 25.14
+
+     NF_{livestem,litter} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
+     \right) *  \left( 1-biofuel\_harvfrac  \right)
+
+where :math:`biofuel\_harvfrac` is the harvested fraction of leaf/livestem for biofuel feedstocks.
+
+.. _Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy crops:
+
+.. table:: Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy crops.
+
+ +----------------------------------+----------------------------+
+ | PFT                              |  :math:`biofuel\_harvfrac` |
+ +==================================+============================+
+ | NET Temperate                    |             0.00           |
+ +----------------------------------+----------------------------+
+ | NET Boreal                       |             0.00           |
+ +----------------------------------+----------------------------+
+ | NDT Boreal                       |             0.00           |
+ +----------------------------------+----------------------------+
+ | BET Tropical                     |             0.00           |
+ +----------------------------------+----------------------------+
+ | BET temperate                    |             0.00           |
+ +----------------------------------+----------------------------+
+ | BDT tropical                     |             0.00           |
+ +----------------------------------+----------------------------+
+ | BDT temperate                    |             0.00           |
+ +----------------------------------+----------------------------+
+ | BDT boreal                       |             0.00           |
+ +----------------------------------+----------------------------+
+ | BES temperate                    |             0.00           |
+ +----------------------------------+----------------------------+
+ | BDS temperate                    |             0.00           |
+ +----------------------------------+----------------------------+
+ | BDS boreal                       |             0.00           |
+ +----------------------------------+----------------------------+
+ | C\ :sub:`3` arctic grass         |             0.00           |
+ +----------------------------------+----------------------------+
+ | C\ :sub:`3` grass                |             0.00           |
+ +----------------------------------+----------------------------+
+ | C\ :sub:`4` grass                |             0.00           |
+ +----------------------------------+----------------------------+
+ | Temperate Corn                   |             0.00           |
+ +----------------------------------+----------------------------+
+ | Spring Wheat                     |             0.00           |
+ +----------------------------------+----------------------------+
+ | Temperate Soybean                |             0.00           |
+ +----------------------------------+----------------------------+
+ | Cotton                           |             0.00           |
+ +----------------------------------+----------------------------+
+ | Rice                             |             0.00           |
+ +----------------------------------+----------------------------+
+ | Sugarcane                        |             0.00           |
+ +----------------------------------+----------------------------+
+ | Tropical Corn                    |             0.00           |
+ +----------------------------------+----------------------------+
+ | Tropical Soybean                 |             0.00           |
+ +----------------------------------+----------------------------+
+ | Miscanthus                       |             0.70           |
+ +----------------------------------+----------------------------+
+ | Switchgrass                      |             0.70           |
+ +----------------------------------+----------------------------+
+
+Whereas food C and N was formerly transferred to the litter pool, CLM5 routes food C and N
 to a grain product pool where the C and N decay to the atmosphere over one year,
 similar in structure to the wood product pools. 
+The biofuel C and N is also routed to the grain product pool and decay to the atmosphere over one year.
 Additionally, CLM5 accounts for the C and N required for crop seeding by removing the seed C and N from the grain
 product pool during harvest. The crop seed pool is then used to seed crops in the subsequent year. 
-Calcuating the crop yields (Equation :eq:`25.9`) requires that you sum the GRAINC_TO_FOOD variable 
+Calcuating the crop yields (Equation :eq:`25.15`) requires that you sum the GRAINC_TO_FOOD variable 
 for each year, and must account for the proportion of C in the dry crop weight. 
 Here, we assume that grain C is 45% of the total dry weight. Additionally, harvest is not typically 100% efficient, so
 analysis needs to assume that harvest efficiency is less. We assume a harvest 
 efficiency of 85%.
 
 .. math::
-   :label: 25.9
+   :label: 25.15
 
      Grain\ yield(g.m^{-2})=\frac{\sum(GRAINC\_ TO\_ FOOD)*0.85}{0.45}
 
@@ -561,27 +670,27 @@ efficiency of 85%.
 
 .. table:: Crop allocation parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
 
- ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================
- \                                            temperate corn  spring wheat  temperatue soybean  cotton  rice    sugarcane  tropical corn  tropical soybean
- ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================
- IVT                                          17, 18          19, 20        23, 24              41, 42  61, 62  67, 68     75, 76         77, 78          
- :math:`a_{leaf}^{i}`                         0.6             0.9           0.85                0.85    0.75    0.6        0.6            0.85            
- :math:`{L}_{max}` (m :sup:`2`  m :sup:`-2`)  5               7             6                   6       7       5          5              6               
- :math:`a_{froot}^{i}`                        0.1             0.05          0.2                 0.2     0.1     0.1        0.1            0.2             
- :math:`a_{froot}^{f}`                        0.05            0             0.2                 0.2     0       0.05       0.05           0.2             
- :math:`a_{leaf}^{f}`                         0               0             0                   0       0       0          0              0               
- :math:`a_{livestem}^{f}`                     0               0.05          0.3                 0.3     0.05    0          0              0.3             
- :math:`d_{L}`                                1.05            1.05          1.05                1.05    1.05    1.05       1.05           1.05            
- :math:`d_{alloc}^{stem}`                     2               1             5                   5       1       2          2              5               
- :math:`d_{alloc}^{leaf}`                     5               3             2                   2       3       5          5              2               
- :math:`{CN}_{leaf}`                          25              20            20                  20      20      25         25             20              
- :math:`{CN}_{stem}`                          50              50            50                  50      50      50         50             50              
- :math:`{CN}_{froot}`                         42              42            42                  42      42      42         42             42              
- :math:`CN^f_{leaf}`                          65              65            65                  65      65      65         65             65              
- :math:`CN^f_{stem}`                          120             100           130                 130     100     120        120            130             
- :math:`CN^f_{froot}`                         0               40            0                   0       40      0          0              0               
- :math:`{CN}_{grain}`                         50              50            50                  50      50      50         50             50              
- ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================
+ ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
+ \                                            temperate corn  spring wheat  temperatue soybean  cotton  rice    sugarcane  tropical corn  tropical soybean  miscanthus        switchgrass     
+ ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
+ IVT                                          17, 18          19, 20        23, 24              41, 42  61, 62  67, 68     75, 76         77, 78            71, 72            73, 74          
+ :math:`a_{leaf}^{i}`                         0.6             0.9           0.85                0.85    0.75    0.6        0.6            0.85              0.9               0.7             
+ :math:`{L}_{max}` (m :sup:`2`  m :sup:`-2`)  5               7             6                   6       7       5          5              6                 10                6.5             
+ :math:`a_{froot}^{i}`                        0.1             0.05          0.2                 0.2     0.1     0.1        0.1            0.2               0.11              0.14            
+ :math:`a_{froot}^{f}`                        0.05            0             0.2                 0.2     0       0.05       0.05           0.2               0.09              0.09            
+ :math:`a_{leaf}^{f}`                         0               0             0                   0       0       0          0              0                 0                 0               
+ :math:`a_{livestem}^{f}`                     0               0.05          0.3                 0.3     0.05    0          0              0.3               0                 0               
+ :math:`d_{L}`                                1.05            1.05          1.05                1.05    1.05    1.05       1.05           1.05              1.05              1.05            
+ :math:`d_{alloc}^{stem}`                     2               1             5                   5       1       2          2              5                 2                 2               
+ :math:`d_{alloc}^{leaf}`                     5               3             2                   2       3       5          5              2                 5                 5               
+ :math:`{CN}_{leaf}`                          25              20            20                  20      20      25         25             20                25                25              
+ :math:`{CN}_{stem}`                          50              50            50                  50      50      50         50             50                50                50              
+ :math:`{CN}_{froot}`                         42              42            42                  42      42      42         42             42                42                42              
+ :math:`CN^f_{leaf}`                          65              65            65                  65      65      65         65             65                65                65              
+ :math:`CN^f_{stem}`                          120             100           130                 130     100     120        120            130               120               120             
+ :math:`CN^f_{froot}`                         0               40            0                   0       40      0          0              0                 0                 0               
+ :math:`{CN}_{grain}`                         50              50            50                  50      50      50         50             50                50                50              
+ ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
 
 Notes: Crop growth phases and corresponding variables are described throughout
 the text. :math:`{CN}_{leaf}`, :math:`{CN}_{stem}`, and :math:`{CN}_{froot}` are
@@ -609,7 +718,7 @@ and :math:`{z}_{bot}` (m), come from the AgroIBIS formulation:
 
 
 .. math::
-   :label: 25.10
+   :label: 25.16
 
    \begin{array}{l} 
    {z_{top} =z_{top}^{\max } \left(\frac{L}{L_{\max } -1} \right)^{2} \ge 0.05{\rm \; where\; }\frac{L}{L_{\max } -1} \le 1} \\ 
@@ -651,7 +760,7 @@ counter in seconds, *f*, is set as soon as the leaf emergence phase for crops
 initiates:
 
 .. math::
-   :label: 25.11
+   :label: 25.17
 
     f = n \times 86400 
 
@@ -682,7 +791,7 @@ the for both rainfed and irrigated spring wheat and sugarcane, the calculation o
 :math:`GDD_{T_{{\rm 2m}} }` allows for latitudinal variation:
 
 .. math::
-   :label: 25.12
+   :label: 25.18
 
    latitudinal\ variation\ in\ base\ T = \left\{
    \begin{array}{lr}    
