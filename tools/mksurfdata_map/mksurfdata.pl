@@ -704,7 +704,7 @@ EOF
       #
       my $double = ".true.";
       #
-      # Loop over each sim_year
+      # Loop over each SSP-RCP scenario
       #
       RCP: foreach my $ssp_rcp ( @rcpaths ) {
          #
@@ -717,24 +717,6 @@ EOF
             if ( $urb_pt && $sim_year ne '2000' ) {
                print "For urban -- skip this simulation year = $sim_year\n";
                next SIM_YEAR;
-            }
-            #
-            # Find the file for each of the types
-            #
-            foreach my $typ ( @typlist ) {
-               my $hgrid = $hgrd{$typ};
-               my $lmask = $lmsk{$typ};
-               my $filnm = $filnm{$typ};
-               my $typ_cmd = "$scrdir/../../bld/queryDefaultNamelist.pl $mkopts -options " . 
-                             "hgrid=$hgrid,lmask=$lmask,mergeGIS=$merge_gis$mkcrop,sim_year=$sim_year -var $filnm";
-               $datfil{$typ} = `$typ_cmd`;
-               $datfil{$typ} = trim($datfil{$typ});
-               if ( $datfil{$typ} !~ /[^ ]+/ ) {
-                  die "ERROR: could NOT find a $filnm data file for this resolution: $hgrid and type: $typ and $lmask.\n$typ_cmd\n\n";
-               }
-               if ( ! defined($opts{'allownofile'}) && ! -f $datfil{$typ} ) {
-                  die "ERROR: data file for this resolution does NOT exist ($datfil{$typ}).\n";
-               }
             }
             #
             # If year is 1850-2000 actually run 1850-2015
@@ -754,6 +736,24 @@ EOF
                $sim_yr0 = $1;
                $sim_yrn = $2;
                $transient = 1;
+            }
+            #
+            # Find the file for each of the types
+            #
+            foreach my $typ ( @typlist ) {
+               my $hgrid = $hgrd{$typ};
+               my $lmask = $lmsk{$typ};
+               my $filnm = $filnm{$typ};
+               my $typ_cmd = "$scrdir/../../bld/queryDefaultNamelist.pl $mkopts -options " . 
+                             "hgrid=$hgrid,lmask=$lmask,mergeGIS=$merge_gis$mkcrop,sim_year=$sim_yr0 -var $filnm";
+               $datfil{$typ} = `$typ_cmd`;
+               $datfil{$typ} = trim($datfil{$typ});
+               if ( $datfil{$typ} !~ /[^ ]+/ ) {
+                  die "ERROR: could NOT find a $filnm data file for this resolution: $hgrid and type: $typ and $lmask.\n$typ_cmd\n\n";
+               }
+               if ( ! defined($opts{'allownofile'}) && ! -f $datfil{$typ} ) {
+                  die "ERROR: data file for this resolution does NOT exist ($datfil{$typ}).\n";
+               }
             }
             # determine simulation year to use for the surface dataset:
             my $sim_yr_surfdat = "$sim_yr0";
