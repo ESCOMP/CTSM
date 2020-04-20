@@ -29,10 +29,14 @@ module CNBalanceCheckMod
   ! !PUBLIC TYPES:
   type, public :: cn_balance_type
      private
-     real(r8), pointer :: begcb_col(:)        ! (gC/m2) carbon mass, beginning of time step 
-     real(r8), pointer :: endcb_col(:)        ! (gC/m2) carbon mass, end of time step
-     real(r8), pointer :: begnb_col(:)        ! (gN/m2) nitrogen mass, beginning of time step 
-     real(r8), pointer :: endnb_col(:)        ! (gN/m2) nitrogen mass, end of time step 
+     real(r8), pointer :: begcb_col(:)  ! (gC/m2) column carbon mass, beginning of time step
+     real(r8), pointer :: endcb_col(:)  ! (gC/m2) column carbon mass, end of time step
+     real(r8), pointer :: begnb_col(:)  ! (gN/m2) column nitrogen mass, beginning of time step
+     real(r8), pointer :: endnb_col(:)  ! (gN/m2) column nitrogen mass, end of time step
+     real(r8), pointer :: begcb_grc(:)  ! (gC/m2) gridcell carbon mass, beginning of time step
+     real(r8), pointer :: endcb_grc(:)  ! (gC/m2) gridcell carbon mass, end of time step
+     real(r8), pointer :: begnb_grc(:)  ! (gN/m2) gridcell nitrogen mass, beginning of time step
+     real(r8), pointer :: endnb_grc(:)  ! (gN/m2) gridcell nitrogen mass, end of time step
    contains
      procedure , public  :: Init
      procedure , public  :: BeginCNBalance
@@ -62,6 +66,14 @@ contains
     type(bounds_type) , intent(in) :: bounds  
 
     integer :: begc, endc
+    integer :: begg, endg
+
+    begg = bounds%begg; endg = bounds%endg
+
+    allocate(this%begcb_grc(begg:endg)) ; this%begcb_grc(:) = nan
+    allocate(this%endcb_grc(begg:endg)) ; this%endcb_grc(:) = nan
+    allocate(this%begnb_grc(begg:endg)) ; this%begnb_grc(:) = nan
+    allocate(this%endnb_grc(begg:endg)) ; this%endnb_grc(:) = nan
 
     begc = bounds%begc; endc= bounds%endc
 
@@ -76,9 +88,15 @@ contains
        cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
     !
     ! !DESCRIPTION:
-    ! Calculate beginning column-level carbon/nitrogen balance, for mass conservation check
+    ! Calculate beginning gridcell and column-level carbon/nitrogen balance
+    ! for mass conservation check
     !
-    ! Should be called after the CN state summaries have been computed for this time step
+    ! Gridcell level:
+    ! Should be called after CN state summaries have been computed
+    ! and before the dynamic landunit area updates
+    !
+    ! Column level:
+    ! Should be called after CN state summaries have been recomputed for this time step
     ! (which should be after the dynamic landunit area updates and the associated filter
     ! updates - i.e., using the new version of the filters)
     !
@@ -92,11 +110,17 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: fc,c
+    integer :: g
+    integer :: begg, endg
     !-----------------------------------------------------------------------
 
     associate(                                            & 
-         col_begcb    => this%begcb_col                  , & ! Output: [real(r8) (:)]  (gC/m2) carbon mass, beginning of time step
-         col_begnb    => this%begnb_col                  , & ! Output: [real(r8) (:)]  (gN/m2) nitrogen mass, beginning of time step 
+         grc_begcb    => this%begcb_grc                  , & ! Output: [real(r8) (:)]  (gC/m2) gridcell carbon mass, beginning of time step
+         grc_begnb    => this%begnb_grc                  , & ! Output: [real(r8) (:)]  (gN/m2) gridcell nitrogen mass, beginning of time step
+!        totgrcc      => cnveg_carbonstate_inst%totc_grc , & ! Input:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
+!        totgrcn      => cnveg_nitrogenstate_inst%totn_grc, & ! Input:  [real(r8) (:)]  (gN/m2) total gridcell nitrogen, incl veg
+         col_begcb    => this%begcb_col                  , & ! Output: [real(r8) (:)]  (gC/m2) column carbon mass, beginning of time step
+         col_begnb    => this%begnb_col                  , & ! Output: [real(r8) (:)]  (gN/m2) column nitrogen mass, beginning of time step
          totcolc      => cnveg_carbonstate_inst%totc_col , & ! Input:  [real(r8) (:)]  (gC/m2) total column carbon, incl veg and cpool
          totcoln      => cnveg_nitrogenstate_inst%totn_col & ! Input:  [real(r8) (:)]  (gN/m2) total column nitrogen, incl veg 
          )
@@ -107,6 +131,13 @@ contains
        col_begnb(c) = totcoln(c)
     end do
 
+    begg = bounds%begg; endg = bounds%endg
+
+    do g = begg, endg
+       grc_begcb(g) = 0._r8  ! TODO Add gridcell terms not accted at col level
+       grc_begnb(g) = 0._r8  ! TODO Add gridcell terms not accted at col level
+    end do
+
     end associate
 
   end subroutine BeginCNBalance
@@ -114,6 +145,9 @@ contains
   !-----------------------------------------------------------------------
   subroutine CBalanceCheck(this, bounds, num_soilc, filter_soilc, &
        soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst)
+    !
+    ! !USES:
+    use subgridAveMod, only: c2g
     !
     ! !DESCRIPTION:
     ! Perform carbon mass conservation check for column and patch
@@ -128,16 +162,20 @@ contains
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,err_index    ! indices
+    integer :: c, g, err_index  ! indices
     integer  :: fc             ! lake filter indices
     logical  :: err_found      ! error flag
     real(r8) :: dt             ! radiation time step (seconds)
-    real(r8) :: col_cinputs
-    real(r8) :: col_coutputs
+    real(r8) :: col_cinputs, grc_cinputs
+    real(r8) :: col_coutputs, grc_coutputs
     real(r8) :: col_errcb(bounds%begc:bounds%endc) 
+    real(r8) :: grc_errcb(bounds%begg:bounds%endg)
     !-----------------------------------------------------------------------
 
     associate(                                                                            & 
+         grc_begcb               =>    this%begcb_grc                                   , & ! Input:  [real(r8) (:) ]  (gC/m2) gridcell-level carbon mass, beginning of time step
+         grc_endcb               =>    this%endcb_grc                                   , & ! Output: [real(r8) (:) ]  (gC/m2) gridcell-level carbon mass, end of time step
+!        totgrcc                 =>    cnveg_carbonstate_inst%totc_grc                  , & ! Input:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
          col_begcb               =>    this%begcb_col                                   , & ! Input:  [real(r8) (:) ]  (gC/m2) carbon mass, beginning of time step 
          col_endcb               =>    this%endcb_col                                   , & ! Output: [real(r8) (:) ]  (gC/m2) carbon mass, end of time step 
          wood_harvestc           =>    cnveg_carbonflux_inst%wood_harvestc_col          , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
@@ -191,7 +229,7 @@ contains
             err_index = c
          end if
           if (abs(col_errcb(c)) > 1e-8_r8) then
-            write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
+            write(iulog,*) 'cbalance warning at c =', c, col_errcb(c), col_endcb(c)
          end if
 
 
@@ -214,6 +252,54 @@ contains
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
+         call endrun(msg=errMsg(sourcefile, __LINE__))
+      end if
+
+      ! Repeat error check at the gridcell level
+      ! The column-level error gets added to the gridcel-level error below
+      call c2g( bounds = bounds, &
+         carr = col_errcb(bounds%begc:bounds%endc), &
+         garr = grc_errcb(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+
+      err_found = .false.
+      do g = bounds%begg, bounds%endg
+         ! calculate gridcell-level carbon storage for mass conservation check
+         grc_endcb(g) = 0._r8  ! TODO Add gridcell terms not accted at col level
+
+         ! calculate total gridcell-level inputs
+         grc_cinputs = 0._r8  ! TODO Add gridcell terms not accted at col level
+
+         ! calculate total gridcell-level outputs
+         grc_coutputs = 0._r8  ! TODO Add gridcell terms not accted at col level
+
+         ! calculate the total gridcell-level carbon balance error
+         ! for this time step
+         grc_errcb(g) = (grc_cinputs - grc_coutputs) * dt - &
+                        (grc_endcb(g) - grc_begcb(g)) + grc_errcb(g)
+
+         ! check for significant errors
+         if (abs(grc_errcb(g)) > 1e-7_r8) then
+            err_found = .true.
+            err_index = g
+         end if
+         if (abs(grc_errcb(g)) > 1e-8_r8) then
+            write(iulog,*) 'cbalance warning at g =', g, grc_errcb(g), grc_endcb(g)
+         end if
+      end do ! end of gridcell loop
+
+      if (err_found) then
+         g = err_index
+         write(iulog,*)'gridcell cbalance error =', grc_errcb(g), g
+         write(iulog,*)'latdeg, londeg          =', grc%latdeg(g), grc%londeg(g)
+         write(iulog,*)'begcb                   =', grc_begcb(g)
+         write(iulog,*)'endcb                   =', grc_endcb(g)
+         write(iulog,*)'delta store             =', grc_endcb(g) - grc_begcb(g)
+         write(iulog,*)'--- Inputs ---'
+         write(iulog,*)'???                     =', 0
+         write(iulog,*)'--- Outputs ---'
+         write(iulog,*)'???                     =', 0
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 

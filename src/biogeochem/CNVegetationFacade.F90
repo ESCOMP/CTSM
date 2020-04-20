@@ -162,6 +162,7 @@ module CNVegetationFacade
      procedure, public :: UpdateSubgridWeights          ! Update subgrid weights if running with prognostic patch weights
      procedure, public :: DynamicAreaConservation       ! Conserve C & N with updates in subgrid weights
      procedure, public :: InitColumnBalance             ! Set the starting point for col-level balance checks
+     procedure, public :: InitGridcellBalance           ! Set the starting point for gridcell-level balance checks
      procedure, public :: EcosystemDynamicsPreDrainage  ! Do the main science that needs to be done before hydrology-drainage
      procedure, public :: EcosystemDynamicsPostDrainage ! Do the main science that needs to be done after hydrology-drainage
      procedure, public :: BalanceCheck                  ! Check the carbon and nitrogen balance
@@ -778,6 +779,80 @@ contains
          this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
 
   end subroutine InitColumnBalance
+
+
+  !-----------------------------------------------------------------------
+  subroutine InitGridcellBalance(this, bounds, num_allc, filter_allc, &
+       num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       soilbiogeochem_carbonstate_inst, &
+       c13_soilbiogeochem_carbonstate_inst, &
+       c14_soilbiogeochem_carbonstate_inst, &
+       soilbiogeochem_nitrogenstate_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set the starting point for gridcell-level balance checks.
+    !
+    ! Gridcell level:
+    ! Called before DynamicAreaConservation.
+    !
+    ! !USES:
+    use subgridAveMod, only : c2g
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type)               , intent(inout) :: this
+    type(bounds_type)                       , intent(in)    :: bounds
+    integer                                 , intent(in)    :: num_allc          ! number of columns in allc filter
+    integer                                 , intent(in)    :: filter_allc(:)    ! filter for all active columns
+    integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
+    integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
+    integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitGridcellBalance'
+    !-----------------------------------------------------------------------
+
+    call CNDriverSummarizeStates(bounds, &
+         num_allc, filter_allc, &
+         num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         this%cnveg_carbonstate_inst, &
+         this%c13_cnveg_carbonstate_inst, &
+         this%c14_cnveg_carbonstate_inst, &
+         this%cnveg_nitrogenstate_inst, &
+         soilbiogeochem_carbonstate_inst, &
+         c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_nitrogenstate_inst)
+
+!   ! total gridcell carbon (TOTGRIDCELLC)
+!   call c2g( bounds = bounds, &
+!        carr = this%cnveg_carbonstate_inst%totc_col(bounds%begc:bounds%endc), &
+!        garr = this%cnveg_carbonstate_inst%totc_grc(bounds%begg:bounds%endg), &
+!        c2l_scale_type = 'unity', &
+!        l2g_scale_type = 'unity')
+!   ! total gridcell nitrogen (TOTGRIDCELLN)
+!   call c2g( bounds = bounds, &
+!        carr = this%cnveg_nitrogenstate_inst%totn_col(bounds%begc:bounds%endc), &
+!        garr = this%cnveg_nitrogenstate_inst%totn_grc(bounds%begg:bounds%endg), &
+!        c2l_scale_type = 'unity', &
+!        l2g_scale_type = 'unity')
+
+    ! TODO In next call,
+    ! add to totc_grc & totn_grc the gridcell terms not accted at col level
+    ! OR add them to zero and start from the column-level error in CBalanceCheck
+    ! If the latter, then prob. need BeginCNGridcellBalance separate from Column
+
+    call this%cn_balance_inst%BeginCNBalance( &
+         bounds, num_soilc, filter_soilc, &
+         this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
+
+  end subroutine InitGridcellBalance
 
 
   !-----------------------------------------------------------------------
