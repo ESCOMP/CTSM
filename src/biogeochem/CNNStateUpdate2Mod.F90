@@ -342,7 +342,7 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
-         if (.not. use_soil_matrixcn)then
+         if(.not. use_matrixcn)then
             ! displayed pools
             ns_veg%leafn_patch(p) = ns_veg%leafn_patch(p)                           &
                  - nf_veg%gru_leafn_to_litter_patch(p) * dt
