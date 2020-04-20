@@ -1,4 +1,85 @@
 ===============================================================
+Tag name:  release-clm5.0.34
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Mon Apr 20 11:27:34 MDT 2020
+One-line Summary: Update documentation for release-clm5.0 branch, and fix issues with no-anthro surface dataset creation
+
+Purpose of this version:
+------------------------
+
+Fix the issues with the no-anthro surface dataset creation (the PtVg simulation year). This 
+makes sure GDP and urban is set to zero and abm to missing for this case. Also bring in the python3
+fix that was intended for the last release tag.
+
+CTSM Master Tag This Corresponds To: ctsm1.0.dev025 (with many other changes)
+
+Summary of changes:
+-------------------
+
+Issues fixed (include CTSM Issue #): #980 #974
+  Fixes #980 -- PtVg option to mksurfdata should also set urban, and GDP to zero, as well as abm to missing
+  Fixes #974 -- Python 3 problem in SSP test
+
+Science changes since: release-clm5.0.33
+  For Potential vegetation sim_year set urban to zero, GDP to zero and abm to missing with mksurfdata.pl
+
+Software changes since: release-clm5.0.33
+  Fix python3 issue for testing in ssp.py
+
+Changes to User Interface since: release-clm5.0.33
+
+Testing:
+--------
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+    izumi ---- PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK
+    izumi ---- OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test): None
+
+  regular tests (aux_clm): None
+
+Summary of Answer changes:
+-------------------------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+Changes answers relative to baseline: No bit-for-bit (other than PtVg surface dataset creation)
+
+Detailed list of changes:
+------------------------
+
+Externals being used: No updates
+
+   cism:   cism-release-cesm2.1.2_04
+   rtm:    release-cesm2.0.04
+   mosart: release-cesm2.0.04
+   cime:   cim5.6.33
+   FATES:  sci.1.30.0_api.8.0.0
+   PTCLM:  PTCLM2_20200121
+
+CTSM Tag versions pulled over from master development branch: None
+
+Pull Requests that document the changes (include PR ids): #976 #986
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #976 -- bring documentation to release branch
+   #986 -- Fix issues with no-atnthro surface dataset creation
+
+===============================================================
+===============================================================
 Tag name:  release-clm5.0.33
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Apr  7 13:21:28 MDT 2020

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-clm5.0.34     erik 04/20/2020 Update documentation for release-clm5.0 branch, and fix issues with no-anthro surface dataset creation
 release-clm5.0.33     erik 04/07/2020 Turn irrigation on for 2300 SSP extensions
 release-clm5.0.32     erik 04/02/2020 Extensions to 2300 for SSP5-8.5,SSP5-3.4, and SSP1-2.6
 release-clm5.0.31     erik 03/29/2020 Bring in raw datasets for 2100-2300 extension for SSP5-8.5/3.5 and SSP1-2.6, some other misc. changes
