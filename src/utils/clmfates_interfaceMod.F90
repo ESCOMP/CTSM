@@ -2379,6 +2379,7 @@ contains
    call this%fates_hist%update_history_hydraulics(nc, &
          this%fates(nc)%nsites, &
          this%fates(nc)%sites, &
+         this%fates(nc)%bc_in, & 
          dtime)
 
 
