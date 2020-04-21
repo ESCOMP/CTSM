@@ -7,7 +7,6 @@ module TotalWaterAndHeatMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod       , only : r8 => shr_kind_r8
-  use shr_log_mod        , only : errMsg => shr_log_errMsg
   use decompMod          , only : bounds_type
   use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus
   use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb
@@ -119,7 +118,7 @@ contains
     character(len=*), parameter :: subname = 'ComputeWaterMassNonLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(water_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(water_mass) == (/bounds%endc/)), sourcefile, __LINE__)
 
     call ComputeLiqIceMassNonLake( &
          bounds = bounds, &
@@ -170,7 +169,7 @@ contains
     character(len=*), parameter :: subname = 'ComputeWaterMassLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(water_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(water_mass) == (/bounds%endc/)), sourcefile, __LINE__)
 
     call ComputeLiqIceMassLake( &
          bounds = bounds, &
@@ -220,22 +219,21 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: c, j, fc                  ! indices
-    real(r8) :: h2ocan_col(bounds%begc:bounds%endc)  ! canopy water (mm H2O)
+    real(r8) :: liqcan_col(bounds%begc:bounds%endc)  ! canopy liquid water (mm H2O)
     real(r8) :: snocan_col(bounds%begc:bounds%endc)  ! canopy snow water (mm H2O)
-    real(r8) :: liqcan                               ! canopy liquid water (mm H2O)
 
     character(len=*), parameter :: subname = 'ComputeLiqIceMassNonLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(liquid_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ice_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(liquid_mass) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ice_mass) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          snl          =>    col%snl                        , & ! Input:  [integer  (:)   ]  negative number of snow layers
          
          h2osfc       =>    waterstate_inst%h2osfc_col     , & ! Input:  [real(r8) (:)   ]  surface water (mm)
-         h2osno       =>    waterstate_inst%h2osno_col     , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)
-         h2ocan_patch =>    waterstate_inst%h2ocan_patch   , & ! Input:  [real(r8) (:)   ]  canopy water (mm H2O)
+         h2osno_no_layers => waterstate_inst%h2osno_no_layers_col , & ! Input:  [real(r8) (:)   ]  snow water that is not resolved into layers (mm H2O)
+         liqcan_patch =>    waterstate_inst%liqcan_patch   , & ! Input:  [real(r8) (:)   ]  canopy liquid water (mm H2O)
          snocan_patch =>    waterstate_inst%snocan_patch   , & ! Input:  [real(r8) (:)   ]  canopy snow water (mm H2O)
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
          h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
@@ -253,8 +251,8 @@ contains
     end do
 
     call p2c(bounds, num_nolakec, filter_nolakec, &
-         h2ocan_patch(bounds%begp:bounds%endp), &
-         h2ocan_col(bounds%begc:bounds%endc))
+         liqcan_patch(bounds%begp:bounds%endp), &
+         liqcan_col(bounds%begc:bounds%endc))
 
     call p2c(bounds, num_nolakec, filter_nolakec, &
          snocan_patch(bounds%begp:bounds%endp), &
@@ -263,31 +261,20 @@ contains
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
 
-       ! waterstate_inst%snocan_patch and waterstate_inst%liqcan_patch are only set if
-       ! we're using snow-on-veg; otherwise they are 0. However, we can rely on
-       ! h2ocan_patch being set in all cases, so we can always determine the liquid mass
-       ! as (h2ocan - snocan).
        ! Note the difference between liqcan and total_plant_stored_h2o.  The prior
        ! is that which exists on the vegetation canopy surface, the latter is
        ! that which exists within the plant xylems and tissues.  In cases
        ! where FATES hydraulics is not turned on, this total_plant_stored_h2o is
        ! non-changing, and is set to 0 for a trivial solution.
 
-       liqcan = h2ocan_col(c) - snocan_col(c)
-       liquid_mass(c) = liquid_mass(c) + liqcan + total_plant_stored_h2o(c)
+       liquid_mass(c) = liquid_mass(c) + liqcan_col(c) + total_plant_stored_h2o(c)
        ice_mass(c) = ice_mass(c) + snocan_col(c)
 
-       if (snl(c) < 0) then
-          ! Loop over snow layers
-          do j = snl(c)+1,0
-             liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
-             ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
-          end do
-       else if (h2osno(c) /= 0._r8) then
-          ! No explicit snow layers, but there may still be some ice in h2osno (there is
-          ! no liquid water in this case)
-          ice_mass(c) = ice_mass(c) + h2osno(c)
-       end if
+       ice_mass(c) = ice_mass(c) + h2osno_no_layers(c)
+       do j = snl(c)+1,0
+          liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
+          ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
+       end do
 
        if (col%hydrologically_active(c)) then
           ! It's important to exclude non-hydrologically-active points, because some of
@@ -358,8 +345,8 @@ contains
     character(len=*), parameter :: subname = 'AccumulateSoilLiqIceMassNonLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(liquid_mass) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ice_mass) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(liquid_mass) == [bounds%endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ice_mass) == [bounds%endc]), sourcefile, __LINE__)
 
     associate( &
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
@@ -427,13 +414,13 @@ contains
     character(len=*), parameter :: subname = 'ComputeLiqIceMassLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(liquid_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ice_mass) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(liquid_mass) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ice_mass) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          snl          =>    col%snl                        , & ! Input:  [integer  (:)   ]  negative number of snow layers
          
-         h2osno       =>    waterstate_inst%h2osno_col     , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)
+         h2osno_no_layers => waterstate_inst%h2osno_no_layers_col , & ! Input:  [real(r8) (:)   ]  snow water that is not resolved into layers (mm H2O)
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
          h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col,  & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
          dynbal_baseline_liq    => waterstate_inst%dynbal_baseline_liq_col, & ! Input:  [real(r8) (:)   ]  baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
@@ -449,17 +436,12 @@ contains
     ! Snow water content
     do fc = 1, num_lakec
        c = filter_lakec(fc)
-       if (snl(c) < 0) then
-          ! Loop over snow layers
-          do j = snl(c)+1,0
-             liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
-             ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
-          end do
-       else if (h2osno(c) /= 0._r8) then
-          ! No explicit snow layers, but there may still be some ice in h2osno (there is
-          ! no liquid water in this case)
-          ice_mass(c) = ice_mass(c) + h2osno(c)
-       end if
+
+       ice_mass(c) = ice_mass(c) + h2osno_no_layers(c)
+       do j = snl(c)+1,0
+          liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
+          ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
+       end do
     end do
 
     ! Soil water content of the soil under the lake
@@ -519,9 +501,9 @@ contains
     integer :: fc
     integer :: c, j
 
-    real(r8) :: h2ocan_col(bounds%begc:bounds%endc)  ! canopy water (mm H2O)
+    real(r8) :: liqcan_col(bounds%begc:bounds%endc)  ! canopy liquid water (mm H2O)
     real(r8) :: snocan_col(bounds%begc:bounds%endc)  ! canopy snow water (mm H2O)
-    real(r8) :: liqcan        ! canopy liquid water (mm H2O)
+    real(r8) :: liqveg                               ! liquid water in/on vegetation (mm H2O)
 
     real(r8) :: heat_dry_mass(bounds%begc:bounds%endc) ! sum of heat content: dry mass [J/m^2]
     real(r8) :: heat_ice(bounds%begc:bounds%endc)      ! sum of heat content: ice [J/m^2]
@@ -530,9 +512,9 @@ contains
     character(len=*), parameter :: subname = 'ComputeHeatNonLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(heat) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(heat_liquid) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cv_liquid) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(heat) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(heat_liquid) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cv_liquid) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          snl          => col%snl, & ! number of snow layers
@@ -543,9 +525,9 @@ contains
          dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Input:  [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
          h2osoi_liq   => waterstatebulk_inst%h2osoi_liq_col, & ! liquid water (kg/m2)
          h2osoi_ice   => waterstatebulk_inst%h2osoi_ice_col, & ! frozen water (kg/m2)
-         h2osno       => waterstatebulk_inst%h2osno_col, & ! snow water (mm H2O)
+         h2osno_no_layers => waterstatebulk_inst%h2osno_no_layers_col, & ! snow water that is not resolved into layers (mm H2O)
          h2osfc       => waterstatebulk_inst%h2osfc_col, & ! surface water (mm H2O)
-         h2ocan_patch => waterstatebulk_inst%h2ocan_patch, & ! canopy water (mm H2O)
+         liqcan_patch => waterstatebulk_inst%liqcan_patch, & ! canopy liquid water (mm H2O)
          snocan_patch => waterstatebulk_inst%snocan_patch, & ! canopy snow water (mm H2O)
          total_plant_stored_h2o_col => waterdiagnosticbulk_inst%total_plant_stored_h2o_col, & ! Input: [real(r8) (:)   ]  water mass in plant tissues (kg m-2)
          aquifer_water_baseline => waterstatebulk_inst%aquifer_water_baseline, & ! Input: [real(r8)] baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
@@ -563,8 +545,8 @@ contains
     end do
 
     call p2c(bounds, &
-         parr = h2ocan_patch(bounds%begp:bounds%endp), &
-         carr = h2ocan_col(bounds%begc:bounds%endc), &
+         parr = liqcan_patch(bounds%begp:bounds%endp), &
+         carr = liqcan_col(bounds%begc:bounds%endc), &
          p2c_scale_type = 'unity')
 
     call p2c(bounds, &
@@ -589,10 +571,6 @@ contains
        ! conservation code. (But I went back and forth on whether to do this, so could
        ! be convinced otherwise.)
 
-       ! snocan and liqcan are only set if we're using snow-on-veg; otherwise they are 0.
-       ! However, we can rely on h2ocan being set in all cases, so we can always
-       ! determine the liquid mass as (h2ocan - snocan).
-       
        ! Note (rgk 04-2017): added total_plant_stored_h2o_col(c), which is the
        ! water inside the plant, which is zero for all non-dynamic models. FATES hydraulics
        ! is the only one with dynamic storage atm.
@@ -602,34 +580,29 @@ contains
        ! pools.  The energy in the plant water should "bring with it" the internal
        ! energy of the soil-to-root water flux.
 
-       liqcan = h2ocan_col(c) - snocan_col(c) + total_plant_stored_h2o_col(c)
+       liqveg = liqcan_col(c) + total_plant_stored_h2o_col(c)
+
        call AccumulateLiquidWaterHeat( &
             temp = heat_base_temp, &
-            h2o = liqcan, &
+            h2o = liqveg, &
             cv_liquid = cv_liquid(c), &
             heat_liquid = heat_liquid(c), &
             latent_heat_liquid = latent_heat_liquid(c))
 
        !--- snow ---
-       if ( snl(c) < 0 ) then
-          ! Loop over snow layers
-          do j = snl(c)+1,0
-             call AccumulateLiquidWaterHeat( &
-                  temp = t_soisno(c,j), &
-                  h2o = h2osoi_liq(c,j), &
-                  cv_liquid = cv_liquid(c), &
-                  heat_liquid = heat_liquid(c), &
-                  latent_heat_liquid = latent_heat_liquid(c))
-             heat_ice(c) = heat_ice(c) + &
-                  TempToHeat(temp = t_soisno(c,j), cv = (h2osoi_ice(c,j)*cpice))
-          end do
-       else if (h2osno(c) /= 0._r8) then
-          ! No explicit snow layers, but there may still be some ice in h2osno (there is
-          ! no liquid water in this case)
-          j = 1
+       j = 1
+       heat_ice(c) = heat_ice(c) + &
+            TempToHeat(temp = t_soisno(c,j), cv = (h2osno_no_layers(c)*cpice))
+       do j = snl(c)+1,0
+          call AccumulateLiquidWaterHeat( &
+               temp = t_soisno(c,j), &
+               h2o = h2osoi_liq(c,j), &
+               cv_liquid = cv_liquid(c), &
+               heat_liquid = heat_liquid(c), &
+               latent_heat_liquid = latent_heat_liquid(c))
           heat_ice(c) = heat_ice(c) + &
-               TempToHeat(temp = t_soisno(c,j), cv = (h2osno(c)*cpice))
-       end if
+               TempToHeat(temp = t_soisno(c,j), cv = (h2osoi_ice(c,j)*cpice))
+       end do
 
        if (col%hydrologically_active(c)) then
           ! NOTE(wjs, 2017-03-23) Water in the unconfined aquifer currently doesn't have
@@ -738,9 +711,9 @@ contains
     character(len=*), parameter :: subname = 'AccumulateSoilHeatNonLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(heat) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(heat_liquid) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cv_liquid) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(heat) == [bounds%endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(heat_liquid) == [bounds%endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cv_liquid) == [bounds%endc]), sourcefile, __LINE__)
 
     associate( &
          dz           => col%dz, &  ! layer depth (m)
@@ -863,9 +836,9 @@ contains
     character(len=*), parameter :: subname = 'ComputeHeatLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(heat) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(heat_liquid) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(cv_liquid) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(heat) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(heat_liquid) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cv_liquid) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          snl          => col%snl, & ! number of snow layers
@@ -875,8 +848,7 @@ contains
          t_soisno     => temperature_inst%t_soisno_col, & ! soil temperature (Kelvin)
          dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Input:  [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
          h2osoi_liq   => waterstatebulk_inst%h2osoi_liq_col, & ! liquid water (kg/m2)
-         h2osoi_ice   => waterstatebulk_inst%h2osoi_ice_col, & ! frozen water (kg/m2)
-         h2osno       => waterstatebulk_inst%h2osno_col & ! snow water (mm H2O)
+         h2osoi_ice   => waterstatebulk_inst%h2osoi_ice_col  & ! frozen water (kg/m2)
          )
 
     do fc = 1, num_lakec
@@ -892,24 +864,21 @@ contains
     ! Snow heat content
     do fc = 1, num_lakec
        c = filter_lakec(fc)
-       if ( snl(c) < 0 ) then
-          ! Loop over snow layers
-          do j = snl(c)+1,0
-             call AccumulateLiquidWaterHeat( &
-                  temp = t_soisno(c,j), &
-                  h2o = h2osoi_liq(c,j), &
-                  cv_liquid = cv_liquid(c), &
-                  heat_liquid = heat_liquid(c), &
-                  latent_heat_liquid = latent_heat_liquid(c))
-             heat_ice(c) = heat_ice(c) + &
-                  TempToHeat(temp = t_soisno(c,j), cv = (h2osoi_ice(c,j)*cpice))
-          end do
-       else if (h2osno(c) /= 0._r8) then
-          ! TODO(wjs, 2017-03-16) (Copying this note from old code... I'm not positive
-          ! it's still true.) The heat capacity (not latent heat) of snow without snow
-          ! layers is currently ignored in LakeTemperature, so it should be ignored here.
-          ! Eventually we should consider this.
-       end if
+
+       ! TODO(wjs, 2017-03-16) (Copying this note from old code... I'm not positive it's
+       ! still true.) The heat capacity (not latent heat) of snow without snow layers
+       ! (i.e., h2osno_no_layers) is currently ignored in LakeTemperature, so it should
+       ! be ignored here.  Eventually we should consider this.
+       do j = snl(c)+1,0
+          call AccumulateLiquidWaterHeat( &
+               temp = t_soisno(c,j), &
+               h2o = h2osoi_liq(c,j), &
+               cv_liquid = cv_liquid(c), &
+               heat_liquid = heat_liquid(c), &
+               latent_heat_liquid = latent_heat_liquid(c))
+          heat_ice(c) = heat_ice(c) + &
+               TempToHeat(temp = t_soisno(c,j), cv = (h2osoi_ice(c,j)*cpice))
+       end do
     end do
 
     ! Soil water content of the soil under the lake
@@ -1013,10 +982,10 @@ contains
     character(len=*), parameter :: subname = 'AdjustDeltaHeatForDeltaLiq'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(delta_liq) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(liquid_water_temp1) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(liquid_water_temp2) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(delta_heat) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(delta_liq) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(liquid_water_temp1) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(liquid_water_temp2) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(delta_heat) == (/bounds%endg/)), sourcefile, __LINE__)
 
     do g = bounds%begg, bounds%endg
        if (delta_liq(g) /= 0._r8) then

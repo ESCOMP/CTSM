@@ -194,7 +194,11 @@ contains
     ! Check consistency of namelist settings
     !
     ! !USES:
-    use clm_varctl     , only : iulog, use_cndv, use_fates, use_cn, use_crop
+    use shr_kind_mod, only: r8 => shr_kind_r8
+    use clm_varctl, only : iulog, use_cndv, use_fates, use_cn, use_crop, &
+                           n_dom_pfts, n_dom_landunits, collapse_urban, &
+                           toosmall_soil, toosmall_crop, toosmall_glacier, &
+                           toosmall_lake, toosmall_wetland, toosmall_urban
     !
     ! !ARGUMENTS:
     !
@@ -232,6 +236,26 @@ contains
        end if
     end if
 
+    if (dyn_subgrid_control_inst%do_transient_pfts .or. dyn_subgrid_control_inst%do_transient_crops) then
+       if (collapse_urban) then
+          write(iulog,*) 'ERROR: do_transient_pfts and do_transient_crops are &
+                          incompatible with collapse_urban = .true.'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+       if (n_dom_pfts > 0 .or. n_dom_landunits > 0 &
+           .or. toosmall_soil > 0._r8 .or. toosmall_crop > 0._r8 &
+           .or. toosmall_glacier > 0._r8 .or. toosmall_lake > 0._r8 &
+           .or. toosmall_wetland > 0._r8 .or. toosmall_urban > 0._r8) then
+          write(iulog,*) 'ERROR: do_transient_pfts and do_transient_crops are &
+                          incompatible with any of the following set to > 0: &
+                          n_dom_pfts > 0, n_dom_landunits > 0, &
+                          toosmall_soil > 0._r8, toosmall_crop > 0._r8, &
+                          toosmall_glacier > 0._r8, toosmall_lake > 0._r8, &
+                          toosmall_wetland > 0._r8, toosmall_urban > 0._r8.'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+    end if
+
     if (dyn_subgrid_control_inst%do_transient_crops) then
        if (use_fates) then
           ! NOTE(wjs, 2017-01-13) ED / FATES does not currently have a mechanism for
@@ -263,7 +287,7 @@ contains
     character(len=*), parameter :: subname = 'get_flanduse_timeseries'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_flanduse_timeseries = dyn_subgrid_control_inst%flanduse_timeseries
 
@@ -275,7 +299,7 @@ contains
     ! Return the value of the do_transient_pfts control flag
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_do_transient_pfts = dyn_subgrid_control_inst%do_transient_pfts
 
@@ -287,7 +311,7 @@ contains
     ! Return the value of the do_transient_crops control flag
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_do_transient_crops = dyn_subgrid_control_inst%do_transient_crops
 
@@ -310,7 +334,7 @@ contains
     ! Return the value of the do_harvest control flag
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_do_harvest = dyn_subgrid_control_inst%do_harvest
 
@@ -322,7 +346,7 @@ contains
     ! Return the value of the reset_dynbal_baselines control flag
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_reset_dynbal_baselines = dyn_subgrid_control_inst%reset_dynbal_baselines
 
@@ -337,7 +361,7 @@ contains
     ! controls error-checking, not any operation of the code.)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_for_testing_allow_non_annual_changes = dyn_subgrid_control_inst%for_testing_allow_non_annual_changes
 
@@ -355,7 +379,7 @@ contains
     ! true will break water and energy conservation!
     ! -----------------------------------------------------------------------
 
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_for_testing_zero_dynbal_fluxes = dyn_subgrid_control_inst%for_testing_zero_dynbal_fluxes
 

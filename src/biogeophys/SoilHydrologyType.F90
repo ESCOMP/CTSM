@@ -169,7 +169,7 @@ contains
 
     this%qcharge_col(begc:endc) = spval
     call hist_addfld1d (fname='QCHARGE',  units='mm/s',  &
-         avgflag='A', long_name='aquifer recharge rate (vegetated landunits only)', &
+         avgflag='A', long_name='aquifer recharge rate (natural vegetated and crop landunits only)', &
          ptr_col=this%qcharge_col, l2g_scale_type='veg')
 
     this%num_substeps_col(begc:endc) = spval
@@ -180,17 +180,17 @@ contains
 
     this%frost_table_col(begc:endc) = spval
     call hist_addfld1d (fname='FROST_TABLE',  units='m',  &
-         avgflag='A', long_name='frost table depth (vegetated landunits only)', &
+         avgflag='A', long_name='frost table depth (natural vegetated and crop landunits only)', &
          ptr_col=this%frost_table_col, l2g_scale_type='veg', default='inactive')
 
     this%zwt_col(begc:endc) = spval
     call hist_addfld1d (fname='ZWT',  units='m',  &
-         avgflag='A', long_name='water table depth (vegetated landunits only)', &
+         avgflag='A', long_name='water table depth (natural vegetated and crop landunits only)', &
          ptr_col=this%zwt_col, l2g_scale_type='veg')
 
     this%zwt_perched_col(begc:endc) = spval
     call hist_addfld1d (fname='ZWT_PERCH',  units='m',  &
-         avgflag='A', long_name='perched water table depth (vegetated landunits only)', &
+         avgflag='A', long_name='perched water table depth (natural vegetated and crop landunits only)', &
          ptr_col=this%zwt_perched_col, l2g_scale_type='veg')
 
   end subroutine InitHistory

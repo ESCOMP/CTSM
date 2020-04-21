@@ -43,7 +43,6 @@ module clm_varcon
   ! Initialize physical constants
   !------------------------------------------------------------------
 
-  real(r8), public, parameter :: n_melt=0.7                         ! fsca shape parameter
   real(r8), public, parameter :: e_ice=6.0                          ! soil ice impedance factor
   real(r8), public, parameter :: pc = 0.4                           ! threshold probability
   real(r8), public, parameter :: mu = 0.13889                       ! connectivity exponent 
@@ -111,9 +110,6 @@ module clm_varcon
   ! These are tunable constants from clm2_3
   ! ------------------------------------------------------------------------
 
-  real(r8), public :: zlnd = 0.01_r8        ! Roughness length for soil [m]
-  real(r8), public :: zsno = 0.0024_r8      ! Roughness length for snow [m]
-  real(r8), public :: csoilc = 0.004_r8     ! Drag coefficient for soil under canopy [-]
   real(r8), public :: capr   = 0.34_r8      ! Tuning factor to turn first layer T into surface T
   real(r8), public :: cnfac  = 0.5_r8       ! Crank Nicholson factor between 0 and 1
   real(r8), public :: ssi    = 0.033_r8     ! Irreducible water saturation of snow
@@ -181,8 +177,6 @@ module clm_varcon
   !------------------------------------------------------------------
 
   real(r8), public :: h2osno_max   = -999.0_r8            ! max allowed snow thickness (mm H2O)
-  real(r8), public :: int_snow_max = -999.0_r8            ! limit applied to integrated snowfall when determining changes in snow-covered fraction during melt (mm H2O)
-  real(r8), public :: n_melt_glcmec = -999.0_r8           ! SCA shape parameter for glc_mec columns
 
   integer, private :: i  ! loop index
 

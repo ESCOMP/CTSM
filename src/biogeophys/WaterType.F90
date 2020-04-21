@@ -77,7 +77,7 @@ module WaterType
   use Wateratm2lndType         , only : wateratm2lnd_type
   use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
   use WaterTracerContainerType , only : water_tracer_container_type
-  use WaterTracerUtils         , only : CompareBulkToTracer
+  use WaterTracerUtils         , only : CompareBulkToTracer, SetTracerToBulkTimesRatio
 
   implicit none
   private
@@ -162,11 +162,14 @@ module WaterType
      procedure, public :: InitAccVars
      procedure, public :: UpdateAccVars
      procedure, public :: Restart
-     procedure, public :: IsIsotope       ! Return true if a given tracer is an isotope
-     procedure, public :: GetIsotopeInfo  ! Get a pointer to the object storing isotope info for a given tracer
+     procedure, public :: GetBulkOrTracerName ! Return name of a given tracer (or bulk)
+     procedure, public :: IsIsotope           ! Return true if a given tracer is an isotope
+     procedure, public :: GetIsotopeInfo      ! Get a pointer to the object storing isotope info for a given tracer
      procedure, public :: GetBulkTracerIndex ! Get the index of the tracer that replicates bulk water
      procedure, public :: DoConsistencyCheck ! Whether TracerConsistencyCheck should be called in this run
      procedure, public :: TracerConsistencyCheck
+     procedure, public :: ResetCheckedTracers
+     procedure, public :: Summary            ! Calculate end-of-timestep summaries of water diagnostic terms
 
      ! Private routines
      procedure, private :: DoInit
@@ -308,10 +311,10 @@ contains
     begc = bounds%begc
     endc = bounds%endc
 
-    SHR_ASSERT_ALL((ubound(h2osno_col) == [endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(snow_depth_col) == [endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(watsat_col, 1) == endc), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno_col, 1) == endc), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osno_col) == [endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(snow_depth_col) == [endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col, 1) == endc), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno_col, 1) == endc), sourcefile, __LINE__)
 
     call this%SetupTracerInfo()
 
@@ -336,7 +339,7 @@ contains
          bulk_info, &
          bulk_vars, &
          snow_depth_input_col = snow_depth_col(begc:endc),    &
-         waterstatebulk_inst = this%waterstatebulk_inst )
+         h2osno_input_col = h2osno_col(begc:endc))
 
     call this%waterbalancebulk_inst%Init(bounds, &
          bulk_info, &
@@ -709,7 +712,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine Restart(this, bounds, ncid, flag, &
+  subroutine Restart(this, bounds, ncid, flag, writing_finidat_interp_dest_file, &
        watsat_col)
     !
     ! !DESCRIPTION:
@@ -720,6 +723,7 @@ contains
     type(bounds_type), intent(in)    :: bounds
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read', 'write' or 'define'
+    logical          , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
     !
     ! !LOCAL VARIABLES:
@@ -728,14 +732,16 @@ contains
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col, 1) == bounds%endc), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat_col, 1) == bounds%endc), sourcefile, __LINE__)
 
     call this%waterfluxbulk_inst%restartBulk (bounds, ncid, flag=flag)
 
     call this%waterstatebulk_inst%restartBulk (bounds, ncid, flag=flag, &
          watsat_col=watsat_col(bounds%begc:bounds%endc,:))
 
-    call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag)
+    call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag, &
+         writing_finidat_interp_dest_file=writing_finidat_interp_dest_file, &
+         waterstatebulk_inst = this%waterstatebulk_inst)
 
     do i = this%tracers_beg, this%tracers_end
 
@@ -749,6 +755,32 @@ contains
     end do
 
   end subroutine Restart
+
+  !-----------------------------------------------------------------------
+  function GetBulkOrTracerName(this, i) result(name)
+    !
+    ! !DESCRIPTION:
+    ! Get name of the given tracer (or bulk)
+    !
+    ! i must be >= this%bulk_and_tracers_beg and <= this%bulk_and_tracers_end
+    !
+    ! !ARGUMENTS:
+    character(len=:), allocatable :: name  ! function result
+    class(water_type), intent(in) :: this
+    integer, intent(in) :: i  ! index of tracer (or bulk)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'GetBulkOrTracerName'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL(i >= this%bulk_and_tracers_beg, sourcefile, __LINE__)
+    SHR_ASSERT_FL(i <= this%bulk_and_tracers_end, sourcefile, __LINE__)
+
+    name = this%bulk_and_tracers(i)%info%get_name()
+
+  end function GetBulkOrTracerName
+
 
   !-----------------------------------------------------------------------
   function IsIsotope(this, i)
@@ -768,8 +800,8 @@ contains
     character(len=*), parameter :: subname = 'IsIsotope'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(i >= this%tracers_beg, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(i <= this%tracers_end, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(i >= this%tracers_beg, sourcefile, __LINE__)
+    SHR_ASSERT_FL(i <= this%tracers_end, sourcefile, __LINE__)
 
     IsIsotope = this%bulk_and_tracers(i)%is_isotope
 
@@ -801,8 +833,8 @@ contains
     character(len=*), parameter :: subname = 'GetIsotopeInfo'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(i >= this%tracers_beg, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(i <= this%tracers_end, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(i >= this%tracers_beg, sourcefile, __LINE__)
+    SHR_ASSERT_FL(i <= this%tracers_end, sourcefile, __LINE__)
 
     select type(info => this%bulk_and_tracers(i)%info)
     type is(water_info_isotope_type)
@@ -890,11 +922,11 @@ contains
 
        if (tracer_info%is_included_in_consistency_check()) then
           num_vars = tracer_vars%get_num_vars()
-          SHR_ASSERT(num_vars == bulk_vars%get_num_vars(), errMsg(sourcefile, __LINE__))
+          SHR_ASSERT_FL(num_vars == bulk_vars%get_num_vars(), sourcefile, __LINE__)
 
           do var_num = 1, num_vars
              name = tracer_vars%get_description(var_num)
-             SHR_ASSERT(name == bulk_vars%get_description(var_num), errMsg(sourcefile, __LINE__))
+             SHR_ASSERT_FL(name == bulk_vars%get_description(var_num), sourcefile, __LINE__)
 
              call tracer_vars%get_bounds(var_num, bounds, begi, endi)
 
@@ -915,5 +947,102 @@ contains
      end do
 
   end subroutine TracerConsistencyCheck
+
+  !-----------------------------------------------------------------------
+  subroutine ResetCheckedTracers(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! For tracers set in TracerConsistencyCheck, reset all values to bulk * ratio
+    !
+    ! This is useful if some code has not been tracerized yet, but we want to perform the
+    ! tracer consistency check on later code: Put a call to TracerConsistencyCheck just
+    ! before the not-yet-tracerized code, then put a call to ResetCheckedTracers just
+    ! after the not-yet-tracerized code.
+    !
+    ! !ARGUMENTS:
+    class(water_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+    integer :: num_vars
+    integer :: var_num
+    integer :: begi, endi
+    real(r8), pointer :: bulk(:)
+    real(r8), pointer :: tracer(:)
+
+    character(len=*), parameter :: subname = 'ResetCheckedTracers'
+    !-----------------------------------------------------------------------
+
+    do i = this%tracers_beg, this%tracers_end
+
+       associate( &
+            tracer_vars => this%bulk_and_tracers(i)%vars, &
+            tracer_info => this%bulk_and_tracers(i)%info, &
+            bulk_vars => this%bulk_and_tracers(this%i_bulk)%vars &
+            )
+
+       if (tracer_info%is_included_in_consistency_check()) then
+          num_vars = tracer_vars%get_num_vars()
+          SHR_ASSERT_FL(num_vars == bulk_vars%get_num_vars(), sourcefile, __LINE__)
+
+          do var_num = 1, num_vars
+             SHR_ASSERT_FL(tracer_vars%get_description(var_num) == bulk_vars%get_description(var_num), sourcefile, __LINE__)
+
+             call tracer_vars%get_bounds(var_num, bounds, begi, endi)
+
+             call bulk_vars%get_data(var_num, bulk)
+             call tracer_vars%get_data(var_num, tracer)
+
+             call SetTracerToBulkTimesRatio(begi, endi, &
+                  bulk = bulk(begi:endi), &
+                  tracer = tracer(begi:endi), &
+                  ratio = tracer_info%get_ratio())
+          end do
+       end if
+       end associate
+
+    end do
+
+  end subroutine ResetCheckedTracers
+
+
+  !-----------------------------------------------------------------------
+  subroutine Summary(this, bounds, &
+       num_soilp, filter_soilp, &
+       num_allc, filter_allc)
+    !
+    ! !DESCRIPTION:
+    ! Compute end-of-timestep summaries of water diagnostic terms
+    !
+    ! !ARGUMENTS:
+    class(water_type) , intent(inout) :: this
+    type(bounds_type) , intent(in)    :: bounds
+    integer           , intent(in)    :: num_soilp       ! number of patches in soilp filter
+    integer           , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    integer           , intent(in)    :: num_allc        ! number of columns in allc filter
+    integer           , intent(in)    :: filter_allc(:)  ! filter for all columns
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'Summary'
+    !-----------------------------------------------------------------------
+
+    do i = this%bulk_and_tracers_beg, this%bulk_and_tracers_end
+       associate(bulk_or_tracer => this%bulk_and_tracers(i))
+       call bulk_or_tracer%waterdiagnostic_inst%Summary( &
+            bounds = bounds, &
+            num_soilp = num_soilp, &
+            filter_soilp = filter_soilp, &
+            num_allc = num_allc, &
+            filter_allc = filter_allc, &
+            waterstate_inst = bulk_or_tracer%waterstate_inst, &
+            waterflux_inst = bulk_or_tracer%waterflux_inst)
+       end associate
+    end do
+
+  end subroutine Summary
+
 
 end module WaterType

@@ -40,6 +40,10 @@
 <stream_year_last_popdens  phys="clm5_0" cnfireson=".true."   >2010</stream_year_last_popdens>
 <model_year_align_popdens  phys="clm5_0" cnfireson=".true."   >1850</model_year_align_popdens>
 
+<stream_year_first_urbantv phys="clm4_5"  >1850</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm4_5"  >2100</stream_year_last_urbantv>
+<model_year_align_urbantv  phys="clm4_5"  >1850</model_year_align_urbantv>
+
 <stream_year_first_urbantv phys="clm5_0"  >1850</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0"  >2100</stream_year_last_urbantv>
 <model_year_align_urbantv  phys="clm5_0"  >1850</model_year_align_urbantv>

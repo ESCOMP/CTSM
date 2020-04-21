@@ -76,6 +76,7 @@ module CNVegetationFacade
   use EnergyFluxType                  , only : energyflux_type
   use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
   use FrictionVelocityMod             , only : frictionvel_type
+  use ActiveLayerMod                  , only : active_layer_type
   use SoilBiogeochemStateType         , only : soilBiogeochem_state_type
   use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemCarbonFluxType    , only : soilBiogeochem_carbonflux_type
@@ -403,8 +404,8 @@ contains
     character(len=*), parameter :: subname = 'UpdateAccVars'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(t_a10_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_ref2m_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(t_a10_patch) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_ref2m_patch) == (/bounds%endp/)), sourcefile, __LINE__)
 
     if (use_cndv) then
        call this%dgvs_inst%UpdateAccVars(bounds, &
@@ -703,12 +704,12 @@ contains
     if (use_c13) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
             this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, &
-            soilbiogeochem_carbonstate_inst)
+            c13_soilbiogeochem_carbonstate_inst)
     end if
     if (use_c14) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
             this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, &
-            soilbiogeochem_carbonstate_inst)
+            c14_soilbiogeochem_carbonstate_inst)
     end if
     call NStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
@@ -790,6 +791,7 @@ contains
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
        soilbiogeochem_state_inst,                                               &
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
+       active_layer_inst, &
        atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
        wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
        photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
@@ -822,7 +824,8 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
-    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst 
+    type(active_layer_type)                 , intent(in)    :: active_layer_inst
+    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)                   , intent(in)    :: waterdiagnosticbulk_inst
     type(waterfluxbulk_type)                    , intent(inout) :: waterfluxbulk_inst
@@ -861,6 +864,7 @@ contains
          c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_state_inst,                                               &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
+         active_layer_inst, &
          atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
          wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
          this%dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &

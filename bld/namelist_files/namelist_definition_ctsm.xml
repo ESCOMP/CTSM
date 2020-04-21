@@ -114,12 +114,25 @@ If TRUE, square the organic fraction when it's used (as was done in CLM4.5)
 Otherwise use the fraction straight up              (the default for CLM5.0)
 </entry>
 
-<entry id="soil_layerstruct" type="char*16" category="clm_physics"
-       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m" >
+<entry id="soil_layerstruct_predefined" type="char*16" category="clm_physics"
+       group="clm_inparm" valid_values="10SL_3.5m,23SL_3.5m,49SL_10m,20SL_8.5m,4SL_2m" >
 10SL_3.5m    = standard CLM4 and CLM4.5 version
 23SL_3.5m    = more vertical layers for permafrost simulations 
 49SL_10m     = 49 layer soil column, 10m of soil, 5 bedrock layers
 20SL_8.5m    = 20 layer soil column, 8m of soil, 5 bedrock layers
+4SL_2m       = 4 layer soil column, 2m of soil, 0 bedrock layers
+</entry>
+
+<entry id="soil_layerstruct_userdefined" type="real(99)" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+User-defined vector of dzsoi. The length of this vector determines nlevgrnd. When the user sets this vector, they have to set soil_layerstruct_userdefined_nlevsoi in the namelist, too; soil_layerstruct_userdefined_nlevsoi must be less than nlevgrnd in this version of the model, even though ideally soil_layerstruct_userdefined_nlevsoi could also equal nlevgrnd.
+<default>Default: rundef</default>
+</entry>
+
+<entry id="soil_layerstruct_userdefined_nlevsoi" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+User-defined number of soil layers required to be set in the namelist when the user sets soil_layerstruct_userdefined in the namelist.
+<default>Default: iundef</default>
 </entry>
 
 <entry id="use_bedrock" type="logical" category="clm_physics"
@@ -301,6 +314,12 @@ Intercept of free living Nitrogen fixation with zero annual ET
 <entry id="use_undercanopy_stability" type="logical" category="clm_physics"
        group="canopyfluxes_inparm" valid_values="" >
 If TRUE use the undercanopy stability term used with CLM4.5 (Sakaguchi&amp;Zeng, 2008)
+</entry>
+
+<entry id="itmax_canopy_fluxes" type="integer" category="clm_physics"
+       group="canopyfluxes_inparm">
+Max number of iterations used in subr. CanopyFluxes. For many years, 40 was the hardwired default value.
+<default>Default: 40</default>
 </entry>
 
 <entry id="interception_fraction" type="real" category="clm_physics"
@@ -605,12 +624,6 @@ baseline proportion of nitrogen allocated for electron transport (J)
 Time step (seconds)
 </entry>
 
-<entry id="override_nsrest" type="integer"  category="clm_restart" 
-       group="clm_inparm" valid_values="3">
-Override the start type from the driver: it can only be
-set to 3 meaning branch.
-</entry>
-
 <entry id="use_fates" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the FATES model
@@ -908,14 +921,14 @@ Human heat stress indices:
 If TRUE, write diagnostic of global radiative temperature written to CLM log file.
 </entry>
 
-<entry id="subgridflag" type="integer" category="clm_physics"
-       group="clm_inparm" valid_values="0,1" >
-Subgrid fluxes for snow
+<entry id="use_subgrid_fluxes" type="logical" category="clm_physics"
+       group="clm_inparm" >
+Whether to use subgrid fluxes for snow
 </entry>
 
-<entry id="snowveg_flag" type="char*10" category="clm_physics"
-       group="clm_canopyhydrology_inparm" valid_values="OFF,ON,ON_RAD" >
-Turn vegetation snow canopy ON, OFF, or ON with albedo influence (ON_RAD)
+<entry id="snowveg_affects_radiation" type="logical" category="clm_physics"
+       group="surfacealbedo_inparm" >
+Whether snow on the vegetation canopy affects the radiation/albedo calculations
 </entry>
 
 <!-- ========================================================================================  -->
@@ -1087,6 +1100,48 @@ Number of dominant pfts, so this determines the number of active pfts. Selecting
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9" value="0">
 Number of dominant landunits, so this determines the number of active landunits. Selecting the value 0 means DO NOTHING, ie all landunits in the input data are active.
+<default>Default: 0</default>
+</entry>
+
+<entry id="collapse_urban" type="logical" category="physics"
+       group="clm_inparm" value=".false.">
+If true, this directs the model to collapse the urban landunits to the dominant urban landunit. Selecting .false. means DO NOTHING, ie all urban landunits found in the input data are active.
+<default>Default: .false.</default>
+</entry>
+
+<entry id="toosmall_soil" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the soil landunit. Selecting the value 0 means DO NOTHING.
+<default>Default: 0</default>
+</entry>
+
+<entry id="toosmall_crop" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the crop landunit. Selecting the value 0 means DO NOTHING.
+<default>Default: 0</default>
+</entry>
+
+<entry id="toosmall_glacier" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the glacier landunit. Selecting the value 0 means DO NOTHING.
+<default>Default: 0</default>
+</entry>
+
+<entry id="toosmall_lake" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the lake landunit. Selecting the value 0 means DO NOTHING.
+<default>Default: 0</default>
+</entry>
+
+<entry id="toosmall_wetland" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the wetland landunit. Selecting the value 0 means DO NOTHING.
+<default>Default: 0</default>
+</entry>
+
+<entry id="toosmall_urban" type="real" category="physics"
+       group="clm_inparm"
+Percentage threshold above which the model keeps the urban landunits. Selecting the value 0 means DO NOTHING. If collapse_urban = .false., the same threshold will apply to all three urban landunits if they are present. If collapse_urban = .true., this threshold will apply to the single collapsed urban landunit if presnet.
 <default>Default: 0</default>
 </entry>
 
@@ -1799,7 +1854,7 @@ CLM run type.
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,1km-merge-10min">
+"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,0.125nldas2,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,1km-merge-10min">
 Horizontal resolutions
 Note: 0.1x0.1, 0.25x0.25, 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 
@@ -1821,7 +1876,7 @@ hist means do NOT use a future scenario, just use historical data.
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v7,gx1v6,gx1v7,navy,test,tx0.1v2,tx1v1,T62,cruncep">
+       valid_values="USGS,gx3v7,gx1v6,gx1v7,navy,test,tx0.1v2,tx1v1,T62,cruncep,nldas2">
 Land mask description
 </entry> 
 
@@ -1945,14 +2000,6 @@ E-folding depth over which decomposition is slowed with depth in all soils.
 <entry id="anoxia" type="logical" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 If TRUE, reduce heterotrophic respiration according to available oxygen predicted by CH4 submodel.
-</entry>
-
-<entry id="anoxia_wtsat" type="logical" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
-If TRUE, weight calculation of oxygen limitation by the inundated fraction and diagnostic saturated column gas
-concentration profile calculated in the CH4 submodel. Only applies if anoxia = TRUE.
-(EXPERIMENTAL AND NOT FUNCTIONAL!)
-(deprecated -- will be removed)
 </entry>
 
 <entry id="froz_q10" type="real" category="clm_vertcn"
@@ -2180,12 +2227,6 @@ Set to alblak values (0.6, 0.4) to keep albedo constant for ice-covered lakes wi
 <!-- namelist elements associated with the Hydrology1Mod                                       -->
 <!-- ========================================================================================  -->
 
-<entry id="oldfflag" type="integer" category="clm_physics"
-       group="clm_canopyhydrology_inparm" valid_values="0,1" >
-Use old snow cover fraction from Niu et al. 2007
-(deprecated -- will be removed)
-</entry>
-
 <entry id="h2osfcflag" type="integer" category="clm_physics"
        group="clm_soilhydrology_inparm" valid_values="0,1" >
 If surface water is active or not
@@ -2404,19 +2445,48 @@ Changes in this value should possibly be accompanied by changes in:
   glc_snow_persistence_max_days > 0.
 </entry>
 
+<entry id="snow_dzmin_1" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Min snow thickness of layer 1 (top snow layer); values other than the default 0.01 have not been tested as of Sep 6, 2019
+</entry>
+<entry id="snow_dzmin_2" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Min snow thickness of layer 2; values other than the default 0.015 have not been tested as of Sep 6, 2019; snow_dzmin of remaining layers is generated with the following recursive formula: dzmin(j) = dzmax_u(j-1) * 0.5_r8
+</entry>
+
+<entry id="snow_dzmax_l_1" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 1 (top snow layer) when no layers beneath; values other than the default 0.03 have not been tested as of Sep 6, 2019
+</entry>
+<entry id="snow_dzmax_l_2" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 2 when no layers beneath; values other than the default 0.07 have not been tested as of Sep 6, 2019; snow_dzmax_l of remaining layers is generated with the following recursive formula: dzmax_l(j) = dzmax_u(j) + dzmax_l(j-1)
+</entry>
+
+<entry id="snow_dzmax_u_1" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 1 (top snow layer) when layers beneath; values other than the default 0.02 have not been tested as of Sep 6, 2019
+</entry>
+<entry id="snow_dzmax_u_2" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+Max snow thickness of layer 2 when layers beneath; values other than the default 0.05 have not been tested as of Sep 6, 2019; snow_dzmax_u of remaining layers is generated with the following recursive formula: dzmax_u(j) = 2._r8 * dzmax_u(j-1) + 0.01_r8
+</entry>
+
 <entry id="int_snow_max" type="real" category="clm_physics"
-       group="clm_inparm" valid_values="" >
+       group="scf_swenson_lawrence_2012_inparm" valid_values="" >
 Limit applied to integrated snowfall when determining changes in snow-covered fraction during melt
 (mm H2O)
+Only applies when using the SwensonLawrence2012 snow cover fraction method
 </entry>
 
 <entry id="n_melt_glcmec" type="real" category="clm_physics"
-       group="clm_inparm" valid_values="" >
+       group="scf_swenson_lawrence_2012_inparm" valid_values="" >
 SCA shape parameter for glc_mec (glacier multiple elevation class) columns
 For most columns, n_melt is based on the standard deviation of 1km topography in the grid cell;
 but glc_mec columns already account for subgrid topographic variability through their use of
 multiple elevation classes; thus, to avoid double-accounting for topographic variability
 in these columns, we use a fixed value of n_melt.
+Only applies when using the SwensonLawrence2012 snow cover fraction method
 </entry>
 
 <entry id="wind_dependent_snow_density" type="logical" category="clm_physics"
@@ -2509,6 +2579,13 @@ WARNING: This variable is intended for short test runs, and generally
 should not be used for scientific production runs. By resetting snow
 below a given elevation, you risk forcing the system to evolve
 differently in areas below and above reset_snow_glc_ela.
+</entry>
+
+<entry id="snow_cover_fraction_method" type="char*64" category="clm_physics"
+       group="clm_inparm" valid_values="NiuYang2007,SwensonLawrence2012" >
+Parameterization to use for snow cover fraction
+NiuYang2007: Niu and Yang 2007
+SwensonLawrence2012: Swenson and Lawrence 2012
 </entry>
 
 <!-- ========================================================================================  -->

@@ -75,6 +75,7 @@ determine default values for namelists.
 <mask hgrid="ne240"               >gx1v6</mask>
 <mask hgrid="ne30"                >gx1v6</mask>
 
+<mask hgrid="0.125nldas2"         >nldas2</mask>
 <mask hgrid="5x5_amazon"          >navy</mask>
 <mask hgrid="1x1_camdenNJ"        >navy</mask>
 <mask hgrid="1x1_vancouverCAN"    >navy</mask>

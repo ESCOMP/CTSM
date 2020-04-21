@@ -62,6 +62,9 @@ REQUIRED OPTIONS
      -cimeroot "directory"    Path to cime directory
      -config "filepath"       Read the given CLM configuration cache file.
                               Default: "config_cache.xml".
+     -configuration "cfg"     The overall configuration being used [ clm | nwp ]
+                                clm = Climate configuration
+                                nwp = Numerical Weather Prediction configuration
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
      -envxml_dir "directory"  Directory name of env_*.xml case files to read in.
@@ -78,6 +81,7 @@ REQUIRED OPTIONS
                               (i.e. 1850, 2000, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
                               (default 2000)
+     -structure "structure"   The overall structure being used [ standard | fast ]
 OPTIONS
      -bgc "value"             Build CLM with BGC package [ sp | cn | bgc | fates ]
                               (default is sp).
@@ -157,13 +161,14 @@ OPTIONS
      -dynamic_vegetation      Toggle for dynamic vegetation model. (default is off)
                               (can ONLY be turned on when BGC type is 'cn' or 'bgc')
                               This turns on the namelist variable: use_cndv
+                              (Deprecated, this will be removed)
      -fire_emis               Produce a fire_emis_nl namelist that will go into the
                               "drv_flds_in" file for the driver to pass fire emissions to the atm.
                               (Note: buildnml copies the file for use by the driver)
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36]
                               (default is 0) (standard option with land-ice model is 10)
      -help [or -h]            Print usage to STDOUT.
-     -light_res <value>       Resolution of lightning dataset to use for CN fire (hcru or T62)
+     -light_res <value>       Resolution of lightning dataset to use for CN fire (360x720 or 94x192)
      -ignore_ic_date          Ignore the date on the initial condition files
                               when determining what input initial condition file to use.
      -ignore_ic_year          Ignore just the year part of the date on the initial condition files
@@ -240,6 +245,7 @@ sub process_commandline {
 
   my %opts = ( cimeroot              => undef,
                config                => "config_cache.xml",
+               configuration         => undef,
                csmdata               => undef,
                clm_usr_name          => undef,
                co2_type              => undef,
@@ -254,6 +260,7 @@ sub process_commandline {
                dir                   => "$cwd",
                rcp                   => "default",
                sim_year              => "default",
+               structure             => undef,
                clm_accelerated_spinup=> "default",
                chk_res               => undef,
                note                  => undef,
@@ -280,6 +287,7 @@ sub process_commandline {
              "co2_ppmv=f"                => \$opts{'co2_ppmv'},
              "co2_type=s"                => \$opts{'co2_type'},
              "config=s"                  => \$opts{'config'},
+             "configuration=s"           => \$opts{'configuration'},
              "csmdata=s"                 => \$opts{'csmdata'},
              "clm_usr_name=s"            => \$opts{'clm_usr_name'},
              "envxml_dir=s"              => \$opts{'envxml_dir'},
@@ -306,6 +314,7 @@ sub process_commandline {
              "rcp=s"                     => \$opts{'rcp'},
              "s|silent"                  => \$opts{'silent'},
              "sim_year=s"                => \$opts{'sim_year'},
+             "structure=s"               => \$opts{'structure'},
              "output_reals=s"            => \$opts{'output_reals_filename'},
              "clm_accelerated_spinup=s"  => \$opts{'clm_accelerated_spinup'},
              "clm_start_type=s"          => \$opts{'clm_start_type'},
@@ -621,6 +630,7 @@ sub process_namelist_commandline_options {
   setup_cmdl_chk_res($opts, $defaults);
   setup_cmdl_resolution($opts, $nl_flags, $definition, $defaults);
   setup_cmdl_mask($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_cmdl_configuration_and_structure($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_bgc($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_fire_light_res($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_spinup($opts, $nl_flags, $definition, $defaults, $nl);
@@ -766,6 +776,31 @@ sub setup_cmdl_fates_mode {
        }
     }
   }
+}
+
+#-------------------------------------------------------------------------------
+sub setup_cmdl_configuration_and_structure {
+   # Error-check and set the 'configuration' and 'structure' namelist flags
+
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   my $val;
+
+   my $var = "configuration";
+   $val = $opts->{$var};
+   if (defined($val) && ($val eq "clm" || $val eq "nwp")) {
+      $nl_flags->{$var} = $val;
+   } else {
+      $log->fatal_error("$var has a value (".$val.") that is NOT valid. Valid values are: clm, nwp.");
+   }
+
+   $var = "structure";
+   $val = $opts->{$var};
+   if (defined($val) && ($val eq "standard" || $val eq "fast")) {
+      $nl_flags->{$var} = $val;
+   } else {
+      $log->fatal_error("$var has a value (".$val.") that is NOT valid. Valid values are: standard, fast.");
+   }
 }
 
 #-------------------------------------------------------------------------------
@@ -1216,6 +1251,8 @@ sub setup_cmdl_dynamic_vegetation {
         my @valid_values   = $definition->get_valid_values( $var );
         $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
      }
+     $log->warning("The use_cndv=T option is deprecated. We do NOT recommend using it." . 
+                   " It's known to have issues and it's not calibrated.");
   }
 }
 #-------------------------------------------------------------------------------
@@ -1637,6 +1674,11 @@ sub process_namelist_inline_logic {
   setup_logic_irrigation_parameters($opts,  $nl_flags, $definition, $defaults, $nl);
 
   ########################################
+  # namelist group: surfacealbedo_inparm #
+  ########################################
+  setup_logic_surfacealbedo($opts, $nl_flags, $definition, $defaults, $nl);
+
+  ########################################
   # namelist group: water_tracers_inparm #
   ########################################
   setup_logic_water_tracers($opts, $nl_flags, $definition, $defaults, $nl);
@@ -1644,7 +1686,12 @@ sub process_namelist_inline_logic {
   #######################################################################
   # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
   #######################################################################
-  setup_logic_hydrology_switches($nl);
+  setup_logic_hydrology_switches($opts, $nl_flags, $definition, $defaults, $nl);
+
+  #######################################################################
+  # namelist group: scf_swenson_lawrence_2012_inparm                    #
+  #######################################################################
+  setup_logic_scf_SwensonLawrence2012($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: clm_initinterp_inparm #
@@ -1791,19 +1838,6 @@ sub setup_logic_start_type {
   my $var = "start_type";
   my $drv_start_type = $nl->get_value($var);
   my $my_start_type  = $nl_flags->{'clm_start_type'};
-  my $nsrest         = $nl->get_value('override_nsrest');
-
-  if ( defined($nsrest) ) {
-    if ( $nsrest == 0 ) { $my_start_type = "startup";  }
-    if ( $nsrest == 1 ) { $my_start_type = "continue"; }
-    if ( $nsrest == 3 ) { $my_start_type = "branch";   }
-    if ( "$my_start_type" eq "$drv_start_type" ) {
-      $log->fatal_error("no need to set override_nsrest to same as start_type.");
-    }
-    if ( "$drv_start_type" !~ /startup/ ) {
-      $log->fatal_error("can NOT set override_nsrest if driver is NOT a startup type.");
-    }
-  }
 
   if ( $my_start_type =~ /branch/ ) {
     if (not defined $nl->get_value('nrevsn')) {
@@ -1852,7 +1886,6 @@ sub setup_logic_decomp_performance {
 sub setup_logic_snow {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snowveg_flag', 'phys'=>$nl_flags->{'phys'} );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowoptics' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowaging' );
 }
@@ -1933,6 +1966,18 @@ sub setup_logic_subgrid {
 
    my $var = 'run_zero_weight_urban';
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'collapse_urban',
+               'structure'=>$nl_flags->{'structure'});
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_dom_landunits',
+               'structure'=>$nl_flags->{'structure'});
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_dom_pfts',
+               'structure'=>$nl_flags->{'structure'});
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_soil');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_crop');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_glacier');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_lake');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_wetland');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'toosmall_urban');
 }
 
 #-------------------------------------------------------------------------------
@@ -2040,9 +2085,31 @@ sub setup_logic_soilstate {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
               'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
+
+  my $var1 = "soil_layerstruct_predefined";
+  my $var2 = "soil_layerstruct_userdefined";
+  my $var3 = "soil_layerstruct_userdefined_nlevsoi";
+  my $soil_layerstruct_predefined = $nl->get_value($var1);
+  my $soil_layerstruct_userdefined = $nl->get_value($var2);
+  my $soil_layerstruct_userdefined_nlevsoi = $nl->get_value($var3);
+
+  if (defined($soil_layerstruct_userdefined)) {
+    if (defined($soil_layerstruct_predefined)) {
+      $log->fatal_error("You have set both soil_layerstruct_userdefined and soil_layerstruct_predefined in your namelist; model cannot determine which to use");
+    }
+    if (not defined($soil_layerstruct_userdefined_nlevsoi)) {
+      $log->fatal_error("You have set soil_layerstruct_userdefined and NOT set soil_layerstruct_userdefined_nlevsoi in your namelist; both MUST be set");
+    }
+  } else {
+    if (defined($soil_layerstruct_userdefined_nlevsoi)) {
+      $log->fatal_error("You have set soil_layerstruct_userdefined_nlevsoi and NOT set soil_layerstruct_userdefined in your namelist; EITHER set both OR neither; in the latter case soil_layerstruct_predefined will be assigned a default value");
+    } else {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct_predefined',
+                  'structure'=>$nl_flags->{'structure'});
+    }
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -2322,6 +2389,15 @@ sub setup_logic_do_transient_pfts {
    # generated
    my $cannot_be_true = "";
 
+   my $n_dom_pfts = $nl->get_value( 'n_dom_pfts' );
+   my $n_dom_landunits = $nl->get_value( 'n_dom_landunits' );
+   my $toosmall_soil = $nl->get_value( 'toosmall_soil' );
+   my $toosmall_crop = $nl->get_value( 'toosmall_crop' );
+   my $toosmall_glacier = $nl->get_value( 'toosmall_glacier' );
+   my $toosmall_lake = $nl->get_value( 'toosmall_lake' );
+   my $toosmall_wetland = $nl->get_value( 'toosmall_wetland' );
+   my $toosmall_urban = $nl->get_value( 'toosmall_urban' );
+
    if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
       $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
    } elsif (&value_is_true($nl->get_value('use_cndv'))) {
@@ -2346,6 +2422,17 @@ sub setup_logic_do_transient_pfts {
 
    if (&value_is_true($nl->get_value($var)) && $cannot_be_true) {
       $log->fatal_error($cannot_be_true);
+   }
+
+   # if do_transient_pfts is .true. and any of these (n_dom_* or toosmall_*)
+   # are > 0 or collapse_urban = .true., then give fatal error
+   if (&value_is_true($nl->get_value($var))) {
+      if (&value_is_true($nl->get_value('collapse_urban'))) {
+         $log->fatal_error("$var cannot be combined with collapse_urban");
+      }
+      if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
+         $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soi > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
    }
 }
 
@@ -2376,6 +2463,15 @@ sub setup_logic_do_transient_crops {
    # generated
    my $cannot_be_true = "";
 
+   my $n_dom_pfts = $nl->get_value( 'n_dom_pfts' );
+   my $n_dom_landunits = $nl->get_value( 'n_dom_landunits' );
+   my $toosmall_soil = $nl->get_value( 'toosmall_soil' );
+   my $toosmall_crop = $nl->get_value( 'toosmall_crop' );
+   my $toosmall_glacier = $nl->get_value( 'toosmall_glacier' );
+   my $toosmall_lake = $nl->get_value( 'toosmall_lake' );
+   my $toosmall_wetland = $nl->get_value( 'toosmall_wetland' );
+   my $toosmall_urban = $nl->get_value( 'toosmall_urban' );
+
    if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
       $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
    } elsif (&value_is_true($nl->get_value('use_fates'))) {
@@ -2401,6 +2497,17 @@ sub setup_logic_do_transient_crops {
 
    if (&value_is_true($nl->get_value($var)) && $cannot_be_true) {
       $log->fatal_error($cannot_be_true);
+   }
+
+   # if do_transient_crops is .true. and any of these (n_dom_* or toosmall_*)
+   # are > 0 or collapse_urban = .true., then give fatal error
+   if (&value_is_true($nl->get_value($var))) {
+      if (&value_is_true($nl->get_value('collapse_urban'))) {
+         $log->fatal_error("$var cannot be combined with collapse_urban");
+      }
+      if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
+         $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
    }
 
    my $dopft = "do_transient_pfts";
@@ -2587,6 +2694,14 @@ sub setup_logic_irrigation_parameters {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_surfacealbedo {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snowveg_affects_radiation' );
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_water_tracers {
    my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -2622,16 +2737,22 @@ sub setup_logic_hydrology_switches {
   #
   # Check on Switches for hydrology
   #
-  my ($nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  my $subgrid    = $nl->get_value('subgridflag' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_subgrid_fluxes');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_cover_fraction_method');
+  my $subgrid    = $nl->get_value('use_subgrid_fluxes' );
   my $origflag   = $nl->get_value('origflag'    );
   my $h2osfcflag = $nl->get_value('h2osfcflag'  );
-  if ( $origflag == 1 && $subgrid == 1 ) {
-    $log->fatal_error("if origflag is ON, subgridflag can NOT also be on!");
+  my $scf_method = $nl->get_value('snow_cover_fraction_method');
+  if ( $origflag == 1 && &value_is_true($subgrid) ) {
+    $log->fatal_error("if origflag is ON, use_subgrid_fluxes can NOT also be on!");
   }
-  if ( $h2osfcflag == 1 && $subgrid != 1 ) {
-    $log->fatal_error("if h2osfcflag is ON, subgridflag can NOT be off!");
+  if ( $h2osfcflag == 1 && ! &value_is_true($subgrid) ) {
+    $log->fatal_error("if h2osfcflag is ON, use_subgrid_fluxes can NOT be off!");
+  }
+  if ( remove_leading_and_trailing_quotes($scf_method) eq 'NiuYang2007' && &value_is_true($subgrid) ) {
+     $log->fatal_error("snow_cover_fraction_method NiuYang2007 is incompatible with use_subgrid_fluxes");
   }
   # Test bad configurations
   my $lower   = $nl->get_value( 'lower_boundary_condition'  );
@@ -2708,13 +2829,6 @@ sub setup_logic_methane {
         $log->fatal_error("lake_decomp_fact set without allowlakeprod=.true.");
       }
     }
-    my $anoxia = $nl->get_value('anoxia');
-    if ( ! defined($anoxia) ||
-         (defined($anoxia) && ! &value_is_true($anoxia)) ) {
-      if ( defined($nl->get_value('anoxia_wtsat')) ) {
-        $log->fatal_error("anoxia_wtsat set without anoxia=.true.");
-      }
-    }
     my $pftspec_rootprof = $nl->get_value('pftspecific_rootingprofile');
     if ( ! defined($pftspec_rootprof) ||
          (defined($pftspec_rootprof) && &value_is_true($pftspec_rootprof) ) ) {
@@ -2723,7 +2837,7 @@ sub setup_logic_methane {
       }
     }
   } else {
-    my @vars = ( "allowlakeprod", "anoxia", "anoxia_wtsat", "pftspecific_rootingprofile" );
+    my @vars = ( "allowlakeprod", "anoxia", "pftspecific_rootingprofile" );
     foreach my $var ( @vars ) {
       if ( defined($nl->get_value($var)) ) {
         $log->fatal_error("$var set without methane model configuration on (use_lch4)");
@@ -2844,7 +2958,7 @@ sub setup_logic_hydrstress {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hydrstress',
-              'use_fates'=>$nl_flags->{'use_fates'} );
+              'configuration'=>$nl_flags->{'configuration'}, 'use_fates'=>$nl_flags->{'use_fates'} );
   $nl_flags->{'use_hydrstress'} = $nl->get_value('use_hydrstress');
   if ( &value_is_true( $nl_flags->{'use_fates'} ) && &value_is_true( $nl_flags->{'use_hydrstress'} ) ) {
      $log->fatal_error("Cannot turn use_hydrstress on when use_fates is on" );
@@ -3232,8 +3346,9 @@ sub setup_logic_megan {
   my $var   = "megan";
 
   if ( $opts->{$var} eq "default" ) {
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-'megan', clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
+     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan',
+                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'},
+                 'configuration'=>$nl_flags->{'configuration'} );
     $nl_flags->{$var} = $nl->get_value($var);
   } else {
     $nl_flags->{$var} = $opts->{$var};
@@ -3382,6 +3497,8 @@ sub setup_logic_canopyfluxes {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_undercanopy_stability' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'itmax_canopy_fluxes',
+              'structure'=>$nl_flags->{'structure'});
 }
 
 #-------------------------------------------------------------------------------
@@ -3403,10 +3520,10 @@ sub setup_logic_snowpack {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nlevsno');
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'h2osno_max');
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'int_snow_max');
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_melt_glcmec');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nlevsno',
+              'structure'=>$nl_flags->{'structure'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'h2osno_max',
+              'structure'=>$nl_flags->{'structure'});
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'wind_dependent_snow_density');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_overburden_compaction_method');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lotmp_snowdensity_method');
@@ -3415,6 +3532,48 @@ sub setup_logic_snowpack {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow_glc');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow_glc_ela');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmin_1');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmin_2');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_l_1');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_l_2');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_u_1');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_dzmax_u_2');
+
+  my $dzmin1 = $nl->get_value('snow_dzmin_1');
+  my $dzmin2 = $nl->get_value('snow_dzmin_2');
+  my $dzmax_l1 = $nl->get_value('snow_dzmax_l_1');
+  my $dzmax_l2 = $nl->get_value('snow_dzmax_l_2');
+  my $dzmax_u1 = $nl->get_value('snow_dzmax_u_1');
+  my $dzmax_u2 = $nl->get_value('snow_dzmax_u_2');
+
+  if ($dzmin1 != 0.01 || $dzmin2 != 0.015 || $dzmax_u1 != 0.02 || $dzmax_u2 != 0.05 || $dzmax_l1 != 0.03 || $dzmax_l2 != 0.07) {
+     $log->warning("Setting any of the following namelist variables to NON DEFAULT values remains untested as of Sep 6, 2019: snow_dzmin_1 & 2, snow_dzmax_u_1 & 2, snow_dzmax_l_1 & 2." );
+     $log->warning("Leave these variables unspecified in user_nl_clm in order to use the default values." );
+  }
+  if ($dzmin1 <= 0.0 || $dzmin2 <= 0.0 || $dzmax_u1 <= 0.0 || $dzmax_u2 <= 0.0 || $dzmax_l1 <= 0.0 || $dzmax_l2 <= 0.0) {
+     $log->fatal_error('One or more of the snow_dzmin_* and/or snow_dzmax_* were set incorrectly to be <= 0');
+  }
+  if ($dzmin2 <= $dzmin1) {
+     $log->fatal_error('snow_dzmin_2 was set incorrectly to be <= snow_dzmin_1');
+  }
+  if ($dzmax_l2 <= $dzmax_l1) {
+     $log->fatal_error('snow_dzmax_l_2 was set incorrectly to be <= snow_dzmax_l_1');
+  }
+  if ($dzmax_u2 <= $dzmax_u1) {
+     $log->fatal_error('snow_dzmax_u_2 was set incorrectly to be <= snow_dzmax_u_1');
+  }
+  if ($dzmin1 >= $dzmax_u1) {
+     $log->fatal_error('snow_dzmin_1 was set incorrectly to be >= snow_dzmax_u_1');
+  }
+  if ($dzmin2 >= $dzmax_u2) {
+     $log->fatal_error('snow_dzmin_2 was set incorrectly to be >= snow_dzmax_u_2');
+  }
+  if ($dzmax_u1 >= $dzmax_l1) {
+     $log->fatal_error('snow_dzmax_u_1 was set incorrectly to be >= snow_dzmax_l_1');
+  }
+  if ($dzmax_u2 >= $dzmax_l2) {
+     $log->fatal_error('snow_dzmax_u_2 was set incorrectly to be >= snow_dzmax_l_2');
+  }
 
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_overburden_compaction_method')) eq 'Vionnet2012') {
      # overburden_compress_tfactor isn't used if we're using the Vionnet2012
@@ -3425,6 +3584,26 @@ sub setup_logic_snowpack {
      }
   } else {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'overburden_compress_tfactor');
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_scf_SwensonLawrence2012 {
+   # Options related to the SwensonLawrence2012 snow cover fraction method
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'int_snow_max');
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'n_melt_glcmec');
+  }
+  else {
+     if (defined($nl->get_value('int_snow_max'))) {
+        $log->fatal_error('int_snow_max is set, but only applies for snow_cover_fraction_method=SwensonLawrence2012');
+     }
+     if (defined($nl->get_value('n_melt_glcmec'))) {
+        $log->fatal_error('n_melt_glcmec is set, but only applies for snow_cover_fraction_method=SwensonLawrence2012');
+     }
   }
 }
 
@@ -3555,7 +3734,7 @@ sub write_output_files {
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm hillslope_hydrology_inparm
                cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
-               water_tracers_inparm);
+               surfacealbedo_inparm water_tracers_inparm);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
   #             finidat_consistency_checks dynpft_consistency_checks);
@@ -3575,6 +3754,9 @@ sub write_output_files {
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
   push @groups, "clm_canopy_inparm";
+  if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
+     push @groups, "scf_swenson_lawrence_2012_inparm";
+  }
 
   my $outfile;
   $outfile = "$opts->{'dir'}/lnd_in";

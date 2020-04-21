@@ -8,7 +8,6 @@ module SoilBiogeochemNitrogenUptakeMod
   !
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use shr_log_mod  , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   !
   ! !PUBLIC TYPES:
@@ -46,10 +45,10 @@ contains
     real(r8):: sminn_tot(bounds%begc:bounds%endc)  !vertically integrated mineral nitrogen
     !-----------------------------------------------------------------------
   
-    SHR_ASSERT_ALL((ubound(dzsoi_decomp)   == (/nlevdecomp/))              , errMsg(sourcefile, __LINE__))   
-    SHR_ASSERT_ALL((ubound(sminn_vr)       == (/bounds%endc, nlevdecomp/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(nfixation_prof) == (/bounds%endc, nlevdecomp/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(nuptake_prof)   == (/bounds%endc, nlevdecomp/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(dzsoi_decomp)   == (/nlevdecomp/))              , sourcefile, __LINE__)   
+    SHR_ASSERT_ALL_FL((ubound(sminn_vr)       == (/bounds%endc, nlevdecomp/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(nfixation_prof) == (/bounds%endc, nlevdecomp/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(nuptake_prof)   == (/bounds%endc, nlevdecomp/)) , sourcefile, __LINE__)
 
     ! init sminn_tot
     do fc=1,num_soilc

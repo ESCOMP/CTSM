@@ -1,3 +1,0 @@
-n_dom_pfts = 2
-n_dom_landunits = 2
-check_dynpft_consistency = .false.

@@ -422,7 +422,7 @@ contains
     character(len=*), parameter :: subname = 'set_glcmec_must_be_same_type'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(glcmec_must_be_same_type_o) == (/endo/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(glcmec_must_be_same_type_o) == (/endo/)), sourcefile, __LINE__)
 
     if (.not. glc_elevclasses_same) then
        ! If the number or bounds of the elevation classes differ between input and
@@ -488,7 +488,7 @@ contains
     character(len=*), parameter :: subname = 'set_icemec_adjustable_type'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(icemec_adjustable_type_o) == (/endo/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(icemec_adjustable_type_o) == (/endo/)), sourcefile, __LINE__)
 
     select case (dimname)
     case ('pft')

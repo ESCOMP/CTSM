@@ -15,6 +15,7 @@ list(APPEND clm_sources
   QSatMod.F90
   RootBiophysMod.F90
   SaturatedExcessRunoffMod.F90
+  SnowCoverFractionBaseMod.F90
   SnowHydrologyMod.F90
   SnowSnicarMod.F90
   SoilHydrologyMod.F90

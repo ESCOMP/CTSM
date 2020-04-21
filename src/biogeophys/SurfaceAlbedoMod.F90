@@ -10,6 +10,7 @@ module SurfaceAlbedoMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
+  use abortutils        , only : endrun
   use landunit_varcon   , only : istsoil, istcrop, istdlak
   use clm_varcon        , only : grlnd, namep
   use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
@@ -27,12 +28,11 @@ module SurfaceAlbedoMod
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use PatchType         , only : patch                
-  
-  use CanopyHydrologyMod, only : IsSnowvegFlagOn, IsSnowvegFlagOnRad
   !
   implicit none
   !
   ! !PUBLIC MEMBER FUNCTIONS:
+  public :: SurfaceAlbedo_readnl
   public :: SurfaceAlbedoInitTimeConst
   public :: SurfaceAlbedo  ! Surface albedo and two-stream fluxes
   !
@@ -67,8 +67,7 @@ module SurfaceAlbedoMod
 
   !
   ! !PRIVATE DATA MEMBERS:
-  ! Snow in vegetation canopy namelist options.
-  logical, private :: snowveg_onrad  = .true.   ! snowveg_flag = 'ON_RAD'
+  logical, private :: snowveg_affects_radiation = .true. ! Whether snow on the vegetation canopy affects the radiation/albedo calculations
 
   !
   ! !PRIVATE DATA FUNCTIONS:
@@ -81,6 +80,59 @@ module SurfaceAlbedoMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine SurfaceAlbedo_readnl( NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for SurfaceAlbedo
+    !
+    ! !USES:
+    use spmdMod       , only : masterproc, mpicom
+    use fileutils     , only : getavu, relavu, opnfil
+    use shr_nl_mod    , only : shr_nl_find_group_name
+    use shr_mpi_mod   , only : shr_mpi_bcast
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+    character(len=*), parameter :: nmlname = "surfacealbedo_inparm"
+
+    character(len=*), parameter :: subname = 'SurfaceAlbedo_readnl'
+    !-----------------------------------------------------------------------
+
+    namelist /surfacealbedo_inparm/ snowveg_affects_radiation
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=surfacealbedo_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast(snowveg_affects_radiation, mpicom)
+
+    if (masterproc) then
+       write(iulog,*)
+       write(iulog,*) nmlname, ' settings'
+       write(iulog,nml=surfacealbedo_inparm)
+       write(iulog,*)
+    end if
+
+  end subroutine SurfaceAlbedo_readnl
+
 
   !-----------------------------------------------------------------------
   subroutine SurfaceAlbedoInitTimeConst(bounds)
@@ -205,9 +257,9 @@ contains
     !
     ! !USES:
     use shr_orb_mod
-    use clm_time_manager    , only : get_nstep
-    use abortutils          , only : endrun
-    use clm_varctl          , only : subgridflag, use_snicar_frc, use_fates
+    use clm_time_manager   , only : get_nstep
+    use abortutils         , only : endrun
+    use clm_varctl         , only : use_subgrid_fluxes, use_snicar_frc, use_fates
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
     use landunit_varcon     , only : istsoil
     use clm_varctl          , only : use_hillslope
@@ -260,6 +312,7 @@ contains
     real(r8) :: coszen_patch    (bounds%begp:bounds%endp)                                 ! cosine solar zenith angle for next time step (patch)
     real(r8) :: rho(bounds%begp:bounds%endp,numrad)                                       ! leaf/stem refl weighted by fraction LAI and SAI
     real(r8) :: tau(bounds%begp:bounds%endp,numrad)                                       ! leaf/stem tran weighted by fraction LAI and SAI
+    real(r8) :: h2osno_total    (bounds%begc:bounds%endc)                                 ! total snow water (mm H2O)
     real(r8) :: albsfc          (bounds%begc:bounds%endc,numrad)                          ! albedo of surface underneath snow (col,bnd) 
     real(r8) :: albsnd(bounds%begc:bounds%endc,numrad)                                    ! snow albedo (direct)
     real(r8) :: albsni(bounds%begc:bounds%endc,numrad)                                    ! snow albedo (diffuse)
@@ -299,7 +352,6 @@ contains
           esai          =>    canopystate_inst%esai_patch         , & ! Input:  [real(r8)  (:)   ]  one-sided stem area index with burying by snow
 
           frac_sno      =>    waterdiagnosticbulk_inst%frac_sno_col        , & ! Input:  [real(r8)  (:)   ]  fraction of ground covered by snow (0 to 1)
-          h2osno        =>    waterstatebulk_inst%h2osno_col          , & ! Input:  [real(r8)  (:)   ]  snow water (mm H2O)                     
           h2osoi_liq    =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Input:  [real(r8)  (:,:) ]  liquid water content (col,lyr) [kg/m2]
           h2osoi_ice    =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Input:  [real(r8)  (:,:) ]  ice lens content (col,lyr) [kg/m2]    
           snw_rds       =>    waterdiagnosticbulk_inst%snw_rds_col         , & ! Input:  [real(r8)  (:,:) ]  snow grain radius (col,lyr) [microns] 
@@ -500,6 +552,10 @@ contains
        mss_cnc_aer_in_fdb(bounds%begc:bounds%endc,:,8) = mss_cnc_dst4(bounds%begc:bounds%endc,:)
     endif
 
+    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_nourbanc, filter_nourbanc, &
+         caller = 'SurfaceAlbedo', &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+
     ! If radiative forcing is being calculated, first estimate clean-snow albedo
 
     if (use_snicar_frc) then
@@ -521,12 +577,13 @@ contains
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
                       h2osno_ice(bounds%begc:bounds%endc, :), &
+                      h2osno_total(bounds%begc:bounds%endc), &
                       snw_rds_in(bounds%begc:bounds%endc, :), &
                       mss_cnc_aer_in_frc_bc(bounds%begc:bounds%endc, :, :), &
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsnd_bc(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstatebulk_inst, waterdiagnosticbulk_inst)
+               waterdiagnosticbulk_inst)
 
           flg_slr = 2; ! diffuse
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
@@ -534,12 +591,13 @@ contains
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
                       h2osno_ice(bounds%begc:bounds%endc, :), &
+                      h2osno_total(bounds%begc:bounds%endc), &
                       snw_rds_in(bounds%begc:bounds%endc, :), &
                       mss_cnc_aer_in_frc_bc(bounds%begc:bounds%endc, :, :), &
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsni_bc(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstatebulk_inst, waterdiagnosticbulk_inst)
+               waterdiagnosticbulk_inst)
 
        ! 2. OC input array:
        !  set BC and dust concentrations, so OC_FRC=[(BC+OC+dust)-(BC+dust)]
@@ -558,12 +616,13 @@ contains
                          flg_slr, &
                          h2osno_liq(bounds%begc:bounds%endc, :), &
                          h2osno_ice(bounds%begc:bounds%endc, :), &
+                         h2osno_total(bounds%begc:bounds%endc), &
                          snw_rds_in(bounds%begc:bounds%endc, :), &
                          mss_cnc_aer_in_frc_oc(bounds%begc:bounds%endc, :, :), &
                          albsfc(bounds%begc:bounds%endc, :), &
                          albsnd_oc(bounds%begc:bounds%endc, :), &
                   foo_snw(bounds%begc:bounds%endc, :, :), &
-                  waterstatebulk_inst, waterdiagnosticbulk_inst)
+                  waterdiagnosticbulk_inst)
 
              flg_slr = 2; ! diffuse
           call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
@@ -571,12 +630,13 @@ contains
                          flg_slr, &
                          h2osno_liq(bounds%begc:bounds%endc, :), &
                          h2osno_ice(bounds%begc:bounds%endc, :), &
+                         h2osno_total(bounds%begc:bounds%endc), &
                          snw_rds_in(bounds%begc:bounds%endc, :), &
                          mss_cnc_aer_in_frc_oc(bounds%begc:bounds%endc, :, :), &
                          albsfc(bounds%begc:bounds%endc, :), &
                          albsni_oc(bounds%begc:bounds%endc, :), &
                   foo_snw(bounds%begc:bounds%endc, :, :), &
-                  waterstatebulk_inst, waterdiagnosticbulk_inst)
+                  waterdiagnosticbulk_inst)
        endif
 
        ! 3. DUST input array:
@@ -595,12 +655,13 @@ contains
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
                       h2osno_ice(bounds%begc:bounds%endc, :), &
+                      h2osno_total(bounds%begc:bounds%endc), &
                       snw_rds_in(bounds%begc:bounds%endc, :), &
                       mss_cnc_aer_in_frc_dst(bounds%begc:bounds%endc, :, :), &
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsnd_dst(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstatebulk_inst, waterdiagnosticbulk_inst)
+               waterdiagnosticbulk_inst)
 
           flg_slr = 2; ! diffuse
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
@@ -608,12 +669,13 @@ contains
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
                       h2osno_ice(bounds%begc:bounds%endc, :), &
+                      h2osno_total(bounds%begc:bounds%endc), &
                       snw_rds_in(bounds%begc:bounds%endc, :), &
                       mss_cnc_aer_in_frc_dst(bounds%begc:bounds%endc, :, :), &
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsni_dst(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstatebulk_inst, waterdiagnosticbulk_inst)
+               waterdiagnosticbulk_inst)
 
        ! 4. ALL AEROSOL FORCING CALCULATION
        ! (pure snow albedo)
@@ -623,12 +685,13 @@ contains
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
                       h2osno_ice(bounds%begc:bounds%endc, :), &
+                      h2osno_total(bounds%begc:bounds%endc), &
                       snw_rds_in(bounds%begc:bounds%endc, :), &
                       mss_cnc_aer_in_frc_pur(bounds%begc:bounds%endc, :, :), &
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsnd_pur(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstatebulk_inst, waterdiagnosticbulk_inst)
+               waterdiagnosticbulk_inst)
 
           flg_slr = 2; ! diffuse
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
@@ -636,12 +699,13 @@ contains
                       flg_slr, &
                       h2osno_liq(bounds%begc:bounds%endc, :), &
                       h2osno_ice(bounds%begc:bounds%endc, :), &
+                      h2osno_total(bounds%begc:bounds%endc), &
                       snw_rds_in(bounds%begc:bounds%endc, :), &
                       mss_cnc_aer_in_frc_pur(bounds%begc:bounds%endc, :, :), &
                       albsfc(bounds%begc:bounds%endc, :), &
                       albsni_pur(bounds%begc:bounds%endc, :), &
                foo_snw(bounds%begc:bounds%endc, :, :), &
-               waterstatebulk_inst, waterdiagnosticbulk_inst)
+               waterdiagnosticbulk_inst)
     end if
 
     ! CLIMATE FEEDBACK CALCULATIONS, ALL AEROSOLS:
@@ -651,12 +715,13 @@ contains
                    flg_slr, &
                    h2osno_liq(bounds%begc:bounds%endc, :), &
                    h2osno_ice(bounds%begc:bounds%endc, :), &
+                   h2osno_total(bounds%begc:bounds%endc), &
                    snw_rds_in(bounds%begc:bounds%endc, :), &
                    mss_cnc_aer_in_fdb(bounds%begc:bounds%endc, :, :), &
                    albsfc(bounds%begc:bounds%endc, :), &
                    albsnd(bounds%begc:bounds%endc, :), &
             flx_absd_snw(bounds%begc:bounds%endc, :, :), &
-            waterstatebulk_inst, waterdiagnosticbulk_inst)
+            waterdiagnosticbulk_inst)
 
        flg_slr = 2; ! diffuse
     call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
@@ -664,12 +729,13 @@ contains
                    flg_slr, &
                    h2osno_liq(bounds%begc:bounds%endc, :), &
                    h2osno_ice(bounds%begc:bounds%endc, :), &
+                   h2osno_total(bounds%begc:bounds%endc), &
                    snw_rds_in(bounds%begc:bounds%endc, :), &
                    mss_cnc_aer_in_fdb(bounds%begc:bounds%endc, :, :), &
                    albsfc(bounds%begc:bounds%endc, :), &
                    albsni(bounds%begc:bounds%endc, :), &
             flx_absi_snw(bounds%begc:bounds%endc, :, :), &
-            waterstatebulk_inst, waterdiagnosticbulk_inst)
+            waterdiagnosticbulk_inst)
 
     ! ground albedos and snow-fraction weighting of snow absorption factors
     do ib = 1, nband
@@ -706,7 +772,7 @@ contains
              !  weight snow layer radiative absorption factors based on snow fraction and soil albedo
              !  (NEEDED FOR ENERGY CONSERVATION)
              do i = -nlevsno+1,1,1
-              if (subgridflag == 0 .or. lun%itype(col%landunit(c)) == istdlak) then 
+              if (.not. use_subgrid_fluxes .or. lun%itype(col%landunit(c)) == istdlak) then 
                  if (ib == 1) then
                    flx_absdv(c,i) = flx_absd_snw(c,i,ib)*frac_sno(c) + &
                         ((1.-frac_sno(c))*(1-albsod(c,ib))*(flx_absd_snw(c,i,ib)/(1.-albsnd(c,ib))))
@@ -739,7 +805,7 @@ contains
     do ib = 1, nband
        do fc = 1,num_nourbanc
           c = filter_nourbanc(fc)
-             if ((coszen_col(c) > 0._r8) .and. (h2osno(c) > 0._r8)) then
+          if ((coszen_col(c) > 0._r8) .and. (h2osno_total(c) > 0._r8)) then
              albsnd_hst(c,ib) = albsnd(c,ib)
              albsni_hst(c,ib) = albsni(c,ib)
           else
@@ -1043,9 +1109,9 @@ contains
     !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(coszen) == (/bounds%endc/)),         errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(albsnd) == (/bounds%endc, numrad/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(albsni) == (/bounds%endc, numrad/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(coszen) == (/bounds%endc/)),         sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(albsnd) == (/bounds%endc, numrad/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(albsni) == (/bounds%endc, numrad/)), sourcefile, __LINE__)
 
    associate(&
           snl          => col%snl                         , & ! Input:  [integer  (:)   ]  number of snow layers                    
@@ -1209,9 +1275,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(coszen) == (/bounds%endp/)),         errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(rho)    == (/bounds%endp, numrad/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(tau)    == (/bounds%endp, numrad/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(coszen) == (/bounds%endp/)),         sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(rho)    == (/bounds%endp, numrad/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(tau)    == (/bounds%endp, numrad/)), sourcefile, __LINE__)
 
      if ( present(SFonly) )then
         lSFonly = SFonly
@@ -1318,9 +1384,6 @@ contains
    ! fabi_sun_z - absorbed sunlit leaf diffuse PAR (per unit sunlit lai+sai) for each canopy layer
    ! fabi_sha_z - absorbed shaded leaf diffuse PAR (per unit shaded lai+sai) for each canopy layer
 
-   ! Set status of snowveg_flag
-   snowveg_onrad = IsSnowvegFlagOnRad()
-
     do ib = 1, numrad
        do fp = 1,num_vegsol
           p = filter_vegsol(fp)
@@ -1339,7 +1402,7 @@ contains
           betail = 0.5_r8 * ((rho(p,ib)+tau(p,ib)) + (rho(p,ib)-tau(p,ib)) &
                  * ((1._r8+chil(p))/2._r8)**2) / omegal
 
-          if ( lSFonly .or. ( (.not. snowveg_onrad) .and. (t_veg(p) > tfrz) ) ) then
+          if ( lSFonly .or. ( (.not. snowveg_affects_radiation) .and. (t_veg(p) > tfrz) ) ) then
              ! Keep omega, betad, and betai as they are (for Snow free case or
              ! when there is no snow
              tmp0 = omegal
@@ -1347,7 +1410,7 @@ contains
              tmp2 = betail
           else
              ! Adjust omega, betad, and betai for intercepted snow
-             if (snowveg_onrad) then
+             if (snowveg_affects_radiation) then
                 tmp0 =   (1._r8-fcansno(p))*omegal        + fcansno(p)*omegas(ib)
                 tmp1 = ( (1._r8-fcansno(p))*omegal*betadl + fcansno(p)*omegas(ib)*betads ) / tmp0
                 tmp2 = ( (1._r8-fcansno(p))*omegal*betail + fcansno(p)*omegas(ib)*betais ) / tmp0

@@ -69,7 +69,6 @@ contains
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
    use shr_nl_mod       , only : shr_nl_find_group_name
-   use shr_log_mod      , only : errMsg => shr_log_errMsg
    use shr_mpi_mod      , only : shr_mpi_bcast
    use ndepStreamMod    , only : clm_domain_mct
    use domainMod        , only : ldomain
@@ -257,7 +256,6 @@ contains
     use clm_varpar       , only : nlevsoi
     use SoilHydrologyType, only : soilhydrology_type
     use WaterDiagnosticBulkType   , only : waterdiagnosticbulk_type
-    use shr_log_mod      , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
     implicit none
@@ -274,8 +272,8 @@ contains
     integer  :: g, c, fc    ! Indices
     real(r8) :: zwt_actual  ! Total water storage (ZWT) to use either perched or total depending on conditions
 
-    SHR_ASSERT_ALL((ubound(qflx_surf_lag_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(finundated)        == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(qflx_surf_lag_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(finundated)        == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                 &
          z                    =>   col%z                                     , & ! Input:  [real(r8) (:,:) ]  layer depth (m) (-nlevsno+1:nlevsoi)

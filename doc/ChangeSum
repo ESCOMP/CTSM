@@ -1,5 +1,59 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev084   negins 02/19/2020 Bounds assertion for C isotopes when threading is on
+  ctsm1.0.dev083   negins 02/06/2020 Some BFB Fixes: Resolve issues #683, # 874, #878, # 885, # 745, #838
+  ctsm1.0.dev082   oleson 02/01/2020 Rename variables to avoid confusion; fix QSNOEVAP diagnostic
+  ctsm1.0.dev081   slevis 01/13/2020 Speed up restart writes
+  ctsm1.0.dev080    sacks 12/02/2019 Update externals, minor fixes to work with latest cime, get nuopc cap working
+  ctsm1.0.dev079    sacks 11/04/2019 Change a few uses of shr_kind
+  ctsm1.0.dev078   oleson 10/31/2019 Fix rootr calculation with use_hydrstress true
+  ctsm1.0.dev077    sacks 10/27/2019 Consistently use frac_sno_eff rather than frac_sno in qg calculations
+  ctsm1.0.dev076    sacks 10/25/2019 Set frac_sno_eff=0 if frac_sno is 0; avoid unnecessary calls to QSat
+  ctsm1.0.dev075    sacks 10/25/2019 Lakes: Adjust frac_sno after updating 0-layer snow pack for dew & sublimation
+  ctsm1.0.dev074    sacks 10/23/2019 For lakes: when reading finidat, set frac_sno=1 if h2osno_total > 0
+  ctsm1.0.dev073    sacks 10/22/2019 Fix bug in calculation of dqgdT
+  ctsm1.0.dev072 mvertens 10/15/2019 Add NUOPC cap
+  ctsm1.0.dev071    sacks 10/11/2019 Split CanopyTemperature into separate pieces
+  ctsm1.0.dev070    sacks 10/09/2019 Fix for writing 0-d variables with PIO2
+  ctsm1.0.dev069    sacks 10/07/2019 Misc. code cleanup and minor bug fixes
+  ctsm1.0.dev068    sacks 09/30/2019 Add water tracers to CombineSnowLayers, DivideSnowLayers, ZeroEmptySnowLayers
+  ctsm1.0.dev067     erik 09/26/2019 Add config_archive.xml to CTSM cime_config -- no testing
+  ctsm1.0.dev066    sacks 09/20/2019 Add water tracers to SnowCapping
+  ctsm1.0.dev065    sacks 09/14/2019 Add water tracers to SnowWater
+  ctsm1.0.dev064   slevis 09/09/2019 User defined top-two snow layers
+  ctsm1.0.dev063     erik 09/05/2019 Two answer changing fixes (fire, DWT_SLASH) and fix for urban streams for Clm45
+  ctsm1.0.dev062    sacks 09/03/2019 Move hobart tests to izumi
+  ctsm1.0.dev061     erik 09/01/2019 Simple b4b fixes: new params file, remove override_nsrest/anoxia_wtsat, DV deprecated
+  ctsm1.0.dev060    sacks 08/29/2019 In SnowWater, truncate small h2osoi residuals
+  ctsm1.0.dev059    sacks 08/24/2019 Continue adding water tracers to LakeHydrology
+  ctsm1.0.dev058   slevis 08/22/2019 Soil texture interpolation bug-fix
+  ctsm1.0.dev057    sacks 08/20/2019 Fix frac_sno bugs
+  ctsm1.0.dev056    sacks 08/16/2019 Start adding water tracers to LakeHydrology, and related refactoring
+  ctsm1.0.dev055    sacks 08/06/2019 Modularize snow cover fraction method
+  ctsm1.0.dev054    sacks 08/02/2019 Fix interpolation of surfdat soil layers so we can use interpolation for 10SL case
+  ctsm1.0.dev053   slevis 08/01/2019 Soil layer definition clean-up and user-defined option
+  ctsm1.0.dev052    sacks 07/22/2019 Fix rare soil color bug in mksurfdata_map
+  ctsm1.0.dev051    sacks 07/19/2019 Update water tracers for remainder of first stage of hydrology
+  ctsm1.0.dev050   slevis 07/15/2019 dz --> dz_lake bug-fix in LakeTemperatureMod.F90 line 960
+  ctsm1.0.dev049     erik 06/23/2019 Update mosart and intel to intel-19 on cheyenne
+  ctsm1.0.dev048     erik 06/23/2019 Updates for buildlib changes and cime and externals updates
+  ctsm1.0.dev047    sacks 06/16/2019 Fix negative snow compaction during snow melt
+  ctsm1.0.dev046    sacks 06/15/2019 Separate the two uses of h2osno
+  ctsm1.0.dev045    sacks 06/06/2019 Recalculate h2osno for the sake of SnowCapping
+  ctsm1.0.dev044    sacks 06/06/2019 Make wetland snow resetting behavior more explicit
+  ctsm1.0.dev043     erik 06/05/2019 Fix FUN bug (frac_ideal_C_use was backwards in regard to delta_CN), 
+                                     and replace Ball-Berry mbbopt with the CLM4.5 version
+  ctsm1.0.dev042   slevis 05/21/2019 Rename, correct, and simplify parameters dewmx and sno_stor_max
+  ctsm1.0.dev041    sacks 05/17/2019 Add water tracers to CanopyHydrologyMod
+  ctsm1.0.dev040   slevis 05/03/2019 Move some hard-coded parameters from code to params.nc file
+  ctsm1.0.dev039    sacks 05/01/2019 Remove excess canopy liquid/snow regardless of temperature
+  ctsm1.0.dev038    sacks 05/01/2019 Support for NWP configuration, NLDAS grid and NLDAS datm forcing
+  ctsm1.0.dev037    sacks 04/29/2019 Change year alignment for present-day I compsets
+  ctsm1.0.dev036     erik 04/26/2019 Fix carbon isotope bug that caused wrong answers for isotopes under transient land-use change
+  ctsm1.0.dev035    sacks 04/22/2019 Change h2ocan to a purely diagnostic variable
+  ctsm1.0.dev034    sacks 04/20/2019 Change clm4_5: Use Justin Perket snow on vegetation
+  ctsm1.0.dev033   slevis 04/11/2019 Limit landunit presence with thresholds set in the namelist
+  ctsm1.0.dev032   negins 04/08/2019 Fixing the balance check to check for possible errors over all columns/patches
   ctsm1.0.dev031    sacks 03/13/2019 Subtract virtual states to reduce dynbal fluxes for transient glaciers
   ctsm1.0.dev030    sacks 03/08/2019 Update CIME; hookup expected test fails
   ctsm1.0.dev029   slevis 02/26/2019 Collapse landunits to the N most dominant

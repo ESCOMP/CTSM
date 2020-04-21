@@ -6,11 +6,15 @@ module clm_varpar
   !
   ! !USES:
   use shr_kind_mod , only: r8 => shr_kind_r8
+  use shr_sys_mod  , only: shr_sys_abort
   use spmdMod      , only: masterproc
   use clm_varctl   , only: use_extralakelayers, use_vertsoilc
   use clm_varctl   , only: use_century_decomp, use_c13, use_c14
   use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
-  use clm_varctl   , only: use_vichydro, soil_layerstruct
+  use clm_varctl   , only: use_vichydro, rundef
+  use clm_varctl   , only: soil_layerstruct_predefined
+  use clm_varctl   , only: soil_layerstruct_userdefined
+  use clm_varctl   , only: soil_layerstruct_userdefined_nlevsoi
   use clm_varctl   , only: use_fates
 
   !
@@ -105,6 +109,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     !
+    integer :: j  ! loop index
     character(len=32) :: subname = 'clm_varpar_init'  ! subroutine name
     !------------------------------------------------------------------------------
 
@@ -140,22 +145,56 @@ contains
 
     nlevsoifl   =  10
     nlevurb     =  5
-    if ( masterproc ) write(iulog, *) 'soil_layerstruct varpar ',soil_layerstruct
-    if ( soil_layerstruct == '10SL_3.5m' ) then
-       nlevsoi     =  nlevsoifl
-       nlevgrnd    =  15
-    else if ( soil_layerstruct == '23SL_3.5m' ) then 
-       nlevsoi     =  8  + nlev_equalspace
-       nlevgrnd    =  15 + nlev_equalspace
-    else if ( soil_layerstruct == '49SL_10m' ) then
-      nlevsoi     =  49 ! 10x10 + 9x100 + 30x300 = 1e4mm = 10m
-!       nlevsoi     =  29 ! 10x10 + 9x100 + 10x300 = 4e3mm = 4m
-       nlevgrnd    =  nlevsoi+5
-    else if ( soil_layerstruct == '20SL_8.5m' ) then
-      nlevsoi     =  20 
-      nlevgrnd    =  nlevsoi+5
+
+    if ( masterproc ) write(iulog, *) 'soil_layerstruct_predefined varpar ', soil_layerstruct_predefined
+    if ( masterproc ) write(iulog, *) 'soil_layerstruct_userdefined varpar ', soil_layerstruct_userdefined
+
+    if (soil_layerstruct_userdefined(1) /= rundef) then  ! user defined soil layers
+       if (soil_layerstruct_predefined /= 'UNSET') then
+          write(iulog,*) subname//' ERROR: Both soil_layerstruct_predefined and soil_layer_userdefined have values'
+          call shr_sys_abort(subname//' ERROR: Cannot decide how to set the soil layer structure')
+       else
+          nlevgrnd = size(soil_layerstruct_userdefined)
+          ! loops backwards until it hits the last valid user-defined value
+          do j = nlevgrnd,1,-1
+             if (soil_layerstruct_userdefined(j) /= rundef) then
+                exit
+             else
+                nlevgrnd = nlevgrnd - 1
+             end if
+          end do
+          nlevsoi = soil_layerstruct_userdefined_nlevsoi  ! read in namelist
+          if (nlevsoi >= nlevgrnd) then
+             write(iulog,*) subname//' ERROR: nlevsoi >= nlevgrnd; did you enter soil_layerstruct_userdefined_nlevsoi correctly in user_nl_clm?'
+             call shr_sys_abort(subname//' ERROR: nlevsoi must be less than nlevgrnd')
+          end if
+       end if
+    else  ! pre-defined soil structure options
+       if ( soil_layerstruct_predefined == '10SL_3.5m' ) then
+          nlevsoi     =  nlevsoifl
+          nlevgrnd    =  15
+       else if ( soil_layerstruct_predefined == '23SL_3.5m' ) then
+          nlevsoi     =  8  + nlev_equalspace
+          nlevgrnd    =  15 + nlev_equalspace
+       else if ( soil_layerstruct_predefined == '49SL_10m' ) then
+          nlevsoi     =  49 ! 10x10 + 9x100 + 30x300 = 1e4mm = 10m
+!          nlevsoi     =  29 ! 10x10 + 9x100 + 10x300 = 4e3mm = 4m
+          nlevgrnd    =  nlevsoi+5
+       else if ( soil_layerstruct_predefined == '20SL_8.5m' ) then
+         nlevsoi     =  20
+         nlevgrnd    =  nlevsoi+5
+       else if ( soil_layerstruct_predefined == '4SL_2m' ) then
+          nlevsoi     =  4
+          nlevgrnd    =  5
+       else if (soil_layerstruct_predefined == 'UNSET') then
+          write(iulog,*) subname//' ERROR: Both soil_layerstruct_predefined and soil_layer_userdefined currently undefined'
+          call shr_sys_abort(subname//' ERROR: Cannot set the soil layer structure')
+       else
+          write(iulog,*) subname//' ERROR: Unrecognized pre-defined soil layer structure: ', trim(soil_layerstruct_predefined)
+          call shr_sys_abort(subname//' ERROR: Unrecognized pre-defined soil layer structure')
+       end if
     endif
-    if ( masterproc ) write(iulog, *) 'soil_layerstruct varpar ',soil_layerstruct,nlevsoi,nlevgrnd
+    if ( masterproc ) write(iulog, *) 'nlevsoi, nlevgrnd varpar ', nlevsoi, nlevgrnd
 
     if (use_vichydro) then
        nlayert     =  nlayer + (nlevgrnd -nlevsoi)

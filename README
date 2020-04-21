@@ -32,6 +32,7 @@ test -------------- CLM Testing scripts for CLM offline tools.
 tools ------------- CLM Offline tools to prepare input datasets and process output.
 cime_config ------- Configuration files of cime for compsets and CLM settings
 manage_externals -- Script to manage the external source directories
+python ------------ Some python modules mostly for use by run_sys_tests (but could be used elsewhere)
 
 Directory structure only for a CTSM checkout:
 
@@ -61,10 +62,17 @@ README.rst --------------- File that displays under the project in github
 README_EXTERNALS.rst ----- Information on how to work with subversion externals for clm
 CODE_OF_CONDUCT.md ------- Code of Conduct for how to work with each other on the CTSM project
 Copyright ---------------- CESM Copyright file
-doc/UpdateChangeLog.pl ------- Script to add documentation on a tag to the
+doc/UpdateChangeLog.pl --- Script to add documentation on a tag to the
                            ChangeLog/ChangeSum files
-doc/ChangeLog ---------------- Documents different CLM versions
-doc/ChangeSum ---------------- Summary documentation of different CLM versions
+doc/ChangeLog ------------ Documents different CLM versions
+doc/ChangeSum ------------ Summary documentation of different CLM versions
+
+doc/design --------------- Software Engineering and code design document files
+
+Checklists for standard Software Engineering tasks
+
+./doc/README.CHECKLIST.master_tags
+./bld/namelist_files/README.CHECKLIST.interpolating_initial_conditions.md
 
 Documentation of Namelist Items: (view the following in a web browser)
 
@@ -77,7 +85,13 @@ Important files in main directories (under $CTSMROOT):
 
 Externals.cfg --------------- File for management of the main high level externals
 Externals_CLM.cfg ----------- File for management of the CLM specific externals (i.e. FATES)
+
+run_sys_tests --------------- Python script to send the standard CTSM testing off (submits
+                              the create_test test suite for several different compilers on the
+                              machines we do standard CTSM testing on).
+
 parse_cime.cs.status -------- Script to parse test status files cs.status.* created by create_test
+                              (can be used along with run_sys_tests)
 doc/Quickstart.GUIDE -------- Quick guide to using cpl7 scripts.
 doc/IMPORTANT_NOTES --------- Some important notes about this version of 
                                                  clm, configuration modes and namelist items 
@@ -87,7 +101,7 @@ doc/ChangeSum --------------- Summary one-line list of changes for each
                               model version.
 doc/README ------------------ Documentation similar to this file
 doc/UsersGuide -------------- CLM Users Guide
-doc/CodeReference ----------- CLM Code Reference Guide
+doc/IMPORTANT_NOTES --------- Some important notes on caveats for some configurations/namelist items
 
 bld/README ------------------ Description of how to use the configure and
                               build-namelist scripts.

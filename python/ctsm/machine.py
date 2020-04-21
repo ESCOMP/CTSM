@@ -21,8 +21,11 @@ logger = logging.getLogger(__name__)
 # For now, just keep in mind that it's possible that a machine's scratch_dir may be None,
 # if it wasn't set explicitly and there was no default available. For now, it's up to the
 # user of the machine object to check for that possibility if need be.
+#
+# Similar notes apply to baseline_dir.
 Machine = namedtuple('Machine', ['name',           # str
                                  'scratch_dir',    # str
+                                 'baseline_dir',   # str
                                  'account',        # str or None
                                  'job_launcher'])  # subclass of JobLauncherBase
 
@@ -74,11 +77,22 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
     # ------------------------------------------------------------------------
 
     mach_defaults = defaults.get(machine_name)
+    baseline_dir = None
     if mach_defaults is not None:
         if job_launcher_type is None:
             job_launcher_type = mach_defaults.job_launcher_type
         if scratch_dir is None:
             scratch_dir = mach_defaults.scratch_dir
+        # NOTE(wjs, 2019-05-17) Note that we don't provide a way to override the default
+        # baseline_dir. The idea is that this should always provide the standard baseline
+        # directory for this machine, even if a particular application wants to use
+        # something different (in contrast to, say, scratch_dir, for which the value in
+        # the machines object can itself be overridden). I think this will be smoother and
+        # more intuitive if different baseline directories are needed for different
+        # purposes in a single application (e.g., different baseline directories for
+        # generation and comparison, or making a link in some temporary location that
+        # points to the standard baselines).
+        baseline_dir = mach_defaults.baseline_dir
         if account is None and mach_defaults.account_required and not allow_missing_entries:
             raise RuntimeError("Could not find an account code")
     else:
@@ -126,8 +140,23 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
 
     return Machine(name=machine_name,
                    scratch_dir=scratch_dir,
+                   baseline_dir=baseline_dir,
                    account=account,
                    job_launcher=job_launcher)
+
+def get_possibly_overridden_baseline_dir(machine, baseline_dir=None):
+    """Get the baseline directory to use here, or None
+
+    If baseline_dir is provided (not None), use that. Otherwise use the baseline directory
+    from machine (which may be None).
+
+    Args:
+    machine (Machine)
+    baseline_dir (str or None): gives the overriding baseline directory to use
+    """
+    if baseline_dir is not None:
+        return baseline_dir
+    return machine.baseline_dir
 
 def _get_account():
     account = get_project()

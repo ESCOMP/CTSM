@@ -11,7 +11,6 @@ module subgridMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
@@ -200,8 +199,8 @@ contains
     character(len=*), parameter :: subname = 'natveg_patch_exists'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(pft >= natpft_lb, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(pft <= natpft_ub, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(pft >= natpft_lb, sourcefile, __LINE__)
+    SHR_ASSERT_FL(pft <= natpft_ub, sourcefile, __LINE__)
 
     if (get_do_transient_pfts() .or. use_cndv .or. use_fates) then
        ! To support transient PFTS and dynamic vegetation cases, we have all possible PFTs
@@ -541,8 +540,8 @@ contains
     !-----------------------------------------------------------------------
 
     if (create_crop_landunit) then
-       SHR_ASSERT(cft >= cft_lb, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(cft <= cft_ub, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(cft >= cft_lb, sourcefile, __LINE__)
+       SHR_ASSERT_FL(cft <= cft_ub, sourcefile, __LINE__)
 
        if (get_do_transient_crops()) then
           ! To support dynamic landunits, we have all possible crop columns in every grid

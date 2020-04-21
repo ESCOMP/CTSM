@@ -9,12 +9,13 @@ module clm_instMod
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates, use_hillslope
-
-  use clm_varctl      , only : use_century_decomp, use_crop
+  use clm_varctl      , only : use_century_decomp, use_crop, snow_cover_fraction_method, paramfile
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice_mec, istsoil
   use perf_mod        , only : t_startf, t_stopf
   use controlMod      , only : NLFilename
+  use fileutils       , only : getfil
+  use ncdio_pio       , only : file_desc_t, ncd_pio_openfile, ncd_pio_closefile
 
   !-----------------------------------------
   ! Constants
@@ -30,6 +31,7 @@ module clm_instMod
   ! Definition of component types 
   !-----------------------------------------
 
+  use ActiveLayerMod                  , only : active_layer_type
   use AerosolMod                      , only : aerosol_type
   use CanopyStateType                 , only : canopystate_type
   use ch4Mod                          , only : ch4_type
@@ -76,6 +78,8 @@ module clm_instMod
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
+  use SnowCoverFractionBaseMod        , only : snow_cover_fraction_base_type
+  use SnowCoverFractionFactoryMod     , only : CreateAndInitSnowCoverFraction
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
   !
@@ -94,6 +98,7 @@ module clm_instMod
   !-----------------------------------------
 
   ! Physics types 
+  type(active_layer_type), public         :: active_layer_inst
   type(aerosol_type), public              :: aerosol_inst
   type(canopystate_type), public          :: canopystate_inst
   type(energyflux_type), public           :: energyflux_inst
@@ -121,6 +126,7 @@ module clm_instMod
   type(lnd2glc_type), public              :: lnd2glc_inst
   type(glc_behavior_type), target, public :: glc_behavior
   type(topo_type), public                 :: topo_inst
+  class(snow_cover_fraction_base_type), public, allocatable :: scf_method
   class(soil_water_retention_curve_type), public, allocatable :: soil_water_retention_curve
 
   ! CN vegetation types
@@ -203,18 +209,23 @@ contains
     integer               :: begc, endc
     integer               :: begl, endl
     type(bounds_type)     :: bounds_clump
+    character(len=1024)   :: locfn        ! local file name
+    type(file_desc_t)     :: params_ncid  ! pio netCDF file id for parameter file
     real(r8), allocatable :: h2osno_col(:)
     real(r8), allocatable :: snow_depth_col(:)
 
     integer :: dummy_to_make_pgi_happy
     !----------------------------------------------------------------------
 
-    ! Note: h2osno_col and snow_depth_col are initialized as local variable 
+    ! Note: h2osno_col and snow_depth_col are initialized as local variables
     ! since they are needed to initialize vertical data structures  
 
     begp = bounds%begp; endp = bounds%endp 
     begc = bounds%begc; endc = bounds%endc 
     begl = bounds%begl; endl = bounds%endl
+
+    call getfil (paramfile, locfn, 0)
+    call ncd_pio_openfile (params_ncid, trim(locfn), 0)
 
     allocate (h2osno_col(begc:endc))
     allocate (snow_depth_col(begc:endc))
@@ -274,6 +285,8 @@ contains
          urbanparams_inst%em_perroad(begl:endl), &
          IsSimpleBuildTemp(), IsProgBuildTemp() )
 
+    call active_layer_inst%Init(bounds)
+
     call canopystate_inst%Init(bounds)
 
     call soilstate_inst%Init(bounds)
@@ -297,7 +310,7 @@ contains
 
     call aerosol_inst%Init(bounds, NLFilename)
 
-    call frictionvel_inst%Init(bounds)
+    call frictionvel_inst%Init(bounds, NLFilename = NLFilename, params_ncid = params_ncid)
 
     call lakestate_inst%Init(bounds)
     call LakeConInit()
@@ -308,7 +321,7 @@ contains
 
     call soilhydrology_inst%Init(bounds, nlfilename, water_inst%waterstatebulk_inst, &
          use_aquifer_layer = use_aquifer_layer())
-    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst)
+    call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, soilstate_inst)
 
     call saturated_excess_runoff_inst%Init(bounds)
     call infiltration_excess_runoff_inst%Init(bounds)
@@ -325,6 +338,14 @@ contains
     call surfrad_inst%Init(bounds)
 
     call dust_inst%Init(bounds)
+
+    allocate(scf_method, source = CreateAndInitSnowCoverFraction( &
+         snow_cover_fraction_method = snow_cover_fraction_method, &
+         bounds = bounds, &
+         col = col, &
+         glc_behavior = glc_behavior, &
+         NLFilename = NLFilename, &
+         params_ncid = params_ncid))
 
     ! Once namelist options are added to control the soil water retention curve method,
     ! we'll need to either pass the namelist file as an argument to this routine, or pass
@@ -357,7 +378,7 @@ contains
        ! Note that init_decompcascade_bgc and init_decompcascade_cn need 
        ! soilbiogeochem_state_inst to be initialized
 
-       call init_decomp_cascade_constants()
+       call init_decomp_cascade_constants( use_century_decomp )
        if (use_century_decomp) then
           call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
                                       soilstate_inst )
@@ -448,12 +469,14 @@ contains
 
     call print_accum_fields()
 
+    call ncd_pio_closefile(params_ncid)
+
     call t_stopf('init_accflds')
 
   end subroutine clm_instInit
 
   !-----------------------------------------------------------------------
-  subroutine clm_instRest(bounds, ncid, flag)
+  subroutine clm_instRest(bounds, ncid, flag, writing_finidat_interp_dest_file)
     !
     ! !USES:
     use ncdio_pio       , only : file_desc_t
@@ -469,12 +492,15 @@ contains
     
     type(file_desc_t) , intent(inout) :: ncid ! netcdf id
     character(len=*)  , intent(in)    :: flag ! 'define', 'write', 'read' 
+    logical           , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
 
     ! Local variables
     integer                           :: nc, nclumps
     type(bounds_type)                 :: bounds_clump
 
     !-----------------------------------------------------------------------
+
+    call active_layer_inst%restart (bounds, ncid, flag=flag)
 
     call atm2lnd_inst%restart (bounds, ncid, flag=flag)
 
@@ -501,6 +527,7 @@ contains
     call soilstate_inst%restart (bounds, ncid, flag=flag)
 
     call water_inst%restart(bounds, ncid, flag=flag, &
+         writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:))
 
     call irrigation_inst%restart (bounds, ncid, flag=flag)
@@ -553,8 +580,7 @@ contains
 
        call clm_fates%restart(bounds, ncid, flag=flag,  &
             waterdiagnosticbulk_inst=water_inst%waterdiagnosticbulk_inst, &
-            canopystate_inst=canopystate_inst, &
-            frictionvel_inst=frictionvel_inst)
+            canopystate_inst=canopystate_inst)
 
     end if
 

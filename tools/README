@@ -142,13 +142,14 @@ III. Process sequence to create input datasets needed to run CLM
 
         c.) New atmosphere or ocean resolution
 
-        If the region DOES include ocean, use $CIMEROOT/tools/mapping/gen_domain_files/gen_maps.sh to create a 
+        If the region DOES include ocean, use
+        $CIMEROOT/tools/mapping/gen_mapping_files/gen_cesm_maps.sh to create a
         mapping file for it.
 
     Example:
 
-    cd $CIMEROOT/tools/mapping/gen_domain_files
-    ./gen_maps.sh -focn <ocngrid> -fatm <atmgrid> -nocn <ocnname> -natm <atmname>
+    cd $CIMEROOT/tools/mapping/gen_mapping_files
+    ./gen_cesm_maps.sh -focn <ocngrid> -fatm <atmgrid> -nocn <ocnname> -natm <atmname>
 
 
     3.) Add SCRIP grid file(s) created in (1) into XML database in CLM (optional)

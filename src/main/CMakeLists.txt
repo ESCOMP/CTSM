@@ -27,6 +27,7 @@ list(APPEND clm_sources
   lnd2glcMod.F90
   ncdio_utils.F90
   organicFileMod.F90
+  paramUtilMod.F90
   subgridAveMod.F90
   subgridWeightsMod.F90
   surfrdUtilsMod.F90
