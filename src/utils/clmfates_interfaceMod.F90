@@ -1912,13 +1912,15 @@ contains
          this%fates(nc)%bc_in(s)%tot_somc     = totsomc(c)
          this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
       end do
-      
+
+      dtime = get_step_size()
       
       ! Update history variables that track these variables
       call this%fates_hist%update_history_cbal(nc, &
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
-            this%fates(nc)%bc_in)
+            this%fates(nc)%bc_in,   &
+            dtime)
 
     end associate
  end subroutine wrap_bgc_summary
