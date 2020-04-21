@@ -14,7 +14,7 @@ module clm_initializeMod
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
   use clm_varctl      , only : nhillslope
-  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec, nhillcol
+  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec, ncol_per_hillslope
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
   use ncdio_pio       , only : file_desc_t
@@ -57,7 +57,6 @@ contains
     use controlMod       , only: control_init, control_print, NLFilename
     use ncdio_pio        , only: ncd_pio_init
     use initGridCellsMod , only: initGridCells
-    use initHillslopeMod , only: initHillslopes, HillslopeDomPft
     use ch4varcon        , only: ch4conrd
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
     !
@@ -169,7 +168,7 @@ contains
     allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
     allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
     if(use_hillslope) then 
-       allocate (nhillcol  (begg:endg                      ))
+       allocate (ncol_per_hillslope  (begg:endg                      ))
     endif
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
@@ -221,15 +220,6 @@ contains
 
     call initGridCells(glc_behavior)
 
-    if(use_hillslope) then
-       ! Specify hillslope (column-level) connectivity
-       call initHillslopes()
-
-       ! Set single pft for hillslope columns
-!       call HillslopeDomPft()
-
-    endif
-
     ! Set global seg maps for gridcells, landlunits, columns and patches
 
     call decompInit_glcp(ns, ni, nj, glc_behavior)
@@ -263,7 +253,7 @@ contains
     ! end of the run for error checking.
 
     deallocate (wt_lunit, wt_cft, wt_glc_mec)
-    if(use_hillslope)  deallocate (nhillcol)
+    if(use_hillslope)  deallocate (ncol_per_hillslope)
 
     call t_stopf('clm_init1')
 

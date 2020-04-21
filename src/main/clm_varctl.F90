@@ -127,7 +127,7 @@ module clm_varctl
   integer, public :: nhillslope = 0
 
   ! maximum number of hillslope columns per landunit
-  integer, public :: nmaxhillcol = 1
+  integer, public :: nmax_col_per_hill = 1
 
   ! do not irrigate by default
   logical, public :: irrigate = .false.            

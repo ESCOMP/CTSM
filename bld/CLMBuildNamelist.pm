@@ -1612,11 +1612,6 @@ sub process_namelist_inline_logic {
   setup_logic_soil_resis($opts,  $nl_flags, $definition, $defaults, $nl);
 
   #############################################
-  # namelist group: hillslope_hydrology_inparm #
-  #############################################
-  setup_logic_hillslope_hydrology($opts, $nl_flags, $definition, $defaults, $nl);
-
-  #############################################
   # namelist group: canopyfluxes_inparm #
   #############################################
   setup_logic_canopyfluxes($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -3381,15 +3376,6 @@ sub setup_logic_soil_resis {
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_resis_method' );
 }
-#-------------------------------------------------------------------------------
-
-sub setup_logic_hillslope_hydrology {
-  # 
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_geomorphology' ); 
-}
-#-------------------------------------------------------------------------------
 
 sub setup_logic_canopyfluxes {
   #

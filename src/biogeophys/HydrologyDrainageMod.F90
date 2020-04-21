@@ -37,8 +37,6 @@ contains
   !-----------------------------------------------------------------------
 
   subroutine HydrologyDrainage(bounds,               &
-       num_hilltop, filter_hilltopc, &
-       num_hillbottom, filter_hillbottomc, &
        num_hillslope, filter_hillslopec, &
        num_nolakec, filter_nolakec,                  &
        num_hydrologyc, filter_hydrologyc,            &
@@ -59,7 +57,7 @@ contains
     use clm_varctl       , only : use_vichydro, use_hillslope
     use clm_varpar       , only : nlevgrnd, nlevurb
     use clm_time_manager , only : get_step_size, get_nstep
-    use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, LateralFlowPowerLaw, LateralFlowHillslope
+    use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, PerchedLateralFlowHillslope, LateralFlowPowerLaw, LateralFlowHillslope
     use SoilWaterMovementMod , only : use_aquifer_layer
     !
     ! !ARGUMENTS:
@@ -72,10 +70,6 @@ contains
     integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
     integer                  , intent(in)    :: num_do_smb_c         ! number of bareland columns in which SMB is calculated, in column filter    
     integer                  , intent(in)    :: filter_do_smb_c(:)   ! column filter for bare land SMB columns      
-     integer               , intent(in)    :: num_hilltop       ! number of soil cols marked "upslope"
-     integer               , intent(in)    :: filter_hilltopc(:) ! column filter for designating "upslope" cols.
-     integer               , intent(in)    :: num_hillbottom       ! number of soil cols marked "downslope"
-     integer               , intent(in)    :: filter_hillbottomc(:) ! column filter for designating "downslope" cols.
      integer               , intent(in)    :: num_hillslope       ! number of soil hill cols.
      integer               , intent(in)    :: filter_hillslopec(:) ! column filter for designating all hill cols.
 
@@ -147,15 +141,14 @@ contains
               waterstatebulk_inst, waterfluxbulk_inst)
       else
          
-         call PerchedLateralFlow(bounds, num_hydrologyc, filter_hydrologyc, &
-              num_urbanc, filter_urbanc,&
-              soilhydrology_inst, soilstate_inst, &
-              waterstatebulk_inst, waterfluxbulk_inst)
-
          if(use_hillslope) then 
+            call PerchedLateralFlowHillslope(bounds, &
+                 num_hydrologyc, filter_hydrologyc, &
+                 soilhydrology_inst, soilstate_inst, &
+                 waterstatebulk_inst, waterfluxbulk_inst,&
+                 wateratm2lndbulk_inst)
+            
             call LateralFlowHillslope(bounds, &
-                 num_hilltop, filter_hilltopc, &
-                 num_hillbottom, filter_hillbottomc, &
                  num_hillslope, filter_hillslopec, &
                  num_hydrologyc, filter_hydrologyc, &
                  num_urbanc, filter_urbanc,&
@@ -163,6 +156,11 @@ contains
                  waterstatebulk_inst, waterfluxbulk_inst, &
                  wateratm2lndbulk_inst)
          else
+            call PerchedLateralFlow(bounds, num_hydrologyc, filter_hydrologyc, &
+                 num_urbanc, filter_urbanc,&
+                 soilhydrology_inst, soilstate_inst, &
+                 waterstatebulk_inst, waterfluxbulk_inst)
+            
             call LateralFlowPowerLaw(bounds, num_hydrologyc, filter_hydrologyc, &
                  num_urbanc, filter_urbanc,&
                  soilhydrology_inst, soilstate_inst, &

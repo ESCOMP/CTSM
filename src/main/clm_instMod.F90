@@ -45,6 +45,7 @@ module clm_instMod
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
+  use HillslopeHydrologyMod           , only : InitHillslope
   use InfiltrationExcessRunoffMod     , only : infiltration_excess_runoff_type
   use IrrigationMod                   , only : irrigation_type
   use LakeStateType                   , only : lakestate_type
@@ -75,7 +76,6 @@ module clm_instMod
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
-  use HillslopeHydrologyBaseMod       , only : hillslope_geomorphology_type
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
   !
@@ -121,7 +121,6 @@ module clm_instMod
   type(lnd2glc_type), public              :: lnd2glc_inst
   type(glc_behavior_type), target, public :: glc_behavior
   type(topo_type), public                 :: topo_inst
-  class(hillslope_geomorphology_type),            allocatable :: hillslope_inst
   class(soil_water_retention_curve_type), public, allocatable :: soil_water_retention_curve
 
   ! CN vegetation types
@@ -190,7 +189,6 @@ contains
     
     use initVerticalMod                    , only : initVertical
     use accumulMod                         , only : print_accum_fields 
-    use HillslopeHydrologyFactoryMod       , only : create_and_init_hillslope_geomorphology_type
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
     use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
@@ -278,11 +276,6 @@ contains
 
     call canopystate_inst%Init(bounds)
 
-    if(use_hillslope) then 
-       allocate(hillslope_inst, &
-            source=create_and_init_hillslope_geomorphology_type(bounds))
-    endif
-
     call soilstate_inst%Init(bounds)
     call SoilStateInitTimeConst(bounds, soilstate_inst, nlfilename) ! sets hydraulic and thermal soil properties
 
@@ -319,6 +312,10 @@ contains
 
     call saturated_excess_runoff_inst%Init(bounds)
     call infiltration_excess_runoff_inst%Init(bounds)
+
+    if(use_hillslope) then 
+       call InitHillslope(bounds, fsurdat)
+    endif
 
     call solarabs_inst%Init(bounds)
 

@@ -51,6 +51,7 @@ module SoilHydrologyMod
   public :: CLMVICMap
   public :: PerchedWaterTable    ! Calculate perched water table
   public :: PerchedLateralFlow   ! Calculate lateral flow from perched saturated zone
+  public :: PerchedLateralFlowHillslope   ! Calculate lateral flow from perched saturated zone in hillslope configuration
   public :: ThetaBasedWaterTable ! Calculate water table from soil moisture state
   public :: LateralFlowPowerLaw  ! Calculate lateral flow based on power law drainage function
   public :: LateralFlowHillslope ! Calculate lateral in multi-column hillslope configuration
@@ -1985,6 +1986,249 @@ contains
 
    end subroutine PerchedLateralFlow
 
+!#41   
+   !-----------------------------------------------------------------------
+   subroutine PerchedLateralFlowHillslope(bounds, num_hydrologyc, &
+        filter_hydrologyc, soilhydrology_inst, soilstate_inst, &
+        waterstatebulk_inst, waterfluxbulk_inst, wateratm2lndbulk_inst)
+     !
+     ! !DESCRIPTION:
+     ! Calculate subsurface drainage from perched saturated zone
+     !
+     ! !USES:
+     use clm_varcon       , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
+     use landunit_varcon  , only : istsoil
+     !
+     ! !ARGUMENTS:
+     type(bounds_type)        , intent(in)      :: bounds               
+     integer                  , intent(in)      :: num_hydrologyc       ! number of column soil points in column filter
+     integer                  , intent(in)      :: filter_hydrologyc(:) ! column filter for soil points
+     type(soilstate_type)       , intent(in)    :: soilstate_inst
+     type(soilhydrology_type)   , intent(inout) :: soilhydrology_inst
+     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+     type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
+     type(wateratm2lndbulk_type), intent(in)    :: wateratm2lndbulk_inst
+     !
+     ! !LOCAL VARIABLES:
+     character(len=32) :: subname = 'PerchedLateralFlowHillslope' ! subroutine name
+     integer  :: c,j,fc,i,g                              ! indices
+     real(r8) :: dtime                                   ! land model time step (sec)
+     real(r8) :: drainage_tot
+     real(r8) :: drainage_layer
+     real(r8) :: s_y
+     integer  :: k
+     integer  :: k_frost(bounds%begc:bounds%endc)
+     integer  :: k_perch(bounds%begc:bounds%endc)
+     real(r8) :: wtsub
+     real(r8) :: q_perch
+     real(r8) :: q_perch_max
+
+     character(len=32) :: transmissivity_method = 'layersum'
+!     character(len=32) :: baseflow_method = 'kinematic'
+     character(len=32) :: baseflow_method = 'darcy'
+!     character(len=32) :: baseflow_method = 'mixed'
+     real(r8) :: transmis
+     real(r8) :: dgrad
+     real(r8), parameter :: k_anisotropic = 1._r8
+     integer  :: c0, c_src, c_dst, nstep, nbase
+     real(r8) :: qflx_drain_perched_vol(bounds%begc:bounds%endc)   ! volumetric lateral subsurface flow through active layer [m3/s]
+     real(r8) :: qflx_drain_perched_out(bounds%begc:bounds%endc)   ! lateral subsurface flow through active layer [mm/s]
+
+     associate(                                                            & 
+          nbedrock           =>    col%nbedrock                          , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)           
+          z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ] layer depth (m)                                 
+          zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ] interface level below a "z" level (m)           
+          dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ] layer depth (m)                                 
+          bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ] Clapp and Hornberger "b"                        
+          hksat              =>    soilstate_inst%hksat_col              , & ! Input:  [real(r8) (:,:) ] hydraulic conductivity at saturation (mm H2O /s)
+          sucsat             =>    soilstate_inst%sucsat_col             , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)                       
+          watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
+
+          frost_table        =>    soilhydrology_inst%frost_table_col    , & ! Input:  [real(r8) (:)   ] frost table depth (m)                             
+          zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ] water table depth (m)                             
+          zwt_perched        =>    soilhydrology_inst%zwt_perched_col    , & ! Input:  [real(r8) (:)   ] perched water table depth (m)                     
+          
+          tdepth             =>    wateratm2lndbulk_inst%tdepth_grc      , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
+          tdepth_bankfull    =>    wateratm2lndbulk_inst%tdepthmax_grc   , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
+
+          qflx_drain_perched =>    waterfluxbulk_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ] perched wt sub-surface runoff (mm H2O /s)         
+
+          h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)                            
+          h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col          & ! Output: [real(r8) (:,:) ] ice lens (kg/m2)                                
+          )
+
+       ! Get time step
+
+       dtime = get_step_size()
+
+       ! locate frost table and perched water table   
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          k_frost(c)=nbedrock(c)
+          k_perch(c)=nbedrock(c)
+          do k=1, nbedrock(c)
+             if (frost_table(c) >= zi(c,k-1) .and. frost_table(c) <= zi(c,k)) then
+                k_frost(c)=k
+                exit
+             endif
+          enddo
+          
+          do k=1, nbedrock(c)
+             if (zwt_perched(c) >= zi(c,k-1) .and. zwt_perched(c) <= zi(c,k)) then
+                k_perch(c)=k
+                exit
+             endif
+          enddo
+       enddo
+
+       ! compute drainage from perched saturated region
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+
+          qflx_drain_perched(c)     = 0._r8
+          qflx_drain_perched_out(c) = 0._r8
+          qflx_drain_perched_vol(c) = 0._r8
+
+          if (frost_table(c) > zwt_perched(c)) then
+             ! hillslope columns
+             if (lun%itype(col%landunit(c)) == istsoil) then 
+
+                ! calculate head gradient
+                g = col%gridcell(c)
+                ! kinematic wave approximation
+                if (baseflow_method == 'kinematic') then
+                   dgrad = col%hill_slope(c)
+                endif
+                ! darcy's law 
+                if (baseflow_method == 'darcy') then
+                   if (col%cold(c) /= ispval) then
+                      dgrad = (col%hill_elev(c)-zwt_perched(c)) &
+                           - (col%hill_elev(col%cold(c))-zwt_perched(col%cold(c)))
+                      dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(col%cold(c)))
+                   else
+                      ! flow between channel and lowest column
+                      ! bankfull height is defined to be zero
+                      dgrad = (col%hill_elev(c)-zwt_perched(c)) &
+                           ! ignore overbankfull storage
+                           - min(max((tdepth(g) - tdepth_bankfull(g)), &
+                           (col%hill_elev(c)-frost_table(c))),0._r8)
+
+                      dgrad = dgrad / (col%hill_distance(c))
+                      ! dgrad cannot be negative when channel is empty
+                      if (tdepth(g) <= 0._r8) then
+                         dgrad = max(dgrad, 0._r8)
+                      endif
+                   endif
+                end if
+
+                ! Determine source and destination columns
+                if (dgrad >= 0._r8) then
+                   c_src = c
+                   c_dst = col%cold(c)
+                else
+                   c_src = col%cold(c)
+                   c_dst = c
+                endif
+
+                ! Calculate transmissivity of source column
+                transmis = 0._r8
+                if(c_src /= ispval) then 
+                   ! sum of layer transmissivities
+                   if (transmissivity_method == 'layersum') then
+                      do k = k_perch(c_src), k_frost(c_src)
+                         if(k == k_perch(c_src)) then
+                            transmis = transmis + 1.e-3_r8*hksat(c_src,k)*(zi(c_src,k) - zwt_perched(c_src))
+                         else
+                            transmis = transmis + 1.e-3_r8*hksat(c_src,k)*dz(c_src,k)
+                         endif
+                      end do
+                      ! adjust by 'anisotropy factor'
+                      transmis = k_anisotropic*transmis
+                   endif
+                   ! constant conductivity based on shallowest saturated layer hk
+                   if (transmissivity_method == 'constant') then
+                      transmis = k_anisotropic*(1.e-3_r8*hksat(c_src,k_perch(c_src))) &
+                           *(zi(c_src,k_frost(c_src)) - zwt_perched(c_src) )
+                   endif
+                   ! power law profile based on shallowest saturated layer hk
+                   if (transmissivity_method == 'power') then
+                   endif
+                else
+                   ! transmissivity of losing stream (c_src == ispval)
+                   transmis = k_anisotropic*(1.e-3_r8*hksat(c,k_perch(c_dst)))*tdepth(g)
+                endif
+
+                qflx_drain_perched_vol(c) = transmis*col%hill_width(c)*dgrad
+                qflx_drain_perched_out(c) = 1.e3_r8*(qflx_drain_perched_vol(c)/col%hill_area(c))
+ 
+             else
+                ! non-hillslope columns
+                !  specify maximum drainage rate
+                q_perch_max = 1.e-5_r8 * sin(col%topo_slope(c) * (rpi/180._r8))
+
+                wtsub = 0._r8
+                q_perch = 0._r8
+                do k = k_perch(c), k_frost(c)
+                   q_perch = q_perch + hksat(c,k)*dz(c,k)
+                   wtsub = wtsub + dz(c,k)
+                end do
+                if (wtsub > 0._r8) q_perch = q_perch/wtsub
+                
+                qflx_drain_perched_out(c) = q_perch_max * q_perch &
+                     *(frost_table(c) - zwt_perched(c))
+             endif
+          endif
+
+       enddo
+             
+       ! compute net drainage from perched saturated region
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          ! drainage-out
+          qflx_drain_perched(c) = qflx_drain_perched(c) + qflx_drain_perched_out(c)
+          if (lun%itype(col%landunit(c)) == istsoil) then
+             ! drainage-in
+             if (col%cold(c) /= ispval) then
+                qflx_drain_perched(col%cold(c)) = &
+                     qflx_drain_perched(col%cold(c)) - &
+                     1.e3_r8*(qflx_drain_perched_vol(c))/col%hill_area(col%cold(c))
+             endif
+          endif
+       enddo
+
+       ! remove drainage from soil moisture storage
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          
+          ! remove drainage from perched saturated layers
+          drainage_tot = qflx_drain_perched(c) * dtime
+          do k = k_perch(c), k_frost(c)
+
+             s_y = watsat(c,k) &
+                  * ( 1. - (1.+1.e3*zwt_perched(c)/sucsat(c,k))**(-1./bsw(c,k)))
+             s_y=max(s_y,0.02_r8)
+             if (k== k_perch(c)) then
+                drainage_layer=min(drainage_tot,(s_y*(zi(c,k) - zwt_perched(c))*1.e3))
+             else
+                drainage_layer=min(drainage_tot,(s_y*(dz(c,k))*1.e3))
+             endif
+             
+             drainage_layer=max(drainage_layer,0._r8)
+             drainage_tot = drainage_tot - drainage_layer
+             h2osoi_liq(c,k) = h2osoi_liq(c,k) - drainage_layer
+             
+          enddo
+
+          ! if drainage_tot is greater than available water 
+          ! (above frost table), then decrease qflx_drain_perched 
+          ! by residual amount for water balance
+          qflx_drain_perched(c) = qflx_drain_perched(c) - drainage_tot/dtime
+       enddo
+
+     end associate
+
+   end subroutine PerchedLateralFlowHillslope
+
 !#5
    !-----------------------------------------------------------------------
    subroutine ThetaBasedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
@@ -2408,8 +2652,6 @@ contains
 !#61
    !-----------------------------------------------------------------------
    subroutine LateralFlowHillslope(bounds,  & 
-        num_hilltop, filter_hilltopc,       &
-        num_hillbottom, filter_hillbottomc, &
         num_hillslope, filter_hillslopec,   &
         num_hydrologyc, filter_hydrologyc,  &
         num_urbanc, filter_urbanc,soilhydrology_inst, soilstate_inst, &
@@ -2442,10 +2684,6 @@ contains
      type(waterfluxbulk_type) , intent(inout) :: waterfluxbulk_inst
      integer                  , intent(in)    :: num_hillslope         ! number of hillslope soil cols 
      integer                  , intent(in)    :: filter_hillslopec(:)  ! column filter for designating all hillslope cols.               
-     integer                  , intent(in)    :: num_hilltop           ! number of hillslope soil cols 
-     integer                  , intent(in)    :: filter_hilltopc(:)    ! column filter for designating all hillslope cols.               
-     integer                  , intent(in)    :: num_hillbottom        ! number of hillslope soil cols 
-     integer                  , intent(in)    :: filter_hillbottomc(:) ! column filter for designating all hillslope cols.               
 
      !
      ! !LOCAL VARIABLES:
@@ -2464,10 +2702,10 @@ contains
      real(r8) :: wtsub                                   ! summation of hk*dzmm for layers below water table (mm**2/s)
      real(r8) :: dzsum                                   ! summation of dzmm of layers below water table (mm)
      real(r8) :: icefracsum                              ! summation of icefrac*dzmm of layers below water table (-)
-     real(r8) :: fracice_rsub(bounds%begc:bounds%endc)   ! fractional impermeability of soil layers (-)
+     real(r8) :: ice_imped_col(bounds%begc:bounds%endc)  ! column average hydraulic conductivity reduction due to presence of soil ice (-)
+     real(r8) :: ice_imped(bounds%begc:bounds%endc,1:nlevsoi)      ! hydraulic conductivity reduction due to presence of soil ice (-)
      real(r8) :: available_h2osoi_liq                    ! available soil liquid water in a layer
      real(r8) :: h2osoi_vol
-     real(r8) :: imped
      real(r8) :: rsub_top_tot
      real(r8) :: rsub_top_layer
      real(r8) :: theta_unsat
@@ -2486,19 +2724,22 @@ contains
      real(r8) :: wtsub_vic                ! summation of hk*dzmm for layers in the third VIC layer
      integer  :: g
 
-!scs
      character(len=32) :: transmissivity_method = 'layersum'
 !     character(len=32) :: baseflow_method = 'kinematic'
      character(len=32) :: baseflow_method = 'darcy'
 !     character(len=32) :: baseflow_method = 'mixed'
-     real(r8) :: transmis
-     real(r8) :: dgrad
+     logical  :: no_lateral_flow = .false.
+     real(r8) :: transmis                         ! transmissivity
+     real(r8) :: dgrad                            ! hydraulic head gradient
      real(r8), parameter :: n_baseflow = 1        ! drainage power law exponent
-     real(r8), parameter :: k_anisotropic = 20._r8
+     real(r8), parameter :: k_anisotropic = 1._r8 ! anisotropy scalar
      real(r8) :: qflx_latflow_out_vol(bounds%begc:bounds%endc) 
      real(r8) :: qflx_net_latflow(bounds%begc:bounds%endc) 
+     real(r8) :: qflx_latflow_avg(bounds%begc:bounds%endc) 
+     real(r8) :: larea
      integer  :: c0, c_src, c_dst, nstep, nbase
-
+     integer  :: l
+     
      !-----------------------------------------------------------------------
 
      associate(                                                            & 
@@ -2564,7 +2805,8 @@ contains
              dzmm(c,j) = dz(c,j)*1.e3_r8
 
              vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
-             icefrac(c,j) = min(1._r8,vol_ice/watsat(c,j))          
+             icefrac(c,j) = min(1._r8,vol_ice/watsat(c,j))
+             ice_imped(c,j)=10._r8**(-e_ice*icefrac(c,j))
           end do
        end do
 
@@ -2575,7 +2817,6 @@ contains
           qflx_drain(c)    = 0._r8 
           qflx_rsub_sat(c) = 0._r8
           rsub_top(c)      = 0._r8
-          fracice_rsub(c)  = 0._r8
 
           qflx_latflow_in(c) = 0._r8
           qflx_latflow_out(c) = 0._r8
@@ -2584,175 +2825,211 @@ contains
           qflx_latflow_out_vol(c) = 0._r8
       end do
 
+      ! The layer index of the first unsaturated layer, 
+      ! i.e., the layer right above the water table
 
-       ! The layer index of the first unsaturated layer, 
-       ! i.e., the layer right above the water table
+      do fc = 1, num_hydrologyc
+         c = filter_hydrologyc(fc)
+         jwt(c) = nlevsoi
+         ! allow jwt to equal zero when zwt is in top layer
+         do j = 1,nlevsoi
+            if(zwt(c) <= zi(c,j)) then
+               jwt(c) = j-1
+               exit
+            end if
+         enddo
+      end do
 
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          jwt(c) = nlevsoi
-          ! allow jwt to equal zero when zwt is in top layer
-          do j = 1,nlevsoi
-             if(zwt(c) <= zi(c,j)) then
-                jwt(c) = j-1
-                exit
-             end if
-          enddo
-       end do
-
+      ! Calculate ice impedance factor (after jwt calculated)
+      do fc = 1, num_hydrologyc
+         c = filter_hydrologyc(fc)
+         dzsum = 0._r8
+         icefracsum = 0._r8
+         do j = max(jwt(c),1), nlevsoi
+            dzsum  = dzsum + dzmm(c,j)
+            icefracsum = icefracsum + icefrac(c,j) * dzmm(c,j)
+         end do
+         ice_imped_col(c)=10._r8**(-e_ice*(icefracsum/dzsum))         
+      enddo
+      
+      do fc = 1, num_hillslope
+         c = filter_hillslopec(fc)
+         g = col%gridcell(c)
          
-       do fc = 1, num_hillslope
-          c = filter_hillslopec(fc)
-          g = col%gridcell(c)
-          ! kinematic wave approximation
-          if (baseflow_method == 'kinematic') then
-             dgrad = col%hill_slope(c)
-          endif
-          ! darcy's law 
-          if (baseflow_method == 'darcy') then
-             if (col%cold(c) /= ispval) then
-                dgrad = (col%hill_elev(c)-zwt(c)) &
-                     - (col%hill_elev(col%cold(c))-zwt(col%cold(c)))
-                dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(col%cold(c)))
-             else
-                ! flow between channel and lowest column
-                ! bankfull height is defined to be zero
-                dgrad = (col%hill_elev(c)-zwt(c)) &
-!                     - (tdepth(g) - tdepth_bankfull(g))
-                     ! ignore overbankfull storage
-                     - min((tdepth(g) - tdepth_bankfull(g)),0._r8)
+         ! kinematic wave approximation
+         if (baseflow_method == 'kinematic') then
+            dgrad = col%hill_slope(c)
+         endif
 
-                dgrad = dgrad / (col%hill_distance(c))
-                ! dgrad cannot be negative when channel is empty
-                if (tdepth(g) <= 0._r8) then
-                   dgrad = max(dgrad, 0._r8)
-                endif
-             endif
-          end if
-
-          ! Calculate transmissivity of source column
-          if (dgrad >= 0._r8) then
-             c_src = c
-          else
-             c_src = col%cold(c)
-          endif
-
-          transmis = 0._r8
-          if(c_src /= ispval) then 
-             ! transmissivity non-zero only when saturated conditions exist
-             if(zwt(c_src) <= zi(c_src,nbedrock(c_src))) then 
-                ! sum of layer transmissivities
-                if (transmissivity_method == 'layersum') then
-                   do j = jwt(c_src)+1, nbedrock(c_src)
-                      if(j == jwt(c_src)+1) then
-                         transmis = transmis + 1.e-3_r8*hksat(c_src,j)*(zi(c_src,j) - zwt(c_src))
-                      else
-                         transmis = transmis + 1.e-3_r8*hksat(c_src,j)*dz(c_src,j)
-                      endif
-                   end do
-                   ! adjust by 'anisotropy factor'
-                   transmis = k_anisotropic*transmis
-                endif
-                ! constant conductivity based on shallowest saturated layer hk
-                if (transmissivity_method == 'constant') then
-                   transmis = k_anisotropic*(1.e-3_r8*hksat(c_src,jwt(c_src)+1)) &
-                        *(zi(c_src,nbedrock(c_src)) - zwt(c_src) )
-                endif
-                ! power law profile based on shallowest saturated layer hk
-                if (transmissivity_method == 'power') then
-                   !             transmis = k_anisotropic*hksat(c_src,jwt(c_src)+1)*0.001_r8*dzsumall* &
-                   !                  ((1-1000._r8*zwt(c_src)/dzsumall)**n_baseflow )/n_baseflow ! (m2/s)
-                endif
-             endif
-          else
-             ! transmissivity of losing stream (c_src == ispval)
-             transmis = k_anisotropic*(1.e-3_r8*hksat(c,jwt(c)+1)) &
-                  *tdepth(g)
-          endif
-
-          ! the qflx_latflow_out_vol calculations use the
-          ! transmissivity to determine whether saturated flow
-          ! conditions exist, b/c gradients will be nonzero
-          ! even when no saturated layers are present
-          qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*dgrad
-          
-! currently this is redundant to above
-          qdischarge(c) = qflx_latflow_out_vol(c)
-
-          ! convert volumetric flow to equivalent flux
-          qflx_latflow_out(c) = 1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(c)
-
-          ! hilltop column has no inflow
-          if (col%colu(c) == ispval) then
-             qflx_latflow_in(c) = 0._r8
-          endif
-
-          ! current outflow is inflow to downhill column normalized by downhill area
-          if (col%cold(c) /= ispval) then
-             qflx_latflow_in(col%cold(c)) = qflx_latflow_in(col%cold(c)) + &
-                  1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(col%cold(c))
-          endif
-
-        enddo
-
-       !-- Topographic runoff  -------------------------
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-
-          ! net lateral flow (positive out)
-          qflx_net_latflow(c) = qflx_latflow_out(c) - qflx_latflow_in(c)
-
-          fff(c) = 1._r8/ hkdepth(c)
-          dzsum = 0._r8
-          icefracsum = 0._r8
-          do j = max(jwt(c),1), nlevsoi
-             dzsum  = dzsum + dzmm(c,j)
-             icefracsum = icefracsum + icefrac(c,j) * dzmm(c,j)
-          end do
-          imped=10._r8**(-e_ice*(icefracsum/dzsum))
-          !@@
-          ! baseflow 
-          if(zwt(c) <= zi(c,nbedrock(c))) then 
-             if (lun%itype(col%landunit(c)) == istsoil) then 
-                ! apply net lateral flow here
-                rsub_top(c) = qflx_net_latflow(c)
-             else
-                rsub_top(c) = imped * baseflow_scalar &
-                     * tan(rpi/180._r8*col%topo_slope(c))* &
-                     (zi(c,nbedrock(c)) - zwt(c))**(n_baseflow)
-             endif
-          else
-             rsub_top(c) = 0._r8
-          endif
-
-          !--  Now remove water via rsub_top
-          rsub_top_tot = - rsub_top(c) * dtime
-
-          if(rsub_top_tot > 0.) then !rising water table
-             do j = jwt(c)+1,1,-1
-                ! analytical expression for specific yield
-                s_y = watsat(c,j) &
-                     * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                s_y=max(s_y,0.02_r8)
-                
-                rsub_top_layer=min(rsub_top_tot,(s_y*dz(c,j)*1.e3))
-
-                rsub_top_layer=max(rsub_top_layer,0._r8)
-                h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
-
-                rsub_top_tot = rsub_top_tot - rsub_top_layer
-
-                if (rsub_top_tot <= 0.) then 
-                   zwt(c) = zwt(c) - rsub_top_layer/s_y/1000._r8
-                   exit
-                else
-                   zwt(c) = zi(c,j-1)
-                endif
-
-             enddo
-             
-             !--  remove residual rsub_top  --------------------------------
-             h2osfc(c) = h2osfc(c) + rsub_top_tot
+         ! darcy's law 
+         if (baseflow_method == 'darcy') then
+            if (col%cold(c) /= ispval) then
+               dgrad = (col%hill_elev(c)-zwt(c)) &
+                    - (col%hill_elev(col%cold(c))-zwt(col%cold(c)))
+               dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(col%cold(c)))
+            else
+               ! flow between channel and lowest column
+               ! bankfull height is defined to be zero
+               dgrad = (col%hill_elev(c)-zwt(c)) &
+                    !                     - (tdepth(g) - tdepth_bankfull(g))
+                    ! ignore overbankfull storage
+                    - min((tdepth(g) - tdepth_bankfull(g)),0._r8)
+               
+               dgrad = dgrad / (col%hill_distance(c))
+               ! dgrad cannot be negative when channel is empty
+               if (tdepth(g) <= 0._r8) then
+                  dgrad = max(dgrad, 0._r8)
+               endif
+               ! add vertical drainage for losing streams
+               ! (this could be a separate term from lateral flow...)
+               if (dgrad < 0._r8) then
+                  !                   dgrad = dgrad - 1._r8
+                  ! adjust lateral gradient w/ k_anisotropic
+                  dgrad = dgrad - 1._r8/k_anisotropic
+               endif
+            endif
+         end if
+         
+         ! Calculate transmissivity of source column
+         if (dgrad >= 0._r8) then
+            c_src = c
+         else
+            c_src = col%cold(c)
+         endif
+         
+         transmis = 0._r8
+         if(c_src /= ispval) then 
+            ! transmissivity non-zero only when saturated conditions exist
+            if(zwt(c_src) <= zi(c_src,nbedrock(c_src))) then 
+               ! sum of layer transmissivities
+               if (transmissivity_method == 'layersum') then
+                  do j = jwt(c_src)+1, nbedrock(c_src)
+                     if(j == jwt(c_src)+1) then
+                        transmis = transmis + 1.e-3_r8*ice_imped(c_src,j)*hksat(c_src,j)*(zi(c_src,j) - zwt(c_src))
+                     else
+                        transmis = transmis + 1.e-3_r8*ice_imped(c_src,j)*hksat(c_src,j)*dz(c_src,j)
+                     endif
+                  end do
+               endif
+               ! constant conductivity based on shallowest saturated layer hk
+               if (transmissivity_method == 'constant') then
+                  transmis = (1.e-3_r8*ice_imped(c_src,jwt(c_src)+1)*hksat(c_src,jwt(c_src)+1)) &
+                       *(zi(c_src,nbedrock(c_src)) - zwt(c_src) )
+               endif
+               ! power law profile based on shallowest saturated layer hk
+               if (transmissivity_method == 'power') then
+                  !             transmis = ice_imped(c_src,jwt(c_src)+1)*hksat(c_src,jwt(c_src)+1)*0.001_r8*dzsumall* &
+                  !                  ((1-1000._r8*zwt(c_src)/dzsumall)**n_baseflow )/n_baseflow ! (m2/s)
+               endif
+            endif
+         else
+            ! transmissivity of losing stream (c_src == ispval)
+            transmis = (1.e-3_r8*ice_imped(c,jwt(c)+1)*hksat(c,jwt(c)+1))*tdepth(g)
+         endif
+         ! adjust transmissivity by 'anisotropy factor'
+         transmis = k_anisotropic*transmis
+         
+         ! the qflx_latflow_out_vol calculations use the
+         ! transmissivity to determine whether saturated flow
+         ! conditions exist, b/c gradients will be nonzero
+         ! even when no saturated layers are present
+         !          qflx_latflow_out_vol(c) = ice_imped(c)*transmis*col%hill_width(c)*dgrad
+         ! include ice impedance in transmissivity
+         qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*dgrad
+         
+         ! currently this is redundant to above
+         qdischarge(c) = qflx_latflow_out_vol(c)
+         
+         ! convert volumetric flow to equivalent flux
+         qflx_latflow_out(c) = 1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(c)
+         
+         ! hilltop column has no inflow
+         if (col%colu(c) == ispval) then
+            qflx_latflow_in(c) = 0._r8
+         endif
+         
+         ! current outflow is inflow to downhill column normalized by downhill area
+         if (col%cold(c) /= ispval) then
+            qflx_latflow_in(col%cold(c)) = qflx_latflow_in(col%cold(c)) + &
+                 1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(col%cold(c))
+         endif
+      enddo
+      
+      ! recalculate average flux for no-lateral flow case
+      if(no_lateral_flow) then
+         if (baseflow_method /= 'kinematic') then
+            call endrun(msg="baseflow_method must be kinematic for no_lateral_flow = .true.! "//errmsg(sourcefile, __LINE__))
+         endif
+         do fc = 1, num_hydrologyc
+            c = filter_hydrologyc(fc)
+            l = col%landunit(c)
+            !need to sum all columns w/ same hillslope id for each column
+            qflx_latflow_avg(c) = 0._r8
+            larea = 0._r8
+            do c0 = lun%coli(l), lun%colf(l)
+               if(col%hillslope_ndx(c0) == col%hillslope_ndx(c)) then
+                  qflx_latflow_avg(c) = qflx_latflow_avg(c) + qflx_latflow_out_vol(c0)
+                  larea = larea + col%hill_area(c0)
+               endif
+            enddo
+            qflx_latflow_avg(c) = 1.e3_r8*qflx_latflow_avg(c)/larea
+         enddo
+      endif
+      
+      !-- Topographic runoff  -------------------------
+      do fc = 1, num_hydrologyc
+         c = filter_hydrologyc(fc)
+         
+         ! net lateral flow (positive out)
+         qflx_net_latflow(c) = qflx_latflow_out(c) - qflx_latflow_in(c)
+         if(no_lateral_flow) then
+            qflx_net_latflow(c) = qflx_latflow_avg(c)
+         endif
+         
+         fff(c) = 1._r8/ hkdepth(c)
+         !@@
+         ! baseflow 
+         if(zwt(c) <= zi(c,nbedrock(c))) then 
+            if (lun%itype(col%landunit(c)) == istsoil) then 
+               ! apply net lateral flow here
+               rsub_top(c) = qflx_net_latflow(c)
+            else
+               rsub_top(c) = ice_imped_col(c) * baseflow_scalar &
+                    * tan(rpi/180._r8*col%topo_slope(c))* &
+                    (zi(c,nbedrock(c)) - zwt(c))**(n_baseflow)
+            endif
+         else
+            rsub_top(c) = 0._r8
+         endif
+         
+         !--  Now remove water via rsub_top
+         rsub_top_tot = - rsub_top(c) * dtime
+         
+         if(rsub_top_tot > 0.) then !rising water table
+            do j = jwt(c)+1,1,-1
+               ! analytical expression for specific yield
+               s_y = watsat(c,j) &
+                    * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
+               s_y=max(s_y,0.02_r8)
+               
+               rsub_top_layer=min(rsub_top_tot,(s_y*dz(c,j)*1.e3))
+               
+               rsub_top_layer=max(rsub_top_layer,0._r8)
+               h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
+               
+               rsub_top_tot = rsub_top_tot - rsub_top_layer
+               
+               if (rsub_top_tot <= 0.) then 
+                  zwt(c) = zwt(c) - rsub_top_layer/s_y/1000._r8
+                  exit
+               else
+                  zwt(c) = zi(c,j-1)
+               endif
+               
+            enddo
+            
+            !--  remove residual rsub_top  --------------------------------
+            h2osfc(c) = h2osfc(c) + rsub_top_tot
                     
           else ! deepening water table
              do j = jwt(c)+1, nbedrock(c)
@@ -2777,7 +3054,6 @@ contains
              
              !--  remove residual rsub_top  ---------------------------------------------
              ! make sure no extra water removed from soil column
-!scs?             rsub_top(c) = rsub_top(c) - rsub_top_tot/dtime
              rsub_top(c) = rsub_top(c) + rsub_top_tot/dtime
           endif
           

@@ -363,7 +363,6 @@ contains
     ! Cosine solar zenith angle for next time step
 
     do g = bounds%begg,bounds%endg
-!       coszen_gcell(g) = shr_orb_cosz (nextsw_cday, grc%lat(g), grc%lon(g), declinp1)
        coszen_grc(g) = shr_orb_cosz (nextsw_cday, grc%lat(g), grc%lon(g), declinp1)
     end do
     
@@ -374,14 +373,13 @@ contains
           zenith_angle = acos(coszen_grc(g))
           
           azsun_grc(g) = shr_orb_azimuth(nextsw_cday, grc%lat(g), grc%lon(g), declinp1, zenith_angle)
-
-          coszen_col(c) = shr_orb_cosinc(zenith_angle,azsun_grc(g),col%hill_slope(c),col%hill_aspect(c))
+! hill_slope is [m/m], convert to radians
+          coszen_col(c) = shr_orb_cosinc(zenith_angle,azsun_grc(g),atan(col%hill_slope(c)),col%hill_aspect(c))
 
        if(coszen_grc(g) > 0._r8 .and. coszen_col(c) < 0._r8) coszen_col(c) = 0._r8
 
 
     else
-!       coszen_col(c) = coszen_gcell(g)
        coszen_col(c) = coszen_grc(g)
     endif
     end do
@@ -389,7 +387,6 @@ contains
        p = filter_nourbanp(fp)
        g = patch%gridcell(p)
        c = patch%column(p)
-!          coszen_patch(p) = coszen_gcell(g)
           coszen_patch(p) = coszen_col(c)
     end do
 

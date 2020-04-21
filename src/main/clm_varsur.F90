@@ -47,7 +47,7 @@ module clm_instur
   real(r8), pointer :: topo_glc_mec(:,:) 
 
   ! subgrid hillslope hydrology constituents
-  integer, pointer :: nhillcol(:) 
+  integer, pointer :: ncol_per_hillslope(:) 
 
   !-----------------------------------------------------------------------
 

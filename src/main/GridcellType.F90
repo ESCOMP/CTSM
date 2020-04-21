@@ -30,7 +30,6 @@ module GridcellType
      logical , pointer :: active           (:) ! just needed for symmetry with other subgrid types
 
      integer,  pointer :: nbedrock         (:) ! index of uppermost bedrock layer
-     integer,  pointer :: ncolumns         (:) ! number of columns per hillslope
 
      ! Daylength
      real(r8) , pointer :: max_dayl        (:) ! maximum daylength for this grid cell (s)
@@ -72,7 +71,6 @@ contains
     allocate(this%londeg    (begg:endg)) ; this%londeg    (:) = nan
     allocate(this%active    (begg:endg)) ; this%active    (:) = .true.
     allocate(this%nbedrock  (begg:endg)) ; this%nbedrock  (:) = ispval
-    allocate(this%ncolumns   (begg:endg)); this%ncolumns   (:) = ispval
 
     ! This is initiailized in module DayLength
     allocate(this%max_dayl  (begg:endg)) ; this%max_dayl  (:) = nan
@@ -98,7 +96,6 @@ contains
     deallocate(this%londeg           )
     deallocate(this%active           )
     deallocate(this%nbedrock         )
-    deallocate(this%ncolumns         )
     deallocate(this%max_dayl         )
     deallocate(this%dayl             )
     deallocate(this%prev_dayl        )

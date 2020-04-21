@@ -184,11 +184,6 @@ Changes soil evaporative resistance method from Sakaguchi and Zeng
 formulation (1).
 </entry>
 
-<entry id="hillslope_geomorphology" type="char*256" category="clm_physics"
-       group="hillslope_hydrology_inparm" valid_values="independent,troch02,surfacedata" >
-Equation set used to derive hillslope geomorphology
-</entry>
-
 <entry id="fire_method" type="char*80" category="clm_physics"
        group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc" >
 The method type to use for CNFire

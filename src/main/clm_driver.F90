@@ -920,8 +920,6 @@ contains
        call t_startf('hydro2_drainage')
 
        call HydrologyDrainage(bounds_clump,                    &
-            filter(nc)%num_hilltop, filter(nc)%hilltopc,       &
-            filter(nc)%num_hillbottom, filter(nc)%hillbottomc, &
             filter(nc)%num_hillslope, filter(nc)%hillslopec,    &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_hydrologyc, filter(nc)%hydrologyc, &

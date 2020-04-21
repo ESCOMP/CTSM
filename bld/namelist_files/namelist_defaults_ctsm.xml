@@ -144,10 +144,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <soil_resis_method phys="clm5_0">1</soil_resis_method>
 <soil_resis_method phys="clm4_5">0</soil_resis_method>
 
-<!-- Hillslope geomorphology namelist defaults -->
-<hillslope_geomorphology phys="clm5_0">independent</hillslope_geomorphology>
-<hillslope_geomorphology phys="clm4_5">independent</hillslope_geomorphology >
-
 <!-- Soil hydrology -->
 <baseflow_scalar phys="clm5_0" lower_boundary_condition="1">1.d-2</baseflow_scalar>
 <baseflow_scalar phys="clm5_0" lower_boundary_condition="2">0.001d00</baseflow_scalar>

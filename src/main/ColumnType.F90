@@ -75,8 +75,6 @@ module ColumnType
      real(r8), pointer :: hill_width           (:)   ! across-hill width of bottom boundary of column 
      real(r8), pointer :: hill_distance        (:)   ! along-hill distance of column from bottom of hillslope
      real(r8), pointer :: hill_aspect          (:)   ! azimuth angle of column wrt to north, positive to east
-! for init_interp, add information on relative position
-!     real(r8), pointer :: relative_position        (:)   ! relative position of column along hillslope
 
      ! other column characteristics
      logical , pointer :: hydrologically_active(:)   ! true if this column is a hydrologically active type

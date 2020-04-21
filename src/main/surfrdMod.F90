@@ -934,8 +934,8 @@ contains
     ! Determine number of hillslopes and columns for hillslope hydrology mode
     !
     ! !USES:
-    use clm_instur, only : nhillcol
-    use clm_varctl, only : nhillslope,nmaxhillcol
+    use clm_instur, only : ncol_per_hillslope
+    use clm_varctl, only : nhillslope,nmax_col_per_hill
     use ncdio_pio       , only : ncd_inqdid, ncd_inqdlen
     !
     ! !ARGUMENTS:
@@ -967,22 +967,22 @@ contains
     ! maximum number of columns per landunit
     call ncd_inqdid(ncid,'nmaxhillcol',dimid,readvar) 
     if (.not. readvar) then
-       write(iulog,*)'surfrd error: nmaxhillcol not on surface data file'
-       nmaxhillcol = 1
+       write(iulog,*)'surfrd error: nmax_col_per_hill not on surface data file'
+       nmax_col_per_hill = 1
     else
        call ncd_inqdlen(ncid,dimid,nh)
-       nmaxhillcol = nh
+       nmax_col_per_hill = nh
     endif
     ! actual number of columns per landunit
     allocate(arrayl(begg:endg))
     call ncd_io(ncid=ncid, varname='nhillcolumns', flag='read', data=arrayl, &
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       write(iulog,*)'surfrd error: nhillcol not on surface data file'
-       nhillcol(begg:endg) = 1
-       write(iulog,*)'setting nhillcol[:] = 1'
+       write(iulog,*)'surfrd error: nhillcolumns not on surface data file'
+       ncol_per_hillslope(begg:endg) = 1
+       write(iulog,*)'setting ncol_per_hillslope[:] = 1'
     else
-       nhillcol(begg:endg) = arrayl(begg:endg)
+       ncol_per_hillslope(begg:endg) = arrayl(begg:endg)
     endif
     deallocate(arrayl)
 

@@ -134,7 +134,7 @@ contains
     !
     ! !USES
     use clm_varpar, only : natpft_lb, natpft_ub
-    use clm_instur, only : nhillcol
+    use clm_instur, only : ncol_per_hillslope
     use clm_varctl, only : use_hillslope
     !
     ! !ARGUMENTS:
@@ -161,7 +161,7 @@ contains
        nlunits = 1
        if(use_hillslope) then 
           ! ensure ncols is > 0
-          ncols = max(nhillcol(gi),1)
+          ncols = max(ncol_per_hillslope(gi),1)
        else
           ncols = 1
        endif
