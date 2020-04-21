@@ -407,6 +407,7 @@ contains
     real(r8) :: dbh(bounds%begp:bounds%endp)       !diameter at breast height of vegetation
     real(r8) :: cp_veg(bounds%begp:bounds%endp)    !heat capacity of veg
     real(r8) :: cp_stem(bounds%begp:bounds%endp)   !heat capacity of stems
+    real(r8) :: rstema(bounds%begp:bounds%endp)    !stem resistance to heat transfer
     real(r8) :: dt_stem(bounds%begp:bounds%endp)   !change in stem temperature
     real(r8) :: fstem(bounds%begp:bounds%endp)     !fraction of stem
     real(r8) :: lw_stem(bounds%begp:bounds%endp)   !internal longwave stem
@@ -417,7 +418,7 @@ contains
     real(r8) :: uuc(bounds%begp:bounds%endp)       ! undercanopy windspeed
     real(r8) :: cp_wood
     real(r8) :: carea_stem
-    real(r8) :: rstema
+
     ! biomass parameters
     real(r8), parameter :: k_vert = 0.1            !vertical distribution of stem
     real(r8), parameter :: k_cyl_vol = 1.0         !departure from cylindrical volume
@@ -578,7 +579,7 @@ contains
          ulrad                  => energyflux_inst%ulrad_patch                  , & ! Output: [real(r8) (:)   ]  upward longwave radiation above the canopy [W/m2]                     
          cgrnd                  => energyflux_inst%cgrnd_patch                  , & ! Output: [real(r8) (:)   ]  deriv. of soil energy flux wrt to soil temp [w/m2/k]                  
          eflx_sh_snow           => energyflux_inst%eflx_sh_snow_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from snow (W/m**2) [+ to atm]                      
-         eflx_sh_h2osfc         => energyflux_inst%eflx_sh_h2osfc_patch         , & ! Output: [real(r8) (:)   ]  sensible heat flux from surface water (W/m**2) [+ to atm]                      
+         eflx_sh_h2osfc         => energyflux_inst%eflx_sh_h2osfc_patch         , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
          eflx_sh_soil           => energyflux_inst%eflx_sh_soil_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
          eflx_sh_stem           => energyflux_inst%eflx_sh_stem_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from stems (W/m**2) [+ to atm]                    
          eflx_sh_veg            => energyflux_inst%eflx_sh_veg_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from leaves (W/m**2) [+ to atm]                    
@@ -683,77 +684,82 @@ contains
       do f = 1, fn
          p = filterp(f)
 
-         ! fraction of stem receiving incoming radiation
-         fstem(p) = (esai(p))/(elai(p)+esai(p))
-         ! when elai = 0, do not multiply by k_vert (i.e. fstem = 1)
-         if(elai(p) > 0._r8) fstem(p) = k_vert * fstem(p)
+         if(use_biomass_heat_storage) then
 
-         ! if using Satellite Phenology mode, use values in parameter file
-         ! otherwise calculate dbh from stem biomass
-         if(.not. use_cn .or. .not. use_biomass_heat_storage) then
-            dbh(p) = dbh_param(patch%itype(p))
+            ! fraction of stem receiving incoming radiation
+            fstem(p) = (esai(p))/(elai(p)+esai(p))
+
+            ! when elai = 0, do not multiply by k_vert (i.e. fstem = 1)
+            if(elai(p) > 0._r8) fstem(p) = k_vert * fstem(p)
+
+            ! if using Satellite Phenology mode, use values in parameter file
+            ! otherwise calculate dbh from stem biomass
+            if(use_cn) then
+               dbh(p) = 2._r8 * sqrt(stem_biomass(p) * (1._r8 - fbw(patch%itype(p))) &
+                    / ( shr_const_pi * htop(p) * k_cyl_vol & 
+                    * nstem(patch%itype(p)) *  wood_density(patch%itype(p))))
+            else
+               dbh(p) = dbh_param(patch%itype(p))
+            endif
+
+            ! leaf and stem surface area
+            sa_leaf(p) = elai(p)
+            ! double in spirit of full surface area for sensible heat
+            sa_leaf(p) = 2.*sa_leaf(p)
+
+            sa_stem(p) = nstem(patch%itype(p))*(htop(p)*shr_const_pi*dbh(p))
+            ! adjust for departure of cylindrical stem model
+            sa_stem(p) = k_cyl_area * sa_stem(p)
+
+            ! do not calculate separate leaf/stem heat capacity for grasses
+            ! or other pfts if dbh is below minimum value
+            if(patch%itype(p) > 11 .or. dbh(p) < min_stem_diameter) then
+               fstem(p) = 0.0
+               sa_stem(p) = 0.0
+            endif
+            
+            ! cross-sectional area of stems
+            carea_stem = shr_const_pi * (dbh(p)*0.5)**2
+
+            ! if using Satellite Phenology mode, calculate leaf and stem biomass
+            if(.not. use_cn) then
+               ! boreal needleleaf lma*c2b ~ 0.25 kg dry mass/m2(leaf)
+               leaf_biomass(p) = 0.25_r8 * max(0.01_r8, sa_leaf(p)) &
+                    / (1.-fbw(patch%itype(p)))
+               stem_biomass(p) = carea_stem * htop(p) * k_cyl_vol &
+                    * nstem(patch%itype(p)) * wood_density(patch%itype(p)) &
+                    /(1.-fbw(patch%itype(p)))
+            endif
+          
+            ! internal longwave fluxes between leaf and stem
+            ! (use same area of interaction i.e. ignore leaf <-> leaf)
+            sa_internal(p) = min(sa_leaf(p),sa_stem(p))
+            sa_internal(p) = k_internal * sa_internal(p)
+
+            ! calculate specify heat capacity of vegetation
+            ! as weighted averaged of dry biomass and water
+            ! lma_dry has units of kg dry mass/m2 here (table 2 of bonan 2017) 
+            ! cdry_biomass = 1400 J/kg/K, cwater = 4188 J/kg/K
+            cp_veg(p)  = leaf_biomass(p) * (1400._r8*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*4188._r8)
+
+            ! cp-stem will have units J/k/ground_area
+            cp_stem(p) = stem_biomass(p) * (1400._r8*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*4188._r8)
+            ! adjust for departure from cylindrical stem model
+            cp_stem(p) = k_cyl_vol * cp_stem(p)
+
+            ! resistance between internal stem temperature and canopy air 
+            rstema(p) = rstem(patch%itype(p))*dbh(p)
          else
-            dbh(p) = 2._r8 * sqrt(stem_biomass(p) * (1._r8 - fbw(patch%itype(p))) / ( shr_const_pi * htop(p) * k_cyl_vol & 
-                 * nstem(patch%itype(p)) *  wood_density(patch%itype(p))))
-         endif
-
-         ! leaf and stem surface area
-         sa_leaf(p) = elai(p)
-! double in spirit of full surface area for sensible heat
-         sa_leaf(p) = 2.*sa_leaf(p)
-
-         sa_stem(p) = nstem(patch%itype(p))*(htop(p)*shr_const_pi*dbh(p))
-! adjust for departure of cylindrical stem model
-         sa_stem(p) = k_cyl_area * sa_stem(p)
-
-         ! do not calculate separate leaf/stem heat capacity for grasses
-         if(patch%itype(p) > 11 .or. dbh(p) < min_stem_diameter) then
-            fstem(p) = 0.0
-            sa_stem(p) = 0.0
-         endif
-
-         if(.not.use_biomass_heat_storage) then
-            fstem(p) = 0._r8
+            ! use_biomass_heat_storage .false.
+            fstem(p)   = 0._r8
             sa_stem(p) = 0._r8
             sa_leaf(p) = (elai(p)+esai(p))
+            sa_internal(p) = 0._r8
+            cp_veg(p)  = 0._r8
+            cp_stem(p) = 0._r8
+            rstema(p)  = 0._r8
          endif
          
-         ! cross-sectional area of stems
-         carea_stem = shr_const_pi * (dbh(p)*0.5)**2
-
-         ! if using Satellite Phenology mode, calculate leaf and stem
-         ! biomass
-         if(.not. use_cn) then
-            ! boreal needleleaf lma*c2b ~ 0.25 kg dry mass/m2(leaf)
-            leaf_biomass(p) = 0.25_r8 * max(0.01_r8, sa_leaf(p)) &
-                 / (1.-fbw(patch%itype(p)))
-            stem_biomass(p) = carea_stem * htop(p) * k_cyl_vol &
-                 * nstem(patch%itype(p)) * wood_density(patch%itype(p)) &
-                 /(1.-fbw(patch%itype(p)))
-          endif
-          
-! internal longwave fluxes between leaf and stem
-! surface area term must be equal, remainder cancels
-! (use same area of interaction i.e. ignore leaf <-> leaf)
-         sa_internal(p) = min(sa_leaf(p),sa_stem(p))
-         sa_internal(p) = k_internal * sa_internal(p)
-
-! calculate specify heat capacity of vegetation
-! as weighted averaged of dry biomass and water
-! lma_dry has units of kg dry mass /m2 here (table 2 of bonan 2017) 
-! cdry_biomass = 1400 J/kg/K, cwater = 4188 J/kg/K
-         cp_veg(p)  = leaf_biomass(p) * (1400._r8*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*4188._r8)
-
-! use non-zero, but small, heat capacity
-         if(.not.use_biomass_heat_storage) then
-            cp_veg(p)  = 0._r8
-         endif
-
-! cp-stem will have units J/k/ground_area
-         cp_stem(p) = stem_biomass(p) * (1400._r8*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*4188._r8)
-
-! adjust for departure from cylindrical stem model
-         cp_stem(p) = k_cyl_vol * cp_stem(p)
       enddo
 
       ! calculate daylength control for Vcmax
@@ -984,20 +990,11 @@ contains
 
             ri = ( grav*htop(p) * (taf(p) - t_grnd(c)) ) / (taf(p) * uaf(p) **2.00_r8)
 
-            !! modify csoilc value (0.004) if the under-canopy is in stable condition
-
-            if (use_undercanopy_stability .and. (taf(p) - t_grnd(c) ) > 0._r8) then
-               ! decrease the value of csoilc by dividing it with (1+gamma*min(S, 10.0))
-               ! ria ("gmanna" in Sakaguchi&Zeng, 2008) is a constant (=0.5)
-               ricsoilc = params_inst%csoilc / (1.00_r8 + ria*min( ri, 10.0_r8) )
-               csoilcn = csoilb*w + ricsoilc*(1._r8-w)
-            else
-               csoilcn = csoilb*w + params_inst%csoilc*(1._r8-w)
-            end if
+            csoilcn = csoilb*w + params_inst%csoilc*(1._r8-w)
 
             !! Sakaguchi changes for stability formulation ends here
 
-            if (use_biomass_heat_storage) then
+            if (use_undercanopy_stability) then
                ! use uuc for ground fluxes (keep uaf for canopy terms)
                rah(p,2) = 1._r8/(csoilcn*uuc(p))
             else
@@ -1079,14 +1076,10 @@ contains
             ! Sensible heat conductance for air, leaf and ground
             ! Moved the original subroutine in-line...
 
-            wta    = 1._r8/rah(p,1)             ! air
+            wta    = 1._r8/rah(p,1)      ! air
             wtl    = sa_leaf(p)/rb(p)    ! leaf
-            wtg(p) = 1._r8/rah(p,2)             ! ground
-            !            wtstem = sa_stem(p)/rb(p)    ! stem
-            ! add resistance between internal stem temperature and canopy air 
-            rstema = rstem(patch%itype(p))*dbh(p)
-
-            wtstem = sa_stem(p)/(rstema + rb(p))    ! stem
+            wtg(p) = 1._r8/rah(p,2)      ! ground
+            wtstem = sa_stem(p)/(rstema(p) + rb(p))    ! stem
 
             wtshi  = 1._r8/(wta+wtl+wtstem+wtg(p))
 
@@ -1099,9 +1092,9 @@ contains
             wtal(p) = wta0(p)+wtl0(p)+wtstem0(p)   ! air + leaf + stem
 
             ! internal longwave fluxes between leaf and stem
-            lw_stem(p) = sa_internal(p) * emv(p) * sb*t_stem(p)**4
-            lw_leaf(p) = sa_internal(p) * emv(p) * sb*t_veg(p)**4
-
+            lw_stem(p) = sa_internal(p) * emv(p) * sb * t_stem(p)**4
+            lw_leaf(p) = sa_internal(p) * emv(p) * sb * t_veg(p)**4
+            
             ! Fraction of potential evaporation from leaf
 
             if (fdry(p) > 0._r8) then
@@ -1115,6 +1108,8 @@ contains
                canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(elai(p), 0.01_r8)
             end if
 
+! should be the same expression used in Photosynthesis/getqflx
+!scs            efpot = forc_rho(c)*elai(p)/rb(p)*(qsatl(p)-qaf(p))
             efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p)*(qsatl(p)-qaf(p))
             h2ocan = liqcan(p) + snocan(p)
 
@@ -1157,6 +1152,7 @@ contains
             ! Moved the original subroutine in-line...
 
             wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
+!scs            wtlq    = frac_veg_nosno(p)*elai(p)/rb(p) * rpp   ! leaf
             wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
 
             !Litter layer resistance. Added by K.Sakaguchi
@@ -1237,6 +1233,7 @@ contains
             ! result in an imbalance in "hvap*qflx_evap_veg" and
             ! "efe + dc2*wtgaq*qsatdt_veg"
 
+!scs            efpot = forc_rho(c)*elai(p)/rb(p) &
             efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p) &
                  *(wtgaq*(qsatl(p)+qsatldT(p)*dt_veg(p)) &
                  -wtgq0*qg(c)-wtaq0(p)*forc_q(c))
@@ -1366,6 +1363,17 @@ contains
               - lw_leaf(p) + lw_stem(p) - eflx_sh_veg(p) - hvap*qflx_evap_veg(p) &
               - ((t_veg(p)-tl_ini(p))*cp_veg(p)/dtime)
 
+         !scs
+!         if (abs(err(p)) > 1e6) then
+!            write(iulog,*) 'canerrchk: ', lw_leaf(p), lw_stem(p), dt_veg(p)
+!            write(iulog,*) 'canerrchk: ', (1.-fstem(p))*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
+!                 *(tlbef(p) + 4._r8*dt_veg(p)) + cir(p)*lw_grnd), &
+!                 lw_leaf(p),lw_stem(p),eflx_sh_veg(p),hvap*qflx_evap_veg(p), &
+!                 t_veg(p),tl_ini(p),dt_veg(p),cp_veg(p),cp_stem(p)
+!         endif
+
+
+         
          !  Update stem temperature; adjust outgoing longwave
          !  does not account for changes in SH or internal LW,  
          !  as that would change result for t_veg above
