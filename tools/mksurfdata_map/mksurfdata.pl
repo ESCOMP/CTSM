@@ -604,7 +604,7 @@ EOF
    my $mkcrop_on  = ",crop='on'";
 
    #
-   # Loop over all resolutions listed
+   # Loop over all resolutions and sim-years listed
    #
    foreach my $res ( @hresols ) {
       #
@@ -628,7 +628,7 @@ EOF
       #
       # Mapping files
       #
-      my %map; my %hgrd; my %lmsk; my %datfil;
+      my %map; my %hgrd; my %lmsk; my %datfil; my %filnm;
       my $hirespft = "off";
       if ( defined($opts{'hirespft'}) ) {
          $hirespft = "on";
@@ -659,8 +659,9 @@ EOF
          $hgrid = trim($hgrid);
          my $filnm = `$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ -var mksrf_filename`;
          $filnm = trim($filnm);
-         $hgrd{$typ} = $hgrid;
-         $lmsk{$typ} = $lmask;
+         $filnm{$typ} = $filnm;
+         $hgrd{$typ}  = $hgrid;
+         $lmsk{$typ}  = $lmask;
 	 if ( $opts{'hgrid'} eq "usrspec" ) {
 	     $map{$typ} = $opts{'usr_mapdir'}."/map_${hgrid}_${lmask}_to_${res}_nomask_aave_da_c${mapdate}\.nc";
 	 } else {
@@ -672,15 +673,6 @@ EOF
          }
          if ( ! defined($opts{'allownofile'}) && ! -f $map{$typ} ) {
             die "ERROR: mapping file for this resolution does NOT exist ($map{$typ}).\n";
-          }
-         my $typ_cmd = "$scrdir/../../bld/queryDefaultNamelist.pl $mkopts -options hgrid=$hgrid,lmask=$lmask,mergeGIS=$merge_gis$mkcrop -var $filnm";
-         $datfil{$typ} = `$typ_cmd`;
-         $datfil{$typ} = trim($datfil{$typ});
-         if ( $datfil{$typ} !~ /[^ ]+/ ) {
-            die "ERROR: could NOT find a $filnm data file for this resolution: $hgrid and type: $typ and $lmask.\n$typ_cmd\n\n";
-         }
-         if ( ! defined($opts{'allownofile'}) && ! -f $datfil{$typ} ) {
-            die "ERROR: data file for this resolution does NOT exist ($datfil{$typ}).\n";
          }
       }
       #
@@ -712,7 +704,7 @@ EOF
       #
       my $double = ".true.";
       #
-      # Loop over each sim_year
+      # Loop over each SSP-RCP scenario
       #
       RCP: foreach my $ssp_rcp ( @rcpaths ) {
          #
@@ -744,6 +736,24 @@ EOF
                $sim_yr0 = $1;
                $sim_yrn = $2;
                $transient = 1;
+            }
+            #
+            # Find the file for each of the types
+            #
+            foreach my $typ ( @typlist ) {
+               my $hgrid = $hgrd{$typ};
+               my $lmask = $lmsk{$typ};
+               my $filnm = $filnm{$typ};
+               my $typ_cmd = "$scrdir/../../bld/queryDefaultNamelist.pl $mkopts -options " . 
+                             "hgrid=$hgrid,lmask=$lmask,mergeGIS=$merge_gis$mkcrop,sim_year=$sim_yr0 -var $filnm";
+               $datfil{$typ} = `$typ_cmd`;
+               $datfil{$typ} = trim($datfil{$typ});
+               if ( $datfil{$typ} !~ /[^ ]+/ ) {
+                  die "ERROR: could NOT find a $filnm data file for this resolution: $hgrid and type: $typ and $lmask.\n$typ_cmd\n\n";
+               }
+               if ( ! defined($opts{'allownofile'}) && ! -f $datfil{$typ} ) {
+                  die "ERROR: data file for this resolution does NOT exist ($datfil{$typ}).\n";
+               }
             }
             # determine simulation year to use for the surface dataset:
             my $sim_yr_surfdat = "$sim_yr0";
