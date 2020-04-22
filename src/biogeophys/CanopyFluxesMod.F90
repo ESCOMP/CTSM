@@ -405,19 +405,18 @@ contains
     logical  :: is_end_day                               ! is end of current day
 
     real(r8) :: dbh(bounds%begp:bounds%endp)       !diameter at breast height of vegetation
-    real(r8) :: cp_veg(bounds%begp:bounds%endp)    !heat capacity of veg
+    real(r8) :: cp_leaf(bounds%begp:bounds%endp)   !heat capacity of leaves
     real(r8) :: cp_stem(bounds%begp:bounds%endp)   !heat capacity of stems
-    real(r8) :: rstema(bounds%begp:bounds%endp)    !stem resistance to heat transfer
+    real(r8) :: rstem(bounds%begp:bounds%endp)     !stem resistance to heat transfer
     real(r8) :: dt_stem(bounds%begp:bounds%endp)   !change in stem temperature
-    real(r8) :: fstem(bounds%begp:bounds%endp)     !fraction of stem
+    real(r8) :: frac_rad_abs_by_stem(bounds%begp:bounds%endp)     !fraction of incoming radiation absorbed by stems
     real(r8) :: lw_stem(bounds%begp:bounds%endp)   !internal longwave stem
     real(r8) :: lw_leaf(bounds%begp:bounds%endp)   !internal longwave leaf
     real(r8) :: sa_stem(bounds%begp:bounds%endp)   !surface area stem m2/m2_ground
     real(r8) :: sa_leaf(bounds%begp:bounds%endp)   !surface area leaf m2/m2_ground
     real(r8) :: sa_internal(bounds%begp:bounds%endp)   !min(sa_stem,sa_leaf)
     real(r8) :: uuc(bounds%begp:bounds%endp)       ! undercanopy windspeed
-    real(r8) :: cp_wood
-    real(r8) :: carea_stem
+    real(r8) :: carea_stem                         !cross-sectional area of stem
 
     ! biomass parameters
     real(r8), parameter :: k_vert = 0.1            !vertical distribution of stem
@@ -425,8 +424,6 @@ contains
     real(r8), parameter :: k_cyl_area = 1.0        !departure from cylindrical area
     real(r8), parameter :: k_internal = 0.0        !self-absorbtion of leaf/stem longwave
     real(r8), parameter :: min_stem_diameter = 0.01!minimum stem diameter for which to calculate stem interactions
-
-
     
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
@@ -445,11 +442,11 @@ contains
          dbh_param              => pftcon%dbh                                   , & ! Input:  diameter at brest height (m)
          fbw                    => pftcon%fbw                                   , & ! Input:  fraction of biomass that is water
          nstem                  => pftcon%nstem                                 , & ! Input:  stem number density (#ind/m2)
-         rstem                  => pftcon%rstem                                 , & ! Input:  stem resistance per stem diameter (s/m**2) 
+         rstem_per_dbh          => pftcon%rstem_per_dbh                         , & ! Input:  stem resistance per stem diameter (s/m**2) 
          wood_density           => pftcon%wood_density                          , & ! Input:  dry wood density (kg/m3)
 
          forc_lwrad             => atm2lnd_inst%forc_lwrad_downscaled_col       , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)                       
-         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
+         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col  , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
          forc_pbot              => atm2lnd_inst%forc_pbot_downscaled_col        , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
          forc_th                => atm2lnd_inst%forc_th_downscaled_col          , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (Kelvin)                            
          forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                                     
@@ -687,10 +684,10 @@ contains
          if(use_biomass_heat_storage) then
 
             ! fraction of stem receiving incoming radiation
-            fstem(p) = (esai(p))/(elai(p)+esai(p))
+            frac_rad_abs_by_stem(p) = (esai(p))/(elai(p)+esai(p))
 
-            ! when elai = 0, do not multiply by k_vert (i.e. fstem = 1)
-            if(elai(p) > 0._r8) fstem(p) = k_vert * fstem(p)
+            ! when elai = 0, do not multiply by k_vert (i.e. frac_rad_abs_by_stem = 1)
+            if(elai(p) > 0._r8) frac_rad_abs_by_stem(p) = k_vert * frac_rad_abs_by_stem(p)
 
             ! if using Satellite Phenology mode, use values in parameter file
             ! otherwise calculate dbh from stem biomass
@@ -714,7 +711,7 @@ contains
             ! do not calculate separate leaf/stem heat capacity for grasses
             ! or other pfts if dbh is below minimum value
             if(patch%itype(p) > 11 .or. dbh(p) < min_stem_diameter) then
-               fstem(p) = 0.0
+               frac_rad_abs_by_stem(p) = 0.0
                sa_stem(p) = 0.0
             endif
             
@@ -740,7 +737,7 @@ contains
             ! as weighted averaged of dry biomass and water
             ! lma_dry has units of kg dry mass/m2 here (table 2 of bonan 2017) 
             ! cdry_biomass = 1400 J/kg/K, cwater = 4188 J/kg/K
-            cp_veg(p)  = leaf_biomass(p) * (1400._r8*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*4188._r8)
+            cp_leaf(p)  = leaf_biomass(p) * (1400._r8*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*4188._r8)
 
             ! cp-stem will have units J/k/ground_area
             cp_stem(p) = stem_biomass(p) * (1400._r8*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*4188._r8)
@@ -748,16 +745,16 @@ contains
             cp_stem(p) = k_cyl_vol * cp_stem(p)
 
             ! resistance between internal stem temperature and canopy air 
-            rstema(p) = rstem(patch%itype(p))*dbh(p)
+            rstem(p) = rstem_per_dbh(patch%itype(p))*dbh(p)
          else
             ! use_biomass_heat_storage .false.
-            fstem(p)   = 0._r8
+            frac_rad_abs_by_stem(p)   = 0._r8
             sa_stem(p) = 0._r8
             sa_leaf(p) = (elai(p)+esai(p))
             sa_internal(p) = 0._r8
-            cp_veg(p)  = 0._r8
+            cp_leaf(p)  = 0._r8
             cp_stem(p) = 0._r8
-            rstema(p)  = 0._r8
+            rstem(p)  = 0._r8
          endif
          
       enddo
@@ -1079,7 +1076,7 @@ contains
             wta    = 1._r8/rah(p,1)      ! air
             wtl    = sa_leaf(p)/rb(p)    ! leaf
             wtg(p) = 1._r8/rah(p,2)      ! ground
-            wtstem = sa_stem(p)/(rstema(p) + rb(p))    ! stem
+            wtstem = sa_stem(p)/(rstem(p) + rb(p))    ! stem
 
             wtshi  = 1._r8/(wta+wtl+wtstem+wtg(p))
 
@@ -1202,13 +1199,13 @@ contains
                  +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
                  +frac_h2osfc(c)*t_h2osfc(c)**4)
 
-            dt_veg(p) = ((1.-fstem(p))*(sabv(p) + air(p) &
+            dt_veg(p) = ((1.-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) &
                  + bir(p)*t_veg(p)**4 + cir(p)*lw_grnd) &
                  - efsh - efe(p) - lw_leaf(p) + lw_stem(p) &
-                 - (cp_veg(p)/dtime)*(t_veg(p) - tl_ini(p))) &
-                 / ((1.-fstem(p))*(- 4._r8*bir(p)*t_veg(p)**3) &
+                 - (cp_leaf(p)/dtime)*(t_veg(p) - tl_ini(p))) &
+                 / ((1.-frac_rad_abs_by_stem(p))*(- 4._r8*bir(p)*t_veg(p)**3) &
                  + 4._r8*sa_internal(p)*emv(p)*sb*t_veg(p)**3 &
-                 +dc1*wtga(p) +dc2*wtgaq*qsatldT(p) + cp_veg(p)/dtime)
+                 +dc1*wtga(p) +dc2*wtgaq*qsatldT(p) + cp_leaf(p)/dtime)
 
             t_veg(p) = tlbef(p) + dt_veg(p)
             
@@ -1218,14 +1215,14 @@ contains
             if (del(p) > delmax) then
                dt_veg(p) = delmax*dels/del(p)
                t_veg(p) = tlbef(p) + dt_veg(p)
-                err(p) = (1.-fstem(p))*(sabv(p) + air(p) &
+                err(p) = (1.-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) &
                     + bir(p)*tlbef(p)**3*(tlbef(p) + &
                     4._r8*dt_veg(p)) + cir(p)*lw_grnd) &
                     -sa_internal(p)*emv(p)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
                     + lw_stem(p) &
                     - (efsh + dc1*wtga(p)*dt_veg(p)) - (efe(p) + &
                     dc2*wtgaq*qsatldT(p)*dt_veg(p)) &
-                    - (cp_veg(p)/dtime)*(t_veg(p) - tl_ini(p))
+                    - (cp_leaf(p)/dtime)*(t_veg(p) - tl_ini(p))
             end if
 
             ! Fluxes from leaves to canopy space
@@ -1358,18 +1355,18 @@ contains
               +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
               +frac_h2osfc(c)*t_h2osfc(c)**4)
 
-         err(p) = (1.-fstem(p))*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
+         err(p) = (1.-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
               *(tlbef(p) + 4._r8*dt_veg(p)) + cir(p)*lw_grnd) &
               - lw_leaf(p) + lw_stem(p) - eflx_sh_veg(p) - hvap*qflx_evap_veg(p) &
-              - ((t_veg(p)-tl_ini(p))*cp_veg(p)/dtime)
+              - ((t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime)
 
          !scs
 !         if (abs(err(p)) > 1e6) then
 !            write(iulog,*) 'canerrchk: ', lw_leaf(p), lw_stem(p), dt_veg(p)
-!            write(iulog,*) 'canerrchk: ', (1.-fstem(p))*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
+!            write(iulog,*) 'canerrchk: ', (1.-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
 !                 *(tlbef(p) + 4._r8*dt_veg(p)) + cir(p)*lw_grnd), &
 !                 lw_leaf(p),lw_stem(p),eflx_sh_veg(p),hvap*qflx_evap_veg(p), &
-!                 t_veg(p),tl_ini(p),dt_veg(p),cp_veg(p),cp_stem(p)
+!                 t_veg(p),tl_ini(p),dt_veg(p),cp_leaf(p),cp_stem(p)
 !         endif
 
 
@@ -1379,16 +1376,16 @@ contains
          !  as that would change result for t_veg above
          if (use_biomass_heat_storage) then
             if (stem_biomass(p) > 0._r8) then
-               dt_stem(p) = (fstem(p)*(sabv(p) + air(p) + bir(p)*ts_ini(p)**4 &
+               dt_stem(p) = (frac_rad_abs_by_stem(p)*(sabv(p) + air(p) + bir(p)*ts_ini(p)**4 &
                     + cir(p)*lw_grnd) - eflx_sh_stem(p) &
                     + lw_leaf(p)- lw_stem(p))/(cp_stem(p)/dtime &
-                    - fstem(p)*bir(p)*4.*ts_ini(p)**3)
+                    - frac_rad_abs_by_stem(p)*bir(p)*4.*ts_ini(p)**3)
             else
                dt_stem(p) = 0._r8
             endif
             
             dhsdt_canopy(p) = dt_stem(p)*cp_stem(p)/dtime &
-                 +(t_veg(p)-tl_ini(p))*cp_veg(p)/dtime
+                 +(t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime
             
             t_stem(p) =  t_stem(p) + dt_stem(p)
          else
@@ -1477,12 +1474,12 @@ contains
          ! Downward longwave radiation below the canopy
 
          dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) + &
-              emv(p)*emg(c)*sb*(tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))*(1.-fstem(p))+ts_ini(p)**3*(ts_ini(p) + 4._r8*dt_stem(p))*fstem(p))
+              emv(p)*emg(c)*sb*(tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))*(1.-frac_rad_abs_by_stem(p))+ts_ini(p)**3*(ts_ini(p) + 4._r8*dt_stem(p))*frac_rad_abs_by_stem(p))
 
          ! Upward longwave radiation above the canopy
 
          ulrad(p) = ((1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c) &
-              + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*((1.-fstem(p))*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))+fstem(p)*ts_ini(p)**3*(ts_ini(p) + 4._r8*dt_stem(p))) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
+              + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*((1.-frac_rad_abs_by_stem(p))*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))+frac_rad_abs_by_stem(p)*ts_ini(p)**3*(ts_ini(p) + 4._r8*dt_stem(p))) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
 
 
          ! Calculate the skin temperature as a weighted sum of all the ground and vegetated fraction

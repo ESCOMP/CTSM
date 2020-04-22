@@ -149,7 +149,7 @@ module pftconMod
      real(r8), allocatable :: dbh  (:)            ! diameter at breast height (m)
      real(r8), allocatable :: fbw  (:)            ! fraction of biomass that is water
      real(r8), allocatable :: nstem  (:)          ! stem density (#/m2)
-     real(r8), allocatable :: rstem  (:)          ! stem resistance per dbh (s/m/m)
+     real(r8), allocatable :: rstem_per_dbh  (:)  ! stem resistance per dbh (s/m/m)
      real(r8), allocatable :: wood_density  (:)   ! wood density (kg/m3)
 
      !  crop
@@ -470,7 +470,7 @@ contains
     allocate( this%dbh           (0:mxpft) )
     allocate( this%fbw           (0:mxpft) )
     allocate( this%nstem         (0:mxpft) )
-    allocate( this%rstem         (0:mxpft) )
+    allocate( this%rstem_per_dbh (0:mxpft) )
     allocate( this%wood_density  (0:mxpft) )
  
   end subroutine InitAllocate
@@ -1025,7 +1025,7 @@ contains
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
        call ncd_io('nstem',this%nstem, 'read', ncid, readvar=readv)
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
-       call ncd_io('rstem',this%rstem, 'read', ncid, readvar=readv)
+       call ncd_io('rstem',this%rstem_per_dbh, 'read', ncid, readvar=readv)
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
        call ncd_io('wood_density',this%wood_density, 'read', ncid, readvar=readv)
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
@@ -1033,7 +1033,7 @@ contains
        this%dbh = 0.0
        this%fbw = 0.0
        this%nstem = 0.1 
-       this%rstem = 0.0
+       this%rstem_per_dbh = 0.0
        this%wood_density = 0.0
     end if
 
@@ -1422,7 +1422,7 @@ contains
     deallocate( this%dbh)
     deallocate( this%fbw)
     deallocate( this%nstem)
-    deallocate( this%rstem)
+    deallocate( this%rstem_per_dbh)
     deallocate( this%wood_density)
   end subroutine Clean
 
