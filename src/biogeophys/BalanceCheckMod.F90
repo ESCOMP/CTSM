@@ -637,41 +637,6 @@ contains
 
        ! Solar radiation energy balance check
 
-<<<<<<< HEAD
-       found = .false.
-       do p = bounds%begp, bounds%endp
-          if (patch%active(p)) then
-             if ( (errsol(p) /= spval) .and. (abs(errsol(p)) > 1.e-7_r8) ) then
-                found = .true.
-                indexp = p
-                indexg = patch%gridcell(indexp)
-             end if
-          end if
-       end do
-       if ( found  .and. (DAnstep > skip_steps) ) then
-          write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
-          write(iulog,*)'nstep         = ',nstep
-          write(iulog,*)'errsol        = ',errsol(indexp)
-          c = patch%column(indexp)
-          write(iulog,*)'index p,c        = ',indexp,c
-          write(iulog,*)' col%itype= ',col%itype(c), &
-               ' lun%itype= ',lun%itype(col%landunit(c))
-          
-          if (abs(errsol(indexp)) > 1.e-5_r8 ) then
-             write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
-             write(iulog,*)'fsa           = ',fsa(indexp)
-             write(iulog,*)'fsr           = ',fsr(indexp)
-             write(iulog,*)'forc_solad(1) = ',forc_solad(indexg,1)
-             write(iulog,*)'forc_solad(2) = ',forc_solad(indexg,2)
-             write(iulog,*)'forc_solai(1) = ',forc_solai(indexg,1)
-             write(iulog,*)'forc_solai(2) = ',forc_solai(indexg,2)
-             write(iulog,*)'forc_tot      = ',forc_solad(indexg,1)+forc_solad(indexg,2) &
-               +forc_solai(indexg,1)+forc_solai(indexg,2)
-             write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
-          end if
-       end if
-=======
        errsol_max_val = maxval( abs(errsol(bounds%begp:bounds%endp)), mask = (errsol(bounds%begp:bounds%endp) /= spval) ) 
 
        if  ((errsol_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
@@ -695,8 +660,6 @@ contains
                write(iulog,*)'clm model is stopping'
                call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
            end if
->>>>>>> escomp/master
-
        end if
        
        ! Longwave radiation energy balance check
