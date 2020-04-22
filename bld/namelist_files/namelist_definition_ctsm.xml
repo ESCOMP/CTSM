@@ -1871,7 +1871,7 @@ hist means do NOT use a future scenario, just use historical data.
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v7,gx1v6,gx1v7,navy,test,tx0.1v2,tx0.1v3,tx1v1,T62,cruncep,nldas2">
+       valid_values="USGS,gx3v7,gx1v6,gx1v7,navy,test,tx0.1v2,tx0.66v1,tx0.1v3,tx1v1,T62,cruncep,nldas2">
 Land mask description
 </entry> 
 
