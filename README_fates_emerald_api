@@ -1,0 +1,23 @@
+$CTSMROOT/README_fates_emerald_api                                          22/04/2020
+
+=============================================================================================
+    QUICKSTART:
+=============================================================================================
+
+#### Create a case
+   cd $CIMEROOT/scripts
+   ./create_newcase            # get help on how to run create_newcase
+   ./create_newcase --case testI --res f19_g17_gl4 --compset I2000Clm50BgcCrop
+                               # create new "I" case for default machine at 1.9x2.5_gx1v7 
+                               # with 4km greenland ice sheetres resolution
+                               # "I2000Clm50BgcCrop" case is clm5_0 active, datm8, and inactive ice/ocn
+                               # With no-evolve ice-sheet, and MOSART for river-routing
+
+#### Run a case
+   cd testI
+   ./case.setup                # create the $CASE.run file
+   ./case.build                # build model and create namelists
+   ./case.submit               # submit script
+                                     # (NOTE: ./xmlchange RESUBMIT=10 to set RESUBMIT to number
+                                     # #  of times to automatically resubmit -- 10 in this example)
+

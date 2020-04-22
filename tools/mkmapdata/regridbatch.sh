@@ -8,15 +8,35 @@
 # that '-t regional' is specified in cmdargs.
 #
 # cheyenne specific batch commands:
-#PBS -A P93300606
-#PBS -N regrid
-#PBS -q regular
-#PBS -l select=4:ncpus=2:mpiprocs=2:mem=109GB
-#PBS -l walltime=2:00:00
-#PBS -j oe
-#PBS -me
-#PBS -V
-#PBS -S /bin/bash
+#SBATCH --account=nn2806k 
+#SBATCH --job-name=mkmapdata
+#SBATCH --mem-per-cpu=256G --partition=bigmem
+#SBATCH --ntasks=1
+#SBATCH --time=05:00:00
+
+source /cluster/bin/jobsetup
+module load ESMF/8.0.0-intel-2019b
+module load NCO/4.9.1-intel-2019b 
+module load NCL/6.6.2-intel-2019b
+
+export ESMF_NETCDF_LIBS="-lnetcdff -lnetcdf -lnetcdf_c++"
+#export ESMF_DIR=/usit/abel/u1/huit/ESMF/esmf
+export ESMF_COMPILER=intel
+export ESMF_COMM=openmpi
+#export ESMF_NETCDF="test"
+export ESMF_NETCDF_LIBPATH=/cluster/software/ESMF/8.0.0-intel-2019b/lib
+export ESMF_NETCDF_INCLUDE=/cluster/software/ESMF/8.0.0-intel-2019b/include
+ulimit -s unlimited
+ 
+export ESMFBIN_PATH=/cluster/software/ESMF/8.0.0-intel-2019b/bin
+export CSMDATA=/cluster/shared/noresm/inputdata
+export MPIEXEC=mpirun
+
+RES=$1
+GRIDFILE=$2
+phys="clm4_5"
+#RES="1x1_stefanie"
+#GRIDFILE="/cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/stefanie/SCRIPgrid_Stefanie_nomask_c200417.nc"
 
 #----------------------------------------------------------------------
 # Set parameters

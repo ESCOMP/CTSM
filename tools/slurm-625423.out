@@ -1,0 +1,787 @@
+Starting job 625423 on c6-5 at Wed Apr 22 00:09:42 CEST 2020
+
+date: invalid date '=200422'
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+** mknoocnmap.pl - Error in entering latitude/longitude for ALP1[i] **
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+/var/spool/slurmd/job625423/slurm_script: line 39: ./src/.env_mach_specific.sh: Permission denied
+./gen_domain: error while loading shared libraries: libmkl_intel_lp64.so: cannot open shared object file: No such file or directory
+mv: cannot stat 'domain.lnd.ALP1[i]_ALP1[i]..nc': No such file or directory
+mv: cannot stat 'domain*.nc': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+./regridbatch.sh: line 17: /cluster/bin/jobsetup: No such file or directory
+Run with standard options
+Create mapping files for this list of resolutions: 1x1_ALP1[i]
+Create mapping files for: 1x1_ALP1[i]
+./regridbatch.sh: line 93: [: too many arguments
+regional
+regional
+args: -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional
+time env REGRID_PROC=1 ./mkmapdata.sh -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional\n
+./mkmapdata.sh
+Script to create mapping files required by mksurfdata_map
+query command is ./../../bld/queryDefaultNamelist.pl -silent -namelist clmexp  -justvalue -options sim_year=2000 -csmdata /cluster/shared/noresm/inputdata
+
+Using user specified scrip grid file: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc
+Output grid resolution is 1x1_ALP1[i]
+Input SCRIP grid file does NOT exist: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc\n
+Make sure CSMDATA environment variable is set correctly
+
+real	0m0.247s
+user	0m0.003s
+sys	0m0.023s
+mv: cannot stat 'map_*': No such file or directory
+SYNOPSIS 
+
+     For supported resolutions:
+     mksurfdata.pl -res <res>  [OPTIONS]
+        -res [or -r] "resolution" is the supported resolution(s) to use for files (by default usrspec ).
+
+      
+     For unsupported, user-specified resolutions:	
+     mksurfdata.pl -res usrspec -usr_gname <user_gname> -usr_gdate <user_gdate>  [OPTIONS]
+        -usr_gname "user_gname"    User resolution name to find grid file with 
+                                   (only used if -res is set to 'usrspec')
+        -usr_gdate "user_gdate"    User map date to find mapping files with
+                                   (only used if -res is set to 'usrspec')
+                                   NOTE: all mapping files are assumed to be in mkmapdata
+                                    - and the user needs to have invoked mkmapdata in 
+                                      that directory first
+        -usr_mapdir "mapdirectory" Directory where the user-supplied mapping files are
+                                   Default: ../mkmapdata
+
+OPTIONS
+     NOTE: The three critical options are (-years, -glc_nec, and -ssp_rcp) they are marked as such.
+
+     -allownofile                  Allow the script to run even if one of the input files
+                                   does NOT exist.
+     -dinlc [or -l]                Enter the directory location for inputdata 
+                                   (default /cluster/shared/noresm/inputdata)
+     -debug [or -d]                Do not actually run -- just print out what 
+                                   would happen if ran.
+     -dynpft "filename"            Dynamic PFT/harvesting file to use if you have a manual list you want to use
+                                   (rather than create it on the fly, must be consistent with first year)
+                                   (Normally NOT used)
+     -fast_maps                    Toggle fast mode which doesn't use the large mapping files
+     -glc_nec "number"             Number of glacier elevation classes to use (by default 10)
+                                   (CRITICAL OPTION)
+     -merge_gis                    If you want to use the glacier dataset that merges in
+                                   the Greenland Ice Sheet data that CISM uses (typically
+                                   used only if consistency with CISM is important)
+     -hirespft                     If you want to use the high-resolution pft dataset rather 
+                                   than the default lower resolution dataset
+                                   (low resolution is at half-degree, high resolution at 3minute)
+                                   (hires only available for present-day [2000])
+     -exedir "directory"           Directory where mksurfdata_map program is
+                                   (by default assume it is in the current directory)
+     -inlandwet                    If you want to allow inland wetlands
+     -no-crop                      Create datasets without the extensive list of prognostic crop types
+     -no_surfdata                  Do not output a surface dataset
+                                   This is useful if you only want a landuse_timeseries file
+     -years [or -y] "years"        Simulation year(s) to run over (by default 2005) 
+                                   (can also be a simulation year range: i.e. 1850-2000 or 1850-2100 for ssp_rcp future scenarios)
+                                   (CRITICAL OPTION)
+     -help  [or -h]                Display this help.
+
+     -rundir "directory"           Directory to run in
+                                   (by default current directory /cluster/home/huit/ctsm/tools/mksurfdata_map)
+
+     -ssp_rcp "scenario-name"      Shared Socioeconomic Pathway and Representative Concentration Pathway Scenario name(s).
+                                   "hist" for historical, otherwise in form of SSPn-m.m where n is the SSP number
+                                   and m.m is the radiative forcing in W/m^2 at the peak or 2100.
+                                   (normally use thiw with -years 1850-2100)
+                                   (CRITICAL OPTION)
+     
+     -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
+
+     -vic                          Add the fields required for the VIC model
+     -glc                          Add the optional 3D glacier fields for verification of the glacier model
+
+      NOTE: years, res, and ssp_rcp can be comma delimited lists.
+
+
+OPTIONS to override the mapping of the input gridded data with hardcoded input
+
+     -pft_frc "list of fractions"  Comma delimited list of percentages for veg types
+     -pft_idx "list of veg index"  Comma delimited veg index for each fraction
+     -soil_cly "% of clay"         % of soil that is clay
+     -soil_col "soil color"        Soil color (1 [light] to 20 [dark])
+     -soil_fmx "soil fmax"         Soil maximum saturated fraction (0-1)
+     -soil_snd "% of sand"         % of soil that is sand
+
+OPTIONS to work around bugs?
+     -urban_skip_abort_on_invalid_data_check
+                                   do not abort on an invalid data check in urban.
+                                   Added 2015-01 to avoid recompiling as noted in
+                                   /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
+
+ERROR: unrecognized arguments: /cluster/shared/noresm/inputdata/lnd/clm2/mappingdata/maps/fates_platform/ALP1[i]
+mv: cannot stat 'surfdata_1x1_ALP1[i]_hist_16pfts_Irrig_CMIP6_simyr2005_c.nc': No such file or directory
+mv: cannot stat 'surfdata*ALP1[i]*': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+** mknoocnmap.pl - Error in entering latitude/longitude for ALP1[i] **
+mv: cannot stat '/cluster/home/huit/ctsm/tools/mkmapgrids/SCRIPgrid_*.nc': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+/var/spool/slurmd/job625423/slurm_script: line 39: ./src/.env_mach_specific.sh: Permission denied
+./gen_domain: error while loading shared libraries: libmkl_intel_lp64.so: cannot open shared object file: No such file or directory
+mv: cannot stat 'domain.lnd.ALP1[i]_ALP1[i]..nc': No such file or directory
+mv: cannot stat 'domain*.nc': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+./regridbatch.sh: line 17: /cluster/bin/jobsetup: No such file or directory
+Run with standard options
+Create mapping files for this list of resolutions: 1x1_ALP1[i]
+Create mapping files for: 1x1_ALP1[i]
+./regridbatch.sh: line 93: [: too many arguments
+regional
+regional
+args: -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional
+time env REGRID_PROC=1 ./mkmapdata.sh -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional\n
+./mkmapdata.sh
+Script to create mapping files required by mksurfdata_map
+query command is ./../../bld/queryDefaultNamelist.pl -silent -namelist clmexp  -justvalue -options sim_year=2000 -csmdata /cluster/shared/noresm/inputdata
+
+Using user specified scrip grid file: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc
+Output grid resolution is 1x1_ALP1[i]
+Input SCRIP grid file does NOT exist: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc\n
+Make sure CSMDATA environment variable is set correctly
+
+real	0m0.152s
+user	0m0.007s
+sys	0m0.021s
+mv: cannot stat 'map_*': No such file or directory
+SYNOPSIS 
+
+     For supported resolutions:
+     mksurfdata.pl -res <res>  [OPTIONS]
+        -res [or -r] "resolution" is the supported resolution(s) to use for files (by default usrspec ).
+
+      
+     For unsupported, user-specified resolutions:	
+     mksurfdata.pl -res usrspec -usr_gname <user_gname> -usr_gdate <user_gdate>  [OPTIONS]
+        -usr_gname "user_gname"    User resolution name to find grid file with 
+                                   (only used if -res is set to 'usrspec')
+        -usr_gdate "user_gdate"    User map date to find mapping files with
+                                   (only used if -res is set to 'usrspec')
+                                   NOTE: all mapping files are assumed to be in mkmapdata
+                                    - and the user needs to have invoked mkmapdata in 
+                                      that directory first
+        -usr_mapdir "mapdirectory" Directory where the user-supplied mapping files are
+                                   Default: ../mkmapdata
+
+OPTIONS
+     NOTE: The three critical options are (-years, -glc_nec, and -ssp_rcp) they are marked as such.
+
+     -allownofile                  Allow the script to run even if one of the input files
+                                   does NOT exist.
+     -dinlc [or -l]                Enter the directory location for inputdata 
+                                   (default /cluster/shared/noresm/inputdata)
+     -debug [or -d]                Do not actually run -- just print out what 
+                                   would happen if ran.
+     -dynpft "filename"            Dynamic PFT/harvesting file to use if you have a manual list you want to use
+                                   (rather than create it on the fly, must be consistent with first year)
+                                   (Normally NOT used)
+     -fast_maps                    Toggle fast mode which doesn't use the large mapping files
+     -glc_nec "number"             Number of glacier elevation classes to use (by default 10)
+                                   (CRITICAL OPTION)
+     -merge_gis                    If you want to use the glacier dataset that merges in
+                                   the Greenland Ice Sheet data that CISM uses (typically
+                                   used only if consistency with CISM is important)
+     -hirespft                     If you want to use the high-resolution pft dataset rather 
+                                   than the default lower resolution dataset
+                                   (low resolution is at half-degree, high resolution at 3minute)
+                                   (hires only available for present-day [2000])
+     -exedir "directory"           Directory where mksurfdata_map program is
+                                   (by default assume it is in the current directory)
+     -inlandwet                    If you want to allow inland wetlands
+     -no-crop                      Create datasets without the extensive list of prognostic crop types
+     -no_surfdata                  Do not output a surface dataset
+                                   This is useful if you only want a landuse_timeseries file
+     -years [or -y] "years"        Simulation year(s) to run over (by default 2005) 
+                                   (can also be a simulation year range: i.e. 1850-2000 or 1850-2100 for ssp_rcp future scenarios)
+                                   (CRITICAL OPTION)
+     -help  [or -h]                Display this help.
+
+     -rundir "directory"           Directory to run in
+                                   (by default current directory /cluster/home/huit/ctsm/tools/mksurfdata_map)
+
+     -ssp_rcp "scenario-name"      Shared Socioeconomic Pathway and Representative Concentration Pathway Scenario name(s).
+                                   "hist" for historical, otherwise in form of SSPn-m.m where n is the SSP number
+                                   and m.m is the radiative forcing in W/m^2 at the peak or 2100.
+                                   (normally use thiw with -years 1850-2100)
+                                   (CRITICAL OPTION)
+     
+     -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
+
+     -vic                          Add the fields required for the VIC model
+     -glc                          Add the optional 3D glacier fields for verification of the glacier model
+
+      NOTE: years, res, and ssp_rcp can be comma delimited lists.
+
+
+OPTIONS to override the mapping of the input gridded data with hardcoded input
+
+     -pft_frc "list of fractions"  Comma delimited list of percentages for veg types
+     -pft_idx "list of veg index"  Comma delimited veg index for each fraction
+     -soil_cly "% of clay"         % of soil that is clay
+     -soil_col "soil color"        Soil color (1 [light] to 20 [dark])
+     -soil_fmx "soil fmax"         Soil maximum saturated fraction (0-1)
+     -soil_snd "% of sand"         % of soil that is sand
+
+OPTIONS to work around bugs?
+     -urban_skip_abort_on_invalid_data_check
+                                   do not abort on an invalid data check in urban.
+                                   Added 2015-01 to avoid recompiling as noted in
+                                   /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
+
+ERROR: unrecognized arguments: /cluster/shared/noresm/inputdata/lnd/clm2/mappingdata/maps/fates_platform/ALP1[i]
+mv: cannot stat 'surfdata_1x1_ALP1[i]_hist_16pfts_Irrig_CMIP6_simyr2005_c.nc': No such file or directory
+mv: cannot stat 'surfdata*ALP1[i]*': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+** mknoocnmap.pl - Error in entering latitude/longitude for ALP1[i] **
+mv: cannot stat '/cluster/home/huit/ctsm/tools/mkmapgrids/SCRIPgrid_*.nc': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+/var/spool/slurmd/job625423/slurm_script: line 39: ./src/.env_mach_specific.sh: Permission denied
+./gen_domain: error while loading shared libraries: libmkl_intel_lp64.so: cannot open shared object file: No such file or directory
+mv: cannot stat 'domain.lnd.ALP1[i]_ALP1[i]..nc': No such file or directory
+mv: cannot stat 'domain*.nc': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+./regridbatch.sh: line 17: /cluster/bin/jobsetup: No such file or directory
+Run with standard options
+Create mapping files for this list of resolutions: 1x1_ALP1[i]
+Create mapping files for: 1x1_ALP1[i]
+./regridbatch.sh: line 93: [: too many arguments
+regional
+regional
+args: -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional
+time env REGRID_PROC=1 ./mkmapdata.sh -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional\n
+./mkmapdata.sh
+Script to create mapping files required by mksurfdata_map
+query command is ./../../bld/queryDefaultNamelist.pl -silent -namelist clmexp  -justvalue -options sim_year=2000 -csmdata /cluster/shared/noresm/inputdata
+
+Using user specified scrip grid file: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc
+Output grid resolution is 1x1_ALP1[i]
+Input SCRIP grid file does NOT exist: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc\n
+Make sure CSMDATA environment variable is set correctly
+
+real	0m0.170s
+user	0m0.003s
+sys	0m0.024s
+mv: cannot stat 'map_*': No such file or directory
+SYNOPSIS 
+
+     For supported resolutions:
+     mksurfdata.pl -res <res>  [OPTIONS]
+        -res [or -r] "resolution" is the supported resolution(s) to use for files (by default usrspec ).
+
+      
+     For unsupported, user-specified resolutions:	
+     mksurfdata.pl -res usrspec -usr_gname <user_gname> -usr_gdate <user_gdate>  [OPTIONS]
+        -usr_gname "user_gname"    User resolution name to find grid file with 
+                                   (only used if -res is set to 'usrspec')
+        -usr_gdate "user_gdate"    User map date to find mapping files with
+                                   (only used if -res is set to 'usrspec')
+                                   NOTE: all mapping files are assumed to be in mkmapdata
+                                    - and the user needs to have invoked mkmapdata in 
+                                      that directory first
+        -usr_mapdir "mapdirectory" Directory where the user-supplied mapping files are
+                                   Default: ../mkmapdata
+
+OPTIONS
+     NOTE: The three critical options are (-years, -glc_nec, and -ssp_rcp) they are marked as such.
+
+     -allownofile                  Allow the script to run even if one of the input files
+                                   does NOT exist.
+     -dinlc [or -l]                Enter the directory location for inputdata 
+                                   (default /cluster/shared/noresm/inputdata)
+     -debug [or -d]                Do not actually run -- just print out what 
+                                   would happen if ran.
+     -dynpft "filename"            Dynamic PFT/harvesting file to use if you have a manual list you want to use
+                                   (rather than create it on the fly, must be consistent with first year)
+                                   (Normally NOT used)
+     -fast_maps                    Toggle fast mode which doesn't use the large mapping files
+     -glc_nec "number"             Number of glacier elevation classes to use (by default 10)
+                                   (CRITICAL OPTION)
+     -merge_gis                    If you want to use the glacier dataset that merges in
+                                   the Greenland Ice Sheet data that CISM uses (typically
+                                   used only if consistency with CISM is important)
+     -hirespft                     If you want to use the high-resolution pft dataset rather 
+                                   than the default lower resolution dataset
+                                   (low resolution is at half-degree, high resolution at 3minute)
+                                   (hires only available for present-day [2000])
+     -exedir "directory"           Directory where mksurfdata_map program is
+                                   (by default assume it is in the current directory)
+     -inlandwet                    If you want to allow inland wetlands
+     -no-crop                      Create datasets without the extensive list of prognostic crop types
+     -no_surfdata                  Do not output a surface dataset
+                                   This is useful if you only want a landuse_timeseries file
+     -years [or -y] "years"        Simulation year(s) to run over (by default 2005) 
+                                   (can also be a simulation year range: i.e. 1850-2000 or 1850-2100 for ssp_rcp future scenarios)
+                                   (CRITICAL OPTION)
+     -help  [or -h]                Display this help.
+
+     -rundir "directory"           Directory to run in
+                                   (by default current directory /cluster/home/huit/ctsm/tools/mksurfdata_map)
+
+     -ssp_rcp "scenario-name"      Shared Socioeconomic Pathway and Representative Concentration Pathway Scenario name(s).
+                                   "hist" for historical, otherwise in form of SSPn-m.m where n is the SSP number
+                                   and m.m is the radiative forcing in W/m^2 at the peak or 2100.
+                                   (normally use thiw with -years 1850-2100)
+                                   (CRITICAL OPTION)
+     
+     -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
+
+     -vic                          Add the fields required for the VIC model
+     -glc                          Add the optional 3D glacier fields for verification of the glacier model
+
+      NOTE: years, res, and ssp_rcp can be comma delimited lists.
+
+
+OPTIONS to override the mapping of the input gridded data with hardcoded input
+
+     -pft_frc "list of fractions"  Comma delimited list of percentages for veg types
+     -pft_idx "list of veg index"  Comma delimited veg index for each fraction
+     -soil_cly "% of clay"         % of soil that is clay
+     -soil_col "soil color"        Soil color (1 [light] to 20 [dark])
+     -soil_fmx "soil fmax"         Soil maximum saturated fraction (0-1)
+     -soil_snd "% of sand"         % of soil that is sand
+
+OPTIONS to work around bugs?
+     -urban_skip_abort_on_invalid_data_check
+                                   do not abort on an invalid data check in urban.
+                                   Added 2015-01 to avoid recompiling as noted in
+                                   /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
+
+ERROR: unrecognized arguments: /cluster/shared/noresm/inputdata/lnd/clm2/mappingdata/maps/fates_platform/ALP1[i]
+mv: cannot stat 'surfdata_1x1_ALP1[i]_hist_16pfts_Irrig_CMIP6_simyr2005_c.nc': No such file or directory
+mv: cannot stat 'surfdata*ALP1[i]*': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+** mknoocnmap.pl - Error in entering latitude/longitude for ALP1[i] **
+mv: cannot stat '/cluster/home/huit/ctsm/tools/mkmapgrids/SCRIPgrid_*.nc': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+/var/spool/slurmd/job625423/slurm_script: line 39: ./src/.env_mach_specific.sh: Permission denied
+./gen_domain: error while loading shared libraries: libmkl_intel_lp64.so: cannot open shared object file: No such file or directory
+mv: cannot stat 'domain.lnd.ALP1[i]_ALP1[i]..nc': No such file or directory
+mv: cannot stat 'domain*.nc': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+./regridbatch.sh: line 17: /cluster/bin/jobsetup: No such file or directory
+Run with standard options
+Create mapping files for this list of resolutions: 1x1_ALP1[i]
+Create mapping files for: 1x1_ALP1[i]
+./regridbatch.sh: line 93: [: too many arguments
+regional
+regional
+args: -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional
+time env REGRID_PROC=1 ./mkmapdata.sh -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional\n
+./mkmapdata.sh
+Script to create mapping files required by mksurfdata_map
+query command is ./../../bld/queryDefaultNamelist.pl -silent -namelist clmexp  -justvalue -options sim_year=2000 -csmdata /cluster/shared/noresm/inputdata
+
+Using user specified scrip grid file: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc
+Output grid resolution is 1x1_ALP1[i]
+Input SCRIP grid file does NOT exist: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc\n
+Make sure CSMDATA environment variable is set correctly
+
+real	0m0.155s
+user	0m0.003s
+sys	0m0.023s
+mv: cannot stat 'map_*': No such file or directory
+SYNOPSIS 
+
+     For supported resolutions:
+     mksurfdata.pl -res <res>  [OPTIONS]
+        -res [or -r] "resolution" is the supported resolution(s) to use for files (by default usrspec ).
+
+      
+     For unsupported, user-specified resolutions:	
+     mksurfdata.pl -res usrspec -usr_gname <user_gname> -usr_gdate <user_gdate>  [OPTIONS]
+        -usr_gname "user_gname"    User resolution name to find grid file with 
+                                   (only used if -res is set to 'usrspec')
+        -usr_gdate "user_gdate"    User map date to find mapping files with
+                                   (only used if -res is set to 'usrspec')
+                                   NOTE: all mapping files are assumed to be in mkmapdata
+                                    - and the user needs to have invoked mkmapdata in 
+                                      that directory first
+        -usr_mapdir "mapdirectory" Directory where the user-supplied mapping files are
+                                   Default: ../mkmapdata
+
+OPTIONS
+     NOTE: The three critical options are (-years, -glc_nec, and -ssp_rcp) they are marked as such.
+
+     -allownofile                  Allow the script to run even if one of the input files
+                                   does NOT exist.
+     -dinlc [or -l]                Enter the directory location for inputdata 
+                                   (default /cluster/shared/noresm/inputdata)
+     -debug [or -d]                Do not actually run -- just print out what 
+                                   would happen if ran.
+     -dynpft "filename"            Dynamic PFT/harvesting file to use if you have a manual list you want to use
+                                   (rather than create it on the fly, must be consistent with first year)
+                                   (Normally NOT used)
+     -fast_maps                    Toggle fast mode which doesn't use the large mapping files
+     -glc_nec "number"             Number of glacier elevation classes to use (by default 10)
+                                   (CRITICAL OPTION)
+     -merge_gis                    If you want to use the glacier dataset that merges in
+                                   the Greenland Ice Sheet data that CISM uses (typically
+                                   used only if consistency with CISM is important)
+     -hirespft                     If you want to use the high-resolution pft dataset rather 
+                                   than the default lower resolution dataset
+                                   (low resolution is at half-degree, high resolution at 3minute)
+                                   (hires only available for present-day [2000])
+     -exedir "directory"           Directory where mksurfdata_map program is
+                                   (by default assume it is in the current directory)
+     -inlandwet                    If you want to allow inland wetlands
+     -no-crop                      Create datasets without the extensive list of prognostic crop types
+     -no_surfdata                  Do not output a surface dataset
+                                   This is useful if you only want a landuse_timeseries file
+     -years [or -y] "years"        Simulation year(s) to run over (by default 2005) 
+                                   (can also be a simulation year range: i.e. 1850-2000 or 1850-2100 for ssp_rcp future scenarios)
+                                   (CRITICAL OPTION)
+     -help  [or -h]                Display this help.
+
+     -rundir "directory"           Directory to run in
+                                   (by default current directory /cluster/home/huit/ctsm/tools/mksurfdata_map)
+
+     -ssp_rcp "scenario-name"      Shared Socioeconomic Pathway and Representative Concentration Pathway Scenario name(s).
+                                   "hist" for historical, otherwise in form of SSPn-m.m where n is the SSP number
+                                   and m.m is the radiative forcing in W/m^2 at the peak or 2100.
+                                   (normally use thiw with -years 1850-2100)
+                                   (CRITICAL OPTION)
+     
+     -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
+
+     -vic                          Add the fields required for the VIC model
+     -glc                          Add the optional 3D glacier fields for verification of the glacier model
+
+      NOTE: years, res, and ssp_rcp can be comma delimited lists.
+
+
+OPTIONS to override the mapping of the input gridded data with hardcoded input
+
+     -pft_frc "list of fractions"  Comma delimited list of percentages for veg types
+     -pft_idx "list of veg index"  Comma delimited veg index for each fraction
+     -soil_cly "% of clay"         % of soil that is clay
+     -soil_col "soil color"        Soil color (1 [light] to 20 [dark])
+     -soil_fmx "soil fmax"         Soil maximum saturated fraction (0-1)
+     -soil_snd "% of sand"         % of soil that is sand
+
+OPTIONS to work around bugs?
+     -urban_skip_abort_on_invalid_data_check
+                                   do not abort on an invalid data check in urban.
+                                   Added 2015-01 to avoid recompiling as noted in
+                                   /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
+
+ERROR: unrecognized arguments: /cluster/shared/noresm/inputdata/lnd/clm2/mappingdata/maps/fates_platform/ALP1[i]
+mv: cannot stat 'surfdata_1x1_ALP1[i]_hist_16pfts_Irrig_CMIP6_simyr2005_c.nc': No such file or directory
+mv: cannot stat 'surfdata*ALP1[i]*': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+** mknoocnmap.pl - Error in entering latitude/longitude for ALP1[i] **
+mv: cannot stat '/cluster/home/huit/ctsm/tools/mkmapgrids/SCRIPgrid_*.nc': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+/var/spool/slurmd/job625423/slurm_script: line 39: ./src/.env_mach_specific.sh: Permission denied
+./gen_domain: error while loading shared libraries: libmkl_intel_lp64.so: cannot open shared object file: No such file or directory
+mv: cannot stat 'domain.lnd.ALP1[i]_ALP1[i]..nc': No such file or directory
+mv: cannot stat 'domain*.nc': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+./regridbatch.sh: line 17: /cluster/bin/jobsetup: No such file or directory
+Run with standard options
+Create mapping files for this list of resolutions: 1x1_ALP1[i]
+Create mapping files for: 1x1_ALP1[i]
+./regridbatch.sh: line 93: [: too many arguments
+regional
+regional
+args: -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional
+time env REGRID_PROC=1 ./mkmapdata.sh -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional\n
+./mkmapdata.sh
+Script to create mapping files required by mksurfdata_map
+query command is ./../../bld/queryDefaultNamelist.pl -silent -namelist clmexp  -justvalue -options sim_year=2000 -csmdata /cluster/shared/noresm/inputdata
+
+Using user specified scrip grid file: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc
+Output grid resolution is 1x1_ALP1[i]
+Input SCRIP grid file does NOT exist: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc\n
+Make sure CSMDATA environment variable is set correctly
+
+real	0m0.156s
+user	0m0.003s
+sys	0m0.024s
+mv: cannot stat 'map_*': No such file or directory
+SYNOPSIS 
+
+     For supported resolutions:
+     mksurfdata.pl -res <res>  [OPTIONS]
+        -res [or -r] "resolution" is the supported resolution(s) to use for files (by default usrspec ).
+
+      
+     For unsupported, user-specified resolutions:	
+     mksurfdata.pl -res usrspec -usr_gname <user_gname> -usr_gdate <user_gdate>  [OPTIONS]
+        -usr_gname "user_gname"    User resolution name to find grid file with 
+                                   (only used if -res is set to 'usrspec')
+        -usr_gdate "user_gdate"    User map date to find mapping files with
+                                   (only used if -res is set to 'usrspec')
+                                   NOTE: all mapping files are assumed to be in mkmapdata
+                                    - and the user needs to have invoked mkmapdata in 
+                                      that directory first
+        -usr_mapdir "mapdirectory" Directory where the user-supplied mapping files are
+                                   Default: ../mkmapdata
+
+OPTIONS
+     NOTE: The three critical options are (-years, -glc_nec, and -ssp_rcp) they are marked as such.
+
+     -allownofile                  Allow the script to run even if one of the input files
+                                   does NOT exist.
+     -dinlc [or -l]                Enter the directory location for inputdata 
+                                   (default /cluster/shared/noresm/inputdata)
+     -debug [or -d]                Do not actually run -- just print out what 
+                                   would happen if ran.
+     -dynpft "filename"            Dynamic PFT/harvesting file to use if you have a manual list you want to use
+                                   (rather than create it on the fly, must be consistent with first year)
+                                   (Normally NOT used)
+     -fast_maps                    Toggle fast mode which doesn't use the large mapping files
+     -glc_nec "number"             Number of glacier elevation classes to use (by default 10)
+                                   (CRITICAL OPTION)
+     -merge_gis                    If you want to use the glacier dataset that merges in
+                                   the Greenland Ice Sheet data that CISM uses (typically
+                                   used only if consistency with CISM is important)
+     -hirespft                     If you want to use the high-resolution pft dataset rather 
+                                   than the default lower resolution dataset
+                                   (low resolution is at half-degree, high resolution at 3minute)
+                                   (hires only available for present-day [2000])
+     -exedir "directory"           Directory where mksurfdata_map program is
+                                   (by default assume it is in the current directory)
+     -inlandwet                    If you want to allow inland wetlands
+     -no-crop                      Create datasets without the extensive list of prognostic crop types
+     -no_surfdata                  Do not output a surface dataset
+                                   This is useful if you only want a landuse_timeseries file
+     -years [or -y] "years"        Simulation year(s) to run over (by default 2005) 
+                                   (can also be a simulation year range: i.e. 1850-2000 or 1850-2100 for ssp_rcp future scenarios)
+                                   (CRITICAL OPTION)
+     -help  [or -h]                Display this help.
+
+     -rundir "directory"           Directory to run in
+                                   (by default current directory /cluster/home/huit/ctsm/tools/mksurfdata_map)
+
+     -ssp_rcp "scenario-name"      Shared Socioeconomic Pathway and Representative Concentration Pathway Scenario name(s).
+                                   "hist" for historical, otherwise in form of SSPn-m.m where n is the SSP number
+                                   and m.m is the radiative forcing in W/m^2 at the peak or 2100.
+                                   (normally use thiw with -years 1850-2100)
+                                   (CRITICAL OPTION)
+     
+     -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
+
+     -vic                          Add the fields required for the VIC model
+     -glc                          Add the optional 3D glacier fields for verification of the glacier model
+
+      NOTE: years, res, and ssp_rcp can be comma delimited lists.
+
+
+OPTIONS to override the mapping of the input gridded data with hardcoded input
+
+     -pft_frc "list of fractions"  Comma delimited list of percentages for veg types
+     -pft_idx "list of veg index"  Comma delimited veg index for each fraction
+     -soil_cly "% of clay"         % of soil that is clay
+     -soil_col "soil color"        Soil color (1 [light] to 20 [dark])
+     -soil_fmx "soil fmax"         Soil maximum saturated fraction (0-1)
+     -soil_snd "% of sand"         % of soil that is sand
+
+OPTIONS to work around bugs?
+     -urban_skip_abort_on_invalid_data_check
+                                   do not abort on an invalid data check in urban.
+                                   Added 2015-01 to avoid recompiling as noted in
+                                   /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
+
+ERROR: unrecognized arguments: /cluster/shared/noresm/inputdata/lnd/clm2/mappingdata/maps/fates_platform/ALP1[i]
+mv: cannot stat 'surfdata_1x1_ALP1[i]_hist_16pfts_Irrig_CMIP6_simyr2005_c.nc': No such file or directory
+mv: cannot stat 'surfdata*ALP1[i]*': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+** mknoocnmap.pl - Error in entering latitude/longitude for ALP1[i] **
+mv: cannot stat '/cluster/home/huit/ctsm/tools/mkmapgrids/SCRIPgrid_*.nc': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+/var/spool/slurmd/job625423/slurm_script: line 39: ./src/.env_mach_specific.sh: Permission denied
+./gen_domain: error while loading shared libraries: libmkl_intel_lp64.so: cannot open shared object file: No such file or directory
+mv: cannot stat 'domain.lnd.ALP1[i]_ALP1[i]..nc': No such file or directory
+mv: cannot stat 'domain*.nc': No such file or directory
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) StdEnv
+./regridbatch.sh: line 17: /cluster/bin/jobsetup: No such file or directory
+Run with standard options
+Create mapping files for this list of resolutions: 1x1_ALP1[i]
+Create mapping files for: 1x1_ALP1[i]
+./regridbatch.sh: line 93: [: too many arguments
+regional
+regional
+args: -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional
+time env REGRID_PROC=1 ./mkmapdata.sh -r 1x1_ALP1[i] -f /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc   -t regional\n
+./mkmapdata.sh
+Script to create mapping files required by mksurfdata_map
+query command is ./../../bld/queryDefaultNamelist.pl -silent -namelist clmexp  -justvalue -options sim_year=2000 -csmdata /cluster/shared/noresm/inputdata
+
+Using user specified scrip grid file: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc
+Output grid resolution is 1x1_ALP1[i]
+Input SCRIP grid file does NOT exist: /cluster/shared/noresm/inputdata/share/scripgrids/fates_platform/ALP1[i]/SCRIPgrid_ALP1[i]_nomask_c{date}.nc\n
+Make sure CSMDATA environment variable is set correctly
+
+real	0m0.160s
+user	0m0.004s
+sys	0m0.022s
+mv: cannot stat 'map_*': No such file or directory
+SYNOPSIS 
+
+     For supported resolutions:
+     mksurfdata.pl -res <res>  [OPTIONS]
+        -res [or -r] "resolution" is the supported resolution(s) to use for files (by default usrspec ).
+
+      
+     For unsupported, user-specified resolutions:	
+     mksurfdata.pl -res usrspec -usr_gname <user_gname> -usr_gdate <user_gdate>  [OPTIONS]
+        -usr_gname "user_gname"    User resolution name to find grid file with 
+                                   (only used if -res is set to 'usrspec')
+        -usr_gdate "user_gdate"    User map date to find mapping files with
+                                   (only used if -res is set to 'usrspec')
+                                   NOTE: all mapping files are assumed to be in mkmapdata
+                                    - and the user needs to have invoked mkmapdata in 
+                                      that directory first
+        -usr_mapdir "mapdirectory" Directory where the user-supplied mapping files are
+                                   Default: ../mkmapdata
+
+OPTIONS
+     NOTE: The three critical options are (-years, -glc_nec, and -ssp_rcp) they are marked as such.
+
+     -allownofile                  Allow the script to run even if one of the input files
+                                   does NOT exist.
+     -dinlc [or -l]                Enter the directory location for inputdata 
+                                   (default /cluster/shared/noresm/inputdata)
+     -debug [or -d]                Do not actually run -- just print out what 
+                                   would happen if ran.
+     -dynpft "filename"            Dynamic PFT/harvesting file to use if you have a manual list you want to use
+                                   (rather than create it on the fly, must be consistent with first year)
+                                   (Normally NOT used)
+     -fast_maps                    Toggle fast mode which doesn't use the large mapping files
+     -glc_nec "number"             Number of glacier elevation classes to use (by default 10)
+                                   (CRITICAL OPTION)
+     -merge_gis                    If you want to use the glacier dataset that merges in
+                                   the Greenland Ice Sheet data that CISM uses (typically
+                                   used only if consistency with CISM is important)
+     -hirespft                     If you want to use the high-resolution pft dataset rather 
+                                   than the default lower resolution dataset
+                                   (low resolution is at half-degree, high resolution at 3minute)
+                                   (hires only available for present-day [2000])
+     -exedir "directory"           Directory where mksurfdata_map program is
+                                   (by default assume it is in the current directory)
+     -inlandwet                    If you want to allow inland wetlands
+     -no-crop                      Create datasets without the extensive list of prognostic crop types
+     -no_surfdata                  Do not output a surface dataset
+                                   This is useful if you only want a landuse_timeseries file
+     -years [or -y] "years"        Simulation year(s) to run over (by default 2005) 
+                                   (can also be a simulation year range: i.e. 1850-2000 or 1850-2100 for ssp_rcp future scenarios)
+                                   (CRITICAL OPTION)
+     -help  [or -h]                Display this help.
+
+     -rundir "directory"           Directory to run in
+                                   (by default current directory /cluster/home/huit/ctsm/tools/mksurfdata_map)
+
+     -ssp_rcp "scenario-name"      Shared Socioeconomic Pathway and Representative Concentration Pathway Scenario name(s).
+                                   "hist" for historical, otherwise in form of SSPn-m.m where n is the SSP number
+                                   and m.m is the radiative forcing in W/m^2 at the peak or 2100.
+                                   (normally use thiw with -years 1850-2100)
+                                   (CRITICAL OPTION)
+     
+     -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
+
+     -vic                          Add the fields required for the VIC model
+     -glc                          Add the optional 3D glacier fields for verification of the glacier model
+
+      NOTE: years, res, and ssp_rcp can be comma delimited lists.
+
+
+OPTIONS to override the mapping of the input gridded data with hardcoded input
+
+     -pft_frc "list of fractions"  Comma delimited list of percentages for veg types
+     -pft_idx "list of veg index"  Comma delimited veg index for each fraction
+     -soil_cly "% of clay"         % of soil that is clay
+     -soil_col "soil color"        Soil color (1 [light] to 20 [dark])
+     -soil_fmx "soil fmax"         Soil maximum saturated fraction (0-1)
+     -soil_snd "% of sand"         % of soil that is sand
+
+OPTIONS to work around bugs?
+     -urban_skip_abort_on_invalid_data_check
+                                   do not abort on an invalid data check in urban.
+                                   Added 2015-01 to avoid recompiling as noted in
+                                   /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
+
+ERROR: unrecognized arguments: /cluster/shared/noresm/inputdata/lnd/clm2/mappingdata/maps/fates_platform/ALP1[i]
+mv: cannot stat 'surfdata_1x1_ALP1[i]_hist_16pfts_Irrig_CMIP6_simyr2005_c.nc': No such file or directory
+mv: cannot stat 'surfdata*ALP1[i]*': No such file or directory
+
+Task and CPU usage stats:
+       JobID    JobName  AllocCPUS   NTasks     MinCPU MinCPUTask     AveCPU    Elapsed ExitCode 
+------------ ---------- ---------- -------- ---------- ---------- ---------- ---------- -------- 
+625423        mkmapdata          1                                             00:00:52      1:0 
+625423.batch      batch          1        1   00:00:17          0   00:00:17   00:00:52      1:0 
+625423.exte+     extern          1        1   00:00:00          0   00:00:00   00:00:52      0:0 
+
+Memory usage stats:
+       JobID     MaxRSS MaxRSSTask     AveRSS MaxPages   MaxPagesTask   AvePages 
+------------ ---------- ---------- ---------- -------- -------------- ---------- 
+625423                                                                           
+625423.batch     27840K          0     27840K      115              0        115 
+625423.exte+          0          0          0        0              0          0 
+
+Disk usage stats:
+       JobID  MaxDiskRead MaxDiskReadTask    AveDiskRead MaxDiskWrite MaxDiskWriteTask   AveDiskWrite 
+------------ ------------ --------------- -------------- ------------ ---------------- -------------- 
+625423                                                                                                
+625423.batch       61.96M               0         61.96M        0.80M                0          0.80M 
+625423.exte+        0.00M               0          0.00M            0                0              0 
+
+Job 625423 completed at Wed Apr 22 00:10:34 CEST 2020
