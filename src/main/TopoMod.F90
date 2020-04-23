@@ -13,8 +13,9 @@ module TopoMod
   use LandunitType   , only : lun
   use glc2lndMod     , only : glc2lnd_type
   use glcBehaviorMod , only : glc_behavior_type
-  use landunit_varcon, only : istice_mec
+  use landunit_varcon, only : istice_mec, istsoil
   use filterColMod   , only : filter_col_type, col_filter_from_logical_array_active_only
+  use clm_varctl     , only : use_hillslope
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -139,8 +140,14 @@ contains
           ! For other landunits, arbitrarily initialize topo_col to 0 m; for landunits
           ! where this matters, this will get overwritten in the run loop by values sent
           ! from CISM
-          this%topo_col(c) = 0._r8
-          this%needs_downscaling_col(c) = .false.
+          if (lun%itype(l) == istsoil .and. use_hillslope) then
+             this%topo_col(c) = col%hill_elev(c) ! + atm_topo(g)
+             this%needs_downscaling_col(c) = .true.
+          else
+             this%topo_col(c) = 0._r8
+             this%needs_downscaling_col(c) = .false.
+          endif
+
        end if
     end do
 
@@ -218,7 +225,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begc, endc
-    integer :: c, g
+    integer :: c, l, g
 
     character(len=*), parameter :: subname = 'UpdateTopo'
     !-----------------------------------------------------------------------
@@ -250,7 +257,13 @@ contains
     do c = bounds%begc, bounds%endc
        if (.not. this%needs_downscaling_col(c)) then
           g = col%gridcell(c)
-          this%topo_col(c) = atm_topo(g)
+          l = col%landunit(c)
+          if (lun%itype(l) == istsoil .and. use_hillslope) then
+             this%topo_col(c) = col%hill_elev(c) + atm_topo(g)
+             this%needs_downscaling_col(c) = .true.
+          else
+             this%topo_col(c) = atm_topo(g)
+          endif
        end if
     end do
 
