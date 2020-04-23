@@ -904,8 +904,8 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   JmaxCoef = Jmaxb1 * dayl_factor * (1.0_r8 - exp(-relhExp * max(relh10 - minrelh, 0.0_r8) / &
        (1.0_r8 - minrelh)))
   do while (PNlcoldi .NE. PNlc .and. jj < 100)      
-     Fc = VcmxTLeuning(tair10, tleafd10c) * Fc25
-     Fj = JmxTLeuning(tair10, tleafd10c) * Fj25
+     Fc = VcmxTKattge(tair10, tleafd10c) * Fc25
+     Fj = JmxTKattge(tair10, tleafd10c) * Fj25
      NUEr = Cv * NUEr25 * (RespTBernacchi(tleafd10c) * hourpd + RespTBernacchi(tleafn10c) * (24.0_r8 - hourpd)) !nitrogen use efficiency for respiration (g biomass/m2/day/g N)
      !****************************************************
      !Nitrogen Allocation Scheme: store the initial value
@@ -1058,7 +1058,7 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
     A = (1.0_r8 - theta_cj) * max(Wc, Wj) + theta_cj * min(Wc, Wj) 
   endif
   PSN = Cv * A * hourpd
-  Vcmaxnight = VcmxTLeuning(tair10, tleafn10) / VcmxTLeuning(tair10, tleafd10) * Vcmax
+  Vcmaxnight = VcmxTKattge(tair10, tleafn10) / VcmxTKattge(tair10, tleafd10) * Vcmax
   RESP = Cv * leaf_mr_vcm * (Vcmax * hourpd + Vcmaxnight * (24.0_r8 - hourpd))
   Net = Jmax / Fj
   Ncb = Vcmax / Fc
@@ -1213,8 +1213,8 @@ subroutine NUEref(NUEjref,NUEcref,Kj2Kcref)
 
   tgrow   = 25.0_r8
   tleaf   = 25.0_r8
-  Fc = VcmxTLeuning(tgrow, tleaf) * Fc25
-  Fj = JmxTLeuning(tgrow, tleaf) * Fj25
+  Fc = VcmxTKattge(tgrow, tleaf) * Fc25
+  Fj = JmxTKattge(tgrow, tleaf) * Fj25
   CO2c = co2ref * forc_pbot_ref * 1.0e-6_r8 !pa
   O2c = O2ref * forc_pbot_ref * 1.0e-6_r8   !pa
   k_c = params_inst%kc25_coef * exp((79430.0_r8 / (rgas*1.e-3_r8 * (25.0_r8 + tfrz))) * (1.0_r8 - (tfrz + 25.0_r8) / (tfrz + tleaf)))
@@ -1254,8 +1254,8 @@ subroutine NUE(O2a, ci, tgrow, tleaf, NUEj,NUEc,Kj2Kc)
   real(r8) :: awc                                     !second deminator term for rubsico limited carboxylation rate based on Farquhar model
   real(r8) :: c_p                                     !CO2 compenstation point (Pa)
   
-  Fc = VcmxTLeuning(tgrow, tleaf) * Fc25
-  Fj = JmxTLeuning(tgrow, tleaf) * Fj25
+  Fc = VcmxTKattge(tgrow, tleaf) * Fc25
+  Fj = JmxTKattge(tgrow, tleaf) * Fj25
   k_c = params_inst%kc25_coef * exp((79430.0_r8 / (rgas*1.e-3_r8 * (25.0_r8 + tfrz))) * (1.0_r8 - (tfrz + 25.0_r8) / (tfrz + tleaf)))
   k_o = params_inst%ko25_coef * exp((36380.0_r8 / (rgas*1.e-3_r8 * (25.0_r8 + tfrz))) * (1.0_r8 - (tfrz + 25.0_r8) / (tfrz + tleaf)))
   c_p = params_inst%cp25_yr2000 * exp((37830.0_r8 / (rgas*1.e-3_r8 * (25.0_r8 + tfrz))) * (1.0_r8 - (tfrz + 25.0_r8) / (tfrz + tleaf)))
