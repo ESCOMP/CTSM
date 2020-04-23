@@ -334,7 +334,7 @@ module LunaMod
          hourpd = dayl(g) / 3600._r8             
          tleafd10 = t_veg10_day(p) - tfrz
          tleafn10 = t_veg10_night(p) - tfrz
-         tleaf10  = (dayl(g)*tleafd10 +(86400._r8-dayl(g)) * tleafn10)/86400._r8 	     
+         tleaf10  = (dayl(g)*tleafd10 +(86400._r8-dayl(g)) * tleafn10)/86400._r8
          tair10 = t10(p)- tfrz
          relh10 = min(1.0_r8, rh10_p(p))  
 	 rb10v = rb10_p(p)	     
@@ -404,8 +404,8 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp, PNlcold, PNetold, PNrespold, PNcbold, &
-                              dayl_factor(p), PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
+                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor(p), &
+                              PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
                           
@@ -795,7 +795,7 @@ end subroutine Clear24_Climate_LUNA
 !Use the LUNA model to calculate the Nitrogen partioning 
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
      Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp,&
-     PNlcold, PNetold, PNrespold, PNcbold, dayl_factor,&
+     PNlcold, PNetold, PNrespold, PNcbold, dayl_factor, &
      PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
   implicit none
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
