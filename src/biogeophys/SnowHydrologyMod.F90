@@ -1438,22 +1438,22 @@ contains
     integer :: fc, c
     integer :: j
     real(r8) :: mss_liqice                                         ! mass of liquid+ice in a layer
-    real(r8) :: qin_bc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic BC into   layer [kg]
-    real(r8) :: qout_bc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic BC out of layer [kg]
-    real(r8) :: qin_bc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic BC into   layer [kg]
-    real(r8) :: qout_bc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic BC out of layer [kg]
-    real(r8) :: qin_oc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic OC into   layer [kg]
-    real(r8) :: qout_oc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic OC out of layer [kg]
-    real(r8) :: qin_oc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic OC into   layer [kg]
-    real(r8) :: qout_oc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic OC out of layer [kg]
-    real(r8) :: qin_dst1    (bounds%begc:bounds%endc)              ! flux of dust species 1 into   layer [kg]
-    real(r8) :: qout_dst1   (bounds%begc:bounds%endc)              ! flux of dust species 1 out of layer [kg]
-    real(r8) :: qin_dst2    (bounds%begc:bounds%endc)              ! flux of dust species 2 into   layer [kg]
-    real(r8) :: qout_dst2   (bounds%begc:bounds%endc)              ! flux of dust species 2 out of layer [kg]
-    real(r8) :: qin_dst3    (bounds%begc:bounds%endc)              ! flux of dust species 3 into   layer [kg]
-    real(r8) :: qout_dst3   (bounds%begc:bounds%endc)              ! flux of dust species 3 out of layer [kg]
-    real(r8) :: qin_dst4    (bounds%begc:bounds%endc)              ! flux of dust species 4 into   layer [kg]
-    real(r8) :: qout_dst4   (bounds%begc:bounds%endc)              ! flux of dust species 4 out of layer [kg]
+    real(r8) :: qin_bc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic BC into   layer [kg/s]
+    real(r8) :: qout_bc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic BC out of layer [kg/s]
+    real(r8) :: qin_bc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic BC into   layer [kg/s]
+    real(r8) :: qout_bc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic BC out of layer [kg/s]
+    real(r8) :: qin_oc_phi  (bounds%begc:bounds%endc)              ! flux of hydrophilic OC into   layer [kg/s]
+    real(r8) :: qout_oc_phi (bounds%begc:bounds%endc)              ! flux of hydrophilic OC out of layer [kg/s]
+    real(r8) :: qin_oc_pho  (bounds%begc:bounds%endc)              ! flux of hydrophobic OC into   layer [kg/s]
+    real(r8) :: qout_oc_pho (bounds%begc:bounds%endc)              ! flux of hydrophobic OC out of layer [kg/s]
+    real(r8) :: qin_dst1    (bounds%begc:bounds%endc)              ! flux of dust species 1 into   layer [kg/s]
+    real(r8) :: qout_dst1   (bounds%begc:bounds%endc)              ! flux of dust species 1 out of layer [kg/s]
+    real(r8) :: qin_dst2    (bounds%begc:bounds%endc)              ! flux of dust species 2 into   layer [kg/s]
+    real(r8) :: qout_dst2   (bounds%begc:bounds%endc)              ! flux of dust species 2 out of layer [kg/s]
+    real(r8) :: qin_dst3    (bounds%begc:bounds%endc)              ! flux of dust species 3 into   layer [kg/s]
+    real(r8) :: qout_dst3   (bounds%begc:bounds%endc)              ! flux of dust species 3 out of layer [kg/s]
+    real(r8) :: qin_dst4    (bounds%begc:bounds%endc)              ! flux of dust species 4 into   layer [kg/s]
+    real(r8) :: qout_dst4   (bounds%begc:bounds%endc)              ! flux of dust species 4 out of layer [kg/s]
 
     character(len=*), parameter :: subname = 'CalcAndApplyAerosolFluxes'
     !-----------------------------------------------------------------------
@@ -1519,73 +1519,89 @@ contains
              ! BCPHI:
              ! 1. flux with meltwater:
              qout_bc_phi(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_bcphi*(mss_bcphi(c,j)/mss_liqice)
-             if (qout_bc_phi(c) > mss_bcphi(c,j)) then
-                qout_bc_phi(c) = mss_bcphi(c,j)
-             endif
-             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c) * dtime
+             if (qout_bc_phi(c)*dtime > mss_bcphi(c,j)) then
+                qout_bc_phi(c) = mss_bcphi(c,j)/dtime
+                mss_bcphi(c,j) = 0._r8
+             else
+                mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c) * dtime
+             end if
              qin_bc_phi(c) = qout_bc_phi(c)
 
              ! BCPHO:
              ! 1. flux with meltwater:
              qout_bc_pho(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_bcpho*(mss_bcpho(c,j)/mss_liqice)
-             if (qout_bc_pho(c) > mss_bcpho(c,j)) then
-                qout_bc_pho(c) = mss_bcpho(c,j)
-             endif
-             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c) * dtime
+             if (qout_bc_pho(c)*dtime > mss_bcpho(c,j)) then
+                qout_bc_pho(c) = mss_bcpho(c,j)/dtime
+                mss_bcpho(c,j) = 0._r8
+             else
+                mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c) * dtime
+             end if
              qin_bc_pho(c) = qout_bc_pho(c)
 
              ! OCPHI:
              ! 1. flux with meltwater:
              qout_oc_phi(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_ocphi*(mss_ocphi(c,j)/mss_liqice)
-             if (qout_oc_phi(c) > mss_ocphi(c,j)) then
-                qout_oc_phi(c) = mss_ocphi(c,j)
-             endif
-             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c) * dtime
+             if (qout_oc_phi(c)*dtime > mss_ocphi(c,j)) then
+                qout_oc_phi(c) = mss_ocphi(c,j)/dtime
+                mss_ocphi(c,j) = 0._r8
+             else
+                mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c) * dtime
+             end if
              qin_oc_phi(c) = qout_oc_phi(c)
 
              ! OCPHO:
              ! 1. flux with meltwater:
              qout_oc_pho(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_ocpho*(mss_ocpho(c,j)/mss_liqice)
-             if (qout_oc_pho(c) > mss_ocpho(c,j)) then
-                qout_oc_pho(c) = mss_ocpho(c,j)
-             endif
-             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c) * dtime
+             if (qout_oc_pho(c)*dtime > mss_ocpho(c,j)) then
+                qout_oc_pho(c) = mss_ocpho(c,j)/dtime
+                mss_ocpho(c,j) = 0._r8
+             else
+                mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c) * dtime
+             end if
              qin_oc_pho(c) = qout_oc_pho(c)
 
              ! DUST 1:
              ! 1. flux with meltwater:
              qout_dst1(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst1*(mss_dst1(c,j)/mss_liqice)
-             if (qout_dst1(c) > mss_dst1(c,j)) then
-                qout_dst1(c) = mss_dst1(c,j)
-             endif
-             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c) * dtime
+             if (qout_dst1(c)*dtime > mss_dst1(c,j)) then
+                qout_dst1(c) = mss_dst1(c,j)/dtime
+                mss_dst1(c,j) = 0._r8
+             else
+                mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c) * dtime
+             end if
              qin_dst1(c) = qout_dst1(c)
 
              ! DUST 2:
              ! 1. flux with meltwater:
              qout_dst2(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst2*(mss_dst2(c,j)/mss_liqice)
-             if (qout_dst2(c) > mss_dst2(c,j)) then
-                qout_dst2(c) = mss_dst2(c,j)
-             endif
-             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c) * dtime
+             if (qout_dst2(c)*dtime > mss_dst2(c,j)) then
+                qout_dst2(c) = mss_dst2(c,j)/dtime
+                mss_dst2(c,j) = 0._r8
+             else
+                mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c) * dtime
+             end if
              qin_dst2(c) = qout_dst2(c)
 
              ! DUST 3:
              ! 1. flux with meltwater:
              qout_dst3(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst3*(mss_dst3(c,j)/mss_liqice)
-             if (qout_dst3(c) > mss_dst3(c,j)) then
-                qout_dst3(c) = mss_dst3(c,j)
-             endif
-             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c) * dtime
+             if (qout_dst3(c)*dtime > mss_dst3(c,j)) then
+                qout_dst3(c) = mss_dst3(c,j)/dtime
+                mss_dst3(c,j) = 0._r8
+             else
+                mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c) * dtime
+             end if
              qin_dst3(c) = qout_dst3(c)
 
              ! DUST 4:
              ! 1. flux with meltwater:
              qout_dst4(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst4*(mss_dst4(c,j)/mss_liqice)
-             if (qout_dst4(c) > mss_dst4(c,j)) then
-                qout_dst4(c) = mss_dst4(c,j)
-             endif
-             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c) * dtime
+             if (qout_dst4(c)*dtime > mss_dst4(c,j)) then
+                qout_dst4(c) = mss_dst4(c,j)/dtime
+                mss_dst4(c,j) = 0._r8
+             else
+                mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c) * dtime
+             end if
              qin_dst4(c) = qout_dst4(c)
 
           end if

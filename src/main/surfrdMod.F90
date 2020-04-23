@@ -13,7 +13,7 @@ module surfrdMod
   use clm_varpar      , only : nlevsoifl
   use landunit_varcon , only : numurbl
   use clm_varcon      , only : grlnd
-  use clm_varctl      , only : iulog, scmlat, scmlon, single_column
+  use clm_varctl      , only : iulog
   use clm_varctl      , only : use_cndv, use_crop
   use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile

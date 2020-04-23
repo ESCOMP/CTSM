@@ -842,7 +842,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -876,7 +876,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpGs" testmods="clm/default">
+  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpRsGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -884,7 +884,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="izumi" compiler="nag" category="prealpha"/>
     </machines>
@@ -892,7 +892,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1125,7 +1125,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpGs" testmods="clm/default">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpRsGs" testmods="clm/default">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -1133,7 +1133,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1141,7 +1141,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
@@ -1234,7 +1234,7 @@
       <option name="comment"  >include a nag debug test of Clm45BgcCrop</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="SMS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1243,7 +1243,7 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
-  <test name="SMS_D_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpGs" testmods="clm/USUMB">
+  <test name="SMS_D_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpRsGs" testmods="clm/USUMB">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
@@ -1305,7 +1305,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="SMS_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1886,7 +1886,7 @@
       </machine>
     </machines>
   </test>
-  <test name="SMS_Ly1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpGs" testmods="clm/output_sp_highfreq">
+  <test name="SMS_Ly1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRsGs" testmods="clm/output_sp_highfreq">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm">
         <options>
@@ -1896,7 +1896,7 @@
       </machine>
     </machines>
   </test>
-  <test name="SMS_D_Vnuopc" grid="f10_f10_musgs" compset="I2000Clm50SpRsGs" testmods="clm/default">
+  <test name="SMS_D_Ld5_Vnuopc" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>

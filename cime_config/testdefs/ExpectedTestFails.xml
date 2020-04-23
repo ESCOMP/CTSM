@@ -44,13 +44,6 @@
     </phase>
   </test>
 
-  <test name="SMS_D_Vnuopc.f10_f10_musgs.I2000Clm50SpRsGs.cheyenne_intel.clm-default">
-    <phase name="SHAREDLIB_BUILD">
-      <status>PEND</status>
-      <issue>#943</issue>
-    </phase>
-  </test>
-
   <!-- fates test suite failures -->
 
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.hobart_nag.clm-Fates">
