@@ -772,6 +772,30 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_vancouverCAN_hist_16pfts_Ir
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_mexicocityMEX_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_urbanc_alpha_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
+<fsurdat hgrid="1x1_ALP1"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/ALP1/surfdata_ALP1_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_ALP2"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/ALP2/surfdata_ALP2_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_ALP3"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/ALP3/surfdata_ALP3_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_ALP4"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/ALP4/surfdata_ALP4_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_SUB1"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/SUB1/surfdata_SUB1_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_SUB2"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/SUB2/surfdata_SUB2_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_SUB3"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/SUB3/surfdata_SUB3_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_SUB4"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/SUB4/surfdata_SUB4_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_BOR1"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/BOR1/surfdata_BOR1_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_BOR2"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/BOR2/surfdata_BOR2_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_BOR3"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/BOR3/surfdata_BOR3_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_BOR4"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/BOR4/surfdata_BOR4_simyr2000.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 without crop -->
 <fsurdat hgrid="48x96"        sim_year="1850" use_crop=".false." irrigate=".true.">
@@ -1119,6 +1143,18 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <ndepmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_ALP1"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_ALP2"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_ALP3"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_ALP4"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_SUB1"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_SUB2"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_SUB3"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_SUB4"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_BOR1"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_BOR2"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_BOR3"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_BOR4"            >nn</ndepmapalgo>
 
 <!-- Soilm moisture streams namelist defaults -->
 <!-- This is if you want to prescribe the soil moisture from input datasets rather than model it -->
@@ -1156,6 +1192,19 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <lai_mapalgo  hgrid="1x1_camdenNJ"        >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_ALP1"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_ALP2"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_ALP3"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_ALP4"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_SUB1"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_SUB2"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_SUB3"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_SUB4"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_BOR1"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_BOR2"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_BOR3"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_BOR4"            >nn</lai_mapalgo>
+
 
 <!-- lightning streams namelist defaults -->
 
@@ -1242,6 +1291,18 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <popdensmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_ALP1"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_ALP2"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_ALP3"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_ALP4"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_SUB1"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_SUB2"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_SUB3"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_SUB4"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_BOR1"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_BOR2"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_BOR3"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_BOR4"            >nn</popdensmapalgo>
 
 <!-- Urban time varying streams namelist defaults -->
 <stream_year_first_urbantv phys="clm5_0" sim_year_range="1850-2100" >2015</stream_year_first_urbantv>

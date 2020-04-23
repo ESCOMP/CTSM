@@ -1,23 +1,89 @@
 $CTSMROOT/README_fates_emerald_api                                          22/04/2020
 
-=============================================================================================
-    QUICKSTART:
-=============================================================================================
+Version 1.0, 22/04/2020 : 
+  Developed based on:
+    CLM5.0: release-clm5.0.32
+    FATES:  sci.1.34.0_api.9.0.0
+    CIME:   cime5.6.33
+  Basic setup for runing CLM-FATES on 12 SeedClim sites, using 
+    (1) GSWP3v1 (0.5 degree) atm forcing, 
+    (2) Default surface data file
+    (3) Default FATES parameterfile (12 pfts) 
+    (4) No initial file ("initial cold start from bare ground")
+    (5) Only simulation for present-day (2000) in equilibrium state are available and tested
 
-#### Create a case
-   cd $CIMEROOT/scripts
-   ./create_newcase            # get help on how to run create_newcase
-   ./create_newcase --case testI --res f19_g17_gl4 --compset I2000Clm50BgcCrop
-                               # create new "I" case for default machine at 1.9x2.5_gx1v7 
-                               # with 4km greenland ice sheetres resolution
-                               # "I2000Clm50BgcCrop" case is clm5_0 active, datm8, and inactive ice/ocn
-                               # With no-evolve ice-sheet, and MOSART for river-routing
+Version 1.1, ??/??/????:   
+  Improved setup for runing CLM-FATES on 12 SeedClim sites, using 
+    (1) COSMO-Rea 6km, ERALAND 9km, atm forcing ?
+    (2) Modify surface data file to better represent the sites ?
+    (3) Modify FATES parameterfile to better represent the sites ?
+    (4) Initial file available for all the sites to run FATES and CLM50BGC ?
+  
+Version 1.2, ??/??/????:
+  Improved setup for runing CLM-FATES on 12 SeedClim sites
+    (1) Set up simulations with prescribed standing structure
+    (2) Set up and test transient simulations from pre-industrial (1850) to present (2020) 
+
+=============================================================================================
+    QUICKSTART on SAGA:
+=============================================================================================
+#### You need to have access to SAGA and the NorESM shared folder on SAGA: /cluster/shared/noresm/inputdata/
+
+#### Clone git repository
+git clone https://github.com/NordicESMhub/ctsm.git
+
+#### Checkout branch "fates_emerald_api"
+cd ~/ctsm
+git checkout fates_emerald_api
+
+#### Download other external codes
+./manage_externals/checkout_externals 
+
+#### Create a case: 
+#--case: which directory your case will be create
+#--compset: which model component will be used, only DATM%1PTGSWP3 is available at the moment 
+#--res: currently available resolution are SeedClim Sites: 1x1_ALP1,1x1_ALP2,1x1_ALP3,1x1_ALP4,1x1_SUB1,1x1_SUB2,1x1_SUB3,1x1_SUB4,1x1_BOR1,1x1_BOR2,1x1_BOR3,1x1_BOR4
+#--machine: where to run the model, saga is the only option at the moment
+#--project: your project number on saga
+
+cd ~/ctsm/cime/scripts
+./create_newcase --case ../../../ctsm_cases/YOUR_CASE_NAME --compset 2000_DATM%1PTGSWP3_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV --res 1x1_ALP1 --machine saga --project nn2806k
 
 #### Run a case
-   cd testI
-   ./case.setup                # create the $CASE.run file
-   ./case.build                # build model and create namelists
-   ./case.submit               # submit script
-                                     # (NOTE: ./xmlchange RESUBMIT=10 to set RESUBMIT to number
-                                     # #  of times to automatically resubmit -- 10 in this example)
+
+cd ~/ctsm_cases/YOUR_CASE_NAME
+./case.setup      # create the $CASE.run file
+./case.build      # build model and create namelists
+./case.submit     # submit script
+                  # default setting only allow you to run 5 days test run.
+
+#### To run a longer simulation
+
+# Following parameters can be adapted for longer simulation
+
+./xmlchange --file env_run.xml --id RUN_STARTDATE --val 0001-01-01      # set up the starting date of your simulation 
+./xmlchange --file env_run.xml --id STOP_OPTION --val nyears            # set the simulation periods to "years"
+./xmlchange --file env_run.xml --id STOP_N --val 5                      # set the length of simulation, i.e, how many years
+./xmlchange --file env_run.xml --id CONTINUE_RUN --val TRUE             # if you want to continue your simulation from restart file, set it to TRUE
+./xmlchange --file env_run.xml --id RESUBMIT --val 10                   # set up how many times you want to resubmit your simulation.
+                                                                        # e.g, STOP_N=5, RESUBMIT=10, you will have simulation for 5+5*10=55 
+./xmlchange --file env_run.xml --id DATM_CLMNCEP_YR_START --val 1901    # set up the start year of the atmospheric forcing 
+./xmlchange --file env_run.xml --id DATM_CLMNCEP_YR_END --val 1950      # set up the end year of the atmospheric forcing
+./xmlchange --file env_workflow.xml --id JOB_WALLCLOCK_TIME --val 01:00:00   # set up longer time for runing the simulation 
+
+./case.submit 
+
+#### Checking the status of your simulation
+
+squeue -u YOUR_SAGA_ACCOUNT
+
+#### Checking the results of your simulation
+
+cd /cluster/work/users/YOUR_SAGA_ACCOUNT/ctsm/YOUR_CASE_NAME/run       # when model is running, model results and restart file are kept here
+cd /cluster/work/users/YOUR_SAGA_ACCOUNT/archive/YOUR_CASE_NAME        # when model is finished, model results and restart file are kept here
+                                                   
+=============================================================================================
+For more detail on the platform and its usage, please refere to "README_fates_emerald_api_expert_only"     
+=============================================================================================
+
 
