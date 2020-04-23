@@ -87,6 +87,16 @@ CTSM testing:
     cheyenne ---- OK 
     izumi ------- PASS
 
+Externals used for the testing:
+   [cism]
+	  tag = cism2_1_68
+   [rtm]
+	  tag = rtm1_0_70
+   [mosart]
+	  tag = mosart1_0_35
+   [cime]
+	  tag = branch_tags/cime5.8.15_a01
+
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
 
