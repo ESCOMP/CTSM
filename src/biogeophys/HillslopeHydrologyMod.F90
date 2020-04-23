@@ -273,6 +273,7 @@ contains
           ! weighted relative to one another via pct_hillslope
           hillslope_area = 0._r8
           do c = lun%coli(l), lun%colf(l)
+             nh = col%hillslope_ndx(c)
              hillslope_area = hillslope_area &
                   + col%hill_area(c)*(real(pct_hillslope(l,nh),r8)*0.01_r8)
           enddo
