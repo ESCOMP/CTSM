@@ -47,7 +47,7 @@ git checkout fates_emerald_api
 #--project: your project number on saga
 
 cd ~/ctsm/cime/scripts
-./create_newcase --case ../../../ctsm_cases/YOUR_CASE_NAME --compset 2000_DATM%1PTGSWP3_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV --res 1x1_ALP1 --machine saga --project nn2806k
+./create_newcase --case ../../../ctsm_cases/YOUR_CASE_NAME --compset 2000_DATM%1PTGSWP3_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV --res 1x1_ALP1 --machine saga --run-unsupported --project nn2806k
 
 #### Run a case
 
