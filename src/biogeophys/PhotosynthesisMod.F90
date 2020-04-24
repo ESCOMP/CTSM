@@ -2802,18 +2802,29 @@ contains
       kcha    = 79430._r8
       koha    = 36380._r8
       cpha    = 37830._r8
-      vcmaxha = 73637._r8
-      jmaxha  = 50300._r8
-      tpuha   = 73637._r8
       lmrha   = 46390._r8
+      ! Values to use for Leuning
+      !vcmaxha = 73637._r8
+      !jmaxha  = 50300._r8
+      !tpuha   = 73637._r8
+      ! Values to use for Kattge
+      vcmaxha = 72000._r8
+      jmaxha  = 50000._r8
+      tpuha   = 72000._r8
 
       ! High temperature deactivation, from:
       ! Leuning (2002) Plant, Cell and Environment 25:1205-1210
       ! The factor "c" scales the deactivation to a value of 1.0 at 25C
 
-      vcmaxhd = 149252._r8
-      jmaxhd  = 152044._r8
-      tpuhd   = 149252._r8
+      ! Values to use for Leuning
+      !vcmaxhd = 149252._r8
+      !jmaxhd  = 152044._r8
+      !tpuhd   = 149252._r8
+      ! Values to use for Kattge
+      vcmaxhd = 200000._r8
+      jmaxhd  = 200000._r8
+      tpuhd   = 200000._r8
+
       lmrhd   = 150650._r8
       lmrse   = 490._r8
       lmrc    = fth25 (lmrhd, lmrse)
@@ -3173,8 +3184,12 @@ contains
                kp25_sha = kp25top * nscaler_sha
 
                ! Adjust for temperature
-               vcmaxse = 486.0_r8
-               jmaxse  = 495.0_r8
+               ! Acclimation is done for Kattge
+               vcmaxse = 668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
+               jmaxse  = 659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
+               ! These values are used for Leuning
+               !vcmaxse = 486.0_r8
+               !jmaxse  = 495.0_r8
                tpuse = vcmaxse
                vcmaxc = fth25 (vcmaxhd, vcmaxse)
                jmaxc  = fth25 (jmaxhd, jmaxse)
