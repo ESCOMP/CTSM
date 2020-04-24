@@ -137,6 +137,7 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : RestartHydrStates
+   use CNFireMethodMod, only: cnfire_method_type
 
    implicit none
    
@@ -176,6 +177,9 @@ module CLMFatesInterfaceMod
 
       ! fates_restart is the inteface calss for restarting the model
       type(fates_restart_interface_type) :: fates_restart
+
+      ! fates_fire_data_method determines the fire data passed from HLM to FATES
+      class(cnfire_method_type), allocatable :: fates_fire_data_method
 
    contains
       
@@ -385,7 +389,9 @@ module CLMFatesInterfaceMod
       use FatesInterfaceTypesMod, only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
       use subgridMod, only :  natveg_patch_exists
-       use clm_instur      , only : wt_nat_patch
+      use clm_instur      , only : wt_nat_patch
+      use CNFireFactoryMod, only: create_fates_fire_data_method
+
       implicit none
       
       ! Input Arguments
@@ -569,6 +575,10 @@ module CLMFatesInterfaceMod
       ! Report Fates Parameters (debug flag in lower level routines)
       call FatesReportParameters(masterproc)
 
+      ! Fire data to send to FATES
+      allocate(this%fates_fire_data_method, &
+               source=create_fates_fire_data_method())
+
     end subroutine init
 
     ! ===================================================================================
@@ -619,6 +629,10 @@ module CLMFatesInterfaceMod
       ! ed_driver is not a hlm_fates_inst_type procedure because we need an extra step 
       ! to process array bounding information 
       
+      ! !USES
+      use FATESFireNoDataMod, only: fates_fire_no_data_type
+      use FATESFireDataMod, only: fates_fire_data_type
+
       implicit none
       class(hlm_fates_interface_type), intent(inout) :: this
       type(bounds_type),intent(in)                   :: bounds_clump
@@ -633,8 +647,12 @@ module CLMFatesInterfaceMod
       type(canopystate_type)  , intent(inout)        :: canopystate_inst
       type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
 
+      type(fates_fire_data_type) :: fates_fire_data_inst
+      type(fates_fire_no_data_type) :: fates_fire_no_data_inst
+
       ! !LOCAL VARIABLES:
       integer  :: s                        ! site index
+      integer  :: g                        ! grid-cell index (HLM)
       integer  :: c                        ! column index (HLM)
       integer  :: ifp                      ! patch index
       integer  :: p                        ! HLM patch index
@@ -686,6 +704,13 @@ module CLMFatesInterfaceMod
 
       do s=1,this%fates(nc)%nsites
          c = this%f2hmap(nc)%fcolumn(s)
+         g = col%gridcell(c)
+
+         if (use_fates_spitfire > 1) then
+            this%fates(nc)%bc_in(s)%lightning24 = fates_fire_data_inst%lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
+         else
+            this%fates(nc)%bc_in(s)%lightning24 = fates_fire_no_data_inst%lnfm24(g) / days_per_year  ! #/km2/yr to #/km2/day
+         end if
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 

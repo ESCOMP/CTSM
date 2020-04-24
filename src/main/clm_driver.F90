@@ -111,11 +111,15 @@ contains
     !
     ! !USES:
     use clm_time_manager     , only : get_curr_date
-    use clm_varctl           , only : use_lai_streams
+    use clm_varctl, only: use_lai_streams, use_fates_spitfire
     use SatellitePhenologyMod, only : lai_advance
+    use FATESFireNoDataMod, only: fates_fire_no_data_type
+    use FATESFireDataMod, only: fates_fire_data_type
     !
     ! !ARGUMENTS:
     implicit none
+    type(fates_fire_data_type) :: fates_fire_data_inst
+    type(fates_fire_no_data_type) :: fates_fire_no_data_inst
     logical ,        intent(in) :: doalb       ! true if time for surface albedo calc
     real(r8),        intent(in) :: nextsw_cday ! calendar day for nstep+1
     real(r8),        intent(in) :: declinp1    ! declination angle for next time step
@@ -398,6 +402,10 @@ contains
        end if
        call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
        call t_stopf('bgc_interp')
+    ! use_fates_spitfire is assigned an integer value in the namelist
+    ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+    else if (use_fates_spitfire > 1) then
+       call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
     end if
 
     ! Get time varying urban data
@@ -1259,6 +1267,14 @@ contains
        if (use_crop) then
           call crop_inst%CropUpdateAccVars(bounds_proc, &
                temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
+       end if
+
+       ! use_fates_spitfire is assigned an integer value in the namelist
+       ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+       if (use_fates_spitfire > 1) then
+          call fates_fire_data_inst%UpdateAccVars(bounds_proc)
+       else
+          call fates_fire_no_data_inst%UpdateAccVars(bounds_proc)
        end if
 
        call t_stopf('accum')

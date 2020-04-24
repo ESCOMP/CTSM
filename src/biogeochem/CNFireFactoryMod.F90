@@ -17,6 +17,7 @@ module CNFireFactoryMod
   ! !PUBLIC ROUTINES:
   public :: CNFireReadNML         ! read the fire namelist
   public :: create_cnfire_method  ! create an object of class cnfire_method_type
+  public :: create_fates_fire_data_method  ! create an object of class cnfire_method_type
 
   ! !PRIVATE DATA MEMBERS:
   character(len=80), private :: fire_method = "li2014qianfrc"
@@ -121,5 +122,44 @@ contains
     call cnfire_method%CNFireReadNML( NLFilename )
 
   end function create_cnfire_method
+  !-----------------------------------------------------------------------
+
+  !-----------------------------------------------------------------------
+  function create_fates_fire_data_method() result(fates_fire_data_method)
+    !
+    ! !DESCRIPTION:
+    ! Create and return an object of fates_fire_data_method_type.
+    ! The particular type is determined based on a namelist parameter.
+    !
+    ! !USES:
+    use clm_varctl, only: use_fates_spitfire
+    use CNFireMethodMod, only: cnfire_method_type
+    use FATESFireNoDataMod, only: fates_fire_no_data_type
+    use FATESFireDataMod, only: fates_fire_data_type
+    !
+    ! !ARGUMENTS:
+    class(cnfire_method_type), allocatable :: fates_fire_data_method  ! function result
+    !
+    ! !LOCAL VARIABLES:
+    integer :: current_case
+    character(len=*), parameter :: subname = 'create_fates_fire_data_method'
+    !-----------------------------------------------------------------------
+
+    current_case = use_fates_spitfire
+
+    select case (current_case)
+
+    case (0:1)
+       allocate(fates_fire_data_method, source=fates_fire_no_data_type())
+    case (2:3)
+       allocate(fates_fire_data_method, source=fates_fire_data_type())
+
+    case default
+       write(iulog,*) subname//' ERROR: unknown method: ', use_fates_spitfire
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+
+    end select
+
+  end function create_fates_fire_data_method
 
 end module CNFireFactoryMod

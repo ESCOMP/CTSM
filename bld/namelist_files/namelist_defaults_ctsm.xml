@@ -1173,14 +1173,19 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <light_res    use_cn=".true." fire_method="nofire" >none</light_res>
 <light_res    use_cn=".true." phys="clm4_5"        >94x192</light_res>
 <light_res    use_cn=".true." phys="clm5_0"        >94x192</light_res>
+<light_res    use_fates=".true." phys="clm5_0"     >360x720</light_res>
 
 <stream_year_first_lightng use_cn=".true."   >0001</stream_year_first_lightng>
 <stream_year_last_lightng  use_cn=".true."   >0001</stream_year_last_lightng>
+<stream_year_first_lightng use_fates=".true.">0001</stream_year_first_lightng>
+<stream_year_last_lightng  use_fates=".true.">0001</stream_year_last_lightng>
 
 <stream_fldfilename_lightng hgrid="94x192"    use_cn=".true."   >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</stream_fldfilename_lightng>
 <stream_fldfilename_lightng hgrid="360x720"   use_cn=".true."   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
+<stream_fldfilename_lightng use_fates=".true."   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
 
 <lightngmapalgo use_cn=".true."                               >bilinear</lightngmapalgo>
+<lightngmapalgo use_fates=".true."                            >nn</lightngmapalgo>
 
 <lightngmapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</lightngmapalgo>
 <lightngmapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</lightngmapalgo>
@@ -2726,7 +2731,7 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <use_nitrif_denitrif bgc_mode="fates"  >.false.</use_nitrif_denitrif>
 
 <!-- ===== FATES DEFAULTS =========== -->
-<use_fates_spitfire            use_fates=".true.">.false.</use_fates_spitfire>
+<use_fates_spitfire            use_fates=".true.">0</use_fates_spitfire>
 <use_fates_planthydro          use_fates=".true.">.false.</use_fates_planthydro>
 <use_fates_cohort_age_tracking use_fates=".true.">.false.</use_fates_cohort_age_tracking>
 <use_fates_ed_st3              use_fates=".true.">.false.</use_fates_ed_st3>
