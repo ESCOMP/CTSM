@@ -950,6 +950,9 @@ sub setup_cmdl_fire_light_res {
     } else {
        $nl_flags->{$var} = ".false.";
     }
+    if ( $nl_flags->{'use_fates_spitfire'} > 1 ) {
+       $nl_flags->{$var} = ".true.";
+    }
   }
 }
 

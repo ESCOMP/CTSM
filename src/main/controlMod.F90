@@ -636,7 +636,7 @@ contains
 
     call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (use_fates_spitfire, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_spitfire, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_fates_logging, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_cohort_age_tracking, 1, MPI_LOGICAL, 0, mpicom, ier)

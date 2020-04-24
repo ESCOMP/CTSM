@@ -269,7 +269,7 @@ contains
     use clm_varcon            , only : spval
     use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
     use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
-    use clm_varctl            , only : use_crop, ndep_from_cpl
+    use clm_varctl            , only : use_crop, ndep_from_cpl, use_fates_spitfire
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size, get_curr_calday
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
@@ -293,8 +293,12 @@ contains
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
     use BalanceCheckMod       , only : BalanceCheckInit
+    use FATESFireNoDataMod, only: fates_fire_no_data_type
+    use FATESFireDataMod, only: fates_fire_data_type
     !
     ! !ARGUMENTS    
+    type(fates_fire_data_type) :: fates_fire_data_inst
+    type(fates_fire_no_data_type) :: fates_fire_no_data_inst
     !
     ! !LOCAL VARIABLES:
     integer               :: c,i,j,k,l,p! indices
@@ -471,6 +475,10 @@ contains
        if ( use_c13 .and. use_c13_timeseries ) then
           call C13_init_TimeSeries()
        end if
+    ! use_fates_spitfire is assigned an integer value in the namelist
+    ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+    else if (use_fates_spitfire > 1) then
+       call bgc_vegetation_inst%Init2(bounds_proc, NLFilename)
     else
        call SatellitePhenologyInit(bounds_proc)
     end if
@@ -604,6 +612,14 @@ contains
 
     if (use_crop) then
        call crop_inst%initAccVars(bounds_proc)
+    end if
+
+    ! use_fates_spitfire is assigned an integer value in the namelist
+    ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+    if (use_fates_spitfire > 1) then
+       call fates_fire_data_inst%initAccVars(bounds_proc)
+    else
+       call fates_fire_no_data_inst%initAccVars(bounds_proc)
     end if
 
     !------------------------------------------------------------       
