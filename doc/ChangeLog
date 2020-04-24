@@ -1,4 +1,142 @@
 ===============================================================
+Tag name:  ctsm1.0.dev091
+Originator(s):  sacks (Bill Sacks)
+Date:  Fri Apr 24 07:43:46 MDT 2020
+One-line Summary: Increase tolerance on near-zero truncation for a snow state update
+
+Purpose of changes
+------------------
+
+In UpdateState_TopLayerFluxes, the tolerance of 1.e-13 was occasionally
+exceeded. Although I haven't done a careful analysis, it seems okay to
+me to increase this tolerance slightly. Here I increase it to 1.e-12.
+
+Previously, if top-layer h2osoi_ice or h2osoi_liq were reduced to less
+than 1e-13 times the original value (in an absolute value sense), these
+masses were set to 0; now we set these masses to 0 if they are reduced
+to less than 1e-12 times the original. So we can now occasionally set a
+value to exactly 0 when before it was left at slightly different from
+zero. If the previous code led to a small positive value, between 1e-13
+and 1e-12 times the original, this tag will change answers slightly. If
+the previous code led to a small negative number, it would cause the
+model to abort, leading to the issue reported in ESCOMP/CTSM#988; this
+change should fix those occasional aborts.
+
+This tag also introduces the general ability to set tolerances to a
+custom value in calls to truncate_small_values.
+
+See ESCOMP/CTSM#988 for details.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#988
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none expected (not checked)
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    izumi ------- pass
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, in theory (but none in test suite)
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: potentially all, but very rarely
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Roundoff
+
+      Potentially changes answers by roundoff (see notes above), but no
+      changes were observed in any test in the test suite
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/989
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev090
 Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
 Date: Thu Apr 23 09:21:18 MDT 2020
