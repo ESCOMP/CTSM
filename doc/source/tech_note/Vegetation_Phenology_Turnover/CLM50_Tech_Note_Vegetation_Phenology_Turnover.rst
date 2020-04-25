@@ -5,8 +5,8 @@ Vegetation Phenology and Turnover
 
 The CLM phenology model consists of several algorithms controlling the
 transfer of stored carbon and nitrogen out of storage pools for the
-display of new growth, into litter pools for losses of displayed
-growth, and into biofuel feedstock pools for bioenergy. PFTs are classified into three distinct phenological types that
+display of new growth and into litter pools for losses of displayed
+growth. PFTs are classified into three distinct phenological types that
 are represented by separate algorithms: an evergreen type, for which
 some fraction of annual leaf growth persists in the displayed pool for
 longer than one year; a seasonal-deciduous type with a single growing

@@ -40,9 +40,17 @@ refers to the interactive crop management model and is included as an option wit
 These updates appear in detail in the sections below. Many also appear in
 :ref:`Levis et al. (2016) <Levisetal2016>`.
 
+
+Available new features since the CLM5 release
+^^^^^^^^^^^^^^^^^^^
+- Addition of bioenergy crops
+
+
+
+
 .. _The crop model:
 
-The crop model: stable and bioenergy crops
+The crop model: cash and bioenergy crops
 -------------------
 
 Introduction
@@ -107,18 +115,20 @@ CLM5 includes ten actively managed crop types
 corn, spring wheat, cotton, rice, sugarcane, miscanthus, and switchgrass) that are chosen 
 based on the availability of corresponding algorithms in AgroIBIS and as 
 developed by :ref:`Badger and Dirmeyer (2015)<BadgerandDirmeyer2015>` and
-described by :ref:`Levis et al. (2016)<Levisetal2016>` and :ref:`Cheng et al. (2019)<Chengetal2019>`. 
-The representations of sugarcane, rice, cotton, tropical corn, tropical soy, miscanthus, and switchgrass are new in CLM5.
+described by :ref:`Levis et al. (2016)<Levisetal2016>`, or from available observations 
+as described by :ref:`Cheng et al. (2019)<Chengetal2019>`. 
+The representations of sugarcane, rice, cotton, tropical corn, and tropical soy are new in CLM5.
+Miscanthus and switchgrass are added after the CLM5 release.
 Sugarcane and tropical corn are both C4 plants and are therefore represented
 using the temperate corn functional form. Tropical soybean uses the temperate
 soybean functional form, while rice and cotton use the wheat functional form.
 In tropical regions, parameter values were developed for the Amazon Basin, and planting
 date window is shifted by six months relative to the Northern Hemisphere. 
 Plantation areas of bioenergy crops are projected to expand throughout the 21st century as a major energy source to 
-replace fossil fuels and mitigate climate changes. Miscanthus and switchgrass are perennial bioenergy crops and 
+replace fossil fuels and mitigate climate change. Miscanthus and switchgrass are perennial bioenergy crops and 
 have quite different physiological traits and land management practices than annual crops, 
-such as longer growing seasons, higher productivity, and less demands for nutrients and water. 
-About 70% of their aboveground biomass (leaf & livestem) is removed at harvest for biofuels. Parameter values were developed by using 
+such as longer growing seasons, higher productivity, and lower demands for nutrients and water. 
+About 70% of biofuel aboveground biomass (leaf & livestem) is removed at harvest for biofuels. Parameter values were developed by using 
 observation data collected at the University of Illinois Energy Farm 
 located in Central Midwestern United States (:ref:`Cheng et al., 2019<Chengetal2019>`).
 
@@ -129,7 +139,7 @@ The unmanaged C3 crop is only used when the crop model is not active and
 has grid cell coverage assigned from satellite data, and 
 the unmanaged C3 irrigated crop type is currently not used 
 since irrigation requires the crop model to be active.
-The default list of pfts also includes twenty-three inactive crop pfts 
+The default list of pfts also includes twenty-one inactive crop pfts 
 that do not yet have associated parameters required for active management. 
 Each of the inactive crop types is simulated using the parameters of the 
 spatially closest associated crop type that is most similar to the functional type (e.g., C3 or C4), 
@@ -546,7 +556,7 @@ Harvest
 Variables track the flow of grain C and N to food and of all other plant pools, including live stem C and N, to litter, and to biofuel feedstock.
 A fraction (determined by :math:`biofuel\_harvfrac`) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels 
 (Equations :eq:`25.9`, :eq:`25.10`, :eq:`25.12`, and :eq:`25.13`),
-with the remaining portions go to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`).
+with the remaining portions going to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`).
 Putting live stem C and N into the litter and biofuel pools is in contrast to the approach for unmanaged PFTs which
 puts live stem C and N into dead stem pools first. 
 Leaf C and N pools are routed to the little and biofuel pools, contrast to that of unmanaged PFTs which put leaf C and N to litter pools only.
@@ -590,11 +600,12 @@ with corresponding nitrogen fluxes:
      NF_{livestem,litter} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
      \right) *  \left( 1-biofuel\_harvfrac  \right)
 
-where :math:`biofuel\_harvfrac` is the harvested fraction of leaf/livestem for biofuel feedstocks.
+where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is stored nitrogen, and
+ :math:`biofuel\_harvfrac` is the harvested fraction of leaf/livestem for biofuel feedstocks.
 
-.. _Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy crops:
+.. _Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production:
 
-.. table:: Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy crops.
+.. table:: Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production.
 
  +----------------------------------+----------------------------+
  | PFT                              |  :math:`biofuel\_harvfrac` |
@@ -745,7 +756,10 @@ In transient simulations, annual fertilizer application is specified on the land
 file by the field FERTNITRO_CFT, which is also in g N/m\ :sup:`2`/yr.
 The values for both of these fields come from the LUMIP time series for each year.
 In addition to the industrial fertilizer, background manure fertilizer is specified
-on the parameter file by the field 'manunitro'. For the current CLM5BGCCROP,
+on the parameter file by the field 'manunitro'. For perennial bioenergy crops, 
+little fertilizer (56kg/ha/yr) is applied to switchgrass, no fertilizer is applied to Miscanthus. 
+Note this set up is only based on local land management practice at the University of Illinois Energy Farm 
+located in Central Midwestern United States :ref:`(Cheng et al., 2019)<Chengetal2019>`. For the current CLM5BGCCROP,
 manure N is applied at a rate of 0.002 kg N/m\ :sup:`2`/yr. Because previous versions 
 of CLM (e.g., CLM4) had rapid denitrification rates, fertilizer is applied slowly
 to minimize N loss (primarily through denitrification) and maximize plant uptake. 

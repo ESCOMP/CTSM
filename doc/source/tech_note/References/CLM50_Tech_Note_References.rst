@@ -276,7 +276,7 @@ model. J. Geophys. Res. 101(D9):14,399-14,414.
 
 .. _Chengetal2019:
 
-Cheng, Y., Huang, M., et al., 2019. Parameterizing perennial bioenergy 
+Cheng, Y. et al., 2019. Parameterizing perennial bioenergy 
 crops in Version 5 of the Community Land Model Based on Site‐Level 
 Observations in the Central Midwestern United States. 
 Journal of Advances in Modeling Earth Systems, 
