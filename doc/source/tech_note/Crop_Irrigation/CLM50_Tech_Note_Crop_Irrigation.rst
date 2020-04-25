@@ -600,8 +600,8 @@ with corresponding nitrogen fluxes:
      NF_{livestem,litter} = \left({NS_{livestem} \mathord{\left/ {\vphantom {NS_{livestem}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t} 
      \right) *  \left( 1-biofuel\_harvfrac  \right)
 
-where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is stored nitrogen, and
- :math:`biofuel\_harvfrac` is the harvested fraction of leaf/livestem for biofuel feedstocks.
+where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, 
+NS is stored nitrogen, and :math:`biofuel\_harvfrac` is the harvested fraction of leaf/livestem for biofuel feedstocks.
 
 .. _Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production:
 
