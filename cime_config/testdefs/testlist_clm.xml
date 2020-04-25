@@ -256,7 +256,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_P720x1_Ln3" grid="hcru_hcru" compset="I2000Clm50BgcCruGs" testmods="clm/coldStart">
+  <test name="SMS_P720x1_Ln6" grid="hcru_hcru" compset="I2000Clm50BgcCruGs" testmods="clm/coldStart">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -432,7 +432,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">0:20:00</option>
+      <option name="wallclock">00:20:00</option>
       <option name="comment"  >Do a test with RTM and flooding on as that also impacts CLM code</option>
     </options>
   </test>
@@ -740,7 +740,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
-          <option name="wallclock">0:30:00</option>
+          <option name="wallclock">00:30:00</option>
           <option name="comment">Want an ERP test covering some non-default irrigation options. Long enough so that we're likely to exercise the various groundwater irrigation code.</option>
         </options>
       </machine>
@@ -842,7 +842,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -876,7 +876,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpGs" testmods="clm/default">
+  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpRsGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -884,7 +884,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="izumi" compiler="nag" category="prealpha"/>
     </machines>
@@ -892,7 +892,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1125,7 +1125,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpGs" testmods="clm/default">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpRsGs" testmods="clm/default">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -1133,7 +1133,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1141,7 +1141,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
@@ -1234,7 +1234,7 @@
       <option name="comment"  >include a nag debug test of Clm45BgcCrop</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="SMS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1243,7 +1243,7 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
-  <test name="SMS_D_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpGs" testmods="clm/USUMB">
+  <test name="SMS_D_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpRsGs" testmods="clm/USUMB">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
@@ -1305,7 +1305,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpGs" testmods="clm/default">
+  <test name="SMS_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRsGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1646,7 +1646,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm">
         <options>
-          <option name="wallclock">0:20:00</option>
+          <option name="wallclock">00:20:00</option>
           <option name="comment">Debug test covering some non-default irrigation options.</option>
         </options>
       </machine>
@@ -1657,7 +1657,7 @@
 
       <machine name="izumi" compiler="intel" category="aux_clm">
         <options>
-          <option name="wallclock">0:30:00</option>
+          <option name="wallclock">00:30:00</option>
           <option name="comment">Include a tracer consistency check in debug mode.</option>
         </options>
       </machine>
@@ -1669,7 +1669,7 @@
 
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
-          <option name="wallclock">0:30:00</option>
+          <option name="wallclock">00:30:00</option>
           <option name="comment">A debug ERP test of the NWP configuration with active BGC and CROP.</option>
         </options>
       </machine>
@@ -1680,7 +1680,7 @@
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm">
         <options>
-          <option name="wallclock">0:30:00</option>
+          <option name="wallclock">00:30:00</option>
           <option name="comment">Ensure that turning on water tracers doesn't change answers. Cold start for now, until we can use initial conditions from a non-isotope case in an isotope case; once we can do that, this should be changed to not be cold start (e.g., 5-day decStart transient test: see also https://github.com/ESCOMP/ctsm/issues/495#issuecomment-516619853).</option>
         </options>
       </machine>
@@ -1691,7 +1691,7 @@
 
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
-          <option name="wallclock">0:30:00</option>
+          <option name="wallclock">00:30:00</option>
           <option name="comment">Include a debug ERP test of the NWP configuration.</option>
         </options>
       </machine>
@@ -1703,7 +1703,7 @@
 
       <machine name="cheyenne" compiler="gnu" category="aux_clm">
         <options>
-          <option name="wallclock">0:30:00</option>
+          <option name="wallclock">00:30:00</option>
           <option name="comment">Include a short smoke test covering the nldas2 grid and the I2000Ctsm50NwpSpNldasGs compset, which uses NLDAS datm forcing.</option>
         </options>
       </machine>
@@ -1715,7 +1715,7 @@
 
       <machine name="cheyenne" compiler="gnu" category="aux_clm">
         <options>
-          <option name="wallclock">0:30:00</option>
+          <option name="wallclock">00:30:00</option>
           <option name="comment">Include a short smoke test covering the nldas2 grid and the I2000Ctsm50NwpSpNldasRsGs compset, which uses NLDAS datm forcing.</option>
         </options>
       </machine>
@@ -1886,7 +1886,7 @@
       </machine>
     </machines>
   </test>
-  <test name="SMS_Ly1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpGs" testmods="clm/output_sp_highfreq">
+  <test name="SMS_Ly1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRsGs" testmods="clm/output_sp_highfreq">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm">
         <options>
@@ -1896,11 +1896,11 @@
       </machine>
     </machines>
   </test>
-  <test name="SMS_D_Vnuopc" grid="f10_f10_musgs" compset="I2000Clm50SpRsGs" testmods="clm/default">
+  <test name="SMS_D_Ld5_Vnuopc" grid="f10_f10_musgs" compset="I2000Clm50BgcCropGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
-          <option name="wallclock">0:30</option>
+          <option name="wallclock">00:30:00</option>
           <option name="comment">Include a test of the NUOPC cap</option>
         </options>
       </machine>
@@ -1910,7 +1910,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
-          <option name="wallclock">0:30:00</option>
+          <option name="wallclock">00:30:00</option>
           <option name="comment">Can use this test to determine if there are significant throughput changes, at least for this common and important configuration. Note that this deliberately doesn't have any testmods in order to (1) avoid doing history output (because the timing of output can be very variable, and mixing output timing with other aspects of model time can be confusing), and (2) generally keep the test replicating a production configuration as closely as possible (so, for example, we do NOT set BFBFLAG=TRUE for this test).</option>
         </options>
       </machine>
@@ -1920,7 +1920,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
-          <option name="wallclock">0:30:00</option>
+          <option name="wallclock">00:30:00</option>
           <option name="comment">This test runs CTSM's Fortran unit tests. We're abusing the system test infrastructure to run these, so that a run of the test suite results in the unit tests being run as well. Grid and compset are irrelevant here, except that compset must be one that includes CTSM in order for CIME to find the test definition.</option>
         </options>
       </machine>
