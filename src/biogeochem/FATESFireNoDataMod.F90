@@ -51,7 +51,7 @@ contains
     ! !DESCRIPTION:
     ! Creates an object of type fates_fire_no_data_type
     ! !ARGUMENTS:
-    constructor%need_lightning_and_popdens = .true.
+    constructor%need_lightning_and_popdens = .false.
   end function constructor
 
   !-----------------------------------------------------------------------
@@ -137,6 +137,7 @@ contains
     !
     ! USES
     use clm_time_manager, only: get_nstep
+    use clm_time_manager, only: get_days_per_year
     use accumulMod, only: update_accum_field, extract_accum_field
     use abortutils, only: endrun
     use EDParamsMod, only: ED_val_nignitions
@@ -148,6 +149,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: dtime                 ! timestep size [seconds]
     integer :: nstep                 ! timestep number
+    integer :: days_per_year
     integer :: ier                   ! error status
     integer :: begg, endg
     real(r8), pointer :: rbufslg(:)  ! temporary single level - gridcell level
@@ -165,8 +167,11 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
+    days_per_year = get_days_per_year()
+
     ! Accumulate and extract lnfm24
-    rbufslg(begg:endg) = ED_val_nignitions
+    ! Convert #/km2/yr to #/km2/hr to match lnfm from datasets
+    rbufslg(begg:endg) = ED_val_nignitions / (days_per_year * 24._r8)
     call update_accum_field  ('lnfm24', rbufslg, nstep)
     call extract_accum_field ('lnfm24', this%lnfm24, nstep)
 

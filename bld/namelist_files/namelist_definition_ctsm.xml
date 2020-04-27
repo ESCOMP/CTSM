@@ -637,7 +637,10 @@ Switch deciding which nutrient model to use in FATES.
 
 <entry id="use_fates_spitfire" type="integer" category="physics"
         group="clm_inparm" valid_values="0,1,2,3" value=".false.">
-Turn on spitfire module for modeling fire (only relevant if FATES is being used) by setting > 0. Values of 1, 2, and 3 correspond to no external inputs, external lightning data, and external confirmed ignition data, respectively.
+Turn on spitfire module to simulate fire by setting use_fates_spitfire > 0.
+Relevant only if use_fates = .true.. Values of 1, 2, and 3 correspond to
+no external inputs, external lightning data, and external confirmed ignition
+data, respectively.
 </entry>
 
 <entry id="use_fates_fixed_biogeog" type="logical" category="physics"
