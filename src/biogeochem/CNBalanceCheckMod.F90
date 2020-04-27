@@ -18,6 +18,7 @@ module CNBalanceCheckMod
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
   use SoilBiogeochemNitrogenfluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemCarbonfluxType    , only : soilbiogeochem_carbonflux_type
+  use CNProductsMod                   , only : cn_products_type
   use ColumnType                      , only : col                
   use GridcellType                    , only : grc
   use CNSharedParamsMod               , only : use_fun
@@ -86,7 +87,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BeginCNGridcellBalance(this, bounds, &
-       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
+       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, c_products_inst)
     !
     ! !DESCRIPTION:
     ! Calculate beginning gridcell-level carbon/nitrogen balance
@@ -96,14 +97,13 @@ contains
     ! and before the dynamic landunit area updates
     !
     ! !USES:
-    use CNProductsMod, only: cn_products_type
     !
     ! !ARGUMENTS:
     class(cn_balance_type)         , intent(inout) :: this
     type(bounds_type)              , intent(in)    :: bounds
     type(cnveg_carbonstate_type)   , intent(in)    :: cnveg_carbonstate_inst
     type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
-    type(cn_products_type) :: c_products_inst  ! slevis: pass as argument?
+    type(cn_products_type)         , intent(in)    :: c_products_inst
     !
     ! !LOCAL VARIABLES:
     integer :: g
@@ -121,8 +121,8 @@ contains
 
     begg = bounds%begg; endg = bounds%endg
 
-    do g = begg, endg  ! slevis: tot_woodprod_grc causes core dump here
-       grc_begcb(g) = totgrcc(g) + seedc_grc(g)  ! + tot_woodprod_grc(g)
+    do g = begg, endg
+       grc_begcb(g) = totgrcc(g) + seedc_grc(g) + tot_woodprod_grc(g)
        grc_begnb(g) = totgrcn(g)
     end do
 
@@ -173,11 +173,11 @@ contains
  
   !-----------------------------------------------------------------------
   subroutine CBalanceCheck(this, bounds, num_soilc, filter_soilc, &
-       soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst)
+       soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, &
+       cnveg_carbonstate_inst, c_products_inst)
     !
     ! !USES:
     use subgridAveMod, only: c2g
-    use CNProductsMod, only: cn_products_type
     !
     ! !DESCRIPTION:
     ! Perform carbon mass conservation check for column and patch
@@ -190,7 +190,7 @@ contains
     type(soilbiogeochem_carbonflux_type) , intent(in)    :: soilbiogeochem_carbonflux_inst
     type(cnveg_carbonflux_type)          , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
-    type(cn_products_type) :: c_products_inst  ! slevis: pass as argument?
+    type(cn_products_type)               , intent(in)    :: c_products_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c, g, err_index  ! indices
@@ -307,11 +307,6 @@ contains
          ! slevis notes:
          ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
          ! totc_p2c_col = totc_patch = totvegc_patch(p) + xsmrpool_patch(p) + ctrunc_patch(p) + cropseedc_deficit_patch(p)
-         ! slevis: tot_woodprod_grc and dwt_woodprod_gain_grc give error
-         !         "Index '241' of dimension 1 of
-         !          array 'tot_woodprod_grc' above upper bound of 1"
-         !         I need to work w these vars differently; pass c_products_inst
-         !         as argument?
          grc_endcb(g) = totgrcc(g) + seedc_grc(g) + tot_woodprod_grc(g)
 
          ! calculate total gridcell-level inputs

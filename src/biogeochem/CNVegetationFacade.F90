@@ -843,9 +843,9 @@ contains
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
 
-    call this%cn_balance_inst%BeginCNGridcellBalance( &
-         bounds, &
-         this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
+    call this%cn_balance_inst%BeginCNGridcellBalance( bounds, &
+         this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst, &
+         this%c_products_inst)
 
   end subroutine InitGridcellBalance
 
@@ -1096,7 +1096,8 @@ contains
        call this%cn_balance_inst%CBalanceCheck( &
             bounds, num_soilc, filter_soilc, &
             soilbiogeochem_carbonflux_inst, &
-            this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst)
+            this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, &
+            this%c_products_inst)
 
        call this%cn_balance_inst%NBalanceCheck( &
             bounds, num_soilc, filter_soilc, &
