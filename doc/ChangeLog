@@ -1,4 +1,118 @@
 ===============================================================
+Tag name:  ctsm1.0.dev092
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Apr 27 11:04:13 MDT 2020
+One-line Summary: Update cime to version in cesm2_2_beta04
+
+Purpose of changes
+------------------
+
+Update cime to latest in cesm2.2 beta tag (cesm2_2_beta04)
+Fix two small issues that had gone on the release-clm5.0 branch.
+Update manage_externals (to manic-v1.1.8)
+
+cime updates
+
+some cleanup from the last maint-5.6 update
+Add ne5np4.pg4 grid.
+case.setup: Add --keep option
+Add omip as option to DATM_CO2_TSERIES
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #974 #966
+   Fixes #974 -- python 3 problem in ssp test
+   Fixes #966 -- a few history fields need to be made CF compliant
+CIME Issues fixed (include issue #): 3459 3466
+   3459 -- case.setup refuses to fix corrupted env_mach_specfic.xml
+   3466 -- fix for aquap
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   ./case.setup now has a --keep option
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: None bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime
+    cime to cime5.8.19
+    (NOTE: CMEPS is pointing to a newer hash than used in the beta tag)
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #996 -- Update cime to latest cesm2.2 beta tag
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev091
 Originator(s):  sacks (Bill Sacks)
 Date:  Fri Apr 24 07:43:46 MDT 2020
