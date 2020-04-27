@@ -1134,6 +1134,7 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <light_res    use_cn=".true." fire_method="nofire" >none</light_res>
 <light_res    use_cn=".true." phys="clm4_5"        >94x192</light_res>
 <light_res    use_cn=".true." phys="clm5_0"        >94x192</light_res>
+<light_res    use_fates=".true." phys="clm4_5"     >360x720</light_res>
 <light_res    use_fates=".true." phys="clm5_0"     >360x720</light_res>
 
 <stream_year_first_lightng use_cn=".true."   >0001</stream_year_first_lightng>

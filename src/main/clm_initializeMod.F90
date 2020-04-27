@@ -293,12 +293,10 @@ contains
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
     use BalanceCheckMod       , only : BalanceCheckInit
-    use FATESFireNoDataMod, only: fates_fire_no_data_type
-    use FATESFireDataMod, only: fates_fire_data_type
+    use CNFireMethodMod, only: cnfiremethod_type
     !
     ! !ARGUMENTS    
-    type(fates_fire_data_type) :: fates_fire_data_inst
-    type(fates_fire_no_data_type) :: fates_fire_no_data_inst
+    type(cnfire_method_type) :: cnfire_method_inst
     !
     ! !LOCAL VARIABLES:
     integer               :: c,i,j,k,l,p! indices
@@ -616,10 +614,8 @@ contains
 
     ! use_fates_spitfire is assigned an integer value in the namelist
     ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
-    if (use_fates_spitfire > 1) then
-       call fates_fire_data_inst%initAccVars(bounds_proc)
-    else
-       call fates_fire_no_data_inst%initAccVars(bounds_proc)
+    if (use_fates_spitfire > 0) then
+       call cnfire_method_inst%initAccVars(bounds_proc)
     end if
 
     !------------------------------------------------------------       

@@ -581,8 +581,7 @@ contains
       ! to process array bounding information 
       
       ! !USES
-      use FATESFireNoDataMod, only: fates_fire_no_data_type
-      use FATESFireDataMod, only: fates_fire_data_type
+      use CNFireMethodMod, only: cnfire_method_type
 
       implicit none
       class(hlm_fates_interface_type), intent(inout) :: this
@@ -596,8 +595,7 @@ contains
       type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
       type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
 
-      type(fates_fire_data_type) :: fates_fire_data_inst
-      type(fates_fire_no_data_type) :: fates_fire_no_data_inst
+      type(cnfire_method_type) :: cnfire_method_inst
 
       ! !LOCAL VARIABLES:
       integer  :: s                        ! site index
@@ -656,10 +654,10 @@ contains
          c = this%f2hmap(nc)%fcolumn(s)
          g = col%gridcell(c)
 
-         if (use_fates_spitfire > 1) then
-            this%fates(nc)%bc_in(s)%lightning24 = fates_fire_data_inst%lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
+         if (use_fates_spitfire > 0) then
+            this%fates(nc)%bc_in(s)%lightning24 = cnfire_method_inst%lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
          else
-            this%fates(nc)%bc_in(s)%lightning24 = fates_fire_no_data_inst%lnfm24(g) / days_per_year  ! #/km2/yr to #/km2/day
+            this%fates(nc)%bc_in(s)%lightning24 = 0.0_r8
          end if
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil

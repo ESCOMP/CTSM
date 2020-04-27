@@ -188,13 +188,11 @@ contains
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
     use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
-    use FATESFireNoDataMod, only: fates_fire_no_data_type
-    use FATESFireDataMod, only: fates_fire_data_type
+    use CNFireMethodMod, only: cnfire_method_type
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
-    type(fates_fire_data_type) :: fates_fire_data_inst
-    type(fates_fire_no_data_type) :: fates_fire_no_data_inst
+    type(cnfire_method_type) :: cnfire_method_inst
     !
     ! !LOCAL VARIABLES:
     integer               :: c,l,g
@@ -440,10 +438,8 @@ contains
 
     ! use_fates_spitfire is assigned an integer value in the namelist
     ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
-    if (use_fates_spitfire > 1) then
-       call fates_fire_data_inst%InitAccBuffer(bounds)
-    else
-       call fates_fire_no_data_inst%InitAccBuffer(bounds)
+    if (use_fates_spitfire > 0) then
+       call cnfire_method_inst%InitAccBuffer(bounds)
     end if
 
     call print_accum_fields()
