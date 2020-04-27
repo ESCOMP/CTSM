@@ -774,7 +774,7 @@ contains
          c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_nitrogenstate_inst)
 
-    call this%cn_balance_inst%BeginCNBalance( &
+    call this%cn_balance_inst%BeginCNColumnBalance( &
          bounds, num_soilc, filter_soilc, &
          this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
 
@@ -830,26 +830,21 @@ contains
          c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_nitrogenstate_inst)
 
-!   ! total gridcell carbon (TOTGRIDCELLC)
-!   call c2g( bounds = bounds, &
-!        carr = this%cnveg_carbonstate_inst%totc_col(bounds%begc:bounds%endc), &
-!        garr = this%cnveg_carbonstate_inst%totc_grc(bounds%begg:bounds%endg), &
-!        c2l_scale_type = 'unity', &
-!        l2g_scale_type = 'unity')
-!   ! total gridcell nitrogen (TOTGRIDCELLN)
-!   call c2g( bounds = bounds, &
-!        carr = this%cnveg_nitrogenstate_inst%totn_col(bounds%begc:bounds%endc), &
-!        garr = this%cnveg_nitrogenstate_inst%totn_grc(bounds%begg:bounds%endg), &
-!        c2l_scale_type = 'unity', &
-!        l2g_scale_type = 'unity')
+    ! total gridcell carbon (TOTGRIDCELLC)
+    call c2g( bounds = bounds, &
+         carr = this%cnveg_carbonstate_inst%totc_col(bounds%begc:bounds%endc), &
+         garr = this%cnveg_carbonstate_inst%totc_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+    ! total gridcell nitrogen (TOTGRIDCELLN)
+    call c2g( bounds = bounds, &
+         carr = this%cnveg_nitrogenstate_inst%totn_col(bounds%begc:bounds%endc), &
+         garr = this%cnveg_nitrogenstate_inst%totn_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
 
-    ! TODO In next call,
-    ! add to totc_grc & totn_grc the gridcell terms not accted at col level
-    ! OR add them to zero and start from the column-level error in CBalanceCheck
-    ! If the latter, then prob. need BeginCNGridcellBalance separate from Column
-
-    call this%cn_balance_inst%BeginCNBalance( &
-         bounds, num_soilc, filter_soilc, &
+    call this%cn_balance_inst%BeginCNGridcellBalance( &
+         bounds, &
          this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
 
   end subroutine InitGridcellBalance
