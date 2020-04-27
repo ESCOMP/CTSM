@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev092
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Mon Apr 27 11:04:13 MDT 2020
+Date: Mon Apr 27 11:34:54 MDT 2020
 One-line Summary: Update cime to version in cesm2_2_beta04
 
 Purpose of changes
@@ -77,11 +77,11 @@ CTSM testing: regular
 
   tools-tests (test/tools):
 
-    cheyenne - 
+    cheyenne - OK
 
   PTCLM testing (tools/shared/PTCLM/test):
 
-    cheyenne - 
+    cheyenne - OK
 
   python testing (see instructions in python/README.md; document testing done):
 
