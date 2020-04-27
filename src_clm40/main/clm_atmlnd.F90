@@ -18,6 +18,7 @@ module clm_atmlnd
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
   use seq_drydep_mod, only : n_drydep, drydep_method, DD_XLND
+  use seq_drydep_mod, only : NLUse, NPatch
   use shr_megan_mod,  only : shr_megan_mechcomps_n
 !
 ! !PUBLIC TYPES:
@@ -124,6 +125,8 @@ module clm_atmlnd
      real(r8), pointer :: rofice(:)       => null() ! rof ice forcing
      real(r8), pointer :: flxdst(:,:)     => null() !dust flux (size bins)
      real(r8), pointer :: ddvel(:,:)      => null() !dry deposition velocities
+     real(r8), pointer :: lwtgcell(:,:)   => null() ! landunit areas
+     real(r8), pointer :: pwtgcell(:,:)   => null() ! patch areas
      real(r8), pointer :: flxvoc(:,:)     => null() ! VOC flux (size bins)
      ! Needed for backwards compatibility with lnd_comp_mct used in clm4_5
      real(r8), pointer :: flux_ch4(:)      => null() !net CH4 flux (kg C/m**2/s) [+ to atm]
@@ -300,6 +303,10 @@ end subroutine init_atm2lnd_type
   if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
      allocate(l2a%ddvel(beg:end,1:n_drydep))
   end if
+  if ( drydep_method == DD_XLND )then
+     allocate(l2a%lwtgcell(beg:end,1:NLUse))
+     allocate(l2a%pwtgcell(beg:end,1:NPatch))
+  end if
 
   ! ival = nan   ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
@@ -330,6 +337,10 @@ end subroutine init_atm2lnd_type
   endif
   if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
      l2a%ddvel(beg:end, : ) = ival
+  end if
+  if ( drydep_method == DD_XLND )then
+     l2a%lwtgcell(:,:)=ival
+     l2a%pwtgcell(:,:)=ival
   end if
 
 end subroutine init_lnd2atm_type
@@ -436,7 +447,7 @@ subroutine clm_map2gcell()
   integer :: begl, endl      ! per-proc beginning and ending landunit indices
   integer :: begg, endg      ! per-proc gridcell ending gridcell indices
 
-  integer :: g                           ! indices
+  integer :: g, l, p                     ! indices
   real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
   real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
   real(r8), parameter :: amCO2 = amC + 2.0_r8*amO ! Atomic mass number for CO2
@@ -536,6 +547,25 @@ subroutine clm_map2gcell()
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, n_drydep, &
           pdd%drydepvel, clm_l2a%ddvel, &
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+  endif
+
+  ! Landunit/patch indices
+  if ( drydep_method == DD_XLND ) then
+      clm_l2a%pwtgcell(:,:) = 0.0e+00_r8
+      do p = begp,endp
+          if (pft%itype(p) > 0 ) then
+             g = pft%gridcell(p)
+             clm_l2a%pwtgcell(g,pft%itype(p)) = pft%wtgcell(p)
+          end if
+      end do
+
+      clm_l2a%lwtgcell(:,:) = 0.0e+00_r8
+      do l = begl,endl
+          if (lun%itype(l) > 0 ) then
+              g = lun%gridcell(l)
+              clm_l2a%lwtgcell(g,lun%itype(l)) = lun%wtgcell(l)
+          end if
+      end do
   endif
 
   ! Convert from gC/m2/s to kgCO2/m2/s

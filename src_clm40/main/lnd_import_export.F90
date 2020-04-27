@@ -237,7 +237,7 @@ contains
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use clm_varctl         , only : iulog, create_glacier_mec_landunit
     use clm_time_manager   , only : get_nstep, get_step_size  
-    use seq_drydep_mod     , only : n_drydep
+    use seq_drydep_mod     , only : n_drydep, NLUse, NPatch
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     !
     ! !ARGUMENTS:
@@ -296,6 +296,18 @@ contains
        if (index_l2x_Sl_ddvel     /= 0 )  then
           l2x(index_l2x_Sl_ddvel:index_l2x_Sl_ddvel+n_drydep-1,i) = &
                clm_l2a%ddvel(g,:n_drydep)
+       end if
+
+       ! for landunit weights
+       if (index_l2x_Sl_lwtgcell  /= 0 )  then
+          l2x(index_l2x_Sl_lwtgcell:index_l2x_Sl_lwtgcell+NLUse-1,i) = &
+               clm_l2a%lwtgcell(g,:NLUse)
+       end if
+
+       ! for patch weights
+       if (index_l2x_Sl_pwtgcell  /= 0 )  then
+          l2x(index_l2x_Sl_pwtgcell:index_l2x_Sl_pwtgcell+NPatch-1,i) = &
+               clm_l2a%pwtgcell(g,:NPatch)
        end if
 
        ! for MEGAN VOC emis fluxes

@@ -40,6 +40,8 @@ module clm_cpl_indices
   integer, public ::index_l2x_Sl_snowh        ! snow height
   integer, public ::index_l2x_Sl_u10          ! 10m wind
   integer, public ::index_l2x_Sl_ddvel        ! dry deposition velocities (optional)
+  integer, public ::index_l2x_Sl_lwtgcell     ! landunit area weights
+  integer, public ::index_l2x_Sl_pwtgcell     ! patch area weights
   integer, public ::index_l2x_Sl_fv           ! friction velocity  
   integer, public ::index_l2x_Sl_ram1         ! aerodynamical resistance
   integer, public ::index_l2x_Sl_soilw        ! volumetric soil water
@@ -131,6 +133,7 @@ contains
     use mct_mod        , only: mct_aVect, mct_aVect_init, mct_avect_indexra
     use mct_mod        , only: mct_aVect_clean, mct_avect_nRattr
     use seq_drydep_mod , only: drydep_fields_token, lnd_drydep
+    use seq_drydep_mod , only: luse_fields_token, patch_fields_token
     use shr_megan_mod  , only: shr_megan_fields_token, shr_megan_mechcomps_n
     use clm_varctl     , only: use_voc
     !
@@ -181,10 +184,15 @@ contains
     index_l2x_Sl_ram1       = mct_avect_indexra(l2x,'Sl_ram1')
     index_l2x_Sl_fv         = mct_avect_indexra(l2x,'Sl_fv')
     index_l2x_Sl_soilw      = mct_avect_indexra(l2x,'Sl_soilw',perrwith='quiet')
+
     if ( lnd_drydep )then
        index_l2x_Sl_ddvel = mct_avect_indexra(l2x, trim(drydep_fields_token))
+       index_l2x_Sl_lwtgcell = mct_avect_indexra(l2x, trim(luse_fields_token))
+       index_l2x_Sl_pwtgcell = mct_avect_indexra(l2x, trim(patch_fields_token))
     else
        index_l2x_Sl_ddvel = 0
+       index_l2x_Sl_lwtgcell = 0
+       index_l2x_Sl_pwtgcell = 0
     end if
 
     index_l2x_Fall_taux     = mct_avect_indexra(l2x,'Fall_taux')
