@@ -207,6 +207,7 @@ contains
     real(r8) :: col_coutputs, grc_coutputs
     real(r8) :: col_errcb(bounds%begc:bounds%endc) 
     real(r8) :: grc_errcb(bounds%begg:bounds%endg)
+    real(r8) :: som_c_leached_grc(bounds%begg:bounds%endg)
     !-----------------------------------------------------------------------
 
     associate(                                                                            & 
@@ -304,6 +305,11 @@ contains
          garr = totgrcc(bounds%begg:bounds%endg), &
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
+      call c2g( bounds = bounds, &
+         carr = som_c_leached(bounds%begc:bounds%endc), &
+         garr = som_c_leached_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
 
       err_found = .false.
       do g = bounds%begg, bounds%endg
@@ -320,7 +326,7 @@ contains
                        dwt_seedc_to_deadstem_grc(g)
 
          ! calculate total gridcell-level outputs
-         grc_coutputs = 0._r8
+         grc_coutputs = - som_c_leached_grc(g)
 
          ! calculate the total gridcell-level carbon balance error
          ! for this time step
@@ -349,7 +355,7 @@ contains
          write(iulog,*)'dwt_seedc_to_leaf_grc   =', dwt_seedc_to_leaf_grc(g) * dt
          write(iulog,*)'dwt_seedc_to_deadstem_grc =', dwt_seedc_to_deadstem_grc(g) * dt
          write(iulog,*)'--- Outputs ---'
-         write(iulog,*)'NONE                    =', 0
+         write(iulog,*)'-1*som_c_leached_grc    = ', som_c_leached_grc(g) * dt
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
@@ -676,7 +682,7 @@ contains
          write(iulog,*) 'grc_fire_nloss           =', grc_fire_nloss(g) * dt
          write(iulog,*) 'wood_harvestn_grc        =', wood_harvestn_grc(g) * dt
          write(iulog,*) 'grainn_to_cropprodn_grc  =', grainn_to_cropprodn_grc(g) * dt
-         write(iulog,*) 'minus som_n_leached_grc  =', - som_n_leached_grc(g) * dt
+         write(iulog,*) '-1*som_n_leached_grc     = ', som_n_leached_grc(g) * dt
          if (.not. use_nitrif_denitrif) then
             write(iulog,*) 'sminn_leached_grc     =', sminn_leached_grc(g) * dt
          else
