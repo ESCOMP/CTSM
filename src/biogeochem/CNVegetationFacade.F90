@@ -845,7 +845,7 @@ contains
 
     call this%cn_balance_inst%BeginCNGridcellBalance( bounds, &
          this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst, &
-         this%c_products_inst)
+         this%c_products_inst, this%n_products_inst)
 
   end subroutine InitGridcellBalance
 
@@ -1062,7 +1062,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BalanceCheck(this, bounds, num_soilc, filter_soilc, &
-       soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
+       soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
+       atm2lnd_inst)
     !
     ! !DESCRIPTION:
     ! Check the carbon and nitrogen balance
@@ -1079,6 +1080,7 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
     !
     ! !LOCAL VARIABLES:
     integer              :: DA_nstep                   ! time step number
@@ -1096,13 +1098,17 @@ contains
        call this%cn_balance_inst%CBalanceCheck( &
             bounds, num_soilc, filter_soilc, &
             soilbiogeochem_carbonflux_inst, &
-            this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, &
+            this%cnveg_carbonflux_inst, &
+            this%cnveg_carbonstate_inst, &
             this%c_products_inst)
 
        call this%cn_balance_inst%NBalanceCheck( &
             bounds, num_soilc, filter_soilc, &
             soilbiogeochem_nitrogenflux_inst, &
-            this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst)
+            this%cnveg_nitrogenflux_inst, &
+            this%cnveg_nitrogenstate_inst, &
+            this%n_products_inst, &
+            atm2lnd_inst)
 
     end if
 

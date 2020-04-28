@@ -1068,7 +1068,8 @@ contains
           call t_startf('cnbalchk')
           call bgc_vegetation_inst%BalanceCheck( &
                bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
-               soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
+               soilbiogeochem_carbonflux_inst, &
+               soilbiogeochem_nitrogenflux_inst, atm2lnd_inst )
           call t_stopf('cnbalchk')
        end if
 

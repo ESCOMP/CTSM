@@ -87,7 +87,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BeginCNGridcellBalance(this, bounds, &
-       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, c_products_inst)
+       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+       c_products_inst, n_products_inst)
     !
     ! !DESCRIPTION:
     ! Calculate beginning gridcell-level carbon/nitrogen balance
@@ -104,6 +105,7 @@ contains
     type(cnveg_carbonstate_type)   , intent(in)    :: cnveg_carbonstate_inst
     type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
     type(cn_products_type)         , intent(in)    :: c_products_inst
+    type(cn_products_type)         , intent(in)    :: n_products_inst
     !
     ! !LOCAL VARIABLES:
     integer :: g
@@ -116,15 +118,18 @@ contains
          totgrcc      => cnveg_carbonstate_inst%totc_grc , & ! Input:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
          totgrcn      => cnveg_nitrogenstate_inst%totn_grc, & ! Input:  [real(r8) (:)]  (gN/m2) total gridcell nitrogen, incl veg
          seedc_grc    => cnveg_carbonstate_inst%seedc_grc, & ! Input:  [real(r8) (:)]  (gC/m2) seed carbon
-         cropprod1_grc => c_products_inst%cropprod1_grc  , & ! Input:  [real(r8) (:)]  (gC/m2) carbon in crop products
-         tot_woodprod_grc => c_products_inst%tot_woodprod_grc &  ! Input:  [real(r8) (:)]  (gC/m2) total carbon in wood products
+         seedn_grc    => cnveg_nitrogenstate_inst%seedn_grc, & ! Input:  [real(r8) (:)]  (gC/m2) seed nitrogen
+         cropprod1c_grc => c_products_inst%cropprod1_grc , & ! Input:  [real(r8) (:)]  (gC/m2) carbon in crop products
+         cropprod1n_grc => n_products_inst%cropprod1_grc , & ! Input:  [real(r8) (:)]  (gC/m2) nitrogen in crop products
+         tot_woodprodc_grc => c_products_inst%tot_woodprod_grc, & ! Input:  [real(r8) (:)]  (gC/m2) total carbon in wood products
+         tot_woodprodn_grc => n_products_inst%tot_woodprod_grc & ! Input:  [real(r8) (:)]  (gC/m2) total nitrogen in wood products
          )
 
     begg = bounds%begg; endg = bounds%endg
 
     do g = begg, endg
-       grc_begcb(g) = totgrcc(g) + seedc_grc(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
-       grc_begnb(g) = totgrcn(g)
+       grc_begcb(g) = totgrcc(g) + seedc_grc(g) + tot_woodprodc_grc(g) + cropprod1c_grc(g)
+       grc_begnb(g) = totgrcn(g) + seedn_grc(g) + tot_woodprodn_grc(g) + cropprod1n_grc(g)
     end do
 
     end associate
@@ -211,11 +216,8 @@ contains
          nbp_grc                 =>    cnveg_carbonflux_inst%nbp_grc                    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) net biome production (positive for sink)
          cropprod1_grc           =>    c_products_inst%cropprod1_grc                    , & ! Input:  [real(r8) (:)]  (gC/m2) carbon in crop products
          tot_woodprod_grc        =>    c_products_inst%tot_woodprod_grc                , & ! Input:  [real(r8) (:)]  (gC/m2) total carbon in wood products
-         dwt_woodprod_gain_grc   =>    c_products_inst%dwt_woodprod_gain_grc           , & ! Input:  [real(r8) (:)]  (gC/m2/s) dynamic landcover addition to wood product pools
          dwt_seedc_to_leaf_grc   =>    cnveg_carbonflux_inst%dwt_seedc_to_leaf_grc      , & ! Input:  [real(r8) (:)]  (gC/m2/s) seed source sent to leaf
          dwt_seedc_to_deadstem_grc =>  cnveg_carbonflux_inst%dwt_seedc_to_deadstem_grc  , & ! Input:  [real(r8) (:)]  (gC/m2/s) seed source sent to deadstem
-         dwt_conv_cflux_grc      =>    cnveg_carbonflux_inst%dwt_conv_cflux_grc         , & ! Input:  [real(r8) (:)]  (gC/m2/s) conversion C flux (immediate loss to atm)
-         dwt_slash_cflux_grc     =>    cnveg_carbonflux_inst%dwt_slash_cflux_grc        , & ! Input:  [real(r8) (:)]  (gC/m2/s) conversion slash flux due to landcover change
          seedc_grc               =>    cnveg_carbonstate_inst%seedc_grc                 , & ! Input:  [real(r8) (:)]  (gC/m2) seed carbon
          col_begcb               =>    this%begcb_col                                   , & ! Input:  [real(r8) (:) ]  (gC/m2) carbon mass, beginning of time step 
          col_endcb               =>    this%endcb_col                                   , & ! Output: [real(r8) (:) ]  (gC/m2) carbon mass, end of time step 
@@ -314,10 +316,8 @@ contains
          ! calculate total gridcell-level inputs
          ! slevis notes:
          ! nbp_grc = nep_grc - fire_closs_grc - hrv_xsmrpool_to_atm_dribbled_grc - dwt_conv_cflux_dribbled_grc - product_closs_grc
-         grc_cinputs = nbp_grc(g) + dwt_woodprod_gain_grc(g) + &
-                       dwt_seedc_to_leaf_grc(g) + &
-                       dwt_seedc_to_deadstem_grc(g) + &
-                       dwt_conv_cflux_grc(g) + dwt_slash_cflux_grc(g)
+         grc_cinputs = nbp_grc(g) + dwt_seedc_to_leaf_grc(g) + &
+                       dwt_seedc_to_deadstem_grc(g)
 
          ! calculate total gridcell-level outputs
          grc_coutputs = 0._r8
@@ -346,11 +346,8 @@ contains
          write(iulog,*)'delta store             =', grc_endcb(g) - grc_begcb(g)
          write(iulog,*)'--- Inputs ---'
          write(iulog,*)'nbp_grc                 =', nbp_grc(g) * dt
-         write(iulog,*)'dwt_woodprod_gain_grc   =', dwt_woodprod_gain_grc(g) * dt
          write(iulog,*)'dwt_seedc_to_leaf_grc   =', dwt_seedc_to_leaf_grc(g) * dt
          write(iulog,*)'dwt_seedc_to_deadstem_grc =', dwt_seedc_to_deadstem_grc(g) * dt
-         write(iulog,*)'dwt_conv_cflux_grc      =', dwt_conv_cflux_grc(g) * dt
-         write(iulog,*)'dwt_slash_cflux_grc     =', dwt_slash_cflux_grc(g) * dt
          write(iulog,*)'--- Outputs ---'
          write(iulog,*)'NONE                    =', 0
          call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -362,13 +359,16 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine NBalanceCheck(this, bounds, num_soilc, filter_soilc, &
-       soilbiogeochem_nitrogenflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst)
+       soilbiogeochem_nitrogenflux_inst, cnveg_nitrogenflux_inst, &
+       cnveg_nitrogenstate_inst, n_products_inst, atm2lnd_inst)
     !
     ! !DESCRIPTION:
     ! Perform nitrogen mass conservation check
     !
     ! !USES:
     use clm_varctl, only : use_crop
+    use subgridAveMod, only: c2g
+    use atm2lndType, only: atm2lnd_type
     !
     ! !ARGUMENTS:
     class(cn_balance_type)                  , intent(inout) :: this
@@ -378,20 +378,49 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(in)    :: soilbiogeochem_nitrogenflux_inst
     type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
+    type(cn_products_type)                  , intent(in)    :: n_products_inst
+    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c,err_index,j  ! indices
+    integer :: g              ! gridcell index
     integer :: fc             ! lake filter indices
     logical :: err_found      ! error flag
     real(r8):: dt             ! radiation time step (seconds)
     real(r8):: col_ninputs(bounds%begc:bounds%endc) 
     real(r8):: col_noutputs(bounds%begc:bounds%endc) 
     real(r8):: col_errnb(bounds%begc:bounds%endc) 
+    real(r8):: grc_ninputs(bounds%begg:bounds%endg)
+    real(r8):: grc_noutputs(bounds%begg:bounds%endg)
+    real(r8):: grc_errnb(bounds%begg:bounds%endg)
+    real(r8):: nfix_to_sminn_grc(bounds%begg:bounds%endg)
+    real(r8):: supplement_to_sminn_grc(bounds%begg:bounds%endg)
+    real(r8):: ffix_to_sminn_grc(bounds%begg:bounds%endg)
+    real(r8):: fert_to_sminn_grc(bounds%begg:bounds%endg)
+    real(r8):: soyfixn_to_sminn_grc(bounds%begg:bounds%endg)
+    real(r8):: denit_grc(bounds%begg:bounds%endg)
+    real(r8):: grc_fire_nloss(bounds%begg:bounds%endg)
+    real(r8):: wood_harvestn_grc(bounds%begg:bounds%endg)
+    real(r8):: grainn_to_cropprodn_grc(bounds%begg:bounds%endg)
+    real(r8):: som_n_leached_grc(bounds%begg:bounds%endg)
+    real(r8):: sminn_leached_grc(bounds%begg:bounds%endg)
+    real(r8):: f_n2o_nit_grc(bounds%begg:bounds%endg)
+    real(r8):: smin_no3_leached_grc(bounds%begg:bounds%endg)
+    real(r8):: smin_no3_runoff_grc(bounds%begg:bounds%endg)
     !-----------------------------------------------------------------------
 
     associate(                                                                             & 
-         col_begnb           => this%begnb_col                                           , & ! Input:  [real(r8) (:) ]  (gN/m2) nitrogen mass, beginning of time step   
-         col_endnb           => this%endnb_col                                           , & ! Output: [real(r8) (:) ]  (gN/m2) nitrogen mass, end of time step         
+         grc_begnb           => this%begnb_grc                                           , & ! Input:  [real(r8) (:) ]  (gN/m2) gridcell nitrogen mass, beginning of time step
+         grc_endnb           => this%endnb_grc                                           , & ! Output: [real(r8) (:) ]  (gN/m2) gridcell nitrogen mass, end of time step
+         totgrcn             => cnveg_nitrogenstate_inst%totn_grc                        , & ! Input:  [real(r8) (:) ]  (gN/m2) total gridcell nitrogen, incl veg
+         forc_ndep           => atm2lnd_inst%forc_ndep_grc                               , & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)
+         cropprod1_grc       => n_products_inst%cropprod1_grc                            , & ! Input:  [real(r8) (:)]  (gN/m2) nitrogen in crop products
+         tot_woodprod_grc    => n_products_inst%tot_woodprod_grc                         , & ! Input:  [real(r8) (:)]  (gN/m2) total nitrogen in wood products
+         dwt_seedn_to_leaf_grc   =>    cnveg_nitrogenflux_inst%dwt_seedn_to_leaf_grc     , & ! Input:  [real(r8) (:)]  (gN/m2/s) seed source sent to leaf
+         dwt_seedn_to_deadstem_grc =>  cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_grc , & ! Input:  [real(r8) (:)]  (gN/m2/s) seed source sent to deadstem
+         seedn_grc           => cnveg_nitrogenstate_inst%seedn_grc                       , & ! Input:  [real(r8) (:)]  (gN/m2) seed nitrogen
+         col_begnb           => this%begnb_col                                           , & ! Input:  [real(r8) (:) ]  (gN/m2) column nitrogen mass, beginning of time step
+         col_endnb           => this%endnb_col                                           , & ! Output: [real(r8) (:) ]  (gN/m2) column nitrogen mass, end of time step
          ndep_to_sminn       => soilbiogeochem_nitrogenflux_inst%ndep_to_sminn_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) atmospheric N deposition to soil mineral N        
          nfix_to_sminn       => soilbiogeochem_nitrogenflux_inst%nfix_to_sminn_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) symbiotic/asymbiotic N fixation to soil mineral N 
          ffix_to_sminn       => soilbiogeochem_nitrogenflux_inst%ffix_to_sminn_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) free living N fixation to soil mineral N         
@@ -465,7 +494,7 @@ contains
          end if
          
          if (abs(col_errnb(c)) > 1e-7_r8) then
-            write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
+            write(iulog,*) 'nbalance warning at c =', c, col_errnb(c), col_endnb(c)
             write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
             write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
          end if
@@ -487,6 +516,175 @@ contains
         
          
          
+         call endrun(msg=errMsg(sourcefile, __LINE__))
+      end if
+
+      ! Repeat error check at the gridcell level
+      call c2g( bounds = bounds, &
+         carr = totcoln(bounds%begc:bounds%endc), &
+         garr = totgrcn(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+      call c2g( bounds = bounds, &
+         carr = nfix_to_sminn(bounds%begc:bounds%endc), &
+         garr = nfix_to_sminn_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+      call c2g( bounds = bounds, &
+         carr = supplement_to_sminn(bounds%begc:bounds%endc), &
+         garr = supplement_to_sminn_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+      if (use_fun) then
+         call c2g( bounds = bounds, &
+            carr = ffix_to_sminn(bounds%begc:bounds%endc), &
+            garr = ffix_to_sminn_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type = 'unity', &
+            l2g_scale_type = 'unity')
+      end if
+      if (use_crop) then
+         call c2g( bounds = bounds, &
+            carr = fert_to_sminn(bounds%begc:bounds%endc), &
+            garr = fert_to_sminn_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type = 'unity', &
+            l2g_scale_type = 'unity')
+         call c2g( bounds = bounds, &
+            carr = soyfixn_to_sminn(bounds%begc:bounds%endc), &
+            garr = soyfixn_to_sminn_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type = 'unity', &
+            l2g_scale_type = 'unity')
+      end if
+      call c2g( bounds = bounds, &
+         carr = denit(bounds%begc:bounds%endc), &
+         garr = denit_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+      call c2g( bounds = bounds, &
+         carr = col_fire_nloss(bounds%begc:bounds%endc), &
+         garr = grc_fire_nloss(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+      call c2g( bounds = bounds, &
+         carr = wood_harvestn(bounds%begc:bounds%endc), &
+         garr = wood_harvestn_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+      call c2g( bounds = bounds, &
+         carr = grainn_to_cropprodn(bounds%begc:bounds%endc), &
+         garr = grainn_to_cropprodn_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+      call c2g( bounds = bounds, &
+         carr = som_n_leached(bounds%begc:bounds%endc), &
+         garr = som_n_leached_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+      if (.not. use_nitrif_denitrif) then
+         call c2g( bounds = bounds, &
+            carr = sminn_leached(bounds%begc:bounds%endc), &
+            garr = sminn_leached_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type = 'unity', &
+            l2g_scale_type = 'unity')
+      else
+         call c2g( bounds = bounds, &
+            carr = f_n2o_nit(bounds%begc:bounds%endc), &
+            garr = f_n2o_nit_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type = 'unity', &
+            l2g_scale_type = 'unity')
+         call c2g( bounds = bounds, &
+            carr = smin_no3_leached(bounds%begc:bounds%endc), &
+            garr = smin_no3_leached_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type = 'unity', &
+            l2g_scale_type = 'unity')
+         call c2g( bounds = bounds, &
+            carr = smin_no3_runoff(bounds%begc:bounds%endc), &
+            garr = smin_no3_runoff_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type = 'unity', &
+            l2g_scale_type = 'unity')
+      end if
+
+      err_found = .false.
+      do g = bounds%begg, bounds%endg
+         ! calculate the total gridcell-level nitrogen storage, for mass conservation check
+         grc_endnb(g) = totgrcn(g) + seedn_grc(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
+
+         ! calculate total gridcell-level inputs
+         grc_ninputs(g) = forc_ndep(g) + nfix_to_sminn_grc(g) + &
+                          supplement_to_sminn_grc(g) + &
+                          dwt_seedn_to_leaf_grc(g) + &
+                          dwt_seedn_to_deadstem_grc(g)
+
+         if (use_fun) then
+            grc_ninputs(g) = grc_ninputs(g) + ffix_to_sminn_grc(g)
+         endif
+
+         if (use_crop) then
+            grc_ninputs(g) = grc_ninputs(g) + fert_to_sminn_grc(g) + soyfixn_to_sminn_grc(g)
+         end if
+
+         ! calculate total gridcell-level outputs
+         grc_noutputs(g) = denit_grc(g) + grc_fire_nloss(g) + &
+                           wood_harvestn_grc(g) + grainn_to_cropprodn_grc(g) - &
+                           som_n_leached_grc(g)
+
+         if (.not. use_nitrif_denitrif) then
+            grc_noutputs(g) = grc_noutputs(g) + sminn_leached_grc(g)
+         else
+            grc_noutputs(g) = grc_noutputs(g) + f_n2o_nit_grc(g) + &
+                              smin_no3_leached_grc(g) + smin_no3_runoff_grc(g)
+         end if
+
+         ! calculate the total gridcell-level nitrogen balance error for this time step
+         grc_errnb(g) = (grc_ninputs(g) - grc_noutputs(g)) * dt - &
+                        (grc_endnb(g) - grc_begnb(g))
+
+         if (abs(grc_errnb(g)) > 1e-3_r8) then
+            err_found = .true.
+            err_index = g
+         end if
+
+         if (abs(grc_errnb(g)) > 1e-7_r8) then
+            write(iulog,*) 'nbalance warning at g =', g, grc_errnb(g), grc_endnb(g)
+         end if
+      end do
+
+      if (err_found) then
+         g = err_index
+         write(iulog,*) 'gridcell nbalance error  =', grc_errnb(g), g
+         write(iulog,*) 'latdeg, londeg           =', grc%latdeg(g), grc%londeg(g)
+         write(iulog,*) 'begnb                    =', grc_begnb(g)
+         write(iulog,*) 'endnb                    =', grc_endnb(g)
+         write(iulog,*) 'delta store              =', grc_endnb(g) - grc_begnb(g)
+         write(iulog,*) 'input mass               =', grc_ninputs(g) * dt
+         write(iulog,*) 'output mass              =', grc_noutputs(g) * dt
+         write(iulog,*) 'net flux                 =', (grc_ninputs(g) - grc_noutputs(g)) * dt
+         write(iulog,*) '--- Inputs ---'
+         write(iulog,*) 'forc_ndep                =', forc_ndep(g) * dt
+         write(iulog,*) 'nfix_to_sminn_grc        =', nfix_to_sminn_grc(g) * dt
+         write(iulog,*) 'supplement_to_sminn_grc  =', supplement_to_sminn_grc(g) * dt
+         write(iulog,*) 'dwt_seedn_to_leaf_grc    =', dwt_seedn_to_leaf_grc(g) * dt
+         write(iulog,*) 'dwt_seedn_to_deadstem_grc =', dwt_seedn_to_deadstem_grc(g) * dt
+         if (use_fun) then
+            write(iulog,*) 'ffix_to_sminn_grc     =', ffix_to_sminn_grc(g) * dt
+         end if
+         if (use_crop) then
+            write(iulog,*) 'fert_to_sminn_grc     =', fert_to_sminn_grc(g) * dt
+            write(iulog,*) 'soyfixn_to_sminn_grc  =', soyfixn_to_sminn_grc(g) * dt
+         end if
+         write(iulog,*) '--- Outputs ---'
+         write(iulog,*) 'denit_grc                =', denit_grc(g) * dt
+         write(iulog,*) 'grc_fire_nloss           =', grc_fire_nloss(g) * dt
+         write(iulog,*) 'wood_harvestn_grc        =', wood_harvestn_grc(g) * dt
+         write(iulog,*) 'grainn_to_cropprodn_grc  =', grainn_to_cropprodn_grc(g) * dt
+         write(iulog,*) 'minus som_n_leached_grc  =', - som_n_leached_grc(g) * dt
+         if (.not. use_nitrif_denitrif) then
+            write(iulog,*) 'sminn_leached_grc     =', sminn_leached_grc(g) * dt
+         else
+            write(iulog,*) 'f_n2o_nit_grc         =', f_n2o_nit_grc(g) * dt
+            write(iulog,*) 'smin_no3_leached_grc  =', smin_no3_leached_grc(g) * dt
+            write(iulog,*) 'smin_no3_runoff_grc   =', smin_no3_runoff_grc(g) * dt
+         end if
+
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
