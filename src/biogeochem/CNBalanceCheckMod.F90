@@ -116,13 +116,14 @@ contains
          totgrcc      => cnveg_carbonstate_inst%totc_grc , & ! Input:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
          totgrcn      => cnveg_nitrogenstate_inst%totn_grc, & ! Input:  [real(r8) (:)]  (gN/m2) total gridcell nitrogen, incl veg
          seedc_grc    => cnveg_carbonstate_inst%seedc_grc, & ! Input:  [real(r8) (:)]  (gC/m2) seed carbon
+         cropprod1_grc => c_products_inst%cropprod1_grc  , & ! Input:  [real(r8) (:)]  (gC/m2) carbon in crop products
          tot_woodprod_grc => c_products_inst%tot_woodprod_grc &  ! Input:  [real(r8) (:)]  (gC/m2) total carbon in wood products
          )
 
     begg = bounds%begg; endg = bounds%endg
 
     do g = begg, endg
-       grc_begcb(g) = totgrcc(g) + seedc_grc(g) + tot_woodprod_grc(g)
+       grc_begcb(g) = totgrcc(g) + seedc_grc(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
        grc_begnb(g) = totgrcn(g)
     end do
 
@@ -208,6 +209,7 @@ contains
          grc_endcb               =>    this%endcb_grc                                   , & ! Output: [real(r8) (:) ]  (gC/m2) gridcell-level carbon mass, end of time step
          totgrcc                 =>    cnveg_carbonstate_inst%totc_grc                  , & ! Input:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
          nbp_grc                 =>    cnveg_carbonflux_inst%nbp_grc                    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) net biome production (positive for sink)
+         cropprod1_grc           =>    c_products_inst%cropprod1_grc                    , & ! Input:  [real(r8) (:)]  (gC/m2) carbon in crop products
          tot_woodprod_grc        =>    c_products_inst%tot_woodprod_grc                , & ! Input:  [real(r8) (:)]  (gC/m2) total carbon in wood products
          dwt_woodprod_gain_grc   =>    c_products_inst%dwt_woodprod_gain_grc           , & ! Input:  [real(r8) (:)]  (gC/m2/s) dynamic landcover addition to wood product pools
          dwt_seedc_to_leaf_grc   =>    cnveg_carbonflux_inst%dwt_seedc_to_leaf_grc      , & ! Input:  [real(r8) (:)]  (gC/m2/s) seed source sent to leaf
@@ -307,7 +309,7 @@ contains
          ! slevis notes:
          ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
          ! totc_p2c_col = totc_patch = totvegc_patch(p) + xsmrpool_patch(p) + ctrunc_patch(p) + cropseedc_deficit_patch(p)
-         grc_endcb(g) = totgrcc(g) + seedc_grc(g) + tot_woodprod_grc(g)
+         grc_endcb(g) = totgrcc(g) + seedc_grc(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
 
          ! calculate total gridcell-level inputs
          ! slevis notes:
@@ -343,7 +345,7 @@ contains
          write(iulog,*)'endcb                   =', grc_endcb(g)
          write(iulog,*)'delta store             =', grc_endcb(g) - grc_begcb(g)
          write(iulog,*)'--- Inputs ---'
-         write(iulog,*)'nbp                     =', nbp_grc(g) * dt
+         write(iulog,*)'nbp_grc                 =', nbp_grc(g) * dt
          write(iulog,*)'dwt_woodprod_gain_grc   =', dwt_woodprod_gain_grc(g) * dt
          write(iulog,*)'dwt_seedc_to_leaf_grc   =', dwt_seedc_to_leaf_grc(g) * dt
          write(iulog,*)'dwt_seedc_to_deadstem_grc =', dwt_seedc_to_deadstem_grc(g) * dt

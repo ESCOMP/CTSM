@@ -33,7 +33,7 @@ module CNProductsMod
      class(species_base_type), allocatable :: species    ! C, N, C13, C14, etc.
 
      ! States
-     real(r8), pointer :: cropprod1_grc(:)    ! (g[C or N]/m2) grain product pool, 1-year lifespan
+     real(r8), pointer, public :: cropprod1_grc(:) ! (g[C or N]/m2) grain product pool, 1-year lifespan
      real(r8), pointer :: prod10_grc(:)       ! (g[C or N]/m2) wood product pool, 10-year lifespan
      real(r8), pointer :: prod100_grc(:)      ! (g[C or N]/m2) wood product pool, 100-year lifespan
      real(r8), pointer, public :: tot_woodprod_grc(:) ! (g[C or N]/m2) total wood product pool
