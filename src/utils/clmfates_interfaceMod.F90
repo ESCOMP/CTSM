@@ -653,9 +653,9 @@ contains
       do s=1,this%fates(nc)%nsites
 
          c = this%f2hmap(nc)%fcolumn(s)
-         g = col%gridcell(c)
 
          if (use_fates_spitfire > 1) then
+            g = col%gridcell(c)
             this%fates(nc)%bc_in(s)%lightning24 = cnfire_method_inst%lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
          else
             this%fates(nc)%bc_in(s)%lightning24 = ED_val_nignitions / days_per_year  ! #/km2/yr to #/km2/day
