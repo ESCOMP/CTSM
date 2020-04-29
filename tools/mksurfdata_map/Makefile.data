@@ -133,9 +133,6 @@ global-present-ne16np4 : FORCE
 global-present-ne120np4 : FORCE
 	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res ne120np4 $(BACKGROUND)
 
-# BUG(wjs, 2019-04-10, ESCOMP/ctsm#262) This -hirespft won't work until issue 262 is resolved
-# For now, I'm using:
-#    -no-crop -glc_nec 10 -y 2005 -res 0.125nldas2
 global-present-nldas : FORCE
 	$(MKSURFDATA) -no-crop -hirespft -glc_nec 10 -y 2005 -res 0.125nldas2 $(BACKGROUND)
 
