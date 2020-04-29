@@ -680,11 +680,7 @@ contains
        call crop_inst%initAccVars(bounds_proc)
     end if
 
-    ! use_fates_spitfire is assigned an integer value in the namelist
-    ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
-    if (use_fates_spitfire > 0) then
-       call cnfire_method_inst%initAccVars(bounds_proc)
-    end if
+    call cnfire_method_inst%initAccVars(bounds_proc)
 
     !------------------------------------------------------------       
     ! Read monthly vegetation
