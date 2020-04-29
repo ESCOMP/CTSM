@@ -582,6 +582,7 @@ contains
       
       ! !USES
       use CNFireMethodMod, only: cnfire_method_type
+      use EDParamsMod, only: ED_val_nignitions
 
       implicit none
       class(hlm_fates_interface_type), intent(inout) :: this
@@ -654,10 +655,10 @@ contains
          c = this%f2hmap(nc)%fcolumn(s)
          g = col%gridcell(c)
 
-         if (use_fates_spitfire > 0) then
+         if (use_fates_spitfire > 1) then
             this%fates(nc)%bc_in(s)%lightning24 = cnfire_method_inst%lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
          else
-            this%fates(nc)%bc_in(s)%lightning24 = 0.0_r8
+            this%fates(nc)%bc_in(s)%lightning24 = ED_val_nignitions / days_per_year  ! #/km2/yr to #/km2/day
          end if
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil

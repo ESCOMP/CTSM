@@ -22,8 +22,9 @@ module FATESFireNoDataMod
   public :: fates_fire_no_data_type
   !
   type, extends(cnfire_base_type) :: fates_fire_no_data_type
+
       ! !PRIVATE MEMBER DATA:
-      real(r8), public, pointer :: lnfm24(:)  ! Daily avg lightning by grid cell (#/km2/hr)
+
     contains
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: InitAccBuffer  ! Initialize accumulation processes
@@ -58,34 +59,20 @@ contains
   subroutine InitAccBuffer (this, bounds)
     !
     ! !DESCRIPTION:
+    ! EMPTY subroutine for the no_data case.
     ! Initialize accumulation buffer for all required module accumulated fields
     ! This routine set defaults values that are then overwritten by the
     ! restart file for restart or branch runs
     !
     ! !USES
-    use clm_varcon, only : spval
-    use accumulMod, only : init_accum_field
     !
     ! !ARGUMENTS:
     class(fates_fire_no_data_type) :: this
     type(bounds_type), intent(in) :: bounds
 
     ! !LOCAL VARIABLES:
-    integer  :: begg, endg
-    integer  :: ier
     !---------------------------------------------------------------------
 
-    begg = bounds%begg; endg = bounds%endg
-
-    allocate(this%lnfm24(begg:endg), stat=ier)
-    if (ier/=0) then
-       call endrun(msg="allocation error for lnfm24"//&
-            errMsg(sourcefile, __LINE__))
-    endif
-    this%lnfm24(:) = spval
-    call init_accum_field (name='lnfm24', units='strikes/km2/hr', &
-         desc='24hr average of lightning strikes',  accum_type='runmean', &
-         accum_period=-1, subgrid_type='gridcell', numlev=1, init_value=0._r8)
 
   end subroutine InitAccBuffer
 
@@ -93,89 +80,39 @@ contains
   subroutine InitAccVars(this, bounds)
     !
     ! !DESCRIPTION:
+    ! EMPTY subroutine for the no_data case.
     ! Initialize module variables that are associated with
     ! time accumulated fields. This routine is called for both an initial run
     ! and a restart run (and must therefore must be called after the restart
     ! file is read in and the accumulation buffer is obtained)
     !
     ! !USES
-    use accumulMod       , only : extract_accum_field
-    use clm_time_manager , only : get_nstep
     !
     ! !ARGUMENTS:
     class(fates_fire_no_data_type) :: this
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer  :: begg, endg
-    integer  :: nstep
-    integer  :: ier
-    real(r8), pointer :: rbufslg(:)  ! temporary
     !---------------------------------------------------------------------
 
-    begg = bounds%begg; endg = bounds%endg
-
-    ! Allocate needed dynamic memory for single level patch field
-    allocate(rbufslg(begg:endg), stat=ier)
-    if (ier/=0) then
-       call endrun(msg="allocation error for rbufslg"//&
-            errMsg(sourcefile, __LINE__))
-    endif
-
-    ! Determine time step
-    nstep = get_nstep()
-
-    call extract_accum_field ('lnfm24', rbufslg, nstep)
-    this%lnfm24(begg:endg) = rbufslg(begg:endg)
-
-    deallocate(rbufslg)
 
   end subroutine InitAccVars
 
   !-----------------------------------------------------------------------
   subroutine UpdateAccVars (this, bounds)
     !
-    ! USES
-    use clm_time_manager, only: get_nstep
-    use clm_time_manager, only: get_days_per_year
-    use accumulMod, only: update_accum_field, extract_accum_field
-    use abortutils, only: endrun
-    use EDParamsMod, only: ED_val_nignitions
+    ! !DESCRIPTION:
+    ! EMPTY subroutine for the no_data case.
+    !
+    ! !USES
     !
     ! !ARGUMENTS:
     class(fates_fire_no_data_type) :: this
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: dtime                 ! timestep size [seconds]
-    integer :: nstep                 ! timestep number
-    integer :: days_per_year
-    integer :: ier                   ! error status
-    integer :: begg, endg
-    real(r8), pointer :: rbufslg(:)  ! temporary single level - gridcell level
     !---------------------------------------------------------------------
 
-    begg = bounds%begg; endg = bounds%endg
-
-    nstep = get_nstep()
-
-    ! Allocate needed dynamic memory for single level gridcell field
-
-    allocate(rbufslg(begg:endg), stat=ier)
-    if (ier/=0) then
-       write(iulog,*)'UpdateAccVars allocation error for rbuf1dg'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    endif
-
-    days_per_year = get_days_per_year()
-
-    ! Accumulate and extract lnfm24
-    ! Convert #/km2/yr to #/km2/hr to match lnfm from datasets
-    rbufslg(begg:endg) = ED_val_nignitions / (days_per_year * 24._r8)
-    call update_accum_field  ('lnfm24', rbufslg, nstep)
-    call extract_accum_field ('lnfm24', this%lnfm24, nstep)
-
-    deallocate(rbufslg)
 
   end subroutine UpdateAccVars
 
