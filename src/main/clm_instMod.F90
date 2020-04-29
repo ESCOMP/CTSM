@@ -185,7 +185,6 @@ contains
     !
     ! !USES: 
     use clm_varpar                         , only : nlevsno, numpft
-    use clm_varctl                         , only : use_fates_spitfire
     use controlMod                         , only : nlfilename, fsurdat
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc

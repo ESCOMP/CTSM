@@ -30,6 +30,8 @@ module FATESFireNoDataMod
       procedure, public :: InitAccBuffer  ! Initialize accumulation processes
       procedure, public :: InitAccVars  ! Initialize accumulation variables
       procedure, public :: UpdateAccVars  ! Update/extract accumulations vars
+      procedure, public :: InterpFileInputs  ! Interpolate inputs from files
+      procedure, public :: Init2  ! Initialization after determining subgrid weights
 
   end type fates_fire_no_data_type
 
@@ -115,5 +117,64 @@ contains
 
 
   end subroutine UpdateAccVars
+
+  !-----------------------------------------------------------------------
+  subroutine InterpFileInputs(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! EMPTY subroutine for the no_data case.
+    ! Interpolate inputs from files
+    !
+    ! NOTE(wjs, 2016-02-23) Stuff done here could probably be done at the end of
+    ! InitEachTimeStep, rather than in this separate routine, except for the
+    ! fact that
+    ! (currently) this Interp stuff is done with proc bounds rather thna clump
+    ! bounds. I
+    ! think that is needed so that you don't update a given stream multiple
+    ! times. If we
+    ! rework the handling of threading / clumps so that there is a separate
+    ! object for
+    ! each clump, then I think this problem would disappear - at which point we
+    ! could
+    ! remove this Interp routine, moving its body to the end of
+    ! InitEachTimeStep.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cnfire_method_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InterpFileInputs'
+    !-----------------------------------------------------------------------
+
+
+  end subroutine InterpFileInputs
+
+  !-----------------------------------------------------------------------
+  subroutine Init2(this, bounds, NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! EMPTY subroutine for the no_data case.
+    ! Initialization after subgrid weights are determined
+    !
+    ! This copy should only be called if use_fates is .true.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cnfire_method_type) , intent(inout) :: this
+    type(bounds_type) , intent(in)    :: bounds
+    character(len=*)  , intent(in)    :: NLFilename ! namelist filename
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'Init2'
+    !-----------------------------------------------------------------------
+
+
+  end subroutine Init2
 
 end module FATESFireNoDataMod
