@@ -434,7 +434,7 @@ my %failtest = (
      "dribble_crphrv w/o crop"   =>{ options=>" -envxml_dir . -bgc cn -no-crop",
                                      namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"-phys clm5_0",
+                                     phys=>"clm5_0",
                                    },
      "CNDV with flanduse_timeseries - clm4_5"=>{ options=>"-bgc bgc -dynamic_vegetation -envxml_dir . -ignore_warnings",
                                      namelst=>"flanduse_timeseries='my_flanduse_timeseries_file.nc'",
