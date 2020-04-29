@@ -19,6 +19,9 @@ release-clm5.0.15   sacks 12/06/2018 SKIPPED ON MASTER -- Option for rain-to-sno
 release-clm5.0.14    erik 11/29/2018 Update cime and fix surface dataset for f05 1850 non-crop case
 release-clm5.0.13    erik 11/14/2018 Update externals with new CO2/presearo/rtm/mosart, add science_support, change testing
 release-clm5.0.12    erik 11/03/2018 New IC files for clm45/clm50 coupled cases, add 2010 compset (IC FILES UPDATE SKIPPED ON MASTER)
+  ctsm1.0.dev092     erik 04/27/2020 Update cime to version in cesm2_2_beta04
+  ctsm1.0.dev091    sacks 04/24/2020 Increase tolerance on near-zero truncation for a snow state update
+  ctsm1.0.dev090   negins 04/23/2020 Refactoring banded diagonal matrix code in SoilTemperature module
   ctsm1.0.dev089    sacks 04/07/2020 Bring documentation source to master
   ctsm1.0.dev088    sacks 04/07/2020 Fix bug in snow aerosol numerics (causes occasional HUGE aerosol values)
   ctsm1.0.dev087    sacks 04/06/2020 Change hard-coded soil layers in phenology to use a target depth
