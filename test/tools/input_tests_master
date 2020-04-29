@@ -23,6 +23,9 @@ bli57 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__
 smi58 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_crp_1850-2000^tools__do
 bli58 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_crp_1850-2000^tools__do
 
+smi64 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_5x5_amazon_hirespft_2005^tools__ds
+bli64 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_5x5_amazon_hirespft_2005^tools__ds
+
 smi74 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
 bli74 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
 smi78 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds
