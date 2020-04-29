@@ -552,7 +552,7 @@ EOF
    my @rcpaths = split( ",", $opts{'ssp_rcp'} );
    # Check that ssp_rcp is valid
    foreach my $ssp_rcp ( @rcpaths  ) {
-      if ( ! $definition->is_valid_value( "ssp_rcp", $ssp_rcp ) ) {
+      if ( ! $definition->is_valid_value( "ssp_rcp", "'$ssp_rcp'" ) ) {
           print "** Invalid ssp_rcp: $ssp_rcp\n";
           usage();
        }
