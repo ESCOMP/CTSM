@@ -355,6 +355,19 @@ contains
     ! restart fields that are present on old restart files.
 
     call restartvar(ncid=ncid, flag=flag, &
+         varname=this%species%rest_fname('tot_woodprod', suffix='_g'), &
+         xtype=ncd_double, dim1name='gridcell', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%tot_woodprod_grc)
+    ! Backwards compatibility mentioned below is not applicable for this var.
+    ! If field not found in restart, then set from template if provided
+    if (flag == 'read' .and. .not. readvar .and. template_provided) then
+       call set_missing_from_template(this%tot_woodprod_grc, &
+            template_for_missing_fields%tot_woodprod_grc, &
+            multiplier = template_multiplier)
+    end if
+
+    call restartvar(ncid=ncid, flag=flag, &
          varname=this%species%rest_fname('cropprod1', suffix='_g'), &
          xtype=ncd_double, dim1name='gridcell', &
          long_name='', units='', &
