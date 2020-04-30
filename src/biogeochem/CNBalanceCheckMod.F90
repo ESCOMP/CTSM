@@ -319,7 +319,6 @@ contains
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
 
-
       err_found = .false.
       do g = bounds%begg, bounds%endg
          ! calculate gridcell-level carbon storage for mass conservation check
@@ -383,7 +382,7 @@ contains
     !
     ! !USES:
     use clm_varctl, only : use_crop
-    use subgridAveMod, only: c2g
+    use subgridAveMod, only: c2g, p2g
     use atm2lndType, only: atm2lnd_type
     !
     ! !ARGUMENTS:
@@ -411,6 +410,7 @@ contains
     real(r8):: grc_errnb(bounds%begg:bounds%endg)
     real(r8):: nfix_to_sminn_grc(bounds%begg:bounds%endg)
     real(r8):: supplement_to_sminn_grc(bounds%begg:bounds%endg)
+    real(r8):: crop_seedn_to_leaf_grc(bounds%begg:bounds%endg)
     real(r8):: ffix_to_sminn_grc(bounds%begg:bounds%endg)
     real(r8):: fert_to_sminn_grc(bounds%begg:bounds%endg)
     real(r8):: soyfixn_to_sminn_grc(bounds%begg:bounds%endg)
@@ -426,6 +426,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                             & 
+         crop_seedn_to_leaf  => cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch           , & ! Input:  [real(r8) (:) ]  (gC/m2/s) seed source to leaf
          grc_begnb           => this%begnb_grc                                           , & ! Input:  [real(r8) (:) ]  (gN/m2) gridcell nitrogen mass, beginning of time step
          grc_endnb           => this%endnb_grc                                           , & ! Output: [real(r8) (:) ]  (gN/m2) gridcell nitrogen mass, end of time step
          totgrcn             => cnveg_nitrogenstate_inst%totn_grc                        , & ! Input:  [real(r8) (:) ]  (gN/m2) total gridcell nitrogen, incl veg
@@ -618,6 +619,12 @@ contains
             c2l_scale_type = 'unity', &
             l2g_scale_type = 'unity')
       end if
+      call p2g(bounds, &
+         crop_seedn_to_leaf(bounds%begp:bounds%endp), &
+         crop_seedn_to_leaf_grc(bounds%begg:bounds%endg), &
+         p2c_scale_type = 'unity', &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
 
       err_found = .false.
       do g = bounds%begg, bounds%endg
@@ -627,6 +634,7 @@ contains
          ! calculate total gridcell-level inputs
          grc_ninputs(g) = forc_ndep(g) + nfix_to_sminn_grc(g) + &
                           supplement_to_sminn_grc(g) + &
+                          crop_seedn_to_leaf_grc(g) + &
                           dwt_seedn_to_leaf_grc(g) + &
                           dwt_seedn_to_deadstem_grc(g)
 
@@ -678,6 +686,7 @@ contains
          write(iulog,*) 'forc_ndep                =', forc_ndep(g) * dt
          write(iulog,*) 'nfix_to_sminn_grc        =', nfix_to_sminn_grc(g) * dt
          write(iulog,*) 'supplement_to_sminn_grc  =', supplement_to_sminn_grc(g) * dt
+         write(iulog,*) 'crop_seedn_to_leaf_grc   =', crop_seedn_to_leaf_grc(g) * dt
          write(iulog,*) 'dwt_seedn_to_leaf_grc    =', dwt_seedn_to_leaf_grc(g) * dt
          write(iulog,*) 'dwt_seedn_to_deadstem_grc =', dwt_seedn_to_deadstem_grc(g) * dt
          if (use_fun) then
