@@ -704,16 +704,20 @@ program mksurfdat
 
     do n = 1,ns_o
 
-       ! Assume wetland and/or lake when dataset landmask implies ocean 
+       ! Assume wetland, glacier and/or lake when dataset landmask implies ocean 
        ! (assume medium soil color (15) and loamy texture).
        ! Also set pftdata_mask here
 
        if (pctlnd_pft(n) < 1.e-6_r8) then
           pftdata_mask(n)  = 0
           soicol(n)        = 15
-          pctwet(n)        = 100._r8 - pctlak(n)
+          if (pctgla(n) < 1.e-6_r8) then
+              pctwet(n)    = 100._r8 - pctlak(n)
+              pctgla(n)    = 0._r8
+          else
+              pctwet(n)    = 100._r8 - pctgla(n) - pctlak(n)
+          end if
           pcturb(n)        = 0._r8
-          pctgla(n)        = 0._r8
           call pctnatpft(n)%set_pct_l2g(0._r8)
           call pctcft(n)%set_pct_l2g(0._r8)
           pctsand(n,:)     = 43._r8
