@@ -11,18 +11,43 @@ Move changes from release-clm5.0.12.13/14/16/17/18/20/21/22/23/24/25/26/27/28/29
 (note excludes release-clm5.0.15, release-clm5.0.19)
 
 Answer changing!
-Updates fates
+Updates FATES with PARTEH option.
 
+Remove CRUNCEP half degree, ne120np4, f05 surface datasets
+Landuse-timeseries files for just: f09, f19, f10, ne30np4, 1x1_numaIA, 1x1_smallvilleIA, 1x1_brazil
+Add datasets needed for SSP scenarios (only Tier I for ndep). Add ZWT_inversion dataset for methane.
 
+Add new ability to use prescribed soil moisture data (from streams files based on an earlier CTSM simulation).
+
+Add new MODISv2 mapping files for mksurfdata_map. Remove T5 and T21 mapping files. Add conus_30_x8 mapping files,
+and T62 mapping files
 
 
 Bugs fixed or introduced
 ------------------------
 
-Issues fixed (include CTSM Issue #): #746, #741, #873
-  #746 -- 
-  #741 --
-  #873 --
+Issues fixed (include CTSM Issue #): #873, #871, #836, #831, #817, #809, #804, #791, #786, #746, #741, #734, #629, #621, #557, #544, #533, #276, #175, #150
+  13 issues....
+  #873 -- Release clm5.0.12 changes
+  #871 -- don't check for valid resolution for CESM cases by default
+  #836 -- add izumi as a place that can run tools tests
+  #831 -- add namelist tint_algo settings for input streams
+  #817 -- Have clm4_5 use the same ndep file as clm5_0 for 1850
+  #809 -- mkmapdata using an old version of intel
+  #804 -- mksurfdata option
+  #791 -- fix threading for prescribed LAI and soil-moisture
+  #786 -- allow use_init_interp for a branch
+  #746 -- Some CLM45 configurations use CLM50 initial conditions files
+  #741 -- C13_HR, C13_NBP, FPI values result in numeric conversion not representable error
+  #734 -- Isotope historical files off of NetCDF-4
+  #629 -- Remove unused fields from surface datasets
+  #621 -- Fully remove rcp in place of only ssp_rcp
+  #557 -- no-anthro compset and options
+  #544 -- Transient cases are matching wrong IC file
+  #533 -- Add -no-anthro option to mksurfdata
+  #276 -- Tests for pre_alpha/pre_beta
+  #175 -- Set stream_year_first_urbantv/last for CLM4.5
+  #150 -- mksurfdata code cleanup
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -43,11 +68,27 @@ Notes of particular relevance for users
 
 Caveats for users (e.g., need to interpolate initial conditions):
 
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Add 2010 compset option
+   New namelist items: ndep_tintalgo, lai_tintalgo, lightng_tintalgo, urbantv_tintalgo, dribble_crophrv_xsmrpool_2atm
+   New soil moisture namelist items: use_soil_moisture_streams, stream_year_first_soilm, stream_year_last_soilm, model_year_align_soilm,
+                                     model_year_align_soilm, soilm_tintalgo, soilm_offset, soilm_ignore_data_if_missing
+   New namelist items for FATES: fates_parteh_mode
+   New 2010, no-anthro, SSP use cases
+   New compsets: I2010Clm50Sp, I2000Clm50BgcCropQianGs, I1850Clm50BgcNoAnthro, I1850Clm50SpNoAnthro, IHistClm50SpCru, IHistClm50SpCru,
+                 IHistClm45SpGs, IHistClm45SpGs
+   New SSP compsets: ISSP585Clm50BgcCrop, ISSP126Clm50BgcCrop, ISSP126Clm50BgcCrop, ISSP245Clm50BgcCrop, ISSP370Clm50BgcCrop, 
+                     ISSP434Clm50BgcCrop, ISSP460Clm50BgcCrop, ISSP460Clm50BgcCrop
+   LAI streams options don't show up in the namelist unless you ask for them
+   finundation comes from streams files, no longer from the surface dataset
+   FATES adds a list of new history variables and dimension types
 
-Changes made to namelist defaults (e.g., changed parameter values):
+Changes made to namelist defaults (e.g., changed parameter values): New fsurdat files, SSP C13/C14 files
+  Add PtVg surface dataset
+  most finidat files now need to be interpolated, a few added in
+  New ndep datasets
 
 Changes to the datasets (e.g., parameter, surface or initial files):
+  New fsurdat files, finidat files need to be interpolated from now
 
 Substantial timing or memory changes: None
 
@@ -56,6 +97,9 @@ Notes of particular relevance for developers: (including Code reviews and testin
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Threshold to reseed dead vegetation increased from zero to 1.0 as a hard coded parameter.
+   Reseeding also happens for generic crop types and not just natural vegetation now.
+   The ability to read in 3D streams was added (input files have to be at the same resolution as the model)
 
 Changes to tests or testing:
 
@@ -100,10 +144,11 @@ Changes answers relative to baseline: Yes
    to work with the new fsurdat files
 
   Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - what code configurations: all global
+    - what platforms/compilers: all
+    - nature of change: Main change is around Antarctica
 
+  CMIP6 simulations and release branch simulations were run with these surface datasets
 
 Detailed list of changes
 ------------------------
@@ -115,12 +160,13 @@ List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): f
 
    FATES now points to the NGEET repository rather than the NCAR fates-release
 
-Pull Requests that document the changes (include PR ids): #998, #883, #849, #567, #561
+Pull Requests that document the changes (include PR ids): #998, #883, #849, #567, #564, #561
 (https://github.com/ESCOMP/ctsm/pull)
    #998 -- Remove Copyright file
    #883 -- Bring changes on release-clm5.0 branch to master PR status: ready priority: high type: enhancement
    #849 -- Fix link to new forums
    #567 -- Ignore patterns for vim
+   #564 -- Update mksurfdata_map to include glaciers outside of pft landmask
    #561 -- Add list of checks that should be done when making new surface datasets
 
 ===============================================================
