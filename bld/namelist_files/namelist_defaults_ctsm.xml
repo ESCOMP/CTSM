@@ -815,9 +815,9 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
  use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1x1_numaIA_hist_78pfts_CMIP6_simyr1850-2015_c170917.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="C24"      sim_year_range="1850-2000"
- use_crop=".true."  >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_C24_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c200317.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_C24_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c200317.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="C96"      sim_year_range="1850-2000"
- use_crop=".true."  >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_C96_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c200317.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_C96_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c200317.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="ne120np4"      sim_year_range="1850-2000" 
  use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
@@ -923,9 +923,9 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_CMIP6_simyr1850_c170824.nc</fsurd
  use_crop=".true."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="C24"      rcp="8.5" sim_year_range="1850-2100"
- use_crop=".true."  >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_C24_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c200317.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_C24_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c200317.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="C96"      rcp="8.5" sim_year_range="1850-2100"
- use_crop=".true."  >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_C96_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c200317.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_C96_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c200317.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="0.47x0.63"     rcp="6" sim_year_range="1850-2000"
  use_crop=".true." >lnd/clm2/surfdata_map/landuse.timeseries_0.47x0.63_hist_78pfts_CMIP6_simyr1850-2015_c180508.nc</flanduse_timeseries>
