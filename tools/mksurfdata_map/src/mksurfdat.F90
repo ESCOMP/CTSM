@@ -710,11 +710,10 @@ program mksurfdat
        if (pctlnd_pft(n) < 1.e-6_r8) then
           pftdata_mask(n)  = 0
           soicol(n)        = 15
-          if (pctgla(n) < 1.e-6_r8) then
-              pctwet(n)    = 100._r8 - pctlak(n)
-              pctgla(n)    = 0._r8
-          else
-              pctwet(n)    = max(100._r8 - pctgla(n) - pctlak(n), 0.0_r8)
+          if (pctgla(n) < 1.e-6_r8 .and. pctlak(n) < 1.e-6_r8) then
+             pctgla(n)    = 0._r8
+             pctlak(n)    = 0._r8
+             pctwet(n)    = 100._r8
           end if
           pcturb(n)        = 0._r8
           call pctnatpft(n)%set_pct_l2g(0._r8)
