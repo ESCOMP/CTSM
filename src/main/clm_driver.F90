@@ -1478,24 +1478,24 @@ contains
          waterfluxbulk_inst%qflx_tran_veg_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_evap_grnd_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_evap_grnd_col(bounds%begc:bounds%endc))
+         waterfluxbulk_inst%qflx_liqevap_from_top_layer_patch(bounds%begp:bounds%endp), &
+         waterfluxbulk_inst%qflx_liqevap_from_top_layer_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_allc, filter_allc, &
          waterfluxbulk_inst%qflx_evap_soi_patch(bounds%begp:bounds%endp), &
          waterfluxbulk_inst%qflx_evap_soi_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_dew_grnd_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_dew_grnd_col(bounds%begc:bounds%endc))
+         waterfluxbulk_inst%qflx_liqdew_to_top_layer_patch(bounds%begp:bounds%endp), &
+         waterfluxbulk_inst%qflx_liqdew_to_top_layer_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_sub_snow_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_sub_snow_col(bounds%begc:bounds%endc))
+         waterfluxbulk_inst%qflx_solidevap_from_top_layer_patch(bounds%begp:bounds%endp), &
+         waterfluxbulk_inst%qflx_solidevap_from_top_layer_col(bounds%begc:bounds%endc))
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
-         waterfluxbulk_inst%qflx_dew_snow_patch(bounds%begp:bounds%endp), &
-         waterfluxbulk_inst%qflx_dew_snow_col(bounds%begc:bounds%endc))
+         waterfluxbulk_inst%qflx_soliddew_to_top_layer_patch(bounds%begp:bounds%endp), &
+         waterfluxbulk_inst%qflx_soliddew_to_top_layer_col(bounds%begc:bounds%endc))
 
   end subroutine clm_drv_patch2col
 

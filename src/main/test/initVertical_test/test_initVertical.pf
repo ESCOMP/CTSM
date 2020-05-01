@@ -1,0 +1,161 @@
+module test_initVertical
+
+  ! Tests of initVerticalMod
+
+  use pfunit_mod
+  use initVerticalMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use clm_varpar, only : nlevlak, nlevgrnd, nlevdecomp_full, nlayer
+  use clm_varcon, only : clm_varcon_init, clm_varcon_clean, zisoi
+  use unittestUtils, only : endrun_msg
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestInitVertical
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestInitVertical
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  ! ========================================================================
+  ! Helper routines
+  ! ========================================================================
+
+  subroutine setUp(this)
+    class(TestInitVertical), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestInitVertical), intent(inout) :: this
+
+    call clm_varcon_clean()
+  end subroutine tearDown
+
+  !-----------------------------------------------------------------------
+  subroutine call_clm_varcon_init(my_nlevgrnd)
+    !
+    ! !DESCRIPTION:
+    ! Set clm_varpar variables needed by clm_varcon_init, then call clm_varcon_init.
+    !
+    ! This should be called at the start of every unit test defined here.
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: my_nlevgrnd
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'call_clm_varcon_init'
+    !-----------------------------------------------------------------------
+
+    nlevgrnd = my_nlevgrnd
+    ! For now, use hard-coded values for these others, since they aren't important for
+    ! the unit tests here
+    nlevlak = 10
+    nlevdecomp_full = nlevgrnd
+
+    call clm_varcon_init(is_simple_buildtemp = .true.)
+  end subroutine call_clm_varcon_init
+
+  !-----------------------------------------------------------------------
+  subroutine set_zisoi(my_zisoi)
+    !
+    ! !DESCRIPTION:
+    ! Set zisoi values in clm_varcon based on passed-in array
+    !
+    ! !ARGUMENTS:
+    ! Interface values at the BOTTOM of each layer; should NOT contain the top (0) value,
+    ! which is always assumed to be 0
+    real(r8), intent(in) :: my_zisoi(:)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'set_zisoi'
+    !-----------------------------------------------------------------------
+
+    @assertEqual(nlevgrnd, ubound(my_zisoi, 1))
+    zisoi(0) = 0._r8
+    zisoi(1:nlevgrnd) = my_zisoi(:)
+
+  end subroutine set_zisoi
+
+
+  ! ========================================================================
+  ! Begin unit tests
+  ! ========================================================================
+
+  @Test
+  subroutine findSoilLayerContainingDepth_top(this)
+    class(TestInitVertical), intent(inout) :: this
+    real(r8), parameter :: my_zisoi(3) = [2._r8, 4._r8, 6._r8]
+    integer :: layer
+
+    call call_clm_varcon_init(my_nlevgrnd = size(my_zisoi))
+    call set_zisoi(my_zisoi)
+
+    call find_soil_layer_containing_depth(1._r8, layer)
+
+    @assertEqual(1, layer)
+  end subroutine findSoilLayerContainingDepth_top
+
+  @Test
+  subroutine findSoilLayerContainingDepth_bottom(this)
+    class(TestInitVertical), intent(inout) :: this
+    real(r8), parameter :: my_zisoi(3) = [2._r8, 4._r8, 6._r8]
+    integer :: layer
+
+    call call_clm_varcon_init(my_nlevgrnd = size(my_zisoi))
+    call set_zisoi(my_zisoi)
+
+    call find_soil_layer_containing_depth(5._r8, layer)
+
+    @assertEqual(3, layer)
+  end subroutine findSoilLayerContainingDepth_bottom
+
+  @Test
+  subroutine findSoilLayerContainingDepth_mid(this)
+    class(TestInitVertical), intent(inout) :: this
+    real(r8), parameter :: my_zisoi(3) = [2._r8, 4._r8, 6._r8]
+    integer :: layer
+
+    call call_clm_varcon_init(my_nlevgrnd = size(my_zisoi))
+    call set_zisoi(my_zisoi)
+
+    call find_soil_layer_containing_depth(3._r8, layer)
+
+    @assertEqual(2, layer)
+  end subroutine findSoilLayerContainingDepth_mid
+
+  @Test
+  subroutine findSoilLayerContainingDepth_negative_aborts(this)
+    class(TestInitVertical), intent(inout) :: this
+    real(r8), parameter :: my_zisoi(3) = [2._r8, 4._r8, 6._r8]
+    integer :: layer
+
+    call call_clm_varcon_init(my_nlevgrnd = size(my_zisoi))
+    call set_zisoi(my_zisoi)
+
+    call find_soil_layer_containing_depth(-1._r8, layer)
+
+    @assertExceptionRaised(endrun_msg('find_soil_layer_containing_depth: depth above top of soil'))
+  end subroutine findSoilLayerContainingDepth_negative_aborts
+
+  @Test
+  subroutine findSoilLayerContainingDepth_tooDeep_aborts(this)
+    class(TestInitVertical), intent(inout) :: this
+    real(r8), parameter :: my_zisoi(3) = [2._r8, 4._r8, 6._r8]
+    integer :: layer
+
+    call call_clm_varcon_init(my_nlevgrnd = size(my_zisoi))
+    call set_zisoi(my_zisoi)
+
+    call find_soil_layer_containing_depth(7._r8, layer)
+
+    @assertExceptionRaised(endrun_msg('find_soil_layer_containing_depth: depth below bottom of soil'))
+  end subroutine findSoilLayerContainingDepth_tooDeep_aborts
+
+end module test_initVertical

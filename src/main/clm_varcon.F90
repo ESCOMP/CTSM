@@ -27,6 +27,7 @@ module clm_varcon
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: clm_varcon_init  ! initialize constants in clm_varcon
+  public :: clm_varcon_clean ! deallocate variables allocated by clm_varcon_init
   !
   ! !REVISION HISTORY:
   ! Created by Mariana Vertenstein
@@ -221,9 +222,6 @@ module clm_varcon
   real(r8), public, allocatable :: dzsoi_decomp(:) !soil dz (thickness)
   integer , public, allocatable :: nlvic(:)        !number of CLM layers in each VIC layer (#)
   real(r8), public, allocatable :: dzvic(:)        !soil dz (thickness) of each VIC layer
-  real(r8), public ,allocatable :: zsoifl(:)       !original soil midpoint (used in interpolation of sand and clay)
-  real(r8), public ,allocatable :: zisoifl(:)      !original soil interface depth (used in interpolation of sand and clay)
-  real(r8), public ,allocatable :: dzsoifl(:)      !original soil thickness  (used in interpolation of sand and clay)
 
   !------------------------------------------------------------------
   ! (Non-tunable) Constants for the CH4 submodel (Tuneable constants in ch4varcon)
@@ -266,7 +264,7 @@ contains
     ! MUST be called  after clm_varpar_init.
     !
     ! !USES:
-    use clm_varpar, only: nlevgrnd, nlevlak, nlevdecomp_full, nlevsoifl, nlayer
+    use clm_varpar, only: nlevgrnd, nlevlak, nlevdecomp_full, nlayer
     !
     ! !ARGUMENTS:
     implicit none
@@ -284,9 +282,6 @@ contains
     allocate( dzsoi_decomp(1:nlevdecomp_full ))
     allocate( nlvic(1:nlayer                 ))
     allocate( dzvic(1:nlayer                 ))
-    allocate( zsoifl(1:nlevsoifl             ))
-    allocate( zisoifl(0:nlevsoifl            ))
-    allocate( dzsoifl(1:nlevsoifl            ))
 
     ! Zero out wastheat factors for simpler building temperature method (introduced in CLM4.5)
     if ( is_simple_buildtemp )then
@@ -295,5 +290,28 @@ contains
     end if
 
   end subroutine clm_varcon_init
+
+  !-----------------------------------------------------------------------
+  subroutine clm_varcon_clean()
+    !
+    ! !DESCRIPTION:
+    ! Deallocate variables allocated by clm_varcon_init
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'clm_varcon_clean'
+    !-----------------------------------------------------------------------
+
+    deallocate(zlak)
+    deallocate(dzlak)
+    deallocate(zsoi)
+    deallocate(dzsoi)
+    deallocate(zisoi)
+    deallocate(dzsoi_decomp)
+    deallocate(nlvic)
+    deallocate(dzvic)
+
+  end subroutine clm_varcon_clean
+
 
 end module clm_varcon
