@@ -1,4 +1,129 @@
 ===============================================================
+Tag name:  ctsm1.0.dev093
+Originator(s):  erik (Erik Kluzek)
+Date: Fri May  1 10:12:22 MDT 2020
+One-line Summary: Bring in changes from release-clm5.0 branch to master
+
+Purpose of changes
+------------------
+
+Move changes from release-clm5.0.12.13/14/16/17/18/20/21/22/23/24/25/26/27/28/29/30 to master
+(note excludes release-clm5.0.15, release-clm5.0.19)
+
+Answer changing!
+Updates fates
+
+
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #746, #741, #873
+  #746 -- 
+  #741 --
+  #873 --
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+Code reviewed by: self
+
+
+CTSM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (345 are different than baseline)
+
+  tools-tests (test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - OK
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    cheyennne -- PASS (when ncar_pylib run)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Updates in all fsurdat files leads to changes in answers
+  Also there are updated finidat files as they had to be interpolated
+   to work with the new fsurdat files
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates, PTCLM
+
+    fates to sci.1.30.0_api.8.0.0
+    PTCLM to PTCLM2_20200121
+
+   FATES now points to the NGEET repository rather than the NCAR fates-release
+
+Pull Requests that document the changes (include PR ids): #883
+(https://github.com/ESCOMP/ctsm/pull)
+   #998 -- Remove Copyright file
+   #883 -- Bring changes on release-clm5.0 branch to master PR status: ready priority: high type: enhancement
+   #849 -- Fix link to new forums
+   #567 -- Ignore patterns for vim
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev092
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon Apr 27 14:51:21 MDT 2020
