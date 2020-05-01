@@ -115,12 +115,13 @@ List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): f
 
    FATES now points to the NGEET repository rather than the NCAR fates-release
 
-Pull Requests that document the changes (include PR ids): #883
+Pull Requests that document the changes (include PR ids): #998, #883, #849, #567, #561
 (https://github.com/ESCOMP/ctsm/pull)
    #998 -- Remove Copyright file
    #883 -- Bring changes on release-clm5.0 branch to master PR status: ready priority: high type: enhancement
    #849 -- Fix link to new forums
    #567 -- Ignore patterns for vim
+   #561 -- Add list of checks that should be done when making new surface datasets
 
 ===============================================================
 ===============================================================
