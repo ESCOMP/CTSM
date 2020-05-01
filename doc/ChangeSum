@@ -1,5 +1,17 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev092     erik 04/27/2020 Update cime to version in cesm2_2_beta04
+  ctsm1.0.dev091    sacks 04/24/2020 Increase tolerance on near-zero truncation for a snow state update
+  ctsm1.0.dev090   negins 04/23/2020 Refactoring banded diagonal matrix code in SoilTemperature module
+  ctsm1.0.dev089    sacks 04/07/2020 Bring documentation source to master
+  ctsm1.0.dev088    sacks 04/07/2020 Fix bug in snow aerosol numerics (causes occasional HUGE aerosol values)
+  ctsm1.0.dev087    sacks 04/06/2020 Change hard-coded soil layers in phenology to use a target depth
+  ctsm1.0.dev086 mvertens 03/19/2020 Updates to NUOPC cap and minor fixes to ncdio_pio
+  ctsm1.0.dev085    sacks 03/16/2020 Update cime
+  ctsm1.0.dev084   negins 02/19/2020 Bounds assertion for C isotopes when threading is on
+  ctsm1.0.dev083   negins 02/06/2020 Some BFB Fixes: Resolve issues #683, # 874, #878, # 885, # 745, #838
+  ctsm1.0.dev082   oleson 02/01/2020 Rename variables to avoid confusion; fix QSNOEVAP diagnostic
+  ctsm1.0.dev081   slevis 01/13/2020 Speed up restart writes
   ctsm1.0.dev080    sacks 12/02/2019 Update externals, minor fixes to work with latest cime, get nuopc cap working
   ctsm1.0.dev079    sacks 11/04/2019 Change a few uses of shr_kind
   ctsm1.0.dev078   oleson 10/31/2019 Fix rootr calculation with use_hydrstress true
