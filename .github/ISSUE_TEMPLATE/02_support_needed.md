@@ -8,7 +8,7 @@ about: Ask for help with using CTSM
 
 We have limited staff and ability to provide support. Here are some resources that might provide help:
 - User's Guide: https://escomp.github.io/ctsm-docs/doc/build/html/users_guide/index.html
-- CESM's land modeling forum: https://xenforo.cgd.ucar.edu/cesm/ctsm-clm-mosart-rtm.134/
+- CESM's land modeling forum: https://xenforo.cgd.ucar.edu/cesm/forums/ctsm-clm-mosart-rtm.134/
 - README files amongst the source code
 - GitHub CTSM issues: https://github.com/escomp/ctsm/issues/
 - Also make sure this issue is unique to CTSM and not really an issue with CESM or CIME
