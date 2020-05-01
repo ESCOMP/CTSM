@@ -29,6 +29,13 @@ module SurfaceResistanceMod
   public :: do_soilevap_beta, do_soil_resistance_sl14
 !  public :: init_soil_resistance
   public :: soil_resistance_readNL
+  public :: readParams
+
+  type, private :: params_type
+     real(r8) :: d_max  ! Dry surface layer parameter (mm)
+     real(r8) :: frac_sat_soil_dsl_init  ! Fraction of saturated soil for moisture value at which DSL initiates (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -160,6 +167,28 @@ contains
   end subroutine soil_resistance_readNL
    
    !------------------------------------------------------------------------------   
+   subroutine readParams( ncid )
+     !
+     ! !USES:
+     use ncdio_pio, only: file_desc_t
+     use paramUtilMod, only: readNcdioScalar
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+     !
+     ! !LOCAL VARIABLES:
+     character(len=*), parameter :: subname = 'readParams_SurfaceResistance'
+     !--------------------------------------------------------------------
+
+     ! Dry surface layer parameter (mm)
+     call readNcdioScalar(ncid, 'd_max', subname, params_inst%d_max)
+     ! Fraction of saturated soil for moisture value at which DSL initiates (unitless)
+     call readNcdioScalar(ncid, 'frac_sat_soil_dsl_init', subname, params_inst%frac_sat_soil_dsl_init)
+
+   end subroutine readParams
+
+   !------------------------------------------------------------------------------   
    subroutine calc_soilevap_resis(bounds, num_nolakec, filter_nolakec, &
         soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, temperature_inst)
      !
@@ -218,7 +247,6 @@ contains
      ! USES
      use shr_kind_mod    , only : r8 => shr_kind_r8     
      use shr_const_mod   , only : SHR_CONST_PI
-     use shr_log_mod     , only : errMsg => shr_log_errMsg   
      use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
      use decompMod       , only : bounds_type
      use clm_varcon      , only : denh2o, denice
@@ -241,7 +269,7 @@ contains
      real(r8) :: fac, fac_fc, wx      !temporary variables
      integer  :: c, l, fc     !indices
 
-     SHR_ASSERT_ALL((ubound(soilbeta)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(soilbeta)    == (/bounds%endc/)), sourcefile, __LINE__)
 
      associate(                                              &
           watsat      =>    soilstate_inst%watsat_col      , & ! Input:  [real(r8) (:,:)] volumetric soil water at saturation (porosity)
@@ -316,7 +344,6 @@ contains
      ! USES
      use shr_kind_mod    , only : r8 => shr_kind_r8     
      use shr_const_mod   , only : SHR_CONST_PI
-     use shr_log_mod     , only : errMsg => shr_log_errMsg   
      use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
      use decompMod       , only : bounds_type
      use clm_varcon      , only : denh2o, denice
@@ -341,8 +368,8 @@ contains
      real(r8) :: eff_por_top
      integer  :: c, l, fc     !indices
      
-     SHR_ASSERT_ALL((ubound(dsl)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(soilresis)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(dsl)    == (/bounds%endc/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(soilresis)    == (/bounds%endc/)), sourcefile, __LINE__)
 
      associate(                                              &
           dz                =>    col%dz                             , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)                             
@@ -374,9 +401,9 @@ contains
 !      dsl(c) = dzmm(c,1)*max(0.001_r8,(0.8*eff_porosity(c,1) - vwc_liq)) &
 ! try arbitrary scaling (not top layer thickness)
 !            dsl(c) = 15._r8*max(0.001_r8,(0.8*eff_porosity(c,1) - vwc_liq)) &
-            dsl(c) = 15._r8*max(0.001_r8,(0.8*eff_por_top - vwc_liq)) &
+            dsl(c) = params_inst%d_max * max(0.001_r8, (params_inst%frac_sat_soil_dsl_init * eff_por_top - vwc_liq)) &
                  !           /max(0.001_r8,(watsat(c,1)- aird))
-                 /max(0.001_r8,(0.8*watsat(c,1)- aird))
+                 / max(0.001_r8, (params_inst%frac_sat_soil_dsl_init * watsat(c,1) - aird))
             
             dsl(c)=max(dsl(c),0._r8)
             dsl(c)=min(dsl(c),200._r8)

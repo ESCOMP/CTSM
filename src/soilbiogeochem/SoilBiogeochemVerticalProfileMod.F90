@@ -25,7 +25,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SoilBiogeochemVerticalProfile(bounds, num_soilc,filter_soilc,num_soilp,filter_soilp, &
-       canopystate_inst, soilstate_inst, soilbiogeochem_state_inst)
+       active_layer_inst, soilstate_inst, soilbiogeochem_state_inst)
     !
     ! !DESCRIPTION:
     !  calculate vertical profiles for distributing soil and litter C and N
@@ -46,11 +46,11 @@ contains
     use decompMod               , only : bounds_type
     use abortutils              , only : endrun
     use clm_varcon              , only : zsoi, dzsoi, zisoi, dzsoi_decomp, zmin_bedrock
-    use clm_varpar              , only : nlevdecomp, nlevgrnd, nlevdecomp_full, maxpatch_pft
+    use clm_varpar              , only : nlevdecomp, nlevgrnd, nlevdecomp_full, maxsoil_patches
     use clm_varctl              , only : use_vertsoilc, iulog, use_bedrock
     use pftconMod               , only : noveg, pftcon
     use SoilBiogeochemStateType , only : soilbiogeochem_state_type
-    use CanopyStateType         , only : canopystate_type
+    use ActiveLayerMod          , only : active_layer_type
     use SoilStateType           , only : soilstate_type
     use ColumnType              , only : col                
     use PatchType               , only : patch                
@@ -61,7 +61,7 @@ contains
     integer                         , intent(in)    :: filter_soilc(:)                         ! filter for soil columns
     integer                         , intent(in)    :: num_soilp                               ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:)                         ! filter for soil patches
-    type(canopystate_type)          , intent(in)    :: canopystate_inst
+    type(active_layer_type)         , intent(in)    :: active_layer_inst
     type(soilstate_type)            , intent(in)    :: soilstate_inst				    
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
     !
@@ -90,7 +90,7 @@ contains
     begc = bounds%begc; endc= bounds%endc
 
     associate(                                                                  & 
-         altmax_lastyear_indx => canopystate_inst%altmax_lastyear_indx_col    , & ! Input:  [integer   (:)   ]  frost table depth (m)                              
+         altmax_lastyear_indx => active_layer_inst%altmax_lastyear_indx_col    , & ! Input:  [integer   (:)   ]  frost table depth (m)                              
 
          crootfr              => soilstate_inst%crootfr_patch                 , & ! Input:  [real(r8)  (:,:) ]  fraction of roots in each soil layer  (nlevgrnd)
          
@@ -178,7 +178,7 @@ contains
          !      cinput_rootfr(bounds%begp:bounds%endp, :), &
          !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
          !      'unity')
-         do pi = 1,maxpatch_pft
+         do pi = 1,maxsoil_patches
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                if (pi <=  col%npatches(c)) then

@@ -44,7 +44,7 @@ contains
 
     use shr_fire_emis_mod,  only : shr_fire_emis_factors_file
     use FireEmisFactorsMod, only : fire_emis_factors_init, fire_emis_factors_get
-    use clm_varpar,         only : numpft
+    use clm_varpar,         only : maxveg
 
     implicit none
 
@@ -54,7 +54,7 @@ contains
 
     ! local vars
     integer :: nmech, nemis
-    real(r8) :: factors(numpft)
+    real(r8) :: factors(maxveg)
     real(r8) :: molec_wght
     type(shr_fire_emis_comp_t), pointer :: emis_cmp
 
@@ -64,7 +64,7 @@ contains
 
     emis_cmp => shr_fire_emis_linkedlist
     do while(associated(emis_cmp))
-       allocate(emis_cmp%emis_factors(numpft))
+       allocate(emis_cmp%emis_factors(maxveg))
        call fire_emis_factors_get( trim(emis_cmp%name), factors, molec_wght )
        emis_cmp%emis_factors = factors*1.e-3_r8 ! convert g/kg dry fuel to kg/kg
        emis_cmp%molec_weight = molec_wght

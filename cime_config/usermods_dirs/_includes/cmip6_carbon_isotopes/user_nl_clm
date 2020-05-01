@@ -7,6 +7,8 @@ use_c14 = .true.
 use_c13_timeseries = .true.
 use_c14_bombspike = .true.
 
+! h0 stream (monthly average, gridcell-level)
+hist_fexcl1 += 'C14_SOILC_vr'
 ! h3 stream (yearly average, gridcell-level)
-hist_fincl4 += 'C14_SOIL1C_vr', 'C14_SOIL2C_vr', 'C14_SOIL3C_vr'
+hist_fincl4 += 'C14_SOILC_vr'
 

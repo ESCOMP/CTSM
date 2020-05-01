@@ -9,7 +9,6 @@ module LakeTemperatureMod
   !
   ! !USES
   use shr_kind_mod      , only : r8 => shr_kind_r8
-  use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use ch4Mod            , only : ch4_type
   use EnergyFluxType    , only : energyflux_type
@@ -115,7 +114,7 @@ contains
     use QSatMod            , only : QSat
     use TridiagonalMod     , only : Tridiagonal
     use clm_varpar         , only : nlevlak, nlevgrnd, nlevsno
-    use clm_time_manager   , only : get_step_size
+    use clm_time_manager   , only : get_step_size_real
     use clm_varcon         , only : hfus, cpliq, cpice, tkwat, tkice, denice
     use clm_varcon         , only : vkc, grav, denh2o, tfrz, cnfac
     use clm_varctl         , only : iulog, use_lch4
@@ -210,6 +209,7 @@ contains
     integer  :: jconvectbot(bounds%begc:bounds%endc)                       ! Hightest level where bottom-originating convection occurs
     logical  :: bottomconvect(bounds%begc:bounds%endc)                     ! Convection originating in bottom layer of lake triggers special convection loop
     real(r8) :: fangkm                                                     ! (m^2/s) extra diffusivity based on Fang & Stefan 1996, citing Ellis, 1991
+    real(r8) :: h2osno_total(bounds%begc:bounds%endc)                      ! total snow water (mm H2O)
 
     ! They think that mixing energy will generally get into lake to make
     ! diffusivity exceed molecular; the energy is damped out according to the Brunt-Vaisala
@@ -240,7 +240,6 @@ contains
          ws              =>   lakestate_inst%ws_col                , & ! Input:  [real(r8) (:)   ]  surface friction velocity (m/s)                   
          lake_raw       =>    lakestate_inst%lake_raw_col          , & ! Input:  [real(r8) (:)   ]  aerodynamic resistance for moisture (s/m)   
          
-         h2osno          =>   waterstatebulk_inst%h2osno_col           , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
          h2osoi_liq      =>   waterstatebulk_inst%h2osoi_liq_col       , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) [for snow & soil layers]
          h2osoi_ice      =>   waterstatebulk_inst%h2osoi_ice_col       , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) [for snow & soil layers]
          frac_iceold     =>   waterdiagnosticbulk_inst%frac_iceold_col      , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
@@ -268,7 +267,7 @@ contains
     ! 1!) Initialization
     ! Determine step size
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     ! Initialize constants
     cwat = cpliq*denh2o ! water heat capacity per unit volume
@@ -509,6 +508,9 @@ contains
     end do
 
     ! Now do for soil / snow layers
+    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+         caller = 'LakeTemperature-1', &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
     do j = -nlevsno + 1, nlevgrnd
        do fc = 1, num_lakec
           c = filter_lakec(fc)
@@ -516,8 +518,8 @@ contains
           if (j >= jtop(c)) then
              ocvts(c) = ocvts(c) + cv(c,j)*(t_soisno(c,j)-tfrz) &
                       + hfus*h2osoi_liq(c,j)
-             if (j == 1 .and. h2osno(c) > 0._r8 .and. j == jtop(c)) then
-                ocvts(c) = ocvts(c) - h2osno(c)*hfus
+             if (j == 1 .and. h2osno_total(c) > 0._r8 .and. j == jtop(c)) then
+                ocvts(c) = ocvts(c) - h2osno_total(c)*hfus
              end if
              t_soisno_bef(c,j) = t_soisno(c,j)
           end if
@@ -945,7 +947,7 @@ contains
     end do
 
     ! Calculate lakeresist and grnd_ch4_cond for CH4 Module
-    ! The CH4 will diffuse directly from the top soil layer to the atmosphere, so 
+    ! The CH4 will diffuse directly from the top lake layer to the atmosphere, so 
     ! the whole lake resistance is included.
 
     if (use_lch4) then
@@ -954,7 +956,7 @@ contains
              c = filter_lakec(fc)
 
              if (j > jconvect(c) .and. j < jconvectbot(c)) then  ! Assume resistance is zero for levels that convect
-                lakeresist(c) = lakeresist(c) + dz(c,j)/kme(c,j) ! dz/eddy or molecular diffusivity
+                lakeresist(c) = lakeresist(c) + dz_lake(c,j)/kme(c,j) ! dz/eddy or molecular diffusivity
              end if
 
              if (j == nlevlak) then ! Calculate grnd_ch4_cond
@@ -1000,6 +1002,9 @@ contains
        end do
     end do
 
+    call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+         caller = 'LakeTemperature-2', &
+         h2osno_total = h2osno_total(bounds%begc:bounds%endc))
     do j = -nlevsno + 1, nlevgrnd
        do fc = 1, num_lakec
           c = filter_lakec(fc)
@@ -1008,8 +1013,8 @@ contains
              ncvts(c) = ncvts(c) + cv(c,j)*(t_soisno(c,j)-tfrz) &
                       + hfus*h2osoi_liq(c,j) 
              if (j < 1) fin(c) = fin(c) + phix(c,j) !For SNICAR
-             if (j == 1 .and. h2osno(c) > 0._r8 .and. j == jtop(c)) then
-                ncvts(c) = ncvts(c) - h2osno(c)*hfus
+             if (j == 1 .and. h2osno_total(c) > 0._r8 .and. j == jtop(c)) then
+                ncvts(c) = ncvts(c) - h2osno_total(c)*hfus
              end if
           end if
           if (j == 1) fin(c) = fin(c) + phi_soil(c)
@@ -1102,9 +1107,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(cv)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(tktopsoillay) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(cv)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(tktopsoillay) == (/bounds%endc/)),           sourcefile, __LINE__)
 
      associate(                                           & 
           snl         => col%snl                        , & ! Input:  [integer (:)]  number of snow layers                    
@@ -1207,9 +1212,13 @@ contains
              c = filter_lakec(fc)
              cv(c,j) = csol(c,j)*(1-watsat(c,j))*dz(c,j) +   &
                   (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
+             ! NOTE(wjs, 2019-06-10) In order to uncomment-out the following code, we
+             ! would need to either pass in h2osno_total or recompute it locally in this
+             ! subroutine.
+             !
              !   if (j == 1) then
-             !      if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8) then
-             !         cv(c,j) = cv(c,j) + cpice*h2osno(c)
+             !      if (snl(c)+1 == 1 .AND. h2osno_total(c) > 0._r8) then
+             !         cv(c,j) = cv(c,j) + cpice*h2osno_total(c)
              !      end if
              !   end if
              ! Won't worry about heat capacity for thin snow on lake with no snow layers.
@@ -1256,7 +1265,7 @@ contains
      ! Errors will be trapped at the end of LakeTemperature.
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
+     use clm_time_manager , only : get_step_size_real
      use clm_varcon       , only : tfrz, hfus, denh2o, denice, cpliq, cpice
      use clm_varpar       , only : nlevsno, nlevgrnd, nlevlak
      !
@@ -1288,9 +1297,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(cv)      == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(cv_lake) == (/bounds%endc, nlevlak/)),  errMsg(sourcefile, __LINE__))
-     SHR_ASSERT_ALL((ubound(lhabs)   == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL_FL((ubound(cv)      == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(cv_lake) == (/bounds%endc, nlevlak/)),  sourcefile, __LINE__)
+     SHR_ASSERT_ALL_FL((ubound(lhabs)   == (/bounds%endc/)),           sourcefile, __LINE__)
 
      associate(                                                   & 
           dz_lake         => col%dz_lake                        , & ! Input:  [real(r8)  (:,:) ] lake layer thickness (m)              
@@ -1298,7 +1307,7 @@ contains
           snl             => col%snl                            , & ! Input:  [integer   (:)   ] number of snow layers                    
 
           snow_depth      => waterdiagnosticbulk_inst%snow_depth_col     , & ! Output: [real(r8)  (:)   ] snow height (m)                         
-          h2osno          => waterstatebulk_inst%h2osno_col         , & ! Output: [real(r8)  (:)   ] snow water (mm H2O)                     
+          h2osno_no_layers => waterstatebulk_inst%h2osno_no_layers_col , & ! Output: [real(r8)  (:)   ] snow water that is not resolved into layers (mm H2O)
           h2osoi_liq      => waterstatebulk_inst%h2osoi_liq_col     , & ! Output: [real(r8)  (:,:) ] liquid water (kg/m2)                  
           h2osoi_ice      => waterstatebulk_inst%h2osoi_ice_col     , & ! Output: [real(r8)  (:,:) ] ice lens (kg/m2)                      
 
@@ -1319,7 +1328,7 @@ contains
 
        ! Get step size
 
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        ! Initialization
 
@@ -1349,20 +1358,20 @@ contains
        do fc = 1,num_lakec
           c = filter_lakec(fc)
 
-          if (snl(c) == 0 .and. h2osno(c) > 0._r8 .and. t_lake(c,1) > tfrz) then
+          if (h2osno_no_layers(c) > 0._r8 .and. t_lake(c,1) > tfrz) then
              heatavail = (t_lake(c,1) - tfrz) * cv_lake(c,1)
-             melt = min(h2osno(c), heatavail/hfus)
+             melt = min(h2osno_no_layers(c), heatavail/hfus)
              heatrem = max(heatavail - melt*hfus, 0._r8)
              !catch small negative value to keep t at tfrz
              t_lake(c,1) = tfrz + heatrem/(cv_lake(c,1))
-             snow_depth(c) = snow_depth(c)*(1._r8 - melt/h2osno(c))
-             h2osno(c) = h2osno(c) - melt
+             snow_depth(c) = snow_depth(c)*(1._r8 - melt/h2osno_no_layers(c))
+             h2osno_no_layers(c) = h2osno_no_layers(c) - melt
              lhabs(c) = lhabs(c) + melt*hfus
              qflx_snomelt(c)   = qflx_snomelt(c)   + melt/dtime
              ! no snow layers, so qflx_snomelt_lyr is not set
              qflx_snow_drain(c) = qflx_snow_drain(c) + melt/dtime
              ! Prevent tiny residuals
-             if (h2osno(c) < smallnumber) h2osno(c) = 0._r8
+             if (h2osno_no_layers(c) < smallnumber) h2osno_no_layers(c) = 0._r8
              if (snow_depth(c) < smallnumber) snow_depth(c) = 0._r8
           end if
        end do

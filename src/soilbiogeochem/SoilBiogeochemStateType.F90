@@ -257,8 +257,6 @@ contains
     !
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use spmdMod    , only : masterproc
-    use abortutils , only : endrun
     use restUtilMod
     use ncdio_pio
     !
@@ -269,43 +267,9 @@ contains
     character(len=*) , intent(in)    :: flag   
     !
     ! !LOCAL VARIABLES:
-    integer, pointer  :: temp1d(:)  ! temporary
-    integer           :: p,j,c,i    ! indices
     logical           :: readvar    ! determine if variable is on initial file
-    real(r8), pointer :: ptr2d(:,:) ! temp. pointers for slicing larger arrays
-    real(r8), pointer :: ptr1d(:)   ! temp. pointers for slicing larger arrays
     !-----------------------------------------------------------------------
   
-    if (use_vertsoilc) then
-       ptr2d => this%fpi_vr_col
-       call restartvar(ncid=ncid, flag=flag, varname='fpi_vr', xtype=ncd_double,  &
-            dim1name='column',dim2name='levgrnd', switchdim=.true., &
-            long_name='fraction of potential immobilization',  units='unitless', &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d)
-    else
-       ptr1d => this%fpi_vr_col(:,1) ! nlevdecomp = 1; so treat as 1D variable
-       call restartvar(ncid=ncid, flag=flag, varname='fpi', xtype=ncd_double,  &
-            dim1name='column', &
-            long_name='fraction of potential immobilization',  units='unitless', &
-            interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-    end if
-
-    if (use_vertsoilc) then
-       ptr2d => this%som_adv_coef_col
-       call restartvar(ncid=ncid, flag=flag, varname='som_adv_coef_vr', xtype=ncd_double,  &
-            dim1name='column',dim2name='levgrnd', switchdim=.true., &
-            long_name='SOM advective flux', units='m/s', fill_value=spval, &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d)
-    end if
-    
-    if (use_vertsoilc) then
-       ptr2d => this%som_diffus_coef_col
-       call restartvar(ncid=ncid, flag=flag, varname='som_diffus_coef_vr', xtype=ncd_double,  &
-            dim1name='column',dim2name='levgrnd', switchdim=.true., &
-            long_name='SOM diffusivity due to bio/cryo-turbation',  units='m^2/s', fill_value=spval, &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d)
-    end if
-
     call restartvar(ncid=ncid, flag=flag, varname='fpg', xtype=ncd_double,  &
          dim1name='column', &
          long_name='', units='', &

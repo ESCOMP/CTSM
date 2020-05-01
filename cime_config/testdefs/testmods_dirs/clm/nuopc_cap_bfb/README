@@ -1,0 +1,10 @@
+This testmod directory currently isn't used in any tests, but is useful
+for the following reason:
+
+According to Mariana Vertenstein: At least at one point, you could get
+bit-for-bit answers when comparing the mct and nuopc versions of CTSM in
+an I compset with SROF and SGLC, if using the changes in this testmod in
+both the mct and nuopc runs.
+
+So we are keeping this around in case someone wants to reproduce that
+comparison.

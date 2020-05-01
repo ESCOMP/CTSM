@@ -54,7 +54,7 @@ contains
     use clm_varcon       , only : denh2o, denice
     use clm_varctl       , only : use_vichydro
     use clm_varpar       , only : nlevgrnd, nlevurb
-    use clm_time_manager , only : get_step_size, get_nstep
+    use clm_time_manager , only : get_step_size_real, get_nstep
     use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, LateralFlowPowerLaw
     use SoilWaterMovementMod , only : use_aquifer_layer
     !
@@ -85,14 +85,14 @@ contains
     real(r8) :: dtime                      ! land model time step (sec)
     !-----------------------------------------------------------------------
 
-    associate(                                                         & ! Input: layer thickness depth (m)  
-         dz                 => col%dz                                , & ! Input: column type
-         ctype              => col%itype                             , & ! Input: gridcell flux of flood water from RTM            
-         qflx_floodg        => wateratm2lndbulk_inst%forc_flood_grc           , & ! Input: rain rate [mm/s]   
+    associate(                                                            & ! Input: layer thickness depth (m)  
+         dz                 => col%dz                                    , & ! Input: column type
+         ctype              => col%itype                                 , & ! Input: gridcell flux of flood water from RTM            
+         qflx_floodg        => wateratm2lndbulk_inst%forc_flood_grc      , & ! Input: rain rate [mm/s]   
          forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col , & ! Input: snow rate [mm/s]
          forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col , & ! Input: water mass begining of the time step     
-         begwb              => waterbalancebulk_inst%begwb_col             , & ! Output:water mass end of the time step 
-         endwb              => waterbalancebulk_inst%endwb_col             , & ! Output:water mass end of the time step     
+         begwb              => waterbalancebulk_inst%begwb_col           , & ! Output:water mass end of the time step 
+         endwb              => waterbalancebulk_inst%endwb_col           , & ! Output:water mass end of the time step     
          h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col        , & ! Output: ice lens (kg/m2)      
          h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col        , & ! Output: liquid water (kg/m2) 
          h2osoi_vol         => waterstatebulk_inst%h2osoi_vol_col        , & ! Output: volumetric soil water 
@@ -112,18 +112,16 @@ contains
          qflx_surf          => waterfluxbulk_inst%qflx_surf_col          , & ! surface runoff (mm H2O /s)      
          qflx_infl          => waterfluxbulk_inst%qflx_infl_col          , & ! infiltration (mm H2O /s)   
          qflx_qrgwl         => waterfluxbulk_inst%qflx_qrgwl_col         , & ! qflx_surf at glaciers, wetlands, lakes
-         qflx_runoff        => waterfluxbulk_inst%qflx_runoff_col        , & ! total runoff 
-                                                                         ! (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
+         qflx_runoff        => waterfluxbulk_inst%qflx_runoff_col        , & ! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_runoff_u      => waterfluxbulk_inst%qflx_runoff_u_col      , & ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
-         qflx_runoff_r      => waterfluxbulk_inst%qflx_runoff_r_col      , & ! Rural total runoff 
-                                                                         ! (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
+         qflx_runoff_r      => waterfluxbulk_inst%qflx_runoff_r_col      , & ! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_ice_runoff_snwcp => waterfluxbulk_inst%qflx_ice_runoff_snwcp_col, &  ! solid runoff from snow capping (mm H2O /s)
-         qflx_irrig         => waterfluxbulk_inst%qflx_irrig_col          & ! irrigation flux (mm H2O /s)   
+         qflx_sfc_irrig     => waterfluxbulk_inst%qflx_sfc_irrig_col       & ! surface irrigation flux (mm H2O /s)   
          )
 
       ! Determine time step and step size
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       if (use_vichydro) then
          call CLMVICMap(bounds, num_hydrologyc, filter_hydrologyc, &
@@ -162,10 +160,9 @@ contains
       end do
 
       call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
-           waterstatebulk_inst, waterdiagnosticbulk_inst, endwb(bounds%begc:bounds%endc))
-
-
-      
+           waterstatebulk_inst, waterdiagnosticbulk_inst, &
+           subtract_dynbal_baselines = .false., &
+           water_mass = endwb(bounds%begc:bounds%endc))
 
       ! Determine wetland and land ice hydrology (must be placed here
       ! since need snow updated from CombineSnowLayers)
@@ -212,7 +209,7 @@ contains
          qflx_runoff(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
 
          if ((lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) .and. col%active(c)) then
-            qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)
+            qflx_runoff(c) = qflx_runoff(c) - qflx_sfc_irrig(c)
          end if
          if (lun%urbpoi(l)) then
             qflx_runoff_u(c) = qflx_runoff(c)

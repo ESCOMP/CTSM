@@ -1,0 +1,4 @@
+./xmlchange RUN_STARTDATE=1963-12-30
+
+# This is done for the decStart testmod, so doing it here, too
+./xmlchange CLM_BLDNML_OPTS=-ignore_warnings --append

@@ -83,7 +83,7 @@ contains
     character(len=*), parameter :: subname = 'dynHarvest_init'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     allocate(harvest(bounds%begg:bounds%endg),stat=ier)
     if (ier /= 0) then
@@ -146,7 +146,7 @@ contains
     character(len=*), parameter :: subname = 'dynHarvest_interp'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     call dynHarvest_file%time_info%set_current_year()
 
@@ -408,7 +408,7 @@ contains
    ! to the column level and assign them to the three litter pools
    !
    ! !USES:
-   use clm_varpar , only : maxpatch_pft, nlevdecomp
+   use clm_varpar , only : nlevdecomp, maxsoil_patches
    !
    ! !ARGUMENTS:
    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
@@ -490,7 +490,7 @@ contains
         )
 
      do j = 1, nlevdecomp
-        do pi = 1,maxpatch_pft
+        do pi = 1,maxsoil_patches
            do fc = 1,num_soilc
               c = filter_soilc(fc)
 
@@ -619,7 +619,7 @@ contains
         end do
      end do
    
-     do pi = 1,maxpatch_pft
+     do pi = 1,maxsoil_patches
         do fc = 1,num_soilc
            c = filter_soilc(fc)
 

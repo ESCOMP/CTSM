@@ -43,7 +43,7 @@ if ( ! defined($result) ) {
 ** Cannot find perl module \"Build/NamelistDefinition.pm\" from directories: @dirs **
 EOF
 }
-my $nldef_file     = "$scrdir/../../bld/namelist_files/namelist_definition_clm4_5.xml";
+my $nldef_file     = "$scrdir/../../bld/namelist_files/namelist_definition_ctsm.xml";
 
 my $definition = Build::NamelistDefinition->new( $nldef_file );
 
@@ -594,7 +594,7 @@ EOF
       } else {
 	  $queryopts = "-res $res -csmdata $CSMDATA -silent -justvalue";
       }
-      $queryfilopts = "$queryopts -onlyfiles -phys clm4_5 ";
+      $queryfilopts = "$queryopts -onlyfiles ";
       my $mkcrop = $mkcrop_off;
       my $setnumpft = "";
       $mkcrop    = $mkcrop_on;

@@ -39,42 +39,47 @@ module SoilBiogeochemDecompCascadeConType
      real(r8)          , pointer  :: spinup_factor(:)                  ! factor by which to scale AD and relevant processes by
   end type decomp_cascade_type
 
+  integer, public, parameter :: i_atm = 0                              ! for terminal pools (i.e. 100% respiration) (only used for CN not for BGC)
   type(decomp_cascade_type), public :: decomp_cascade_con
   !------------------------------------------------------------------------
 
 contains
 
   !------------------------------------------------------------------------
-  subroutine init_decomp_cascade_constants()
+  subroutine init_decomp_cascade_constants( use_century_decomp )
     !
     ! !DESCRIPTION:
     ! Initialize decomposition cascade state
     !------------------------------------------------------------------------
+    ! !ARGUMENTS:
+    logical, intent(IN) :: use_century_decomp
+    ! !LOGAL VARIABLES:
+    integer :: ibeg    ! Beginning index for allocated arrays
 
+    if ( use_century_decomp ) then
+       ibeg = 1
+    else
+       ibeg = i_atm
+    end if
     !-- properties of each pathway along decomposition cascade 
     allocate(decomp_cascade_con%cascade_step_name(1:ndecomp_cascade_transitions))
     allocate(decomp_cascade_con%cascade_donor_pool(1:ndecomp_cascade_transitions))
     allocate(decomp_cascade_con%cascade_receiver_pool(1:ndecomp_cascade_transitions))
 
-    ! NOTE(bja, 2015-10) according to Dave Lawrence and Charlie Koven,
-    ! the indexing of decomposing pools from 0:ndecomp_pools is a
-    ! bug. The lower bound should be 1. The index zero data shouldn't
-    ! be used.
-    
     !-- properties of each decomposing pool
-    allocate(decomp_cascade_con%floating_cn_ratio_decomp_pools(0:ndecomp_pools))
-    allocate(decomp_cascade_con%decomp_pool_name_restart(0:ndecomp_pools))
-    allocate(decomp_cascade_con%decomp_pool_name_history(0:ndecomp_pools))
-    allocate(decomp_cascade_con%decomp_pool_name_long(0:ndecomp_pools))
-    allocate(decomp_cascade_con%decomp_pool_name_short(0:ndecomp_pools))
-    allocate(decomp_cascade_con%is_litter(0:ndecomp_pools))
-    allocate(decomp_cascade_con%is_soil(0:ndecomp_pools))
-    allocate(decomp_cascade_con%is_cwd(0:ndecomp_pools))
-    allocate(decomp_cascade_con%initial_cn_ratio(0:ndecomp_pools))
-    allocate(decomp_cascade_con%initial_stock(0:ndecomp_pools))
-    allocate(decomp_cascade_con%is_metabolic(0:ndecomp_pools))
-    allocate(decomp_cascade_con%is_cellulose(0:ndecomp_pools))
-    allocate(decomp_cascade_con%is_lignin(0:ndecomp_pools))
+    allocate(decomp_cascade_con%floating_cn_ratio_decomp_pools(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%decomp_pool_name_restart(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%decomp_pool_name_history(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%decomp_pool_name_long(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%decomp_pool_name_short(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%is_litter(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%is_soil(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%is_cwd(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%initial_cn_ratio(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%initial_stock(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%is_metabolic(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%is_cellulose(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%is_lignin(ibeg:ndecomp_pools))
     allocate(decomp_cascade_con%spinup_factor(1:ndecomp_pools))
 
     !-- properties of each pathway along decomposition cascade 
@@ -83,21 +88,21 @@ contains
     decomp_cascade_con%cascade_receiver_pool(1:ndecomp_cascade_transitions) = 0
 
     !-- first initialization of properties of each decomposing pool
-    decomp_cascade_con%floating_cn_ratio_decomp_pools(0:ndecomp_pools) = .false.
-    decomp_cascade_con%decomp_pool_name_history(0:ndecomp_pools)       = ''
-    decomp_cascade_con%decomp_pool_name_restart(0:ndecomp_pools)       = ''
-    decomp_cascade_con%decomp_pool_name_long(0:ndecomp_pools)          = ''
-    decomp_cascade_con%decomp_pool_name_short(0:ndecomp_pools)         = ''
-    decomp_cascade_con%is_litter(0:ndecomp_pools)                      = .false.
-    decomp_cascade_con%is_soil(0:ndecomp_pools)                        = .false.
-    decomp_cascade_con%is_cwd(0:ndecomp_pools)                         = .false.
-    decomp_cascade_con%initial_cn_ratio(0:ndecomp_pools)               = nan
-    decomp_cascade_con%initial_stock(0:ndecomp_pools)                  = nan
-    decomp_cascade_con%initial_stock_soildepth                         = 0.3
-    decomp_cascade_con%is_metabolic(0:ndecomp_pools)                   = .false.
-    decomp_cascade_con%is_cellulose(0:ndecomp_pools)                   = .false.
-    decomp_cascade_con%is_lignin(0:ndecomp_pools)                      = .false.
-    decomp_cascade_con%spinup_factor(1:ndecomp_pools)                  = nan
+    decomp_cascade_con%floating_cn_ratio_decomp_pools(ibeg:ndecomp_pools) = .false.
+    decomp_cascade_con%decomp_pool_name_history(ibeg:ndecomp_pools)       = ''
+    decomp_cascade_con%decomp_pool_name_restart(ibeg:ndecomp_pools)       = ''
+    decomp_cascade_con%decomp_pool_name_long(ibeg:ndecomp_pools)          = ''
+    decomp_cascade_con%decomp_pool_name_short(ibeg:ndecomp_pools)         = ''
+    decomp_cascade_con%is_litter(ibeg:ndecomp_pools)                      = .false.
+    decomp_cascade_con%is_soil(ibeg:ndecomp_pools)                        = .false.
+    decomp_cascade_con%is_cwd(ibeg:ndecomp_pools)                         = .false.
+    decomp_cascade_con%initial_cn_ratio(ibeg:ndecomp_pools)               = nan
+    decomp_cascade_con%initial_stock(ibeg:ndecomp_pools)                  = nan
+    decomp_cascade_con%initial_stock_soildepth                            = 0.3
+    decomp_cascade_con%is_metabolic(ibeg:ndecomp_pools)                   = .false.
+    decomp_cascade_con%is_cellulose(ibeg:ndecomp_pools)                   = .false.
+    decomp_cascade_con%is_lignin(ibeg:ndecomp_pools)                      = .false.
+    decomp_cascade_con%spinup_factor(1:ndecomp_pools)                     = nan
 
   end subroutine init_decomp_cascade_constants
 

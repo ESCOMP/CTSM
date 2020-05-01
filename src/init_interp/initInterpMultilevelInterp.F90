@@ -154,7 +154,7 @@ contains
     !-----------------------------------------------------------------------
 
     npts = size(coordinates_source, 2)
-    SHR_ASSERT((size(coordinates_dest, 2) == npts), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(coordinates_dest, 2) == npts), sourcefile, __LINE__)
 
     nlev_source = size(coordinates_source, 1)
     nlev_dest = size(coordinates_dest, 1)
@@ -217,13 +217,13 @@ contains
     this%coord_varname = trim(coord_varname)
 
     this%npts = size(coordinates_source, 2)
-    SHR_ASSERT((size(coordinates_dest, 2) == this%npts), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(coordinates_dest, 2) == this%npts), sourcefile, __LINE__)
 
     this%nlev_source = size(coordinates_source, 1)
     this%nlev_dest = size(coordinates_dest, 1)
 
-    SHR_ASSERT_ALL((shape(level_classes_source) == [this%nlev_source, this%npts]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((shape(level_classes_dest) == [this%nlev_dest, this%npts]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((shape(level_classes_source) == [this%nlev_source, this%npts]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((shape(level_classes_dest) == [this%nlev_dest, this%npts]), sourcefile, __LINE__)
 
     do i = 1, this%npts
        call this%check_coordinate_array(coordinates_source(:,i), level_classes_source(:,i))
@@ -324,9 +324,9 @@ contains
     character(len=*), parameter :: subname = 'interp_multilevel'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((size(data_dest) == this%nlev_dest), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((size(data_source) == this%nlev_source), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((index_dest >= 1 .and. index_dest <= this%npts), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(data_dest) == this%nlev_dest), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(data_source) == this%nlev_source), sourcefile, __LINE__)
+    SHR_ASSERT_FL((index_dest >= 1 .and. index_dest <= this%npts), sourcefile, __LINE__)
 
     my_level_classes_source(:) = this%level_classes_source(:, index_dest)
     my_coordinates_source(:)   = this%coordinates_source(:, index_dest)
@@ -423,7 +423,7 @@ contains
     !-----------------------------------------------------------------------
 
     nlevs = size(coordinates)
-    SHR_ASSERT((size(level_classes) == nlevs), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(level_classes) == nlevs), sourcefile, __LINE__)
 
     call pack_wrapper(coordinates_in_existing_levels, coordinates, level_classes /= ispval)
 

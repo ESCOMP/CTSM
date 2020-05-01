@@ -155,8 +155,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SNICAR_RT (flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,  &
-                        coszen, flg_slr_in, h2osno_liq, h2osno_ice, snw_rds,   &
-                        mss_cnc_aer_in, albsfc, albout, flx_abs, waterstatebulk_inst, waterdiagnosticbulk_inst)
+                        coszen, flg_slr_in, h2osno_liq, h2osno_ice, h2osno_total, snw_rds,   &
+                        mss_cnc_aer_in, albsfc, albout, flx_abs, waterdiagnosticbulk_inst)
     !
     ! !DESCRIPTION:
     ! Determine reflectance of, and vertically-resolved solar absorption in, 
@@ -190,12 +190,12 @@ contains
     integer           , intent(in)  :: flg_slr_in                                         ! flag: =1 for direct-beam incident flux,=2 for diffuse incident flux
     real(r8)          , intent(in)  :: h2osno_liq     ( bounds%begc: , -nlevsno+1: )      ! liquid water content (col,lyr) [kg/m2]
     real(r8)          , intent(in)  :: h2osno_ice     ( bounds%begc: , -nlevsno+1: )      ! ice content (col,lyr) [kg/m2]
+    real(r8)          , intent(in)  :: h2osno_total   ( bounds%begc: )                    ! total snow content (col) [kg/m2] (may differ from sum of h2osno_liq and h2osno_ice if there is snow despite there being no explicit snow layers)
     integer           , intent(in)  :: snw_rds        ( bounds%begc: , -nlevsno+1: )      ! snow effective radius (col,lyr) [microns, m^-6]
     real(r8)          , intent(in)  :: mss_cnc_aer_in ( bounds%begc: , -nlevsno+1: , 1: ) ! mass concentration of all aerosol species (col,lyr,aer) [kg/kg]
     real(r8)          , intent(in)  :: albsfc         ( bounds%begc: , 1: )               ! albedo of surface underlying snow (col,bnd) [frc]
     real(r8)          , intent(out) :: albout         ( bounds%begc: , 1: )               ! snow albedo, averaged into 2 bands (=0 if no sun or no snow) (col,bnd) [frc]
     real(r8)          , intent(out) :: flx_abs        ( bounds%begc: , -nlevsno+1: , 1: ) ! absorbed flux in each layer per unit flux incident (col, lyr, bnd)
-    type(waterstatebulk_type) , intent(in)  :: waterstatebulk_inst
     type(waterdiagnosticbulk_type) , intent(in)  :: waterdiagnosticbulk_inst
     !
     ! !LOCAL VARIABLES:
@@ -313,19 +313,19 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(coszen)         == (/bounds%endc/)),                 errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osno_liq)     == (/bounds%endc, 0/)),              errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osno_ice)     == (/bounds%endc, 0/)),              errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(snw_rds)        == (/bounds%endc, 0/)),              errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(mss_cnc_aer_in) == (/bounds%endc, 0, sno_nbr_aer/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(albsfc)         == (/bounds%endc, numrad/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(albout)         == (/bounds%endc, numrad/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(flx_abs)        == (/bounds%endc, 1, numrad/)),      errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(coszen)         == (/bounds%endc/)),                 sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osno_liq)     == (/bounds%endc, 0/)),              sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osno_ice)     == (/bounds%endc, 0/)),              sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osno_total)   == (/bounds%endc/)),                 sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(snw_rds)        == (/bounds%endc, 0/)),              sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(mss_cnc_aer_in) == (/bounds%endc, 0, sno_nbr_aer/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(albsfc)         == (/bounds%endc, numrad/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(albout)         == (/bounds%endc, numrad/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(flx_abs)        == (/bounds%endc, 1, numrad/)),      sourcefile, __LINE__)
 
     associate(& 
          snl         =>   col%snl                           , & ! Input:  [integer (:)]  negative number of snow layers (col) [nbr]
 
-         h2osno      =>   waterstatebulk_inst%h2osno_col        , & ! Input:  [real(r8) (:)]  snow liquid water equivalent (col) [kg/m2]
          frac_sno    =>   waterdiagnosticbulk_inst%frac_sno_eff_col    & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
          )
 
@@ -352,7 +352,7 @@ contains
 
          ! set snow/ice mass to be used for RT:
          if (flg_snw_ice == 1) then
-            h2osno_lcl = h2osno(c_idx)
+            h2osno_lcl = h2osno_total(c_idx)
          else
             h2osno_lcl = h2osno_ice(c_idx,0)
          endif
@@ -426,7 +426,7 @@ contains
                   write (iulog,*) "flg_snw_ice= ", flg_snw_ice
                   write (iulog,*) "column: ", c_idx, " level: ", i, " snl(c)= ", snl_lcl
                   write (iulog,*) "lat= ", lat_coord, " lon= ", lon_coord
-                  write (iulog,*) "h2osno(c)= ", h2osno_lcl
+                  write (iulog,*) "h2osno_total(c)= ", h2osno_lcl
                   call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
                endif
             enddo
@@ -925,7 +925,7 @@ contains
                   write (iulog,*) "SNICAR STATS: albout_lcl(bnd)= ",albout_lcl(bnd_idx), &
                        " albsfc_lcl(bnd_idx)= ",albsfc_lcl(bnd_idx)
                   write (iulog,*) "SNICAR STATS: landtype= ", sfctype
-                  write (iulog,*) "SNICAR STATS: h2osno= ", h2osno_lcl, " snl= ", snl_lcl
+                  write (iulog,*) "SNICAR STATS: h2osno_total= ", h2osno_lcl, " snl= ", snl_lcl
                   write (iulog,*) "SNICAR STATS: coszen= ", coszen(c_idx), " flg_slr= ", flg_slr_in
 
                   write (iulog,*) "SNICAR STATS: soot(-4)= ", mss_cnc_aer_lcl(-4,1)
@@ -1026,7 +1026,7 @@ contains
     !   I am aware.
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size, get_nstep
+    use clm_time_manager , only : get_step_size_real, get_nstep
     use clm_varpar       , only : nlevsno
     use clm_varcon       , only : spval
     use shr_const_mod    , only : SHR_CONST_RHOICE, SHR_CONST_PI
@@ -1082,7 +1082,7 @@ contains
          qflx_snofrz_lyr    => waterfluxbulk_inst%qflx_snofrz_lyr_col , & ! Input:  [real(r8) (:,:) ]  snow freezing rate (col,lyr) [kg m-2 s-1]
 
          frac_sno           => waterdiagnosticbulk_inst%frac_sno_eff_col   , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
-         h2osno             => waterstatebulk_inst%h2osno_col         , & ! Input:  [real(r8) (:)   ]  snow water (col) [mm H2O]               
+         h2osno_no_layers   => waterstatebulk_inst%h2osno_no_layers_col    , & ! Input:  [real(r8) (:)   ]  snow that is not resolved into layers (col) [mm H2O]
          h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water content (col,lyr) [kg m-2]
          h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice content (col,lyr) [kg m-2]        
          snw_rds            => waterdiagnosticbulk_inst%snw_rds_col        , & ! Output: [real(r8) (:,:) ]  effective grain radius (col,lyr) [microns, m-6]
@@ -1097,7 +1097,7 @@ contains
   
 
       ! set timestep and step interval
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! loop over columns that have at least one snow layer
       do fc = 1, num_snowc
@@ -1267,7 +1267,7 @@ contains
       !   set snw_rds to fresh snow grain size:
       do fc = 1, num_nosnowc
          c_idx = filter_nosnowc(fc)
-         if (h2osno(c_idx) > 0._r8) then
+         if (h2osno_no_layers(c_idx) > 0._r8) then
             snw_rds(c_idx,0) = snw_rds_min
          endif
       enddo

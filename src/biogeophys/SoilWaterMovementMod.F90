@@ -7,10 +7,8 @@ module SoilWaterMovementMod
   ! module contains different subroutines to couple soil and root water interactions
   !
   ! created by Jinyun Tang, Mar 12, 2014
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_sys_mod         , only : shr_sys_flush
-  use clm_instMod    , only : clm_fates
  
   !
   implicit none
@@ -376,7 +374,7 @@ contains
     !-----------------------------------------------------------------------   
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(baseflow_sink)  == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(baseflow_sink)  == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
 
 !this is just a placeholder for now
     baseflow_sink = 0.
@@ -460,7 +458,7 @@ contains
     use clm_varcon                 , only : wimp,grav,hfus,tfrz
     use clm_varcon                 , only : e_ice,denh2o, denice
     use clm_varpar                 , only : nlevsoi, max_patch_per_col, nlevgrnd
-    use clm_time_manager           , only : get_step_size, get_nstep
+    use clm_time_manager           , only : get_step_size_real, get_nstep
     use column_varcon              , only : icol_roof, icol_road_imperv
     use clm_varctl                 , only : use_flexibleCN, use_hydrstress
     use TridiagonalMod             , only : Tridiagonal
@@ -574,15 +572,13 @@ contains
          qflx_infl         =>    waterfluxbulk_inst%qflx_infl_col       , & ! Input:  [real(r8) (:)   ]  infiltration (mm H2O /s)                          
 
          qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:,:) ]  vegetation/soil water exchange (mm H2O/s) (+ = to atm)
-         qflx_tran_veg_col =>    waterfluxbulk_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
-         rootr_col         =>    soilstate_inst%rootr_col           , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
          t_soisno          =>    temperature_inst%t_soisno_col        & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
          )
 
       ! Get time step
       
       nstep = get_nstep()
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
 
       ! Because the depths in this routine are in mm, use local
@@ -1048,7 +1044,7 @@ contains
     use clm_varctl           , only : iulog, use_hydrstress
     use clm_varcon           , only : denh2o, denice
     use clm_varpar           , only : nlevsoi
-    use clm_time_manager     , only : get_step_size, get_nstep
+    use clm_time_manager     , only : get_step_size_real, get_nstep
     use SoilStateType        , only : soilstate_type
     use SoilHydrologyType    , only : soilhydrology_type
     use TemperatureType      , only : temperature_type
@@ -1163,7 +1159,7 @@ contains
       ! Get time step
 
       nstep = get_nstep()
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! main spatial loop
       do fc = 1, num_hydrologyc
@@ -2012,7 +2008,7 @@ contains
     use shr_const_mod        , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
     use abortutils           , only : endrun
     use decompMod            , only : bounds_type
-    use clm_time_manager     , only : get_step_size
+    use clm_time_manager     , only : get_step_size_real
     use clm_varpar           , only : nlevsoi
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use SoilStateType        , only : soilstate_type
@@ -2069,7 +2065,7 @@ contains
 
       ! Get time step
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! compute flux of water to aquifer
       do fc = 1, num_hydrologyc
@@ -2154,7 +2150,6 @@ contains
     !
     ! !USES:
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
     use clm_varpar     , only : nlevurb
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_varctl     , only : iulog
@@ -2178,11 +2173,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(a)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(b)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(r)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(u)    == (/ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(a)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(b)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(r)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(u)    == (/ubj/)), sourcefile, __LINE__)
 
     ! Solve the matrix
 

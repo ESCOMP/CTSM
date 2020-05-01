@@ -193,8 +193,8 @@ contains
     !  calculate nitrification and denitrification rates
     !
     ! !USES:
-    use clm_time_manager  , only : get_curr_date, get_step_size
-    use CNSharedParamsMod , only : anoxia_wtsat, CNParamsShareInst
+    use clm_time_manager  , only : get_curr_date
+    use CNSharedParamsMod , only : CNParamsShareInst
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -349,20 +349,6 @@ contains
                   anaerobic_frac(c,j) = 0._r8
                endif
 
-               if (anoxia_wtsat) then ! Average saturated fraction values into anaerobic_frac(c,j).
-                  r_min_sat = 2._r8 * surface_tension_water / (rho_w * grav * abs(grav * 1.e-6_r8 * sucsat(c,j)))
-                  r_psi_sat = sqrt(r_min_sat * r_max)
-                  if (o2_decomp_depth_sat(c,j) > 0._r8) then
-                     anaerobic_frac_sat = exp(-rij_kro_a * r_psi_sat**(-rij_kro_alpha) * &
-                          o2_decomp_depth_sat(c,j)**(-rij_kro_beta) * &
-                          conc_o2_sat(c,j)**rij_kro_gamma * (watsat(c,j) + ratio_diffusivity_water_gas(c,j) * &
-                          watsat(c,j))**rij_kro_delta)
-                  else
-                     anaerobic_frac_sat = 0._r8
-                  endif
-                  anaerobic_frac(c,j) = (1._r8 - finundated(c))*anaerobic_frac(c,j) + finundated(c)*anaerobic_frac_sat
-               end if
-
             else
                ! NITRIF_DENITRIF requires Methane model to be active, 
                ! otherwise diffusivity will be zeroed out here. EBK CDK 10/18/2011
@@ -449,11 +435,6 @@ contains
             ! total water limitation function (Del Grosso et al., 2000, figure 7a)
             wfps_vr(c,j) = max(min(h2osoi_vol(c,j)/watsat(c, j), 1._r8), 0._r8) * 100._r8
             fr_WFPS(c,j) = max(0.1_r8, 0.015_r8 * wfps_vr(c,j) - 0.32_r8)
-            if (use_lch4) then
-               if (anoxia_wtsat) then
-                  fr_WFPS(c,j) = fr_WFPS(c,j)*(1._r8 - finundated(c)) + finundated(c)*1.18_r8
-               end if
-            end if
 
             ! final ratio expression 
             n2_n2o_ratio_denit_vr(c,j) = max(0.16*ratio_k1(c,j), ratio_k1(c,j)*exp(-0.8 * ratio_no3_co2(c,j))) * fr_WFPS(c,j)

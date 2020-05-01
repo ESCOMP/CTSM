@@ -8,7 +8,7 @@ module VOCEmissionMod
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use clm_varctl         , only : iulog
-  use clm_varpar         , only : numpft, nlevcan
+  use clm_varpar         , only : maxveg, nlevcan
   use pftconMod          , only : ndllf_evr_tmp_tree,  ndllf_evr_brl_tree
   use pftconMod          , only : ndllf_dcd_brl_tree,  nbrdlf_evr_trp_tree
   use pftconMod          , only : nbrdlf_evr_tmp_tree, nbrdlf_dcd_brl_shrub
@@ -126,9 +126,9 @@ contains
     
     meg_cmp => shr_megan_linkedlist
     do while(associated(meg_cmp))
-       allocate(meg_cmp%emis_factors(numpft))
+       allocate(meg_cmp%emis_factors(maxveg))
        call megan_factors_get( trim(meg_cmp%name), factors, class_num, molec_wght )
-       meg_cmp%emis_factors(1:numpft) = factors(1:numpft)
+       meg_cmp%emis_factors(1:maxveg) = factors(1:maxveg)
        meg_cmp%class_number = class_num
        meg_cmp%molec_weight = molec_wght
        meg_cmp => meg_cmp%next_megcomp
@@ -451,7 +451,7 @@ contains
     ! factor used convert MEGAN units [micro-grams/m2/hr] to CAM srf emis units [g/m2/sec]
     real(r8), parameter :: megemis_units_factor = 1._r8/3600._r8/1.e6_r8
 
-    ! real(r8) :: root_depth(0:numpft)    ! Root depth [m]
+    ! real(r8) :: root_depth(0:maxveg)    ! Root depth [m]
     character(len=32), parameter :: subname = "VOCEmission"
     !-----------------------------------------------------------------------
 
@@ -462,7 +462,7 @@ contains
     !    root_depth(nbrdlf_evr_trp_tree:nbrdlf_evr_tmp_tree)   = 3.0_r8  ! broadleaf evergreen tree
     !    root_depth(nbrdlf_dcd_trp_tree:nbrdlf_dcd_brl_tree)   = 2.0_r8  ! broadleaf deciduous tree
     !    root_depth(nbrdlf_evr_shrub:nbrdlf_dcd_brl_shrub)     = 2.5_r8  ! shrub
-    !    root_depth(nc3_arctic_grass:numpft)                   = 1.5_r8  ! grass/crop
+    !    root_depth(nc3_arctic_grass:maxveg)                   = 1.5_r8  ! grass/crop
     !
     if ( shr_megan_mechcomps_n < 1) return
 
@@ -676,7 +676,7 @@ contains
     !
     ! Get mapped EF for isoprene
     ! Use gridded values for 6 Patches specified by MEGAN following
-    ! Guenther et al. (2006).  Map the numpft CLM Patches to these 6.
+    ! Guenther et al. (2006).  Map the maxveg CLM Patches to these 6.
     ! Units: [ug m-2 h-1] 
     !
     ! !ARGUMENTS:

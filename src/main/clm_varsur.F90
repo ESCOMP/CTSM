@@ -34,6 +34,11 @@ module clm_instur
   ! (second dimension goes cft_lb:cft_ub)
   real(r8), pointer :: fert_cft(:,:)       
 
+  ! for each cft on the crop landunit, specify irrigation application
+  ! method (even non-irrigated)
+  ! (second dimension goes cft_lb:cft_ub)
+  integer,  pointer :: irrig_method(:,:)       
+
   ! for glc_mec landunits, weight of glacier in each elevation class (adds to 1.0 on the
   ! landunit for all grid cells, even those without any glacier)
   real(r8), pointer :: wt_glc_mec(:,:)   

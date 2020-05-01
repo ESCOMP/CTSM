@@ -20,7 +20,6 @@ module DUSTMod
   use landunit_varcon      , only : istcrop, istsoil
   use clm_varctl           , only : iulog
   use abortutils           , only : endrun
-  use subgridAveMod        , only : p2l_1d
   use decompMod            , only : bounds_type
   use atm2lndType          , only : atm2lnd_type
   use SoilStateType        , only : soilstate_type
@@ -242,6 +241,7 @@ contains
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
     real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
     real(r8), parameter :: vai_mbl_thr = 0.3_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
+    character(len=*),parameter :: subname = 'DUSTEmission'
     !------------------------------------------------------------------------
 
     associate(                                                         & 
@@ -296,7 +296,7 @@ contains
          end if
       end do
       if (found) then
-         write(iulog,*) 'p2l_1d error: sumwt is greater than 1.0 at l= ',index
+         write(iulog,*) subname//':: error: sumwt is greater than 1.0 at l= ',index
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 

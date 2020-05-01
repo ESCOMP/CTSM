@@ -8,7 +8,6 @@ module lnd2atmMod
 #include "shr_assert.h"
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
-  use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_megan_mod        , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod    , only : shr_fire_emis_mechcomps_n
   use clm_varpar           , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
@@ -16,7 +15,8 @@ module lnd2atmMod
   use clm_varctl           , only : iulog, use_lch4
   use seq_drydep_mod       , only : n_drydep, drydep_method, DD_XLND
   use decompMod            , only : bounds_type
-  use subgridAveMod        , only : p2g, c2g 
+  use subgridAveMod        , only : p2g, c2g
+  use filterColMod         , only : filter_col_type, col_filter_from_logical_array
   use lnd2atmType          , only : lnd2atm_type
   use atm2lndType          , only : atm2lnd_type
   use ch4Mod               , only : ch4_type
@@ -70,13 +70,15 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds  
-    type(water_type)      , intent(in)    :: water_inst
+    type(water_type)      , intent(inout) :: water_inst
     type(surfalb_type)    , intent(in)    :: surfalb_inst
     type(energyflux_type) , intent(in)    :: energyflux_inst
     type(lnd2atm_type)    , intent(inout) :: lnd2atm_inst 
     !
     ! !LOCAL VARIABLES:
-    integer :: i,g                                    ! index
+    integer  :: i,g                                   ! index
+    type(filter_col_type) :: filter_active_c          ! filter for active columns
+    real(r8) :: h2osno_total(bounds%begc:bounds%endc) ! total snow water (mm H2O)
     real(r8), parameter :: amC   = 12.0_r8          ! Atomic mass number for Carbon
     real(r8), parameter :: amO   = 16.0_r8          ! Atomic mass number for Oxygen
     real(r8), parameter :: amCO2 = amC + 2.0_r8*amO ! Atomic mass number for CO2
@@ -84,26 +86,38 @@ contains
     real(r8), parameter :: convertgC2kgCO2 = 1.0e-3_r8 * (amCO2/amC)
     !------------------------------------------------------------------------
 
-    call c2g(bounds, &
-         water_inst%waterstatebulk_inst%h2osno_col (bounds%begc:bounds%endc), &
-         water_inst%waterlnd2atmbulk_inst%h2osno_grc    (bounds%begg:bounds%endg), &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+    ! TODO(wjs, 2019-06-12) We could use the standard allc filter for this. However,
+    ! currently lnd2atm_minimal is called from outside a clump loop, both in
+    ! initialization and in the driver loop (via the call to lnd2atm), and filters are
+    ! only available inside a clump loop. At a glance, it looks like these calls could be
+    ! put inside clump loops. But I want to look a little more carefully and/or do some
+    ! additional testing (e.g., writing coupler AVGHIST files for one test, and maybe
+    ! examining fields that are sent in initialization - and comparing these with
+    ! baselines) to help ensure I'm not breaking anything, before making this change. So
+    ! for now we build the necessary filters on the fly.
+    filter_active_c = col_filter_from_logical_array(bounds, &
+         col%active(bounds%begc:bounds%endc))
 
-    do g = bounds%begg,bounds%endg
-       water_inst%waterlnd2atmbulk_inst%h2osno_grc(g) = water_inst%waterlnd2atmbulk_inst%h2osno_grc(g)/1000._r8
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(bulk_or_tracer => water_inst%bulk_and_tracers(i))
+
+       call bulk_or_tracer%waterstate_inst%CalculateTotalH2osno( &
+            bounds, &
+            filter_active_c%num, &
+            filter_active_c%indices, &
+            caller = 'lnd2atm_minimal: '//water_inst%GetBulkOrTracerName(i), &
+            h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+       call c2g(bounds, &
+            h2osno_total(bounds%begc:bounds%endc), &
+            bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+
+       do g = bounds%begg,bounds%endg
+          bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(g) = &
+               bulk_or_tracer%waterlnd2atm_inst%h2osno_grc(g)/1000._r8
+       end do
+       end associate
     end do
-
-    do i = 1, water_inst%num_tracers
-      call c2g(bounds, &
-           water_inst%waterstate_tracer_inst(i)%h2osno_col (bounds%begc:bounds%endc), &
-           water_inst%waterlnd2atm_tracer_inst(i)%h2osno_grc    (bounds%begg:bounds%endg), &
-           c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-
-      do g = bounds%begg,bounds%endg
-         water_inst%waterlnd2atm_tracer_inst(i)%h2osno_grc(g) = water_inst%waterlnd2atm_tracer_inst(i)%h2osno_grc(g)/1000._r8
-      end do
-    end do
-
 
     call c2g(bounds, nlevgrnd, &
          water_inst%waterstatebulk_inst%h2osoi_vol_col (bounds%begc:bounds%endc, :), &
@@ -175,7 +189,7 @@ contains
     real(r8), parameter :: convertgC2kgCO2 = 1.0e-3_r8 * (amCO2/amC)
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(net_carbon_exchange_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(net_carbon_exchange_grc) == (/bounds%endg/)), sourcefile, __LINE__)
 
     call handle_ice_runoff(bounds, water_inst%waterfluxbulk_inst, glc_behavior, &
          melt_non_icesheet_ice_runoff = lnd2atm_inst%params%melt_non_icesheet_ice_runoff, &
@@ -374,8 +388,9 @@ contains
          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
+
     call c2g( bounds, &
-         water_inst%waterfluxbulk_inst%qflx_irrig_col (bounds%begc:bounds%endc), &
+         water_inst%waterfluxbulk_inst%qflx_sfc_irrig_col (bounds%begc:bounds%endc), &
          water_inst%waterlnd2atmbulk_inst%qirrig_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
@@ -449,9 +464,9 @@ contains
     character(len=*), parameter :: subname = 'handle_ice_runoff'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(qflx_ice_runoff_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_liq_from_ice_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eflx_sh_ice_to_liq_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(qflx_ice_runoff_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_liq_from_ice_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eflx_sh_ice_to_liq_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     do c = bounds%begc, bounds%endc
        if (col%active(c)) then

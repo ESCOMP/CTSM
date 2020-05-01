@@ -7,7 +7,7 @@ module CNRootDynMod
 !
 ! !USES:
    use shr_kind_mod                    , only : r8 => shr_kind_r8
-   use clm_time_manager                , only : get_step_size
+   use clm_time_manager                , only : get_step_size_real
    use clm_varpar                      , only : nlevsoi, nlevgrnd
    use clm_varctl                      , only : use_vertsoilc, use_bedrock
    use decompMod                       , only : bounds_type
@@ -102,7 +102,7 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
     )
    
 ! set time steps
-   dt = get_step_size()
+   dt = get_step_size_real()
 
 ! set minpsi to permanent wilting point
    minpsi = -1.5_r8

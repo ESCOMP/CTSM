@@ -12,8 +12,10 @@ module SaturatedExcessRunoffMod
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   use abortutils   , only : endrun
-  use clm_varctl   , only : iulog, use_vichydro
+  use clm_varctl   , only : iulog, use_vichydro, crop_fsat_equals_zero
   use clm_varcon   , only : spval
+  use LandunitType , only : landunit_type
+  use landunit_varcon  , only : istcrop
   use ColumnType   , only : column_type
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType, only : soilstate_type
@@ -48,6 +50,12 @@ module SaturatedExcessRunoffMod
      procedure, private, nopass :: ComputeFsatTopmodel
      procedure, private, nopass :: ComputeFsatVic
   end type saturated_excess_runoff_type
+  public :: readParams
+
+  type, private :: params_type
+     real(r8) :: fff  ! Decay factor for fractional saturated area (1/m)
+  end type params_type
+  type(params_type), private ::  params_inst
 
   ! !PRIVATE DATA MEMBERS:
 
@@ -167,13 +175,33 @@ contains
 
   end subroutine InitCold
 
+  !-----------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_SaturatedExcessRunoff'
+    !--------------------------------------------------------------------
+
+    ! Decay factor for fractional saturated area (1/m)
+    call readNcdioScalar(ncid, 'fff', subname, params_inst%fff)
+
+  end subroutine readParams
+
   ! ========================================================================
   ! Science routines
   ! ========================================================================
 
   !-----------------------------------------------------------------------
   subroutine SaturatedExcessRunoff (this, bounds, num_hydrologyc, filter_hydrologyc, &
-       col, soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
+       lun, col, soilhydrology_inst, soilstate_inst, waterfluxbulk_inst)
     !
     ! !DESCRIPTION:
     ! Calculate surface runoff due to saturated surface
@@ -185,13 +213,14 @@ contains
     type(bounds_type)        , intent(in)    :: bounds               
     integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
+    type(landunit_type)      , intent(in)    :: lun
     type(column_type)        , intent(in)    :: col
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: fc, c
+    integer  :: fc, c, l
 
     character(len=*), parameter :: subname = 'SaturatedExcessRunoff'
     !-----------------------------------------------------------------------
@@ -227,6 +256,17 @@ contains
        write(iulog,*) subname//' ERROR: Unrecognized fsat_method: ', this%fsat_method
        call endrun(subname//' ERROR: Unrecognized fsat_method')
     end select
+
+    ! ------------------------------------------------------------------------
+    ! Set fsat to zero for crop columns
+    ! ------------------------------------------------------------------------
+    if (crop_fsat_equals_zero) then
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          l = col%landunit(c)
+          if(lun%itype(l) == istcrop) fsat(c) = 0._r8
+       end do
+    endif
 
     ! ------------------------------------------------------------------------
     ! Compute qflx_sat_excess_surf
@@ -299,7 +339,7 @@ contains
     character(len=*), parameter :: subname = 'ComputeFsatTopmodel'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(fsat) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(fsat) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          frost_table      =>    soilhydrology_inst%frost_table_col  , & ! Input:  [real(r8) (:)   ]  frost table depth (m)
@@ -311,12 +351,11 @@ contains
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
-       fff = 0.5_r8
        if (frost_table(c) > zwt_perched(c) .and. frost_table(c) <= zwt(c)) then
           ! use perched water table to determine fsat (if present)
-          fsat(c) = wtfact(c) * exp(-0.5_r8*fff*zwt_perched(c))
+          fsat(c) = wtfact(c) * exp(-0.5_r8*params_inst%fff*zwt_perched(c))
        else
-          fsat(c) = wtfact(c) * exp(-0.5_r8*fff*zwt(c))
+          fsat(c) = wtfact(c) * exp(-0.5_r8*params_inst%fff*zwt(c))
        end if
     end do
 
@@ -352,7 +391,7 @@ contains
     character(len=*), parameter :: subname = 'ComputeFsatVic'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(fsat) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(fsat) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          b_infil          =>    soilhydrology_inst%b_infil_col      , & ! Input:  [real(r8) (:)   ]  VIC b infiltration parameter

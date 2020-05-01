@@ -14,7 +14,7 @@
     Where for the CAM specific compsets below the following is supported
     TIME = Time period (e.g. 2000, HIST, RCP8...)
     ATM  = [CAM40, CAM50, CAM55]
-    LND  = [CLM40, CLM45, CLM50, SLND]
+    LND  = [CLM45, CLM50, SLND]
     ICE  = [CICE, DICE, SICE]
     OCN  = [DOCN, ,AQUAP, SOCN]
     ROF  = [RTM, SROF]
@@ -37,13 +37,13 @@
 <!-- I single point forcing -->
 
   <compset>
-    <alias>I1PtClm50SpGs</alias>
-    <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <alias>I1PtClm50SpRsGs</alias>
+    <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>I1PtClm45SpGs</alias>
-    <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+    <alias>I1PtClm45SpRsGs</alias>
+    <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
 <!-- I CLM50 Compsets -->
@@ -51,6 +51,18 @@
   <compset>
     <alias>I2000Clm50Sp</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing -->
+  <compset>
+    <alias>I2000Clm50SpRsGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing -->
+  <compset>
+    <alias>I2000Clm50SpRtmGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -62,6 +74,12 @@
   <compset>
     <alias>I2000Clm50BgcCropRtm</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing; used in the RTM test suite -->
+  <compset>
+    <alias>I2000Clm50BgcCropRtmGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -126,6 +144,28 @@
     <lname>2000_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
+  <!-- Primarily for testing (stub glc needed for single-point tests); uses Qian
+       atmospheric forcing simply to give faster datm throughput, which is
+       particularly relevant for single-point cases (where datm dominates the
+       runtime) -->
+  <compset>
+    <alias>I2000Clm50BgcCropQianGs</alias>
+    <lname>2000_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing - when we want builds and runs to be as
+       fast as possible, but still with full-featured CTSM: uses Qian
+       atm forcing to speed up datm, SROF and SGLC to speed up build and
+       run -->
+  <compset>
+    <alias>I2000Clm50BgcCropQianRsGs</alias>
+    <lname>2000_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+  <compset>
+    <alias>I2000Clm45BgcCropQianRsGs</alias>
+    <lname>2000_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
   <compset>
     <alias>I2000Clm50BgcCruGs</alias>
     <lname>2000_DATM%CRUv7_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
@@ -151,6 +191,11 @@
   <compset>
     <alias>I2000Clm50FatesGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I2000Clm50FatesRsGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -192,6 +237,15 @@
     <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
+  <!-- Primarily for testing (stub glc needed for single-point tests); uses Qian
+       atmospheric forcing simply to give faster datm throughput, which is
+       particularly relevant for single-point cases (where datm dominates the
+       runtime) -->
+  <compset>
+    <alias>IHistClm50BgcCropQianGs</alias>
+    <lname>HIST_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
   <!-- Primarily for testing, not entirely sure this configure works -->
   <compset>
     <alias>I2000Clm50BgcDvCrop</alias>
@@ -213,6 +267,32 @@
     <lname>1850_DATM%CPLHIST_CLM50%BGC_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
+<!-- I CLM50 NWP Compsets -->
+
+  <!-- GSWP datm forcing, for global runs or regional runs outside the CONUS -->
+  <compset>
+    <alias>I2000Ctsm50NwpSpGswpGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%NWP-SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I2000Ctsm50NwpBgcCropGswpGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%NWP-BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <!-- NLDAS datm forcing, for regional runs over the CONUS, e.g., using
+       the nldas grid -->
+  <compset>
+    <alias>I2000Ctsm50NwpSpNldasGs</alias>
+    <lname>2000_DATM%NLDAS2_CLM50%NWP-SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <!-- NLDAS datm forcing, for regional runs over the CONUS, e.g., using
+       the nldas grid; stub ROF to improve performance -->
+  <compset>
+    <alias>I2000Ctsm50NwpSpNldasRsGs</alias>
+    <lname>2000_DATM%NLDAS2_CLM50%NWP-SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
 
 <!-- I CLM45 Compsets -->
 
@@ -257,7 +337,12 @@
     <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
-  <!-- Stub glacier needed for regional / single-point -->
+  <!-- Stub glacier / stub rof needed for regional / single-point -->
+  <compset>
+    <alias>I2000Clm45FatesRsGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
   <compset>
     <alias>I2000Clm45FatesGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_RTM_SGLC_SWAV</lname>
@@ -336,61 +421,14 @@
     <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%EVOLVE_SWAV</lname>
   </compset>
 
-  <!-- CLM 4.0 -->
-  <compset>
-    <alias>I2000Clm40SpCruGs</alias>
-    <lname>2000_DATM%CRUv7_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>I1850Clm40SpCruGs</alias>
-    <lname>1850_DATM%CRUv7_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <science_support grid="f09_g17"/>
-    <science_support grid="f19_g17"/>
-  </compset>
-
-  <compset>
-    <alias>I1850Clm40SpGswGs</alias>
-    <lname>1850_DATM%GSWP3v1_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <science_support grid="f09_g17"/>
-    <science_support grid="f19_g17"/>
-  </compset>
-
-  <compset>
-    <alias>I1850Clm40CnGswGs</alias>
-    <lname>1850_DATM%GSWP3v1_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <science_support grid="f09_g17"/>
-    <science_support grid="f19_g17"/>
-  </compset>
-
-  <compset>
-    <alias>IHistClm40SpCruGs</alias>
-    <lname>HIST_DATM%CRUv7_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>IHistClm40CnGswGs</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <science_support grid="f09_g17"/>
-    <science_support grid="f19_g17"/>
-  </compset>
-
-  <compset>
-    <alias>IHistClm40CnCruGs</alias>
-    <lname>HIST_DATM%CRUv7_CLM40%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-    <science_support grid="f09_g17"/>
-    <science_support grid="f19_g17"/>
-  </compset>
-
-  
-
-
   <!-- changes to driver xml variables - in case of a tie in the values matches the last match is taken -->
 
   <entries>
     <entry id="RUN_STARTDATE">
       <values>
 	<value compset="HIST_"			  >1850-01-01</value>
+        <value compset="2000_"                    >2000-01-01</value>
+        <value compset="2010_"                    >2010-01-01</value>
 	<value compset="CLM[45].*_CISM.*_TEST"	  >1980-01-15</value>
 	<value compset="CLM[45]%[^_]*CNDV.*_TEST" >1997-12-31</value>
 	<value grid="a%1x1_mexicocityMEX"	  >1993-12-01</value>

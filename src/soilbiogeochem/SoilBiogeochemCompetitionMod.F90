@@ -129,7 +129,7 @@ contains
     !
     ! !USES:
     use clm_varcon      , only: secspday
-    use clm_time_manager, only: get_step_size
+    use clm_time_manager, only: get_step_size_real
     use clm_varctl      , only: iulog, cnallocate_carbon_only_set
     use shr_infnan_mod  , only: nan => shr_infnan_nan, assignment(=)
     !
@@ -142,7 +142,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! set time steps
-    dt = real( get_step_size(), r8 )
+    dt = get_step_size_real()
 
     ! set space-and-time parameters from parameter file
     bdnr = params_inst%bdnr * (dt/secspday)
@@ -179,7 +179,7 @@ contains
     use clm_varcon       , only: nitrif_n2o_loss_frac
     use CNSharedParamsMod, only: use_fun
     use CNFUNMod         , only: CNFUN
-    use subgridAveMod    , only: p2c_2d
+    use subgridAveMod    , only: p2c
     use perf_mod         , only : t_startf, t_stopf
     !
     ! !ARGUMENTS:
@@ -371,7 +371,7 @@ contains
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
                       soilbiogeochem_nitrogenflux_inst,soilbiogeochem_carbonflux_inst,canopystate_inst,      &
                       soilbiogeochem_nitrogenstate_inst)
-            call p2c_2d(bounds, nlevdecomp, &
+            call p2c(bounds, nlevdecomp, &
                       cnveg_nitrogenflux_inst%sminn_to_plant_fun_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                       soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_vr_col(bounds%begc:bounds%endc,1:nlevdecomp), &
                       'unity')
@@ -741,12 +741,12 @@ contains
                       soilbiogeochem_nitrogenstate_inst)
                       
             ! sminn_to_plant_fun is output of actual N uptake from FUN
-            call p2c_2d(bounds,nlevdecomp, &
+            call p2c(bounds,nlevdecomp, &
                        cnveg_nitrogenflux_inst%sminn_to_plant_fun_no3_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                        soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_no3_vr_col(bounds%begc:bounds%endc,1:nlevdecomp),&
                        'unity')
 
-            call p2c_2d(bounds,nlevdecomp, &
+            call p2c(bounds,nlevdecomp, &
                        cnveg_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                        soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_col(bounds%begc:bounds%endc,1:nlevdecomp),&
                        'unity')
