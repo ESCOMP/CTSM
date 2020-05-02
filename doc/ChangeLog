@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev093
 Originator(s):  erik (Erik Kluzek)
-Date: Fri May  1 21:25:07 MDT 2020
+Date: Fri May  1 22:27:16 MDT 2020
 One-line Summary: Bring in changes from release-clm5.0 branch to master
 
 Purpose of changes
@@ -115,6 +115,12 @@ Caveats for developers (e.g., code that is duplicated that requires double maint
    The ability to read in 3D streams was added (input files have to be at the same resolution as the model)
 
 Changes to tests or testing:
+   Add no-anthro, 2010, f19 waccm and SSP tests
+   Make sure prealpha/prebeta tests are also run by aux_clm
+   Add prescribed soil moisture test
+   Lengthen waccm_offline test
+   Remove hcru_hcru and edison tests
+   Add some aux_cime_baseline tests
 
 Code reviewed by: self
 
