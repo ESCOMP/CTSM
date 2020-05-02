@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev093
 Originator(s):  erik (Erik Kluzek)
-Date: Fri May  1 10:12:22 MDT 2020
+Date: Fri May  1 21:25:07 MDT 2020
 One-line Summary: Bring in changes from release-clm5.0 branch to master
 
 Purpose of changes
@@ -22,12 +22,13 @@ Add new ability to use prescribed soil moisture data (from streams files based o
 Add new MODISv2 mapping files for mksurfdata_map. Remove T5 and T21 mapping files. Add conus_30_x8 mapping files,
 and T62 mapping files
 
+Add contrib directory to tools with contributed tools and scripts.
+
 
 Bugs fixed or introduced
 ------------------------
 
-Issues fixed (include CTSM Issue #): #873, #871, #836, #831, #817, #809, #804, #791, #786, #746, #741, #734, #629, #621, #557, #544, #533, #276, #175, #150
-  13 issues....
+Issues fixed (include CTSM Issue #): 31 issues....
   #873 -- Release clm5.0.12 changes
   #871 -- don't check for valid resolution for CESM cases by default
   #836 -- add izumi as a place that can run tools tests
@@ -38,14 +39,25 @@ Issues fixed (include CTSM Issue #): #873, #871, #836, #831, #817, #809, #804, #
   #791 -- fix threading for prescribed LAI and soil-moisture
   #786 -- allow use_init_interp for a branch
   #746 -- Some CLM45 configurations use CLM50 initial conditions files
-  #741 -- C13_HR, C13_NBP, FPI values result in numeric conversion not representable error
+  #741 -- C13_HR, C13_NBP, FPI values result in numeric conversion not representable error (changes answers)
   #734 -- Isotope historical files off of NetCDF-4
+  #716 -- 2 degree CMIP6WACCMDECK needs Carbon isotopes off
+  #707 -- Missing mapping files for hirespft
+  #673 -- Ice shelf wetland fix in mksurfdata_map can lead to glacier+lake > 100% on surface datasets (changes surface dataset creation)
+  #653 -- To save disk on fsurdat files use zwt0 on finindated file
   #629 -- Remove unused fields from surface datasets
+  #624 -- QSNOEVAP history output incorrect
   #621 -- Fully remove rcp in place of only ssp_rcp
+  #608 -- Odd (blocky) spatial patterns in generic crop leafc for BGC simulation when initialized from BGC-Crop (changes answers)
+  #589 -- Existence of content in the lai_streams namelist makes it confusing to users
   #557 -- no-anthro compset and options
+  #553 -- More robust mksurfdata_map logic for determining where to put wetlands
+  #547 -- Add conus_30_x8 grid as valid option for CTSM and mksurfdata_map
+  #545 -- Antarctica ice shelves are being treated as wetlands rather than glaciers
   #544 -- Transient cases are matching wrong IC file
   #533 -- Add -no-anthro option to mksurfdata
   #276 -- Tests for pre_alpha/pre_beta
+  #262 -- hirespft option to mksurfdata.pl
   #175 -- Set stream_year_first_urbantv/last for CLM4.5
   #150 -- mksurfdata code cleanup
 
@@ -66,7 +78,8 @@ Does this tag change answers significantly for any of the following physics conf
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions):
+Caveats for users (e.g., need to interpolate initial conditions): New surface datasets do mean initial conditions
+  will need to be interpolated
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Add 2010 compset option
    New namelist items: ndep_tintalgo, lai_tintalgo, lightng_tintalgo, urbantv_tintalgo, dribble_crophrv_xsmrpool_2atm
@@ -84,7 +97,7 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): 
 
 Changes made to namelist defaults (e.g., changed parameter values): New fsurdat files, SSP C13/C14 files
   Add PtVg surface dataset
-  most finidat files now need to be interpolated, a few added in
+  most finidat files now need to be interpolated, a few added in to get testing to work
   New ndep datasets
 
 Changes to the datasets (e.g., parameter, surface or initial files):
@@ -142,6 +155,8 @@ Changes answers relative to baseline: Yes
   Updates in all fsurdat files leads to changes in answers
   Also there are updated finidat files as they had to be interpolated
    to work with the new fsurdat files
+  Reseeding change can effect answers on startup if activated
+  Extra call to SoilBiogeochemPrecisionControl can cause a small answer change
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all global
