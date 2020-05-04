@@ -43,9 +43,10 @@ module LunaMod
 
   type, private :: params_type
 ! cp25, kc25, ko25: Bernacchi et al (2001) Plant, Cell & Environment 24:253-259
-      real(r8) :: cp25_yr2000  ! CO2 compensation point at 25°C at present day O2 (mol/mol)
-      real(r8) :: kc25_coef  ! Michaelis-Menten const. at 25°C for CO2 (unitless)
-      real(r8) :: ko25_coef  ! Michaelis-Menten const. at 25°C for O2 (unitless)
+      real(r8) :: cp25_yr2000   ! CO2 compensation point at 25°C at present day O2 (mol/mol)
+      real(r8) :: kc25_coef     ! Michaelis-Menten const. at 25°C for CO2 (unitless)
+      real(r8) :: ko25_coef     ! Michaelis-Menten const. at 25°C for O2 (unitless)
+      real(r8) :: luna_theta_cj ! LUNA empirical curvature parameter for ac, aj photosynthesis co-limitation (unitless)
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -174,6 +175,8 @@ module LunaMod
     ! Michaelis-Menten constant at 25°C for CO2 (unitless)
     call readNcdioScalar(ncid, 'kc25_coef', subname, params_inst%kc25_coef)
     params_inst%kc25_coef = params_inst%kc25_coef * 1.e5_r8  ! from mol/mol to Luna units
+    ! LUNA empirical curvature parameter for ac, aj photosynthesis co-limitation
+    call readNcdioScalar(ncid, 'luna_theta_cj', subname, params_inst%luna_theta_cj)
 
    end subroutine readParams
 
@@ -872,7 +875,6 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8) :: chg_per_step                            !the nitrogen change per interation
   real(r8) :: Vcmaxnight                              !Vcmax during night (umol/m2/s)
   real(r8) :: ci                                      !inter-cellular CO2 concentration (Pa)
-  real(r8) :: theta_cj                                !interpolation coefficient
   real(r8) :: tleafd10c                               !10-day mean daytime leaf temperature, contrained for physiological range (oC)
   real(r8) :: tleafn10c                               !10-day mean leaf temperature for night, constrained for physiological range (oC)
   real(r8) :: Vcmax                                   !the maximum carboxyaltion rate (umol/m2/s) 
@@ -881,7 +883,6 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   integer  :: increase_flag                           !whether to increase or decrease
 
   call NUEref(NUEjref, NUEcref, Kj2Kcref)
-  theta_cj = 0.95_r8
   Nlc = PNlcold * FNCa                                !proportion of light capturing nitrogen in functional nitrogen
   Net = PNetold * FNCa                                !proportion of light harvesting (electron transport) nitrogen in functional nitrogen
   Nresp = PNrespold * FNCa                            !proportion of respirational nitrogen in functional nitrogen
@@ -1027,7 +1028,6 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   real(r8) :: Wc2Wj                                   !ratio: Wc/Wj  
   real(r8) :: ELTRNabsorb                             !absorbed electron rate, umol electron/m2 leaf /s
   real(r8) :: Jmaxb0act                               !base value of Jmax (umol/m2/s) 
-  real(r8) :: theta_cj                                !interpolation coefficient
   real(r8) :: theta                                   !light absorption rate (0-1)
   real(r8) :: Vcmaxnight                              !Vcmax during night (umol/m2/s)
   real(r8) :: Wc                                      !rubisco-limited photosynthetic rate (umol/m2/s)
@@ -1035,7 +1035,6 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   real(r8) :: NUECHG                                  !the nitrogen use efficiency change under current conidtions compared to reference climate conditions (25oC and 385 ppm )
   real(r8), parameter :: leaf_mr_vcm = 0.015_r8       !Scalar constant of leaf respiration with Vcmax (should use parameter in CanopyStateMod)
   
-  theta_cj = 0.95_r8
   theta = 0.292_r8 / (1.0_r8 + 0.076_r8 / (Nlc * Cb))
   ELTRNabsorb = theta * PARi10
   Jmaxb0act = Jmaxb0 * FNCa * Fj
@@ -1051,7 +1050,7 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   else
     Wc = Kc * Vcmax
     Wj = Kj * JmeanL
-    A = (1.0_r8 - theta_cj) * max(Wc, Wj) + theta_cj * min(Wc, Wj) 
+    A = (1.0_r8 - params_inst%luna_theta_cj) * max(Wc, Wj) + params_inst%luna_theta_cj * min(Wc, Wj) 
   endif
   PSN = Cv * A * hourpd
   Vcmaxnight = VcmxTKattge(tair10, tleafn10) / VcmxTKattge(tair10, tleafd10) * Vcmax
@@ -1113,11 +1112,9 @@ subroutine Photosynthesis_luna(forc_pbot, tleafd, relh, CO2a,O2a, rb, Vcmax, Jme
   real(r8) :: rsmax0                                  !maximum stomata conductance (s/m)
   real(r8) :: tleaf                                   !daytime leaf temperature (oC)
   real(r8) :: tleafk                                  !the temperature of the leaf in Kelvin
-  real(r8) :: theta_cj                                !the interpolation coefficient for Wj and Wc
   real(r8) :: relhc                                   !constrained relative humidity (unitless)
   integer  :: i                                       !index record the number of iterations
   
-  theta_cj = 0.95_r8
   rsmax0 = 2.0_r8 * 1.0e4_r8
   bp = 2000.0_r8
   tleaf = tleafd
@@ -1175,7 +1172,7 @@ subroutine Photosynthesis_luna(forc_pbot, tleafd, relh, CO2a,O2a, rb, Vcmax, Jme
     Wc = Kc * Vcmax
     Wj = Kj * JmeanL
   end if                
-  A = (1.0_r8 - theta_cj) * max(Wc, Wj) + theta_cj * min(Wc, Wj)   !use this instead of the quadratic to avoid values not in the range of wc and wj
+  A = (1.0_r8 - params_inst%luna_theta_cj) * max(Wc, Wj) + params_inst%luna_theta_cj * min(Wc, Wj)   !use this instead of the quadratic to avoid values not in the range of wc and wj
   rs = cf / gs_mol
   rs =  min(rsmax0, rs)
                       
