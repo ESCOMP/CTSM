@@ -117,8 +117,6 @@ contains
          grc_begnb    => this%begnb_grc                  , & ! Output: [real(r8) (:)]  (gN/m2) gridcell nitrogen mass, beginning of time step
          totgrcc      => cnveg_carbonstate_inst%totc_grc , & ! Input:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
          totgrcn      => cnveg_nitrogenstate_inst%totn_grc, & ! Input:  [real(r8) (:)]  (gN/m2) total gridcell nitrogen, incl veg
-         seedc_grc    => cnveg_carbonstate_inst%seedc_grc, & ! Input:  [real(r8) (:)]  (gC/m2) seed carbon
-         seedn_grc    => cnveg_nitrogenstate_inst%seedn_grc, & ! Input:  [real(r8) (:)]  (gC/m2) seed nitrogen
          cropprod1c_grc => c_products_inst%cropprod1_grc , & ! Input:  [real(r8) (:)]  (gC/m2) carbon in crop products
          cropprod1n_grc => n_products_inst%cropprod1_grc , & ! Input:  [real(r8) (:)]  (gC/m2) nitrogen in crop products
          tot_woodprodc_grc => c_products_inst%tot_woodprod_grc, & ! Input:  [real(r8) (:)]  (gC/m2) total carbon in wood products
@@ -128,8 +126,8 @@ contains
     begg = bounds%begg; endg = bounds%endg
 
     do g = begg, endg
-       grc_begcb(g) = totgrcc(g) + seedc_grc(g) + tot_woodprodc_grc(g) + cropprod1c_grc(g)
-       grc_begnb(g) = totgrcn(g) + seedn_grc(g) + tot_woodprodn_grc(g) + cropprod1n_grc(g)
+       grc_begcb(g) = totgrcc(g) + tot_woodprodc_grc(g) + cropprod1c_grc(g)
+       grc_begnb(g) = totgrcn(g) + tot_woodprodn_grc(g) + cropprod1n_grc(g)
     end do
 
     end associate
@@ -219,7 +217,6 @@ contains
          tot_woodprod_grc        =>    c_products_inst%tot_woodprod_grc                 , & ! Input:  [real(r8) (:)]  (gC/m2) total carbon in wood products
          dwt_seedc_to_leaf_grc   =>    cnveg_carbonflux_inst%dwt_seedc_to_leaf_grc      , & ! Input:  [real(r8) (:)]  (gC/m2/s) seed source sent to leaf
          dwt_seedc_to_deadstem_grc =>  cnveg_carbonflux_inst%dwt_seedc_to_deadstem_grc  , & ! Input:  [real(r8) (:)]  (gC/m2/s) seed source sent to deadstem
-         seedc_grc               =>    cnveg_carbonstate_inst%seedc_grc                 , & ! Input:  [real(r8) (:)]  (gC/m2) seed carbon
          col_begcb               =>    this%begcb_col                                   , & ! Input:  [real(r8) (:) ]  (gC/m2) carbon mass, beginning of time step 
          col_endcb               =>    this%endcb_col                                   , & ! Output: [real(r8) (:) ]  (gC/m2) carbon mass, end of time step 
          wood_harvestc           =>    cnveg_carbonflux_inst%wood_harvestc_col          , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
@@ -317,7 +314,13 @@ contains
          ! slevis notes:
          ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
          ! totc_p2c_col = totc_patch = totvegc_patch(p) + xsmrpool_patch(p) + ctrunc_patch(p) + cropseedc_deficit_patch(p)
-         grc_endcb(g) = totgrcc(g) + seedc_grc(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
+         ! slevis: Not including seedc_grc in grc_begcb and grc_endcb because
+         ! seedc_grc equals
+         ! -1 * (dwt_seedc_to_leaf_grc(g) + dwt_seedc_to_deadstem_grc(g))
+         ! and we account for the latter fluxes as inputs below; the same
+         ! fluxes have entered the pools earlier in the timestep. For true
+         ! conservation we would need to add a flux out of npp into seed.
+         grc_endcb(g) = totgrcc(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
 
          ! calculate total gridcell-level inputs
          ! slevis notes:
@@ -406,7 +409,6 @@ contains
     real(r8):: soyfixn_to_sminn_grc(bounds%begg:bounds%endg)
     real(r8):: denit_grc(bounds%begg:bounds%endg)
     real(r8):: grc_fire_nloss(bounds%begg:bounds%endg)
-    real(r8):: wood_harvestn_grc(bounds%begg:bounds%endg)
     real(r8):: som_n_leached_grc(bounds%begg:bounds%endg)
     real(r8):: sminn_leached_grc(bounds%begg:bounds%endg)
     real(r8):: f_n2o_nit_grc(bounds%begg:bounds%endg)
@@ -420,10 +422,11 @@ contains
          totgrcn             => cnveg_nitrogenstate_inst%totn_grc                        , & ! Input:  [real(r8) (:) ]  (gN/m2) total gridcell nitrogen, incl veg
          forc_ndep           => atm2lnd_inst%forc_ndep_grc                               , & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)
          cropprod1_grc       => n_products_inst%cropprod1_grc                            , & ! Input:  [real(r8) (:)]  (gN/m2) nitrogen in crop products
+         product_loss_grc    => n_products_inst%product_loss_grc                         , & ! Input:  [real(r8) (:)]  (gN/m2) losses from wood & crop products
          tot_woodprod_grc    => n_products_inst%tot_woodprod_grc                         , & ! Input:  [real(r8) (:)]  (gN/m2) total nitrogen in wood products
          dwt_seedn_to_leaf_grc   =>    cnveg_nitrogenflux_inst%dwt_seedn_to_leaf_grc     , & ! Input:  [real(r8) (:)]  (gN/m2/s) seed source sent to leaf
          dwt_seedn_to_deadstem_grc =>  cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_grc , & ! Input:  [real(r8) (:)]  (gN/m2/s) seed source sent to deadstem
-         seedn_grc           => cnveg_nitrogenstate_inst%seedn_grc                       , & ! Input:  [real(r8) (:)]  (gN/m2) seed nitrogen
+         dwt_conv_nflux_grc  =>  cnveg_nitrogenflux_inst%dwt_conv_nflux_grc              , & ! Input:  [real(r8) (:)]  (gN/m2/s) dwt_conv_nflux_patch summed to the gridcell-level
          col_begnb           => this%begnb_col                                           , & ! Input:  [real(r8) (:) ]  (gN/m2) column nitrogen mass, beginning of time step
          col_endnb           => this%endnb_col                                           , & ! Output: [real(r8) (:) ]  (gN/m2) column nitrogen mass, end of time step
          ndep_to_sminn       => soilbiogeochem_nitrogenflux_inst%ndep_to_sminn_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) atmospheric N deposition to soil mineral N        
@@ -570,11 +573,6 @@ contains
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
       call c2g( bounds = bounds, &
-         carr = wood_harvestn(bounds%begc:bounds%endc), &
-         garr = wood_harvestn_grc(bounds%begg:bounds%endg), &
-         c2l_scale_type = 'unity', &
-         l2g_scale_type = 'unity')
-      call c2g( bounds = bounds, &
          carr = som_n_leached(bounds%begc:bounds%endc), &
          garr = som_n_leached_grc(bounds%begg:bounds%endg), &
          c2l_scale_type = 'unity', &
@@ -606,7 +604,13 @@ contains
       err_found = .false.
       do g = bounds%begg, bounds%endg
          ! calculate the total gridcell-level nitrogen storage, for mass conservation check
-         grc_endnb(g) = totgrcn(g) + seedn_grc(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
+         ! slevis: Not including seedn_grc in grc_begnb and grc_endnb because
+         ! seedn_grc equals
+         ! -1 * (dwt_seedn_to_leaf_grc(g) + dwt_seedn_to_deadstem_grc(g))
+         ! and we account for the latter fluxes as inputs below; the same
+         ! fluxes have entered the pools earlier in the timestep. For true
+         ! conservation we would need to add a flux out of nfix into seed.
+         grc_endnb(g) = totgrcn(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
 
          ! calculate total gridcell-level inputs
          grc_ninputs(g) = forc_ndep(g) + nfix_to_sminn_grc(g) + &
@@ -624,7 +628,8 @@ contains
 
          ! calculate total gridcell-level outputs
          grc_noutputs(g) = denit_grc(g) + grc_fire_nloss(g) + &
-                           wood_harvestn_grc(g) - som_n_leached_grc(g)
+                           dwt_conv_nflux_grc(g) + product_loss_grc(g) - &
+                           som_n_leached_grc(g)
 
          if (.not. use_nitrif_denitrif) then
             grc_noutputs(g) = grc_noutputs(g) + sminn_leached_grc(g)
@@ -673,7 +678,8 @@ contains
          write(iulog,*) '--- Outputs ---'
          write(iulog,*) 'denit_grc                =', denit_grc(g) * dt
          write(iulog,*) 'grc_fire_nloss           =', grc_fire_nloss(g) * dt
-         write(iulog,*) 'wood_harvestn_grc        =', wood_harvestn_grc(g) * dt
+         write(iulog,*) 'dwt_conv_nflux_grc       =', dwt_conv_nflux_grc(g) * dt
+         write(iulog,*) 'product_loss_grc         =', product_loss_grc(g) * dt
          write(iulog,*) '-1*som_n_leached_grc     = ', som_n_leached_grc(g) * dt
          if (.not. use_nitrif_denitrif) then
             write(iulog,*) 'sminn_leached_grc     =', sminn_leached_grc(g) * dt

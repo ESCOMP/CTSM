@@ -770,7 +770,6 @@ contains
          name = 'hrv_xsmrpool_to_atm_' // carbon_type_suffix, &
          units = 'gC/m^2', &
          allows_non_annual_delta = .false.)
-
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -4552,6 +4551,16 @@ contains
          dwt_conv_cflux_delta_grc(bounds%begg:bounds%endg))
     call this%dwt_conv_cflux_dribbler%get_curr_flux(bounds, &
          this%dwt_conv_cflux_dribbled_grc(bounds%begg:bounds%endg))
+
+    if (get_for_testing_allow_non_annual_changes() .or. use_cndv) then
+       hrv_xsmrpool_to_atm_dribbled_grc = hrv_xsmrpool_to_atm_dribbled_grc
+       this%dwt_conv_cflux_dribbled_grc = this%dwt_conv_cflux_dribbled_grc
+    else
+       ! In this case overwrite the dribbled array with the non-dribbled array
+       ! so as to conserve carbon and nitrogen at every timestep
+       hrv_xsmrpool_to_atm_dribbled_grc = hrv_xsmrpool_to_atm_grc
+       this%dwt_conv_cflux_dribbled_grc = this%dwt_conv_cflux_grc
+    end if
 
     do g = bounds%begg, bounds%endg
        ! net ecosystem exchange of carbon, includes fire flux and hrv_xsmrpool flux,
