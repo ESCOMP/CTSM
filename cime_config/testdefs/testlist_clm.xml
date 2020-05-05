@@ -1865,11 +1865,7 @@
   <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesAllVars">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-<<<<<<< HEAD
-      <machine name="hobart" compiler="nag" category="fates"/>
-=======
       <machine name="izumi" compiler="nag" category="fates"/>
->>>>>>> fates_next_api
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -1899,11 +1895,7 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-<<<<<<< HEAD
-      <machine name="hobart" compiler="nag" category="fates"/>
-=======
       <machine name="izumi" compiler="nag" category="fates"/>
->>>>>>> fates_next_api
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -1922,11 +1914,7 @@
   <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/FatesHydro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-<<<<<<< HEAD
-      <machine name="hobart" compiler="nag" category="fates"/>
-=======
       <machine name="izumi" compiler="nag" category="fates"/>
->>>>>>> fates_next_api
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -1945,12 +1933,7 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-<<<<<<< HEAD
-      <machine name="cheyenne" compiler="gnu" category="fates"/>
-      <machine name="hobart" compiler="nag" category="fates"/>
-=======
       <machine name="izumi" compiler="nag" category="fates"/>
->>>>>>> fates_next_api
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
