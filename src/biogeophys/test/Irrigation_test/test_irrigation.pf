@@ -4,6 +4,9 @@ module test_irrigation
 
   use pfunit_mod
   use unittestSubgridMod
+  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use unittestTimeManagerMod, only : unittest_timemgr_set_curr_date
+  use clm_time_manager, only: advance_timestep
   use IrrigationMod, only : irrigation_type, irrigation_params_type
   use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_varpar, only : nlevsoi, nlevgrnd
@@ -20,6 +23,7 @@ module test_irrigation
 
   real(r8), parameter :: tol = 1.e-13_r8
   integer , parameter :: dtime = 1800  ! model time step, seconds
+  integer , parameter :: irrig_start = 21600
 
   @TestCase
   type, extends(TestCase) :: TestIrrigation
@@ -39,8 +43,6 @@ module test_irrigation
      real(r8), allocatable :: relsat_target(:,:)
      real(r8), allocatable :: volr(:)
 
-     ! Previous model time
-     integer :: time_prev
    contains
      procedure :: setUp
      procedure :: tearDown
@@ -68,6 +70,11 @@ contains
   subroutine setUp(this)
     class(TestIrrigation), intent(inout) :: this
 
+    ! Setup time manager
+    call unittest_timemgr_setup(dtime=dtime)
+    ! Set time to one time-step ahead of start time, as irrigation uses the previous time step
+    call unittest_timemgr_set_curr_date(yr=5, mon=1, day=1, tod=irrig_start+dtime)
+
     ! Need to set nlevgrnd before doing the subgrid setup (because it is needed when
     ! allocating the col object). So we must do this before setupEnvironment, because
     ! that assumes that the subgrid setup has already been done.
@@ -83,6 +90,7 @@ contains
   subroutine tearDown(this)
     class(TestIrrigation), intent(inout) :: this
 
+    call unittest_timemgr_teardown()
     call this%irrigation%Clean()
     call this%teardownEnvironment()
     call unittest_subgrid_teardown()
@@ -170,7 +178,7 @@ contains
     ! Set parameters
     this%irrigation_params = irrigation_params_type( &
          irrig_min_lai = 0.0_r8, &
-         irrig_start_time = 21600, &
+         irrig_start_time = irrig_start, &
          irrig_length = 14400, &
          irrig_target_smp = -3400._r8, &
          irrig_depth = irrig_depth, &
@@ -196,9 +204,8 @@ contains
        end do
     end do
 
-    ! Set time_prev to the irrig_start_time minus 1 hour (since we're using a longitude
-    ! about 1 hour east of 0Z)
-    this%time_prev = this%irrigation_params%irrig_start_time - 3600
+    ! Set time to one time-step ahead of start time, as irrigation uses the previous time step
+    call unittest_timemgr_set_curr_date(yr=5, mon=1, day=1, tod=irrig_start+dtime)
 
     call this%irrigation%InitForTesting(bounds, this%irrigation_params, dtime, &
          this%relsat_wilting_point, this%relsat_target)
@@ -238,8 +245,8 @@ contains
        col%nbedrock(c) = nlevsoi
     end do
 
-    ! slightly greater than 1 hour offset
-    grc%londeg(:) = 15.1_r8
+    ! Use longitude along Greenich so don't have to calculate offsets for longitudes (that's calculated in clm_time_manager)
+    grc%londeg(:) = 0.0_r8
 
     grc%area(:) = 10.0_r8
     
@@ -325,7 +332,6 @@ contains
          bounds=bounds, &
          num_exposedvegp = this%numf, &
          filter_exposedvegp = this%filter, &
-         time_prev = this%time_prev, &
          elai = this%elai, &
          t_soisno = this%t_soisno, &
          eff_porosity = this%eff_porosity, &
@@ -480,8 +486,8 @@ contains
     ! Setup
     call this%setupSinglePatch()
     call this%setupIrrigation()
-    ! Set previous time to be one time step before the time when we would start irrigating
-    this%time_prev = this%time_prev - dtime
+    ! Set current time to start time, as irrigation uses the time step befor ethat
+    call unittest_timemgr_set_curr_date(yr=5, mon=1, day=1, tod=irrig_start)
 
     ! Call irrigation routines
     call this%calculateAndApplyIrrigation()
@@ -556,27 +562,6 @@ contains
   end subroutine limited_irrigation_for_limiting_volr
 
   @Test
-  subroutine irrigation_should_happen_for_big_longitude(this)
-    use GridcellType, only : grc
-    class(TestIrrigation), intent(inout) :: this
-
-    ! Setup
-    call this%setupSinglePatch()
-    call this%setupIrrigation()
-    ! Use a big longitude and a time_prev that should lead to irrigation at that longitude
-    ! The main point of this is to test the modulo in the local_time calculation
-    grc%londeg(:) = 359.9_r8
-    this%time_prev = this%irrigation_params%irrig_start_time + dtime
-
-    ! Call irrigation routines
-    call this%calculateAndApplyIrrigation()
-
-    ! Check result
-    @assertTrue(this%irrigation%qflx_irrig_patch(bounds%begp) > 0._r8)
-
-  end subroutine irrigation_should_happen_for_big_longitude
-
-  @Test
   subroutine irrigation_continues_at_same_rate_for_multiple_time_steps(this)
     class(TestIrrigation), intent(inout) :: this
     real(r8), allocatable :: deficits(:,:)
@@ -592,7 +577,7 @@ contains
     call this%calculateAndApplyIrrigation()
     call this%computeDeficits(deficits)
     expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
-    this%time_prev = this%time_prev + dtime
+    call advance_timestep()
     this%h2osoi_liq = 100._r8
     call this%calculateAndApplyIrrigation()
 
@@ -618,7 +603,7 @@ contains
     ! steps
     do time = 1, expected_num_time_steps
        call this%calculateAndApplyIrrigation()
-       this%time_prev = this%time_prev + dtime
+       call advance_timestep()
     end do
     @assertTrue(this%irrigation%qflx_irrig_patch(bounds%begp) > 0._r8)
 
@@ -637,26 +622,24 @@ contains
     class(TestIrrigation), intent(inout) :: this
     real(r8), allocatable :: deficits(:,:)
     real(r8) :: expected
-    integer :: time_prev_orig
     integer :: time
     integer :: expected_num_time_steps
 
     ! Setup
     call this%setupSinglePatch()
     call this%setupIrrigation()
-    time_prev_orig = this%time_prev
 
     ! Call irrigation routines for long enough that irrigation should go to 0
     expected_num_time_steps = this%irrigation_params%irrig_length / dtime
     do time = 1, expected_num_time_steps + 1
        call this%calculateAndApplyIrrigation()
-       this%time_prev = this%time_prev + dtime
+       call advance_timestep()
     end do
     ! The following assertion is mainly here to make sure the test is working as intended
     @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
 
     ! Now reset time, change soil moisture, and make sure that irrigation happens as expected
-    this%time_prev = time_prev_orig
+    call unittest_timemgr_set_curr_date(yr=5, mon=1, day=1, tod=irrig_start+dtime)
     this%h2osoi_liq(:,:) = 100._r8
     call this%calculateAndApplyIrrigation()
     call this%computeDeficits(deficits)

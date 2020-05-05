@@ -1,5 +1,0 @@
-This directory turns on a variety of extra output fields that are desired for
-cmip6 runs.
-
-To use these mods, you must be using a configuration with CLM50%BGC-CROP using
-glc_mec (which is the standard cmip6 configuration).

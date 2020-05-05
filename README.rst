@@ -4,7 +4,7 @@ CTSM
 
 The Community Terrestrial Systems Model.
 
-This includes the Community Land Model (CLM5 and CLM4.5) of the Community Earth System Model.
+This includes the Community Land Model (CLM5.0 and CLM4.5) of the Community Earth System Model.
 
 For documentation, quick start, diagnostics, model output and
 references, see
@@ -28,4 +28,4 @@ join our low traffic email list:
 
 https://groups.google.com/a/ucar.edu/forum/#!forum/ctsm-dev
 
-(Send email to ctsm-core@ucar.edu if you have problems with any of this)
+(Send email to ctsm-software@ucar.edu if you have problems with any of this)

@@ -162,6 +162,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begg,endg
+    character(len=:), allocatable :: active_if_non_isotope
 
     character(len=*), parameter :: subname = 'InitHistory'
     !-----------------------------------------------------------------------
@@ -169,13 +170,19 @@ contains
     begg = bounds%begg
     endg = bounds%endg
 
+    if (this%species%is_isotope()) then
+       active_if_non_isotope = 'inactive'
+    else
+       active_if_non_isotope = 'active'
+    end if
+
     this%cropprod1_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('CROPPROD1'), &
          units = 'g' // this%species%get_species() // '/m^2', &
          avgflag = 'A', &
          long_name = '1-yr grain product ' // this%species%get_species(), &
-         ptr_gcell = this%cropprod1_grc)
+         ptr_gcell = this%cropprod1_grc, default=active_if_non_isotope)
 
     this%prod10_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -199,7 +206,7 @@ contains
          units = 'g' // this%species%get_species() // '/m^2', &
          avgflag = 'A', &
          long_name = 'total wood product ' // this%species%get_species(), &
-         ptr_gcell = this%tot_woodprod_grc)
+         ptr_gcell = this%tot_woodprod_grc, default=active_if_non_isotope)
 
     this%dwt_prod10_gain_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -223,7 +230,7 @@ contains
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'landcover change-driven addition to wood product pools', &
-         ptr_gcell = this%dwt_woodprod_gain_grc)
+         ptr_gcell = this%dwt_woodprod_gain_grc, default=active_if_non_isotope)
 
     this%dwt_cropprod1_gain_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -231,7 +238,7 @@ contains
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'landcover change-driven addition to 1-year crop product pool', &
-         ptr_gcell = this%dwt_cropprod1_gain_grc)
+         ptr_gcell = this%dwt_cropprod1_gain_grc, default=active_if_non_isotope)
 
     this%cropprod1_loss_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -239,7 +246,7 @@ contains
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'loss from 1-yr grain product pool', &
-         ptr_gcell = this%cropprod1_loss_grc)
+         ptr_gcell = this%cropprod1_loss_grc, default=active_if_non_isotope)
 
     this%prod10_loss_grc(begg:endg) = spval
     call hist_addfld1d( &
@@ -263,7 +270,7 @@ contains
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'total loss from wood product pools', &
-         ptr_gcell = this%tot_woodprod_loss_grc)
+         ptr_gcell = this%tot_woodprod_loss_grc, default=active_if_non_isotope)
 
   end subroutine InitHistory
 

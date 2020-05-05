@@ -55,7 +55,9 @@ class GitRepository(Repository):
         branch or tag.
         """
         repo_dir_path = os.path.join(base_dir_path, repo_dir_name)
-        if not os.path.exists(repo_dir_path):
+        repo_dir_exists = os.path.exists(repo_dir_path)
+        if (repo_dir_exists and not os.listdir(
+                repo_dir_path)) or not repo_dir_exists:
             self._clone_repo(base_dir_path, repo_dir_name, verbosity)
         self._checkout_ref(repo_dir_path, verbosity)
 
@@ -694,7 +696,7 @@ class GitRepository(Repository):
     def _git_clone(url, repo_dir_name, verbosity):
         """Run git clone for the side effect of creating a repository.
         """
-        cmd = ['git', 'clone', url, repo_dir_name]
+        cmd = ['git', 'clone', '--quiet', url, repo_dir_name]
         if verbosity >= VERBOSITY_VERBOSE:
             printlog('    {0}'.format(' '.join(cmd)))
         execute_subprocess(cmd)
@@ -710,7 +712,7 @@ class GitRepository(Repository):
     def _git_fetch(remote_name):
         """Run the git fetch command to for the side effect of updating the repo
         """
-        cmd = ['git', 'fetch', '--tags', remote_name]
+        cmd = ['git', 'fetch', '--quiet', '--tags', remote_name]
         execute_subprocess(cmd)
 
     @staticmethod
@@ -721,7 +723,7 @@ class GitRepository(Repository):
         form 'origin/my_feature', or 'tag1'.
 
         """
-        cmd = ['git', 'checkout', ref]
+        cmd = ['git', 'checkout', '--quiet', ref]
         if verbosity >= VERBOSITY_VERBOSE:
             printlog('    {0}'.format(' '.join(cmd)))
         execute_subprocess(cmd)

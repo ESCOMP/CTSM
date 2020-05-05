@@ -10,3 +10,5 @@ hist_fincl1       = 'SNOWLIQ','SNOWICE' ,
                     'TG', 
                     'RH2M_U', 'RH2M_R',
                     'QRUNOFF'
+calc_human_stress_indices = 'NONE'
+use_ssre = .false.

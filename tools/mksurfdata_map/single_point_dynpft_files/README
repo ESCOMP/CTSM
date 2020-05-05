@@ -1,2 +1,4 @@
+$CTSMROOT/tools/mksurfdata_map/single_point_dynpft_files
+
 This directory contains files that can be used with the -dynpft option to
 mksurfdata.pl when creating the respective single-point transient datasets.

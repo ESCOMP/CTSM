@@ -3,7 +3,7 @@
 """
 build clm library
 """
-import sys, os, time, filecmp, shutil, imp
+import sys, os, shutil, imp
 
 _CIMEROOT = os.environ.get("CIMEROOT")
 if _CIMEROOT is None:

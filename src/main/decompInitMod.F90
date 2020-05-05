@@ -27,6 +27,7 @@ module decompInitMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public decompInit_lnd    ! initializes lnd grid decomposition into clumps and processors
+  public decompInit_lnd3D  ! initializes lnd grid 3D decomposition
   public decompInit_clumps ! initializes atm grid decomposition into clumps
   public decompInit_glcp   ! initializes g,l,c,p decomp info
   !
@@ -285,6 +286,7 @@ contains
     ! Set gsMap_lnd_gdc2glo (the global index here includes mask=0 or ocean points)
 
     call get_proc_bounds(beg, end)
+
     allocate(gindex(beg:end))
     do n = beg,end
        gindex(n) = ldecomp%gdc2glo(n)
@@ -311,6 +313,63 @@ contains
     call shr_sys_flush(iulog)
 
   end subroutine decompInit_lnd
+
+  !------------------------------------------------------------------------------
+  subroutine decompInit_lnd3D(lni,lnj,lnk)
+    !
+    ! !DESCRIPTION:
+    !
+    !   Create a 3D decomposition gsmap for the global 2D grid with soil levels
+    !   as the 3rd dimesnion.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer , intent(in) :: lni,lnj,lnk   ! domain global size
+    !
+    ! !LOCAL VARIABLES:
+    integer :: m,n,k                    ! indices
+    integer :: begg,endg,lsize,gsize    ! used for gsmap init
+    integer :: begg3d,endg3d
+    integer, pointer :: gindex(:)       ! global index for gsmap init
+
+
+    ! Set gsMap_lnd_gdc2glo (the global index here includes mask=0 or ocean points)
+    call get_proc_bounds(begg, endg)
+    begg3d = (begg-1)*lnk + 1
+    endg3d = endg*lnk
+    lsize = (endg3d - begg3d + 1 )
+    allocate(gindex(begg3d:endg3d))
+    do k = 1, lnk
+       do n = begg,endg
+          m = (begg-1)*lnk + (k-1)*(endg-begg+1) + (n-begg+1)
+          gindex(m) = ldecomp%gdc2glo(n) + (k-1)*(lni*lnj)
+       enddo
+    enddo
+    gsize = lni * lnj * lnk
+    call mct_gsMap_init(gsMap_lnd2Dsoi_gdc2glo, gindex, mpicom, comp_id, lsize, gsize)
+
+    ! Diagnostic output
+
+    if (masterproc) then
+       write(iulog,*)' 3D GSMap'
+       write(iulog,*)'   longitude points               = ',lni
+       write(iulog,*)'   latitude points                = ',lnj
+       write(iulog,*)'   soil levels                    = ',lnk
+       write(iulog,*)'   gsize                          = ',gsize
+       write(iulog,*)'   lsize                          = ',lsize
+       write(iulog,*)'   bounds(gindex)                 = ',size(gindex)
+       write(iulog,*)' gsMap Characteristics'
+       write(iulog,*) '  lnd gsmap glo num of segs      = ',mct_gsMap_ngseg(gsMap_lnd2Dsoi_gdc2glo)
+       write(iulog,*)
+    end if
+
+    deallocate(gindex)
+
+    call shr_sys_flush(iulog)
+
+  end subroutine decompInit_lnd3D
 
   !------------------------------------------------------------------------------
   subroutine decompInit_clumps(lns,lni,lnj,glc_behavior)

@@ -47,6 +47,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_parteh_mode
    use clm_varctl        , only : use_fates_spitfire
    use clm_varctl        , only : use_fates_planthydro
+   use clm_varctl        , only : use_fates_cohort_age_tracking
    use clm_varctl        , only : use_fates_ed_st3
    use clm_varctl        , only : use_fates_ed_prescribed_phys
    use clm_varctl        , only : use_fates_logging
@@ -102,7 +103,7 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : allocate_bcout
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
-   use FatesInterfaceMod     , only : InitPARTEHGlobals
+
 
    use FatesHistoryInterfaceMod, only : fates_history_interface_type
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
@@ -116,6 +117,7 @@ module CLMFatesInterfaceMod
    use EDInitMod             , only : init_site_vars
    use EDInitMod             , only : init_patches
    use EDInitMod             , only : set_site_properties
+   use EDInitMod             , only : InitFatesGlobals
    use EDPftVarcon           , only : EDpftvarcon_inst
    use EDSurfaceRadiationMod , only : ED_SunShadeFracs, ED_Norman_Radiation
    use EDBtranMod            , only : btran_ed, &
@@ -197,11 +199,6 @@ module CLMFatesInterfaceMod
    ! developer will at least question its usage (RGK)
    private :: hlm_bounds_to_fates_bounds
 
-   ! The GetAndSetTime function is used to get the current time from the CLM 
-   ! time procedures and then set to the fates global time variables during restart, 
-   ! init_coldstart, and dynamics_driv function calls
-   private :: GetAndSetTime
-
    logical :: debug  = .false.
 
    character(len=*), parameter, private :: sourcefile = &
@@ -249,6 +246,7 @@ contains
       integer                                        :: pass_ed_prescribed_phys
       integer                                        :: pass_logging
       integer                                        :: pass_planthydro
+      integer                                        :: pass_cohort_age_tracking
       integer                                        :: pass_inventory_init
       integer                                        :: pass_is_restart
       integer                                        :: nc        ! thread index
@@ -343,6 +341,13 @@ contains
          pass_planthydro = 0
       end if
       call set_fates_ctrlparms('use_planthydro',ival=pass_planthydro)
+
+      if(use_fates_cohort_age_tracking) then
+         pass_cohort_age_tracking = 1
+      else
+         pass_cohort_age_tracking = 0
+      end if
+      call set_fates_ctrlparms('use_cohort_age_tracking',ival=pass_cohort_age_tracking)
 
       if(use_fates_logging) then
          pass_logging = 1
@@ -477,7 +482,7 @@ contains
          call this%init_soil_depths(nc)
          
          if (use_fates_planthydro) then
-            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in,numpft_fates)
+            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in)
          end if
 
          if( this%fates(nc)%nsites == 0 ) then
@@ -502,13 +507,10 @@ contains
       end do
       !$OMP END PARALLEL DO
 
-      ! This will initialize all globals associated with the chosen
-      ! Plant Allocation and Reactive Transport hypothesis. This includes
-      ! mapping tables and global variables. These will be read-only
-      ! and only required once per machine instance (thus no requirements
-      ! to have it instanced on each thread
+      ! This will initialize all FATES globals,
+      ! particular PARTEH and HYDRO globals
       
-      call InitPARTEHGlobals()
+      call InitFatesGlobals(masterproc)
       
 
       
@@ -584,9 +586,22 @@ contains
       integer  :: c                        ! column index (HLM)
       integer  :: ifp                      ! patch index
       integer  :: p                        ! HLM patch index
+      integer  :: yr                       ! year (0, ...)
+      integer  :: mon                      ! month (1, ..., 12)
+      integer  :: day                      ! day of month (1, ..., 31)
+      integer  :: sec                      ! seconds of the day
       integer  :: nlevsoil                 ! number of soil layers at the site
       integer  :: nld_si                   ! site specific number of decomposition layers
-
+      integer  :: current_year             
+      integer  :: current_month
+      integer  :: current_day
+      integer  :: current_tod
+      integer  :: current_date
+      integer  :: jan01_curr_year
+      integer  :: reference_date
+      integer  :: days_per_year
+      real(r8) :: model_day
+      real(r8) :: day_of_year
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -598,8 +613,24 @@ contains
       ! and it keeps all the boundaries in one location
       ! ---------------------------------------------------------------------------------
 
-      ! Set the FATES global time and date variables
-      call GetAndSetTime
+      days_per_year = get_days_per_year()
+      call get_curr_date(current_year,current_month,current_day,current_tod)
+      current_date = current_year*10000 + current_month*100 + current_day
+      jan01_curr_year = current_year*10000 + 100 + 1
+
+      call get_ref_date(yr, mon, day, sec)
+      reference_date = yr*10000 + mon*100 + day
+
+      call timemgr_datediff(reference_date, sec, current_date, current_tod, model_day)
+
+      call timemgr_datediff(jan01_curr_year,0,current_date,sec,day_of_year)
+      
+      call SetFatesTime(current_year, current_month, &
+                        current_day, current_tod, &
+                        current_date, reference_date, &
+                        model_day, floor(day_of_year), &
+                        days_per_year, 1.0_r8/dble(days_per_year))
+
 
       do s=1,this%fates(nc)%nsites
 
@@ -965,9 +996,6 @@ contains
       ! I think that is it...
       ! ---------------------------------------------------------------------------------
 
-      ! Set the FATES global time and date variables
-      call GetAndSetTime 
-
       if(.not.initialized) then
 
          initialized=.true.
@@ -1134,7 +1162,23 @@ contains
                      nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
                      this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoil) = &
                           soilstate_inst%hksat_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%watsat_sisl(1:nlevsoil) = &
+                          soilstate_inst%watsat_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%watres_sisl(1:nlevsoil) = &
+                          soilstate_inst%watres_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%sucsat_sisl(1:nlevsoil) = &
+                          soilstate_inst%sucsat_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%bsw_sisl(1:nlevsoil) = &
+                          soilstate_inst%bsw_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) = &
+                          waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
                   end do
+
 
                   call RestartHydrStates(this%fates(nc)%sites,  &
                                          this%fates(nc)%nsites, &
@@ -1155,6 +1199,8 @@ contains
                                                                 this%fates(nc)%sites, &
                                                                 this%fates(nc)%bc_out)
                     
+              
+
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
                ! ------------------------------------------------------------------------
@@ -1195,10 +1241,6 @@ contains
      integer :: j
      integer :: s
      integer :: c
-
-
-     ! Set the FATES global time and date variables
-     call GetAndSetTime                                                                
 
      nclumps = get_proc_clumps()
 
@@ -1407,9 +1449,9 @@ contains
 
         ! set transpiration input boundary condition to zero. The exposed
         ! vegetation filter may not even call every patch.
-
-        this%fates(nc)%bc_in(s)%qflx_transp_pa(:) = 0._r8
-
+        if (use_fates_planthydro) then
+            this%fates(nc)%bc_in(s)%qflx_transp_pa(:) = 0._r8
+        end if
 
      end do
   end subroutine prep_canopyfluxes
@@ -1870,12 +1912,15 @@ contains
          this%fates(nc)%bc_in(s)%tot_somc     = totsomc(c)
          this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
       end do
+
+      dtime = get_step_size()
       
       ! Update history variables that track these variables
       call this%fates_hist%update_history_cbal(nc, &
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
-            this%fates(nc)%bc_in)
+            this%fates(nc)%bc_in,   &
+            dtime)
 
     end associate
  end subroutine wrap_bgc_summary
@@ -1926,6 +1971,7 @@ contains
    use FatesIOVariableKindMod, only : patch_r8, patch_ground_r8, patch_size_pft_r8
    use FatesIOVariableKindMod, only : site_r8, site_ground_r8, site_size_pft_r8
    use FatesIOVariableKindMod, only : site_size_r8, site_pft_r8, site_age_r8
+   use FatesIOVariableKindMod, only : site_coage_r8, site_coage_pft_r8
    use FatesIOVariableKindMod, only : site_fuel_r8, site_cwdsc_r8, site_scag_r8
    use FatesIOVariableKindMod, only : site_scagpft_r8, site_agepft_r8
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
@@ -2061,11 +2107,14 @@ contains
                               ptr_patch=this%fates_hist%hvars(ivar)%r82d,    & 
                               default=trim(vdefault))
            
+        
         case(site_ground_r8, site_size_pft_r8, site_size_r8, site_pft_r8, &
-             site_age_r8, site_height_r8, site_fuel_r8, site_cwdsc_r8, &
+             site_age_r8, site_height_r8, site_coage_r8,site_coage_pft_r8, &
+             site_fuel_r8, site_cwdsc_r8, &
              site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, & 
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
              site_elcwd_r8, site_elage_r8)
+
 
            d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
            dim2name = this%fates_hist%dim_bounds(d_index)%name
@@ -2082,6 +2131,7 @@ contains
         end select
           
       end associate
+
    end do
  end subroutine init_history_io
 
@@ -2181,7 +2231,16 @@ contains
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
        nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
+
+       ! This is the water removed from the soil layers by roots (or added)
        waterflux_inst%qflx_rootsoi_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(1:nlevsoil)
+
+       ! This is the total amount of water transferred to surface runoff
+       ! (this is generated potentially from supersaturating soils
+       ! (currently this is unnecessary)
+       ! waterflux_inst%qflx_drain_vr_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_ro_sisl(1:nlevsoil)
+       
+
     end do
     
  end subroutine ComputeRootSoilFlux
@@ -2239,9 +2298,9 @@ contains
    integer :: s
    integer :: c 
    integer :: j
-   integer :: f   ! loop index for the patch filter
    integer :: ifp
    integer :: p
+   integer :: f
    integer :: nlevsoil 
    real(r8) :: dtime
 
@@ -2276,28 +2335,23 @@ contains
             soilstate_inst%eff_porosity_col(c,1:nlevsoil)
 
       do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno 
-          p = ifp+col%patchi(c)
-          ! fsa_patch was filled on the nourban_pa filter, which should cover
-          ! all fates patches.
-          ! These are not currently used anyway (RGK 07/30/19)
-          this%fates(nc)%bc_in(s)%swrad_net_pa(ifp) = solarabs_inst%fsa_patch(p)
-          this%fates(nc)%bc_in(s)%lwrad_net_pa(ifp) = energyflux_inst%eflx_lwrad_net_patch(p)
+         p = ifp+col%patchi(c)
+         this%fates(nc)%bc_in(s)%swrad_net_pa(ifp) = solarabs_inst%fsa_patch(p)
+         this%fates(nc)%bc_in(s)%lwrad_net_pa(ifp) = energyflux_inst%eflx_lwrad_net_patch(p)
       end do
+   end do
 
-  end do
-
-
-  ! The exposed vegetation filter "filterp" dictates which patches
-  ! had their transpiration updated during canopy_fluxes(). Patches
-  ! not in the filter had been zero'd during prep_canopyfluxes().
-  
-  do f = 1,fn
+   ! The exposed vegetation filter "filterp" dictates which patches
+   ! had their transpiration updated during canopy_fluxes(). Patches
+   ! not in the filter had been zero'd during prep_canopyfluxes().
+   
+   do f = 1,fn
       p = filterp(f)
       c = patch%column(p)
       s = this%f2hmap(nc)%hsites(c)
       ifp = p - col%patchi(c)
       this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterflux_inst%qflx_tran_veg_patch(p)
-  end do
+   end do
 
    ! Call Fates Hydraulics
    ! ------------------------------------------------------------------------------------
@@ -2324,6 +2378,7 @@ contains
    call this%fates_hist%update_history_hydraulics(nc, &
          this%fates(nc)%nsites, &
          this%fates(nc)%sites, &
+         this%fates(nc)%bc_in, & 
          dtime)
 
 
@@ -2335,7 +2390,7 @@ contains
  subroutine hlm_bounds_to_fates_bounds(hlm, fates)
 
    use FatesIODimensionsMod, only : fates_bounds_type
-   use FatesInterfaceMod, only : nlevsclass, nlevage
+   use FatesInterfaceMod, only : nlevsclass, nlevage, nlevcoage
    use FatesInterfaceMod, only : nlevheight
    use EDtypesMod,        only : nfsc
    use FatesLitterMod,    only : ncwd
@@ -2365,6 +2420,12 @@ contains
    
    fates%size_class_begin = 1
    fates%size_class_end = nlevsclass
+
+   fates%coagepf_class_begin = 1
+   fates%coagepf_class_end = nlevcoage * numpft_fates
+
+   fates%coage_class_begin = 1
+   fates%coage_class_end = nlevcoage
 
    fates%pft_class_begin = 1
    fates%pft_class_end = numpft_fates
@@ -2413,62 +2474,5 @@ contains
 
    
  end subroutine hlm_bounds_to_fates_bounds
-
- ! ======================================================================================
-
- subroutine GetAndSetTime()
-
-   ! CLM MODULES
-   use clm_time_manager  , only : get_days_per_year, &
-                                  get_curr_date,     &
-                                  get_ref_date,      &
-                                  timemgr_datediff
-
-   ! FATES MODULES
-   use FatesInterfaceMod     , only : SetFatesTime
-
-   ! LOCAL VARIABLES
-   integer  :: yr                       ! year (0, ...)
-   integer  :: mon                      ! month (1, ..., 12)
-   integer  :: day                      ! day of month (1, ..., 31)
-   integer  :: sec                      ! seconds of the day
-   integer  :: current_year             
-   integer  :: current_month
-   integer  :: current_day
-   integer  :: current_tod
-   integer  :: current_date
-   integer  :: jan01_curr_year
-   integer  :: reference_date
-   integer  :: days_per_year
-   real(r8) :: model_day
-   real(r8) :: day_of_year
-
-   
-   ! Get the current date and determine the set the start of the current year
-   call get_curr_date(current_year,current_month,current_day,current_tod)
-   current_date = current_year*10000 + current_month*100 + current_day
-   jan01_curr_year = current_year*10000 + 100 + 1
-
-   ! Get the reference date components and compute the date
-   call get_ref_date(yr, mon, day, sec)
-   reference_date = yr*10000 + mon*100 + day
-
-   ! Get the defined number of days per year 
-   days_per_year = get_days_per_year()
-
-   ! Determine the model day
-   call timemgr_datediff(reference_date, sec, current_date, current_tod, model_day)
-
-   ! Determine the current DOY
-   call timemgr_datediff(jan01_curr_year,0,current_date,sec,day_of_year)
-   
-   ! Set the FATES global time variables
-   call SetFatesTime(current_year, current_month, &
-                     current_day, current_tod, &
-                     current_date, reference_date, &
-                     model_day, floor(day_of_year), &
-                     days_per_year, 1.0_r8/dble(days_per_year))
-
- end subroutine GetAndSetTime
 
 end module CLMFatesInterfaceMod

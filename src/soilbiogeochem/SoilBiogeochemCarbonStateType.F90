@@ -25,6 +25,7 @@ module SoilBiogeochemCarbonStateType
      
      ! all c pools involved in decomposition
      real(r8), pointer :: decomp_cpools_vr_col (:,:,:) ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
+     real(r8), pointer :: decomp_soilc_vr_col  (:,:)   ! (gC/m3) vertically-resolved decomposing total soil c pool
      real(r8), pointer :: ctrunc_vr_col        (:,:)   ! (gC/m3) vertically-resolved column-level sink for C truncation
 
      ! summary (diagnostic) state variables, not involved in mass balance
@@ -102,6 +103,8 @@ contains
 
     allocate(this%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))  
     this%decomp_cpools_vr_col(:,:,:)= nan
+    allocate(this%decomp_soilc_vr_col(begc:endc,1:nlevdecomp_full))  
+    this%decomp_soilc_vr_col(:,:)= nan
 
     allocate(this%ctrunc_col     (begc :endc)) ; this%ctrunc_col     (:) = nan
     if ( .not. use_fates ) then
@@ -144,6 +147,13 @@ contains
     !-------------------------------
 
     if (carbon_type == 'c12') then
+
+       if ( nlevdecomp_full > 1 ) then
+          this%decomp_soilc_vr_col(begc:endc,:) = spval
+          call hist_addfld2d (fname='SOILC_vr', units='gC/m^3',  type2d='levsoi', &
+               avgflag='A', long_name='SOIL C (vertically resolved)', &
+               ptr_col=this%decomp_soilc_vr_col)
+       end if
 
        this%decomp_cpools_col(begc:endc,:) = spval
        do l  = 1, ndecomp_pools
@@ -217,6 +227,13 @@ contains
 
     if ( carbon_type == 'c13' ) then
 
+       if ( nlevdecomp_full > 1 ) then
+          this%decomp_soilc_vr_col(begc:endc,:) = spval
+          call hist_addfld2d (fname='C13_SOILC_vr', units='gC13/m^3',  type2d='levsoi', &
+               avgflag='A', long_name='C13 SOIL C (vertically resolved)', &
+               ptr_col=this%decomp_soilc_vr_col, default='inactive')
+       end if
+
        this%decomp_cpools_vr_col(begc:endc,:,:) = spval
        do l = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
@@ -233,7 +250,7 @@ contains
           longname =  'C13 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C'
           call hist_addfld1d (fname=fieldname, units='gC13/m^2', &
                avgflag='A', long_name=longname, &
-               ptr_col=data1dptr)
+               ptr_col=data1dptr, default='inactive')
        end do
 
        this%totlitc_col(begc:endc) = spval
@@ -250,14 +267,14 @@ contains
           this%totlitc_1m_col(begc:endc) = spval
           call hist_addfld1d (fname='C13_TOTLITC_1m', units='gC13/m^2', &
                avgflag='A', long_name='C13 total litter carbon to 1 meter', &
-               ptr_col=this%totlitc_1m_col)
+               ptr_col=this%totlitc_1m_col, default='inactive')
        end if
 
        if ( nlevdecomp_full > 1 ) then
           this%totsomc_1m_col(begc:endc) = spval
           call hist_addfld1d (fname='C13_TOTSOMC_1m', units='gC13/m^2', &
                avgflag='A', long_name='C13 total soil organic matter carbon to 1 meter', &
-               ptr_col=this%totsomc_1m_col)
+               ptr_col=this%totsomc_1m_col, default='inactive')
        endif
 
        this%ctrunc_col(begc:endc) = spval
@@ -279,6 +296,13 @@ contains
 
     if ( carbon_type == 'c14' ) then
 
+       if ( nlevdecomp_full > 1 ) then
+          this%decomp_soilc_vr_col(begc:endc,:) = spval
+          call hist_addfld2d (fname='C14_SOILC_vr', units='gC14/m^3',  type2d='levsoi', &
+               avgflag='A', long_name='C14 SOIL C (vertically resolved)', &
+               ptr_col=this%decomp_soilc_vr_col)
+       end if
+
        this%decomp_cpools_vr_col(begc:endc,:,:) = spval
        do l = 1, ndecomp_pools
           if ( nlevdecomp_full > 1 ) then
@@ -293,7 +317,7 @@ contains
           fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C'
           longname =  'C14 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C'
           call hist_addfld1d (fname=fieldname, units='gC14/m^2', &
-               avgflag='A', long_name=longname, ptr_col=data1dptr)
+               avgflag='A', long_name=longname, ptr_col=data1dptr, default='inactive')
 
           if ( nlevdecomp_full > 1 ) then
              data1dptr => this%decomp_cpools_1m_col(:,l)
@@ -318,12 +342,12 @@ contains
           this%totlitc_1m_col(begc:endc) = spval
           call hist_addfld1d (fname='C14_TOTLITC_1m', units='gC14/m^2', &
                avgflag='A', long_name='C14 total litter carbon to 1 meter', &
-               ptr_col=this%totlitc_1m_col)
+               ptr_col=this%totlitc_1m_col, default='inactive')
 
           this%totsomc_1m_col(begc:endc) = spval
           call hist_addfld1d (fname='C14_TOTSOMC_1m', units='gC14/m^2', &
                avgflag='A', long_name='C14 total soil organic matter carbon to 1 meter', &
-               ptr_col=this%totsomc_1m_col)
+               ptr_col=this%totsomc_1m_col, default='inactive')
        endif
 
        this%ctrunc_col(begc:endc) = spval
@@ -831,6 +855,27 @@ contains
        end do
 
     endif
+
+    ! Add soil carbon pools together to produce vertically-resolved decomposing total soil c pool
+    if ( nlevdecomp_full > 1 ) then
+       do j = 1, nlevdecomp
+          do fc = 1,num_allc
+             c = filter_allc(fc)
+             this%decomp_soilc_vr_col(c,j) = 0._r8
+          end do
+       end do
+       do l = 1, ndecomp_pools
+          if ( decomp_cascade_con%is_soil(l) ) then
+             do j = 1, nlevdecomp
+                do fc = 1,num_allc
+                   c = filter_allc(fc)
+                   this%decomp_soilc_vr_col(c,j) = this%decomp_soilc_vr_col(c,j) + &
+                        this%decomp_cpools_vr_col(c,j,l)
+                end do
+             end do
+          end if
+       end do
+    end if
 
     ! truncation carbon
     do fc = 1,num_allc

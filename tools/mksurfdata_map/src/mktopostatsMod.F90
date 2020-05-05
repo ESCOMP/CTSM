@@ -36,7 +36,7 @@ contains
 ! !IROUTINE: mktopostats
 !
 ! !INTERFACE:
-subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_o)
+subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_o, std_elev)
 !
 ! !DESCRIPTION:
 ! make various topography statistics
@@ -55,6 +55,7 @@ subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_
   character(len=*)  , intent(in) :: mapfname          ! input mapping file name
   character(len=*)  , intent(in) :: datfname          ! input data file name
   integer           , intent(in) :: ndiag             ! unit number for diag out
+  real(r8)          , intent(in) :: std_elev          ! standard deviation of elevation (m) to use when not using input file
   real(r8)          , intent(out):: topo_stddev_o(:)  ! output grid: standard deviation of elevation (m)
   real(r8)          , intent(out):: slope_o(:)        ! output grid: slope (degrees)
 !
@@ -72,6 +73,7 @@ subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_
   real(r8), allocatable :: data_i(:)          ! data on input grid
   integer  :: ncid,varid                      ! input netCDF id's
   integer  :: ier                             ! error status
+  logical  :: bypass_reading                  ! If should bypass reading dataset and just use a global value
   
   real(r8), parameter :: min_valid_topo_stddev = 0._r8
 
@@ -82,68 +84,87 @@ subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_
 !-----------------------------------------------------------------------
 
   write (6,*) 'Attempting to make Topography statistics.....'
+  if ( std_elev >= 0.0_r8 )then
+     bypass_reading = .true.
+     write (6,*) '    By pass the reading and just use global values'
+  else
+     bypass_reading = .false.
+  end if
   call shr_sys_flush(6)
 
   ! -----------------------------------------------------------------
   ! Read domain and mapping information, check for consistency
   ! -----------------------------------------------------------------
 
-  call domain_read(tdomain,datfname)
+  if ( .not. bypass_reading )then
+     call domain_read(tdomain,datfname)
   
-  call gridmap_mapread(tgridmap, mapfname )
-  call gridmap_check( tgridmap, subname )
+     call gridmap_mapread(tgridmap, mapfname )
+     call gridmap_check( tgridmap, subname )
 
-  call domain_checksame( tdomain, ldomain, tgridmap )
+     call domain_checksame( tdomain, ldomain, tgridmap )
 
-  ! -----------------------------------------------------------------
-  ! Open input file, allocate memory for input data
-  ! -----------------------------------------------------------------
+     ! -----------------------------------------------------------------
+     ! Open input file, allocate memory for input data
+     ! -----------------------------------------------------------------
 
-  write(6,*)'Open Topography file: ', trim(datfname)
-  call check_ret(nf_open(datfname, 0, ncid), subname)
+     write(6,*)'Open Topography file: ', trim(datfname)
+     call check_ret(nf_open(datfname, 0, ncid), subname)
 
-  allocate(data_i(tdomain%ns), stat=ier)
-  if (ier/=0) call abort()
+     allocate(data_i(tdomain%ns), stat=ier)
+     if (ier/=0) call abort()
 
-  ! -----------------------------------------------------------------
-  ! Make topography standard deviation
-  ! -----------------------------------------------------------------
+     ! -----------------------------------------------------------------
+     ! Make topography standard deviation
+     ! -----------------------------------------------------------------
 
-  call check_ret(nf_inq_varid (ncid, 'ELEVATION', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areastddev(tgridmap, data_i, topo_stddev_o, nodata=0._r8)
+     call check_ret(nf_inq_varid (ncid, 'ELEVATION', varid), subname)
+     call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
+     call gridmap_areastddev(tgridmap, data_i, topo_stddev_o, nodata=0._r8)
+
+     call output_diagnostics_continuous_outonly(topo_stddev_o, tgridmap, "Topo Std Dev", "m", ndiag)
+  else
+     write (6,*) '    Set std deviation of topography to ', std_elev
+     topo_stddev_o = std_elev
+  end if
 
   ! Check validity of output data
   if (min_bad(topo_stddev_o, min_valid_topo_stddev, 'topo_stddev')) then
      stop
   end if
 
-  call output_diagnostics_continuous_outonly(topo_stddev_o, tgridmap, "Topo Std Dev", "m", ndiag)
 
   ! -----------------------------------------------------------------
   ! Regrid slope
   ! -----------------------------------------------------------------
 
-  call check_ret(nf_inq_varid (ncid, 'SLOPE', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, slope_o, nodata=0._r8)
+  if ( .not. bypass_reading )then
+     call check_ret(nf_inq_varid (ncid, 'SLOPE', varid), subname)
+     call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
+     call gridmap_areaave(tgridmap, data_i, slope_o, nodata=0._r8)
 
+     call output_diagnostics_continuous(data_i, slope_o, tgridmap, "Slope", "degrees", ndiag)
+  else
+     write (6,*) '    Set slope of topography to ', 0.0_r8
+     slope_o = 0.0_r8
+  end if
   ! Check validity of output data
   if (min_bad(slope_o, min_valid_slope, 'slope') .or. &
       max_bad(slope_o, max_valid_slope, 'slope')) then
      stop
   end if
 
-  call output_diagnostics_continuous(data_i, slope_o, tgridmap, "Slope", "degrees", ndiag)
 
   ! -----------------------------------------------------------------
   ! Close files and deallocate dynamic memory
   ! -----------------------------------------------------------------
 
-  call check_ret(nf_close(ncid), subname)
-  call domain_clean(tdomain) 
-  call gridmap_clean(tgridmap)
-  deallocate (data_i)
+  if ( .not. bypass_reading )then
+     call check_ret(nf_close(ncid), subname)
+     call domain_clean(tdomain) 
+     call gridmap_clean(tgridmap)
+     deallocate (data_i)
+  end if
 
   write (6,*) 'Successfully made Topography statistics'
   write (6,*)

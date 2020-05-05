@@ -23,6 +23,7 @@ module TemperatureType
 
      ! Temperatures
      real(r8), pointer :: t_veg_patch              (:)   ! patch vegetation temperature (Kelvin)
+     real(r8), pointer :: t_skin_patch             (:)   ! patch skin temperature (Kelvin)
      real(r8), pointer :: t_veg_day_patch          (:)   ! patch daytime  accumulative vegetation temperature (Kelvinx*nsteps), LUNA specific, from midnight to current step
      real(r8), pointer :: t_veg_night_patch        (:)   ! patch night-time accumulative vegetation temperature (Kelvin*nsteps), LUNA specific, from midnight to current step
      real(r8), pointer :: t_veg10_day_patch        (:)   ! 10 day running mean of patch daytime time vegetation temperature (Kelvin), LUNA specific, but can be reused
@@ -33,6 +34,7 @@ module TemperatureType
      real(r8), pointer :: t_h2osfc_bef_col         (:)   ! col surface water temperature from time-step before
      real(r8), pointer :: t_ssbef_col              (:,:) ! col soil/snow temperature before update (-nlevsno+1:nlevgrnd)
      real(r8), pointer :: t_soisno_col             (:,:) ! col soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
+     real(r8), pointer :: tsl_col                  (:)   ! col temperature of near-surface soil layer (Kelvin)
      real(r8), pointer :: t_soi10cm_col            (:)   ! col soil temperature in top 10cm of soil (Kelvin)
      real(r8), pointer :: t_soi17cm_col            (:)   ! col soil temperature in top 17cm of soil (Kelvin)
      real(r8), pointer :: t_sno_mul_mss_col        (:)   ! col snow temperature multiplied by layer mass, layer sum (K * kg/m2) 
@@ -187,6 +189,7 @@ contains
 
     ! Temperatures
     allocate(this%t_veg_patch              (begp:endp))                      ; this%t_veg_patch              (:)   = nan
+    allocate(this%t_skin_patch             (begp:endp))                      ; this%t_skin_patch             (:)   = nan
     if(use_luna) then
      allocate(this%t_veg_day_patch         (begp:endp))                      ; this%t_veg_day_patch          (:)   = spval
      allocate(this%t_veg_night_patch       (begp:endp))                      ; this%t_veg_night_patch        (:)   = spval
@@ -212,7 +215,9 @@ contains
     allocate(this%dTdz_top_col             (begc:endc))                      ; this%dTdz_top_col             (:)   = nan
     allocate(this%dt_veg_patch             (begp:endp))                      ; this%dt_veg_patch             (:)   = nan
 
+    allocate(this%tsl_col                  (begc:endc))                      ; this%tsl_col                  (:)   = nan
     allocate(this%t_sno_mul_mss_col        (begc:endc))                      ; this%t_sno_mul_mss_col        (:)   = nan
+    allocate(this%tsl_col                  (begc:endc))                      ; this%tsl_col                  (:)   = nan
     allocate(this%t_soi10cm_col            (begc:endc))                      ; this%t_soi10cm_col            (:)   = nan
     allocate(this%t_soi17cm_col            (begc:endc))                      ; this%t_soi17cm_col            (:)   = spval
     allocate(this%dt_grnd_col              (begc:endc))                      ; this%dt_grnd_col              (:)   = nan
@@ -383,6 +388,11 @@ contains
          avgflag='A', long_name='vegetation temperature', &
          ptr_patch=this%t_veg_patch)
 
+    this%t_skin_patch(begp:endp) = spval
+    call hist_addfld1d(fname='TSKIN', units='K',  &
+         avgflag='A', long_name='skin temperature', &
+         ptr_patch=this%t_skin_patch, c2l_scale_type='urbans')
+
     this%t_grnd_col(begc:endc) = spval
     call hist_addfld1d (fname='TG',  units='K',  &
          avgflag='A', long_name='ground temperature', &
@@ -412,6 +422,10 @@ contains
          avgflag='A', long_name='soil temperature in top 10cm of soil', &
          ptr_col=this%t_soi10cm_col, set_urb=spval)
 
+    this%tsl_col(begc:endc) = spval
+    call hist_addfld1d (fname='TSL',  units='K', &
+         avgflag='A', long_name='temperature of near-surface soil layer (vegetated landunits only)', &
+         ptr_col=this%tsl_col, l2g_scale_type='veg')
     this%t_sno_mul_mss_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOTXMASS',  units='K kg/m2', &
          avgflag='A', long_name='snow temperature times layer mass, layer sum; '// &

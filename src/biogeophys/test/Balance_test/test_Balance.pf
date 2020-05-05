@@ -1,0 +1,107 @@
+module test_balance
+
+   ! Some tests of the balance check system
+
+  use pfunit_mod
+  
+  use shr_kind_mod  , only : r8 => shr_kind_r8
+  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use unittestSubgridMod
+  use ncdio_pio   ! use the fake version of this module
+  use BalanceCheckMod
+  use unittestUtils  , only : endrun_msg
+
+  implicit none
+  save
+
+  @TestCase
+  type, extends(TestCase) :: TestBalance
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestBalance
+
+contains
+
+  subroutine setUp(this)
+    class(TestBalance), intent(inout) :: this
+
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestBalance), intent(inout) :: this
+
+    call unittest_timemgr_teardown()
+    call BalanceCheckClean()
+
+  end subroutine tearDown
+
+  @Test
+  subroutine test_balance_init( this )
+    class(TestBalance), intent(inout) :: this
+    integer :: dtime
+    integer :: nskip
+
+    dtime = 1800
+    call unittest_timemgr_setup(dtime=dtime)
+    call BalanceCheckInit()
+    nskip = GetBalanceCheckSkipSteps()
+    @assertEqual( 2, nskip, message="Ensure standard balance check is 2 time-steps" )
+  end subroutine test_balance_init
+
+  @Test
+  subroutine test_balance_longstep( this )
+    class(TestBalance), intent(inout) :: this
+    integer :: dtime
+    integer :: nskip
+
+    dtime = 7200
+    call unittest_timemgr_setup(dtime=dtime)
+    call BalanceCheckInit()
+    nskip = GetBalanceCheckSkipSteps()
+    @assertEqual( 2, nskip, message="Ensure even with a long time-step skip is 2 time-steps" )
+  end subroutine test_balance_longstep
+
+  @Test
+  subroutine test_balance_300sec( this )
+    class(TestBalance), intent(inout) :: this
+    integer :: dtime
+    integer :: nskip
+
+    dtime = 300
+    call unittest_timemgr_setup(dtime=dtime)
+    call BalanceCheckInit()
+    nskip = GetBalanceCheckSkipSteps()
+    @assertEqual( 12, nskip, message="Check skip length for 300 sec time-step" )
+  end subroutine test_balance_300sec
+
+  @Test
+  subroutine test_balance_Fail( this )
+    class(TestBalance), intent(inout) :: this
+    integer :: dtime
+    integer :: nskip
+    character(len=256) :: expected_msg
+
+    dtime = 1800
+    call unittest_timemgr_setup(dtime=dtime)
+    nskip = GetBalanceCheckSkipSteps()
+    expected_msg = endrun_msg( &
+            "ERROR:: GetBalanceCheckSkipSteps called before BalanceCheckInit" )
+    @assertExceptionRaised(expected_msg)
+    call BalanceCheckInit()
+  end subroutine test_balance_Fail
+
+  @Test
+  subroutine test_balance_shortstep( this )
+    class(TestBalance), intent(inout) :: this
+    integer :: dtime
+    integer :: nskip
+
+    dtime = 36
+    call unittest_timemgr_setup(dtime=dtime)
+    call BalanceCheckInit()
+    nskip = GetBalanceCheckSkipSteps()
+    @assertEqual( 100, nskip, message="Ensure with a short step correct number of skip steps is done" )
+  end subroutine test_balance_shortstep
+
+end module test_balance

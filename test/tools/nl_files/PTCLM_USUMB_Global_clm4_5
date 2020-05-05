@@ -1,1 +1,1 @@
--s US-UMB -d CSMDATA --mydatadir . --map_gdate 171024 --donot_use_tower_yrs --clmnmlusecase 20thC_transient  --pftgrid --soilgrid
+-s US-UMB -d CSMDATA --mydatadir . --map_gdate 171024 --donot_use_tower_yrs --clmnmlusecase 20thC_transient  --pftgrid --soilgrid --ctsm_root CTSM_ROOT --cime_root CIME_ROOT

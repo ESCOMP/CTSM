@@ -1,0 +1,7 @@
+This usermods directory provides a common base on which other usermods
+can build for changing the out-of-the-box output to something useful
+when you want to include high-frequency output (daily and more
+frequent).
+
+This should not be used directly. Instead, use one of the other usermods
+directories that builds on this.

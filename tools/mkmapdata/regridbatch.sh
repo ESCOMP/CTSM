@@ -4,25 +4,9 @@
 # Batch script to submit to create mapping files for all standard
 # resolutions.  If you provide a single resolution via "$RES", only
 # that resolution will be used. In that case: If it is a regional or
-# single point resolution, you should set 'BSUB -n' to 1, and be sure
+# single point resolution, you should set '#PBS -n' to 1, and be sure
 # that '-t regional' is specified in cmdargs.
 #
-# Currently only setup to run on yellowstone/caldera/geyser. Note that
-# geyser is needed for very high resolution files (e.g., 1 km) because
-# of its large memory per node, so that is set as the default.
-# However, for coarser resolutions, you may get better performance on
-# caldera or yellowstone.
-# 
-# yellowstone specific batch commands:
-#BSUB -P P93300606
-#BSUB -n 8
-#BSUB -R "span[ptile=8]" 
-#BSUB -o regrid.%J.out   # ouput filename
-#BSUB -e regrid.%J.err   # error filename
-#BSUB -J regrid          # job name
-#BSUB -W 24:00
-#BSUB -q geyser          # queue
-
 # cheyenne specific batch commands:
 #PBS -A P93300606
 #PBS -N regrid
@@ -45,8 +29,29 @@
 if [ -z "$RES" ]; then
    echo "Run for all valid resolutions"
    resols=`../../bld/queryDefaultNamelist.pl -res list -silent`
+   if [ ! -z "$GRIDFILE" ]; then
+      echo "When GRIDFILE set RES also needs to be set for a single resolution"
+      exit 1
+   fi
 else
    resols="$RES"
+fi
+if [ -z "$GRIDFILE" ]; then
+  grid=""
+else
+   if [[ ${#resols[@]} > 1 ]]; then
+      echo "When GRIDFILE is specificed only one resolution can also be given (# resolutions ${#resols[@]})"
+      echo "Resolutions input is: $resols"
+      exit 1
+   fi
+   grid="-f $GRIDFILE"
+fi
+
+if [ -z "$MKMAPDATA_OPTIONS" ]; then
+   echo "Run with standard options"
+   options=" "
+else
+   options="$MKMAPDATA_OPTIONS"
 fi
 echo "Create mapping files for this list of resolutions: $resols"
 
@@ -55,7 +60,7 @@ echo "Create mapping files for this list of resolutions: $resols"
 for res in $resols; do
    echo "Create mapping files for: $res"
 #----------------------------------------------------------------------
-   cmdargs="-r $res"
+   cmdargs="-r $res $grid $options"
 
    # For single-point and regional resolutions, tell mkmapdata that
    # output type is regional
@@ -63,6 +68,10 @@ for res in $resols; do
        res_type="regional"
    else
        res_type="global"
+   fi
+   # Assume if you are providing a gridfile that the grid is regional
+   if [ $grid != "" ];then
+       res_type="regional"
    fi
 
    cmdargs="$cmdargs -t $res_type"

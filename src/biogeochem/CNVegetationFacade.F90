@@ -124,7 +124,8 @@ module CNVegetationFacade
      type(dgvs_type)                :: dgvs_inst
 
      ! Control variables
-     logical, private :: reseed_dead_plants    ! Flag to indicate if should reseed dead plants when starting up the model
+     logical, private :: reseed_dead_plants              ! Flag to indicate if should reseed dead plants when starting up the model
+     logical, private :: dribble_crophrv_xsmrpool_2atm = .False. ! Flag to indicate if should harvest xsmrpool to the atmosphere
 
      ! TODO(wjs, 2016-02-19) Evaluate whether some other variables should be moved in
      ! here. Whether they should be moved in depends on how tightly they are tied in with
@@ -179,13 +180,16 @@ module CNVegetationFacade
      procedure, private :: CNReadNML                    ! Read in the CN general namelist
   end type cn_vegetation_type
 
+  ! !PRIVATE DATA MEMBERS:
+
+  integer, private :: skip_steps    ! Number of steps to skip at startup
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine Init(this, bounds, NLFilename)
+  subroutine Init(this, bounds, NLFilename, nskip_steps)
     !
     ! !DESCRIPTION:
     ! Initialize a CNVeg object.
@@ -199,7 +203,8 @@ contains
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
-    character(len=*) , intent(in)    :: NLFilename ! namelist filename
+    character(len=*) , intent(in)    :: NLFilename  ! namelist filename
+    integer          , intent(in)    :: nskip_steps ! Number of steps to skip at startup
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -213,26 +218,31 @@ contains
     ! Note - always initialize the memory for cnveg_state_inst (used in biogeophys/)
     call this%cnveg_state_inst%Init(bounds)
     
+    skip_steps = nskip_steps
+
     if (use_cn) then
 
        ! Read in the general CN namelist
        call this%CNReadNML( NLFilename )    ! MUST be called first as passes down control information to others
 
-       call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8, NLFilename=NLFilename)
+       call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8, &
+                                             NLFilename=NLFilename,  dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm )
        if (use_c13) then
           call this%c13_cnveg_carbonstate_inst%Init(bounds, carbon_type='c13', ratio=c13ratio, &
-               NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
+               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        if (use_c14) then
           call this%c14_cnveg_carbonstate_inst%Init(bounds, carbon_type='c14', ratio=c14ratio, &
-               NLFilename=NLFilename, c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+               NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
+               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
-       call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12')
+       call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12', dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm )
        if (use_c13) then
-          call this%c13_cnveg_carbonflux_inst%Init(bounds, carbon_type='c13')
+          call this%c13_cnveg_carbonflux_inst%Init(bounds, carbon_type='c13', dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm)
        end if
        if (use_c14) then
-          call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14')
+          call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14', dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm)
        end if
        call this%cnveg_nitrogenstate_inst%Init(bounds,                   &
             this%cnveg_carbonstate_inst%leafc_patch(begp:endp),          &
@@ -289,9 +299,11 @@ contains
     character(len=*), parameter :: nmlname = 'cn_general'   ! MUST match what is in namelist below
     !-----------------------------------------------------------------------
     logical :: reseed_dead_plants
-    namelist /cn_general/ reseed_dead_plants
+    logical :: dribble_crophrv_xsmrpool_2atm
+    namelist /cn_general/ reseed_dead_plants, dribble_crophrv_xsmrpool_2atm
 
-    reseed_dead_plants = this%reseed_dead_plants
+    reseed_dead_plants    = this%reseed_dead_plants
+    dribble_crophrv_xsmrpool_2atm = this%dribble_crophrv_xsmrpool_2atm
 
     if (masterproc) then
        unitn = getavu()
@@ -309,9 +321,11 @@ contains
        call relavu( unitn )
     end if
 
-    call shr_mpi_bcast (reseed_dead_plants      , mpicom)
+    call shr_mpi_bcast (reseed_dead_plants     , mpicom)
+    call shr_mpi_bcast (dribble_crophrv_xsmrpool_2atm  , mpicom)
 
     this%reseed_dead_plants = reseed_dead_plants
+    this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -695,17 +709,24 @@ contains
     if (use_c13) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
             this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, &
-            soilbiogeochem_carbonstate_inst)
+            c13_soilbiogeochem_carbonstate_inst)
     end if
     if (use_c14) then
        call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
             this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, &
-            soilbiogeochem_carbonstate_inst)
+            c14_soilbiogeochem_carbonstate_inst)
     end if
     call NStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
          soilbiogeochem_nitrogenstate_inst)
     call t_stopf('CNUpdateDynPatch')
+
+    ! This call fixes issue #741 by performing precision control on decomp_cpools_vr_col
+    call t_startf('SoilBiogeochemPrecisionControl')
+    call SoilBiogeochemPrecisionControl(num_soilc_with_inactive, filter_soilc_with_inactive,  &
+         soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst,soilbiogeochem_nitrogenstate_inst)
+    call t_stopf('SoilBiogeochemPrecisionControl')
 
     call t_startf('dyn_cnbal_col')
     call dyn_cnbal_col(bounds, clump_index, column_state_updater, &
@@ -854,7 +875,7 @@ contains
          atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
          canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
          this%dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,          &
-         nutrient_competition_method, this%cnfire_method)
+         nutrient_competition_method, this%cnfire_method, this%dribble_crophrv_xsmrpool_2atm)
 
     ! fire carbon emissions 
     call CNFireEmisUpdate(bounds, num_soilp, filter_soilp, &
@@ -985,6 +1006,7 @@ contains
     ! Should only be called if use_cn is true
     !
     ! !USES:
+    use clm_time_manager   , only : get_nstep_since_startup_or_lastDA_restart_or_pause
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type)               , intent(inout) :: this
@@ -995,15 +1017,15 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
-    integer              :: nstep                   ! time step number
+    integer              :: DA_nstep                   ! time step number
 
     character(len=*), parameter :: subname = 'BalanceCheck'
     !-----------------------------------------------------------------------
 
-    nstep = get_nstep()
-    if (nstep < 2 )then
+    DA_nstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
+    if (DA_nstep <= skip_steps )then
        if (masterproc) then
-          write(iulog,*) '--WARNING-- skipping CN balance check for first timestep'
+          write(iulog,*) '--WARNING-- skipping CN balance check for first timesteps after startup or data assimilation'
        end if
     else
 

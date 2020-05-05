@@ -36,10 +36,10 @@ module LunaMod
   ! PRIVATE MEMBER FUNCTIONS:
   public  :: LunaReadNML                                   !subroutine to read in the Luna namelist
   public  :: Update_Photosynthesis_Capacity                !subroutine to update the canopy nitrogen profile
-  public  :: NitrogenAllocation                            !subroutine to update the Vcmax25 and Jmax25 at the leaf level
   public  :: Acc24_Climate_LUNA                            !subroutine to accumulate 24 hr climates
   public  :: Acc240_Climate_LUNA                           !subroutine to accumulate 10 day climates
   public  :: Clear24_Climate_LUNA                          !subroutine to clear 24 hr climates
+  private :: NitrogenAllocation                            !subroutine to update the Vcmax25 and Jmax25 at the leaf level
   private :: NUEref                                        !Calculate the Nitrogen use effieciency based on reference CO2 and leaf temperature
   private :: NUE                                           !Calculate the Nitrogen use effieciency based on current CO2 and leaf temperature
   private :: JmxTLeuning                                   !Calculate the temperature response for Jmax, based on Leunning 2002 Plant, Cell & Environment
@@ -367,7 +367,7 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp,  PNstoreold, PNlcold, PNetold, PNrespold, &
+                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp, PNlcold, PNetold, PNrespold, &
                               PNcbold, PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
@@ -756,7 +756,7 @@ end subroutine Clear24_Climate_LUNA
 !Use the LUNA model to calculate the Nitrogen partioning 
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
      Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp,&
-     PNstoreold, PNlcold, PNetold, PNrespold, PNcbold, &
+     PNlcold, PNetold, PNrespold, PNcbold, &
      PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
   implicit none
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
@@ -775,7 +775,6 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: Jmaxb1                     !coefficient determining the response of electron transport rate to light availability (unitless) 
   real(r8), intent (in) :: Wc2Wjb0                    !the baseline ratio of rubisco-limited rate vs light-limited photosynthetic rate (Wc:Wj)
   real(r8), intent (in) :: relhExp                    !specifies the impact of relative humidity on electron transport rate (unitless)
-  real(r8), intent (in) :: PNstoreold                 !old value of the proportion of nitrogen allocated to storage (unitless)
   real(r8), intent (in) :: PNlcold                    !old value of the proportion of nitrogen allocated to light capture (unitless)
   real(r8), intent (in) :: PNetold                    !old value of the proportion of nitrogen allocated to electron transport (unitless)
   real(r8), intent (in) :: PNrespold                  !old value of the proportion of nitrogen allocated to respiration (unitless)
@@ -848,7 +847,6 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
 
   call NUEref(NUEjref, NUEcref, Kj2Kcref)
   theta_cj = 0.95_r8
-  Nstore = PNstoreold * FNCa                          !proportion of storage nitrogen in functional nitrogen
   Nlc = PNlcold * FNCa                                !proportion of light capturing nitrogen in functional nitrogen
   Net = PNetold * FNCa                                !proportion of light harvesting (electron transport) nitrogen in functional nitrogen
   Nresp = PNrespold * FNCa                            !proportion of respirational nitrogen in functional nitrogen

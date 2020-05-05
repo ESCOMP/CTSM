@@ -1,7 +1,4 @@
 !===============================================================================
-! SVN $Id: shr_sys_mod.F90 28978 2011-06-27 20:37:05Z jedwards $
-! SVN $URL: https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_110803/shr/shr_sys_mod.F90 $
-!===============================================================================
 
 MODULE shr_sys_mod
 

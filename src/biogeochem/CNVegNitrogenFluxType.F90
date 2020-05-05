@@ -178,7 +178,6 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: ndeploy_patch                             (:)     ! patch total N deployed to growth and storage (gN/m2/s)
      real(r8), pointer :: wood_harvestn_patch                       (:)     ! patch total N losses to wood product pools (gN/m2/s)
      real(r8), pointer :: wood_harvestn_col                         (:)     ! col total N losses to wood product pools (gN/m2/s) (p2c)
-
      ! phenology: litterfall and crop fluxes
      real(r8), pointer :: phenology_n_to_litr_met_n_col             (:,:)   ! col N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)
      real(r8), pointer :: phenology_n_to_litr_cel_n_col             (:,:)   ! col N fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gN/m3/s)
@@ -951,7 +950,7 @@ contains
             ptr_patch=this%fert_patch)
     end if
 
-    if (use_crop) then
+    if (use_crop .and. .not. use_fun) then
        this%soyfixn_patch(begp:endp) = spval
        call hist_addfld1d (fname='SOYFIXN', units='gN/m^2/s', &
             avgflag='A', long_name='soybean fixation', &
@@ -1267,42 +1266,42 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%fert_counter_patch(p)  = 0._r8
        end if
-       if ( use_fun ) then
+       if ( use_fun ) then      !previously set to spval for special land units
           if (lun%ifspecial(l)) then
-             this%plant_ndemand_patch(p)        = spval
-             this%avail_retransn_patch(p)       = spval
-             this%plant_nalloc_patch(p)         = spval
-             this%Npassive_patch(p)             = spval
-             this%Nactive_patch(p)              = spval
-             this%Nnonmyc_patch(p)              = spval
-             this%Nam_patch(p)                  = spval
-             this%Necm_patch(p)                 = spval
+             this%plant_ndemand_patch(p)        = 0._r8
+             this%avail_retransn_patch(p)       = 0._r8
+             this%plant_nalloc_patch(p)         = 0._r8
+             this%Npassive_patch(p)             = 0._r8
+             this%Nactive_patch(p)              = 0._r8
+             this%Nnonmyc_patch(p)              = 0._r8
+             this%Nam_patch(p)                  = 0._r8
+             this%Necm_patch(p)                 = 0._r8
              if (use_nitrif_denitrif) then
-                this%Nactive_no3_patch(p)       = spval
-                this%Nactive_nh4_patch(p)       = spval
-                this%Nnonmyc_no3_patch(p)       = spval
-                this%Nnonmyc_nh4_patch(p)       = spval
-                this%Nam_no3_patch(p)           = spval
-                this%Nam_nh4_patch(p)           = spval
-                this%Necm_no3_patch(p)          = spval
-                this%Necm_nh4_patch(p)          = spval
+                this%Nactive_no3_patch(p)       = 0._r8
+                this%Nactive_nh4_patch(p)       = 0._r8
+                this%Nnonmyc_no3_patch(p)       = 0._r8
+                this%Nnonmyc_nh4_patch(p)       = 0._r8
+                this%Nam_no3_patch(p)           = 0._r8
+                this%Nam_nh4_patch(p)           = 0._r8
+                this%Necm_no3_patch(p)          = 0._r8
+                this%Necm_nh4_patch(p)          = 0._r8
              end if
-             this%Nfix_patch(p)                      = spval
-             this%Nretrans_patch(p)             = spval
-             this%Nretrans_org_patch(p)         = spval
-             this%Nretrans_season_patch(p)      = spval
-             this%Nretrans_stress_patch(p)      = spval
-             this%Nuptake_patch(p)              = spval
-             this%sminn_to_plant_fun_patch(p)   = spval
-             this%cost_nfix_patch               = spval
-             this%cost_nactive_patch            = spval
-             this%cost_nretrans_patch           = spval          
-             this%nuptake_npp_fraction_patch    = spval
+             this%Nfix_patch(p)                 = 0._r8
+             this%Nretrans_patch(p)             = 0._r8
+             this%Nretrans_org_patch(p)         = 0._r8
+             this%Nretrans_season_patch(p)      = 0._r8
+             this%Nretrans_stress_patch(p)      = 0._r8
+             this%Nuptake_patch(p)              = 0._r8
+             this%sminn_to_plant_fun_patch(p)   = 0._r8
+             this%cost_nfix_patch               = 0._r8
+             this%cost_nactive_patch            = 0._r8
+             this%cost_nretrans_patch           = 0._r8          
+             this%nuptake_npp_fraction_patch    = 0._r8
                              
              do j = 1, nlevdecomp
-                this%sminn_to_plant_fun_vr_patch(p,j)       = spval
-                this%sminn_to_plant_fun_no3_vr_patch(p,j)   = spval
-                this%sminn_to_plant_fun_nh4_vr_patch(p,j)   = spval
+                this%sminn_to_plant_fun_vr_patch(p,j)       = 0._r8
+                this%sminn_to_plant_fun_no3_vr_patch(p,j)   = 0._r8
+                this%sminn_to_plant_fun_nh4_vr_patch(p,j)   = 0._r8
              end do 
           end if
        end if
@@ -1409,108 +1408,132 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%plant_nalloc_patch) 
 
      if ( use_fun ) then
+!       set_missing_vals_to_constant for BACKWARDS_COMPATIBILITY(wrw, 2018-06-28) re. issue #426
+!       special land units previously set to spval, not 0
+!       modifications here should correct this 
         call restartvar(ncid=ncid, flag=flag, varname='Nactive', xtype=ncd_double,       &
              dim1name='pft', &
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nactive_patch) 
+        call set_missing_vals_to_constant(this%Nactive_patch, 0._r8)
 !    
         call restartvar(ncid=ncid, flag=flag, varname='Nnonmyc', xtype=ncd_double,       &
              dim1name='pft', &
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nnonmyc_patch)
+        call set_missing_vals_to_constant(this%Nnonmyc_patch, 0._r8)
  
         call restartvar(ncid=ncid, flag=flag, varname='Nam', xtype=ncd_double,           &
              dim1name='pft', &
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nam_patch)
+        call set_missing_vals_to_constant(this%Nam_patch, 0._r8)
  
         call restartvar(ncid=ncid, flag=flag, varname='Necm', xtype=ncd_double,          &
              dim1name='pft', &
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Necm_patch)
+        call set_missing_vals_to_constant(this%Necm_patch, 0._r8)
  
         if (use_nitrif_denitrif) then
            call restartvar(ncid=ncid, flag=flag, varname='Nactive_no3', xtype=ncd_double,   &
                 dim1name='pft', &
                 long_name='', units='', &
                 interpinic_flag='interp', readvar=readvar, data=this%Nactive_no3_patch)
+           call set_missing_vals_to_constant(this%Nactive_no3_patch, 0._r8)
     
            call restartvar(ncid=ncid, flag=flag, varname='Nactive_nh4', xtype=ncd_double,   &
                 dim1name='pft', &
                 long_name='', units='', &
                 interpinic_flag='interp', readvar=readvar, data=this%Nactive_nh4_patch)   
+           call set_missing_vals_to_constant(this%Nactive_nh4_patch, 0._r8)
  
            call restartvar(ncid=ncid, flag=flag, varname='Nnonmyc_no3', xtype=ncd_double,    &
                 dim1name='pft', &
                 long_name='', units='', &
                 interpinic_flag='interp', readvar=readvar, data=this%Nnonmyc_no3_patch)
+           call set_missing_vals_to_constant(this%Nnonmyc_no3_patch, 0._r8)
  
            call restartvar(ncid=ncid, flag=flag, varname='Nnonmyc_nh4', xtype=ncd_double,    &
                 dim1name='pft', &
                 long_name='', units='', &
                 interpinic_flag='interp', readvar=readvar, data=this%Nnonmyc_nh4_patch)
+           call set_missing_vals_to_constant(this%Nnonmyc_nh4_patch, 0._r8)
  
            call restartvar(ncid=ncid, flag=flag, varname='Nam_no3', xtype=ncd_double,         &
                 dim1name='pft', &
                 long_name='', units='', &
                 interpinic_flag='interp', readvar=readvar, data=this%Nam_no3_patch)
+           call set_missing_vals_to_constant(this%Nam_no3_patch, 0._r8)
  
            call restartvar(ncid=ncid, flag=flag, varname='Nam_nh4', xtype=ncd_double,         &
                 dim1name='pft', &
                 long_name='', units='', &
                 interpinic_flag='interp', readvar=readvar, data=this%Nam_nh4_patch)
+           call set_missing_vals_to_constant(this%Nam_nh4_patch,  0._r8)
  
            call restartvar(ncid=ncid, flag=flag, varname='Necm_no3', xtype=ncd_double,        &
                 dim1name='pft', &
                 long_name='', units='', &
                 interpinic_flag='interp', readvar=readvar, data=this%Necm_no3_patch)
+           call set_missing_vals_to_constant(this%Necm_no3_patch, 0._r8)
  
            call restartvar(ncid=ncid, flag=flag, varname='Necm_nh4', xtype=ncd_double,        &
                 dim1name='pft', &
                 long_name='', units='', &
                 interpinic_flag='interp', readvar=readvar, data=this%Necm_nh4_patch)
+           call set_missing_vals_to_constant(this%Necm_nh4_patch, 0._r8)
         end if
 !
         call restartvar(ncid=ncid, flag=flag, varname='Npassive', xtype=ncd_double,      &
              dim1name='pft', &
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Npassive_patch)
+        call set_missing_vals_to_constant(this%Npassive_patch, 0._r8)
  
         call restartvar(ncid=ncid, flag=flag, varname='Nfix', xtype=ncd_double,          &
              dim1name='pft', &
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nfix_patch)
+        call set_missing_vals_to_constant(this%Nfix_patch, 0._r8)
  
         call restartvar(ncid=ncid, flag=flag, varname='Nretrans', xtype=ncd_double,       &
              dim1name='pft', &
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nretrans_patch)
+        call set_missing_vals_to_constant(this%Nretrans_patch, 0._r8)
  
         call restartvar(ncid=ncid, flag=flag, varname='Nretrans_org', xtype=ncd_double,   &
              dim1name='pft', &
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nretrans_org_patch)
+        call set_missing_vals_to_constant(this%Nretrans_org_patch, 0._r8)
  
         call restartvar(ncid=ncid, flag=flag, varname='Nretrans_season', xtype=ncd_double, &
              dim1name='pft', &
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nretrans_season_patch)
+        call set_missing_vals_to_constant(this%Nretrans_season_patch, 0._r8)
  
         call restartvar(ncid=ncid, flag=flag, varname='Nretrans_stress', xtype=ncd_double, &
              dim1name='pft', &
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nretrans_stress_patch)
+        call set_missing_vals_to_constant(this%Nretrans_stress_patch, 0._r8)
  
         call restartvar(ncid=ncid, flag=flag, varname='Nuptake', xtype=ncd_double,            &
              dim1name='pft', &
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nuptake_patch)
+        call set_missing_vals_to_constant(this%Nuptake_patch, 0._r8)
 
         call restartvar(ncid=ncid, flag=flag, varname='sminn_to_plant_fun', xtype=ncd_double,            &
              dim1name='pft', &
              long_name='Total soil N uptake of FUN', units='gN/m2/s', &
              interpinic_flag='interp', readvar=readvar, data=this%sminn_to_plant_fun_patch)
+        call set_missing_vals_to_constant(this%sminn_to_plant_fun_patch, 0._r8)
      end if
+! End BACKWARDS_COMPATIBILITY(wrw, 2018-06-28) re. issue #426
 
   end subroutine Restart
 

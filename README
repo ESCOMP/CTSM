@@ -1,15 +1,29 @@
-README                                          02/05/2018
+$CTSMROOT/README                                          06/08/2018
 
 Community Land Surface Model (CLM) science version 5.0.0  series -- source code, tools, 
 offline-build and test scripts. This gives you everything you need
 to run CLM with CESM with datm8 to provide CRU NCEP or GSWP3 forcing data in 
 place of a modeled atmosphere.
 
-For lists of current bugs (issues) and current development see the CTSM github page:
+For lists of current bugs (issues) and current development see the CTSM GitHub page:
 
 https://github.com/ESCOMP/ctsm
 
-General directory structure:
+IMPORTANT NOTE ON CESM CHECKOUT VERSUS A CTSM CHECKOUT:
+
+If this is the top level directory from making a clone of CTSM the 
+directory structure is a little bit different than if CTSM is from 
+a clone of the entire CESM. If this is part of CESM this directory
+will be under components/clm alongside other CESM component models.
+For a CTSM checkout this will be the top level directory.
+
+Other documentation will refer to $CTSMROOT and it means the directory
+that this file is at. CIMEROOT is the directory where "cime" is for
+this checkout. For a CESM checkout $CIMEROOT will be the "cime" directory
+beneath the top level directory. For a CTSM checkout $CIMEROOT will
+be $CTSMROOT/cime.
+
+General directory structure ($CTSMROOT):
 
 doc --------------- Documentation of CLM.
 bld --------------- Template, configure and build-namelist scripts for clm.
@@ -19,14 +33,15 @@ tools ------------- CLM Offline tools to prepare input datasets and process outp
 cime_config ------- Configuration files of cime for compsets and CLM settings
 manage_externals -- Script to manage the external source directories
 
-cime/scripts --------------- CPL7 scripts
+Directory structure only for a CTSM checkout:
+
+components -------- Other active sub-components needed for CLM to run (river routing and land-ice models)
+
+cime/scripts --------------- cesm/cime driver scripts
 
 cime/src/drivers/mct/main ----------- CESM top level driver source code.
 cime/src/drivers/mct/shr ------------ CESM top level driver shared code.
 cime/src/components/data_comps/datm - CESM Data model version 8 source code.
-components/cism --------------------- CESM Community land Ice Sheet Model.
-components/mosart ------------------- Model for Scale Adaptive River Transport
-components/rtm ---------------------- CESM River Transport Model.
 cime/src/components/stub_comps/sice - CESM stub sea-ice model source code.
 cime/src/components/stub_comps/socn - CESM stub ocean model source code.
 cime/src/components/stub_comps/sglc - CESM stub glacier model source code.
@@ -35,11 +50,16 @@ cime/src/externals ------------------ CESM external utility codes
                                       (Earth System Model Framework)
                                       (timing -- code timing utility)
                                       (pio -- Parallel Input/Output)
+components/cism --------------------- CESM Community land Ice Sheet Model.
+components/mosart ------------------- Model for Scale Adaptive River Transport
+components/rtm ---------------------- CESM River Transport Model.
 
-Top level documentation:
+Top level documentation ($CTSMROOT):
 
 README ------------------- This file
+README.rst --------------- File that displays under the project in github
 README_EXTERNALS.rst ----- Information on how to work with subversion externals for clm
+CODE_OF_CONDUCT.md ------- Code of Conduct for how to work with each other on the CTSM project
 Copyright ---------------- CESM Copyright file
 doc/UpdateChangeLog.pl ------- Script to add documentation on a tag to the
                            ChangeLog/ChangeSum files
@@ -48,18 +68,17 @@ doc/ChangeSum ---------------- Summary documentation of different CLM versions
 
 Documentation of Namelist Items: (view the following in a web browser)
 
-components/clm/bld/namelist_files/namelist_definition.xml --- Definition of all namelist items
-components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml - Default values for CLM4.5/CLM5.0
+bld/namelist_files/namelist_definition.xml --- Definition of all namelist items
+bld/namelist_files/namelist_defaults_clm4_5.xml - Default values for CLM4.5/CLM5.0
 
 =============================================================================================
-Important files in main directories:
+Important files in main directories (under $CTSMROOT):
 =============================================================================================
 
 Externals.cfg --------------- File for management of the main high level externals
 Externals_CLM.cfg ----------- File for management of the CLM specific externals (i.e. FATES)
 parse_cime.cs.status -------- Script to parse test status files cs.status.* created by create_test
 doc/Quickstart.GUIDE -------- Quick guide to using cpl7 scripts.
-doc/Quickstart.userdatasets - Quick guide to using your own datasets.
 doc/IMPORTANT_NOTES --------- Some important notes about this version of 
                                                  clm, configuration modes and namelist items 
                                                  that are not validated or functional.
@@ -79,7 +98,14 @@ cime_config/buildnml ------------- Build the CLM namelist for CIME
 cime_config/buildlib ------------- Build the CLM library
 cime_config/config_compsets.xml -- Define CLM compsets
 cime_config/config_component.xml - Define CLM XML settings
+cime_config/config_tests.xml ----- Define CLM specific tests 
 cime_config/config_pes.xml ------- Define Processor layouts for various CLM grids and compsets
+cime_config/testdefs ------------- Directory for specification of CLM testing
+cime_config/testdefs/ExpectedTestFails.xml -- List of tests that are expected to fail
+cime_config/usermods_dirs -------- Directories of sets of user-modification subdirs
+                                   (These are directories that add specific user modifications to
+                                    simulations created using "cime/scripts/create_newcase --user-mods-dir".
+                                    Current sub directories are for various CMIP6 configurations)
 
 test/tools/test_driver.sh -- Script for general software testing of 
                              CLM's offline tools.
@@ -95,34 +121,42 @@ tools/ncl_scripts  ------------ Directory of NCL and perl scripts to do various
                                 tasks. Most notably to plot perturbation error growth
                                 testing and to extract regional information from
                                 global datasets for single-point/regional simulations.
+tools/contrib ----------------- Miscellansous useful scripts for pre and post processing
+                                as well as case management of CTSM. These scripts are
+                                contributed by users and may not be as well tested or
+                                supported as other tools.
 
 
 =============================================================================================
 Source code directory structure:
 =============================================================================================
 
-src/biogeochem -- Biogeochemisty
-src/main -------- Main control and high level code
-src/cpl --------- Land model high level MCT and ESMF drivers
-src/biogeophys -- Biogeophysics (Hydrology)
-src/dyn_subgrid - Dynamic land unit change
-src/init_interp - Online interpolation
-scr/fates ------- FATES model and sub-directories 
-                  Functionally Assembled Terrestrial Ecosystem Simulator (FATES)
-                  Experimental Ecosystem Demography model
-src/utils ------- Utility codes
+src/biogeochem ---- Biogeochemisty
+src/main ---------- Main control and high level code
+src/cpl ----------- Land model high level MCT and ESMF drivers
+src/biogeophys ---- Biogeophysics (Hydrology)
+src/dyn_subgrid --- Dynamic land unit change
+src/init_interp --- Online interpolation
+scr/fates --------- FATES model and sub-directories 
+                    Functionally Assembled Terrestrial Ecosystem Simulator (FATES)
+                    Experimental Ecosystem Demography model
+src/utils --------- Utility codes
+src/unit_test_shr - Unit test shared modules for unit testing
+src/unit_test_stubs Unit test stubs that replicate CTSM code simpler
 
-scr_clm40 ------- CLM4.0 source code directory
+src_clm40 --------- CLM4.0 source code directory
 
 =============================================================================================
-    QUICKSTART: using the CPL7 scripts:
+    QUICKSTART: using the CPL7 scripts
 =============================================================================================
 
-         cd cime/scripts
+         cd $CIMEROOT/scripts
          ./create_newcase            # get help on how to run create_newcase
-         ./create_newcase --case testI --res f19_g17_gl4 --compset I2000Clm50BgcCrop --mach cheyenne
-                                     # create new "I" case for cheyenne_intel at 1.9x2.5_gx1v7 res
+         ./create_newcase --case testI --res f19_g17_gl4 --compset I2000Clm50BgcCrop
+                                     # create new "I" case for default machine at 1.9x2.5_gx1v7 
+                                     # with 4km greenland ice sheetres resolution
                                      # "I2000Clm50BgcCrop" case is clm5_0 active, datm8, and inactive ice/ocn
+                                     # With no-evolve ice-sheet, and MOSART for river-routing
          cd testI
          ./case.setup                # create the $CASE.run file
          ./case.build                # build model and create namelists

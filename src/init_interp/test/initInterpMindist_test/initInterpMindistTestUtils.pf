@@ -1,0 +1,136 @@
+module initInterpMindistTestUtils
+
+  ! Utilities to aid the testing of initInterpMindist
+
+  use pfunit_mod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use initInterpMindist, only : subgrid_type, subgrid_special_indices_type
+  use glcBehaviorMod, only: glc_behavior_type
+  use unittestSubgridMod, only : bounds
+  use unittestArrayMod, only: grc_array
+
+  implicit none
+  private
+
+  public :: create_subgrid_info
+  public :: create_glc_behavior
+
+  type(subgrid_special_indices_type), parameter, public :: subgrid_special_indices = &
+       subgrid_special_indices_type( &
+       ipft_not_vegetated = 0, &
+       icol_vegetated_or_bare_soil = 10, &
+       ilun_vegetated_or_bare_soil = 3, &
+       ilun_crop = 4, &
+       ilun_landice_multiple_elevation_classes = 5)
+
+  ! value we can use for a special landunit; note that this just needs to differ from
+  ! ilun_vegetated_or_bare_soil and from ilun_crop
+  integer, parameter, public :: ilun_special = 6
+
+contains
+
+  !-----------------------------------------------------------------------
+  function create_subgrid_info(npts, name, lat, lon, &
+       beg, ptype, ctype, ltype, topoglc) &
+       result(subgrid_info)
+    !
+    ! !ARGUMENTS:
+    type(subgrid_type) :: subgrid_info  ! function result
+    integer, intent(in) :: npts
+    character(len=*), intent(in) :: name
+    real(r8), intent(in) :: lat(:)
+    real(r8), intent(in) :: lon(:)
+    integer, intent(in), optional :: beg  ! beginning index; if not provided, assumed to be 1 (should be provided for output, not needed for input)
+    integer, intent(in), optional :: ptype(:)
+    integer, intent(in), optional :: ctype(:)
+    integer, intent(in), optional :: ltype(:)
+    real(r8), intent(in), optional :: topoglc(:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: l_beg  ! local version of beg
+    integer :: l_end  ! ending index
+
+    character(len=*), parameter :: subname = 'create_subgrid_info'
+    !-----------------------------------------------------------------------
+
+    if (present(beg)) then
+       l_beg = beg
+    else
+       l_beg = 1
+    end if
+    l_end = l_beg + npts - 1
+
+    ! Check array lengths
+    @assertEqual(npts, size(lat))
+    @assertEqual(npts, size(lon))
+    if (present(ptype)) then
+       @assertEqual(npts, size(ptype))
+    end if
+    if (present(ctype)) then
+       @assertEqual(npts, size(ctype))
+    end if
+    if (present(ltype)) then
+       @assertEqual(npts, size(ltype))
+    end if
+    if (present(topoglc)) then
+       @assertEqual(npts, size(topoglc))
+    end if
+
+    ! Set subgrid_info components
+
+    subgrid_info%name = name
+
+    allocate(subgrid_info%lat(l_beg:l_end))
+    subgrid_info%lat = lat
+    allocate(subgrid_info%lon(l_beg:l_end))
+    subgrid_info%lon = lon
+    allocate(subgrid_info%coslat(l_beg:l_end))
+    subgrid_info%coslat = cos(subgrid_info%lat)
+
+    if (present(ptype)) then
+       allocate(subgrid_info%ptype(l_beg:l_end))
+       subgrid_info%ptype = ptype
+    end if
+    if (present(ctype)) then
+       allocate(subgrid_info%ctype(l_beg:l_end))
+       subgrid_info%ctype = ctype
+    end if
+    if (present(ltype)) then
+       allocate(subgrid_info%ltype(l_beg:l_end))
+       subgrid_info%ltype = ltype
+    end if
+    if (present(topoglc)) then
+       allocate(subgrid_info%topoglc(l_beg:l_end))
+       subgrid_info%topoglc = topoglc
+    end if
+
+  end function create_subgrid_info
+
+  !-----------------------------------------------------------------------
+  function create_glc_behavior(collapse_to_atm_topo) result(glc_behavior)
+    !
+    ! !DESCRIPTION:
+    ! Creates a glc_behavior instance with the given collapse_to_atm_topo behavior set
+    ! for all grid cells.
+    !
+    ! Must be called *after* setting up the subgrid structure.
+    !
+    ! Note that collapse_to_atm_topo is the only aspect of glc_behavior that is relevant
+    ! for the unit tests in this module.
+    !
+    ! !ARGUMENTS:
+    type(glc_behavior_type) :: glc_behavior  ! function result
+    logical, intent(in) :: collapse_to_atm_topo
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'create_glc_behavior'
+    !-----------------------------------------------------------------------
+
+    call glc_behavior%InitSetDirectly(bounds%begg, bounds%endg, &
+         has_virtual_columns = grc_array(.false.), &
+         collapse_to_atm_topo = grc_array(collapse_to_atm_topo))
+
+  end function create_glc_behavior
+
+end module initInterpMindistTestUtils

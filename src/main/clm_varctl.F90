@@ -189,6 +189,14 @@ module clm_varctl
   logical, public :: use_c13 = .false.                  ! true => use C-13 model
   logical, public :: use_c14 = .false.                  ! true => use C-14 model
 
+  ! BUG(wjs, 2018-10-25, ESCOMP/ctsm#67) There is a bug that causes incorrect values for C
+  ! isotopes if running init_interp from a case without C isotopes to a case with C
+  ! isotopes (https://github.com/ESCOMP/ctsm/issues/67). Normally, an error-check prevents
+  ! you from doing this interpolation (until we have fixed that bug). However, we
+  ! sometimes want to bypass this error-check in system tests. This namelist flag bypasses
+  ! this error-check.
+  logical, public :: for_testing_allow_interp_non_ciso_to_ciso = .false.
+
   !----------------------------------------------------------
   !  FATES switches
   !----------------------------------------------------------
@@ -202,6 +210,7 @@ module clm_varctl
   logical, public            :: use_fates_spitfire = .false.           ! true => use spitfire model
   logical, public            :: use_fates_logging = .false.            ! true => turn on logging module
   logical, public            :: use_fates_planthydro = .false.         ! true => turn on fates hydro
+  logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking
   logical, public            :: use_fates_ed_st3   = .false.           ! true => static stand structure
   logical, public            :: use_fates_ed_prescribed_phys = .false. ! true => prescribed physiology
   logical, public            :: use_fates_inventory_init = .false.     ! true => initialize fates from inventory
@@ -233,6 +242,12 @@ module clm_varctl
   integer, public :: CN_partition_opt = 0
   integer, public :: CN_evergreen_phenology_opt = 0
   integer, public :: carbon_resp_opt = 0
+
+  !----------------------------------------------------------
+  ! prescribed soil moisture streams switch 
+  !----------------------------------------------------------
+
+  logical, public :: use_soil_moisture_streams = .false. ! true => use prescribed soil moisture stream
 
   !----------------------------------------------------------
   ! lai streams switch for Sat. Phenology
@@ -311,6 +326,10 @@ module clm_varctl
   ! FATES
   !----------------------------------------------------------
   character(len=fname_len), public :: fates_paramfile  = ' '
+  !----------------------------------------------------------
+  ! SSRE diagnostic
+  !----------------------------------------------------------
+  logical, public :: use_SSRE = .false.   ! flag for SSRE diagnostic
 
   !----------------------------------------------------------
   ! Migration of CPP variables

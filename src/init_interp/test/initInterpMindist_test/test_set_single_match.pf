@@ -1,0 +1,359 @@
+module test_set_single_match
+
+  ! Tests of initInterpMindist: set_single_match
+
+  use pfunit_mod
+  use initInterpMindist
+  use initInterpMindistTestUtils, only : create_subgrid_info, create_glc_behavior
+  use initInterpMindistTestUtils, only : subgrid_special_indices, ilun_special
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSimpleSubgridSetupsMod
+  use unittestSubgridMod
+  use unittestUtils, only : endrun_msg
+  use glcBehaviorMod, only: glc_behavior_type
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestSetSingleMatch
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestSetSingleMatch
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  ! ========================================================================
+  ! Utility routines
+  ! ========================================================================
+
+  subroutine setUp(this)
+    class(TestSetSingleMatch), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestSetSingleMatch), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
+  end subroutine tearDown
+
+  subroutine wrap_set_single_match(subgridi, subgrido, mindist_index, activeo, &
+       glc_behavior)
+    ! Wrap the call to set_single_match
+    !
+    ! If activeo is not provided, it is assumed to be .true. for all points
+    !
+    ! If glc_behavior is not present, it is assumed to have collapse_to_atm_topo false
+    ! for all grid cells.
+
+    ! Arguments:
+    type(subgrid_type), intent(in) :: subgridi
+    type(subgrid_type), intent(in) :: subgrido
+    integer, intent(out) :: mindist_index(:)
+    logical, intent(in), optional :: activeo(:)
+    type(glc_behavior_type), intent(in), optional :: glc_behavior
+
+    ! Local variables:
+    integer :: npts_i, npts_o
+    integer :: bego, endo
+    logical, allocatable :: l_activeo(:)
+    type(glc_behavior_type) :: l_glc_behavior
+
+    !-----------------------------------------------------------------------
+
+    npts_i = size(subgridi%lon)
+    npts_o = size(subgrido%lon)
+    bego = lbound(subgrido%lon, 1)
+    endo = ubound(subgrido%lon, 1)
+
+    @assertEqual(npts_o, size(mindist_index))
+
+    if (present(activeo)) then
+       @assertEqual(npts_o, size(activeo))
+       l_activeo = activeo
+    else
+       allocate(l_activeo(npts_o))
+       l_activeo = .true.
+    end if
+
+    if (present(glc_behavior)) then
+       l_glc_behavior = glc_behavior
+    else
+       l_glc_behavior = create_glc_behavior(collapse_to_atm_topo = .false.)
+    end if
+
+    call set_single_match(begi = 1, endi = npts_i, bego = bego, endo = endo, &
+         activeo = l_activeo, subgridi = subgridi, subgrido = subgrido, &
+         subgrid_special_indices = subgrid_special_indices, &
+         glc_behavior = l_glc_behavior, &
+         glc_elevclasses_same = .true., &
+         mindist_index = mindist_index)
+
+  end subroutine wrap_set_single_match
+
+  ! ========================================================================
+  ! Tests
+  ! ========================================================================
+
+  @Test
+  subroutine singleMatch_findsMatch(this)
+    class(TestSetSingleMatch), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ltype = 8
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: mindist_index(1)
+    integer :: i
+
+    call setup_single_veg_patch(pft_type=1)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begc, &
+         name = 'column', &
+         ctype = [my_ctype], &
+         ltype = [my_ltype], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    ! The target point is point 3. Both before and after the target point there are
+    ! points with (1) same type but different location, and (2) same location but
+    ! different type.
+    subgridi = create_subgrid_info( &
+         npts = 5, &
+         name = 'column', &
+         ctype = [my_ctype-1, my_ctype, my_ctype, my_ctype, my_ctype+1], &
+         ltype = [(my_ltype, i=1,5)], &
+         lat   = [my_lat,     my_lat+1, my_lat,   my_lat-1, my_lat], &
+         lon   = [(my_lon, i=1,5)])
+
+    call wrap_set_single_match(subgridi, subgrido, mindist_index)
+
+    @assertEqual(3, mindist_index(1))
+  end subroutine singleMatch_findsMatch
+
+  @Test
+  subroutine singleMatch_inactive_findsMatch(this)
+    ! Even if the output point is inactive, it still finds a match for this point. (This
+    ! is in contrast to set_mindist).
+    class(TestSetSingleMatch), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ltype = 8
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: mindist_index(1)
+    integer :: i
+
+    call setup_single_veg_patch(pft_type=1)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begc, &
+         name = 'column', &
+         ctype = [my_ctype], &
+         ltype = [my_ltype], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'column', &
+         ctype = [my_ctype-1, my_ctype, my_ctype+1], &
+         ltype = [(my_ltype, i=1,3)], &
+         lat   = [(my_lat, i=1,3)], &
+         lon   = [(my_lon, i=1,3)])
+
+    call wrap_set_single_match(subgridi, subgrido, mindist_index, &
+         activeo = [.false.])
+
+    @assertEqual(2, mindist_index(1))
+  end subroutine singleMatch_inactive_findsMatch
+
+  @Test
+  subroutine noMatches_inactive_returns0(this)
+    ! For an inactive point: it's okay if there are no candidate source points
+    class(TestSetSingleMatch), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ltype = 8
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: mindist_index(1)
+
+    call setup_single_veg_patch(pft_type=1)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begc, &
+         name = 'column', &
+         ctype = [my_ctype], &
+         ltype = [my_ltype], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    subgridi = create_subgrid_info( &
+         npts = 1, &
+         name = 'column', &
+         ctype = [my_ctype+1], &
+         ltype = [my_ltype], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    call wrap_set_single_match(subgridi, subgrido, mindist_index, &
+         activeo = [.false.])
+
+    @assertEqual(0, mindist_index(1))
+  end subroutine noMatches_inactive_returns0
+
+  @Test
+  subroutine twoMatches_aborts(this)
+    ! If there are two matches for the given output point, aborts
+    class(TestSetSingleMatch), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ltype = 8
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: mindist_index(1)
+    integer :: i
+    character(len=:), allocatable :: expected_msg
+
+    call setup_single_veg_patch(pft_type=1)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begc, &
+         name = 'column', &
+         ctype = [my_ctype], &
+         ltype = [my_ltype], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    subgridi = create_subgrid_info( &
+         npts = 2, &
+         name = 'column', &
+         ctype = [(my_ctype, i=1,2)], &
+         ltype = [(my_ltype, i=1,2)], &
+         lat   = [(my_lat, i=1,2)], &
+         lon   = [(my_lon, i=1,2)])
+
+    call wrap_set_single_match(subgridi, subgrido, mindist_index)
+
+    expected_msg = endrun_msg( &
+         'set_single_match ERROR: found multiple input points matching output point')
+    @assertExceptionRaised(expected_msg)
+  end subroutine twoMatches_aborts
+
+  @Test
+  subroutine noMatches_aborts(this)
+    ! For an active point: aborts if there are no candidate source points
+    !
+    ! Note for the future: We could probably relax this requirement if we added code that
+    ! set subgrid areas to zero for any active point in the output for which there are no
+    ! matching input points.
+    class(TestSetSingleMatch), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ctype = 15
+    integer, parameter :: my_ltype = 8
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: mindist_index(1)
+    character(len=:), allocatable :: expected_msg
+
+    call setup_single_veg_patch(pft_type=1)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begc, &
+         name = 'column', &
+         ctype = [my_ctype], &
+         ltype = [my_ltype], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    ! One point differs in lat, one point differs in lon, one point differs in ctype
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'column', &
+         ctype = [my_ctype, my_ctype, my_ctype+1], &
+         ltype = [my_ltype, my_ltype, my_ltype], &
+         lat   = [my_lat+1, my_lat  , my_lat], &
+         lon   = [my_lon  , my_lon+1, my_lon])
+
+    call wrap_set_single_match(subgridi, subgrido, mindist_index)
+
+    expected_msg = endrun_msg( &
+         'set_single_match ERROR: cannot find any input points matching output point')
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine noMatches_aborts
+
+  @Test
+  subroutine noncropToCrop_patchVariable_aborts(this)
+    ! This test provides a contrast with the analogous test of set_mindist,
+    ! noncropToCrop_patchVariable_usesCorrectPft. For set_single_patch, in contrast to
+    ! set_mindist, it is an error if we try to go from a non-crop case to a crop case.
+    ! This is because areas won't add to 1 properly if we try to copy a crop patch from
+    ! the natural veg column onto a crop patch from its own crop column.
+    !
+    ! This test also covers similar use cases, such as going from a crop case to a
+    ! non-crop case.
+    class(TestSetSingleMatch), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ptype = 5
+    integer :: my_ctype
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: mindist_index(1)
+    integer :: i
+    character(len=:), allocatable :: expected_msg
+
+    associate( &
+         icol_natveg => subgrid_special_indices%icol_vegetated_or_bare_soil, &
+         ilun_natveg => subgrid_special_indices%ilun_vegetated_or_bare_soil, &
+         ilun_crop   => subgrid_special_indices%ilun_crop &
+         )
+
+    my_ctype = icol_natveg + 1  ! arbitrary; we just want this to differ from icol_natveg
+
+    call setup_landunit_ncols(ltype=ilun_crop, &
+         ctypes=[my_ctype], &
+         cweights=[1._r8], &
+         ptype=my_ptype)
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         beg = bounds%begp, &
+         name = 'pft', &
+         ptype = [my_ptype], &
+         ctype = [my_ctype], &
+         ltype = [ilun_crop], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    ! Input point #2 has the same ptype, but a different ctype and ltype. Other input
+    ! points differ in ptype. With set_mindist, we would choose #2, but with
+    ! set_single_match we should abort.
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'pft', &
+         ptype = [my_ptype - 1, my_ptype, my_ptype + 1], &
+         ctype = [icol_natveg, icol_natveg, icol_natveg], &
+         ltype = [ilun_natveg, ilun_natveg, ilun_natveg], &
+         lat = [(my_lat, i=1,3)], &
+         lon = [(my_lon, i=1,3)])
+
+    call wrap_set_single_match(subgridi, subgrido, mindist_index)
+
+    expected_msg = endrun_msg( &
+         'set_single_match ERROR: cannot find any input points matching output point')
+    @assertExceptionRaised(expected_msg)
+
+    end associate
+  end subroutine noncropToCrop_patchVariable_aborts
+
+end module test_set_single_match

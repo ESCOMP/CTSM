@@ -14,6 +14,7 @@ list(APPEND clm_sources
   unittestSimpleSubgridSetupsMod.F90
   unittestFilterBuilderMod.F90
   unittestGlcMec.F90
+  unittestUtils.F90
   )
 
 sourcelist_to_parent(clm_sources)

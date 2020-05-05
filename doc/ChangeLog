@@ -1,373 +1,99 @@
 ===============================================================
-Tag name:  clm5.0.dev008
-Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Fri Apr 27 13:28:41 MDT 2018
-One-line Summary: With FUN subtract out soil nitrification flux of plant uptake of soil NH3 and NO3
+Tag name:  ctsm1.0.dev025
+Originator(s): Keith Oleson, Bill Sacks
+Date: Wed Jan 23 10:48:01 MST 2019
+One-line Summary: History fields for vertically-resolved sums of soil C and N, and minor fixes
 
 Purpose of changes
 ------------------
 
-Soil nitrification flux wasn't taken out of plant uptake of either soil NH3 or NO3, with FUN on, and now it is.
+Main change is from Keith Oleson: Add history fields for
+vertically-resolved sums of SOIL1C, SOIL2C, and SOIL3C for C12, C13,
+C14, and similarly for N. New fields are SOILC_vr, C13_SOILC_vr, and
+C14_SOILC_vr, and SOILN_vr. For runs that use the output_bgc usermods,
+including cmip6 runs, we no longer output 'SOIL1C_vr', 'SOIL1N_vr',
+'SOIL2C_vr', 'SOIL2N_vr', 'SOIL3C_vr', 'SOIL3N_vr'; instead we output
+'SOILC_vr', 'SOILN_vr', and similarly for C isotopes.
 
-
-Bugs fixed or introduced
-------------------------
-
-Issues fixed (include CTSM Issue #): 
-  #351 -- FATES external to https
-  #310 -- With FUN on soil nitrification flux is not subtracted out of plant uptake of of soil NH4 or NO3
-
-Notes of particular relevance for users
----------------------------------------
-
-Caveats for users (e.g., need to interpolate initial conditions): None
-
-Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
-
-Changes made to namelist defaults (e.g., changed parameter values): None
-
-Changes to the datasets (e.g., parameter, surface or initial files): None
-
-Substantial timing or memory changes: None
-
-Notes of particular relevance for developers: (including Code reviews and testing)
----------------------------------------------
-
-Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
-
-Changes to tests or testing:
-
-Code reviewed by: wweider, rfischer
-
-Did you follow the steps in .CLMTrunkChecklist: yes
-
-CLM testing: regular
-
- [PASS means all tests PASS and OK means tests PASS other than expected fails.]
-
-  build-namelist tests:
-
-    cheyenne - PASS
-
-  unit-tests (components/clm/src):
-
-    cheyenne - PASS
-
-  regular tests (aux_clm):
-
-    cheyenne_intel ---- OK
-    cheyenne_gnu ------ OK
-    hobart_nag -------- OK
-    hobart_pgi -------- OK
-    hobart_intel ------ OK
-
-CLM tag used for the baseline comparisons:  clm5.0.dev007
-
-
-Answer changes
---------------
-
-Changes answers relative to baseline: Yes!
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations: All CLM50 BGC with FUN on
-    - what platforms/compilers: All
-    - nature of change: climate very nearly the same
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-                    rfisher case -- clm5_nbug_test_case ----- short f45 resolution
-                    oleson case --- clm5_nbug_test_case ----- AD spinup f45 resolution
-                    oleson case --- clm5_nbug_test_casepAD -- Post AD spinup f45 resolution
-
-   URL for LMWG diagnostics output used to validate new climate:
-     http://webext.cgd.ucar.edu/I1850/clm5_nbug_test_casepAD/lnd/clm5_nbug_test_casepAD.281_300-clm5_nbug_control_casepAD.281_300/setsIndex.html
-	
-
-Detailed list of changes
-------------------------
-
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates changed to https form rather than ssh
-
-Pull Requests that document the changes (include PR ids):
-(https://github.com/ESCOMP/ctsm/pull)
-    #344
-
-===============================================================
-===============================================================
-Tag name:  clm5.0.dev007
-Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Tue Apr 24 14:50:19 MDT 2018
-One-line Summary: Bring in a few answer changing things: FATES, cism updates, IC file fix, testing 1850 compset use 1850 orbit
-
-Purpose of changes
-------------------
-
-Important updates in land-ice model (CISM) version used that changes answers. Fix some initial condition problems
-with CLM5.0 cases. Update the FATES version to a new updated science version that hence changes answers.
-Change the default orbit for testing of 1850 cases to use 1850 orbit rather than 1990.
-Make sure to use f45_f45_g37 and not f45_f45 in test lists.
-
+Also minor fixes:
+- Output cpl hist files in SSP test (resolves ESCOMP/ctsm#61)
+- Remove FATES-related commented-out code in OzoneMod (this has been
+  moved to https://github.com/ESCOMP/ctsm/issues/618)
+- Minor tweak to run_sys_tests
 
 Bugs fixed or introduced
 ------------------------
 
 Issues fixed (include CTSM Issue #):
-   #313 -- Issues with initial condition files
+- Resolves ESCOMP/ctsm#61
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
 
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions): None
+Caveats for users (e.g., need to interpolate initial conditions): none
 
-Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
-
-Changes made to namelist defaults (e.g., changed parameter values): None
-
-Changes to the datasets (e.g., parameter, surface or initial files): New IC file for clm5_0_CRUv7
-   CLM5.0 finidat files choosen will be different for both GSWP3.1 and CRUNCEPv7 forcing
-
-Substantial timing or memory changes: No
-
-Notes of particular relevance for developers: (including Code reviews and testing)
----------------------------------------------
-
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-  When the cime version is updated the changes that make the 1850 orbit explicit in testing can be removed
-
-Changes to tests or testing: 1850 tests explicitly set a 1850 orbit, f45_f45 tests changed to include mask (f45_f45_mg37)
-
-Code reviewed by: self
-
-Did you follow the steps in .CLMTrunkChecklist: yes
-
-CLM testing: regular
-
- [PASS means all tests PASS and OK means tests PASS other than expected fails.]
-
-  build-namelist tests:
-
-    cheyenne - PASS
-
-  unit-tests (components/clm/src):
-
-    cheyenne - PASS
-
-  regular tests (aux_clm):
-
-    cheyenne_intel ---- OK
-    cheyenne_gnu ------ OK
-    hobart_nag -------- OK
-    hobart_pgi -------- OK
-    hobart_intel ------ OK
-
-CLM tag used for the baseline comparisons:  clm5.0.dev006
-
-
-Answer changes
---------------
-
-Changes answers relative to baseline: Yes
-
-  Summarize any changes to answers:
-    - what code configurations: All 1850 tests, all FATES, all with CISM, CLM50 initial conditions
-    - what platforms/compilers: All
-    - nature of change: Significant
-
-Detailed list of changes
-------------------------
-
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates, cism
-    FATES to SCI_1.8.1_API_3.0.0
-    cism  to cism2_1_49
-
-Pull Requests that document the changes (include PR ids):
-(https://github.com/ESCOMP/ctsm/pull)
-   #349 -- Update manage externals to manic_v1.1.3
-   #348 -- Update FATES science version to 1.8.1, and bring in some answer changes
-
-===============================================================
-===============================================================
-Tag name:  clm5.0.dev006
-Originator(s):  sacks (Bill Sacks)
-Date: Thu Apr 12 06:16:16 MDT 2018
-One-line Summary: Don't allocate memory for zero-weight natveg patches and urban
-
-Purpose of changes
-------------------
-
-We have previously been allocating memory for all urban columns and all
-natural veg PFTs, everywhere. In some cases this may still be desired,
-but in some cases - and particularly non-transient cases - this is a
-waste of memory and performance without any benefit.
-
-In timing runs of a CONUS test case set up by Mike Barlage, where there
-were 2 PFTs per gridcell (bare plus grass), only allocating memory for
-the non-zero-weight points (i.e., 2 natural pfts per gridcell and
-nothing else) reduced land run time from 56.4 sec to 21.6 sec.
-
-This tag puts in place a more general solution, avoiding allocating
-memory for zero-weight natural PFTs in non-transient runs, and avoiding
-allocating memory for zero-weight urban points unless requested with a
-namelist flag.
-
-For non-transient runs, this change improves performance and decreases
-memory and restart file size substantially: For short timing runs on
-cheyenne_intel at f09_g16 (I haven't looked closely at memory use, but
-it probably is about the same reduction as the restart file size):
-- I1850Clm50Sp
-  - 91% of the runtime (i.e., 9.0% reduction in runtime)
-  - Restart file size is 32% of original (68% reduction)
-- I1850Clm50Bgc
-  - 77% of the runtime (i.e., 23% reduction in runtime)
-  - Restart file size is 33% of original (67% reduction)
-- I1850Clm50BgcCrop
-  - 80% of the runtime (i.e., 20% reduction in runtime)
-  - Restart file size is 37% of original (63% reduction)
-
-(Non-transient cases should also be improved due to the urban change,
-but I haven't investigated the improvement there.)
-
-This tag also fixes some other bugs, as noted below.
-
-NOTE: This change requires running init_interp on any existing initial
-conditions files! In addition, moving forward, init_interp will always
-be needed when going from a non-transient to a transient run (this has
-already been the case when running with crop; now it will also be the
-case when running without crop, too).
-
-Bugs fixed or introduced
-------------------------
-
-Issues fixed (include CTSM Issue #):
-- Fixes #298: Don't allocate memory for zero-weight PFTs and urban
-  columns
-- Fixes #317: c14 bombspike and c13 timeseries code can use the wrong
-  year, with irreproducible behavior
-- Fixes #320: I1850Clm50Sp compset mistakenly uses SGLC
-
-Notes of particular relevance for users
----------------------------------------
-
-Caveats for users (e.g., need to interpolate initial conditions):
-- You will need to run init_interp on any existing initial conditions
-  files
-- Moving forward, init_interp will always be needed when going from a
-  non-transient to a transient run (this has already been the case when
-  running with crop; now it will also be the case when running without
-  crop, too)
-
-Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
-- New namelist variable: run_zero_weight_urban: If TRUE, run all urban
-  landunits everywhere where we have valid urban data. This has two
-  effects: (1) goes back to the previous behavior of allocating memory
-  for urban nearly everywhere; (2) makes all urban columns active, even
-  if they have zero weight. This can be used to evaluate potential urban
-  behavior globally.
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
 
 Changes made to namelist defaults (e.g., changed parameter values):
-- Use init_interp for all out-of-the-box finidat files
+- For runs that use the output_bgc usermods, including cmip6 runs, we no
+  longer output 'SOIL1C_vr', 'SOIL1N_vr', 'SOIL2C_vr', 'SOIL2N_vr',
+  'SOIL3C_vr', 'SOIL3N_vr'; instead we output 'SOILC_vr', 'SOILN_vr',
+  and similarly for C isotopes.
 
-Changes to the datasets (e.g., parameter, surface or initial files):
-- Remove initial conditions for Fates for 1x1 Brazil
+Changes to the datasets (e.g., parameter, surface or initial files): none
 
-Substantial timing or memory changes:
-- Substantial decreases in memory use and improvements in timing: see
-  notes above.
+Substantial timing or memory changes: none
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
 
-Changes to tests or testing:
-- Changed aux_clm Fates tests to use cold start
-- Changed the allActive test to be a transient case so that we allocate and run all PFTs
+Changes to tests or testing: none
 
-Code reviewed by:
-- Quick review by Erik Kluzek
-- Urban change reviewed by Keith Oleson
+Code reviewed by: Bill Sacks; Erik Kluzek reviewed the changes to the SSP test
 
-Did you follow the steps in .CLMTrunkChecklist: yes
 
-CLM testing:
-
- [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+CTSM testing:
 
   build-namelist tests:
-
-    cheyenne - ok
-
-    Tests pass, namelists differ as expected
-
-  unit-tests (components/clm/src):
-
-    cheyenne - pass
-
-  tools-tests (components/clm/test/tools):
 
     cheyenne - not run
 
-  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
 
      cheyenne - not run
 
   regular tests (aux_clm):
 
-    cheyenne_intel ---- ok
-    cheyenne_gnu ------ ok
-    hobart_nag -------- ok
-    hobart_pgi -------- ok
-    hobart_intel ------ ok
+    cheyenne ---- pass
+    hobart ------ pass
 
-    ok means: tests pass, some baseline failures as expected:
-    - DIMSIZEDIFF for vector output
-    - ERI_D_Ld9.f09_g16.I1850Clm50Sp.cheyenne_gnu.clm-default differs
-      due to fix of #320
-    - ERP_D_Ld9.f09_g16.I1850Clm50SpCru.cheyenne_gnu.clm-default differs
-      because this uses init_interp whereas on master we did not use
-      init_interp, and this changes answers for this ERP test due to
-      #330
-    - SMS_D_Ly2.1x1_brazil.IHistClm50BgcQianGs.cheyenne_intel.clm-ciso_bombspike1963
-      differs due to fix of #317
-
-    Note: For changed tests (allActive and Fates tests), I ran the new
-    versions of the tests from clm5.0.dev005 and confirmed that dev006
-    is bit-for-bit with dev005 for these changed tests.
-
-CLM tag used for the baseline comparisons: clm5.0.dev005
+CTSM tag used for the baseline comparisons: ctsm1.0.dev024
 
 
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES, but only in limited situations
+Changes answers relative to baseline: NO
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations: see below
-    - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-
-    Changes answers in the following situations:
-    - Vector output is not directly comparable, because dimension sizes
-      differ
-    - I1850Clm50Sp cases change substantially due to fix of #320
-    - Cases with carbon isotope bombspike change due to fix of #317
-    - In some situations, cases that use init_interp now but did not
-      before can change answers by roundoff due to #330
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -375,70 +101,90 @@ Detailed list of changes
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
 
 Pull Requests that document the changes (include PR ids):
-(https://github.com/ESCOMP/ctsm/pull)
-- #311: Avoid allocating memory for zero-weight natveg patches and urban
+https://github.com/ESCOMP/ctsm/pull/551
 
 ===============================================================
 ===============================================================
-Tag name:  clm5.0.dev005
+Tag name:  ctsm1.0.dev015
 Originator(s):  sacks (Bill Sacks)
-Date: Tue Apr 10 14:15:52 MDT 2018
-One-line Summary: Two fixes for init_interp
+Date: Sun Oct 28 14:29:30 MDT 2018
+One-line Summary: CMIP6 compset modifiers, usermods for typical output, and other output enhancements
 
 Purpose of changes
 ------------------
 
-Two fixes for init_interp:
+(1) Support %BGC-CROP-CMIP6DECK and %BGC-CROP-CMIP6WACCMDECK compset
+    modifiers, so that we can turn on the necessary options
+    (output-related and others) via new CMIP6-specific compsets.
 
-(1) Copy as many snow layers as possible in init_interp
+(2) Turn on carbon isotopes in CMIP6 runs (from Erik Kluzek)
 
-    In most cases, we only need data from the existing snow layers. But in a
-    few cases - in particular, the flx_abs* variables - we need data even
-    from non-existing snow layers in order for interpolation to be
-    bit-for-bit. The change here reworks snow interpolation so that, in
-    addition to copying the existing snow layers, we also copy as many
-    non-existing snow layers as will fit in the destination layer structure.
+(3) Remove setting of CCSM_BGC=CO2A in the cmip6 usermods
 
-    Fixes #326
+(4) Add usermods directories for getting typical extra output that's
+    wanted in many cases: output_crop, output_crop_highfreq, output_bgc,
+    output_bgc_highfreq, output_sp, and output_sp_highfreq. These can be
+    enabled by adding something like '--user-mods-dir output_crop' on
+    the create_newcase line (that short-hand works for an I compset; for
+    F or B compsets, you need to provide the full path to the usermod
+    directory).
 
-(2) For glcmec, match col/patch types in some cases
+(4) Allow holes in the number of history tapes. Holes are cases where,
+    for example, we have h0, h1 and h3 tapes, but no h2 tape (because
+    there are no fields on the h2 tape). (This is needed for (3).)
 
-    If glcmec used the same elevation class definitions in input and output,
-    then match classes as we do for most landunit types, rather than just
-    using topographic heights. (An exception is output cells with the
-    single_at_atm_topo behavior, because their types could change once we
-    enter the run loop.)
+(5) Fix reading and writing of 1-d logical global arrays. This fixes
+    ESCOMP/ctsm#24 for real (rather than just preventing an attempt to
+    read/write 1-d logical arrays, as was done in the previous 'fix').
 
-    Fixes #325
+(6) Add C13_NBP and C14_NBP diagnostic fields (from Keith Oleson)
 
-The new behavior is covered by unit tests. This tag also expands some
-unit testing infrastructure to facilitate the addition of some of these
-unit tests.
+(7) Make a bunch of carbon isotope diagnostic fields inactive by default
 
-I have confirmed that this test passes:
-LII_D_Ld9.f09_g16.I1850Clm50SpCru.hobart_intel.clm-default, when I point
-to an initial conditions file that I generated from the dev 002 tag
-(because I wasn't sure if the current default initial conditions file
-was exactly compatible with the latest master). Before the changes in
-this tag, that test was failing.
+(8) Don't allow interpolation (use_init_interp) from a case without
+    carbon isotopes to a case with carbon isotopes: Due to
+    https://github.com/ESCOMP/ctsm/issues/67, interpolation from a case
+    without carbon isotopes to a case with carbon isotopes yields
+    incorrect initialization values for the carbon isotopes. Now that
+    we're turning carbon isotopes on via some semi-out-of-the-box
+    usermods (for cmip6), it is becoming more important to check to make
+    sure someone doesn't shoot themselves in the foot this way.
+
+(9) Add tests of the new output usermods as well as of the CMIP6 compset
+    modifiers
 
 Bugs fixed or introduced
 ------------------------
 
 Issues fixed (include CTSM Issue #):
-- #326: init_interp can change answers for absorbed radiation in
-  non-existent snow layers
-- #325: init_interp can change answers over the CISM domain
+- Fixes #24 for real (ncd_io_1d_log_glob is broken)
+- Fixes #529 (Organize usermods_dirs to facilitate running cases with
+  the right output)
 
-Known bugs introduced in this tag (include github issue ID):
-- #339: cheyenne_gnu restart test fails exact restart comparison sporadically
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
 
 Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions): none
 
-Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variable, just for testing purposes:
+  for_testing_allow_interp_non_ciso_to_ciso. This bypasses an error
+  check, and should only be used in tests.
 
 Changes made to namelist defaults (e.g., changed parameter values): none
 
@@ -448,16 +194,163 @@ Substantial timing or memory changes: none
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
 
+Changes to tests or testing:
+- Reworked tests of cmip6_deck usermods to use the new
+  %BGC-CROP-CMIP6DECK compset modifier, and changed f09_g16 to f09_g17
+- Added a test of the %BGC-CROP-CMIP6WACCMDECK compset modifier
+- Added tests of output_crop_highfreq, output_bgc_highfreq and
+  output_sp_highfreq usermods directories
+- Note that there are NO tests covering the cmip6_evolving_icesheet
+  usermods: this usermod directory adds very little beyond cmip6_deck,
+  so it didn't seem worth its own test
+
+Code reviewed by: Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+    ERI_D_Ld9.T31_g37.I2000Clm50Sp.cheyenne_intel.clm-SNICARFRC
+    initially failed COMPARE_base_hybrid, COMPARE_base_rest and BASELINE
+    comparisons. I reran it and it passed.
+
+    Manually compared all history files from
+    ERS_Ly3.f10_f10_musgs.I1850Clm50BgcCropCmip6.cheyenne_intel.clm-basic
+    with baseline
+    ERS_Ly3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_intel.clm-cmip6. They
+    were all identical. Also compared all history files from
+    SMS_Ld5_D.f09_g17.I1850Clm50BgcCropCmip6.cheyenne_intel.clm-basic
+    with baseline
+    SMS_Ld5_D.f09_g17.I1850Clm50BgcCrop.cheyenne_intel.clm-cmip6. They
+    were all identical (but note that this basically just compared the
+    cpl.hi file: the test was too short to produce monthly files.)
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev014
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/536 - Allow holes in the number of
+  history tapes and reorganize cmip6 usermods (main PR containing all of
+  these changes)
+- https://github.com/ESCOMP/ctsm/pull/527 - Add carbon_isotope user-mod
+  directory to turn on c13 and c14
+- https://github.com/ESCOMP/ctsm/pull/539 - Support a %CMIP6DECK compset
+  modifier
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev014
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Oct 26 06:20:34 MDT 2018
+One-line Summary: Miscellaneous minor, bit-for-bit bug fixes
+
+Purpose of changes
+------------------
+
+Four miscellaneous minor, bit-for-bit bug fixes:
+
+(1) Py3 pylint check and address cime issue ESMCI/cime#2822 (from Jim
+    Edwards: ESCOMP/ctsm#526)
+
+(2) Change uppercase DEBUG variables to lowercase debug (requested by
+    Jim Edwards to avoid conflicting with the DEBUG CPP token)
+    (Fixes ESCOMP/ctsm#534)
+
+(3) Remove unnecessary line of code in LunaMod.F90 that was causing
+    problems with some compilers due to an uninitialized variable
+    (Fixes ESCOMP/ctsm#322)
+
+(4) Add r8 to 0 constant to fix build issue with XLF compiler (from Jim
+    Edwards: ESCOMP/ctsm#531)
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes ESCOMP/ctsm#322 (ERS_D_Ld5.f19_g16.I2000Clm50BgcCruGs run FAIL (intel))
+- Fixes ESCOMP/ctsm#534 (Rename DEBUG to debug in a few places)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
 Changes to tests or testing: none
 
-Code reviewed by: self
+Code reviewed by: different pieces reviewed by different people
 
-Did you follow the steps in .CLMTrunkChecklist: yes
 
-CLM testing:
+CTSM testing:
 
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
@@ -485,10 +378,758 @@ CLM testing:
     hobart_pgi -------- ok
     hobart_intel ------ ok
 
-    ok means tests pass, baselines fail as expected (baseline failures
-    just for tests that use init_interp)
+    ok means tests and baseline comparisons pass. There were unexpected
+    NLCOMP diffs. From spot-checking a few tests, I see the following:
 
-CLM tag used for the baseline comparisons: clm5.0.dev004
+    
+    (1) On both cheyenne and hobart: Diffs in logfile. This looks like a
+        problem in cime: it says:
+
+        BASE: logfile = 'rof.log.136342.hobart.cgd.ucar.edu
+        COMP: logfile = 'rof.log
+
+    (2) On hobart: Diffs in pio_typename: netcdf vs. pnetcdf (says that
+        new uses pnetcdf): but when I compare files by hand, they look
+        the same in this respect (both baseline and new use netcdf), so
+        maybe this is due to a problem in the timing of when nlcomp is
+        run?
+
+    Since these both look like problems in the comparison script rather
+    than in the tag, I'm letting these go, but will open a cime issue if
+    we see this again.
+
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev013
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/531 (fix build issue with xlf compiler)
+- https://github.com/ESCOMP/ctsm/pull/526 (fix cime issue 2822 and pylint chk)
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev013
+Originator(s):  erik (Erik Kluzek)/slevisconsulting
+Date: Thu Oct 25 18:09:47 MDT 2018
+One-line Summary: Fix the fact that transient Bgc and SP cases had constant crop area in time
+
+Purpose of changes
+------------------
+
+Fix transient non-crop cases that had constant crop area so that crop area will change in time
+(and hence natural veg area will also change corresponding to it).
+
+Also bring in changes to update mksurfdata_map to handle SSP-RCP future scenarios. Right now
+it can handle SSP5-8.5 out of the box. Also add a new test for that.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):  #538
+   #538 -- In transient pft simulations with use_crop=.false., %crop does not advance from 1850 values
+
+Known bugs found since the previous tag (include github issue ID): #545
+   #545 -- Antarctica ice shelves are being treated as wetlands rather than glaciers
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[X] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): A few more namelist checks
+   Added a check to make sure do_transient_pfts was the same as do_transient_crops
+   Don't allow use_fertilizer for non-crop case
+   namelist checks that create_crop_landunit=T except for FATES
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New -ssp_rcp option to mksurfdata.pl
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): New mksrfpft datasets in XML for SSP5-8.5
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in ../CTSMMasterChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Now, do_transient_pfts and do_transient_crops only work in unison, and hence
+   should be simplified to one logical called do_transient_veg
+
+Changes to tests or testing: Add new SSP5-8.5 mksurf test
+
+Code reviewed by: self, slevisconsulting, billsacks
+
+CTSM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (18 of the transient test namelists are different to baseline as expected)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - OK (PTCLM tests fail)
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CTSM tag used for the baseline comparisons:  ctsm1.0.dev012
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm4_5/clm5_0 transient simulations without Crop (either Bgc or SP)
+    - what platforms/compilers: All
+    - nature of change: crop areas increase in time and impact simulations
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: dll/clm50_r267_1deg_GSWP3V1_iso_hist_nocrop_transientfix
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #546, #540
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #546 -- Add in ability for mksurfdata_map to handle ssp_rcp scenarios and specifically SSP5-8.5
+   $540 -- Transient PFT issue
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev012
+Originator(s):  erik (Erik Kluzek)
+Date: Sat Sep 29 11:49:35 MDT 2018
+One-line Summary: Add snow-free fields for snowmip, fix several issues
+
+Purpose of changes
+------------------
+
+Bring in new diagnostic fields added by Justin Perket, Sean Swenson and Mark Flanner
+for Snow-MIP. Most of those are fields that represent "Snow Free" data.
+
+Also bring in fixes for a list of issues. Add handling of the new CO2 which includes
+both latitude-band and global average versions. Add some changes to make it easier
+for input data processing including NOT doing the slow 1km map file creation. Have
+the number of steps that are skipped at startup dependent on the time-step size. Add
+a test for some requirements of WACCMX (time-step and use of ESMF). Calculations of 
+local time are now done in a global subroutine, that can handle negative longitudes.
+Fix how FFIX_TO_SMINN is handled for history output. The namelist logical "calc_human_stress_indices"
+changed from logical to a character string of three values: FAST, NONE, ALL. FAST
+is the default so the less expensive ones are output, NONE turns them all off, and ]
+ALL does all of them including the expensive ones.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #428, #474, #475, #476, #450, #482, #481, #491
+   Fix #428 -- Update getco2_historical.ncl to handle latitude varying CO2
+   Fix #474 -- Add ability to send GRIDFILE to regridbatch.sh script
+   Fix #475 -- Have number of steps to skip balance-check based on time
+   Fix #476 -- Add a test for WACCMX standalone
+   Fix #450 -- Add option to use global average of terrain standard deviation on surfdata files
+       (partial fix with simplest option)
+   Fix #482 -- Add extra field on CO2 streams file for global/time-averaged data
+   Fix #481 -- FFIX_TO_SMINN needs to be output when FUN is on
+   Fix #491 -- Calculations of local noon assume that longitude is 0 to 360 rather than -180 to 180
+
+Known bugs introduced in this tag (include github issue ID): cime#2801
+   cime#2801 -- Problem building with ESMF_LIB
+
+Known bugs found since the previous tag (include github issue ID):  #507, #505
+   #507 -- Albedo's are bad at night with negative longitudes
+   #505 -- CTSM input data-set tools can only work on 0-360 grids, and require monotone increasing longitude
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+  New namelist:
+    use_ssre -- Turn on show free fields needed for SnowMIP
+
+  Changed namelist:
+   calc_human_stress_indices changed from logical to character with options: ALL, FAST, NONE
+
+  New history fields:
+     Mostly added Snow Free (SF) fields
+     ALBDSF
+     ALBISF
+     FSRSF
+     FSRSFND
+     FSRSFNDLN
+     FSRSFNI
+     FSRSFVD
+     FSRSFVDLN
+     FSRSFVI
+     SSRE_FSR
+     SSRE_FSRND
+     SSRE_FSRNDLN
+     SSRE_FSRNI
+     SSRE_FSRVD
+     SSRE_FSRVDLN
+     SSRE_FSRVI
+
+Changes made to namelist defaults (e.g., changed parameter values): 
+   calc_human_stress_indices = 'FAST' is now the default
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   mkghg_bndtvghg -- Update with new CO2 files, both monthly, lat-bands and yearly, global
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   I was able to reduce the duplication in SurfaceAlbedoMod where the original implementation added a cut
+   and paste copy of code. But, there is still a lot of duplication in this file that could be improved, by
+   making smaller functions/subroutines to do sections of code that are essentially repeated many times.
+   There's a bit of an increase in complexity to reduce the duplication, but reducing the duplication was worth it.
+
+Changes to tests or testing:
+   Add a new waccmx_offline test mods and test with it
+   New test expected fail because of cime issue: ERS_D_Ln9_P480x3.f19_g16.I2000Clm50SpGs.cheyenne_intel.clm-waccmx_offline
+   Turn use_ssre on for most tests, off for reducedOutput
+   And set calc_human_stress_indices=NONE for reducedOutput, FAST for most, and ALL for KitchenSink and KSMOut tests
+
+Code reviewed by: self, @olyson, @billsacks
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev011
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): No
+
+Pull Requests that document the changes (include PR ids): #462 #449
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #462 -- Add namelist item to calculate all heat stress indices only if requested; to speed up model
+   #449 -- Bring in snowmip diagnostic fields
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev011
+Originator(s):  sacks (Bill Sacks), mvr (Mathew Rothstein)
+Date: Wed Sep 12 10:50:31 MDT 2018
+One-line Summary: Add water tracer consistency checks, and other water tracer work
+
+Purpose of changes
+------------------
+
+1. Add water tracer consistency checks
+
+2. Add infrastructure for looping over all water tracers - currently
+   just used for the tracer consistency checks
+
+3. Breakout of atm2lnd and lnd2atm water variables, needed for water tracers
+
+4. Add some namelist control over the addition of water tracers
+
+5. Add a system test that exercises the water tracer consistency checks
+
+6. Add a 'ratio' variable for each water tracer
+
+7. Add some unit tests of the new water tracer infrastructure
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Partially addresses #357
+- Resolves #479
+- Resolves #492
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Don't be fooled by the new namelist variable, enable_water_isotopes:
+  This is just a place-holder for now, not implying that water isotopes
+  are actually working.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variables: enable_water_tracer_consistency_checks and
+  enable_water_isotopes. The latter is just a place-holder for now.
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: New test that runs the water tracer consistency check
+   I ran this test on cheyenne_gnu and cheyenne_intel along with the
+   out-of-the-box hobart_nag version
+
+Code reviewed by: Mat Rothstein and I have worked together on many of
+these changes, but not all code has been reviewed by the other.
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - ok (tests pass, clm4_5 and clm5_0 namelists differ from
+    baseline as expected)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev010
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/497
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev009
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Aug 22 20:32:36 MDT 2018
+One-line Summary: Fix initialization of AnnET in InitAccVars
+
+Purpose of changes
+------------------
+
+InitAccVars was mistakenly setting qflx_evap_tot_col rather than
+AnnET. This fix allows us to remove now-redundant cold start and restart
+code for AnnET.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes #480
+- Partially addresses #285
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: basic proposed changes reviewed by Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - pass
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev008
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev008
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Aug 14 10:25:12 MDT 2018
+One-line Summary: Update 1850 ndep file and last year for streams for Historical transient cases
+
+Purpose of changes
+------------------
+
+Bring in changes from release-clm5.0.05. Update to latest Nitrogen Deposition file from simulations with WACCM for 1850.
+Also fix an issue with the last year for historical transient cases.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 461
+   #461 -- increase last year in streams for transient
+
+Known bugs found since the previous tag (include github issue ID): [If none, remove this line]
+  #478 -- Bare soil g1 should be missing value or zero
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): Last year extended for transient datasets
+
+Changes to the datasets (e.g., parameter, surface or initial files): New ndep dataset for 1850
+
+Substantial timing or memory changes:
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: Lengthen some tests
+
+Code reviewed by: self
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (11 show differences for 1850_control and 20thC_transient)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev007
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: 1850_control or 20thC_transient for Clm50
+    - what platforms/compilers: all
+    - nature of change: similar climate
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+    #477 -- Move changes from release-clm5.0.05 onto master
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev007
+Originator(s):  sacks (Bill Sacks)
+Date: Sun Aug  5 21:03:28 MDT 2018
+One-line Summary: Avoid glacier dynamic landunit adjustments in first time step
+
+Purpose of changes
+------------------
+
+Always avoid generating dynamic landunit adjustments for glacier area
+changes in the first timestep of a startup or hybrid run - not just for
+cold start or interpolated start. See the detailed discussion in
+https://github.com/ESCOMP/ctsm/issues/340 for rationale.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes #340 (Avoid generating dynamic landunit adjustment fluxes for
+  glacier changes in the first timestep)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - not run
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- ok
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
+
+    ok means tests pass; baseline failures as expected in these two
+    tests that do not use init_interp:
+
+    FAIL ERI_N2_Ld9.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-default BASELINE ctsm1.0.dev006
+    FAIL SMS_Lm13.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-cropMonthOutput BASELINE ctsm1.0.dev006
+
+    (The glacier area on the finidat file used in these tests -
+    clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c180715.nc
+    - seems to have come from an finidat_interp_dest file, and thus does
+    not match the glacier area from CISM.)
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev006
 
 
 Answer changes
@@ -500,25 +1141,22 @@ Changes answers relative to baseline: YES
   following should be filled in (otherwise remove this section):
 
   Summarize any changes to answers, i.e.,
-    - what code configurations: all configurations with use_init_interp = .true.
+    - what code configurations: Startup / Hybrid runs that include CISM
+     (even NOEVOLVE) and do not use init_interp, due to:
+     - different PE layout in new case vs. the one that generated the
+       finidat (roundoff-level diffs)
+     - different glacier area on finidat file vs. what's in CISM
+       (greater than roundoff-level diffs)
     - what platforms/compilers: all
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-      Not investigated carefully, but expected to be larger than roundoff / same climate
+      Roundoff-level for different PE layout, larger than roundoff but
+      should be same climate when there is different glacier area on the
+      finidat file vs. what's in CISM
 
-      Differences arise due to both fixes listed above.
-
-      (1) Copy as many snow layers as possible in init_interp: It
-          appears that this only changes answers for some radiation
-          terms in the first time step after initialization when a snow
-          layer had just melted before the restart file was written. In
-          this case, the flx_abs* variables are set differently for this
-          just-disappeared layer. This can affect a lot of grid cells,
-          but I expect differences from this change to be very small and
-          not scientifically important.
-
-      (2) For glcmec, match col/patch types in some cases: This seems to
-          only affect a small number of grid cells in Greenland. So I do
-          not expect the overall effect on a simulation to be significant.
+      The differences arise from dynamic landunit adjustments of the
+      below-ground C and N states in the old code, as CTSM adjusts its
+      areas to match CISM's. In the new code, there are no C and N
+      adjustments in the first time step from this adjustment.
 
    If bitwise differences were observed, how did you show they were no worse
    than roundoff? N/A
@@ -536,280 +1174,64 @@ Detailed list of changes
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
 
 Pull Requests that document the changes (include PR ids):
-(https://github.com/ESCOMP/ctsm/pull)
-- #328: fixes for init_interp
+- #470 (Avoid glacier dynamic landunit adjustments in first time step)
 
 ===============================================================
 ===============================================================
-Tag name:  clm5.0.dev004
-Originator(s):  erik (Erik Kluzek)
-Date: Mon Apr  9 00:20:03 MDT 2018
-One-line Summary: List of important bug fixes
-
-Purpose of changes
-------------------
-
-A list of important bug and usability fixes. One of those changes makes it easier for the user to end up with
-initial condition files that don't match the start date of their simulation. This is problematic because of the 
-saved counters for prognostic crop. For sure a mismatched date will end up with bad results for the first season,
-but this will also affect subsequent years running averages. So we don't recommend that you do that.
-
-Jim Edwards also brought in some changes for PIO for 64bit_data, and to fix fill values for integer data. And we updated
-manage_externals to the newest version.
-
-
-Bugs fixed or introduced
-------------------------
-
-Issues fixed (include CTSM Issue #): [If none, remove this line]
-#213 -- usability issue for CPLHIST that Keith found.
-#210 -- Recent request to increase number of tapes to 10.
-#169 -- usability issue for running hybrid or branch cases with crop that keeps biting Mike Mills.
-#68 --- workaround for gnu compiler bug
-#46 --- needed for multi-instance
-#66 --– need to relax tolerance for negative C/N values in order for CLM45 Crop to work
-#65 --– need to change a check from "> 0" to "> [small val]"
-#240 -- from Jim
-#255 -- get PTCLM working
-#253 -- bad clm40 IC file
-
-Known bugs introduced in this tag (include github issue ID):
- #329 -- init_interp doesn't work if finidat points to finidat_interp_dest from a different case
- #326 -- init_interp can change answers for absorbed radiation in non-existent snow layers
- #325 -- init_interp can change answers over the CISM domain
-
-Notes of particular relevance for users
----------------------------------------
-
-Caveats for users (e.g., need to interpolate initial conditions):
-   You can bypass the ignore_ic_date error when crop is being used
-   Matching for initial conditions for crop simulations are allowed to ignore the month/day
-   When crop is on and the start date doesn't match the date for the initial conditions file,
-   the counters for the crop model will be incorrect -- and hence the first season will be screwed
-   up, and the screwed up results will affect the running averages for the future. This was a condition
-   that we didn't allow you to easily do -- we've made it easier for this to happen now.
-
-Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
-   Allow ten streams of history tapes rather than just six.
-   Correct the I1850Clm50BgcSpinup compset
-   You can bypass the ignore_ic_date error when crop is being used (may affect results)
-   Matching for initial conditions for crop simulations are allowed to ignore the month/day
-   The precision control settings for Nitrogen and Carbon are now making it to the namelist
-
-Changes made to namelist defaults (e.g., changed parameter values): ncrit=1.d-8 (10X looser)
-
-Changes to the datasets (e.g., parameter, surface or initial files): Correct to a few finidat files (clm4_0_CRUv7)
-
-Substantial timing or memory changes: Maybe 3% to memory
-
- There is a 3% increase to memory, but memory high water mark seems to double
-
-Notes of particular relevance for developers: (including Code reviews and testing)
----------------------------------------------
-
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
-Changes to tests or testing: 
-   Added aux_cime_baseline tests
-   add cplhist test
-   Add edison to fates testlist
-
-Code reviewed by: self
-
-Did you follow the steps in .CLMTrunkChecklist: yes
-
-CLM testing: regular
-
-
- [PASS means all tests PASS and OK means tests PASS other than expected fails.]
-
-  build-namelist tests:
-
-    cheyenne - PASS
-
-  unit-tests (components/clm/src):
-
-    cheyenne - PASS
-
-  PTCLM testing (components/clm/tools/shared/PTCLM/test):
-
-     cheyenne - PASS
-
-  regular tests (aux_clm):
-
-    cheyenne_intel ---- OK
-    cheyenne_gnu ------ OK
-    hobart_nag -------- OK
-    hobart_pgi -------- OK
-    hobart_intel ------ OK
-
-CLM tag used for the baseline comparisons: clm5.0.dev003
-
-
-Answer changes
---------------
-
-Changes answers relative to baseline: no  but, there are some specific potential or small apparant change to answers
-   in terms of the test suite
-   3 fields have a different missing value pattern: landmask, pftmask, nbedrock
-   roundoff difference in F_N2O_DENIT due to #65
-      LVG_Ld5_D.f10_f10.I1850Clm50Bgc.cheyenne_intel.clm-no_vector_output
-   landmask was different for two cases:
-      ERP_P36x2_Lm25.f10_f10_musgs.I2000Clm50BgcDvCrop.cheyenne_intel.clm-monthly
-      ERP_P72x2_Lm25.f10_f10_musgs.I2000Clm50BgcDvCrop.cheyenne_intel.clm-monthly
-
-Detailed list of changes
-------------------------
-
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): manic
-   manage_externals to manicv1.0.2
-
-Pull Requests that document the changes (include PR ids):
-(https://github.com/ESCOMP/ctsm/pull)
-
-   #337 Update manage_externals to manicv1.0.2
-   #333 Important fixes
-   #241 Add support for 64bit_data, fix fillvalues
-
-===============================================================
-===============================================================
-Tag name:  clm5.0.dev003
-Originator(s):  erik (Erik Kluzek)
-Date: Fri Mar  9 00:34:04 MST 2018
-One-line Summary: Bug fixes for energy imbalance associated with surface water and lakes
-
-Purpose of changes
-------------------
-
-These are bug fixes for the land energy imbalance over land as determined by coupler diagnostics. 
-They include bug fixes for surface water phase change and lake/snow interactions developed by 
-Sean Swenson and Keith Oleson.
-
-Bugs fixed or introduced
-------------------------
-
-Issues fixed (include CTSM Issue #): #304
-    #304 -- Energy imbalance over land per coupler diagnostics
-
-Known bugs introduced in this tag (include github issue ID): [If none, remove this line]
-   #317 -- c14 bombspike and c13 timeseries code can use the wrong year, with irreproducible behavior
-   #313 -- Problems with CLM5 initial conditions files
-   #310 -- With FUN on soil nitrification flux is not subtracted out of plant uptake of of soil NH4 or NO3
-
-
-Notes of particular relevance for users
----------------------------------------
-
-Caveats for users (e.g., need to interpolate initial conditions): None
-
-Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
-
-Changes made to namelist defaults (e.g., changed parameter values): None
-
-Changes to the datasets (e.g., parameter, surface or initial files): None
-
-Substantial timing or memory changes: None
-
-Notes of particular relevance for developers: (including Code reviews and testing)
----------------------------------------------
-
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-  There is some dupliciation in calculations by level that could be consolidated
-  For example, the calculation of c1.
-  There is a check for ffrac_sno(c) > 0, that probably should be greater than a small value
-
-Changes to tests or testing: none
-
-Code reviewed by: self, sacks, swensosc
-
-Did you follow the steps in .CLMTrunkChecklist: yes
-
-CLM testing: regular
-
- [PASS means all tests PASS and OK means tests PASS other than expected fails.]
-
-  build-namelist tests:
-
-    cheyenne - PASS
-
-  unit-tests (components/clm/src):
-
-    cheyenne - PASS
-
-  regular tests (aux_clm):
-
-    cheyenne_intel ---- OK
-    cheyenne_gnu ------ OK
-    hobart_nag -------- OK
-    hobart_pgi -------- OK
-    hobart_intel ------ OK
-
-CLM tag used for the baseline comparisons:  clm5.0.dev002
-
-
-Answer changes
---------------
-
-Changes answers relative to baseline: Yes!
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations: clm4_5 and clm5_0
-    - what platforms/compilers: all
-    - nature of change: climate similar
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: clm50_r272_1deg_GSWP3V1_iso_h2osfclakefix_1850.1443_1461
-       - username: oleson
-       - machine: cheyenne
-
-   URL for LMWG diagnostics output used to validate new climate:
-
-http://webext.cgd.ucar.edu/I1850/clm50_r272_1deg_GSWP3V1_iso_h2osfclakefix_1850/lnd/clm50_r272_1deg_GSWP3V1_iso_h2osfclakefix_1850.1443_1461-clm50_r272_1deg_GSWP3V1_iso_1850.1443_1461/setsIndex.html
-	
-
-Detailed list of changes
-------------------------
-
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
-
-Pull Requests that document the changes (include PR ids):
-(https://github.com/ESCOMP/ctsm/pull)
-
-   #307 -- Bug fixes for energy imbalance associated with surface water and lakes
-
-===============================================================
-===============================================================
-Tag name:  clm5.0.dev002
+Tag name:  ctsm1.0.dev006
 Originator(s):  sacks (Bill Sacks)
-Date:  Sun Feb 25 06:53:36 MST 2018
-One-line Summary: Add some land ice diagnostic vars needed for CMIP6
+Date: Sat Aug  4 07:48:09 MDT 2018
+One-line Summary: Minor bug fixes, cleanup, documentation and enhancements
 
 Purpose of changes
 ------------------
 
-Add some diagnostic variables needed for analyzing land ice that have
-been requested by some of the MIPs in CMIP6 (especially ISMIP).
+A collection of minor bug fixes, code cleanup, documentation and
+enhancements, all bit-for-bit. See list of issues fixed below for
+details.
 
-Also, fixes c2l_scale_type to fix urban scaling for SNOWICE, SNOWLIQ
-
-Some changes from Leo van Kampenhout.
 
 Bugs fixed or introduced
 ------------------------
 
 Issues fixed (include CTSM Issue #):
-- https://github.com/ESCOMP/ctsm/issues/271 Add some land ice fields for cmip6
+- Fixes #24 (ncd_io_1d_log_glob is broken)
+- Fixes #120 (Incorrect comments in Biogeophysics1Mod.F90
+- Fixes #217 (Change some cheyenne_gnu tests to cheyenne_intel)
+- Fixes #245 (Put all .gitignore entries in top-level file)
+- Fixes #272 (Code should error on missing mxsoil_color when SOIL_COLOR
+  is used)
+- Fixes #283 (Add more helpful message about need to do init_interp with
+  wrong number of vertical layers)
+- Fixes #367 (For cmip6 runs: Turn on cpl hist output needed to drive a
+  TG compset)
+- Fixes #412 (Fix documentation of init_interp_method)
+- Fixes #419 (Do not allow SOYFIXN diagnostic field with FUN)
+- Fixes #464 (Some lines longer than 132 characters)
+- Fixes #465 (Remove backwards compatibility check for snw_rds)
+- Fixes #467 (Increase wallclock limit for test)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
 
 Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions): none
 
-Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
 
 Changes made to namelist defaults (e.g., changed parameter values): none
 
@@ -819,16 +1241,21 @@ Substantial timing or memory changes: none
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
 
-Changes to tests or testing: none
+Changes to tests or testing:
+- Changed a single-point test from gnu to intel to get better debugging
+   information
+   (SMS_D_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm45BgcCropQianGs.cheyenne_intel.clm-cropMonthOutput)
+- For some single-point tests on both gnu and intel: removed one
+  compiler, keeping the tests on just one
 
-Code reviewed by: self, Erik Kluzek
+Code reviewed by: self
 
-Did you follow the steps in .CLMTrunkChecklist: yes
 
-CLM testing:
+CTSM testing:
 
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
@@ -850,57 +1277,31 @@ CLM testing:
 
   regular tests (aux_clm):
 
-    cheyenne_intel ---- ok
-    cheyenne_gnu ------ ok
-    hobart_nag -------- ok
-    hobart_pgi -------- ok
-    hobart_intel ------ ok
+    cheyenne_intel ---- pass
+    cheyenne_gnu ------ pass
+    hobart_nag -------- pass
+    hobart_pgi -------- pass
+    hobart_intel ------ pass
 
-    ok means tests pass, answer changes as expected, as noted below
+    NLCOMP failures as expected for tests with the cmip6 test mod
 
-CLM tag used for the baseline comparisons: clm5.0.dev001
+    Some long single-point gnu tests failed due to running out of
+    wallclock time; I have removed these, just keeping them on intel
+    (along with removing a few other tests after I ran the testing - see
+    commit 5c226bdf):
+
+       FAIL ERS_Lm54_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropGs.cheyenne_gnu.clm-cropMonthOutput RUN time=4803
+       FAIL ERS_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropGs.cheyenne_gnu.clm-cropMonthOutput RUN time=6024
+
+
+CTSM tag used for the baseline comparisons: ctsm1.0.dev005
 
 
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES - just in SNOWICE, SNOWLIQ
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations: All
-    - what platforms/compilers: All
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-      - just changes the diagnostic fields SNOWICE, SNOWLIQ, due to
-        fixed c2l_scale_type for these fields
-
-
-      The test
-      ERP_P72x2_Ly3.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-irrig_o3_reduceOutput
-      also showed small answer changes just in the cpl field
-      l2x_Sl_tsrf00, for a single grid cell in Antarctica
-      (221.485144932008 vs. 221.485144910486). However, I reran it 10
-      times, and it was bit-for-bit (other than SNOWICE and SNOWLIQ) in
-      all 10 of those re-runs. So I'm chalking this up to a machine
-      fluke. (The restart file from the problematic run showed diffs in
-      a bunch of fields; from spot-checking one - SNOW_DEPTH - diffs
-      were just in one point. But since this is a reduceOutput run,
-      diffs didn't show up in CLM history files. I confirmed that there
-      were no diffs in finidat_interp_dest or in namelists.) I
-      regenerated baselines for this test using one of the cases without
-      this machine fluke.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-
+Changes answers relative to baseline: NO - bit-for-bit
+	
 
 Detailed list of changes
 ------------------------
@@ -908,42 +1309,170 @@ Detailed list of changes
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
 
 Pull Requests that document the changes (include PR ids):
-(https://github.com/ESCOMP/ctsm/pull)
-
-#303 - Snow integrated temperature
-#306 - Add some land ice diagnostic variables needed for cmip6
+- #392 (Remove old code for snw_rds restart that looks no longer needed)
+- (Other changes not documented in PRs)
 
 ===============================================================
 ===============================================================
-Tag name:  clm5.0.dev001
+Tag name:  ctsm1.0.dev004
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Wed Feb 14 14:14:34 MST 2018
-One-line Summary: Fix LND_TUNING_MODE for fully coupled case, update some README files/PTCLM
+Date: Wed Jul 18 02:10:23 MDT 2018
+One-line Summary: Add some new diagnostic fields, fix a few issues, update cmip6 output
 
 Purpose of changes
 ------------------
 
-Fix problem with default LND_TUNING_MODE for cases coupled to CAM. Update some of the README
-files. And also bring in a PTCLM version that will work in the new CTSM git checkout directory
-structure.
+Add some new diagnostic fields. Some needed for CMIP6. Update the CMIP6 user-mods output.
+Fix a couple issues. Get full list of history tapes working correctly. Check for valid range
+of CO2. New IC file interpolated from the previous one for f19_g17_gl4 for 2000 Clm50BgcCrop.
+
 
 Bugs fixed or introduced
 ------------------------
 
-Issues fixed (include CTSM Issue #): 
-#255 PTCLMmkdata doesn't work in the CLM git checkout
+Issues fixed (include CTSM Issue #): $210, #427, #429
+   #210 -- increase number of history tapes
+   $427 -- Check for zero CO2
+   #429 -- New IC for present day
 
-Known bugs found in this tag (include github issue ID):
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
 
-#262 hirespft option for mksurfdata.pl doesn't work
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
 
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): New history fields
+   TSKIN --- skin temperature
+   TSL ----- temperature of near-surface soil layer
+   GSSUNLN - sunlit leaf stomatal conductance at local noon
+   GSSHALN - shaded leaf stomatal conductance at local noon
+
+Changes made to namelist defaults (e.g., changed parameter values):  None
+
+Changes to the datasets (e.g., parameter, surface or initial files): New finidat file f19_g17_gl4 2000 Clm50BgcCrop 
+    New file is just interpolate from the previous file to a f19_g17_gl4 gridfor Clm50BgcCrop and 2000 simulation year
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CLMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: None
+
+Code reviewed by: self, oleson, abtawfik
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - OK (95 are different because of finidat file change)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- PASS
+    hobart_pgi -------- FAIL
+    hobart_intel ------ PASS
+
+CTSM tag used for the baseline comparisons:  ctsm1.0.dev003
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes -- only 2000 cases because of new IC
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Just 2000 cases
+    - what platforms/compilers: All
+    - nature of change: same climate
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+
+   #338 -- Radtemp and other new diagnostic fields
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev003
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Sun Jul 15 00:26:46 MDT 2018
+One-line Summary: Update cime/cism to work on upgraded hobart and with glade changes on cheyenne
+
+Purpose of changes
+------------------
+
+Update cime and cism so can work on upgraded hobart. Also fix an issue that the Nag6.2 compiler found
+in CTSM. Also get working with glade changes that happened on cheyenne, DIN_LOC_ROOT_CLMFORC was
+changed to a new directory.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): [If none, remove this line]
+   #441 -- Changes in glade invalidate previous softlinks and data locations
+   #438 -- Illegal argument aliasing caught by nag6.2
+   #433 -- with hobart upgrade CTSM not working
+
+Known bugs introduced in this tag (include github issue ID):
+   #444 -- PGI fails on cheyenne and hobart
+
+Known bugs found since the previous tag (include github issue ID):
+   #443 -- Wood C:N ratios
+   #440 -- leafcn_max < target leafcn?
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
 
 Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions): None
 
-Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): DIN_LOC_ROOT_CLMFORC on cheyenne
+   DIN_LOC_ROOT_CLMFORC was change on cheyenne
 
 Changes made to namelist defaults (e.g., changed parameter values): None
 
@@ -953,38 +1482,47 @@ Substantial timing or memory changes: None
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
+NOTE: Be sure to review the steps in .CTSMTrunkChecklist as well as the coding style in the Developers Guide
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
 
-Changes to tests or testing: None
+Changes to tests or testing: path for cheyenne specific test had to be changed
+    Add some gnu tests on hobart
+    Lengthen wallclock on a test
+    Fix path for DA test_mod
 
 Code reviewed by: self
 
-Did you follow the steps in .CLMTrunkChecklist: yes
+CLM testing: regular
 
-CLM testing: doc
-
-PASS means all tests PASS and OK means tests PASS other than expected fails.]
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
   build-namelist tests:
 
-    cheyenne -  PASS
+    cheyenne - PASS
 
   unit-tests (components/clm/src):
 
     cheyenne - PASS
 
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
-     cheyenne -  PASS
-  
-  Extra Tests:
+     cheyenne - OK
 
-ERS_Ld5.f19_g17.E1850L45TEST.cheyenne_intel.cice-default
-SMS_Ld1.f09_f09_mg17.FW1850.cheyenne_intel.cam-reduced_hist1d
-SMS_Ld7.f09_g17.B1850.cheyenne_intel.allactive-defaultio
+  regular tests (aux_clm):
 
-CLM tag used for the baseline comparisons: clm5.0.dev000
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- FAIL
+    hobart_gnu -------- PASS
+    hobart_intel ------ PASS
+
+CLM tag used for the baseline comparisons:  ctsm1.0.dev002
 
 
 Answer changes
@@ -995,38 +1533,132 @@ Changes answers relative to baseline: No bit-for-bit
 Detailed list of changes
 ------------------------
 
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): PTCLM
-  PTCLM to PTCLM2_180214
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, cism
+   cism-wrapper to release-cesm2.0.04
+   cime         to cime5.6.10
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+ #444 -- Get working on upgraded hobart and with glade changes on cheyenne
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev002
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Jul  6 16:33:03 MDT 2018
+One-line Summary: Fix NFIX flux variables so special land-units are zeroed out, tools update, add some *_MAX fields on mksurfdata_map for transient cases
+
+Purpose of changes
+------------------
+
+Nitrogen Fixation flux arrays were being set to missing value over non-vegetated landunits. This sets them to zero everywhere
+and averages in the zero's at the gridcell level for history output. It also reads in restarts with missing values and converts
+them to zero's.
+
+There are also some tools updates, getting the tools working on the new upgraded hobart.cgd.ucar.edu.
+
+And mksurfdata_map is updated to add some *_MAX files on the landuse.timeseries files that will allow us to conserve memory
+for transient cases.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #435, #436, #433 (for tools)
+    #435 -- intel build for tools
+    #426 -- Nitrogen Fixation flux variables
+    #433 -- hobart broken, got it working for tools
+
+Known bugs found since the previous tag (include github issue ID): #433, #431
+
+   #433 -- with hobart upgrade, hobart build isn't working
+   #431 -- When set_* options are used to hist_addfld be careful of ordering
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[ ] clm4_5
+
+[ ] clm4_0
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): ndep file updated for clm5_0 for 1850
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CLMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): NFIX flux variables
+   NFIX flux variables when read from restart have special-values (missing on non veg landunits) converted to zero's
+   They are now initialized to zero everywhere.
+
+Changes to tests or testing: None
+
+Code reviewed by: self, wwieder, and lawrence, sacks (mksurfdata_map code)
+
+CLM testing: regular (although none on hobart!)
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (5 tests differ from previous version)
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - PASS
+    hobart --- PASS
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+
+CLM tag used for the baseline comparisons: ctsm1.0.dev001
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: clm5_0 BGC configurations with FUN and clm5_0 with BGC for new 1850 ndep file
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All clm5_0 BGC due to NFIX fields, and clm5_0 1850 BGC due to new ndep file
+    - what platforms/compilers: All
+    - nature of change: similar climate
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
 
-#297 -- README files
-#296 -- Make LND_TUNING_MODE correct and consistent when coupled with CAM
-#295 -- Bring in a working PTCLMmkdata version
-#261 -- Reorder links
+  #437 -- ChangeLog template
+  #432 -- nfix
+  #331 -- _MAX fields on mksurfdata_map
 
 ===============================================================
-===============================================================
-Tag name:  clm5.0.dev000
-Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Feb 05 2018
-One-line Summary: Initial version of CLM5.0
-
-This is the initial science version of CLM5.0.
-
-Developments for CLM5.0 build on the progress made in CLM4.5. Most major components of the model have been updated with particularly
-notable changes made to soil and plant hydrology, snow density, river modeling, carbon and nitrogen cycling and coupling, and crop
-modeling.
-The updates to CLM science are documented here:
-
-https://escomp.github.io/ctsm-docs/doc/build/html/tech_note/Introduction/CLM50_Tech_Note_Introduction.html#clm5-0
-
-This version has production versions of CLM5.0 CMIP6 land-use change files for 1850, historical, and 2000. It has preliminary
-versions of CMIP6 forcing files for Nitrogen deposition and population density. Further updates are needed for prescribed aerosols,
-and future scenarios.
-
-Spunup initial conditions are provided for several CLM physics and forcing combinations from simulations run at 1-degree resolution
-(fv 0.9x1.25 with g1xv6 ocean mask).
-
 ===============================================================

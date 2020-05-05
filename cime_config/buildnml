@@ -3,7 +3,7 @@
 """
 CLM namelist creator
 """
-import sys, os, time, shutil, re, imp, filecmp
+import sys, os, shutil, imp, filecmp
 
 _CIMEROOT = os.environ.get("CIMEROOT")
 if _CIMEROOT is None:
@@ -46,7 +46,6 @@ def buildnml(case, caseroot, compname):
     clm_force_coldstart = case.get_value("CLM_FORCE_COLDSTART")
     lnd_tuning_mode = case.get_value("LND_TUNING_MODE")
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
-    comp_glc = case.get_value("COMP_GLC")
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
     lnd_ncpl = case.get_value("LND_NCPL")
@@ -61,14 +60,6 @@ def buildnml(case, caseroot, compname):
     run_reftod = case.get_value("RUN_REFTOD")
     glc_nec = case.get_value("GLC_NEC")
     mask = case.get_value("MASK_GRID")
-
-    # -----------------------------------------------------
-    # Clear out old data
-    # -----------------------------------------------------
-
-    input_data_list = os.path.join(caseroot,"Buildconf","clm.input_data_list")
-    if os.path.exists(input_data_list):
-        os.remove(input_data_list)
 
     # -----------------------------------------------------
     # Set clmconf
@@ -133,10 +124,10 @@ def buildnml(case, caseroot, compname):
     if run_type == "branch":
         startfile_type = "nrevsn"
         if clm_force_coldstart == "on":
-           clm_force_coldstart = "off"
-           logger.warning( "WARNING: You've turned on CLM_FORCE_COLDSTART for a branch run_type, which is a contradiction, the coldstart will be ignored\n" +
-                           "  turn off CLM_FORCE_COLDSTART, or set RUN_TYPE=hybrid to get rid of this warning"
-                         )
+            clm_force_coldstart = "off"
+            logger.warning( "WARNING: You've turned on CLM_FORCE_COLDSTART for a branch run_type, which is a contradiction, the coldstart will be ignored\n" +
+                            "  turn off CLM_FORCE_COLDSTART, or set RUN_TYPE=hybrid to get rid of this warning")
+
 
     if (clm_force_coldstart == "on"):
         logger.warning( "WARNING: CLM is starting up from a cold state" )
@@ -168,9 +159,9 @@ def buildnml(case, caseroot, compname):
         usecase = ""
 
     if ( (mask != "null") and (mask != "UNSET") ):
-       gridmask = "-mask %s" %mask
+        gridmask = "-mask %s" %mask
     else:
-       gridmask = ""
+        gridmask = ""
 
     start_ymd = run_startdate.replace('-','')
 
@@ -190,6 +181,13 @@ def buildnml(case, caseroot, compname):
     lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
     
     config_cache_file = os.path.join(caseroot,"Buildconf","clmconf","config_cache.xml")
+
+    # -----------------------------------------------------
+    # Clear out old data
+    # -----------------------------------------------------
+
+    if os.path.exists(inputdata_file):
+        os.remove(inputdata_file)
 
     # -----------------------------------------------------
     # loop over instances

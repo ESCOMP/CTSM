@@ -1,7 +1,7 @@
 Obtaining the full model code and associated scripting infrastructure
 =====================================================================
 
-CTSM is released via github. You will need some familiarity with git in order
+CTSM is released via GitHub. You will need some familiarity with git in order
 to modify the code and commit these changes. However, to simply checkout and run the
 code, no git knowledge is required other than what is documented in the following steps.
 
@@ -115,7 +115,7 @@ Committing your change to Externals.cfg
 After making this change, it's a good idea to commit the change in your
 local CTSM git repository. First create a branch in your local
 repository, then commit it. (Unlike with subversion, branches are stored
-locally unless you explicitly push them up to github. Feel free to
+locally unless you explicitly push them up to GitHub. Feel free to
 create whatever local branches you'd like.) For example::
 
   git checkout -b my_ctsm_branch

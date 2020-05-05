@@ -81,7 +81,6 @@ contains
     integer :: unitn                ! unit for namelist file
     character(len=32) :: subname = 'CanopyHydrology_readnl'  ! subroutine name
     !-----------------------------------------------------------------------
-
     namelist /clm_canopyhydrology_inparm/ &
          oldfflag, &
          interception_fraction, &
@@ -919,5 +918,6 @@ contains
      IsSnowvegFlagOnRad = (trim(snowveg_flag) == 'ON_RAD')
 
    end function IsSnowvegFlagOnRad
+
 
 end module CanopyHydrologyMod

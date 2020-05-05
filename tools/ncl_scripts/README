@@ -1,4 +1,4 @@
-components/clm/tools/ncl_scripts					Nov/06/2012
+$CTSMROOT/tools/ncl_scripts					Jun/08/2018
 
 CLM NCL script tools for analysis of CLM history files -- or for creation or
 modification of CLM input files.

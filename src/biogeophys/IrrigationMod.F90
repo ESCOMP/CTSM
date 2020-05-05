@@ -51,7 +51,7 @@ module IrrigationMod
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog
-  use clm_varcon       , only : isecspday, degpsec, denh2o, spval, namec
+  use clm_varcon       , only : isecspday, denh2o, spval, namec
   use clm_varpar       , only : nlevsoi, nlevgrnd
   use clm_time_manager , only : get_step_size
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
@@ -799,7 +799,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CalcIrrigationNeeded(this, bounds, num_exposedvegp, filter_exposedvegp, &
-       time_prev, elai, t_soisno, eff_porosity, h2osoi_liq, volr, rof_prognostic)
+       elai, t_soisno, eff_porosity, h2osoi_liq, volr, rof_prognostic)
     !
     ! !DESCRIPTION:
     ! Calculate whether and how much irrigation is needed for each column. However, this
@@ -811,9 +811,6 @@ contains
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
-
-    ! time of day (in seconds since 0Z) at start of timestep
-    integer, intent(in) :: time_prev
 
     ! number of points in filter_exposedvegp
     integer, intent(in) :: num_exposedvegp
@@ -911,7 +908,7 @@ contains
 
        check_for_irrig_patch(p) = this%PointNeedsCheckForIrrig( &
             pft_type=patch%itype(p), elai=elai(p), &
-            time_prev=time_prev, londeg=grc%londeg(g))
+            londeg=grc%londeg(g))
        if (check_for_irrig_patch(p)) then
           c = patch%column(p)
           check_for_irrig_col(c) = .true.
@@ -1033,27 +1030,24 @@ contains
   end subroutine CalcIrrigationNeeded
 
   !-----------------------------------------------------------------------
-  function PointNeedsCheckForIrrig(this, pft_type, elai, time_prev, londeg) &
+  function PointNeedsCheckForIrrig(this, pft_type, elai, londeg) &
        result(check_for_irrig)
     !
     ! !DESCRIPTION:
     ! Determine whether a given patch needs to be checked for irrigation now.
     !
     ! !USES:
-    use pftconMod, only : pftcon
+    use clm_time_manager, only : get_local_time
+    use pftconMod       , only : pftcon
     !
     ! !ARGUMENTS:
     logical :: check_for_irrig  ! function result
     class(irrigation_type), intent(in) :: this
     integer , intent(in) :: pft_type  ! type of pft in this patch
     real(r8), intent(in) :: elai      ! one-sided leaf area index with burying by snow
-    integer , intent(in) :: time_prev ! time of day (in seconds since 0Z) at start of timestep
     real(r8), intent(in) :: londeg    ! longitude (degrees)
     !
     ! !LOCAL VARIABLES:
-    ! local time at start of time step (seconds after solar midnight)
-    integer  :: local_time
-
     ! number of seconds since the prescribed irrigation start time
     integer  :: seconds_since_irrig_start_time
 
@@ -1063,8 +1057,7 @@ contains
     if (pftcon%irrigated(pft_type) == 1._r8 .and. &
          elai > this%params%irrig_min_lai) then
        ! see if it's the right time of day to start irrigating:
-       local_time = modulo(time_prev + nint(londeg/degpsec), isecspday)
-       seconds_since_irrig_start_time = modulo(local_time - this%params%irrig_start_time, isecspday)
+       seconds_since_irrig_start_time = get_local_time( londeg, starttime=this%params%irrig_start_time, offset=-this%dtime )
        if (seconds_since_irrig_start_time < this%dtime) then
           check_for_irrig         = .true.
        else

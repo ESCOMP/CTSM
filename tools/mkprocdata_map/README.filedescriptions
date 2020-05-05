@@ -1,5 +1,5 @@
-README.filedescriptions                        Erik Kluzek
-                                               11/7/2017
+$CTSMROOT/tools/mkprocdata_map/README.filedescriptions                        Erik Kluzek
+                                                                              06/08/2018
 
 mkprocdata_map_all ------------ Script to run over a list of files
 mkprocdata_map_wrap ----------- Main script to actually use

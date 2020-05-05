@@ -22,7 +22,7 @@ module histFileMod
   use PatchType      , only : patch                
   use EDTypesMod     , only : nclmax
   use EDTypesMod     , only : nlevleaf
-  use FatesInterfaceMod , only : nlevsclass, nlevage
+  use FatesInterfaceMod , only : nlevsclass, nlevage, nlevcoage
   use FatesInterfaceMod , only : nlevheight
   use EDTypesMod        , only : nfsc
   use FatesLitterMod    , only : ncwd
@@ -58,7 +58,11 @@ module histFileMod
   !
   ! Counters
   !
-  integer , public :: ntapes = 0         ! index of max history file requested
+  ! ntapes gives the index of the max history file requested. There can be "holes" in the
+  ! numbering - e.g., we can have h0, h1 and h3 tapes, but no h2 tape (because there are
+  ! no fields on the h2 tape). In this case, ntapes will be 4 (for h0, h1, h2 and h3,
+  ! since h3 is the last requested file), not 3 (the number of files actually produced).
+  integer , private :: ntapes = 0        ! index of max history file requested
   !
   ! Namelist
   !
@@ -244,6 +248,11 @@ module histFileMod
   ! Master list: an array of master_entry entities
   !
   type (master_entry) :: masterlist(max_flds)  ! master field list
+  !
+  ! Whether each history tape is in use in this run. If history_tape_in_use(i) is false,
+  ! then data in tape(i) is undefined and should not be referenced.
+  !
+  logical :: history_tape_in_use(max_tapes)  ! whether each history tape is in use in this run
   !
   ! History tape: an array of history_tape entities (only active fields)
   !
@@ -706,6 +715,7 @@ contains
        end do
     end do
 
+    history_tape_in_use(:) = .false.
     tape(:)%nflds = 0
     do t = 1,max_tapes
 
@@ -782,7 +792,7 @@ contains
        end if
     end do
 
-    ! Determine total number of active history tapes
+    ! Determine index of max active history tape, and whether each tape is in use
 
     ntapes = 0
     do t = max_tapes,1,-1
@@ -792,23 +802,11 @@ contains
        end if
     end do
 
-    ! Ensure there are no "holes" in tape specification, i.e. empty tapes.
-    ! Enabling holes should not be difficult if necessary.
-
-    do t = 1,ntapes
-       if (tape(t)%nflds  ==  0) then
-          write(iulog,*) trim(subname),' ERROR: Tape ',t,' is empty'
-          call endrun(msg=errMsg(sourcefile, __LINE__))
+    do t = 1, ntapes
+       if (tape(t)%nflds > 0) then
+          history_tape_in_use(t) = .true.
        end if
     end do
-
-    ! Check that the number of history files declared does not exceed
-    ! the maximum allowed.
-
-    if (ntapes > max_tapes) then
-       write(iulog,*) trim(subname),' ERROR: Too many history files declared, max_tapes=',max_tapes
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
 
     ! Change 1d output per tape output flag if requested - only for history
     ! tapes where 2d xy averaging is not enabled
@@ -842,6 +840,10 @@ contains
           end if
           write(iulog,*)'Number of time samples on history tape ',t,' is ',hist_mfilt(t)
           write(iulog,*)'Output precision on history tape ',t,'=',hist_ndens(t)
+          if (.not. history_tape_in_use(t)) then
+             write(iulog,*) 'History tape ',t,' does not have any fields,'
+             write(iulog,*) 'so it will not be written!'
+          end if
           write(iulog,*)
        end do
        call shr_sys_flush(iulog)
@@ -1067,8 +1069,9 @@ contains
     !-----------------------------------------------------------------------
 
     do t = 1,ntapes
-!$OMP PARALLEL DO PRIVATE (f, num2d)
+!$OMP PARALLEL DO PRIVATE (f, num2d, numdims)
        do f = 1,tape(t)%nflds
+
           numdims = tape(t)%hlist(f)%field%numdims
           
           if ( numdims == 1) then   
@@ -1390,6 +1393,7 @@ contains
     ! !USES:
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
     use decompMod       , only : BOUNDS_LEVEL_PROC
+    use clm_varctl      , only : iulog
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1440,6 +1444,7 @@ contains
     no_snow_behavior    =  tape(t)%hlist(f)%field%no_snow_behavior
     hpindex             =  tape(t)%hlist(f)%field%hpindex
 
+
     if (no_snow_behavior /= no_snow_unset) then
        ! For multi-layer snow fields, build a special output variable that handles
        ! missing snow layers appropriately
@@ -1459,6 +1464,7 @@ contains
        call hist_set_snow_field_2d(field, clmptr_ra(hpindex)%ptr, no_snow_behavior, type1d, &
             beg1d, end1d)
     else
+   
        field => clmptr_ra(hpindex)%ptr(:,1:num2d)
        field_allocated = .false.
     end if
@@ -2064,17 +2070,20 @@ contains
     call ncd_defdim(lnfid, 'scale_type_string_length', scale_type_strlen, dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
     
+
     if(use_fates)then
        call ncd_defdim(lnfid, 'fates_levscag', nlevsclass * nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levscagpf', nlevsclass * nlevage * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levagepft', nlevage * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levscls', nlevsclass, dimid)
+       call ncd_defdim(lnfid, 'fates_levcacls', nlevcoage, dimid)
        call ncd_defdim(lnfid, 'fates_levpft', numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levage', nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levheight', nlevheight, dimid)
        call ncd_defdim(lnfid, 'fates_levfuel', nfsc, dimid)
        call ncd_defdim(lnfid, 'fates_levcwdsc', ncwd, dimid)
        call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levcapf', nlevcoage*numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levcan', nclmax, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlf', nlevleaf * nclmax, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlfpf', nlevleaf * nclmax * numpft_fates, dimid)
@@ -2498,6 +2507,9 @@ contains
     use FatesInterfaceMod, only : fates_hdim_levsclass
     use FatesInterfaceMod, only : fates_hdim_pfmap_levscpf
     use FatesInterfaceMod, only : fates_hdim_scmap_levscpf
+    use FatesInterfaceMod, only : fates_hdim_levcoage
+    use FatesInterfaceMod, only : fates_hdim_pfmap_levcapf
+    use FatesInterfaceMod, only : fates_hdim_camap_levcapf
     use FatesInterfaceMod, only : fates_hdim_levage
     use FatesInterfaceMod, only : fates_hdim_levheight
     use FatesInterfaceMod, only : fates_hdim_levpft
@@ -2589,6 +2601,12 @@ contains
                   long_name='FATES pft index of the combined pft-size class dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_scmap_levscpf',xtype=ncd_int, dim1name='fates_levscpf', &
                   long_name='FATES size index of the combined pft-size class dimension', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_levcacls', xtype=tape(t)%ncprec, dim1name='fates_levcacls', &
+                  long_name='FATES cohort age class lower bound', units='years', ncid=nfid(t))
+             call ncd_defvar(varname='fates_pftmap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
+                  long_name='FATES pft index of the combined pft-cohort age class dimension', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_camap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
+                  long_name='FATES cohort age index of the combined pft-cohort age dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_levage',xtype=tape(t)%ncprec, dim1name='fates_levage', &
                   long_name='FATES patch age (yr)', ncid=nfid(t))
              call ncd_defvar(varname='fates_levheight',xtype=tape(t)%ncprec, dim1name='fates_levheight', &
@@ -2653,8 +2671,11 @@ contains
              call ncd_io(varname='fates_scmap_levscag',data=fates_hdim_scmap_levscag, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_agmap_levscag',data=fates_hdim_agmap_levscag, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levscls',data=fates_hdim_levsclass, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_levcacls',data=fates_hdim_levcoage, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_pftmap_levscpf',data=fates_hdim_pfmap_levscpf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_scmap_levscpf',data=fates_hdim_scmap_levscpf, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_pftmap_levcapf',data=fates_hdim_pfmap_levcapf, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_camap_levcapf',data=fates_hdim_camap_levcapf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levage',data=fates_hdim_levage, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levheight',data=fates_hdim_levheight, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levpft',data=fates_hdim_levpft, ncid=nfid(t), flag='write')
@@ -3456,9 +3477,15 @@ contains
     ! and write data to history files if end of history interval.
     do t = 1, ntapes
 
+       if (.not. history_tape_in_use(t)) then
+          cycle
+       end if
+
        ! Skip nstep=0 if monthly average
 
-       if (nstep==0 .and. tape(t)%nhtfrq==0) cycle
+       if (nstep==0 .and. tape(t)%nhtfrq==0) then
+          cycle
+       end if
 
        ! Determine if end of history interval
        tape(t)%is_endhist = .false.
@@ -3561,6 +3588,10 @@ contains
     ! must reopen the files
 
     do t = 1, ntapes
+       if (.not. history_tape_in_use(t)) then
+          cycle
+       end if
+
        if (if_disphist(t)) then
           if (tape(t)%ntimes /= 0) then
              if (masterproc) then
@@ -3586,6 +3617,10 @@ contains
     ! Reset number of time samples to zero if file is full 
     
     do t = 1, ntapes
+       if (.not. history_tape_in_use(t)) then
+          cycle
+       end if
+
        if (if_disphist(t) .and. tape(t)%ntimes==tape(t)%mfilt) then
           tape(t)%ntimes = 0
        end if
@@ -3634,7 +3669,9 @@ contains
     character(len=max_chars)  :: units           ! units of variable
     character(len=max_chars)  :: units_acc       ! accumulator units
     character(len=max_chars)  :: fname           ! full name of history file
-    character(len=max_chars)  :: locrest(max_tapes) ! local history restart file names
+    character(len=max_chars)  :: locrest(max_tapes)  ! local history restart file names
+    character(len=max_length_filename) :: my_locfnh  ! temporary version of locfnh
+    character(len=max_length_filename) :: my_locfnhr ! temporary version of locfnhr
 
     character(len=max_namlen),allocatable :: tname(:)
     character(len=max_chars), allocatable :: tunits(:),tlongname(:)
@@ -3665,7 +3702,9 @@ contains
     integer :: dimid                             ! dimension ID
     integer :: k                                 ! 1d index
     integer :: ntapes_onfile                     ! number of history tapes on the restart file
+    logical, allocatable :: history_tape_in_use_onfile(:) ! whether a given history tape is in use, according to the restart file
     integer :: nflds_onfile                      ! number of history fields on the restart file
+    logical :: readvar                           ! whether a variable was read successfully
     integer :: t                                 ! tape index
     integer :: f                                 ! field index
     integer :: varid                             ! variable id
@@ -3717,6 +3756,12 @@ contains
        call ncd_defdim( ncid, 'ntapes'       , ntapes      , dimid)
        call ncd_defdim( ncid, 'max_chars'    , max_chars   , dimid)
 
+       call ncd_defvar(ncid=ncid, varname='history_tape_in_use', xtype=ncd_log, &
+            long_name="Whether this history tape is in use", &
+            dim1name="ntapes")
+       ier = PIO_inq_varid(ncid, 'history_tape_in_use', vardesc)
+       ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
+
        call ncd_defvar(ncid=ncid, varname='locfnh', xtype=ncd_char, &
             long_name="History filename",     &
             comment="This variable NOT needed for startup or branch simulations", &
@@ -3740,6 +3785,9 @@ contains
        ! only read/write accumulators and counters if needed
 
        do t = 1,ntapes
+          if (.not. history_tape_in_use(t)) then
+             cycle
+          end if
 
           ! Create the restart history filename and open it
           write(hnum,'(i1.1)') t-1
@@ -3914,8 +3962,16 @@ contains
 
        ! Add history filenames to master restart file
        do t = 1,ntapes
-          call ncd_io('locfnh',  locfnh(t),  'write', ncid, nt=t)
-          call ncd_io('locfnhr', locfnhr(t), 'write', ncid, nt=t)
+          call ncd_io('history_tape_in_use', history_tape_in_use(t), 'write', ncid, nt=t)
+          if (history_tape_in_use(t)) then
+             my_locfnh  = locfnh(t)
+             my_locfnhr = locfnhr(t)
+          else
+             my_locfnh  = 'non_existent_file'
+             my_locfnhr = 'non_existent_file'
+          end if
+          call ncd_io('locfnh',  my_locfnh,  'write', ncid, nt=t)
+          call ncd_io('locfnhr', my_locfnhr, 'write', ncid, nt=t)
        end do
        
        fincl(:,1)  = hist_fincl1(:)
@@ -3951,6 +4007,10 @@ contains
        allocate(itemp(max_nflds))
 
        do t = 1,ntapes
+          if (.not. history_tape_in_use(t)) then
+             cycle
+          end if
+
           call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t), flag='write')
 
           call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t), flag='write')
@@ -4016,19 +4076,46 @@ contains
     !================================================
 
        call ncd_inqdlen(ncid,dimid,ntapes_onfile, name='ntapes')
-       if ( is_restart() .and. ntapes_onfile /= ntapes )then
-          write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
-          call endrun(msg=' ERROR: number of ntapes different than on restart file!,'// &
-               ' you can NOT change history options on restart!' //&
-               errMsg(sourcefile, __LINE__))
-       end if
-       if ( is_restart() .and. ntapes > 0 )then
-          call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
-          call ncd_io('locfnhr', locrest(1:ntapes), 'read', ncid )
-          do t = 1,ntapes
-             call strip_null(locrest(t))
-             call strip_null(locfnh(t))
-          end do
+       if (is_restart()) then
+          if (ntapes_onfile /= ntapes) then
+             write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
+             call endrun(msg=' ERROR: number of ntapes differs from restart file. '// &
+                  'You can NOT change history options on restart.', &
+                  additional_msg=errMsg(sourcefile, __LINE__))
+          end if
+
+          if (ntapes > 0) then
+             allocate(history_tape_in_use_onfile(ntapes))
+             call ncd_io('history_tape_in_use', history_tape_in_use_onfile, 'read', ncid, &
+                  readvar=readvar)
+             if (.not. readvar) then
+                ! BACKWARDS_COMPATIBILITY(wjs, 2018-10-06) Old restart files do not have
+                ! 'history_tape_in_use'. However, before now, this has implicitly been
+                ! true for all tapes <= ntapes.
+                history_tape_in_use_onfile(:) = .true.
+             end if
+             do t = 1, ntapes
+                if (history_tape_in_use_onfile(t) .neqv. history_tape_in_use(t)) then
+                   write(iulog,*) subname//' ERROR: history_tape_in_use on restart file'
+                   write(iulog,*) 'disagrees with current run: For tape ', t
+                   write(iulog,*) 'On restart file: ', history_tape_in_use_onfile(t)
+                   write(iulog,*) 'In current run : ', history_tape_in_use(t)
+                   write(iulog,*) 'This suggests that this tape was empty in one case,'
+                   write(iulog,*) 'but non-empty in the other. (history_tape_in_use .false.'
+                   write(iulog,*) 'means that history tape is empty.)'
+                   call endrun(msg=' ERROR: history_tape_in_use differs from restart file. '// &
+                        'You can NOT change history options on restart.', &
+                        additional_msg=errMsg(sourcefile, __LINE__))
+                end if
+             end do
+
+             call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
+             call ncd_io('locfnhr', locrest(1:ntapes), 'read', ncid )
+             do t = 1,ntapes
+                call strip_null(locrest(t))
+                call strip_null(locfnh(t))
+             end do
+          end if
        end if
 
        ! Determine necessary indices - the following is needed if model decomposition is different on restart
@@ -4037,6 +4124,9 @@ contains
 
        if ( is_restart() )then
           do t = 1,ntapes
+             if (.not. history_tape_in_use(t)) then
+                cycle
+             end if
 
              call getfil( locrest(t), locfnhr(t), 0 )
              call ncd_pio_openfile (ncid_hist(t), trim(locfnhr(t)), ncd_nowrite)
@@ -4242,6 +4332,10 @@ contains
     if (flag == 'write') then     
 
        do t = 1,ntapes
+          if (.not. history_tape_in_use(t)) then
+             cycle
+          end if
+
           if (.not. tape(t)%is_endhist) then
 
              do f = 1,tape(t)%nflds
@@ -4293,6 +4387,9 @@ contains
        ! Read history restart information if history files are not full
 
        do t = 1,ntapes
+          if (.not. history_tape_in_use(t)) then
+             cycle
+          end if
 
           if (.not. tape(t)%is_endhist) then
 
@@ -4832,6 +4929,8 @@ contains
        num2d = nlevdecomp_full
     case ('fates_levscls')
        num2d = nlevsclass
+    case('fates_levcacls')
+       num2d = nlevcoage
     case ('fates_levpft')
        num2d = numpft_fates
     case ('fates_levage')
@@ -4844,6 +4943,8 @@ contains
        num2d = ncwd
     case ('fates_levscpf')
        num2d = nlevsclass*numpft_fates
+    case ('fates_levcapf')
+       num2d = nlevcoage*numpft_fates
     case ('fates_levscag')
        num2d = nlevsclass*nlevage
     case ('fates_levscagpf')
@@ -4896,8 +4997,8 @@ contains
     end select
 
     ! History buffer pointer
-
     hpindex = pointer_index()
+   
 
     if (present(ptr_lnd)) then
        l_type1d = grlnd
@@ -4913,6 +5014,7 @@ contains
        l_type1d = namel
        l_type1d_out = namel
        clmptr_ra(hpindex)%ptr => ptr_lunit
+
        if (present(set_lake)) then
           do l = bounds%begl,bounds%endl
              if (lun%lakpoi(l)) ptr_lunit(l,:) = set_lake
@@ -4978,6 +5080,7 @@ contains
        l_type1d = namep
        l_type1d_out = namep
        clmptr_ra(hpindex)%ptr => ptr_patch
+
        if (present(set_lake)) then
           do p = bounds%begp,bounds%endp
              l =patch%landunit(p)
@@ -5196,7 +5299,7 @@ contains
   subroutine hist_do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, rstwr, nlend)
     !
     ! !DESCRIPTION:
-    ! Determine logic for closeing and/or disposing history file
+    ! Determine logic for closing and/or disposing history file
     ! Sets values for if_disphist, if_stop (arguments)
     ! Remove history files unless this is end of run or
     ! history file is not full.

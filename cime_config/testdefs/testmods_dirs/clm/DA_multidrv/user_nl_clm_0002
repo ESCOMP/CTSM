@@ -1,0 +1,13 @@
+ ! Settings being used for DART cases
+ hist_empty_htapes = .true.
+ hist_fincl1 = 'NEP','TOTECOSYSC','TOTVEGC','TLAI'
+ hist_fincl2 = 'NEP','FSH','EFLX_LH_TOT_R'
+ hist_fincl3 = 'TV','TLAI','PBOT','TBOT','TSA','RH2M_R','SNOWDP'
+ hist_nhtfrq = -24,1,-24
+ hist_mfilt  = 1,48,1
+ hist_avgflag_pertape = 'A','A','I'
+ hist_dov2xy = .true.,.true.,.false.
+ hist_type1d_pertape = ' ',' ',' '
+
+ use_init_interp = .true.
+ finidat = '/glade/p/cisl/dares/RDA_strawman/CESM_ensembles/CLM/CLM5BGC-Crop/ctsm_2001-01-01-00000/clm5_f09_spinup80.clm2_0002.r.2001-01-01-00000.nc'

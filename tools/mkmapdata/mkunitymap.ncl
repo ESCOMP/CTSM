@@ -6,8 +6,6 @@
 ;
 ;  Erik Kluzek
 ;  Dec/07/2011
-;  $Id: getco2_historical.ncl 23741 2010-06-12 19:27:09Z erik $
-;  $HeadURL;
 ;
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 begin
@@ -24,6 +22,8 @@ begin
   outfilename = getenv("MAPFILE");    ; Get name of the output mapping file
 
   print_str  = getenv("PRINT");       ; Do Extra printing for debugging
+
+  gitdescribe = getenv("GITDES");     ; Git describe from the source clone
 
   if ( ismissing(gridfile1) )then
      print( "ERROR: GRIDFILE1 is missing!" );
@@ -45,6 +45,10 @@ begin
      else
         printn = False;
      end if
+  end if
+
+  if ( ismissing(gitdescribe) )then
+     gitdescribe = systemfunc( "git describe" )
   end if
 
   ;
@@ -136,8 +140,7 @@ begin
   nc@grid_file_dst = gridfile2;
   nc@title   = "SCRIP mapping file between identical grids without ocean";
   nc@history = ldate+": create using mkunitymap.ncl";
-  nc@Version = "$HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/newgrid/models/lnd/clm/tools/ncl_scripts/ndeplintInterp.ncl $";
-  nc@Revision = "$Id: ndeplintInterp.ncl 25175 2010-10-16 03:47:50Z erik $";
+  nc@Version = gitdescribe;
 
   ;
   ; Fraction

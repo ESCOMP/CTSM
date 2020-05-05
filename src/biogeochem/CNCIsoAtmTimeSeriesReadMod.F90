@@ -122,12 +122,12 @@ contains
     character(len=*), parameter :: vname = 'Delta14co2_in_air'  ! Variable name on file
     !-----------------------------------------------------------------------
 
+    call getfil(atm_c14_filename, locfn, 0)
+
     if ( masterproc ) then
        write(iulog, *) 'C14_init_BombSpike: preparing to open file:'
        write(iulog, *) trim(locfn)
     endif
-
-    call getfil(atm_c14_filename, locfn, 0)
 
     call ncd_pio_openfile (ncid, trim(locfn), 0)
 
@@ -241,12 +241,12 @@ contains
     character(len=*), parameter :: vname = 'delta13co2_in_air'  ! Variable name on file
     !-----------------------------------------------------------------------
 
+    call getfil(atm_c13_filename, locfn, 0)
+
     if ( masterproc ) then
        write(iulog, *) 'C13_init_TimeSeries: preparing to open file:'
        write(iulog, *) trim(locfn)
     endif
-
-    call getfil(atm_c13_filename, locfn, 0)
 
     call ncd_pio_openfile (ncid, trim(locfn), 0)
 

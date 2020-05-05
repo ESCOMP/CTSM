@@ -673,6 +673,14 @@ contains
     deallocate(sumwtcol, sumwtlunit, sumwtgcell)
 
     if (error_found) then
+       write(iulog,*) ' '
+       write(iulog,*) 'If you are seeing this message at the beginning of a run with'
+       write(iulog,*) 'use_init_interp = .true. and init_interp_method = "use_finidat_areas",'
+       write(iulog,*) 'and you are seeing weights less than 1, then a likely cause is:'
+       write(iulog,*) 'For the above-mentioned grid cell(s):'
+       write(iulog,*) 'The matching input grid cell had some non-zero-weight subgrid type'
+       write(iulog,*) 'that is not present in memory in the new run.'
+       write(iulog,*) ' '
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 

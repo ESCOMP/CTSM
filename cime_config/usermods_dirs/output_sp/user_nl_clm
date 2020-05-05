@@ -1,0 +1,10 @@
+!----------------------------------------------------------------------------------
+! Settings from output_sp
+!----------------------------------------------------------------------------------
+
+! h1 stream (monthly average, finest sub-grid)
+hist_fincl2 += 'FPSN'
+
+! h2 stream (monthly average, landunit-level)
+hist_fincl3 += 'FPSN'
+

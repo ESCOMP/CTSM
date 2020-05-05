@@ -39,6 +39,7 @@ module SpeciesIsotopeType
      procedure, public :: hist_fname
      procedure, public :: rest_fname
      procedure, public :: get_species
+     procedure, public :: is_isotope
   end type species_isotope_type
 
   interface species_isotope_type
@@ -132,5 +133,15 @@ contains
     species_name = trim(this%species_name) // trim(this%isotope_name)
 
   end function get_species
+
+  pure function is_isotope(this)
+    ! Return true if this is an isotope, false if not
+
+    logical :: is_isotope ! function result
+    class(species_isotope_type), intent(in) :: this
+    !-----------------------------------------------------------------------
+
+    is_isotope = .true.
+  end function is_isotope
 
 end module SpeciesIsotopeType

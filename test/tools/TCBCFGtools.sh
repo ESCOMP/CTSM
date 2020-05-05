@@ -32,7 +32,11 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/tools/${1}*`
+cfgdir=`ls -1d ${CLM_ROOT}/tools/${1}`
+if [ $? -ne 0 ];then
+   cfgdir=`ls -1d ${CIME_ROOT}/tools/mapping/${1}*`
+   echo "use: $cfgdir"
+fi
 blddir=${CLM_TESTDIR}/${test_name}/src
 if [ -d ${blddir} ]; then
     rm -r ${blddir}

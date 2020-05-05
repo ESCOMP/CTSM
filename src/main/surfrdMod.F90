@@ -188,11 +188,12 @@ contains
     call domain_init(ldomain, isgrid2d=isgrid2d, ni=ni, nj=nj, nbeg=begg, nend=endg)
 
     ! Determine type of file - old style grid file or new style domain file
-    call check_var(ncid=ncid, varname='LONGXY', vardesc=vardesc, readvar=readvar) 
-    if (readvar) istype_domain = .false.
-
     call check_var(ncid=ncid, varname='xc', vardesc=vardesc, readvar=readvar) 
-    if (readvar) istype_domain = .true.
+    if (readvar)then
+        istype_domain = .true.
+    else
+        istype_domain = .false.
+    end if
 
     ! Read in area, lon, lat
 
@@ -211,33 +212,15 @@ contains
             dim1name=grlnd, readvar=readvar)
        if (.not. readvar) call endrun( msg=' ERROR: yc NOT on file'//errMsg(sourcefile, __LINE__))
     else
-       call ncd_io(ncid=ncid, varname= 'AREA', flag='read', data=ldomain%area, &
-            dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( msg=' ERROR: AREA NOT on file'//errMsg(sourcefile, __LINE__))
-       
-       call ncd_io(ncid=ncid, varname= 'LONGXY', flag='read', data=ldomain%lonc, &
-            dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( msg=' ERROR: LONGXY NOT on file'//errMsg(sourcefile, __LINE__))
-       
-       call ncd_io(ncid=ncid, varname= 'LATIXY', flag='read', data=ldomain%latc, &
-            dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( msg=' ERROR: LATIXY NOT on file'//errMsg(sourcefile, __LINE__))
+       call endrun( msg=" ERROR: can no longer read non domain files" )
     end if
 
     if (isgrid2d) then
        allocate(rdata2d(ni,nj), lon1d(ni), lat1d(nj))
-       if (istype_domain) then
-          vname = 'xc'
-       else
-          vname = 'LONGXY'
-       end if
+       if (istype_domain) vname = 'xc'
        call ncd_io(ncid=ncid, varname=trim(vname), data=rdata2d, flag='read', readvar=readvar)
        lon1d(:) = rdata2d(:,1)
-       if (istype_domain) then
-          vname = 'yc'
-       else
-          vname = 'LATIXY'
-       end if
+       if (istype_domain) vname = 'yc'
        call ncd_io(ncid=ncid, varname=trim(vname), data=rdata2d, flag='read', readvar=readvar)
        lat1d(:) = rdata2d(1,:)
        deallocate(rdata2d)
@@ -255,25 +238,21 @@ contains
        ! where (ldomain%latc < -90.0_r8) ldomain%latc = -90.0_r8
        ! where (ldomain%latc >  90.0_r8) ldomain%latc =  90.0_r8
     endif
+    if ( any(ldomain%lonc < 0.0_r8) )then
+       call endrun( msg=' ERROR: lonc is negative and currently can NOT be (see https://github.com/ESCOMP/ctsm/issues/507)' &
+                      //errMsg(sourcefile, __LINE__))
+    endif
 
-    call ncd_io(ncid=ncid, varname='LANDMASK', flag='read', data=ldomain%mask, &
+    call ncd_io(ncid=ncid, varname='mask', flag='read', data=ldomain%mask, &
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call ncd_io(ncid=ncid, varname='mask', flag='read', data=ldomain%mask, &
-            dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) then
-          call endrun( msg=' ERROR: LANDMASK NOT on fracdata file'//errMsg(sourcefile, __LINE__))
-       end if
+       call endrun( msg=' ERROR: LANDMASK NOT on fracdata file'//errMsg(sourcefile, __LINE__))
     end if
 
-    call ncd_io(ncid=ncid, varname='LANDFRAC', flag='read', data=ldomain%frac, &
+    call ncd_io(ncid=ncid, varname='frac', flag='read', data=ldomain%frac, &
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call ncd_io(ncid=ncid, varname='frac', flag='read', data=ldomain%frac, &
-            dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) then
-          call endrun( msg=' ERROR: LANDFRAC NOT on fracdata file'//errMsg(sourcefile, __LINE__))
-       end if
+       call endrun( msg=' ERROR: LANDFRAC NOT on fracdata file'//errMsg(sourcefile, __LINE__))
     end if
 
     call ncd_pio_closefile(ncid)

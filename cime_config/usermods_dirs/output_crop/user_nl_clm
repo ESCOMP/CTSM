@@ -1,0 +1,16 @@
+!----------------------------------------------------------------------------------
+! Settings from output_crop
+!----------------------------------------------------------------------------------
+
+! h0 stream (monthly average, gridcell-level)
+hist_fexcl1 += 'PCT_CFT'
+
+! h1 stream (monthly average, finest sub-grid)
+hist_fincl2 += 'GRAINC_TO_FOOD','NFERTILIZATION'
+
+! h2 stream (monthly average, landunit-level)
+hist_fincl3 += 'GRAINC_TO_FOOD'
+
+! h3 stream (yearly average, gridcell-level)
+hist_fincl4 += 'PCT_CFT','CROPPROD1C:I'
+

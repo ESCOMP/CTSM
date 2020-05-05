@@ -1,0 +1,4 @@
+The purpose of this test is to run with the changes needed for the WACCM-X configuration
+but with CTSM standalone. Since, WACCM-X is unlikely to have initial conditions that are 
+in equalibrium purposely use a file that will require the model to flush out a shock to the system
+at startup.

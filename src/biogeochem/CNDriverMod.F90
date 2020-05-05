@@ -92,7 +92,7 @@ contains
        atm2lnd_inst, waterstate_inst, waterflux_inst,                                      &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst,            &
        dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,                     &
-       nutrient_competition_method, cnfire_method)
+       nutrient_competition_method, cnfire_method, dribble_crophrv_xsmrpool_2atm)
     !
     ! !DESCRIPTION:
     ! The core CN code is executed here. Calculates fluxes for maintenance
@@ -179,6 +179,7 @@ contains
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     class(cnfire_method_type)               , intent(inout) :: cnfire_method
+    logical                                 , intent(in)    :: dribble_crophrv_xsmrpool_2atm
     !
     ! !LOCAL VARIABLES:
     real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
@@ -549,16 +550,16 @@ contains
     ! Update all prognostic carbon state variables (except for gap-phase mortality and fire fluxes)
     call CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
          crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-         soilbiogeochem_carbonflux_inst)
+         soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
     if ( use_c13 ) then
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
             crop_inst, c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
-            c13_soilbiogeochem_carbonflux_inst)
+            c13_soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
     end if
     if ( use_c14 ) then
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
             crop_inst, c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
-            c14_soilbiogeochem_carbonflux_inst)
+            c14_soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
     end if
 
     ! Update all prognostic nitrogen state variables (except for gap-phase mortality and fire fluxes)
@@ -754,7 +755,7 @@ contains
          dgvs_inst, cnveg_state_inst,                                                                                              &
          cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                         &
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),                                  &
-         froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full),                                & 
+         froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &
          croot_prof_patch=soilbiogeochem_state_inst%croot_prof_patch(begp:endp, 1:nlevdecomp_full),                                &
          stem_prof_patch=soilbiogeochem_state_inst%stem_prof_patch(begp:endp, 1:nlevdecomp_full),                                  &
          totsomc_col=soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc),                                                       &

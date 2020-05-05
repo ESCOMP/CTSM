@@ -1,7 +1,6 @@
 set(pfunit_sources
   test_downscale_forcings.pf
-  test_partition_precip.pf
-  test_sens_heat_from_precip_conversion.pf)
+  test_partition_precip.pf)
 
 create_pFUnit_test(atm2lnd test_atm2lnd_exe
   "${pfunit_sources}" "")

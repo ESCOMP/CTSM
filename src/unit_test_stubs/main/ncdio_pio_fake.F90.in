@@ -10,6 +10,7 @@ module ncdio_pio
   use shr_assert_mod , only : shr_assert
   use ncdio_var, only : ncdio_var_type
   use ncdio_dim, only : ncdio_dim_type
+  use abortutils,only : endrun
 
   ! !PUBLIC TYPES:
   implicit none
@@ -55,6 +56,7 @@ module ncdio_pio
   public :: ncd_inqdid            ! stub: inquire dimension id
   public :: ncd_inqvdlen          ! stub: inquire size of a dimension
   public :: ncd_inqdlen           ! stub: inquire size of a dimension
+  public :: ncd_defvar            ! define variables
   public :: ncd_inqfdims          ! stub: inquire file dimensions
   public :: ncd_getatt            ! stub: get attribute
   public :: ncd_putatt            ! stub: put attribute
@@ -70,6 +72,11 @@ module ncdio_pio
 
   !
   ! !PRIVATE MEMBER FUNCTIONS:
+
+  interface ncd_defvar
+     module procedure ncd_defvar_bynf
+     module procedure ncd_defvar_bygrid
+  end interface
   
   private :: ncd_get_variable_index  ! return the index of a given variable
 
@@ -325,6 +332,77 @@ contains
   ! ======================================================================
   ! Stubs for the actual ncdio_pio functionality (do nothing)
   ! ======================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_defvar_bynf(ncid, varname, xtype, ndims, dimid, varid, &
+       long_name, units, cell_method, missing_value, fill_value, &
+       imissing_value, ifill_value, comment, flag_meanings, &
+       flag_values, nvalid_range )
+    !
+    ! !DESCRIPTION:
+    !  Define a netcdf variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout) :: ncid                  ! netcdf file id
+    character(len=*)   , intent(in)  :: varname                 ! variable name
+    integer            , intent(in)  :: xtype                   ! external type
+    integer            , intent(in)  :: ndims                   ! number of dims
+    integer            , intent(inout) :: varid                 ! returned var id
+    integer            , intent(in), optional :: dimid(:)       ! dimids
+    character(len=*)   , intent(in), optional :: long_name      ! attribute
+    character(len=*)   , intent(in), optional :: units          ! attribute
+    character(len=*)   , intent(in), optional :: cell_method    ! attribute
+    character(len=*)   , intent(in), optional :: comment        ! attribute
+    character(len=*)   , intent(in), optional :: flag_meanings(:) ! attribute
+    real(r8)           , intent(in), optional :: missing_value  ! attribute for real
+    real(r8)           , intent(in), optional :: fill_value     ! attribute for real
+    integer            , intent(in), optional :: imissing_value ! attribute for int
+    integer            , intent(in), optional :: ifill_value    ! attribute for int
+    integer            , intent(in), optional :: flag_values(:)  ! attribute for int
+    integer            , intent(in), optional :: nvalid_range(2)  ! attribute for int
+
+    ! Do nothing
+    call endrun( 'ncd_defvar_bynf should not be actually called for unit tests' )
+
+  end subroutine ncd_defvar_bynf
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_defvar_bygrid(ncid, varname, xtype, &
+       dim1name, dim2name, dim3name, dim4name, dim5name, &
+       long_name, units, cell_method, missing_value, fill_value, &
+       imissing_value, ifill_value, switchdim, comment, &
+       flag_meanings, flag_values, nvalid_range )
+    !
+    ! !DESCRIPTION:
+    !  Define a netcdf variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout) :: ncid                 ! netcdf file id
+    character(len=*)   , intent(in)  :: varname                 ! variable name
+    integer            , intent(in)  :: xtype                   ! external type
+    character(len=*)   , intent(in), optional :: dim1name       ! dimension name
+    character(len=*)   , intent(in), optional :: dim2name       ! dimension name
+    character(len=*)   , intent(in), optional :: dim3name       ! dimension name
+    character(len=*)   , intent(in), optional :: dim4name       ! dimension name
+    character(len=*)   , intent(in), optional :: dim5name       ! dimension name
+    character(len=*)   , intent(in), optional :: long_name      ! attribute
+    character(len=*)   , intent(in), optional :: units          ! attribute
+    character(len=*)   , intent(in), optional :: cell_method    ! attribute
+    character(len=*)   , intent(in), optional :: comment        ! attribute
+    character(len=*)   , intent(in), optional :: flag_meanings(:) ! attribute
+    real(r8)           , intent(in), optional :: missing_value  ! attribute for real
+    real(r8)           , intent(in), optional :: fill_value     ! attribute for real
+    integer            , intent(in), optional :: imissing_value ! attribute for int
+    integer            , intent(in), optional :: ifill_value    ! attribute for int
+    logical            , intent(in), optional :: switchdim      ! true=> permute dim1 and dim2 for output
+    integer            , intent(in), optional :: flag_values(:)  ! attribute for int
+    integer            , intent(in), optional :: nvalid_range(2)  ! attribute for int
+
+    ! Do nothing
+    call endrun( 'ncd_defvar_bygrid should not be actually called for unit tests' )
+
+  end subroutine ncd_defvar_bygrid
+
 
   !-----------------------------------------------------------------------
   subroutine ncd_pio_openfile(file, fname, mode)

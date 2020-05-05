@@ -1,9 +1,4 @@
-components/clm/tools/mksurfdata_map/README    Jan 13, 2012
-
-slevis comments:
-See additional info for how I created the new surface data in slevis notes
-at the top of this file:
-surfdata_74pft_360x720cru_simyr2000_c130920.log
+$CTSMROOT/tools/mksurfdata_map/README    Jun 08, 2018
 
 The routines in this directory create a surface dataset.
 The output grid is read in from the input namelist and
@@ -19,13 +14,16 @@ Surface datasets can either be created for two separate cases
 The following steps provide a method to create the executable
 and generate the surface dataset:
 
-1) > cd src
+1) Make the mksurfdata_map executable
+
+   Starting from this directory $CTSMROOT/tools/mksurfdata_map
+   > cd src
    > gmake
    By default code compiles optimized so it's reasonably fast. If you want
    to use the debugger, with bounds-checking, and float trapping on do the 
    following:
       gmake OPT=FALSE
-   See Also: See the components/clm/tools/README file for notes about setting
+   See Also: See the $CTSMROOT/tools/README file for notes about setting
    the path for NetCDF and running with shared-memory parallelism.
 
 2) For supported model resolutions - skip this step
@@ -33,7 +31,8 @@ and generate the surface dataset:
    For unsupported model resolutions - do the following...
    determine the pathname of the model resolution SCRIP grid file 
    
-   > cd mkmapdata
+   Starting from this directory $CTSMROOT/tools/mksurfdata_map
+   > cd ../mkmapdata
    invoke one of the following commands
    (for global resolution)
    > ./mkmapdata.sh -f <scrip grid file full pathname> -res <res> -type global    
@@ -47,6 +46,8 @@ and generate the surface dataset:
    mksurfdata.pl (see below)	
 
 3) make surface dataset(s)
+
+   Starting from this directory $CTSMROOT/tools/mksurfdata_map
    > mksurfdata.pl --help  (for full usage instructions)
    For supported model resolution (<res>)
    > mksurfdata.pl -res <res> [options]	
@@ -63,8 +64,7 @@ and generate the surface dataset:
 
 Lists of input files for range of dates historical or future scenarios:
 
-  landuse_timeseries_hist_16pfts_simyr1850-2005.txt --- List of historical input PFT files from 1850 to 2005
+  landuse_timeseries_hist_16pfts_simyr1850-2015.txt --- List of historical input PFT files from 1850 to 2015
 
-(Historical period from 1850-2005 datafiles all point to the historical files, while
- the future scenarios 2006-2100 are the scenario datasets)
+(Historical period from 1850-2015 datafiles all point to the historical files)
 

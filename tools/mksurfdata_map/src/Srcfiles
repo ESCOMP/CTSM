@@ -12,6 +12,7 @@ mkpftConstantsMod.F90
 mkpftUtilsMod.F90
 mkpctPftTypeMod.F90
 mkpftMod.F90
+mksoilUtilsMod.F90
 mksoilMod.F90
 mkvocefMod.F90
 mksurfdat.F90
@@ -29,7 +30,6 @@ mkpeatMod.F90
 mksoildepthMod.F90
 mktopostatsMod.F90
 mkVICparamsMod.F90
-mkCH4inversionMod.F90
 nanMod.F90
 shr_file_mod.F90
 shr_sys_mod.F90

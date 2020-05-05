@@ -2,4 +2,4 @@
 !
 ! Initial condition file at the desired configuration to run, so can verify that interpolating from it gives the same result
 ! Note that this was generated with GLC_TWO_WAY_COUPLING=FALSE
-finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2000-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c180306.nc'
+finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2000-01-01.1.9x2.5_gx1v7_gl4_simyr2000_dynglc_c190311.nc'

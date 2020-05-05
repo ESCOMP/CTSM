@@ -4,3 +4,4 @@ use_bedrock = .true.
 use_luna = .true.
 use_flexibleCN = .true.
 use_fun = .true.
+calc_human_stress_indices = 'ALL'

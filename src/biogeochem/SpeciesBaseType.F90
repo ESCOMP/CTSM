@@ -22,6 +22,9 @@ module SpeciesBaseType
 
      ! Get the full species name
      procedure(get_species_interface), public, deferred :: get_species
+
+     ! Return true if this is an isotope, false if not
+     procedure(is_isotope_interface), public, deferred :: is_isotope
   end type species_base_type
 
   abstract interface
@@ -62,6 +65,14 @@ module SpeciesBaseType
        character(len=:), allocatable :: species_name
        class(species_base_type) , intent(in)  :: this
      end function get_species_interface
+
+     pure function is_isotope_interface(this) result(is_isotope)
+       ! Return true if this is an isotope, false if not
+       import :: species_base_type
+
+       logical :: is_isotope ! function result
+       class(species_base_type), intent(in) :: this
+     end function is_isotope_interface
   end interface
 
 end module SpeciesBaseType

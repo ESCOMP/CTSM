@@ -170,7 +170,7 @@ contains
 
     this%icemask_grc(begg:endg) = spval
     call hist_addfld1d (fname='ICE_MODEL_FRACTION',  units='unitless',  &
-         avgflag='I', long_name='Ice sheet model fractional coverage', &
+         avgflag='A', long_name='Ice sheet model fractional coverage', &
          ptr_gcell=this%icemask_grc, default='inactive')
 
   end subroutine InitHistory

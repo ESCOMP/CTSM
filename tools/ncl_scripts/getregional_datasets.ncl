@@ -4,8 +4,6 @@
 ;
 ;  Erik Kluzek
 ;  Aug/28/2009
-;  $Id$
-;  $HeadURL;
 ;
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl";
 

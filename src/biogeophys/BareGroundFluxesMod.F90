@@ -51,7 +51,8 @@ contains
     use FrictionVelocityMod  , only : FrictionVelocity, MoninObukIni
     use QSatMod              , only : QSat
     use SurfaceResistanceMod , only : do_soilevap_beta,do_soil_resistance_sl14
-    use HumanIndexMod        , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
+    use HumanIndexMod        , only : all_human_stress_indices, fast_human_stress_indices, &
+                                      Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                       swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                       SwampCoolEff, KtoC, VaporPres
     use FrictionVelocityMod  , only : frictionvel_parms_inst
@@ -390,37 +391,42 @@ contains
          end if
 
          ! Human Heat Stress
-         if ( calc_human_stress_indices )then
+         if ( all_human_stress_indices .or. fast_human_stress_indices ) then
             call KtoC(t_ref2m(p), tc_ref2m(p))
             call VaporPres(rh_ref2m(p), e_ref2m, vap_ref2m(p))
-            call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), q_ref2m(p), &
-                            teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
             call Wet_BulbS(tc_ref2m(p),rh_ref2m(p), wbt_ref2m(p))
             call HeatIndex(tc_ref2m(p), rh_ref2m(p), nws_hi_ref2m(p))
             call AppTemp(tc_ref2m(p), vap_ref2m(p), u10_clm(p), appar_temp_ref2m(p))
             call swbgt(tc_ref2m(p), vap_ref2m(p), swbgt_ref2m(p))
             call hmdex(tc_ref2m(p), vap_ref2m(p), humidex_ref2m(p))
-            call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
             call dis_coiS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p), discomf_index_ref2mS(p))
-            call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
-            call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            if ( all_human_stress_indices ) then
+               call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), q_ref2m(p), &
+                               teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
+               call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
+               call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
+               call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+            end if
   
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-              teq_ref2m_r(p)            = teq_ref2m(p)
-              ept_ref2m_r(p)            = ept_ref2m(p)
-              wb_ref2m_r(p)             = wb_ref2m(p)
               wbt_ref2m_r(p)            = wbt_ref2m(p)
               nws_hi_ref2m_r(p)         = nws_hi_ref2m(p)
               appar_temp_ref2m_r(p)     = appar_temp_ref2m(p)
               swbgt_ref2m_r(p)          = swbgt_ref2m(p)
               humidex_ref2m_r(p)        = humidex_ref2m(p)
-              discomf_index_ref2m_r(p)  = discomf_index_ref2m(p)
               discomf_index_ref2mS_r(p) = discomf_index_ref2mS(p)
-              thic_ref2m_r(p)           = thic_ref2m(p)
-              thip_ref2m_r(p)           = thip_ref2m(p)
-              swmp80_ref2m_r(p)         = swmp80_ref2m(p)
-              swmp65_ref2m_r(p)         = swmp65_ref2m(p)
+              if ( all_human_stress_indices ) then
+                 teq_ref2m_r(p)            = teq_ref2m(p)
+                 ept_ref2m_r(p)            = ept_ref2m(p)
+                 wb_ref2m_r(p)             = wb_ref2m(p)
+                 discomf_index_ref2m_r(p)  = discomf_index_ref2m(p)
+                 thic_ref2m_r(p)           = thic_ref2m(p)
+                 thip_ref2m_r(p)           = thip_ref2m(p)
+                 swmp80_ref2m_r(p)         = swmp80_ref2m(p)
+                 swmp65_ref2m_r(p)         = swmp65_ref2m(p)
+              end if
             end if
+
          end if
       end do
 

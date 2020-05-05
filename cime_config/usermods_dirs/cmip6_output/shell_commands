@@ -1,4 +1,0 @@
-#!/bin/bash
-
-./xmlchange CCSM_BGC=CO2A
-

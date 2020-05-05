@@ -146,7 +146,7 @@ contains
          er                      =>    cnveg_carbonflux_inst%er_col                     , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
          col_fire_closs          =>    cnveg_carbonflux_inst%fire_closs_col             , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total column-level fire C loss
          col_hrv_xsmrpool_to_atm =>    cnveg_carbonflux_inst%hrv_xsmrpool_to_atm_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) excess MR pool harvest mortality 
-
+         col_xsmrpool_to_atm     =>   cnveg_carbonflux_inst%xsmrpool_to_atm_col         , & ! Input:  [real(r8) (:) ]  (gC/m2/s) excess MR pool crop harvest loss to atm
          som_c_leached           =>    soilbiogeochem_carbonflux_inst%som_c_leached_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total SOM C loss from vertical transport 
 
          totcolc                 =>    cnveg_carbonstate_inst%totc_col                    & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
@@ -167,7 +167,8 @@ contains
 
          ! calculate total column-level outputs
          ! er = ar + hr, col_fire_closs includes patch-level fire losses
-         col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c)
+         col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c) + &
+              col_xsmrpool_to_atm(c)
 
          ! Fluxes to product pools are included in column-level outputs: the product
          ! pools are not included in totcolc, so are outside the system with respect to
@@ -211,6 +212,7 @@ contains
          write(iulog,*)'er                       = ',er(c)*dt
          write(iulog,*)'col_fire_closs           = ',col_fire_closs(c)*dt
          write(iulog,*)'col_hrv_xsmrpool_to_atm  = ',col_hrv_xsmrpool_to_atm(c)*dt
+         write(iulog,*)'col_xsmrpool_to_atm      = ',col_xsmrpool_to_atm(c)*dt
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt

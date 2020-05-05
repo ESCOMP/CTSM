@@ -478,32 +478,32 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='land1d_wtxy', xtype=ncd_double, &
          dim1name='landunit',                                                      &
          long_name='landunit weight relative to corresponding gridcell',           &
-         interpinic_flag='skip', readvar=readvar, data=lun%wtgcell)
+         interpinic_flag='area', readvar=readvar, data=lun%wtgcell)
 
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_wtxy', xtype=ncd_double,  &
          dim1name='column',                                                         &
          long_name='column weight relative to corresponding gridcell', units=' ',   &
-         interpinic_flag='skip', readvar=readvar, data=col%wtgcell)
+         interpinic_flag='area', readvar=readvar, data=col%wtgcell)
 
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_wtlnd', xtype=ncd_double, &
          dim1name='column',                                                         &
          long_name='column weight relative to corresponding landunit', units=' ',   &
-         interpinic_flag='skip', readvar=readvar, data=col%wtlunit)
+         interpinic_flag='area', readvar=readvar, data=col%wtlunit)
 
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtxy', xtype=ncd_double,  &
          dim1name='pft',                                                            &
          long_name='pft weight relative to corresponding gridcell', units='',       &  
-         interpinic_flag='skip', readvar=readvar, data=patch%wtgcell)
+         interpinic_flag='area', readvar=readvar, data=patch%wtgcell)
 
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtlnd', xtype=ncd_double, &
          dim1name='pft',                                                            &
          long_name='pft weight relative to corresponding landunit', units='',       & 
-         interpinic_flag='skip', readvar=readvar, data=patch%wtlunit)
+         interpinic_flag='area', readvar=readvar, data=patch%wtlunit)
 
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtcol', xtype=ncd_double, &
          dim1name='pft',                                                            &
          long_name='pft weight relative to corresponding column', units='',         &
-         interpinic_flag='skip', readvar=readvar, data=patch%wtcol)
+         interpinic_flag='area', readvar=readvar, data=patch%wtcol)
 
     ! Snow column variables
 
