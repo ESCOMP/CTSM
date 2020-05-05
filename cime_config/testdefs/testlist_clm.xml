@@ -1786,6 +1786,8 @@
   <test name="ERP_Ld3" grid="f09_g16" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1814,6 +1816,18 @@
   <test name="ERS_D_Ld5" grid="f19_g16" compset="I2000Clm45Fates" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+<<<<<<< HEAD
+||||||| constructed merge base
+<<<<<<< HEAD
+      <machine name="hobart" compiler="nag" category="fates"/>
+=======
+      <machine name="izumi" compiler="nag" category="fates"/>
+>>>>>>> fates_next_api
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
+=======
+      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
+>>>>>>> no for real this time, fixing merge conflicts
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
