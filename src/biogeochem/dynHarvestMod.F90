@@ -23,6 +23,7 @@ module dynHarvestMod
   use clm_varcon              , only : grlnd
   use ColumnType              , only : col                
   use PatchType               , only : patch                
+  use clm_varctl              , only : use_fates
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -50,6 +51,7 @@ module dynHarvestMod
   type(dyn_var_time_uninterp_type) :: harvest_inst(num_harvest_inst)   ! value of each harvest variable
 
   real(r8) , allocatable   :: harvest(:) ! harvest rates
+  real(r8) , allocatable   :: harvest_typeresolved(:,:) ! harvest rates, resolved by harvest type
   logical                  :: do_harvest ! whether we're in a period when we should do harvest
   character(len=*), parameter :: string_not_set = "not_set"  ! string to initialize with to indicate string wasn't set
   character(len=64)        :: harvest_units = string_not_set ! units from harvest variables 
@@ -85,9 +87,16 @@ contains
 
     SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
-    allocate(harvest(bounds%begg:bounds%endg),stat=ier)
-    if (ier /= 0) then
-       call endrun(msg=' allocation error for harvest'//errMsg(sourcefile, __LINE__))
+    if ( .not. use_fates ) then
+       allocate(harvest(bounds%begg:bounds%endg),stat=ier)
+       if (ier /= 0) then
+          call endrun(msg=' allocation error for harvest'//errMsg(sourcefile, __LINE__))
+       end if
+    else
+       allocate(harvest_typeresolved(bounds%begg:bounds%endg, num_harvest_inst),stat=ier)
+       if (ier /= 0) then
+          call endrun(msg=' allocation error for harvest_typeresolved'//errMsg(sourcefile, __LINE__))
+       end if
     end if
 
     ! Get the year from the START of the timestep for consistency with other dyn file
@@ -171,6 +180,61 @@ contains
     end if
 
   end subroutine dynHarvest_interp
+
+
+  !-----------------------------------------------------------------------
+  subroutine dynHarvest_interp_resolve_harvesttypes(bounds)
+    !
+    ! !DESCRIPTION:
+    ! Get harvest data for model time, when needed.
+    !
+    ! Note that harvest data are stored as rates (not weights) and so time interpolation
+    ! is not necessary - the harvest rate is held constant through the year.  This is
+    ! consistent with the treatment of changing PFT weights, where interpolation of the
+    ! annual endpoint weights leads to a constant rate of change in PFT weight through the
+    ! year, with abrupt changes in the rate at annual boundaries.
+    !
+    ! Note the difference between this and dynHarvest_interp is that here, we keep the different
+    ! forcing sets distinct (e.g., for passing to FATES which has distinct primary and secondary lands)
+    ! and thus store it in harvest_typeresolved
+    !
+    ! !USES:
+    use dynTimeInfoMod , only : time_info_type
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds  ! proc-level bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer               :: varnum       ! counter for harvest variables
+    real(r8), allocatable :: this_data(:) ! data for a single harvest variable
+
+    character(len=*), parameter :: subname = 'dynHarvest_interp'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+
+    call dynHarvest_file%time_info%set_current_year()
+
+    ! Get total harvest for this time step
+    harvest_typeresolved(bounds%begg:bounds%endg,1:num_harvest_inst) = 0._r8
+
+    if (dynHarvest_file%time_info%is_before_time_series()) then
+       ! Turn off harvest before the start of the harvest time series
+       do_harvest = .false.
+    else
+       ! Note that do_harvest stays true even past the end of the time series. This
+       ! means that harvest rates will be maintained at the rate given in the last
+       ! year of the file for all years past the end of this specified time series.
+       do_harvest = .true.
+       allocate(this_data(bounds%begg:bounds%endg))
+       do varnum = 1, num_harvest_inst
+          call harvest_inst(varnum)%get_current_data(this_data)
+          harvest_typeresolved(bounds%begg:bounds%endg,varnum) = this_data(bounds%begg:bounds%endg)
+       end do
+       deallocate(this_data)
+    end if
+
+  end subroutine dynHarvest_interp_resolve_harvesttypes
 
 
   !-----------------------------------------------------------------------
