@@ -189,6 +189,8 @@ module CLMFatesInterfaceMod
       procedure, public :: wrap_canopy_radiation
       procedure, public :: wrap_bgc_summary
       procedure, public :: TransferZ0mDisp
+      procedure, public :: InterpFileInputs  ! Interpolate inputs from files
+      procedure, public :: Init2  ! Initialization after determining subgrid weights
       procedure, private :: init_history_io
       procedure, private :: wrap_update_hlmfates_dyn
       procedure, private :: init_soil_depths
@@ -1967,6 +1969,65 @@ contains
 
     return
  end subroutine TransferZ0mDisp
+
+  !-----------------------------------------------------------------------
+  subroutine InterpFileInputs(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Interpolate inputs from files
+    !
+    ! NOTE(wjs, 2016-02-23) Stuff done here could probably be done at the end of
+    ! InitEachTimeStep, rather than in this separate routine, except for the
+    ! fact that
+    ! (currently) this Interp stuff is done with proc bounds rather thna clump
+    ! bounds. I
+    ! think that is needed so that you don't update a given stream multiple
+    ! times. If we
+    ! rework the handling of threading / clumps so that there is a separate
+    ! object for
+    ! each clump, then I think this problem would disappear - at which point we
+    ! could
+    ! remove this Interp routine, moving its body to the end of
+    ! InitEachTimeStep.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cnfire_method_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InterpFileInputs'
+    !-----------------------------------------------------------------------
+
+    call this%cnfire_method%CNFireInterp(bounds)
+
+  end subroutine InterpFileInputs
+
+  !-----------------------------------------------------------------------
+  subroutine Init2(this, bounds, NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Initialization after subgrid weights are determined
+    !
+    ! This copy should only be called if use_fates is .true.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cnfire_method_type) , intent(inout) :: this
+    type(bounds_type) , intent(in)    :: bounds
+    character(len=*)  , intent(in)    :: NLFilename ! namelist filename
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'Init2'
+    !-----------------------------------------------------------------------
+
+    call this%cnfire_method%CNFireInit(bounds, NLFilename)
+
+  end subroutine Init2
 
  ! ======================================================================================
 
