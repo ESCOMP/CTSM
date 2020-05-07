@@ -553,10 +553,8 @@ subroutine clm_map2gcell()
   if ( drydep_method == DD_XLND ) then
       clm_l2a%pwtgcell(:,:) = 0.0e+00_r8
       do p = begp,endp
-          if (pft%itype(p) > 0 ) then
-             g = pft%gridcell(p)
-             clm_l2a%pwtgcell(g,pft%itype(p)) = pft%wtgcell(p)
-          end if
+          g = pft%gridcell(p)
+          clm_l2a%pwtgcell(g,pft%itype(p)+1) = pft%wtgcell(p)
       end do
 
       clm_l2a%lwtgcell(:,:) = 0.0e+00_r8
