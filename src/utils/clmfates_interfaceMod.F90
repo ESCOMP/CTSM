@@ -676,11 +676,6 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
                waterstate_inst%h2osoi_vol_col(c,1:nlevsoil) 
 
-         ! TO-DO: SHOULD THIS BE LIQVOL OR IS VOL OK? (RGK-02-2017)
-
-         this%fates(nc)%bc_in(s)%t_veg24_si = &
-               temperature_inst%t_veg24_patch(col%patchi(c))
-
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
                min(nlevsoil, canopystate_inst%altmax_lastyear_indx_col(c))
 
