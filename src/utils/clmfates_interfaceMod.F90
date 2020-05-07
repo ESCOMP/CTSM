@@ -131,6 +131,9 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : UpdateH2OVeg
    use FatesPlantHydraulicsMod, only : RestartHydrStates
+   use dynSubgridControlMod   , only : get_do_harvest
+   use dynHarvestMod          , only : num_harvest_inst, &
+                                       dynHarvest_interp_resolve_harvesttypes
 
    implicit none
    
@@ -584,6 +587,7 @@ contains
       ! !LOCAL VARIABLES:
       integer  :: s                        ! site index
       integer  :: c                        ! column index (HLM)
+      integer  :: g                        ! gridcell index (HLM)
       integer  :: ifp                      ! patch index
       integer  :: p                        ! HLM patch index
       integer  :: yr                       ! year (0, ...)
@@ -602,6 +606,8 @@ contains
       integer  :: days_per_year
       real(r8) :: model_day
       real(r8) :: day_of_year
+      integer  :: begg,endg
+      real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -612,6 +618,8 @@ contains
       ! one day.  The cost of holding site level boundary conditions is minimal
       ! and it keeps all the boundaries in one location
       ! ---------------------------------------------------------------------------------
+
+      begg = bounds_clump%begg; endg = bounds_clump%endg
 
       days_per_year = get_days_per_year()
       call get_curr_date(current_year,current_month,current_day,current_tod)
@@ -631,10 +639,16 @@ contains
                         model_day, floor(day_of_year), &
                         days_per_year, 1.0_r8/dble(days_per_year))
 
+      if (get_do_harvest()) then
+         call dynHarvest_interp_resolve_harvesttypes(bounds_clump, &
+              harvest_rates=harvest_rates(begg:endg,1:num_harvest_inst))
+      endif
 
       do s=1,this%fates(nc)%nsites
 
          c = this%f2hmap(nc)%fcolumn(s)
+
+         g = col%gricell(c)
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
@@ -665,6 +679,11 @@ contains
 
          end do
 
+         if (get_do_harvest()) then
+            do iharv = 1, num_harvest_inst
+               this%fates(nc)%bc_in(s)%harvest_rates(iharv) = harvest_rates(g,iharv)
+            end do
+         endif
          
          if(use_fates_planthydro)then
             this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoil)  = soilstate_inst%hksat_col(c,1:nlevsoil)
@@ -674,7 +693,6 @@ contains
             this%fates(nc)%bc_in(s)%bsw_sisl(1:nlevsoil)    = soilstate_inst%bsw_col(c,1:nlevsoil)
             this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) =  waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
          end if
-         
 
       end do
 
