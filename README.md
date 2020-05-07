@@ -1,9 +1,8 @@
-====
-CTSM
-====
+# CTSM
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3739617.svg
-   :target: https://doi.org/10.5281/zenodo.3739617
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3739617.svg)](https://doi.org/10.5281/zenodo.3739617)
+
+## Overview and Resources
 
 The Community Terrestrial Systems Model.
 
