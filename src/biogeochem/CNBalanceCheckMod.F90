@@ -398,6 +398,10 @@ contains
     real(r8):: col_ninputs(bounds%begc:bounds%endc) 
     real(r8):: col_noutputs(bounds%begc:bounds%endc) 
     real(r8):: col_errnb(bounds%begc:bounds%endc) 
+    real(r8):: col_ninputs_partial(bounds%begc:bounds%endc)
+    real(r8):: col_noutputs_partial(bounds%begc:bounds%endc)
+    real(r8):: grc_ninputs_partial(bounds%begg:bounds%endg)
+    real(r8):: grc_noutputs_partial(bounds%begg:bounds%endg)
     real(r8):: grc_ninputs(bounds%begg:bounds%endg)
     real(r8):: grc_noutputs(bounds%begg:bounds%endg)
     real(r8):: grc_errnb(bounds%begg:bounds%endg)
@@ -451,6 +455,10 @@ contains
       ! set time steps
       dt = get_step_size_real()
 
+      ! initialize local arrays
+      col_ninputs_partial(:) = 0._r8
+      col_noutputs_partial(:) = 0._r8
+
       err_found = .false.
       do fc = 1,num_soilc
          c=filter_soilc(fc)
@@ -468,6 +476,8 @@ contains
          if (use_crop) then
             col_ninputs(c) = col_ninputs(c) + fert_to_sminn(c) + soyfixn_to_sminn(c)
          end if
+
+         col_ninputs_partial(c) = col_ninputs(c)
 
          ! calculate total column-level outputs
          col_noutputs(c) = denit(c) + col_fire_nloss(c)
@@ -490,6 +500,10 @@ contains
          end if
 
          col_noutputs(c) = col_noutputs(c) - som_n_leached(c)
+
+         col_noutputs_partial(c) = col_noutputs(c) - &
+                                   wood_harvestn(c) - &
+                                   grainn_to_cropprodn(c)
 
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
@@ -533,72 +547,15 @@ contains
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
       call c2g( bounds = bounds, &
-         carr = nfix_to_sminn(bounds%begc:bounds%endc), &
-         garr = nfix_to_sminn_grc(bounds%begg:bounds%endg), &
+         carr = col_ninputs_partial(bounds%begc:bounds%endc), &
+         garr = grc_ninputs_partial(bounds%begg:bounds%endg), &
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
       call c2g( bounds = bounds, &
-         carr = supplement_to_sminn(bounds%begc:bounds%endc), &
-         garr = supplement_to_sminn_grc(bounds%begg:bounds%endg), &
+         carr = col_noutputs_partial(bounds%begc:bounds%endc), &
+         garr = grc_noutputs_partial(bounds%begg:bounds%endg), &
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
-      if (use_fun) then
-         call c2g( bounds = bounds, &
-            carr = ffix_to_sminn(bounds%begc:bounds%endc), &
-            garr = ffix_to_sminn_grc(bounds%begg:bounds%endg), &
-            c2l_scale_type = 'unity', &
-            l2g_scale_type = 'unity')
-      end if
-      if (use_crop) then
-         call c2g( bounds = bounds, &
-            carr = fert_to_sminn(bounds%begc:bounds%endc), &
-            garr = fert_to_sminn_grc(bounds%begg:bounds%endg), &
-            c2l_scale_type = 'unity', &
-            l2g_scale_type = 'unity')
-         call c2g( bounds = bounds, &
-            carr = soyfixn_to_sminn(bounds%begc:bounds%endc), &
-            garr = soyfixn_to_sminn_grc(bounds%begg:bounds%endg), &
-            c2l_scale_type = 'unity', &
-            l2g_scale_type = 'unity')
-      end if
-      call c2g( bounds = bounds, &
-         carr = denit(bounds%begc:bounds%endc), &
-         garr = denit_grc(bounds%begg:bounds%endg), &
-         c2l_scale_type = 'unity', &
-         l2g_scale_type = 'unity')
-      call c2g( bounds = bounds, &
-         carr = col_fire_nloss(bounds%begc:bounds%endc), &
-         garr = grc_fire_nloss(bounds%begg:bounds%endg), &
-         c2l_scale_type = 'unity', &
-         l2g_scale_type = 'unity')
-      call c2g( bounds = bounds, &
-         carr = som_n_leached(bounds%begc:bounds%endc), &
-         garr = som_n_leached_grc(bounds%begg:bounds%endg), &
-         c2l_scale_type = 'unity', &
-         l2g_scale_type = 'unity')
-      if (.not. use_nitrif_denitrif) then
-         call c2g( bounds = bounds, &
-            carr = sminn_leached(bounds%begc:bounds%endc), &
-            garr = sminn_leached_grc(bounds%begg:bounds%endg), &
-            c2l_scale_type = 'unity', &
-            l2g_scale_type = 'unity')
-      else
-         call c2g( bounds = bounds, &
-            carr = f_n2o_nit(bounds%begc:bounds%endc), &
-            garr = f_n2o_nit_grc(bounds%begg:bounds%endg), &
-            c2l_scale_type = 'unity', &
-            l2g_scale_type = 'unity')
-         call c2g( bounds = bounds, &
-            carr = smin_no3_leached(bounds%begc:bounds%endc), &
-            garr = smin_no3_leached_grc(bounds%begg:bounds%endg), &
-            c2l_scale_type = 'unity', &
-            l2g_scale_type = 'unity')
-         call c2g( bounds = bounds, &
-            carr = smin_no3_runoff(bounds%begc:bounds%endc), &
-            garr = smin_no3_runoff_grc(bounds%begg:bounds%endg), &
-            c2l_scale_type = 'unity', &
-            l2g_scale_type = 'unity')
-      end if
 
       err_found = .false.
       do g = bounds%begg, bounds%endg
@@ -612,30 +569,14 @@ contains
          grc_endnb(g) = totgrcn(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
 
          ! calculate total gridcell-level inputs
-         grc_ninputs(g) = forc_ndep(g) + nfix_to_sminn_grc(g) + &
-                          supplement_to_sminn_grc(g) + &
+         grc_ninputs(g) = grc_ninputs_partial(g) + &
                           dwt_seedn_to_leaf_grc(g) + &
                           dwt_seedn_to_deadstem_grc(g)
 
-         if (use_fun) then
-            grc_ninputs(g) = grc_ninputs(g) + ffix_to_sminn_grc(g)
-         endif
-
-         if (use_crop) then
-            grc_ninputs(g) = grc_ninputs(g) + fert_to_sminn_grc(g) + soyfixn_to_sminn_grc(g)
-         end if
-
          ! calculate total gridcell-level outputs
-         grc_noutputs(g) = denit_grc(g) + grc_fire_nloss(g) + &
-                           dwt_conv_nflux_grc(g) + product_loss_grc(g) - &
-                           som_n_leached_grc(g)
-
-         if (.not. use_nitrif_denitrif) then
-            grc_noutputs(g) = grc_noutputs(g) + sminn_leached_grc(g)
-         else
-            grc_noutputs(g) = grc_noutputs(g) + f_n2o_nit_grc(g) + &
-                              smin_no3_leached_grc(g) + smin_no3_runoff_grc(g)
-         end if
+         grc_noutputs(g) = grc_noutputs_partial(g) + &
+                           dwt_conv_nflux_grc(g) + &
+                           product_loss_grc(g)
 
          ! calculate the total gridcell-level nitrogen balance error for this time step
          grc_errnb(g) = (grc_ninputs(g) - grc_noutputs(g)) * dt - &
@@ -662,32 +603,13 @@ contains
          write(iulog,*) 'output mass              =', grc_noutputs(g) * dt
          write(iulog,*) 'net flux                 =', (grc_ninputs(g) - grc_noutputs(g)) * dt
          write(iulog,*) '--- Inputs ---'
-         write(iulog,*) 'forc_ndep                =', forc_ndep(g) * dt
-         write(iulog,*) 'nfix_to_sminn_grc        =', nfix_to_sminn_grc(g) * dt
-         write(iulog,*) 'supplement_to_sminn_grc  =', supplement_to_sminn_grc(g) * dt
+         write(iulog,*) 'grc_ninputs_partial      =', grc_ninputs_partial(g) * dt
          write(iulog,*) 'dwt_seedn_to_leaf_grc    =', dwt_seedn_to_leaf_grc(g) * dt
          write(iulog,*) 'dwt_seedn_to_deadstem_grc =', dwt_seedn_to_deadstem_grc(g) * dt
-         if (use_fun) then
-            write(iulog,*) 'ffix_to_sminn_grc     =', ffix_to_sminn_grc(g) * dt
-         end if
-         if (use_crop) then
-            write(iulog,*) 'fert_to_sminn_grc     =', fert_to_sminn_grc(g) * dt
-            write(iulog,*) 'soyfixn_to_sminn_grc  =', soyfixn_to_sminn_grc(g) * dt
-         end if
          write(iulog,*) '--- Outputs ---'
-         write(iulog,*) 'denit_grc                =', denit_grc(g) * dt
-         write(iulog,*) 'grc_fire_nloss           =', grc_fire_nloss(g) * dt
+         write(iulog,*) 'grc_noutputs_partial     =', grc_noutputs_partial(g) * dt
          write(iulog,*) 'dwt_conv_nflux_grc       =', dwt_conv_nflux_grc(g) * dt
          write(iulog,*) 'product_loss_grc         =', product_loss_grc(g) * dt
-         write(iulog,*) '-1*som_n_leached_grc     = ', som_n_leached_grc(g) * dt
-         if (.not. use_nitrif_denitrif) then
-            write(iulog,*) 'sminn_leached_grc     =', sminn_leached_grc(g) * dt
-         else
-            write(iulog,*) 'f_n2o_nit_grc         =', f_n2o_nit_grc(g) * dt
-            write(iulog,*) 'smin_no3_leached_grc  =', smin_no3_leached_grc(g) * dt
-            write(iulog,*) 'smin_no3_runoff_grc   =', smin_no3_runoff_grc(g) * dt
-         end if
-
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
