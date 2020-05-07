@@ -112,22 +112,22 @@ contains
     integer :: begg, endg
     !-----------------------------------------------------------------------
 
-    associate(                                            &
-         grc_begcb    => this%begcb_grc                  , & ! Output: [real(r8) (:)]  (gC/m2) gridcell carbon mass, beginning of time step
-         grc_begnb    => this%begnb_grc                  , & ! Output: [real(r8) (:)]  (gN/m2) gridcell nitrogen mass, beginning of time step
-         totgrcc      => cnveg_carbonstate_inst%totc_grc , & ! Input:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
-         totgrcn      => cnveg_nitrogenstate_inst%totn_grc, & ! Input:  [real(r8) (:)]  (gN/m2) total gridcell nitrogen, incl veg
-         cropprod1c_grc => c_products_inst%cropprod1_grc , & ! Input:  [real(r8) (:)]  (gC/m2) carbon in crop products
-         cropprod1n_grc => n_products_inst%cropprod1_grc , & ! Input:  [real(r8) (:)]  (gC/m2) nitrogen in crop products
-         tot_woodprodc_grc => c_products_inst%tot_woodprod_grc, & ! Input:  [real(r8) (:)]  (gC/m2) total carbon in wood products
-         tot_woodprodn_grc => n_products_inst%tot_woodprod_grc & ! Input:  [real(r8) (:)]  (gC/m2) total nitrogen in wood products
+    associate(                                                &
+         begcb          => this%begcb_grc                   , &  ! Output: [real(r8) (:)]  (gC/m2) gridcell carbon mass, beginning of time step
+         begnb          => this%begnb_grc                   , &  ! Output: [real(r8) (:)]  (gN/m2) gridcell nitrogen mass, beginning of time step
+         totc           => cnveg_carbonstate_inst%totc_grc  , &  ! Input:  [real(r8) (:)]  (gC/m2) total gridcell carbon, incl veg and cpool
+         totn           => cnveg_nitrogenstate_inst%totn_grc, &  ! Input:  [real(r8) (:)]  (gN/m2) total gridcell nitrogen, incl veg
+         c_cropprod1    => c_products_inst%cropprod1_grc    , &  ! Input:  [real(r8) (:)]  (gC/m2) carbon in crop products
+         n_cropprod1    => n_products_inst%cropprod1_grc    , &  ! Input:  [real(r8) (:)]  (gC/m2) nitrogen in crop products
+         c_tot_woodprod => c_products_inst%tot_woodprod_grc , &  ! Input:  [real(r8) (:)]  (gC/m2) total carbon in wood products
+         n_tot_woodprod => n_products_inst%tot_woodprod_grc   &  ! Input:  [real(r8) (:)]  (gC/m2) total nitrogen in wood products
          )
 
     begg = bounds%begg; endg = bounds%endg
 
     do g = begg, endg
-       grc_begcb(g) = totgrcc(g) + tot_woodprodc_grc(g) + cropprod1c_grc(g)
-       grc_begnb(g) = totgrcn(g) + tot_woodprodn_grc(g) + cropprod1n_grc(g)
+       begcb(g) = totc(g) + c_tot_woodprod(g) + c_cropprod1(g)
+       begnb(g) = totn(g) + n_tot_woodprod(g) + n_cropprod1(g)
     end do
 
     end associate
@@ -141,7 +141,6 @@ contains
     ! !DESCRIPTION:
     ! Calculate beginning column-level carbon/nitrogen balance, for mass conservation check
     !
-    ! Column level:
     ! Should be called after CN state summaries have been recomputed for this time step
     ! (which should be after the dynamic landunit area updates and the associated filter
     ! updates - i.e., using the new version of the filters)
@@ -181,7 +180,7 @@ contains
        cnveg_carbonstate_inst, c_products_inst)
     !
     ! !USES:
-    use subgridAveMod, only: c2g, p2g
+    use subgridAveMod, only: c2g
     !
     ! !DESCRIPTION:
     ! Perform carbon mass conservation check for column and patch
@@ -315,9 +314,9 @@ contains
          ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
          ! totc_p2c_col = totc_patch = totvegc_patch(p) + xsmrpool_patch(p) + ctrunc_patch(p) + cropseedc_deficit_patch(p)
          ! slevis: Not including seedc_grc in grc_begcb and grc_endcb because
-         ! seedc_grc equals
+         ! seedc_grc forms out of thin air, for now, and equals
          ! -1 * (dwt_seedc_to_leaf_grc(g) + dwt_seedc_to_deadstem_grc(g))
-         ! and we account for the latter fluxes as inputs below; the same
+         ! We account for the latter fluxes as inputs below; the same
          ! fluxes have entered the pools earlier in the timestep. For true
          ! conservation we would need to add a flux out of npp into seed.
          grc_endcb(g) = totgrcc(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
@@ -376,7 +375,7 @@ contains
     !
     ! !USES:
     use clm_varctl, only : use_crop
-    use subgridAveMod, only: c2g, p2g
+    use subgridAveMod, only: c2g
     use atm2lndType, only: atm2lnd_type
     !
     ! !ARGUMENTS:
@@ -605,9 +604,9 @@ contains
       do g = bounds%begg, bounds%endg
          ! calculate the total gridcell-level nitrogen storage, for mass conservation check
          ! slevis: Not including seedn_grc in grc_begnb and grc_endnb because
-         ! seedn_grc equals
+         ! seedn_grc forms out of thin air, for now, and equals
          ! -1 * (dwt_seedn_to_leaf_grc(g) + dwt_seedn_to_deadstem_grc(g))
-         ! and we account for the latter fluxes as inputs below; the same
+         ! We account for the latter fluxes as inputs below; the same
          ! fluxes have entered the pools earlier in the timestep. For true
          ! conservation we would need to add a flux out of nfix into seed.
          grc_endnb(g) = totgrcn(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
