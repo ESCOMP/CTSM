@@ -19,7 +19,7 @@ https://escomp.github.io/ctsm-docs/
 
 For help with how to work with CTSM in git, see
 
-https://github.com/ESCOMP/ctsm/wiki/Getting-started-with-CTSM-in-git
+https://github.com/ESCOMP/CTSM/wiki/Quick-start-to-CTSM-development-with-git
 
 and
 
