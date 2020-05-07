@@ -47,6 +47,9 @@ module LunaMod
       real(r8) :: kc25_coef     ! Michaelis-Menten const. at 25°C for CO2 (unitless)
       real(r8) :: ko25_coef     ! Michaelis-Menten const. at 25°C for O2 (unitless)
       real(r8) :: luna_theta_cj ! LUNA empirical curvature parameter for ac, aj photosynthesis co-limitation (unitless)
+      real(r8) :: jmaxb0        ! The baseline proportion of nitrogen allocated for electron transport (J)
+      real(r8) :: wc2wjb0       ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (unitless)
+      real(r8) :: enzyme_turnover_daily ! The daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001) (unitless)
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -73,11 +76,8 @@ module LunaMod
   real(r8), parameter :: CO2ref = 380.0_r8                   ! reference CO2 concentration for calculation of reference NUE. 
   real(r8), parameter :: forc_pbot_ref = 101325.0_r8       ! reference air pressure for calculation of reference NUE
   real(r8), parameter :: Q10Enz = 2.0_r8                   ! Q10 value for enzyme decay rate
-  real(r8), parameter :: Jmaxb0 = 0.0311_r8                ! the baseline proportion of nitrogen allocated for electron transport (J)     
   real(r8)            :: Jmaxb1 = 0.1_r8                   ! the baseline proportion of nitrogen allocated for electron transport (J)    
-  real(r8), parameter :: Wc2Wjb0 = 0.8054_r8               ! the baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) 
   real(r8), parameter :: relhExp = 6.0999_r8               ! electron transport parameters related to relative humidity
-  real(r8), parameter :: Enzyme_turnover_daily = 0.1_r8    ! the daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001)
   real(r8), parameter :: NMCp25 = 0.715_r8                 ! estimated by assuming 80% maintenance respiration is used for photosynthesis enzyme maintenance
   real(r8), parameter :: Trange1 = 5.0_r8                  ! lower temperature limit (oC) for nitrogen optimization  
   real(r8), parameter :: Trange2 = 42.0_r8                 ! upper temperature limit (oC) for nitrogen optimization
@@ -177,6 +177,12 @@ module LunaMod
     params_inst%kc25_coef = params_inst%kc25_coef * 1.e5_r8  ! from mol/mol to Luna units
     ! LUNA empirical curvature parameter for ac, aj photosynthesis co-limitation
     call readNcdioScalar(ncid, 'luna_theta_cj', subname, params_inst%luna_theta_cj)
+    ! The baseline proportion of nitrogen allocated for electron transport (J)
+    call readNcdioScalar(ncid, 'jmaxb0', subname, params_inst%jmaxb0)
+    ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (unitless)
+    call readNcdioScalar(ncid, 'wc2wjb0', subname, params_inst%wc2wjb0)
+    ! The daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001) (unitless)
+    call readNcdioScalar(ncid, 'enzyme_turnover_daily', subname, params_inst%enzyme_turnover_daily)
 
    end subroutine readParams
 
@@ -342,7 +348,7 @@ module LunaMod
          !--------------------------------------------------------------------
          !calculate the enzyme ternover rate
          EnzTurnoverTFactor = Q10Enz**(0.1_r8*(min(40.0_r8, tleaf10) - 25.0_r8))            
-         max_daily_pchg = EnzTurnoverTFactor * Enzyme_turnover_daily
+         max_daily_pchg = EnzTurnoverTFactor * params_inst%enzyme_turnover_daily
          !-----------------------------------------------------------------
          rabsorb = 1.0_r8-rhol(ft,1)-taul(ft,1)
          !Implemented the nitrogen allocation model
@@ -405,7 +411,7 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp, PNlcold, PNetold, PNrespold, &
+                              Jmaxb1, relhExp, PNlcold, PNetold, PNrespold, &
                               PNcbold, PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
@@ -793,7 +799,7 @@ end subroutine Clear24_Climate_LUNA
 !************************************************************************************************************************************************
 !Use the LUNA model to calculate the Nitrogen partioning 
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
-     Jmaxb0, Jmaxb1, Wc2Wjb0, relhExp,&
+     Jmaxb1, relhExp,&
      PNlcold, PNetold, PNrespold, PNcbold, &
      PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
   implicit none
@@ -809,9 +815,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: tair10                     !10-day running mean of the 2m temperature (oC)
   real(r8), intent (in) :: tleafd10                   !10-day running mean of daytime leaf temperature (oC) 
   real(r8), intent (in) :: tleafn10                   !10-day running mean of nighttime leaf temperature (oC) 
-  real(r8), intent (in) :: Jmaxb0                     !baseline proportion of nitrogen allocated for electron transport rate (unitless)
   real(r8), intent (in) :: Jmaxb1                     !coefficient determining the response of electron transport rate to light availability (unitless) 
-  real(r8), intent (in) :: Wc2Wjb0                    !the baseline ratio of rubisco-limited rate vs light-limited photosynthetic rate (Wc:Wj)
   real(r8), intent (in) :: relhExp                    !specifies the impact of relative humidity on electron transport rate (unitless)
   real(r8), intent (in) :: PNlcold                    !old value of the proportion of nitrogen allocated to light capture (unitless)
   real(r8), intent (in) :: PNetold                    !old value of the proportion of nitrogen allocated to electron transport (unitless)
@@ -911,7 +915,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
      call NUE(O2a10, ci, tair10, tleafd10c, NUEj, NUEc, Kj2Kc)
      call Nitrogen_investments (KcKjFlag,FNCa, Nlc, forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, tair10, &
           tleafd10c,tleafn10c, &
-          Kj2Kc, Wc2Wjb0, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, Kc, Kj, ci, &
+          Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, Kc, Kj, ci, &
           Vcmax, Jmax,JmeanL,JmaxL, Net, Ncb, Nresp, PSN, RESP)
 
      Npsntarget = Nlc + Ncb + Net                                                         !target nitrogen allocated to photosynthesis, which may be lower or higher than Npsn_avail
@@ -925,7 +929,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
         KcKjFlag = 1
         call Nitrogen_investments (KcKjFlag,FNCa, Nlc2, forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, &
              tair10, tleafd10c,tleafn10c, &
-             Kj2Kc, Wc2Wjb0, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, Kc, Kj, ci, &
+             Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, Kc, Kj, ci, &
              Vcmax, Jmax,JmeanL,JmaxL, Net2, Ncb2, Nresp2, PSN2, RESP2)
 
         Npsntarget2 = Nlc2 + Ncb2 + Net2
@@ -953,7 +957,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
         KcKjFlag = 1
         call Nitrogen_investments (KcKjFlag,FNCa, Nlc1,forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, &
              tair10, tleafd10c,tleafn10c, &
-             Kj2Kc, Wc2Wjb0, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, Kc, Kj, ci,&
+             Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, Kc, Kj, ci,&
              Vcmax, Jmax,JmeanL,JmaxL, Net1, Ncb1, Nresp1, PSN1, RESP1)
         Npsntarget1 = Nlc1 + Ncb1 + Net1
         Carboncost1 = (Npsntarget - Npsntarget1) * NMCp25 * Cv * (RespTBernacchi(tleafd10c) * hourpd + &
@@ -983,7 +987,7 @@ end subroutine NitrogenAllocation
 
 subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
      CO2a10, O2a10, PARi10, PARimx10, rb10, hourpd, tair10, tleafd10, tleafn10, &
-     Kj2Kc, Wc2Wjb0, JmaxCoef, Fc, Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, Kc, &
+     Kj2Kc, JmaxCoef, Fc, Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, Kc, &
      Kj, ci, Vcmax, Jmax, JmeanL, JmaxL, Net, Ncb, Nresp, PSN, RESP)
   implicit none
   integer,  intent (in) :: KcKjFlag                   !flag to indicate whether to update the Kc and Kj using the photosynthesis subroutine; 0--Kc and Kj need to be calculated; 1--Kc and Kj is prescribed.
@@ -1001,7 +1005,6 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   real(r8), intent (in) :: tleafd10                   !10-day mean daytime leaf temperature (oC) 
   real(r8), intent (in) :: tleafn10                   !10-day mean nighttime leaf temperature (oC) 
   real(r8), intent (in) :: Kj2Kc                      !ratio:  Kj / Kc
-  real(r8), intent (in) :: Wc2Wjb0                    !the baseline ratio of rubisco-limited rate vs light-limited photosynthetic rate (Wc:Wj)
   real(r8), intent (in) :: JmaxCoef                   !coefficient determining the response of electron transport rate to light availability (unitless) and humidity
   real(r8), intent (in) :: Fc                         !the temperature adjustment factor for Vcmax 
   real(r8), intent (in) :: Fj                         !the temperature adjustment factor for Jmax 
@@ -1037,11 +1040,11 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   
   theta = 0.292_r8 / (1.0_r8 + 0.076_r8 / (Nlc * Cb))
   ELTRNabsorb = theta * PARi10
-  Jmaxb0act = Jmaxb0 * FNCa * Fj
+  Jmaxb0act = params_inst%jmaxb0 * FNCa * Fj
   Jmax = Jmaxb0act + JmaxCoef * ELTRNabsorb
   JmaxL = theta * PARimx10 / (sqrt(1.0_r8 + (theta * PARimx10 / Jmax)**2.0_r8))        
   NUEchg = (NUEc / NUEcref) * (NUEjref / NUEj)
-  Wc2Wj = Wc2Wjb0 * (NUEchg**0.5_r8)
+  Wc2Wj = params_inst%wc2wjb0 * (NUEchg**0.5_r8)
   Wc2Wj = min(1.0_r8, Wc2Wj)
   Vcmax = Wc2Wj * JmaxL * Kj2Kc
   JmeanL = theta * PARi10 / (sqrt(1.0_r8 + (ELTRNabsorb / Jmax)**2.0_r8))
