@@ -25,6 +25,8 @@ module CNProductsMod
      ! ------------------------------------------------------------------------
 
      real(r8), pointer, public :: product_loss_grc(:)   ! (g[C or N]/m2/s) total decomposition loss from ALL product pools
+     real(r8), pointer, public :: cropprod1_grc(:)  ! (g[C or N]/m2) grain product pool, 1-year lifespan
+     real(r8), pointer, public :: tot_woodprod_grc(:)  ! (g[C or N]/m2) total wood product pool
 
      ! ------------------------------------------------------------------------
      ! Private instance variables
@@ -33,10 +35,8 @@ module CNProductsMod
      class(species_base_type), allocatable :: species    ! C, N, C13, C14, etc.
 
      ! States
-     real(r8), pointer, public :: cropprod1_grc(:) ! (g[C or N]/m2) grain product pool, 1-year lifespan
      real(r8), pointer :: prod10_grc(:)       ! (g[C or N]/m2) wood product pool, 10-year lifespan
      real(r8), pointer :: prod100_grc(:)      ! (g[C or N]/m2) wood product pool, 100-year lifespan
-     real(r8), pointer, public :: tot_woodprod_grc(:) ! (g[C or N]/m2) total wood product pool
 
      ! Fluxes: gains
      real(r8), pointer :: dwt_prod10_gain_grc(:)  ! (g[C or N]/m2/s) dynamic landcover addition to 10-year wood product pool
@@ -355,19 +355,6 @@ contains
     ! restart fields that are present on old restart files.
 
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%species%rest_fname('tot_woodprod', suffix='_g'), &
-         xtype=ncd_double, dim1name='gridcell', &
-         long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%tot_woodprod_grc)
-    ! Backwards compatibility mentioned below is not applicable for this var.
-    ! If field not found in restart, then set from template if provided
-    if (flag == 'read' .and. .not. readvar .and. template_provided) then
-       call set_missing_from_template(this%tot_woodprod_grc, &
-            template_for_missing_fields%tot_woodprod_grc, &
-            multiplier = template_multiplier)
-    end if
-
-    call restartvar(ncid=ncid, flag=flag, &
          varname=this%species%rest_fname('cropprod1', suffix='_g'), &
          xtype=ncd_double, dim1name='gridcell', &
          long_name='', units='', &
@@ -440,6 +427,10 @@ contains
                template_for_missing_fields%prod100_grc, &
                multiplier = template_multiplier)
        end if
+    end if
+
+    if (flag == 'read') then
+       call this%ComputeSummaryVars(bounds)
     end if
 
   end subroutine Restart
