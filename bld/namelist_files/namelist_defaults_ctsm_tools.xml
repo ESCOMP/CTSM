@@ -56,13 +56,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata hgrid="0.5x0.5"   lmask="nomask"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="0.25x0.25" lmask="nomask"     
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.25x0.25_nomask_c191014.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.25x0.25_nomask_c200309.nc</scripgriddata>
 <scripgriddata hgrid="5x5min"    lmask="nomask"    
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_nomask_c191107.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_nomask_c200309.nc</scripgriddata>
 <scripgriddata hgrid="10x10min" lmask="nomask"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_nomask_c110228.nc</scripgriddata>
 <scripgriddata hgrid="3x3min"    lmask="nomask"    
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_3x3min_nomask_c191102.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3x3min_nomask_c200309.nc</scripgriddata>
 <scripgriddata_lrgfile_needed hgrid="3x3min" lmask="nomask">64bit_offset</scripgriddata_lrgfile_needed>
 <!--scripgriddata hgrid="0.9x1.25"  lmask="nomask"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.9x1.25_nomask_c191014.nc</scripgriddata-->

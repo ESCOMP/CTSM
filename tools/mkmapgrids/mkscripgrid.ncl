@@ -118,16 +118,16 @@ end
   do i = 0, nx-1
     lat(:,i)          =  latCenters;
     latCorners(:,i,0) =  latCenters - delY/2.d0;
-    latCorners(:,i,1) =  latCenters + delY/2.d0;
+    latCorners(:,i,1) =  latCenters - delY/2.d0;
     latCorners(:,i,2) =  latCenters + delY/2.d0;
-    latCorners(:,i,3) =  latCenters - delY/2.d0;
+    latCorners(:,i,3) =  latCenters + delY/2.d0;
   end do
   do j = 0, ny-1
     lon(j,:)          =  lonCenters;
     lonCorners(j,:,0) =  lonCenters - delX/2.d0;
-    lonCorners(j,:,1) =  lonCenters - delX/2.d0;
+    lonCorners(j,:,1) =  lonCenters + delX/2.d0;
     lonCorners(j,:,2) =  lonCenters + delX/2.d0;
-    lonCorners(j,:,3) =  lonCenters + delX/2.d0;
+    lonCorners(j,:,3) =  lonCenters - delX/2.d0;
   end do
 
   ; for some reason, "No_FillValue" isn't working in the case where imask=1
