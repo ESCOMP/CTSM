@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3739617.svg)](https://doi.org/10.5281/zenodo.3739617)
 
-## Overview and Resources
+## Overview and resources
 The Community Terrestrial Systems Model.
 
 This includes the Community Land Model (CLM5.0 and CLM4.5) of the Community Earth System Model.
@@ -30,3 +30,23 @@ join our low traffic email list:
 https://groups.google.com/a/ucar.edu/forum/#!forum/ctsm-dev
 
 (Send email to ctsm-software@ucar.edu if you have problems with any of this)
+
+## CTSM code management team
+
+CTSM code management is provided primarily by:
+
+Software engineering team:
+- [Erik Kluzek](https://github.com/ekluzek)
+- [Bill Sacks](https://github.com/billsacks)
+- [Mariana Vertenstein](https://github.com/mvertens)
+- [Negin Sobhani](https://github.com/negin513)
+- [Sam Levis](https://github.com/slevisconsulting)
+
+Science team:
+- [Dave Lawrence](https://github.com/dlawrenncar)
+- [Will Wieder](https://github.com/wwieder)
+- [Danica Lombardozzi](https://github.com/danicalombardozzi)
+- [Keith Oleson](https://github.com/olyson)
+- [Sean Swenson](https://github.com/swensosc)
+- [Mike Barlage](https://github.com/barlage)
+- [Rosie Fisher](https://github.com/rosiealice)
