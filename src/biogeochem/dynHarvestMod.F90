@@ -31,6 +31,8 @@ module dynHarvestMod
   !
   public :: dynHarvest_init    ! initialize data structures for harvest information
   public :: dynHarvest_interp  ! get harvest data for current time step, if needed
+  public :: dynHarvest_interp_resolve_harvesttypes  ! get harvest data for current time step, if needed, harvest-type-resolved
+  public :: get_harvest_rate
   public :: CNHarvest          ! harvest mortality routine for CN code
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -51,7 +53,6 @@ module dynHarvestMod
   type(dyn_var_time_uninterp_type) :: harvest_inst(num_harvest_inst)   ! value of each harvest variable
 
   real(r8) , allocatable   :: harvest(:) ! harvest rates
-  real(r8) , allocatable   :: harvest_typeresolved(:,:) ! harvest rates, resolved by harvest type
   logical                  :: do_harvest ! whether we're in a period when we should do harvest
   character(len=*), parameter :: string_not_set = "not_set"  ! string to initialize with to indicate string wasn't set
   character(len=64)        :: harvest_units = string_not_set ! units from harvest variables 
@@ -87,15 +88,11 @@ contains
 
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
-    if ( .not. use_fates ) then
+    ! we only need to keep this summary variable in CN veg type
+    if ( .not. use_fates ) then  
        allocate(harvest(bounds%begg:bounds%endg),stat=ier)
        if (ier /= 0) then
           call endrun(msg=' allocation error for harvest'//errMsg(sourcefile, __LINE__))
-       end if
-    else
-       allocate(harvest_typeresolved(bounds%begg:bounds%endg, num_harvest_inst),stat=ier)
-       if (ier /= 0) then
-          call endrun(msg=' allocation error for harvest_typeresolved'//errMsg(sourcefile, __LINE__))
        end if
     end if
 
@@ -183,7 +180,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine dynHarvest_interp_resolve_harvesttypes(bounds)
+  subroutine dynHarvest_interp_resolve_harvesttypes(bounds, harvest_rates)
     !
     ! !DESCRIPTION:
     ! Get harvest data for model time, when needed.
@@ -203,6 +200,7 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc-level bounds
+    real(r8)         , intent(out):: harvest_rates(bounds%begg: , 1: ) ! output the harvest rates
     !
     ! !LOCAL VARIABLES:
     integer               :: varnum       ! counter for harvest variables
@@ -215,8 +213,7 @@ contains
 
     call dynHarvest_file%time_info%set_current_year()
 
-    ! Get total harvest for this time step
-    harvest_typeresolved(bounds%begg:bounds%endg,1:num_harvest_inst) = 0._r8
+    harvest_rates(bounds%begg:bounds%endg,1:num_harvest_inst) = 0._r8
 
     if (dynHarvest_file%time_info%is_before_time_series()) then
        ! Turn off harvest before the start of the harvest time series
@@ -229,12 +226,16 @@ contains
        allocate(this_data(bounds%begg:bounds%endg))
        do varnum = 1, num_harvest_inst
           call harvest_inst(varnum)%get_current_data(this_data)
-          harvest_typeresolved(bounds%begg:bounds%endg,varnum) = this_data(bounds%begg:bounds%endg)
+          harvest_rates(bounds%begg:bounds%endg,varnum) = this_data(bounds%begg:bounds%endg)
        end do
        deallocate(this_data)
     end if
 
   end subroutine dynHarvest_interp_resolve_harvesttypes
+
+  subroutine get_harvest_rate(soilc
+
+  end subroutine get_harvest_rate
 
 
   !-----------------------------------------------------------------------

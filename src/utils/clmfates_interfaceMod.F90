@@ -138,8 +138,11 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : RestartHydrStates
    use FATESFireBase          , only : fates_fire_base_type
-   use CNFireFactoryMod, only: no_fire, scalar_lightning, &
-                               successful_ignitions, anthro_ignitions
+   use CNFireFactoryMod       , only : no_fire, scalar_lightning, &
+                                       successful_ignitions, anthro_ignitions
+   use dynSubgridControlMod   , only : get_do_harvest
+   use dynHarvestMod          , only : num_harvest_inst, &
+                                       dynHarvest_interp_resolve_harvesttypes
 
    implicit none
    
@@ -664,6 +667,7 @@ module CLMFatesInterfaceMod
       integer  :: s                        ! site index
       integer  :: g                        ! grid-cell index (HLM)
       integer  :: c                        ! column index (HLM)
+      integer  :: g                        ! gridcell index (HLM)
       integer  :: ifp                      ! patch index
       integer  :: p                        ! HLM patch index
       integer  :: yr                       ! year (0, ...)
@@ -684,6 +688,8 @@ module CLMFatesInterfaceMod
       real(r8) :: day_of_year
       real(r8), pointer :: lnfm24(:)
       integer  :: ier
+      integer  :: begg,endg
+      real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -694,6 +700,8 @@ module CLMFatesInterfaceMod
       ! one day.  The cost of holding site level boundary conditions is minimal
       ! and it keeps all the boundaries in one location
       ! ---------------------------------------------------------------------------------
+
+      begg = bounds_clump%begg; endg = bounds_clump%endg
 
       days_per_year = get_days_per_year()
       call get_curr_date(current_year,current_month,current_day,current_tod)
@@ -713,6 +721,11 @@ module CLMFatesInterfaceMod
                         model_day, floor(day_of_year), &
                         days_per_year, 1.0_r8/dble(days_per_year))
 
+      if (get_do_harvest()) then
+         call dynHarvest_interp_resolve_harvesttypes(bounds_clump, &
+               harvest_rates=harvest_rates(begg:endg,1:num_harvest_inst))
+      endif
+                                          
       if (fates_spitfire_mode > scalar_lightning) then
          allocate(lnfm24(bounds_clump%begg:bounds_clump%endg), stat=ier)
          if (ier /= 0) then
@@ -725,9 +738,9 @@ module CLMFatesInterfaceMod
 
       do s=1,this%fates(nc)%nsites
          c = this%f2hmap(nc)%fcolumn(s)
+         g = col%gricell(c)
 
          if (fates_spitfire_mode > scalar_lightning) then
-            g = col%gridcell(c)
             do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
                p = ifp + col%patchi(c)
 
@@ -760,6 +773,11 @@ module CLMFatesInterfaceMod
 
          end do
 
+         if (get_do_harvest()) then
+            do iharv = 1, num_harvest_inst
+               this%fates(nc)%bc_in(s)%harvest_rates(iharv) = harvest_rates(g,iharv)
+            end do
+         endif
          
          if(use_fates_planthydro)then
             this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoil)  = soilstate_inst%hksat_col(c,1:nlevsoil)
@@ -769,7 +787,6 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%bsw_sisl(1:nlevsoil)    = soilstate_inst%bsw_col(c,1:nlevsoil)
             this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) =  waterstatebulk_inst%h2osoi_liq_col(c,1:nlevsoil)
          end if
-         
 
       end do
 
