@@ -1,0 +1,17 @@
+s/CLM4.5/+|version|/g
+s/clm4.5/+|version|/g
+s/CLM5.0/+|version|/g
+s/clm5.0/+|version|/g
+s/CESM2.0/+|cesmrelease|/g
+s/cesm2.0/+|cesmrelease|/g
+s/CESM1.2.0/+|cesmrelease|/g
+s/cesm1.2.0/+|cesmrelease|/g
+s#models/lnd/clm#$CTSMROOT#g
+s#tools/shared/#tools/#g
+s#shared/#./#g
+s/yellowstone/cheyenne/g
+s/I1850SPINUPCN/I1850Clm50BgcSpinup/g
+s/I1850CRUCLM45BGC/I1850Clm50BgcCropCru/g
+s/I1850CRUCLM45BGC/I1850Clm50BgcCrop/g
+s/f19_g16/f19_g17_gl4/g
+s/f09_g16/f09_g17_gl4/g
