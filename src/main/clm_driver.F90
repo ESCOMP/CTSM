@@ -111,8 +111,10 @@ contains
     !
     ! !USES:
     use clm_time_manager     , only : get_curr_date
-    use clm_varctl, only: use_lai_streams, use_fates_spitfire
+    use clm_varctl           , only : use_lai_streams, use_fates_spitfire
     use SatellitePhenologyMod, only : lai_advance
+    use FATESFireNoDataMod   , only : fates_fire_no_data_type
+    use FATESFireDataMod     , only : fates_fire_data_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -123,6 +125,8 @@ contains
     logical,         intent(in) :: rstwr       ! true => write restart file this step
     logical,         intent(in) :: nlend       ! true => end of run on this step
     character(len=*),intent(in) :: rdate       ! restart file time stamp for name
+    type(fates_fire_no_data_type) :: fates_fire_no_data_inst
+    type(fates_fire_data_type) :: fates_fire_data_inst
 
     ! Whether we're running with a prognostic ROF component. This shouldn't change from
     ! timestep to timestep, but we pass it into the driver loop because it isn't available
@@ -1010,7 +1014,8 @@ contains
           call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
                water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst)
+               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst &
+               frictionvel_inst)
 
           ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
           ! call to reweight_wrapup, if it's needed at all.
@@ -1265,7 +1270,7 @@ contains
                temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
        end if
 
-       call cnfire_method_inst%UpdateAccVars(bounds_proc)
+       call fates_fire_data_inst%UpdateAccVars(bounds_proc)
 
        call t_stopf('accum')
     end if
