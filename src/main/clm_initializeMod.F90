@@ -293,10 +293,12 @@ contains
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
     use BalanceCheckMod       , only : BalanceCheckInit
-    use CNFireMethodMod, only: cnfiremethod_type
+    use FATESFireNoDataMod    , only : fates_fire_no_data_type
+    use FATESFireDataMod      , only : fates_fire_data_type
     !
     ! !ARGUMENTS    
-    type(cnfire_method_type) :: cnfire_method_inst
+    type(fates_fire_no_data_type) :: fates_fire_no_data_inst
+    type(fates_fire_data_type) :: fates_fire_data_inst
     !
     ! !LOCAL VARIABLES:
     integer               :: c,i,j,k,l,p! indices
@@ -612,7 +614,7 @@ contains
        call crop_inst%initAccVars(bounds_proc)
     end if
 
-    call cnfire_method_inst%initAccVars(bounds_proc)
+    call fates_fire_data_inst%initAccVars(bounds_proc)
 
     !------------------------------------------------------------       
     ! Read monthly vegetation

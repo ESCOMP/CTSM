@@ -575,7 +575,7 @@ contains
    subroutine dynamics_driv(this, nc, bounds_clump,      &
          atm2lnd_inst, soilstate_inst, temperature_inst, &
          waterstate_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
-         frictionvel_inst )
+         frictionvel_inst)
     
       ! This wrapper is called daily from clm_driver
       ! This wrapper calls ed_driver, which is the daily dynamics component of FATES
@@ -584,6 +584,7 @@ contains
       
       ! !USES
       use EDParamsMod, only: ED_val_nignitions
+      use FATESFireDataMod, only: fates_fire_data_type
 
       implicit none
       class(hlm_fates_interface_type), intent(inout) :: this
@@ -596,6 +597,7 @@ contains
       type(canopystate_type)  , intent(inout)        :: canopystate_inst
       type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
       type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
+      type(fates_fire_data_type)                     :: fates_fire_data_inst
 
       ! !LOCAL VARIABLES:
       integer  :: s                        ! site index
@@ -655,7 +657,7 @@ contains
 
          if (use_fates_spitfire > 1) then
             g = col%gridcell(c)
-            this%fates(nc)%bc_in(s)%lightning24 = this%fates_fire_data_method%lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
+            this%fates(nc)%bc_in(s)%lightning24 = fates_fire_data_inst%lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
          else
             this%fates(nc)%bc_in(s)%lightning24 = ED_val_nignitions / days_per_year  ! #/km2/yr to #/km2/day
          end if
