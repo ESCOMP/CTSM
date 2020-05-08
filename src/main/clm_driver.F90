@@ -113,11 +113,9 @@ contains
     use clm_time_manager     , only : get_curr_date
     use clm_varctl, only: use_lai_streams, use_fates_spitfire
     use SatellitePhenologyMod, only : lai_advance
-    use CNFireMethodMod, only: cnfire_method_type
     !
     ! !ARGUMENTS:
     implicit none
-    type(cnfire_method_type) :: cnfire_method_inst
     logical ,        intent(in) :: doalb       ! true if time for surface albedo calc
     real(r8),        intent(in) :: nextsw_cday ! calendar day for nstep+1
     real(r8),        intent(in) :: declinp1    ! declination angle for next time step

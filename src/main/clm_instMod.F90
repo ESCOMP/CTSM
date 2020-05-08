@@ -66,6 +66,7 @@ module clm_instMod
   use HumanIndexMod                   , only : humanindex_type
   use VOCEmissionMod                  , only : vocemis_type
   use CNFireEmissionsMod              , only : fireemis_type
+  use CNFireMethodMod                 , only : cnfire_method_type
   use atm2lndType                     , only : atm2lnd_type
   use lnd2atmType                     , only : lnd2atm_type
   use lnd2glcMod                      , only : lnd2glc_type 
@@ -153,6 +154,8 @@ module clm_instMod
   type(vocemis_type)  , public            :: vocemis_inst
   type(fireemis_type) , public            :: fireemis_inst
   type(drydepvel_type), public            :: drydepvel_inst
+  type(cnfire_method_type), public        :: cnfire_method_inst
+
 
   ! FATES
   type(hlm_fates_interface_type), public  :: clm_fates
@@ -197,11 +200,9 @@ contains
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
     use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
-    use CNFireMethodMod, only: cnfire_method_type
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
-    type(cnfire_method_type) :: cnfire_method_inst
     !
     ! !LOCAL VARIABLES:
     integer               :: c,l,g
