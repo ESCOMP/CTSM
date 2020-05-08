@@ -583,7 +583,6 @@ contains
       ! to process array bounding information 
       
       ! !USES
-      use CNFireMethodMod, only: cnfire_method_type
       use EDParamsMod, only: ED_val_nignitions
 
       implicit none
@@ -597,8 +596,6 @@ contains
       type(canopystate_type)  , intent(inout)        :: canopystate_inst
       type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
       type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
-
-      type(cnfire_method_type) :: cnfire_method_inst
 
       ! !LOCAL VARIABLES:
       integer  :: s                        ! site index
@@ -658,7 +655,7 @@ contains
 
          if (use_fates_spitfire > 1) then
             g = col%gridcell(c)
-            this%fates(nc)%bc_in(s)%lightning24 = cnfire_method_inst%lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
+            this%fates(nc)%bc_in(s)%lightning24 = this%fates_fire_data_method%lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
          else
             this%fates(nc)%bc_in(s)%lightning24 = ED_val_nignitions / days_per_year  ! #/km2/yr to #/km2/day
          end if
@@ -1993,7 +1990,7 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    class(cnfire_method_type), intent(inout) :: this
+    class(hlm_fates_interface_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
@@ -2001,7 +1998,7 @@ contains
     character(len=*), parameter :: subname = 'InterpFileInputs'
     !-----------------------------------------------------------------------
 
-    call this%cnfire_method%CNFireInterp(bounds)
+    call this%fates_fire_data_method%CNFireInterp(bounds)
 
   end subroutine InterpFileInputs
 
@@ -2016,16 +2013,16 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    class(cnfire_method_type) , intent(inout) :: this
-    type(bounds_type) , intent(in)    :: bounds
-    character(len=*)  , intent(in)    :: NLFilename ! namelist filename
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    character(len=*), intent(in) :: NLFilename ! namelist filename
     !
     ! !LOCAL VARIABLES:
 
     character(len=*), parameter :: subname = 'Init2'
     !-----------------------------------------------------------------------
 
-    call this%cnfire_method%CNFireInit(bounds, NLFilename)
+    call this%fates_fire_data_method%CNFireInit(bounds, NLFilename)
 
   end subroutine Init2
 
