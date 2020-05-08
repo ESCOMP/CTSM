@@ -187,13 +187,9 @@ contains
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
     use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
-    use FATESFireNoDataMod                 , only : fates_fire_no_data_type
-    use FATESFireDataMod                   , only : fates_fire_data_type
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
-    type(fates_fire_no_data_type) :: fates_fire_no_data_inst
-    type(fates_fire_data_type) :: fates_fire_data_inst
     !
     ! !LOCAL VARIABLES:
     integer               :: c,l,g
@@ -437,7 +433,9 @@ contains
        call crop_inst%InitAccBuffer(bounds)
     end if
 
-    call fates_fire_data_inst%InitAccBuffer(bounds)
+    if (use_fates) then
+       call clm_fates%InitAccBuffer(bounds)
+    end if
 
     call print_accum_fields()
 
