@@ -27,6 +27,7 @@ module FATESFireNoDataMod
 
     contains
       ! !PUBLIC MEMBER FUNCTIONS:
+      procedure, public :: GetLight24     ! Return the 24-hour averaged lightning data
       procedure, public :: InitAccBuffer  ! Initialize accumulation processes
       procedure, public :: InitAccVars  ! Initialize accumulation variables
       procedure, public :: UpdateAccVars  ! Update/extract accumulations vars
@@ -54,6 +55,20 @@ contains
     ! !ARGUMENTS:
     constructor%need_lightning_and_popdens = .false.
   end function constructor
+
+  !-----------------------------------------------------------------------
+  function GetLight24( this ) result(lnfm24)
+    !
+    ! !DESCRIPTION: Get the 24-hour averaged lightning data
+    ! !USES
+    !
+    ! !ARGUMENTS:
+    class(fates_fire_no_data_type) :: this
+    real(r8), pointer :: lnfm24(:)
+    !---------------------------------------------------------------------
+    call endrun( "GetLight24 should NOT be called for the FATES No-Data case" )
+    !---------------------------------------------------------------------
+  end function
 
   !-----------------------------------------------------------------------
   subroutine InitAccBuffer (this, bounds)

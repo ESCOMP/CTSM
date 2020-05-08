@@ -23,9 +23,10 @@ module FATESFireDataMod
   !
   type, extends(cnfire_base_type) :: fates_fire_data_type
       ! !PRIVATE MEMBER DATA:
-      real(r8), public, pointer :: lnfm24(:)  ! Daily avg lightning by grid cell (#/km2/hr)
+      real(r8), private, pointer :: lnfm24(:)  ! Daily avg lightning by grid cell (#/km2/hr)
     contains
       ! !PUBLIC MEMBER FUNCTIONS:
+      procedure, public :: GetLight24     ! Return 24-hour averaged lightning data
       procedure, public :: InitAccBuffer  ! Initialize accumulation processes
       procedure, public :: InitAccVars  ! Initialize accumulation variables
       procedure, public :: UpdateAccVars  ! Update/extract accumulations vars
@@ -54,6 +55,20 @@ contains
     constructor%need_lightning_and_popdens = .true.
   end function constructor
 
+  !-----------------------------------------------------------------------
+  function GetLight24( this ) result(lnfm24)
+    !
+    ! !DESCRIPTION: Get the 24-hour averaged lightning data
+    ! !USES
+    !
+    ! !ARGUMENTS:
+    class(fates_fire_data_type) :: this
+    real(r8), pointer :: lnfm24(:)
+    !---------------------------------------------------------------------
+    lnfm24 => this%lnfm24
+    !---------------------------------------------------------------------
+  end function
+  
   !-----------------------------------------------------------------------
   subroutine InitAccBuffer (this, bounds)
     !
