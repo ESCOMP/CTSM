@@ -621,6 +621,7 @@ contains
       integer  :: days_per_year
       real(r8) :: model_day
       real(r8) :: day_of_year
+      real(r8), pointer :: lnfm24(:)
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -649,7 +650,9 @@ contains
                         current_date, reference_date, &
                         model_day, floor(day_of_year), &
                         days_per_year, 1.0_r8/dble(days_per_year))
-
+      if (use_fates_spitfire > 1) then
+         lnfm24 = this%fates_fire_data_method%GetLight24()
+      end if
 
       do s=1,this%fates(nc)%nsites
 
@@ -657,7 +660,7 @@ contains
 
          if (use_fates_spitfire > 1) then
             g = col%gridcell(c)
-            this%fates(nc)%bc_in(s)%lightning24 = this%fates_fire_data_method%lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
+            this%fates(nc)%bc_in(s)%lightning24 = lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
          else
             this%fates(nc)%bc_in(s)%lightning24 = ED_val_nignitions / days_per_year  ! #/km2/yr to #/km2/day
          end if
