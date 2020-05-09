@@ -128,7 +128,7 @@ Plantation areas of bioenergy crops are projected to expand throughout the 21st 
 replace fossil fuels and mitigate climate change. Miscanthus and switchgrass are perennial bioenergy crops and 
 have quite different physiological traits and land management practices than annual crops, 
 such as longer growing seasons, higher productivity, and lower demands for nutrients and water. 
-About 70% of biofuel aboveground biomass (leaf & livestem) is removed at harvest for biofuels. Parameter values were developed by using 
+About 70% of biofuel aboveground biomass (leaf & livestem) is removed at harvest. Parameter values were developed by using 
 observation data collected at the University of Illinois Energy Farm 
 located in Central Midwestern United States (:ref:`Cheng et al., 2019<Chengetal2019>`).
 
@@ -945,4 +945,3 @@ river water storage is maintained above a specified threshold.
   temperate cereals (wheat, barley, and rye) (:ref:`Portmann et al. 2010 <Portmannetal2010>`),
   available online from
   *ftp://ftp.rz.uni-frankfurt.de/pub/uni-frankfurt/physische\_geographie/hydrologie/public/data/MIRCA2000/harvested\_area\_grids.*
-
