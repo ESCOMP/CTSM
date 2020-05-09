@@ -154,9 +154,8 @@ increasing litterfall rate throughout the offset period.
 The :math:`biofuel\_harvfrac` (:numref:`Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy crops`) 
 is the harvested fraction of aboveground biomass (leaf & livestem) for bioenergy crops. It is only non-zero for prognostic crops.
 The special case for fluxes in the final litterfall timestep
-(:math:`{t}_{offset}` = :math:`\Delta t`\ ) ensures that a fraction (:math:`1-biofuel\_harvfrac`) of the
-displayed growth is sent to the litter pools for deciduous plant types, while the remaining fraction (:math:`biofuel\_harvfrac`) 
-of leaf biomass goes to the biofuel feedstock pools (Equation :eq:`25.9`). Modifications on livestem carbon pools for prognostic crops 
+(:math:`{t}_{offset}` = :math:`\Delta t`\ ) ensures that all of the displayed growth is sent to the litter pools or biofuel feedstock pools. The fraction (:math:`biofuel\_harvfrac`) of leaf biomass going to the biofuel feedstock pools (Equation :eq:`25.9`) is defined in Table 26.3 and is only non-zero for prognostic crops. The remaining fraction of leaf biomass (:math:`1-biofuel\_harvfrac`) for deciduous plant types is sent to the litter pools. 
+Similar modifications made for livestem carbon pools for prognostic crops
 can be found in section :numref:`Harvest to food and seed` in Equations :eq:`25.9`-:eq:`25.14`.
 
 Corresponding nitrogen fluxes during litterfall take into account retranslocation of nitrogen out of the displayed leaf pool prior to
@@ -873,4 +872,3 @@ fractions used for carbon fluxes:
    :label: 20.97) 
 
    NF_{froot,lit3} =\sum _{p=0}^{npfts}NF_{froot,litter} f_{lig\_ froot,p} wcol_{p}  .
-
