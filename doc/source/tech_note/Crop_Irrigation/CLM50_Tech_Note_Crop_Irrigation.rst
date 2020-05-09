@@ -758,8 +758,8 @@ The values for both of these fields come from the LUMIP time series for each yea
 In addition to the industrial fertilizer, background manure fertilizer is specified
 on the parameter file by the field 'manunitro'. For perennial bioenergy crops, 
 little fertilizer (56kg/ha/yr) is applied to switchgrass, no fertilizer is applied to Miscanthus. 
-Note this set up is only based on local land management practice at the University of Illinois Energy Farm 
-located in Central Midwestern United States :ref:`(Cheng et al., 2019)<Chengetal2019>`. For the current CLM5BGCCROP,
+Note these rates only based on local land management practice at the University of Illinois Energy Farm 
+located in Central Midwestern United States :ref:`(Cheng et al., 2019)<Chengetal2019>` rather than the LUMIP timeseries. For the current CLM5BGCCROP,
 manure N is applied at a rate of 0.002 kg N/m\ :sup:`2`/yr. Because previous versions 
 of CLM (e.g., CLM4) had rapid denitrification rates, fertilizer is applied slowly
 to minimize N loss (primarily through denitrification) and maximize plant uptake. 
