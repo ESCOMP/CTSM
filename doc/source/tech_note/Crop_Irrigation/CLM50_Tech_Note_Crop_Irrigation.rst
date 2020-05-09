@@ -554,7 +554,7 @@ Harvest
 ''''''''''''''''''''''''''''''
 
 Variables track the flow of grain C and N to food and of all other plant pools, including live stem C and N, to litter, and to biofuel feedstock.
-A fraction (determined by :math:`biofuel\_harvfrac`) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels 
+A fraction (determined by the :math:`biofuel\_harvfrac`, defined in Table 26.3) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels 
 (Equations :eq:`25.9`, :eq:`25.10`, :eq:`25.12`, and :eq:`25.13`),
 with the remaining portions going to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`).
 Putting live stem C and N into the litter and biofuel pools is in contrast to the approach for unmanaged PFTs which
