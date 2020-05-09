@@ -662,7 +662,7 @@ NS is stored nitrogen, and :math:`biofuel\_harvfrac` is the harvested fraction o
 Whereas food C and N was formerly transferred to the litter pool, CLM5 routes food C and N
 to a grain product pool where the C and N decay to the atmosphere over one year,
 similar in structure to the wood product pools. 
-The biofuel C and N is also routed to the grain product pool and decay to the atmosphere over one year.
+The biofuel C and N is also routed to the grain product pool and decays to the atmosphere over one year.
 Additionally, CLM5 accounts for the C and N required for crop seeding by removing the seed C and N from the grain
 product pool during harvest. The crop seed pool is then used to seed crops in the subsequent year. 
 Calcuating the crop yields (Equation :eq:`25.15`) requires that you sum the GRAINC_TO_FOOD variable 
