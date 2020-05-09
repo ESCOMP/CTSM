@@ -528,7 +528,7 @@ Representation of human management of the land (agriculture, wood harvest) is au
 The CLM4.5 crop model is extended to operate globally through the addition of rice, sugarcane,  
 tropical varieties of corn and soybean :ref:`(Badger and Dirmeyer, 2015<BadgerandDirmeyer2015>` and :ref:`Levis et al., 2016)<Levisetal2016>`, 
 and perennial bioenergy crops :ref:`(Cheng et al., 2019)<Chengetal2019>`.
-These crop types are added to the existing temperate corn, temperature soybean, spring wheat, and cotton crop types.
+These crop types are added to the existing temperate corn, temperate soybean, spring wheat, and cotton crop types.
 Fertilization rates and irrigation equipped area updated annually based on crop type and geographic region through an input dataset.  
 The irrigation trigger is updated.  Additional minor changes include crop phenological triggers that
 vary by latitude for selected crop types, grain C and N is now removed at harvest to a 1-year product pool with

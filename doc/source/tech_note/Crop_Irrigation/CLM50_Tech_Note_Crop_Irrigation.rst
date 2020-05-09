@@ -128,7 +128,7 @@ Plantation areas of bioenergy crops are projected to expand throughout the 21st 
 replace fossil fuels and mitigate climate change. Miscanthus and switchgrass are perennial bioenergy crops and 
 have quite different physiological traits and land management practices than annual crops, 
 such as longer growing seasons, higher productivity, and lower demands for nutrients and water. 
-About 70% of biofuel aboveground biomass (leaf & livestem) is removed at harvest for biofuels. Parameter values were developed by using 
+About 70% of biofuel aboveground biomass (leaf & livestem) is removed at harvest. Parameter values were developed by using 
 observation data collected at the University of Illinois Energy Farm 
 located in Central Midwestern United States (:ref:`Cheng et al., 2019<Chengetal2019>`).
 
@@ -366,7 +366,7 @@ Harvest occurs in one time step using the BGC leaf offset algorithm.
 .. table:: Crop phenology and morphology parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
 
  ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================  ==========================  ==========================
- \                                    temperate corn             spring wheat                temperatue soybean          cotton                      rice                        sugarcane                  tropical corn              tropical soybean            miscanthus                  switchgrass
+ \                                    temperate corn             spring wheat                temperate soybean          cotton                      rice                        sugarcane                  tropical corn              tropical soybean            miscanthus                  switchgrass
  ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================  ==========================  ==========================
  IVT                                  17, 18                     19, 20                      23, 24                      41, 42                      61, 62                      67, 68                     75, 76                     77, 78                      71, 72                      73, 74                    
  :math:`Date_{planting}^{min}`        April 1                    April 1                     May 1                       April 1                     Janurary 1                  Janurary 1                 March 20                   April 15                    April 1                     April 1                   
@@ -554,12 +554,12 @@ Harvest
 ''''''''''''''''''''''''''''''
 
 Variables track the flow of grain C and N to food and of all other plant pools, including live stem C and N, to litter, and to biofuel feedstock.
-A fraction (determined by :math:`biofuel\_harvfrac`) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels 
+A fraction (determined by the :math:`biofuel\_harvfrac`, defined in Table 26.3) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels 
 (Equations :eq:`25.9`, :eq:`25.10`, :eq:`25.12`, and :eq:`25.13`),
 with the remaining portions going to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`).
 Putting live stem C and N into the litter and biofuel pools is in contrast to the approach for unmanaged PFTs which
 puts live stem C and N into dead stem pools first. 
-Leaf C and N pools are routed to the little and biofuel pools, contrast to that of unmanaged PFTs which put leaf C and N to litter pools only.
+Leaf C and N pools are routed to the litter and biofuel pools, in contrast to that of unmanaged PFTs and non-biofuel crops, which put leaf C and N into litter pools only.
 Root C and N pools are routed to the litter pools in the same manner as natural vegetation.
   
 .. math::
@@ -662,7 +662,7 @@ NS is stored nitrogen, and :math:`biofuel\_harvfrac` is the harvested fraction o
 Whereas food C and N was formerly transferred to the litter pool, CLM5 routes food C and N
 to a grain product pool where the C and N decay to the atmosphere over one year,
 similar in structure to the wood product pools. 
-The biofuel C and N is also routed to the grain product pool and decay to the atmosphere over one year.
+The biofuel C and N is also routed to the grain product pool and decays to the atmosphere over one year.
 Additionally, CLM5 accounts for the C and N required for crop seeding by removing the seed C and N from the grain
 product pool during harvest. The crop seed pool is then used to seed crops in the subsequent year. 
 Calcuating the crop yields (Equation :eq:`25.15`) requires that you sum the GRAINC_TO_FOOD variable 
@@ -682,7 +682,7 @@ efficiency of 85%.
 .. table:: Crop allocation parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
 
  ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
- \                                            temperate corn  spring wheat  temperatue soybean  cotton  rice    sugarcane  tropical corn  tropical soybean  miscanthus        switchgrass     
+ \                                            temperate corn  spring wheat  temperate soybean  cotton  rice    sugarcane  tropical corn  tropical soybean  miscanthus        switchgrass     
  ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
  IVT                                          17, 18          19, 20        23, 24              41, 42  61, 62  67, 68     75, 76         77, 78            71, 72            73, 74          
  :math:`a_{leaf}^{i}`                         0.6             0.9           0.85                0.85    0.75    0.6        0.6            0.85              0.9               0.7             
@@ -758,8 +758,8 @@ The values for both of these fields come from the LUMIP time series for each yea
 In addition to the industrial fertilizer, background manure fertilizer is specified
 on the parameter file by the field 'manunitro'. For perennial bioenergy crops, 
 little fertilizer (56kg/ha/yr) is applied to switchgrass, no fertilizer is applied to Miscanthus. 
-Note this set up is only based on local land management practice at the University of Illinois Energy Farm 
-located in Central Midwestern United States :ref:`(Cheng et al., 2019)<Chengetal2019>`. For the current CLM5BGCCROP,
+Note these rates only based on local land management practice at the University of Illinois Energy Farm 
+located in Central Midwestern United States :ref:`(Cheng et al., 2019)<Chengetal2019>` rather than the LUMIP timeseries. For the current CLM5BGCCROP,
 manure N is applied at a rate of 0.002 kg N/m\ :sup:`2`/yr. Because previous versions 
 of CLM (e.g., CLM4) had rapid denitrification rates, fertilizer is applied slowly
 to minimize N loss (primarily through denitrification) and maximize plant uptake. 
@@ -945,4 +945,3 @@ river water storage is maintained above a specified threshold.
   temperate cereals (wheat, barley, and rye) (:ref:`Portmann et al. 2010 <Portmannetal2010>`),
   available online from
   *ftp://ftp.rz.uni-frankfurt.de/pub/uni-frankfurt/physische\_geographie/hydrologie/public/data/MIRCA2000/harvested\_area\_grids.*
-
