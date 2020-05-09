@@ -682,7 +682,7 @@ efficiency of 85%.
 .. table:: Crop allocation parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
 
  ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
- \                                            temperate corn  spring wheat  temperatue soybean  cotton  rice    sugarcane  tropical corn  tropical soybean  miscanthus        switchgrass     
+ \                                            temperate corn  spring wheat  temperate soybean  cotton  rice    sugarcane  tropical corn  tropical soybean  miscanthus        switchgrass     
  ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
  IVT                                          17, 18          19, 20        23, 24              41, 42  61, 62  67, 68     75, 76         77, 78            71, 72            73, 74          
  :math:`a_{leaf}^{i}`                         0.6             0.9           0.85                0.85    0.75    0.6        0.6            0.85              0.9               0.7             
