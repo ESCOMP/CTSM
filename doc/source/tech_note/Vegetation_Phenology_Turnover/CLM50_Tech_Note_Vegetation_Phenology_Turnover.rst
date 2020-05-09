@@ -151,8 +151,8 @@ periods as:
 where superscripts *n* and *n-1* refer to fluxes on the current and
 previous timesteps, respectively. The rate coefficient :math:`{r}_{xfer\_off}` varies with time to produce a linearly
 increasing litterfall rate throughout the offset period. 
-The :math:`biofuel\_harvfrac` (:numref:`Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy crops`) 
-is the harvested fraction of aboveground biomass (leaf & livestem) for bioenergy crops. It is only non-zero for prognostic crops.
+The :math:`biofuel\_harvfrac` (:numref:`Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production`) 
+is the harvested fraction of aboveground biomass (leaf & livestem) for bioenergy crops.
 The special case for fluxes in the final litterfall timestep
 (:math:`{t}_{offset}` = :math:`\Delta t`\ ) ensures that a fraction (:math:`1-biofuel\_harvfrac`) of the
 displayed growth is sent to the litter pools for deciduous plant types, while the remaining fraction (:math:`biofuel\_harvfrac`) 
