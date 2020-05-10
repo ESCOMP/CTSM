@@ -366,7 +366,7 @@ Harvest occurs in one time step using the BGC leaf offset algorithm.
 .. table:: Crop phenology and morphology parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
 
  ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================  ==========================  ==========================
- \                                    temperate corn             spring wheat                temperate soybean          cotton                      rice                        sugarcane                  tropical corn              tropical soybean            miscanthus                  switchgrass
+ \                                    temperate corn             spring wheat                temperate soybean           cotton                      rice                        sugarcane                  tropical corn              tropical soybean            miscanthus                  switchgrass
  ===================================  =========================  ==========================  ==========================  ==========================  ==========================  =========================  =========================  ==========================  ==========================  ==========================
  IVT                                  17, 18                     19, 20                      23, 24                      41, 42                      61, 62                      67, 68                     75, 76                     77, 78                      71, 72                      73, 74                    
  :math:`Date_{planting}^{min}`        April 1                    April 1                     May 1                       April 1                     Janurary 1                  Janurary 1                 March 20                   April 15                    April 1                     April 1                   
@@ -554,7 +554,8 @@ Harvest
 ''''''''''''''''''''''''''''''
 
 Variables track the flow of grain C and N to food and of all other plant pools, including live stem C and N, to litter, and to biofuel feedstock.
-A fraction (determined by the :math:`biofuel\_harvfrac`, defined in Table 26.3) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels 
+A fraction (determined by the :math:`biofuel\_harvfrac`, defined in 
+:numref:`Table Plant functional type (PFT) parameters for harvested fraction of leaf/livestem for bioenergy production`) of leaf/livestem C and N from bioenergy crops is removed at harvest for biofuels 
 (Equations :eq:`25.9`, :eq:`25.10`, :eq:`25.12`, and :eq:`25.13`),
 with the remaining portions going to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`).
 Putting live stem C and N into the litter and biofuel pools is in contrast to the approach for unmanaged PFTs which
@@ -682,7 +683,7 @@ efficiency of 85%.
 .. table:: Crop allocation parameters for the active crop plant functional types (pfts) in CLM5BGCCROP. Numbers in the first row correspond to the list of pfts in :numref:`Table Crop plant functional types`.
 
  ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
- \                                            temperate corn  spring wheat  temperate soybean  cotton  rice    sugarcane  tropical corn  tropical soybean  miscanthus        switchgrass     
+ \                                            temperate corn  spring wheat  temperate soybean   cotton  rice    sugarcane  tropical corn  tropical soybean  miscanthus        switchgrass     
  ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
  IVT                                          17, 18          19, 20        23, 24              41, 42  61, 62  67, 68     75, 76         77, 78            71, 72            73, 74          
  :math:`a_{leaf}^{i}`                         0.6             0.9           0.85                0.85    0.75    0.6        0.6            0.85              0.9               0.7             
@@ -719,7 +720,7 @@ Physical Crop Characteristics
 ''''''''''''''''''''''''''''''
 Leaf area index (*L*) is calculated as a function of specific leaf area  
 (SLA, :numref:`Table Crop phenology parameters`) and leaf C. 
-Stem area index (*S*) is equal to 0.1\ *L* for temperate and tropical corn and sugarcane and 0.2\ *L* for
+Stem area index (*S*) is equal to 0.1\ *L* for temperate and tropical corn, sugarcane, and perennial bioenergy crops and 0.2\ *L* for
 other crops, as in AgroIBIS. All live
 C and N pools go to 0 after crop harvest, but the *S* is kept at 0.25 to
 simulate a post-harvest “stubble” on the ground.
