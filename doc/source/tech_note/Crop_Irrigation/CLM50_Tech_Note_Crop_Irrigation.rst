@@ -720,7 +720,7 @@ Physical Crop Characteristics
 ''''''''''''''''''''''''''''''
 Leaf area index (*L*) is calculated as a function of specific leaf area  
 (SLA, :numref:`Table Crop phenology parameters`) and leaf C. 
-Stem area index (*S*) is equal to 0.1\ *L* for temperate and tropical corn, sugarcane, and perennial bioenergy crops and 0.2\ *L* for
+Stem area index (*S*) is equal to 0.1\ *L* for temperate and tropical corn, sugarcane, switchgrass, and miscanthus and 0.2\ *L* for
 other crops, as in AgroIBIS. All live
 C and N pools go to 0 after crop harvest, but the *S* is kept at 0.25 to
 simulate a post-harvest “stubble” on the ground.
