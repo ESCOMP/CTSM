@@ -39,10 +39,10 @@ module LunaMod
   public  :: Acc24_Climate_LUNA                            !subroutine to accumulate 24 hr climates
   public  :: Acc240_Climate_LUNA                           !subroutine to accumulate 10 day climates
   public  :: Clear24_Climate_LUNA                          !subroutine to clear 24 hr climates
-  public :: readParams
+  public  :: readParams                                    ! Read in parameters on parameter file
 
   type, private :: params_type
-! cp25, kc25, ko25: Bernacchi et al (2001) Plant, Cell & Environment 24:253-259
+      ! cp25, kc25, ko25: Bernacchi et al (2001) Plant, Cell & Environment 24:253-259
       real(r8) :: cp25_yr2000   ! CO2 compensation point at 25°C at present day O2 (mol/mol)
       real(r8) :: kc25_coef     ! Michaelis-Menten const. at 25°C for CO2 (unitless)
       real(r8) :: ko25_coef     ! Michaelis-Menten const. at 25°C for O2 (unitless)
@@ -50,6 +50,8 @@ module LunaMod
       real(r8) :: jmaxb0        ! The baseline proportion of nitrogen allocated for electron transport (J)
       real(r8) :: wc2wjb0       ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (unitless)
       real(r8) :: enzyme_turnover_daily ! The daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001) (unitless)
+      real(r8) :: relhExp       ! Specifies the impact of relative humidity on electron transport rate (unitless)
+      real(r8) :: minrelh       ! Minimum relative humidity for nitrogen optimization (fraction)
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -77,14 +79,12 @@ module LunaMod
   real(r8), parameter :: forc_pbot_ref = 101325.0_r8       ! reference air pressure for calculation of reference NUE
   real(r8), parameter :: Q10Enz = 2.0_r8                   ! Q10 value for enzyme decay rate
   real(r8)            :: Jmaxb1 = 0.1_r8                   ! the baseline proportion of nitrogen allocated for electron transport (J)    
-  real(r8), parameter :: relhExp = 6.0999_r8               ! electron transport parameters related to relative humidity
   real(r8), parameter :: NMCp25 = 0.715_r8                 ! estimated by assuming 80% maintenance respiration is used for photosynthesis enzyme maintenance
   real(r8), parameter :: Trange1 = 5.0_r8                  ! lower temperature limit (oC) for nitrogen optimization  
   real(r8), parameter :: Trange2 = 42.0_r8                 ! upper temperature limit (oC) for nitrogen optimization
   real(r8), parameter :: SNC = 0.004_r8                    ! structural nitrogen concentration (g N g-1 dry mass carbon)
   real(r8), parameter :: mp = 9.0_r8                       ! slope of stomatal conductance; this is used to estimate model parameter, but may need to be updated from the physiology file, 
   real(r8), parameter :: PARLowLim = 200.0_r8              ! minimum photosynthetically active radiation for nitrogen optimization
-  real(r8), parameter :: minrelh = 0.25_r8                 ! minimum relative humdity for nitrogen optimization
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -183,6 +183,10 @@ module LunaMod
     call readNcdioScalar(ncid, 'wc2wjb0', subname, params_inst%wc2wjb0)
     ! The daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001) (unitless)
     call readNcdioScalar(ncid, 'enzyme_turnover_daily', subname, params_inst%enzyme_turnover_daily)
+    ! Specifies the impact of relative humidity on electron transport rate (unitless)
+    call readNcdioScalar(ncid, 'relhExp', subname, params_inst%relhExp)
+    ! Minimum relative humidity for nitrogen optimization (fraction)
+    call readNcdioScalar(ncid, 'minrelh', subname, params_inst%minrelh)
 
    end subroutine readParams
 
@@ -411,7 +415,7 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb1, relhExp, PNlcold, PNetold, PNrespold, &
+                              Jmaxb1, PNlcold, PNetold, PNrespold, &
                               PNcbold, PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
@@ -799,8 +803,7 @@ end subroutine Clear24_Climate_LUNA
 !************************************************************************************************************************************************
 !Use the LUNA model to calculate the Nitrogen partioning 
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
-     Jmaxb1, relhExp,&
-     PNlcold, PNetold, PNrespold, PNcbold, &
+     Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, &
      PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
   implicit none
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
@@ -816,7 +819,6 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: tleafd10                   !10-day running mean of daytime leaf temperature (oC) 
   real(r8), intent (in) :: tleafn10                   !10-day running mean of nighttime leaf temperature (oC) 
   real(r8), intent (in) :: Jmaxb1                     !coefficient determining the response of electron transport rate to light availability (unitless) 
-  real(r8), intent (in) :: relhExp                    !specifies the impact of relative humidity on electron transport rate (unitless)
   real(r8), intent (in) :: PNlcold                    !old value of the proportion of nitrogen allocated to light capture (unitless)
   real(r8), intent (in) :: PNetold                    !old value of the proportion of nitrogen allocated to electron transport (unitless)
   real(r8), intent (in) :: PNrespold                  !old value of the proportion of nitrogen allocated to respiration (unitless)
@@ -902,8 +904,8 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   tleafd10c = min(max(tleafd10, Trange1), Trange2)    !constrain the physiological range
   tleafn10c = min(max(tleafn10, Trange1), Trange2)    !constrain the physiological range
   ci = 0.7_r8 * CO2a10 
-  JmaxCoef = Jmaxb1 * ((hourpd / 12.0_r8)**2.0_r8) * (1.0_r8 - exp(-relhExp * max(relh10 - minrelh, 0.0_r8) / &
-       (1.0_r8 - minrelh)))
+  JmaxCoef = Jmaxb1 * ((hourpd / 12.0_r8)**2.0_r8) * (1.0_r8 - exp(-params_inst%relhExp * max(relh10 - &
+      params_inst%minrelh, 0.0_r8) / (1.0_r8 - params_inst%minrelh)))
   do while (PNlcoldi .NE. PNlc .and. jj < 100)      
      Fc = VcmxTKattge(tair10, tleafd10c) * Fc25
      Fj = JmxTKattge(tair10, tleafd10c) * Fj25
@@ -1123,7 +1125,7 @@ subroutine Photosynthesis_luna(forc_pbot, tleafd, relh, CO2a,O2a, rb, Vcmax, Jme
   tleaf = tleafd
   tleafk = tleaf + tfrz
   aquad = 1.0_r8
-  relhc = max(minrelh, relh)
+  relhc = max(params_inst%minrelh, relh)
   bbb = 1.0_r8 / bp
   mbb = mp
   CO2c = CO2a 
