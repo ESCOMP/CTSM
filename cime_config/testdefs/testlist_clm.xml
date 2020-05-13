@@ -1896,6 +1896,8 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesPPhys">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>      
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
