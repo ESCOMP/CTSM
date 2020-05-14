@@ -560,7 +560,7 @@ A fraction (determined by the :math:`biofuel\_harvfrac`, defined in
 with the remaining portions going to the litter pools (Equations :eq:`20.14)`, :eq:`25.11`, and :eq:`25.14`).
 Putting live stem C and N into the litter and biofuel pools is in contrast to the approach for unmanaged PFTs which
 puts live stem C and N into dead stem pools first. 
-Leaf C and N pools are routed to the litter and biofuel pools, in contrast to that of unmanaged PFTs and non-biofuel crops, which put leaf C and N into litter pools only.
+Biofuel crop leaf C and N pools are routed to the litter and biofuel pools, in contrast to that of unmanaged PFTs and non-biofuel crops, which put leaf C and N into litter pools only.
 Root C and N pools are routed to the litter pools in the same manner as natural vegetation.
   
 .. math::
@@ -759,7 +759,7 @@ The values for both of these fields come from the LUMIP time series for each yea
 In addition to the industrial fertilizer, background manure fertilizer is specified
 on the parameter file by the field 'manunitro'. For perennial bioenergy crops, 
 little fertilizer (56kg/ha/yr) is applied to switchgrass, no fertilizer is applied to Miscanthus. 
-Note these rates only based on local land management practice at the University of Illinois Energy Farm 
+Note these rates are only based on local land management practices at the University of Illinois Energy Farm 
 located in Central Midwestern United States :ref:`(Cheng et al., 2019)<Chengetal2019>` rather than the LUMIP timeseries. For the current CLM5BGCCROP,
 manure N is applied at a rate of 0.002 kg N/m\ :sup:`2`/yr. Because previous versions 
 of CLM (e.g., CLM4) had rapid denitrification rates, fertilizer is applied slowly
