@@ -3,6 +3,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3739617.svg)](https://doi.org/10.5281/zenodo.3739617)
 
 ## Overview and resources
+
 The Community Terrestrial Systems Model.
 
 This includes the Community Land Model (CLM5.0 and CLM4.5) of the Community Earth System Model.
@@ -23,6 +24,11 @@ https://github.com/ESCOMP/CTSM/wiki/Quick-start-to-CTSM-development-with-git
 and
 
 https://github.com/ESCOMP/ctsm/wiki/Recommended-git-setup
+
+For support with model use, troubleshooting, etc., please use the CTSM forum (or other
+appropriate forum) here:
+
+https://xenforo.cgd.ucar.edu/cesm/
 
 To get updates on CTSM tags and important notes on CTSM developments
 join our low traffic email list:
