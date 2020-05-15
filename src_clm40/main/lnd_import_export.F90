@@ -310,6 +310,12 @@ contains
                clm_l2a%pwtgcell(g,:NPatch)
        end if
 
+       ! for leaf area indices
+       if (index_l2x_Sl_lai       /= 0 )  then
+          l2x(index_l2x_Sl_lai:index_l2x_Sl_lai+NPatch-1,i) = &
+               clm_l2a%lai(g,:NPatch)
+       end if
+
        ! for MEGAN VOC emis fluxes
        if (index_l2x_Fall_flxvoc  /= 0 ) then
           l2x(index_l2x_Fall_flxvoc:index_l2x_Fall_flxvoc+shr_megan_mechcomps_n-1,i) = &

@@ -15,6 +15,7 @@ module clm_atmlnd
   use decompMod   , only : get_proc_bounds
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
+  use shr_infnan_mod, only: shr_infnan_isnan
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
   use seq_drydep_mod, only : n_drydep, drydep_method, DD_XLND
@@ -127,6 +128,7 @@ module clm_atmlnd
      real(r8), pointer :: ddvel(:,:)      => null() !dry deposition velocities
      real(r8), pointer :: lwtgcell(:,:)   => null() ! landunit areas
      real(r8), pointer :: pwtgcell(:,:)   => null() ! patch areas
+     real(r8), pointer :: lai(:,:)        => null() ! leaf area indices
      real(r8), pointer :: flxvoc(:,:)     => null() ! VOC flux (size bins)
      ! Needed for backwards compatibility with lnd_comp_mct used in clm4_5
      real(r8), pointer :: flux_ch4(:)      => null() !net CH4 flux (kg C/m**2/s) [+ to atm]
@@ -306,6 +308,7 @@ end subroutine init_atm2lnd_type
   if ( drydep_method == DD_XLND )then
      allocate(l2a%lwtgcell(beg:end,1:NLUse))
      allocate(l2a%pwtgcell(beg:end,1:NPatch))
+     allocate(l2a%lai(beg:end,1:NPatch))
   end if
 
   ! ival = nan   ! causes core dump in map_maparray, tcx fix
@@ -341,6 +344,7 @@ end subroutine init_atm2lnd_type
   if ( drydep_method == DD_XLND )then
      l2a%lwtgcell(:,:)=ival
      l2a%pwtgcell(:,:)=ival
+     l2a%lai(:,:)     =ival
   end if
 
 end subroutine init_lnd2atm_type
@@ -564,6 +568,19 @@ subroutine clm_map2gcell()
               clm_l2a%lwtgcell(g,lun%itype(l)) = lun%wtgcell(l)
           end if
       end do
+  endif
+
+  ! Leaf area indices
+  if ( drydep_method == DD_XLND ) then
+      clm_l2a%lai(:,:) = 0.0e+00_r8
+      do p = begp,endp
+          g = pft%gridcell(p)
+          if ( shr_infnan_isnan(pps%elai(p)) ) then
+              clm_l2a%lai(g,pft%itype(p)+1) = 0.0e+00_r8
+          else
+              clm_l2a%lai(g,pft%itype(p)+1) = pps%elai(p)
+          endif
+      enddo
   endif
 
   ! Convert from gC/m2/s to kgCO2/m2/s
