@@ -12,13 +12,14 @@ module lnd2atmMod
   use shr_megan_mod        , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod    , only : shr_fire_emis_mechcomps_n
   use clm_varpar           , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
-  use clm_varcon           , only : rair, grav, cpair, hfus, tfrz, spval
+  use clm_varcon           , only : rair, grav, cpair, hfus, tfrz, spval, ispval
   use clm_varctl           , only : iulog, use_lch4
   use seq_drydep_mod       , only : n_drydep, drydep_method, DD_XLND
   use decompMod            , only : bounds_type
   use subgridAveMod        , only : p2g, c2g 
   use lnd2atmType          , only : lnd2atm_type
   use atm2lndType          , only : atm2lnd_type
+  use CanopyStateType      , only : canopystate_type
   use ch4Mod               , only : ch4_type
   use DUSTMod              , only : dust_type
   use DryDepVelocity       , only : drydepvel_type
@@ -34,6 +35,7 @@ module lnd2atmMod
   use IrrigationMod        , only : irrigation_type 
   use glcBehaviorMod       , only : glc_behavior_type
   use glc2lndMod           , only : glc2lnd_type
+  use PatchType            , only : patch
   use ColumnType           , only : col
   use LandunitType         , only : lun
   use GridcellType         , only : grc                
@@ -124,7 +126,7 @@ contains
   subroutine lnd2atm(bounds, &
        atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
        waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
-       solarabs_inst, drydepvel_inst,  &
+       solarabs_inst, drydepvel_inst, canopystate_inst, &
        vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
        lnd2atm_inst, &
        net_carbon_exchange_grc) 
@@ -147,6 +149,7 @@ contains
     type(energyflux_type)       , intent(in)    :: energyflux_inst
     type(solarabs_type)         , intent(in)    :: solarabs_inst
     type(drydepvel_type)        , intent(in)    :: drydepvel_inst
+    type(canopystate_type)      , intent(in)    :: canopystate_inst
     type(vocemis_type)          , intent(in)    :: vocemis_inst
     type(fireemis_type)         , intent(in)    :: fireemis_inst
     type(dust_type)             , intent(in)    :: dust_inst
@@ -156,7 +159,7 @@ contains
     real(r8)                    , intent(in)    :: net_carbon_exchange_grc( bounds%begg: )  ! net carbon exchange between land and atmosphere, positive for source (gC/m2/s)
     !
     ! !LOCAL VARIABLES:
-    integer  :: c, g  ! indices
+    integer  :: c, p, l, g  ! indices
     real(r8) :: qflx_ice_runoff_col(bounds%begc:bounds%endc) ! total column-level ice runoff
     real(r8) :: eflx_sh_ice_to_liq_grc(bounds%begg:bounds%endg) ! sensible heat flux generated from the ice to liquid conversion, averaged to gridcell
     real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
@@ -278,6 +281,36 @@ contains
             lnd2atm_inst%ddvel_grc        (bounds%begg:bounds%endg, :), &
             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
     endif
+
+    ! Landunit/patch areas
+    if ( drydep_method == DD_XLND ) then
+        lnd2atm_inst%pwtgcell_grc(:,:) = 0.0e+00_r8
+        do p = bounds%begp,bounds%endp
+            if (patch%itype(p) /= ispval) then
+                g = patch%gridcell(p)
+                lnd2atm_inst%pwtgcell_grc(g,patch%itype(p)+1) = patch%wtgcell(p)
+            end if
+        end do
+
+        lnd2atm_inst%lwtgcell_grc(:,:) = 0.0e+00_r8
+        do l = bounds%begl,bounds%endl
+            if (lun%itype(p) /= ispval) then
+                g = lun%gridcell(l)
+                lnd2atm_inst%lwtgcell_grc(g,lun%itype(l)) = lun%wtgcell(l)
+            end if
+        end do
+    end if
+
+    ! Leaf area indices
+    if ( drydep_method == DD_XLND ) then
+        ! Aggregate sunlit and shaded leaf area index
+        lnd2atm_inst%lai_grc(:,:) = 0.0e+00_r8
+        do p = bounds%begp,bounds%endp
+            g = patch%gridcell(p)
+            lnd2atm_inst%lai_grc(g,patch%itype(p)+1) = &
+                canopystate_inst%elai_patch(p)
+        end do
+    end if
 
     ! voc emission flux
     if (shr_megan_mechcomps_n>0) then

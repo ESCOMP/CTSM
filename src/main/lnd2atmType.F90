@@ -16,6 +16,7 @@ module lnd2atmType
   use shr_megan_mod , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod,only : shr_fire_emis_mechcomps_n
   use seq_drydep_mod, only : n_drydep, drydep_method, DD_XLND
+  use seq_drydep_mod, only : NLUse, NPatch
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -57,6 +58,9 @@ module lnd2atmType
      real(r8), pointer :: fv_grc             (:)   => null() ! friction velocity (m/s) (for dust model)
      real(r8), pointer :: flxdst_grc         (:,:) => null() ! dust flux (size bins)
      real(r8), pointer :: ddvel_grc          (:,:) => null() ! dry deposition velocities
+     real(r8), pointer :: lwtgcell_grc       (:,:) => null() ! landunit areas
+     real(r8), pointer :: pwtgcell_grc       (:,:) => null() ! patch areas
+     real(r8), pointer :: lai_grc            (:,:) => null() ! leaf area indices
      real(r8), pointer :: flxvoc_grc         (:,:) => null() ! VOC flux (size bins)
      real(r8), pointer :: fireflx_grc        (:,:) => null() ! Wild Fire Emissions
      real(r8), pointer :: fireztop_grc       (:)   => null() ! Wild Fire Emissions vertical distribution top
@@ -189,6 +193,11 @@ contains
     endif
     if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
        allocate(this%ddvel_grc(begg:endg,1:n_drydep)); this%ddvel_grc(:,:)=ival
+    end if
+    if ( drydep_method == DD_XLND ) then
+        allocate(this%lwtgcell_grc(begg:endg,1:NLUse));  this%lwtgcell_grc(:,:)=spval
+        allocate(this%pwtgcell_grc(begg:endg,1:NPatch)); this%pwtgcell_grc(:,:)=spval
+        allocate(this%lai_grc(begg:endg,1:NPatch));      this%lai_grc(:,:)     =spval
     end if
 
   end subroutine InitAllocate

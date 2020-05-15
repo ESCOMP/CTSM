@@ -293,6 +293,7 @@ contains
     use clm_varctl         , only : iulog
     use clm_time_manager   , only : get_nstep, get_step_size  
     use seq_drydep_mod     , only : n_drydep
+    use seq_drydep_mod     , only : NLUse, NPatch
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     use shr_fire_emis_mod  , only : shr_fire_emis_mechcomps_n
     use domainMod          , only : ldomain
@@ -357,6 +358,24 @@ contains
        if (index_l2x_Sl_ddvel     /= 0 )  then
           l2x(index_l2x_Sl_ddvel:index_l2x_Sl_ddvel+n_drydep-1,i) = &
                lnd2atm_inst%ddvel_grc(g,:n_drydep)
+       end if
+
+       ! for landunit weights
+       if (index_l2x_Sl_lwtgcell  /= 0 )  then
+           l2x(index_l2x_Sl_lwtgcell:index_l2x_Sl_lwtgcell+NLUse-1,i) = &
+               lnd2atm_inst%lwtgcell_grc(g,:NLUse)
+       end if
+
+       ! for patch weights
+       if (index_l2x_Sl_pwtgcell  /= 0 )  then
+           l2x(index_l2x_Sl_pwtgcell:index_l2x_Sl_pwtgcell+NPatch-1,i) = &
+               lnd2atm_inst%pwtgcell_grc(g,:NPatch)
+       end if
+
+       ! for leaf area indices
+       if (index_l2x_Sl_lai  /= 0 )  then
+           l2x(index_l2x_Sl_lai:index_l2x_Sl_lai+NPatch-1,i) = &
+               lnd2atm_inst%lai_grc(g,:NPatch)
        end if
 
        ! for MEGAN VOC emis fluxes
