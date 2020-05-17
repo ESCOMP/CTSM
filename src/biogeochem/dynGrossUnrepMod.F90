@@ -510,22 +510,34 @@ contains
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc) = 0._r8
                   end if
                   ! Check for negative pools from having harvesting and gross-unrep on at the same time
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' leaf_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_leafc_to_litter(p)               = leafc(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc) = 1._r8 / dtime
+                  end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc) .ge. 1._r8 / dtime) then
                      gru_frootc_to_litter(p)               = frootc(p) 
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc) = 1._r8 / dtime
                   end if
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' livestem_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' deadstem_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' livecroot_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' deadcroot_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' leafst_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_livestemc_to_atm(p)               = livestemc(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc) = 1._r8 / dtime
+                  end if
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_deadstemc_to_atm(p)               = deadstemc(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc) = 1._r8 / dtime
+                  end if
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_livecrootc_to_litter(p)               = livecrootc(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc) = 1._r8 / dtime
+                  end if
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_deadcrootc_to_litter(p)               = deadcrootc(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc) = 1._r8 / dtime
+                  end if
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_leafc_storage_to_atm(p)               = leafc_storage(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc) = 1._r8 / dtime
+                  end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootst_to_iout_gmc) .ge. 1._r8 / dtime) &
                      call endrun(msg=' ifrootst_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemst_to_iout_gmc) .ge. 1._r8 / dtime) &
