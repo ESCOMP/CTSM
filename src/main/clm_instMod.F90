@@ -575,7 +575,8 @@ contains
 
        call clm_fates%restart(bounds, ncid, flag=flag,  &
             waterdiagnosticbulk_inst=water_inst%waterdiagnosticbulk_inst, &
-            canopystate_inst=canopystate_inst)
+            canopystate_inst=canopystate_inst, &
+            soilstate_inst=soilstate_inst)
 
     end if
 
