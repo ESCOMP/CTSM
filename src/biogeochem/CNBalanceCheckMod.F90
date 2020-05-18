@@ -86,7 +86,7 @@ contains
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
-  subroutine BeginCNGridcellBalance(this, bounds, &
+  subroutine BeginCNGridcellBalance(this, bounds, cnveg_carbonflux_inst, &
        cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
        c_products_inst, n_products_inst)
     !
@@ -102,6 +102,7 @@ contains
     ! !ARGUMENTS:
     class(cn_balance_type)         , intent(inout) :: this
     type(bounds_type)              , intent(in)    :: bounds
+    type(cnveg_carbonflux_type)    , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)   , intent(in)    :: cnveg_carbonstate_inst
     type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
     type(cn_products_type)         , intent(in)    :: c_products_inst
@@ -110,6 +111,8 @@ contains
     ! !LOCAL VARIABLES:
     integer :: g
     integer :: begg, endg
+    real(r8) :: hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg)
+    real(r8) :: dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
     !-----------------------------------------------------------------------
 
     associate(                                                &
@@ -125,8 +128,15 @@ contains
 
     begg = bounds%begg; endg = bounds%endg
 
+    call cnveg_carbonflux_inst%hrv_xsmrpool_to_atm_dribbler%get_amount_left_to_dribble_beg( &
+         bounds, hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg))
+    call cnveg_carbonflux_inst%dwt_conv_cflux_dribbler%get_amount_left_to_dribble_beg( &
+         bounds, dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg))
+
     do g = begg, endg
-       begcb(g) = totc(g) + c_tot_woodprod(g) + c_cropprod1(g)
+       begcb(g) = totc(g) + c_tot_woodprod(g) + c_cropprod1(g) + &
+                  hrv_xsmrpool_amount_left_to_dribble(g) + &
+                  dwt_conv_cflux_amount_left_to_dribble(g)
        begnb(g) = totn(g) + n_tot_woodprod(g) + n_cropprod1(g)
     end do
 
@@ -205,6 +215,8 @@ contains
     real(r8) :: col_errcb(bounds%begc:bounds%endc) 
     real(r8) :: grc_errcb(bounds%begg:bounds%endg)
     real(r8) :: som_c_leached_grc(bounds%begg:bounds%endg)
+    real(r8) :: hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg)
+    real(r8) :: dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg)
     !-----------------------------------------------------------------------
 
     associate(                                                                            & 
@@ -310,16 +322,22 @@ contains
       err_found = .false.
       do g = bounds%begg, bounds%endg
          ! calculate gridcell-level carbon storage for mass conservation check
-         ! slevis notes:
+         ! Notes:
          ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
          ! totc_p2c_col = totc_patch = totvegc_patch(p) + xsmrpool_patch(p) + ctrunc_patch(p) + cropseedc_deficit_patch(p)
-         ! slevis: Not including seedc_grc in grc_begcb and grc_endcb because
+         ! Not including seedc_grc in grc_begcb and grc_endcb because
          ! seedc_grc forms out of thin air, for now, and equals
          ! -1 * (dwt_seedc_to_leaf_grc(g) + dwt_seedc_to_deadstem_grc(g))
          ! We account for the latter fluxes as inputs below; the same
          ! fluxes have entered the pools earlier in the timestep. For true
          ! conservation we would need to add a flux out of npp into seed.
-         grc_endcb(g) = totgrcc(g) + tot_woodprod_grc(g) + cropprod1_grc(g)
+         call cnveg_carbonflux_inst%hrv_xsmrpool_to_atm_dribbler%get_amount_left_to_dribble_end( &
+            bounds, hrv_xsmrpool_amount_left_to_dribble(bounds%begg:bounds%endg))
+         call cnveg_carbonflux_inst%dwt_conv_cflux_dribbler%get_amount_left_to_dribble_end( &
+            bounds, dwt_conv_cflux_amount_left_to_dribble(bounds%begg:bounds%endg))
+         grc_endcb(g) = totgrcc(g) + tot_woodprod_grc(g) + cropprod1_grc(g) + &
+                        hrv_xsmrpool_amount_left_to_dribble(g) + &
+                        dwt_conv_cflux_amount_left_to_dribble(g)
 
          ! calculate total gridcell-level inputs
          ! slevis notes:
@@ -405,25 +423,12 @@ contains
     real(r8):: grc_ninputs(bounds%begg:bounds%endg)
     real(r8):: grc_noutputs(bounds%begg:bounds%endg)
     real(r8):: grc_errnb(bounds%begg:bounds%endg)
-    real(r8):: nfix_to_sminn_grc(bounds%begg:bounds%endg)
-    real(r8):: supplement_to_sminn_grc(bounds%begg:bounds%endg)
-    real(r8):: ffix_to_sminn_grc(bounds%begg:bounds%endg)
-    real(r8):: fert_to_sminn_grc(bounds%begg:bounds%endg)
-    real(r8):: soyfixn_to_sminn_grc(bounds%begg:bounds%endg)
-    real(r8):: denit_grc(bounds%begg:bounds%endg)
-    real(r8):: grc_fire_nloss(bounds%begg:bounds%endg)
-    real(r8):: som_n_leached_grc(bounds%begg:bounds%endg)
-    real(r8):: sminn_leached_grc(bounds%begg:bounds%endg)
-    real(r8):: f_n2o_nit_grc(bounds%begg:bounds%endg)
-    real(r8):: smin_no3_leached_grc(bounds%begg:bounds%endg)
-    real(r8):: smin_no3_runoff_grc(bounds%begg:bounds%endg)
     !-----------------------------------------------------------------------
 
     associate(                                                                             & 
          grc_begnb           => this%begnb_grc                                           , & ! Input:  [real(r8) (:) ]  (gN/m2) gridcell nitrogen mass, beginning of time step
          grc_endnb           => this%endnb_grc                                           , & ! Output: [real(r8) (:) ]  (gN/m2) gridcell nitrogen mass, end of time step
          totgrcn             => cnveg_nitrogenstate_inst%totn_grc                        , & ! Input:  [real(r8) (:) ]  (gN/m2) total gridcell nitrogen, incl veg
-         forc_ndep           => atm2lnd_inst%forc_ndep_grc                               , & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)
          cropprod1_grc       => n_products_inst%cropprod1_grc                            , & ! Input:  [real(r8) (:)]  (gN/m2) nitrogen in crop products
          product_loss_grc    => n_products_inst%product_loss_grc                         , & ! Input:  [real(r8) (:)]  (gN/m2) losses from wood & crop products
          tot_woodprod_grc    => n_products_inst%tot_woodprod_grc                         , & ! Input:  [real(r8) (:)]  (gN/m2) total nitrogen in wood products
@@ -560,7 +565,8 @@ contains
       err_found = .false.
       do g = bounds%begg, bounds%endg
          ! calculate the total gridcell-level nitrogen storage, for mass conservation check
-         ! slevis: Not including seedn_grc in grc_begnb and grc_endnb because
+         ! Notes:
+         ! Not including seedn_grc in grc_begnb and grc_endnb because
          ! seedn_grc forms out of thin air, for now, and equals
          ! -1 * (dwt_seedn_to_leaf_grc(g) + dwt_seedn_to_deadstem_grc(g))
          ! We account for the latter fluxes as inputs below; the same

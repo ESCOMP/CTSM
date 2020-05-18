@@ -844,6 +844,7 @@ contains
          l2g_scale_type = 'unity')
 
     call this%cn_balance_inst%BeginCNGridcellBalance( bounds, &
+         this%cnveg_carbonflux_inst, &
          this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst, &
          this%c_products_inst, this%n_products_inst)
 
