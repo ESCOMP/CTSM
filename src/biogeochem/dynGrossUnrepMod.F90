@@ -574,10 +574,14 @@ contains
                      gru_deadstemc_xfer_to_atm(p)               = deadstemc_xfer(p) 
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemxf_to_iout_gmc) = 1._r8 / dtime
                   end if
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' livecrootxf_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' deadcrootxf_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_livecrootc_xfer_to_atm(p)               = livecrootc_xfer(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc) = 1._r8 / dtime
+                  end if
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_deadcrootc_xfer_to_atm(p)               = deadcrootc_xfer(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc) = 1._r8 / dtime
+                  end if
                end if
             end if
          end do
