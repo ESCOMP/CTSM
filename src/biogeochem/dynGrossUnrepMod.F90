@@ -562,8 +562,10 @@ contains
                      gru_leafc_xfer_to_atm(p)               = leafc_xfer(p) 
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc) = 1._r8 / dtime
                   end if
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootxf_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' ifrootxf_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootxf_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_frootc_xfer_to_atm(p)               = frootc_xfer(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootxf_to_iout_gmc) = 1._r8 / dtime
+                  end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemxf_to_iout_gmc) .ge. 1._r8 / dtime) &
                      call endrun(msg=' livestemxf_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemxf_to_iout_gmc) .ge. 1._r8 / dtime) &
