@@ -391,18 +391,6 @@ module CLMFatesInterfaceMod
 
       ! local variables
       integer                                        :: nclumps   ! Number of threads
-
-      integer                                        :: pass_masterproc
-      integer                                        :: pass_vertsoilc
-      integer                                        :: pass_spitfire 
-      integer                                        :: pass_ed_st3
-      integer                                        :: pass_ed_prescribed_phys
-      integer                                        :: pass_logging
-      integer                                        :: pass_planthydro
-      integer                                        :: pass_cohort_age_tracking
-      integer                                        :: pass_inventory_init
-      integer                                        :: pass_is_restart
-      integer                                        :: pass_biogeog
       integer                                        :: nc        ! thread index
       integer                                        :: s         ! FATES site index
       integer                                        :: c         ! HLM column index
