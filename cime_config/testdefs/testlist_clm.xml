@@ -212,7 +212,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-<<<<<<< HEAD
   <test name="ERP_D_Ld5" grid="ne30_g16" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="izumi" compiler="nag" category="prealpha"/>
@@ -230,8 +229,6 @@
       <option name="comment">Use a transient compset so we allocate and run all PFTs (non-transient cases only allocate memory for non-zero-weight PFTs)</option>
     </options>
   </test>
-=======
->>>>>>> 411cd3f086de400693ab88caff9530ebea6fd16a
   <test name="ERP_D_Ld5" grid="f10_f10_musgs" compset="IHistClm50BgcCrop" testmods="clm/allActive">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
