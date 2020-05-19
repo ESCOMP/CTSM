@@ -538,18 +538,30 @@ contains
                      gru_leafc_storage_to_atm(p)               = leafc_storage(p) 
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc) = 1._r8 / dtime
                   end if
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootst_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' ifrootst_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemst_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' livestemst_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemst_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' deadstemst_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootst_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' livecrootst_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' deadcrootst_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
-                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc) .ge. 1._r8 / dtime) &
-                     call endrun(msg=' leafxf_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootst_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_frootc_storage_to_atm(p)               = Frootc_storage(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootst_to_iout_gmc) = 1._r8 / dtime
+                  end if
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemst_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_livestemc_storage_to_atm(p)               = livestemc_storage(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemst_to_iout_gmc) = 1._r8 / dtime
+                  end if
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemst_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_deadstemc_storage_to_atm(p)               = deadstemc_storage(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemst_to_iout_gmc) = 1._r8 / dtime
+                  end if
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootst_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_livecrootc_storage_to_atm(p)               = livecrootc_storage(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootst_to_iout_gmc) = 1._r8 / dtime
+                  end if
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_deadcrootc_storage_to_atm(p)               = deadcrootc_storage(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc) = 1._r8 / dtime
+                  end if
+                  if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc) .ge. 1._r8 / dtime) then
+                     gru_leafc_xfer_to_atm(p)               = leafc_xfer(p) 
+                     cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc) = 1._r8 / dtime
+                  end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootxf_to_iout_gmc) .ge. 1._r8 / dtime) &
                      call endrun(msg=' ifrootxf_to_out_ph > 1/dt'//errMsg(sourcefile, __LINE__))
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemxf_to_iout_gmc) .ge. 1._r8 / dtime) &
