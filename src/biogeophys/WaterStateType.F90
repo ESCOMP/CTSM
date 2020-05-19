@@ -11,6 +11,7 @@ module WaterstateType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use clm_varctl     , only : use_vancouver, use_mexicocity, use_cn, iulog, use_luna
+  use clm_varctl     , only : use_fates_planthydro
   use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -766,7 +767,11 @@ contains
                   if (j > nbedrock) then
                      this%h2osoi_vol_col(c,j) = 0.0_r8
                   else
-                     this%h2osoi_vol_col(c,j) = 0.15_r8
+                     if(use_fates_planthydro) then
+                         this%h2osoi_vol_col(c,j) = 0.75_r8*watsat_col(c,j)
+                     else
+                         this%h2osoi_vol_col(c,j) = 0.15_r8
+                     end if
                   endif
                end do
             else if (lun%urbpoi(l)) then
