@@ -66,18 +66,12 @@ contains
      tString='som_diffus'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     !soilbiogeochem_litt_verttransp_params_inst%som_diffus=tempr
-     ! FIX(SPM,032414) - can't be pulled out since division makes things not bfb
-     params_inst%som_diffus = 1e-4_r8 / (secspday * 365._r8)  
+     params_inst%som_diffus=tempr
 
      tString='cryoturb_diffusion_k'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     !soilbiogeochem_litt_verttransp_params_inst%cryoturb_diffusion_k=tempr
-     !FIX(SPM,032414) Todo.  This constant cannot be on file since the divide makes things
-     !SPM Todo.  This constant cannot be on file since the divide makes things
-     !not bfb
-     params_inst%cryoturb_diffusion_k = 5e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 5 cm^2 / yr = 1m^2 / 200 yr
+     params_inst%cryoturb_diffusion_k=tempr
 
      tString='max_altdepth_cryoturbation'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
