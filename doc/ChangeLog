@@ -1,4 +1,573 @@
 ===============================================================
+Tag name:  ctsm1.0.dev093
+Originator(s):  erik (Erik Kluzek)
+Date: Fri May  1 22:27:16 MDT 2020
+One-line Summary: Bring in changes from release-clm5.0 branch to master
+
+Purpose of changes
+------------------
+
+Move changes from release-clm5.0.12.13/14/16/17/18/20/21/22/23/24/25/26/27/28/29/30 to master
+(note excludes release-clm5.0.15, release-clm5.0.19)
+
+Answer changing!
+Updates FATES with PARTEH option.
+
+Remove CRUNCEP half degree, ne120np4, f05 surface datasets
+Landuse-timeseries files for just: f09, f19, f10, ne30np4, 1x1_numaIA, 1x1_smallvilleIA, 1x1_brazil
+Add datasets needed for SSP scenarios (only Tier I for ndep). Add ZWT_inversion dataset for methane.
+
+Add new ability to use prescribed soil moisture data (from streams files based on an earlier CTSM simulation).
+
+Add new MODISv2 mapping files for mksurfdata_map. Remove T5 and T21 mapping files. Add conus_30_x8 mapping files,
+and T62 mapping files
+
+Add contrib directory to tools with contributed tools and scripts.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 31 issues....
+  #873 -- Release clm5.0.12 changes
+  #871 -- don't check for valid resolution for CESM cases by default
+  #836 -- add izumi as a place that can run tools tests
+  #831 -- add namelist tint_algo settings for input streams
+  #817 -- Have clm4_5 use the same ndep file as clm5_0 for 1850
+  #809 -- mkmapdata using an old version of intel
+  #804 -- mksurfdata option
+  #791 -- fix threading for prescribed LAI and soil-moisture
+  #786 -- allow use_init_interp for a branch
+  #746 -- Some CLM45 configurations use CLM50 initial conditions files
+  #741 -- C13_HR, C13_NBP, FPI values result in numeric conversion not representable error (changes answers)
+  #734 -- Isotope historical files off of NetCDF-4
+  #716 -- 2 degree CMIP6WACCMDECK needs Carbon isotopes off
+  #707 -- Missing mapping files for hirespft
+  #673 -- Ice shelf wetland fix in mksurfdata_map can lead to glacier+lake > 100% on surface datasets (changes surface dataset creation)
+  #653 -- To save disk on fsurdat files use zwt0 on finindated file
+  #629 -- Remove unused fields from surface datasets
+  #624 -- QSNOEVAP history output incorrect
+  #621 -- Fully remove rcp in place of only ssp_rcp
+  #608 -- Odd (blocky) spatial patterns in generic crop leafc for BGC simulation when initialized from BGC-Crop (changes answers)
+  #589 -- Existence of content in the lai_streams namelist makes it confusing to users
+  #557 -- no-anthro compset and options
+  #553 -- More robust mksurfdata_map logic for determining where to put wetlands
+  #547 -- Add conus_30_x8 grid as valid option for CTSM and mksurfdata_map
+  #545 -- Antarctica ice shelves are being treated as wetlands rather than glaciers
+  #544 -- Transient cases are matching wrong IC file
+  #533 -- Add -no-anthro option to mksurfdata
+  #276 -- Tests for pre_alpha/pre_beta
+  #262 -- hirespft option to mksurfdata.pl
+  #175 -- Set stream_year_first_urbantv/last for CLM4.5
+  #150 -- mksurfdata code cleanup
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): New surface datasets do mean initial conditions
+  will need to be interpolated
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Add 2010 compset option
+   New namelist items: ndep_tintalgo, lai_tintalgo, lightng_tintalgo, urbantv_tintalgo, dribble_crophrv_xsmrpool_2atm
+   New soil moisture namelist items: use_soil_moisture_streams, stream_year_first_soilm, stream_year_last_soilm, model_year_align_soilm,
+                                     model_year_align_soilm, soilm_tintalgo, soilm_offset, soilm_ignore_data_if_missing
+   New namelist items for FATES: fates_parteh_mode
+   New 2010, no-anthro, SSP use cases
+   New compsets: I2010Clm50Sp, I2000Clm50BgcCropQianGs, I1850Clm50BgcNoAnthro, I1850Clm50SpNoAnthro, IHistClm50SpCru, IHistClm50SpCru,
+                 IHistClm45SpGs, IHistClm45SpGs
+   New SSP compsets: ISSP585Clm50BgcCrop, ISSP126Clm50BgcCrop, ISSP126Clm50BgcCrop, ISSP245Clm50BgcCrop, ISSP370Clm50BgcCrop, 
+                     ISSP434Clm50BgcCrop, ISSP460Clm50BgcCrop, ISSP460Clm50BgcCrop
+   LAI streams options don't show up in the namelist unless you ask for them
+   finundation comes from streams files, no longer from the surface dataset
+   FATES adds a list of new history variables and dimension types
+
+Changes made to namelist defaults (e.g., changed parameter values): New fsurdat files, SSP C13/C14 files
+  Add PtVg surface dataset
+  most finidat files now need to be interpolated, a few added in to get testing to work
+  New ndep datasets
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+  New fsurdat files, finidat files need to be interpolated from now
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Threshold to reseed dead vegetation increased from zero to 1.0 as a hard coded parameter.
+   Reseeding also happens for generic crop types and not just natural vegetation now.
+   The ability to read in 3D streams was added (input files have to be at the same resolution as the model)
+
+Changes to tests or testing:
+   Add no-anthro, 2010, f19 waccm and SSP tests
+   Make sure prealpha/prebeta tests are also run by aux_clm
+   Add prescribed soil moisture test
+   Lengthen waccm_offline test
+   Remove hcru_hcru and edison tests
+   Add some aux_cime_baseline tests
+
+Code reviewed by: self
+
+
+CTSM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (345 are different than baseline)
+
+  tools-tests (test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - OK
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    cheyennne -- PASS (when ncar_pylib run)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Updates in all fsurdat files leads to changes in answers
+  Also there are updated finidat files as they had to be interpolated
+   to work with the new fsurdat files
+  Reseeding change can effect answers on startup if activated
+  Extra call to SoilBiogeochemPrecisionControl can cause a small answer change
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all global
+    - what platforms/compilers: all
+    - nature of change: Main change is around Antarctica
+
+  CMIP6 simulations and release branch simulations were run with these surface datasets
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates, PTCLM
+
+    fates to sci.1.30.0_api.8.0.0
+    PTCLM to PTCLM2_20200121
+
+   FATES now points to the NGEET repository rather than the NCAR fates-release
+
+Pull Requests that document the changes (include PR ids): #998, #883, #849, #567, #564, #561
+(https://github.com/ESCOMP/ctsm/pull)
+   #998 -- Remove Copyright file
+   #883 -- Bring changes on release-clm5.0 branch to master PR status: ready priority: high type: enhancement
+   #849 -- Fix link to new forums
+   #567 -- Ignore patterns for vim
+   #564 -- Update mksurfdata_map to include glaciers outside of pft landmask
+   #561 -- Add list of checks that should be done when making new surface datasets
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev092
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Apr 27 14:51:21 MDT 2020
+One-line Summary: Update cime to version in cesm2_2_beta04
+
+Purpose of changes
+------------------
+
+Update cime to latest in cesm2.2 beta tag (cesm2_2_beta04)
+Fix two small issues that had gone on the release-clm5.0 branch.
+Update manage_externals (to manic-v1.1.8)
+
+NOTE: Part of the reason for updating cime, was because of some problems
+Mike Mills was having on cheyenne with inputdata files being deleted out 
+from under him before setting up his cases. We think system issues were 
+interacting with issues with cime putting in place zero length
+missing files for the version of cime he was using. Those issues went
+away with a cime update, so we hope updating to a newer cime version here
+will help prevent those issues for CTSM users.
+
+cime updates:
+
+some cleanup from the last maint-5.6 update
+Add ne5np4.pg4 grid.
+case.setup: Add --keep option
+Add omip as option to DATM_CO2_TSERIES
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #974 #966
+   Fixes #974 -- python 3 problem in ssp test
+   Fixes #966 -- a few history fields need to be made CF compliant
+CIME Issues fixed (include issue #): 3459 3466
+   3459 -- case.setup refuses to fix corrupted env_mach_specfic.xml
+   3466 -- fix for aquap
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   ./case.setup now has a --keep option
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  tools-tests (test/tools):
+
+    cheyenne - OK
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - OK
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: None bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime
+    cime to cime5.8.19
+    (NOTE: CMEPS is pointing to a newer hash than used in the beta tag)
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #996 -- Update cime to latest cesm2.2 beta tag
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev091
+Originator(s):  sacks (Bill Sacks)
+Date:  Fri Apr 24 07:43:46 MDT 2020
+One-line Summary: Increase tolerance on near-zero truncation for a snow state update
+
+Purpose of changes
+------------------
+
+In UpdateState_TopLayerFluxes, the tolerance of 1.e-13 was occasionally
+exceeded. Although I haven't done a careful analysis, it seems okay to
+me to increase this tolerance slightly. Here I increase it to 1.e-12.
+
+Previously, if top-layer h2osoi_ice or h2osoi_liq were reduced to less
+than 1e-13 times the original value (in an absolute value sense), these
+masses were set to 0; now we set these masses to 0 if they are reduced
+to less than 1e-12 times the original. So we can now occasionally set a
+value to exactly 0 when before it was left at slightly different from
+zero. If the previous code led to a small positive value, between 1e-13
+and 1e-12 times the original, this tag will change answers slightly. If
+the previous code led to a small negative number, it would cause the
+model to abort, leading to the issue reported in ESCOMP/CTSM#988; this
+change should fix those occasional aborts.
+
+This tag also introduces the general ability to set tolerances to a
+custom value in calls to truncate_small_values.
+
+See ESCOMP/CTSM#988 for details.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#988
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none expected (not checked)
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Erik Kluzek
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    izumi ------- pass
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, in theory (but none in test suite)
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: potentially all, but very rarely
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Roundoff
+
+      Potentially changes answers by roundoff (see notes above), but no
+      changes were observed in any test in the test suite
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/989
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev090
+Originator(s):  negins (Negin Sobhani,UCAR/CSEG,303-497-1224)
+Date: Thu Apr 23 09:21:18 MDT 2020
+One-line Summary: Refactoring banded diagonal matrix and solve system in SoilTemperature module
+
+Purpose of changes
+------------------
+
+Previously, the SoilTemperature module has a high level of nested subroutine
+calls, which hurt its performance and readability. There were many
+redundancies, logical issues, and nested conditionals  in the modular code
+as discussed in issue #323. In this PR, SoilTemperature module is optimized
+and rewritten for better readability and performance while maintaining bfb
+compatibility.
+
+
+This PR addresses issue ESCOMP/ctsm#323
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+	-ESCOMP/ctsm#323
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: The revised code improved the
+performance of the previous code by ~1.5-2x.
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Bill Sacks
+
+
+CTSM testing:
+
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK 
+    izumi ------- PASS
+
+Externals used for the testing:
+   [cism]
+	  tag = cism2_1_68
+   [rtm]
+	  tag = rtm1_0_70
+   [mosart]
+	  tag = mosart1_0_35
+   [cime]
+	  tag = branch_tags/cime5.8.15_a01
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/CTSM/pull/979)
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev089
 Originator(s):  sacks (Bill Sacks)
 Date:  Tue Apr  7 12:01:59 MDT 2020

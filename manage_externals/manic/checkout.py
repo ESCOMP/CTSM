@@ -227,6 +227,21 @@ The root of the source tree will be referred to as `${SRC_ROOT}` below.
     Now, %(prog)s will process Externals.cfg and also process
     Externals_LIBX.cfg as if it was a sub-external.
 
+  * from_submodule (True / False) : used to pull the repo_url, local_path,
+    and hash properties for this external from the .gitmodules file in
+    this repository. Note that the section name (the entry in square
+    brackets) must match the name in the .gitmodules file.
+    If from_submodule is True, the protocol must be git and no repo_url,
+    local_path, hash, branch, or tag entries are allowed.
+    Default: False
+
+  * sparse (string) : used to control a sparse checkout. This optional
+    entry should point to a filename (path relative to local_path) that
+    contains instructions on which repository paths to include (or
+    exclude) from the working tree.
+    See the "SPARSE CHECKOUT" section of https://git-scm.com/docs/git-read-tree
+    Default: sparse checkout is disabled
+
   * Lines beginning with '#' or ';' are comments and will be ignored.
 
 # Obtaining this tool, reporting issues, etc.
@@ -279,6 +294,13 @@ of the externals description file or examine the output of
                         'the screen and log file. This flag can be '
                         'used up to two times, increasing the '
                         'verbosity level each time.')
+
+    parser.add_argument('--svn-ignore-ancestry', action='store_true', default=False,
+                        help='By default, subversion will abort if a component is '
+                        'already checked out and there is no common ancestry with '
+                        'the new URL. This flag passes the "--ignore-ancestry" flag '
+                        'to the svn switch call. (This is not recommended unless '
+                        'you are sure about what you are doing.)')
 
     #
     # developer options
@@ -348,7 +370,7 @@ def main(args):
                 "No component {} found in {}".format(
                     comp, args.externals))
 
-    source_tree = SourceTree(root_dir, external)
+    source_tree = SourceTree(root_dir, external, svn_ignore_ancestry=args.svn_ignore_ancestry)
     printlog('Checking status of externals: ', end='')
     tree_status = source_tree.status()
     printlog('')
