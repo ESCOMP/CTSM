@@ -132,8 +132,9 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : UpdateH2OVeg
    use FatesPlantHydraulicsMod, only : RestartHydrStates
    use dynSubgridControlMod   , only : get_do_harvest
-   use dynHarvestMod          , only : num_harvest_inst, &
-                                       dynHarvest_interp_resolve_harvesttypes
+   use dynHarvestMod          , only : num_harvest_inst, harvest_varnames
+   use dynHarvestMod          , only : harvest_units, mass_units, unitless_units
+   use dynHarvestMod          , only : dynHarvest_interp_resolve_harvesttypes
 
    implicit none
    
@@ -352,11 +353,31 @@ contains
       end if
       call set_fates_ctrlparms('use_cohort_age_tracking',ival=pass_cohort_age_tracking)
 
+      ! check fates logging namelist value first because hlm harvest overrides it
       if(use_fates_logging) then
          pass_logging = 1
       else
          pass_logging = 0
       end if
+
+      if(get_do_harvest()) then
+         pass_logging = 1
+         pass_num_lu_harvest_cats = num_harvest_inst
+         if (wood_harvest_units .eq. unitless_units) then
+            pass_lu_harvest = 1
+         else if (wood_harvest_units .eq. mass_units) then
+            pass_lu_harvest = 2
+         else
+            write(iulog,*) 'units field not one of the specified options.'
+            call endrun(msg=errMsg(sourcefile, __LINE__))
+         end if
+      else
+         pass_lu_harvest = 0
+         pass_num_lu_harvest_cats = 0
+      end if
+
+      call set_fates_ctrlparms('use_lu_harvest',ival=pass_lu_harvest)
+      call set_fates_ctrlparms('num_lu_harvest_cats',ival=pass_num_lu_harvest_cats)
       call set_fates_ctrlparms('use_logging',ival=pass_logging)
 
       if(use_fates_inventory_init) then
@@ -465,7 +486,7 @@ contains
                ndecomp = 1
             end if
 
-            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp)
+            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, num_harvest_inst)
             call allocate_bcout(this%fates(nc)%bc_out(s),col%nbedrock(c),ndecomp)
             call this%fates(nc)%zero_bcs(s)
 
@@ -608,6 +629,7 @@ contains
       real(r8) :: day_of_year
       integer  :: begg,endg
       real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
+      logical  :: after_start_of_harvest_ts
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -641,7 +663,8 @@ contains
 
       if (get_do_harvest()) then
          call dynHarvest_interp_resolve_harvesttypes(bounds_clump, &
-              harvest_rates=harvest_rates(begg:endg,1:num_harvest_inst))
+              harvest_rates=harvest_rates(begg:endg,1:num_harvest_inst), &
+              after_start_of_harvest_ts)
       endif
 
       do s=1,this%fates(nc)%nsites
@@ -692,6 +715,17 @@ contains
             this%fates(nc)%bc_in(s)%sucsat_sisl(1:nlevsoil) = soilstate_inst%sucsat_col(c,1:nlevsoil)
             this%fates(nc)%bc_in(s)%bsw_sisl(1:nlevsoil)    = soilstate_inst%bsw_col(c,1:nlevsoil)
             this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) =  waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
+         end if
+
+         ! get the harvest data, which is by gridcell
+         ! for now there is one veg column per gridcell, so store all harvest data in each site
+         ! this will eventually change
+         ! today's hlm harvest flag needs to be set no matter what
+         g = col_pp%gridcell(c)
+         this%fates(nc)%bc_in(s)%hlm_do_harvest_today = do_harvest
+         if (do_harvest) then
+            this%fates(nc)%bc_in(s)%hlm_harvest(1:num_harvest_inst) = harvest_rates(1:num_harvest_inst,g)
+            this%fates(nc)%bc_in(s)%hlm_harvest_catnames = harvest_catnames
          end if
 
       end do

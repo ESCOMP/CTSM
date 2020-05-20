@@ -32,7 +32,6 @@ module dynHarvestMod
   public :: dynHarvest_init    ! initialize data structures for harvest information
   public :: dynHarvest_interp  ! get harvest data for current time step, if needed
   public :: dynHarvest_interp_resolve_harvesttypes  ! get harvest data for current time step, if needed, harvest-type-resolved
-  public :: get_harvest_rate
   public :: CNHarvest          ! harvest mortality routine for CN code
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -54,8 +53,10 @@ module dynHarvestMod
 
   real(r8) , allocatable   :: harvest(:) ! harvest rates
   logical                  :: do_harvest ! whether we're in a period when we should do harvest
-  character(len=*), parameter :: string_not_set = "not_set"  ! string to initialize with to indicate string wasn't set
-  character(len=64)        :: harvest_units = string_not_set ! units from harvest variables 
+  character(len=*),  parameter :: string_not_set = "not_set"  ! string to initialize with to indicate string wasn't set
+  character(len=64)            :: harvest_units = string_not_set ! units from harvest variables 
+  character(len=64), parameter :: mass_units = "gC/m2/yr"
+  character(len=64), parameter :: unitless_units = "unitless"
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !---------------------------------------------------------------------------
@@ -110,10 +111,10 @@ contains
             do_check_sums_equal_1=.false., data_shape=[num_points])
        call harvest_inst(varnum)%get_att("units",units)
        if ( trim(units) == string_not_set ) then
-          units = "unitless"
-       else if ( trim(units) == "unitless" ) then
+          units = unitless_units
+       else if ( trim(units) == unitless_units ) then
 
-       else if ( trim(units) /= "gC/m2/yr" ) then
+       else if ( trim(units) /= mass_units ) then
           call endrun(msg=' bad units read in from file='//trim(units)//errMsg(sourcefile, __LINE__))
        end if
        if ( varnum > 1 .and. trim(units) /= trim(harvest_units) )then
@@ -123,7 +124,7 @@ contains
        harvest_units = units
        units = string_not_set
     end do
-    
+
   end subroutine dynHarvest_init
 
 
@@ -180,7 +181,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine dynHarvest_interp_resolve_harvesttypes(bounds, harvest_rates)
+  subroutine dynHarvest_interp_resolve_harvesttypes(bounds, harvest_rates, after_start_of_harvest_ts)
     !
     ! !DESCRIPTION:
     ! Get harvest data for model time, when needed.
@@ -201,6 +202,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc-level bounds
     real(r8)         , intent(out):: harvest_rates(bounds%begg: , 1: ) ! output the harvest rates
+    logical          , intent(out):: after_start_of_harvest_ts
     !
     ! !LOCAL VARIABLES:
     integer               :: varnum       ! counter for harvest variables
@@ -213,16 +215,15 @@ contains
 
     call dynHarvest_file%time_info%set_current_year()
 
-    harvest_rates(bounds%begg:bounds%endg,1:num_harvest_inst) = 0._r8
-
     if (dynHarvest_file%time_info%is_before_time_series()) then
        ! Turn off harvest before the start of the harvest time series
-       do_harvest = .false.
+       after_start_of_harvest_ts = .false.
+       harvest_rates(bounds%begg:bounds%endg,1:num_harvest_inst) = 0._r8
     else
        ! Note that do_harvest stays true even past the end of the time series. This
        ! means that harvest rates will be maintained at the rate given in the last
        ! year of the file for all years past the end of this specified time series.
-       do_harvest = .true.
+       after_start_of_harvest_ts = .true.
        allocate(this_data(bounds%begg:bounds%endg))
        do varnum = 1, num_harvest_inst
           call harvest_inst(varnum)%get_current_data(this_data)
@@ -232,11 +233,6 @@ contains
     end if
 
   end subroutine dynHarvest_interp_resolve_harvesttypes
-
-  subroutine get_harvest_rate(soilc
-
-  end subroutine get_harvest_rate
-
 
   !-----------------------------------------------------------------------
   subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -374,7 +370,7 @@ contains
          if (ivt(p) > noveg .and. ivt(p) < nbrdlf_evr_shrub) then
 
             if (do_harvest) then
-               if (harvest_units == "gC/m2/yr") then
+               if (harvest_units == mass_units) then
                   thistreec = leafc(p) + frootc(p) + livestemc(p) + deadstemc(p) + livecrootc(p) + deadcrootc(p) + xsmrpool(p)
                   cm = harvest(g)
                   if (thistreec > 0.0_r8) then
