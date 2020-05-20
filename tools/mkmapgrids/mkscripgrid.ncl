@@ -119,13 +119,13 @@ end
   latCenters = fspan1up( (latS + delY/2.d0), (latN - delY/2.d0), ny)
   lon = new( (/ny, nx/), "double" );
   lat = new( (/ny, nx/), "double" );
-  if ( (nx == 1) .or. (ny == 1) )then
+  if ( (nx .eq. 1) .or. (ny .eq. 1) )then
      lonCorners = new( (/ny, nx, 4/), "double" );
      latCorners = new( (/ny, nx, 4/), "double" );
   end if
   do i = 0, nx-1
     lat(:,i)          =  latCenters;
-    if ( (nx == 1) .or. (ny == 1) )then
+    if ( (nx .eq. 1) .or. (ny .eq. 1) )then
        latCorners(:,i,0) =  latCenters - delY/2.d0;
        latCorners(:,i,1) =  latCenters - delY/2.d0;
        latCorners(:,i,2) =  latCenters + delY/2.d0;
@@ -134,7 +134,7 @@ end
   end do
   do j = 0, ny-1
     lon(j,:)          =  lonCenters;
-    if ( (nx == 1) .or. (ny == 1) )then
+    if ( (nx .eq. 1) .or. (ny .eq. 1) )then
        lonCorners(j,:,0) =  lonCenters - delX/2.d0;
        lonCorners(j,:,1) =  lonCenters + delX/2.d0;
        lonCorners(j,:,2) =  lonCenters + delX/2.d0;
@@ -153,7 +153,7 @@ end
   
   Opt = True
   Opt@Mask2D   = Mask2D
-  if ( (nx == 1) .or. (ny == 1) )then
+  if ( (nx .eq. 1) .or. (ny .eq. 1) )then
     Opt@GridCornerLat = latCorners
     Opt@GridCornerLon = lonCorners
   end if
