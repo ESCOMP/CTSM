@@ -20,7 +20,7 @@ module decompInitMod
   use glcBehaviorMod  , only : glc_behavior_type
   use decompMod
   use mct_mod         , only : mct_gsMap_init, mct_gsMap_ngseg, mct_gsMap_nlseg, mct_gsmap_gsize
-  use FatesInterfaceMod, only : fates_maxElementsPerSite
+  use FatesInterfaceTypesMod, only : fates_maxElementsPerSite
   !
   ! !PUBLIC TYPES:
   implicit none
