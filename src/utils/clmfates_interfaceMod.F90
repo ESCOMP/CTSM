@@ -45,6 +45,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : iulog
    use clm_varctl        , only : use_vertsoilc
    use clm_varctl        , only : fates_parteh_mode
+   use clm_varctl        , only : use_fates
    use clm_varctl        , only : use_fates_spitfire
    use clm_varctl        , only : use_fates_planthydro
    use clm_varctl        , only : use_fates_cohort_age_tracking
@@ -98,9 +99,12 @@ module CLMFatesInterfaceMod
 !   use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink_Default
 
    ! Used FATES Modules
-   use FatesInterfaceMod     , only : fates_interface_type
+   use FatesInterfaceTypesMod , only : fates_interface_type
+   use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
+   use FatesInterfaceMod, only : SetFatesGlobalElements
    use FatesInterfaceMod     , only : allocate_bcin
    use FatesInterfaceMod     , only : allocate_bcout
+   use FatesInterfaceMod     , only : zero_bcs
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
 
@@ -110,14 +114,13 @@ module CLMFatesInterfaceMod
 
    use EDTypesMod            , only : ed_patch_type
    use EDTypesMod            , only : num_elements
-   use FatesInterfaceMod     , only : hlm_numlevgrnd
+   use FatesInterfaceTypesMod     , only : hlm_numlevgrnd
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
    use EDInitMod             , only : zero_site
    use EDInitMod             , only : init_site_vars
    use EDInitMod             , only : init_patches
    use EDInitMod             , only : set_site_properties
-   use EDInitMod             , only : InitFatesGlobals
    use EDPftVarcon           , only : EDpftvarcon_inst
    use EDSurfaceRadiationMod , only : ED_SunShadeFracs, ED_Norman_Radiation
    use EDBtranMod            , only : btran_ed, &
@@ -129,7 +132,6 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : hydraulics_drive
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
-   use FatesPlantHydraulicsMod, only : UpdateH2OVeg
    use FatesPlantHydraulicsMod, only : RestartHydrStates
    use dynSubgridControlMod   , only : get_do_harvest
    use dynHarvestMod          , only : num_harvest_inst, harvest_varnames
@@ -207,9 +209,178 @@ module CLMFatesInterfaceMod
 
    character(len=*), parameter, private :: sourcefile = &
         __FILE__
-   
-contains
 
+   public  :: CLMFatesGlobals
+
+ contains
+
+
+   subroutine CLMFatesGlobals()
+
+     ! --------------------------------------------------------------------------------
+     ! This is one of the first calls to fates
+     ! Used for setting dimensions.  This MUST
+     ! be called after NL variables are specified and
+     ! after the FATES parameter file has been read in
+     ! Aside from setting global dimension info, which
+     ! is used in the history file, we also transfer
+     ! over the NL variables to FATES global settings.
+     ! --------------------------------------------------------------------------------  
+
+     logical                                        :: verbose_output
+     integer                                        :: pass_masterproc
+     integer                                        :: pass_vertsoilc
+     integer                                        :: pass_spitfire     
+     integer                                        :: pass_ed_st3
+     integer                                        :: pass_logging
+     integer                                        :: pass_ed_prescribed_phys
+     integer                                        :: pass_planthydro
+     integer                                        :: pass_inventory_init
+     integer                                        :: pass_is_restart
+     integer                                        :: pass_cohort_age_tracking
+     
+     if (use_fates) then
+
+        verbose_output = .false.
+        call FatesInterfaceInit(iulog, verbose_output)
+        
+        ! Force FATES parameters that are recieve type, to the unset value
+        call set_fates_ctrlparms('flush_to_unset')
+        
+        ! Send parameters individually
+        call set_fates_ctrlparms('num_sw_bbands',ival=numrad)
+        call set_fates_ctrlparms('vis_sw_index',ival=ivis)
+        call set_fates_ctrlparms('nir_sw_index',ival=inir)
+        
+        call set_fates_ctrlparms('num_lev_ground',ival=nlevgrnd)
+        call set_fates_ctrlparms('hlm_name',cval='CLM')
+        call set_fates_ctrlparms('hio_ignore_val',rval=spval)
+        call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
+        call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1))
+        
+        call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
+        
+        if(is_restart()) then
+           pass_is_restart = 1
+        else
+           pass_is_restart = 0
+        end if
+        call set_fates_ctrlparms('is_restart',ival=pass_is_restart)
+        
+        if(use_vertsoilc) then
+           pass_vertsoilc = 1
+        else
+           pass_vertsoilc = 0
+        end if
+        call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
+        
+        if(use_fates_spitfire) then
+           pass_spitfire = 1
+        else
+           pass_spitfire = 0
+        end if
+        call set_fates_ctrlparms('use_spitfire',ival=pass_spitfire)
+        
+        if(use_fates_ed_st3) then
+           pass_ed_st3 = 1
+        else
+           pass_ed_st3 = 0
+        end if
+        call set_fates_ctrlparms('use_ed_st3',ival=pass_ed_st3)
+        
+        if(use_fates_logging) then
+           pass_logging = 1
+        else
+           pass_logging = 0
+        end if
+        call set_fates_ctrlparms('use_logging',ival=pass_logging)
+        
+        if(use_fates_ed_prescribed_phys) then
+           pass_ed_prescribed_phys = 1
+        else
+           pass_ed_prescribed_phys = 0
+        end if
+        call set_fates_ctrlparms('use_ed_prescribed_phys',ival=pass_ed_prescribed_phys)
+        
+        if(use_fates_planthydro) then
+           pass_planthydro = 1
+        else
+           pass_planthydro = 0
+        end if
+        call set_fates_ctrlparms('use_planthydro',ival=pass_planthydro)
+        
+        if(use_fates_cohort_age_tracking) then
+           pass_cohort_age_tracking = 1
+        else
+           pass_cohort_age_tracking = 0
+        end if
+        call set_fates_ctrlparms('use_cohort_age_tracking',ival=pass_cohort_age_tracking)
+
+        ! check fates logging namelist value first because hlm harvest overrides it
+        if(use_fates_logging) then
+           pass_logging = 1
+        else
+           pass_logging = 0
+        end if
+
+        if(get_do_harvest()) then
+           pass_logging = 1
+           pass_num_lu_harvest_cats = num_harvest_inst
+           if (wood_harvest_units .eq. unitless_units) then
+              pass_lu_harvest = 1
+           else if (wood_harvest_units .eq. mass_units) then
+              pass_lu_harvest = 2
+           else
+              write(iulog,*) 'units field not one of the specified options.'
+              call endrun(msg=errMsg(sourcefile, __LINE__))
+           end if
+        else
+           pass_lu_harvest = 0
+           pass_num_lu_harvest_cats = 0
+        end if
+
+        call set_fates_ctrlparms('use_lu_harvest',ival=pass_lu_harvest)
+        call set_fates_ctrlparms('num_lu_harvest_cats',ival=pass_num_lu_harvest_cats)
+        call set_fates_ctrlparms('use_logging',ival=pass_logging)
+        
+        if(use_fates_inventory_init) then
+           pass_inventory_init = 1
+        else
+           pass_inventory_init = 0
+        end if
+        call set_fates_ctrlparms('use_inventory_init',ival=pass_inventory_init)
+        
+        call set_fates_ctrlparms('inventory_ctrl_file',cval=fates_inventory_ctrl_filename)
+        
+        if(masterproc)then
+           pass_masterproc = 1
+        else
+           pass_masterproc = 0
+        end if
+        call set_fates_ctrlparms('masterproc',ival=pass_masterproc)
+        
+        ! Check through FATES parameters to see if all have been set
+        call set_fates_ctrlparms('check_allset')
+        
+     end if
+     
+     ! This determines the total amount of space it requires in its largest
+     ! dimension.  We are currently calling that the "cohort" dimension, but
+     ! it is really a utility dimension that captures the models largest
+     ! size need.
+     ! Sets:
+     ! fates_maxElementsPerPatch
+     ! num_elements
+     ! fates_maxElementsPerSite (where a site is roughly equivalent to a column)
+     ! (Note: this needs to be called when use_fates=.false. as well, becuase
+     ! it will return some nominal dimension sizes of 1
+     
+     call SetFatesGlobalElements(use_fates)
+     
+     return
+   end subroutine CLMFatesGlobals
+   
+  
   ! ====================================================================================
 
    subroutine init(this, bounds_proc )
@@ -230,8 +401,7 @@ contains
       ! is not turned on
       ! ---------------------------------------------------------------------------------
      
-      use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
-      use FatesInterfaceMod, only : numpft_fates => numpft
+      use FatesInterfaceTypesMod, only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
 
       implicit none
@@ -242,7 +412,7 @@ contains
 
       ! local variables
       integer                                        :: nclumps   ! Number of threads
-      logical                                        :: verbose_output
+
       integer                                        :: pass_masterproc
       integer                                        :: pass_vertsoilc
       integer                                        :: pass_spitfire 
@@ -272,133 +442,11 @@ contains
       
       ! Parameter Routines
       call param_derived%Init( numpft_fates )
-      
-
-      verbose_output = .false.
-      call FatesInterfaceInit(iulog, verbose_output)
 
       nclumps = get_proc_clumps()
       allocate(this%fates(nclumps))
       allocate(this%f2hmap(nclumps))
 
-      ! ---------------------------------------------------------------------------------
-      ! Send dimensions and other model controling parameters to FATES.  These
-      ! are obviously only those parameters that are dictated by the host
-      ! ---------------------------------------------------------------------------------
-      
-      ! Force FATES parameters that are recieve type, to the unset value
-      call set_fates_ctrlparms('flush_to_unset')
-      
-      ! Send parameters individually
-      call set_fates_ctrlparms('num_sw_bbands',ival=numrad)
-      call set_fates_ctrlparms('vis_sw_index',ival=ivis)
-      call set_fates_ctrlparms('nir_sw_index',ival=inir)
-      
-      call set_fates_ctrlparms('num_lev_ground',ival=nlevgrnd)
-      call set_fates_ctrlparms('hlm_name',cval='CLM')
-      call set_fates_ctrlparms('hio_ignore_val',rval=spval)
-      call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
-      call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1)) ! RGK: FATES IGNORES
-                                                                          ! AND DOESNT TOUCH
-                                                                          ! THE BARE SOIL PATCH
-      call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
-
-
-      if(is_restart()) then
-         pass_is_restart = 1
-      else
-         pass_is_restart = 0
-      end if
-      call set_fates_ctrlparms('is_restart',ival=pass_is_restart)
-
-      if(use_vertsoilc) then
-         pass_vertsoilc = 1
-      else
-         pass_vertsoilc = 0
-      end if
-      call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
-      
-      if(use_fates_spitfire) then
-         pass_spitfire = 1
-      else
-         pass_spitfire = 0
-      end if
-      call set_fates_ctrlparms('use_spitfire',ival=pass_spitfire)
-
-      if(use_fates_ed_st3) then
-        pass_ed_st3 = 1
-      else
-         pass_ed_st3 = 0
-      end if
-      call set_fates_ctrlparms('use_ed_st3',ival=pass_ed_st3)
-      
-      if(use_fates_ed_prescribed_phys) then
-         pass_ed_prescribed_phys = 1
-      else
-         pass_ed_prescribed_phys = 0
-      end if
-      call set_fates_ctrlparms('use_ed_prescribed_phys',ival=pass_ed_prescribed_phys)
-
-      if(use_fates_planthydro) then
-         pass_planthydro = 1
-      else
-         pass_planthydro = 0
-      end if
-      call set_fates_ctrlparms('use_planthydro',ival=pass_planthydro)
-
-      if(use_fates_cohort_age_tracking) then
-         pass_cohort_age_tracking = 1
-      else
-         pass_cohort_age_tracking = 0
-      end if
-      call set_fates_ctrlparms('use_cohort_age_tracking',ival=pass_cohort_age_tracking)
-
-      ! check fates logging namelist value first because hlm harvest overrides it
-      if(use_fates_logging) then
-         pass_logging = 1
-      else
-         pass_logging = 0
-      end if
-
-      if(get_do_harvest()) then
-         pass_logging = 1
-         pass_num_lu_harvest_cats = num_harvest_inst
-         if (wood_harvest_units .eq. unitless_units) then
-            pass_lu_harvest = 1
-         else if (wood_harvest_units .eq. mass_units) then
-            pass_lu_harvest = 2
-         else
-            write(iulog,*) 'units field not one of the specified options.'
-            call endrun(msg=errMsg(sourcefile, __LINE__))
-         end if
-      else
-         pass_lu_harvest = 0
-         pass_num_lu_harvest_cats = 0
-      end if
-
-      call set_fates_ctrlparms('use_lu_harvest',ival=pass_lu_harvest)
-      call set_fates_ctrlparms('num_lu_harvest_cats',ival=pass_num_lu_harvest_cats)
-      call set_fates_ctrlparms('use_logging',ival=pass_logging)
-
-      if(use_fates_inventory_init) then
-         pass_inventory_init = 1
-      else
-         pass_inventory_init = 0
-      end if
-      call set_fates_ctrlparms('use_inventory_init',ival=pass_inventory_init)
-
-      call set_fates_ctrlparms('inventory_ctrl_file',cval=fates_inventory_ctrl_filename)
-
-
-      if(masterproc)then
-         pass_masterproc = 1
-      else
-         pass_masterproc = 0
-      end if
-      call set_fates_ctrlparms('masterproc',ival=pass_masterproc)
-
-      ! Check through FATES parameters to see if all have been set
-      call set_fates_ctrlparms('check_allset')
 
       if(debug)then
          write(iulog,*) 'clm_fates%init():  allocating for ',nclumps,' threads'
@@ -488,7 +536,7 @@ contains
 
             call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, num_harvest_inst)
             call allocate_bcout(this%fates(nc)%bc_out(s),col%nbedrock(c),ndecomp)
-            call this%fates(nc)%zero_bcs(s)
+            call zero_bcs(this%fates(nc),s)
 
             ! Pass any grid-cell derived attributes to the site
             ! ---------------------------------------------------------------------------
@@ -530,12 +578,6 @@ contains
 
       end do
       !$OMP END PARALLEL DO
-
-      ! This will initialize all FATES globals,
-      ! particular PARTEH and HYDRO globals
-      
-      call InitFatesGlobals(masterproc)
-      
 
       
       call this%init_history_io(bounds_proc)
@@ -677,11 +719,6 @@ contains
 
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
                waterstate_inst%h2osoi_vol_col(c,1:nlevsoil) 
-
-         ! TO-DO: SHOULD THIS BE LIQVOL OR IS VOL OK? (RGK-02-2017)
-
-         this%fates(nc)%bc_in(s)%t_veg24_si = &
-               temperature_inst%t_veg24_patch(col%patchi(c))
 
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
                min(nlevsoil, canopystate_inst%altmax_lastyear_indx_col(c))
@@ -872,10 +909,6 @@ contains
        !       ! This updates the internal value and the bc_out value.
        !       ! If hydraulics is off, it returns 0 storage
        if ( use_fates_planthydro ) then
-       !          call UpdateH2OVeg(this%fates(nc)%nsites, &
-       !                this%fates(nc)%sites,  &
-       !                this%fates(nc)%bc_out)
-       !
           do s = 1, this%fates(nc)%nsites
              c = this%f2hmap(nc)%fcolumn(s)
              waterstate_inst%total_plant_stored_h2o_col(c) = &
@@ -992,7 +1025,7 @@ contains
      use FatesIODimensionsMod, only: fates_bounds_type
      use FatesIOVariableKindMod, only : site_r8, site_int, cohort_r8, cohort_int
      use EDMainMod, only :        ed_update_site
-     use FatesInterfaceMod, only:  fates_maxElementsPerSite
+     use FatesInterfaceTypesMod, only:  fates_maxElementsPerSite
 
       implicit none
 
@@ -2442,12 +2475,12 @@ contains
  subroutine hlm_bounds_to_fates_bounds(hlm, fates)
 
    use FatesIODimensionsMod, only : fates_bounds_type
-   use FatesInterfaceMod, only : nlevsclass, nlevage, nlevcoage
-   use FatesInterfaceMod, only : nlevheight
+   use FatesInterfaceTypesMod, only : nlevsclass, nlevage, nlevcoage
+   use FatesInterfaceTypesMod, only : nlevheight
    use EDtypesMod,        only : nfsc
    use FatesLitterMod,    only : ncwd
    use EDtypesMod,        only : nlevleaf, nclmax
-   use FatesInterfaceMod, only : numpft_fates => numpft
+   use FatesInterfaceTypesMod, only : numpft_fates => numpft
    use clm_varpar,        only : nlevgrnd
 
    implicit none
