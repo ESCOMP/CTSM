@@ -134,7 +134,7 @@ module pftconMod
      real(r8), allocatable :: slatop        (:)   ! SLA at top of canopy [m^2/gC]
      real(r8), allocatable :: dsladlai      (:)   ! dSLA/dLAI [m^2/gC]
      real(r8), allocatable :: leafcn        (:)   ! leaf C:N [gC/gN]
-     real(r8), allocatable :: biofuel_harvfrac (:)   ! cut a fraction of stem/leaf for biofuel [-]
+     real(r8), allocatable :: biofuel_harvfrac (:) ! fraction of stem and leaf cut for harvest, sent to biofuels [unitless]
      real(r8), allocatable :: flnr          (:)   ! fraction of leaf N in Rubisco [no units]
      real(r8), allocatable :: woody         (:)   ! woody lifeform flag (0 or 1)
      real(r8), allocatable :: lflitcn       (:)   ! leaf litter C:N (gC/gN)
