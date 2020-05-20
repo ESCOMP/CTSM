@@ -119,21 +119,27 @@ end
   latCenters = fspan1up( (latS + delY/2.d0), (latN - delY/2.d0), ny)
   lon = new( (/ny, nx/), "double" );
   lat = new( (/ny, nx/), "double" );
-  lonCorners = new( (/ny, nx, 4/), "double" );
-  latCorners = new( (/ny, nx, 4/), "double" );
+  if ( (nx == 1) .or. (ny == 1) )then
+     lonCorners = new( (/ny, nx, 4/), "double" );
+     latCorners = new( (/ny, nx, 4/), "double" );
+  end if
   do i = 0, nx-1
     lat(:,i)          =  latCenters;
-    latCorners(:,i,0) =  latCenters - delY/2.d0;
-    latCorners(:,i,1) =  latCenters + delY/2.d0;
-    latCorners(:,i,2) =  latCenters + delY/2.d0;
-    latCorners(:,i,3) =  latCenters - delY/2.d0;
+    if ( (nx == 1) .or. (ny == 1) )then
+       latCorners(:,i,0) =  latCenters - delY/2.d0;
+       latCorners(:,i,1) =  latCenters - delY/2.d0;
+       latCorners(:,i,2) =  latCenters + delY/2.d0;
+       latCorners(:,i,3) =  latCenters + delY/2.d0;
+    end if
   end do
   do j = 0, ny-1
     lon(j,:)          =  lonCenters;
-    lonCorners(j,:,0) =  lonCenters - delX/2.d0;
-    lonCorners(j,:,1) =  lonCenters - delX/2.d0;
-    lonCorners(j,:,2) =  lonCenters + delX/2.d0;
-    lonCorners(j,:,3) =  lonCenters + delX/2.d0;
+    if ( (nx == 1) .or. (ny == 1) )then
+       lonCorners(j,:,0) =  lonCenters - delX/2.d0;
+       lonCorners(j,:,1) =  lonCenters + delX/2.d0;
+       lonCorners(j,:,2) =  lonCenters + delX/2.d0;
+       lonCorners(j,:,3) =  lonCenters - delX/2.d0;
+    end if
   end do
 
   ; for some reason, "No_FillValue" isn't working in the case where imask=1
@@ -147,8 +153,10 @@ end
   
   Opt = True
   Opt@Mask2D   = Mask2D
-  Opt@GridCornerLat = latCorners
-  Opt@GridCornerLon = lonCorners
+  if ( (nx == 1) .or. (ny == 1) )then
+    Opt@GridCornerLat = latCorners
+    Opt@GridCornerLon = lonCorners
+  end if
   Opt@Title = "SCRIP grid file for "+name
   if (printn) then
     Opt@Debug = True
@@ -161,7 +169,7 @@ end
 
   nc = addfile( outfilename, "w" );
   nc@history = ldate+": create using mkscripgrid.ncl";
-  nc@comment = "Ocean is assumed to non-existant at this point";
+  nc@comment = "Ocean is assumed to be non-existant in this region";
   nc@Version = gitdescribe;
   if ( printn )then
     print( "================================================================================================" );
