@@ -1177,6 +1177,10 @@ contains
           if ( this%pprodharv10(i) > 1.0_r8 .or. this%pprodharv10(i) < 0.0_r8 )then
              call endrun(msg=' ERROR: pprodharv10 outside of range.'//errMsg(sourcefile, __LINE__))
           end if
+          if (i < npcropmin .and. this%biofuel_harvfrac(i) /= 0._r8) then
+             call endrun(msg=' ERROR: biofuel_harvfrac non-zero for a non-prognostic crop PFT.'//&
+                  errMsg(sourcefile, __LINE__))
+          end if
        end do
     end if
 
