@@ -120,8 +120,15 @@ end
   lon = new( (/ny, nx/), "double" );
   lat = new( (/ny, nx/), "double" );
   if ( (nx .eq. 1) .or. (ny .eq. 1) )then
+     if ( printn )then
+        print( "Calculate corners" )
+     end if
      lonCorners = new( (/ny, nx, 4/), "double" );
      latCorners = new( (/ny, nx, 4/), "double" );
+  else
+     if ( printn )then
+        print( "Have NCL calculate corners" )
+     end if
   end if
   do i = 0, nx-1
     lat(:,i)          =  latCenters;
