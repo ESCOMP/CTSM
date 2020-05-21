@@ -45,18 +45,18 @@ module dynHarvestMod
   type(dyn_file_type), target :: dynHarvest_file ! information for the file containing harvest data
 
   ! Define the underlying harvest variables
-  integer, parameter :: num_harvest_inst = 5
-  character(len=64), parameter :: harvest_varnames(num_harvest_inst) = &
+  integer, parameter, public :: num_harvest_inst = 5
+  character(len=64), parameter, public :: harvest_varnames(num_harvest_inst) = &
        [character(len=64) :: 'HARVEST_VH1', 'HARVEST_VH2', 'HARVEST_SH1', 'HARVEST_SH2', 'HARVEST_SH3']
   
   type(dyn_var_time_uninterp_type) :: harvest_inst(num_harvest_inst)   ! value of each harvest variable
 
   real(r8) , allocatable   :: harvest(:) ! harvest rates
-  logical                  :: do_harvest ! whether we're in a period when we should do harvest
+  logical, public, protected   :: do_harvest ! whether we're in a period when we should do harvest
   character(len=*),  parameter :: string_not_set = "not_set"  ! string to initialize with to indicate string wasn't set
-  character(len=64)            :: harvest_units = string_not_set ! units from harvest variables 
-  character(len=64), parameter :: mass_units = "gC/m2/yr"
-  character(len=64), parameter :: unitless_units = "unitless"
+  character(len=64), public, protected :: harvest_units = string_not_set ! units from harvest variables 
+  character(len=64), parameter, public :: mass_units = "gC/m2/yr"
+  character(len=64), parameter, public :: unitless_units = "unitless"
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !---------------------------------------------------------------------------

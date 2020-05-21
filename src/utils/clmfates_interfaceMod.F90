@@ -232,13 +232,15 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_vertsoilc
      integer                                        :: pass_spitfire     
      integer                                        :: pass_ed_st3
+     integer                                        :: pass_num_lu_harvest_cats
+     integer                                        :: pass_lu_harvest
      integer                                        :: pass_logging
      integer                                        :: pass_ed_prescribed_phys
      integer                                        :: pass_planthydro
      integer                                        :: pass_inventory_init
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
-     
+
      if (use_fates) then
 
         verbose_output = .false.
@@ -326,14 +328,17 @@ module CLMFatesInterfaceMod
         if(get_do_harvest()) then
            pass_logging = 1
            pass_num_lu_harvest_cats = num_harvest_inst
-           if (wood_harvest_units .eq. unitless_units) then
-              pass_lu_harvest = 1
-           else if (wood_harvest_units .eq. mass_units) then
-              pass_lu_harvest = 2
-           else
-              write(iulog,*) 'units field not one of the specified options.'
-              call endrun(msg=errMsg(sourcefile, __LINE__))
-           end if
+           ! !!! cdk fo rnow set this inline because harvest_units is being set after this
+           ! if (trim(harvest_units) .eq. trim(unitless_units)) then
+           !    pass_lu_harvest = 1
+           ! else if (trim(harvest_units) .eq. trim(mass_units)) then
+           !    pass_lu_harvest = 2
+           ! else
+           !    write(iulog,*) 'units field not one of the specified options.'
+           !    write(iulog,*) harvest_units
+           !    call endrun(msg=errMsg(sourcefile, __LINE__))
+           ! end if
+           pass_lu_harvest = 1
         else
            pass_lu_harvest = 0
            pass_num_lu_harvest_cats = 0
@@ -672,6 +677,7 @@ module CLMFatesInterfaceMod
       integer  :: begg,endg
       real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
       logical  :: after_start_of_harvest_ts
+      integer  :: iharv
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -706,14 +712,14 @@ module CLMFatesInterfaceMod
       if (get_do_harvest()) then
          call dynHarvest_interp_resolve_harvesttypes(bounds_clump, &
               harvest_rates=harvest_rates(begg:endg,1:num_harvest_inst), &
-              after_start_of_harvest_ts)
+              after_start_of_harvest_ts=after_start_of_harvest_ts)
       endif
 
       do s=1,this%fates(nc)%nsites
 
          c = this%f2hmap(nc)%fcolumn(s)
 
-         g = col%gricell(c)
+         g = col%gridcell(c)
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
@@ -738,12 +744,6 @@ module CLMFatesInterfaceMod
                   atm2lnd_inst%wind24_patch(p)
 
          end do
-
-         if (get_do_harvest()) then
-            do iharv = 1, num_harvest_inst
-               this%fates(nc)%bc_in(s)%harvest_rates(iharv) = harvest_rates(g,iharv)
-            end do
-         endif
          
          if(use_fates_planthydro)then
             this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoil)  = soilstate_inst%hksat_col(c,1:nlevsoil)
@@ -758,12 +758,15 @@ module CLMFatesInterfaceMod
          ! for now there is one veg column per gridcell, so store all harvest data in each site
          ! this will eventually change
          ! today's hlm harvest flag needs to be set no matter what
-         g = col_pp%gridcell(c)
-         this%fates(nc)%bc_in(s)%hlm_do_harvest_today = do_harvest
-         if (do_harvest) then
-            this%fates(nc)%bc_in(s)%hlm_harvest(1:num_harvest_inst) = harvest_rates(1:num_harvest_inst,g)
-            this%fates(nc)%bc_in(s)%hlm_harvest_catnames = harvest_catnames
-         end if
+         if (get_do_harvest()) then
+            this%fates(nc)%bc_in(s)%hlm_do_harvest_today = after_start_of_harvest_ts
+            if (after_start_of_harvest_ts) then
+               this%fates(nc)%bc_in(s)%hlm_harvest(1:num_harvest_inst) = harvest_rates(1:num_harvest_inst,g)
+            else
+               this%fates(nc)%bc_in(s)%hlm_harvest(1:num_harvest_inst) = 0._r8
+            end if
+            this%fates(nc)%bc_in(s)%hlm_harvest_catnames(1:num_harvest_inst) = harvest_varnames(1:num_harvest_inst)
+         endif
 
       end do
 
