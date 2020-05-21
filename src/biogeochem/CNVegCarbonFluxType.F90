@@ -838,6 +838,16 @@ contains
                ptr_patch=this%grainc_to_seed_patch)
        end if
 
+       this%hrv_livestemc_to_litter_patch(begp:endp) = spval
+       call hist_addfld1d (fname='HRV_LIVESTEMC_TO_LITTER', units='gC/m^2/s', &
+            avgflag='A', long_name='harvest livestem C mortality', &
+            ptr_patch=this%hrv_livestemc_to_litter_patch, default='active')
+
+       this%livestemc_to_litter_patch(begp:endp) = spval
+       call hist_addfld1d (fname='LIVESTEMC_TO_LITTER', units='gC/m^2/s', &
+            avgflag='A', long_name='livestem C mortality', &
+            ptr_patch=this%hrv_livestemc_to_litter_patch, default='active')
+
        this%litterc_loss_col(begc:endc) = spval
        call hist_addfld1d (fname='LITTERC_LOSS', units='gC/m^2/s', &
             avgflag='A', long_name='litter C loss', &
@@ -896,12 +906,12 @@ contains
        this%m_livestemc_storage_to_litter_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_LIVESTEMC_STORAGE_TO_LITTER', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C storage mortality', &
-            ptr_patch=this%m_livestemc_storage_to_litter_patch, default='inactive')
+            ptr_patch=this%m_livestemc_storage_to_litter_patch, default='active')
 
        this%m_deadstemc_storage_to_litter_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_DEADSTEMC_STORAGE_TO_LITTER', units='gC/m^2/s', &
             avgflag='A', long_name='dead stem C storage mortality', &
-            ptr_patch=this%m_deadstemc_storage_to_litter_patch, default='inactive')
+            ptr_patch=this%m_deadstemc_storage_to_litter_patch, default='active')
 
        this%m_livecrootc_storage_to_litter_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_LIVECROOTC_STORAGE_TO_LITTER', units='gC/m^2/s', &
@@ -926,7 +936,7 @@ contains
        this%m_livestemc_xfer_to_litter_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_LIVESTEMC_XFER_TO_LITTER', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C transfer mortality', &
-            ptr_patch=this%m_livestemc_xfer_to_litter_patch, default='inactive')
+            ptr_patch=this%m_livestemc_xfer_to_litter_patch, default='active')
 
        this%m_deadstemc_xfer_to_litter_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_DEADSTEMC_XFER_TO_LITTER', units='gC/m^2/s', &
@@ -946,7 +956,7 @@ contains
        this%m_livestemc_to_litter_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_LIVESTEMC_TO_LITTER', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C mortality', &
-            ptr_patch=this%m_livestemc_to_litter_patch, default='inactive')
+            ptr_patch=this%m_livestemc_to_litter_patch, default='active')
 
        this%m_deadstemc_to_litter_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_DEADSTEMC_TO_LITTER', units='gC/m^2/s', &
@@ -991,17 +1001,17 @@ contains
        this%m_livestemc_to_fire_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_LIVESTEMC_TO_FIRE', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C fire loss', &
-            ptr_patch=this%m_livestemc_to_fire_patch, default='inactive')
+            ptr_patch=this%m_livestemc_to_fire_patch, default='active')
 
        this%m_livestemc_storage_to_fire_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_LIVESTEMC_STORAGE_TO_FIRE', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C storage fire loss', &
-            ptr_patch=this%m_livestemc_storage_to_fire_patch, default='inactive')
+            ptr_patch=this%m_livestemc_storage_to_fire_patch, default='active')
 
        this%m_livestemc_xfer_to_fire_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_LIVESTEMC_XFER_TO_FIRE', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C transfer fire loss', &
-            ptr_patch=this%m_livestemc_xfer_to_fire_patch, default='inactive')
+            ptr_patch=this%m_livestemc_xfer_to_fire_patch, default='active')
 
        this%m_deadstemc_to_fire_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_DEADSTEMC_TO_FIRE', units='gC/m^2/s', &
@@ -1092,22 +1102,22 @@ contains
        this%m_livestemc_to_litter_fire_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_LIVESTEMC_TO_LITTER_FIRE', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C fire mortality to litter', &
-            ptr_patch=this%m_livestemc_to_litter_fire_patch, default='inactive')
+            ptr_patch=this%m_livestemc_to_litter_fire_patch, default='active')
 
        this%m_livestemc_storage_to_litter_fire_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_LIVESTEMC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C storage fire mortality to litter', &
-            ptr_patch=this%m_livestemc_storage_to_litter_fire_patch, default='inactive')
+            ptr_patch=this%m_livestemc_storage_to_litter_fire_patch, default='active')
 
        this%m_livestemc_xfer_to_litter_fire_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_LIVESTEMC_XFER_TO_LITTER_FIRE', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C transfer fire mortality to litter', &
-            ptr_patch=this%m_livestemc_xfer_to_litter_fire_patch, default='inactive')
+            ptr_patch=this%m_livestemc_xfer_to_litter_fire_patch, default='active')
 
        this%m_livestemc_to_deadstemc_fire_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_LIVESTEMC_TO_DEADSTEMC_FIRE', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C fire mortality to dead stem C', &
-            ptr_patch=this%m_livestemc_to_deadstemc_fire_patch, default='inactive')
+            ptr_patch=this%m_livestemc_to_deadstemc_fire_patch, default='active')
 
        this%m_deadstemc_to_litter_fire_patch(begp:endp) = spval
        call hist_addfld1d (fname='M_DEADSTEMC_TO_LITTER_FIRE', units='gC/m^2/s', &
@@ -1198,7 +1208,7 @@ contains
        this%leafc_xfer_to_leafc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAFC_XFER_TO_LEAFC', units='gC/m^2/s', &
             avgflag='A', long_name='leaf C growth from storage', &
-            ptr_patch=this%leafc_xfer_to_leafc_patch, default='inactive')
+            ptr_patch=this%leafc_xfer_to_leafc_patch, default='active')
 
        this%frootc_xfer_to_frootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='FROOTC_XFER_TO_FROOTC', units='gC/m^2/s', &
@@ -1208,12 +1218,12 @@ contains
        this%livestemc_xfer_to_livestemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMC_XFER_TO_LIVESTEMC', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C growth from storage', &
-            ptr_patch=this%livestemc_xfer_to_livestemc_patch, default='inactive')
+            ptr_patch=this%livestemc_xfer_to_livestemc_patch, default='active')
 
        this%deadstemc_xfer_to_deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADSTEMC_XFER_TO_DEADSTEMC', units='gC/m^2/s', &
             avgflag='A', long_name='dead stem C growth from storage', &
-            ptr_patch=this%deadstemc_xfer_to_deadstemc_patch, default='inactive')
+            ptr_patch=this%deadstemc_xfer_to_deadstemc_patch, default='active')
 
        this%livecrootc_xfer_to_livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTC_XFER_TO_LIVECROOTC', units='gC/m^2/s', &
@@ -1245,7 +1255,7 @@ contains
        this%cpool_to_resp_patch(begp:endp) = spval
        call hist_addfld1d (fname='EXCESSC_MR', units='gC/m^2/s', &
             avgflag='A', long_name='excess C maintenance respiration', &
-            ptr_patch=this%cpool_to_resp_patch, default='inactive')
+            ptr_patch=this%cpool_to_resp_patch, default='active')
        this%leaf_mr_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAF_MR', units='gC/m^2/s', &
             avgflag='A', long_name='leaf maintenance respiration', &
@@ -1259,12 +1269,12 @@ contains
        this%livestem_mr_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEM_MR', units='gC/m^2/s', &
             avgflag='A', long_name='live stem maintenance respiration', &
-            ptr_patch=this%livestem_mr_patch, default='inactive')
+            ptr_patch=this%livestem_mr_patch, default='active')
 
        this%livecroot_mr_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOT_MR', units='gC/m^2/s', &
             avgflag='A', long_name='live coarse root maintenance respiration', &
-            ptr_patch=this%livecroot_mr_patch, default='inactive')
+            ptr_patch=this%livecroot_mr_patch, default='active')
 
        this%psnsun_to_cpool_patch(begp:endp) = spval
        call hist_addfld1d (fname='PSNSUN_TO_CPOOL', units='gC/m^2/s', &
@@ -1299,42 +1309,42 @@ contains
        this%cpool_to_livestemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_TO_LIVESTEMC', units='gC/m^2/s', &
             avgflag='A', long_name='allocation to live stem C', &
-            ptr_patch=this%cpool_to_livestemc_patch, default='inactive')
+            ptr_patch=this%cpool_to_livestemc_patch, default='active')
 
        this%cpool_to_livestemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_TO_LIVESTEMC_STORAGE', units='gC/m^2/s', &
             avgflag='A', long_name='allocation to live stem C storage', &
-            ptr_patch=this%cpool_to_livestemc_storage_patch, default='inactive')
+            ptr_patch=this%cpool_to_livestemc_storage_patch, default='active')
 
        this%cpool_to_deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_TO_DEADSTEMC', units='gC/m^2/s', &
             avgflag='A', long_name='allocation to dead stem C', &
-            ptr_patch=this%cpool_to_deadstemc_patch, default='inactive')
+            ptr_patch=this%cpool_to_deadstemc_patch, default='active')
 
        this%cpool_to_deadstemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_TO_DEADSTEMC_STORAGE', units='gC/m^2/s', &
             avgflag='A', long_name='allocation to dead stem C storage', &
-            ptr_patch=this%cpool_to_deadstemc_storage_patch, default='inactive')
+            ptr_patch=this%cpool_to_deadstemc_storage_patch, default='active')
 
        this%cpool_to_livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_TO_LIVECROOTC', units='gC/m^2/s', &
             avgflag='A', long_name='allocation to live coarse root C', &
-            ptr_patch=this%cpool_to_livecrootc_patch, default='inactive')
+            ptr_patch=this%cpool_to_livecrootc_patch, default='active')
 
        this%cpool_to_livecrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_TO_LIVECROOTC_STORAGE', units='gC/m^2/s', &
             avgflag='A', long_name='allocation to live coarse root C storage', &
-            ptr_patch=this%cpool_to_livecrootc_storage_patch, default='inactive')
+            ptr_patch=this%cpool_to_livecrootc_storage_patch, default='active')
 
        this%cpool_to_deadcrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_TO_DEADCROOTC', units='gC/m^2/s', &
             avgflag='A', long_name='allocation to dead coarse root C', &
-            ptr_patch=this%cpool_to_deadcrootc_patch, default='inactive')
+            ptr_patch=this%cpool_to_deadcrootc_patch, default='active')
 
        this%cpool_to_deadcrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_TO_DEADCROOTC_STORAGE', units='gC/m^2/s', &
             avgflag='A', long_name='allocation to dead coarse root C storage', &
-            ptr_patch=this%cpool_to_deadcrootc_storage_patch, default='inactive')
+            ptr_patch=this%cpool_to_deadcrootc_storage_patch, default='active')
 
        this%cpool_to_gresp_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_TO_GRESP_STORAGE', units='gC/m^2/s', &
@@ -1374,42 +1384,42 @@ contains
        this%cpool_livestem_gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_LIVESTEM_GR', units='gC/m^2/s', &
             avgflag='A', long_name='live stem growth respiration', &
-            ptr_patch=this%cpool_livestem_gr_patch, default='inactive')
+            ptr_patch=this%cpool_livestem_gr_patch, default='active')
 
        this%cpool_livestem_storage_gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_LIVESTEM_STORAGE_GR', units='gC/m^2/s', &
             avgflag='A', long_name='live stem growth respiration to storage', &
-            ptr_patch=this%cpool_livestem_storage_gr_patch, default='inactive')
+            ptr_patch=this%cpool_livestem_storage_gr_patch, default='active')
 
        this%transfer_livestem_gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='TRANSFER_LIVESTEM_GR', units='gC/m^2/s', &
             avgflag='A', long_name='live stem growth respiration from storage', &
-            ptr_patch=this%transfer_livestem_gr_patch, default='inactive')
+            ptr_patch=this%transfer_livestem_gr_patch, default='active')
 
        this%cpool_deadstem_gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_DEADSTEM_GR', units='gC/m^2/s', &
             avgflag='A', long_name='dead stem growth respiration', &
-            ptr_patch=this%cpool_deadstem_gr_patch, default='inactive')
+            ptr_patch=this%cpool_deadstem_gr_patch, default='active')
 
        this%cpool_deadstem_storage_gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_DEADSTEM_STORAGE_GR', units='gC/m^2/s', &
             avgflag='A', long_name='dead stem growth respiration to storage', &
-            ptr_patch=this%cpool_deadstem_storage_gr_patch, default='inactive')
+            ptr_patch=this%cpool_deadstem_storage_gr_patch, default='active')
 
        this%transfer_deadstem_gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='TRANSFER_DEADSTEM_GR', units='gC/m^2/s', &
             avgflag='A', long_name='dead stem growth respiration from storage', &
-            ptr_patch=this%transfer_deadstem_gr_patch, default='inactive')
+            ptr_patch=this%transfer_deadstem_gr_patch, default='active')
 
        this%cpool_livecroot_gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_LIVECROOT_GR', units='gC/m^2/s', &
             avgflag='A', long_name='live coarse root growth respiration', &
-            ptr_patch=this%cpool_livecroot_gr_patch, default='inactive')
+            ptr_patch=this%cpool_livecroot_gr_patch, default='active')
 
        this%cpool_livecroot_storage_gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='CPOOL_LIVECROOT_STORAGE_GR', units='gC/m^2/s', &
             avgflag='A', long_name='live coarse root growth respiration to storage', &
-            ptr_patch=this%cpool_livecroot_storage_gr_patch, default='inactive')
+            ptr_patch=this%cpool_livecroot_storage_gr_patch, default='active')
 
        this%transfer_livecroot_gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='TRANSFER_LIVECROOT_GR', units='gC/m^2/s', &
@@ -1444,12 +1454,12 @@ contains
        this%livestemc_storage_to_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMC_STORAGE_TO_XFER', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C shift storage to transfer', &
-            ptr_patch=this%livestemc_storage_to_xfer_patch, default='inactive')
+            ptr_patch=this%livestemc_storage_to_xfer_patch, default='active')
 
        this%deadstemc_storage_to_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADSTEMC_STORAGE_TO_XFER', units='gC/m^2/s', &
             avgflag='A', long_name='dead stem C shift storage to transfer', &
-            ptr_patch=this%deadstemc_storage_to_xfer_patch, default='inactive')
+            ptr_patch=this%deadstemc_storage_to_xfer_patch, default='active')
 
        this%livecrootc_storage_to_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTC_STORAGE_TO_XFER', units='gC/m^2/s', &
@@ -1469,12 +1479,12 @@ contains
        this%livestemc_to_deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMC_TO_DEADSTEMC', units='gC/m^2/s', &
             avgflag='A', long_name='live stem C turnover', &
-            ptr_patch=this%livestemc_to_deadstemc_patch, default='inactive')
+            ptr_patch=this%livestemc_to_deadstemc_patch, default='active')
 
        this%livecrootc_to_deadcrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTC_TO_DEADCROOTC', units='gC/m^2/s', &
             avgflag='A', long_name='live coarse root C turnover', &
-            ptr_patch=this%livecrootc_to_deadcrootc_patch, default='inactive')
+            ptr_patch=this%livecrootc_to_deadcrootc_patch, default='active')
 
        this%gpp_before_downreg_patch(begp:endp) = spval
        call hist_addfld1d (fname='INIT_GPP', units='gC/m^2/s', &

@@ -6,7 +6,7 @@ module CNNStateUpdate1Mod
   !
   ! !USES:
   use shr_kind_mod                    , only: r8 => shr_kind_r8
-  use clm_time_manager                , only : get_step_size_real
+  use clm_time_manager                , only : get_step_size, get_step_size_real
   use clm_varpar                      , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
   use clm_varpar                      , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
@@ -119,7 +119,7 @@ contains
          )
 
       ! set time steps
-      dt = get_step_size_real()
+      dt = real( get_step_size(), r8 )
 
 
       ! soilbiogeochemistry fluxes TODO - this should be moved elsewhere
@@ -189,6 +189,11 @@ contains
             ns_veg%deadcrootn_patch(p)   = ns_veg%deadcrootn_patch(p) + nf_veg%livecrootn_to_deadcrootn_patch(p)*dt
             ns_veg%livecrootn_patch(p)   = ns_veg%livecrootn_patch(p) - nf_veg%livecrootn_to_retransn_patch(p)*dt
             ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livecrootn_to_retransn_patch(p)*dt
+            ! WW change logic so livestem_retrans goes to npool (via free_retrans flux)
+            ! this should likely be done more cleanly if it works, i.e. not update fluxes w/ states
+            ! additional considerations for crop?
+            nf_veg%free_retransn_to_npool_patch(p) = nf_veg%free_retransn_to_npool_patch(p) + nf_veg%livestemn_to_retransn_patch(p)
+            nf_veg%free_retransn_to_npool_patch(p) = nf_veg%free_retransn_to_npool_patch(p) + nf_veg%livecrootn_to_retransn_patch(p)
          end if
          if (ivt(p) >= npcropmin) then ! Beth adds retrans from froot
             ns_veg%frootn_patch(p)       = ns_veg%frootn_patch(p)     - nf_veg%frootn_to_retransn_patch(p)*dt

@@ -2720,8 +2720,10 @@ contains
             if (CNratio_floating .eqv. .true.) then    
                if (livestemc(p) == 0.0_r8) then    
                    ntovr = 0.0_r8    
+                   livestemn_to_deadstemn(p) = 0.0_r8 
                 else    
                    ntovr = ctovr * (livestemn(p) / livestemc(p))   
+                   livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p)) 
                 end if   
 
                 livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
@@ -2739,19 +2741,23 @@ contains
             if (CNratio_floating .eqv. .true.) then    
               if (livecrootc(p) == 0.0_r8) then    
                   ntovr = 0.0_r8    
+                  livecrootn_to_deadcrootn(p) = 0.0_r8 
                else    
                   ntovr = ctovr * (livecrootn(p) / livecrootc(p))   
+                   livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p)) 
                end if   
 
-               livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
+!               livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
             end if    
             
             livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
-            if(use_fun)then
-               !TURNED OFF FLUXES TO CORRECT N ACCUMULATION ISSUE. RF. Oct 2015. 
-               livecrootn_to_retransn(p) = 0.0_r8
-               livestemn_to_retransn(p)  = 0.0_r8
-            endif
+
+!           Allow resorbtion with FUN
+!           if(use_fun)then
+!              !TURNED OFF FLUXES TO CORRECT N ACCUMULATION ISSUE. RF. Oct 2015. 
+!              livecrootn_to_retransn(p) = 0.0_r8
+!              livestemn_to_retransn(p)  = 0.0_r8
+!           endif
 
          end if
 
