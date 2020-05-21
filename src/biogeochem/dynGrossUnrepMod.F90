@@ -514,91 +514,109 @@ contains
                   ! Check for negative pools from having harvesting and gross-unrep on at the same time
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_leafc_to_litter(p)               = leafc(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_frootc_to_litter(p)               = frootc(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_livestemc_to_atm(p)               = livestemc(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_deadstemc_to_atm(p)               = deadstemc(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_livecrootc_to_litter(p)               = livecrootc(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_deadcrootc_to_litter(p)               = deadcrootc(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_leafc_storage_to_atm(p)               = leafc_storage(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootst_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootst_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_frootc_storage_to_atm(p)               = Frootc_storage(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootst_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemst_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemst_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_livestemc_storage_to_atm(p)               = livestemc_storage(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemst_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemst_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemst_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_deadstemc_storage_to_atm(p)               = deadstemc_storage(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemst_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootst_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootst_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_livecrootc_storage_to_atm(p)               = livecrootc_storage(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootst_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_deadcrootc_storage_to_atm(p)               = deadcrootc_storage(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_leafc_xfer_to_atm(p)               = leafc_xfer(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootxf_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootxf_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_frootc_xfer_to_atm(p)               = frootc_xfer(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootxf_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemxf_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemxf_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_livestemc_xfer_to_atm(p)               = livestemc_xfer(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemxf_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemxf_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemxf_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_deadstemc_xfer_to_atm(p)               = deadstemc_xfer(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemxf_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_livecrootc_xfer_to_atm(p)               = livecrootc_xfer(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc) = 1._r8 / dtime
                   end if
                   if(cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc) .ge. 1._r8 / dtime) then
                      m = dtime * min( one_ov_dt, cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc) - one_ov_dt)
+                     m = (1.0_r8 - m)
                      gru_deadcrootc_xfer_to_atm(p)               = deadcrootc_xfer(p) * m
                      cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc) = 1._r8 / dtime
                   end if
