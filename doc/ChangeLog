@@ -1,4 +1,140 @@
 ===============================================================
+Tag name:  ctsm1.0.dev095
+Originator(s):  sacks (Bill Sacks)
+Date:  Thu May 21 10:25:16 MDT 2020
+One-line Summary: Update cime and cmeps externals; rework initialization of CNFire object
+
+Purpose of changes
+------------------
+
+Main change is to update cime and cmeps externals. cime is now
+essentially at the version used in cesm2_2_beta05 (but with one change
+backed out); cmeps is at latest master.
+
+Also, reworks initialization of CNFire object to avoid occasional
+segmentation faults.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1018 (Occasional seg faults when initializing
+  CNFire object)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+- Note: Because of a change in cime, datm now uses netcdf rather than
+  pnetcdf, but it doesn't seem that that impacts performance
+  significantly
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- pass
+
+    cheyenne tests pass; some answer changes as expected (as noted below)
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+      - cheyenne_gnu - due to compiler version update
+      - nuopc - presumably due to the major cmeps update
+    - what platforms/compilers: see above
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      - Not investigated
+
+    I have verified that gnu tests in 59d1dd4a are identical to those
+    in dcaad375 - i.e., the rework of the initialization logic for fire
+    didn't change answers
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: cime5.8.19 -> branch_tags/cime5.8.23_a01
+  (same as cime5.8.23, but reverts to using pio1 for mpi-serial cases,
+  since some mpi-serial cases failed with pio2)
+- cmeps
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev094
 Originator(s):  sacks (Bill Sacks)
 Date:  Fri May 15 13:41:01 MDT 2020

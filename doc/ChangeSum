@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev095    sacks 05/21/2020 Update cime and cmeps externals; rework initialization of CNFire object
   ctsm1.0.dev094    sacks 05/15/2020 Minor bug fixes needed for latest cime
   ctsm1.0.dev093     erik 05/01/2020 Bring in changes from release-clm5.0 branch to master
 release-clm5.0.30    erik 01/21/2020 Update FATES to sci.1.30.0_api.8.0.0
