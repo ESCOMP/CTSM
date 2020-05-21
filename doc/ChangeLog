@@ -108,6 +108,10 @@ Changes answers relative to baseline: YES
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
       - Not investigated
 
+    I have verified that gnu tests in 59d1dd4a are identical to those
+    in dcaad375 - i.e., the rework of the initialization logic for fire
+    didn't change answers
+
    If bitwise differences were observed, how did you show they were no worse
    than roundoff? N/A
 
