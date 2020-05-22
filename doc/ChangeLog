@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev096
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
-Date:  Thu May 21 15:00:03 MDT 2020
+Date:  Thu May 21 19:18:24 MDT 2020
 One-line Summary: Gridcell-level balance checks for carbon and nitrogen
 
 Purpose of changes
@@ -79,8 +79,8 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- 
-    izumi ------- 
+    cheyenne ---- OK
+    izumi ------- PASS
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
@@ -88,18 +88,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
+Changes answers relative to baseline: No
 
 
 Detailed list of changes
