@@ -35,7 +35,7 @@ module initGridCellsMod
   public initGridcells ! initialize sub-grid gridcell mapping 
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private set_landunit_veg
+  private set_landunit_veg_compete
   private set_landunit_wet_lake
   private set_landunit_ice_mec
   private set_landunit_crop_noncompete
@@ -60,7 +60,7 @@ contains
     use subgridWeightsMod , only : compute_higher_order_weights
     use landunit_varcon   , only : istsoil, istwet, istdlak, istice_mec
     use landunit_varcon   , only : isturb_tbd, isturb_hd, isturb_md, istcrop
-    use clm_varctl        , only : use_fates,use_individual_pft_soil_column
+    use clm_varctl        , only : use_fates
     use shr_const_mod     , only : SHR_CONST_PI
     !
     ! !ARGUMENTS:
@@ -135,7 +135,7 @@ contains
 
        ! Determine naturally vegetated landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
-          call set_landunit_veg(               &
+          call set_landunit_veg_compete(               &
                ltype=istsoil, gi=gdc, li=li, ci=ci, pi=pi)
        end do
 
@@ -215,10 +215,10 @@ contains
   end subroutine initGridcells
 
   !------------------------------------------------------------------------
-  subroutine set_landunit_veg (ltype, gi, li, ci, pi)
+  subroutine set_landunit_veg_compete (ltype, gi, li, ci, pi)
     !
     ! !DESCRIPTION: 
-    ! Initialize vegetated landunit
+    ! Initialize vegetated landunit with competition
     !
     ! !USES
     use clm_instur, only : wt_lunit, wt_nat_patch
@@ -273,7 +273,7 @@ contains
     SHR_ASSERT_FL(ncols_added == ncols, sourcefile, __LINE__)
     SHR_ASSERT_FL(npatches_added == npatches, sourcefile, __LINE__)
 
-  end subroutine set_landunit_veg
+  end subroutine set_landunit_veg_compete
   
   !------------------------------------------------------------------------
   subroutine set_landunit_wet_lake (ltype, gi, li, ci, pi)

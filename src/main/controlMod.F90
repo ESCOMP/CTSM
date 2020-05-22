@@ -242,8 +242,6 @@ contains
 
     namelist /clm_inparm/ use_biomass_heat_storage
 
-    namelist /clm_inparm/ use_individual_pft_soil_column
-
     namelist /clm_inparm/ use_hydrstress
 
     namelist /clm_inparm/ use_dynroot
@@ -746,8 +744,6 @@ contains
     call mpi_bcast (use_bedrock, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_biomass_heat_storage, 1, MPI_LOGICAL, 0, mpicom, ier)
-
-    call mpi_bcast (use_individual_pft_soil_column, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
