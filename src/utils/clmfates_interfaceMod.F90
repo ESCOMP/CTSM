@@ -513,7 +513,7 @@ module CLMFatesInterfaceMod
 
             ! initialize static layers for reduced complexity FATES versions from HLM 
             ! maybe make this into a subroutine of it's own later. 
-            do m = natpft_lb,natpft_ub
+            do m = natpft_lb,natpft_ub-1
                ft = m-natpft_lb+1 
                if (natveg_patch_exists(g, m)) then
                   this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,m)
