@@ -100,6 +100,8 @@ module  PhotosynthesisMod
      real(r8) :: tpuhd      ! Deactivation energy for tpu (J/mol)
      real(r8) :: lmrhd      ! Deactivation energy for lmr (J/mol)
      real(r8) :: lmrse      ! Entropy term for lmr (J/mol/K)
+     real(r8) :: tpu25ratio ! Ratio of tpu25top to vcmax25top (unitless)
+     real(r8) :: kp25ratio  ! Ratio of kp25top to vcmax25top (unitless)
      real(r8), allocatable, public  :: krmax              (:)
      real(r8), allocatable, private :: kmax               (:,:)
      real(r8), allocatable, private :: psi50              (:,:)
@@ -733,6 +735,10 @@ contains
     call readNcdioScalar(ncid, 'lmrhd', subname, params_inst%lmrhd)
     ! Entropy term for lmr (J/mol/K)
     call readNcdioScalar(ncid, 'lmrse', subname, params_inst%lmrse)
+    ! Ratio of tpu25top to vcmax25top (unitless)
+    call readNcdioScalar(ncid, 'tpu25ratio', subname, params_inst%tpu25ratio)
+    ! Ratio of kp25top to vcmax25top (unitless)
+    call readNcdioScalar(ncid, 'kp25ratio', subname, params_inst%kp25ratio)
 
   end subroutine readParams
 
@@ -1416,8 +1422,8 @@ contains
          ! used jmax25 = 1.97 vcmax25, from Wullschleger (1993) Journal of Experimental Botany 44:907-920.
 
          jmax25top = (2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top
-         tpu25top  = 0.167_r8 * vcmax25top
-         kp25top   = 20000._r8 * vcmax25top
+         tpu25top  = params_inst%tpu25ratio * vcmax25top
+         kp25top   = params_inst%kp25ratio * vcmax25top
 
          ! Nitrogen scaling factor. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593 used
          ! kn = 0.11. Here, derive kn from vcmax25 as in Lloyd et al (2010) Biogeosciences, 7, 1833-1859
@@ -1529,7 +1535,7 @@ contains
                if(use_luna.and.c3flag(p).and.crop(patch%itype(p))== 0)then
                   vcmax25 = photosyns_inst%vcmx25_z_patch(p,iv)
                   jmax25 = photosyns_inst%jmx25_z_patch(p,iv)
-                  tpu25 = 0.167_r8 * vcmax25 
+                  tpu25 = params_inst%tpu25ratio * vcmax25 
                   !Implement scaling of Vcmax25 from sunlit average to shaded canopy average value. RF & GBB. 1 July 2016
                   if(phase == 'sha'.and.surfalb_inst%vcmaxcintsun_patch(p).gt.0._r8.and.nlevcan==1) then
                      vcmax25 = vcmax25 * surfalb_inst%vcmaxcintsha_patch(p)/surfalb_inst%vcmaxcintsun_patch(p)
@@ -2975,8 +2981,8 @@ contains
          ! used jmax25 = 1.97 vcmax25, from Wullschleger (1993) Journal of Experimental Botany 44:907-920.
 
          jmax25top = (2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top
-         tpu25top  = 0.167_r8 * vcmax25top
-         kp25top   = 20000._r8 * vcmax25top
+         tpu25top  = params_inst%tpu25ratio * vcmax25top
+         kp25top   = params_inst%kp25ratio * vcmax25top
          luvcmax25top(p) = vcmax25top
          lujmax25top(p) = jmax25top
          lutpu25top(p)=tpu25top
@@ -3111,8 +3117,8 @@ contains
                   vcmax25_sha = photosyns_inst%vcmx25_z_patch(p,iv)
                   jmax25_sun = photosyns_inst%jmx25_z_patch(p,iv)
                   jmax25_sha = photosyns_inst%jmx25_z_patch(p,iv)
-                  tpu25_sun = 0.167_r8 * vcmax25_sun        
-                  tpu25_sha = 0.167_r8 * vcmax25_sha        
+                  tpu25_sun = params_inst%tpu25ratio * vcmax25_sun        
+                  tpu25_sha = params_inst%tpu25ratio * vcmax25_sha        
                   if(surfalb_inst%vcmaxcintsun_patch(p).gt.0._r8.and.nlevcan==1) then
                     vcmax25_sha = vcmax25_sun * surfalb_inst%vcmaxcintsha_patch(p)/surfalb_inst%vcmaxcintsun_patch(p)
                     jmax25_sha  = jmax25_sun  * surfalb_inst%vcmaxcintsha_patch(p)/surfalb_inst%vcmaxcintsun_patch(p) 

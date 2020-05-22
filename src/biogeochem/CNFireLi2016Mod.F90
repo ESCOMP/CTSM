@@ -48,6 +48,7 @@ module CNFireLi2016Mod
   !
   ! !PUBLIC TYPES:
   public :: cnfire_li2016_type
+  public :: readParams
   !
   type, extends(cnfire_base_type) :: cnfire_li2016_type
      private
@@ -67,6 +68,12 @@ module CNFireLi2016Mod
   end interface cnfire_li2016_type
   !-----------------------------------------------------------------------
 
+  type, private :: params_type
+     real(r8) :: prh30                ! Factor related to dependence of fuel combustibility on 30-day running mean of relative humidity (unitless)
+     real(r8) :: ignition_efficiency  ! Ignition efficiency of cloud-to-ground lightning (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -81,6 +88,28 @@ contains
 
     constructor%need_lightning_and_popdens = .true.
   end function constructor
+
+  !-----------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readCNFireLi2016Params'
+    !--------------------------------------------------------------------
+
+    ! Factor related to dependence of fuel combustibility on 30-day running mean of relative humidity (unitless)
+    call readNcdioScalar(ncid, 'prh30', subname, params_inst%prh30)
+    ! Ignition efficiency of cloud-to-ground lightning (unitless)
+    call readNcdioScalar(ncid, 'ignition_efficiency', subname, params_inst%ignition_efficiency)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -598,7 +627,7 @@ contains
            if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then  
               afuel  =min(1._r8,max(0._r8,(fuelc(c)-2500._r8)/(5000._r8-2500._r8)))
               arh=1._r8-max(0._r8, min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low)))
-              arh30=1._r8-max(0.7_r8, min(1._r8,rh30_col(c)/90._r8))
+              arh30=1._r8-max(params_inst%prh30, min(1._r8,rh30_col(c)/90._r8))
               if (forc_rh(g) < rh_hgh.and. wtlf(c) > 0._r8 .and. tsoi17(c)> SHR_CONST_TKFRZ)then
                 fire_m   = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8)*((1._r8 -max(0._r8,&
                     min(1._r8,(btran_col(c)/wtlf(c)-bt_min)/(bt_max-bt_min))))**0.5_r8)
@@ -607,8 +636,8 @@ contains
               end if
               lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
               fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
-              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8*cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))*0.22_r8)  &
-                         *(1._r8-fs)*(1._r8-cropf_col(c))
+              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8*cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
+                   params_inst%ignition_efficiency)*(1._r8-fs)*(1._r8-cropf_col(c))
               nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
               Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
               spread_m = fire_m**0.5_r8

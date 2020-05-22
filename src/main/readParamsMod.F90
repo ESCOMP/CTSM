@@ -31,6 +31,7 @@ contains
     use CNMRespMod                        , only : readCNMRespParams                      => readParams
     use CNFUNMod                          , only : readCNFUNParams                        => readParams
     use CNPhenologyMod                    , only : readCNPhenolParams                     => readParams
+    use CNFireLi2016Mod                   , only : readCNFireLi2016Params                 => readParams
     use SoilBiogeochemCompetitionMod      , only : readSoilBiogeochemCompetitionParams    => readParams
     use SoilBiogeochemNLeachingMod        , only : readSoilBiogeochemNLeachingParams      => readParams
     use SoilBiogeochemNitrifDenitrifMod   , only : readSoilBiogeochemNitrifDenitrifParams => readParams
@@ -87,6 +88,7 @@ contains
        call readCNMRespParams(ncid)
        call readCNFUNParams(ncid)
        call readCNPhenolParams(ncid)
+       call readCNFireLi2016Params(ncid)
     end if
 
     !
