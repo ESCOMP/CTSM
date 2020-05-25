@@ -1,4 +1,193 @@
 ===============================================================
+Tag name:  ctsm1.0.dev097
+Originator(s): ycheng (Yanyan Cheng)
+Date:  Mon May 25 15:14:56 MDT 2020
+One-line Summary: Add two bioenergy crops (switchgrass and miscanthus)
+
+Purpose of changes
+------------------
+
+Main change is from Yanyan Cheng: adding parameters and code for two
+bioenergy crops, switchgrass and miscanthus. Along with this, there is a
+new potential flux from crop leaves and stems to the crop product pool
+at harvest, representing biofuel products; a new pft-specific parameter
+controls this flux (biofuel_harvfrac). Currently, the out-of-the-box
+surface datasets do not specify any area for these crops, but the new
+parameter file will allow them to be present if specified on the surface
+dataset or landuse_timeseries file. Note that this is only an option for
+CLM5.0, NOT for CLM4.5. (See https://github.com/ESCOMP/CTSM/pull/884 for
+details.)
+
+Also, some minor fixes from Bill Sacks: See notes under "bugs fixed"
+below.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#203 - Fixes creation of harvest-related variables
+  on surface datasets created with the all_veg option - smallville,
+  PTCLM, etc. (documented in https://github.com/ESCOMP/CTSM/pull/1019)
+- Resolves ESCOMP/CTSM#930 - Makes gindex_ocn intent(inout) rather than
+  intent(out)
+- Resolves ESCOMP/CTSM#1021 - Changes SSP test to only do symlink if
+  needed
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- For transient crop cases, now more crops in memory. This creates a
+  need for interpolation of initial conditions for initial conditions
+  generated from a transient case.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values):
+- Changed parameter values for switchgrass and miscanthus (only for clm5.0)
+- New pft-specific parameter, biofuel_harvfrac (for both clm4.5 and clm5.0)
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- New parameter files with the above changes
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Changed smallville ERS_Lm20 test to be cold start (see comment in
+  commit 8368f222 for details)
+- Added a multi-year smallville test that includes these new crops
+
+Code reviewed by: Bill Sacks, Danica Lombardozzi
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - ok
+
+    Pass except for expected baseline failures
+
+    Ran on 633be0eb, with comparison against ctsm1.0.dev095; tests pass
+    except these expected baseline failures:
+
+        030 blf84 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_clm4_5^buildtools ....................\c
+         rc=7 FAIL
+
+        032 blfc4 TBLscript_tools.sh PTCLM PTCLMmkdata PTCLM_USUMB_Cycle_clm4_5^buildtools ..............\c
+         rc=7 FAIL
+
+        Diffs for these are just in the harvest-related fields on the surface dataset, as expected.
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- pass
+
+    For cheyenne testing: a few tests had baseline failures. The
+    differences just arise in the h1 (vector) files, due to differences
+    in dimension sizes. These differences are expected. See below for
+    details.
+
+    Ran most testing on 8309c213. Reran two SSP tests on 4665c9ce
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but diagnostic only due to
+change in dimension sizes - does not change answers in any meaningful
+way
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Transient CLM50 cases with crops; just
+      changes dimensions on vector (h1) history files
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      diagnostic change only
+
+      Differences were observed in the following tests:
+
+          ERS_Ly3_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropQianGs.cheyenne_gnu.clm-cropMonthOutput
+          SMS_Ld5.f10_f10_musgs.ISSP245Clm50BgcCrop.cheyenne_gnu.clm-ciso_dec2050Start
+          SMS_Ld5.f10_f10_musgs.ISSP370Clm50BgcCrop.cheyenne_gnu.clm-ciso_dec2050Start
+          ERP_D_Ld10_P36x2.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_decStart
+          ERP_D_Ld5.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-allActive
+          ERP_Ly3_P72x2.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-cropMonthOutput
+          ERS_D_Ld7_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropGs.cheyenne_intel.clm-decStart1851_noinitial
+          ERS_Ly3_P72x2.f10_f10_musgs.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput
+          ERS_Ly5_P144x1.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-cropMonthOutput
+          ERS_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropQianGs.cheyenne_intel.clm-cropMonthOutput
+          LCISO_Lm13.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_monthly
+          SMS_Ld5.f10_f10_musgs.ISSP585Clm50BgcCrop.cheyenne_intel.clm-ciso_dec2050Start
+
+      The differences just arise in the h1 files, due to differences in
+      dimension sizes. I reran these tests with a paramfile where I
+      reverted the mergeToPft variable; then they were all bfb with
+      master.
+
+      Other than this, there were FIELDLIST differences, as expected.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/884
+- https://github.com/ESCOMP/CTSM/pull/1019
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev096
 Originator(s):  slevis (Samuel Levis,SLevis Consulting LLC,303-665-1310)
 Date:  Thu May 21 19:18:24 MDT 2020
