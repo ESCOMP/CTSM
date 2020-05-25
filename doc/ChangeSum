@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev097   ycheng 05/25/2020 Add two bioenergy crops (switchgrass and miscanthus)
   ctsm1.0.dev096   slevis 05/21/2020 Gridcell-level balance checks for carbon and nitrogen
   ctsm1.0.dev095    sacks 05/21/2020 Update cime and cmeps externals; rework initialization of CNFire object
   ctsm1.0.dev094    sacks 05/15/2020 Minor bug fixes needed for latest cime
