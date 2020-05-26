@@ -25,8 +25,14 @@
     <COMPILERS>$COMPILER</COMPILERS>
 
     <!-- MPILIBS: mpilibs supported on this machine, comma seperated list,
-	 first is default, mpi-serial is assumed and not required in this list-->
-    <MPILIBS>$MPILIB</MPILIBS>
+	 first is default, mpi-serial is assumed and not required in
+         this list.
+
+         It appears that the particular value is not important here: all
+         that matters is that we're self-consistent. (See
+         https://github.com/ESMCI/cime/issues/3537)
+    -->
+    <MPILIBS>mpich</MPILIBS>
 
     <!-- CIME_OUTPUT_ROOT: Base directory for case output,
 	 the case/bld and case/run directories are written below here -->
