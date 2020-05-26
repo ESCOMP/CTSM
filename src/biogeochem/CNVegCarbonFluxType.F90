@@ -3964,7 +3964,6 @@ contains
        this%litfire_col(i)             = value_column
        this%somfire_col(i)             = value_column
        this%totfire_col(i)             = value_column
-       this%fire_closs_col(i)          = value_column
 
        ! Zero p2c column fluxes
        this%rr_col(i)                  = value_column  

@@ -31,31 +31,27 @@ module CNFireNoFireMod
   type, extends(cnfire_base_type) :: cnfire_nofire_type
     private
   contains
-     !
-     ! !PUBLIC MEMBER FUNCTIONS:
-     procedure, public :: CNFireArea    ! Calculate fire area
+    !
+    ! !PUBLIC MEMBER FUNCTIONS:
+    procedure, public :: need_lightning_and_popdens
+    procedure, public :: CNFireArea    ! Calculate fire area
   end type cnfire_nofire_type
-
-  !
-  ! !PRIVATE MEMBER DATA:
-  !-----------------------------------------------------------------------
-
-  interface cnfire_nofire_type
-     ! initialize a new cnfire_base object
-     module procedure constructor
-  end interface cnfire_nofire_type
-  !-----------------------------------------------------------------------
 
 contains
 
-  !------------------------------------------------------------------------
-  type(cnfire_nofire_type) function constructor()
-    !
-    ! !DESCRIPTION:
-    ! Creates an object of type cnfire_base_type.
+  !-----------------------------------------------------------------------
+  function need_lightning_and_popdens(this)
     ! !ARGUMENTS:
-    constructor%need_lightning_and_popdens = .false.
-  end function constructor
+    class(cnfire_nofire_type), intent(in) :: this
+    logical :: need_lightning_and_popdens  ! function result
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'need_lightning_and_popdens'
+    !-----------------------------------------------------------------------
+
+    need_lightning_and_popdens = .false.
+  end function need_lightning_and_popdens
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &

@@ -2624,20 +2624,6 @@ contains
                    long_name='FATES pft map into patch age x pft', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_agmap_levagepft', xtype=ncd_int, dim1name='fates_levagepft', &
                    long_name='FATES age-class map into patch age x pft', units='-', ncid=nfid(t))
-             call ncd_defvar(varname='fates_levelem',xtype=ncd_int, dim1name='fates_levelem', &
-                   long_name='FATES element (C,N,P,...) identifier', units='-', ncid=nfid(t))
-             call ncd_defvar(varname='fates_elmap_levelpft', xtype=ncd_int, dim1name='fates_levelpft', &
-                   long_name='FATES element map into element x pft   ', units='-', ncid=nfid(t))
-             call ncd_defvar(varname='fates_pftmap_levelpft', xtype=ncd_int, dim1name='fates_levelpft', &
-                   long_name='FATES pft map into element x pft', units='-', ncid=nfid(t))
-             call ncd_defvar(varname='fates_elmap_levelcwd', xtype=ncd_int, dim1name='fates_levelcwd', &
-                   long_name='FATES element map into element x cwd', units='-', ncid=nfid(t))
-             call ncd_defvar(varname='fates_cwdmap_levelcwd', xtype=ncd_int, dim1name='fates_levelcwd', &
-                   long_name='FATES cwd map into element x cwd', units='-', ncid=nfid(t))
-             call ncd_defvar(varname='fates_elmap_levelage', xtype=ncd_int, dim1name='fates_levelage', &
-                   long_name='FATES element map into age x pft', units='-', ncid=nfid(t))
-             call ncd_defvar(varname='fates_agemap_levelage', xtype=ncd_int, dim1name='fates_levelage', &
-                   long_name='FATES element map into age x pft', units='-', ncid=nfid(t))
 
           end if
 
@@ -2674,13 +2660,6 @@ contains
              call ncd_io(varname='fates_pftmap_levscagpft',data=fates_hdim_pftmap_levscagpft, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_pftmap_levagepft',data=fates_hdim_pftmap_levagepft, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_agmap_levagepft',data=fates_hdim_agmap_levagepft, ncid=nfid(t), flag='write')
-             call ncd_io(varname='fates_levelem',data=fates_hdim_levelem, ncid=nfid(t),flag='write')
-             call ncd_io(varname='fates_elmap_levelpft',data=fates_hdim_elmap_levelpft, ncid=nfid(t),flag='write')
-             call ncd_io(varname='fates_pftmap_levelpft',data=fates_hdim_pftmap_levelpft, ncid=nfid(t),flag='write')
-             call ncd_io(varname='fates_elmap_levelcwd',data=fates_hdim_elmap_levelcwd, ncid=nfid(t),flag='write')
-             call ncd_io(varname='fates_cwdmap_levelcwd',data=fates_hdim_cwdmap_levelcwd, ncid=nfid(t),flag='write')
-             call ncd_io(varname='fates_elmap_levelage',data=fates_hdim_elmap_levelage, ncid=nfid(t),flag='write')
-             call ncd_io(varname='fates_agemap_levelage',data=fates_hdim_agemap_levelage, ncid=nfid(t),flag='write')
           end if
 
        endif
