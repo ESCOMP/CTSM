@@ -58,7 +58,7 @@ module clm_driver
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
-  use ch4Mod                 , only : ch4, ch4_init_balance_check
+  use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
   use VOCEmissionMod         , only : VOCEmission
   !
@@ -318,6 +318,12 @@ contains
                c14_soilbiogeochem_carbonstate_inst, &
                soilbiogeochem_nitrogenstate_inst)
        end if
+       if (use_lch4) then
+          call ch4_init_gridcell_balance_check(bounds_clump, &
+               filter(nc)%num_nolakec, filter(nc)%nolakec, &
+               filter(nc)%num_lakec, filter(nc)%lakec, &
+               ch4_inst)
+       end if
        call t_stopf('begcnbal_grc')
 
     end do
@@ -397,7 +403,7 @@ contains
        end if
 
        if (use_lch4) then
-          call ch4_init_balance_check(bounds_clump, &
+          call ch4_init_column_balance_check(bounds_clump, &
                filter(nc)%num_nolakec, filter(nc)%nolakec, &
                filter(nc)%num_lakec, filter(nc)%lakec, &
                ch4_inst)
