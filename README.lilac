@@ -8,10 +8,9 @@ I. Building a CTSM / LILAC library for inclusion in an atmosphere model
    > git checkout lilac_cap
    > ./manage_externals/checkout_externals -v
 
-2) set the following environment variables (***LILAC_MODE IS CRITICAL to have the lilac code built as part of ctsm)
+2) set the following environment variables
    SRCROOT is where ctsm is checked out 
 
-   > export LILAC_MODE='on'
    > export SRCROOT=`pwd`
    > export CASEDIR=/glade/scratch/$USER/test_lilac
 
@@ -20,6 +19,7 @@ I. Building a CTSM / LILAC library for inclusion in an atmosphere model
    > cd $SRCROOT/cime/scripts
    > ./create_newcase --case $CASEDIR --compset I2000Clm50SpRsGs --res f45_f45_mg37 --run-unsupported --driver nuopc
    >  cd $CASEDIR
+   > ./xmlchange LILAC_MODE=on
    > ./xmlchange DEBUG=TRUE
    > ./case.setup
    > ./case.build --sharedlib-only
