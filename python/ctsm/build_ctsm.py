@@ -32,7 +32,9 @@ def main(cime_path):
     args = _commandline_args()
     process_logging_args(args)
 
-    if not args.rebuild:
+    if args.rebuild:
+        sys.exit('ERROR: --rebuild not yet implemented')
+    else:
         build_ctsm(cime_path=cime_path,
                    build_dir=args.build_dir,
                    os_type=args.os,
