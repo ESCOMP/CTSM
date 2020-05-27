@@ -334,7 +334,6 @@ contains
           rain_to_snow_conversion_c(c) = 0._r8
           snow_to_rain_conversion_c(c) = 0._r8
           eflx_sh_precip_conversion(c) = 0._r8
-          qflx_runoff_rain_to_snow_conversion(c) = 0._r8
        end if
     end do
 
