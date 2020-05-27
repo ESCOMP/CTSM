@@ -28,6 +28,10 @@ def run_cmd_output_on_error(cmd, errmsg, cwd=None):
         print(error.output)
         print('')
         abort(errmsg)
+    except:
+        print('ERROR trying to run:')
+        print(' '.join(cmd))
+        raise
 
 def make_link(src, dst):
     """Makes a link pointing to src named dst
