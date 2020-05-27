@@ -24,6 +24,8 @@ def run_cmd_output_on_error(cmd, errmsg, cwd=None):
     except subprocess.CalledProcessError as error:
         print('ERROR while running:')
         print(' '.join(cmd))
+        if cwd is not None:
+            print('From {}'.format(cwd))
         print('')
         print(error.output)
         print('')
@@ -31,6 +33,8 @@ def run_cmd_output_on_error(cmd, errmsg, cwd=None):
     except:
         print('ERROR trying to run:')
         print(' '.join(cmd))
+        if cwd is not None:
+            print('From {}'.format(cwd))
         raise
 
 def make_link(src, dst):
