@@ -3,7 +3,7 @@
 
 import os
 import subprocess
-import sys
+from ctsm.utils import abort
 
 def run_cmd_output_on_error(cmd, errmsg, cwd=None):
     """Run the given command; suppress output but print it if there is an error
@@ -22,10 +22,12 @@ def run_cmd_output_on_error(cmd, errmsg, cwd=None):
                                     universal_newlines=True,
                                     cwd=cwd)
     except subprocess.CalledProcessError as error:
-        print('ERROR:\n')
+        print('ERROR while running:')
+        print(' '.join(cmd))
+        print('')
         print(error.output)
         print('')
-        sys.exit('ERROR: {}'.format(errmsg))
+        abort(errmsg)
 
 def make_link(src, dst):
     """Makes a link pointing to src named dst

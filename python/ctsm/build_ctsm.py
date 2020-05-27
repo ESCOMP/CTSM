@@ -5,11 +5,11 @@ import logging
 import os
 import string
 import subprocess
-import sys
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.os_utils import run_cmd_output_on_error
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.utils import abort
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ def main(cime_path):
     process_logging_args(args)
 
     if args.rebuild:
-        sys.exit('ERROR: --rebuild not yet implemented')
+        abort('ERROR: --rebuild not yet implemented')
     else:
         build_ctsm(cime_path=cime_path,
                    build_dir=args.build_dir,
@@ -292,8 +292,8 @@ def _create_build_dir(build_dir):
     build_dir (str): path to build directory; this directory shouldn't exist yet!
     """
     if os.path.exists(build_dir):
-        sys.exit('ERROR: When running without --rebuild, the build directory must not exist yet\n'
-                 '(<{}> already exists)'.format(build_dir))
+        abort('ERROR: When running without --rebuild, the build directory must not exist yet\n'
+              '(<{}> already exists)'.format(build_dir))
     os.makedirs(build_dir)
     os.makedirs(os.path.join(build_dir, _INPUTDATA_DIRNAME))
     os.makedirs(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME))
@@ -410,4 +410,4 @@ def _create_and_build_case(cime_path, build_dir):
              '--sharedlib-only'],
             cwd=casedir)
     except subprocess.CalledProcessError:
-        sys.exit('ERROR building CTSM or its dependencies - see above for details')
+        abort('ERROR building CTSM or its dependencies - see above for details')
