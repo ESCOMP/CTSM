@@ -512,10 +512,6 @@ contains
     if(use_soil_moisture_streams) then 
        call PrescribedSoilMoistureInit(bounds_proc)
     endif
-<<<<<<< HEAD
-=======
-
->>>>>>> ctsm1.0.dev093
 
 
     ! ------------------------------------------------------------------------

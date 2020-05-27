@@ -47,12 +47,14 @@ module clm_instMod
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
+  use InfiltrationExcessRunoffMod     , only : infiltration_excess_runoff_type
   use IrrigationMod                   , only : irrigation_type
   use LakeStateType                   , only : lakestate_type
   use OzoneBaseMod                    , only : ozone_base_type
   use OzoneFactoryMod                 , only : create_and_init_ozone_type
   use PhotosynthesisMod               , only : photosyns_type
-  use SoilHydrologyType               , only : soilhydrology_type  
+  use SoilHydrologyType               , only : soilhydrology_type
+  use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
   use SoilStateType                   , only : soilstate_type
   use SolarAbsorbedType               , only : solarabs_type
   use SurfaceRadiationMod             , only : surfrad_type
@@ -320,6 +322,9 @@ contains
          use_aquifer_layer = use_aquifer_layer())
     call SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, soilstate_inst)
 
+    call saturated_excess_runoff_inst%Init(bounds)
+    call infiltration_excess_runoff_inst%Init(bounds)
+
     call solarabs_inst%Init(bounds)
 
     call surfalb_inst%Init(bounds)
@@ -571,10 +576,6 @@ contains
        call clm_fates%restart(bounds, ncid, flag=flag,  &
             waterdiagnosticbulk_inst=water_inst%waterdiagnosticbulk_inst, &
             canopystate_inst=canopystate_inst, &
-<<<<<<< HEAD
-            frictionvel_inst=frictionvel_inst, &
-=======
->>>>>>> ctsm1.0.dev093
             soilstate_inst=soilstate_inst)
 
     end if
