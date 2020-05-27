@@ -1557,11 +1557,6 @@ sub process_namelist_inline_logic {
   ###############################
   setup_logic_nitrogen_deposition($opts,  $nl_flags, $definition, $defaults, $nl);
 
-  ##########################################
-  # namelist group: soil_moisture_streams  #
-  ##########################################
-  setup_logic_soilm_streams($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
-
   ##################################
   # namelist group: cnmresp_inparm #
   ##################################
