@@ -14,7 +14,7 @@ Testing performed, if any:
 (List what testing you did to show your changes worked as expected)
 (This can be manual testing or running of the different test suites)
 (Documentation on system testing is here: https://github.com/ESCOMP/ctsm/wiki/System-Testing-Guide)
-(aux_clm on cheyenne for gnu/pgi and hobart for gnu/pgi/nag is the standard for tags on master)
+(aux_clm on cheyenne for intel/gnu and izumi for intel/gnu/nag/pgi is the standard for tags on master)
 
 **NOTE: Be sure to check your Coding style against the standard:**
 https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines

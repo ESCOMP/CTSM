@@ -32,11 +32,15 @@ module CLMFatesInterfaceMod
    !  use ed_driver_interface, only: 
    
    ! Used CLM Modules
+#include "shr_assert.h"
    use PatchType         , only : patch
    use shr_kind_mod      , only : r8 => shr_kind_r8
    use decompMod         , only : bounds_type
-   use WaterStateType    , only : waterstate_type
-   use WaterFluxType     , only : waterflux_type
+   use WaterStateBulkType    , only : waterstatebulk_type
+   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+   use WaterFluxBulkType     , only : waterfluxbulk_type
+   use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
+   use ActiveLayerMod    , only : active_layer_type
    use CanopyStateType   , only : canopystate_type
    use TemperatureType   , only : temperature_type
    use EnergyFluxType    , only : energyflux_type
@@ -71,7 +75,6 @@ module CLMFatesInterfaceMod
    use SolarAbsorbedType , only : solarabs_type
    use SoilBiogeochemCarbonFluxType, only :  soilbiogeochem_carbonflux_type
    use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
-   use FrictionVelocityMod  , only : frictionvel_type
    use clm_time_manager  , only : is_restart
    use ncdio_pio         , only : file_desc_t, ncd_int, ncd_double
    use restUtilMod,        only : restartvar
@@ -80,7 +83,7 @@ module CLMFatesInterfaceMod
                                   get_ref_date,      &
                                   timemgr_datediff,  &
                                   is_beg_curr_day,   &
-                                  get_step_size,     &
+                                  get_step_size_real,&
                                   get_nstep
    use spmdMod           , only : masterproc
    use decompMod         , only : get_proc_bounds,   &
@@ -225,7 +228,7 @@ contains
       ! ---------------------------------------------------------------------------------
      
       use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
-      use FatesInterfaceMod, only : numpft_fates => numpft
+      use FatesInterfaceMod, only : maxveg_ed => numpft
       use FatesParameterDerivedMod, only : param_derived
 
       implicit none
@@ -264,7 +267,7 @@ contains
 
       
       ! Parameter Routines
-      call param_derived%Init( numpft_fates )
+      call param_derived%Init( maxveg_ed )
       
 
       verbose_output = .false.
@@ -295,7 +298,6 @@ contains
                                                                           ! AND DOESNT TOUCH
                                                                           ! THE BARE SOIL PATCH
       call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
-
 
       if(is_restart()) then
          pass_is_restart = 1
@@ -472,8 +474,9 @@ contains
          call this%init_soil_depths(nc)
          
          if (use_fates_planthydro) then
-            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in,numpft_fates)
+            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in,maxveg_ed)
          end if
+
 
          if( this%fates(nc)%nsites == 0 ) then
             write(iulog,*) 'Clump ',nc,' had no valid FATES sites'
@@ -504,9 +507,8 @@ contains
       ! to have it instanced on each thread
       
       call InitPARTEHGlobals()
-      
 
-      
+ 
       call this%init_history_io(bounds_proc)
 
       ! Report Fates Parameters (debug flag in lower level routines)
@@ -554,8 +556,8 @@ contains
 
    subroutine dynamics_driv(this, nc, bounds_clump,      &
          atm2lnd_inst, soilstate_inst, temperature_inst, &
-         waterstate_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
-         frictionvel_inst )
+         active_layer_inst, &
+         waterstatebulk_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst)
     
       ! This wrapper is called daily from clm_driver
       ! This wrapper calls ed_driver, which is the daily dynamics component of FATES
@@ -568,11 +570,13 @@ contains
       type(atm2lnd_type)      , intent(in)           :: atm2lnd_inst
       type(soilstate_type)    , intent(in)           :: soilstate_inst
       type(temperature_type)  , intent(in)           :: temperature_inst
+      type(active_layer_type) , intent(in)           :: active_layer_inst
       integer                 , intent(in)           :: nc
-      type(waterstate_type)   , intent(inout)        :: waterstate_inst
+      type(waterstatebulk_type)   , intent(inout)        :: waterstatebulk_inst
+      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
+      type(wateratm2lndbulk_type)   , intent(inout)        :: wateratm2lndbulk_inst
       type(canopystate_type)  , intent(inout)        :: canopystate_inst
       type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
-      type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
 
       ! !LOCAL VARIABLES:
       integer  :: s                        ! site index
@@ -632,7 +636,7 @@ contains
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
-               waterstate_inst%h2osoi_vol_col(c,1:nlevsoil) 
+               waterstatebulk_inst%h2osoi_vol_col(c,1:nlevsoil) 
 
          ! TO-DO: SHOULD THIS BE LIQVOL OR IS VOL OK? (RGK-02-2017)
 
@@ -640,7 +644,7 @@ contains
                temperature_inst%t_veg24_patch(col%patchi(c))
 
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
-               min(nlevsoil, canopystate_inst%altmax_lastyear_indx_col(c))
+               min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
 
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
             p = ifp+col%patchi(c)
@@ -648,10 +652,10 @@ contains
                  temperature_inst%t_veg24_patch(p)
 
             this%fates(nc)%bc_in(s)%precip24_pa(ifp) = &
-                  atm2lnd_inst%prec24_patch(p)
+                  wateratm2lndbulk_inst%prec24_patch(p)
 
             this%fates(nc)%bc_in(s)%relhumid24_pa(ifp) = &
-                  atm2lnd_inst%rh24_patch(p)
+                  wateratm2lndbulk_inst%rh24_patch(p)
 
             this%fates(nc)%bc_in(s)%wind24_pa(ifp) = &
                   atm2lnd_inst%wind24_patch(p)
@@ -665,7 +669,7 @@ contains
             this%fates(nc)%bc_in(s)%watres_sisl(1:nlevsoil) = soilstate_inst%watres_col(c,1:nlevsoil)
             this%fates(nc)%bc_in(s)%sucsat_sisl(1:nlevsoil) = soilstate_inst%sucsat_col(c,1:nlevsoil)
             this%fates(nc)%bc_in(s)%bsw_sisl(1:nlevsoil)    = soilstate_inst%bsw_col(c,1:nlevsoil)
-            this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) =  waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
+            this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) =  waterstatebulk_inst%h2osoi_liq_col(c,1:nlevsoil)
          end if
          
 
@@ -726,9 +730,8 @@ contains
       ! ---------------------------------------------------------------------------------
       call this%wrap_update_hlmfates_dyn(nc,               &
                                          bounds_clump,     &
-                                         waterstate_inst,  &
-                                         canopystate_inst, &
-                                         frictionvel_inst)
+                                         waterdiagnosticbulk_inst,  &
+                                         canopystate_inst)
       
       ! ---------------------------------------------------------------------------------
       ! Part IV: 
@@ -750,7 +753,7 @@ contains
    ! ------------------------------------------------------------------------------------
 
    subroutine wrap_update_hlmfates_dyn(this, nc, bounds_clump,      &
-        waterstate_inst, canopystate_inst, frictionvel_inst )
+        waterdiagnosticbulk_inst, canopystate_inst)
 
       ! ---------------------------------------------------------------------------------
       ! This routine handles the updating of vegetation canopy diagnostics, (such as lai)
@@ -762,9 +765,8 @@ contains
      class(hlm_fates_interface_type), intent(inout) :: this
      type(bounds_type),intent(in)                   :: bounds_clump
      integer                 , intent(in)           :: nc
-     type(waterstate_type)   , intent(inout)        :: waterstate_inst
+     type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
-     type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
      
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch 
@@ -779,11 +781,11 @@ contains
          esai => canopystate_inst%esai_patch , &
          htop => canopystate_inst%htop_patch , &
          hbot => canopystate_inst%hbot_patch , & 
-         z0m  => frictionvel_inst%z0m_patch  , & ! Output: [real(r8) (:)   ] momentum roughness length (m)      
+         z0m  => canopystate_inst%z0m_patch  , & ! Output: [real(r8) (:)   ] momentum roughness length (m)      
          displa => canopystate_inst%displa_patch, &
          dleaf_patch => canopystate_inst%dleaf_patch, &
-         snow_depth => waterstate_inst%snow_depth_col, &
-         frac_sno_eff => waterstate_inst%frac_sno_eff_col, &
+         snow_depth => waterdiagnosticbulk_inst%snow_depth_col, &
+         frac_sno_eff => waterdiagnosticbulk_inst%frac_sno_eff_col, &
          frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch)
 
 
@@ -819,7 +821,7 @@ contains
        !
           do s = 1, this%fates(nc)%nsites
              c = this%f2hmap(nc)%fcolumn(s)
-             waterstate_inst%total_plant_stored_h2o_col(c) = &
+             waterdiagnosticbulk_inst%total_plant_stored_h2o_col(c) = &
                   this%fates(nc)%bc_out(s)%plant_stored_h2o_si
           end do
        end if
@@ -910,8 +912,8 @@ contains
 
    ! ====================================================================================
 
-   subroutine restart( this, bounds_proc, ncid, flag, waterstate_inst, &
-                             canopystate_inst, frictionvel_inst, soilstate_inst)
+   subroutine restart( this, bounds_proc, ncid, flag, waterdiagnosticbulk_inst, &
+                             canopystate_inst, soilstate_inst )
 
       ! ---------------------------------------------------------------------------------
       ! The ability to restart the model is handled through three different types of calls
@@ -934,6 +936,7 @@ contains
      use FatesIOVariableKindMod, only : site_r8, site_int, cohort_r8, cohort_int
      use EDMainMod, only :        ed_update_site
      use FatesInterfaceMod, only:  fates_maxElementsPerSite
+     use FatesPlantHydraulicsMod, only : RestartHydrStates
 
       implicit none
 
@@ -943,9 +946,8 @@ contains
       type(bounds_type)              , intent(in)    :: bounds_proc
       type(file_desc_t)              , intent(inout) :: ncid    ! netcdf id
       character(len=*)               , intent(in)    :: flag
-      type(waterstate_type)          , intent(inout) :: waterstate_inst
+      type(waterdiagnosticbulk_type)          , intent(inout) :: waterdiagnosticbulk_inst
       type(canopystate_type)         , intent(inout) :: canopystate_inst
-      type(frictionvel_type)         , intent(inout) :: frictionvel_inst
       type(soilstate_type)           , intent(inout) :: soilstate_inst
       
       ! Locals
@@ -1167,7 +1169,7 @@ contains
                ! Update diagnostics of FATES ecosystem structure used in HLM.
                ! ------------------------------------------------------------------------
                call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                     waterstate_inst,canopystate_inst,frictionvel_inst)
+                     waterdiagnosticbulk_inst,canopystate_inst)
 
                ! ------------------------------------------------------------------------
                ! Update the 3D patch level radiation absorption fractions
@@ -1175,8 +1177,6 @@ contains
                call this%fates_restart%update_3dpatch_radiation(this%fates(nc)%nsites, &
                                                                 this%fates(nc)%sites, &
                                                                 this%fates(nc)%bc_out)
-                    
-              
 
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
@@ -1197,15 +1197,16 @@ contains
 
    !=====================================================================================
 
-   subroutine init_coldstart(this, waterstate_inst, canopystate_inst, soilstate_inst, frictionvel_inst)
+   subroutine init_coldstart(this, waterstatebulk_inst, waterdiagnosticbulk_inst, &
+        canopystate_inst, soilstate_inst)
 
 
      ! Arguments
      class(hlm_fates_interface_type), intent(inout) :: this
-     type(waterstate_type)          , intent(inout) :: waterstate_inst
+     type(waterstatebulk_type)          , intent(inout) :: waterstatebulk_inst
+     type(waterdiagnosticbulk_type)          , intent(inout) :: waterdiagnosticbulk_inst
      type(canopystate_type)         , intent(inout) :: canopystate_inst
      type(soilstate_type)           , intent(inout) :: soilstate_inst
-     type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
 
      ! locals
      integer                                        :: nclumps
@@ -1252,24 +1253,21 @@ contains
                  this%fates(nc)%bc_in(s)%watsat_sisl(1:nlevsoil) = &
                       soilstate_inst%watsat_col(c,1:nlevsoil)
                  
-                 this%fates(nc)%bc_in(s)%watres_sisl(1:nlevsoil) = &
-                      soilstate_inst%watres_col(c,1:nlevsoil)
-
                  this%fates(nc)%bc_in(s)%sucsat_sisl(1:nlevsoil) = &
                       soilstate_inst%sucsat_col(c,1:nlevsoil)
-
+ 
                  this%fates(nc)%bc_in(s)%bsw_sisl(1:nlevsoil) = &
                       soilstate_inst%bsw_col(c,1:nlevsoil)
-
+ 
                  this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) = &
-                      waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
-
+                      waterstatebulk_inst%h2osoi_liq_col(c,1:nlevsoil)
+ 
                  this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoil) = &
                        soilstate_inst%hksat_col(c,1:nlevsoil)
 
                  do j = 1, nlevsoil
                     vol_ice = min(soilstate_inst%watsat_col(c,j), &
-                          waterstate_inst%h2osoi_ice_col(c,j)/(col%dz(c,j)*denice))
+                          waterstatebulk_inst%h2osoi_ice_col(c,j)/(col%dz(c,j)*denice))
                     eff_porosity = max(0.01_r8,soilstate_inst%watsat_col(c,j)-vol_ice)
                     this%fates(nc)%bc_in(s)%eff_porosity_sl(j) = eff_porosity
                  end do
@@ -1291,7 +1289,7 @@ contains
            ! Update diagnostics of FATES ecosystem structure used in HLM.
            ! ------------------------------------------------------------------------
            call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                waterstate_inst,canopystate_inst,frictionvel_inst)
+                waterdiagnosticbulk_inst,canopystate_inst)
 
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
@@ -1428,8 +1426,8 @@ contains
 
    ! ====================================================================================
    
-   subroutine wrap_btran(this,nc,fn,filterc,soilstate_inst, waterstate_inst, &
-                         temperature_inst, energyflux_inst,  &
+   subroutine wrap_btran(this,nc,fn,filterc,soilstate_inst, &
+                         waterdiagnosticbulk_inst, temperature_inst, energyflux_inst,  &
                          soil_water_retention_curve)
       
       ! ---------------------------------------------------------------------------------
@@ -1451,7 +1449,7 @@ contains
       integer                , intent(in)            :: filterc(fn) ! This is a list of
                                                                         ! columns with exposed veg
       type(soilstate_type)   , intent(inout)         :: soilstate_inst
-      type(waterstate_type)  , intent(in)            :: waterstate_inst
+      type(waterdiagnosticbulk_type)  , intent(in)            :: waterdiagnosticbulk_inst
       type(temperature_type) , intent(in)            :: temperature_inst
       type(energyflux_type)  , intent(inout)         :: energyflux_inst
       class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
@@ -1472,7 +1470,7 @@ contains
          bsw         => soilstate_inst%bsw_col              , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b" 
          eff_porosity => soilstate_inst%eff_porosity_col    , & ! Input:  [real(r8) (:,:) ]  effective porosity = porosity - vol_ice       
          t_soisno    => temperature_inst%t_soisno_col       , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)
-         h2osoi_liqvol => waterstate_inst%h2osoi_liqvol_col , & ! Input: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
+         h2osoi_liqvol => waterdiagnosticbulk_inst%h2osoi_liqvol_col , & ! Input: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
          btran       => energyflux_inst%btran_patch         , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) 
          btran2       => energyflux_inst%btran2_patch       , & ! Output: [real(r8) (:)   ]  
          rresis      => energyflux_inst%rresis_patch        , & ! Output: [real(r8) (:,:) ]  root resistance by layer (0-1)  (nlevgrnd) 
@@ -1543,6 +1541,7 @@ contains
         do s = 1, this%fates(nc)%nsites
            nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
            c = this%f2hmap(nc)%fcolumn(s)
+           nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
            do j = 1,nlevsoil
               if(this%fates(nc)%bc_out(s)%active_suction_sl(j)) then
                  s_node = max(h2osoi_liqvol(c,j)/eff_porosity(c,j),0.01_r8)
@@ -1606,7 +1605,7 @@ contains
     use shr_log_mod       , only : errMsg => shr_log_errMsg
     use abortutils        , only : endrun
     use decompMod         , only : bounds_type
-    use clm_varcon        , only : rgas, tfrz, namep
+    use clm_varcon        , only : rgas, tfrz, namep  
     use clm_varctl        , only : iulog
     use pftconMod         , only : pftcon
     use perf_mod          , only : t_startf, t_stopf
@@ -1650,11 +1649,12 @@ contains
       do s = 1, this%fates(nc)%nsites
          
          c = this%f2hmap(nc)%fcolumn(s)
+         
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
          do j = 1,nlevsoil
             this%fates(nc)%bc_in(s)%t_soisno_sl(j)   = t_soisno(c,j)  ! soil temperature (Kelvin)
-         end do
+        end do
          this%fates(nc)%bc_in(s)%forc_pbot           = forc_pbot(c)   ! atmospheric pressure (Pa)
 
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
@@ -1685,7 +1685,7 @@ contains
          end do
       end do
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       
       ! Call photosynthesis
       
@@ -1750,7 +1750,7 @@ contains
     end do
 
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
     call  AccumulateFluxes_ED(this%fates(nc)%nsites,  &
                                this%fates(nc)%sites, &
                                this%fates(nc)%bc_in,  &
@@ -1865,9 +1865,6 @@ contains
     type(soilbiogeochem_carbonstate_type), intent(in) :: soilbiogeochem_carbonstate_inst
 
     ! locals
-    real(r8) :: dtime
-    integer  :: nstep
-    logical  :: is_beg_day
     integer :: s,c
 
     associate(& 
@@ -1882,7 +1879,8 @@ contains
          this%fates(nc)%bc_in(s)%tot_somc     = totsomc(c)
          this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
       end do
-      
+
+
       
       ! Update history variables that track these variables
       call this%fates_hist%update_history_cbal(nc, &
@@ -1896,13 +1894,13 @@ contains
  ! ======================================================================================
 
 
- subroutine TransferZ0mDisp(this,bounds_clump,frictionvel_inst,canopystate_inst)
+ subroutine TransferZ0mDisp(this, bounds_clump, z0m_patch, displa_patch)
 
     ! Arguments
-    class(hlm_fates_interface_type), intent(inout) :: this
-    type(bounds_type),intent(in)                   :: bounds_clump
-    type(canopystate_type)  , intent(inout)        :: canopystate_inst
-    type(frictionvel_type)  , intent(inout)        :: frictionvel_inst
+    class(hlm_fates_interface_type), intent(in) :: this
+    type(bounds_type),intent(in)                :: bounds_clump
+    real(r8), intent(inout) :: z0m_patch( bounds_clump%begp: )  ! patch momentum roughness length (m)
+    real(r8), intent(inout) :: displa_patch( bounds_clump%begp: )  ! patch displacement height (m)
 
     ! Locals
     integer :: ci   ! Current clump index
@@ -1911,18 +1909,21 @@ contains
     integer :: ifp  ! Fates patch index
     integer :: p    ! CLM patch index
 
+    SHR_ASSERT_FL((ubound(z0m_patch, 1) == bounds_clump%endp), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(displa_patch, 1) == bounds_clump%endp), sourcefile, __LINE__)
+
     ci = bounds_clump%clump_index
 
     do s = 1, this%fates(ci)%nsites
        c = this%f2hmap(ci)%fcolumn(s)
 
-       frictionvel_inst%z0m_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
-       canopystate_inst%displa_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
+       z0m_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
+       displa_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
 
        do ifp = 1, this%fates(ci)%sites(s)%youngest_patch%patchno
           p = ifp+col%patchi(c)
-          frictionvel_inst%z0m_patch(p) = this%fates(ci)%bc_out(s)%z0m_pa(ifp)
-          canopystate_inst%displa_patch(p) = this%fates(ci)%bc_out(s)%displa_pa(ifp)
+          z0m_patch(p) = this%fates(ci)%bc_out(s)%z0m_pa(ifp)
+          displa_patch(p) = this%fates(ci)%bc_out(s)%displa_pa(ifp)
        end do
     end do
 
@@ -2076,7 +2077,7 @@ contains
            
         case(site_ground_r8, site_size_pft_r8, site_size_r8, site_pft_r8, &
              site_age_r8, site_height_r8, site_fuel_r8, site_cwdsc_r8, &
-             site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, & 
+             site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, &
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
              site_elcwd_r8, site_elage_r8)
 
@@ -2085,8 +2086,9 @@ contains
            call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
                               type2d=trim(dim2name),                        &
                               avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,     & 
+                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
                               default=trim(vdefault))
+
 
         case default
            write(iulog,*) 'A FATES iotype was created that was not registerred'
@@ -2153,14 +2155,14 @@ contains
  ! ======================================================================================
 
  subroutine ComputeRootSoilFlux(this, bounds_clump, num_filterc, filterc, &
-       soilstate_inst, waterflux_inst)
+       soilstate_inst, waterfluxbulk_inst)
 
     class(hlm_fates_interface_type), intent(inout) :: this
     type(bounds_type),intent(in)                   :: bounds_clump
     integer,intent(in)                             :: num_filterc
     integer,intent(in)                             :: filterc(num_filterc)
     type(soilstate_type), intent(inout)            :: soilstate_inst
-    type(waterflux_type), intent(inout)            :: waterflux_inst
+    type(waterfluxbulk_type), intent(inout)            :: waterfluxbulk_inst
     
     ! locals
     integer :: s
@@ -2194,7 +2196,7 @@ contains
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
        nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
-       waterflux_inst%qflx_rootsoi_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(1:nlevsoil)
+       waterfluxbulk_inst%qflx_rootsoi_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(1:nlevsoil)
     end do
     
  end subroutine ComputeRootSoilFlux
@@ -2231,7 +2233,7 @@ contains
  ! ======================================================================================
 
  subroutine wrap_hydraulics_drive(this, bounds_clump, nc, &
-                                 soilstate_inst, waterstate_inst, waterflux_inst, &
+                                 soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, &
                                  solarabs_inst, energyflux_inst)
 
 
@@ -2240,8 +2242,9 @@ contains
    type(bounds_type),intent(in)                   :: bounds_clump
    integer,intent(in)                             :: nc
    type(soilstate_type)    , intent(inout)        :: soilstate_inst
-   type(waterstate_type)   , intent(inout)        :: waterstate_inst
-   type(waterflux_type)    , intent(inout)        :: waterflux_inst
+   type(waterstatebulk_type)   , intent(inout)        :: waterstatebulk_inst
+   type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
+   type(waterfluxbulk_type)    , intent(inout)        :: waterfluxbulk_inst
    type(solarabs_type)     , intent(inout)        :: solarabs_inst
    type(energyflux_type)   , intent(inout)        :: energyflux_inst
 
@@ -2251,21 +2254,21 @@ contains
    integer :: j
    integer :: ifp
    integer :: p
-   integer :: nlevsoil 
+   integer :: nlevsoil
    real(r8) :: dtime
 
 
    if ( .not.use_fates_planthydro ) return
 
 
-   dtime = get_step_size()
+   dtime = get_step_size_real()
 
    ! Prepare Input Boundary Conditions
    ! ------------------------------------------------------------------------------------
 
    do s = 1, this%fates(nc)%nsites
 
-      c = this%f2hmap(nc)%fcolumn(s) 
+      c = this%f2hmap(nc)%fcolumn(s)
 
       nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
@@ -2280,7 +2283,7 @@ contains
       this%fates(nc)%bc_in(s)%bsw_sisl(1:nlevsoil)        = &
             soilstate_inst%bsw_col(c,1:nlevsoil)
       this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil)    = &
-            waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
+            waterstatebulk_inst%h2osoi_liq_col(c,1:nlevsoil)
       this%fates(nc)%bc_in(s)%eff_porosity_sl(1:nlevsoil) = &
             soilstate_inst%eff_porosity_col(c,1:nlevsoil)
 
@@ -2288,7 +2291,7 @@ contains
          p = ifp+col%patchi(c)
          this%fates(nc)%bc_in(s)%swrad_net_pa(ifp) = solarabs_inst%fsa_patch(p)
          this%fates(nc)%bc_in(s)%lwrad_net_pa(ifp) = energyflux_inst%eflx_lwrad_net_patch(p)
-         this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterflux_inst%qflx_tran_veg_patch(p)
+         this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterfluxbulk_inst%qflx_tran_veg_patch(p)
       end do
    end do
 
@@ -2307,7 +2310,7 @@ contains
 
    do s = 1, this%fates(nc)%nsites
       c = this%f2hmap(nc)%fcolumn(s)
-      waterstate_inst%total_plant_stored_h2o_col(c) = &
+      waterdiagnosticbulk_inst%total_plant_stored_h2o_col(c) = &
             this%fates(nc)%bc_out(s)%plant_stored_h2o_si
    end do
 
@@ -2333,7 +2336,7 @@ contains
    use EDtypesMod,        only : nfsc
    use FatesLitterMod,    only : ncwd
    use EDtypesMod,        only : nlevleaf, nclmax
-   use FatesInterfaceMod, only : numpft_fates => numpft
+   use FatesInterfaceMod, only : maxveg_ed => numpft
    use clm_varpar,        only : nlevgrnd
 
    implicit none
@@ -2354,13 +2357,13 @@ contains
    fates%ground_end = nlevgrnd
    
    fates%sizepft_class_begin = 1
-   fates%sizepft_class_end = nlevsclass * numpft_fates
+   fates%sizepft_class_end = nlevsclass * maxveg_ed
    
    fates%size_class_begin = 1
    fates%size_class_end = nlevsclass
 
    fates%pft_class_begin = 1
-   fates%pft_class_end = numpft_fates
+   fates%pft_class_end = maxveg_ed
 
    fates%age_class_begin = 1
    fates%age_class_end = nlevage
@@ -2372,11 +2375,11 @@ contains
    fates%sizeage_class_end   = nlevsclass * nlevage
 
    fates%agepft_class_begin = 1
-   fates%agepft_class_end   = nlevage * numpft_fates
+   fates%agepft_class_end   = nlevage * maxveg_ed
    
    fates%sizeagepft_class_begin = 1
-   fates%sizeagepft_class_end   = nlevsclass * nlevage * numpft_fates
-   
+   fates%sizeagepft_class_end   = nlevsclass * nlevage * maxveg_ed
+
    fates%fuel_begin = 1
    fates%fuel_end = nfsc
    
@@ -2390,13 +2393,13 @@ contains
    fates%cnlf_end = nlevleaf * nclmax
    
    fates%cnlfpft_begin = 1
-   fates%cnlfpft_end = nlevleaf * nclmax * numpft_fates
+   fates%cnlfpft_end = nlevleaf * nclmax * maxveg_ed
 
    fates%elem_begin = 1
    fates%elem_end   = num_elements
-   
+
    fates%elpft_begin = 1
-   fates%elpft_end   = num_elements * numpft_fates
+   fates%elpft_end   = num_elements * maxveg_ed
 
    fates%elcwd_begin = 1
    fates%elcwd_end   = num_elements * ncwd

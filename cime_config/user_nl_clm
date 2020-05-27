@@ -8,7 +8,6 @@
 ! Set use_cn             by the compset you use and CLM_BLDNML_OPTS -bgc  setting
 ! Set use_crop           by the compset you use and CLM_BLDNML_OPTS -crop setting
 ! Set spinup_state       by the CLM_BLDNML_OPTS -bgc_spinup      setting
-! Set irrigate           by the CLM_BLDNML_OPTS -irrig .true.    setting
 ! Set co2_ppmv           with CCSM_CO2_PPMV                      option
 ! Set dtime              with L_NCPL                             option
 ! Set fatmlndfrc         with LND_DOMAIN_PATH/LND_DOMAIN_FILE    options

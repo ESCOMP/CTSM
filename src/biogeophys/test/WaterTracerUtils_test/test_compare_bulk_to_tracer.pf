@@ -1,0 +1,176 @@
+module test_compare_bulk_to_tracer
+
+  ! Tests of WaterTracerUtils: CompareBulkToTracer
+
+  use pfunit_mod
+  use WaterTracerUtils, only : CompareBulkToTracer
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
+  use unittestUtils, only : endrun_msg
+  use clm_varcon, only : spval
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestCompare
+     character(len=:), allocatable :: expected_msg  ! expected error message for failures
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: doCall1pt   ! do the call to CompareBulkToTracer on single-point inputs
+  end type TestCompare
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestCompare), intent(inout) :: this
+
+    this%expected_msg = endrun_msg('CompareBulkToTracer: tracer does not agree with bulk water')
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestCompare), intent(inout) :: this
+  end subroutine tearDown
+
+  subroutine doCall1pt(this, bulk, tracer,ratio)
+    ! Do the call to CompareBulkToTracer on single-point inputs
+    class(TestCompare), intent(in) :: this
+    real(r8), intent(in) :: bulk
+    real(r8), intent(in) :: tracer
+    real(r8), intent(in) :: ratio
+    call CompareBulkToTracer(bounds_beg = 1, bounds_end = 1, &
+         bulk = [bulk], tracer = [tracer], &
+         ratio = ratio, &
+         caller_location = 'test', name = 'myvar')
+  end subroutine doCall1pt
+
+  @Test
+  subroutine sameVal_shouldPass(this)
+    ! If bulk and tracer have the same value, the compare call should pass
+    class(TestCompare), intent(inout) :: this
+
+    ! Test passes if this subroutine runs without an exception
+    call this%doCall1pt(2._r8, 2._r8,1._r8)
+  end subroutine sameVal_shouldPass
+
+  @Test
+  subroutine both0_shouldPass(this)
+    ! If bulk and tracer are both 0, the compare call should pass
+    class(TestCompare), intent(inout) :: this
+
+    ! Test passes if this subroutine runs without an exception
+    call this%doCall1pt(0._r8, 0._r8,1._r8)
+  end subroutine both0_shouldPass
+
+  @Test
+  subroutine bothNan_shouldPass(this)
+    ! If bulk and tracer are both NaN, the compare call should pass
+    class(TestCompare), intent(inout) :: this
+    real(r8) :: bulk, tracer
+
+    bulk = nan
+    tracer = nan
+    ! Test passes if this subroutine runs without an exception
+    call this%doCall1pt(bulk, tracer,1._r8)
+  end subroutine bothNan_shouldPass
+
+  @Test
+  subroutine ratioLessThan1_shouldPass(this)
+    ! If bulk*ratio equals tracer, the compare call should pass
+    class(TestCompare), intent(inout) :: this
+
+    ! Test passes if this subroutine runs without an exception
+    call this%doCall1pt(3._r8, 1.8_r8, 0.6_r8)
+  end subroutine ratioLessThan1_shouldPass
+
+  @Test
+  subroutine bothSpval_shouldPass(this)
+    ! If bulk and tracer are both spval, the compare call should pass
+    class(TestCompare), intent(inout) :: this
+
+    ! Test passes if this subroutine runs without an exception
+    call this%doCall1pt(spval, spval, 0.6_r8)
+  end subroutine bothSpval_shouldPass
+
+  @Test
+  subroutine differentVal_shouldFail(this)
+    ! If bulk and tracer have different values, the compare call should fail
+    class(TestCompare), intent(inout) :: this
+
+    call this%doCall1pt(2._r8, 2.1_r8,1._r8)
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine differentVal_shouldFail
+
+  @Test
+  subroutine bulk0_shouldFail(this)
+    ! If bulk is 0 and tracer is non-0, the compare call should fail
+    class(TestCompare), intent(inout) :: this
+
+    call this%doCall1pt(0._r8, 0.1_r8, 1._r8)
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine bulk0_shouldFail
+
+  @Test
+  subroutine tracer0_shouldFail(this)
+    ! If tracer is 0 and bulk is non-0, the compare call should fail
+    class(TestCompare), intent(inout) :: this
+
+    call this%doCall1pt(0.1_r8, 0._r8, 1._r8)
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine tracer0_shouldFail
+
+  @Test
+  subroutine bulkNan_shouldFail(this)
+    ! If bulk is NaN and tracer is not, the compare call should fail
+    class(TestCompare), intent(inout) :: this
+    real(r8) :: bulk, tracer
+
+    bulk = nan
+    tracer = 0.1_r8
+    call this%doCall1pt(bulk, tracer, 1._r8)
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine bulkNan_shouldFail
+
+  @Test
+  subroutine tracerNan_shouldFail(this)
+    ! If tracer is NaN and bulk is not, the compare call should fail
+    class(TestCompare), intent(inout) :: this
+    real(r8) :: bulk, tracer
+
+    bulk = 0.1_r8
+    tracer = nan
+    call this%doCall1pt(bulk, tracer, 1._r8)
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine tracerNan_shouldFail
+
+  @Test
+  subroutine ratioLessThan1_shouldFail(this)
+    ! If bulk*ratio does not equal tracer, the compare call should fail
+    class(TestCompare), intent(inout) :: this
+
+    call this%doCall1pt(3.0_r8, 1.9_r8, 0.6_r8)
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine ratioLessThan1_shouldFail
+
+  @Test
+  subroutine bulkSpval_shouldFail(this)
+    ! If bulk is spval and tracer is not, the compare call should fail
+    class(TestCompare), intent(inout) :: this
+
+    call this%doCall1pt(spval, 2._r8, 1._r8)
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine bulkSpval_shouldFail
+
+  @Test
+  subroutine tracerSpval_shouldFail(this)
+    ! If tracer is spval and bulk is not, the compare call should fail
+    class(TestCompare), intent(inout) :: this
+
+    call this%doCall1pt(4._r8, spval, 1._r8)
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine tracerSpval_shouldFail
+
+
+end module test_compare_bulk_to_tracer

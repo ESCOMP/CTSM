@@ -75,7 +75,6 @@ contains
     !
     ! !USES
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
     use decompMod      , only : bounds_type
     use ColumnType     , only : col
     !
@@ -96,9 +95,9 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(watsat)     == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eff_por)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat)     == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eff_por)    == (/bounds%endc, ubj/)), sourcefile, __LINE__)
 
     !main calculation loop
     !it assumes the soil layers start from 1
@@ -124,7 +123,6 @@ contains
     ! !USES
     use shr_kind_mod   , only : r8 => shr_kind_r8
     use decompMod      , only : bounds_type
-    use shr_log_mod    , only : errMsg => shr_log_errMsg    
     use ColumnType     , only : col
     implicit none
     !
@@ -147,9 +145,9 @@ contains
     ubj = 0
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jtop)       == (/bounds%endc/))     , errMsg(sourcefile, __LINE__)) 
-    SHR_ASSERT_ALL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eff_por)    == (/bounds%endc,0/))   , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jtop)       == (/bounds%endc/))     , sourcefile, __LINE__) 
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eff_por)    == (/bounds%endc,0/))   , sourcefile, __LINE__)
 
     !main calculation loop
 
@@ -179,7 +177,6 @@ contains
     !
     ! !USES
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use shr_log_mod    , only : errMsg => shr_log_errMsg  
     use decompMod      , only : bounds_type
     use ColumnType     , only : col
     !
@@ -200,10 +197,10 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes  
-    SHR_ASSERT_ALL((ubound(jtop)         == (/bounds%endc/))     , errMsg(sourcefile, __LINE__)) 
-    SHR_ASSERT_ALL((ubound(h2osoi_liq)   == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eff_porosity) == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(vol_liq)      == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))  
+    SHR_ASSERT_ALL_FL((ubound(jtop)         == (/bounds%endc/))     , sourcefile, __LINE__) 
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_liq)   == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eff_porosity) == (/bounds%endc, ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(vol_liq)      == (/bounds%endc, ubj/)), sourcefile, __LINE__)  
 
     !main calculation loop
     do j = lbj, ubj
@@ -221,21 +218,19 @@ contains
 
   !--------------------------------------------------------------------------------
   subroutine normalize_unfrozen_rootfr(bounds, ubj, fn, filterp, &
-       canopystate_inst, soilstate_inst, temperature_inst, rootfr_unf)
+       active_layer_inst, soilstate_inst, temperature_inst, rootfr_unf)
     !
     ! !DESCRIPTIONS
     ! normalize root fraction for total unfrozen depth 
     !
     ! !USES
     use shr_kind_mod    , only: r8 => shr_kind_r8
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
     use clm_varcon      , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment 
     use decompMod       , only : bounds_type
-    use CanopyStateType , only : canopystate_type
+    use ActiveLayerMod  , only : active_layer_type
     use EnergyFluxType  , only : energyflux_type
     use TemperatureType , only : temperature_type
     use SoilStateType   , only : soilstate_type
-    use WaterSTateType  , only : waterstate_type
     use SimpleMathMod   , only : array_normalization
     use PatchType       , only : patch
     !
@@ -245,7 +240,7 @@ contains
     integer                , intent(in)    :: ubj                                        !ubinning level indices
     integer                , intent(in)    :: fn                                         !filter dimension
     integer                , intent(in)    :: filterp(:)                                 !filter
-    type(canopystate_type) , intent(in)    :: canopystate_inst
+    type(active_layer_type), intent(in)    :: active_layer_inst
     type(soilstate_type)   , intent(in)    :: soilstate_inst
     type(temperature_type) , intent(in)    :: temperature_inst
     real(r8)               , intent(inout) :: rootfr_unf(bounds%begp:bounds%endp, 1:ubj) !normalized root fraction in unfrozen layers
@@ -260,8 +255,8 @@ contains
 
          t_soisno             => temperature_inst%t_soisno_col             , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)                    
 
-         altmax_lastyear_indx => canopystate_inst%altmax_lastyear_indx_col , & ! Input:  [real(r8) (:)   ]  prior year maximum annual depth of thaw                               
-         altmax_indx          => canopystate_inst%altmax_indx_col            & ! Input:  [real(r8) (:)   ]  maximum annual depth of thaw                                          
+         altmax_lastyear_indx => active_layer_inst%altmax_lastyear_indx_col , & ! Input:  [real(r8) (:)   ]  prior year maximum annual depth of thaw                               
+         altmax_indx          => active_layer_inst%altmax_indx_col            & ! Input:  [real(r8) (:)   ]  maximum annual depth of thaw                                          
          )
 
       ! main calculation loop  
@@ -316,22 +311,22 @@ contains
   !--------------------------------------------------------------------------------
   subroutine calc_root_moist_stress_clm45default(bounds, &
        nlevgrnd, fn, filterp, rootfr_unf, &
-       temperature_inst, soilstate_inst, energyflux_inst, waterstate_inst, &
-       soil_water_retention_curve) 
+       temperature_inst, soilstate_inst, energyflux_inst, waterstatebulk_inst, &
+       waterdiagnosticbulk_inst, soil_water_retention_curve) 
     !
     ! DESCRIPTIONS
     ! compute the root water stress using the default clm45 approach
     !
     ! USES
     use shr_kind_mod         , only : r8 => shr_kind_r8  
-    use shr_log_mod          , only : errMsg => shr_log_errMsg
     use decompMod            , only : bounds_type
     use clm_varcon           , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment
     use pftconMod            , only : pftcon
     use TemperatureType      , only : temperature_type
     use SoilStateType        , only : soilstate_type
     use EnergyFluxType       , only : energyflux_type
-    use WaterSTateType       , only : waterstate_type
+    use WaterStateBulkType       , only : waterstatebulk_type
+    use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use PatchType            , only : patch
     use clm_varctl           , only : iulog, use_hydrstress
@@ -346,7 +341,8 @@ contains
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     type(temperature_type) , intent(in)    :: temperature_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
@@ -357,7 +353,7 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes   
-    SHR_ASSERT_ALL((ubound(rootfr_unf) == (/bounds%endp, nlevgrnd/)), errMsg(sourcefile, __LINE__))  
+    SHR_ASSERT_ALL_FL((ubound(rootfr_unf) == (/bounds%endp, nlevgrnd/)), sourcefile, __LINE__)  
 
     associate(                                                &
          smpso         => pftcon%smpso                      , & ! Input:  soil water potential at full stomatal opening (mm)                    
@@ -370,14 +366,14 @@ contains
          bsw           => soilstate_inst%bsw_col            , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"                         (constant)                                        
          eff_porosity  => soilstate_inst%eff_porosity_col   , & ! Input:  [real(r8) (:,:) ]  effective porosity = porosity - vol_ice         
          rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
-         rootr         => soilstate_inst%rootr_patch        , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer                      
+         rootr         => soilstate_inst%rootr_patch        , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer (SMS method only)
 
          btran         => energyflux_inst%btran_patch       , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) (integrated soil water stress)
          btran2        => energyflux_inst%btran2_patch      , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
          rresis        => energyflux_inst%rresis_patch      , & ! Output: [real(r8) (:,:) ]  root soil water stress (resistance) by layer (0-1)  (nlevgrnd)                          
 
-         h2osoi_vol    => waterstate_inst%h2osoi_vol_col    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-         h2osoi_liqvol => waterstate_inst%h2osoi_liqvol_col   & ! Output: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
+         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+         h2osoi_liqvol => waterdiagnosticbulk_inst%h2osoi_liqvol_col   & ! Output: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
          ) 
 
       do j = 1,nlevgrnd
@@ -411,9 +407,13 @@ contains
                end if
 
                !it is possible to further separate out a btran function, but I will leave it for the moment, jyt
-               if ( .not.(use_hydrstress) ) then
-                  btran(p)    = btran(p) + max(rootr(p,j),0._r8)
-               end if
+               ! We need btran here regardless of whether use_hydrstress is true or false 
+               ! in order to calculate rootr.  rootr is needed by SoilWaterPlantSinkMod.F90 and ch4Mod.F90 when
+               ! use_hydrstress = false, and by ch4Mod.F90 when use_hydrstress = true or false.
+               ! Note that, with use_hydrstress = true, btran will be recalculated using the PHS method later,
+               ! but this SMS form of btran is still used to calculate rootr here; we're living with this
+               ! inconsistency for now.
+               btran(p)    = btran(p) + max(rootr(p,j),0._r8)
             end if
             s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
 
@@ -426,6 +426,9 @@ contains
       end do
 
       ! Normalize root resistances to get layer contribution to ET
+      ! Note that rootr as calculated here is based on the SMS (soil moisture stress) method, 
+      ! not the PHS (plant hydraulic stress) method. It is (should) only be used by SoilWaterPlantSinkMod.F90
+      ! and ch4Mod.F90 when use_hydrstress = false, and by ch4Mod.F90 when use_hydrstress = true or false.
       do j = 1,nlevgrnd
          do f = 1, fn
             p = filterp(f)
@@ -436,28 +439,29 @@ contains
             end if
          end do
       end do
+
     end associate
 
   end subroutine calc_root_moist_stress_clm45default
 
   !--------------------------------------------------------------------------------
   subroutine calc_root_moist_stress(bounds, nlevgrnd, fn, filterp, &
-       canopystate_inst, energyflux_inst,  soilstate_inst, temperature_inst, &
-       waterstate_inst, soil_water_retention_curve)
+       active_layer_inst, energyflux_inst,  soilstate_inst, temperature_inst, &
+       waterstatebulk_inst, waterdiagnosticbulk_inst, soil_water_retention_curve)
     !
     ! DESCRIPTIONS
     ! compute the root water stress using different approaches
     !
     ! USES
     use shr_kind_mod    , only : r8 => shr_kind_r8  
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
     use clm_varcon      , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment 
     use decompMod       , only : bounds_type
-    use CanopyStateType , only : canopystate_type
+    use ActiveLayerMod  , only : active_layer_type
     use EnergyFluxType  , only : energyflux_type
     use TemperatureType , only : temperature_type
     use SoilStateType   , only : soilstate_type
-    use WaterSTateType  , only : waterstate_type
+    use WaterStateBulkType  , only : waterstatebulk_type
+    use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use abortutils      , only : endrun       
     !
@@ -467,11 +471,12 @@ contains
     integer                , intent(in)    :: nlevgrnd
     integer                , intent(in)    :: fn
     integer                , intent(in)    :: filterp(:)
-    type(canopystate_type) , intent(in)    :: canopystate_inst
+    type(active_layer_type), intent(in)    :: active_layer_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     type(temperature_type) , intent(in)    :: temperature_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
@@ -489,7 +494,7 @@ contains
          ubj = nlevgrnd,                    &
          fn = fn,                           &
          filterp = filterp,                 &
-         canopystate_inst=canopystate_inst, &
+         active_layer_inst=active_layer_inst, &
          soilstate_inst=soilstate_inst,     &
          temperature_inst=temperature_inst, & 
          rootfr_unf=rootfr_unf(bounds%begp:bounds%endp,1:nlevgrnd))
@@ -507,7 +512,8 @@ contains
             energyflux_inst=energyflux_inst,            &
             temperature_inst=temperature_inst,          &
             soilstate_inst=soilstate_inst,              &
-            waterstate_inst=waterstate_inst,            &
+            waterstatebulk_inst=waterstatebulk_inst,            &
+            waterdiagnosticbulk_inst=waterdiagnosticbulk_inst,            &
             rootfr_unf=rootfr_unf(bounds%begp:bounds%endp,1:nlevgrnd), &
             soil_water_retention_curve=soil_water_retention_curve)
 

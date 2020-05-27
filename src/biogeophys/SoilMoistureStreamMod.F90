@@ -10,7 +10,7 @@ module SoilMoistureStreamMod
   use shr_strdata_mod , only : shr_strdata_type, shr_strdata_create
   use shr_strdata_mod , only : shr_strdata_print, shr_strdata_advance
   use shr_kind_mod    , only : r8 => shr_kind_r8
-  use shr_kind_mod    , only : CL => shr_kind_CL
+  use shr_kind_mod    , only : CL => shr_kind_CL, CXX => shr_kind_CXX
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
@@ -24,7 +24,7 @@ module SoilMoistureStreamMod
   use LandunitType    , only : lun
   use ColumnType      , only : col                
   use SoilStateType   , only : soilstate_type
-  use WaterStateType  , only : waterstate_type
+  use WaterStateBulkType, only : waterstatebulk_type
   use perf_mod        , only : t_startf, t_stopf
   use spmdMod         , only : masterproc
   use spmdMod         , only : mpicom, comp_id
@@ -96,7 +96,7 @@ contains
     character(*), parameter    :: subName = "('PrescribedSoilMoistureInit')"
     character(*), parameter    :: F00 = "('(PrescribedSoilMoistureInit) ',4a)"
     character(*), parameter    :: soilmString = "H2OSOI"  ! base string for field string
-    character(SHR_KIND_CXX)    :: fldList            ! field string
+    character(CXX)             :: fldList            ! field string
     !-----------------------------------------------------------------------
     !
     ! deal with namelist variables here in init
@@ -266,7 +266,7 @@ contains
   !
   !-----------------------------------------------------------------------
   subroutine PrescribedSoilMoistureInterp(bounds, soilstate_inst, &
-       waterstate_inst)
+       waterstatebulk_inst)
     !
     ! Assign data stream information for prescribed soil moisture.
     !
@@ -280,7 +280,7 @@ contains
     implicit none
     type(bounds_type)         , intent(in)    :: bounds
     type(soilstate_type)      , intent(in)    :: soilstate_inst
-    type(waterstate_type)     , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c, g, j, ig, n
@@ -301,10 +301,10 @@ contains
     associate( &
          dz               =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
          watsat           =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)
-         h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col        , & ! Input/Output:  [real(r8) (:,:) ]  liquid water (kg/m2)
-         h2osoi_ice       =>    waterstate_inst%h2osoi_ice_col        , & ! Input/Output:  [real(r8) (:,:) ]  ice water (kg/m2)
-         h2osoi_vol       =>    waterstate_inst%h2osoi_vol_col        , & ! Output: volumetric soil water (m3/m3)
-         h2osoi_vol_prs   =>    waterstate_inst%h2osoi_vol_prs_grc      & ! Output: prescribed volumetric soil water (m3/m3)
+         h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Input/Output:  [real(r8) (:,:) ]  liquid water (kg/m2)
+         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Input/Output:  [real(r8) (:,:) ]  ice water (kg/m2)
+         h2osoi_vol       =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Output: volumetric soil water (m3/m3)
+         h2osoi_vol_prs   =>    waterstatebulk_inst%h2osoi_vol_prs_grc      & ! Output: prescribed volumetric soil water (m3/m3)
          )
       SHR_ASSERT_FL( (lbound(h2osoi_vol,1) <= bounds%begc ), sourcefile, __LINE__)
       SHR_ASSERT_FL( (ubound(h2osoi_vol,1) >= bounds%endc ), sourcefile, __LINE__)

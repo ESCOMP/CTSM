@@ -17,6 +17,7 @@ module CNDVDriverMod
   use clm_varcon               , only : grlnd
   use LandunitType             , only : lun                
   use PatchType                , only : patch                
+  use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -38,7 +39,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNDVDriver(bounds, &
        num_natvegp, filter_natvegp, kyr, &
-       atm2lnd_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
+       atm2lnd_inst, wateratm2lndbulk_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
     !
     ! !DESCRIPTION:
     ! Drives the annual dynamic vegetation that works with CN
@@ -53,6 +54,7 @@ contains
     integer                         , intent(inout) :: filter_natvegp(:)       ! filter for naturally-vegetated patches
     integer                         , intent(in)    :: kyr                     ! used in routine climate20 below
     type(atm2lnd_type)              , intent(inout) :: atm2lnd_inst
+    type(wateratm2lndbulk_type)              , intent(inout) :: wateratm2lndbulk_inst
     type(cnveg_carbonflux_type)     , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)    , intent(inout) :: cnveg_carbonstate_inst
     type(dgvs_type)                 , intent(inout) :: dgvs_inst
@@ -107,7 +109,7 @@ contains
       ! present, we do not use the natveg filter in this subroutine.
 
       call Establishment(bounds, &
-           atm2lnd_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
+           atm2lnd_inst, wateratm2lndbulk_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
 
       ! Reset dgvm variables needed in next yr (too few to keep subr. dvreset)
 
@@ -129,7 +131,7 @@ contains
     ! !USES:
     use shr_const_mod   , only : SHR_CONST_CDAY
     use shr_sys_mod     , only : shr_sys_getenv
-    use clm_varpar      , only : maxpatch_pft
+    use clm_varpar      , only : maxsoil_patches
     use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, paramfile, iulog
     use clm_varcon      , only : spval
     use clm_time_manager, only : get_ref_date, get_nstep, get_curr_date, get_curr_time
@@ -168,7 +170,7 @@ contains
          nind    => dgvs_inst%nind_patch      & ! Input:  [real(r8) (:)]  number of individuals (#/m**2)                    
          )
 
-      allocate(rbuf2dg(bounds%begg:bounds%endg,maxpatch_pft), stat=ier)
+      allocate(rbuf2dg(bounds%begg:bounds%endg,maxsoil_patches), stat=ier)
       if (ier /= 0) call endrun(msg='histCNDV: allocation error for rbuf2dg'//&
            errMsg(sourcefile, __LINE__))
 
@@ -238,7 +240,7 @@ contains
       else
          call ncd_defdim (ncid, 'gridcell', ldomain%ns, dimid)
       end if
-      call ncd_defdim (ncid, 'pft' , maxpatch_pft , dimid)
+      call ncd_defdim (ncid, 'pft' , maxsoil_patches, dimid)
       call ncd_defdim (ncid, 'time', ncd_unlimited, dimid)
       call ncd_defdim (ncid, 'string_length', 80  , dimid)
 
@@ -371,7 +373,7 @@ contains
       ! Write time dependent variables to CNDV history file
 
       ! The if .not. ifspecial statment below guarantees that the m index will
-      ! always lie between 1 and maxpatch_pft
+      ! always lie between 1 and maxsoil_patches
 
       rbuf2dg(bounds%begg : bounds%endg, :) = 0._r8
       do p = bounds%begp,bounds%endp

@@ -6,16 +6,44 @@ module ActiveLayerMod
   !
   ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8
+  use decompMod       , only : bounds_type
   use shr_const_mod   , only : SHR_CONST_TKFRZ
-  use clm_varctl      , only : iulog
+  use clm_varctl      , only : iulog, use_cn
+  use clm_varcon      , only : spval  
+  use landunit_varcon , only : istsoil, istcrop
   use TemperatureType , only : temperature_type
-  use CanopyStateType , only : canopystate_type
-  use GridcellType    , only : grc       
-  use ColumnType      , only : col       
+  use GridcellType    , only : grc
+  use LandunitType    , only : lun
+  use ColumnType      , only : col
   !
   implicit none
   save
   private
+  !
+  ! !PUBLIC TYPES:
+  type, public :: active_layer_type
+     private
+     ! Public data members:
+     real(r8) , pointer, public :: altmax_col               (:)   ! col maximum annual depth of thaw
+     real(r8) , pointer, public :: altmax_lastyear_col      (:)   ! col prior year maximum annual depth of thaw
+     integer  , pointer, public :: altmax_indx_col          (:)   ! col maximum annual depth of thaw
+     integer  , pointer, public :: altmax_lastyear_indx_col (:)   ! col prior year maximum annual depth of thaw
+
+     ! Private data members:
+     real(r8) , pointer :: alt_col                  (:)   ! col current depth of thaw
+     integer  , pointer :: alt_indx_col             (:)   ! col current depth of thaw
+   contains
+     ! Public routines
+     procedure, public :: alt_calc
+     procedure, public :: Init
+     procedure, public :: Restart
+
+     ! Private routines
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
+  end type active_layer_type
+
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public:: alt_calc
@@ -23,9 +51,13 @@ module ActiveLayerMod
   
 contains
 
+  ! ========================================================================
+  ! Science routines
+  ! ========================================================================
+
   !-----------------------------------------------------------------------
-  subroutine alt_calc(num_soilc, filter_soilc, &
-       temperature_inst, canopystate_inst) 
+  subroutine alt_calc(this, num_soilc, filter_soilc, &
+       temperature_inst)
     !
     ! !DESCRIPTION:
     !  define active layer thickness similarly to frost_table, except set as deepest thawed layer and define on nlevgrnd
@@ -47,10 +79,10 @@ contains
     use clm_varcon       , only : zsoi
     !
     ! !ARGUMENTS:
+    class(active_layer_type), intent(inout) :: this
     integer                , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                , intent(in)    :: filter_soilc(:) ! filter for soil columns
     type(temperature_type) , intent(in)    :: temperature_inst
-    type(canopystate_type) , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: c, j, fc, g                     ! counters
@@ -66,14 +98,14 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
-         t_soisno             =>    temperature_inst%t_soisno_col        ,    & ! Input:   [real(r8) (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)                    
-         
-         alt                  =>    canopystate_inst%alt_col             ,    & ! Output:  [real(r8) (:)   ]  current depth of thaw                                                 
-         altmax               =>    canopystate_inst%altmax_col          ,    & ! Output:  [real(r8) (:)   ]  maximum annual depth of thaw                                          
-         altmax_lastyear      =>    canopystate_inst%altmax_lastyear_col ,    & ! Output:  [real(r8) (:)   ]  prior year maximum annual depth of thaw                               
-         alt_indx             =>    canopystate_inst%alt_indx_col        ,    & ! Output:  [integer  (:)   ]  current depth of thaw                                                  
-         altmax_indx          =>    canopystate_inst%altmax_indx_col     ,    & ! Output:  [integer  (:)   ]  maximum annual depth of thaw                                           
-         altmax_lastyear_indx =>    canopystate_inst%altmax_lastyear_indx_col & ! Output:  [integer  (:)   ]  prior year maximum annual depth of thaw                                
+         t_soisno             =>    temperature_inst%t_soisno_col , & ! Input:   [real(r8) (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
+
+         alt                  =>    this%alt_col                  , & ! Output:  [real(r8) (:)   ]  current depth of thaw
+         altmax               =>    this%altmax_col               , & ! Output:  [real(r8) (:)   ]  maximum annual depth of thaw
+         altmax_lastyear      =>    this%altmax_lastyear_col      , & ! Output:  [real(r8) (:)   ]  prior year maximum annual depth of thaw
+         alt_indx             =>    this%alt_indx_col             , & ! Output:  [integer  (:)   ]  current depth of thaw
+         altmax_indx          =>    this%altmax_indx_col          , & ! Output:  [integer  (:)   ]  maximum annual depth of thaw
+         altmax_lastyear_indx =>    this%altmax_lastyear_indx_col   & ! Output:  [integer  (:)   ]  prior year maximum annual depth of thaw
          )
 
       ! on a set annual timestep, update annual maxima
@@ -151,5 +183,168 @@ contains
     end associate 
 
   end subroutine alt_calc
-  
+
+  ! ========================================================================
+  ! Infrastructure routines (for initialization & restart)
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine Init(this, bounds)
+    !
+    ! !ARGUMENTS:
+    class(active_layer_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'Init'
+    !-----------------------------------------------------------------------
+
+    call this%InitAllocate(bounds)
+    call this%InitHistory(bounds)
+    call this%InitCold(bounds)
+
+  end subroutine Init
+
+  !-----------------------------------------------------------------------
+  subroutine InitAllocate(this, bounds)
+    !
+    ! !ARGUMENTS:
+    class(active_layer_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitAllocate'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc  &
+         )
+
+    allocate(this%alt_col                  (begc:endc))           ; this%alt_col                  (:)   = spval     
+    allocate(this%altmax_col               (begc:endc))           ; this%altmax_col               (:)   = spval
+    allocate(this%altmax_lastyear_col      (begc:endc))           ; this%altmax_lastyear_col      (:)   = spval
+    allocate(this%alt_indx_col             (begc:endc))           ; this%alt_indx_col             (:)   = huge(1)
+    allocate(this%altmax_indx_col          (begc:endc))           ; this%altmax_indx_col          (:)   = huge(1)
+    allocate(this%altmax_lastyear_indx_col (begc:endc))           ; this%altmax_lastyear_indx_col (:)   = huge(1)
+
+    end associate
+
+  end subroutine InitAllocate
+
+  !-----------------------------------------------------------------------
+  subroutine InitHistory(this, bounds)
+    !
+    ! !USES:
+    use histFileMod   , only: hist_addfld1d
+    !
+    ! !ARGUMENTS:
+    class(active_layer_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    character(len=:), allocatable :: active_if_cn
+
+    character(len=*), parameter :: subname = 'InitHistory'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         begc => bounds%begc, &
+         endc => bounds%endc  &
+         )
+
+    if (use_cn) then
+       active_if_cn = 'active'
+    else
+       active_if_cn = 'inactive'
+    end if
+
+    this%alt_col(begc:endc) = spval
+    call hist_addfld1d (fname='ALT', units='m', &
+         avgflag='A', long_name='current active layer thickness', &
+         ptr_col=this%alt_col, default=active_if_cn)
+
+    this%altmax_col(begc:endc) = spval
+    call hist_addfld1d (fname='ALTMAX', units='m', &
+         avgflag='A', long_name='maximum annual active layer thickness', &
+         ptr_col=this%altmax_col, default=active_if_cn)
+
+    this%altmax_lastyear_col(begc:endc) = spval
+    call hist_addfld1d (fname='ALTMAX_LASTYEAR', units='m', &
+         avgflag='A', long_name='maximum prior year active layer thickness', &
+         ptr_col=this%altmax_lastyear_col, default='inactive')
+
+    end associate
+
+  end subroutine InitHistory
+
+  !-----------------------------------------------------------------------
+  subroutine InitCold(this, bounds)
+    !
+    ! !ARGUMENTS:
+    class(active_layer_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: l, c
+
+    character(len=*), parameter :: subname = 'InitCold'
+    !-----------------------------------------------------------------------
+
+    do c = bounds%begc, bounds%endc
+       l = col%landunit(c)
+
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+          this%alt_col(c)               = 0._r8 !iniitialized to spval for all columns
+          this%altmax_col(c)            = 0._r8 !iniitialized to spval for all columns
+          this%altmax_lastyear_col(c)   = 0._r8 !iniitialized to spval for all columns
+          this%alt_indx_col(c)          = 0     !initiialized to huge  for all columns
+          this%altmax_indx_col(c)       = 0     !initiialized to huge  for all columns
+          this%altmax_lastyear_indx_col = 0     !initiialized to huge  for all columns
+       end if
+    end do
+
+  end subroutine InitCold
+
+  !-----------------------------------------------------------------------
+  subroutine Restart(this, bounds, ncid, flag)
+    !
+    ! !USES:
+    use ncdio_pio  , only : file_desc_t, ncd_double, ncd_int
+    use restUtilMod
+    !
+    ! !ARGUMENTS:
+    class(active_layer_type), intent(inout) :: this
+    type(bounds_type) , intent(in)    :: bounds 
+    type(file_desc_t) , intent(inout) :: ncid   ! netcdf id
+    character(len=*)  , intent(in)    :: flag   ! 'read' or 'write'
+    !
+    ! !LOCAL VARIABLES:
+    logical :: readvar      ! determine if variable is on initial file
+
+    character(len=*), parameter :: subname = 'Restart'
+    !-----------------------------------------------------------------------
+
+    call restartvar(ncid=ncid, flag=flag, varname='altmax', xtype=ncd_double,  &
+         dim1name='column', long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%altmax_col) 
+
+    call restartvar(ncid=ncid, flag=flag, varname='altmax_lastyear', xtype=ncd_double,  &
+         dim1name='column', long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%altmax_lastyear_col) 
+
+    call restartvar(ncid=ncid, flag=flag, varname='altmax_indx', xtype=ncd_int,  &
+         dim1name='column', long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%altmax_indx_col) 
+
+    call restartvar(ncid=ncid, flag=flag, varname='altmax_lastyear_indx', xtype=ncd_int,  &
+         dim1name='column', long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%altmax_lastyear_indx_col) 
+
+  end subroutine Restart
+
+
+
 end module ActiveLayerMod

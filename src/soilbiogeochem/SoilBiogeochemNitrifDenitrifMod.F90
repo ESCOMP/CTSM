@@ -16,7 +16,7 @@ module SoilBiogeochemNitrifDenitrifMod
   use abortutils                      , only : endrun
   use decompMod                       , only : bounds_type
   use SoilStatetype                   , only : soilstate_type
-  use WaterStateType                  , only : waterstate_type
+  use WaterStateBulkType                  , only : waterstatebulk_type
   use TemperatureType                 , only : temperature_type
   use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
@@ -186,22 +186,22 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SoilBiogeochemNitrifDenitrif(bounds, num_soilc, filter_soilc, &
-       soilstate_inst, waterstate_inst, temperature_inst, ch4_inst, &
+       soilstate_inst, waterstatebulk_inst, temperature_inst, ch4_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
     !  calculate nitrification and denitrification rates
     !
     ! !USES:
-    use clm_time_manager  , only : get_curr_date, get_step_size
-    use CNSharedParamsMod , only : anoxia_wtsat, CNParamsShareInst
+    use clm_time_manager  , only : get_curr_date
+    use CNSharedParamsMod , only : CNParamsShareInst
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
     integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     type(soilstate_type)                    , intent(in)    :: soilstate_inst
-    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+    type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(temperature_type)                  , intent(in)    :: temperature_inst
     type(ch4_type)                          , intent(in)    :: ch4_inst
     type(soilbiogeochem_carbonflux_type)    , intent(in)    :: soilbiogeochem_carbonflux_inst
@@ -246,8 +246,8 @@ contains
          sucsat                        =>    soilstate_inst%sucsat_col                                          , & ! Input:  [real(r8) (:,:)  ]  minimum soil suction (mm)                       
          soilpsi                       =>    soilstate_inst%soilpsi_col                                         , & ! Input:  [real(r8) (:,:)  ]  soil water potential in each soil layer (MPa)   
          
-         h2osoi_vol                    =>    waterstate_inst%h2osoi_vol_col                                     , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
-         h2osoi_liq                    =>    waterstate_inst%h2osoi_liq_col                                     , & ! Input:  [real(r8) (:,:)  ]  liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
+         h2osoi_vol                    =>    waterstatebulk_inst%h2osoi_vol_col                                     , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
+         h2osoi_liq                    =>    waterstatebulk_inst%h2osoi_liq_col                                     , & ! Input:  [real(r8) (:,:)  ]  liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
          
          t_soisno                      =>    temperature_inst%t_soisno_col                                      , & ! Input:  [real(r8) (:,:)  ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
          
@@ -349,20 +349,6 @@ contains
                   anaerobic_frac(c,j) = 0._r8
                endif
 
-               if (anoxia_wtsat) then ! Average saturated fraction values into anaerobic_frac(c,j).
-                  r_min_sat = 2._r8 * surface_tension_water / (rho_w * grav * abs(grav * 1.e-6_r8 * sucsat(c,j)))
-                  r_psi_sat = sqrt(r_min_sat * r_max)
-                  if (o2_decomp_depth_sat(c,j) > 0._r8) then
-                     anaerobic_frac_sat = exp(-rij_kro_a * r_psi_sat**(-rij_kro_alpha) * &
-                          o2_decomp_depth_sat(c,j)**(-rij_kro_beta) * &
-                          conc_o2_sat(c,j)**rij_kro_gamma * (watsat(c,j) + ratio_diffusivity_water_gas(c,j) * &
-                          watsat(c,j))**rij_kro_delta)
-                  else
-                     anaerobic_frac_sat = 0._r8
-                  endif
-                  anaerobic_frac(c,j) = (1._r8 - finundated(c))*anaerobic_frac(c,j) + finundated(c)*anaerobic_frac_sat
-               end if
-
             else
                ! NITRIF_DENITRIF requires Methane model to be active, 
                ! otherwise diffusivity will be zeroed out here. EBK CDK 10/18/2011
@@ -449,11 +435,6 @@ contains
             ! total water limitation function (Del Grosso et al., 2000, figure 7a)
             wfps_vr(c,j) = max(min(h2osoi_vol(c,j)/watsat(c, j), 1._r8), 0._r8) * 100._r8
             fr_WFPS(c,j) = max(0.1_r8, 0.015_r8 * wfps_vr(c,j) - 0.32_r8)
-            if (use_lch4) then
-               if (anoxia_wtsat) then
-                  fr_WFPS(c,j) = fr_WFPS(c,j)*(1._r8 - finundated(c)) + finundated(c)*1.18_r8
-               end if
-            end if
 
             ! final ratio expression 
             n2_n2o_ratio_denit_vr(c,j) = max(0.16*ratio_k1(c,j), ratio_k1(c,j)*exp(-0.8 * ratio_no3_co2(c,j))) * fr_WFPS(c,j)

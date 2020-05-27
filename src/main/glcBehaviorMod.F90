@@ -326,7 +326,7 @@ contains
     character(len=*), parameter :: subname = 'InitFromInputs'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(glacier_region_map) == (/endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(glacier_region_map) == (/endg/)), sourcefile, __LINE__)
 
     call check_glacier_region_map
 
@@ -347,10 +347,9 @@ contains
        my_rain_to_snow_behavior = glacier_region_rain_to_snow_behavior(my_id)
 
        ! This should only happen due to a programming error, not due to a user input error
-       SHR_ASSERT(my_behavior /= BEHAVIOR_UNSET, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(my_melt_behavior /= BEHAVIOR_UNSET, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(my_ice_runoff_behavior /= BEHAVIOR_UNSET, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(my_rain_to_snow_behavior /= BEHAVIOR_UNSET, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(my_behavior /= BEHAVIOR_UNSET, sourcefile, __LINE__)
+       SHR_ASSERT_FL(my_melt_behavior /= BEHAVIOR_UNSET, sourcefile, __LINE__)
+       SHR_ASSERT_FL(my_ice_runoff_behavior /= BEHAVIOR_UNSET, sourcefile, __LINE__)
 
        if (my_behavior == BEHAVIOR_VIRTUAL) then
           this%has_virtual_columns_grc(g) = .true.
@@ -428,7 +427,7 @@ contains
          glacier_region_behavior(i) = BEHAVIOR_UNSET
 
          if (glacier_region_present(i)) then
-            SHR_ASSERT_ALL((ubound(glacier_region_behavior_str) >= (/i/)), errMsg(sourcefile, __LINE__))
+            SHR_ASSERT_ALL_FL((ubound(glacier_region_behavior_str) >= (/i/)), sourcefile, __LINE__)
 
             select case (glacier_region_behavior_str(i))
             case ('multiple')
@@ -461,7 +460,7 @@ contains
          glacier_region_melt_behavior(i) = BEHAVIOR_UNSET
 
          if (glacier_region_present(i)) then
-            SHR_ASSERT_ALL((ubound(glacier_region_melt_behavior_str) >= (/i/)), errMsg(sourcefile, __LINE__))
+            SHR_ASSERT_ALL_FL((ubound(glacier_region_melt_behavior_str) >= (/i/)), sourcefile, __LINE__)
 
             select case (glacier_region_melt_behavior_str(i))
             case ('replaced_by_ice')
@@ -492,7 +491,7 @@ contains
          glacier_region_ice_runoff_behavior(i) = BEHAVIOR_UNSET
 
          if (glacier_region_present(i)) then
-            SHR_ASSERT_ALL((ubound(glacier_region_ice_runoff_behavior_str) >= (/i/)), errMsg(sourcefile, __LINE__))
+            SHR_ASSERT_ALL_FL((ubound(glacier_region_ice_runoff_behavior_str) >= (/i/)), sourcefile, __LINE__)
 
             select case (glacier_region_ice_runoff_behavior_str(i))
             case ('remains_ice')
@@ -572,15 +571,8 @@ contains
     character(len=*), parameter :: subname = 'InitForTesting'
     !-----------------------------------------------------------------------
 
-    if (present(has_virtual_columns)) then
-       SHR_ASSERT_ALL((ubound(has_virtual_columns) == (/endg/)), errMsg(sourcefile, __LINE__))
-    end if
-    if (present(collapse_to_atm_topo)) then
-       SHR_ASSERT_ALL((ubound(collapse_to_atm_topo) == (/endg/)), errMsg(sourcefile, __LINE__))
-    end if
-    if (present(rain_to_snow_runs_off)) then
-       SHR_ASSERT_ALL((ubound(rain_to_snow_runs_off) == [endg]), errMsg(sourcefile, __LINE__))
-    end if
+    SHR_ASSERT_ALL_FL((ubound(has_virtual_columns) == (/endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(collapse_to_atm_topo) == (/endg/)), sourcefile, __LINE__)
 
     call this%InitAllocate(begg, endg)
     if (present(has_virtual_columns)) then
@@ -648,7 +640,7 @@ contains
     character(len=*), parameter :: subname = 'read_surface_dataset'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(glacier_region_map) == (/endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(glacier_region_map) == (/endg/)), sourcefile, __LINE__)
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read GLACIER_REGION...'
@@ -781,7 +773,7 @@ contains
          wt_lunit(gi, istice_mec) > 0.0_r8) then
        ! For grid cells with the collapse_to_atm_topo behavior, with a non-zero weight
        ! ice_mec landunit, we expect exactly one column
-       SHR_ASSERT(ncols == 1, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(ncols == 1, sourcefile, __LINE__)
     end if
 
     if (ncols > 0) then
@@ -921,7 +913,7 @@ contains
     character(len=*), parameter :: subname = 'icemec_cols_need_downscaling'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(needs_downscaling_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(needs_downscaling_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     do fc = 1, num_icemecc
        c = filter_icemecc(fc)
@@ -958,7 +950,7 @@ contains
     character(len=*), parameter :: subname = 'cols_have_dynamic_type_array'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(has_dynamic_type_col) == (/endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(has_dynamic_type_col) == (/endc/)), sourcefile, __LINE__)
 
     do c = begc, endc
        g = col%gridcell(c)
@@ -995,7 +987,7 @@ contains
     character(len=*), parameter :: subname = 'patches_have_dynamic_type_array'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(has_dynamic_type_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(has_dynamic_type_patch) == (/endp/)), sourcefile, __LINE__)
 
     do p = begp, endp
        g = patch%gridcell(p)
@@ -1067,7 +1059,7 @@ contains
     character(len=*), parameter :: subname = 'update_collapsed_columns_classes'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(topo_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(topo_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     do fc = 1, collapse_filterc%num
        c = collapse_filterc%indices(fc)

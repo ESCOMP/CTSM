@@ -16,7 +16,7 @@ module ch4Mod
   use clm_varcon                     , only : denh2o, denice, tfrz, grav, spval, rgas, grlnd
   use clm_varcon                     , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
   use landunit_varcon                , only : istsoil, istcrop, istdlak
-  use clm_time_manager               , only : get_step_size, get_nstep
+  use clm_time_manager               , only : get_step_size_real, get_nstep
   use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4
   use abortutils                     , only : endrun
   use decompMod                      , only : bounds_type
@@ -31,8 +31,9 @@ module ch4Mod
   use SoilHydrologyType              , only : soilhydrology_type  
   use SoilStateType                  , only : soilstate_type
   use TemperatureType                , only : temperature_type
-  use WaterfluxType                  , only : waterflux_type
-  use WaterstateType                 , only : waterstate_type
+  use WaterFluxBulkType                  , only : waterfluxbulk_type
+  use WaterStateBulkType                 , only : waterstatebulk_type
+  use WaterDiagnosticBulkType                 , only : waterdiagnosticbulk_type
   use GridcellType                   , only : grc                
   use LandunitType                   , only : lun                
   use ColumnType                     , only : col                
@@ -679,7 +680,8 @@ contains
 
     this%ch4_dfsat_flux_col(begc:endc) = spval
     call hist_addfld1d (fname='FCH4_DFSAT', units='kgC/m2/s',  &
-         avgflag='A', long_name='CH4 additional flux due to changing fsat, vegetated landunits only', &
+         avgflag='A', &
+         long_name='CH4 additional flux due to changing fsat, natural vegetated and crop landunits only', &
          ptr_col=this%ch4_dfsat_flux_col)
 
     this%zwt_ch4_unsat_col(begc:endc) = spval
@@ -751,7 +753,7 @@ contains
     logical               :: readvar     ! If read variable from file or not
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(cellorg_col) == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cellorg_col) == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
 
     !----------------------------------------
     ! Initialize time constant variables
@@ -1592,7 +1594,7 @@ contains
   subroutine ch4 (bounds, num_soilc, filter_soilc, num_lakec, filter_lakec, &
        num_nolakec, filter_nolakec, num_soilp, filter_soilp, &
        atm2lnd_inst, lakestate_inst, canopystate_inst, soilstate_inst, soilhydrology_inst, &
-       temperature_inst, energyflux_inst, waterstate_inst, waterflux_inst, &
+       temperature_inst, energyflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, &
        soilbiogeochem_carbonflux_inst, &
        soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst, &
        agnpp, bgnpp, annsum_npp, rr)
@@ -1625,8 +1627,9 @@ contains
     type(soilhydrology_type)               , intent(in)    :: soilhydrology_inst
     type(temperature_type)                 , intent(in)    :: temperature_inst
     type(energyflux_type)                  , intent(inout) :: energyflux_inst
-    type(waterstate_type)                  , intent(in)    :: waterstate_inst
-    type(waterflux_type)                   , intent(in)    :: waterflux_inst
+    type(waterstatebulk_type)                  , intent(in)    :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)                  , intent(in)    :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)                   , intent(in)    :: waterfluxbulk_inst
     type(soilbiogeochem_carbonflux_type)   , intent(in)    :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenflux_type) , intent(in)    :: soilbiogeochem_nitrogenflux_inst
     type(ch4_type)                         , intent(inout) :: ch4_inst
@@ -1667,10 +1670,10 @@ contains
     character(len=32) :: subname='ch4'                 ! subroutine name
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(agnpp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bgnpp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(annsum_npp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rr) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                                 & 
          dz                   =>   col%dz                                    , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       
@@ -1689,10 +1692,10 @@ contains
          rootfr               =>   soilstate_inst%rootfr_patch               , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer  (nlevgrnd)
          rootfr_col           =>   soilstate_inst%rootfr_col                 , & ! Output: [real(r8) (:,:) ]  fraction of roots in each soil layer  (nlevgrnd) (p2c)
 
-         frac_h2osfc          =>   waterstate_inst%frac_h2osfc_col           , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
-         snow_depth           =>   waterstate_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
-         tws                  =>   waterstate_inst%tws_grc                   , & ! Input:  [real(r8) (:)   ]  total water storage (kg m-2)                                   
-         qflx_surf            =>   waterflux_inst%qflx_surf_col              , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)                        
+         frac_h2osfc          =>   waterdiagnosticbulk_inst%frac_h2osfc_col           , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+         snow_depth           =>   waterdiagnosticbulk_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
+         tws                  =>   waterdiagnosticbulk_inst%tws_grc                   , & ! Input:  [real(r8) (:)   ]  total water storage (kg m-2)                                   
+         qflx_surf            =>   waterfluxbulk_inst%qflx_surf_col              , & ! Input:  [real(r8) (:)   ]  total surface runoff (mm H2O /s)
 
          conc_o2_sat          =>   ch4_inst%conc_o2_sat_col                  , & ! Input:  [real(r8) (:,:) ]  O2 conc  in each soil layer (mol/m3) (nlevsoi)  
          totcolch4_bef        =>   ch4_inst%totcolch4_bef_col                , & ! Input:  [real(r8) (:)   ]  total methane in soil column, start of timestep (g C / m^2)
@@ -1749,7 +1752,7 @@ contains
       qflxlagd          = params_inst%qflxlagd
       highlatfact       = params_inst%highlatfact
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       nstep = get_nstep()
       dtime_ch4 = dtime
       redoxlags = redoxlag*secspday ! days --> s
@@ -1807,8 +1810,8 @@ contains
       if ( ch4_inst%ch4findstream%useStreams() &
            .or. (finundation_mtd == finundation_mtd_h2osfc) )then
          call ch4_inst%ch4findstream%CalcFinundated( bounds, num_soilc, &
-                               filter_soilc, soilhydrology_inst, waterstate_inst, &
-                               qflx_surf_lag(begc:endc), finundated(begc:endc) )
+                               filter_soilc, soilhydrology_inst, &
+                               waterdiagnosticbulk_inst, qflx_surf_lag(begc:endc), finundated(begc:endc) )
       else
 
          call endrun( "ERROR:: finundation method MUST now use a streams file to run, it can no longer read from the fsurdat file" )
@@ -1929,7 +1932,7 @@ contains
          if (sat == 0) then ! unsaturated
 
             call get_jwt (bounds, num_soilc, filter_soilc, jwt(begc:endc), &
-                 soilstate_inst, waterstate_inst, temperature_inst)
+                 soilstate_inst, waterstatebulk_inst, temperature_inst)
 
             do fc = 1, num_soilc
                c = filter_soilc(fc)
@@ -1965,7 +1968,7 @@ contains
          ! calculate CH4 production in each soil layer
          call ch4_prod (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
               rr(begp:endp), jwt(begc:endc), sat, lake, &
-              soilstate_inst, temperature_inst, waterstate_inst, &
+              soilstate_inst, temperature_inst, waterstatebulk_inst, &
               soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
               ch4_inst)
 
@@ -1973,7 +1976,7 @@ contains
          call ch4_oxid (bounds, &
               num_soilc, filter_soilc, &
               jwt(begc:endc), sat, lake, &
-              waterstate_inst, soilstate_inst, temperature_inst, ch4_inst)
+              waterstatebulk_inst, soilstate_inst, temperature_inst, ch4_inst)
 
          ! calculate CH4 aerenchyma losses in each soil layer
          call ch4_aere (bounds, &
@@ -1981,13 +1984,13 @@ contains
               num_soilp, filter_soilp, &
               annsum_npp(begp:endp), jwt(begc:endc), sat, lake, &
               canopystate_inst, soilstate_inst, temperature_inst, energyflux_inst, &
-              waterstate_inst, waterflux_inst, ch4_inst)
+              waterstatebulk_inst, waterfluxbulk_inst, ch4_inst)
 
          ! calculate CH4 ebullition losses in each soil layer
          call ch4_ebul (bounds, &
               num_soilc, filter_soilc, &
               jwt(begc:endc), sat, lake, &
-              atm2lnd_inst, temperature_inst, lakestate_inst, soilstate_inst, waterstate_inst, &
+              atm2lnd_inst, temperature_inst, lakestate_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
               ch4_inst)
 
          ! Solve CH4 reaction/diffusion equation 
@@ -1995,7 +1998,7 @@ contains
          call ch4_tran (bounds, &
               num_soilc, filter_soilc, &
               jwt(begc:endc), dtime_ch4, sat, lake, &
-              soilstate_inst, temperature_inst, waterstate_inst, energyflux_inst, ch4_inst)
+              soilstate_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, energyflux_inst, ch4_inst)
 
       enddo ! sat/unsat
 
@@ -2014,7 +2017,7 @@ contains
          ! calculate CH4 production in each lake layer
          call ch4_prod (bounds, num_lakec, filter_lakec, 0, dummyfilter, &
               rr(begp:endp), jwt(begc:endc), sat, lake, &
-              soilstate_inst, temperature_inst, waterstate_inst, &
+              soilstate_inst, temperature_inst, waterstatebulk_inst, &
               soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
               ch4_inst)
 
@@ -2022,26 +2025,26 @@ contains
          call ch4_oxid (bounds, &
               num_lakec, filter_lakec, &
               jwt(begc:endc), sat, lake, &
-              waterstate_inst, soilstate_inst, temperature_inst, ch4_inst)
+              waterstatebulk_inst, soilstate_inst, temperature_inst, ch4_inst)
 
          ! calculate CH4 aerenchyma losses in each lake layer
          ! The p filter will not be used here; the relevant column vars will just be set to 0.
          call ch4_aere (bounds, num_lakec, filter_lakec, 0, dummyfilter, &
               annsum_npp(begp:endp), jwt(begc:endc), sat, lake, &
               canopystate_inst, soilstate_inst, temperature_inst, energyflux_inst, &
-              waterstate_inst, waterflux_inst, ch4_inst)
+              waterstatebulk_inst, waterfluxbulk_inst, ch4_inst)
 
          ! calculate CH4 ebullition losses in each lake layer
          call ch4_ebul (bounds, num_lakec, filter_lakec, &
               jwt(begc:endc), sat, lake, &
-              atm2lnd_inst, temperature_inst, lakestate_inst, soilstate_inst, waterstate_inst, &
+              atm2lnd_inst, temperature_inst, lakestate_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
               ch4_inst)
 
          ! Solve CH4 reaction/diffusion equation 
          ! Competition for oxygen will occur here.
          call ch4_tran (bounds, num_lakec, filter_lakec, &
               jwt(begc:endc), dtime_ch4, sat, lake, &
-              soilstate_inst, temperature_inst, waterstate_inst, energyflux_inst, ch4_inst)
+              soilstate_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, energyflux_inst, ch4_inst)
 
       end if
 
@@ -2217,7 +2220,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
        filter_methp, rr, jwt, sat, lake, &
-       soilstate_inst, temperature_inst, waterstate_inst, &
+       soilstate_inst, temperature_inst, waterstatebulk_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
        ch4_inst)
     !
@@ -2246,7 +2249,7 @@ contains
     logical                                , intent(in)    :: lake                ! function called with lake filter
     type(soilstate_type)                   , intent(inout) :: soilstate_inst
     type(temperature_type)                 , intent(in)    :: temperature_inst
-    type(waterstate_type)                  , intent(in)    :: waterstate_inst
+    type(waterstatebulk_type)                  , intent(in)    :: waterstatebulk_inst
     type(soilbiogeochem_carbonflux_type)   , intent(in)    :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenflux_type) , intent(in)    :: soilbiogeochem_nitrogenflux_inst
     type(ch4_type)                         , intent(inout) :: ch4_inst
@@ -2291,8 +2294,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(rr) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                    & 
          wtcol          =>    patch%wtcol                                         , & ! Input:  [real(r8) (:)    ]  weight (relative to column)                       
@@ -2302,7 +2305,7 @@ contains
 
          t_soisno       =>    temperature_inst%t_soisno_col                     , & ! Input:  [real(r8) (:,:)  ]  soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
 
-         h2osoi_vol     =>    waterstate_inst%h2osoi_vol_col                    , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+         h2osoi_vol     =>    waterstatebulk_inst%h2osoi_vol_col                    , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
 
          watsat         =>    soilstate_inst%watsat_col                         , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water at saturation (porosity)  
          crootfr        =>    soilstate_inst%crootfr_patch                      , & ! Input:  [real(r8) (:,:)  ]  fraction of roots for carbon in each soil layer  (nlevsoi) 
@@ -2337,7 +2340,7 @@ contains
          co2_decomp_depth => ch4_inst%co2_decomp_depth_sat_col   ! Output: [real(r8) (:,:)]  CO2 production during decomposition in each soil layer (nlevsoi) (mol/m3/s)
       endif
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       q10ch4           = params_inst%q10ch4
       q10ch4base       = params_inst%q10ch4base
@@ -2555,14 +2558,14 @@ contains
   subroutine ch4_oxid (bounds, &
        num_methc, filter_methc, &
        jwt, sat, lake, &
-       waterstate_inst, soilstate_inst, temperature_inst, ch4_inst)
+       waterstatebulk_inst, soilstate_inst, temperature_inst, ch4_inst)
     !
     ! !DESCRIPTION:
     ! Oxidation is based on double Michaelis-Mentin kinetics, and is adjusted for low soil moisture.
     ! Oxidation will be limited by available oxygen in ch4_tran.
     
     ! !USES:
-    use clm_time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size_real
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in) :: bounds    
@@ -2571,7 +2574,7 @@ contains
     integer                , intent(in) :: jwt( bounds%begc: ) ! index of the soil layer right above the water table (-) [col]
     integer                , intent(in) :: sat                 ! 0 = unsaturated; 1 = saturated
     logical                , intent(in) :: lake                ! function called with lake filter
-    type(waterstate_type)  , intent(in) :: waterstate_inst
+    type(waterstatebulk_type)  , intent(in) :: waterstatebulk_inst
     type(soilstate_type)   , intent(in) :: soilstate_inst
     type(temperature_type) , intent(in) :: temperature_inst
     type(ch4_type)         , intent(in) :: ch4_inst
@@ -2609,10 +2612,10 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                          & 
-         h2osoi_vol => waterstate_inst%h2osoi_vol_col , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+         h2osoi_vol => waterstatebulk_inst%h2osoi_vol_col , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
 
          smp_l      => soilstate_inst%smp_l_col       , & ! Input:  [real(r8) (: ,:) ]  soil matrix potential [mm]                      
          watsat     => soilstate_inst%watsat_col      , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water at saturation (porosity)  
@@ -2637,7 +2640,7 @@ contains
       endif
 
       ! Get land model time step
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Set oxidation parameters
       vmax_ch4_oxid   = params_inst%vmax_ch4_oxid
@@ -2708,7 +2711,7 @@ contains
   subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, filter_methp, &
        annsum_npp, jwt, sat, lake, &
        canopystate_inst, soilstate_inst, temperature_inst, energyflux_inst, &
-       waterstate_inst, waterflux_inst, ch4_inst)
+       waterstatebulk_inst, waterfluxbulk_inst, ch4_inst)
     !
     ! !DESCRIPTION:
     ! Arctic c3 grass (which is often present in fens) and all vegetation in inundated areas is assumed to have
@@ -2719,7 +2722,7 @@ contains
 
     ! !USES:
     use clm_varcon       , only : rpi
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use pftconMod        , only : nc3_arctic_grass, nc3_nonarctic_grass, nc4_grass, noveg, pftcon
     use ch4varcon        , only : transpirationloss, use_aereoxid_prog
     !
@@ -2737,8 +2740,8 @@ contains
     type(soilstate_type)        , intent(inout) :: soilstate_inst
     type(temperature_type)      , intent(in)    :: temperature_inst
     type(energyflux_type)       , intent(in)    :: energyflux_inst
-    type(waterstate_type)       , intent(in)    :: waterstate_inst
-    type(waterflux_type)        , intent(in)    :: waterflux_inst
+    type(waterstatebulk_type)       , intent(in)    :: waterstatebulk_inst
+    type(waterfluxbulk_type)        , intent(in)    :: waterfluxbulk_inst
     type(ch4_type)              , intent(inout) :: ch4_inst
     !
     ! !LOCAL VARIABLES:
@@ -2777,8 +2780,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(annsum_npp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                              & 
          z             =>    col%z                                        , & ! Input:  [real(r8) (:,:)  ]  layer depth (m) (-nlevsno+1:nlevsoi)            
@@ -2790,12 +2793,12 @@ contains
          t_soisno      =>    temperature_inst%t_soisno_col                , & ! Input:  [real(r8) (:,:)  ]  soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
 
          watsat        =>    soilstate_inst%watsat_col                    , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water at saturation (porosity)   
-         rootr         =>    soilstate_inst%rootr_patch                   , & ! Input:  [real(r8) (:,:)  ]  effective fraction of roots in each soil layer  (nlevgrnd)
+         rootr         =>    soilstate_inst%rootr_patch                   , & ! Input:  [real(r8) (:,:)  ]  effective fraction of roots in each soil layer (SMS method only) (nlevgrnd)
          rootfr        =>    soilstate_inst%rootfr_patch                  , & ! Input:  [real(r8) (:,:)  ]  fraction of roots in each soil layer  (nlevsoi) 
 
-         h2osoi_vol    =>    waterstate_inst%h2osoi_vol_col               , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+         h2osoi_vol    =>    waterstatebulk_inst%h2osoi_vol_col               , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
 
-         qflx_tran_veg =>    waterflux_inst%qflx_tran_veg_patch           , & ! Input:  [real(r8) (:)    ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
+         qflx_tran_veg =>    waterfluxbulk_inst%qflx_tran_veg_patch           , & ! Input:  [real(r8) (:)    ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
 
          canopy_cond   =>    energyflux_inst%canopy_cond_patch            , & ! Input:  [real(r8) (:)    ]  tracer conductance for canopy [m/s]               
 
@@ -2825,7 +2828,7 @@ contains
          ch4_prod_depth   =>  ch4_inst%ch4_prod_depth_sat_col   ! Input:  [real(r8) (:,:)]  production of CH4 in each soil layer (nlevsoi) (mol/m3/s)
       endif
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Set aerenchyma parameters
       aereoxid           = params_inst%aereoxid
@@ -2960,7 +2963,7 @@ contains
   subroutine ch4_ebul (bounds, &
        num_methc, filter_methc, &
        jwt, sat, lake, &
-       atm2lnd_inst, temperature_inst, lakestate_inst, soilstate_inst, waterstate_inst, &
+       atm2lnd_inst, temperature_inst, lakestate_inst, soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
        ch4_inst)
     !
     ! !DESCRIPTION:
@@ -2970,7 +2973,7 @@ contains
     ! Bubbles are released to the water table surface in ch4_tran.
 
     ! !USES:
-    use clm_time_manager   , only : get_step_size
+    use clm_time_manager   , only : get_step_size_real
     use LakeCon           
     !
     ! !ARGUMENTS:
@@ -2984,7 +2987,8 @@ contains
     type(temperature_type) , intent(in)    :: temperature_inst
     type(lakestate_type)   , intent(in)    :: lakestate_inst 
     type(soilstate_type)   , intent(in)    :: soilstate_inst
-    type(waterstate_type)  , intent(in)    :: waterstate_inst
+    type(waterstatebulk_type)  , intent(in)    :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
     type(ch4_type)         , intent(inout) :: ch4_inst
     !
     ! !LOCAL VARIABLES:
@@ -3009,7 +3013,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                      & 
          z            =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  soil layer depth (m)                            
@@ -3025,9 +3029,9 @@ contains
 
          watsat       =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)  
 
-         h2osoi_vol   =>    waterstate_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-         h2osfc       =>    waterstate_inst%h2osfc_col            , & ! Input:  [real(r8) (:)   ]  surface water (mm)                                
-         frac_h2osfc  =>    waterstate_inst%frac_h2osfc_col         & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+         h2osoi_vol   =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+         h2osfc       =>    waterstatebulk_inst%h2osfc_col            , & ! Input:  [real(r8) (:)   ]  surface water (mm)                                
+         frac_h2osfc  =>    waterdiagnosticbulk_inst%frac_h2osfc_col         & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
          )
 
       if (sat == 0) then                                   ! unsaturated
@@ -3045,7 +3049,7 @@ contains
       endif
 
       ! Get land model time step
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       vgc_max = params_inst%vgc_max
 
       bubble_f = 0.57_r8 ! CH4 content in gas bubbles (Kellner et al. 2006)
@@ -3102,7 +3106,7 @@ contains
   subroutine ch4_tran (bounds, &
        num_methc, filter_methc, &
        jwt, dtime_ch4, sat, lake, &
-       soilstate_inst, temperature_inst, waterstate_inst, energyflux_inst, ch4_inst)
+       soilstate_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, energyflux_inst, ch4_inst)
     !
     ! !DESCRIPTION:
     ! Solves the reaction & diffusion equation for the timestep.  First "competition" between processes for
@@ -3114,7 +3118,7 @@ contains
     ! Then CH4 diffusive flux is calculated and consistency is checked.
 
     ! !USES:
-    use clm_time_manager   , only : get_step_size, get_nstep
+    use clm_time_manager   , only : get_step_size_real, get_nstep
     use TridiagonalMod     , only : Tridiagonal
     use ch4varcon          , only : ch4frzout, use_aereoxid_prog
     !
@@ -3128,7 +3132,8 @@ contains
     real(r8)               , intent(in)    :: dtime_ch4           ! time step for ch4 calculations
     type(soilstate_type)   , intent(in)    :: soilstate_inst
     type(temperature_type) , intent(in)    :: temperature_inst
-    type(waterstate_type)  , intent(in)    :: waterstate_inst
+    type(waterstatebulk_type)  , intent(in)    :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
     type(energyflux_type)  , intent(in)    :: energyflux_inst
     type(ch4_type)         , intent(inout) :: ch4_inst
     !
@@ -3205,7 +3210,7 @@ contains
     character(len=32) :: subname='ch4_tran' ! subroutine name
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                 & 
          z             =>    col%z                           , & ! Input:  [real(r8) (:,:) ]  soil layer depth (m)                            
@@ -3221,12 +3226,12 @@ contains
          t_grnd        =>    temperature_inst%t_grnd_col     , & ! Input:  [real(r8) (:)   ]  ground temperature (Kelvin)                       
          t_h2osfc      =>    temperature_inst%t_h2osfc_col   , & ! Input:  [real(r8) (:)   ]  surface water temperature               
 
-         frac_h2osfc   =>    waterstate_inst%frac_h2osfc_col , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
-         snow_depth    =>    waterstate_inst%snow_depth_col  , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
-         h2osoi_vol    =>    waterstate_inst%h2osoi_vol_col  , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-         h2osoi_liq    =>    waterstate_inst%h2osoi_liq_col  , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) [for snow & soil layers]   
-         h2osoi_ice    =>    waterstate_inst%h2osoi_ice_col  , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) [for snow & soil layers]       
-         h2osfc        =>    waterstate_inst%h2osfc_col      , & ! Input:  [real(r8) (:)   ]  surface water (mm)                                
+         frac_h2osfc   =>    waterdiagnosticbulk_inst%frac_h2osfc_col , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+         snow_depth    =>    waterdiagnosticbulk_inst%snow_depth_col  , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
+         h2osoi_vol    =>    waterstatebulk_inst%h2osoi_vol_col  , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+         h2osoi_liq    =>    waterstatebulk_inst%h2osoi_liq_col  , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) [for snow & soil layers]   
+         h2osoi_ice    =>    waterstatebulk_inst%h2osoi_ice_col  , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) [for snow & soil layers]       
+         h2osfc        =>    waterstatebulk_inst%h2osfc_col      , & ! Input:  [real(r8) (:)   ]  surface water (mm)                                
 
          c_atm         =>    ch4_inst%c_atm_grc              , & ! Input:  [real(r8) (:,:) ]  CH4, O2, CO2 atmospheric conc  (mol/m3)         
 
@@ -3270,7 +3275,7 @@ contains
       endif
 
       ! Get land model time step
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       nstep = get_nstep()
 
       ! Set transport parameters
@@ -3905,7 +3910,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine get_jwt (bounds, num_methc, filter_methc, jwt, &
-       soilstate_inst, waterstate_inst, temperature_inst)
+       soilstate_inst, waterstatebulk_inst, temperature_inst)
     !
     ! !DESCRIPTION:
     ! Finds the first unsaturated layer going up. Also allows a perched water table over ice.
@@ -3916,7 +3921,7 @@ contains
     integer                , intent(in)  :: filter_methc(:)     ! column filter for soil points
     integer                , intent(out) :: jwt( bounds%begc: ) ! index of the soil layer right above the water table (-) [col]
     type(soilstate_type)   , intent(in)  :: soilstate_inst
-    type(waterstate_type)  , intent(in)  :: waterstate_inst
+    type(waterstatebulk_type)  , intent(in)  :: waterstatebulk_inst
     type(temperature_type) , intent(in)  :: temperature_inst
     !
     ! !LOCAL VARIABLES:
@@ -3925,11 +3930,11 @@ contains
     integer  :: fc       ! filter column index
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                          & 
          watsat     => soilstate_inst%watsat_col      , & ! Input:  [real(r8) (:,:)  ] volumetric soil water at saturation (porosity)   
-         h2osoi_vol => waterstate_inst%h2osoi_vol_col , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+         h2osoi_vol => waterstatebulk_inst%h2osoi_vol_col , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
          t_soisno   => temperature_inst%t_soisno_col    & ! Input:  [real(r8) (: ,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
          )
 
@@ -3976,7 +3981,7 @@ contains
     ! !DESCRIPTION: Annual mean fields.
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size, get_days_per_year, get_nstep
+    use clm_time_manager, only: get_step_size_real, get_days_per_year, get_nstep
     use clm_varcon      , only: secspday
     !
     ! !ARGUMENTS:
@@ -3998,8 +4003,8 @@ contains
     real(r8):: secsperyear
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(agnpp) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bgnpp) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                           & 
          somhr          =>    soilbiogeochem_carbonflux_inst%somhr_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) soil organic matter heterotrophic respiration
@@ -4017,7 +4022,7 @@ contains
          )
 
       ! set time steps
-      dt = real(get_step_size(), r8)
+      dt = get_step_size_real()
       secsperyear = real( get_days_per_year() * secspday, r8)
 
       do fc = 1,num_methc
@@ -4102,7 +4107,7 @@ contains
     character(len=*), parameter       :: subname = 'ch4_totcolch4'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(totcolch4) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(totcolch4) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          dz             =>   col%dz                      , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       

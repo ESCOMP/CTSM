@@ -23,7 +23,6 @@
 <stream_year_last_ndep  phys="clm5_0" use_cn=".true." >1850</stream_year_last_ndep>
 
 <ndep_taxmode            phys="clm5_0" use_cn=".true." >cycle</ndep_taxmode>
-<ndep_varlist            phys="clm5_0" use_cn=".true." >NDEP_month</ndep_varlist>
 
 <stream_year_first_popdens phys="clm4_0" cnfireson=".true." >1925</stream_year_first_popdens>
 <stream_year_last_popdens  phys="clm4_0" cnfireson=".true." >1925</stream_year_last_popdens>

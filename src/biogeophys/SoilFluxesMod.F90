@@ -17,8 +17,9 @@ module SoilFluxesMod
   use EnergyFluxType    , only : energyflux_type
   use SolarAbsorbedType , only : solarabs_type
   use TemperatureType   , only : temperature_type
-  use WaterstateType    , only : waterstate_type
-  use WaterfluxType     , only : waterflux_type
+  use WaterStateBulkType    , only : waterstatebulk_type
+  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use WaterFluxBulkType     , only : waterfluxbulk_type
   use LandunitType	, only : lun                
   use ColumnType	, only : col                
   use PatchType		, only : patch                
@@ -38,13 +39,13 @@ contains
        num_urbanp, filter_urbanp, &
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
        atm2lnd_inst, solarabs_inst, temperature_inst, canopystate_inst, &
-       waterstate_inst, energyflux_inst, waterflux_inst)            
+       waterstatebulk_inst, waterdiagnosticbulk_inst, energyflux_inst, waterfluxbulk_inst)            
     !
     ! !DESCRIPTION:
     ! Update surface fluxes based on the new ground temperature
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size_real
     use clm_varcon       , only : hvap, cpair, grav, vkc, tfrz, sb 
     use landunit_varcon  , only : istsoil, istcrop
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
@@ -64,8 +65,9 @@ contains
     type(solarabs_type)    , intent(in)    :: solarabs_inst
     type(temperature_type) , intent(in)    :: temperature_inst
     type(canopystate_type) , intent(in)    :: canopystate_inst
-    type(waterstate_type)  , intent(in)    :: waterstate_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterstatebulk_type)  , intent(in)    :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     !
     ! !LOCAL VARIABLES:
@@ -92,11 +94,10 @@ contains
 
          frac_veg_nosno          => canopystate_inst%frac_veg_nosno_patch   , & ! Input:  [integer (:)    ]  fraction of veg not covered by snow (0/1 now) [-]
 
-         frac_sno_eff            => waterstate_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
-         frac_h2osfc             => waterstate_inst%frac_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
-         h2osoi_ice              => waterstate_inst%h2osoi_ice_col          , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) (new)                
-         h2osoi_liq              => waterstate_inst%h2osoi_liq_col          , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) (new)            
-
+         frac_sno_eff            => waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
+         frac_h2osfc             => waterdiagnosticbulk_inst%frac_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+         h2osoi_ice              => waterstatebulk_inst%h2osoi_ice_col          , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) (new)                
+         h2osoi_liq              => waterstatebulk_inst%h2osoi_liq_col          , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) (new)            
          sabg_soil               => solarabs_inst%sabg_soil_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by soil (W/m**2)
          sabg_snow               => solarabs_inst%sabg_snow_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by snow (W/m**2)
          sabg                    => solarabs_inst%sabg_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by ground (W/m**2)
@@ -125,18 +126,18 @@ contains
          cgrnds                  => energyflux_inst%cgrnds_patch            , & ! Input:  [real(r8) (:)   ]  deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
          cgrndl                  => energyflux_inst%cgrndl_patch            , & ! Input:  [real(r8) (:)   ]  deriv of soil latent heat flux wrt soil temp [w/m**2/k]
          
-         qflx_evap_can           => waterflux_inst%qflx_evap_can_patch      , & ! Output: [real(r8) (:)   ]  evaporation from leaves and stems (mm H2O/s) (+ = to atm)
-         qflx_evap_soi           => waterflux_inst%qflx_evap_soi_patch      , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
-         qflx_evap_veg           => waterflux_inst%qflx_evap_veg_patch      , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)
-         qflx_tran_veg           => waterflux_inst%qflx_tran_veg_patch      , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
-         qflx_evap_tot           => waterflux_inst%qflx_evap_tot_patch      , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
-         qflx_evap_grnd          => waterflux_inst%qflx_evap_grnd_patch     , & ! Output: [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
-         qflx_sub_snow           => waterflux_inst%qflx_sub_snow_patch      , & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
-         qflx_dew_snow           => waterflux_inst%qflx_dew_snow_patch      , & ! Output: [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
-         qflx_dew_grnd           => waterflux_inst%qflx_dew_grnd_patch      , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
-         qflx_ev_snow            => waterflux_inst%qflx_ev_snow_patch       , & ! In/Out: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
-         qflx_ev_soil            => waterflux_inst%qflx_ev_soil_patch       , & ! In/Out: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
-         qflx_ev_h2osfc          => waterflux_inst%qflx_ev_h2osfc_patch     , & ! In/Out: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
+         qflx_evap_can           => waterfluxbulk_inst%qflx_evap_can_patch      , & ! Output: [real(r8) (:)   ]  evaporation from leaves and stems (mm H2O/s) (+ = to atm)
+         qflx_evap_soi           => waterfluxbulk_inst%qflx_evap_soi_patch      , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
+         qflx_evap_veg           => waterfluxbulk_inst%qflx_evap_veg_patch      , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)
+         qflx_tran_veg           => waterfluxbulk_inst%qflx_tran_veg_patch      , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
+         qflx_evap_tot           => waterfluxbulk_inst%qflx_evap_tot_patch      , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
+         qflx_liqevap_from_top_layer   => waterfluxbulk_inst%qflx_liqevap_from_top_layer_patch  , & ! Output: [real(r8) (:)   ]  rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
+         qflx_solidevap_from_top_layer => waterfluxbulk_inst%qflx_solidevap_from_top_layer_patch, & ! Output: [real(r8) (:)   ]  rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]
+         qflx_liqdew_to_top_layer      => waterfluxbulk_inst%qflx_liqdew_to_top_layer_patch     , & ! Output: [real(r8) (:)   ]  rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
+         qflx_soliddew_to_top_layer    => waterfluxbulk_inst%qflx_soliddew_to_top_layer_patch   , & ! Output: [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
+         qflx_ev_snow            => waterfluxbulk_inst%qflx_ev_snow_patch       , & ! In/Out: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
+         qflx_ev_soil            => waterfluxbulk_inst%qflx_ev_soil_patch       , & ! In/Out: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
+         qflx_ev_h2osfc          => waterfluxbulk_inst%qflx_ev_h2osfc_patch     , & ! In/Out: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
          
          eflx_sh_grnd            => energyflux_inst%eflx_sh_grnd_patch      , & ! Output: [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]
          eflx_sh_veg             => energyflux_inst%eflx_sh_veg_patch       , & ! Output: [real(r8) (:)   ]  sensible heat flux from leaves (W/m**2) [+ to atm]
@@ -164,7 +165,7 @@ contains
 
       ! Get step size
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       call t_startf('bgp2_loop_1')
       do fc = 1,num_nolakec
@@ -209,12 +210,12 @@ contains
          eflx_sh_grnd(p) = eflx_sh_grnd(p) + tinc(c)*cgrnds(p)
          qflx_evap_soi(p) = qflx_evap_soi(p) + tinc(c)*cgrndl(p)
 
-         ! set ev_snow, ev_soil for urban landunits here
+         ! Set ev_soil, ev_h2osfc, ev_snow for urban landunits here
          l = patch%landunit(p)
          if (lun%urbpoi(l)) then
-            qflx_ev_snow(p) = qflx_evap_soi(p)
             qflx_ev_soil(p) = 0._r8
             qflx_ev_h2osfc(p) = 0._r8
+            qflx_ev_snow(p) = qflx_evap_soi(p)
          else
             qflx_ev_snow(p) = qflx_ev_snow(p) + tinc(c)*cgrndl(p)
             qflx_ev_soil(p) = qflx_ev_soil(p) + tinc(c)*cgrndl(p)
@@ -275,6 +276,11 @@ contains
             qflx_ev_h2osfc(p) = qflx_ev_h2osfc(p) * egirat(c)
          end if
 
+         ! Update ev_snow for urban landunits here
+         if (lun%urbpoi(l)) then
+            qflx_ev_snow(p) = qflx_evap_soi(p)
+         end if
+
          ! Ground heat flux
          
          if (.not. lun%urbpoi(l)) then
@@ -319,29 +325,63 @@ contains
             eflx_sh_tot_u(p)= eflx_sh_tot(p)
          end if
 
-         ! Assign ground evaporation to sublimation from soil ice or to dew
-         ! on snow or ground
+         qflx_liqevap_from_top_layer(p)   = 0._r8
+         qflx_solidevap_from_top_layer(p) = 0._r8
+         qflx_soliddew_to_top_layer(p)    = 0._r8
+         qflx_liqdew_to_top_layer(p)      = 0._r8
 
-         qflx_evap_grnd(p) = 0._r8
-         qflx_sub_snow(p) = 0._r8
-         qflx_dew_snow(p) = 0._r8
-         qflx_dew_grnd(p) = 0._r8
+         ! Partition the evaporation from snow/soil surface into liquid evaporation, 
+         ! solid evaporation (sublimation), liquid dew, or solid dew.  Note that the variables
+         ! affected here are all related to the snow subgrid patch only because of the use of qflx_ev_snow.
+         ! In the situations where there are snow layers or there is snow without an explicit snow layer, 
+         ! the partitioned variables will represent the components of snow evaporation 
+         ! (qflx_ev_snow = qflx_liqevap_from_top_layer + qflx_solidevap_from_top_layer 
+         ! - qflx_liqdew_to_top_layer - qflx_soliddew_to_top_layer).
+         ! In the case of no snow, qflx_ev_snow has already been set equal to qflx_ev_soil (the evaporation 
+         ! from the subgrid soil patch) and the partitioned variables will then represent evaporation from the 
+         ! subgrid soil patch.
+         ! In the case of urban columns (and lake columns - see LakeHydrologyMod), there are no subgrid 
+         ! patches and qflx_evap_soi is used. qflx_evap_soi = qflx_liqevap_from_top_layer + qflx_solidevap_from_top_layer 
+         ! - qflx_liqdew_to_top_layer - qflx_soliddew_to_top_layer.
+         if (.not. lun%urbpoi(l)) then
+            if (qflx_ev_snow(p) >= 0._r8) then
+               ! for evaporation partitioning between liquid evap and ice sublimation, 
+               ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
+               if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
+                  qflx_liqevap_from_top_layer(p) = max(qflx_ev_snow(p)*(h2osoi_liq(c,j)/ &
+                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+               else
+                  qflx_liqevap_from_top_layer(p) = 0._r8
+               end if
+               qflx_solidevap_from_top_layer(p) = qflx_ev_snow(p) - qflx_liqevap_from_top_layer(p)
+            else
+               if (t_grnd(c) < tfrz) then
+                  qflx_soliddew_to_top_layer(p) = abs(qflx_ev_snow(p))
+               else
+                  qflx_liqdew_to_top_layer(p) = abs(qflx_ev_snow(p))
+               end if
+            end if
 
-         if (qflx_ev_snow(p) >= 0._r8) then
-            ! for evaporation partitioning between liquid evap and ice sublimation, 
-            ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
-            if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0.) then
-               qflx_evap_grnd(p) = max(qflx_ev_snow(p)*(h2osoi_liq(c,j)/(h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+         else ! Urban columns
+
+            if (qflx_evap_soi(p) >= 0._r8) then
+               ! for evaporation partitioning between liquid evap and ice sublimation, 
+               ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
+               if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
+                  qflx_liqevap_from_top_layer(p) = max(qflx_evap_soi(p)*(h2osoi_liq(c,j)/ &
+                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+               else
+                  qflx_liqevap_from_top_layer(p) = 0._r8
+               end if
+               qflx_solidevap_from_top_layer(p) = qflx_evap_soi(p) - qflx_liqevap_from_top_layer(p)
             else
-               qflx_evap_grnd(p) = 0.
+               if (t_grnd(c) < tfrz) then
+                  qflx_soliddew_to_top_layer(p) = abs(qflx_evap_soi(p))
+               else
+                  qflx_liqdew_to_top_layer(p) = abs(qflx_evap_soi(p))
+               end if
             end if
-            qflx_sub_snow(p) = qflx_ev_snow(p) - qflx_evap_grnd(p)
-         else
-            if (t_grnd(c) < tfrz) then
-               qflx_dew_snow(p) = abs(qflx_ev_snow(p))
-            else
-               qflx_dew_grnd(p) = abs(qflx_ev_snow(p))
-            end if
+
          end if
 
          ! Variables needed by history tape

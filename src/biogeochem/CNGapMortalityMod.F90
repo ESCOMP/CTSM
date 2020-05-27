@@ -120,10 +120,10 @@ contains
     real(r8):: k_mort = 0.3  ! coeff of growth efficiency in mortality equation
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(croot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(stem_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(croot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(stem_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
 
     associate(                                         & 
          ivt        =>    patch%itype                  , & ! Input:  [integer  (:) ]  patch vegetation type                                
@@ -292,7 +292,7 @@ contains
     ! assigns them to the three litter pools
     !
     ! !USES:
-    use clm_varpar , only : maxpatch_pft, nlevdecomp, nlevdecomp_full
+    use clm_varpar , only : maxsoil_patches, nlevdecomp, nlevdecomp_full
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
@@ -309,10 +309,10 @@ contains
     integer :: fc,c,pi,p,j               ! indices
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(croot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(stem_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(croot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(stem_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
 
     associate(                                                                                                 & 
          leaf_prof                           => leaf_prof_patch                                              , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of leaves                         
@@ -381,7 +381,7 @@ contains
          )
 
       do j = 1,nlevdecomp
-         do pi = 1,maxpatch_pft
+         do pi = 1,maxsoil_patches
             do fc = 1,num_soilc
                c = filter_soilc(fc)
 

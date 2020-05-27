@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+"""Driver for running CTSM system tests"""
+
+from __future__ import print_function
+
+import os
+import sys
+
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'python')
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.path_utils import add_cime_lib_to_path
+
+# For this script, we want to ensure that we're using the cime version that's included in
+# the standalone CTSM checkout, so that test results use a consistent cime version - thus,
+# we are specifying standalone_only=True.
+cime_path = add_cime_lib_to_path(standalone_only=True)
+
+from ctsm.run_sys_tests import main
+
+if __name__ == "__main__":
+    main(cime_path=cime_path)

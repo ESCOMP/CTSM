@@ -68,6 +68,7 @@ STANDARD = \
 	global-present-f05 \
 	global-present-ne16np4 \
 	global-present-ne120np4 \
+	global-present-nldas \
 	global-present-T42 \
 	global-historical \
 	global-historical-ne120np4 \
@@ -131,6 +132,9 @@ global-present-ne16np4 : FORCE
 
 global-present-ne120np4 : FORCE
 	$(MKSURFDATA) -no-crop -glc_nec 10 -y 2000 -res ne120np4 $(BACKGROUND)
+
+global-present-nldas : FORCE
+	$(MKSURFDATA) -no-crop -hirespft -glc_nec 10 -y 2005 -res 0.125nldas2 $(BACKGROUND)
 
 global-historical : FORCE
 	$(MKSURFDATA) -no-crop -glc_nec 10 -y 1850 -res $(STANDARD_RES) $(BACKGROUND)

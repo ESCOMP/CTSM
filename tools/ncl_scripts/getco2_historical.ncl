@@ -19,7 +19,6 @@ begin
    csmdata  = getenv("CSMDATA");
    clmroot  = getenv("CLM_ROOT");
    hgrid    = getenv("HGRID");          ; Get horizontal grid to use from env variable
-   ssp_rcp  = getenv("SSP_RCP");        ; Get SSP-RCP future scenario to use from env variable
    querynml = "bld/queryDefaultNamelist.pl -silent -justvalue ";
    if ( .not. ismissing(csmdata) )then
       querynml = querynml+" -csmdata "+csmdata;
@@ -32,15 +31,12 @@ begin
    if ( ismissing(hgrid) )then
      hgrid = "lat-bands"
    end if
-   if ( ismissing(ssp_rcp) )then
-     ssp_rcp = "hist"
-   end if
    ;
    ; Get input Greenhouse gas file and open it
    ;
    filetype  = "mkghg_bndtvghg";
    print( querynml+" -namelist clmexp -var "+filetype+" -options hgrid="+hgrid );
-   ghgfile  = systemfunc( querynml+" -namelist clmexp -var "+filetype+" -options hgrid="+hgrid+",ssp_rcp="+ssp_rcp );
+   ghgfile  = systemfunc( querynml+" -namelist clmexp -var "+filetype+" -options hgrid="+hgrid );
    print( "Use "+filetype+" file: "+ghgfile );
    if ( systemfunc("test -f "+ghgfile+"; echo $?" ) .ne. 0 )then
       print( "Input "+filetype+" file does not exist or not found: "+ghgfile );
@@ -61,7 +57,7 @@ begin
    sim_yr_rng = "simyr_"+sim_yr0 + "-" + sim_yr2;
    
    cmip_vers = "_CMIP6_";
-   outco2filename = "fco2_datm_"+hgrid+ssp_rcp+"_"+sim_yr_rng+cmip_vers+"c"+sdate+".nc";
+   outco2filename = "fco2_datm_"+hgrid+sim_yr_rng+cmip_vers+"c"+sdate+".nc";
    system( "/bin/rm -f "+outco2filename );
    print( "output file: "+outco2filename );
    nco = addfile( outco2filename, "c" );

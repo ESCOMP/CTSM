@@ -5,6 +5,7 @@ module SoilStateInitTimeConstMod
   ! Set hydraulic and thermal properties 
   !
   ! !USES
+  use shr_kind_mod  , only : r8 => shr_kind_r8
   use SoilStateType , only : soilstate_type
   use LandunitType  , only : lun                
   use ColumnType    , only : col                
@@ -19,7 +20,11 @@ module SoilStateInitTimeConstMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ReadNL
   !
+  ! !PUBLIC DATA:
+  real(r8), public :: organic_max  ! organic matter (kg/m3) where soil is assumed to act like peat
+
   ! !PRIVATE DATA:
+
   ! Control variables (from namelist)
   logical, private :: organic_frac_squared ! If organic fraction should be squared (as in CLM4.5)
 
@@ -87,7 +92,6 @@ contains
   subroutine SoilStateInitTimeConst(bounds, soilstate_inst, nlfilename) 
     !
     ! !USES:
-    use shr_kind_mod        , only : r8 => shr_kind_r8
     use shr_log_mod         , only : errMsg => shr_log_errMsg
     use shr_infnan_mod      , only : nan => shr_infnan_nan, assignment(=)
     use decompMod           , only : bounds_type
@@ -95,12 +99,12 @@ contains
     use spmdMod             , only : masterproc
     use ncdio_pio           , only : file_desc_t, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
     use ncdio_pio           , only : ncd_pio_openfile, ncd_pio_closefile, ncd_inqdlen
-    use clm_varpar          , only : numpft, numrad
+    use clm_varpar          , only : numrad
     use clm_varpar          , only : nlevsoi, nlevgrnd, nlevlak, nlevsoifl, nlayer, nlayert, nlevurb, nlevsno
     use clm_varcon          , only : zsoi, dzsoi, zisoi, spval
     use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
-    use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct
+    use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct_predefined
     use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice_mec
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
     use fileutils           , only : getfil
@@ -140,13 +144,11 @@ contains
     real(r8)           :: tkm                           ! mineral conductivity
     real(r8)           :: xksat                         ! maximum hydraulic conductivity of soil [mm/s]
     real(r8)           :: clay,sand                     ! temporaries
-    real(r8)           :: organic_max                   ! organic matter (kg/m3) where soil is assumed to act like peat
     integer            :: dimid                         ! dimension id
     logical            :: readvar 
     type(file_desc_t)  :: ncid                          ! netcdf id
     real(r8) ,pointer  :: zsoifl (:)                    ! Output: [real(r8) (:)]  original soil midpoint 
     real(r8) ,pointer  :: zisoifl (:)                   ! Output: [real(r8) (:)]  original soil interface depth 
-    real(r8) ,pointer  :: dzsoifl (:)                   ! Output: [real(r8) (:)]  original soil thickness 
     real(r8) ,pointer  :: gti (:)                       ! read in - fmax 
     real(r8) ,pointer  :: sand3d (:,:)                  ! read in - soil texture: percent sand (needs to be a pointer for use in ncdio)
     real(r8) ,pointer  :: clay3d (:,:)                  ! read in - soil texture: percent clay (needs to be a pointer for use in ncdio)
@@ -156,6 +158,7 @@ contains
     integer            :: begp, endp
     integer            :: begc, endc
     integer            :: begg, endg
+    integer :: found  ! flag that equals 0 if not found and 1 if found
     !-----------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
@@ -301,22 +304,22 @@ contains
     ! get original soil depths to be used in interpolation of sand and clay
     ! --------------------------------------------------------------------
 
-    allocate(zsoifl(1:nlevsoifl), zisoifl(0:nlevsoifl), dzsoifl(1:nlevsoifl))
-    do j = 1, nlevsoifl
-       zsoifl(j) = 0.025*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
+    ! Note that the depths on the file are assumed to be the same as the depths in the
+    ! model when running with 10SL_3.5m. Ideally zsoifl and zisoifl would be read from
+    ! the surface dataset rather than assumed here.
+    !
+    ! We need to specify zsoifl down to nlevsoifl+1 (rather than just nlevsoifl) so that
+    ! we can get the appropriate zisoifl at level nlevsoifl (i.e., the bottom interface
+    ! depth).
+    allocate(zsoifl(1:nlevsoifl+1), zisoifl(0:nlevsoifl))
+    do j = 1, nlevsoifl+1
+       zsoifl(j) = 0.025_r8*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
     enddo
-
-    dzsoifl(1) = 0.5_r8*(zsoifl(1)+zsoifl(2))             !thickness b/n two interfaces
-    do j = 2,nlevsoifl-1
-       dzsoifl(j)= 0.5_r8*(zsoifl(j+1)-zsoifl(j-1))
-    enddo
-    dzsoifl(nlevsoifl) = zsoifl(nlevsoifl)-zsoifl(nlevsoifl-1)
 
     zisoifl(0) = 0._r8
-    do j = 1, nlevsoifl-1
+    do j = 1, nlevsoifl
        zisoifl(j) = 0.5_r8*(zsoifl(j)+zsoifl(j+1))         !interface depths
     enddo
-    zisoifl(nlevsoifl) = zsoifl(nlevsoifl) + 0.5_r8*dzsoifl(nlevsoifl)
 
     ! --------------------------------------------------------------------
     ! Set soil hydraulic and thermal properties: non-lake
@@ -328,12 +331,15 @@ contains
     !   roof, sunwall and shadewall are prescribed in SoilThermProp.F90 
     !   in SoilPhysicsMod.F90
 
-
     do c = begc, endc
        g = col%gridcell(c)
        l = col%landunit(c)
 
-       if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec) then
+       ! istwet and istice_mec and
+       ! urban roof, sunwall, shadewall properties set to special value
+       if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec .or. &
+           (lun%urbpoi(l) .and. col%itype(c) /= icol_road_perv .and. &
+                                col%itype(c) /= icol_road_imperv)) then
 
           do lev = 1,nlevgrnd
              soilstate_inst%bsw_col(c,lev)    = spval
@@ -358,90 +364,69 @@ contains
              soilstate_inst%csol_col(c,lev)= spval
           end do
 
-       else if (lun%urbpoi(l) .and. (col%itype(c) /= icol_road_perv) .and. (col%itype(c) /= icol_road_imperv) )then
-
-          ! Urban Roof, sunwall, shadewall properties set to special value
-          do lev = 1,nlevgrnd
-             soilstate_inst%watsat_col(c,lev) = spval
-             soilstate_inst%watfc_col(c,lev)  = spval
-             soilstate_inst%bsw_col(c,lev)    = spval
-             soilstate_inst%hksat_col(c,lev)  = spval
-             soilstate_inst%sucsat_col(c,lev) = spval
-             soilstate_inst%watdry_col(c,lev) = spval 
-             soilstate_inst%watopt_col(c,lev) = spval 
-             soilstate_inst%bd_col(c,lev) = spval 
-             if (lev <= nlevsoi) then
-                soilstate_inst%cellsand_col(c,lev) = spval
-                soilstate_inst%cellclay_col(c,lev) = spval
-                soilstate_inst%cellorg_col(c,lev)  = spval
-             end if
-          end do
-
-          do lev = 1,nlevgrnd
-             soilstate_inst%tkmg_col(c,lev)   = spval
-             soilstate_inst%tksatu_col(c,lev) = spval
-             soilstate_inst%tkdry_col(c,lev)  = spval
-             soilstate_inst%csol_col(c,lev)   = spval
-          end do
-
        else
 
           do lev = 1,nlevgrnd
-             ! DML - this if statement could probably be removed and just the
-             ! top part used for all soil layer structures
-             if ( soil_layerstruct /= '10SL_3.5m' )then ! apply soil texture from 10 layer input dataset 
-                if (lev .eq. 1) then
+             ! Top-most model soil level corresponds to dataset's top-most soil
+             ! level regardless of corresponding depths
+             if (lev .eq. 1) then
+                clay = clay3d(g,1)
+                sand = sand3d(g,1)
+                om_frac = organic3d(g,1)/organic_max
+             else if (lev <= nlevsoi) then
+                found = 0  ! reset value
+                if (zsoi(lev) <= zisoifl(1)) then
+                   ! Search above the dataset's range of zisoifl depths
                    clay = clay3d(g,1)
                    sand = sand3d(g,1)
-                   om_frac = organic3d(g,1)/organic_max 
-                else if (lev <= nlevsoi) then
-                   do j = 1,nlevsoifl-1
-                      if (zisoi(lev) >= zisoifl(j) .AND. zisoi(lev) < zisoifl(j+1)) then
-                         clay = clay3d(g,j+1)
-                         sand = sand3d(g,j+1)
-                         om_frac = organic3d(g,j+1)/organic_max    
-                      endif
-                   end do
-                else
+                   om_frac = organic3d(g,1)/organic_max
+                   found = 1
+                else if (zsoi(lev) > zisoifl(nlevsoifl)) then
+                   ! Search below the dataset's range of zisoifl depths
                    clay = clay3d(g,nlevsoifl)
                    sand = sand3d(g,nlevsoifl)
-                   om_frac = 0._r8
-                endif
-             else
-                if (lev <= nlevsoi) then ! duplicate clay and sand values from 10th soil layer
-                   clay = clay3d(g,lev)
-                   sand = sand3d(g,lev)
-                   if ( organic_frac_squared )then
-                      om_frac = (organic3d(g,lev)/organic_max)**2._r8
-                   else
-                      om_frac = organic3d(g,lev)/organic_max
-                   end if
+                   om_frac = organic3d(g,nlevsoifl)/organic_max
+                   found = 1
                 else
-                   clay = clay3d(g,nlevsoi)
-                   sand = sand3d(g,nlevsoi)
-                   om_frac = 0._r8
-                endif
+                   ! For remaining model soil levels, search within dataset's
+                   ! range of zisoifl values. Look for model node depths
+                   ! that are between the dataset's interface depths.
+                   do j = 1,nlevsoifl-1
+                      if (zsoi(lev) > zisoifl(j) .AND. zsoi(lev) <= zisoifl(j+1)) then
+                         clay = clay3d(g,j+1)
+                         sand = sand3d(g,j+1)
+                         om_frac = organic3d(g,j+1)/organic_max
+                         found = 1
+                      endif
+                      if (found == 1) exit  ! no need to stay in the loop
+                   end do
+                end if
+                ! If not found, then something's wrong
+                if (found == 0) then
+                   write(iulog,*) 'For model soil level =', lev
+                   call endrun(msg="ERROR finding a soil dataset depth to interpolate the model depth to"//errmsg(sourcefile, __LINE__))
+                end if
+             else  ! if lev > nlevsoi
+                clay = clay3d(g,nlevsoifl)
+                sand = sand3d(g,nlevsoifl)
+                om_frac = 0._r8
+             endif
+
+             if (organic_frac_squared) then
+                om_frac = om_frac**2._r8
              end if
 
-             if (lun%itype(l) == istdlak) then
+             if (lun%urbpoi(l)) then
+                om_frac = 0._r8 ! No organic matter for urban
+             end if
 
-                if (lev <= nlevsoi) then
-                   soilstate_inst%cellsand_col(c,lev) = sand
-                   soilstate_inst%cellclay_col(c,lev) = clay
-                   soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
-                end if
+             if (lev <= nlevsoi) then
+                soilstate_inst%cellsand_col(c,lev) = sand
+                soilstate_inst%cellclay_col(c,lev) = clay
+                soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
+             end if
 
-             else if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
-
-                if (lun%urbpoi(l)) then
-                   om_frac = 0._r8 ! No organic matter for urban
-                end if
-
-                if (lev <= nlevsoi) then
-                   soilstate_inst%cellsand_col(c,lev) = sand
-                   soilstate_inst%cellclay_col(c,lev) = clay
-                   soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
-                end if
+             if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
 
                 ! Note that the following properties are overwritten for urban impervious road 
                 ! layers that are not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
@@ -623,7 +608,7 @@ contains
     ! --------------------------------------------------------------------
 
     deallocate(sand3d, clay3d, organic3d)
-    deallocate(zisoifl, zsoifl, dzsoifl)
+    deallocate(zisoifl, zsoifl)
 
   end subroutine SoilStateInitTimeConst
 

@@ -53,16 +53,22 @@ exits. That means that manual teardown is skipped, whereas this automatic
 teardown still happens. This, in turn, is important so that the remaining tests
 can still run properly.
 
---- Notes about separation into multiple files ---
+--- Tests of various irrigation sources ---
 
-I have separated tests based on what needs to be done for the setup and teardown
-of each test. Tests that need identical setup and teardown (or lack thereof) are
-grouped together.
+(2018-12-15) Some notes about the tests of the various irrigation
+sources: surface water (rivers), unconfined aquifer and confined
+aquifer:
 
-IrrigationWrapperMod contains routines that are used by both the singlepatch and
-multipatch tests. In terms of setup and teardown: I have put setup stuff in here
-that is in common for both the singlepatch and multipatch tests. I then do the
-symmetrical teardown here, as well (e.g., if a variable foo is allocated in
-IrrigationWrapperMod, I also deallocate it in the teardown routine in
-IrrigationWrapperMod). The setup done in the .pf files themselves is stuff that
-differs between singlepatch and multipatch (or between individual tests).
+In addition to testing the basic logic for these various sources, there
+are two other aspects of the behavior that I wanted to test:
+
+(1) Does it work to have irrigation from a mix of sources?
+
+(2) Does it work to have multiple patches on a single column? (I felt it
+    was important to test this given the complexity of the logic for
+    going back and forth between patch and column-level variables.)
+
+I felt that tests would have been too complex if I tried to cover (1)
+and (2) in a single test. So instead, I have single-patch but
+multi-source tests covering (1), and multi-patch but single-source tests
+covering (2).

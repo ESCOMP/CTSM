@@ -28,6 +28,10 @@ class SSP(SystemTestsCommon):
         rof = self._case.get_value("COMP_ROF")
         expect(rof == "mosart", "ERROR: SSP test requires that ROF component be mosart")
 
+    def build_phase(self, sharedlib_only=False, model_only=False):
+        self._case.set_value("MOSART_MODE", "NULL")
+        self.build_indv(sharedlib_only=sharedlib_only, model_only=model_only)
+
     def run_phase(self):
         caseroot = self._case.get_value("CASEROOT")
         orig_case = self._case
@@ -41,7 +45,7 @@ class SSP(SystemTestsCommon):
 
         # determine run lengths needed below
         stop_nf = self._case.get_value("STOP_N")
-        stop_n1 = stop_nf / 2
+        stop_n1 = int(stop_nf / 2)
         stop_n2 = stop_nf - stop_n1
 
         #-------------------------------------------------------------------
@@ -55,10 +59,9 @@ class SSP(SystemTestsCommon):
         logger.info("  writing restarts at end of run")
         logger.info("  short term archiving is on ")
 
-        clone.set_value("CLM_ACCELERATED_SPINUP", "on")
-        clone.set_value("MOSART_MODE", "NULL")
-        clone.set_value("STOP_N",stop_n1)
-        clone.flush()
+        with clone:
+            clone.set_value("CLM_ACCELERATED_SPINUP", "on")
+            clone.set_value("STOP_N",stop_n1)
 
         dout_sr = clone.get_value("DOUT_S_ROOT")
         # No history files expected, set suffix=None to avoid compare error
@@ -89,7 +92,6 @@ class SSP(SystemTestsCommon):
         self._case.set_value("RUN_TYPE", "hybrid")
         self._case.set_value("GET_REFCASE", False)
         self._case.set_value("RUN_REFCASE", "{}.ref1".format(orig_casevar))
-        self._case.set_value("MOSART_MODE", "NULL")
 
         self._case.set_value("RUN_REFDATE", refdate)
         self._case.set_value("STOP_N", stop_n2)

@@ -19,10 +19,12 @@ module UrbanFluxesMod
   use atm2lndType          , only : atm2lnd_type
   use SoilStateType        , only : soilstate_type
   use TemperatureType      , only : temperature_type
-  use WaterstateType       , only : waterstate_type
+  use WaterStateBulkType       , only : waterstatebulk_type
+  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
   use FrictionVelocityMod  , only : frictionvel_type
   use EnergyFluxType       , only : energyflux_type
-  use WaterfluxType        , only : waterflux_type
+  use WaterFluxBulkType        , only : waterfluxbulk_type
+  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
   use HumanIndexMod        , only : humanindex_type
   use GridcellType         , only : grc                
   use LandunitType         , only : lun                
@@ -52,7 +54,8 @@ contains
   subroutine UrbanFluxes (bounds, num_nourbanl, filter_nourbanl,                        &
        num_urbanl, filter_urbanl, num_urbanc, filter_urbanc, num_urbanp, filter_urbanp, &
        atm2lnd_inst, urbanparams_inst, soilstate_inst, temperature_inst,                &
-       waterstate_inst, frictionvel_inst, energyflux_inst, waterflux_inst,              &
+       waterstatebulk_inst, waterdiagnosticbulk_inst, frictionvel_inst,                 &
+       energyflux_inst, waterfluxbulk_inst, wateratm2lndbulk_inst,                      &
        humanindex_inst) 
     !
     ! !DESCRIPTION: 
@@ -65,10 +68,9 @@ contains
     use column_varcon       , only : icol_shadewall, icol_road_perv, icol_road_imperv
     use column_varcon       , only : icol_roof, icol_sunwall
     use filterMod           , only : filter
-    use FrictionVelocityMod , only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
     use QSatMod             , only : QSat
     use clm_varpar          , only : maxpatch_urb, nlevurb, nlevgrnd
-    use clm_time_manager    , only : get_step_size, get_nstep, is_near_local_noon
+    use clm_time_manager    , only : get_step_size_real, get_nstep, is_near_local_noon
     use HumanIndexMod       , only : all_human_stress_indices, fast_human_stress_indices, &
                                      Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                      swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
@@ -88,9 +90,11 @@ contains
     type(urbanparams_type) , intent(in)    :: urbanparams_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     type(temperature_type) , intent(inout) :: temperature_inst
-    type(waterstate_type)  , intent(inout) :: waterstate_inst
+    type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
-    type(waterflux_type)   , intent(inout) :: waterflux_inst
+    type(waterfluxbulk_type)   , intent(inout) :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type)   , intent(inout) :: wateratm2lndbulk_inst
     type(energyflux_type)  , intent(inout) :: energyflux_inst
     type(humanindex_type)  , intent(inout) :: humanindex_inst
     !
@@ -201,7 +205,7 @@ contains
          forc_t              =>   atm2lnd_inst%forc_t_not_downscaled_grc    , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (K)                       
          forc_th             =>   atm2lnd_inst%forc_th_not_downscaled_grc   , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (K)             
          forc_rho            =>   atm2lnd_inst%forc_rho_not_downscaled_grc  , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                 
-         forc_q              =>   atm2lnd_inst%forc_q_not_downscaled_grc    , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)             
+         forc_q              =>   wateratm2lndbulk_inst%forc_q_not_downscaled_grc    , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)             
          forc_pbot           =>   atm2lnd_inst%forc_pbot_not_downscaled_grc , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                         
          forc_u              =>   atm2lnd_inst%forc_u_grc                   , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in east direction (m/s)    
          forc_v              =>   atm2lnd_inst%forc_v_grc                   , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in north direction (m/s)   
@@ -211,7 +215,7 @@ contains
 
          rootr_road_perv     =>   soilstate_inst%rootr_road_perv_col        , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer for urban pervious road
          soilalpha_u         =>   soilstate_inst%soilalpha_u_col            , & ! Input:  [real(r8) (:)   ]  Urban factor that reduces ground saturated specific humidity (-)
-         rootr               =>   soilstate_inst%rootr_patch                , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
+         rootr               =>   soilstate_inst%rootr_patch                , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer (SMS method only) 
 
          t_grnd              =>   temperature_inst%t_grnd_col               , & ! Input:  [real(r8) (:)   ]  ground surface temperature (K)                    
          t_soisno            =>   temperature_inst%t_soisno_col             , & ! Input:  [real(r8) (:,:) ]  soil temperature (K)                            
@@ -252,20 +256,20 @@ contains
          swmp80_ref2m        => humanindex_inst%swmp80_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m Swamp Cooler temperature 80% effi (C)
          swmp80_ref2m_u      => humanindex_inst%swmp80_ref2m_u_patch        , & ! Output: [real(r8) (:)   ]  Urban 2 m Swamp Cooler temperature 80% effi (C)
 
-         frac_sno            =>   waterstate_inst%frac_sno_col              , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
-         snow_depth          =>   waterstate_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
-         dqgdT               =>   waterstate_inst%dqgdT_col                 , & ! Input:  [real(r8) (:)   ]  temperature derivative of "qg"                    
-         qg                  =>   waterstate_inst%qg_col                    , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface (kg/kg)       
-         h2osoi_ice          =>   waterstate_inst%h2osoi_ice_col            , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
-         h2osoi_liq          =>   waterstate_inst%h2osoi_liq_col            , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-         qaf                 =>   waterstate_inst%qaf_lun                   , & ! Output: [real(r8) (:)   ]  urban canopy air specific humidity (kg/kg)        
-         q_ref2m             =>   waterstate_inst%q_ref2m_patch             , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)      
-         rh_ref2m            =>   waterstate_inst%rh_ref2m_patch            , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)          
-         rh_ref2m_u          =>   waterstate_inst%rh_ref2m_u_patch          , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)          
+         frac_sno            =>   waterdiagnosticbulk_inst%frac_sno_col              , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+         snow_depth          =>   waterdiagnosticbulk_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
+         dqgdT               =>   waterdiagnosticbulk_inst%dqgdT_col                 , & ! Input:  [real(r8) (:)   ]  temperature derivative of "qg"                    
+         qg                  =>   waterdiagnosticbulk_inst%qg_col                    , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface (kg/kg)       
+         h2osoi_ice          =>   waterstatebulk_inst%h2osoi_ice_col            , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
+         h2osoi_liq          =>   waterstatebulk_inst%h2osoi_liq_col            , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
+         qaf                 =>   waterdiagnosticbulk_inst%qaf_lun                   , & ! Output: [real(r8) (:)   ]  urban canopy air specific humidity (kg/kg)        
+         q_ref2m             =>   waterdiagnosticbulk_inst%q_ref2m_patch             , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)      
+         rh_ref2m            =>   waterdiagnosticbulk_inst%rh_ref2m_patch            , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)          
+         rh_ref2m_u          =>   waterdiagnosticbulk_inst%rh_ref2m_u_patch          , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)          
 
          forc_hgt_u_patch    =>   frictionvel_inst%forc_hgt_u_patch         , & ! Input:  [real(r8) (:)   ]  observational height of wind at patch-level (m)     
          forc_hgt_t_patch    =>   frictionvel_inst%forc_hgt_t_patch         , & ! Input:  [real(r8) (:)   ]  observational height of temperature at patch-level (m)
-         zetamax             =>   frictionvel_parms_inst%zetamaxstable      , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
+         zetamax             =>   frictionvel_inst%zetamaxstable            , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          ram1                =>   frictionvel_inst%ram1_patch               , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                    
          u10_clm             =>   frictionvel_inst%u10_clm_patch            , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
 
@@ -291,10 +295,9 @@ contains
          taux                =>   energyflux_inst%taux_patch                , & ! Output: [real(r8) (:)   ]  wind (shear) stress: e-w (kg/m/s**2)              
          tauy                =>   energyflux_inst%tauy_patch                , & ! Output: [real(r8) (:)   ]  wind (shear) stress: n-s (kg/m/s**2)               
 
-         qflx_evap_soi       =>   waterflux_inst%qflx_evap_soi_patch        , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)          
-         qflx_tran_veg       =>   waterflux_inst%qflx_tran_veg_patch        , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
-         qflx_evap_veg       =>   waterflux_inst%qflx_evap_veg_patch        , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)    
-         qflx_evap_tot       =>   waterflux_inst%qflx_evap_tot_patch        , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
+         qflx_evap_soi       =>   waterfluxbulk_inst%qflx_evap_soi_patch        , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)          
+         qflx_tran_veg       =>   waterfluxbulk_inst%qflx_tran_veg_patch        , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
+         qflx_evap_veg       =>   waterfluxbulk_inst%qflx_evap_veg_patch        , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)    
 
          begl                =>   bounds%begl                               , &
          endl                =>   bounds%endl                                 &
@@ -316,7 +319,7 @@ contains
       zii(begl:endl)  = 1000._r8          ! Should be set to the same values as in Biogeophysics1Mod
 
       ! Get current date
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       ! Compute canyontop wind using Masson (2000)
 
@@ -384,7 +387,7 @@ contains
 
          ! Initialize Monin-Obukhov length and wind speed including convective velocity
 
-         call MoninObukIni(ur(l), thv_g(l), dthv, zldis(l), z_0_town(l), um(l), obu(l))
+         call frictionvel_inst%MoninObukIni(ur(l), thv_g(l), dthv, zldis(l), z_0_town(l), um(l), obu(l))
 
       end do
 
@@ -418,12 +421,12 @@ contains
          ! temperature and humidity profiles of surface boundary layer.
 
          if (num_urbanl > 0) then
-            call FrictionVelocity(begl, endl, &
+            call frictionvel_inst%FrictionVelocity(begl, endl, &
                  num_urbanl, filter_urbanl, &
                  z_d_town(begl:endl), z_0_town(begl:endl), z_0_town(begl:endl), z_0_town(begl:endl), &
                  obu(begl:endl), iter, ur(begl:endl), um(begl:endl), ustar(begl:endl), &
                  temp1(begl:endl), temp2(begl:endl), temp12m(begl:endl), temp22m(begl:endl), fm(begl:endl), &
-                 frictionvel_inst, landunit_index=.true.)
+                 landunit_index=.true.)
          end if
 
          do fl = 1, num_urbanl

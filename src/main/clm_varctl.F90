@@ -60,7 +60,7 @@ module clm_varctl
   character(len=256), public :: username = ' '                           
 
   ! description of this source
-  character(len=256), public :: source   = "Community Land Model CLM4.0" 
+  character(len=256), public :: source   = "Community Terrestrial Systems Model"
 
   ! version of program
   character(len=256), public :: version  = " "                           
@@ -126,6 +126,9 @@ module clm_varctl
   ! do not irrigate by default
   logical, public :: irrigate = .false.            
 
+  ! set saturated excess runoff to zero for crops
+  logical, public :: crop_fsat_equals_zero = .false.
+  
   !----------------------------------------------------------
   ! Other subgrid logic
   !----------------------------------------------------------
@@ -135,6 +138,17 @@ module clm_varctl
 
   ! true => make ALL patches, cols & landunits active (even if weight is 0)
   logical, public :: all_active = .false.          
+
+  logical, public :: collapse_urban = .false.  ! true => collapse urban landunits to the dominant urban landunit; default = .false. means "do nothing" i.e. keep all urban landunits as found in the input data
+  integer, public :: n_dom_landunits = -1  ! # of dominant landunits; determines the number of active landunits; default = 0 (set in namelist_defaults_ctsm.xml) means "do nothing"
+  integer, public :: n_dom_pfts = -1  ! # of dominant pfts; determines the number of active pfts; default = 0 (set in namelist_defaults_ctsm.xml) means "do nothing"
+
+  real(r8), public :: toosmall_soil = -1._r8  ! threshold above which the model keeps the soil landunit; default = 0 (set in namelist_defaults_ctsm.xml) means "do nothing"
+  real(r8), public :: toosmall_crop = -1._r8  ! threshold above which the model keeps the crop landunit; default = 0 (set in namelist_defaults_ctsm.xml) means "do nothing"
+  real(r8), public :: toosmall_glacier = -1._r8  ! threshold above which the model keeps the glacier landunit; default = 0 (set in namelist_defaults_ctsm.xml) means "do nothing"
+  real(r8), public :: toosmall_lake = -1._r8  ! threshold above which the model keeps the lake landunit; default = 0 (set in namelist_defaults_ctsm.xml) means "do nothing"
+  real(r8), public :: toosmall_wetland = -1._r8  ! threshold above which the model keeps the wetland landunit; default = 0 (set in namelist_defaults_ctsm.xml) means "do nothing"
+  real(r8), public :: toosmall_urban = -1._r8  ! threshold above which the model keeps any urban landunits that are present; default = 0 (set in namelist_defaults_ctsm.xml) means "do nothing"
 
   !----------------------------------------------------------
   ! BGC logic and datasets
@@ -174,7 +188,10 @@ module clm_varctl
   !----------------------------------------------------------
 
   ! use subgrid fluxes
-  integer,  public :: subgridflag = 1                   
+  logical,  public :: use_subgrid_fluxes = .true.
+
+  ! which snow cover fraction parameterization to use
+  character(len=64), public :: snow_cover_fraction_method
 
   ! true => write global average diagnostics to std out
   logical,  public :: wrtdia       = .false.            
@@ -259,7 +276,9 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical,           public :: use_bedrock = .false. ! true => use spatially variable soil depth
-  character(len=16), public :: soil_layerstruct = '10SL_3.5m'
+  character(len=16), public :: soil_layerstruct_predefined = 'UNSET'
+  real(r8), public :: soil_layerstruct_userdefined(99) = rundef
+  integer, public :: soil_layerstruct_userdefined_nlevsoi = iundef
 
   !----------------------------------------------------------
   ! plant hydraulic stress switch

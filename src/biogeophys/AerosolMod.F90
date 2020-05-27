@@ -8,10 +8,11 @@ module AerosolMod
   use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
   use decompMod        , only : bounds_type
   use clm_varpar       , only : nlevsno, nlevgrnd 
-  use clm_time_manager , only : get_step_size
+  use clm_time_manager , only : get_step_size_real
   use atm2lndType      , only : atm2lnd_type
-  use WaterfluxType    , only : waterflux_type
-  use WaterstateType   , only : waterstate_type
+  use WaterFluxBulkType    , only : waterfluxbulk_type
+  use WaterStateBulkType   , only : waterstatebulk_type
+  use WaterDiagnosticBulkType   , only : waterdiagnosticbulk_type
   use ColumnType       , only : col               
   use abortutils       , only : endrun
   !
@@ -83,8 +84,9 @@ module AerosolMod
 
      ! Public procedures
      procedure, public  :: Init         
-     procedure, public  :: Restart      
-     procedure, public  :: Reset 
+     procedure, public  :: Restart
+     procedure, public  :: ResetFilter
+     procedure, public  :: Reset
 
      ! Private procedures
      procedure, private :: InitAllocate 
@@ -371,8 +373,8 @@ contains
     logical :: readvar      ! determine if variable is on initial file
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osoi_ice_col) == (/bounds%endc,nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osoi_liq_col) == (/bounds%endc,nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_ice_col) == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_liq_col) == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
 
     call restartvar(ncid=ncid, flag=flag, varname='mss_bcpho', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
@@ -479,14 +481,39 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
+  subroutine ResetFilter(this, num_c, filter_c)
+    !
+    ! !DESCRIPTION:
+    ! Initialize SNICAR variables for fresh snow columns, for all columns in the given
+    ! filter
+    !
+    ! !ARGUMENTS:
+    class(aerosol_type), intent(inout) :: this
+    integer, intent(in) :: num_c       ! number of columns in filter_c
+    integer, intent(in) :: filter_c(:) ! column filter to operate over
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter :: subname = 'ResetFilter'
+    !-----------------------------------------------------------------------
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+       call this%Reset(c)
+    end do
+
+  end subroutine ResetFilter
+
+  !-----------------------------------------------------------------------
   subroutine Reset(this, column)
     !
     ! !DESCRIPTION:
     ! Intitialize SNICAR variables for fresh snow column
     !
     ! !ARGUMENTS:
-    class(aerosol_type)             :: this
-    integer           , intent(in)  :: column     ! column index
+    class(aerosol_type), intent(inout):: this
+    integer, intent(in)  :: column     ! column index
     !-----------------------------------------------------------------------
 
     this%mss_bcpho_col(column,:)  = 0._r8
@@ -513,7 +540,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine AerosolMasses(bounds, num_on, filter_on, num_off, filter_off, &
-       waterflux_inst, waterstate_inst, aerosol_inst)
+       waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, aerosol_inst)
     !
     ! !DESCRIPTION:
     ! Calculate column-integrated aerosol masses, and
@@ -528,8 +555,9 @@ contains
     integer               , intent(in)    :: filter_on(:)   ! column filter for filter-ON points
     integer               , intent(in)    :: num_off        ! number of column non filter-OFF points
     integer               , intent(in)    :: filter_off(:)  ! column filter for filter-OFF points
-    type(waterflux_type)  , intent(in)    :: waterflux_inst 
-    type(waterstate_type) , intent(inout) :: waterstate_inst
+    type(waterfluxbulk_type)  , intent(in)    :: waterfluxbulk_inst 
+    type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
+    type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
     type(aerosol_type)    , intent(inout) :: aerosol_inst
     !
     ! !LOCAL VARIABLES:
@@ -542,11 +570,11 @@ contains
     associate(                                                & 
          snl           => col%snl                           , & ! Input:  [integer  (:)   ]  number of snow layers                    
 
-         h2osoi_ice    => waterstate_inst%h2osoi_ice_col    , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                      
-         h2osoi_liq    => waterstate_inst%h2osoi_liq_col    , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
+         h2osoi_ice    => waterstatebulk_inst%h2osoi_ice_col    , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                      
+         h2osoi_liq    => waterstatebulk_inst%h2osoi_liq_col    , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
 
-         h2osno_top    => waterstate_inst%h2osno_top_col    , & ! Output: [real(r8) (:)   |  top-layer mass of snow  [kg]
-         snw_rds       => waterstate_inst%snw_rds_col       , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
+         h2osno_top    => waterdiagnosticbulk_inst%h2osno_top_col    , & ! Output: [real(r8) (:)   |  top-layer mass of snow  [kg]
+         snw_rds       => waterdiagnosticbulk_inst%snw_rds_col       , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
 
          mss_bcpho     => aerosol_inst%mss_bcpho_col        , & ! Output: [real(r8) (:,:) ]  mass of hydrophobic BC in snow (col,lyr) [kg]
          mss_bcphi     => aerosol_inst%mss_bcphi_col        , & ! Output: [real(r8) (:,:) ]  mass of hydrophillic BC in snow (col,lyr) [kg]
@@ -575,7 +603,7 @@ contains
          mss_cnc_dst4  => aerosol_inst%mss_cnc_dst4_col       & ! Output: [real(r8) (:,:) ]  mass concentration of dust species 4 (col,lyr) [kg/kg]
          )
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       do fc = 1, num_on
          c = filter_on(fc)
@@ -775,7 +803,7 @@ contains
       ! is in the top layer after deposition, and is not immediately
       ! washed out before radiative calculations are done
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
 
       do fc = 1, num_snowc
          c = filter_snowc(fc)

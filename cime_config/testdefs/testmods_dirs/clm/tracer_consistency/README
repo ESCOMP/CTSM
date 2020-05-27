@@ -1,0 +1,6 @@
+This test turns on water tracer consistency checks. This ensures that
+water tracers are updated to stay in sync with bulk quantities.
+
+As of now (2018-09-05), water tracers are not yet initialized properly
+when starting from a restart file that did not itself have water tracers
+on it. So we use cold start for this test.

@@ -16,6 +16,7 @@ module CNDVEstablishmentMod
   use CNVegcarbonfluxType  , only : cnveg_carbonflux_type
   use LandunitType         , only : lun                
   use PatchType            , only : patch                
+  use Wateratm2lndBulkType , only : wateratm2lndbulk_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -31,7 +32,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Establishment(bounds, &
-       atm2lnd_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
+       atm2lnd_inst, wateratm2lndbulk_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
     !
     ! !DESCRIPTION:
     ! Calculates establishment of new patches - called once per year
@@ -47,6 +48,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)            , intent(in)    :: bounds  
     type(atm2lnd_type)           , intent(in)    :: atm2lnd_inst
+    type(wateratm2lndbulk_type)           , intent(in)    :: wateratm2lndbulk_inst
     type(cnveg_carbonflux_type)  , intent(in)    :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type) , intent(inout) :: cnveg_carbonstate_inst
     type(dgvs_type)              , intent(inout) :: dgvs_inst
@@ -108,7 +110,7 @@ contains
          tcmin          =>    dgv_ecophyscon%tcmin                       , & ! Input:  [real(r8) (:) ]  ecophys const - minimum coldest monthly mean temperature
          gddmin         =>    dgv_ecophyscon%gddmin                      , & ! Input:  [real(r8) (:) ]  ecophys const - minimum growing degree days (at or above 5 C)
 
-         prec365        =>    atm2lnd_inst%prec365_col                   , & ! Input:  [real(r8) (:) ]  365-day running mean of tot. precipitation        
+         prec365        =>    wateratm2lndbulk_inst%prec365_col                   , & ! Input:  [real(r8) (:) ]  365-day running mean of tot. precipitation        
 
          agddtw         =>    dgvs_inst%agddtw_patch                     , & ! Input:  [real(r8) (:) ]  accumulated growing degree days above twmax       
          agdd20         =>    dgvs_inst%agdd20_patch                     , & ! Input:  [real(r8) (:) ]  20-yr running mean of agdd                        

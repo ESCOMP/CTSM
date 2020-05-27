@@ -8,7 +8,7 @@ module CNCStateUpdate2Mod
   use shr_kind_mod                   , only : r8 => shr_kind_r8
   use shr_log_mod                    , only : errMsg => shr_log_errMsg
   use abortutils                     , only : endrun
-  use clm_time_manager               , only : get_step_size
+  use clm_time_manager               , only : get_step_size_real
   use clm_varpar                     , only : nlevdecomp, i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use CNvegCarbonStateType           , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType            , only : cnveg_carbonflux_type
@@ -55,7 +55,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       ! column level carbon fluxes from gap-phase mortality
       do j = 1,nlevdecomp
@@ -162,7 +162,7 @@ contains
          )
      
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
       ! column level carbon fluxes from harvest mortality
       do j = 1, nlevdecomp

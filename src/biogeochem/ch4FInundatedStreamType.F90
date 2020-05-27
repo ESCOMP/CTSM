@@ -69,7 +69,6 @@ contains
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
    use shr_nl_mod       , only : shr_nl_find_group_name
-   use shr_log_mod      , only : errMsg => shr_log_errMsg
    use shr_mpi_mod      , only : shr_mpi_bcast
    use ndepStreamMod    , only : clm_domain_mct
    use domainMod        , only : ldomain
@@ -243,8 +242,8 @@ contains
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
-  subroutine CalcFinundated(this, bounds, num_soilc, filter_soilc, soilhydrology_inst, waterstate_inst, &
-                            qflx_surf_lag_col, finundated )
+  subroutine CalcFinundated(this, bounds, num_soilc, filter_soilc, soilhydrology_inst, &
+                            waterdiagnosticbulk_inst, qflx_surf_lag_col, finundated )
     !
     ! !DESCRIPTION:
     ! 
@@ -256,8 +255,7 @@ contains
     use ch4varcon        , only : finundation_mtd_TWS_inversion
     use clm_varpar       , only : nlevsoi
     use SoilHydrologyType, only : soilhydrology_type
-    use WaterstateType   , only : waterstate_type
-    use shr_log_mod      , only : errMsg => shr_log_errMsg
+    use WaterDiagnosticBulkType   , only : waterdiagnosticbulk_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -266,7 +264,7 @@ contains
     integer                                , intent(in)    :: num_soilc          ! number of column soil points in column filter
     integer                                , intent(in)    :: filter_soilc(:)    ! column filter for soil points
     type(soilhydrology_type)               , intent(in)    :: soilhydrology_inst
-    type(waterstate_type)                  , intent(in)    :: waterstate_inst
+    type(waterdiagnosticbulk_type)                  , intent(in)    :: waterdiagnosticbulk_inst
     real(r8)                               , intent(in)    :: qflx_surf_lag_col(bounds%begc:) !time-lagged surface runoff (mm H2O /s)
     real(r8)                               , intent(inout) :: finundated(bounds%begc:)        ! fractional inundated area in soil column (excluding dedicated wetland columns)
     !
@@ -274,15 +272,15 @@ contains
     integer  :: g, c, fc    ! Indices
     real(r8) :: zwt_actual  ! Total water storage (ZWT) to use either perched or total depending on conditions
 
-    SHR_ASSERT_ALL((ubound(qflx_surf_lag_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(finundated)        == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(qflx_surf_lag_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(finundated)        == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                 &
          z                    =>   col%z                                     , & ! Input:  [real(r8) (:,:) ]  layer depth (m) (-nlevsno+1:nlevsoi)
          zwt                  =>   soilhydrology_inst%zwt_col                , & ! Input:  [real(r8) (:)   ]  water table depth (m)
          zwt_perched          =>   soilhydrology_inst%zwt_perched_col        , & ! Input:  [real(r8) (:)   ]  perched water table depth (m)
-         tws                  =>   waterstate_inst%tws_grc                   , & ! Input:  [real(r8) (:)   ]  total water storage (kg m-2)
-         frac_h2osfc          =>   waterstate_inst%frac_h2osfc_col             & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+         tws                  =>   waterdiagnosticbulk_inst%tws_grc                   , & ! Input:  [real(r8) (:)   ]  total water storage (kg m-2)
+         frac_h2osfc          =>   waterdiagnosticbulk_inst%frac_h2osfc_col             & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
     )
 
     ! Calculate finundated

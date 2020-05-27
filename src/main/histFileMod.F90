@@ -16,6 +16,7 @@ module histFileMod
   use clm_varcon     , only : spval, ispval, dzsoi_decomp 
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
   use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type
+  use GetGlobalValuesMod , only : GetGlobalIndexArray
   use GridcellType   , only : grc                
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -27,7 +28,7 @@ module histFileMod
   use EDTypesMod        , only : nfsc
   use FatesLitterMod    , only : ncwd
   use EDTypesMod        , only : num_elements_fates => num_elements
-  use FatesInterfaceMod , only : numpft_fates => numpft
+  use FatesInterfaceMod , only : maxveg_fates => numpft
   use ncdio_pio 
 
   !
@@ -1128,7 +1129,7 @@ contains
     integer k_offset                    ! offset for mapping sliced subarray pointers when outputting variables in PFT/col vector form
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
 
     avgflag        =  tape(t)%hlist(f)%avgflag
     nacs           => tape(t)%hlist(f)%nacs
@@ -1149,8 +1150,8 @@ contains
 
     map2gcell = .false.
     if (type1d_out == nameg .or. type1d_out == grlnd) then
-       SHR_ASSERT(beg1d_out == bounds%begg, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endg, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begg, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endg, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1180,8 +1181,8 @@ contains
        end if
     end if
     if (type1d_out == namel ) then
-       SHR_ASSERT(beg1d_out == bounds%begl, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endl, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begl, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endl, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1204,8 +1205,8 @@ contains
        end if
     end if
     if (type1d_out == namec ) then
-       SHR_ASSERT(beg1d_out == bounds%begc, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endc, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begc, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endc, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1425,7 +1426,7 @@ contains
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
 
     avgflag             =  tape(t)%hlist(f)%avgflag
     nacs                => tape(t)%hlist(f)%nacs
@@ -1469,8 +1470,8 @@ contains
 
     map2gcell = .false.
     if (type1d_out == nameg .or. type1d_out == grlnd) then
-       SHR_ASSERT(beg1d_out == bounds%begg, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endg, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begg, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endg, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1499,8 +1500,8 @@ contains
           map2gcell = .true.
        end if
     else if ( type1d_out == namel )then
-       SHR_ASSERT(beg1d_out == bounds%begl, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endl, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begl, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endl, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1522,8 +1523,8 @@ contains
           map2gcell = .true.
        end if
     else if ( type1d_out == namec )then
-       SHR_ASSERT(beg1d_out == bounds%begc, errMsg(sourcefile, __LINE__))
-       SHR_ASSERT(end1d_out == bounds%endc, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_FL(beg1d_out == bounds%begc, sourcefile, __LINE__)
+       SHR_ASSERT_FL(end1d_out == bounds%endc, sourcefile, __LINE__)
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
           ! (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
@@ -1751,9 +1752,9 @@ contains
     character(len=*), parameter :: subname = 'hist_set_snow_field_2d'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(field_out, 1) == end1d), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(field_in , 1) == end1d), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(field_out, 2) == ubound(field_in, 2)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(field_out, 1) == end1d), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(field_in , 1) == end1d), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(field_out, 2) == ubound(field_in, 2)), sourcefile, __LINE__)
 
     associate(&
     snl            => col%snl  &   ! Input: [integer (:)] number of snow layers (negative)
@@ -2068,20 +2069,20 @@ contains
     
     if(use_fates)then
        call ncd_defdim(lnfid, 'fates_levscag', nlevsclass * nlevage, dimid)
-       call ncd_defdim(lnfid, 'fates_levscagpf', nlevsclass * nlevage * numpft_fates, dimid)
-       call ncd_defdim(lnfid, 'fates_levagepft', nlevage * numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levscagpf', nlevsclass * nlevage * maxveg_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levagepft', nlevage * maxveg_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levscls', nlevsclass, dimid)
-       call ncd_defdim(lnfid, 'fates_levpft', numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levpft', maxveg_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levage', nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levheight', nlevheight, dimid)
        call ncd_defdim(lnfid, 'fates_levfuel', nfsc, dimid)
        call ncd_defdim(lnfid, 'fates_levcwdsc', ncwd, dimid)
-       call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*maxveg_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levcan', nclmax, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlf', nlevleaf * nclmax, dimid)
-       call ncd_defdim(lnfid, 'fates_levcnlfpf', nlevleaf * nclmax * numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levcnlfpf', nlevleaf * nclmax * maxveg_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levelem', num_elements_fates, dimid)
-       call ncd_defdim(lnfid, 'fates_levelpft', num_elements_fates * numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levelpft', num_elements_fates * maxveg_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levelcwd', num_elements_fates * ncwd, dimid)
        call ncd_defdim(lnfid, 'fates_levelage', num_elements_fates * nlevage, dimid)
     end if
@@ -2268,10 +2269,10 @@ contains
                                                       /)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     !-------------------------------------------------------------------------------
     !***      Non-time varying 3D fields                    ***
@@ -3133,10 +3134,8 @@ contains
           call ncd_defvar(varname='land1d_jxy', xtype=ncd_int, dim1name=namel, &
                long_name='2d latitude index of corresponding landunit', ncid=ncid)
 
-          ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
-          !call ncd_defvar(varname='land1d_gi', xtype=ncd_int, dim1name='landunit', &
-          !     long_name='1d grid index of corresponding landunit', ncid=ncid)
-          ! ----------------------------------------------------------------
+          call ncd_defvar(varname='land1d_gi', xtype=ncd_int, dim1name=namel, &
+               long_name='1d grid index of corresponding landunit', ncid=ncid)
 
           call ncd_defvar(varname='land1d_wtgcell', xtype=ncd_double, dim1name=namel, &
                long_name='landunit weight relative to corresponding gridcell', ncid=ncid)
@@ -3162,13 +3161,11 @@ contains
           call ncd_defvar(varname='cols1d_jxy', xtype=ncd_int, dim1name=namec, &
                long_name='2d latitude index of corresponding column', ncid=ncid)
 
-          ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
-          !call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name='column', &
-          !     long_name='1d grid index of corresponding column', ncid=ncid)
+          call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name=namec, &
+               long_name='1d grid index of corresponding column', ncid=ncid)
 
-          !call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name='column', &
-          !     long_name='1d landunit index of corresponding column', ncid=ncid)
-          ! ----------------------------------------------------------------
+          call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name=namec, &
+               long_name='1d landunit index of corresponding column', ncid=ncid)
 
           call ncd_defvar(varname='cols1d_wtgcell', xtype=ncd_double, dim1name=namec, &
                long_name='column weight relative to corresponding gridcell', ncid=ncid)
@@ -3200,16 +3197,14 @@ contains
           call ncd_defvar(varname='pfts1d_jxy', xtype=ncd_int, dim1name=namep, &
                long_name='2d latitude index of corresponding pft', ncid=ncid)
 
-          ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
-          !call ncd_defvar(varname='pfts1d_gi', xtype=ncd_int, dim1name='pft', &
-          !     long_name='1d grid index of corresponding pft', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_gi', xtype=ncd_int, dim1name=namep, &
+               long_name='1d grid index of corresponding pft', ncid=ncid)
 
-          !call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name='pft', &
-          !     long_name='1d landunit index of corresponding pft', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name=namep, &
+               long_name='1d landunit index of corresponding pft', ncid=ncid)
 
-          !call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name='pft', &
-          !     long_name='1d column index of corresponding pft', ncid=ncid)
-          ! ----------------------------------------------------------------
+          call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name=namep, &
+               long_name='1d column index of corresponding pft', ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name=namep, &
                long_name='pft weight relative to corresponding gridcell', ncid=ncid)
@@ -3287,9 +3282,8 @@ contains
          ilarr(l) = (ldecomp%gdc2glo(lun%gridcell(l))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='land1d_jxy'      , data=ilarr        , dim1name=namel, ncid=ncid, flag='write')
-       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 Bug 1310
-       !call ncd_io(varname='land1d_gi'       , data=lun%gridcell, dim1name=namel, ncid=ncid, flag='write')
-       ! ----------------------------------------------------------------
+       ilarr = GetGlobalIndexArray(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
+       call ncd_io(varname='land1d_gi'       , data=ilarr, dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_wtgcell'  , data=lun%wtgcell , dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_ityplunit', data=lun%itype   , dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_active'   , data=lun%active  , dim1name=namel, ncid=ncid, flag='write')
@@ -3312,10 +3306,11 @@ contains
          icarr(c) = (ldecomp%gdc2glo(col%gridcell(c))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='cols1d_jxy'    , data=icarr         ,dim1name=namec, ncid=ncid, flag='write')
-       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 Bug 1310
-       !call ncd_io(varname='cols1d_gi'     , data=col%gridcell, dim1name=namec, ncid=ncid, flag='write')
-       !call ncd_io(varname='cols1d_li'     , data=col%landunit, dim1name=namec, ncid=ncid, flag='write')
-       ! ----------------------------------------------------------------
+       icarr = GetGlobalIndexArray(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=nameg)
+       call ncd_io(varname='cols1d_gi'     , data=icarr, dim1name=namec, ncid=ncid, flag='write')
+       icarr = GetGlobalIndexArray(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=namel)
+       call ncd_io(varname='cols1d_li', data=icarr            , dim1name=namec, ncid=ncid, flag='write')
+
        call ncd_io(varname='cols1d_wtgcell', data=col%wtgcell , dim1name=namec, ncid=ncid, flag='write')
        call ncd_io(varname='cols1d_wtlunit', data=col%wtlunit , dim1name=namec, ncid=ncid, flag='write')
        call ncd_io(varname='cols1d_itype_col', data=col%itype , dim1name=namec, ncid=ncid, flag='write')
@@ -3345,11 +3340,14 @@ contains
          iparr(p) = (ldecomp%gdc2glo(patch%gridcell(p))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='pfts1d_jxy'      , data=iparr        , dim1name=namep, ncid=ncid, flag='write')
-       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
-       !call ncd_io(varname='pfts1d_gi'       , data=patch%gridcell, dim1name=namep, ncid=ncid, flag='write')
-       !call ncd_io(varname='pfts1d_li'       , data=patch%landunit, dim1name=namep, ncid=ncid, flag='write')
-       !call ncd_io(varname='pfts1d_ci'       , data=patch%column  , dim1name=namep, ncid=ncid, flag='write')
-       ! ----------------------------------------------------------------
+
+       iparr = GetGlobalIndexArray(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=nameg)
+       call ncd_io(varname='pfts1d_gi'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
+       iparr = GetGlobalIndexArray(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namel)
+       call ncd_io(varname='pfts1d_li'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
+       iparr = GetGlobalIndexArray(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namec)
+       call ncd_io(varname='pfts1d_ci'  , data=iparr              , dim1name=namep, ncid=ncid, flag='write')
+
        call ncd_io(varname='pfts1d_wtgcell'  , data=patch%wtgcell , dim1name=namep, ncid=ncid, flag='write')
        call ncd_io(varname='pfts1d_wtlunit'  , data=patch%wtlunit , dim1name=namep, ncid=ncid, flag='write')
        call ncd_io(varname='pfts1d_wtcol'    , data=patch%wtcol   , dim1name=namep, ncid=ncid, flag='write')
@@ -3435,10 +3433,10 @@ contains
     character(len=*),parameter :: subname = 'hist_htapes_wrapup'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
 
     ! get current step
 
@@ -3508,8 +3506,8 @@ contains
              ! Define time-constant field variables
              call htape_timeconst(t, mode='define')
 
-             ! Define 3D time-constant field variables only to first primary tape
-             if ( do_3Dtconst .and. t == 1 ) then
+             ! Define 3D time-constant field variables on first history tapes
+             if ( do_3Dtconst) then
                 call htape_timeconst3D(t, &
                      bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='define')
                 TimeConst3DVars_Filename = trim(locfnh(t))
@@ -3527,8 +3525,8 @@ contains
           ! Write time constant history variables
           call htape_timeconst(t, mode='write')
 
-          ! Write 3D time constant history variables only to first primary tape
-          if ( do_3Dtconst .and. t == 1 .and. tape(t)%ntimes == 1 )then
+          ! Write 3D time constant history variables to first history tapes
+          if ( do_3Dtconst .and. tape(t)%ntimes == 1 )then
              call htape_timeconst3D(t, &
                   bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='write')
              do_3Dtconst = .false.
@@ -4911,7 +4909,7 @@ contains
     case ('fates_levscls')
        num2d = nlevsclass
     case ('fates_levpft')
-       num2d = numpft_fates
+       num2d = maxveg_fates
     case ('fates_levage')
        num2d = nlevage
     case ('fates_levheight')
@@ -4921,19 +4919,19 @@ contains
     case ('fates_levcwdsc')
        num2d = ncwd
     case ('fates_levscpf')
-       num2d = nlevsclass*numpft_fates
+       num2d = nlevsclass*maxveg_fates
     case ('fates_levscag')
        num2d = nlevsclass*nlevage
     case ('fates_levscagpf')
-       num2d = nlevsclass*nlevage*numpft_fates
+       num2d = nlevsclass*nlevage*maxveg_fates
     case ('fates_levagepft')
-       num2d = nlevage*numpft_fates
+       num2d = nlevage*maxveg_fates
     case ('fates_levcan')
        num2d = nclmax
     case ('fates_levcnlf')
        num2d = nlevleaf * nclmax
     case ('fates_levcnlfpf')
-       num2d = nlevleaf * nclmax * numpft_fates
+       num2d = nlevleaf * nclmax * maxveg_fates
     case ('ltype')
        num2d = max_lunit
     case ('natpft')
@@ -4941,7 +4939,7 @@ contains
     case ('fates_levelem')
        num2d = num_elements_fates
     case ('fates_levelpft')
-       num2d = num_elements_fates*numpft_fates
+       num2d = num_elements_fates*maxveg_fates
     case ('fates_levelcwd')
        num2d = num_elements_fates*ncwd
     case ('fates_levelage')

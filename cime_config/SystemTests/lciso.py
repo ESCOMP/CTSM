@@ -19,7 +19,8 @@ class LCISO(SystemTestsCompareTwo):
                                        separate_builds = False,
                                        run_two_suffix = 'cisoallon',
                                        run_one_description = 'carbon isotopes off',
-                                       run_two_description = 'c13 and c14 isotopes on as well as C isotope time series')
+                                       run_two_description = 'c13 and c14 isotopes on as well as C isotope time series',
+                                       ignore_fieldlist_diffs = True)
 
     def _case_one_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
@@ -29,9 +30,5 @@ class LCISO(SystemTestsCompareTwo):
     def _case_two_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
                                 component = "clm",
-                                contents = "use_c13=.true.,use_c14=.true.,use_c13_timeseries=.true.,use_c14_bombspike=.true.," + \
-                                "hist_fexcl1='C13_AR','C13_GPP','C13_HR','C13_NBP','C13_SOILC_vr','C13_TOTECOSYSC'," + \
-                                "'C13_TOTLITC','C13_TOTSOMC','C13_TOTVEGC','C14_AR','C14_GPP','C14_HR','C14_NBP'," + \
-                                "'C14_SOILC_vr','C14_TOTECOSYSC','C14_TOTLITC','C14_TOTSOMC','C14_TOTVEGC'")
-
+                                contents = "use_c13=.true.,use_c14=.true.,use_c13_timeseries=.true.,use_c14_bombspike=.true." )
 

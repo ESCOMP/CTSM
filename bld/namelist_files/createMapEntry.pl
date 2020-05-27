@@ -3,8 +3,8 @@
 # July 18 2012                                         Muszala
 #
 # createMapEntry.pl - A simple script to dump a list of mappings for a specified resolution to then
-# cut and paste into namelist_defaults_clm.xml.  A better way is to write the output of this script
-# to a file and then directly insert that file into namelist_defaults_clm.xml (using :r foo in vim for
+# cut and paste into namelist_defaults_ctsm.xml.  A better way is to write the output of this script
+# to a file and then directly insert that file into namelist_defaults_ctsm.xml (using :r foo in vim for
 # example).
 #
 # Example usage:>> ./createMapEntry.pl 1x1_brazil   
@@ -36,7 +36,7 @@ use Getopt::Long;
          SYNOPSIS 
    
          $scriptName <res>  
-            <res> is the resolution to use to dump text to paste into namelist_defaults_clm.xml
+            <res> is the resolution to use to dump text to paste into namelist_defaults_ctsm.xml
 EOF
    }
 
@@ -56,7 +56,7 @@ EOF
    foreach my $foo ( @list ) {
       next if ($foo =~ m/^\./);  #~# skip anything in the directory with a leading or stand alone 'dot'
       my @tokens = split(/_/, $foo); #~# split foo name by the underscore
-      #~# write out lines for namelist_defaults_clm.xml
+      #~# write out lines for namelist_defaults_ctsm.xml
       print "<map frm_hgrid=\"$tokens[1]\"    frm_lmask=\"$tokens[2]\"  to_hgrid=\"$tokens[4]\"   to_lmask=\"$tokens[5]\" \n";
       print ">$partialPath/$foo</map>\n";
    }

@@ -1,0 +1,101 @@
+module test_water_tracer_container
+
+  ! Tests of WaterTracerContainerType
+
+  use pfunit_mod
+  use WaterTracerContainerType
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use decompMod, only : BOUNDS_SUBGRID_GRIDCELL
+  use unittestUtils, only : endrun_msg
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestWTC
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestWTC
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestWTC), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestWTC), intent(inout) :: this
+  end subroutine tearDown
+
+  @Test
+  subroutine changeVarValues_reflectsNewValues(this)
+    ! If you add a few variables, then change their values, the new values should be
+    ! reflected in the pointers in the container.
+    !
+    ! The main point of this test is: make sure that the move_alloc does the right thing
+    ! with pointers (rather than copying the values in the pointer).
+    !
+    ! This test illustrates the typical workflow of using this container class.
+    class(TestWTC), intent(inout) :: this
+    type(water_tracer_container_type) :: container
+    real(r8), target :: data1(3)
+    real(r8), target :: more_data(3,4)
+    real(r8), pointer :: data_retrieved(:)
+    integer :: i
+    integer :: num_vars
+
+    call container%init()
+    data1 = [1._r8, 2._r8, 3._r8]
+    ! Add enough variables that we can be pretty confident that there has been a resize
+    ! sometime after adding the pointer to data1
+    call container%add_var(data1, 1, 'my data1', BOUNDS_SUBGRID_GRIDCELL)
+    do i = 1, 4
+       call container%add_var(more_data(:,i), 1, 'more data', BOUNDS_SUBGRID_GRIDCELL)
+    end do
+    call container%complete_setup()
+    data1 = [11._r8, 12._r8, 13._r8]
+    call container%get_data(1, data_retrieved)
+
+    @assertEqual(5, container%get_num_vars())
+    @assertEqual([11._r8, 12._r8, 13._r8], data_retrieved)
+
+  end subroutine changeVarValues_reflectsNewValues
+
+  @Test
+  subroutine withoutCompleteSetup_aborts(this)
+    ! If you try to call get_num_vars before calling complete_setup, aborts
+    class(TestWTC), intent(inout) :: this
+    type(water_tracer_container_type) :: container
+    real(r8), target :: data(3)
+    integer :: num_vars
+    character(len=:), allocatable :: expected_msg
+
+    call container%init()
+    call container%add_var(data, 1, 'my data', BOUNDS_SUBGRID_GRIDCELL)
+    num_vars = container%get_num_vars()
+    expected_msg = endrun_msg( &
+         'Attempt to call get_num_vars without calling complete_setup')
+    @assertExceptionRaised(expected_msg)
+  end subroutine withoutCompleteSetup_aborts
+
+  @Test
+  subroutine addVar_afterCompleteSetup_aborts(this)
+    ! If you try to call add_var after calling complete_setup, aborts
+    class(TestWTC), intent(inout) :: this
+    type(water_tracer_container_type) :: container
+    real(r8), target :: data1(3), data2(3)
+    integer :: num_vars
+    character(len=:), allocatable :: expected_msg
+
+    call container%init()
+    call container%add_var(data1, 1, 'my data1', BOUNDS_SUBGRID_GRIDCELL)
+    call container%complete_setup()
+    call container%add_var(data2, 1, 'my data2', BOUNDS_SUBGRID_GRIDCELL)
+    expected_msg = endrun_msg( &
+         'Attempt to call add_var after complete_setup was called')
+    @assertExceptionRaised(expected_msg)
+  end subroutine addVar_afterCompleteSetup_aborts
+
+end module test_water_tracer_container

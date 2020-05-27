@@ -1,0 +1,339 @@
+module test_truncate_small_values
+
+  ! Tests of NumericsMod: truncate_small_values
+
+  use pfunit_mod
+  use NumericsMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSimpleSubgridSetupsMod
+  use unittestSubgridMod
+  use unittestFilterBuilderMod, only : filter_from_range
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestTSV
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestTSV
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestTSV), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestTSV), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
+  end subroutine tearDown
+
+  ! ------------------------------------------------------------------------
+  ! Tests of truncate_small_values
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine tsv_truncates_correct_points(this)
+    class(TestTSV), intent(inout) :: this
+    real(r8) :: data_baseline(3)
+    real(r8) :: data(3)
+    real(r8) :: data_saved(3)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_n_veg_patches(pwtcol = [0.1_r8, 0.8_r8, 0.1_r8], pft_types = [1, 2, 3])
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    ! point 2 should be truncated, others should not be truncated
+    data_baseline = [1._r8, 1._r8, 1._r8]
+    data = [0.5_r8, 1.e-16_r8, -1._r8]
+    data_saved = data
+
+    call truncate_small_values( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         data_baseline = data_baseline, &
+         data = data)
+
+    @assertEqual(data_saved(1), data(1))
+    @assertEqual(data_saved(3), data(3))
+    @assertEqual(0._r8, data(2))
+
+  end subroutine tsv_truncates_correct_points
+
+  @Test
+  subroutine tsv_custom_tolerance_truncates_correct_points(this)
+    class(TestTSV), intent(inout) :: this
+    real(r8) :: data_baseline(3)
+    real(r8) :: data(3)
+    real(r8) :: data_saved(3)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_n_veg_patches(pwtcol = [0.1_r8, 0.8_r8, 0.1_r8], pft_types = [1, 2, 3])
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    ! point 2 should be truncated, others should not be truncated
+    data_baseline = [1._r8, 1._r8, 1._r8]
+    data = [5.e-12_r8, 5.e-13_r8, 5.e-12_r8]
+    data_saved = data
+
+    call truncate_small_values( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         data_baseline = data_baseline, &
+         data = data, &
+         custom_rel_epsilon = 1.e-12_r8)
+
+    @assertEqual(data_saved(1), data(1))
+    @assertEqual(data_saved(3), data(3))
+    @assertEqual(0._r8, data(2))
+
+  end subroutine tsv_custom_tolerance_truncates_correct_points
+
+  @Test
+  subroutine tsv_truncates_large_magnitude(this)
+    ! Make sure we're just relying on relative rather than absolute magnitudes by
+    ! confirming that it can truncate a value with large magnitude.
+    class(TestTSV), intent(inout) :: this
+    real(r8) :: data_baseline(1)
+    real(r8) :: data(1)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_single_veg_patch(pft_type = 1)
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    data_baseline = [1.e30_r8]
+    data = [1.e10_r8]
+
+    call truncate_small_values( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         data_baseline = data_baseline, &
+         data = data)
+
+    @assertEqual(0._r8, data(1))
+  end subroutine tsv_truncates_large_magnitude
+
+  @Test
+  subroutine tsv_does_not_truncate_small_magnitude(this)
+    ! Make sure we're just relying on relative rather than absolute magnitudes by
+    ! confirming that it does not truncate a value with small magnitude.
+    class(TestTSV), intent(inout) :: this
+    real(r8) :: data_baseline(1)
+    real(r8) :: data(1)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_single_veg_patch(pft_type = 1)
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    data_baseline = [1.e-30_r8]
+    data = [1.e-31_r8]
+
+    call truncate_small_values( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         data_baseline = data_baseline, &
+         data = data)
+
+    @assertEqual(1.e-31_r8, data(1))
+  end subroutine tsv_does_not_truncate_small_magnitude
+
+  ! ------------------------------------------------------------------------
+  ! Tests of truncate_small_values_one_lev. The following tests parallel the ones for
+  ! truncate_small_values.
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine tsvol_truncates_correct_points(this)
+    class(TestTSV), intent(inout) :: this
+    real(r8) :: data_baseline(3)
+    real(r8) :: data(3,1)
+    real(r8) :: data_saved(3,1)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_n_veg_patches(pwtcol = [0.1_r8, 0.8_r8, 0.1_r8], pft_types = [1, 2, 3])
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    ! point 2 should be truncated, others should not be truncated
+    data_baseline(:) = [1._r8, 1._r8, 1._r8]
+    data(:,1) = [0.5_r8, 1.e-16_r8, -1._r8]
+    data_saved = data
+
+    call truncate_small_values_one_lev( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         lev_lb = 1, &
+         lev = [1,1,1], &
+         data_baseline = data_baseline, &
+         data = data)
+
+    @assertEqual(data_saved(1,1), data(1,1))
+    @assertEqual(data_saved(3,1), data(3,1))
+    @assertEqual(0._r8, data(2,1))
+
+  end subroutine tsvol_truncates_correct_points
+
+  @Test
+  subroutine tsvol_custom_tolerance_truncates_correct_points(this)
+    class(TestTSV), intent(inout) :: this
+    real(r8) :: data_baseline(3)
+    real(r8) :: data(3,1)
+    real(r8) :: data_saved(3,1)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_n_veg_patches(pwtcol = [0.1_r8, 0.8_r8, 0.1_r8], pft_types = [1, 2, 3])
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    ! point 2 should be truncated, others should not be truncated
+    data_baseline(:) = [1._r8, 1._r8, 1._r8]
+    data(:,1) = [5.e-12_r8, 5.e-13_r8, 5.e-12_r8]
+    data_saved = data
+
+    call truncate_small_values_one_lev( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         lev_lb = 1, &
+         lev = [1,1,1], &
+         data_baseline = data_baseline, &
+         data = data, &
+         custom_rel_epsilon = 1.e-12_r8)
+
+    @assertEqual(data_saved(1,1), data(1,1))
+    @assertEqual(data_saved(3,1), data(3,1))
+    @assertEqual(0._r8, data(2,1))
+
+  end subroutine tsvol_custom_tolerance_truncates_correct_points
+
+  @Test
+  subroutine tsvol_truncates_large_magnitude(this)
+    ! Make sure we're just relying on relative rather than absolute magnitudes by
+    ! confirming that it can truncate a value with large magnitude.
+    class(TestTSV), intent(inout) :: this
+    real(r8) :: data_baseline(1)
+    real(r8) :: data(1,1)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_single_veg_patch(pft_type = 1)
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    data_baseline(1) = 1.e30_r8
+    data(1,1) = 1.e10_r8
+
+    call truncate_small_values_one_lev( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         lev_lb = 1, &
+         lev = [1], &
+         data_baseline = data_baseline, &
+         data = data)
+
+    @assertEqual(0._r8, data(1,1))
+  end subroutine tsvol_truncates_large_magnitude
+
+  @Test
+  subroutine tsvol_does_not_truncate_small_magnitude(this)
+    ! Make sure we're just relying on relative rather than absolute magnitudes by
+    ! confirming that it does not truncate a value with small magnitude.
+    class(TestTSV), intent(inout) :: this
+    real(r8) :: data_baseline(1)
+    real(r8) :: data(1,1)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_single_veg_patch(pft_type = 1)
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    data_baseline(1) = 1.e-30_r8
+    data(1,1) = 1.e-31_r8
+
+    call truncate_small_values_one_lev( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         lev_lb = 1, &
+         lev = [1], &
+         data_baseline = data_baseline, &
+         data = data)
+
+    @assertEqual(1.e-31_r8, data(1,1))
+  end subroutine tsvol_does_not_truncate_small_magnitude
+
+  ! ------------------------------------------------------------------------
+  ! Additional tests of truncate_small_values_one_lev that are specific to this
+  ! multi-level routine.
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine tsvol_truncates_correct_levels(this)
+    ! Make sure that only the desired levels are considered in the truncation
+    class(TestTSV), intent(inout) :: this
+    ! Note that, to make sure the code handles non-1 level lower bound, we start level at
+    ! 11 rather than 1
+    real(r8) :: data_baseline(3)
+    real(r8) :: data(3, 11:12)
+    real(r8) :: data_saved(3, 11:12)
+    integer  :: lev(3)
+    integer :: num_f
+    integer, allocatable :: filter_f(:)
+
+    call setup_n_veg_patches(pwtcol = [0.1_r8, 0.8_r8, 0.1_r8], pft_types = [1, 2, 3])
+    call filter_from_range(bounds%begp, bounds%endp, num_f, filter_f)
+
+    ! All points are small enough to be truncated, but truncation should only happen at
+    ! the specified levels.
+    data_baseline(:) = 1._r8
+    data(:, 11) = [1.e-16_r8, 2.e-16_r8, 3.e-16_r8]
+    data(:, 12) = [4.e-16_r8, 5.e-16_r8, 6.e-16_r8]
+    data_saved = data
+    ! Note the following lev vector: we truncate levels 11, 12 and 11 for points 1, 2 and
+    ! 3, respectively
+    lev = [11, 12, 11]
+
+    call truncate_small_values_one_lev( &
+         num_f = num_f, &
+         filter_f = filter_f, &
+         lb = bounds%begp, &
+         ub = bounds%endp, &
+         lev_lb = 11, &
+         lev = lev, &
+         data_baseline = data_baseline, &
+         data = data)
+
+    ! First confirm that levels that should have been truncated were indeed truncated
+    @assertEqual(0._r8, data(1, 11))
+    @assertEqual(0._r8, data(2, 12))
+    @assertEqual(0._r8, data(3, 11))
+
+    ! Now confirm that levels that should have remain untouched were indeed left untouched
+    @assertEqual(data_saved(1, 12), data(1, 12))
+    @assertEqual(data_saved(2, 11), data(2, 11))
+    @assertEqual(data_saved(3, 12), data(3, 12))
+
+  end subroutine tsvol_truncates_correct_levels
+
+end module test_truncate_small_values
