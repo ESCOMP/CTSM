@@ -13,7 +13,6 @@ module CNFireMethodMod
   public :: cnfire_method_type
 
   type, abstract :: cnfire_method_type
-     logical, public :: need_lightning_and_popdens = .true.   ! If need lightning and population density 
    contains
 
      ! Initialize the fire datasets

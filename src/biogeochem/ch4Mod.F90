@@ -3550,17 +3550,18 @@ contains
                   end if
 
                   ! Now add new h2osfc form
-                  if (.not. lake .and. sat == 1 .and. frac_h2osfc(c) > 0._r8 .and. t_h2osfc(c) >= tfrz) then
-                     t_soisno_c = t_h2osfc(c) - tfrz
-                     ponddiff = (d_con_w(s,1) + d_con_w(s,2)*t_soisno_c + d_con_w(s,3)*t_soisno_c**2) * 1.e-9_r8 &
-                          * scale_factor_liqdiff
-                     pondz = h2osfc(c) / 1000._r8 / frac_h2osfc(c) ! Assume all h2osfc corresponds to sat area
-                     ! mm      /  mm/m
-                     pondres = pondres + pondz / ponddiff
-                  else if (.not. lake .and. sat == 1 .and. frac_h2osfc(c) > 0._r8 .and. &
-                       h2osfc(c)/frac_h2osfc(c) > capthick) then ! Assuming short-circuit logic will avoid FPE here.
-                     ! assume surface ice is impermeable
-                     pondres = 1/smallnumber
+                  if (.not. lake .and. sat == 1 .and. frac_h2osfc(c) > 0._r8) then
+                     if (t_h2osfc(c) >= tfrz) then
+                        t_soisno_c = t_h2osfc(c) - tfrz
+                        ponddiff = (d_con_w(s,1) + d_con_w(s,2)*t_soisno_c + d_con_w(s,3)*t_soisno_c**2) * 1.e-9_r8 &
+                             * scale_factor_liqdiff
+                        pondz = h2osfc(c) / 1000._r8 / frac_h2osfc(c) ! Assume all h2osfc corresponds to sat area
+                        ! mm      /  mm/m
+                        pondres = pondres + pondz / ponddiff
+                     else if (h2osfc(c)/frac_h2osfc(c) > capthick) then
+                        ! assume surface ice is impermeable
+                        pondres = 1/smallnumber
+                     end if
                   end if
 
                   spec_grnd_cond(c,s) = 1._r8/(1._r8/grnd_ch4_cond(c) + snowres(c) + pondres)
