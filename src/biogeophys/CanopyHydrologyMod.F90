@@ -1177,5 +1177,4 @@ contains
 
    end subroutine BulkDiag_FracWet
 
-
 end module CanopyHydrologyMod

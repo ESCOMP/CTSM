@@ -12668,3 +12668,227 @@ Pull Requests that document the changes (include PR ids):
 
 ===============================================================
 ===============================================================
+Tag name:  ctsm1.0.dev001
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Jun 22 07:31:43 MDT 2018
+One-line Summary: Begin separating SoilHydrology flux calculations
+
+Note the new tag naming: Starting with this tag, we are naming tags
+"ctsm..." rather than "clm...". We are starting with ctsm version 1,
+which for now is nearly the same as clm version 5. We are moving to this
+new tag naming now because:
+
+(1) The changes in this tag represent the first step towards
+    implementing the CTSM vision (separating the biogeophysics flux
+    calculations from state updates, making it easier to plug in
+    alternative parameterizations, etc.).
+
+(2) This tag changes answers relative to the CLM5 release. (We expect
+    the climate to be the same, but we haven't tested this carefully
+    yet.)
+
+Purpose of changes
+------------------
+
+First steps toward separating various flux calculations in the soil
+hydrology code. The focus here is on saturated surface runoff and
+infiltration excess runoff. The changes here separate flux calculations
+from state updates and extract various calculations into their own
+subroutines to facilitate swapping in alternative parameterizations.
+
+Most of the changes here are refactorings that are either bit-for-bit or
+just introduce roundoff-level differences. However, there are also a few
+larger answer changes, as described below.
+
+These are the greater-than-roundoff-level answer changes:
+
+(A1) Use full qflx_surf in BGC code. Previously, the subroutines ch4 and
+     SoilBiogeochemNLeaching had been using a flux that excluded surface
+     water runoff (qflx_h2osfc_surf). That was deemed to be incorrect
+     (by Dave Lawrence and others), so these BGC subroutines have been
+     changed to use the full surface runoff (saturated excess runoff +
+     infiltration excess runoff + h2osfc runoff).
+
+     Configurations affected: BGC compsets
+
+     Magnitude of change: Larger than roundoff; expected to be same
+     climate, but not investigated carefully
+
+(A2) VIC: Don't ever use the TOPModel formulation for SurfaceRunoff
+
+     The code was using the TOPModel-based formulation for SurfaceRunoff
+     if frost_table > zwt_perched. Sean Swenson felt this shouldn't be
+     done, and refactoring will be easier if VIC always uses the
+     vic-looking formulation, so I'm stopping applying this formulation
+     when using VIC.
+
+     Configurations affected: VIC compsets
+
+     Magnitude of change: Larger than roundoff; not investigated carefully
+
+(A3) VIC: Remove infiltration excess runoff
+
+     Martyn Clark reviewed the VIC implementation, and felt that the
+     current implementation of infiltration excess runoff is
+     inconsistent with the standard VIC implementation. It appears that
+     what was being called VIC's infiltration excess runoff was actually
+     just an attempt to give a better numerical approximation to the
+     solution for saturated surface excess runoff. So deleting this
+     leaves only a first-order approximation to VIC's saturated surface
+     excess runoff.
+
+     Eventually we may want to put in place a more accurate solution for
+     VIC's saturated surface excess runoff. But Martyn's feeling is that
+     this can come in with other changes we want to make regarding
+     numerical solutions in CTSM.
+
+     Configurations affected: VIC compsets
+
+     Magnitude of change: Larger than roundoff; expected to be same
+     climate, but not investigated carefully
+
+(A4) Change in QOVER diagnostic field: now includes QH2OSFC.
+
+These are the major refactorings (either bit-for-bit or just
+roundoff-level differences):
+
+(R1) Extract surface runoff to its own module, and other modularization
+     related to what used to be subroutine SurfaceRunoff: extract a
+     subroutine for each fsat method, move urban surface runoff code
+     into different routines.
+
+(R2) Extract infiltration excess runoff to its own module, and other
+     modularization related to what used to be subroutine Infiltration.
+
+NOTE: For a detailed breakdown of changes, including documentation of
+which changed changed answers, see the file ChangeLog_branch which was
+deleted from this branch shortly before it was merged to master.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Fixes #424 (decStart testmod is missing an `--append` in an xmlchange command)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Substantial timing or memory changes:
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in .CLMTrunkChecklist as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+- Shortened a 25-month f19 test to 13-months
+  (SMS_Lm13.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-cropMonthOutput):
+  This test took a long time to run, and we already have long tests of
+  this configuration at coarse-resolution. I suggested removing this
+  test entirely, but Erik Kluzek wanted to maintain a shortened version
+  of it. Erik's comments were:
+
+     How about either flip it to f45 (because Rosie is using that
+     resolution for science) -- or leave it at f19 and have it run for 9
+     months? The 25 months was to take it just past the 2-year spinup
+     time. From spunup initial conditions 9-months pretty much does a
+     full harvest cycle. f19 and f09 are the main configurations for
+     science and it would be good to have something longer than just
+     really short tests.
+
+  I decided on Lm13, because this still completes in significantly less
+  than 2-hours, and if we're running for 9 months anyway, it seems
+  valuable to finish out the year and run a bit into the next year,
+  since some crop stuff triggers at the end of the year.
+
+Code reviewed by: Various code reviews done last Fall, when these
+changes were first implemented.
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  unit-tests (components/clm/src):
+
+    cheyenne - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     cheyenne - not run
+
+  regular tests (aux_clm):
+
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    hobart_nag -------- OK
+    hobart_pgi -------- OK
+    hobart_intel ------ OK
+
+    OK means tests pass, answers change as expected.
+
+CLM tag used for the baseline comparisons: clm5.0.dev013
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Essentially all (except CLM4)
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+    Roundoff-level changes for nearly all configurations (except CLM4).
+
+    Greater-than-roundoff-level changes for the following
+    configurations:
+    - BGC: see (A1) note above (expected to be same climate, but not
+      investigated carefully)
+    - VIC: see (A2) and (A3) notes above (magnitude of change not
+      investigated carefully)
+    - QOVER diagnostic field: see (A4) note above
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/ctsm/pull/244
+- https://github.com/ESCOMP/ctsm/pull/190
+- Other PRs that existed on the old NCAR/clm-ctsm repository (which has
+  been deleted), which were not migrated to the new repository
+
+===============================================================
