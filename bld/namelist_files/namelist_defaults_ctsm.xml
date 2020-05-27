@@ -393,8 +393,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_0">lnd/clm2/paramdata/clm5_params.c200402.nc</paramfile>
-<paramfile phys="clm4_5">lnd/clm2/paramdata/clm_params.c200402.nc</paramfile>
+<paramfile phys="clm5_0">lnd/clm2/paramdata/clm5_params.c200519.nc</paramfile>
+<paramfile phys="clm4_5">lnd/clm2/paramdata/clm_params.c200519.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
@@ -793,7 +793,7 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_4x5_hist_78pfts_CMIP6_simyr2000
 <fsurdat hgrid="1x1_numaIA"       sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_numaIA_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
+lnd/clm2/surfdata_map/ctsm1.0.dev094-2-g633be0eb/surfdata_1x1_smallvilleIA_hist_78pfts_CMIP6_simyr2000_c200521.nc</fsurdat>
 
 <fsurdat hgrid="ne30np4"     sim_year="2000" use_crop=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_ne30np4_hist_78pfts_CMIP6_simyr2000_c190303.nc</fsurdat>
