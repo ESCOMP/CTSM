@@ -106,9 +106,6 @@ def _main_func():
         if lilac_mode == 'on':
             driver = "lilac"
             machine = case.get_value('MACH')
-            _write_ctsm_mk(exeroot=case.get_value("EXEROOT"),
-                           libroot=libroot,
-                           machine=machine)
 
         #-------------------------------------------------------
         # create Filepath file
