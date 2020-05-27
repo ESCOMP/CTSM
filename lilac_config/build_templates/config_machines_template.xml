@@ -45,7 +45,7 @@
 
     <!-- DIN_LOC_ROOT_CLMFORC: override of DIN_LOC_ROOT specific to CLM
 	 forcing data -->
-    <DIN_LOC_ROOT_CLMFORC>$$CIME_OUTPUT_ROOT/inputdata_clmforc</DIN_LOC_ROOT_CLMFORC>
+    <DIN_LOC_ROOT_CLMFORC>$$CIME_OUTPUT_ROOT/inputdata</DIN_LOC_ROOT_CLMFORC>
 
     <!-- DOUT_S_ROOT: root directory of short term archive files, short term
       archiving moves model output data out of the run directory, but
@@ -112,6 +112,14 @@
          specify any environment variables here.)
       -->
     <module_system type="none"/>
+
+    <!-- EXEROOT: case executable / build root directory
+
+         For this purpose, we have a generic bld directory in
+         CIME_OUTPUT_ROOT, rather than having a case-specific bld
+         directory.
+    -->
+    <EXEROOT>$$CIME_OUTPUT_ROOT/bld</EXEROOT>
 
   </machine>
 </config_machines>

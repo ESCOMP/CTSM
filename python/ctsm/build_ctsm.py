@@ -2,14 +2,28 @@
 
 import argparse
 import logging
-import sys
 import os
 import string
+import subprocess
+import sys
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
+from ctsm.os_utils import run_cmd_output_on_error
 from ctsm.path_utils import path_to_ctsm_root
 
 logger = logging.getLogger(__name__)
+
+# ========================================================================
+# Define some constants
+# ========================================================================
+
+# this matches the machine name in config_machines_template.xml
+_MACH_NAME = 'ctsm_build'
+
+# these are arbitrary, since we only use the case for its build, not any of the runtime
+# settings; they just need to be valid
+_COMPSET = 'I2000Ctsm50NwpSpNldasRsGs'
+_RES = 'nldas2_rnldas2_mnldas2'
 
 _MACHINE_CONFIG_DIRNAME = 'machine_configuration'
 _INPUTDATA_DIRNAME = 'inputdata'
@@ -95,6 +109,8 @@ def build_ctsm(cime_path,
                             gptl_nano_timers=gptl_nano_timers,
                             extra_fflags=extra_fflags,
                             extra_cflags=extra_cflags)
+    _create_and_build_case(cime_path=cime_path,
+                           build_dir=build_dir)
 
 # ========================================================================
 # Private functions
@@ -355,3 +371,40 @@ def _fill_out_machine_files(build_dir,
     with open(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, 'config_compilers.xml'),
               'w') as cc_file:
         cc_file.write(config_compilers)
+
+def _create_and_build_case(cime_path, build_dir):
+    """Create a case and build the CTSM library and its dependencies
+
+    Args:
+    cime_path (str): path to root of cime
+    build_dir (str): path to build directory
+    """
+    casedir = os.path.join(build_dir, 'case')
+
+    # Note that, for some commands, we want to suppress output, only showing the output if
+    # the command fails; for these we use run_cmd_output_on_error. For other commands, we
+    # want to always show output (or there should be no output in general); for these, we
+    # directly use subprocess.check_call or similar.
+
+    run_cmd_output_on_error(
+        ['create_newcase',
+         '--case', casedir,
+         '--compset', _COMPSET,
+         '--res', _RES,
+         '--machine', _MACH_NAME,
+         '--driver', 'nuopc',
+         '--extra-machines-dir', os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME),
+         '--run-unsupported'],
+        errmsg='Problem creating CTSM case directory',
+        cwd=os.path.join(cime_path, 'scripts'))
+
+    run_cmd_output_on_error(['case.setup'],
+                            errmsg='Problem setting up CTSM case directory',
+                            cwd=casedir)
+
+    subprocess.check_call(['xmlchange', 'LILAC_MODE=on'], cwd=casedir)
+
+    try:
+        subprocess.check_call(['case.build'], cwd=casedir)
+    except subprocess.CalledProcessError:
+        sys.exit('ERROR building CTSM or its dependencies - see above for details')
