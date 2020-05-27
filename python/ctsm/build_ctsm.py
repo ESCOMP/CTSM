@@ -405,6 +405,9 @@ def _create_and_build_case(cime_path, build_dir):
     subprocess.check_call(['xmlchange', 'LILAC_MODE=on'], cwd=casedir)
 
     try:
-        subprocess.check_call(['case.build'], cwd=casedir)
+        subprocess.check_call(
+            ['case.build',
+             '--sharedlib-only'],
+            cwd=casedir)
     except subprocess.CalledProcessError:
         sys.exit('ERROR building CTSM or its dependencies - see above for details')
