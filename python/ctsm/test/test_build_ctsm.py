@@ -39,7 +39,20 @@ class TestBuildCtsm(unittest.TestCase):
     def test_commandlineArgs_rebuild_invalid2(self, mock_stderr):
         """Test _commandline_args with --rebuild, with an argument that is invalid with this option
 
-        This tests an argument that is required for non-rebuilds, with a dash
+        This tests an argument that is required for new machines, without a dash
+        """
+        expected_re = r"--os cannot be provided if --rebuild is set"
+        with self.assertRaises(SystemExit):
+            _ = _commandline_args(args_to_parse=['build/directory',
+                                                 '--rebuild',
+                                                 '--os', 'linux'])
+        self.assertRegex(mock_stderr.getvalue(), expected_re)
+
+    @patch('sys.stderr', new_callable=StringIO)
+    def test_commandlineArgs_rebuild_invalid3(self, mock_stderr):
+        """Test _commandline_args with --rebuild, with an argument that is invalid with this option
+
+        This tests an argument that is required for new machines, with a dash
         """
         expected_re = r"--netcdf-path cannot be provided if --rebuild is set"
         with self.assertRaises(SystemExit):
@@ -49,10 +62,10 @@ class TestBuildCtsm(unittest.TestCase):
         self.assertRegex(mock_stderr.getvalue(), expected_re)
 
     @patch('sys.stderr', new_callable=StringIO)
-    def test_commandlineArgs_rebuild_invalid3(self, mock_stderr):
+    def test_commandlineArgs_rebuild_invalid4(self, mock_stderr):
         """Test _commandline_args with --rebuild, with an argument that is invalid with this option
 
-        This tests an argument that is optional for non-rebuilds, which also has a default
+        This tests an argument that is optional for new machines, which also has a default
         that isn't None
         """
         expected_re = r"--gmake cannot be provided if --rebuild is set"
@@ -63,7 +76,7 @@ class TestBuildCtsm(unittest.TestCase):
         self.assertRegex(mock_stderr.getvalue(), expected_re)
 
     def test_commandlineArgs_noRebuild_valid(self):
-        """Test _commandline_args without --rebuild, with a valid argument list
+        """Test _commandline_args without --rebuild or --machine, with a valid argument list
 
         (all required things present)
         """
@@ -75,8 +88,11 @@ class TestBuildCtsm(unittest.TestCase):
                                              '--esmf-lib-path', '/path/to/esmf/lib'])
 
     @patch('sys.stderr', new_callable=StringIO)
-    def test_commandlineArgs_noRebuild_invalid(self, mock_stderr):
-        """Test _commandline_args without --rebuild, with a missing required argument"""
+    def test_commandlineArgs_noRebuild_invalid1(self, mock_stderr):
+        """Test _commandline_args without --rebuild or --machine, with a missing required argument
+
+        This tests an argument in the non-rebuild-required list
+        """
         expected_re = r"--compiler must be provided if --rebuild is not set"
         with self.assertRaises(SystemExit):
             _ = _commandline_args(args_to_parse=['build/directory',
@@ -85,6 +101,67 @@ class TestBuildCtsm(unittest.TestCase):
                                                  '--esmf-lib-path', '/path/to/esmf/lib'])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
 
+    @patch('sys.stderr', new_callable=StringIO)
+    def test_commandlineArgs_noRebuild_invalid2(self, mock_stderr):
+        """Test _commandline_args without --rebuild or --machine, with a missing required argument
+
+        This tests an argument in the new-machine-required list
+        """
+        expected_re = r"--os must be provided if neither --machine nor --rebuild are set"
+        with self.assertRaises(SystemExit):
+            _ = _commandline_args(args_to_parse=['build/directory',
+                                                 '--compiler', 'intel',
+                                                 '--netcdf-path', '/path/to/netcdf',
+                                                 '--esmf-lib-path', '/path/to/esmf/lib'])
+        self.assertRegex(mock_stderr.getvalue(), expected_re)
+
+    def test_commandlineArgs_machine_valid(self):
+        """Test _commandline_args with --machine, with a valid argument list
+
+        (all required things present)
+        """
+        # pylint: disable=no-self-use
+        _ = _commandline_args(args_to_parse=['build/directory',
+                                             '--machine', 'mymachine',
+                                             '--compiler', 'intel'])
+
+    @patch('sys.stderr', new_callable=StringIO)
+    def test_commandlineArgs_machine_missingRequired(self, mock_stderr):
+        """Test _commandline_args with --machine, with a missing required argument
+        """
+        expected_re = r"--compiler must be provided if --rebuild is not set"
+        with self.assertRaises(SystemExit):
+            _ = _commandline_args(args_to_parse=['build/directory',
+                                                 '--machine', 'mymachine'])
+        self.assertRegex(mock_stderr.getvalue(), expected_re)
+
+    @patch('sys.stderr', new_callable=StringIO)
+    def test_commandlineArgs_machine_illegalArg1(self, mock_stderr):
+        """Test _commandline_args with --rebuild, with an argument that is illegal with this option
+
+        This tests an argument that is required for new machines
+        """
+        expected_re = r"--os cannot be provided if --machine is set"
+        with self.assertRaises(SystemExit):
+            _ = _commandline_args(args_to_parse=['build/directory',
+                                                 '--machine', 'mymachine',
+                                                 '--compiler', 'intel',
+                                                 '--os', 'linux'])
+        self.assertRegex(mock_stderr.getvalue(), expected_re)
+
+    @patch('sys.stderr', new_callable=StringIO)
+    def test_commandlineArgs_machine_illegalArg2(self, mock_stderr):
+        """Test _commandline_args with --rebuild, with an argument that is illegal with this option
+
+        This tests an argument that is optional for new machines
+        """
+        expected_re = r"--gmake cannot be provided if --machine is set"
+        with self.assertRaises(SystemExit):
+            _ = _commandline_args(args_to_parse=['build/directory',
+                                                 '--machine', 'mymachine',
+                                                 '--compiler', 'intel',
+                                                 '--gmake', 'mymake'])
+        self.assertRegex(mock_stderr.getvalue(), expected_re)
 
     def test_checkAndTransformOs_valid(self):
         """Test _check_and_transform_os with valid input"""

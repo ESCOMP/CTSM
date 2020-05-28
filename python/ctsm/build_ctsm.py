@@ -51,8 +51,9 @@ def main(cime_path):
     else:
         build_ctsm(cime_path=cime_path,
                    build_dir=args.build_dir,
-                   os_type=args.os,
                    compiler=args.compiler,
+                   machine=args.machine,
+                   os_type=args.os,
                    netcdf_path=args.netcdf_path,
                    esmf_lib_path=args.esmf_lib_path,
                    gmake=args.gmake,
@@ -65,12 +66,13 @@ def main(cime_path):
 
 def build_ctsm(cime_path,
                build_dir,
-               os_type,
                compiler,
-               netcdf_path,
-               esmf_lib_path,
-               gmake,
-               gmake_j,
+               machine=None,
+               os_type=None,
+               netcdf_path=None,
+               esmf_lib_path=None,
+               gmake=None,
+               gmake_j=None,
                pnetcdf_path=None,
                pio_filesystem_hints=None,
                gptl_nano_timers=False,
@@ -81,36 +83,55 @@ def build_ctsm(cime_path,
     Args:
     cime_path (str): path to root of cime
     build_dir (str): path to build directory
-    os_type (str): operating system type; one of linux, aix, darwin or cnl
     compiler (str): compiler type
-    netcdf_path (str): path to NetCDF installation
-    esmf_lib_path (str): path to ESMF library directory
-    gmake (str): name of GNU make tool
-    gmake_j (int): number of threads to use when building
-    pnetcdf_path (str): path to PNetCDF installation, if present (or None)
-    pio_filesystem_hints (str): if present (not None), enable filesystem hints for the
+    machine (str or None): machine name (a machine known to cime)
+    os_type (str or None): operating system type; one of linux, aix, darwin or cnl
+        Must be given if machine isn't given; ignored if machine is given
+    netcdf_path (str or None): path to NetCDF installation
+        Must be given if machine isn't given; ignored if machine is given
+    esmf_lib_path (str or None): path to ESMF library directory
+        Must be given if machine isn't given; ignored if machine is given
+    gmake (str or None): name of GNU make tool
+        Ignored if machine is given
+    gmake_j (int or None): number of threads to use when building
+        Ignored if machine is given
+    pnetcdf_path (str or None): path to PNetCDF installation, if present (or None)
+        Ignored if machine is given
+    pio_filesystem_hints (str or None): if present (not None), enable filesystem hints for the
         given filesystem type
+        Ignored if machine is given
     gptl_nano_timers (bool): if True, enable timers in build of the GPTL timing library
+        Ignored if machine is given
     extra_fflags (str): any extra flags to include when compiling Fortran files
+        Ignored if machine is given
     extra_cflags (str): any extra flags to include when compiling C files
+        Ignored if machine is given
     """
 
-    os_type = _check_and_transform_os(os_type)
-    _create_build_dir(build_dir)
-    _fill_out_machine_files(build_dir=build_dir,
-                            os_type=os_type,
-                            compiler=compiler,
-                            netcdf_path=netcdf_path,
-                            esmf_lib_path=esmf_lib_path,
-                            gmake=gmake,
-                            gmake_j=gmake_j,
-                            pnetcdf_path=pnetcdf_path,
-                            pio_filesystem_hints=pio_filesystem_hints,
-                            gptl_nano_timers=gptl_nano_timers,
-                            extra_fflags=extra_fflags,
-                            extra_cflags=extra_cflags)
+    _create_build_dir(build_dir=build_dir,
+                      existing_machine=(machine is not None))
+
+    if machine is None:
+        assert os_type is not None, 'with machine absent, os_type must be given'
+        assert netcdf_path is not None, 'with machine absent, netcdf_path must be given'
+        assert esmf_lib_path is not None, 'with machine absent, esmf_lib_path must be given'
+        os_type = _check_and_transform_os(os_type)
+        _fill_out_machine_files(build_dir=build_dir,
+                                os_type=os_type,
+                                compiler=compiler,
+                                netcdf_path=netcdf_path,
+                                esmf_lib_path=esmf_lib_path,
+                                gmake=gmake,
+                                gmake_j=gmake_j,
+                                pnetcdf_path=pnetcdf_path,
+                                pio_filesystem_hints=pio_filesystem_hints,
+                                gptl_nano_timers=gptl_nano_timers,
+                                extra_fflags=extra_fflags,
+                                extra_cflags=extra_cflags)
+
     _create_and_build_case(cime_path=cime_path,
-                           build_dir=build_dir)
+                           build_dir=build_dir,
+                           machine=machine)
 
 # ========================================================================
 # Private functions
@@ -123,15 +144,23 @@ def _commandline_args(args_to_parse=None):
     args_to_parse: list of strings or None: Generally only used for unit testing; if None,
         reads args from sys.argv
     """
+    # pylint: disable=line-too-long
 
     description = """
 Script to build CTSM library and its dependencies
 
 Typical usage:
 
-    For a fresh build:
+    For a fresh build with a machine that has been ported to cime
+    (http://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html):
 
-        build_ctsm /path/to/nonexistent/directory --os OS --compiler COMPILER --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH
+        build_ctsm /path/to/nonexistent/directory --machine MACHINE --compiler COMPILER
+
+        (Some other optional arguments are also allowed in this usage, but many are not.)
+
+    For a fresh build with a machine that has NOT been ported to cime:
+
+        build_ctsm /path/to/nonexistent/directory --compiler COMPILER --os OS --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH
 
         (Other optional arguments are also allowed in this usage.)
 
@@ -139,7 +168,7 @@ Typical usage:
 
         build_ctsm /path/to/existing/directory --rebuild
 
-        (No other arguments are allowed in this usage.)
+        (Most other arguments are NOT allowed in this usage.)
 """
 
     parser = argparse.ArgumentParser(
@@ -151,18 +180,23 @@ Typical usage:
                         'If --rebuild is given, this should be the path to an existing build,\n'
                         'otherwise this directory must not already exist.')
 
-    parser.add_argument('--rebuild', action='store_true',
-                        help='Rebuild in an existing build directory\n'
-                        'If given, none of the build-related optional arguments should be given.\n')
+    main_opts = parser.add_mutually_exclusive_group()
+
+    main_opts.add_argument('--machine',
+                           help='Name of machine; this must be a machine that has been ported to cime\n'
+                           '(http://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html)\n'
+                           'If given, then none of the machine-definition optional arguments should be given.\n')
+
+    main_opts.add_argument('--rebuild', action='store_true',
+                           help='Rebuild in an existing build directory\n'
+                           'If given, none of the machine-definition or build-related optional arguments\n'
+                           'should be given.\n')
 
     non_rebuild_required = parser.add_argument_group(
-        title='required arguments without --rebuild; not allowed with --rebuild')
+        title='required arguments when not rebuilding',
+        description='These arguments are required if --rebuild is not given; '
+        'they are not allowed with --rebuild:')
     non_rebuild_required_list = []
-
-    non_rebuild_required.add_argument('--os', type=str.lower,
-                                      choices=['linux', 'aix', 'darwin', 'cnl'],
-                                      help='Operating system type')
-    non_rebuild_required_list.append('os')
 
     # For now, only support the compilers that we regularly test with, even though cime
     # supports many other options
@@ -171,104 +205,127 @@ Typical usage:
                                       help='Compiler type')
     non_rebuild_required_list.append('compiler')
 
-    non_rebuild_required.add_argument('--netcdf-path',
+    new_machine_required = parser.add_argument_group(
+        title='required arguments for a user-defined machine',
+        description='These arguments are required if neither --machine nor --rebuild are given; '
+        'they are not allowed with either of those arguments:')
+    new_machine_required_list = []
+
+    new_machine_required.add_argument('--os', type=str.lower,
+                                      choices=['linux', 'aix', 'darwin', 'cnl'],
+                                      help='Operating system type')
+    new_machine_required_list.append('os')
+
+    new_machine_required.add_argument('--netcdf-path',
                                       help='Path to NetCDF installation\n'
                                       '(path to top-level directory, containing subdirectories\n'
                                       'named lib, include, etc.)')
-    non_rebuild_required_list.append('netcdf-path')
+    new_machine_required_list.append('netcdf-path')
 
-    non_rebuild_required.add_argument('--esmf-lib-path',
+    new_machine_required.add_argument('--esmf-lib-path',
                                       help='Path to ESMF library directory\n'
                                       'This directory should include an esmf.mk file')
-    non_rebuild_required_list.append('esmf-lib-path')
+    new_machine_required_list.append('esmf-lib-path')
 
-    non_rebuild_optional = parser.add_argument_group(
-        title='optional arguments without --rebuild; not allowed with --rebuild')
-    non_rebuild_optional_list = []
+    new_machine_optional = parser.add_argument_group(
+        title='optional arguments for a user-defined machine',
+        description='These arguments are optional if neither --machine nor --rebuild are given; '
+        'they are not allowed with either of those arguments:')
+    new_machine_optional_list = []
 
-    non_rebuild_optional.add_argument('--gmake', default='gmake',
+    new_machine_optional.add_argument('--gmake', default='gmake',
                                       help='Name of GNU Make tool on your system\n'
                                       'Default: gmake')
-    non_rebuild_optional_list.append('gmake')
+    new_machine_optional_list.append('gmake')
 
-    non_rebuild_optional.add_argument('--gmake-j', default=8, type=int,
+    new_machine_optional.add_argument('--gmake-j', default=8, type=int,
                                       help='Number of threads to use when building\n'
                                       'Default: 8')
-    non_rebuild_optional_list.append('gmake-j')
+    new_machine_optional_list.append('gmake-j')
 
-    non_rebuild_optional.add_argument('--pnetcdf-path',
+    new_machine_optional.add_argument('--pnetcdf-path',
                                       help='Path to PNetCDF installation, if present\n')
-    non_rebuild_optional_list.append('pnetcdf-path')
+    new_machine_optional_list.append('pnetcdf-path')
 
-    non_rebuild_optional.add_argument('--pio-filesystem-hints', type=str.lower,
+    new_machine_optional.add_argument('--pio-filesystem-hints', type=str.lower,
                                       choices=['gpfs', 'lustre'],
                                       help='Enable filesystem hints for the given filesystem type\n'
                                       'when building the Parallel IO library')
-    non_rebuild_optional_list.append('pio-filesystem-hints')
+    new_machine_optional_list.append('pio-filesystem-hints')
 
-    non_rebuild_optional.add_argument('--gptl-nano-timers', action='store_true',
+    new_machine_optional.add_argument('--gptl-nano-timers', action='store_true',
                                       help='Enable nano timers in build of the GPTL timing library')
-    non_rebuild_optional_list.append('gptl-nano-timers')
+    new_machine_optional_list.append('gptl-nano-timers')
 
-    non_rebuild_optional.add_argument('--extra-fflags', default='',
+    new_machine_optional.add_argument('--extra-fflags', default='',
                                       help='Any extra, non-standard flags to include\n'
                                       'when compiling Fortran files\n'
                                       'Tip: to allow a dash at the start of these flags,\n'
                                       'use a quoted string with an initial space, as in:\n'
                                       '    --extra-fflags " -flag1 -flag2"')
-    non_rebuild_optional_list.append('extra-fflags')
+    new_machine_optional_list.append('extra-fflags')
 
-    non_rebuild_optional.add_argument('--extra-cflags', default='',
+    new_machine_optional.add_argument('--extra-cflags', default='',
                                       help='Any extra, non-standard flags to include\n'
                                       'when compiling C files\n'
                                       'Tip: to allow a dash at the start of these flags,\n'
                                       'use a quoted string with an initial space, as in:\n'
                                       '    --extra-cflags " -flag1 -flag2"')
-    non_rebuild_optional_list.append('extra-cflags')
+    new_machine_optional_list.append('extra-cflags')
 
     add_logging_args(parser)
 
     args = parser.parse_args(args_to_parse)
     if args.rebuild:
-        _check_args_rebuild(parser, args, non_rebuild_required_list+non_rebuild_optional_list)
+        _confirm_args_absent(parser, args, "cannot be provided if --rebuild is set",
+                             non_rebuild_required_list + new_machine_required_list + new_machine_optional_list)
     else:
-        _check_args_non_rebuild(parser, args, non_rebuild_required_list)
+        _confirm_args_present(parser, args, "must be provided if --rebuild is not set",
+                              non_rebuild_required_list)
+        if args.machine:
+            _confirm_args_absent(parser, args, "cannot be provided if --machine is set",
+                                 new_machine_required_list + new_machine_optional_list)
+        else:
+            _confirm_args_present(parser, args, "must be provided if neither --machine nor --rebuild are set",
+                                  new_machine_required_list)
 
     return args
 
-def _check_args_rebuild(parser, args, args_not_allowed_in_rebuild):
-    """Checks if any arguments not allowed with --rebuild are set
+def _confirm_args_absent(parser, args, errmsg, args_not_allowed):
+    """Confirms that all args not allowed in this usage are absent
 
     Calls parser.error if there are problems
 
     Args:
     parser: ArgumentParser
     args: list of parsed arguments
-    args_not_allowed_in_rebuild: list of strings - argument names in this category
+    errmsg: string - message printed if there is a problem
+    args_not_allowed: list of strings - argument names in this category
     """
-    for arg in args_not_allowed_in_rebuild:
+    for arg in args_not_allowed:
         arg_no_dashes = arg.replace('-', '_')
         # To determine whether the user specified an argument, we look at whether it's
         # value differs from its default value. This won't catch the case where the user
         # explicitly set an argument to its default value, but it's not a big deal if we
         # miss printing an error in that case.
         if vars(args)[arg_no_dashes] != parser.get_default(arg_no_dashes):
-            parser.error('--{} cannot be provided if --rebuild is set'.format(arg))
+            parser.error('--{} {}'.format(arg, errmsg))
 
-def _check_args_non_rebuild(parser, args, non_rebuild_required_list):
-    """Checks if any arguments required without --rebuild are absent
+def _confirm_args_present(parser, args, errmsg, args_required):
+    """Confirms that all args required in this usage are present
 
     Calls parser.error if there are problems
 
     Args:
     parser: ArgumentParser
     args: list of parsed arguments
-    non_rebuild_required_list: list of strings - argument names in this category
+    errmsg: string - message printed if there is a problem
+    args_required: list of strings - argument names in this category
     """
-    for arg in non_rebuild_required_list:
+    for arg in args_required:
         arg_no_dashes = arg.replace('-', '_')
         if vars(args)[arg_no_dashes] is None:
-            parser.error('--{} must be provided if --rebuild is not set'.format(arg))
+            parser.error('--{} {}'.format(arg, errmsg))
 
 def _check_and_transform_os(os_type):
     """Check validity of os_type argument and transform it to proper case
@@ -285,18 +342,20 @@ def _check_and_transform_os(os_type):
         raise ValueError("Unknown OS: {}".format(os_type))
     return os_type_transformed
 
-def _create_build_dir(build_dir):
+def _create_build_dir(build_dir, existing_machine):
     """Create the given build directory and any necessary sub-directories
 
     Args:
     build_dir (str): path to build directory; this directory shouldn't exist yet!
+    existing_machine (bool): whether this build is for a machine known to cime
+        (as opposed to an on-the-fly machine port)
     """
     if os.path.exists(build_dir):
         abort('ERROR: When running without --rebuild, the build directory must not exist yet\n'
               '(<{}> already exists)'.format(build_dir))
     os.makedirs(build_dir)
-    os.makedirs(os.path.join(build_dir, _INPUTDATA_DIRNAME))
-    os.makedirs(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME))
+    if not existing_machine:
+        os.makedirs(os.path.join(build_dir, _INPUTDATA_DIRNAME))
 
 def _fill_out_machine_files(build_dir,
                             os_type,
@@ -317,6 +376,7 @@ def _fill_out_machine_files(build_dir,
     path_to_templates = os.path.join(path_to_ctsm_root(),
                                      'lilac_config',
                                      'build_templates')
+    os.makedirs(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME))
 
     # ------------------------------------------------------------------------
     # Fill in config_machines.xml
@@ -372,12 +432,15 @@ def _fill_out_machine_files(build_dir,
               'w') as cc_file:
         cc_file.write(config_compilers)
 
-def _create_and_build_case(cime_path, build_dir):
+def _create_and_build_case(cime_path, build_dir, machine=None):
     """Create a case and build the CTSM library and its dependencies
 
     Args:
     cime_path (str): path to root of cime
     build_dir (str): path to build directory
+    machine (str or None): name of machine or None
+        If None, we assume we're using an on-the-fly machine port
+        Otherwise, machine should be the name of a machine known to cime
     """
     casedir = os.path.join(build_dir, 'case')
 
@@ -391,16 +454,21 @@ def _create_and_build_case(cime_path, build_dir):
     # former in case dot isn't in the user's path; we do the latter in case the commands
     # require you to be in the case directory when you execute them.
 
-    run_cmd_output_on_error(
-        [os.path.join(cime_path, 'scripts', 'create_newcase'),
-         '--case', casedir,
-         '--compset', _COMPSET,
-         '--res', _RES,
-         '--machine', _MACH_NAME,
-         '--driver', 'nuopc',
-         '--extra-machines-dir', os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME),
-         '--run-unsupported'],
-        errmsg='Problem creating CTSM case directory')
+    if machine is None:
+        machine_args = ['--machine', _MACH_NAME,
+                        '--extra-machines-dir', os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME)]
+    else:
+        machine_args = ['--machine', machine]
+
+    create_newcase_cmd = [os.path.join(cime_path, 'scripts', 'create_newcase'),
+                          '--case', casedir,
+                          '--compset', _COMPSET,
+                          '--res', _RES,
+                          '--driver', 'nuopc',
+                          '--run-unsupported']
+    create_newcase_cmd.extend(machine_args)
+    run_cmd_output_on_error(create_newcase_cmd,
+                            errmsg='Problem creating CTSM case directory')
 
     run_cmd_output_on_error([os.path.join(casedir, 'case.setup')],
                             errmsg='Problem setting up CTSM case directory',
