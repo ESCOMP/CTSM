@@ -825,7 +825,7 @@ module CLMFatesInterfaceMod
          if (get_do_harvest()) then
             this%fates(nc)%bc_in(s)%hlm_do_harvest_today = after_start_of_harvest_ts
             if (after_start_of_harvest_ts) then
-               this%fates(nc)%bc_in(s)%hlm_harvest(1:num_harvest_inst) = harvest_rates(1:num_harvest_inst,g)
+               this%fates(nc)%bc_in(s)%hlm_harvest(1:num_harvest_inst) = harvest_rates(g,1:num_harvest_inst)
             else
                this%fates(nc)%bc_in(s)%hlm_harvest(1:num_harvest_inst) = 0._r8
             end if
