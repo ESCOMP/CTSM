@@ -53,7 +53,7 @@ def main(cime_path):
         build_ctsm(cime_path=cime_path,
                    build_dir=build_dir,
                    compiler=args.compiler,
-                   skip_build=args.skip_build,
+                   no_build=args.no_build,
                    machine=args.machine,
                    os_type=args.os,
                    netcdf_path=args.netcdf_path,
@@ -69,7 +69,7 @@ def main(cime_path):
 def build_ctsm(cime_path,
                build_dir,
                compiler,
-               skip_build=False,
+               no_build=False,
                machine=None,
                os_type=None,
                netcdf_path=None,
@@ -87,7 +87,7 @@ def build_ctsm(cime_path,
     cime_path (str): path to root of cime
     build_dir (str): path to build directory
     compiler (str): compiler type
-    skip_build (bool): If True, set things up, but skip doing the actual build
+    no_build (bool): If True, set things up, but skip doing the actual build
     machine (str or None): machine name (a machine known to cime)
     os_type (str or None): operating system type; one of linux, aix, darwin or cnl
         Must be given if machine isn't given; ignored if machine is given
@@ -137,7 +137,7 @@ def build_ctsm(cime_path,
                            build_dir=build_dir,
                            compiler=compiler,
                            machine=machine,
-                           skip_build=skip_build)
+                           no_build=no_build)
 
 # ========================================================================
 # Private functions
@@ -217,10 +217,10 @@ Typical usage:
         'they are not allowed with --rebuild:')
     non_rebuild_optional_list = []
 
-    non_rebuild_optional.add_argument('--skip-build', action='store_true',
+    non_rebuild_optional.add_argument('--no-build', action='store_true',
                                       help='Do the pre-build setup, but do not actually build CTSM\n'
                                       '(This is useful for testing, or for expert use.)')
-    non_rebuild_optional_list.append('skip-build')
+    non_rebuild_optional_list.append('no-build')
 
     new_machine_required = parser.add_argument_group(
         title='required arguments for a user-defined machine',
@@ -450,7 +450,7 @@ def _fill_out_machine_files(build_dir,
               'w') as cc_file:
         cc_file.write(config_compilers)
 
-def _create_and_build_case(cime_path, build_dir, compiler, machine=None, skip_build=False):
+def _create_and_build_case(cime_path, build_dir, compiler, machine=None, no_build=False):
     """Create a case and build the CTSM library and its dependencies
 
     Args:
@@ -460,7 +460,7 @@ def _create_and_build_case(cime_path, build_dir, compiler, machine=None, skip_bu
     machine (str or None): name of machine or None
         If None, we assume we're using an on-the-fly machine port
         Otherwise, machine should be the name of a machine known to cime
-    skip_build (bool): If True, set things up, but skip doing the actual build
+    no_build (bool): If True, set things up, but skip doing the actual build
     """
     casedir = os.path.join(build_dir, 'case')
 
@@ -507,7 +507,7 @@ def _create_and_build_case(cime_path, build_dir, compiler, machine=None, skip_bu
             make_link(os.path.join(casedir, '.env_mach_specific.{}'.format(extension)),
                       os.path.join(build_dir, 'ctsm_build_environment.{}'.format(extension)))
 
-    if not skip_build:
+    if not no_build:
         try:
             subprocess.check_call(
                 [os.path.join(casedir, 'case.build'),
