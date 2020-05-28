@@ -182,6 +182,7 @@ contains
     type(ch4_type)                          , intent(in)    :: ch4_inst
     type(dgvs_type)                         , intent(inout) :: dgvs_inst
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
+    type(saturated_excess_runoff_type)      , intent(in)    :: saturated_excess_runoff_inst
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     class(cnfire_method_type)               , intent(inout) :: cnfire_method
