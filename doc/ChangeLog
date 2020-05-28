@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev098
 Originator(s):  John Truesdale,UCAR/AMP,303-497-1386
-Date:  Thu May 28 12:26:34 MDT 2020
+Date: Thu May 28 14:39:27 MDT 2020
 One-line Summary: Bring in GFDL fv3 cubed sphere grids C24, C48, C96, C192, C384
 
 Purpose of changes
@@ -53,12 +53,11 @@ Notes of particular relevance for developers: (including Code reviews and testin
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
 
 Changes to tests or testing: Add C96 tests
 
 Code reviewed by: @ekluzek
-
 
 CTSM testing: regular, tools
 
@@ -70,7 +69,7 @@ CTSM testing: regular, tools
 
   tools-tests (test/tools):
 
-    cheyenne - 
+    cheyenne - OK
 
   python testing (see instructions in python/README.md; document testing done):
 
