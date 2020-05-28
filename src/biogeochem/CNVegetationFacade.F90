@@ -74,7 +74,7 @@ module CNVegetationFacade
   use CNDVType                        , only : dgvs_type
   use CNDVDriverMod                   , only : CNDVDriver, CNDVHIST
   use EnergyFluxType                  , only : energyflux_type
-  use SoilHydrologyType               , only : soilhydrology_type
+  use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
   use FrictionVelocityMod             , only : frictionvel_type
   use ActiveLayerMod                  , only : active_layer_type
   use SoilBiogeochemStateType         , only : soilBiogeochem_state_type
@@ -851,6 +851,7 @@ contains
     type(crop_type)                         , intent(inout) :: crop_inst
     type(ch4_type)                          , intent(in)    :: ch4_inst
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
+    type(saturated_excess_runoff_type)      , intent(in)    :: saturated_excess_runoff_inst
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
