@@ -211,7 +211,8 @@ contains
     character(len=*), parameter :: subname = 'dynHarvest_interp'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    !!! NOTE I AM NOT USING THE BOUNDS_LEVEL_PROC ASSERTION HERE BECAUSE OF WHERE IN THE CALLING
+    !!! SEQUENCE THIS IS CALLED.  I THINK THIS IS SAFE BUT NEED TO CONFIRM.  --CDK
 
     call dynHarvest_file%time_info%set_current_year()
 
