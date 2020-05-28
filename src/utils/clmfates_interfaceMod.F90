@@ -1539,7 +1539,6 @@ contains
         ! Note that the filter_btran is unioned with active_suction_sl
 
         do s = 1, this%fates(nc)%nsites
-           nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
            c = this%f2hmap(nc)%fcolumn(s)
            nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
            do j = 1,nlevsoil
