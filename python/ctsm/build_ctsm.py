@@ -386,8 +386,13 @@ def _create_and_build_case(cime_path, build_dir):
     # want to always show output (or there should be no output in general); for these, we
     # directly use subprocess.check_call or similar.
 
+    # Also note that, for commands executed from the case directory, we specify the path
+    # to the case directory both in the command itself and in the cwd argument. We do the
+    # former in case dot isn't in the user's path; we do the latter in case the commands
+    # require you to be in the case directory when you execute them.
+
     run_cmd_output_on_error(
-        ['create_newcase',
+        [os.path.join(cime_path, 'scripts', 'create_newcase'),
          '--case', casedir,
          '--compset', _COMPSET,
          '--res', _RES,
@@ -395,18 +400,17 @@ def _create_and_build_case(cime_path, build_dir):
          '--driver', 'nuopc',
          '--extra-machines-dir', os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME),
          '--run-unsupported'],
-        errmsg='Problem creating CTSM case directory',
-        cwd=os.path.join(cime_path, 'scripts'))
+        errmsg='Problem creating CTSM case directory')
 
-    run_cmd_output_on_error(['case.setup'],
+    run_cmd_output_on_error([os.path.join(casedir, 'case.setup')],
                             errmsg='Problem setting up CTSM case directory',
                             cwd=casedir)
 
-    subprocess.check_call(['xmlchange', 'LILAC_MODE=on'], cwd=casedir)
+    subprocess.check_call([os.path.join(casedir, 'xmlchange'), 'LILAC_MODE=on'], cwd=casedir)
 
     try:
         subprocess.check_call(
-            ['case.build',
+            [os.path.join(casedir, 'case.build'),
              '--sharedlib-only'],
             cwd=casedir)
     except subprocess.CalledProcessError:
