@@ -65,6 +65,20 @@ class TestBuildCtsm(unittest.TestCase):
     def test_commandlineArgs_rebuild_invalid4(self, mock_stderr):
         """Test _commandline_args with --rebuild, with an argument that is invalid with this option
 
+        This tests an argument that is optional for new non-rebuild
+        that isn't None
+        """
+        expected_re = r"--skip-build cannot be provided if --rebuild is set"
+        with self.assertRaises(SystemExit):
+            _ = _commandline_args(args_to_parse=['build/directory',
+                                                 '--rebuild',
+                                                 '--skip-build'])
+        self.assertRegex(mock_stderr.getvalue(), expected_re)
+
+    @patch('sys.stderr', new_callable=StringIO)
+    def test_commandlineArgs_rebuild_invalid5(self, mock_stderr):
+        """Test _commandline_args with --rebuild, with an argument that is invalid with this option
+
         This tests an argument that is optional for new machines, which also has a default
         that isn't None
         """
