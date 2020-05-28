@@ -500,6 +500,12 @@ def _create_and_build_case(cime_path, build_dir, compiler, machine=None, skip_bu
 
     make_link(os.path.join(casedir, 'bld'),
               os.path.join(build_dir, 'bld'))
+    if machine is not None:
+        # For a pre-existing machine, the .env_mach_specific files are likely useful to
+        # the user. Make sym links to these with more intuitive names.
+        for extension in ('sh', 'csh'):
+            make_link(os.path.join(casedir, '.env_mach_specific.{}'.format(extension)),
+                      os.path.join(build_dir, 'ctsm_build_environment.{}'.format(extension)))
 
     if not skip_build:
         try:
