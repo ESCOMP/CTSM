@@ -136,6 +136,10 @@ and :math:`\text{LMA}` is the inverse of specific leaf area at the canopy top (:
  +----------------------------------+--------------------------+--------------------------+
  | Tropical Soybean                 |          0.0350          |           0.4102         |
  +----------------------------------+--------------------------+--------------------------+
+ | Miscanthus                       |          0.0570          |           0.2930         |
+ +----------------------------------+--------------------------+--------------------------+
+ | Switchgrass                      |          0.0490          |           0.2930         |
+ +----------------------------------+--------------------------+--------------------------+
 
 Notes: :math:`SLA_{\text{0}}` is the specific leaf area at the canopy top (m :sup:`2` leaf/g biomass),
 and :math:`N_{\text{cb}}` is the fraction of leaf nitrogen in Rubisco (g N in Rubisco g :sup:`-1` N)

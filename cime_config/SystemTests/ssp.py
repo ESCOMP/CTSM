@@ -83,7 +83,14 @@ class SSP(SystemTestsCommon):
         rest_path = os.path.join(dout_sr, "rest", "{}-{}".format(refdate, refsec))
 
         for item in glob.glob("{}/*{}*".format(rest_path, refdate)):
-            os.symlink(item, os.path.join(rundir, os.path.basename(item)))
+            link_name = os.path.join(rundir, os.path.basename(item))
+            if os.path.islink(link_name) and os.readlink(link_name) == item:
+                # Link is already set up correctly: do nothing
+                # (os.symlink raises an exception if you try to replace an
+                # existing file)
+                pass
+            else:
+                os.symlink(item, link_name)
 
         for item in glob.glob("{}/*rpointer*".format(rest_path)):
             shutil.copy(item, rundir)

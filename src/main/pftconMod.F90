@@ -134,6 +134,7 @@ module pftconMod
      real(r8), allocatable :: slatop        (:)   ! SLA at top of canopy [m^2/gC]
      real(r8), allocatable :: dsladlai      (:)   ! dSLA/dLAI [m^2/gC]
      real(r8), allocatable :: leafcn        (:)   ! leaf C:N [gC/gN]
+     real(r8), allocatable :: biofuel_harvfrac (:) ! fraction of stem and leaf cut for harvest, sent to biofuels [unitless]
      real(r8), allocatable :: flnr          (:)   ! fraction of leaf N in Rubisco [no units]
      real(r8), allocatable :: woody         (:)   ! woody lifeform flag (0 or 1)
      real(r8), allocatable :: lflitcn       (:)   ! leaf litter C:N (gC/gN)
@@ -356,7 +357,8 @@ contains
     allocate( this%fnitr         (0:mxpft) )       
     allocate( this%slatop        (0:mxpft) )      
     allocate( this%dsladlai      (0:mxpft) )    
-    allocate( this%leafcn        (0:mxpft) )      
+    allocate( this%leafcn        (0:mxpft) )  
+    allocate( this%biofuel_harvfrac (0:mxpft) )  
     allocate( this%flnr          (0:mxpft) )        
     allocate( this%woody         (0:mxpft) )       
     allocate( this%lflitcn       (0:mxpft) )      
@@ -657,6 +659,9 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('leafcn', this%leafcn, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    
+    call ncd_io('biofuel_harvfrac', this%biofuel_harvfrac, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('flnr', this%flnr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
@@ -1172,6 +1177,10 @@ contains
           if ( this%pprodharv10(i) > 1.0_r8 .or. this%pprodharv10(i) < 0.0_r8 )then
              call endrun(msg=' ERROR: pprodharv10 outside of range.'//errMsg(sourcefile, __LINE__))
           end if
+          if (i < npcropmin .and. this%biofuel_harvfrac(i) /= 0._r8) then
+             call endrun(msg=' ERROR: biofuel_harvfrac non-zero for a non-prognostic crop PFT.'//&
+                  errMsg(sourcefile, __LINE__))
+          end if
        end do
     end if
 
@@ -1282,6 +1291,7 @@ contains
     deallocate( this%slatop)
     deallocate( this%dsladlai)
     deallocate( this%leafcn)
+    deallocate( this%biofuel_harvfrac)
     deallocate( this%flnr)
     deallocate( this%woody)
     deallocate( this%lflitcn)

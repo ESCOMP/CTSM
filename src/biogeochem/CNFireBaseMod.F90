@@ -74,7 +74,7 @@ module CNFireBaseMod
   end type
 
   !
-  type, extends(cnfire_method_type) :: cnfire_base_type
+  type, abstract, extends(cnfire_method_type) :: cnfire_base_type
     private
       ! !PRIVATE MEMBER DATA:
 
@@ -93,6 +93,8 @@ module CNFireBaseMod
       procedure, public :: CNFireInterp      ! Interpolate fire data
       procedure, public :: CNFireArea        ! Calculate fire area
       procedure, public :: CNFireFluxes      ! Calculate fire fluxes
+      procedure(need_lightning_and_popdens_interface), public, deferred :: &
+           need_lightning_and_popdens ! Returns true if need lightning & popdens
       !
       ! !PRIVATE MEMBER FUNCTIONS:
       procedure, private :: hdm_init    ! position datasets for dynamic human population density
@@ -101,6 +103,23 @@ module CNFireBaseMod
       procedure, private :: lnfm_interp ! interpolates between two years of Lightning file data
   end type cnfire_base_type
   !-----------------------------------------------------------------------
+
+  abstract interface
+     !-----------------------------------------------------------------------
+     function need_lightning_and_popdens_interface(this) result(need_lightning_and_popdens)
+       !
+       ! !DESCRIPTION:
+       ! Returns true if need lightning and popdens, false otherwise
+       !
+       ! USES
+       import :: cnfire_base_type
+       !
+       ! !ARGUMENTS:
+       class(cnfire_base_type), intent(in) :: this
+       logical :: need_lightning_and_popdens  ! function result
+       !-----------------------------------------------------------------------
+     end function need_lightning_and_popdens_interface
+  end interface
 
   type(cnfire_const_type), public, protected :: cnfire_const          ! Fire constants shared by Li versons
 
@@ -123,7 +142,7 @@ contains
     character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
-    if ( this%need_lightning_and_popdens ) then
+    if ( this%need_lightning_and_popdens() ) then
        ! Allocate lightning forcing data
        allocate( this%forc_lnfm(bounds%begg:bounds%endg) )
        this%forc_lnfm(bounds%begg:) = nan
@@ -173,7 +192,7 @@ contains
                              rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree, &
                              lfuel, ufuel, cmb_cmplt_fact
 
-    if ( this%need_lightning_and_popdens ) then
+    if ( this%need_lightning_and_popdens() ) then
        cli_scale                 = cnfire_const%cli_scale
        boreal_peatfire_c         = cnfire_const%boreal_peatfire_c
        non_boreal_peatfire_c     = cnfire_const%non_boreal_peatfire_c
@@ -255,7 +274,7 @@ contains
     type(bounds_type), intent(in) :: bounds  
     !-----------------------------------------------------------------------
 
-    if ( this%need_lightning_and_popdens ) then
+    if ( this%need_lightning_and_popdens() ) then
        call this%hdm_interp(bounds)
        call this%lnfm_interp(bounds)
     end if

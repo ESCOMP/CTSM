@@ -63,7 +63,12 @@ contains
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
     !
     ! !ARGUMENTS
-    integer, pointer, optional, intent(out) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
+    ! COMPILER_BUG(wjs, 2020-02-20, intel18.0.3) Although gindex_ocn could be
+    ! intent(out), intel18.0.3 generates a runtime segmentation fault in runs that don't
+    ! have this argument present when this is declared intent(out). (It works fine on
+    ! intel 19.0.2 when declared as intent(out).) See also
+    ! https://github.com/ESCOMP/CTSM/issues/930.
+    integer, pointer, optional, intent(inout) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status

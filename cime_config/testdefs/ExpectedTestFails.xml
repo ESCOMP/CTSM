@@ -33,14 +33,7 @@
   <test name="ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianGs.cheyenne_gnu.clm-monthly">
     <phase name="RUN">
       <status>FAIL</status>
-      <issue>#158</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_D_Ln9_P480x3.f19_g16.I2000Clm50SpGs.cheyenne_intel.clm-waccmx_offline">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#550</issue>
+      <issue>#203</issue>
     </phase>
   </test>
 

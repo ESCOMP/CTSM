@@ -83,6 +83,7 @@ module CNVegCarbonStateType
      real(r8), pointer :: totc_p2c_col             (:) ! (gC/m2) totc_patch averaged to col
      real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool
      real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
+     real(r8), pointer :: totc_grc                 (:) ! (gC/m2) total gridcell carbon
 
      logical, private  :: dribble_crophrv_xsmrpool_2atm
    contains
@@ -269,6 +270,7 @@ contains
     allocate(this%totc_p2c_col             (begc:endc)) ; this%totc_p2c_col             (:) = nan
     allocate(this%totc_col                 (begc:endc)) ; this%totc_col                 (:) = nan
     allocate(this%totecosysc_col           (begc:endc)) ; this%totecosysc_col           (:) = nan
+    allocate(this%totc_grc                 (begg:endg)) ; this%totc_grc                 (:) = nan
 
   end subroutine InitAllocate
 
@@ -1020,6 +1022,7 @@ contains
 
     do g = bounds%begg, bounds%endg
        this%seedc_grc(g) = 0._r8
+       this%totc_grc(g)  = 0._r8
     end do
 
     ! initialize fields for special filters
