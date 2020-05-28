@@ -44,6 +44,14 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="ERI_D_Ld9" grid="C96_t061" compset="I2000Clm50SpRsGs" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+    </options>
+  </test>
   <test name="ERI_D_Ld9" grid="ne30_g16" compset="I2000Clm50BgcCruGs" testmods="clm/vrtlay">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -202,6 +210,23 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+  <test name="ERP_D_Ld5" grid="ne30_g16" compset="I1850Clm50BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+    </options>
+  </test>
+  <test name="ERP_D_Ld5" grid="C96_C96_mg17" compset="IHistClm50BgcCrop" testmods="clm/allActive">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Use a transient compset so we allocate and run all PFTs (non-transient cases only allocate memory for non-zero-weight PFTs)</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_musgs" compset="IHistClm50BgcCrop" testmods="clm/allActive">
@@ -771,6 +796,15 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Test transient PFTs (via HIST) in conjunction with changing glacier area. This test also covers the reset_dynbal_baselines option. CISM is not answer preserving across processor changes, but short test length should be OK.</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld10" grid="C96_C96_mg17" compset="IHistClm50Sp" testmods="clm/decStart">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >test transient PFTs (via HIST) with a December start, reading 78-pft data and running with 16 pfts</option>
     </options>
   </test>
   <test name="ERS_D_Ld10" grid="f10_f10_musgs" compset="IHistClm50Sp" testmods="clm/collapse_pfts_78_to_16_decStart_f10">
