@@ -7,7 +7,7 @@ import string
 import subprocess
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
-from ctsm.os_utils import run_cmd_output_on_error
+from ctsm.os_utils import run_cmd_output_on_error, make_link
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
 
@@ -47,7 +47,7 @@ def main(cime_path):
     process_logging_args(args)
 
     if args.rebuild:
-        abort('ERROR: --rebuild not yet implemented')
+        abort('--rebuild not yet implemented')
     else:
         build_ctsm(cime_path=cime_path,
                    build_dir=args.build_dir,
@@ -367,7 +367,7 @@ def _create_build_dir(build_dir, existing_machine):
         (as opposed to an on-the-fly machine port)
     """
     if os.path.exists(build_dir):
-        abort('ERROR: When running without --rebuild, the build directory must not exist yet\n'
+        abort('When running without --rebuild, the build directory must not exist yet\n'
               '(<{}> already exists)'.format(build_dir))
     os.makedirs(build_dir)
     if not existing_machine:
@@ -492,6 +492,9 @@ def _create_and_build_case(cime_path, build_dir, machine=None, skip_build=False)
                             cwd=casedir)
 
     subprocess.check_call([os.path.join(casedir, 'xmlchange'), 'LILAC_MODE=on'], cwd=casedir)
+
+    make_link(os.path.join(casedir, 'bld'),
+              os.path.join(build_dir, 'bld'))
 
     if not skip_build:
         try:
