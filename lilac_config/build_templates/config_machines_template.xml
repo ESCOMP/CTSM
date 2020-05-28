@@ -113,13 +113,5 @@
       -->
     <module_system type="none"/>
 
-    <!-- EXEROOT: case executable / build root directory
-
-         For this purpose, we have a generic bld directory in
-         CIME_OUTPUT_ROOT, rather than having a case-specific bld
-         directory.
-    -->
-    <EXEROOT>$$CIME_OUTPUT_ROOT/bld</EXEROOT>
-
   </machine>
 </config_machines>
