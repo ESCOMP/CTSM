@@ -45,12 +45,13 @@ def main(cime_path):
     setup_logging_pre_config()
     args = _commandline_args()
     process_logging_args(args)
+    build_dir = os.path.abspath(args.build_dir)
 
     if args.rebuild:
         abort('--rebuild not yet implemented')
     else:
         build_ctsm(cime_path=cime_path,
-                   build_dir=args.build_dir,
+                   build_dir=build_dir,
                    compiler=args.compiler,
                    skip_build=args.skip_build,
                    machine=args.machine,
