@@ -25,7 +25,8 @@ module ColumnType
   use shr_sys_mod    , only : shr_sys_abort
   use clm_varctl     , only : iulog
   use column_varcon  , only : is_hydrologically_active
-
+  use LandunitType   , only : lun
+  !
   ! !PUBLIC TYPES:
   implicit none
   save
@@ -66,6 +67,7 @@ module ColumnType
 
      ! other column characteristics
      logical , pointer :: hydrologically_active(:)   ! true if this column is a hydrologically active type
+     logical , pointer :: urbpoi               (:)   ! true=>urban point
 
      ! levgrnd_class gives the class in which each layer falls. This is relevant for
      ! columns where there are 2 or more fundamentally different layer types. For
@@ -130,6 +132,7 @@ contains
     allocate(this%topo_std    (begc:endc))                     ; this%topo_std    (:)   = nan
 
     allocate(this%hydrologically_active(begc:endc))            ; this%hydrologically_active(:) = .false.
+    allocate(this%urbpoi      (begc:endc))                     ; this%urbpoi      (:)   = .false.
 
   end subroutine Init
 
@@ -165,6 +168,7 @@ contains
     deallocate(this%nbedrock   )
     deallocate(this%levgrnd_class)
     deallocate(this%hydrologically_active)
+    deallocate(this%urbpoi)
 
   end subroutine Clean
 
