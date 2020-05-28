@@ -135,6 +135,7 @@ def build_ctsm(cime_path,
 
     _create_and_build_case(cime_path=cime_path,
                            build_dir=build_dir,
+                           compiler=compiler,
                            machine=machine,
                            skip_build=skip_build)
 
@@ -449,12 +450,13 @@ def _fill_out_machine_files(build_dir,
               'w') as cc_file:
         cc_file.write(config_compilers)
 
-def _create_and_build_case(cime_path, build_dir, machine=None, skip_build=False):
+def _create_and_build_case(cime_path, build_dir, compiler, machine=None, skip_build=False):
     """Create a case and build the CTSM library and its dependencies
 
     Args:
     cime_path (str): path to root of cime
     build_dir (str): path to build directory
+    compiler (str): compiler to use
     machine (str or None): name of machine or None
         If None, we assume we're using an on-the-fly machine port
         Otherwise, machine should be the name of a machine known to cime
@@ -479,9 +481,11 @@ def _create_and_build_case(cime_path, build_dir, machine=None, skip_build=False)
         machine_args = ['--machine', machine]
 
     create_newcase_cmd = [os.path.join(cime_path, 'scripts', 'create_newcase'),
+                          '--output-root', build_dir,
                           '--case', casedir,
                           '--compset', _COMPSET,
                           '--res', _RES,
+                          '--compiler', compiler,
                           '--driver', 'nuopc',
                           '--run-unsupported']
     create_newcase_cmd.extend(machine_args)
