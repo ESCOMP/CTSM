@@ -137,7 +137,7 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : RestartHydrStates
-   use CNFireMethodMod, only: cnfire_method_type
+   use FATESFireBase          , only : fates_fire_base_type
 
    implicit none
    
@@ -179,7 +179,7 @@ module CLMFatesInterfaceMod
       type(fates_restart_interface_type) :: fates_restart
 
       ! fates_fire_data_method determines the fire data passed from HLM to FATES
-      class(cnfire_method_type), allocatable :: fates_fire_data_method
+      class(fates_fire_base_type), allocatable :: fates_fire_data_method
 
    contains
       
@@ -198,7 +198,8 @@ module CLMFatesInterfaceMod
       procedure, public :: TransferZ0mDisp
       procedure, public :: InterpFileInputs  ! Interpolate inputs from files
       procedure, public :: Init2  ! Initialization after determining subgrid weights
-      procedure, public :: InitAccBuffer ! Initialize any accumulation variables
+      procedure, public :: InitAccBuffer ! Initialize any accumulation buffers
+      procedure, public :: InitAccVars   ! Initialize any accumulation variables
       procedure, public :: UpdateAccVars ! Update any accumulation variables
       procedure, private :: init_history_io
       procedure, private :: wrap_update_hlmfates_dyn
@@ -580,8 +581,7 @@ module CLMFatesInterfaceMod
       call FatesReportParameters(masterproc)
 
       ! Fire data to send to FATES
-      allocate(this%fates_fire_data_method, &
-               source=create_fates_fire_data_method())
+      call create_fates_fire_data_method( this%fates_fire_data_method )
 
     end subroutine init
 
@@ -2093,7 +2093,7 @@ module CLMFatesInterfaceMod
   subroutine InitAccBuffer(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialized any accumulation variables needed for FATES
+    ! Initialized any accumulation buffers needed for FATES
     !
     ! !USES:
     !
@@ -2109,6 +2109,28 @@ module CLMFatesInterfaceMod
     call this%fates_fire_data_method%InitAccBuffer( bounds )
 
   end subroutine InitAccBuffer
+
+
+  !-----------------------------------------------------------------------
+  subroutine InitAccVars(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Initialized any accumulation variables needed for FATES
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitAccVars'
+    !-----------------------------------------------------------------------
+
+    call this%fates_fire_data_method%InitAccVars( bounds )
+
+  end subroutine InitAccVars
 
   !-----------------------------------------------------------------------
   subroutine UpdateAccVars(this, bounds)

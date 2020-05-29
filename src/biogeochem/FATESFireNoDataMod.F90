@@ -12,8 +12,7 @@ module FATESFireNoDataMod
   use abortutils, only: endrun
   use clm_varctl, only: iulog
   use decompMod, only: bounds_type
-  use CNFireMethodMod, only: cnfire_method_type
-  use CNFireBaseMod, only: cnfire_base_type
+  use FatesFireBase, only: fates_fire_base_type
   !
   implicit none
   private
@@ -21,7 +20,8 @@ module FATESFireNoDataMod
   ! !PUBLIC TYPES:
   public :: fates_fire_no_data_type
   !
-  type, extends(cnfire_base_type) :: fates_fire_no_data_type
+  type, extends(fates_fire_base_type) :: fates_fire_no_data_type
+      private
 
       ! !PRIVATE MEMBER DATA:
 
