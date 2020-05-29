@@ -111,14 +111,6 @@ contains
     this%atm2lnd_inst%forc_t_downscaled_col(bounds%begc:bounds%endc) = temperature(:)
   end subroutine set_inputs
 
-  subroutine call_partition_precip(this)
-    class(TestPartitionPrecip), intent(inout) :: this
-
-    call partition_precip(bounds, this%glc_behavior, this%atm2lnd_inst, &
-         eflx_sh_precip_conversion = this%sh_from_conversion, &
-         qflx_runoff_rain_to_snow_conversion = this%rain_to_snow_runoff)
-  end subroutine call_partition_precip
-
   @Test
   subroutine lowTemp_resultsInCorrectPartitioning(this)
     class(TestPartitionPrecip), intent(inout) :: this

@@ -380,8 +380,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      Antarctica: remains_ice -->
 <glacier_region_ice_runoff_behavior>'melted','melted','remains_ice','remains_ice'</glacier_region_ice_runoff_behavior>
 
-<glacier_region_rain_to_snow_behavior>'converted_to_snow','converted_to_snow','converted_to_snow','converted_to_snow'</glacier_region_rain_to_snow_behavior>
-
 <!-- This parameter is tied (in a scientific sense) to h2osno_max: For large
      values of h2osno_max, glc_snow_persistence_max_days should be 0; for small
      values of h2osno_max, glc_snow_persistence_max_days should be non-zero. For

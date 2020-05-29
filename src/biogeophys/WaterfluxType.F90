@@ -87,7 +87,6 @@ module WaterfluxType
      real(r8), pointer :: qflx_snomelt_lyr_col     (:,:) ! col snow melt in each layer (mm H2O /s)
      real(r8), pointer :: qflx_snow_drain_col      (:)   ! col drainage from snow pack
      real(r8), pointer :: qflx_qrgwl_col           (:)   ! col qflx_surf at glaciers, wetlands, lakes
-     real(r8), pointer :: qflx_runoff_rain_to_snow_conversion_col(:) ! col runoff flux from rain-to-snow conversion, when this conversion leads to immediate runoff rather than snow (mm H2O /s)
      real(r8), pointer :: qflx_runoff_col          (:)   ! col total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
      real(r8), pointer :: qflx_runoff_r_col        (:)   ! col Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
      real(r8), pointer :: qflx_runoff_u_col        (:)   ! col urban total runoff (qflx_drain+qflx_surf) (mm H2O /s) 
@@ -227,7 +226,6 @@ contains
     allocate(this%qflx_snofrz_col          (begc:endc))              ; this%qflx_snofrz_col          (:)   = nan
     allocate(this%qflx_snofrz_lyr_col      (begc:endc,-nlevsno+1:0)) ; this%qflx_snofrz_lyr_col      (:,:) = nan
     allocate(this%qflx_qrgwl_col           (begc:endc))              ; this%qflx_qrgwl_col           (:)   = nan
-    allocate(this%qflx_runoff_rain_to_snow_conversion_col(begc:endc)); this%qflx_runoff_rain_to_snow_conversion_col(:) = nan
     allocate(this%qflx_drain_perched_col   (begc:endc))              ; this%qflx_drain_perched_col   (:)   = nan
     allocate(this%qflx_deficit_col         (begc:endc))              ; this%qflx_deficit_col         (:)   = nan
     allocate(this%qflx_floodc_col          (begc:endc))              ; this%qflx_floodc_col          (:)   = nan
@@ -300,12 +298,6 @@ contains
          avgflag='A', &
          long_name='surface runoff at glaciers (liquid only), wetlands, lakes; also includes melted ice runoff from QSNWCPICE', &
          ptr_col=this%qflx_qrgwl_col, c2l_scale_type='urbanf')
-
-    this%qflx_runoff_rain_to_snow_conversion_col(begc:endc) = spval
-    call hist_addfld1d (fname='QRUNOFF_RAIN_TO_SNOW_CONVERSION', units='mm/s', &
-         avgflag='A', &
-         long_name='liquid runoff from rain-to-snow conversion when this conversion leads to immediate runoff', &
-         ptr_col=this%qflx_runoff_rain_to_snow_conversion_col, c2l_scale_type='urbanf')
 
     this%qflx_drain_col(begc:endc) = spval
     call hist_addfld1d (fname='QDRAI',  units='mm/s',  &

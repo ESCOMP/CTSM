@@ -361,19 +361,11 @@ contains
           water_inst%waterfluxbulk_inst%qflx_qrgwl_col(c) = water_inst%waterfluxbulk_inst%qflx_qrgwl_col(c) + &
                water_inst%waterlnd2atmbulk_inst%qflx_liq_from_ice_col(c)
 
-          ! NOTE(wjs, 2018-12-05) Similarly, it's not entirely appropriate to put
-          ! qflx_runoff_rain_to_snow_conversion_col into qflx_qrgwl_col, since again, this
-          ! is generated over landunits other than glaciers, wetlands and lakes. I'm
-          ! putting it in qflx_qrgwl_col partly because glacier landunits are typically
-          ! the primary source of this flux, and partly just because I'm not sure where
-          ! else to put it.
-          waterflux_inst%qflx_qrgwl_col(c) = waterflux_inst%qflx_qrgwl_col(c) + &
-               waterflux_inst%qflx_runoff_rain_to_snow_conversion_col(c)
-
           ! qflx_runoff is the sum of a number of terms, including qflx_qrgwl. Since we
           ! are adjusting qflx_qrgwl above, we need to adjust qflx_runoff analogously.
           water_inst%waterfluxbulk_inst%qflx_runoff_col(c) = water_inst%waterfluxbulk_inst%qflx_runoff_col(c) + &
                water_inst%waterlnd2atmbulk_inst%qflx_liq_from_ice_col(c)
+               
        end if
     end do
 
