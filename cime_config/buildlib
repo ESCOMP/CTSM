@@ -21,37 +21,23 @@ from CIME.utils import run_cmd, expect
 logger = logging.getLogger(__name__)
 
 ###############################################################################
-def _write_ctsm_mk(exeroot, libroot, machine):
+def _write_ctsm_mk(gmake, gmake_opts, makefile, exeroot, libroot):
     """Writes a ctsm.mk file in exeroot.
 
     This file can be included by atmosphere model builds outside of cime.
-
-    NOTE: This currently only supports the machines cheyenne (intel) and bishorn
-    (gnu). Also, it assumes that ESMFMKFILE is set in your environment.
-
-    Arguments:
-    exeroot (str): path to build directory
-    libroot (str): path to directory containing libclm.a
-    machine (str): name of machine
     """
 
+    cime_output_file = os.path.join(exeroot, 'cime_variables.mk')
+    # Set MODEL=driver because some link flags are set differently when MODEL=driver, and
+    # those are the ones we want here.
+    cmd = ("{gmake} write_include_and_link_flags OUTPUT_FILE={cime_output_file} "
+           "MODEL=driver {gmake_opts} -f {makefile} ").format(
+               gmake=gmake, cime_output_file=cime_output_file, gmake_opts=gmake_opts, makefile=makefile)
+    rc, out, err = run_cmd(cmd)
+    logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n"%(cmd,out,err))
+    expect(rc == 0, "Command %s failed with rc=%s" % (cmd, rc))
+
     ctsm_mk_path = os.path.join(exeroot, 'ctsm.mk')
-    ctsm_bld_dir = os.path.abspath(os.path.join(libroot, os.pardir))
-    shared_bld_dir = os.path.abspath(os.path.join(ctsm_bld_dir, os.pardir, os.pardir))
-    esmfmkfile = os.environ['ESMFMKFILE']
-
-    # Set machine-specific libs for machines we currently support. Note there are a lot of
-    # hard-coded assumptions here, regarding the compiler, paths to libraries, etc.
-    #
-    # ESMF library doesn't need to be included here, because the necessary elements of the
-    # link line for that are included elsewhere.
-    if machine == 'cheyenne':
-        machine_specific_libs = '-mkl=cluster  -L/glade/u/apps/ch/opt/pnetcdf/1.11.0/mpt/2.19/intel/19.0.2//lib -lpnetcdf -L/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib -Wl,-rpath,/glade/u/apps/ch/opt/netcdf-mpi/4.6.1/mpt/2.19/intel/19.0.2/lib -cxxlib -lrt -ldl -lnetcdff -lnetcdf -cxxlib'
-    elif machine == 'bishorn':
-        machine_specific_libs = '-L/usr/local/lib -lnetcdff -lnetcdf -framework Accelerate'
-    else:
-        expect(False, "Unknown machine for LILAC's ctsm.mk file: {}".format(machine))
-
     with open(ctsm_mk_path, 'w') as ctsm_mk:
         ctsm_mk.write("""
 # ======================================================================
@@ -64,29 +50,32 @@ def _write_ctsm_mk(exeroot, libroot, machine):
 # ======================================================================
 
 # ======================================================================
+# The following CIME variables are meant for internal use, and generally
+# should not be included directly in an atmosphere model's build.
+# ======================================================================
+
+""")
+        with open(cime_output_file) as infile:
+            ctsm_mk.write(infile.read())
+
+    ctsm_bld_dir = os.path.abspath(os.path.join(libroot, os.pardir))
+    with open(ctsm_mk_path, 'a') as ctsm_mk:
+        ctsm_mk.write("""
+# ======================================================================
 # The following settings are meant for internal use, and generally
 # should not be included directly in an atmosphere model's build.
 # ======================================================================
 
-include {esmfmkfile}
-
-SHARED_BLD_DIR = {shared_bld_dir}
 CTSM_BLD_DIR   = {ctsm_bld_dir}
-DEPENDS_LIB    = $(SHARED_BLD_DIR)/lib
-SHR_LIB        = $(CTSM_BLD_DIR)/c1a1l1/lib
-SHR_INC        = $(CTSM_BLD_DIR)/c1a1l1/csm_share
 CTSM_INC       = $(CTSM_BLD_DIR)/clm/obj
-
-LIBS = -L$(CTSM_BLD_DIR)/lib -lclm -L$(SHR_LIB) -lcsm_share -L$(DEPENDS_LIB) -lpiof -lpioc -lgptl -lmct -lmpeu {machine_specific_libs}
 
 # ======================================================================
 # The following settings should be included in an atmosphere model's build.
 # ======================================================================
 
-CTSM_INCLUDES = $(ESMF_F90COMPILEPATHS) -I$(SHR_INC) -I$(CTSM_INC)
-CTSM_LIBS =  $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) $(ESMF_F90ESMFLINKLIBS) $(LIBS)
-""".format(esmfmkfile=esmfmkfile, shared_bld_dir=shared_bld_dir, ctsm_bld_dir=ctsm_bld_dir,
-           machine_specific_libs=machine_specific_libs))
+CTSM_INCLUDES = $(CIME_ESMF_F90COMPILEPATHS) -I$(CIME_CSM_SHR_INCLUDE) -I$(CTSM_INC)
+CTSM_LIBS = -L$(CTSM_BLD_DIR)/lib -lclm $(CIME_ULIBS) $(CIME_SLIBS) $(CIME_MLIBS) $(CIME_F90_LDFLAGS)
+""".format(ctsm_bld_dir=ctsm_bld_dir))
 
 ###############################################################################
 def _main_func():
@@ -97,15 +86,16 @@ def _main_func():
     with Case(caseroot) as case:
 
         casetools = case.get_value("CASETOOLS")
+        makefile = os.path.join(casetools, "Makefile")
         lnd_root = case.get_value("COMP_ROOT_DIR_LND")
         gmake_j = case.get_value("GMAKE_J")
         gmake = case.get_value("GMAKE")
+        gmake_opts = get_standard_makefile_args(case)
         driver = case.get_value("COMP_INTERFACE").lower()
         lilac_mode = case.get_value("LILAC_MODE")
 
         if lilac_mode == 'on':
             driver = "lilac"
-            machine = case.get_value('MACH')
 
         #-------------------------------------------------------
         # create Filepath file
@@ -146,14 +136,24 @@ def _main_func():
         #-------------------------------------------------------
 
         complib = os.path.join(libroot,"libclm.a")
-        makefile = os.path.join(casetools, "Makefile")
 
         cmd = "{} complib -j {} MODEL=clm COMPLIB={} -f {} {}" \
-              .format(gmake, gmake_j, complib, makefile, get_standard_makefile_args(case))
+              .format(gmake, gmake_j, complib, makefile, gmake_opts)
 
         rc, out, err = run_cmd(cmd)
         logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n"%(cmd,out,err))
         expect(rc == 0, "Command %s failed with rc=%s" % (cmd, rc))
+
+        # ------------------------------------------------------------------------
+        # for lilac usage, we need a file containing some Makefile variables (for the atmosphere model's build)
+        # ------------------------------------------------------------------------
+
+        if lilac_mode == 'on':
+            _write_ctsm_mk(gmake=gmake,
+                           gmake_opts=gmake_opts,
+                           makefile=makefile,
+                           exeroot=case.get_value("EXEROOT"),
+                           libroot=libroot)
 
 ###############################################################################
 
