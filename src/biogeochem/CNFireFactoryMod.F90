@@ -125,7 +125,7 @@ contains
   !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
-  function create_fates_fire_data_method() result(fates_fire_data_method)
+  subroutine create_fates_fire_data_method( fates_fire_data_method )
     !
     ! !DESCRIPTION:
     ! Create and return an object of fates_fire_data_method_type.
@@ -134,11 +134,12 @@ contains
     ! !USES:
     use clm_varctl, only: use_fates_spitfire
     use CNFireMethodMod, only: cnfire_method_type
+    use FATESFireBase,      only: fates_fire_base_type
     use FATESFireNoDataMod, only: fates_fire_no_data_type
     use FATESFireDataMod, only: fates_fire_data_type
     !
     ! !ARGUMENTS:
-    class(cnfire_method_type), allocatable :: fates_fire_data_method  ! function result
+    class(fates_fire_base_type), allocatable, intent(inout) :: fates_fire_data_method  ! function result
     !
     ! !LOCAL VARIABLES:
     integer :: current_case
@@ -150,9 +151,9 @@ contains
     select case (current_case)
 
     case (0:1)
-       allocate(fates_fire_data_method, source=fates_fire_no_data_type())
+       allocate(fates_fire_no_data_type :: fates_fire_data_method)
     case (2:3)
-       allocate(fates_fire_data_method, source=fates_fire_data_type())
+       allocate(fates_fire_data_type :: fates_fire_data_method)
 
     case default
        write(iulog,*) subname//' ERROR: unknown method: ', use_fates_spitfire
@@ -160,6 +161,6 @@ contains
 
     end select
 
-  end function create_fates_fire_data_method
+  end subroutine create_fates_fire_data_method
 
 end module CNFireFactoryMod

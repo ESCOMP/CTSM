@@ -12,8 +12,7 @@ module FATESFireDataMod
   use abortutils, only: endrun
   use clm_varctl, only: iulog
   use decompMod, only: bounds_type
-  use CNFireMethodMod, only: cnfire_method_type
-  use CNFireBaseMod, only: cnfire_base_type
+  use FatesFireBase, only: fates_fire_base_type
   !
   implicit none
   private
@@ -21,7 +20,7 @@ module FATESFireDataMod
   ! !PUBLIC TYPES:
   public :: fates_fire_data_type
   !
-  type, extends(cnfire_base_type) :: fates_fire_data_type
+  type, extends(fates_fire_base_type) :: fates_fire_data_type
       ! !PRIVATE MEMBER DATA:
       real(r8), private, pointer :: lnfm24(:)  ! Daily avg lightning by grid cell (#/km2/hr)
     contains
