@@ -42,7 +42,7 @@ module CNFireBaseMod
   use ColumnType                         , only : col
   use PatchType                          , only : patch
   use mct_mod
-  use CNFireMethodMod                    , only : cnfire_method_type
+  use FireMethodType                     , only : fire_method_type
   !
   implicit none
   private
@@ -74,7 +74,7 @@ module CNFireBaseMod
   end type
 
   !
-  type, abstract, extends(cnfire_method_type) :: cnfire_base_type
+  type, abstract, extends(fire_method_type) :: cnfire_base_type
     private
       ! !PRIVATE MEMBER DATA:
 
@@ -88,9 +88,9 @@ module CNFireBaseMod
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
-      procedure, public :: CNFireInit        ! Initialization of CNFire
-      procedure, public :: CNFireReadNML     ! Read in namelist for CNFire
-      procedure, public :: CNFireInterp      ! Interpolate fire data
+      procedure, public :: FireInit          ! Initialization of CNFire
+      procedure, public :: FireReadNML       ! Read in namelist for CNFire
+      procedure, public :: FireInterp        ! Interpolate fire data
       procedure, public :: CNFireArea        ! Calculate fire area
       procedure, public :: CNFireFluxes      ! Calculate fire fluxes
       procedure(need_lightning_and_popdens_interface), public, deferred :: &
@@ -129,7 +129,7 @@ module CNFireBaseMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNFireInit( this, bounds, NLFilename )
+  subroutine FireInit( this, bounds, NLFilename )
     !
     ! !DESCRIPTION:
     ! Initialize CN Fire module
@@ -156,10 +156,10 @@ contains
        call this%lnfm_interp(bounds)
     end if
 
-  end subroutine CNFireInit
+  end subroutine FireInit
 
   !-----------------------------------------------------------------------
-  subroutine CNFireReadNML( this, NLFilename )
+  subroutine FireReadNML( this, NLFilename )
     !
     ! !DESCRIPTION:
     ! Read the namelist for CNFire
@@ -179,7 +179,7 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: subname = 'CNFireReadNML'
+    character(len=*), parameter :: subname = 'FireReadNML'
     character(len=*), parameter :: nmlname = 'lifire_inparm'
     !-----------------------------------------------------------------------
     real(r8) :: cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha
@@ -261,10 +261,10 @@ contains
        end if
     end if
 
-  end subroutine CNFireReadNML
+  end subroutine FireReadNML
 
   !-----------------------------------------------------------------------
-  subroutine CNFireInterp(this,bounds)
+  subroutine FireInterp(this,bounds)
     !
     ! !DESCRIPTION:
     ! Interpolate CN Fire datasets
@@ -279,7 +279,7 @@ contains
        call this%lnfm_interp(bounds)
     end if
 
-  end subroutine CNFireInterp
+  end subroutine FireInterp
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
