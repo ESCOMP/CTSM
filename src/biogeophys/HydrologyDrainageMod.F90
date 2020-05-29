@@ -186,6 +186,7 @@ contains
 
             qflx_drain_perched(c) = 0._r8
             qflx_rsub_sat(c)      = spval
+            qflx_infl(c)          = 0._r8
 
          end if
 
