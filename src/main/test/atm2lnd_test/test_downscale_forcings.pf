@@ -13,7 +13,6 @@ module test_downscale_forcings
   use WaterInfoBulkType, only : water_info_bulk_type
   use TopoMod, only : topo_type
   use decompMod, only : bounds_type
-  use glcBehaviorMod, only : glc_behavior_type
   use filterColMod
 
   implicit none
@@ -28,9 +27,7 @@ module test_downscale_forcings
      type(atm2lnd_type) :: atm2lnd_inst
      type(wateratm2lndbulk_type) :: wateratm2lndbulk_inst
      type(topo_type_always_downscale) :: topo_inst
-     type(glc_behavior_type) :: glc_behavior
      real(r8), allocatable :: eflx_sh_precip_conversion(:)
-     real(r8), allocatable :: rain_to_snow_runoff(:)
    contains
      procedure :: setUp
      procedure :: tearDown
@@ -203,7 +200,7 @@ contains
   subroutine call_downscale_forcings(this)
     ! Wraps the call to downscale_forcings
     !
-    ! Modifies this%atm2lnd_inst, this%eflx_sh_precip_conversion, and this%rain_to_snow_runoff
+    ! Modifies this%atm2lnd_inst and this%eflx_sh_precip_conversion
     class(TestDownscaleForcings), intent(inout) :: this
 
     this%eflx_sh_precip_conversion = col_array()

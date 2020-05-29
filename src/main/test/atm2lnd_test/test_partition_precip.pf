@@ -5,7 +5,6 @@ module test_partition_precip
   use pfunit_mod
   use atm2lndMod
   use atm2lndType
-  use glcBehaviorMod, only : glc_behavior_type
   use shr_kind_mod, only : r8 => shr_kind_r8
   use unittestSubgridMod
   use unittestSimpleSubgridSetupsMod
@@ -24,12 +23,10 @@ module test_partition_precip
      type(atm2lnd_type) :: atm2lnd_inst
      type(wateratm2lndbulk_type) :: wateratm2lndbulk_inst
      real(r8), allocatable :: sh_from_conversion(:)
-     real(r8), allocatable :: rain_to_snow_runoff(:)
    contains
      procedure :: setUp
      procedure :: tearDown
      procedure :: set_inputs
-     procedure :: call_partition_precip
   end type TestPartitionPrecip
 
   real(r8), parameter :: tol = 1.e-13
@@ -55,8 +52,7 @@ contains
     call unittest_subgrid_teardown()
   end subroutine tearDown
 
-  subroutine set_inputs(this, rain, snow, temperature, &
-       repartition_rain_snow, rain_to_snow_runs_off)
+  subroutine set_inputs(this, rain, snow, temperature, repartition_rain_snow)
     ! set necessary input variables
     class(TestPartitionPrecip), intent(inout) :: this
     real(r8), intent(in) :: rain(:)
@@ -66,24 +62,13 @@ contains
     ! If not provided, set to true
     logical, intent(in), optional :: repartition_rain_snow
 
-    ! If provided, this should be a gridcell-level array; if not provided, set to false
-    logical, intent(in), optional :: rain_to_snow_runs_off(bounds%begg:)
-
     logical :: l_repartition_rain_snow
-    logical :: l_rain_to_snow_runs_off(bounds%begg:bounds%endg)
     type(atm2lnd_params_type) :: atm2lnd_params
 
     if (present(repartition_rain_snow)) then
        l_repartition_rain_snow = repartition_rain_snow
     else
        l_repartition_rain_snow = .true.
-    end if
-
-    if (present(rain_to_snow_runs_off)) then
-       @assertEqual([bounds%endg], ubound(rain_to_snow_runs_off))
-       l_rain_to_snow_runs_off(:) = rain_to_snow_runs_off(:)
-    else
-       l_rain_to_snow_runs_off(:) = .false.
     end if
 
     atm2lnd_params = atm2lnd_params_type( &
@@ -96,14 +81,9 @@ contains
          precip_repartition_nonglc_all_rain_t = precip_repartition_nonglc_all_rain_t)
 
     ! Allocate necessary variables
-    call this%glc_behavior%InitSetDirectly( &
-         begg = bounds%begg, &
-         endg = bounds%endg, &
-         rain_to_snow_runs_off = l_rain_to_snow_runs_off)
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
     call this%wateratm2lndbulk_inst%InitForTesting(bounds,water_info_bulk_type())
     this%sh_from_conversion = col_array()
-    this%rain_to_snow_runoff = col_array()
 
     ! set input variables
     this%wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(bounds%begg:bounds%endg) = rain(:)
@@ -263,47 +243,6 @@ contains
   end subroutine rainToSnow_resultsInCorrectHeatFlux
 
   @Test
-  subroutine lowTemp_glcBehaviorRunsOff_resultsInCorrectChanges(this)
-    class(TestPartitionPrecip), intent(inout) :: this
-
-    call setup_single_veg_patch(pft_type=1)
-    call this%set_inputs(rain=[2._r8], snow=[3._r8], temperature=[250._r8], &
-         rain_to_snow_runs_off=[.true.])
-
-    call this%call_partition_precip()
-
-    associate(&
-         rain_col => this%atm2lnd_inst%forc_rain_downscaled_col, &
-         snow_col => this%atm2lnd_inst%forc_snow_downscaled_col)
-    @assertEqual([0._r8], rain_col, tolerance=tol)
-    @assertEqual([3._r8], snow_col, tolerance=tol)
-    @assertEqual([2._r8], this%rain_to_snow_runoff, tolerance=tol)
-    @assertEqual([0._r8], this%sh_from_conversion)
-    end associate
-  end subroutine lowTemp_glcBehaviorRunsOff_resultsInCorrectChanges
-
-  @Test
-  subroutine highTemp_glcBehaviorRunsOff_resultsInCorrectPartitioning(this)
-    ! The partitioning in this case should be the same as if we were using the default
-    ! glc behavior
-    class(TestPartitionPrecip), intent(inout) :: this
-
-    call setup_single_veg_patch(pft_type=1)
-    call this%set_inputs(rain=[2._r8], snow=[3._r8], temperature=[290._r8], &
-         rain_to_snow_runs_off=[.true.])
-
-    call this%call_partition_precip()
-
-    associate(&
-         rain_col => this%atm2lnd_inst%forc_rain_downscaled_col, &
-         snow_col => this%atm2lnd_inst%forc_snow_downscaled_col)
-    @assertEqual([5._r8], rain_col, tolerance=tol)
-    @assertEqual([0._r8], snow_col, tolerance=tol)
-    @assertEqual([0._r8], this%rain_to_snow_runoff, tolerance=tol)
-    end associate
-  end subroutine highTemp_glcBehaviorRunsOff_resultsInCorrectPartitioning
-
-  @Test
   subroutine repartitionFlagFalse_resultsInNoChange(this)
     class(TestPartitionPrecip), intent(inout) :: this
 
@@ -323,7 +262,6 @@ contains
     @assertEqual([0._r8], rain_to_snow_conversion_col)
     @assertEqual([0._r8], snow_to_rain_conversion_col)
     @assertEqual([0._r8], this%sh_from_conversion)
-    @assertEqual([0._r8], this%rain_to_snow_runoff)
     end associate
   end subroutine repartitionFlagFalse_resultsInNoChange
 
