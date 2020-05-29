@@ -163,7 +163,7 @@ module glcBehaviorMod
 
   ! !PRIVATE MEMBER DATA:
 
-  ! Longest name allowed for glacier_region_behavior, glacier_region_melt_behavior,
+  ! Longest name allowed for glacier_region_behavior, glacier_region_melt_behavior and
   ! glacier_region_ice_runoff_behavior
   integer, parameter :: max_behavior_name_len = 32
 
@@ -295,7 +295,7 @@ contains
     integer, parameter :: ICE_RUNOFF_BEHAVIOR_MELTED = 2
 
     ! value indicating that a behavior code has not been set (for glacier_region_behavior,
-    ! glacier_region_melt_behavior, glacier_region_ice_runoff_behavior)
+    ! glacier_region_melt_behavior or glacier_region_ice_runoff_behavior)
     integer, parameter :: BEHAVIOR_UNSET = -1
 
     character(len=*), parameter :: subname = 'InitFromInputs'
@@ -500,6 +500,8 @@ contains
     class(glc_behavior_type), intent(inout) :: this
     integer, intent(in) :: begg  ! beginning gridcell index
     integer, intent(in) :: endg  ! ending gridcell index
+    logical, intent(in) :: has_virtual_columns(begg:)
+    logical, intent(in) :: collapse_to_atm_topo(begg:)
     !
     ! !LOCAL VARIABLES:
 
@@ -510,6 +512,8 @@ contains
     SHR_ASSERT_ALL_FL((ubound(collapse_to_atm_topo) == (/endg/)), sourcefile, __LINE__)
 
     call this%InitAllocate(begg, endg)
+    this%has_virtual_columns_grc(:) = has_virtual_columns(:)
+    this%collapse_to_atm_topo_grc(:) = collapse_to_atm_topo(:)
 
   end subroutine InitSetDirectly
 
@@ -535,7 +539,6 @@ contains
     allocate(this%melt_replaced_by_ice_grc(begg:endg)); this%melt_replaced_by_ice_grc(:) = .false.
     allocate(this%collapse_to_atm_topo_grc(begg:endg)); this%collapse_to_atm_topo_grc(:) = .false.
     allocate(this%ice_runoff_melted_grc(begg:endg)); this%ice_runoff_melted_grc(:) = .false.
-    allocate(this%rain_to_snow_runs_off_grc(begg:endg)); this%rain_to_snow_runs_off_grc(:) = .false.
 
   end subroutine InitAllocate
 
