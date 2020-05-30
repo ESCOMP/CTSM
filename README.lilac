@@ -39,7 +39,7 @@ library (I), do the following:
    > make clean
    > source ./.env_mach_specific.sh
    > export DEBUG=TRUE
-   > make atm_driver 
+   > make COMPILER=intel atm_driver
 
 2) to generate the input namelists
 

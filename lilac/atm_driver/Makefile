@@ -8,9 +8,7 @@
 # (1) Run cime's configure tool in order to generate a Macros.make file
 #
 # (2) Source the .env_mach_specific.sh file created by the configure
-#     tool in order to set up the environment correctly. Among other
-#     things, this should set the environment variable ESMFMKFILE. (See
-#     notes below about the need for this.)
+#     tool in order to set up the environment correctly.
 #
 # (3) Set the environment variable CTSM_MKFILE - e.g.
 #
@@ -22,26 +20,16 @@ include Macros.make
 
 include $(CTSM_MKFILE)
 
-# Most atmosphere model builds shouldn't need this directly, but we use
-# it here in order to easily get a f90 compiler and f90 compile opts for
-# building atm_driver.o. (This is a bit of a kludge that we should
-# change later.)
-include $(ESMFMKFILE)
-
-#================================================================================
-# Compiler and linker rules using ESMF_ variables supplied by esmf.mk
-#================================================================================
-
 .SUFFIXES: .F90
 
 %.o : %.F90
-	$(ESMF_F90COMPILER) -c $(ESMF_F90COMPILEOPTS) $(CTSM_INCLUDES) $(FFLAGS) $<
+	$(MPIFC) -c $(CTSM_INCLUDES) $(FFLAGS) $<
 
 atm_driver.o : $(CURDIR)/atm_driver.F90
-	$(ESMF_F90COMPILER) -c $(ESMF_F90COMPILEOPTS) $(CTSM_INCLUDES) $(FFLAGS) $<
+	$(MPIFC) -c $(CTSM_INCLUDES) $(FFLAGS) $<
 
 atm_driver: atm_driver.o 
-	$(ESMF_F90LINKER) $(ESMF_F90LINKOPTS) -o $@ $^ $(CTSM_LIBS)
+	$(MPIFC) -o $@ $^ $(CTSM_LIBS)
 	mv atm_driver atm_driver.exe
 
 # module dependencies:
