@@ -515,3 +515,6 @@ def _create_and_build_case(cime_path, build_dir, compiler, machine=None, no_buil
                 cwd=casedir)
         except subprocess.CalledProcessError:
             abort('ERROR building CTSM or its dependencies - see above for details')
+
+        make_link(os.path.join(casedir, 'bld', 'ctsm.mk'),
+                  os.path.join(build_dir, 'ctsm.mk'))
