@@ -280,7 +280,7 @@ contains
     use clm_varctl            , only : use_crop, ndep_from_cpl
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size_real, get_curr_calday
-    use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
+    use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
     use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
     use DaylengthMod          , only : InitDaylength
@@ -436,9 +436,7 @@ contains
     end if
 
     ! Initialize instances of all derived types as well as time constant variables
-
     call clm_instInit(bounds_proc)
-
     ! Initialize SNICAR optical and aging parameters
 
     call SnowOptics_init( ) ! SNICAR optical parameters:

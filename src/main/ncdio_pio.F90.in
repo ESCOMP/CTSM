@@ -176,12 +176,11 @@ contains
     !
     ! !USES:
     use shr_pio_mod     , only : shr_pio_getiosys, shr_pio_getiotype, shr_pio_getioformat
-    use clm_varctl      , only : inst_name
     !-----------------------------------------------------------------------
 
-    PIO_subsystem => shr_pio_getiosys(inst_name)
-    io_type       =  shr_pio_getiotype(inst_name)
-    io_netcdf_format = shr_pio_getioformat(inst_name)
+    PIO_subsystem => shr_pio_getiosys('LND')
+    io_type       =  shr_pio_getiotype('LND')
+    io_netcdf_format = shr_pio_getioformat('LND')
   end subroutine ncd_pio_init
 
   !-----------------------------------------------------------------------

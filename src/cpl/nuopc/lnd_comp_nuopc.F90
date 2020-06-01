@@ -8,6 +8,7 @@ module lnd_comp_nuopc
   use NUOPC                  , only : NUOPC_CompDerive, NUOPC_CompSetEntryPoint, NUOPC_CompSpecialize
   use NUOPC                  , only : NUOPC_CompFilterPhaseMap, NUOPC_CompAttributeGet, NUOPC_CompAttributeSet
   use NUOPC_Model            , only : model_routine_SS           => SetServices
+  use NUOPC_Model            , only : SetVM
   use NUOPC_Model            , only : model_label_Advance        => label_Advance
   use NUOPC_Model            , only : model_label_DataInitialize => label_DataInitialize
   use NUOPC_Model            , only : model_label_SetRunClock    => label_SetRunClock
@@ -18,7 +19,7 @@ module lnd_comp_nuopc
   use shr_file_mod           , only : shr_file_getlogunit, shr_file_setlogunit
   use shr_orb_mod            , only : shr_orb_decl, shr_orb_params, SHR_ORB_UNDEF_REAL, SHR_ORB_UNDEF_INT
   use shr_cal_mod            , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
-  use spmdMod                , only : masterproc, mpicom, spmd_init
+  use spmdMod                , only : masterproc, mpicom, spmd_init, npes
   use decompMod              , only : bounds_type, ldecomp, get_proc_bounds
   use domainMod              , only : ldomain
   use controlMod             , only : control_setNL
@@ -35,11 +36,11 @@ module lnd_comp_nuopc
   use clm_driver             , only : clm_drv
   use lnd_import_export      , only : advertise_fields, realize_fields
   use lnd_import_export      , only : import_fields, export_fields
-  use lnd_shr_methods        , only : chkerr, state_setscalar, state_getscalar, state_diagnose, alarmInit
-  use lnd_shr_methods        , only : set_component_logging, get_component_instance, log_clock_advance
+  use nuopc_shr_methods      , only : chkerr, state_setscalar, state_getscalar, state_diagnose, alarmInit
+  use nuopc_shr_methods      , only : set_component_logging, get_component_instance, log_clock_advance
   use perf_mod               , only : t_startf, t_stopf, t_barrierf
   use netcdf                 , only : nf90_open, nf90_nowrite, nf90_noerr, nf90_close, nf90_strerror
-  use netcdf                 , only : nf90_inq_dimid, nf90_inq_varid, nf90_get_var  
+  use netcdf                 , only : nf90_inq_dimid, nf90_inq_varid, nf90_get_var
   use netcdf                 , only : nf90_inquire_dimension, nf90_inquire_variable
 
   implicit none
@@ -47,6 +48,7 @@ module lnd_comp_nuopc
 
   ! Module routines
   public  :: SetServices
+  public  :: SetVM
   private :: InitializeP0
   private :: InitializeAdvertise
   private :: InitializeRealize
@@ -66,7 +68,7 @@ module lnd_comp_nuopc
   integer                :: flds_scalar_index_ny = 0
   integer                :: flds_scalar_index_nextsw_cday = 0
 
-  logical                :: glc_present 
+  logical                :: glc_present
   logical                :: rof_prognostic
   integer, parameter     :: dbug = 0
   character(*),parameter :: modName =  "(lnd_comp_nuopc)"
@@ -167,7 +169,7 @@ contains
     ! local variables
     type(ESMF_VM)      :: vm
     integer            :: lmpicom
-    integer            :: ierr 
+    integer            :: ierr
     integer            :: n
     integer            :: localpet
     integer            :: compid      ! component id
@@ -176,6 +178,7 @@ contains
     character(len=CL)  :: logmsg
     logical            :: isPresent, isSet
     logical            :: cism_evolve
+    integer            :: ierror, commsize
     character(len=*), parameter :: subname=trim(modName)//':(InitializeAdvertise) '
     character(len=*), parameter :: format = "('("//trim(subname)//") :',A)"
     !-------------------------------------------------------------------------------
@@ -199,13 +202,14 @@ contains
 
     call mpi_comm_dup(lmpicom, mpicom, ierr)
 
+
     ! Note still need compid for those parts of the code that use the data model
     ! functionality through subroutine calls
     call NUOPC_CompAttributeGet(gcomp, name='MCTID', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) compid  ! convert from string to integer
 
-    call spmd_init( mpicom, compid )
+    call spmd_init(mpicom, compid)
 
     !----------------------------------------------------------------------------
     ! determine instance information
@@ -294,7 +298,7 @@ contains
     if (trim(cvalue) == 'sglc') then
        glc_present = .false.
     else
-       glc_present = .true. 
+       glc_present = .true.
        cism_evolve = .true.
        call NUOPC_CompAttributeGet(gcomp, name="cism_evolve", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -329,7 +333,8 @@ contains
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
 
     use clm_instMod, only : lnd2atm_inst, lnd2glc_inst, water_inst
-
+!$  use omp_lib, only : omp_set_num_threads
+    use ESMF, only : ESMF_VM, ESMF_VMGet
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
     type(ESMF_State)     :: importState
@@ -340,6 +345,7 @@ contains
     ! local variables
     type(ESMF_Mesh)         :: mesh, gridmesh        ! esmf mesh
     type(ESMF_DistGrid)     :: DistGrid              ! esmf global index space descriptor
+    type(ESMF_VM)           :: vm
     type(ESMF_Time)         :: currTime              ! Current time
     type(ESMF_Time)         :: startTime             ! Start time
     type(ESMF_Time)         :: stopTime              ! Stop time
@@ -358,6 +364,8 @@ contains
     integer                 :: curr_tod              ! Start time of day (sec)
     integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
     integer                 :: dtime_clm             ! ctsm time-step
+    integer                 :: localPet
+    integer                 :: localpecount
     integer, pointer        :: gindex(:)             ! global index space for land and ocean points
     integer, pointer        :: gindex_lnd(:)         ! global index space for just land points
     integer, pointer        :: gindex_ocn(:)         ! global index space for just ocean points
@@ -395,7 +403,7 @@ contains
     integer                 :: maxIndex(2)
     real(r8)                :: mincornerCoord(2)
     real(r8)                :: maxcornerCoord(2)
-    type(ESMF_Grid)         :: lgrid 
+    type(ESMF_Grid)         :: lgrid
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
@@ -408,7 +416,6 @@ contains
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_setLogUnit (iulog)
-
 #if (defined _MEMTRACE)
     if (masterproc) then
        lbnum=1
@@ -416,6 +423,13 @@ contains
     endif
 #endif
 
+    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+!$  call omp_set_num_threads(localPeCount)
+    print *,__FILE__,__LINE__,localPeCount
     !----------------------
     ! Obtain attribute values
     !----------------------
@@ -553,7 +567,7 @@ contains
     ! If no land then abort for now
     ! TODO: need to handle the case of noland with CMEPS
     ! if ( noland ) then
-    !    call shr_sys_abort(trim(subname)//"ERROR: Currently cannot handle case of single column with non-land") 
+    !    call shr_sys_abort(trim(subname)//"ERROR: Currently cannot handle case of single column with non-land")
     ! end if
 
     ! obtain global index array for just land points which includes mask=0 or ocean points
@@ -767,7 +781,7 @@ contains
 
 #if (defined _MEMTRACE)
     if(masterproc) then
-       write(iulog,*) TRIM(Sub) // ':end::'
+       write(iulog,*) TRIM(subname) // ':end::'
        lbnum=1
        call memmon_dump_fort('memmon.out','lnd_comp_nuopc_InitializeRealize:end::',lbnum)
        call memmon_reset_addr()
@@ -785,8 +799,10 @@ contains
     !------------------------
     ! Run CTSM
     !------------------------
-    
+
     use clm_instMod, only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
+!$  use omp_lib, only : omp_set_num_threads
+    use ESMF, only : ESMF_VM, ESMF_VMGet
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -798,6 +814,7 @@ contains
     type(ESMF_Time)        :: currTime
     type(ESMF_Time)        :: nextTime
     type(ESMF_State)       :: importState, exportState
+    type(ESMF_VM)          :: vm
     character(ESMF_MAXSTR) :: cvalue
     character(ESMF_MAXSTR) :: case_name      ! case name
     integer                :: ymd            ! CTSM current date (YYYYMMDD)
@@ -812,6 +829,8 @@ contains
     integer                :: tod_sync       ! Sync current time of day (sec)
     integer                :: dtime          ! time step increment (sec)
     integer                :: nstep          ! time step index
+    integer                :: localPet
+    integer                :: localpecount
     logical                :: rstwr          ! .true. ==> write restart file before returning
     logical                :: nlend          ! .true. ==> last time-step
     logical                :: dosend         ! true => send data back to driver
@@ -832,6 +851,13 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+!$  call omp_set_num_threads(localPeCount)
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_setLogUnit (iulog)
@@ -1210,7 +1236,7 @@ contains
     ! input/output variables
     type(ESMF_GridComp) , intent(in)    :: gcomp
     integer             , intent(in)    :: logunit
-    logical             , intent(in)    :: mastertask 
+    logical             , intent(in)    :: mastertask
     integer             , intent(out)   :: rc              ! output error
 
     ! local variables
@@ -1304,12 +1330,12 @@ contains
   subroutine clm_orbital_update(clock, logunit,  mastertask, eccen, obliqr, lambm0, mvelpp, rc)
 
     !----------------------------------------------------------
-    ! Update orbital settings 
+    ! Update orbital settings
     !----------------------------------------------------------
 
     ! input/output variables
     type(ESMF_Clock) , intent(in)    :: clock
-    integer          , intent(in)    :: logunit 
+    integer          , intent(in)    :: logunit
     logical          , intent(in)    :: mastertask
     real(R8)         , intent(inout) :: eccen  ! orbital eccentricity
     real(R8)         , intent(inout) :: obliqr ! Earths obliquity in rad
@@ -1319,7 +1345,7 @@ contains
 
     ! local variables
     type(ESMF_Time)   :: CurrTime ! current time
-    integer           :: year     ! model year at current time 
+    integer           :: year     ! model year at current time
     integer           :: orb_year ! orbital year for current orbital computation
     character(len=CL) :: msgstr   ! temporary
     logical           :: lprint
@@ -1335,7 +1361,7 @@ contains
        orb_year = orb_iyear + (year - orb_iyear_align)
        lprint = mastertask
     else
-       orb_year = orb_iyear 
+       orb_year = orb_iyear
        if (first_time) then
           lprint = mastertask
           first_time = .false.
