@@ -1,4 +1,105 @@
 ===============================================================
+Tag name:  ctsm1.0.dev098
+Originator(s):  John Truesdale,UCAR/AMP,303-497-1386
+Date: Thu May 28 14:39:27 MDT 2020
+One-line Summary: Bring in GFDL fv3 cubed sphere grids C24, C48, C96, C192, C384
+
+Purpose of changes
+------------------
+
+Add support for new GFDL fv3 curbed sphere grids. Low resolution C24, and C48
+Moderate resolution C96, and high resolution C192 and C384. Add in mapping files
+so all can be created. Make C96 a default resolution created with new surface
+datasets. For all of these only the crop versions of surface and landuse.timeseries
+are in place, as non-crop can run in CLM without needing different datasets. Also for
+historical landuse.timeseries we use the SSP5-8.5 timeseries files, so that it can be
+used for future, historical and beyond 2015 present day.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #1025
+ Fixes #1025 -- By default only create crop version of surface/landuse.timeseries datasets
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): New surface and landuse.timeseries files
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: Add C96 tests
+
+Code reviewed by: @ekluzek
+
+CTSM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (15 new tests for new resolutions)
+
+  tools-tests (test/tools):
+
+    cheyenne - OK
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - PASS (cheyenne)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #891
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #891 -- add definitions/defaults for GFDL fv3 cubed sphere grids C24, C48, C96, C192, C384
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev097
 Originator(s): ycheng (Yanyan Cheng)
 Date:  Mon May 25 15:14:56 MDT 2020
