@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the CLM documentation
+Welcome to the CTSM documentation
 ==================================
 
-This document has two major sections.
+This document has three major sections.
 
 .. toctree::
    :maxdepth: 2
@@ -14,6 +14,7 @@ This document has two major sections.
 
    users_guide/index.rst
    tech_note/index.rst
+   lilac/index.rst
 
 Indices and tables
 ==================
