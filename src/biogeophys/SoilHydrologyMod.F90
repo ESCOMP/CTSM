@@ -194,111 +194,19 @@ contains
             ! fractional impermeability
 
             vol_ice(c,j) = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
-            if (origflag == 1) then
-               icefrac(c,j) = min(1._r8,h2osoi_ice(c,j)/(h2osoi_ice(c,j)+h2osoi_liq(c,j)))
-            else
-               icefrac(c,j) = min(1._r8,vol_ice(c,j)/watsat(c,j))
-            endif
+            eff_porosity(c,j) = max(0.01_r8,watsat(c,j)-vol_ice(c,j))
+            icefrac(c,j) = min(1._r8,vol_ice(c,j)/watsat(c,j))
 
+            ! fracice is only used in code with origflag == 1. For this calculation, we use
+            ! the version of icefrac that was used in this original hydrology code.
+            if (h2osoi_ice(c,j) == 0._r8) then
+               ! Avoid possible divide by zero (in case h2osoi_liq(c,j) is also 0)
+               icefrac_orig = 0._r8
+            else
+               icefrac_orig = min(1._r8,h2osoi_ice(c,j)/(h2osoi_ice(c,j)+h2osoi_liq(c,j)))
+            end if
             fracice(c,j) = max(0._r8,exp(-3._r8*(1._r8-icefrac(c,j)))- exp(-3._r8))/(1.0_r8-exp(-3._r8))
          end do
-      end do
-
-      ! Saturated fraction
-
-      do fc = 1, num_hydrologyc
-         c = filter_hydrologyc(fc)
-         fff(c) = 0.5_r8
-         if (use_vichydro) then 
-            top_moist(c) = 0._r8
-            top_ice(c) = 0._r8
-            top_max_moist(c) = 0._r8
-            do j = 1, nlayer - 1
-               top_ice(c) = top_ice(c) + ice(c,j)
-               top_moist(c) =  top_moist(c) + moist(c,j) + ice(c,j)
-               top_max_moist(c) = top_max_moist(c) + max_moist(c,j)
-            end do
-            if(top_moist(c)> top_max_moist(c)) top_moist(c)= top_max_moist(c)
-            top_ice(c)     = max(0._r8,top_ice(c))
-            max_infil(c)   = (1._r8+b_infil(c)) * top_max_moist(c)
-            ex(c)          = b_infil(c) / (1._r8 + b_infil(c))
-            A(c)           = 1._r8 - (1._r8 - top_moist(c) / top_max_moist(c))**ex(c)
-            i_0(c)         = max_infil(c) * (1._r8 - (1._r8 - A(c))**(1._r8/b_infil(c)))
-            fsat(c)        = A(c)  !for output
-         else
-            fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c))
-         end if
-
-         ! use perched water table to determine fsat (if present)
-         if ( frost_table(c) > zwt(c)) then 
-            if (use_vichydro) then
-               fsat(c) =  A(c)
-            else
-               fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c))
-            end if
-         else
-            if ( frost_table(c) > zwt_perched(c)) then 
-               fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt_perched(c))!*( frost_table(c) - zwt_perched(c))/4.0
-            endif
-         endif
-         if (origflag == 1) then
-            if (use_vichydro) then
-               call endrun(msg="VICHYDRO is not available for origflag=1"//errmsg(sourcefile, __LINE__))
-            else
-               fcov(c) = (1._r8 - fracice(c,1)) * fsat(c) + fracice(c,1)
-            end if
-         else
-            fcov(c) = fsat(c)
-         endif
-      end do
-
-      do fc = 1, num_hydrologyc
-         c = filter_hydrologyc(fc)
-
-         ! assume qinmax large relative to qflx_top_soil in control
-         if (origflag == 1) then
-            qflx_surf(c) =  fcov(c) * qflx_top_soil(c)
-         else
-            ! only send fast runoff directly to streams
-            qflx_surf(c) =   fsat(c) * qflx_top_soil(c)
-         endif
-      end do
-
-      ! Determine water in excess of ponding limit for urban roof and impervious road.
-      ! Excess goes to surface runoff. No surface runoff for sunwall and shadewall.
-
-      do fc = 1, num_urbanc
-         c = filter_urbanc(fc)
-         if (col%itype(c) == icol_roof .or. col%itype(c) == icol_road_imperv) then
-
-            ! If there are snow layers then all qflx_top_soil goes to surface runoff
-            if (snl(c) < 0) then
-               qflx_surf(c) = max(0._r8,qflx_top_soil(c))
-            else
-               xs(c) = max(0._r8, &
-                    h2osoi_liq(c,1)/dtime + qflx_top_soil(c) - qflx_evap_grnd(c) - &
-                    pondmx_urban/dtime)
-               if (xs(c) > 0.) then
-                  h2osoi_liq(c,1) = pondmx_urban
-               else
-                  h2osoi_liq(c,1) = max(0._r8,h2osoi_liq(c,1)+ &
-                       (qflx_top_soil(c)-qflx_evap_grnd(c))*dtime)
-               end if
-               qflx_surf(c) = xs(c)
-            end if
-         else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
-            qflx_surf(c) = 0._r8
-         end if
-         ! send flood water flux to runoff for all urban columns
-         qflx_surf(c) = qflx_surf(c)  + qflx_floodc(c)
-
-      end do
-
-      ! remove stormflow and snow on h2osfc from qflx_top_soil
-      do fc = 1, num_hydrologyc
-         c = filter_hydrologyc(fc)
-         ! add flood water flux to qflx_top_soil
-         qflx_top_soil(c) = qflx_top_soil(c) + qflx_snow_h2osfc(c) + qflx_floodc(c)
       end do
 
     end associate
