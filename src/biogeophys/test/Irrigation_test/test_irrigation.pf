@@ -224,11 +224,6 @@ contains
     ! Set time to one time-step ahead of start time, as irrigation uses the previous time step
     call unittest_timemgr_set_curr_date(yr=5, mon=1, day=1, tod=irrig_start+dtime)
 
-    ! Setup time manager
-    call unittest_timemgr_setup(dtime=dtime)
-    ! Set time to one time-step ahead of start time, as irrigation uses the previous time step
-    call unittest_timemgr_set_curr_date(yr=5, mon=1, day=1, tod=irrig_start+dtime)
-
     ! Need to set nlevgrnd before doing the subgrid setup (because it is needed when
     ! allocating the col object). So we must do this before setupEnvironment, because
     ! that assumes that the subgrid setup has already been done.
