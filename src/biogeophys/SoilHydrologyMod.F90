@@ -4,8 +4,10 @@ module SoilHydrologyMod
   ! !DESCRIPTION:
   ! Calculate soil hydrology
   !
+#include "shr_assert.h"
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
+  use abortutils        , only : endrun
   use decompMod         , only : bounds_type
   use clm_varctl        , only : iulog, use_vichydro
   use clm_varcon        , only : e_ice, denh2o, denice, rpi
@@ -16,6 +18,7 @@ module SoilHydrologyMod
   use landunit_varcon   , only : istsoil, istcrop
   use clm_time_manager  , only : get_step_size_real
   use EnergyFluxType    , only : energyflux_type
+  use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
   use SoilHydrologyType , only : soilhydrology_type  
   use SoilStateType     , only : soilstate_type
   use Wateratm2lndBulkType, only : wateratm2lndbulk_type
@@ -99,7 +102,6 @@ contains
     use shr_mpi_mod    , only : shr_mpi_bcast
     use clm_varctl     , only : iulog
     use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use abortutils     , only : endrun
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
@@ -149,71 +151,40 @@ contains
        soilhydrology_inst, soilstate_inst, waterstatebulk_inst)
     !
     ! !DESCRIPTION:
-    ! Calculate surface runoff
+    ! Set diagnostic variables related to the fraction of water and ice in each layer
     !
     ! !USES:
-    use clm_varcon      , only : denice, denh2o, wimp, pondmx_urban
-    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
-    use column_varcon   , only : icol_road_imperv, icol_road_perv
-    use clm_varpar      , only : nlevsoi, maxpatch_pft
-    use clm_time_manager, only : get_step_size
-    use clm_varpar      , only : nlayer, nlayert
-    use abortutils      , only : endrun
+    use clm_varcon      , only : denice
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
     integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
-    integer                  , intent(in)    :: num_urbanc           ! number of column urban points in column filter
-    integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(waterstatebulk_type), intent(in)    :: waterstatebulk_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,j,fc,g,l,i                               !indices
-    real(r8) :: dtime                                      !land model time step (sec)
-    real(r8) :: xs(bounds%begc:bounds%endc)                !excess soil water above urban ponding limit
+    integer  :: j,fc,c                                     !indices
     real(r8) :: vol_ice(bounds%begc:bounds%endc,1:nlevsoi) !partial volume of ice lens in layer
-    real(r8) :: fff(bounds%begc:bounds%endc)               !decay factor (m-1)
-    real(r8) :: s1                                         !variable to calculate qinmax
-    real(r8) :: su                                         !variable to calculate qinmax
-    real(r8) :: v                                          !variable to calculate qinmax
-    real(r8) :: qinmax                                     !maximum infiltration capacity (mm/s)
-    real(r8) :: A(bounds%begc:bounds%endc)                 !fraction of the saturated area
-    real(r8) :: ex(bounds%begc:bounds%endc)                !temporary variable (exponent)
-    real(r8) :: top_moist(bounds%begc:bounds%endc)         !temporary, soil moisture in top VIC layers
-    real(r8) :: top_max_moist(bounds%begc:bounds%endc)     !temporary, maximum soil moisture in top VIC layers
-    real(r8) :: top_ice(bounds%begc:bounds%endc)           !temporary, ice len in top VIC layers
-    character(len=32) :: subname = 'SurfaceRunoff'         !subroutine name
+    real(r8) :: icefrac_orig ! original formulation for icefrac
+
+    character(len=*), parameter :: subname = 'SetSoilWaterFractions'
     !-----------------------------------------------------------------------
 
-    associate(                                                        & 
-         snl              =>    col%snl                             , & ! Input:  [integer  (:)   ]  minus number of snow layers                        
+    associate( &                                                      & 
          dz               =>    col%dz                              , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
 
-         sucsat           =>    soilstate_inst%sucsat_col           , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)                       
          watsat           =>    soilstate_inst%watsat_col           , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)  
-         wtfact           =>    soilstate_inst%wtfact_col           , & ! Input:  [real(r8) (:)   ]  maximum saturated fraction for a gridcell         
-         hksat            =>    soilstate_inst%hksat_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
-         bsw              =>    soilstate_inst%bsw_col              , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"                        
+         eff_porosity     =>    soilstate_inst%eff_porosity_col     , & ! Output: [real(r8) (:,:) ]  effective porosity = porosity - vol_ice
 
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)
 
          origflag         =>    soilhydrology_inst%origflag         , & ! Input:  logical
-         fcov             =>    soilhydrology_inst%fcov_col         , & ! Output: [real(r8) (:)   ]  fractional impermeable area                       
-         fsat             =>    soilhydrology_inst%fsat_col         , & ! Output: [real(r8) (:)   ]  fractional area with water table at surface       
-         fracice          =>    soilhydrology_inst%fracice_col      , & ! Output: [real(r8) (:,:) ]  fractional impermeability (-)                    
          icefrac          =>    soilhydrology_inst%icefrac_col      , & ! Output: [real(r8) (:,:) ]                                                  
-         ice              =>    soilhydrology_inst%ice_col          , & ! Output: [real(r8) (:,:) ]  ice len in each VIC layers(ice, mm)              
-         max_infil        =>    soilhydrology_inst%max_infil_col    , & ! Output: [real(r8) (:)   ]  maximum infiltration capacity in VIC (mm)          
-         i_0              =>    soilhydrology_inst%i_0_col            & ! Output: [real(r8) (:)   ]  column average soil moisture in top VIC layers (mm)
+         fracice          =>    soilhydrology_inst%fracice_col        & ! Output: [real(r8) (:,:) ]  fractional impermeability (-)                    
          )
-
-      ! Get time step
-
-      dtime = get_step_size()
 
       do j = 1,nlevsoi
          do fc = 1, num_hydrologyc
