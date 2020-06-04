@@ -53,7 +53,6 @@ Module SoilHydrologyType
      real(r8), pointer :: top_max_moist_col (:)     ! col VIC maximum soil moisture in top layers
      real(r8), pointer :: top_ice_col       (:)     ! col VIC ice len in top layers
      real(r8), pointer :: top_moist_limited_col(:)  ! col VIC soil moisture in top layers, limited to no greater than top_max_moist_col
-     real(r8), pointer :: i_0_col           (:)     ! col VIC average saturation in top soil layers 
      real(r8), pointer :: ice_col           (:,:)   ! col VIC soil ice (kg/m2) for VIC soil layers
 
    contains
@@ -146,7 +145,6 @@ contains
     allocate(this%top_max_moist_col (begc:endc))                 ; this%top_max_moist_col (:)     = nan
     allocate(this%top_ice_col       (begc:endc))                 ; this%top_ice_col       (:)     = nan
     allocate(this%top_moist_limited_col(begc:endc))              ; this%top_moist_limited_col(:)  = nan
-    allocate(this%i_0_col           (begc:endc))                 ; this%i_0_col           (:)     = nan
     allocate(this%ice_col           (begc:endc,nlayert))         ; this%ice_col           (:,:)   = nan
 
   end subroutine InitAllocate
