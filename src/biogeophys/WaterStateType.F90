@@ -36,12 +36,9 @@ module WaterStateType
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
      real(r8), pointer :: h2osoi_vol_prs_grc     (:,:) ! grc volumetric soil water prescribed (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
-<<<<<<< HEAD
      real(r8), pointer :: air_vol_col            (:,:) ! col air filled porosity
      real(r8), pointer :: h2osoi_liqvol_col      (:,:) ! col volumetric liquid water content (v/v)
      real(r8), pointer :: h2ocan_patch           (:)   ! patch canopy water (mm H2O)
-=======
->>>>>>> ctsm1.0.dev093
      real(r8), pointer :: h2osfc_col             (:)   ! col surface water (mm H2O)
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
