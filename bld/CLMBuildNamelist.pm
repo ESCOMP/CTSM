@@ -940,7 +940,7 @@ sub setup_cmdl_fire_light_res {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
     }
     my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
-    if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) ) {
+    if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
        $log->fatal_error("fire_method is being set even though bgc is NOT cn or bgc.");
     }
     if ( defined($fire_method) && $fire_method eq "nofire" ) {
@@ -3443,7 +3443,7 @@ sub setup_logic_lightning_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    if ( &value_is_true($nl_flags->{'cnfireson'}) ) {
+    if ( &value_is_true($nl_flags->{'cnfireson'}) || &value_is_true($nl_flags->{'use_fates'}) ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 'use_cn'=>$nl_flags->{'use_cn'},
                   'hgrid'=>$nl_flags->{'res'},
                   'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
