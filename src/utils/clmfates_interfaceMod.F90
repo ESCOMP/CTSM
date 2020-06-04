@@ -674,6 +674,7 @@ module CLMFatesInterfaceMod
       real(r8) :: model_day
       real(r8) :: day_of_year
       real(r8), pointer :: lnfm24(:)
+      integer  :: ier
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -702,7 +703,14 @@ module CLMFatesInterfaceMod
                         current_date, reference_date, &
                         model_day, floor(day_of_year), &
                         days_per_year, 1.0_r8/dble(days_per_year))
+
       if (use_fates_spitfire > 1) then
+         allocate(lnfm24(bounds_clump%begg:bounds_clump%endg), stat=ier)
+         if (ier /= 0) then
+            call endrun(msg="allocation error for lnfm24"//&
+                 errmsg(sourcefile, __LINE__))
+         endif
+
          lnfm24 = this%fates_fire_data_method%GetLight24()
       end if
 

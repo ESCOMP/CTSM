@@ -507,12 +507,14 @@ contains
        if ( use_c13 .and. use_c13_timeseries ) then
           call C13_init_TimeSeries()
        end if
-    ! use_fates_spitfire is assigned an integer value in the namelist
-    ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
-    else if (use_fates_spitfire > 1) then
-       call clm_fates%Init2(bounds_proc, NLFilename)
     else
        call SatellitePhenologyInit(bounds_proc)
+
+       ! use_fates_spitfire is assigned an integer value in the namelist
+       ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+       if (use_fates_spitfire > 1) then
+          call clm_fates%Init2(bounds_proc, NLFilename)
+       end if
     end if
 
     if(use_soil_moisture_streams) then 

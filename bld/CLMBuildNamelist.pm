@@ -946,7 +946,7 @@ sub setup_cmdl_fire_light_res {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
   }
   my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
-  if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) ) {
+  if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
      $log->fatal_error("fire_method is being set even though bgc is NOT cn or bgc.");
   }
   if ( defined($fire_method) && $fire_method eq "nofire" ) {
@@ -3287,7 +3287,8 @@ sub setup_logic_lightning_streams {
   # lightning streams require CN/BGC
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  if ( &value_is_true($nl_flags->{'cnfireson'}) ) {
+<<<<<<< HEAD
+  if ( &value_is_true($nl_flags->{'cnfireson'}) || &value_is_true($nl_flags->{'use_fates'}) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 'use_cn'=>$nl_flags->{'use_cn'},
                  'hgrid'=>$nl_flags->{'res'},
                  'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
@@ -3300,6 +3301,37 @@ sub setup_logic_lightning_streams {
      # Set align year, if first and last years are different
      if ( $nl->get_value('stream_year_first_lightng') !=
           $nl->get_value('stream_year_last_lightng') ) {
+||||||| constructed merge base
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    if ( &value_is_true($nl_flags->{'cnfireson'}) ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 'use_cn'=>$nl_flags->{'use_cn'},
+                  'hgrid'=>$nl_flags->{'res'},
+                  'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      # Set align year, if first and last years are different
+      if ( $nl->get_value('stream_year_first_lightng') !=
+           $nl->get_value('stream_year_last_lightng') ) {
+=======
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    if ( &value_is_true($nl_flags->{'cnfireson'}) || &value_is_true($nl_flags->{'use_fates'}) ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 'use_cn'=>$nl_flags->{'use_cn'},
+                  'hgrid'=>$nl_flags->{'res'},
+                  'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      # Set align year, if first and last years are different
+      if ( $nl->get_value('stream_year_first_lightng') !=
+           $nl->get_value('stream_year_last_lightng') ) {
+>>>>>>> Minor corrections for clm-fates to run with a lightning dataset
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_lightng', 'sim_year'=>$nl_flags->{'sim_year'},
                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
      }
