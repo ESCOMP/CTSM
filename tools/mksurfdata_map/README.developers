@@ -14,6 +14,8 @@ I.  Adding a new raw data file
 
 II. Adding mapping files for a raw data file with a new grid / landmask
 
+III. Checks that should be done when making new surface datasets
+
 ============================================================================
 I. Adding a new raw data file
 ============================================================================
@@ -176,3 +178,50 @@ laid out here.
       directory yourself
 
 
+============================================================================
+III. Checks that should be done when making new surface datasets
+============================================================================
+
+Remaking all surface datasets carries the risk of introducing unintended
+changes, particularly when you are expecting answer changes (so you
+don't notice unintended answer changes that are mixed with the expected
+changes).
+
+Here are some things to check after making a new set of surface
+datasets:
+
+- For at least one global dataset (probably a production resolution
+  rather than a low resolution that is just used for testing): Compare
+  the new dataset against the previous version:
+
+  - Compare header (via ncdump -h) and/or log file: ensure that the same
+    source data were used, except where you expect differences
+
+  - Compare all fields with a tool like cprnc: make sure that the only
+    fields that differ are those you expect to differ
+
+  - Visually compare all fields that differ: make sure differences look
+    reasonable and as expected
+    
+And here are some things to check for when making new landuse.timeseries 
+datasets (which often happens at the same time, and most of the above applies
+as well):
+
+- Compare one of the productive resolution datasets to a previous version.
+
+  - If part of it should be identical (for example the historical period) make
+    sure it is identical as expected (using cprnc make sure the historical period
+    is identical and only the future scenario changes).
+  
+  - If the historical period should be identical, make sure the 1850 surface dataset
+    created is identical to the previous one.
+    
+  - Visually compare all fields/times that differ: make sure differences look
+    reasonable and as expected. Go through at least the first and last time to see
+    that the change in time is as expected. 
+    
+  - Quickly going through the time differences for at least one field that changes
+    can also be useful to see that there isn't a sudden jump for a particular time.
+    
+  - Go through the list of raw PFT files that were used to create the dataset and make
+    sure it appears to be correct (ncdump -v input_pftdata_filename)

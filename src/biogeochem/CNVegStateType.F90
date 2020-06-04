@@ -321,17 +321,17 @@ contains
          ptr_col=this%nfire_col)
 
     this%farea_burned_col(begc:endc) = spval
-    call hist_addfld1d (fname='FAREA_BURNED',  units='proportion/sec', &
+    call hist_addfld1d (fname='FAREA_BURNED',  units='s-1', &
          avgflag='A', long_name='timestep fractional area burned', &
          ptr_col=this%farea_burned_col)
 
     this%baf_crop_col(begc:endc) = spval
-    call hist_addfld1d (fname='BAF_CROP',  units='proportion/sec', &
+    call hist_addfld1d (fname='BAF_CROP',  units='s-1', &
          avgflag='A', long_name='fractional area burned for crop', &
          ptr_col=this%baf_crop_col)
 
     this%baf_peatf_col(begc:endc) = spval
-    call hist_addfld1d (fname='BAF_PEATF',  units='proportion/sec', &
+    call hist_addfld1d (fname='BAF_PEATF',  units='s-1', &
          avgflag='A', long_name='fractional area burned in peatland', &
          ptr_col=this%baf_peatf_col)
  

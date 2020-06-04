@@ -706,7 +706,7 @@ contains
     this%qflx_evap_tot_patch(begp:endp) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QFLX_EVAP_TOT'), &
-         units='mm H2O/s', &
+         units='kg m-2 s-1', &
          avgflag='A', &
          long_name=this%info%lname('qflx_evap_soi + qflx_evap_can + qflx_tran_veg'), &
          ptr_patch=this%qflx_evap_tot_patch, c2l_scale_type='urbanf')
