@@ -192,7 +192,6 @@ contains
 
             ! Porosity of soil, partial volume of ice and liquid, fraction of ice in each layer,
             ! fractional impermeability
-
             vol_ice(c,j) = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
             eff_porosity(c,j) = max(0.01_r8,watsat(c,j)-vol_ice(c,j))
             icefrac(c,j) = min(1._r8,vol_ice(c,j)/watsat(c,j))
@@ -205,7 +204,7 @@ contains
             else
                icefrac_orig = min(1._r8,h2osoi_ice(c,j)/(h2osoi_ice(c,j)+h2osoi_liq(c,j)))
             end if
-            fracice(c,j) = max(0._r8,exp(-3._r8*(1._r8-icefrac(c,j)))- exp(-3._r8))/(1.0_r8-exp(-3._r8))
+            fracice(c,j) = max(0._r8,exp(-3._r8*(1._r8-icefrac_orig))- exp(-3._r8))/(1.0_r8-exp(-3._r8))
          end do
       end do
 
@@ -1530,25 +1529,25 @@ contains
        ! Set values related to top VIC layers
 
        do fc = 1, numf
-         c = filter(fc)
-         top_moist(c) = 0._r8
-         top_ice(c) = 0._r8
-         top_max_moist(c) = 0._r8
-      end do
+          c = filter(fc)
+          top_moist(c) = 0._r8
+          top_ice(c) = 0._r8
+          top_max_moist(c) = 0._r8
+       end do
 
-      do j = 1, nlayer - 1
-         do fc = 1, numf
-            c = filter(fc)
-            top_ice(c) = top_ice(c) + ice(c,j)
-            top_moist(c) =  top_moist(c) + moist(c,j) + ice(c,j)
-            top_max_moist(c) = top_max_moist(c) + max_moist(c,j)
-         end do
-      end do
+       do j = 1, nlayer - 1
+          do fc = 1, numf
+             c = filter(fc)
+             top_ice(c) = top_ice(c) + ice(c,j)
+             top_moist(c) =  top_moist(c) + moist(c,j) + ice(c,j)
+             top_max_moist(c) = top_max_moist(c) + max_moist(c,j)
+          end do
+       end do
 
-      do fc = 1, numf
-         c = filter(fc)
-         top_moist_limited(c) = min(top_moist(c), top_max_moist(c))
-      end do
+       do fc = 1, numf
+          c = filter(fc)
+          top_moist_limited(c) = min(top_moist(c), top_max_moist(c))
+       end do
 
      end associate
 
