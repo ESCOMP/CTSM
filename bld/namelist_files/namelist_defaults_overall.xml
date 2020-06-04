@@ -32,15 +32,6 @@ determine default values for namelists.
 <clm_demand sim_year_range="1850-2000">flanduse_timeseries</clm_demand>
 <clm_demand sim_year_range="1850-2100">flanduse_timeseries</clm_demand>
 
-
-<clm_start_type sim_year_range="1850-2100">arb_ic</clm_start_type>
-
-
-<!-- For transient cases, turn on demand to set flanduse_timeseries -->
-<clm_demand sim_year_range="1850-2000">flanduse_timeseries</clm_demand>
-<clm_demand sim_year_range="1850-2100">flanduse_timeseries</clm_demand>
-
-
 <!-- Default location of {csmdata} -->
 <csmdata>/fs/cgd/csm/inputdata</csmdata>
 
