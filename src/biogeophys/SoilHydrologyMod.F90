@@ -446,19 +446,19 @@ contains
      !-----------------------------------------------------------------------
 
      associate( &
-         snl              =>    col%snl                             , & ! Input:  [integer  (:)   ]  minus number of snow layers                        
-
+         snl              =>    col%snl                             , & ! Input:  [integer  (:)   ]  minus number of snow layers
 
          qflx_surf        =>    waterfluxbulk_inst%qflx_surf_col        , & ! Output: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
          qflx_infl_excess_surf => waterfluxbulk_inst%qflx_infl_excess_surf_col, & ! Input:  [real(r8) (:)   ]  surface runoff due to infiltration excess (mm H2O /s)
          qflx_h2osfc_surf =>    waterfluxbulk_inst%qflx_h2osfc_surf_col,  & ! Input:  [real(r8) (:)   ]  surface water runoff (mm H2O /s)
          qflx_rain_plus_snomelt => waterfluxbulk_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
-         qflx_liqevap_from_top_layer => waterfluxbulk_inst%qflx_liqevap_from_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]    
-         qflx_floodc      =>    waterfluxbulk_inst%qflx_floodc_col      , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM               
+         qflx_liqevap_from_top_layer => waterfluxbulk_inst%qflx_liqevap_from_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
+         qflx_floodc      =>    waterfluxbulk_inst%qflx_floodc_col      , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM
          qflx_sat_excess_surf => waterfluxbulk_inst%qflx_sat_excess_surf_col , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
 
          xs_urban         =>    soilhydrology_inst%xs_urban_col     , & ! Output: [real(r8) (:)   ]  excess soil water above urban ponding limit
-         h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col        & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
+
+         h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col        & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
          )
 
      dtime = get_step_size_real()
@@ -468,10 +468,10 @@ contains
      ! ------------------------------------------------------------------------
 
      do fc = 1, num_hydrologyc
-      c = filter_hydrologyc(fc)
-      ! Depending on whether h2osfcflag is 0 or 1, one of qflx_infl_excess or
-      ! qflx_h2osfc_surf will always be 0. But it's safe to just add them both.
-      qflx_surf(c) = qflx_sat_excess_surf(c) + qflx_infl_excess_surf(c) + qflx_h2osfc_surf(c)
+         c = filter_hydrologyc(fc)
+         ! Depending on whether h2osfcflag is 0 or 1, one of qflx_infl_excess or
+         ! qflx_h2osfc_surf will always be 0. But it's safe to just add them both.
+         qflx_surf(c) = qflx_sat_excess_surf(c) + qflx_infl_excess_surf(c) + qflx_h2osfc_surf(c)
      end do
 
      ! ------------------------------------------------------------------------
@@ -526,34 +526,15 @@ contains
      integer  :: fc, c
      real(r8) :: dtime ! land model time step (sec)
 
-             !6. update h2osfc prior to calculating bottom drainage from h2osfc
-             h2osfc(c) = h2osfc(c) + qflx_in_h2osfc(c) * dtime
+     character(len=*), parameter :: subname = 'UpdateUrbanPonding'
+     !-----------------------------------------------------------------------
 
-             !--  if all water evaporates, there will be no bottom drainage
-             if (h2osfc(c) < 0.0) then
-                qflx_infl(c) = qflx_infl(c) + h2osfc(c)/dtime
-                h2osfc(c) = 0.0
-                qflx_h2osfc_drain(c)= 0._r8
-             else
-                qflx_h2osfc_drain(c)=min(frac_h2osfc(c)*qinmax,h2osfc(c)/dtime)
-             endif
+     associate( &
+         snl              =>    col%snl                             , & ! Input:  [integer  (:)   ]  minus number of snow layers                        
 
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)
 
-             !7. remove drainage from h2osfc and add to qflx_infl
-             h2osfc(c) = h2osfc(c) - qflx_h2osfc_drain(c) * dtime
-             qflx_infl(c) = qflx_infl(c) + qflx_h2osfc_drain(c)
-          else
-             ! non-vegetated landunits (i.e. urban) use original CLM4 code
-             if (snl(c) >= 0) then
-                ! when no snow present, sublimation is removed in Drainage
-                qflx_infl(c) = qflx_top_soil(c) - qflx_surf(c) - qflx_evap_grnd(c)
-             else
-                qflx_infl(c) = qflx_top_soil(c) - qflx_surf(c) &
-                     - (1.0_r8 - frac_sno(c)) * qflx_ev_soil(c)
-             end if
-             qflx_h2osfc_surf(c) = 0._r8
-          endif
+         xs_urban         =>    soilhydrology_inst%xs_urban_col     , & ! Input:  [real(r8) (:)   ]  excess soil water above urban ponding limit
 
          qflx_rain_plus_snomelt => waterfluxbulk_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
          qflx_liqevap_from_top_layer => waterfluxbulk_inst%qflx_liqevap_from_top_layer_col & ! Input:  [real(r8) (:)   ]  rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]    
@@ -575,17 +556,10 @@ contains
            end if
         end if
      end do
-
-       do fc = 1, num_urbanc
-          c = filter_urbanc(fc)
-          if (col%itype(c) /= icol_road_perv) then
-             qflx_infl(c) = 0._r8
-          end if
-       end do
-    
+  
     end associate
 
-   end subroutine Infiltration
+   end subroutine UpdateUrbanPonding
 
    !-----------------------------------------------------------------------
    subroutine WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
@@ -595,9 +569,7 @@ contains
      ! Calculate watertable, considering aquifer recharge but no drainage.
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
      use clm_varcon       , only : pondmx, tfrz, watmin,denice,denh2o
-     use clm_varpar       , only : nlevsoi
      use column_varcon    , only : icol_roof, icol_road_imperv
      !
      ! !ARGUMENTS:
@@ -621,7 +593,6 @@ contains
      integer  :: jwt(bounds%begc:bounds%endc)            ! index of the soil layer right above the water table (-)
      real(r8) :: rsub_bot(bounds%begc:bounds%endc)       ! subsurface runoff - bottom drainage (mm/s)
      real(r8) :: rsub_top(bounds%begc:bounds%endc)       ! subsurface runoff - topographic control (mm/s)
-     real(r8) :: fff(bounds%begc:bounds%endc)            ! decay factor (m-1)
      real(r8) :: xsi(bounds%begc:bounds%endc)            ! excess soil water above saturation at layer i (mm)
      real(r8) :: rous                                    ! aquifer yield (-)
      real(r8) :: wh                                      ! smpfz(jwt)-z(jwt) (mm)
@@ -631,7 +602,6 @@ contains
      real(r8) :: icefracsum                              ! summation of icefrac*dzmm of layers below water table (-)
      real(r8) :: fracice_rsub(bounds%begc:bounds%endc)   ! fractional impermeability of soil layers (-)
      real(r8) :: ka                                      ! hydraulic conductivity of the aquifer (mm/s)
-     real(r8) :: dza                                     ! fff*(zwt-z(jwt)) (-)
      real(r8) :: available_h2osoi_liq                    ! available soil liquid water in a layer
      real(r8) :: imped
      real(r8) :: rsub_top_tot
@@ -913,11 +883,8 @@ contains
      ! Calculate subsurface drainage
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
-     use clm_varpar       , only : nlevsoi, nlevgrnd, nlayer, nlayert
      use clm_varcon       , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
      use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv
-     use abortutils       , only : endrun
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds               
@@ -1017,7 +984,7 @@ contains
           ice                =>    soilhydrology_inst%ice_col            , & ! Input:  [real(r8) (:,:) ] soil layer moisture (mm)                         
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ] aquifer recharge rate (mm/s)                      
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical
-          h2osfcflag         =>    soilhydrology_inst%h2osfcflag         , & ! Input:  logical
+          h2osfcflag         =>    soilhydrology_inst%h2osfcflag         , & ! Input:  integer
           
           qflx_snwcp_liq     =>    waterfluxbulk_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
           qflx_ice_runoff_xs =>    waterfluxbulk_inst%qflx_ice_runoff_xs_col , & ! Output: [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s) [+]
@@ -1490,7 +1457,6 @@ contains
      !
      ! !USES:
      use clm_varcon  , only : denh2o, denice, watmin
-     use clm_varpar  , only : nlevsoi, nlayer, nlayert, nlevgrnd 
      use decompMod   , only : bounds_type
      !
      ! !REVISION HISTORY:
@@ -1527,7 +1493,11 @@ contains
           vic_clm_fract => soilhydrology_inst%vic_clm_fract_col , & ! Input:  [real(r8) (:,:,:) ] fraction of VIC layers in each CLM layer
           moist         => soilhydrology_inst%moist_col         , & ! Output: [real(r8) (:,:)   ] liquid water (mm)                      
           ice           => soilhydrology_inst%ice_col           , & ! Output: [real(r8) (:,:)   ] ice lens (mm)                          
-          moist_vol     => soilhydrology_inst%moist_vol_col       & ! Output: [real(r8) (:,:)   ] volumetric soil moisture for VIC soil layers
+          moist_vol     => soilhydrology_inst%moist_vol_col     , & ! Output: [real(r8) (:,:)   ] volumetric soil moisture for VIC soil layers
+          top_moist     =>    soilhydrology_inst%top_moist_col    , & ! Output:  [real(r8) (:)   ]  soil moisture in top VIC layers
+          top_max_moist =>    soilhydrology_inst%top_max_moist_col, & ! Output:  [real(r8) (:)   ]  maximum soil moisture in top VIC layers
+          top_ice       =>    soilhydrology_inst%top_ice_col      , & ! Output:  [real(r8) (:)   ]  ice len in top VIC layers
+          top_moist_limited => soilhydrology_inst%top_moist_limited_col  & ! Output:  [real(r8) (:) ]  soil moisture in top layers, limited to no greater than top_max_moist
           )
 
        ! map CLM to VIC
@@ -1557,6 +1527,29 @@ contains
           moist_vol(c, nlayer+1:nlayert) = h2osoi_vol(c, nlevsoi+1:nlevgrnd)
        end do
 
+       ! Set values related to top VIC layers
+
+       do fc = 1, numf
+         c = filter(fc)
+         top_moist(c) = 0._r8
+         top_ice(c) = 0._r8
+         top_max_moist(c) = 0._r8
+      end do
+
+      do j = 1, nlayer - 1
+         do fc = 1, numf
+            c = filter(fc)
+            top_ice(c) = top_ice(c) + ice(c,j)
+            top_moist(c) =  top_moist(c) + moist(c,j) + ice(c,j)
+            top_max_moist(c) = top_max_moist(c) + max_moist(c,j)
+         end do
+      end do
+
+      do fc = 1, numf
+         c = filter(fc)
+         top_moist_limited(c) = min(top_moist(c), top_max_moist(c))
+      end do
+
      end associate
 
    end subroutine CLMVICMap
@@ -1572,7 +1565,6 @@ contains
      !
      ! !USES:
      use clm_varcon       , only : pondmx, tfrz, watmin,denice,denh2o
-     use clm_varpar       , only : nlevsoi
      use column_varcon    , only : icol_roof, icol_road_imperv
      !
      ! !ARGUMENTS:
@@ -1694,11 +1686,8 @@ contains
      ! Calculate subsurface drainage from perched saturated zone
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
-     use clm_varpar       , only : nlevsoi, nlevgrnd, nlayer, nlayert
      use clm_varcon       , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
      use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv
-     use abortutils       , only : endrun
 
      !
      ! !ARGUMENTS:
@@ -1858,7 +1847,6 @@ contains
      !
      ! !USES:
      use clm_varcon       , only : denice,denh2o
-     use clm_varpar       , only : nlevsoi
      use column_varcon    , only : icol_roof, icol_road_imperv
      !
      ! !ARGUMENTS:
@@ -1954,11 +1942,8 @@ contains
      ! Calculate subsurface drainage
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
-     use clm_varpar       , only : nlevsoi, nlevgrnd, nlayer, nlayert
      use clm_varcon       , only : pondmx, watmin,rpi, secspday, nlvic
      use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv
-     use abortutils       , only : endrun
      use GridcellType     , only : grc                
 
      !
@@ -2041,7 +2026,7 @@ contains
           ice                =>    soilhydrology_inst%ice_col            , & ! Input:  [real(r8) (:,:) ] soil layer moisture (mm)                         
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ] aquifer recharge rate (mm/s)                      
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical
-          h2osfcflag         =>    soilhydrology_inst%h2osfcflag         , & ! Input:  logical
+          h2osfcflag         =>    soilhydrology_inst%h2osfcflag         , & ! Input:  integer
           
           qflx_snwcp_liq     =>    waterfluxbulk_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess rainfall due to snow capping (mm H2O /s) [+]
           qflx_ice_runoff_xs =>    waterfluxbulk_inst%qflx_ice_runoff_xs_col , & ! Output: [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s) [+]
@@ -2278,8 +2263,6 @@ contains
      ! Calculate watertable, considering aquifer recharge but no drainage.
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
-     use clm_varpar       , only : nlevsoi
      use column_varcon    , only : icol_roof, icol_road_imperv
      !
      ! !ARGUMENTS:
