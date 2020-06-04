@@ -1265,12 +1265,6 @@ contains
         lSFonly = .false.
      end if
 
-     if ( present(SFonly) )then
-        lSFonly = SFonly
-     else
-        lSFonly = .false.
-     end if
-
    associate(&
           xl           =>    pftcon%xl                           , & ! Input:  ecophys const - leaf/stem orientation index
 
