@@ -348,15 +348,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_D_P36x2_Ld3" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/rain_to_snow_runs_off">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm">
-        <options>
-          <option name="wallclock">00:20:00</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
   <test name="ERP_D_P36x2_Ld3" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/cropColdStart">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -582,7 +573,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >include a debug threaded test of I2000Clm45Bgc with prescribed streams on (has to be f09 for prescribed)</option>
+      <option name="comment"  >include a debug test of I1850Clm45Bgc</option>
     </options>
   </test>
   <test name="ERI_D_Ld9" grid="f10_f10_musgs" compset="I1850Clm45Bgc" testmods="clm/default">
@@ -833,8 +824,6 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="intel" category="prebeta"/>
       <machine name="izumi" compiler="pgi" category="prebeta"/>
-      <!-- <machine name="hobart" compiler="intel" category="prebeta"/> -->
-      <!-- <machine name="hobart" compiler="pgi" category="prebeta"/> -->
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1113,14 +1102,6 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_D" grid="f19_f19_mg17" compset="I2010Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
