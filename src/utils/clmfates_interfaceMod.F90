@@ -50,7 +50,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_vertsoilc
    use clm_varctl        , only : fates_parteh_mode
    use clm_varctl        , only : use_fates
-   use clm_varctl        , only : use_fates_spitfire
+   use clm_varctl        , only : fates_spitfire_mode
    use clm_varctl        , only : use_fates_planthydro
    use clm_varctl        , only : use_fates_cohort_age_tracking
    use clm_varctl        , only : use_fates_ed_st3
@@ -269,6 +269,8 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1))
         
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
+        
+        call set_fates_ctrlparms('spitfire_mode',ival=fates_spitfire_mode)
         
         if(is_restart()) then
            pass_is_restart = 1
@@ -704,7 +706,7 @@ module CLMFatesInterfaceMod
                         model_day, floor(day_of_year), &
                         days_per_year, 1.0_r8/dble(days_per_year))
 
-      if (use_fates_spitfire > 1) then
+      if (fates_spitfire_mode > 1) then
          allocate(lnfm24(bounds_clump%begg:bounds_clump%endg), stat=ier)
          if (ier /= 0) then
             call endrun(msg="allocation error for lnfm24"//&
@@ -717,11 +719,19 @@ module CLMFatesInterfaceMod
       do s=1,this%fates(nc)%nsites
          c = this%f2hmap(nc)%fcolumn(s)
 
-         if (use_fates_spitfire > 1) then
+         if (fates_spitfire_mode > 1) then
             g = col%gridcell(c)
-            this%fates(nc)%bc_in(s)%lightning24 = lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
+            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
+               p = ifp + col%patchi(c)
+
+               this%fates(nc)%bc_in(s)%lightning24(ifp) = lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
+            end do
          else
-            this%fates(nc)%bc_in(s)%lightning24 = ED_val_nignitions / days_per_year  ! #/km2/yr to #/km2/day
+            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
+               p = ifp + col%patchi(c)
+
+               this%fates(nc)%bc_in(s)%lightning24(ifp) = ED_val_nignitions / days_per_year  ! #/km2/yr to #/km2/day
+            end do
          end if
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil

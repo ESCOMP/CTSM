@@ -768,7 +768,7 @@ sub setup_cmdl_fates_mode {
       }
     } else {
        # dis-allow fates specific namelist items with non-fates runs
-	my @list  = (  "use_fates_spitfire", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
+	my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
 		       "use_fates_cohort_age_tracking", 
                       "use_fates_inventory_init","use_fates_fixed_biogeog", "fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode" );
        foreach my $var ( @list ) {
@@ -917,6 +917,7 @@ sub setup_cmdl_fire_light_res {
      if ( defined($fire_method) && $val ne "none" ) {
         if ( $fire_method eq "nofire" ) {
            $log->fatal_error("-$var option used with fire_method='nofire'. -$var can ONLY be used without the nofire option");
+<<<<<<< HEAD
         }
      }
      my $stream_fldfilename_lightng = remove_leading_and_trailing_quotes( $nl->get_value('stream_fldfilename_lightng') );
@@ -957,6 +958,91 @@ sub setup_cmdl_fire_light_res {
      $nl_flags->{$var} = ".false.";
   }
   if ( $nl_flags->{'use_fates_spitfire'} > 1 ) {
+||||||| constructed merge base
+         }
+       }
+       my $stream_fldfilename_lightng = remove_leading_and_trailing_quotes( $nl->get_value('stream_fldfilename_lightng') );
+       if ( defined($stream_fldfilename_lightng) && $val ne "none" ) {
+          $log->fatal_error("-$var option used while also explicitly setting stream_fldfilename_lightng filename which is a contradiction. Use one or the other not both.");
+       }
+       if ( ! &value_is_true($nl->get_value('use_cn')) ) {
+          $log->fatal_error("-$var option used CN is NOT on. -$var can only be used when CN is on (with bgc: cn or bgc)");
+       }
+       if ( &value_is_true($nl->get_value('use_cn')) && $val eq "none" ) {
+          $log->fatal_error("-$var option is set to none, but CN is on (with bgc: cn or bgc) which is a contradiction");
+       }
+       $nl_flags->{$var} = $val;
+    }
+    my $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, quote_string($nl_flags->{$var}) );
+    if (  ! $definition->is_valid_value( $var, $nl_flags->{$var}, 'noquotes'=>1 ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      $log->fatal_error("$var has a value (".$nl_flags->{$var}.") that is NOT valid. Valid values are: @valid_values");
+    }
+    $log->verbose_message("Using $nl_flags->{$var} for $var.");
+    #
+    # Set flag if cn-fires are on or not
+    #
+    $var = "cnfireson";
+    if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl->get_value('use_cn')) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
+    }
+    my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
+    if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
+       $log->fatal_error("fire_method is being set even though bgc is NOT cn or bgc.");
+    }
+    if ( defined($fire_method) && $fire_method eq "nofire" ) {
+       $nl_flags->{$var} = ".false.";
+    } elsif ( &value_is_true($nl->get_value('use_cn')) ) {
+       $nl_flags->{$var} = ".true.";
+    } else {
+       $nl_flags->{$var} = ".false.";
+    }
+    if ( $nl_flags->{'use_fates_spitfire'} > 1 ) {
+=======
+         }
+       }
+       my $stream_fldfilename_lightng = remove_leading_and_trailing_quotes( $nl->get_value('stream_fldfilename_lightng') );
+       if ( defined($stream_fldfilename_lightng) && $val ne "none" ) {
+          $log->fatal_error("-$var option used while also explicitly setting stream_fldfilename_lightng filename which is a contradiction. Use one or the other not both.");
+       }
+       if ( ! &value_is_true($nl->get_value('use_cn')) ) {
+          $log->fatal_error("-$var option used CN is NOT on. -$var can only be used when CN is on (with bgc: cn or bgc)");
+       }
+       if ( &value_is_true($nl->get_value('use_cn')) && $val eq "none" ) {
+          $log->fatal_error("-$var option is set to none, but CN is on (with bgc: cn or bgc) which is a contradiction");
+       }
+       $nl_flags->{$var} = $val;
+    }
+    my $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, quote_string($nl_flags->{$var}) );
+    if (  ! $definition->is_valid_value( $var, $nl_flags->{$var}, 'noquotes'=>1 ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      $log->fatal_error("$var has a value (".$nl_flags->{$var}.") that is NOT valid. Valid values are: @valid_values");
+    }
+    $log->verbose_message("Using $nl_flags->{$var} for $var.");
+    #
+    # Set flag if cn-fires are on or not
+    #
+    $var = "cnfireson";
+    if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl->get_value('use_cn')) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
+    }
+    my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
+    if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
+       $log->fatal_error("fire_method is being set even though bgc is NOT cn or bgc.");
+    }
+    if ( defined($fire_method) && $fire_method eq "nofire" ) {
+       $nl_flags->{$var} = ".false.";
+    } elsif ( &value_is_true($nl->get_value('use_cn')) ) {
+       $nl_flags->{$var} = ".true.";
+    } else {
+       $nl_flags->{$var} = ".false.";
+    }
+    # fates_spitfire_mode = 0 for no_fire, 1 for global const. value from
+    # fates_params, 2 for lightning dataset, 3 for successful_ignitions dataset
+    if ( $nl_flags->{'fates_spitfire_mode'} > 1 ) {
+>>>>>>> Additional conflicts resolved; revisions in response to rgknox's review
        $nl_flags->{$var} = ".true.";
   }
 }
@@ -3287,7 +3373,6 @@ sub setup_logic_lightning_streams {
   # lightning streams require CN/BGC
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-<<<<<<< HEAD
   if ( &value_is_true($nl_flags->{'cnfireson'}) || &value_is_true($nl_flags->{'use_fates'}) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 'use_cn'=>$nl_flags->{'use_cn'},
                  'hgrid'=>$nl_flags->{'res'},
@@ -3301,37 +3386,6 @@ sub setup_logic_lightning_streams {
      # Set align year, if first and last years are different
      if ( $nl->get_value('stream_year_first_lightng') !=
           $nl->get_value('stream_year_last_lightng') ) {
-||||||| constructed merge base
-  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    if ( &value_is_true($nl_flags->{'cnfireson'}) ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 'use_cn'=>$nl_flags->{'use_cn'},
-                  'hgrid'=>$nl_flags->{'res'},
-                  'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      # Set align year, if first and last years are different
-      if ( $nl->get_value('stream_year_first_lightng') !=
-           $nl->get_value('stream_year_last_lightng') ) {
-=======
-  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    if ( &value_is_true($nl_flags->{'cnfireson'}) || &value_is_true($nl_flags->{'use_fates'}) ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 'use_cn'=>$nl_flags->{'use_cn'},
-                  'hgrid'=>$nl_flags->{'res'},
-                  'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
-                  'sim_year'=>$nl_flags->{'sim_year'},
-                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
-      # Set align year, if first and last years are different
-      if ( $nl->get_value('stream_year_first_lightng') !=
-           $nl->get_value('stream_year_last_lightng') ) {
->>>>>>> Minor corrections for clm-fates to run with a lightning dataset
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_lightng', 'sim_year'=>$nl_flags->{'sim_year'},
                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
      }
@@ -3810,7 +3864,7 @@ sub setup_logic_fates {
 
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
-        my @list  = (  "use_fates_spitfire", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys", 
+        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys", 
                        "use_fates_inventory_init","use_fates_fixed_biogeog", "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking" );
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'} );

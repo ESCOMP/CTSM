@@ -2732,7 +2732,7 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <use_nitrif_denitrif bgc_mode="fates"  >.false.</use_nitrif_denitrif>
 
 <!-- ===== FATES DEFAULTS =========== -->
-<use_fates_spitfire            use_fates=".true.">0</use_fates_spitfire>
+<fates_spitfire_mode           use_fates=".true.">0</fates_spitfire_mode>
 <use_fates_planthydro          use_fates=".true.">.false.</use_fates_planthydro>
 <use_fates_cohort_age_tracking use_fates=".true.">.false.</use_fates_cohort_age_tracking>
 <use_fates_ed_st3              use_fates=".true.">.false.</use_fates_ed_st3>

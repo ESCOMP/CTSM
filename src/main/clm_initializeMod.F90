@@ -280,7 +280,7 @@ contains
     use clm_varcon            , only : spval
     use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
     use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
-    use clm_varctl            , only : use_crop, ndep_from_cpl, use_fates_spitfire
+    use clm_varctl            , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size_real, get_curr_calday
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
@@ -510,9 +510,9 @@ contains
     else
        call SatellitePhenologyInit(bounds_proc)
 
-       ! use_fates_spitfire is assigned an integer value in the namelist
+       ! fates_spitfire_mode is assigned an integer value in the namelist
        ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
-       if (use_fates_spitfire > 1) then
+       if (fates_spitfire_mode > 1) then
           call clm_fates%Init2(bounds_proc, NLFilename)
        end if
     end if
