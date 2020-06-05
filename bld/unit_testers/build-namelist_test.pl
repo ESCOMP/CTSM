@@ -822,7 +822,7 @@ my %failtest = (
                                      conopts=>"-phys clm4_0",
                                    },
      "usespitfireButNOTFATES"    =>{ options=>"-envxml_dir . -no-megan",
-                                     namelst=>"use_fates_spitfire=.true.",
+                                     namelst=>"fates_spitfire_mode>1",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },

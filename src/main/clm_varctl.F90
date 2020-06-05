@@ -207,7 +207,7 @@ module clm_varctl
   integer, public            :: fates_parteh_mode = -9                 ! 1 => carbon only
                                                                        ! 2 => C+N+P (not enabled yet)
                                                                        ! no others enabled
-  integer, public            :: use_fates_spitfire = 0                 ! > 1 => use spitfire model
+  integer, public            :: fates_spitfire_mode = 0                ! > 0 => use spitfire model: 1 with global const. lightning, 2 with lightning dataset, 3 with successful ignition dataset
   logical, public            :: use_fates_logging = .false.            ! true => turn on logging module
   logical, public            :: use_fates_planthydro = .false.         ! true => turn on fates hydro
   logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking

@@ -1,7 +1,7 @@
 hist_mfilt        = 365
 hist_nhtfrq       = -24
 hist_empty_htapes = .false.
-use_fates_spitfire= 1
+fates_spitfire_mode = 1
 hist_fincl1       = 'NCL_BY_AGE','NPATCH_BY_AGE','BIOMASS_BY_AGE','NPP_BY_AGE','GPP_BY_AGE','PARSUN_Z_CNLF','PARSHA_Z_CNLF','PARSUN_Z_CNLFPFT',
                     'PARSHA_Z_CNLFPFT','PARSUN_Z_CAN','PARSHA_Z_CAN','LAISUN_Z_CNLF','LAISHA_Z_CNLF','LAISUN_Z_CNLFPFT','LAISHA_Z_CNLFPFT',
                     'LAISUN_TOP_CAN','LAISHA_TOP_CAN','FABD_SUN_CNLFPFT','FABD_SHA_CNLFPFT','FABI_SUN_CNLFPFT','FABI_SHA_CNLFPFT',

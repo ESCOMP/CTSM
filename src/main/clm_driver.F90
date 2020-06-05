@@ -109,7 +109,7 @@ contains
     !
     ! !USES:
     use clm_time_manager     , only : get_curr_date
-    use clm_varctl           , only : use_lai_streams, use_fates_spitfire
+    use clm_varctl           , only : use_lai_streams, fates_spitfire_mode
     use SatellitePhenologyMod, only : lai_advance
     !
     ! !ARGUMENTS:
@@ -395,9 +395,9 @@ contains
        end if
        call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
        call t_stopf('bgc_interp')
-    ! use_fates_spitfire is assigned an integer value in the namelist
+    ! fates_spitfire_mode is assigned an integer value in the namelist
     ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
-    else if (use_fates_spitfire > 1) then
+    else if (fates_spitfire_mode > 1) then
        call clm_fates%InterpFileInputs(bounds_proc)
     end if
 

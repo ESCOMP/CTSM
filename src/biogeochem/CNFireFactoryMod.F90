@@ -132,7 +132,7 @@ contains
     ! The particular type is determined based on a namelist parameter.
     !
     ! !USES:
-    use clm_varctl, only: use_fates_spitfire
+    use clm_varctl, only: fates_spitfire_mode
     use CNFireMethodMod, only: cnfire_method_type
     use FATESFireBase,      only: fates_fire_base_type
     use FATESFireNoDataMod, only: fates_fire_no_data_type
@@ -146,7 +146,7 @@ contains
     character(len=*), parameter :: subname = 'create_fates_fire_data_method'
     !-----------------------------------------------------------------------
 
-    current_case = use_fates_spitfire
+    current_case = fates_spitfire_mode
 
     select case (current_case)
 
@@ -156,7 +156,7 @@ contains
        allocate(fates_fire_data_type :: fates_fire_data_method)
 
     case default
-       write(iulog,*) subname//' ERROR: unknown method: ', use_fates_spitfire
+       write(iulog,*) subname//' ERROR: unknown method: ', fates_spitfire_mode
        call endrun(msg=errMsg(sourcefile, __LINE__))
 
     end select
