@@ -45,6 +45,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : iulog
    use clm_varctl        , only : use_vertsoilc
    use clm_varctl        , only : fates_parteh_mode
+   use clm_varctl        , only : use_fates
    use clm_varctl        , only : use_fates_spitfire
    use clm_varctl        , only : use_fates_planthydro
    use clm_varctl        , only : use_fates_cohort_age_tracking
@@ -98,19 +99,22 @@ module CLMFatesInterfaceMod
 !   use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink_Default
 
    ! Used FATES Modules
-   use FatesInterfaceMod     , only : fates_interface_type
+   use FatesInterfaceTypesMod , only : fates_interface_type
+   use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
+   use FatesInterfaceMod, only : SetFatesGlobalElements
    use FatesInterfaceMod     , only : allocate_bcin
    use FatesInterfaceMod     , only : allocate_bcout
+   use FatesInterfaceMod     , only : zero_bcs
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
-   use FatesInterfaceMod     , only : InitPARTEHGlobals
+
 
    use FatesHistoryInterfaceMod, only : fates_history_interface_type
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
    use EDTypesMod            , only : ed_patch_type
    use EDTypesMod            , only : num_elements
-   use FatesInterfaceMod     , only : hlm_numlevgrnd
+   use FatesInterfaceTypesMod     , only : hlm_numlevgrnd
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
    use EDInitMod             , only : zero_site
@@ -128,7 +132,6 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : hydraulics_drive
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
-   use FatesPlantHydraulicsMod, only : UpdateH2OVeg
    use FatesPlantHydraulicsMod, only : RestartHydrStates
    use FATESFireBase          , only : fates_fire_base_type
 
@@ -211,9 +214,145 @@ module CLMFatesInterfaceMod
 
    character(len=*), parameter, private :: sourcefile = &
         __FILE__
-   
-contains
 
+   public  :: CLMFatesGlobals
+
+ contains
+
+
+   subroutine CLMFatesGlobals()
+
+     ! --------------------------------------------------------------------------------
+     ! This is one of the first calls to fates
+     ! Used for setting dimensions.  This MUST
+     ! be called after NL variables are specified and
+     ! after the FATES parameter file has been read in
+     ! Aside from setting global dimension info, which
+     ! is used in the history file, we also transfer
+     ! over the NL variables to FATES global settings.
+     ! --------------------------------------------------------------------------------  
+
+     logical                                        :: verbose_output
+     integer                                        :: pass_masterproc
+     integer                                        :: pass_vertsoilc
+     integer                                        :: pass_ed_st3
+     integer                                        :: pass_logging
+     integer                                        :: pass_ed_prescribed_phys
+     integer                                        :: pass_planthydro
+     integer                                        :: pass_inventory_init
+     integer                                        :: pass_is_restart
+     integer                                        :: pass_cohort_age_tracking
+     
+     if (use_fates) then
+
+        verbose_output = .false.
+        call FatesInterfaceInit(iulog, verbose_output)
+        
+        ! Force FATES parameters that are recieve type, to the unset value
+        call set_fates_ctrlparms('flush_to_unset')
+        
+        ! Send parameters individually
+        call set_fates_ctrlparms('num_sw_bbands',ival=numrad)
+        call set_fates_ctrlparms('vis_sw_index',ival=ivis)
+        call set_fates_ctrlparms('nir_sw_index',ival=inir)
+        
+        call set_fates_ctrlparms('num_lev_ground',ival=nlevgrnd)
+        call set_fates_ctrlparms('hlm_name',cval='CLM')
+        call set_fates_ctrlparms('hio_ignore_val',rval=spval)
+        call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
+        call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1))
+        
+        call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
+        
+        call set_fates_ctrlparms('use_spitfire',ival=use_fates_spitfire)
+        
+        if(is_restart()) then
+           pass_is_restart = 1
+        else
+           pass_is_restart = 0
+        end if
+        call set_fates_ctrlparms('is_restart',ival=pass_is_restart)
+        
+        if(use_vertsoilc) then
+           pass_vertsoilc = 1
+        else
+           pass_vertsoilc = 0
+        end if
+        call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
+        
+        if(use_fates_ed_st3) then
+           pass_ed_st3 = 1
+        else
+           pass_ed_st3 = 0
+        end if
+        call set_fates_ctrlparms('use_ed_st3',ival=pass_ed_st3)
+        
+        if(use_fates_logging) then
+           pass_logging = 1
+        else
+           pass_logging = 0
+        end if
+        call set_fates_ctrlparms('use_logging',ival=pass_logging)
+        
+        if(use_fates_ed_prescribed_phys) then
+           pass_ed_prescribed_phys = 1
+        else
+           pass_ed_prescribed_phys = 0
+        end if
+        call set_fates_ctrlparms('use_ed_prescribed_phys',ival=pass_ed_prescribed_phys)
+        
+        if(use_fates_planthydro) then
+           pass_planthydro = 1
+        else
+           pass_planthydro = 0
+        end if
+        call set_fates_ctrlparms('use_planthydro',ival=pass_planthydro)
+        
+        if(use_fates_cohort_age_tracking) then
+           pass_cohort_age_tracking = 1
+        else
+           pass_cohort_age_tracking = 0
+        end if
+        call set_fates_ctrlparms('use_cohort_age_tracking',ival=pass_cohort_age_tracking)
+        
+        if(use_fates_inventory_init) then
+           pass_inventory_init = 1
+        else
+           pass_inventory_init = 0
+        end if
+        call set_fates_ctrlparms('use_inventory_init',ival=pass_inventory_init)
+        
+        call set_fates_ctrlparms('inventory_ctrl_file',cval=fates_inventory_ctrl_filename)
+        
+        if(masterproc)then
+           pass_masterproc = 1
+        else
+           pass_masterproc = 0
+        end if
+        call set_fates_ctrlparms('masterproc',ival=pass_masterproc)
+        
+        ! Check through FATES parameters to see if all have been set
+        call set_fates_ctrlparms('check_allset')
+        
+     end if
+     
+     ! This determines the total amount of space it requires in its largest
+     ! dimension.  We are currently calling that the "cohort" dimension, but
+     ! it is really a utility dimension that captures the models largest
+     ! size need.
+     ! Sets:
+     ! fates_maxElementsPerPatch
+     ! num_elements
+     ! fates_maxElementsPerSite (where a site is roughly equivalent to a column)
+     ! (Note: this needs to be called when use_fates=.false. as well, becuase
+     ! it will return some nominal dimension sizes of 1
+     
+     call SetFatesGlobalElements(use_fates)
+     
+     return
+   end subroutine CLMFatesGlobals
+   
+  
   ! ====================================================================================
 
    subroutine init(this, bounds_proc )
@@ -234,8 +373,7 @@ contains
       ! is not turned on
       ! ---------------------------------------------------------------------------------
      
-      use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
-      use FatesInterfaceMod, only : numpft_fates => numpft
+      use FatesInterfaceTypesMod, only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
       use CNFireFactoryMod, only: create_fates_fire_data_method
 
@@ -247,10 +385,9 @@ contains
 
       ! local variables
       integer                                        :: nclumps   ! Number of threads
-      logical                                        :: verbose_output
+
       integer                                        :: pass_masterproc
       integer                                        :: pass_vertsoilc
-      integer                                        :: pass_spitfire 
       integer                                        :: pass_ed_st3
       integer                                        :: pass_ed_prescribed_phys
       integer                                        :: pass_logging
@@ -277,113 +414,10 @@ contains
       
       ! Parameter Routines
       call param_derived%Init( numpft_fates )
-      
-
-      verbose_output = .false.
-      call FatesInterfaceInit(iulog, verbose_output)
 
       nclumps = get_proc_clumps()
       allocate(this%fates(nclumps))
       allocate(this%f2hmap(nclumps))
-
-      ! ---------------------------------------------------------------------------------
-      ! Send dimensions and other model controling parameters to FATES.  These
-      ! are obviously only those parameters that are dictated by the host
-      ! ---------------------------------------------------------------------------------
-      
-      ! Force FATES parameters that are recieve type, to the unset value
-      call set_fates_ctrlparms('flush_to_unset')
-      
-      ! Send parameters individually
-      call set_fates_ctrlparms('num_sw_bbands',ival=numrad)
-      call set_fates_ctrlparms('vis_sw_index',ival=ivis)
-      call set_fates_ctrlparms('nir_sw_index',ival=inir)
-      
-      call set_fates_ctrlparms('num_lev_ground',ival=nlevgrnd)
-      call set_fates_ctrlparms('hlm_name',cval='CLM')
-      call set_fates_ctrlparms('hio_ignore_val',rval=spval)
-      call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
-      call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1)) ! RGK: FATES IGNORES
-                                                                          ! AND DOESNT TOUCH
-                                                                          ! THE BARE SOIL PATCH
-      call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
-
-
-      if(is_restart()) then
-         pass_is_restart = 1
-      else
-         pass_is_restart = 0
-      end if
-      call set_fates_ctrlparms('is_restart',ival=pass_is_restart)
-
-      if(use_vertsoilc) then
-         pass_vertsoilc = 1
-      else
-         pass_vertsoilc = 0
-      end if
-      call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
-      
-      if (use_fates_spitfire > 0) then
-         pass_spitfire = 1
-      else
-         pass_spitfire = 0
-      end if
-      call set_fates_ctrlparms('use_spitfire',ival=pass_spitfire)
-
-      if(use_fates_ed_st3) then
-        pass_ed_st3 = 1
-      else
-         pass_ed_st3 = 0
-      end if
-      call set_fates_ctrlparms('use_ed_st3',ival=pass_ed_st3)
-      
-      if(use_fates_ed_prescribed_phys) then
-         pass_ed_prescribed_phys = 1
-      else
-         pass_ed_prescribed_phys = 0
-      end if
-      call set_fates_ctrlparms('use_ed_prescribed_phys',ival=pass_ed_prescribed_phys)
-
-      if(use_fates_planthydro) then
-         pass_planthydro = 1
-      else
-         pass_planthydro = 0
-      end if
-      call set_fates_ctrlparms('use_planthydro',ival=pass_planthydro)
-
-      if(use_fates_cohort_age_tracking) then
-         pass_cohort_age_tracking = 1
-      else
-         pass_cohort_age_tracking = 0
-      end if
-      call set_fates_ctrlparms('use_cohort_age_tracking',ival=pass_cohort_age_tracking)
-
-      if(use_fates_logging) then
-         pass_logging = 1
-      else
-         pass_logging = 0
-      end if
-      call set_fates_ctrlparms('use_logging',ival=pass_logging)
-
-      if(use_fates_inventory_init) then
-         pass_inventory_init = 1
-      else
-         pass_inventory_init = 0
-      end if
-      call set_fates_ctrlparms('use_inventory_init',ival=pass_inventory_init)
-
-      call set_fates_ctrlparms('inventory_ctrl_file',cval=fates_inventory_ctrl_filename)
-
-
-      if(masterproc)then
-         pass_masterproc = 1
-      else
-         pass_masterproc = 0
-      end if
-      call set_fates_ctrlparms('masterproc',ival=pass_masterproc)
-
-      ! Check through FATES parameters to see if all have been set
-      call set_fates_ctrlparms('check_allset')
 
       if(debug)then
          write(iulog,*) 'clm_fates%init():  allocating for ',nclumps,' threads'
@@ -473,7 +507,7 @@ contains
 
             call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp)
             call allocate_bcout(this%fates(nc)%bc_out(s),col%nbedrock(c),ndecomp)
-            call this%fates(nc)%zero_bcs(s)
+            call zero_bcs(this%fates(nc),s)
 
             ! Pass any grid-cell derived attributes to the site
             ! ---------------------------------------------------------------------------
@@ -491,7 +525,7 @@ contains
          call this%init_soil_depths(nc)
          
          if (use_fates_planthydro) then
-            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in,numpft_fates)
+            call InitHydrSites(this%fates(nc)%sites,this%fates(nc)%bc_in)
          end if
 
          if( this%fates(nc)%nsites == 0 ) then
@@ -515,15 +549,6 @@ contains
 
       end do
       !$OMP END PARALLEL DO
-
-      ! This will initialize all globals associated with the chosen
-      ! Plant Allocation and Reactive Transport hypothesis. This includes
-      ! mapping tables and global variables. These will be read-only
-      ! and only required once per machine instance (thus no requirements
-      ! to have it instanced on each thread
-      
-      call InitPARTEHGlobals()
-      
 
       
       call this%init_history_io(bounds_proc)
@@ -677,11 +702,6 @@ contains
 
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
                waterstate_inst%h2osoi_vol_col(c,1:nlevsoil) 
-
-         ! TO-DO: SHOULD THIS BE LIQVOL OR IS VOL OK? (RGK-02-2017)
-
-         this%fates(nc)%bc_in(s)%t_veg24_si = &
-               temperature_inst%t_veg24_patch(col%patchi(c))
 
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
                min(nlevsoil, canopystate_inst%altmax_lastyear_indx_col(c))
@@ -857,10 +877,6 @@ contains
        !       ! This updates the internal value and the bc_out value.
        !       ! If hydraulics is off, it returns 0 storage
        if ( use_fates_planthydro ) then
-       !          call UpdateH2OVeg(this%fates(nc)%nsites, &
-       !                this%fates(nc)%sites,  &
-       !                this%fates(nc)%bc_out)
-       !
           do s = 1, this%fates(nc)%nsites
              c = this%f2hmap(nc)%fcolumn(s)
              waterstate_inst%total_plant_stored_h2o_col(c) = &
@@ -977,7 +993,7 @@ contains
      use FatesIODimensionsMod, only: fates_bounds_type
      use FatesIOVariableKindMod, only : site_r8, site_int, cohort_r8, cohort_int
      use EDMainMod, only :        ed_update_site
-     use FatesInterfaceMod, only:  fates_maxElementsPerSite
+     use FatesInterfaceTypesMod, only:  fates_maxElementsPerSite
 
       implicit none
 
@@ -1199,7 +1215,23 @@ contains
                      nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
                      this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoil) = &
                           soilstate_inst%hksat_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%watsat_sisl(1:nlevsoil) = &
+                          soilstate_inst%watsat_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%watres_sisl(1:nlevsoil) = &
+                          soilstate_inst%watres_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%sucsat_sisl(1:nlevsoil) = &
+                          soilstate_inst%sucsat_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%bsw_sisl(1:nlevsoil) = &
+                          soilstate_inst%bsw_col(c,1:nlevsoil)
+                     
+                     this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) = &
+                          waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
                   end do
+
 
                   call RestartHydrStates(this%fates(nc)%sites,  &
                                          this%fates(nc)%nsites, &
@@ -1933,13 +1965,15 @@ contains
          this%fates(nc)%bc_in(s)%tot_somc     = totsomc(c)
          this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
       end do
-      
+
+      dtime = get_step_size()
       
       ! Update history variables that track these variables
       call this%fates_hist%update_history_cbal(nc, &
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
-            this%fates(nc)%bc_in)
+            this%fates(nc)%bc_in,   &
+            dtime)
 
     end associate
  end subroutine wrap_bgc_summary
@@ -2373,7 +2407,16 @@ contains
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
        nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
+
+       ! This is the water removed from the soil layers by roots (or added)
        waterflux_inst%qflx_rootsoi_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_soil2root_sisl(1:nlevsoil)
+
+       ! This is the total amount of water transferred to surface runoff
+       ! (this is generated potentially from supersaturating soils
+       ! (currently this is unnecessary)
+       ! waterflux_inst%qflx_drain_vr_col(c,1:nlevsoil) = this%fates(nc)%bc_out(s)%qflx_ro_sisl(1:nlevsoil)
+       
+
     end do
     
  end subroutine ComputeRootSoilFlux
@@ -2410,6 +2453,7 @@ contains
  ! ======================================================================================
 
  subroutine wrap_hydraulics_drive(this, bounds_clump, nc, &
+                                 fn, filterp, &
                                  soilstate_inst, waterstate_inst, waterflux_inst, &
                                  solarabs_inst, energyflux_inst)
 
@@ -2418,6 +2462,8 @@ contains
    class(hlm_fates_interface_type), intent(inout) :: this
    type(bounds_type),intent(in)                   :: bounds_clump
    integer,intent(in)                             :: nc
+   integer, intent(in)                            :: fn
+   integer, intent(in)                            :: filterp(fn)
    type(soilstate_type)    , intent(inout)        :: soilstate_inst
    type(waterstate_type)   , intent(inout)        :: waterstate_inst
    type(waterflux_type)    , intent(inout)        :: waterflux_inst
@@ -2430,6 +2476,7 @@ contains
    integer :: j
    integer :: ifp
    integer :: p
+   integer :: f
    integer :: nlevsoil 
    real(r8) :: dtime
 
@@ -2467,8 +2514,19 @@ contains
          p = ifp+col%patchi(c)
          this%fates(nc)%bc_in(s)%swrad_net_pa(ifp) = solarabs_inst%fsa_patch(p)
          this%fates(nc)%bc_in(s)%lwrad_net_pa(ifp) = energyflux_inst%eflx_lwrad_net_patch(p)
-         this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterflux_inst%qflx_tran_veg_patch(p)
       end do
+   end do
+
+   ! The exposed vegetation filter "filterp" dictates which patches
+   ! had their transpiration updated during canopy_fluxes(). Patches
+   ! not in the filter had been zero'd during prep_canopyfluxes().
+   
+   do f = 1,fn
+      p = filterp(f)
+      c = patch%column(p)
+      s = this%f2hmap(nc)%hsites(c)
+      ifp = p - col%patchi(c)
+      this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterflux_inst%qflx_tran_veg_patch(p)
    end do
 
    ! Call Fates Hydraulics
@@ -2496,6 +2554,7 @@ contains
    call this%fates_hist%update_history_hydraulics(nc, &
          this%fates(nc)%nsites, &
          this%fates(nc)%sites, &
+         this%fates(nc)%bc_in, & 
          dtime)
 
 
@@ -2507,12 +2566,12 @@ contains
  subroutine hlm_bounds_to_fates_bounds(hlm, fates)
 
    use FatesIODimensionsMod, only : fates_bounds_type
-   use FatesInterfaceMod, only : nlevsclass, nlevage, nlevcoage
-   use FatesInterfaceMod, only : nlevheight
+   use FatesInterfaceTypesMod, only : nlevsclass, nlevage, nlevcoage
+   use FatesInterfaceTypesMod, only : nlevheight
    use EDtypesMod,        only : nfsc
    use FatesLitterMod,    only : ncwd
    use EDtypesMod,        only : nlevleaf, nclmax
-   use FatesInterfaceMod, only : numpft_fates => numpft
+   use FatesInterfaceTypesMod, only : numpft_fates => numpft
    use clm_varpar,        only : nlevgrnd
 
    implicit none
