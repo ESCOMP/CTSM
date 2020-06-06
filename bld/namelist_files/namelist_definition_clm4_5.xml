@@ -626,6 +626,11 @@ no external inputs, external lightning data, and external confirmed ignition
 data, respectively.
 </entry>
 
+<entry id="use_fates_fixed_biogeog" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false."> 
+Toggle to turn on fixed biogeography mode (only relevant if FATES is being used).
+</entry>
+
 <entry id="use_fates_logging" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the logging module (only relevant if FATES is being used).
