@@ -384,6 +384,8 @@ module CLMFatesInterfaceMod
      
       use FatesInterfaceTypesMod, only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
+      use subgridMod, only :  natveg_patch_exists
+      use clm_instur      , only : wt_nat_patch
       use CNFireFactoryMod, only: create_fates_fire_data_method
 
       implicit none
