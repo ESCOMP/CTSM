@@ -699,6 +699,18 @@ contains
     end if
 
     sgridindex => null()
+    deallocate(pftindx)
+    deallocate(colindx)
+    deallocate(lunindx)
+    deallocate(grcindx)
+    deallocate(pft_activei)
+    deallocate(col_activei)
+    deallocate(lun_activei)
+    deallocate(grc_activei)
+    deallocate(pft_activeo)
+    deallocate(col_activeo)
+    deallocate(lun_activeo)
+    deallocate(grc_activeo)
 
   end subroutine initInterp
 
