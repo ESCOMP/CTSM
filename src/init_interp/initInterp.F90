@@ -210,15 +210,15 @@ contains
     integer            :: npftsi, ncolsi, nlunsi, ngrcsi 
     integer            :: npftso, ncolso, nlunso, ngrcso 
     logical            :: glc_elevclasses_same
-    integer , pointer  :: pftindx(:)
-    integer , pointer  :: colindx(:)     
-    integer , pointer  :: lunindx(:)     
-    integer , pointer  :: grcindx(:) 
-    logical , pointer  :: pft_activei(:), pft_activeo(:) 
-    logical , pointer  :: col_activei(:), col_activeo(:) 
-    logical , pointer  :: lun_activei(:), lun_activeo(:)
-    logical , pointer  :: grc_activei(:), grc_activeo(:)
-    integer , pointer  :: sgridindex(:)
+    integer , allocatable, target  :: pftindx(:)
+    integer , allocatable, target  :: colindx(:)
+    integer , allocatable, target  :: lunindx(:)
+    integer , allocatable, target  :: grcindx(:)
+    logical , allocatable  :: pft_activei(:), pft_activeo(:)
+    logical , allocatable  :: col_activei(:), col_activeo(:)
+    logical , allocatable  :: lun_activei(:), lun_activeo(:)
+    logical , allocatable  :: grc_activei(:), grc_activeo(:)
+    integer , pointer      :: sgridindex(:)
     type(subgrid_special_indices_type) :: subgrid_special_indices
     type(interp_multilevel_container_type) :: interp_multilevel_container
     type(interp_2dvar_type) :: var2d_i, var2d_o  ! holds metadata for 2-d variables
@@ -698,6 +698,8 @@ contains
        write (iulog,*) ' Successfully created initial condition file mapped from input IC file'
     end if
 
+    sgridindex => null()
+
   end subroutine initInterp
 
   !-----------------------------------------------------------------------
@@ -823,9 +825,6 @@ contains
        call endrun('Unhandled interp_method'//errMsg(sourcefile, __LINE__))
     end select
 
-    deallocate(subgridi%lat, subgridi%lon, subgridi%coslat)
-    deallocate(subgrido%lat, subgrido%lon, subgrido%coslat)
-    
   end subroutine findMinDist
 
  !=======================================================================
@@ -1158,6 +1157,7 @@ contains
     call var2do%writevar_double(rbuf2do)
        
     deallocate(rbuf2do, rbuf2do_levelsi)
+    multilevel_interpolator => null()
 
   end subroutine interp_2d_double
 
