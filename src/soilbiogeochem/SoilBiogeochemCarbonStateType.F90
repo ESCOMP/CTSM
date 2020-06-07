@@ -911,6 +911,10 @@ contains
                 call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//'_Cap', xtype=ncd_double,  &
                      dim1name='column', long_name='',  units='', fill_value=spval, &
                      interpinic_flag='interp' , readvar=readvar, data=ptr1d)
+                ptr1d => this%decomp0_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0", xtype=ncd_double,  &
+                  dim1name='column', long_name='',  units='', fill_value=spval, &
+                  interpinic_flag='interp' , readvar=readvar, data=ptr1d)
              end if
           end if
           if (flag=='read' .and. .not. readvar) then
@@ -930,6 +934,142 @@ contains
              end do
           end if
        end do
+
+       if (use_soil_matrixcn)then
+          if(flag=='write')then
+             do i = 1,ndecomp_pools
+                do j = 1,nlevdecomp
+                   this%in_acc_2d(:,j,i) = this%in_acc(:,j+(i-1)*nlevdecomp)
+                end do
+             end do
+             do i = 1,decomp_cascade_con%n_all_entries
+                found = .false.
+                j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+                j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+                i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+                i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+                if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                   this%vert_up_tran_acc(:,i_lev,i_decomp) = this%AKXcacc%M(:,i)
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                      this%vert_down_tran_acc(:,i_lev,i_decomp) =  this%AKXcacc%M(:,i)
+                      found = .true.
+                   else
+                      if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                         this%exit_acc(:,i_lev,i_decomp) = this%AKXcacc%M(:,i)
+                         found = .true.
+                      else
+                         do k=1,ndecomp_cascade_transitions
+                            if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                               i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                               j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                               this%hori_tran_acc(:,i_lev,k) = this%AKXcacc%M(:,i)
+                               found = .true.
+                            end if
+                         end do
+                      end if
+                   end if
+                end if
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
+             end do
+          end if
+          do k = 1, ndecomp_pools
+             varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c_13'
+             if (use_vertsoilc) then
+                ptr2d => this%in_acc_2d(:,:,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_acc_vr", xtype=ncd_double,  &
+                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                   long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                   ptr2d => this%vert_up_tran_acc(:,:,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_acc_vr", xtype=ncd_double,  &
+                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                   long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                   ptr2d => this%vert_down_tran_acc(:,:,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_acc_vr", xtype=ncd_double,  &
+                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                   long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                   ptr2d => this%exit_acc(:,:,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_acc_vr", xtype=ncd_double,  &
+                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                   long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
+             else
+                ptr1d => this%in_acc_2d(:,1,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_acc", xtype=ncd_double,  &
+                   dim1name='column', long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr1d)
+                ptr1d => this%vert_up_tran_acc(:,1,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_acc", xtype=ncd_double,  &
+                   dim1name='column', long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr1d)
+                ptr1d => this%vert_down_tran_acc(:,1,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_acc", xtype=ncd_double,  &
+                   dim1name='column', long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr1d)
+                ptr1d => this%exit_acc(:,1,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_acc", xtype=ncd_double,  &
+                   dim1name='column', long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr1d)
+             end if
+          end do
+          do i = 1, ndecomp_cascade_transitions
+             varname=trim(decomp_cascade_con%cascade_step_name(i))//'c_13'
+             if(use_vertsoilc) then
+                ptr2d => this%hori_tran_acc(:,:,i)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_acc_vr", xtype=ncd_double,  &
+                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                   long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
+             else
+                ptr1d => this%hori_tran_acc(:,1,i)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_acc", xtype=ncd_double,  &
+                   dim1name='column', long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr1d)
+             end if
+          end do
+          if(flag=='read')then
+             do i = 1,ndecomp_pools
+                do j = 1,nlevdecomp
+                   this%in_acc(:,j+(i-1)*nlevdecomp) = this%in_acc_2d(:,j,i)
+                end do
+             end do
+             do i = 1,decomp_cascade_con%n_all_entries
+                found = .false.
+                j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+                j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+                i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+                i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+                if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                   this%AKXcacc%M(:,i) = this%vert_up_tran_acc(:,i_lev,i_decomp) 
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                      this%AKXcacc%M(:,i) = this%vert_down_tran_acc(:,i_lev,i_decomp) 
+                      found = .true.
+                   else
+                      if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                         this%AKXcacc%M(:,i) = this%exit_acc(:,i_lev,i_decomp) 
+                         found = .true.
+                      else
+                         do k=1,ndecomp_cascade_transitions
+                            if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                               i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                               j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                               this%AKXcacc%M(:,i) = this%hori_tran_acc(:,i_lev,k) 
+                               found = .true.
+                            end if
+                         end do
+                      end if
+                   end if
+                end if
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
+             end do
+          end if
+       end if
 
        if (use_vertsoilc) then
           ptr2d => this%ctrunc_vr_col
@@ -977,11 +1117,17 @@ contains
                   dim1name='column', &
                   long_name='',  units='', fill_value=spval, &
                   interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-             ptr1d => this%matrix_cap_decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
-             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap", xtype=ncd_double,  &
-                  dim1name='column', &
-                  long_name='',  units='', fill_value=spval, &
-                  interpinic_flag='interp' , readvar=readvar, data=ptr1d)
+             if(use_soil_matrixcn)then
+                ptr1d => this%matrix_cap_decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap", xtype=ncd_double,  &
+                     dim1name='column', &
+                     long_name='',  units='', fill_value=spval, &
+                     interpinic_flag='interp' , readvar=readvar, data=ptr1d)
+                ptr1d => this%decomp0_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0", xtype=ncd_double,  &
+                     dim1name='column', long_name='',  units='', fill_value=spval, &
+                     interpinic_flag='interp' , readvar=readvar, data=ptr1d)
+             end if
           end if
           if (flag=='read' .and. .not. readvar) then
              write(iulog,*) 'initializing soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col with atmospheric c14 value for: '//&
@@ -1000,6 +1146,142 @@ contains
              end do
           end if
        end do
+
+       if (use_soil_matrixcn)then
+          if(flag=='write')then
+             do i = 1,ndecomp_pools
+                do j = 1,nlevdecomp
+                   this%in_acc_2d(:,j,i) = this%in_acc(:,j+(i-1)*nlevdecomp)
+                end do
+             end do
+             do i = 1,decomp_cascade_con%n_all_entries
+                found = .false.
+                j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+                j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+                i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+                i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+                if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                   this%vert_up_tran_acc(:,i_lev,i_decomp) = this%AKXcacc%M(:,i)
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                      this%vert_down_tran_acc(:,i_lev,i_decomp) =  this%AKXcacc%M(:,i)
+                      found = .true.
+                   else
+                      if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                         this%exit_acc(:,i_lev,i_decomp) = this%AKXcacc%M(:,i)
+                         found = .true.
+                      else
+                         do k=1,ndecomp_cascade_transitions
+                            if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                               i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                               j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                               this%hori_tran_acc(:,i_lev,k) = this%AKXcacc%M(:,i)
+                               found = .true.
+                            end if
+                         end do
+                      end if
+                   end if
+                end if
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
+             end do
+          end if
+          do k = 1, ndecomp_pools
+             varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c_14'
+             if (use_vertsoilc) then
+                ptr2d => this%in_acc_2d(:,:,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_acc_vr", xtype=ncd_double,  &
+                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                   long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                   ptr2d => this%vert_up_tran_acc(:,:,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_acc_vr", xtype=ncd_double,  &
+                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                   long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                   ptr2d => this%vert_down_tran_acc(:,:,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_acc_vr", xtype=ncd_double,  &
+                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                   long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                   ptr2d => this%exit_acc(:,:,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_acc_vr", xtype=ncd_double,  &
+                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                   long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
+             else
+                ptr1d => this%in_acc_2d(:,1,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_acc", xtype=ncd_double,  &
+                   dim1name='column', long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr1d)
+                ptr1d => this%vert_up_tran_acc(:,1,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_acc", xtype=ncd_double,  &
+                   dim1name='column', long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr1d)
+                ptr1d => this%vert_down_tran_acc(:,1,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_acc", xtype=ncd_double,  &
+                   dim1name='column', long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr1d)
+                ptr1d => this%exit_acc(:,1,k)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_acc", xtype=ncd_double,  &
+                   dim1name='column', long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr1d)
+             end if
+          end do
+          do i = 1, ndecomp_cascade_transitions
+             varname=trim(decomp_cascade_con%cascade_step_name(i))//'c_14'
+             if(use_vertsoilc) then
+                ptr2d => this%hori_tran_acc(:,:,i)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_acc_vr", xtype=ncd_double,  &
+                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                   long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
+             else
+                ptr1d => this%hori_tran_acc(:,1,i)
+                call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_acc", xtype=ncd_double,  &
+                   dim1name='column', long_name='',  units='', fill_value=spval, &
+                   interpinic_flag='interp', readvar=readvar, data=ptr1d)
+             end if
+          end do
+          if(flag=='read')then
+             do i = 1,ndecomp_pools
+                do j = 1,nlevdecomp
+                   this%in_acc(:,j+(i-1)*nlevdecomp) = this%in_acc_2d(:,j,i)
+                end do
+             end do
+             do i = 1,decomp_cascade_con%n_all_entries
+                found = .false.
+                j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+                j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+                i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+                i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+                if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                   this%AKXcacc%M(:,i) = this%vert_up_tran_acc(:,i_lev,i_decomp) 
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                      this%AKXcacc%M(:,i) = this%vert_down_tran_acc(:,i_lev,i_decomp) 
+                      found = .true.
+                   else
+                      if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                         this%AKXcacc%M(:,i) = this%exit_acc(:,i_lev,i_decomp) 
+                         found = .true.
+                      else
+                         do k=1,ndecomp_cascade_transitions
+                            if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                               i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                               j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                               this%AKXcacc%M(:,i) = this%hori_tran_acc(:,i_lev,k) 
+                               found = .true.
+                            end if
+                         end do
+                      end if
+                   end if
+                end if
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
+             end do
+          end if
+       end if
 
        if (use_vertsoilc) then 
           ptr2d => this%ctrunc_vr_col

@@ -261,6 +261,8 @@ contains
          Necm                         => cnveg_nitrogenflux_inst%Necm_patch                        , & ! Output:  [real(r8) (:) ]  ECM uptake (gN/m2/s)
          sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch          , & ! Output:  [real(r8) (:) ]  Total N uptake of FUN (gN/m2/s)
          matrix_Cinput                => cnveg_carbonflux_inst%matrix_Cinput_patch                 , & ! Output:  [real(r8) (:) ]  C input of matrix (gC/m2/s)
+         matrix_C13input              => cnveg_carbonflux_inst%matrix_C13input_patch               , & ! C13 input of matrix
+         matrix_C14input              => cnveg_carbonflux_inst%matrix_C14input_patch               , & ! C14 input of matrix
          matrix_Ninput                => cnveg_nitrogenflux_inst%matrix_Ninput_patch               , & ! Output:  [real(r8) (:) ]  N input of matrix (gN/m2/s)
          matrix_nphtransfer           => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch          , & ! Output:  [real(r8) (:,:,:) ]  A-matrix_phenology for nitrogen
          matrix_alloc                 => cnveg_carbonflux_inst%matrix_alloc_patch                  , & ! Output:  [real(r8) (:,:) ]    B-matrix for carbon allocation
@@ -515,6 +517,16 @@ contains
 
          if(use_matrixcn)then
             matrix_Cinput(p) = plant_calloc(p)
+            if(use_c13 .and. psnsun_to_cpool(p)+psnshade_to_cpool(p).ne. 0.)then
+               matrix_C13input(p) = plant_calloc(p) * &
+                                ((c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)+ c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p))/ &
+                                (psnsun_to_cpool(p)+psnshade_to_cpool(p)))
+            end if
+            if(use_c14 .and. psnsun_to_cpool(p)+psnshade_to_cpool(p).ne. 0.)then
+               matrix_C14input(p) = plant_calloc(p) * &
+                                ((c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)+ c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p))/ &
+                                (psnsun_to_cpool(p)+psnshade_to_cpool(p)))
+            end if
             if(retransn(p) .ne. 0)then
                matrix_nphtransfer(p,iretransn_to_ileaf)           = matrix_nphtransfer(p,iretransn_to_ileaf) &
                                                                   + matrix_nalloc(p,ileaf    )     * retransn_to_npool(p) / retransn(p)

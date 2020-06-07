@@ -832,7 +832,8 @@ contains
             c14_soilbiogeochem_carbonflux_inst)
 
        call C14Decay(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
+            c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+            cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,  c14_soilbiogeochem_carbonflux_inst)
     end if
     call t_stopf('CNUpdate3')
 

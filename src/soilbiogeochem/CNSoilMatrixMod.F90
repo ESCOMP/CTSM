@@ -23,7 +23,7 @@ module CNSoilMatrixMod
   use clm_varpar                         , only : ndecomp_pools, nlevdecomp, ndecomp_pools_vr        !number of biogeochemically active soil layers
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_cascade_outtransitions
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-  use clm_varcon                         , only : dzsoi_decomp,zsoi,secspday
+  use clm_varcon                         , only : dzsoi_decomp,zsoi,secspday,c3_r2,c14ratio
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con    
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
@@ -115,7 +115,7 @@ contains
     integer :: begc,endc                                    ! bounds 
     real(r8),dimension(bounds%begc:bounds%endc,nlevdecomp*(ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)) :: a_ma_vr,na_ma_vr
 
-    real(r8),dimension(bounds%begc:bounds%endc,1:ndecomp_pools_vr,1) ::  soilmatrixc_cap,soilmatrixn_cap
+    real(r8),dimension(bounds%begc:bounds%endc,1:ndecomp_pools_vr,1) ::  soilmatrixc_cap,soilmatrixc13_cap,soilmatrixc14_cap,soilmatrixn_cap
     real(r8), dimension(1:ndecomp_pools_vr,1:ndecomp_pools_vr)   ::  AKinv,AKinvn
 
     real(r8),dimension(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools) :: cn_decomp_pools
@@ -125,11 +125,14 @@ contains
     integer,dimension(:) :: kfire_i(1:ndecomp_pools_vr)
     integer,dimension(:) :: kfire_j(1:ndecomp_pools_vr)
     real(r8),dimension(:,:) :: Cinter_old(bounds%begc:bounds%endc,1:ndecomp_pools_vr)
+    real(r8),dimension(:,:) :: C13inter_old(bounds%begc:bounds%endc,1:ndecomp_pools_vr)
+    real(r8),dimension(:,:) :: C14inter_old(bounds%begc:bounds%endc,1:ndecomp_pools_vr)
     real(r8),dimension(:,:) :: Ninter_old(bounds%begc:bounds%endc,1:ndecomp_pools_vr)
     logical,save :: list_ready1_fire   = .False.
     logical,save :: list_ready1_nofire = .False.
     logical,save :: list_ready2_fire   = .False.
     logical,save :: list_ready2_nofire = .False.
+    logical,save :: list_ready3_fire   = .False.
     logical,save :: init_readyAsoilc = .False.
     logical,save :: init_readyAsoiln = .False.
     logical isbegofyear
@@ -145,6 +148,8 @@ contains
     ns_soil   => soilbiogeochem_nitrogenstate_inst  , & ! In/Output
     cs13_soil => c13_soilbiogeochem_carbonstate_inst, & ! In/Output 
     cs14_soil => c14_soilbiogeochem_carbonstate_inst, & ! In/Output 
+    cf13_soil => c13_soilbiogeochem_carbonflux_inst,  & ! In/Output 
+    cf14_soil => c14_soilbiogeochem_carbonflux_inst,  & ! In/Output 
 
     fpi_vr                        => soilbiogeochem_state_inst%fpi_vr_col                 ,&!Input:[real(r8)(:,:)]fraction of potential immobilization (no units)
     cascade_donor_pool            => decomp_cascade_con%cascade_donor_pool                ,&!Input:[integer(:)]which pool is C taken from for a given decomposition step
@@ -294,7 +299,8 @@ contains
             do j = 1, nlevdecomp
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
-                     matrix_Cinter13%V(c,j+(i-1)*nlevdecomp)   = cs13_soil%decomp_cpools_vr_col(c,j,i)
+                  matrix_Cinter13%V(c,j+(i-1)*nlevdecomp)   = cs13_soil%decomp_cpools_vr_col(c,j,i)
+                  C13inter_old(c,j+(i-1)*nlevdecomp)        = cs13_soil%decomp_cpools_vr_col(c,j,i)
                end do
             end do
          end do
@@ -306,6 +312,7 @@ contains
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
                   matrix_Cinter14%V(c,j+(i-1)*nlevdecomp)   = cs14_soil%decomp_cpools_vr_col(c,j,i)
+                  C14inter_old(c,j+(i-1)*nlevdecomp)        = cs14_soil%decomp_cpools_vr_col(c,j,i)
                end do
             end do
          end do
@@ -325,6 +332,12 @@ contains
                   do fc = 1,num_soilc
                      c = filter_soilc(fc)
                      cs_soil%decomp0_cpools_vr_col(c,j,i)=cs_soil%decomp_cpools_vr_col(c,j,i)
+                     if(use_c13)then
+                        cs13_soil%decomp0_cpools_vr_col(c,j,i)=cs13_soil%decomp_cpools_vr_col(c,j,i)
+                     end if
+                     if(use_c14)then
+                        cs14_soil%decomp0_cpools_vr_col(c,j,i)=cs14_soil%decomp_cpools_vr_col(c,j,i)
+                     end if
                      ns_soil%decomp0_npools_vr_col(c,j,i)=ns_soil%decomp_npools_vr_col(c,j,i)
                   end do
                end do
@@ -332,6 +345,16 @@ contains
             where(cs_soil%decomp0_cpools_vr_col .lt. epsi)
                cs_soil%decomp0_cpools_vr_col = epsi
             end where
+            if(use_c13)then
+               where(cs13_soil%decomp0_cpools_vr_col .lt. epsi*c3_r2)
+                  cs13_soil%decomp0_cpools_vr_col = epsi*c3_r2
+               end where
+            end if
+            if(use_c14)then
+               where(cs14_soil%decomp0_cpools_vr_col .lt. epsi*c14ratio) 
+                  cs14_soil%decomp0_cpools_vr_col = epsi*c14ratio
+               end where
+            end if
             where(ns_soil%decomp0_npools_vr_col .lt. epsi)
                ns_soil%decomp0_npools_vr_col = epsi
             end where
@@ -371,6 +394,19 @@ contains
          kfire_j(j) = j
       end do
       call AKfiresoil%SetValueSM(begc,endc,num_soilc,filter_soilc,matrix_decomp_fire_k(begc:endc,1:ndecomp_pools_vr),kfire_i,kfire_j,ndecomp_pools_vr)
+      if(use_c14)then
+         do i = 1,ndecomp_pools
+            do j = 1, nlevdecomp
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  cf14_soil%matrix_decomp_fire_k_col(c,j+(i-1)*nlevdecomp) = cf14_soil%matrix_decomp_fire_k_col(c,j+(i-1)*nlevdecomp) &
+                                                                           + matrix_decomp_fire_k(c,j+(i-1)*nlevdecomp)
+               end do
+            end do
+         end do
+         call cf14_soil%AKfiresoil%SetValueSM(begc,endc,num_soilc,filter_soilc,&
+                             cf14_soil%matrix_decomp_fire_k_col(begc:endc,1:ndecomp_pools_vr),kfire_i,kfire_j,ndecomp_pools_vr)
+      end if
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SetValueAV,AKfire')
 
       ! Calculate AKallsoilc = A*K + AVsoil + AKfiresoil. (AKfiresoil = -Kfire)
@@ -394,17 +430,27 @@ contains
                  list_B=list_V_AKVfire,list_C=list_fire_AKVfire,NE_ABC=NE_AKallsoiln,RI_ABC=RI_AKallsoiln,CI_ABC=CI_AKallsoiln,&
                  use_actunit_list_C=.True.,num_actunit_C=num_actfirec,filter_actunit_C=filter_actfirec)
          end if
+         if(use_c14)then
+            call cf14_soil%AKallsoilc%SPMP_ABC(num_soilc,filter_soilc,AKsoilc,AVsoil,cf14_soil%AKfiresoil,list_ready3_fire,&
+                 list_A=list_AK_AKVfire,list_B=list_V_AKVfire,list_C=list_fire_AKVfire,NE_ABC=cf14_soil%NE_AKallsoilc,&
+                 RI_ABC=cf14_soil%RI_AKallsoilc,CI_ABC=cf14_soil%CI_AKallsoilc)
+         end if
       else
          if(num_actfirec .eq. 0)then
-            call AKAllsoilc%SetValueCopySM( num_soilc,filter_soilc,AKsoilc )
-            call AKAllsoiln%SetValueCopySM( num_soilc,filter_soilc,AKsoiln )
+            call AKallsoilc%SetValueCopySM( num_soilc,filter_soilc,AKsoilc )
+            call AKallsoiln%SetValueCopySM( num_soilc,filter_soilc,AKsoiln )
          else
             call AKallsoilc%SPMP_AB(num_soilc,filter_soilc,AKsoilc,AKfiresoil,list_ready1_fire,list_A=list_AK_AKVfire, &
                  list_B=list_V_AKVfire, NE_AB=NE_AKallsoilc,RI_AB=RI_AKallsoilc,CI_AB=CI_AKallsoilc)
             call AKallsoiln%SPMP_AB(num_soilc,filter_soilc,AKsoiln,AKfiresoil,list_ready2_fire,list_A=list_AK_AKVfire, &
                  list_B=list_V_AKVfire, NE_AB=NE_AKallsoiln,RI_AB=RI_AKallsoiln,CI_AB=CI_AKallsoiln)
          end if
+         if(use_c14)then
+            call cf14_soil%AKallsoilc%SPMP_AB(num_soilc,filter_soilc,AKsoilc,cf14_soil%AKfiresoil,list_ready3_fire,list_A=list_AK_AKVfire, &
+                 list_B=list_V_AKVfire, NE_AB=cf14_soil%NE_AKallsoilc,RI_AB=cf14_soil%RI_AKallsoilc,CI_AB=cf14_soil%CI_AKallsoilc)
+         end if
       end if
+
 
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SPMP_AB')
 
@@ -432,7 +478,7 @@ contains
 
       ! Update soil C14 pool size: X(matrix_Cinter14) = X(matrix_Cinter14) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter14)
       if ( use_c14)then
-         call matrix_Cinter14%SPMM_AX(num_soilc,filter_soilc,AKallsoilc)
+         call matrix_Cinter14%SPMM_AX(num_soilc,filter_soilc,cf14_soil%AKallsoilc)
       end if
 
       ! Update soil C pool size: X(matrix_Cinter) = X(matrix_Cinter) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter) + I(matrix_Cinput)
@@ -507,7 +553,6 @@ contains
       call t_stopf('CN Soil matrix-assign back')
 
       if(use_soil_matrixcn .and. (is_outmatrix .or. isspinup))then
-         call t_startf('CN Soil matrix-spinup & output1')
             
          ! Accumulate C transfers during a whole calendar year to calculate the C and N capacity
          do j=1,ndecomp_pools*nlevdecomp
@@ -517,23 +562,96 @@ contains
                ns_soil%in_nacc(c,j) = ns_soil%in_nacc(c,j) + matrix_Ninput%V(c,j)
             end do
          end do
+         if(use_c13)then
+            do j=1,ndecomp_pools*nlevdecomp
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  cs13_soil%in_acc (c,j) = cs13_soil%in_acc (c,j) + matrix_Cinput13%V(c,j)
+               end do
+            end do
+         end if
+         if(use_c14)then
+            do j=1,ndecomp_pools*nlevdecomp
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  cs14_soil%in_acc (c,j) = cs14_soil%in_acc (c,j) + matrix_Cinput14%V(c,j)
+               end do
+            end do
+         end if
 
-         ! Calculate all the soil N transfers in current time step
-         ! After this step, AKallsoiln represents all the N transfers (gN/m3/step)
-         call t_stopf('CN Soil matrix-spinup & output1')
-         call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,Ninter_old(begc:endc,1:ndecomp_pools_vr))
-         call t_startf('CN Soil matrix-spinup & output1.5')
+         if(use_c13)then
+            call cf13_soil%AKallsoilc%SetValueCopySM (num_soilc,filter_soilc,AKallsoilc)
+         end if
 
-         call AKallsoiln%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
-         call t_stopf('CN Soil matrix-spinup & output1.5')
-
+!         if(use_c14)then
+!            call cf14_soil%AKallsoilc%SetValueCopySM (num_soilc,filter_soilc,AKallsoilc)
+!         end if
          ! Calculate all the soil C transfers in current time step. 
          ! After this step, AKallsoilc represents all the C transfers (gC/m3/step)
          call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,Cinter_old(begc:endc,1:ndecomp_pools_vr))
-         call t_startf('CN Soil matrix-spinup & output1.6')
          call AKallsoilc%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
-         call t_stopf('CN Soil matrix-spinup & output1.6')
         
+         if(use_c13)then
+            call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,C13inter_old(begc:endc,1:ndecomp_pools_vr))
+            call cf13_soil%AKallsoilc%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
+         end if
+        
+         if(use_c14)then
+            call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,C14inter_old(begc:endc,1:ndecomp_pools_vr))
+            call cf14_soil%AKallsoilc%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
+         end if
+        
+         ! Calculate all the soil N transfers in current time step
+         ! After this step, AKallsoiln represents all the N transfers (gN/m3/step)
+         call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,Ninter_old(begc:endc,1:ndecomp_pools_vr))
+         call AKallsoiln%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
+
+         !
+         ! Accumulate soil C transfers: AKXcacc = AKXcacc + AKallsoilc
+         !
+         ! Copy indices from AKallsoilc on restart step
+         if ( is_first_restart_step() )then
+           call AKXcacc%CopyIdxSM( AKallsoilc )
+         end if
+         if ( AKXcacc%IsValuesSetSM() )then
+            call AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoilc)
+         else
+            ! This should only happen on the first time-step
+            call AKXcacc%SetValueCopySM(num_soilc,filter_soilc,AKallsoilc)
+         end if
+
+         !
+         ! Accumulate soil C13 transfers: cs13_soil%AKXcacc = cs13_soil%AKXcacc + cs13_soil%AKallsoilc
+         !
+         ! Copy indices from AKallsoilc on restart step
+         if(use_c13)then
+            if ( is_first_restart_step() )then
+               call cs13_soil%AKXcacc%CopyIdxSM( cf13_soil%AKallsoilc )
+            end if
+            if ( cs13_soil%AKXcacc%IsValuesSetSM() )then
+               call cs13_soil%AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,cf13_soil%AKallsoilc)
+            else
+            ! This should only happen on the first time-step
+               call cs13_soil%AKXcacc%SetValueCopySM(num_soilc,filter_soilc,cf13_soil%AKallsoilc)
+            end if
+         end if
+
+         !
+         ! Accumulate soil C14 transfers: cs14_soil%AKXcacc = cs14_soil%AKXcacc + cs14_soil%AKallsoilc
+         !
+         ! Copy indices from AKallsoilc on restart step
+         if(use_c14)then
+            if ( is_first_restart_step() )then
+               call cs14_soil%AKXcacc%CopyIdxSM( cf14_soil%AKallsoilc )
+            end if
+            if ( cs14_soil%AKXcacc%IsValuesSetSM() )then
+               call cs14_soil%AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,cf14_soil%AKallsoilc)
+            else
+            ! This should only happen on the first time-step
+               call cs14_soil%AKXcacc%SetValueCopySM(num_soilc,filter_soilc,cf14_soil%AKallsoilc)
+            end if
+         end if
+
          !
          ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
          !
@@ -542,31 +660,11 @@ contains
            call AKXnacc%CopyIdxSM( AKallsoiln )
          end if
          if ( AKXnacc%IsValuesSetSM() )then
-            call t_startf('CN Soil matrix-spinup & output2')
             call AKXnacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoiln)
-            call t_stopf('CN Soil matrix-spinup & output2')
          else
             ! This should only happen on the first time-step
             call AKXnacc%SetValueCopySM(num_soilc,filter_soilc,AKallsoiln)
          end if
-
-         !
-         ! Accumulate soil N transfers: AKXnacc = AKXnacc + AKallsoiln
-         !
-
-         ! Copy indices from AKallsoilc on restart step
-         if ( is_first_restart_step() )then
-           call AKXcacc%CopyIdxSM( AKallsoilc )
-         end if
-         if ( AKXcacc%IsValuesSetSM() )then
-            call t_startf('CN Soil matrix-spinup & output3')
-            call AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoilc)
-            call t_stopf('CN Soil matrix-spinup & output3')
-         else
-            ! This should only happen on the first time-step
-            call AKXcacc%SetValueCopySM(num_soilc,filter_soilc,AKallsoilc)
-         end if
-
 
          call t_startf('CN Soil matrix-calc. C capacity')
          if((.not. isspinup .and. is_end_curr_year()) .or. (isspinup .and. is_end_curr_year() .and. mod(iyr,nyr_SASU) .eq. 0))then
@@ -576,6 +674,12 @@ contains
                c = filter_soilc(fc)
                cs_soil%tran_acc (c,1:ndecomp_pools_vr,1:ndecomp_pools_vr) = 0._r8
                ns_soil%tran_nacc(c,1:ndecomp_pools_vr,1:ndecomp_pools_vr) = 0._r8
+               if(use_c13)then
+                  cs13_soil%tran_acc (c,1:ndecomp_pools_vr,1:ndecomp_pools_vr) = 0._r8
+               end if
+               if(use_c14)then
+                  cs14_soil%tran_acc (c,1:ndecomp_pools_vr,1:ndecomp_pools_vr) = 0._r8
+               end if
             end do
             do j=1,n_all_entries
                j_lev    = mod(all_j(j)-1,nlevdecomp)+1
@@ -584,6 +688,12 @@ contains
                   c = filter_soilc(fc)
                   cs_soil%tran_acc(c,all_i(j),all_j(j))  = AKXcacc%M(c,j) / cs_soil%decomp0_cpools_vr_col(c,j_lev,j_decomp)
                   ns_soil%tran_nacc(c,all_i(j),all_j(j)) = AKXnacc%M(c,j) / ns_soil%decomp0_npools_vr_col(c,j_lev,j_decomp)
+                  if(use_c13)then
+                     cs13_soil%tran_acc(c,all_i(j),all_j(j))  = cs13_soil%AKXcacc%M(c,j) / cs13_soil%decomp0_cpools_vr_col(c,j_lev,j_decomp)
+                  end if
+                  if(use_c14)then
+                     cs14_soil%tran_acc(c,all_i(j),all_j(j))  = cs14_soil%AKXcacc%M(c,j) / cs14_soil%decomp0_cpools_vr_col(c,j_lev,j_decomp)
+                  end if
                end do
             end do
 
@@ -595,6 +705,28 @@ contains
                   end if 
                end do
             end do
+        
+            if(use_c13)then
+               do i=1,ndecomp_pools_vr
+                  do fc = 1,num_soilc
+                     c = filter_soilc(fc)
+                     if (abs(cs13_soil%tran_acc(c,i,i)) .le. epsi)then !avoid inversion nan
+                         cs13_soil%tran_acc(c,i,i) = 1.e+36_r8
+                     end if 
+                  end do
+               end do
+            end if
+
+            if(use_c14)then
+               do i=1,ndecomp_pools_vr
+                  do fc = 1,num_soilc
+                     c = filter_soilc(fc)
+                     if (abs(cs14_soil%tran_acc(c,i,i)) .le. epsi)then !avoid inversion nan
+                         cs14_soil%tran_acc(c,i,i) = 1.e+36_r8
+                     end if 
+                  end do
+               end do
+            end if
 
             do i=1,ndecomp_pools_vr
                do fc = 1,num_soilc
@@ -609,8 +741,16 @@ contains
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                call inverse(cs_soil%tran_acc(c,1:ndecomp_pools_vr,1:ndecomp_pools_vr),AKinv(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ndecomp_pools_vr)
-               call inverse(ns_soil%tran_nacc(c,1:ndecomp_pools_vr,1:ndecomp_pools_vr),AKinvn(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ndecomp_pools_vr)
                soilmatrixc_cap(c,:,1) = -matmul(AKinv(1:ndecomp_pools_vr,1:ndecomp_pools_vr),cs_soil%in_acc(c,1:ndecomp_pools_vr))
+               if(use_c13)then
+                  call inverse(cs13_soil%tran_acc(c,1:ndecomp_pools_vr,1:ndecomp_pools_vr),AKinv(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ndecomp_pools_vr)
+                  soilmatrixc13_cap(c,:,1) = -matmul(AKinv(1:ndecomp_pools_vr,1:ndecomp_pools_vr),cs13_soil%in_acc(c,1:ndecomp_pools_vr))
+               end if
+               if(use_c14)then
+                  call inverse(cs14_soil%tran_acc(c,1:ndecomp_pools_vr,1:ndecomp_pools_vr),AKinv(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ndecomp_pools_vr)
+                  soilmatrixc14_cap(c,:,1) = -matmul(AKinv(1:ndecomp_pools_vr,1:ndecomp_pools_vr),cs14_soil%in_acc(c,1:ndecomp_pools_vr))
+               end if
+               call inverse(ns_soil%tran_nacc(c,1:ndecomp_pools_vr,1:ndecomp_pools_vr),AKinvn(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ndecomp_pools_vr)
                soilmatrixn_cap(c,:,1) = -matmul(AKinvn(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ns_soil%in_nacc(c,1:ndecomp_pools_vr))
             end do
 
@@ -620,6 +760,12 @@ contains
                      c = filter_soilc(fc)
                      if(soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1) .lt. 0)then
                         soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1) = 0._r8
+                     endif
+                     if(use_c13 .and. soilmatrixc13_cap(c,j+(i-1)*nlevdecomp,1) .lt. 0)then
+                        soilmatrixc13_cap(c,j+(i-1)*nlevdecomp,1) = 0._r8
+                     endif
+                     if(use_c14 .and. soilmatrixc14_cap(c,j+(i-1)*nlevdecomp,1) .lt. 0)then
+                        soilmatrixc14_cap(c,j+(i-1)*nlevdecomp,1) = 0._r8
                      endif
                      if(soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1) .lt. 0)then
                         soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1) = 0._r8
@@ -640,6 +786,12 @@ contains
                                      (soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)/cs_soil%decomp0_cpools_vr_col(c,j,i) .gt. 100 .and. soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1) .gt. 1.e+5_r8  &
                                  .or. soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)/ns_soil%decomp0_npools_vr_col(c,j,i) .gt. 100 .and. soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1) .gt. 1.e+3_r8) )then
                         soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1) = matrix_Cinter%V(c,j+(i-1)*nlevdecomp)
+                        if(use_c13)then
+                           soilmatrixc13_cap(c,j+(i-1)*nlevdecomp,1) = matrix_Cinter13%V(c,j+(i-1)*nlevdecomp)
+                        end if
+                        if(use_c14)then
+                           soilmatrixc14_cap(c,j+(i-1)*nlevdecomp,1) = matrix_Cinter14%V(c,j+(i-1)*nlevdecomp)
+                        end if
                         soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1) = matrix_Ninter%V(c,j+(i-1)*nlevdecomp)
                      end if
                   end do
@@ -650,6 +802,12 @@ contains
                c = filter_soilc(fc)
                if(any(soilmatrixc_cap(c,:,1) .gt. 1.e+8_r8) .or. any(soilmatrixn_cap(c,:,1) .gt. 1.e+8_r8))then
                   soilmatrixc_cap(c,:,1) = matrix_Cinter%V(c,:)
+                  if(use_c13)then
+                     soilmatrixc13_cap(c,:,1) = matrix_Cinter13%V(c,:)
+                  end if
+                  if(use_c14)then
+                     soilmatrixc14_cap(c,:,1) = matrix_Cinter14%V(c,:)
+                  end if
                   soilmatrixn_cap(c,:,1) = matrix_Ninter%V(c,:)
                end if
             end do
@@ -662,23 +820,54 @@ contains
                      c = filter_soilc(fc)
                      if(isspinup .and. .not. is_first_step_of_this_run_segment())then
                         cs_soil%decomp_cpools_vr_col(c,j,i) =  soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
+                        if(use_c13)then
+                           cs13_soil%decomp_cpools_vr_col(c,j,i) =  soilmatrixc13_cap(c,j+(i-1)*nlevdecomp,1)
+                        end if
+                        if(use_c14)then
+                           cs14_soil%decomp_cpools_vr_col(c,j,i) =  soilmatrixc14_cap(c,j+(i-1)*nlevdecomp,1)
+                        end if
                         if(floating_cn_ratio_decomp_pools(i))then
                            ns_soil%decomp_npools_vr_col(c,j,i) =  soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)
                         else
                            ns_soil%decomp_npools_vr_col(c,j,i) = cs_soil%decomp_cpools_vr_col(c,j,i) / cn_decomp_pools(c,j,i)
                         end if
+                        ! calculate the average of the storage capacity when iloop equals to iloop_avg
                         if(iloop .eq. iloop_avg)then
                            cs_soil%decomp_cpools_vr_SASUsave_col(c,j,i) = cs_soil%decomp_cpools_vr_SASUsave_col(c,j,i) + cs_soil%decomp_cpools_vr_col(c,j,i)
+                           if(use_c13)then
+                              cs13_soil%decomp_cpools_vr_SASUsave_col(c,j,i) = cs13_soil%decomp_cpools_vr_SASUsave_col(c,j,i) + cs13_soil%decomp_cpools_vr_col(c,j,i)
+                           end if
+                           if(use_c14)then
+                              cs14_soil%decomp_cpools_vr_SASUsave_col(c,j,i) = cs14_soil%decomp_cpools_vr_SASUsave_col(c,j,i) + cs14_soil%decomp_cpools_vr_col(c,j,i)
+                           end if
                            ns_soil%decomp_npools_vr_SASUsave_col(c,j,i) = ns_soil%decomp_npools_vr_SASUsave_col(c,j,i) + ns_soil%decomp_npools_vr_col(c,j,i)
                            if(iyr .eq. nyr_forcing)then
                               cs_soil%decomp_cpools_vr_col(c,j,i) = cs_soil%decomp_cpools_vr_SASUsave_col(c,j,i) / (nyr_forcing/nyr_SASU)
+                              if(use_c13)then
+                                 cs13_soil%decomp_cpools_vr_col(c,j,i) = cs13_soil%decomp_cpools_vr_SASUsave_col(c,j,i) / (nyr_forcing/nyr_SASU)
+                              end if
+                              if(use_c14)then
+                                 cs14_soil%decomp_cpools_vr_col(c,j,i) = cs14_soil%decomp_cpools_vr_SASUsave_col(c,j,i) / (nyr_forcing/nyr_SASU)
+                              end if
                               ns_soil%decomp_npools_vr_col(c,j,i) = ns_soil%decomp_npools_vr_SASUsave_col(c,j,i) / (nyr_forcing/nyr_SASU)
                               cs_soil%decomp_cpools_vr_SASUsave_col(c,j,i) = 0._r8
+                              if(use_c13)then
+                                 cs13_soil%decomp_cpools_vr_SASUsave_col(c,j,i) = 0._r8
+                              end if
+                              if(use_c14)then
+                                 cs14_soil%decomp_cpools_vr_SASUsave_col(c,j,i) = 0._r8
+                              end if
                               ns_soil%decomp_npools_vr_SASUsave_col(c,j,i) = 0._r8
                            end if
                         end if
                      end if
                      cs_soil%matrix_cap_decomp_cpools_vr_col(c,j,i) = soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
+                     if(use_c13)then
+                        cs_soil%matrix_cap_decomp_cpools_vr_col(c,j,i) = soilmatrixc13_cap(c,j+(i-1)*nlevdecomp,1)
+                     end if
+                     if(use_c14)then
+                        cs_soil%matrix_cap_decomp_cpools_vr_col(c,j,i) = soilmatrixc14_cap(c,j+(i-1)*nlevdecomp,1)
+                     end if
                      ns_soil%matrix_cap_decomp_npools_vr_col(c,j,i) = soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)
                   end do
                end do
@@ -693,6 +882,12 @@ contains
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
                   AKXcacc%M(c,j) = 0._r8
+                  if(use_c13)then
+                     cs13_soil%AKXcacc%M(c,j) = 0._r8
+                  end if
+                  if(use_c14)then
+                     cs14_soil%AKXcacc%M(c,j) = 0._r8
+                  end if
                   AKXnacc%M(c,j) = 0._r8
                end do
             end do
@@ -700,6 +895,12 @@ contains
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                cs_soil%in_acc   (c,:)   = 0._r8
+               if(use_c13)then
+                  cs13_soil%in_acc   (c,:)   = 0._r8
+               end if
+               if(use_c14)then
+                  cs14_soil%in_acc   (c,:)   = 0._r8
+               end if
                ns_soil%in_nacc  (c,:)   = 0._r8
             end do
          end if
