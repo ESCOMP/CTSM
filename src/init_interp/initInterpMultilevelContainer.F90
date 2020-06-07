@@ -53,6 +53,7 @@ module initInterpMultilevelContainer
    contains
      procedure :: init
      procedure :: find_interpolator
+     final :: destroy_interp_multilevel_container_type
   end type interp_multilevel_container_type
 
   ! Private routines
@@ -479,6 +480,33 @@ contains
     deallocate(snlsno_source_plus_1)
 
   end subroutine create_snow_interpolators
+
+  ! ========================================================================
+  ! Finalizers
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine destroy_interp_multilevel_container_type(this)
+    !
+    ! !DESCRIPTION:
+    ! Finalize routine for interp_multilevel_container_type
+    !
+    ! !ARGUMENTS:
+    type(interp_multilevel_container_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'destroy_interp_multilevel_container_type'
+    !-----------------------------------------------------------------------
+
+    deallocate(this%interp_multilevel_copy)
+    deallocate(this%interp_multilevel_levgrnd_col)
+    deallocate(this%interp_multilevel_levgrnd_pft)
+    deallocate(this%interp_multilevel_levsno)
+    deallocate(this%interp_multilevel_levsno1)
+    deallocate(this%interp_multilevel_levtot_col)
+
+  end subroutine destroy_interp_multilevel_container_type
 
 
 end module initInterpMultilevelContainer
