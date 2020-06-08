@@ -941,7 +941,7 @@ sub setup_cmdl_fire_light_res {
     }
     my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
     if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
-       $log->fatal_error("fire_method is being set even though bgc is NOT cn or bgc.");
+       $log->fatal_error("fire_method is being set while use_cn and use_fates are both false.");
     }
     if ( defined($fire_method) && $fire_method eq "nofire" ) {
        $nl_flags->{$var} = ".false.";
