@@ -9,8 +9,8 @@
 This section describes the process for obtaining and building the CTSM library and its
 dependencies, and linking to these libraries in an atmosphere model's build.
 
-Quick start example
-===================
+Quick start example / overview
+==============================
 
 The basic process for obtaining and building CTSM is the following:
 
@@ -25,13 +25,23 @@ command will look like this (example given for NCAR's ``cheyenne`` machine)::
 
   ./build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
 
+and then, before building the atmosphere model::
+
+  source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.sh
+
 On a machine that has *not* been ported to CIME, you will need to provide some additional
 information. Run ``build_ctsm -h`` for details, but the basic command will look like
 this::
 
   ./build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default
 
-Further details on these commands are given below.
+In both cases, you will then need to include the necessary information in the include and
+link lines of the atmosphere model's build. For a Makefile-based build, this can be done
+by including the file ``/PATH/TO/CTSM/BUILD/ctsm.mk`` in the atmosphere model's build
+scripts, then adding ``CTSM_INCLUDES`` to the include line and ``CTSM_LIBS`` to the link
+line.
+
+Further details on these steps are given below.
 
 .. _building-ctsm-and-lilac-prerequisites:
 
@@ -172,8 +182,8 @@ Building on a machine that has not been ported to CIME
 
 If you are using a machine thata has not been ported to CIME_, then you need to specify
 additional information to ``build_ctsm`` that is needed by the build system. Before
-building CTSM, you should load any modules required by the atmosphere model or CTSM
-builds, including all of the :ref:`prerequisites noted
+building CTSM, you should load any modules and/or set any environment variables required
+by the atmosphere model or CTSM builds, including all of the :ref:`prerequisites noted
 above<building-ctsm-and-lilac-prerequisites>`.
 
 The minimal amount of information needed is given by the following::
@@ -263,7 +273,7 @@ expect that the user has set an environment variable::
 If that environment variable exists, then the ``configure`` script adds the following to
 the Makefile-based build:
 
-- Adds an include line (like ``include ${WRF_CTSM_MKFILE}``)
+- Includes the ``ctsm.mk`` file (like ``include ${WRF_CTSM_MKFILE}``)
 
 - Adds a CPP definition, ``-DWRF_USE_CTSM``, which is used to do conditional compilation
   of the CTSM-LILAC interface code
