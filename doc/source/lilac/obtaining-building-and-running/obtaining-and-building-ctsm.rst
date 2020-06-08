@@ -70,6 +70,10 @@ Building CTSM requires:
 
   - typically, this includes compiler wrappers like ``mpif90`` and ``mpicc``
 
+- ESMF version 8 or later
+
+  - **ESMF is not needed in general for CTSM, but is needed for LILAC**
+
 Obtaining CTSM
 ==============
 
@@ -117,6 +121,8 @@ All of these workflows use CIME's build system behind the scenes. Typically, you
 need to be aware of any of those details, but if problems arise, you may want to consult
 the `CIME documentation`_.
 
+.. _building-on-a-cime-supported-machine:
+
 Building on a CIME-supported machine
 ------------------------------------
 
@@ -124,7 +130,10 @@ If you are using a machine that has been ported to CIME_ (for example, NCAR's ``
 machine), then you do not need to specify much information to ``build_ctsm``. In addition,
 in this case, CIME will load the appropriate modules and set the appropriate environment
 variables at build time, so you do not need to do anything to set up your environment
-ahead of time.
+ahead of time. **Building CTSM with LILAC requires ESMF. ESMF is currently an optional
+CIME dependency, so many CIME-ported machines do not provide information on an ESMF
+installation. NCAR's cheyenne machine DOES provide ESMF, but for other machines, you may
+need to add this to your CIME port.**
 
 To build CTSM and its dependencies in this case, run::
 
@@ -139,11 +148,11 @@ machine.
    created for you by the build script.
 
 Some other options to ``build_ctsm`` are supported in this case (but many are not, since
-they are only applicable to the non-CIME-supported machine workflow); run ``build_ctsm
+they are only applicable to the non-CIME-supported machine workflow); run ``./build_ctsm
 -h`` for details.
 
-Besides the build files themselves, there are two key files that are needed for the build
-of the atmosphere model:
+Besides the build files themselves, ``build_ctsm`` creates the following important files
+that are needed for the build of the atmosphere model:
 
 1. ``/PATH/TO/CTSM/BUILD/ctsm.mk``: This Makefile-formatted file gives variables that
    should be set in the atmosphere model's build. :ref:`See below for information on how
@@ -157,6 +166,55 @@ of the atmosphere model:
    similar shells). **This will ensure that the atmosphere model is built with the same
    compiler and library versions as CTSM.** For example, with bash: ``source
    /PATH/TO/CTSM/BUILD/ctsm_build_environment.sh``.
+
+Building on a machine that has not been ported to CIME
+------------------------------------------------------
+
+If you are using a machine thata has not been ported to CIME_, then you need to specify
+additional information to ``build_ctsm`` that is needed by the build system. Before
+building CTSM, you should load any modules required by the atmosphere model or CTSM
+builds, including all of the :ref:`prerequisites noted
+above<building-ctsm-and-lilac-prerequisites>`.
+
+The minimal amount of information needed is given by the following::
+
+  ./build_ctsm /PATH/TO/CTSM/BUILD --compiler COMPILER --os OS --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH
+
+where you should fill in the capitalized arguments with appropriate values for your
+machine. Run ``./build_ctsm -h`` for details on these arguments, as well as documentation
+of additional, optional arguments. Some of these optional arguments may be needed for
+successful compilation, while others (such as ``--pnetcdf-path``) may be needed for good
+model performance.
+
+.. note::
+
+   The given directory (``/PATH/TO/CTSM/BUILD``) must *not* exist. This directory is
+   created for you by the build script.
+
+Example usage for a Mac (a simple case) is::
+
+  ./build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default
+
+Example usage for NCAR's ``cheyenne`` machine (a more complex case) is::
+
+  module purge
+  module load ncarenv/1.3 intel/19.0.5 esmf_libs mkl
+  module use /glade/work/himanshu/PROGS/modulefiles/esmfpkgs/intel/19.0.5
+  module load esmf-8.1.0b14-ncdfio-mpt-O mpt/2.21 netcdf/4.7.3 pnetcdf/1.12.1 ncarcompilers/0.5.0
+  module load python
+
+  ./build_ctsm /glade/scratch/$USER/ctsm_build_dir --os linux --compiler intel --netcdf-path '$ENV{NETCDF}' --pio-filesystem-hints gpfs --pnetcdf-path '$ENV{PNETCDF}' --esmf-lib-path '$ENV{ESMF_LIBDIR}' --extra-cflags '-xCORE_AVX2 -no-fma' --extra-fflags '-xCORE_AVX2 -no-fma'
+
+(It's better to use the :ref:`alternative process for a CIME-supported
+machine<building-on-a-cime-supported-machine>` in this case, but the above illustrates
+what would be needed for a machine similar to this that has not been ported to CIME.)
+
+Besides the build files themselves, ``build_ctsm`` creates an important file that is
+needed for the build of the atmosphere model: ``/PATH/TO/CTSM/BUILD/ctsm.mk``. This
+Makefile-formatted file gives variables that should be set in the atmosphere model's
+build. :ref:`See below for information on how to use this
+file<including-ctsm-in-the-atmosphere-model-build>`.
+
 
 Rebuilding after changing CTSM source code
 ------------------------------------------
@@ -173,9 +231,46 @@ where ``/PATH/TO/CTSM/BUILD`` should point to the same directory you originally 
 Including CTSM in the atmosphere model's build
 ==============================================
 
-.. todo::
+Once you have successfully built CTSM and its dependencies, you will need to add various
+paths to the compilation and link lines when building your atmosphere model. For a
+Makefile-based build system, we facilitate this by producing a file,
+``/PATH/TO/CTSM/BUILD/ctsm.mk``, which you can include in your own build script. (We do
+not yet produce an equivalent for CMake or other build systems.)
 
-   TODO: Fill this section in
+There are two important variables defined in this file:
+
+- ``CTSM_INCLUDES``: This variable should be included in the compilation line for the
+  atmosphere model's source files. It lists all paths that need to be included in these
+  compilations so that the compiler can find the appropriate Fortran module files.
+
+- ``CTSM_LIBS``: This variable should be included in the link line when creating the final
+  executable. It lists paths and library names that need to be included in the link
+  step. **Note: This may not include all of the libraries that are**
+  :ref:`prerequisites<building-ctsm-and-lilac-prerequisites>`, **such as LAPACK, BLAS and
+  NetCDF. If your atmosphere doesn't already require these, you may need to add
+  appropriate information to your atmosphere model's link line.** However, it should
+  already include all required link information for ESMF.
+
+Other variables in this file do not need to be included directly in the atmosphere model's
+build (they are just intermediate variables used to create ``CTSM_INCLUDES`` and
+``CTSM_LIBS``).
+
+For example, for the WRF build, we do the following: If building with CTSM, then we
+expect that the user has set an environment variable::
+
+  export WRF_CTSM_MKFILE=/PATH/TO/CTSM/BUILD/ctsm.mk
+
+If that environment variable exists, then the ``configure`` script adds the following to
+the Makefile-based build:
+
+- Adds an include line (like ``include ${WRF_CTSM_MKFILE}``)
+
+- Adds a CPP definition, ``-DWRF_USE_CTSM``, which is used to do conditional compilation
+  of the CTSM-LILAC interface code
+
+- Adds ``$(CTSM_INCLUDES)`` to its variable ``INCLUDE_MODULES``
+
+- Adds ``$(CTSM_LIBS)`` to its variable ``LIB``
 
 .. _CIME: http://esmci.github.io/cime
 .. _CIME documentation: http://esmci.github.io/cime
