@@ -147,7 +147,7 @@
   <test name="ERS_D_Lm12.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesSuccIgnitions">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
-      <issue>NGEET/fates#991</issue>
+      <issue>#667</issue>
     </phase>
   </test>
 
