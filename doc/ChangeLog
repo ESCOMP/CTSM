@@ -81,6 +81,12 @@ CTSM testing:
 
     izumi: tests pass, some baselines fail as expected
 
+    ERP_D_Ld3.f09_g17.I2000Clm50SpGs.cheyenne_intel.clm-prescribed
+    showed differences from the stored baselines, but it appears that
+    the stored baselines were incorrect: when I reran this test from
+    master, the master version differed from the stored baselines and
+    was identical to this branch.
+
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
 
