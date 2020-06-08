@@ -171,15 +171,6 @@
     <lname>2000_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
-  <!-- Primarily for testing (stub glc needed for single-point tests); uses Qian
-       atmospheric forcing simply to give faster datm throughput, which is
-       particularly relevant for single-point cases (where datm dominates the
-       runtime) -->
-  <compset>
-    <alias>I2000Clm50BgcCropQianGs</alias>
-    <lname>2000_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-  </compset>
-
   <compset>
     <alias>I2000Clm50BgcCruGs</alias>
     <lname>2000_DATM%CRUv7_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
@@ -317,15 +308,6 @@
   <compset>
     <alias>IHistClm50BgcCropGs</alias>
     <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-  </compset>
-
-  <!-- Primarily for testing (stub glc needed for single-point tests); uses Qian
-       atmospheric forcing simply to give faster datm throughput, which is
-       particularly relevant for single-point cases (where datm dominates the
-       runtime) -->
-  <compset>
-    <alias>IHistClm50BgcCropQianGs</alias>
-    <lname>HIST_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <!-- Primarily for testing, not entirely sure this configure works -->
