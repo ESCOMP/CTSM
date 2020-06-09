@@ -96,9 +96,9 @@ def build_ctsm(cime_path,
     esmf_lib_path (str or None): path to ESMF library directory
         Must be given if machine isn't given; ignored if machine is given
     gmake (str or None): name of GNU make tool
-        Ignored if machine is given
+        Must be given if machine isn't given; ignored if machine is given
     gmake_j (int or None): number of threads to use when building
-        Ignored if machine is given
+        Must be given if machine isn't given; ignored if machine is given
     pnetcdf_path (str or None): path to PNetCDF installation, if present (or None)
         Ignored if machine is given
     pio_filesystem_hints (str or None): if present (not None), enable filesystem hints for the
