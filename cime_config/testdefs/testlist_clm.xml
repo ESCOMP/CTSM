@@ -1140,6 +1140,51 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="SMS_Ld1" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm50Sp" testmods="clm/basic">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm1"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Want at least one test of ne30pg2, because this grid is needed by CAM</option>
+    </options>
+  </test>
+  <test name="SMS_Ld1" grid="ne30pg3_ne30pg3_mg17" compset="I2000Clm50BgcCrop" testmods="clm/basic">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm1"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Want at least one test of ne30pg3, because this grid is needed by CAM</option>
+    </options>
+  </test>
+  <test name="SMS_Ld1" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="I1850Clm50BgcCrop" testmods="clm/basic">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm1"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Want at least one test of ne0CONUSne30x8, because this grid is needed by CAM</option>
+    </options>
+  </test>
+  <test name="SMS_Ld1" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="ISSP585Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm1"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Want at least one test of ne0ARCTICGRISne30x8, because this grid is needed by CAM</option>
+    </options>
+  </test>
+  <test name="SMS_Ld1" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="I1850Clm50Sp" testmods="clm/basic">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm1"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Want at least one test of ne0ARCTICGRISne30x8, because this grid is needed by CAM</option>
+    </options>
+  </test>
   <test name="SMS_D" grid="f19_f19_mg17" compset="I2010Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
