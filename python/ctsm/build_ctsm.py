@@ -134,12 +134,14 @@ def build_ctsm(cime_path,
                                 extra_cflags=extra_cflags)
 
     case_dir = os.path.join(build_dir, 'case')
-    _create_and_build_case(cime_path=cime_path,
-                           build_dir=build_dir,
-                           case_dir=case_dir,
-                           compiler=compiler,
-                           machine=machine,
-                           no_build=no_build)
+    _create_case(cime_path=cime_path,
+                 build_dir=build_dir,
+                 case_dir=case_dir,
+                 compiler=compiler,
+                 machine=machine)
+    if not no_build:
+        _build_case(build_dir=build_dir,
+                    case_dir=case_dir)
 
 # ========================================================================
 # Private functions
@@ -452,8 +454,8 @@ def _fill_out_machine_files(build_dir,
               'w') as cc_file:
         cc_file.write(config_compilers)
 
-def _create_and_build_case(cime_path, build_dir, case_dir, compiler, machine=None, no_build=False):
-    """Create a case and build the CTSM library and its dependencies
+def _create_case(cime_path, build_dir, case_dir, compiler, machine=None):
+    """Create a case that can later be used to build the CTSM library and its dependencies
 
     Args:
     cime_path (str): path to root of cime
@@ -463,12 +465,11 @@ def _create_and_build_case(cime_path, build_dir, case_dir, compiler, machine=Non
     machine (str or None): name of machine or None
         If None, we assume we're using an on-the-fly machine port
         Otherwise, machine should be the name of a machine known to cime
-    no_build (bool): If True, set things up, but skip doing the actual build
     """
     # Note that, for some commands, we want to suppress output, only showing the output if
-    # the command fails; for these we use run_cmd_output_on_error. For other commands, we
-    # want to always show output (or there should be no output in general); for these, we
-    # directly use subprocess.check_call or similar.
+    # the command fails; for these we use run_cmd_output_on_error. For other commands,
+    # there should be no output in general; for these, we directly use
+    # subprocess.check_call or similar.
 
     # Also note that, for commands executed from the case directory, we specify the path
     # to the case directory both in the command itself and in the cwd argument. We do the
@@ -508,14 +509,25 @@ def _create_and_build_case(cime_path, build_dir, case_dir, compiler, machine=Non
             make_link(os.path.join(case_dir, '.env_mach_specific.{}'.format(extension)),
                       os.path.join(build_dir, 'ctsm_build_environment.{}'.format(extension)))
 
-    if not no_build:
-        try:
-            subprocess.check_call(
-                [os.path.join(case_dir, 'case.build'),
-                 '--sharedlib-only'],
-                cwd=case_dir)
-        except subprocess.CalledProcessError:
-            abort('ERROR building CTSM or its dependencies - see above for details')
+def _build_case(build_dir, case_dir):
+    """Build the CTSM library and its dependencies
 
-        make_link(os.path.join(case_dir, 'bld', 'ctsm.mk'),
-                  os.path.join(build_dir, 'ctsm.mk'))
+    Args:
+    build_dir (str): path to build directory
+    case_dir (str): path to case directory
+    """
+    # We want user to see output from the build command, so we use subprocess.check_call
+    # rather than run_cmd_output_on_error.
+
+    # See comment in _create_case for why we use case_dir in both the path to the command
+    # and in the cwd argument to check_call.
+    try:
+        subprocess.check_call(
+            [os.path.join(case_dir, 'case.build'),
+             '--sharedlib-only'],
+            cwd=case_dir)
+    except subprocess.CalledProcessError:
+        abort('ERROR building CTSM or its dependencies - see above for details')
+
+    make_link(os.path.join(case_dir, 'bld', 'ctsm.mk'),
+              os.path.join(build_dir, 'ctsm.mk'))
