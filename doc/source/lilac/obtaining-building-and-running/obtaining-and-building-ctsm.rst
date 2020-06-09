@@ -9,6 +9,14 @@
 This section describes the process for obtaining and building the CTSM library and its
 dependencies, and linking to these libraries in an atmosphere model's build.
 
+.. important::
+
+   This documentation only applies to the process where you are building CTSM with LILAC
+   for use in an atmosphere model that has *not* been integrated with CESM or CIME. If you
+   are using CTSM within CESM, or running CTSM in land-only mode with a data atmosphere,
+   then you should refer to the :ref:`general CTSM user's guide<users-guide>` as well as
+   the `CIME documentation`_.
+
 Quick start example / overview
 ==============================
 
@@ -23,17 +31,17 @@ Obtain CTSM by running::
 Then build CTSM and its dependencies. On a machine that has been ported to CIME, the
 command will look like this (example given for NCAR's ``cheyenne`` machine)::
 
-  ./build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
+  ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
 
 and then, before building the atmosphere model::
 
   source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.sh
 
 On a machine that has *not* been ported to CIME, you will need to provide some additional
-information. Run ``build_ctsm -h`` for details, but the basic command will look like
-this::
+information. Run ``./lilac/build_ctsm -h`` for details, but the basic command will look
+like this::
 
-  ./build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default
+  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default
 
 In both cases, you will then need to include the necessary information in the include and
 link lines of the atmosphere model's build. For a Makefile-based build, this can be done
@@ -107,7 +115,7 @@ Building CTSM and its dependencies
 Overview
 --------
 
-CTSM provides a build script, ``build_ctsm``, for building CTSM and its dependencies. (The
+CTSM provides a build script, ``lilac/build_ctsm``, for building CTSM and its dependencies. (The
 dependencies built with this build script include various libraries that are packaged with
 CIME_. This does *not* build the :ref:`prerequisites noted
 above<building-ctsm-and-lilac-prerequisites>`: it is assumed that those are already built
@@ -147,7 +155,7 @@ need to add this to your CIME port.**
 
 To build CTSM and its dependencies in this case, run::
 
-  ./build_ctsm /PATH/TO/CTSM/BUILD --machine MACHINE --compiler COMPILER
+  ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --machine MACHINE --compiler COMPILER
 
 where you should fill in the capitalized arguments with appropriate values for your
 machine.
@@ -158,8 +166,8 @@ machine.
    created for you by the build script.
 
 Some other options to ``build_ctsm`` are supported in this case (but many are not, since
-they are only applicable to the non-CIME-supported machine workflow); run ``./build_ctsm
--h`` for details.
+they are only applicable to the non-CIME-supported machine workflow); run
+``./lilac/build_ctsm -h`` for details.
 
 Besides the build files themselves, ``build_ctsm`` creates the following important files
 that are needed for the build of the atmosphere model:
@@ -188,10 +196,10 @@ above<building-ctsm-and-lilac-prerequisites>`.
 
 The minimal amount of information needed is given by the following::
 
-  ./build_ctsm /PATH/TO/CTSM/BUILD --compiler COMPILER --os OS --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH
+  ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --compiler COMPILER --os OS --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH
 
 where you should fill in the capitalized arguments with appropriate values for your
-machine. Run ``./build_ctsm -h`` for details on these arguments, as well as documentation
+machine. Run ``./lilac/build_ctsm -h`` for details on these arguments, as well as documentation
 of additional, optional arguments. Some of these optional arguments may be needed for
 successful compilation, while others (such as ``--pnetcdf-path``) may be needed for good
 model performance.
@@ -203,7 +211,7 @@ model performance.
 
 Example usage for a Mac (a simple case) is::
 
-  ./build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default
+  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default
 
 Example usage for NCAR's ``cheyenne`` machine (a more complex case) is::
 
@@ -213,7 +221,7 @@ Example usage for NCAR's ``cheyenne`` machine (a more complex case) is::
   module load esmf-8.1.0b14-ncdfio-mpt-O mpt/2.21 netcdf/4.7.3 pnetcdf/1.12.1 ncarcompilers/0.5.0
   module load python
 
-  ./build_ctsm /glade/scratch/$USER/ctsm_build_dir --os linux --compiler intel --netcdf-path '$ENV{NETCDF}' --pio-filesystem-hints gpfs --pnetcdf-path '$ENV{PNETCDF}' --esmf-lib-path '$ENV{ESMF_LIBDIR}' --extra-cflags '-xCORE_AVX2 -no-fma' --extra-fflags '-xCORE_AVX2 -no-fma'
+  ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --os linux --compiler intel --netcdf-path '$ENV{NETCDF}' --pio-filesystem-hints gpfs --pnetcdf-path '$ENV{PNETCDF}' --esmf-lib-path '$ENV{ESMF_LIBDIR}' --extra-cflags '-xCORE_AVX2 -no-fma' --extra-fflags '-xCORE_AVX2 -no-fma'
 
 (It's better to use the :ref:`alternative process for a CIME-supported
 machine<building-on-a-cime-supported-machine>` in this case, but the above illustrates
@@ -232,7 +240,7 @@ Rebuilding after changing CTSM source code
 To rebuild after changing CTSM source code, you should follow one of the above workflows,
 but the ``build_ctsm`` command will simply be::
 
-  ./build_ctsm /PATH/TO/CTSM/BUILD --rebuild
+  ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --rebuild
 
 where ``/PATH/TO/CTSM/BUILD`` should point to the same directory you originally used.
 

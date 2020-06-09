@@ -1,8 +1,8 @@
 .. _obtaining-building-and-running:
 
-======================================
- Obtaining, building and running CTSM
-======================================
+=================================================
+ Obtaining, building and running CTSM with LILAC
+=================================================
 
 .. toctree::
    :maxdepth: 2
