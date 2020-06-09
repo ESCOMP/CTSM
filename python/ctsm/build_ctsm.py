@@ -133,8 +133,10 @@ def build_ctsm(cime_path,
                                 extra_fflags=extra_fflags,
                                 extra_cflags=extra_cflags)
 
+    case_dir = os.path.join(build_dir, 'case')
     _create_and_build_case(cime_path=cime_path,
                            build_dir=build_dir,
+                           case_dir=case_dir,
                            compiler=compiler,
                            machine=machine,
                            no_build=no_build)
@@ -450,20 +452,19 @@ def _fill_out_machine_files(build_dir,
               'w') as cc_file:
         cc_file.write(config_compilers)
 
-def _create_and_build_case(cime_path, build_dir, compiler, machine=None, no_build=False):
+def _create_and_build_case(cime_path, build_dir, case_dir, compiler, machine=None, no_build=False):
     """Create a case and build the CTSM library and its dependencies
 
     Args:
     cime_path (str): path to root of cime
     build_dir (str): path to build directory
+    case_dir (str): path to case directory
     compiler (str): compiler to use
     machine (str or None): name of machine or None
         If None, we assume we're using an on-the-fly machine port
         Otherwise, machine should be the name of a machine known to cime
     no_build (bool): If True, set things up, but skip doing the actual build
     """
-    casedir = os.path.join(build_dir, 'case')
-
     # Note that, for some commands, we want to suppress output, only showing the output if
     # the command fails; for these we use run_cmd_output_on_error. For other commands, we
     # want to always show output (or there should be no output in general); for these, we
@@ -482,7 +483,7 @@ def _create_and_build_case(cime_path, build_dir, compiler, machine=None, no_buil
 
     create_newcase_cmd = [os.path.join(cime_path, 'scripts', 'create_newcase'),
                           '--output-root', build_dir,
-                          '--case', casedir,
+                          '--case', case_dir,
                           '--compset', _COMPSET,
                           '--res', _RES,
                           '--compiler', compiler,
@@ -492,29 +493,29 @@ def _create_and_build_case(cime_path, build_dir, compiler, machine=None, no_buil
     run_cmd_output_on_error(create_newcase_cmd,
                             errmsg='Problem creating CTSM case directory')
 
-    run_cmd_output_on_error([os.path.join(casedir, 'case.setup')],
+    run_cmd_output_on_error([os.path.join(case_dir, 'case.setup')],
                             errmsg='Problem setting up CTSM case directory',
-                            cwd=casedir)
+                            cwd=case_dir)
 
-    subprocess.check_call([os.path.join(casedir, 'xmlchange'), 'LILAC_MODE=on'], cwd=casedir)
+    subprocess.check_call([os.path.join(case_dir, 'xmlchange'), 'LILAC_MODE=on'], cwd=case_dir)
 
-    make_link(os.path.join(casedir, 'bld'),
+    make_link(os.path.join(case_dir, 'bld'),
               os.path.join(build_dir, 'bld'))
     if machine is not None:
         # For a pre-existing machine, the .env_mach_specific files are likely useful to
         # the user. Make sym links to these with more intuitive names.
         for extension in ('sh', 'csh'):
-            make_link(os.path.join(casedir, '.env_mach_specific.{}'.format(extension)),
+            make_link(os.path.join(case_dir, '.env_mach_specific.{}'.format(extension)),
                       os.path.join(build_dir, 'ctsm_build_environment.{}'.format(extension)))
 
     if not no_build:
         try:
             subprocess.check_call(
-                [os.path.join(casedir, 'case.build'),
+                [os.path.join(case_dir, 'case.build'),
                  '--sharedlib-only'],
-                cwd=casedir)
+                cwd=case_dir)
         except subprocess.CalledProcessError:
             abort('ERROR building CTSM or its dependencies - see above for details')
 
-        make_link(os.path.join(casedir, 'bld', 'ctsm.mk'),
+        make_link(os.path.join(case_dir, 'bld', 'ctsm.mk'),
                   os.path.join(build_dir, 'ctsm.mk'))

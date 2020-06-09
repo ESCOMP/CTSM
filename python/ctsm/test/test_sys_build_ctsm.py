@@ -48,6 +48,7 @@ class TestSysBuildCtsm(unittest.TestCase):
                    esmf_lib_path='/path/to/esmf/lib',
                    gmake='gmake',
                    gmake_j=8)
+        # no assertions: test passes as long as the command doesn't generate any errors
 
     def test_buildSetup_userDefinedMachine_allInfo(self):
         """Get through the case.setup phase with a user-defined machine
@@ -72,6 +73,7 @@ class TestSysBuildCtsm(unittest.TestCase):
                    gptl_nano_timers=True,
                    extra_fflags='-foo',
                    extra_cflags='-bar')
+        # no assertions: test passes as long as the command doesn't generate any errors
 
 if __name__ == '__main__':
     unit_testing.setup_for_tests()
