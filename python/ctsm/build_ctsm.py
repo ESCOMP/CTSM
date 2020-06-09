@@ -48,7 +48,7 @@ def main(cime_path):
     build_dir = os.path.abspath(args.build_dir)
 
     if args.rebuild:
-        abort('--rebuild not yet implemented')
+        rebuild_ctsm(build_dir=build_dir)
     else:
         build_ctsm(cime_path=cime_path,
                    build_dir=build_dir,
@@ -133,15 +133,39 @@ def build_ctsm(cime_path,
                                 extra_fflags=extra_fflags,
                                 extra_cflags=extra_cflags)
 
-    case_dir = os.path.join(build_dir, 'case')
     _create_case(cime_path=cime_path,
                  build_dir=build_dir,
-                 case_dir=case_dir,
                  compiler=compiler,
                  machine=machine)
     if not no_build:
-        _build_case(build_dir=build_dir,
-                    case_dir=case_dir)
+        _build_case(build_dir=build_dir)
+
+def rebuild_ctsm(build_dir):
+    """Re-run the build in an existing directory
+
+    Args:
+    build_dir (str): path to build directory
+    """
+    if not os.path.exists(build_dir):
+        abort('When running with --rebuild, the build directory must already exist\n'
+              '(<{}> does not exist)'.format(build_dir))
+
+    case_dir = _get_case_dir(build_dir)
+    if not os.path.exists(case_dir):
+        abort('It appears there was a problem setting up the initial build in\n'
+              '<{}>\n'
+              'You should start over with a fresh build directory.'.format(build_dir))
+
+    try:
+        subprocess.check_call(
+            [os.path.join(case_dir, 'case.build'),
+             '--clean-depends',
+             'lnd'],
+            cwd=case_dir)
+    except subprocess.CalledProcessError:
+        abort('ERROR resetting build for CTSM in order to rebuild - see above for details')
+
+    _build_case(build_dir)
 
 # ========================================================================
 # Private functions
@@ -364,6 +388,10 @@ def _check_and_transform_os(os_type):
         raise ValueError("Unknown OS: {}".format(os_type))
     return os_type_transformed
 
+def _get_case_dir(build_dir):
+    """Given the path to build_dir, return the path to the case directory"""
+    return os.path.join(build_dir, 'case')
+
 def _create_build_dir(build_dir, existing_machine):
     """Create the given build directory and any necessary sub-directories
 
@@ -454,13 +482,12 @@ def _fill_out_machine_files(build_dir,
               'w') as cc_file:
         cc_file.write(config_compilers)
 
-def _create_case(cime_path, build_dir, case_dir, compiler, machine=None):
+def _create_case(cime_path, build_dir, compiler, machine=None):
     """Create a case that can later be used to build the CTSM library and its dependencies
 
     Args:
     cime_path (str): path to root of cime
     build_dir (str): path to build directory
-    case_dir (str): path to case directory
     compiler (str): compiler to use
     machine (str or None): name of machine or None
         If None, we assume we're using an on-the-fly machine port
@@ -475,6 +502,8 @@ def _create_case(cime_path, build_dir, case_dir, compiler, machine=None):
     # to the case directory both in the command itself and in the cwd argument. We do the
     # former in case dot isn't in the user's path; we do the latter in case the commands
     # require you to be in the case directory when you execute them.
+
+    case_dir = _get_case_dir(build_dir)
 
     if machine is None:
         machine_args = ['--machine', _MACH_NAME,
@@ -509,18 +538,18 @@ def _create_case(cime_path, build_dir, case_dir, compiler, machine=None):
             make_link(os.path.join(case_dir, '.env_mach_specific.{}'.format(extension)),
                       os.path.join(build_dir, 'ctsm_build_environment.{}'.format(extension)))
 
-def _build_case(build_dir, case_dir):
+def _build_case(build_dir):
     """Build the CTSM library and its dependencies
 
     Args:
     build_dir (str): path to build directory
-    case_dir (str): path to case directory
     """
     # We want user to see output from the build command, so we use subprocess.check_call
     # rather than run_cmd_output_on_error.
 
     # See comment in _create_case for why we use case_dir in both the path to the command
     # and in the cwd argument to check_call.
+    case_dir = _get_case_dir(build_dir)
     try:
         subprocess.check_call(
             [os.path.join(case_dir, 'case.build'),
