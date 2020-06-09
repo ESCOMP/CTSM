@@ -129,9 +129,17 @@ contains
        deallocate(this%topoglc)
     end if
 
-    deallocate(this%lat)
-    deallocate(this%lon)
-    deallocate(this%coslat)
+    if (associated(this%lat)) then
+       deallocate(this%lat)
+    end if
+
+    if (associated(this%lon)) then
+       deallocate(this%lon)
+    end if
+
+    if (associated(this%coslat)) then
+       deallocate(this%coslat)
+    end if
 
   end subroutine destroy_subgrid_type
 
