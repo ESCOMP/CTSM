@@ -835,7 +835,7 @@ module CLMFatesInterfaceMod
       ! ---------------------------------------------------------------------------------
       call this%fates_hist%update_history_dyn( nc,                    &
                                               this%fates(nc)%nsites, &
-                                              this%fates(nc)%sites, this%fates(nc)%bc_in) 
+                                              this%fates(nc)%sites) 
 
       if (masterproc) then
          write(iulog, *) 'clm: leaving fates model', bounds_clump%begg, &
@@ -1294,7 +1294,7 @@ module CLMFatesInterfaceMod
                ! ------------------------------------------------------------------------
                call this%fates_hist%update_history_dyn( nc, &
                      this%fates(nc)%nsites,                 &
-                     this%fates(nc)%sites, this%fates(nc)%bc_in) 
+                     this%fates(nc)%sites) 
 
                
             end if
@@ -1409,7 +1409,7 @@ module CLMFatesInterfaceMod
            ! ------------------------------------------------------------------------
            call this%fates_hist%update_history_dyn( nc, &
                 this%fates(nc)%nsites,                 &
-                this%fates(nc)%sites, this%fates(nc)%bc_in) 
+                this%fates(nc)%sites) 
 
            
 
