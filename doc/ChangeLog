@@ -1,4 +1,132 @@
 ===============================================================
+Tag name:  ctsm1.0.dev100
+Originator(s):  sacks (Bill Sacks)
+Date:  Tue Jun  9 06:15:15 MDT 2020
+One-line Summary: Deallocate memory after running init_interp
+
+Purpose of changes
+------------------
+
+Many of the pointer arrays in init_interp were not being deallocated
+when init_interp finished. This was a particular problem because some of
+these arrays were allocated for the full global source grid on each
+processor, so the memory use was significant. This tag fixes this issue.
+
+This issue is documented in https://github.com/ESCOMP/CTSM/issues/1010
+and https://github.com/ESCOMP/CTSM/issues/1032.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1032 (Memory isn't deallocated in some of the
+  init_interp code)
+
+Known bugs found since the previous tag (include github issue ID):
+- This does NOT resolve ESCOMP/CTSM#1010 (WACCMX test fails with
+  ctsm1.0.dev093 in cesm2_2_alpha05c), even though that was the original
+  hope.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+- The initial run of the PFS test showed a very long time taken in
+  initialization. However, it appears that this was a system issue:
+  rerunning twice showed times back to normal.
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - pass (on my mac)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    izumi ------- pass
+
+    Most testing was done on f332fafc. After that, I made a minor change
+    that was needed for the unit tests to pass. I then reran (1)
+    clm_short on cheyenne, and (2) this subset of the test list on
+    izumi:
+
+      SMS.f10_f10_musgs.I2000Clm50BgcCrop.izumi_gnu.clm-crop
+      SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.izumi_gnu.clm-crop
+      PEM_Ld1.f10_f10_musgs.I2000Clm50BgcCropGs.izumi_intel.clm-crop
+      SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.izumi_intel.clm-crop
+      SMS.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop
+      SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop
+      SMS_Ld5_D_P48x1.f10_f10_musgs.IHistClm50Bgc.izumi_nag.clm-monthly
+      ERP_Ld5_P48x1.f10_f10_musgs.I1850Clm50Bgc.izumi_nag.clm-default
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev099
 Originator(s):  sacks (Bill Sacks)
 Date:  Mon Jun  8 09:29:38 MDT 2020
