@@ -73,7 +73,6 @@ contains
     ! atm_topo is arbitrary for the sake of getting these counts. We don't have a true
     ! atm_topo value at the point of this call, so use 0.
     real(r8), parameter :: atm_topo = 0._r8
-
     !------------------------------------------------------------------------------
 
     npatches = 0

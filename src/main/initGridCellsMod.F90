@@ -71,7 +71,6 @@ contains
     integer :: nclumps              ! number of clumps on this processor
     type(bounds_type) :: bounds_proc
     type(bounds_type) :: bounds_clump
-
     !------------------------------------------------------------------------
 
     ! Notes about how this routine is arranged, and its implications for the arrangement
