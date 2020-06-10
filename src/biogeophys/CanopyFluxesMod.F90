@@ -1155,7 +1155,6 @@ contains
             ! Moved the original subroutine in-line...
 
             wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
-!scs            wtlq    = frac_veg_nosno(p)*elai(p)/rb(p) * rpp   ! leaf
             wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
 
             !Litter layer resistance. Added by K.Sakaguchi
@@ -1236,7 +1235,6 @@ contains
             ! result in an imbalance in "hvap*qflx_evap_veg" and
             ! "efe + dc2*wtgaq*qsatdt_veg"
 
-!scs            efpot = forc_rho(c)*elai(p)/rb(p) &
             efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p) &
                  *(wtgaq*(qsatl(p)+qsatldT(p)*dt_veg(p)) &
                  -wtgq0*qg(c)-wtaq0(p)*forc_q(c))
@@ -1366,17 +1364,6 @@ contains
               - lw_leaf(p) + lw_stem(p) - eflx_sh_veg(p) - hvap*qflx_evap_veg(p) &
               - ((t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime)
 
-         !scs
-!         if (abs(err(p)) > 1e6) then
-!            write(iulog,*) 'canerrchk: ', lw_leaf(p), lw_stem(p), dt_veg(p)
-!            write(iulog,*) 'canerrchk: ', (1.-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
-!                 *(tlbef(p) + 4._r8*dt_veg(p)) + cir(p)*lw_grnd), &
-!                 lw_leaf(p),lw_stem(p),eflx_sh_veg(p),hvap*qflx_evap_veg(p), &
-!                 t_veg(p),tl_ini(p),dt_veg(p),cp_leaf(p),cp_stem(p)
-!         endif
-
-
-         
          !  Update stem temperature; adjust outgoing longwave
          !  does not account for changes in SH or internal LW,  
          !  as that would change result for t_veg above
