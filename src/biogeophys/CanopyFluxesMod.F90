@@ -1113,8 +1113,6 @@ contains
                canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(elai(p), 0.01_r8)
             end if
 
-! should be the same expression used in Photosynthesis/getqflx
-!scs            efpot = forc_rho(c)*elai(p)/rb(p)*(qsatl(p)-qaf(p))
             efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p)*(qsatl(p)-qaf(p))
             h2ocan = liqcan(p) + snocan(p)
 
