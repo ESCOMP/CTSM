@@ -257,6 +257,7 @@ end subroutine domain_check
 
     ! Read domain file and compute stuff as needed
 
+
     call check_ret(nf_open(fname, 0, ncid), subname)
 
     ! Assume unstructured grid

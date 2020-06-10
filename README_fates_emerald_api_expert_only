@@ -1,1 +1,74 @@
-To be added soon.
+$CTSMROOT/README_fates_emerald_api_expert_only                                          03/06/2020
+
+#################################################################################
+# This document explains how to update the model codes and 
+# how to create atmospheric forcing and inputdata for new sites
+# (No technical support will be promised, use at your own risk!)
+# See also Yeliz's notes: https://ctsm-docs.readthedocs.io/en/latest/ for additional details
+#################################################################################
+
+######## Two important things to watch out first!!!
+######## Two important things to watch out first!!!
+######## Two important things to watch out first!!!
+(1) Module environment on your supercomputer: DON'T load any module beforehand, except "StdEvn"!
+(2) Git version control: 
+    CLM-FATES have very complex and sperate repository system:
+      -> ctsm: always create your own branch, do not touch master!
+      -> cime: remember to create your own branch in cime folder also, to record all the changes you make.
+      -> fates: remember to create your own branch in fates folder also, to record all the changes you make.       
+      If you do not create your own branch for "cime" and "fates", when you run "./manage_externals/checkout_externals", your previous "cime" and "fates" will be overwritten.
+
+
+######## Download ctsm and update ctsm-fates (Only important steps are illustrated here!!!)
+**** If you are already using fates_emerald_api, skip this! ****
+e.g.:
+     git remote add ctsm_ncar https://github.com/ESCOMP/CTSM.git   # set a remote name for NCAR CTSM git repository
+     git fetch ctsm_ncar                    # get the most recent updates of CTSM
+     git merge ctsm_ncar/master             # update your current branch with the newest CTSM version
+     git merge ctsm_ncar/fates_next_api     # update your current branch with the newest CLM-FATES interface
+
+##To update fates, you need to go to fates folder
+e.g.:
+     git remote add NGEET_fates https://github.com/NGEET/fates.git
+     git fetch NGEET_fates    # get the most recent updates of FATES
+     git merge NGEET_fates.git/master # update your current branch with the newest FATES
+
+######## Adapt ctsm/cime to specific machine (e.g., SAGA and FRAM)
+**** If you are already using fates_emerald_api, skip this! ****
+Following file need to be modified
+..../cime/config/cesm/machines/config_batch.xml
+..../cime/config/cesm/machines/config_compilers.xml
+..../cime/config/cesm/machines/config_machines.xml
+
+See example here, you need look for the setup 
+https://github.com/NordicESMhub/cime/blob/cime5.6.10_noresm2_1_rel_06/config/cesm/machines/config_compilers.xml
+https://github.com/NordicESMhub/cime/blob/cime5.6.10_noresm2_1_rel_06/config/cesm/machines/config_machines.xml
+https://github.com/NordicESMhub/cime/blob/cime5.6.10_noresm2_1_rel_06/config/cesm/machines/config_batch.xml
+
+
+**** If you want to set up new sites, please follow the following steps ****
+######## Make script grids (see "prepare_inputdata.sh" in ./tools)
+######## Make domain file  (see "prepare_inputdata.sh" in ./tools)
+######## Make mapping file (see "prepare_inputdata.sh" in ./tools)
+######## Make surface data file (see "prepare_inputdata.sh" in ./tools)
+######## Make and modify FATES parameter file:
+         ## Use existing tools:
+           ./src/fates/tools/FatesPFTIndexSwapper.py        # Select PFTs interested. 
+           ./src/fates/tools/modify_fates_paramfile.py      # Modify PFT parameters  
+         ## To use these tools, netcdf and python modules need to be loaded.
+           module load netCDF-Fortran/4.4.4-intel-2018b 
+           module load Python/3.6.6-intel-2018b 
+          ./FatesPFTIndexSwapper.py --pft-indices=2,6,9,10 --fin=****.nc --fout=****.nc
+         ## The default FATES parameter file is in ./src/fates/parameter_files    
+         ## To create a netcdf parameter file: ncgen -o ****.nc fates_params_default.cdl
+######## Make atmospheric forcing for new sites (see "prepare_atm_forcing_****.ncl" in ./tools)
+
+######## Set each sites as a unique grid type. The following file need to be modified:
+~/ctsm/cime/config/cesm/config_grids.xml
+~/ctsm/cime/src/components/data_comps/datm/cime_config/namelist_definition_datm.xml
+~/ctsm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+######## Set new atmospheric forcing for the sites
+~/ctsm/cime/src/components/data_comps/datm/cime_config/config_component.xml (for different climate forcing)
+~/ctsm/cime_config/config_component.xml (for different climate forcing)
+

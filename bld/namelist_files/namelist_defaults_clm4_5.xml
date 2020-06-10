@@ -796,6 +796,24 @@ lnd/clm2/surfdata_map/fates_platform/BOR2/surfdata_BOR2_simyr2000.nc</fsurdat>
 lnd/clm2/surfdata_map/fates_platform/BOR3/surfdata_BOR3_simyr2000.nc</fsurdat>
 <fsurdat hgrid="1x1_BOR4"    sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/fates_platform/BOR4/surfdata_BOR4_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_LYG"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/LYG/surfdata_LYG_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_BUO"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/BUO/surfdata_BUO_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_HAV"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/HAV/surfdata_HAV_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_SKO"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/SKO/surfdata_SKO_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_VIKE"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/VIKE/surfdata_VIKE_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_JOAS"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/JOAS/surfdata_JOAS_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_LIAH"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/LIAH/surfdata_LIAH_simyr2000.nc</fsurdat>
+<fsurdat hgrid="1x1_FINN"    sim_year="2000" use_crop=".false." irrigate=".true.">
+lnd/clm2/surfdata_map/fates_platform/FINN/surfdata_FINN_simyr2000.nc</fsurdat>
+
+
 
 <!-- for pre-industrial simulations - year 1850 without crop -->
 <fsurdat hgrid="48x96"        sim_year="1850" use_crop=".false." irrigate=".true.">
@@ -1155,6 +1173,14 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <ndepmapalgo use_cn=".true."   hgrid="1x1_BOR2"            >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_BOR3"            >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_BOR4"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_LYG"             >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_BUO"             >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_HAV"             >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_SKO"             >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_VIKE"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_JOAS"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_LIAH"            >nn</ndepmapalgo>
+<ndepmapalgo use_cn=".true."   hgrid="1x1_FINN"            >nn</ndepmapalgo>
 
 <!-- Soilm moisture streams namelist defaults -->
 <!-- This is if you want to prescribe the soil moisture from input datasets rather than model it -->
@@ -1204,7 +1230,14 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <lai_mapalgo  hgrid="1x1_BOR2"            >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_BOR3"            >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_BOR4"            >nn</lai_mapalgo>
-
+<lai_mapalgo  hgrid="1x1_LYG"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_BUO"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_HAV"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_SKO"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_VIKE"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_JOAS"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_LIAH"            >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_FINN"            >nn</lai_mapalgo>
 
 <!-- lightning streams namelist defaults -->
 
@@ -1303,6 +1336,14 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <popdensmapalgo use_cn=".true."   hgrid="1x1_BOR2"            >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_BOR3"            >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_BOR4"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_LYG"             >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_BUO"             >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_HAV"             >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_SKO"             >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_VIKE"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_JOAS"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_LIAH"            >nn</popdensmapalgo>
+<popdensmapalgo use_cn=".true."   hgrid="1x1_FINN"            >nn</popdensmapalgo>
 
 <!-- Urban time varying streams namelist defaults -->
 <stream_year_first_urbantv phys="clm5_0" sim_year_range="1850-2100" >2015</stream_year_first_urbantv>
