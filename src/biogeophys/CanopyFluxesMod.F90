@@ -987,11 +987,19 @@ contains
 
             ri = ( grav*htop(p) * (taf(p) - t_grnd(c)) ) / (taf(p) * uaf(p) **2.00_r8)
 
-            csoilcn = csoilb*w + params_inst%csoilc*(1._r8-w)
-
+            ! modify csoilc value (0.004) if the under-canopy is in stable condition
+            if (use_undercanopy_stability .and. (taf(p) - t_grnd(c) ) > 0._r8) then
+               ! decrease the value of csoilc by dividing it with (1+gamma*min(S, 10.0))
+               ! ria ("gmanna" in Sakaguchi&Zeng, 2008) is a constant (=0.5)
+               ricsoilc = params_inst%csoilc / (1.00_r8 + ria*min( ri, 10.0_r8) )
+               csoilcn = csoilb*w + ricsoilc*(1._r8-w)
+            else
+               csoilcn = csoilb*w + params_inst%csoilc*(1._r8-w)
+            end if
+            
             !! Sakaguchi changes for stability formulation ends here
 
-            if (use_undercanopy_stability) then
+            if (use_biomass_heat_storage) then
                ! use uuc for ground fluxes (keep uaf for canopy terms)
                rah(p,2) = 1._r8/(csoilcn*uuc(p))
             else
