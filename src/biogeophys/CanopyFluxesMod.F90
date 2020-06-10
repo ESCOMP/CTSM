@@ -1472,7 +1472,9 @@ contains
          ! Upward longwave radiation above the canopy
 
          ulrad(p) = ((1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c) &
-              + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*((1.-frac_rad_abs_by_stem(p))*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))+frac_rad_abs_by_stem(p)*ts_ini(p)**3*(ts_ini(p) + 4._r8*dt_stem(p))) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
+              + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*((1.-frac_rad_abs_by_stem(p)) &
+              *tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))+frac_rad_abs_by_stem(p)*ts_ini(p)**3*(ts_ini(p) &
+              + 4._r8*dt_stem(p))) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
 
 
          ! Calculate the skin temperature as a weighted sum of all the ground and vegetated fraction
