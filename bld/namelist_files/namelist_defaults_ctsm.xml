@@ -2733,8 +2733,6 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <use_fates_logging             use_fates=".true.">.false.</use_fates_logging>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
 <fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
-<<<<<<< HEAD:bld/namelist_files/namelist_defaults_clm4_5.xml
-=======
 
 <!-- =========================================  -->
 <!-- Defaults for dynamic subgrid               -->
@@ -2750,7 +2748,6 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <enable_water_tracer_consistency_checks>.false.</enable_water_tracer_consistency_checks>
 
 <enable_water_isotopes>.false.</enable_water_isotopes>
->>>>>>> ctsm1.0.dev093:bld/namelist_files/namelist_defaults_ctsm.xml
 
 <!-- =========================================  -->
 <!-- Defaults for init_interp                   -->
