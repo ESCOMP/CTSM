@@ -1,2 +1,9 @@
 ./xmlchange --force CLM_BLDNML_OPTS="-light_res 360x720" --append
-./xmlchange --force RUN_STARTDATE=1700-12-31
+./xmlchange --force RUN_STARTDATE=1700-01-01
+./xmlchange --force DATM_CLMNCEP_YR_ALIGN=1970
+./xmlchange --force DATM_CLMNCEP_YR_END=1971
+./xmlchange --force DATM_CLMNCEP_YR_START=1970
+./xmlchange --force RUN_REFCASE=TRENDY2019_S3_CO2ClimateLUC_matrix_v2
+./xmlchange --force RUN_REFDATE=1970-01-01
+./xmlchange --force RUN_TYPE=branch
+./xmlchange --force GET_REFCASE=TRUE
