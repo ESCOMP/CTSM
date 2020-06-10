@@ -7,7 +7,7 @@ module TemperatureType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop
+  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage
   use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevlak, nlevurb
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
@@ -390,10 +390,12 @@ contains
          avgflag='A', long_name='Urban daily maximum of average 2-m temperature', &
          ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval, default='inactive')
 
-    this%t_stem_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TSTEM', units='K',  &
-         avgflag='A', long_name='stem temperature', &
-         ptr_patch=this%t_stem_patch, default='inactive')
+    if (use_biomass_heat_storage) then 
+       this%t_stem_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TSTEM', units='K',  &
+            avgflag='A', long_name='stem temperature', &
+            ptr_patch=this%t_stem_patch, default='active')
+    endif
 
     this%t_veg_patch(begp:endp) = spval
     call hist_addfld1d (fname='TV', units='K',  &
