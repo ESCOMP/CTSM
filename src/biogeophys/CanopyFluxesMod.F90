@@ -1017,7 +1017,7 @@ contains
             svpts(p) = el(p)                         ! pa
             eah(p) = forc_pbot(c) * qaf(p) / 0.622_r8   ! pa
             rhaf(p) = eah(p)/svpts(p)
-! add history fields
+            ! variables for history fields
             rah1(p)  = rah(p,1)                  
             raw1(p)  = raw(p,1)                  
             rah2(p)  = rah(p,2)                  
