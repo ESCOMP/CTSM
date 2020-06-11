@@ -122,7 +122,10 @@ Introduce the following diffs to ./git_wrf_ctsm/ctsm/lilac/atm_driver/<file>
 by replacing the entries preceded by minus signs with the entries
 preceded by plus signs.
 
-diff ./lilac/atm_driver/atm_driver_in ./lilac/atm_driver/atm_driver_in::
+diff ./lilac/atm_driver/atm_driver_in ./lilac/atm_driver/atm_driver_in:
+
+.. code-block:: diff
+
   -  atm_mesh_file = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
   -  atm_global_nx = 72
   -  atm_global_ny = 46
@@ -130,7 +133,10 @@ diff ./lilac/atm_driver/atm_driver_in ./lilac/atm_driver/atm_driver_in::
   +  atm_global_nx = 199
   +  atm_global_ny = 139
 
-diff ./lilac/atm_driver/ctsm.cfg ./lilac/atm_driver/ctsm.cfg::
+diff ./lilac/atm_driver/ctsm.cfg ./lilac/atm_driver/ctsm.cfg:
+
+.. code-block:: diff
+
   -configuration     = clm
   -structure         = standard
   -clm_bldnml_opts   = -bgc sp
@@ -148,7 +154,10 @@ diff ./lilac/atm_driver/ctsm.cfg ./lilac/atm_driver/ctsm.cfg::
   +lnd_domain_path   = /glade/work/slevis/barlage_wrf_ctsm/conus/gen_domain_files
   +clm_namelist_opts = hist_nhtfrq=1 hist_mfilt=1 hist_ndens=1 fsurdat="/glade/work/barlage/ctsm/conus/surfdata_conus/surfdata_conus_hist_16pfts_Irrig_CMIP6_simyr2000_c191212.nc" finidat="/glade/scratch/sacks/wrf_code/WRF/test/em_real/nldas_nwp_0109a.clm2.r.2000-04-01-64800.nc" use_init_interp=.true.
 
-diff ./lilac/atm_driver/lilac_in ./lilac/atm_driver/lilac_in::
+diff ./lilac/atm_driver/lilac_in ./lilac/atm_driver/lilac_in:
+
+.. code-block:: diff
+
   - atm_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
   + atm_mesh_filename = '/glade/work/slevis/barlage_wrf_ctsm/conus/mesh/wrf2ctsm_land_conus_ESMFMesh_c20191216.nc'
 
