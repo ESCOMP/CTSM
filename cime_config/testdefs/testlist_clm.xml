@@ -1142,7 +1142,7 @@
   </test>
   <test name="SMS_Ld1" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm50Sp" testmods="clm/basic">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm1"/>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1151,7 +1151,7 @@
   </test>
   <test name="SMS_Ld1" grid="ne30pg3_ne30pg3_mg17" compset="I2000Clm50BgcCrop" testmods="clm/basic">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm1"/>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1160,7 +1160,7 @@
   </test>
   <test name="SMS_Ld1" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="I1850Clm50BgcCrop" testmods="clm/basic">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm1"/>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1169,7 +1169,7 @@
   </test>
   <test name="SMS_Ld1" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="ISSP585Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm1"/>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1178,7 +1178,7 @@
   </test>
   <test name="SMS_Ld1" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="I1850Clm50Sp" testmods="clm/basic">
     <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm1"/>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
