@@ -443,8 +443,8 @@ def _fill_out_machine_files(build_dir,
     For documentation of args, see the documentation in the build_ctsm function
     """
     path_to_templates = os.path.join(path_to_ctsm_root(),
-                                     'lilac_config',
-                                     'build_templates')
+                                     'lilac',
+                                     'bld_templates')
     os.makedirs(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME))
 
     # ------------------------------------------------------------------------
