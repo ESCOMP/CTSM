@@ -19,6 +19,15 @@ from earlier sections but in recipe form and with minimal detail.
 Preparing the CTSM
 ==================
 
+.. todo::
+
+  I think we don't need some of the following since too much instructions
+  are usually more confusing...
+  I tried removing incorrect or redundant information.
+
+  For example, people who do not use cheyenne might get confused by the 
+  following commands on scratch.
+
 Decide where you will work, for example::
 
   cd /glade/scratch/$USER
@@ -30,6 +39,7 @@ Decide where you will work, for example::
   Discs other than /glade/scratch may provide insufficient space for
   output from simulations longer than one or two months.
 
+
 Obtain CTSM by running::
 
   git clone https://github.com/ESCOMP/ctsm.git
@@ -37,19 +47,19 @@ Obtain CTSM by running::
   git checkout lilac_cap
   ./manage_externals/checkout_externals -v
 
-Build CTSM and its dependencies::
+Build CTSM and its dependencies, for example for cheyenne::
 
   ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
 
-Run::
+
+Set environment similar to environments used for your CTSM build for bash::
 
   source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.sh
 
-.. note::
+or Cshell::
 
-  If the previous command fails due to your environment settings,
-  try this one instead:
   source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.csh
+
 
 .. note::
 
@@ -59,10 +69,12 @@ Run::
 
 Preparing the WRF model
 =======================
+.. todo::
+
+  update the git address to WRF feature branch...
 
 Obtain WRF by running::
 
-  cd /glade/scratch/$USER/git_wrf_ctsm
   git clone git@github.com:billsacks/WRF.git
   cd WRF
   git checkout lilac_dev
@@ -72,7 +84,20 @@ Obtain WRF by running::
   If the git clone command fails for you as written, then try it this way:
   git clone https://github.com/billsacks/WRF.git
 
+.. todo::
+
+  Sam, I think comments like the above are too trivial and make things more confusing...
+
+
 Build WRF
+
+
+.. todo::
+
+  Sam, while I think some of the notes below are useful such as number (4), 
+  I believe some of the notes mentioned below such as number (1) is too trivial
+  and make our instructions less professional.
+  I tried integrating this into our instructions for example for bash vs. Cshell.
 
 .. note::
 
@@ -95,25 +120,49 @@ Build WRF
 
 .. note::
 
-  4) The ./compile step takes more than 15 minutes to complete.
+  4) The ./compile step might take more than 30 minutes to complete.
 
-Now that you have read notes 1 to 4, proceed with building WRF::
+
+
+For building WRF using CTSM, we should set makefile variables needed for WRF build by::
 
   export WRF_CTSM_MKFILE=/glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
+
+or::
+
+  setenv WRF_CTSM_MKFILE /glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
+
+
+The following is needed in order to undo an undesired setting in that env_mach_specific file::
+
   export MPI_USE_ARRAY=None
+
+or::
+
+  setenv MPI_USE_ARRAY None
+
+
+Then configure and build WRF for your machine and intended compiler by::
+
   ./clean -a
   ./configure
-  ./compile em_real > compile.log &
+
+Choose one of the options, similar to the compiler used for building CTSM.
+
+Next, choose one of the options for nesting. Currently nesting is not available for WRF-CTSM,
+therefore we should use 1::
+
+  ./compile em_real >& compile.log
 
 .. note::
 
   Check the bottom of your log file for a successful compilation message
   or search the file for the string "Error" with a capital E.
+
+.. note::
+
   Optional: One may use tmux or nohup for configuring and compiling.
   Try "man nohup" for more information.
-
-.. todo::
-  I have not heard of tmux on cheyenne. Is it available?
 
 Create input namelists for CTSM and LILAC
 =========================================
@@ -171,31 +220,51 @@ Generate the lnd_in file by running the following from
 
 Copy lilac_in, lnd_in, and lnd_modelio.nml to the WRF/run directory.
 
-.. todo::
-
-  Sam skipped starting here
 
 
-Compile and run the WRF Preprocessing System (WPS)
+Compile WRF Preprocessing System (WPS)
 ==================================================
 
-The WRF Preprocessing System (WPS) is a set of programs to prepare input
-to the real program for real-data simulations. 
+The WRF Preprocessing System (WPS) is a set of programs to prepare
+input to the real program for WRF real-data simulations.
 
-.. todo::
+.. note::
+    Building WPS requires that WRF be already built successfully.
 
-  Negin, pls explain how to "follow WRF instructions" and what you mean
-  by "similar way we did" in the next paragraph.
 
-To compile WPS using your WRF build, follow WRF instructions.
-In summary, configure and compile WPS similar way we did.
+Get WPS zipped tar file from: 
+http://www2.mmm.ucar.edu/wrf/users/download/get_source.html
 
-Run WPS tools
+Untar WPS tar file::
+
+    gzip -cd WPSV4.0.TAR.gz | tar -xf -
+
+
+Then we should compile WPS similar to the way we build WRF. In summary::
+
+    cd WPS
+    ./configure
+
+Here choose one option, for your intended compiler, similar to your WRF build.
+After configuring, you can check configure.wps for making sure all the libs and paths 
+are set correctly.
+
+
+Then, compile WPS::
+    ./compile >& compile.log
+
+.. note::
+  If wps build is succsfully you should see geogrid.exe, ungrib.exe, and metgrid.exe.
+
+Run WRF Preprocessing System (WPS) Steps
+==================================================
+
+
 
 .. todo::
 
   First reference to the WRF namelist in the next line. We should
-  specify where that is.
+  specify where that is. 
 
 Edit namelist.wps for your domain of interest, which should be the same
 domain as used in your WRF namelist. 
