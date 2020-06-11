@@ -65,7 +65,8 @@ def main(cime_path):
                    gptl_nano_timers=args.gptl_nano_timers,
                    extra_fflags=args.extra_fflags,
                    extra_cflags=args.extra_cflags,
-                   build_debug=args.build_debug)
+                   build_debug=args.build_debug,
+                   build_without_openmp=args.build_without_openmp)
 
 def build_ctsm(cime_path,
                build_dir,
@@ -82,7 +83,8 @@ def build_ctsm(cime_path,
                gptl_nano_timers=False,
                extra_fflags='',
                extra_cflags='',
-               build_debug=False):
+               build_debug=False,
+               build_without_openmp=False):
     """Implementation of build_ctsm command
 
     Args:
@@ -113,6 +115,7 @@ def build_ctsm(cime_path,
     extra_cflags (str): any extra flags to include when compiling C files
         Ignored if machine is given
     build_debug (bool): if True, build with flags for debugging
+    build_without_openmp (bool): if True, build without OpenMP support
     """
 
     _create_build_dir(build_dir=build_dir,
@@ -140,7 +143,8 @@ def build_ctsm(cime_path,
                  build_dir=build_dir,
                  compiler=compiler,
                  machine=machine,
-                 build_debug=build_debug)
+                 build_debug=build_debug,
+                 build_without_openmp=build_without_openmp)
     if not no_build:
         _build_case(build_dir=build_dir)
 
@@ -253,6 +257,12 @@ Typical usage:
     non_rebuild_optional.add_argument('--build-debug', action='store_true',
                                       help='Build with flags for debugging rather than production runs')
     non_rebuild_optional_list.append('build-debug')
+
+    non_rebuild_optional.add_argument('--build-without-openmp', action='store_true',
+                                      help='By default, CTSM is built with support for OpenMP threading;\n'
+                                      'if this flag is set, then CTSM is built without this support.\n'
+                                      'This is mainly useful if your machine/compiler does not support OpenMP.')
+    non_rebuild_optional_list.append('build-without-openmp')
 
     non_rebuild_optional.add_argument('--no-build', action='store_true',
                                       help='Do the pre-build setup, but do not actually build CTSM\n'
@@ -491,7 +501,8 @@ def _fill_out_machine_files(build_dir,
               'w') as cc_file:
         cc_file.write(config_compilers)
 
-def _create_case(cime_path, build_dir, compiler, machine=None, build_debug=False):
+def _create_case(cime_path, build_dir, compiler,
+                 machine=None, build_debug=False, build_without_openmp=False):
     """Create a case that can later be used to build the CTSM library and its dependencies
 
     Args:
@@ -502,6 +513,7 @@ def _create_case(cime_path, build_dir, compiler, machine=None, build_debug=False
         If None, we assume we're using an on-the-fly machine port
         Otherwise, machine should be the name of a machine known to cime
     build_debug (bool): if True, build with flags for debugging
+    build_without_openmp (bool): if True, build without OpenMP support
     """
     # Note that, for some commands, we want to suppress output, only showing the output if
     # the command fails; for these we use run_cmd_output_on_error. For other commands,
@@ -514,6 +526,7 @@ def _create_case(cime_path, build_dir, compiler, machine=None, build_debug=False
     # require you to be in the case directory when you execute them.
 
     case_dir = _get_case_dir(build_dir)
+    xmlchange = os.path.join(case_dir, 'xmlchange')
 
     if machine is None:
         machine_args = ['--machine', _MACH_NAME,
@@ -537,9 +550,11 @@ def _create_case(cime_path, build_dir, compiler, machine=None, build_debug=False
                             errmsg='Problem setting up CTSM case directory',
                             cwd=case_dir)
 
-    subprocess.check_call([os.path.join(case_dir, 'xmlchange'), 'LILAC_MODE=on'], cwd=case_dir)
+    subprocess.check_call([xmlchange, 'LILAC_MODE=on'], cwd=case_dir)
     if build_debug:
-        subprocess.check_call([os.path.join(case_dir, 'xmlchange'), 'DEBUG=TRUE'], cwd=case_dir)
+        subprocess.check_call([xmlchange, 'DEBUG=TRUE'], cwd=case_dir)
+    if not build_without_openmp:
+        subprocess.check_call([xmlchange, 'FORCE_BUILD_SMP=TRUE'], cwd=case_dir)
 
     make_link(os.path.join(case_dir, 'bld'),
               os.path.join(build_dir, 'bld'))

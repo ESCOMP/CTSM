@@ -73,7 +73,8 @@ class TestSysBuildCtsm(unittest.TestCase):
                    gptl_nano_timers=True,
                    extra_fflags='-foo',
                    extra_cflags='-bar',
-                   build_debug=True)
+                   build_debug=True,
+                   build_without_openmp=True)
         # no assertions: test passes as long as the command doesn't generate any errors
 
 if __name__ == '__main__':
