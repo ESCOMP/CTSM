@@ -36,12 +36,14 @@ class LILACSMOKE(SystemTestsCommon):
             if not os.path.isdir(build_dir):
                 machine = self._case.get_value('MACH')
                 compiler = self._case.get_value('COMPILER')
-                # TODO(wjs, 2020-06-10) Add --build-debug if the test is a debug test
+                debug = self._case.get_value('DEBUG')
                 cmd = '{script_path} {build_dir} --machine {machine} --compiler {compiler}'.format(
                     script_path=script_path,
                     build_dir=build_dir,
                     machine=machine,
                     compiler=compiler)
+                if debug:
+                    cmd += ' --build-debug'
                 append_testlog(cmd)
                 run_cmd_no_fail(cmd, arg_stdout='build_ctsm.bldlog', combine_output=True, from_dir=exeroot)
                 logfile = os.path.join(exeroot, 'build_ctsm.bldlog')
@@ -66,5 +68,5 @@ class LILACSMOKE(SystemTestsCommon):
             post_build(self._case, logs, build_complete=True)
 
     def run_phase(self):
-        # TODO(wjs, 2020-06-10) Fill this in
+        # FIXME(wjs, 2020-06-10) Fill this in
         pass

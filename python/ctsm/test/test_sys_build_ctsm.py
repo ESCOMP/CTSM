@@ -72,7 +72,8 @@ class TestSysBuildCtsm(unittest.TestCase):
                    pio_filesystem_hints='gpfs',
                    gptl_nano_timers=True,
                    extra_fflags='-foo',
-                   extra_cflags='-bar')
+                   extra_cflags='-bar',
+                   build_debug=True)
         # no assertions: test passes as long as the command doesn't generate any errors
 
 if __name__ == '__main__':

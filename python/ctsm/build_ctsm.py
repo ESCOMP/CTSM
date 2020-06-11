@@ -64,7 +64,8 @@ def main(cime_path):
                    pio_filesystem_hints=args.pio_filesystem_hints,
                    gptl_nano_timers=args.gptl_nano_timers,
                    extra_fflags=args.extra_fflags,
-                   extra_cflags=args.extra_cflags)
+                   extra_cflags=args.extra_cflags,
+                   build_debug=args.build_debug)
 
 def build_ctsm(cime_path,
                build_dir,
@@ -80,7 +81,8 @@ def build_ctsm(cime_path,
                pio_filesystem_hints=None,
                gptl_nano_timers=False,
                extra_fflags='',
-               extra_cflags=''):
+               extra_cflags='',
+               build_debug=False):
     """Implementation of build_ctsm command
 
     Args:
@@ -110,6 +112,7 @@ def build_ctsm(cime_path,
         Ignored if machine is given
     extra_cflags (str): any extra flags to include when compiling C files
         Ignored if machine is given
+    build_debug (bool): if True, build with flags for debugging
     """
 
     _create_build_dir(build_dir=build_dir,
@@ -136,7 +139,8 @@ def build_ctsm(cime_path,
     _create_case(cime_path=cime_path,
                  build_dir=build_dir,
                  compiler=compiler,
-                 machine=machine)
+                 machine=machine,
+                 build_debug=build_debug)
     if not no_build:
         _build_case(build_dir=build_dir)
 
@@ -179,6 +183,7 @@ def _commandline_args(args_to_parse=None):
         reads args from sys.argv
     """
     # pylint: disable=line-too-long
+    # pylint: disable=too-many-statements
 
     description = """
 Script to build CTSM library and its dependencies
@@ -244,6 +249,10 @@ Typical usage:
         description='These arguments are optional if --rebuild is not given; '
         'they are not allowed with --rebuild:')
     non_rebuild_optional_list = []
+
+    non_rebuild_optional.add_argument('--build-debug', action='store_true',
+                                      help='Build with flags for debugging rather than production runs')
+    non_rebuild_optional_list.append('build-debug')
 
     non_rebuild_optional.add_argument('--no-build', action='store_true',
                                       help='Do the pre-build setup, but do not actually build CTSM\n'
@@ -482,7 +491,7 @@ def _fill_out_machine_files(build_dir,
               'w') as cc_file:
         cc_file.write(config_compilers)
 
-def _create_case(cime_path, build_dir, compiler, machine=None):
+def _create_case(cime_path, build_dir, compiler, machine=None, build_debug=False):
     """Create a case that can later be used to build the CTSM library and its dependencies
 
     Args:
@@ -492,6 +501,7 @@ def _create_case(cime_path, build_dir, compiler, machine=None):
     machine (str or None): name of machine or None
         If None, we assume we're using an on-the-fly machine port
         Otherwise, machine should be the name of a machine known to cime
+    build_debug (bool): if True, build with flags for debugging
     """
     # Note that, for some commands, we want to suppress output, only showing the output if
     # the command fails; for these we use run_cmd_output_on_error. For other commands,
@@ -528,6 +538,8 @@ def _create_case(cime_path, build_dir, compiler, machine=None):
                             cwd=case_dir)
 
     subprocess.check_call([os.path.join(case_dir, 'xmlchange'), 'LILAC_MODE=on'], cwd=case_dir)
+    if build_debug:
+        subprocess.check_call([os.path.join(case_dir, 'xmlchange'), 'DEBUG=TRUE'], cwd=case_dir)
 
     make_link(os.path.join(case_dir, 'bld'),
               os.path.join(build_dir, 'bld'))
