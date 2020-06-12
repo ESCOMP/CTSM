@@ -3,13 +3,12 @@
 import argparse
 import logging
 import os
-import string
 import subprocess
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.os_utils import run_cmd_output_on_error, make_link
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import abort
+from ctsm.utils import abort, fill_template_file
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +24,14 @@ _MACH_NAME = 'ctsm_build'
 _COMPSET = 'I2000Ctsm50NwpSpNldasRsGs'
 _RES = 'nldas2_rnldas2_mnldas2'
 
+_PATH_TO_TEMPLATES = os.path.join(path_to_ctsm_root(),
+                                  'lilac',
+                                  'bld_templates')
+
 _MACHINE_CONFIG_DIRNAME = 'machine_configuration'
 _INPUTDATA_DIRNAME = 'inputdata'
+_RUNTIME_INPUTS_DIRNAME = 'runtime_inputs'
+
 _GPTL_NANOTIMERS_CPPDEFS = '-DHAVE_NANOTIME -DBIT64 -DHAVE_VPRINTF -DHAVE_BACKTRACE -DHAVE_SLASHPROC -DHAVE_COMM_F2C -DHAVE_TIMES -DHAVE_GETTIMEOFDAY' # pylint: disable=line-too-long
 
 # ========================================================================
@@ -118,8 +123,9 @@ def build_ctsm(cime_path,
     build_without_openmp (bool): if True, build without OpenMP support
     """
 
+    existing_machine = machine is not None
     _create_build_dir(build_dir=build_dir,
-                      existing_machine=(machine is not None))
+                      existing_machine=existing_machine)
 
     if machine is None:
         assert os_type is not None, 'with machine absent, os_type must be given'
@@ -145,6 +151,18 @@ def build_ctsm(cime_path,
                  machine=machine,
                  build_debug=build_debug,
                  build_without_openmp=build_without_openmp)
+
+    if existing_machine:
+        # For a user-defined machine, we create an inputdata directory for this case. For
+        # an existing cime-ported machine, we still want an inputdata directory alongside
+        # the other directories, but now it will just be a link to the real inputdata
+        # space on that machine. (Note that, for a user-defined machine, it's important
+        # that we have created this directory before creating the case, whereas for an
+        # existing machine, we need to wait until after we have created the case to know
+        # where to make the sym link point to.)
+        _link_to_inputdata(build_dir=build_dir)
+
+    _stage_runtime_inputs(build_dir=build_dir)
     if not no_build:
         _build_case(build_dir=build_dir)
 
@@ -442,27 +460,20 @@ def _fill_out_machine_files(build_dir,
 
     For documentation of args, see the documentation in the build_ctsm function
     """
-    path_to_templates = os.path.join(path_to_ctsm_root(),
-                                     'lilac',
-                                     'bld_templates')
     os.makedirs(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME))
 
     # ------------------------------------------------------------------------
     # Fill in config_machines.xml
     # ------------------------------------------------------------------------
 
-    with open(os.path.join(path_to_templates, 'config_machines_template.xml')) as cm_template_file:
-        cm_template_file_contents = cm_template_file.read()
-    config_machines_template = string.Template(cm_template_file_contents)
-    config_machines = config_machines_template.substitute(
-        OS=os_type,
-        COMPILER=compiler,
-        CIME_OUTPUT_ROOT=build_dir,
-        GMAKE=gmake,
-        GMAKE_J=gmake_j)
-    with open(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, 'config_machines.xml'),
-              'w') as cm_file:
-        cm_file.write(config_machines)
+    fill_template_file(
+        path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'config_machines_template.xml'),
+        path_to_final=os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, 'config_machines.xml'),
+        substitutions={'OS':os_type,
+                       'COMPILER':compiler,
+                       'CIME_OUTPUT_ROOT':build_dir,
+                       'GMAKE':gmake,
+                       'GMAKE_J':gmake_j})
 
     # ------------------------------------------------------------------------
     # Fill in config_compilers.xml
@@ -485,21 +496,19 @@ def _fill_out_machine_files(build_dir,
     else:
         pnetcdf_path_tag = ''
 
-    with open(os.path.join(path_to_templates, 'config_compilers_template.xml')) as cc_template_file:
-        cc_template_file_contents = cc_template_file.read()
-    config_compilers_template = string.Template(cc_template_file_contents)
-    config_compilers = config_compilers_template.substitute(
-        COMPILER=compiler,
-        GPTL_CPPDEFS=gptl_cppdefs,
-        NETCDF_PATH=netcdf_path,
-        PIO_FILESYSTEM_HINTS=pio_filesystem_hints_tag,
-        PNETCDF_PATH=pnetcdf_path_tag,
-        ESMF_LIBDIR=esmf_lib_path,
-        EXTRA_CFLAGS=extra_cflags,
-        EXTRA_FFLAGS=extra_fflags)
-    with open(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, 'config_compilers.xml'),
-              'w') as cc_file:
-        cc_file.write(config_compilers)
+    fill_template_file(
+        path_to_template=os.path.join(_PATH_TO_TEMPLATES,
+                                      'config_compilers_template.xml'),
+        path_to_final=os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, 'config_compilers.xml'),
+        substitutions={'COMPILER':compiler,
+                       'GPTL_CPPDEFS':gptl_cppdefs,
+                       'NETCDF_PATH':netcdf_path,
+                       'PIO_FILESYSTEM_HINTS':pio_filesystem_hints_tag,
+                       'PNETCDF_PATH':pnetcdf_path_tag,
+                       'ESMF_LIBDIR':esmf_lib_path,
+                       'EXTRA_CFLAGS':extra_cflags,
+                       'EXTRA_FFLAGS':extra_fflags})
+
 
 def _create_case(cime_path, build_dir, compiler,
                  machine=None, build_debug=False, build_without_openmp=False):
@@ -564,6 +573,34 @@ def _create_case(cime_path, build_dir, compiler,
         for extension in ('sh', 'csh'):
             make_link(os.path.join(case_dir, '.env_mach_specific.{}'.format(extension)),
                       os.path.join(build_dir, 'ctsm_build_environment.{}'.format(extension)))
+
+def _link_to_inputdata(build_dir):
+    """For an existing machine, make a sym link to the inputdata directory
+
+    Args:
+    build_dir (str): path to build directory
+    """
+    case_dir = _get_case_dir(build_dir)
+    xmlquery = os.path.join(case_dir, 'xmlquery')
+
+    inputdata_dir = subprocess.check_output([xmlquery, '--value', 'DIN_LOC_ROOT'],
+                                            cwd=case_dir,
+                                            universal_newlines=True)
+    make_link(inputdata_dir,
+              os.path.join(build_dir, _INPUTDATA_DIRNAME))
+
+def _stage_runtime_inputs(build_dir):
+    """Stage CTSM and LILAC runtime inputs
+
+    Args:
+    build_dir (str): path to build directory
+    """
+    os.makedirs(os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME))
+
+    fill_template_file(
+        path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'ctsm_template.cfg'),
+        path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'ctsm.cfg'),
+        substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
 
 def _build_case(build_dir):
     """Build the CTSM library and its dependencies
