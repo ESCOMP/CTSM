@@ -38,6 +38,10 @@ _ENV_LILAC_TEMPLATE = """
 </file>
 """
 
+# This string is used in the out-of-the-box ctsm.cfg file to denote a value that needs to
+# be filled in
+_PLACEHOLDER = 'FILL_THIS_IN'
+
 ###############################################################################
 def parse_command_line(args, description):
 ###############################################################################
@@ -59,23 +63,54 @@ def parse_command_line(args, description):
     return arguments.rundir
 
 ###############################################################################
-def get_config_value(config, section, item, file_path):
+def get_config_value(config, section, item, file_path, allowed_values=None):
     """Get a given item from a given section of the config object
 
     Give a helpful error message if we can't find the given section or item
 
     Note that the file_path argument is only used for the sake of the error message
+
+    If allowed_values is present, it should be a list of strings giving allowed values
     """
     try:
         val = config.get(section, item)
     except NoSectionError:
-        print("ERROR: Config file {} must contain section '{}'\n".format(file_path, section))
-        raise
+        sys.exit("ERROR: Config file {} must contain section '{}'".format(file_path, section))
     except NoOptionError:
-        print("ERROR: Config file {} must contain item '{}' in section '{}'\n".format(
+        sys.exit("ERROR: Config file {} must contain item '{}' in section '{}'".format(
             file_path, item, section))
-        raise
+
+    if val == _PLACEHOLDER:
+        sys.exit("Error: {} needs to be specified in config file {}".format(item, file_path))
+
+    if allowed_values is not None:
+        if val not in allowed_values:
+            sys.exit("Error: {} is not an allowed value for {} in config file {}\n"
+                     "Allowed values: {}".format(val, item, file_path, allowed_values))
+
     return val
+
+###############################################################################
+def determine_bldnml_opts(bgc_mode, crop, vichydro):
+###############################################################################
+    """Return a string giving bldnml options, given some other inputs"""
+    bldnml_opts = ''
+    bldnml_opts += ' -bgc {}'.format(bgc_mode)
+    if bgc_mode == 'fates':
+        # BUG(wjs, 2020-06-12, ESCOMP/CTSM#115) For now, FATES is incompatible with MEGAN
+        bldnml_opts += ' -no-megan'
+
+    if crop == 'on':
+        if bgc_mode not in ['bgc', 'cn']:
+            sys.exit("Error: setting crop to 'on' is only compatible with bgc_mode of 'bgc' or 'cn'")
+        bldnml_opts += ' -crop'
+
+    if vichydro == 'on':
+        if bgc_mode != 'sp':
+            sys.exit("Error: setting vichydro to 'on' is only compatible with bgc_mode of 'sp'")
+        bldnml_opts += ' -vichydro'
+
+    return bldnml_opts
 
 ###############################################################################
 def buildnml(rundir, bldnmldir):
@@ -91,29 +126,40 @@ def buildnml(rundir, bldnmldir):
     config = ConfigParser()
     config.read(file_path)
 
-    clm_phys = get_config_value(config, 'buildnml_input', 'clm_phys', file_path)
-    start_type = get_config_value(config, 'buildnml_input', 'start_type', file_path)
-    start_ymd = get_config_value(config, 'buildnml_input', 'start_ymd', file_path)
-    configuration = get_config_value(config, 'buildnml_input', 'configuration', file_path)
-    structure = get_config_value(config, 'buildnml_input', 'structure', file_path)
-    ccsm_co2_ppmv = get_config_value(config, 'buildnml_input', 'ccsm_co2_ppmv', file_path)
-    clm_co2_type = get_config_value(config, 'buildnml_input', 'clm_co2_type', file_path)
-    clm_bldnml_opts = get_config_value(config, 'buildnml_input', 'clm_bldnml_opts', file_path)
+    lnd_domain_file = get_config_value(config, 'buildnml_input', 'lnd_domain_file', file_path)
+    fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat', file_path)
+    finidat = get_config_value(config, 'buildnml_input', 'finidat', file_path)
+
+    ctsm_phys = get_config_value(config, 'buildnml_input', 'ctsm_phys', file_path,
+                                 allowed_values=['clm4_5', 'clm5_0'])
+    configuration = get_config_value(config, 'buildnml_input', 'configuration', file_path,
+                                     allowed_values=['nwp', 'clm'])
+    structure = get_config_value(config, 'buildnml_input', 'structure', file_path,
+                                 allowed_values=['fast', 'standard'])
+    bgc_mode = get_config_value(config, 'buildnml_input', 'bgc_mode', file_path,
+                                allowed_values=['sp', 'bgc', 'cn', 'fates'])
+    crop = get_config_value(config, 'buildnml_input', 'crop', file_path,
+                            allowed_values=['off', 'on'])
+    vichydro = get_config_value(config, 'buildnml_input', 'vichydro', file_path,
+                                allowed_values=['off', 'on'])
+
+    bldnml_opts = determine_bldnml_opts(bgc_mode=bgc_mode,
+                                        crop=crop,
+                                        vichydro=vichydro)
+
+    co2_ppmv = get_config_value(config, 'buildnml_input', 'co2_ppmv', file_path)
     use_case = get_config_value(config, 'buildnml_input', 'use_case', file_path)
     lnd_tuning_mode = get_config_value(config, 'buildnml_input', 'lnd_tuning_mode', file_path)
-    spinup = get_config_value(config, 'buildnml_input', 'spinup', file_path)
-    gridmask = get_config_value(config, 'buildnml_input', 'gridmask', file_path)
-    lnd_grid = get_config_value(config, 'buildnml_input', 'lnd_grid', file_path)
-    lnd_domain_file = get_config_value(config, 'buildnml_input', 'lnd_domain_file', file_path)
-    lnd_domain_path = get_config_value(config, 'buildnml_input', 'lnd_domain_path', file_path)
-    din_loc_root = get_config_value(config, 'buildnml_input', 'din_loc_root', file_path)
-    clm_namelist_opts = get_config_value(config, 'buildnml_input', 'clm_namelist_opts', file_path)
+    spinup = get_config_value(config, 'buildnml_input', 'spinup', file_path,
+                              allowed_values=['off', 'on'])
+
+    inputdata_path = get_config_value(config, 'buildnml_input', 'inputdata_path', file_path)
 
     # create config_cache.xml file
     # Note that build-namelist utilizes the contents of the config_cache.xml file in
     # the namelist_defaults.xml file to obtain namelist variables
     config_cache = os.path.join(rundir, "config_cache.xml")
-    config_cache_text = _CONFIG_CACHE_TEMPLATE.format(clm_phys=clm_phys)
+    config_cache_text = _CONFIG_CACHE_TEMPLATE.format(clm_phys=ctsm_phys)
     with open(config_cache, 'w') as tempfile:
         tempfile.write(config_cache_text)
 
@@ -128,30 +174,40 @@ def buildnml(rundir, bldnmldir):
     if os.path.exists(inputdatalist_path):
         os.remove(inputdatalist_path)
 
+    # determine if fsurdat and/or finidat should appear in the -namelist option
+    extra_namelist_opts = ''
+    if fsurdat != 'UNSET':
+        extra_namelist_opts = extra_namelist_opts + " fsurdat = '{}' ".format(fsurdat)
+    if finidat != 'UNSET':
+        extra_namelist_opts = extra_namelist_opts + " finidat = '{}' ".format(finidat)
+
     # call build-namelist
     cmd = os.path.abspath(os.path.join(bldnmldir, os.pardir, "bld", "build-namelist"))
     command = [cmd,
-               '-csmdata', din_loc_root,
+               '-csmdata', inputdata_path,
                '-inputdata', inputdatalist_path,
-               '-namelist', '&clm_inparm  start_ymd={} {}/'.format(start_ymd, clm_namelist_opts),
+               # Hard-code start_ymd of year-2000. This is used to set the run type (for
+               # which a setting of 2000 gives 'startup', which is what we want) and pick
+               # the initial conditions file (which is pretty much irrelevant when running
+               # with lilac).
+               '-namelist', '&clm_inparm  start_ymd=20000101 {} /'.format(extra_namelist_opts),
                '-use_case', use_case,
                '-ignore_ic_year', # For now, we assume ignore_ic_year, not ignore_ic_date
-               '-res', lnd_grid,
-               '-clm_start_type', start_type,
+               '-res', 'lilac',
+               '-clm_start_type', 'default', # seems unimportant (see discussion in https://github.com/ESCOMP/CTSM/issues/876)
                '-configuration', configuration,
                '-structure', structure,
-               '-lnd_frac', os.path.join(lnd_domain_path, lnd_domain_file),
+               '-lnd_frac', lnd_domain_file,
                '-glc_nec', str(10),
-               '-co2_ppmv', ccsm_co2_ppmv,
-               '-co2_type', clm_co2_type,
+               '-co2_ppmv', co2_ppmv,
+               '-co2_type', 'constant',
                '-clm_accelerated_spinup', spinup,
                '-lnd_tuning_mode', lnd_tuning_mode,
                '-no-megan',  # Eventually make this dynamic (see https://github.com/ESCOMP/CTSM/issues/926)
                '-config', os.path.join(rundir, "config_cache.xml"),
-               '-envxml_dir', rundir]
-    command.extend(clm_bldnml_opts.split())
-    if gridmask not in ('null', 'UNSET'):
-        command.extend(['-mask', gridmask])
+               '-envxml_dir', rundir,
+               '-clm_usr_name', 'lilac']
+    command.extend(bldnml_opts.split())
 
     subprocess.check_call(command,
                           universal_newlines=True)
@@ -166,7 +222,7 @@ def main():
     """Main function"""
 
     rundir = parse_command_line(sys.argv[1:], __doc__)
-    bldnmldir = os.path.dirname(os.path.abspath(__file__))
+    bldnmldir = os.path.dirname(os.path.realpath(__file__))
     buildnml(rundir, bldnmldir)
 
 
