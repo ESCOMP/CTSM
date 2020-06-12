@@ -1,21 +1,21 @@
 &lilac_run_input 
- caseid = 'test_lilac'
+ caseid = 'ctsm_lilac'
 /
 &lilac_history_input
- lilac_histfreq_option = 'nsteps'
- lilac_histfreq_n = 4
+ lilac_histfreq_option = 'never'
+ lilac_histfreq_n = 1
 /
 &lilac_atmcap_input
- atm_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
+ atm_mesh_filename = '$INPUTDATA/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
 /
 &lilac_lnd_input
- lnd_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
+ lnd_mesh_filename = '$INPUTDATA/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
 /
 &lilac_rof_input
- rof_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/r05_nomask_c110308_ESMFmesh.nc'
+ rof_mesh_filename = '$INPUTDATA/share/meshes/r05_nomask_c110308_ESMFmesh.nc'
 /
 &atmaero_stream 
- stream_fldfilename='/glade/p/cesmdata/cseg/inputdata/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_WACCM.ensmean_monthly_hist_1849-2015_0.9x1.25_CMIP6_c180926.nc'
+ stream_fldfilename='$INPUTDATA/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_WACCM.ensmean_monthly_hist_1849-2015_0.9x1.25_CMIP6_c180926.nc'
  stream_year_first = 2000
  stream_year_last = 2000
 /

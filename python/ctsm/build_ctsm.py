@@ -602,6 +602,11 @@ def _stage_runtime_inputs(build_dir):
         path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'ctsm.cfg'),
         substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
 
+    fill_template_file(
+        path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'lilac_in_template'),
+        path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lilac_in'),
+        substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
+
 def _build_case(build_dir):
     """Build the CTSM library and its dependencies
 
