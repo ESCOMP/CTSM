@@ -1948,7 +1948,7 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
       end do
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       
       ! Update history variables that track these variables
       call this%fates_hist%update_history_cbal(nc, &
