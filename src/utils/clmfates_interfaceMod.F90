@@ -989,6 +989,7 @@ module CLMFatesInterfaceMod
       type(bounds_type)              , intent(in)    :: bounds_proc
       type(file_desc_t)              , intent(inout) :: ncid    ! netcdf id
       character(len=*)               , intent(in)    :: flag
+      type(waterstatebulk_type)          , intent(inout) :: waterstatebulk_inst
       type(waterdiagnosticbulk_type)          , intent(inout) :: waterdiagnosticbulk_inst
       type(canopystate_type)         , intent(inout) :: canopystate_inst
       type(soilstate_type)           , intent(inout) :: soilstate_inst
@@ -1214,7 +1215,7 @@ module CLMFatesInterfaceMod
                           soilstate_inst%bsw_col(c,1:nlevsoil)
                      
                      this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) = &
-                          waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
+                          waterstatebulk_inst%h2osoi_liq_col(c,1:nlevsoil)
                   end do
 
 
