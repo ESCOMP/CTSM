@@ -2453,7 +2453,7 @@ module CLMFatesInterfaceMod
    fates%ground_end = nlevgrnd
    
    fates%sizepft_class_begin = 1
-   fates%sizepft_class_end = nlevsclass * maxveg_ed
+   fates%sizepft_class_end = nlevsclass * numpft_fates
    
    fates%size_class_begin = 1
    fates%size_class_end = nlevsclass
@@ -2465,7 +2465,7 @@ module CLMFatesInterfaceMod
    fates%coage_class_end = nlevcoage
 
    fates%pft_class_begin = 1
-   fates%pft_class_end = maxveg_ed
+   fates%pft_class_end = numpft_fates
 
    fates%age_class_begin = 1
    fates%age_class_end = nlevage
@@ -2477,10 +2477,10 @@ module CLMFatesInterfaceMod
    fates%sizeage_class_end   = nlevsclass * nlevage
 
    fates%agepft_class_begin = 1
-   fates%agepft_class_end   = nlevage * maxveg_ed
+   fates%agepft_class_end   = nlevage * numpft_fates
    
    fates%sizeagepft_class_begin = 1
-   fates%sizeagepft_class_end   = nlevsclass * nlevage * maxveg_ed
+   fates%sizeagepft_class_end   = nlevsclass * nlevage * numpft_fates
 
    fates%fuel_begin = 1
    fates%fuel_end = nfsc
@@ -2495,13 +2495,13 @@ module CLMFatesInterfaceMod
    fates%cnlf_end = nlevleaf * nclmax
    
    fates%cnlfpft_begin = 1
-   fates%cnlfpft_end = nlevleaf * nclmax * maxveg_ed
+   fates%cnlfpft_end = nlevleaf * nclmax * numpft_fates
 
    fates%elem_begin = 1
    fates%elem_end   = num_elements
 
    fates%elpft_begin = 1
-   fates%elpft_end   = num_elements * maxveg_ed
+   fates%elpft_end   = num_elements * numpft_fates
 
    fates%elcwd_begin = 1
    fates%elcwd_end   = num_elements * ncwd
