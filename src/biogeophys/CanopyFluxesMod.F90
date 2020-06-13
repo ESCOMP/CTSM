@@ -438,6 +438,8 @@ contains
          snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
          dayl                   => grc%dayl                                     , & ! Input:  [real(r8) (:)   ]  daylength (s)
          max_dayl               => grc%max_dayl                                 , & ! Input:  [real(r8) (:)   ]  maximum daylength for this grid cell (s)
+         is_tree                => pftcon%is_tree                               , & ! Input:  tree patch or not
+         is_shrub               => pftcon%is_shrub                              , & ! Input:  shrub patch or not
          dleaf                  => pftcon%dleaf                                 , & ! Input:  characteristic leaf dimension (m)
          dbh_param              => pftcon%dbh                                   , & ! Input:  diameter at brest height (m)
          fbw                    => pftcon%fbw                                   , & ! Input:  fraction of biomass that is water
@@ -708,9 +710,10 @@ contains
             ! adjust for departure of cylindrical stem model
             sa_stem(p) = k_cyl_area * sa_stem(p)
 
-            ! do not calculate separate leaf/stem heat capacity for grasses
-            ! or other pfts if dbh is below minimum value
-            if(patch%itype(p) > 11 .or. dbh(p) < min_stem_diameter) then
+            ! only calculate separate leaf/stem heat capacity for trees
+            ! and shrubs if dbh is greater than some minimum value
+            if(.not.(is_tree(patch%itype(p)) .or. is_shrub(patch%itype(p))) &
+                 .or. dbh(p) < min_stem_diameter) then
                frac_rad_abs_by_stem(p) = 0.0
                sa_stem(p) = 0.0
             endif

@@ -110,7 +110,9 @@ module pftconMod
   type, public :: pftcon_type
 
      integer , allocatable :: noveg         (:)   ! value for not vegetated
-     integer , allocatable :: tree          (:)   ! tree or not?
+     logical , allocatable :: is_tree       (:)   ! tree or not?
+     logical , allocatable :: is_shrub      (:)   ! shrub or not?
+     logical , allocatable :: is_grass      (:)   ! grass or not?
 
      real(r8), allocatable :: dleaf         (:)   ! characteristic leaf dimension (m)
      real(r8), allocatable :: c3psn         (:)   ! photosynthetic pathway: 0. = c4, 1. = c3
@@ -339,8 +341,10 @@ contains
     class(pftcon_type) :: this
     !-----------------------------------------------------------------------
 
-    allocate( this%noveg         (0:mxpft)); this%noveg (:)   =huge(1)
-    allocate( this%tree          (0:mxpft)); this%tree  (:)   =huge(1)
+    allocate( this%noveg         (0:mxpft)); this%noveg    (:) = huge(1)
+    allocate( this%is_tree       (0:mxpft)); this%is_tree  (:) = .false.
+    allocate( this%is_shrub      (0:mxpft)); this%is_shrub (:) = .false.
+    allocate( this%is_grass      (0:mxpft)); this%is_grass (:) = .false.
 
     allocate( this%dleaf         (0:mxpft) )       
     allocate( this%c3psn         (0:mxpft) )       
@@ -983,13 +987,8 @@ contains
        this%dwood(m) = dwood
        this%root_radius(m)  = root_radius
        this%root_density(m) = root_density
-
-       if (m <= ntree) then
-          this%tree(m) = 1
-       else
-          this%tree(m) = 0
-       end if
     end do
+
     !
     ! clm 5 nitrogen variables
     !
@@ -1137,6 +1136,29 @@ contains
 
     call this%set_is_pft_known_to_model()
     call this%set_num_cfts_known_to_model()
+
+    ! Set vegetation family identifier (tree/shrub/grass)
+    do m = 0,mxpft 
+       if (m == ndllf_evr_tmp_tree .or. m == ndllf_evr_brl_tree &
+            .or. m == ndllf_dcd_brl_tree .or. m == nbrdlf_evr_trp_tree &
+            .or. m == nbrdlf_evr_tmp_tree .or. m == nbrdlf_dcd_trp_tree &
+            .or. m == nbrdlf_dcd_tmp_tree .or. m == nbrdlf_dcd_brl_tree) then
+          this%is_tree(m) = .true.
+       else
+          this%is_tree(m) = .false.
+       endif
+       if(m == nbrdlf_evr_shrub .or. m == nbrdlf_dcd_tmp_shrub .or. m == nbrdlf_dcd_brl_shrub) then
+          this%is_shrub(m) = .true.
+       else
+          this%is_shrub(m) = .false.
+       endif
+       if(m == nc3_arctic_grass .or. m == nc3_nonarctic_grass .or. m == nc4_grass) then
+          this%is_grass(m) = .true.
+       else
+          this%is_grass(m) = .false.
+       endif
+       
+    end do
 
     if (use_cndv) then
        this%fcur(:) = this%fcurdv(:)
@@ -1292,7 +1314,9 @@ contains
     !-----------------------------------------------------------------------
 
     deallocate( this%noveg)
-    deallocate( this%tree)
+    deallocate( this%is_tree)
+    deallocate( this%is_shrub)
+    deallocate( this%is_grass)
 
     deallocate( this%dleaf)
     deallocate( this%c3psn)
