@@ -23,12 +23,12 @@ module histFileMod
   use PatchType      , only : patch                
   use EDTypesMod     , only : nclmax
   use EDTypesMod     , only : nlevleaf
-  use FatesInterfaceMod , only : nlevsclass, nlevage
-  use FatesInterfaceMod , only : nlevheight
+  use FatesInterfaceTypesMod , only : nlevsclass, nlevage, nlevcoage
+  use FatesInterfaceTypesMod , only : nlevheight
   use EDTypesMod        , only : nfsc
   use FatesLitterMod    , only : ncwd
   use EDTypesMod        , only : num_elements_fates => num_elements
-  use FatesInterfaceMod , only : maxveg_fates => numpft
+  use FatesInterfaceTypesMod , only : numpft_fates => numpft
   use ncdio_pio 
 
   !
@@ -1072,6 +1072,7 @@ contains
     do t = 1,ntapes
 !$OMP PARALLEL DO PRIVATE (f, num2d, numdims)
        do f = 1,tape(t)%nflds
+
           numdims = tape(t)%hlist(f)%field%numdims
           
           if ( numdims == 1) then   
@@ -1393,6 +1394,7 @@ contains
     ! !USES:
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
     use decompMod       , only : BOUNDS_LEVEL_PROC
+    use clm_varctl      , only : iulog
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1443,6 +1445,7 @@ contains
     no_snow_behavior    =  tape(t)%hlist(f)%field%no_snow_behavior
     hpindex             =  tape(t)%hlist(f)%field%hpindex
 
+
     if (no_snow_behavior /= no_snow_unset) then
        ! For multi-layer snow fields, build a special output variable that handles
        ! missing snow layers appropriately
@@ -1462,6 +1465,7 @@ contains
        call hist_set_snow_field_2d(field, clmptr_ra(hpindex)%ptr, no_snow_behavior, type1d, &
             beg1d, end1d)
     else
+   
        field => clmptr_ra(hpindex)%ptr(:,1:num2d)
        field_allocated = .false.
     end if
@@ -2067,22 +2071,25 @@ contains
     call ncd_defdim(lnfid, 'scale_type_string_length', scale_type_strlen, dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
     
+
     if(use_fates)then
        call ncd_defdim(lnfid, 'fates_levscag', nlevsclass * nlevage, dimid)
-       call ncd_defdim(lnfid, 'fates_levscagpf', nlevsclass * nlevage * maxveg_fates, dimid)
-       call ncd_defdim(lnfid, 'fates_levagepft', nlevage * maxveg_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levscagpf', nlevsclass * nlevage * numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levagepft', nlevage * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levscls', nlevsclass, dimid)
-       call ncd_defdim(lnfid, 'fates_levpft', maxveg_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levcacls', nlevcoage, dimid)
+       call ncd_defdim(lnfid, 'fates_levpft', numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levage', nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levheight', nlevheight, dimid)
        call ncd_defdim(lnfid, 'fates_levfuel', nfsc, dimid)
        call ncd_defdim(lnfid, 'fates_levcwdsc', ncwd, dimid)
-       call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*maxveg_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*numpft_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levcapf', nlevcoage*numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levcan', nclmax, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlf', nlevleaf * nclmax, dimid)
-       call ncd_defdim(lnfid, 'fates_levcnlfpf', nlevleaf * nclmax * maxveg_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levcnlfpf', nlevleaf * nclmax * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levelem', num_elements_fates, dimid)
-       call ncd_defdim(lnfid, 'fates_levelpft', num_elements_fates * maxveg_fates, dimid)
+       call ncd_defdim(lnfid, 'fates_levelpft', num_elements_fates * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levelcwd', num_elements_fates * ncwd, dimid)
        call ncd_defdim(lnfid, 'fates_levelage', num_elements_fates * nlevage, dimid)
     end if
@@ -2498,34 +2505,37 @@ contains
     use domainMod       , only : ldomain, lon1d, lat1d
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
     use clm_time_manager, only : get_ref_date, get_calendar, NO_LEAP_C, GREGORIAN_C
-    use FatesInterfaceMod, only : fates_hdim_levsclass
-    use FatesInterfaceMod, only : fates_hdim_pfmap_levscpf
-    use FatesInterfaceMod, only : fates_hdim_scmap_levscpf
-    use FatesInterfaceMod, only : fates_hdim_levage
-    use FatesInterfaceMod, only : fates_hdim_levheight
-    use FatesInterfaceMod, only : fates_hdim_levpft
-    use FatesInterfaceMod, only : fates_hdim_scmap_levscag
-    use FatesInterfaceMod, only : fates_hdim_agmap_levscag
-    use FatesInterfaceMod, only : fates_hdim_scmap_levscagpft
-    use FatesInterfaceMod, only : fates_hdim_agmap_levscagpft
-    use FatesInterfaceMod, only : fates_hdim_pftmap_levscagpft
-    use FatesInterfaceMod, only : fates_hdim_agmap_levagepft
-    use FatesInterfaceMod, only : fates_hdim_pftmap_levagepft
-    use FatesInterfaceMod, only : fates_hdim_levfuel
-    use FatesInterfaceMod, only : fates_hdim_levcwdsc
-    use FatesInterfaceMod, only : fates_hdim_levcan
-    use FatesInterfaceMod, only : fates_hdim_canmap_levcnlf
-    use FatesInterfaceMod, only : fates_hdim_lfmap_levcnlf
-    use FatesInterfaceMod, only : fates_hdim_canmap_levcnlfpf
-    use FatesInterfaceMod, only : fates_hdim_lfmap_levcnlfpf
-    use FatesInterfaceMod, only : fates_hdim_pftmap_levcnlfpf
-    use FatesInterfaceMod, only : fates_hdim_levelem
-    use FatesInterfaceMod, only : fates_hdim_elmap_levelpft
-    use FatesInterfaceMod, only : fates_hdim_pftmap_levelpft
-    use FatesInterfaceMod, only : fates_hdim_elmap_levelcwd
-    use FatesInterfaceMod, only : fates_hdim_cwdmap_levelcwd
-    use FatesInterfaceMod, only : fates_hdim_elmap_levelage
-    use FatesInterfaceMod, only : fates_hdim_agemap_levelage
+    use FatesInterfaceTypesMod, only : fates_hdim_levsclass
+    use FatesInterfaceTypesMod, only : fates_hdim_pfmap_levscpf
+    use FatesInterfaceTypesMod, only : fates_hdim_scmap_levscpf
+    use FatesInterfaceTypesMod, only : fates_hdim_levcoage
+    use FatesInterfaceTypesMod, only : fates_hdim_pfmap_levcapf
+    use FatesInterfaceTypesMod, only : fates_hdim_camap_levcapf
+    use FatesInterfaceTypesMod, only : fates_hdim_levage
+    use FatesInterfaceTypesMod, only : fates_hdim_levheight
+    use FatesInterfaceTypesMod, only : fates_hdim_levpft
+    use FatesInterfaceTypesMod, only : fates_hdim_scmap_levscag
+    use FatesInterfaceTypesMod, only : fates_hdim_agmap_levscag
+    use FatesInterfaceTypesMod, only : fates_hdim_scmap_levscagpft
+    use FatesInterfaceTypesMod, only : fates_hdim_agmap_levscagpft
+    use FatesInterfaceTypesMod, only : fates_hdim_pftmap_levscagpft
+    use FatesInterfaceTypesMod, only : fates_hdim_agmap_levagepft
+    use FatesInterfaceTypesMod, only : fates_hdim_pftmap_levagepft
+    use FatesInterfaceTypesMod, only : fates_hdim_levfuel
+    use FatesInterfaceTypesMod, only : fates_hdim_levcwdsc
+    use FatesInterfaceTypesMod, only : fates_hdim_levcan
+    use FatesInterfaceTypesMod, only : fates_hdim_canmap_levcnlf
+    use FatesInterfaceTypesMod, only : fates_hdim_lfmap_levcnlf
+    use FatesInterfaceTypesMod, only : fates_hdim_canmap_levcnlfpf
+    use FatesInterfaceTypesMod, only : fates_hdim_lfmap_levcnlfpf
+    use FatesInterfaceTypesMod, only : fates_hdim_pftmap_levcnlfpf
+    use FatesInterfaceTypesMod, only : fates_hdim_levelem
+    use FatesInterfaceTypesMod, only : fates_hdim_elmap_levelpft
+    use FatesInterfaceTypesMod, only : fates_hdim_pftmap_levelpft
+    use FatesInterfaceTypesMod, only : fates_hdim_elmap_levelcwd
+    use FatesInterfaceTypesMod, only : fates_hdim_cwdmap_levelcwd
+    use FatesInterfaceTypesMod, only : fates_hdim_elmap_levelage
+    use FatesInterfaceTypesMod, only : fates_hdim_agemap_levelage
 
 
     !
@@ -2592,6 +2602,12 @@ contains
                   long_name='FATES pft index of the combined pft-size class dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_scmap_levscpf',xtype=ncd_int, dim1name='fates_levscpf', &
                   long_name='FATES size index of the combined pft-size class dimension', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_levcacls', xtype=tape(t)%ncprec, dim1name='fates_levcacls', &
+                  long_name='FATES cohort age class lower bound', units='years', ncid=nfid(t))
+             call ncd_defvar(varname='fates_pftmap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
+                  long_name='FATES pft index of the combined pft-cohort age class dimension', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_camap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
+                  long_name='FATES cohort age index of the combined pft-cohort age dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_levage',xtype=tape(t)%ncprec, dim1name='fates_levage', &
                   long_name='FATES patch age (yr)', ncid=nfid(t))
              call ncd_defvar(varname='fates_levheight',xtype=tape(t)%ncprec, dim1name='fates_levheight', &
@@ -2656,8 +2672,11 @@ contains
              call ncd_io(varname='fates_scmap_levscag',data=fates_hdim_scmap_levscag, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_agmap_levscag',data=fates_hdim_agmap_levscag, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levscls',data=fates_hdim_levsclass, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_levcacls',data=fates_hdim_levcoage, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_pftmap_levscpf',data=fates_hdim_pfmap_levscpf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_scmap_levscpf',data=fates_hdim_scmap_levscpf, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_pftmap_levcapf',data=fates_hdim_pfmap_levcapf, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_camap_levcapf',data=fates_hdim_camap_levcapf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levage',data=fates_hdim_levage, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levheight',data=fates_hdim_levheight, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levpft',data=fates_hdim_levpft, ncid=nfid(t), flag='write')
@@ -4908,8 +4927,10 @@ contains
        num2d = nlevdecomp_full
     case ('fates_levscls')
        num2d = nlevsclass
+    case('fates_levcacls')
+       num2d = nlevcoage
     case ('fates_levpft')
-       num2d = maxveg_fates
+       num2d = numpft_fates
     case ('fates_levage')
        num2d = nlevage
     case ('fates_levheight')
@@ -4919,19 +4940,21 @@ contains
     case ('fates_levcwdsc')
        num2d = ncwd
     case ('fates_levscpf')
-       num2d = nlevsclass*maxveg_fates
+       num2d = nlevsclass*numpft_fates
+    case ('fates_levcapf')
+       num2d = nlevcoage*numpft_fates
     case ('fates_levscag')
        num2d = nlevsclass*nlevage
     case ('fates_levscagpf')
-       num2d = nlevsclass*nlevage*maxveg_fates
+       num2d = nlevsclass*nlevage*numpft_fates
     case ('fates_levagepft')
-       num2d = nlevage*maxveg_fates
+       num2d = nlevage*numpft_fates
     case ('fates_levcan')
        num2d = nclmax
     case ('fates_levcnlf')
        num2d = nlevleaf * nclmax
     case ('fates_levcnlfpf')
-       num2d = nlevleaf * nclmax * maxveg_fates
+       num2d = nlevleaf * nclmax * numpft_fates
     case ('ltype')
        num2d = max_lunit
     case ('natpft')
@@ -4939,7 +4962,7 @@ contains
     case ('fates_levelem')
        num2d = num_elements_fates
     case ('fates_levelpft')
-       num2d = num_elements_fates*maxveg_fates
+       num2d = num_elements_fates*numpft_fates
     case ('fates_levelcwd')
        num2d = num_elements_fates*ncwd
     case ('fates_levelage')
@@ -4972,8 +4995,8 @@ contains
     end select
 
     ! History buffer pointer
-
     hpindex = pointer_index()
+   
 
     if (present(ptr_lnd)) then
        l_type1d = grlnd
@@ -4989,6 +5012,7 @@ contains
        l_type1d = namel
        l_type1d_out = namel
        clmptr_ra(hpindex)%ptr => ptr_lunit
+
        if (present(set_lake)) then
           do l = bounds%begl,bounds%endl
              if (lun%lakpoi(l)) ptr_lunit(l,:) = set_lake
@@ -5054,6 +5078,7 @@ contains
        l_type1d = namep
        l_type1d_out = namep
        clmptr_ra(hpindex)%ptr => ptr_patch
+
        if (present(set_lake)) then
           do p = bounds%begp,bounds%endp
              l =patch%landunit(p)

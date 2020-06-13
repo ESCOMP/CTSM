@@ -24,7 +24,7 @@ module clm_initializeMod
   use PatchType       , only : patch         ! instance
   use reweightMod     , only : reweight_wrapup
   use filterMod       , only : allocFilters, filter, filter_inactive_and_active
-  use FatesInterfaceMod, only : set_fates_global_elements
+  use CLMFatesInterfaceMod, only : CLMFatesGlobals
   use dynSubgridControlMod, only: dynSubgridControl_init, get_reset_dynbal_baselines
 
   use clm_instMod
@@ -197,9 +197,10 @@ contains
     !
     ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
     ! to allocate space)
+    ! This also sets up various global constants in FATES
     ! ------------------------------------------------------------------------
 
-    call set_fates_global_elements(use_fates)
+    call CLMFatesGlobals()
 
     ! ------------------------------------------------------------------------
     ! Determine decomposition of subgrid scale landunits, columns, patches
