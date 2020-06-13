@@ -956,7 +956,7 @@ module CLMFatesInterfaceMod
 
    ! ====================================================================================
 
-   subroutine restart( this, bounds_proc, ncid, flag, waterstatebulk_inst &
+   subroutine restart( this, bounds_proc, ncid, flag, waterstatebulk_inst, &
                              waterdiagnosticbulk_inst, canopystate_inst, soilstate_inst )
                              
 
