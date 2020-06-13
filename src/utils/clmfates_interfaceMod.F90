@@ -1932,7 +1932,8 @@ module CLMFatesInterfaceMod
     type(soilbiogeochem_carbonstate_type), intent(in) :: soilbiogeochem_carbonstate_inst
 
     ! locals
-    integer :: s,c
+    real(r8) :: dtime
+    integer  :: s,c
 
     associate(& 
         hr            => soilbiogeochem_carbonflux_inst%hr_col,      & ! (gC/m2/s) total heterotrophic respiration
