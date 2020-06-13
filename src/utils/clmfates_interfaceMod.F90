@@ -2387,7 +2387,7 @@ module CLMFatesInterfaceMod
       c = patch%column(p)
       s = this%f2hmap(nc)%hsites(c)
       ifp = p - col%patchi(c)
-      this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterflux_inst%qflx_tran_veg_patch(p)
+      this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterfluxbulk_inst%qflx_tran_veg_patch(p)
    end do
 
    ! Call Fates Hydraulics
