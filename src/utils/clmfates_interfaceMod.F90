@@ -956,8 +956,9 @@ module CLMFatesInterfaceMod
 
    ! ====================================================================================
 
-   subroutine restart( this, bounds_proc, ncid, flag, waterdiagnosticbulk_inst, &
-                             canopystate_inst, soilstate_inst )
+   subroutine restart( this, bounds_proc, ncid, flag, waterstatebulk_inst &
+                             waterdiagnosticbulk_inst, canopystate_inst, soilstate_inst )
+                             
 
       ! ---------------------------------------------------------------------------------
       ! The ability to restart the model is handled through three different types of calls
@@ -989,8 +990,8 @@ module CLMFatesInterfaceMod
       type(bounds_type)              , intent(in)    :: bounds_proc
       type(file_desc_t)              , intent(inout) :: ncid    ! netcdf id
       character(len=*)               , intent(in)    :: flag
-      type(waterstatebulk_type)          , intent(inout) :: waterstatebulk_inst
-      type(waterdiagnosticbulk_type)          , intent(inout) :: waterdiagnosticbulk_inst
+      type(waterstatebulk_type)      , intent(inout) :: waterstatebulk_inst
+      type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
       type(canopystate_type)         , intent(inout) :: canopystate_inst
       type(soilstate_type)           , intent(inout) :: soilstate_inst
       
