@@ -68,7 +68,7 @@ or Cshell::
   _obtaining-and-building-ctsm. <-- CREATED LINK TO THE CORRECT SECTION?
 
 Building the WRF model with CTSM
-=======================
+================================
 .. todo::
 
   update the git address to WRF feature branch...
@@ -290,6 +290,20 @@ diff ./lilac/atm_driver/lilac_in ./lilac/atm_driver/lilac_in:
   - lnd_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
   + lnd_mesh_filename = '/glade/work/slevis/barlage_wrf_ctsm/conus/mesh/wrf2ctsm_land_conus_ESMFMesh_c20191216.nc'
 
+Before you generate the lnd_in file, you may modify user_nl_clm in
+/glade/scratch/$USER/ctsm_build_dir/case/. For example you may wish to
+point to an alternate CTSM initial condition file. To merge WRF initial
+conditions from a wrfinput file into a CTSM initial condition file, type::
+
+ module load ncl/6.6.2
+ ncl transfer_wrfinput_to_ctsm_with_snow.ncl 'finidat="finidat_interp_dest.nc"' 'wrfinput="./git_wrf_ctsm/WRF/test/em_real/wrfinput_d01.noseaice"' 'merged="finidat_interp_dest_wrfinit_snow.nc"'
+
+.. todo::
+
+ Need to make the above ncl script available. I assume that the finidat
+ and the wrfinput files need to be consistent for this to work. If so,
+ we should prob. explain how to generate a consistent finidat file.
+
 Generate the lnd_in file by running the following from
 ./git_wrf_ctsm/ctsm/lilac/atm_driver::
 
@@ -301,7 +315,7 @@ Copy lilac_in, lnd_in, and lnd_modelio.nml to the WRF/run directory.
 
 
 Run WRF
-=================
+=======
 
 If real program is completed successfully, we should see wrfinput and wrfbdy files
 in our directory.
