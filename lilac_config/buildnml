@@ -42,25 +42,49 @@ _ENV_LILAC_TEMPLATE = """
 # be filled in
 _PLACEHOLDER = 'FILL_THIS_IN'
 
+# This string is used in the out-of-the-box ctsm.cfg file to denote a value that can be
+# filled in, but doesn't absolutely need to be
+_UNSET = 'UNSET'
+
 ###############################################################################
 def parse_command_line(args, description):
 ###############################################################################
 
-    """Parse the command line, return rundir"""
+    """Parse the command line, return object holding arguments"""
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description=description)
 
     parser.add_argument("--rundir", type=str, default=os.getcwd(),
-                        help="specify the full path of the run directory")
+                        help="Full path of the run directory")
+
+    parser.add_argument("--existing-res",
+                        help="Use the given out-of-the-box resolution (e.g., '4x5').\n"
+                        "This argument should NOT be provided for a user-defined resolution.\n"
+                        "If this argument is provided, then --existing-mask must also be provided.")
+
+    parser.add_argument("--existing-mask",
+                        help="Use the given out-of-the-box mask (e.g., 'gx3v7').\n"
+                        "This argument should NOT be provided for a user-defined resolution.\n"
+                        "If this argument is provided, then --existing-res must also be provided.")
 
     arguments = parser.parse_args(args)
 
-    # check if rundir exists
-    if not os.path.isdir(arguments.rundir):
-        raise RuntimeError("rundir {} does not exist".format(arguments.rundir))
+    # Perform some error checking on arguments, and set derived values
 
-    return arguments.rundir
+    if not os.path.isdir(arguments.rundir):
+        sys.exit("rundir {} does not exist".format(arguments.rundir))
+
+    if arguments.existing_res and arguments.existing_mask:
+        arguments.use_existing_res_and_mask = True
+    elif arguments.existing_res and not arguments.existing_mask:
+        sys.exit("If --existing-res is given, then --existing-mask must also be given")
+    elif arguments.existing_mask and not arguments.existing_res:
+        sys.exit("If --existing-mask is given, then --existing-res must also be given")
+    else:
+        arguments.use_existing_res_and_mask = False
+
+    return arguments
 
 ###############################################################################
 def get_config_value(config, section, item, file_path, allowed_values=None):
@@ -113,10 +137,14 @@ def determine_bldnml_opts(bgc_mode, crop, vichydro):
     return bldnml_opts
 
 ###############################################################################
-def buildnml(rundir, bldnmldir):
+def buildnml(rundir, bldnmldir, use_existing_res_and_mask, existing_res=None, existing_mask=None):
 ###############################################################################
 
-    """Build the ctsm namelist"""
+    """Build the ctsm namelist
+
+    If use_existing_res_and_mask is True, then existing_res and existing_mask should be
+    specified; otherwise, they are ignored.
+    """
 
     # pylint: disable=too-many-locals
 
@@ -127,7 +155,12 @@ def buildnml(rundir, bldnmldir):
     config.read(file_path)
 
     lnd_domain_file = get_config_value(config, 'buildnml_input', 'lnd_domain_file', file_path)
-    fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat', file_path)
+    if use_existing_res_and_mask:
+        fsurdat = _UNSET
+    else:
+        # If we're not using an out-of-the-box grid, then require the user to explicitly
+        # specify the surface dataset.
+        fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat', file_path)
     finidat = get_config_value(config, 'buildnml_input', 'finidat', file_path)
 
     ctsm_phys = get_config_value(config, 'buildnml_input', 'ctsm_phys', file_path,
@@ -176,9 +209,9 @@ def buildnml(rundir, bldnmldir):
 
     # determine if fsurdat and/or finidat should appear in the -namelist option
     extra_namelist_opts = ''
-    if fsurdat != 'UNSET':
+    if fsurdat != _UNSET:
         extra_namelist_opts = extra_namelist_opts + " fsurdat = '{}' ".format(fsurdat)
-    if finidat != 'UNSET':
+    if finidat != _UNSET:
         extra_namelist_opts = extra_namelist_opts + " finidat = '{}' ".format(finidat)
 
     # call build-namelist
@@ -193,7 +226,6 @@ def buildnml(rundir, bldnmldir):
                '-namelist', '&clm_inparm  start_ymd=20000101 {} /'.format(extra_namelist_opts),
                '-use_case', use_case,
                '-ignore_ic_year', # For now, we assume ignore_ic_year, not ignore_ic_date
-               '-res', 'lilac',
                '-clm_start_type', 'default', # seems unimportant (see discussion in https://github.com/ESCOMP/CTSM/issues/876)
                '-configuration', configuration,
                '-structure', structure,
@@ -205,8 +237,16 @@ def buildnml(rundir, bldnmldir):
                '-lnd_tuning_mode', lnd_tuning_mode,
                '-no-megan',  # Eventually make this dynamic (see https://github.com/ESCOMP/CTSM/issues/926)
                '-config', os.path.join(rundir, "config_cache.xml"),
-               '-envxml_dir', rundir,
-               '-clm_usr_name', 'lilac']
+               '-envxml_dir', rundir]
+    if use_existing_res_and_mask:
+        command.extend(['-res', existing_res,
+                        '-mask', existing_mask])
+    else:
+        # NOTE(wjs, 2020-06-16) Note that we do NOT use the -mask argument in this case;
+        # it's possible that we should be using it in some circumstances (I haven't looked
+        # into how it's used).
+        command.extend(['-res', 'lilac',
+                        '-clm_usr_name', 'lilac'])
     command.extend(bldnml_opts.split())
 
     subprocess.check_call(command,
@@ -221,9 +261,14 @@ def buildnml(rundir, bldnmldir):
 def main():
     """Main function"""
 
-    rundir = parse_command_line(sys.argv[1:], __doc__)
+    args = parse_command_line(sys.argv[1:], __doc__)
     bldnmldir = os.path.dirname(os.path.realpath(__file__))
-    buildnml(rundir, bldnmldir)
+    buildnml(
+        rundir=args.rundir,
+        bldnmldir=bldnmldir,
+        use_existing_res_and_mask=args.use_existing_res_and_mask,
+        existing_res=args.existing_res,
+        existing_mask=args.existing_mask)
 
 
 ###############################################################################
