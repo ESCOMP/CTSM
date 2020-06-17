@@ -776,7 +776,7 @@ sub setup_cmdl_fates_mode {
        # dis-allow fates specific namelist items with non-fates runs
 	my @list  = (  "use_fates_spitfire", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
 		       "use_fates_cohort_age_tracking", 
-                      "use_fates_inventory_init", "fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode" );
+                      "use_fates_inventory_init","use_fates_fixed_biogeog", "fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode" );
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
               $log->fatal_error("$var is being set, but can ONLY be set when -bgc fates option is used.\n");
@@ -3895,7 +3895,7 @@ sub setup_logic_fates {
     if ($physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "use_fates_spitfire", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys", 
-                       "use_fates_inventory_init", "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking" );
+                       "use_fates_inventory_init","use_fates_fixed_biogeog", "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking" );
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'} );
         }

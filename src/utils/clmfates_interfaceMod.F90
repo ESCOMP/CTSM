@@ -53,6 +53,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_ed_prescribed_phys
    use clm_varctl        , only : use_fates_logging
    use clm_varctl        , only : use_fates_inventory_init
+   use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : fates_inventory_ctrl_filename
  
    use clm_varcon        , only : tfrz
@@ -60,7 +61,7 @@ module CLMFatesInterfaceMod
    use clm_varcon        , only : denice
    use clm_varcon        , only : ispval
 
-   use clm_varpar        , only : natpft_size
+   use clm_varpar        , only : natpft_size, natpft_ub, natpft_lb
    use clm_varpar        , only : numrad
    use clm_varpar        , only : ivis
    use clm_varpar        , only : inir
@@ -234,6 +235,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_inventory_init
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
+     integer                                        :: pass_biogeog     
      
      if (use_fates) then
 
@@ -276,6 +278,13 @@ module CLMFatesInterfaceMod
            pass_spitfire = 0
         end if
         call set_fates_ctrlparms('use_spitfire',ival=pass_spitfire)
+
+        if(use_fates_fixed_biogeog)then
+           pass_biogeog = 1
+        else 
+           pass_biogeog = 0
+        end if 
+        call set_fates_ctrlparms('use_fixed_biogeog',ival=pass_biogeog)
         
         if(use_fates_ed_st3) then
            pass_ed_st3 = 1
@@ -372,7 +381,8 @@ module CLMFatesInterfaceMod
      
       use FatesInterfaceTypesMod, only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
-
+      use subgridMod, only :  natveg_patch_exists
+       use clm_instur      , only : wt_nat_patch
       implicit none
       
       ! Input Arguments
@@ -381,22 +391,13 @@ module CLMFatesInterfaceMod
 
       ! local variables
       integer                                        :: nclumps   ! Number of threads
-
-      integer                                        :: pass_masterproc
-      integer                                        :: pass_vertsoilc
-      integer                                        :: pass_spitfire 
-      integer                                        :: pass_ed_st3
-      integer                                        :: pass_ed_prescribed_phys
-      integer                                        :: pass_logging
-      integer                                        :: pass_planthydro
-      integer                                        :: pass_cohort_age_tracking
-      integer                                        :: pass_inventory_init
-      integer                                        :: pass_is_restart
       integer                                        :: nc        ! thread index
       integer                                        :: s         ! FATES site index
       integer                                        :: c         ! HLM column index
       integer                                        :: l         ! HLM LU index
       integer                                        :: g         ! HLM grid index
+      integer                                        :: m         ! HLM PFT index
+      integer                                        :: ft       ! FATES PFT index
       integer                                        :: pi,pf
       integer, allocatable                           :: collist (:)
       type(bounds_type)                              :: bounds_clump
@@ -416,11 +417,9 @@ module CLMFatesInterfaceMod
       allocate(this%fates(nclumps))
       allocate(this%f2hmap(nclumps))
 
-
       if(debug)then
          write(iulog,*) 'clm_fates%init():  allocating for ',nclumps,' threads'
       end if
-
       
       nclumps = get_proc_clumps()
 
@@ -514,12 +513,22 @@ module CLMFatesInterfaceMod
             this%fates(nc)%sites(s)%lat = grc%latdeg(g)
             this%fates(nc)%sites(s)%lon = grc%londeg(g)
 
-         end do
-        
 
-         ! Initialize site-level static quantities dictated by the HLM
-         ! currently ground layering depth
+            ! initialize static layers for reduced complexity FATES versions from HLM 
+            ! maybe make this into a subroutine of it's own later. 
+            do m = natpft_lb,natpft_ub-1
+               ft = m-natpft_lb+1 
+               if (natveg_patch_exists(g, m)) then
+                  this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,m)
+               else 
+                  this%fates(nc)%bc_in(s)%pft_areafrac(ft)=0._r8
+               end if
+            end do
 
+          end do !site
+
+        ! Initialize site-level static quantities dictated by the HLM                                                                            
+        ! currently ground layering depth
          call this%init_soil_depths(nc)
          
          if (use_fates_planthydro) then
@@ -1283,7 +1292,7 @@ module CLMFatesInterfaceMod
            end do
            
            call set_site_properties(this%fates(nc)%nsites, &
-                                    this%fates(nc)%sites)
+                                    this%fates(nc)%sites,this%fates(nc)%bc_in)
 
            ! ----------------------------------------------------------------------------
            ! Initialize Hydraulics Code if turned on
