@@ -394,7 +394,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
 <paramfile phys="clm5_0">lnd/clm2/paramdata/clm5_params.c200614.nc</paramfile>
-<paramfile phys="clm4_5">lnd/clm2/paramdata/clm45_params.c200613b.nc</paramfile>
+<paramfile phys="clm4_5">lnd/clm2/paramdata/clm45_params.c200614.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
