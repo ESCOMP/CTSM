@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev101 ole/erik 06/17/2020 Changes from Keith to bring a list of variables to the parameter file
   ctsm1.0.dev100    sacks 06/09/2020 Deallocate memory after running init_interp
   ctsm1.0.dev099    sacks 06/08/2020 Update cime, needed for izumi machine updates
   ctsm1.0.dev098 jet/erik 05/28/2020 Bring in GFDL fv3 cubed sphere grids C24, C48, C96, C192, C384
