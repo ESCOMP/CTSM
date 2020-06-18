@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev101
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326), oleson (Keith Oleson)
-Date:  Wed Jun 17 23:12:09 MDT 2020
+Date: Wed Jun 17 23:51:22 MDT 2020
 One-line Summary: Changes from Keith to bring a list of variables to the parameter file
 
 Purpose of changes
@@ -45,6 +45,15 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): 
 Changes made to namelist defaults (e.g., changed parameter values): None
 
 Changes to the datasets (e.g., parameter, surface or initial files): paramfile for both clm4_5 and clm5_0
+   Add 51 new parameters to the paramsfile:
+       bsw_adjustfactor,cpha,csol_clay,csol_om,csol_sand,denitrif_nitrateconc_coefficient,denitrif_nitrateconc_exponent,
+       denitrif_respiration_coefficient,denitrif_respiration_exponent,drift_gs,e_ice,enzyme_turnover_daily,eta0_anderson,
+       eta0_vionnet,fnps,hksat_adjustfactor,ignition_efficiency,jmaxb0,jmaxha,jmaxhd,kcha,koha,kp25ratio,lmrha,lmrhd,
+       lmrse,luna_theta_cj,minrelh,n_baseflow,pd,perched_baseflow_scalar,prh30,relhExp,ssi,sucsat_adjustfactor,theta_cj,
+       theta_ip,theta_psii,tpuha,tpuhd,tkd_clay,tkd_om,tkd_sand,tkm_om,tpu25ratio,vcmaxha,vcmaxhd,watsat_adjustfactor,
+       wc2wjb0,wimp,wind_min
+    k_nitr_max removed and replaced with k_nitr_max_perday
+    meta-data for the tau_* variables changed, and a roundoff difference in the clm4_5 paramfile
 
 Substantial timing or memory changes: None
 
@@ -52,7 +61,9 @@ Notes of particular relevance for developers: (including Code reviews and testin
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): prh30 not used for clm4_5
+   prh30 was added in but won't be used for the CNFireLi2014 formulation. 
+   It's only used for the clm5_0 and following formulations
 
 Changes to tests or testing: None
 
@@ -65,11 +76,11 @@ CTSM testing: regular
 
   build-namelist tests:
 
-    cheyenne - 
+    cheyenne - PASS (170 tests differ from baseline because of new paramfiles)
 
   python testing (see instructions in python/README.md; document testing done):
 
-    (any machine) - 
+    cheyenne - PASS
 
   regular tests (aux_clm):
 
