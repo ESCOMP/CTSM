@@ -193,7 +193,7 @@ module CNVegetationFacade
 contains
 
   !-----------------------------------------------------------------------
-  subroutine Init(this, bounds, NLFilename, nskip_steps)
+  subroutine Init(this, bounds, NLFilename, nskip_steps, params_ncid)
     !
     ! !DESCRIPTION:
     ! Initialize a CNVeg object.
@@ -203,12 +203,14 @@ contains
     ! !USES:
     use CNFireFactoryMod , only : create_cnfire_method
     use clm_varcon       , only : c13ratio, c14ratio
+    use ncdio_pio        , only : file_desc_t
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
     character(len=*) , intent(in)    :: NLFilename  ! namelist filename
     integer          , intent(in)    :: nskip_steps ! Number of steps to skip at startup
+    type(file_desc_t), intent(inout) :: params_ncid ! NetCDF handle to parameter file
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -274,6 +276,7 @@ contains
     end if
 
     call create_cnfire_method(NLFilename, this%cnfire_method)
+    call this%cnfire_method%CNFireReadParams( params_ncid )
 
   end subroutine Init
 
