@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""System tests for build_ctsm
+"""System tests for lilac_build_ctsm
 
 These tests do a lot of work (interacting with cime, etc.), and thus take relatively long
 to run.
@@ -13,7 +13,7 @@ import os
 
 from ctsm.path_utils import add_cime_lib_to_path
 from ctsm import unit_testing
-from ctsm.build_ctsm import build_ctsm
+from ctsm.lilac_build_ctsm import build_ctsm
 
 _CIME_PATH = add_cime_lib_to_path(standalone_only=True)
 
@@ -22,7 +22,7 @@ _CIME_PATH = add_cime_lib_to_path(standalone_only=True)
 # pylint: disable=invalid-name
 
 class TestSysBuildCtsm(unittest.TestCase):
-    """System tests for build_ctsm"""
+    """System tests for lilac_build_ctsm"""
 
     def setUp(self):
         self._tempdir = tempfile.mkdtemp()

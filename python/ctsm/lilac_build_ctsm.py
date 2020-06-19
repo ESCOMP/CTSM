@@ -1,4 +1,4 @@
-"""Functions implementing build_ctsm command"""
+"""Functions implementing LILAC's build_ctsm command"""
 
 import argparse
 import logging

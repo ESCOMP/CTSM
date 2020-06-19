@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Unit tests for build_ctsm
+"""Unit tests for lilac_build_ctsm
 """
 
 import unittest
@@ -8,14 +8,14 @@ from unittest.mock import patch
 from io import StringIO
 
 from ctsm import unit_testing
-from ctsm.build_ctsm import _commandline_args, _check_and_transform_os
+from ctsm.lilac_build_ctsm import _commandline_args, _check_and_transform_os
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
 # pylint: disable=invalid-name
 
 class TestBuildCtsm(unittest.TestCase):
-    """Tests of build_ctsm"""
+    """Tests of lilac_build_ctsm"""
 
     def test_commandlineArgs_rebuild_valid(self):
         """Test _commandline_args with --rebuild, with a valid argument list (no disallowed args)"""

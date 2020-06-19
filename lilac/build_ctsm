@@ -13,7 +13,7 @@ from ctsm.path_utils import add_cime_lib_to_path
 
 cime_path = add_cime_lib_to_path()
 
-from ctsm.build_ctsm import main
+from ctsm.lilac_build_ctsm import main
 
 if __name__ == "__main__":
     main(cime_path=cime_path)
