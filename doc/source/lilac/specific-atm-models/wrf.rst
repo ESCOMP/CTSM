@@ -16,50 +16,38 @@ from earlier sections but in recipe form and with minimal detail.
   This section assumes use of a machine that has been ported to CIME.
   In this example we assume NCAR’s cheyenne computer in particular.
 
-Preparing the CTSM
-==================
-
-.. todo::
-
-  I think we don't need some of the following since too much instructions
-  are usually more confusing...
-  I tried removing incorrect or redundant information.
-
-  For example, people who do not use cheyenne might get confused by the 
-  following commands on scratch.
+Clone CTSM Repository
+-------------------------
 
 Decide where you will work, for example::
 
-  cd /glade/scratch/$USER
-  mkdir git_wrf_ctsm
-  cd git_wrf_ctsm
-
-.. note::
-
-  Discs other than /glade/scratch may provide insufficient space for
-  output from simulations longer than one or two months.
+    mkdir git_wrf_ctsm
+    cd git_wrf_ctsm
 
 
-Obtain CTSM by running::
+Clone CTSM repository and checkout lilac_cap branch::
 
-  git clone https://github.com/ESCOMP/ctsm.git
-  cd ctsm
-  git checkout lilac_cap
-  ./manage_externals/checkout_externals -v
+    git clone https://github.com/ESCOMP/ctsm.git
+    cd ctsm
+    git checkout lilac_cap
+    ./manage_externals/checkout_externals
 
-Build CTSM and its dependencies, for example for cheyenne::
+Build CTSM and its dependencies based on instructions from previous sections,
+for example for cheyenne::
 
-  ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
+    ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
 
 
-Set environment similar to environments used for your CTSM build for bash::
+Set environment similar to environments used for your CTSM build using
+ctsm_build_environment.sh for bash::
 
-  source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.sh
+    source /ctsm_build_dir/ctsm_build_environment.sh
 
-or Cshell::
+or ctsm_build_environment.csh for Cshell:
 
-  source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.csh
+.. code-block:: Tcsh
 
+    source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.csh
 
 .. note::
 
@@ -68,35 +56,41 @@ or Cshell::
   _obtaining-and-building-ctsm. <-- CREATED LINK TO THE CORRECT SECTION?
 
 Building the WRF model with CTSM
-================================
+--------------------------------
+
 .. todo::
 
-  update the git address to WRF feature branch...
+    update the git address to WRF feature branch...
 
 Clone WRF CTSM branch into your directory::
 
-  git clone git@github.com:billsacks/WRF.git
-  cd WRF
-  git checkout lilac_dev
+    git clone git@github.com:billsacks/WRF.git
+    cd WRF
+    git checkout lilac_dev
 
 
-For building WRF using CTSM, we should set makefile variables from CTSM needed for 
+For building WRF using CTSM, we should set makefile variables from CTSM needed for
 WRF build by (BASH)::
 
-  export WRF_CTSM_MKFILE=/glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
+    export WRF_CTSM_MKFILE=/glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
 
-or::
+or (Cshell):
 
-  setenv WRF_CTSM_MKFILE /glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
+.. code-block:: Tcsh
+
+    setenv WRF_CTSM_MKFILE /glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
 
 .. todo::
+
     Bill and Sam do we need the following still:?
 
 The following is needed in order to undo an undesired setting in that env_mach_specific file::
 
   export MPI_USE_ARRAY=None
 
-or::
+or (Cshell):
+
+.. code-block:: Tcsh
 
   setenv MPI_USE_ARRAY None
 
@@ -107,7 +101,9 @@ Explicitly define which model core to build by::
 
     export WRF_EM_CORE=1
 
-or::
+or (Cshell):
+
+.. code-block:: Tcsh
 
     setenv WRF_EM_CORE 1
 
@@ -115,7 +111,9 @@ Explicilty turn off data assimilation by::
 
     export WRF_DA_CORE=0
 
-or::
+or (Cshell):
+
+.. code-block:: Tcsh
 
     setenv WRF_DA_CORE 0
 
@@ -157,16 +155,18 @@ Then compile em_real and save the log::
 
 
 Compile WRF Preprocessing System (WPS)
-==================================================
+--------------------------------------
 
 The WRF Preprocessing System (WPS) is a set of programs to prepare
 input to the real program for WRF real-data simulations.
 
 .. note::
+
     Building WPS requires that WRF be already built successfully.
 
 
-Get WPS zipped tar file from: 
+Get WPS zipped tar file from:
+
 http://www2.mmm.ucar.edu/wrf/users/download/get_source.html
 
 Untar WPS tar file::
@@ -174,7 +174,7 @@ Untar WPS tar file::
     gzip -cd WPSV4.0.TAR.gz | tar -xf -
 
 
-Then we should compile WPS similar to the way we build WRF. In summary::
+Then compile WPS similar to the way WRF was built. In summary::
 
     cd WPS
     ./configure
@@ -184,41 +184,45 @@ After configuring, you can check configure.wps for making sure all the libs and 
 are set correctly.
 
 Then, compile WPS::
+
     ./compile >& compile.log
 
 .. note::
+
     If wps build is succsfully you should see geogrid.exe, ungrib.exe, and metgrid.exe.
     Alternatively, you can check the log for successful build message.
 
 
 Run WRF Preprocessing System (WPS) Steps
-==================================================
+-----------------------------------------
 
 Edit namelist.wps for your domain of interest, which should be the same
 domain as used in your WRF namelist.
 
-Define the domain and interpolate static geographical data to the grids::
+First, use geogrid.exe to define the domain and interpolate static geographical data
+to the grids::
 
-  ./geogrid.exe >& log.geogrid
+    ./geogrid.exe >& log.geogrid
 
-Link in the input GFS data files::
 
-  ./link_grib.csh $path_where_you_placed_GFS_files
+Check the geogrid log file for successful ******
+Link the GRIB data files that are going to be used::
+
+    ./link_grib.csh $your_GRIB_data_path
 
 Extract meteorological fields from GRIB-formatted files::
 
-  ./ungrib.exe
+    ./ungrib.exe
 
-Horizontally interpolate the metrological fields extracted by ungrib to
+Horizontally interpolate the meteorological fields extracted by ungrib to
 the model grids defined in geogrid::
 
-  ./metgrid.exe >& log.metgrid
-
-You should now have met_em.d01* files.
+    ./metgrid.exe >& log.metgrid
 
 
-Run Real program
-==================================================
+
+Run real program
+----------------
 Run real.exe to generate initial and boundary conditions. 
 
 Follow WRF instructions for creating initial and boundary
@@ -227,7 +231,9 @@ conditions. In summary, complete the following steps:
 Move or link WPS output files (met_em.d01* files) to your WRF/run directory. 
 
 Edit namelist.input for your WRF domain and desirable configurations.
-This should be the same domain as in the namelist used in WPS. 
+This should be the same domain as in the namelist used in WPS.
+
+
 To run WRF-CTSM, change land-surface option to 51::
 
   sf_surface_physics = 51
@@ -236,6 +242,10 @@ To run WRF-CTSM, change land-surface option to 51::
 
   sf_surface_physics values for running WRF-Noah and WRF-NoahMP are
   2 and 4, respectively.
+
+.. todo::
+
+    add the link and adding some note that nested run is not possible....
 
 Run real.exe (if compiled parallel submit a batch job) to generate
 wrfinput and wrfbdy files.
@@ -315,12 +325,13 @@ Copy lilac_in, lnd_in, and lnd_modelio.nml to the WRF/run directory.
 
 
 Run WRF
-=======
+-------
 
 If real program is completed successfully, we should see wrfinput and wrfbdy files
 in our directory.
 
-Next, we should run WRF via batch job.
+Next, we should run WRF.
+
 For Cheyenne, we should submit a batch job to PBS (Pro workload management system).
 For more instructions on running a batch job on Cheyenne, please check:
 https://www2.cisl.ucar.edu/resources/computational-systems/cheyenne/running-jobs/submitting-jobs-pbs
