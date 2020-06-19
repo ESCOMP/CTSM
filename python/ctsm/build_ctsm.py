@@ -28,9 +28,9 @@ _PATH_TO_TEMPLATES = os.path.join(path_to_ctsm_root(),
                                   'lilac',
                                   'bld_templates')
 
-_PATH_TO_BUILDNML = os.path.join(path_to_ctsm_root(),
-                                 'lilac_config',
-                                 'buildnml')
+_PATH_TO_MAKE_RUNTIME_INPUTS = os.path.join(path_to_ctsm_root(),
+                                            'lilac',
+                                            'make_runtime_inputs')
 
 _MACHINE_CONFIG_DIRNAME = 'machine_configuration'
 _INPUTDATA_DIRNAME = 'inputdata'
@@ -611,8 +611,8 @@ def _stage_runtime_inputs(build_dir):
         path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lilac_in'),
         substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
 
-    make_link(_PATH_TO_BUILDNML,
-              os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'buildnml'))
+    make_link(_PATH_TO_MAKE_RUNTIME_INPUTS,
+              os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'make_runtime_inputs'))
 
 def _build_case(build_dir):
     """Build the CTSM library and its dependencies
