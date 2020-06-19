@@ -204,6 +204,13 @@ to the grids::
 
     ./geogrid.exe >& log.geogrid
 
+If the geogrid step is finished successfully, you should see the following message in
+the log file::
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Successful completion of geogrid. !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 Check the geogrid log file for successful ******
 Link the GRIB data files that are going to be used::
@@ -212,12 +219,24 @@ Link the GRIB data files that are going to be used::
 
 Extract meteorological fields from GRIB-formatted files::
 
-    ./ungrib.exe
+    ./ungrib.exe >& log.ungrib
+
+Check ungrib log for the following message showing successful completion of ungrib step::
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !  Successful completion of ungrib.   !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
+
 
 Horizontally interpolate the meteorological fields extracted by ungrib to
 the model grids defined in geogrid::
 
     ./metgrid.exe >& log.metgrid
+
 
 
 
@@ -337,7 +356,9 @@ For more instructions on running a batch job on Cheyenne, please check:
 https://www2.cisl.ucar.edu/resources/computational-systems/cheyenne/running-jobs/submitting-jobs-pbs
 
 
-A sample of basic PBS job for Cheyenne::
+A sample of basic PBS job for Cheyenne:
+
+.. code-block:: Tcsh
 
     #!/bin/tcsh
     #PBS -N job_name
