@@ -207,10 +207,9 @@ to the grids::
 If the geogrid step is finished successfully, you should see the following message in
 the log file::
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! Successful completion of geogrid. !
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !  Successful completion of geogrid.   !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Check the geogrid log file for successful ******
 Link the GRIB data files that are going to be used::
@@ -237,6 +236,14 @@ the model grids defined in geogrid::
 
     ./metgrid.exe >& log.metgrid
 
+
+
+Check the metgrid log for the following message showing successful completion of
+metgrid step::
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !  Successful completion of metgrid.  !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 
@@ -269,6 +276,10 @@ To run WRF-CTSM, change land-surface option to 51::
 Run real.exe (if compiled parallel submit a batch job) to generate
 wrfinput and wrfbdy files.
 
+
+Check the last line of the real log file for the following message::
+
+    SUCCESS COMPLETE REAL_EM INIT
 
 Create input namelists for CTSM and LILAC
 =========================================
