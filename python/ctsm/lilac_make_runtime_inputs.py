@@ -1,14 +1,22 @@
 """Functions implementing LILAC's make_runtime_inputs command"""
 
-import sys
 import os
 import subprocess
 import argparse
+import logging
 
 from configparser import ConfigParser
 from configparser import NoSectionError, NoOptionError
 
+from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.utils import abort
+
+logger = logging.getLogger(__name__)
+
+# ========================================================================
+# Define some constants
+# ========================================================================
 
 _CONFIG_CACHE_TEMPLATE = """
 <?xml version="1.0"?>
@@ -45,10 +53,14 @@ _PLACEHOLDER = 'FILL_THIS_IN'
 _UNSET = 'UNSET'
 
 ###############################################################################
-def parse_command_line(args, description):
+def parse_command_line():
 ###############################################################################
 
     """Parse the command line, return object holding arguments"""
+
+    description = """
+Script to create runtime inputs when running CTSM via LILAC
+"""
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description=description)
@@ -66,19 +78,21 @@ def parse_command_line(args, description):
                         "This argument should NOT be provided for a user-defined resolution.\n"
                         "If this argument is provided, then --existing-res must also be provided.")
 
-    arguments = parser.parse_args(args)
+    add_logging_args(parser)
+
+    arguments = parser.parse_args()
 
     # Perform some error checking on arguments, and set derived values
 
     if not os.path.isdir(arguments.rundir):
-        sys.exit("rundir {} does not exist".format(arguments.rundir))
+        abort("rundir {} does not exist".format(arguments.rundir))
 
     if arguments.existing_res and arguments.existing_mask:
         arguments.use_existing_res_and_mask = True
     elif arguments.existing_res and not arguments.existing_mask:
-        sys.exit("If --existing-res is given, then --existing-mask must also be given")
+        abort("If --existing-res is given, then --existing-mask must also be given")
     elif arguments.existing_mask and not arguments.existing_res:
-        sys.exit("If --existing-mask is given, then --existing-res must also be given")
+        abort("If --existing-mask is given, then --existing-res must also be given")
     else:
         arguments.use_existing_res_and_mask = False
 
@@ -97,18 +111,18 @@ def get_config_value(config, section, item, file_path, allowed_values=None):
     try:
         val = config.get(section, item)
     except NoSectionError:
-        sys.exit("ERROR: Config file {} must contain section '{}'".format(file_path, section))
+        abort("ERROR: Config file {} must contain section '{}'".format(file_path, section))
     except NoOptionError:
-        sys.exit("ERROR: Config file {} must contain item '{}' in section '{}'".format(
+        abort("ERROR: Config file {} must contain item '{}' in section '{}'".format(
             file_path, item, section))
 
     if val == _PLACEHOLDER:
-        sys.exit("Error: {} needs to be specified in config file {}".format(item, file_path))
+        abort("Error: {} needs to be specified in config file {}".format(item, file_path))
 
     if allowed_values is not None:
         if val not in allowed_values:
-            sys.exit("Error: {} is not an allowed value for {} in config file {}\n"
-                     "Allowed values: {}".format(val, item, file_path, allowed_values))
+            abort("Error: {} is not an allowed value for {} in config file {}\n"
+                  "Allowed values: {}".format(val, item, file_path, allowed_values))
 
     return val
 
@@ -124,12 +138,12 @@ def determine_bldnml_opts(bgc_mode, crop, vichydro):
 
     if crop == 'on':
         if bgc_mode not in ['bgc', 'cn']:
-            sys.exit("Error: setting crop to 'on' is only compatible with bgc_mode of 'bgc' or 'cn'")
+            abort("Error: setting crop to 'on' is only compatible with bgc_mode of 'bgc' or 'cn'")
         bldnml_opts += ' -crop'
 
     if vichydro == 'on':
         if bgc_mode != 'sp':
-            sys.exit("Error: setting vichydro to 'on' is only compatible with bgc_mode of 'sp'")
+            abort("Error: setting vichydro to 'on' is only compatible with bgc_mode of 'sp'")
         bldnml_opts += ' -vichydro'
 
     return bldnml_opts
@@ -223,8 +237,11 @@ def buildnml(rundir, use_existing_res_and_mask, existing_res=None, existing_mask
                # with lilac).
                '-namelist', '&clm_inparm  start_ymd=20000101 {} /'.format(extra_namelist_opts),
                '-use_case', use_case,
-               '-ignore_ic_year', # For now, we assume ignore_ic_year, not ignore_ic_date
-               '-clm_start_type', 'default', # seems unimportant (see discussion in https://github.com/ESCOMP/CTSM/issues/876)
+               # For now, we assume ignore_ic_year, not ignore_ic_date
+               '-ignore_ic_year',
+               # -clm_start_type seems unimportant (see discussion in
+               # https://github.com/ESCOMP/CTSM/issues/876)
+               '-clm_start_type', 'default',
                '-configuration', configuration,
                '-structure', structure,
                '-lnd_frac', lnd_domain_file,
@@ -233,7 +250,9 @@ def buildnml(rundir, use_existing_res_and_mask, existing_res=None, existing_mask
                '-co2_type', 'constant',
                '-clm_accelerated_spinup', spinup,
                '-lnd_tuning_mode', lnd_tuning_mode,
-               '-no-megan',  # Eventually make this dynamic (see https://github.com/ESCOMP/CTSM/issues/926)
+               # Eventually make -no-megan dynamic (see
+               # https://github.com/ESCOMP/CTSM/issues/926)
+               '-no-megan',
                '-config', os.path.join(rundir, "config_cache.xml"),
                '-envxml_dir', rundir]
     if use_existing_res_and_mask:
@@ -258,8 +277,10 @@ def buildnml(rundir, use_existing_res_and_mask, existing_res=None, existing_mask
 ###############################################################################
 def main():
     """Main function"""
+    setup_logging_pre_config()
+    args = parse_command_line()
+    process_logging_args(args)
 
-    args = parse_command_line(sys.argv[1:], __doc__)
     buildnml(
         rundir=args.rundir,
         use_existing_res_and_mask=args.use_existing_res_and_mask,
