@@ -11,9 +11,6 @@
 &lilac_lnd_input
  lnd_mesh_filename = '$INPUTDATA/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
 /
-&lilac_rof_input
- rof_mesh_filename = '$INPUTDATA/share/meshes/r05_nomask_c110308_ESMFmesh.nc'
-/
 &atmaero_stream 
  stream_fldfilename='$INPUTDATA/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_WACCM.ensmean_monthly_hist_1849-2015_0.9x1.25_CMIP6_c180926.nc'
  stream_year_first = 2000
