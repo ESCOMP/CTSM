@@ -68,6 +68,7 @@ def main(cime_path):
                    os_type=args.os,
                    netcdf_path=args.netcdf_path,
                    esmf_lib_path=args.esmf_lib_path,
+                   max_mpitasks_per_node=args.max_mpitasks_per_node,
                    gmake=args.gmake,
                    gmake_j=args.gmake_j,
                    pnetcdf_path=args.pnetcdf_path,
@@ -86,6 +87,7 @@ def build_ctsm(cime_path,
                os_type=None,
                netcdf_path=None,
                esmf_lib_path=None,
+               max_mpitasks_per_node=None,
                gmake=None,
                gmake_j=None,
                pnetcdf_path=None,
@@ -108,6 +110,8 @@ def build_ctsm(cime_path,
     netcdf_path (str or None): path to NetCDF installation
         Must be given if machine isn't given; ignored if machine is given
     esmf_lib_path (str or None): path to ESMF library directory
+        Must be given if machine isn't given; ignored if machine is given
+    max_mpitasks_per_node (int or None): number of physical processors per shared-memory node
         Must be given if machine isn't given; ignored if machine is given
     gmake (str or None): name of GNU make tool
         Must be given if machine isn't given; ignored if machine is given
@@ -136,12 +140,15 @@ def build_ctsm(cime_path,
         assert os_type is not None, 'with machine absent, os_type must be given'
         assert netcdf_path is not None, 'with machine absent, netcdf_path must be given'
         assert esmf_lib_path is not None, 'with machine absent, esmf_lib_path must be given'
+        assert max_mpitasks_per_node is not None, ('with machine absent '
+                                                   'max_mpitasks_per_node must be given')
         os_type = _check_and_transform_os(os_type)
         _fill_out_machine_files(build_dir=build_dir,
                                 os_type=os_type,
                                 compiler=compiler,
                                 netcdf_path=netcdf_path,
                                 esmf_lib_path=esmf_lib_path,
+                                max_mpitasks_per_node=max_mpitasks_per_node,
                                 gmake=gmake,
                                 gmake_j=gmake_j,
                                 pnetcdf_path=pnetcdf_path,
@@ -226,7 +233,7 @@ Typical usage:
 
     For a fresh build with a machine that has NOT been ported to cime:
 
-        build_ctsm /path/to/nonexistent/directory --compiler COMPILER --os OS --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH
+        build_ctsm /path/to/nonexistent/directory --compiler COMPILER --os OS --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH --max-mpitasks-per-node MAX_MPITASKS_PER_NODE
 
         (Other optional arguments are also allowed in this usage.)
 
@@ -313,6 +320,11 @@ Typical usage:
                                       help='Path to ESMF library directory\n'
                                       'This directory should include an esmf.mk file')
     new_machine_required_list.append('esmf-lib-path')
+
+    new_machine_required.add_argument('--max-mpitasks-per-node', type=int,
+                                      help='Number of physical processors per shared-memory node\n'
+                                      'on this machine')
+    new_machine_required_list.append('max-mpitasks-per-node')
 
     new_machine_optional = parser.add_argument_group(
         title='optional arguments for a user-defined machine',
@@ -454,6 +466,7 @@ def _fill_out_machine_files(build_dir,
                             compiler,
                             netcdf_path,
                             esmf_lib_path,
+                            max_mpitasks_per_node,
                             gmake,
                             gmake_j,
                             pnetcdf_path=None,
@@ -478,7 +491,8 @@ def _fill_out_machine_files(build_dir,
                        'COMPILER':compiler,
                        'CIME_OUTPUT_ROOT':build_dir,
                        'GMAKE':gmake,
-                       'GMAKE_J':gmake_j})
+                       'GMAKE_J':gmake_j,
+                       'MAX_MPITASKS_PER_NODE':max_mpitasks_per_node})
 
     # ------------------------------------------------------------------------
     # Fill in config_compilers.xml
@@ -585,12 +599,8 @@ def _link_to_inputdata(build_dir):
     Args:
     build_dir (str): path to build directory
     """
-    case_dir = _get_case_dir(build_dir)
-    xmlquery = os.path.join(case_dir, 'xmlquery')
+    inputdata_dir = _xmlquery('DIN_LOC_ROOT', build_dir)
 
-    inputdata_dir = subprocess.check_output([xmlquery, '--value', 'DIN_LOC_ROOT'],
-                                            cwd=case_dir,
-                                            universal_newlines=True)
     make_link(inputdata_dir,
               os.path.join(build_dir, _INPUTDATA_DIRNAME))
 
@@ -611,6 +621,13 @@ def _stage_runtime_inputs(build_dir):
         path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'lilac_in_template'),
         path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lilac_in'),
         substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
+
+    pio_stride = _xmlquery('MAX_MPITASKS_PER_NODE', build_dir)
+    fill_template_file(
+        path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'lnd_modelio_template.nml'),
+        path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lnd_modelio.nml'),
+        substitutions={'PIO_STRIDE':pio_stride,
+                       'PIO_TYPENAME':'pnetcdf'})
 
     shutil.copyfile(
         src=os.path.join(_PATH_TO_TEMPLATES, 'user_nl_ctsm'),
@@ -641,3 +658,12 @@ def _build_case(build_dir):
 
     make_link(os.path.join(case_dir, 'bld', 'ctsm.mk'),
               os.path.join(build_dir, 'ctsm.mk'))
+
+def _xmlquery(varname, build_dir):
+    """Run xmlquery from the case in build_dir and return the value of the given variable"""
+    case_dir = _get_case_dir(build_dir)
+    xmlquery_path = os.path.join(case_dir, 'xmlquery')
+    value = subprocess.check_output([xmlquery_path, '--value', varname],
+                                    cwd=case_dir,
+                                    universal_newlines=True)
+    return value

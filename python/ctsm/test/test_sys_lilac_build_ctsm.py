@@ -46,6 +46,7 @@ class TestSysBuildCtsm(unittest.TestCase):
                    os_type='linux',
                    netcdf_path='/path/to/netcdf',
                    esmf_lib_path='/path/to/esmf/lib',
+                   max_mpitasks_per_node=16,
                    gmake='gmake',
                    gmake_j=8)
         # no assertions: test passes as long as the command doesn't generate any errors
@@ -66,6 +67,7 @@ class TestSysBuildCtsm(unittest.TestCase):
                    os_type='linux',
                    netcdf_path='/path/to/netcdf',
                    esmf_lib_path='/path/to/esmf/lib',
+                   max_mpitasks_per_node=16,
                    gmake='gmake',
                    gmake_j=8,
                    pnetcdf_path='/path/to/pnetcdf',

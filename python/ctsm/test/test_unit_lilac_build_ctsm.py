@@ -99,7 +99,8 @@ class TestBuildCtsm(unittest.TestCase):
                                              '--os', 'linux',
                                              '--compiler', 'intel',
                                              '--netcdf-path', '/path/to/netcdf',
-                                             '--esmf-lib-path', '/path/to/esmf/lib'])
+                                             '--esmf-lib-path', '/path/to/esmf/lib',
+                                             '--max-mpitasks-per-node', '16'])
 
     @patch('sys.stderr', new_callable=StringIO)
     def test_commandlineArgs_noRebuild_invalid1(self, mock_stderr):
@@ -112,7 +113,8 @@ class TestBuildCtsm(unittest.TestCase):
             _ = _commandline_args(args_to_parse=['build/directory',
                                                  '--os', 'linux',
                                                  '--netcdf-path', '/path/to/netcdf',
-                                                 '--esmf-lib-path', '/path/to/esmf/lib'])
+                                                 '--esmf-lib-path', '/path/to/esmf/lib',
+                                                 '--max-mpitasks-per-node', '16'])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
 
     @patch('sys.stderr', new_callable=StringIO)
@@ -126,7 +128,8 @@ class TestBuildCtsm(unittest.TestCase):
             _ = _commandline_args(args_to_parse=['build/directory',
                                                  '--compiler', 'intel',
                                                  '--netcdf-path', '/path/to/netcdf',
-                                                 '--esmf-lib-path', '/path/to/esmf/lib'])
+                                                 '--esmf-lib-path', '/path/to/esmf/lib',
+                                                 '--max-mpitasks-per-node', '16'])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
 
     def test_commandlineArgs_machine_valid(self):

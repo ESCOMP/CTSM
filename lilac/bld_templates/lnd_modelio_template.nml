@@ -3,6 +3,6 @@
   pio_numiotasks = -99
   pio_rearranger = 1
   pio_root = 1
-  pio_stride = 36
-  pio_typename = "pnetcdf"
+  pio_stride = $PIO_STRIDE
+  pio_typename = "$PIO_TYPENAME"
 /
