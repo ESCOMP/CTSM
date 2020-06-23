@@ -76,6 +76,7 @@ def main(cime_path):
                    gptl_nano_timers=args.gptl_nano_timers,
                    extra_fflags=args.extra_fflags,
                    extra_cflags=args.extra_cflags,
+                   no_pnetcdf=args.no_pnetcdf,
                    build_debug=args.build_debug,
                    build_without_openmp=args.build_without_openmp)
 
@@ -95,6 +96,7 @@ def build_ctsm(cime_path,
                gptl_nano_timers=False,
                extra_fflags='',
                extra_cflags='',
+               no_pnetcdf=False,
                build_debug=False,
                build_without_openmp=False):
     """Implementation of build_ctsm command
@@ -128,6 +130,7 @@ def build_ctsm(cime_path,
         Ignored if machine is given
     extra_cflags (str): any extra flags to include when compiling C files
         Ignored if machine is given
+    no_pnetcdf (bool): if True, use netcdf rather than pnetcdf
     build_debug (bool): if True, build with flags for debugging
     build_without_openmp (bool): if True, build without OpenMP support
     """
@@ -174,7 +177,7 @@ def build_ctsm(cime_path,
         # where to make the sym link point to.)
         _link_to_inputdata(build_dir=build_dir)
 
-    _stage_runtime_inputs(build_dir=build_dir)
+    _stage_runtime_inputs(build_dir=build_dir, no_pnetcdf=no_pnetcdf)
     if not no_build:
         _build_case(build_dir=build_dir)
 
@@ -233,7 +236,9 @@ Typical usage:
 
     For a fresh build with a machine that has NOT been ported to cime:
 
-        build_ctsm /path/to/nonexistent/directory --compiler COMPILER --os OS --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH --max-mpitasks-per-node MAX_MPITASKS_PER_NODE
+        build_ctsm /path/to/nonexistent/directory --compiler COMPILER --os OS --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH --max-mpitasks-per-node MAX_MPITASKS_PER_NODE --pnetcdf-path PNETCDF_PATH
+
+        If PNetCDF is not available, set --no-pnetcdf instead of --pnetcdf-path.
 
         (Other optional arguments are also allowed in this usage.)
 
@@ -283,6 +288,14 @@ Typical usage:
         description='These arguments are optional if --rebuild is not given; '
         'they are not allowed with --rebuild:')
     non_rebuild_optional_list = []
+
+    non_rebuild_optional.add_argument('--no-pnetcdf', action='store_true',
+                                      help='Use NetCDF instead of PNetCDF for CTSM I/O.\n'
+                                      'On a user-defined machine, you must either set this flag\n'
+                                      'or set --pnetcdf-path. On a cime-ported machine,\n'
+                                      'this flag must be set if PNetCDF is not available\n'
+                                      'for this machine/compiler.')
+    non_rebuild_optional_list.append('no-pnetcdf')
 
     non_rebuild_optional.add_argument('--build-debug', action='store_true',
                                       help='Build with flags for debugging rather than production runs')
@@ -343,7 +356,8 @@ Typical usage:
     new_machine_optional_list.append('gmake-j')
 
     new_machine_optional.add_argument('--pnetcdf-path',
-                                      help='Path to PNetCDF installation, if present\n')
+                                      help='Path to PNetCDF installation, if present\n'
+                                      'You must either specify this or set --no-pnetcdf')
     new_machine_optional_list.append('pnetcdf-path')
 
     new_machine_optional.add_argument('--pio-filesystem-hints', type=str.lower,
@@ -388,6 +402,10 @@ Typical usage:
         else:
             _confirm_args_present(parser, args, "must be provided if neither --machine nor --rebuild are set",
                                   new_machine_required_list)
+            if not args.no_pnetcdf and args.pnetcdf_path is None:
+                parser.error("For a user-defined machine, need to specify either --no-pnetcdf or --pnetcdf-path")
+            if args.no_pnetcdf and args.pnetcdf_path is not None:
+                parser.error("--no-pnetcdf cannot be given if you set --pnetcdf-path")
 
     return args
 
@@ -404,7 +422,7 @@ def _confirm_args_absent(parser, args, errmsg, args_not_allowed):
     """
     for arg in args_not_allowed:
         arg_no_dashes = arg.replace('-', '_')
-        # To determine whether the user specified an argument, we look at whether it's
+        # To determine whether the user specified an argument, we look at whether its
         # value differs from its default value. This won't catch the case where the user
         # explicitly set an argument to its default value, but it's not a big deal if we
         # miss printing an error in that case.
@@ -604,11 +622,12 @@ def _link_to_inputdata(build_dir):
     make_link(inputdata_dir,
               os.path.join(build_dir, _INPUTDATA_DIRNAME))
 
-def _stage_runtime_inputs(build_dir):
+def _stage_runtime_inputs(build_dir, no_pnetcdf):
     """Stage CTSM and LILAC runtime inputs
 
     Args:
     build_dir (str): path to build directory
+    no_pnetcdf (bool): if True, use netcdf rather than pnetcdf
     """
     os.makedirs(os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME))
 
@@ -623,11 +642,15 @@ def _stage_runtime_inputs(build_dir):
         substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
 
     pio_stride = _xmlquery('MAX_MPITASKS_PER_NODE', build_dir)
+    if no_pnetcdf:
+        pio_typename = 'netcdf'
+    else:
+        pio_typename = 'pnetcdf'
     fill_template_file(
         path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'lnd_modelio_template.nml'),
         path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lnd_modelio.nml'),
         substitutions={'PIO_STRIDE':pio_stride,
-                       'PIO_TYPENAME':'pnetcdf'})
+                       'PIO_TYPENAME':pio_typename})
 
     shutil.copyfile(
         src=os.path.join(_PATH_TO_TEMPLATES, 'user_nl_ctsm'),

@@ -48,7 +48,8 @@ class TestSysBuildCtsm(unittest.TestCase):
                    esmf_lib_path='/path/to/esmf/lib',
                    max_mpitasks_per_node=16,
                    gmake='gmake',
-                   gmake_j=8)
+                   gmake_j=8,
+                   no_pnetcdf=True)
         # no assertions: test passes as long as the command doesn't generate any errors
 
     def test_buildSetup_userDefinedMachine_allInfo(self):
