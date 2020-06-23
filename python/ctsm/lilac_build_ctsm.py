@@ -3,6 +3,7 @@
 import argparse
 import logging
 import os
+import shutil
 import subprocess
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
@@ -610,6 +611,10 @@ def _stage_runtime_inputs(build_dir):
         path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'lilac_in_template'),
         path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lilac_in'),
         substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
+
+    shutil.copyfile(
+        src=os.path.join(_PATH_TO_TEMPLATES, 'user_nl_ctsm'),
+        dst=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'user_nl_ctsm'))
 
     make_link(_PATH_TO_MAKE_RUNTIME_INPUTS,
               os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'make_runtime_inputs'))
