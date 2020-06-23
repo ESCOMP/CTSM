@@ -32,7 +32,9 @@ class TestMakeRuntimeInputs(unittest.TestCase):
 
     def test_buildnmlOpts_spCrop_fails(self):
         """Test determine_buildnml_opts with bgc_mode='sp' and crop on: should fail"""
-        with self.assertRaisesRegex(SystemExit, "setting crop to 'on' is only compatible with bgc_mode"):
+        with self.assertRaisesRegex(
+                SystemExit,
+                "setting crop to 'on' is only compatible with bgc_mode"):
             _ = determine_bldnml_opts(bgc_mode='sp', crop='on', vichydro='off')
 
     def test_buildnmlOpts_spVic(self):

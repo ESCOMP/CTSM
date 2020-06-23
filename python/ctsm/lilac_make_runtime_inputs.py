@@ -12,7 +12,7 @@ from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, proces
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
 
-from CIME.buildnml import create_namelist_infile
+from CIME.buildnml import create_namelist_infile # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
@@ -55,15 +55,19 @@ _PLACEHOLDER = 'FILL_THIS_IN'
 _UNSET = 'UNSET'
 
 # ========================================================================
-# Fake case object that can be used to satisfy the interface of CIME functions that need a
+# Fake case class that can be used to satisfy the interface of CIME functions that need a
 # case object
 # ========================================================================
 
 class CaseFake:
+    """Fake case class to satisfy interface of CIME functions that need a case object"""
+    # pylint: disable=too-few-public-methods
+
     def __init__(self):
         pass
 
-    def get_resolved_value(self, value):
+    @staticmethod
+    def get_resolved_value(value):
         """Make sure get_resolved_value doesn't get called
 
         (since we don't have a real case object to resolve values with)
@@ -177,6 +181,7 @@ def buildnml(rundir, use_existing_res_and_mask, existing_res=None, existing_mask
     """
 
     # pylint: disable=too-many-locals
+    # pylint: disable=too-many-statements
 
     ctsm_cfg_path = os.path.join(rundir, 'ctsm.cfg')
 
