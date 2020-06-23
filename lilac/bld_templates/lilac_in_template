@@ -6,10 +6,10 @@
  lilac_histfreq_n = 1
 /
 &lilac_atmcap_input
- atm_mesh_filename = '$INPUTDATA/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
+ atm_mesh_filename = 'FILL_THIS_IN'
 /
 &lilac_lnd_input
- lnd_mesh_filename = '$INPUTDATA/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
+ lnd_mesh_filename = 'FILL_THIS_IN'
 /
 &atmaero_stream 
  stream_fldfilename='$INPUTDATA/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_WACCM.ensmean_monthly_hist_1849-2015_0.9x1.25_CMIP6_c180926.nc'
