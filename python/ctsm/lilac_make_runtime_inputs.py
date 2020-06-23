@@ -171,7 +171,8 @@ def determine_bldnml_opts(bgc_mode, crop, vichydro):
     return bldnml_opts
 
 ###############################################################################
-def buildnml(rundir, use_existing_res_and_mask, existing_res=None, existing_mask=None):
+def buildnml(cime_path, rundir, use_existing_res_and_mask,
+             existing_res=None, existing_mask=None):
 ###############################################################################
 
     """Build the ctsm namelist
@@ -258,6 +259,7 @@ def buildnml(rundir, use_existing_res_and_mask, existing_res=None, existing_mask
     # call build-namelist
     cmd = os.path.abspath(os.path.join(path_to_ctsm_root(), "bld", "build-namelist"))
     command = [cmd,
+               '-cimeroot', cime_path,
                '-infile', infile,
                '-csmdata', inputdata_path,
                '-inputdata', inputdatalist_path,
@@ -306,13 +308,21 @@ def buildnml(rundir, use_existing_res_and_mask, existing_res=None, existing_mask
     os.remove(infile)
 
 ###############################################################################
-def main():
-    """Main function"""
+def main(cime_path):
+    """Main function
+
+    Args:
+    cime_path (str): path to the cime that we're using (this is passed in explicitly
+        rather than relying on calling path_to_cime so that we can be absolutely sure that
+        the scripts called here are coming from the same cime as the cime library we're
+        using).
+    """
     setup_logging_pre_config()
     args = parse_command_line()
     process_logging_args(args)
 
     buildnml(
+        cime_path=cime_path,
         rundir=args.rundir,
         use_existing_res_and_mask=args.use_existing_res_and_mask,
         existing_res=args.existing_res,
