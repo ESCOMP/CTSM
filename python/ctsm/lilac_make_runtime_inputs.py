@@ -12,6 +12,8 @@ from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, proces
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
 
+from CIME.buildnml import create_namelist_infile
+
 logger = logging.getLogger(__name__)
 
 # ========================================================================
@@ -52,6 +54,22 @@ _PLACEHOLDER = 'FILL_THIS_IN'
 # filled in, but doesn't absolutely need to be
 _UNSET = 'UNSET'
 
+# ========================================================================
+# Fake case object that can be used to satisfy the interface of CIME functions that need a
+# case object
+# ========================================================================
+
+class CaseFake:
+    def __init__(self):
+        pass
+
+    def get_resolved_value(self, value):
+        """Make sure get_resolved_value doesn't get called
+
+        (since we don't have a real case object to resolve values with)
+        """
+        abort("Cannot resolve value with a '$' variable: {}".format(value))
+
 ###############################################################################
 def parse_command_line():
 ###############################################################################
@@ -66,7 +84,7 @@ Script to create runtime inputs when running CTSM via LILAC
                                      description=description)
 
     parser.add_argument("--rundir", type=str, default=os.getcwd(),
-                        help="Full path of the run directory")
+                        help="Full path of the run directory (containing ctsm.cfg & user_nl_ctsm)")
 
     parser.add_argument("--existing-res",
                         help="Use the given out-of-the-box resolution (e.g., '4x5').\n"
@@ -160,45 +178,51 @@ def buildnml(rundir, use_existing_res_and_mask, existing_res=None, existing_mask
 
     # pylint: disable=too-many-locals
 
-    file_path = os.path.join(rundir, 'ctsm.cfg')
+    ctsm_cfg_path = os.path.join(rundir, 'ctsm.cfg')
 
     # read the config file
     config = ConfigParser()
-    config.read(file_path)
+    config.read(ctsm_cfg_path)
 
-    lnd_domain_file = get_config_value(config, 'buildnml_input', 'lnd_domain_file', file_path)
+    lnd_domain_file = get_config_value(config, 'buildnml_input', 'lnd_domain_file', ctsm_cfg_path)
     if use_existing_res_and_mask:
         fsurdat = _UNSET
     else:
         # If we're not using an out-of-the-box grid, then require the user to explicitly
         # specify the surface dataset.
-        fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat', file_path)
-    finidat = get_config_value(config, 'buildnml_input', 'finidat', file_path)
+        fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat', ctsm_cfg_path)
+    finidat = get_config_value(config, 'buildnml_input', 'finidat', ctsm_cfg_path)
 
-    ctsm_phys = get_config_value(config, 'buildnml_input', 'ctsm_phys', file_path,
+    ctsm_phys = get_config_value(config, 'buildnml_input', 'ctsm_phys', ctsm_cfg_path,
                                  allowed_values=['clm4_5', 'clm5_0'])
-    configuration = get_config_value(config, 'buildnml_input', 'configuration', file_path,
+    configuration = get_config_value(config, 'buildnml_input', 'configuration', ctsm_cfg_path,
                                      allowed_values=['nwp', 'clm'])
-    structure = get_config_value(config, 'buildnml_input', 'structure', file_path,
+    structure = get_config_value(config, 'buildnml_input', 'structure', ctsm_cfg_path,
                                  allowed_values=['fast', 'standard'])
-    bgc_mode = get_config_value(config, 'buildnml_input', 'bgc_mode', file_path,
+    bgc_mode = get_config_value(config, 'buildnml_input', 'bgc_mode', ctsm_cfg_path,
                                 allowed_values=['sp', 'bgc', 'cn', 'fates'])
-    crop = get_config_value(config, 'buildnml_input', 'crop', file_path,
+    crop = get_config_value(config, 'buildnml_input', 'crop', ctsm_cfg_path,
                             allowed_values=['off', 'on'])
-    vichydro = get_config_value(config, 'buildnml_input', 'vichydro', file_path,
+    vichydro = get_config_value(config, 'buildnml_input', 'vichydro', ctsm_cfg_path,
                                 allowed_values=['off', 'on'])
 
     bldnml_opts = determine_bldnml_opts(bgc_mode=bgc_mode,
                                         crop=crop,
                                         vichydro=vichydro)
 
-    co2_ppmv = get_config_value(config, 'buildnml_input', 'co2_ppmv', file_path)
-    use_case = get_config_value(config, 'buildnml_input', 'use_case', file_path)
-    lnd_tuning_mode = get_config_value(config, 'buildnml_input', 'lnd_tuning_mode', file_path)
-    spinup = get_config_value(config, 'buildnml_input', 'spinup', file_path,
+    co2_ppmv = get_config_value(config, 'buildnml_input', 'co2_ppmv', ctsm_cfg_path)
+    use_case = get_config_value(config, 'buildnml_input', 'use_case', ctsm_cfg_path)
+    lnd_tuning_mode = get_config_value(config, 'buildnml_input', 'lnd_tuning_mode', ctsm_cfg_path)
+    spinup = get_config_value(config, 'buildnml_input', 'spinup', ctsm_cfg_path,
                               allowed_values=['off', 'on'])
 
-    inputdata_path = get_config_value(config, 'buildnml_input', 'inputdata_path', file_path)
+    inputdata_path = get_config_value(config, 'buildnml_input', 'inputdata_path', ctsm_cfg_path)
+
+    # Parse the user_nl_ctsm file
+    infile = os.path.join(rundir, '.namelist')
+    create_namelist_infile(case=CaseFake(),
+                           user_nl_file=os.path.join(rundir, 'user_nl_ctsm'),
+                           namelist_infile=infile)
 
     # create config_cache.xml file
     # Note that build-namelist utilizes the contents of the config_cache.xml file in
@@ -229,6 +253,7 @@ def buildnml(rundir, use_existing_res_and_mask, existing_res=None, existing_mask
     # call build-namelist
     cmd = os.path.abspath(os.path.join(path_to_ctsm_root(), "bld", "build-namelist"))
     command = [cmd,
+               '-infile', infile,
                '-csmdata', inputdata_path,
                '-inputdata', inputdatalist_path,
                # Hard-code start_ymd of year-2000. This is used to set the run type (for
@@ -273,6 +298,7 @@ def buildnml(rundir, use_existing_res_and_mask, existing_res=None, existing_mask
     os.remove(os.path.join(rundir, "config_cache.xml"))
     os.remove(os.path.join(rundir, "env_lilac.xml"))
     os.remove(os.path.join(rundir, "drv_flds_in"))
+    os.remove(infile)
 
 ###############################################################################
 def main():
