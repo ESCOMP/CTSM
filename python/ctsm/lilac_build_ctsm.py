@@ -33,6 +33,10 @@ _PATH_TO_MAKE_RUNTIME_INPUTS = os.path.join(path_to_ctsm_root(),
                                             'lilac',
                                             'make_runtime_inputs')
 
+_PATH_TO_DOWNLOAD_INPUT_DATA = os.path.join(path_to_ctsm_root(),
+                                            'lilac',
+                                            'download_input_data')
+
 _MACHINE_CONFIG_DIRNAME = 'machine_configuration'
 _INPUTDATA_DIRNAME = 'inputdata'
 _RUNTIME_INPUTS_DIRNAME = 'runtime_inputs'
@@ -662,6 +666,9 @@ def _stage_runtime_inputs(build_dir, no_pnetcdf):
 
     make_link(_PATH_TO_MAKE_RUNTIME_INPUTS,
               os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'make_runtime_inputs'))
+
+    make_link(_PATH_TO_DOWNLOAD_INPUT_DATA,
+              os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'download_input_data'))
 
 def _build_case(build_dir):
     """Build the CTSM library and its dependencies
