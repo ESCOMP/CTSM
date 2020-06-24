@@ -24,7 +24,6 @@ Decide where you will work, for example::
     mkdir git_wrf_ctsm
     cd git_wrf_ctsm
 
-
 Clone CTSM repository and checkout lilac_cap branch::
 
     git clone https://github.com/ESCOMP/ctsm.git
@@ -80,19 +79,6 @@ or (Cshell):
 
     setenv WRF_CTSM_MKFILE /glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
 
-.. todo::
-
-    Bill and Sam do we need the following still:?
-
-The following is needed in order to undo an undesired setting in that env_mach_specific file::
-
-  export MPI_USE_ARRAY=None
-
-or (Cshell):
-
-.. code-block:: Tcsh
-
-  setenv MPI_USE_ARRAY None
 
 There are also few other environmental setting that should be set for building WRF.
 Some of these are not required, but might help if you face any compilation errors.
@@ -117,10 +103,6 @@ or (Cshell):
 
     setenv WRF_DA_CORE 0
 
-
-Make sure you set NETCDF environment variable by::
-
-    setenv NETCDF /usr/local/netcdf/ (or wherever you have netcdf compiled.)
 
 Then configure and build WRF for your machine and intended compiler by::
 
@@ -153,7 +135,6 @@ Then compile em_real and save the log::
     Try "man nohup" for more information.
 
 
-
 Compile WRF Preprocessing System (WPS)
 --------------------------------------
 
@@ -165,14 +146,11 @@ input to the real program for WRF real-data simulations.
     Building WPS requires that WRF be already built successfully.
 
 
-Get WPS zipped tar file from:
+Get WPS from:
 
-http://www2.mmm.ucar.edu/wrf/users/download/get_source.html
+https://www2.mmm.ucar.edu/wrf/users/download/wrf-regist_or_download.php
 
-Untar WPS tar file::
-
-    gzip -cd WPSV4.0.TAR.gz | tar -xf -
-
+Please note that new users must register a form in this step.
 
 Then compile WPS similar to the way WRF was built. In summary::
 
@@ -208,13 +186,18 @@ If the geogrid step is finished successfully, you should see the following messa
 the log file::
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !  Successful completion of geogrid.   !
+    !  Successful completion of geogrid.  !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Check the geogrid log file for successful ******
-Link the GRIB data files that are going to be used::
+
+Next, we should run ungrib to get gribbed data into usable f ormat to be ingested by WRF.
+
+For running ungrib.exe, firt link the GRIB data files that are going to be used::
 
     ./link_grib.csh $your_GRIB_data_path
+
+Based on your GRIB data type, link or copy the appropriate VTable to your WPS directory.
+WRF has some prepared VTable under /ungrib/Variable_tables/ folder.
 
 Extract meteorological fields from GRIB-formatted files::
 
@@ -227,15 +210,12 @@ Check ungrib log for the following message showing successful completion of ungr
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-
-
-
+At this point, you should see ungrib output (intermediate files) in your WPS directory.
 
 Horizontally interpolate the meteorological fields extracted by ungrib to
 the model grids defined in geogrid::
 
     ./metgrid.exe >& log.metgrid
-
 
 
 Check the metgrid log for the following message showing successful completion of
@@ -249,15 +229,21 @@ metgrid step::
 
 Run real program
 ----------------
-Run real.exe to generate initial and boundary conditions. 
 
-Follow WRF instructions for creating initial and boundary
-conditions. In summary, complete the following steps: 
+Run real.exe to generate initial and boundary conditions.
+
+Follow WRF instructions for creating initial and boundary conditions. 
+In summary, complete the following steps:
 
 Move or link WPS output files (met_em.d01* files) to your WRF/run directory. 
 
 Edit namelist.input for your WRF domain and desirable configurations.
 This should be the same domain as in the namelist used in WPS.
+
+
+.. todo::
+
+    update the option number of wrf namelist.
 
 
 To run WRF-CTSM, change land-surface option to 51::
