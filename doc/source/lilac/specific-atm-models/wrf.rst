@@ -16,33 +16,40 @@ from earlier sections but in recipe form and with minimal detail.
   This section assumes use of a machine that has been ported to CIME.
   In this example we assume NCAR’s cheyenne computer in particular.
 
-Clone CTSM Repository
--------------------------
+Clone CTSM Repository and Build CTSM
+------------------------------------
 
-Decide where you will work, for example::
+Decide where you will work. This is also where the model will write
+output, so on cheyenne you may benefit from starting in
+/glade/scratch/$USER due to the larger disk space there.
 
-    mkdir git_wrf_ctsm
-    cd git_wrf_ctsm
+Clone the CTSM repository::
 
-Clone CTSM repository and checkout lilac_cap branch::
-
-    git clone https://github.com/ESCOMP/ctsm.git
-    cd ctsm
+    mkdir your_directory_name
+    cd your_directory_name
+    git clone https://github.com/ESCOMP/CTSM.git
+    cd CTSM
     git checkout lilac_cap
     ./manage_externals/checkout_externals
+
+.. todo::
+
+    Remove "git checkout lilac_cap" from the above when ready
 
 Build CTSM and its dependencies based on instructions from previous sections,
 for example for cheyenne::
 
-    ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
+    ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne --build-without-openmp
 
+.. todo::
 
-Set environment similar to environments used for your CTSM build using
-ctsm_build_environment.sh for bash::
+    Remove "--build-without-openmp" from the above when ready
 
-    source /ctsm_build_dir/ctsm_build_environment.sh
+Source ctsm_build_environment.sh (bash environment)::
 
-or ctsm_build_environment.csh for Cshell:
+    source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.sh
+
+or ctsm_build_environment.csh (Cshell environment):
 
 .. code-block:: Tcsh
 
@@ -51,8 +58,13 @@ or ctsm_build_environment.csh for Cshell:
 .. note::
 
   For additional details on preparing the CTSM, including how to
-  recompile when making code changes to the CTSM, read section
-  _obtaining-and-building-ctsm. <-- CREATED LINK TO THE CORRECT SECTION?
+  recompile when making code changes to the CTSM, read Section 3.2:
+  https://escomp.github.io/ctsm-docs/versions/master/html/lilac/obtaining-building-and-running/index.html
+  https:../obtaining-building-and-running/index.html
+
+.. todo::
+
+  If the second (relative) link works, remove the first (absolute) link
 
 Building the WRF model with CTSM
 --------------------------------
@@ -60,61 +72,57 @@ Building the WRF model with CTSM
 .. todo::
 
     update the git address to WRF feature branch...
+    and remove "git checkout lilac_dev" below
 
-Clone WRF CTSM branch into your directory::
+Clone the WRF CTSM branch into your_directory_name::
 
+    cd ..
     git clone git@github.com:billsacks/WRF.git
     cd WRF
     git checkout lilac_dev
 
 
-For building WRF using CTSM, we should set makefile variables from CTSM needed for
-WRF build by (BASH)::
+Set makefile variables from CTSM needed for the WRF build, for bash::
 
     export WRF_CTSM_MKFILE=/glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
 
-or (Cshell):
+or for Cshell use the setenv command and remove the "=" (here and in
+subsequent cases):
 
 .. code-block:: Tcsh
 
     setenv WRF_CTSM_MKFILE /glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
 
-
-There are also few other environmental setting that should be set for building WRF.
-Some of these are not required, but might help if you face any compilation errors.
+The next two environment settings for building WRF may help if you
+encounter compilation errors, but should be unnecessary for completing
+the current example on cheyenne.
 
 Explicitly define which model core to build by::
 
     export WRF_EM_CORE=1
 
-or (Cshell):
-
-.. code-block:: Tcsh
-
-    setenv WRF_EM_CORE 1
-
 Explicilty turn off data assimilation by::
 
     export WRF_DA_CORE=0
 
-or (Cshell):
-
-.. code-block:: Tcsh
-
-    setenv WRF_DA_CORE 0
-
-
-Then configure and build WRF for your machine and intended compiler by::
+Now configure and build WRF for your machine and intended compiler.
+The ./clean command is necessary after any modification of WRF code::
 
     ./clean -a
     ./configure
 
-Choose one of the options, similar to the compiler used for building CTSM.
+At the prompt choose one of the options, similar to the compiler used 
+for building CTSM. The specific example has been tested successfuly by
+choosing 15 here.
 
-Next, choose one of the options for nesting. Currently nesting is not available for WRF-CTSM,
-therefore we should use 1.
+.. todo::
 
-Then compile em_real and save the log::
+    Negin, by "similar to" do you mean "same as" in the above?
+
+The next prompt requests an option for nesting. Currently nesting is not
+available for WRF-CTSM so enter 1.
+
+Now compile em_real and save the log::
 
     ./compile em_real >& compile.log
 
@@ -139,7 +147,7 @@ Compile WRF Preprocessing System (WPS)
 --------------------------------------
 
 The WRF Preprocessing System (WPS) is a set of programs to prepare
-input to the real program for WRF real-data simulations.
+inputs to the real program executable (real.exe) for WRF real-data simulations.
 
 .. note::
 
@@ -150,16 +158,20 @@ Get WPS from:
 
 https://www2.mmm.ucar.edu/wrf/users/download/wrf-regist_or_download.php
 
-Please note that new users must register a form in this step.
+New users must complete a registration form in this step.
 
 Then compile WPS similar to the way WRF was built. In summary::
 
     cd WPS
     ./configure
 
-Here choose one option, for your intended compiler, similar to your WRF build.
-After configuring, you can check configure.wps for making sure all the libs and paths 
+At the prompt choose your intended compiler, similar to your WRF build.
+After configuring, check configure.wps to make sure all the libs and paths 
 are set correctly.
+
+.. todo::
+
+    Negin, by "similar to" do you mean "same as" in the above?
 
 Then, compile WPS::
 
@@ -167,12 +179,12 @@ Then, compile WPS::
 
 .. note::
 
-    If wps build is succsfully you should see geogrid.exe, ungrib.exe, and metgrid.exe.
+    If wps builds succesfully you should see geogrid.exe, ungrib.exe, and metgrid.exe.
     Alternatively, you can check the log for successful build message.
 
 
-Run WRF Preprocessing System (WPS) Steps
------------------------------------------
+Run WRF Preprocessing System (WPS)
+----------------------------------
 
 Edit namelist.wps for your domain of interest, which should be the same
 domain as used in your WRF namelist.
@@ -182,17 +194,16 @@ to the grids::
 
     ./geogrid.exe >& log.geogrid
 
-If the geogrid step is finished successfully, you should see the following message in
-the log file::
+If the geogrid step finishes successfully, you should see the following message in the log file::
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !  Successful completion of geogrid.  !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-Next, we should run ungrib to get gribbed data into usable f ormat to be ingested by WRF.
+Next, run ungrib to get gribbed data into usable format to be ingested by WRF.
 
-For running ungrib.exe, firt link the GRIB data files that are going to be used::
+To run ungrib.exe, first link the GRIB data files that are going to be used::
 
     ./link_grib.csh $your_GRIB_data_path
 
@@ -227,8 +238,8 @@ metgrid step::
 
 
 
-Run real program
-----------------
+Run real.exe
+------------
 
 Run real.exe to generate initial and boundary conditions.
 
@@ -270,8 +281,10 @@ Check the last line of the real log file for the following message::
 Create input namelists for CTSM and LILAC
 =========================================
 
-Introduce the following diffs to ./git_wrf_ctsm/ctsm/lilac/atm_driver/<file>
-by replacing the entries preceded by minus signs with the entries
+Introduce the following diffs to 
+./your_directory_name/ctsm/lilac/atm_driver/<file>
+where <file> is atm_driver_in, ctsm.cfg, and lilac_in.
+In particular, replace the entries preceded by minus signs with the entries
 preceded by plus signs.
 
 diff ./lilac/atm_driver/atm_driver_in ./lilac/atm_driver/atm_driver_in:
@@ -321,48 +334,42 @@ Before you generate the lnd_in file, you may modify user_nl_clm in
 point to an alternate CTSM initial condition file. To merge WRF initial
 conditions from a wrfinput file into a CTSM initial condition file, type::
 
- module load ncl/6.6.2
- ncl transfer_wrfinput_to_ctsm_with_snow.ncl 'finidat="finidat_interp_dest.nc"' 'wrfinput="./git_wrf_ctsm/WRF/test/em_real/wrfinput_d01.noseaice"' 'merged="finidat_interp_dest_wrfinit_snow.nc"'
+ module load ncl
+ ncl transfer_wrfinput_to_ctsm_with_snow.ncl 'finidat="finidat_interp_dest.nc"' 'wrfinput="./your_directory_name/WRF/test/em_real/wrfinput_d01.noseaice"' 'merged="finidat_interp_dest_wrfinit_snow.nc"'
 
 .. todo::
 
- Need to make the above ncl script available. I assume that the finidat
- and the wrfinput files need to be consistent for this to work. If so,
- we should prob. explain how to generate a consistent finidat file.
+ Make the above ncl script available. If the finidat and wrfinput files
+ need to be consistent for this to work, we should explain how to
+ generate a consistent finidat file.
 
 Generate the lnd_in file by running the following from
-./git_wrf_ctsm/ctsm/lilac/atm_driver::
+./your_directory_name/ctsm/lilac/atm_driver::
 
   ../../lilac_config/buildnml 
 
 Copy lilac_in, lnd_in, and lnd_modelio.nml to the WRF/run directory.
 
 
-
-
 Run WRF
 -------
 
-If real program is completed successfully, we should see wrfinput and wrfbdy files
+If real program completed successfully, we should see wrfinput and wrfbdy files
 in our directory.
 
-Next, we should run WRF.
-
-For Cheyenne, we should submit a batch job to PBS (Pro workload management system).
-For more instructions on running a batch job on Cheyenne, please check:
+Now run WRF-CTSM. On Cheyenne this means submitting a batch job to PBS (Pro workload management system).
+For detailed instructions on running a batch job on Cheyenne, please check:
 https://www2.cisl.ucar.edu/resources/computational-systems/cheyenne/running-jobs/submitting-jobs-pbs
 
-
-A sample of basic PBS job for Cheyenne:
+A simple PBS script to run WRF-CTSM on Cheyenne looks like this:
 
 .. code-block:: Tcsh
 
     #!/bin/tcsh
-    #PBS -N job_name
-    #PBS -A project_code
+    #PBS -N your_job_name
+    #PBS -A your_project_code
     #PBS -l walltime=01:00:00
     #PBS -q queue_name
-    #PBS -j oe
     #PBS -k eod
     #PBS -m abe
     #PBS -M your_email_address
@@ -375,4 +382,6 @@ A sample of basic PBS job for Cheyenne:
     ### Run the executable
     mpiexec_mpt ./wrf.exe
 
+If you named this script run_wrf_ctsm.csh, then you type next::
 
+    qsub run_wrf_ctsm.csh
