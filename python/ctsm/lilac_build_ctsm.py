@@ -600,15 +600,15 @@ def _create_case(cime_path, build_dir, compiler,
     run_cmd_output_on_error(create_newcase_cmd,
                             errmsg='Problem creating CTSM case directory')
 
-    run_cmd_output_on_error([os.path.join(case_dir, 'case.setup')],
-                            errmsg='Problem setting up CTSM case directory',
-                            cwd=case_dir)
-
     subprocess.check_call([xmlchange, 'LILAC_MODE=on'], cwd=case_dir)
     if build_debug:
         subprocess.check_call([xmlchange, 'DEBUG=TRUE'], cwd=case_dir)
     if not build_without_openmp:
         subprocess.check_call([xmlchange, 'FORCE_BUILD_SMP=TRUE'], cwd=case_dir)
+
+    run_cmd_output_on_error([os.path.join(case_dir, 'case.setup')],
+                            errmsg='Problem setting up CTSM case directory',
+                            cwd=case_dir)
 
     make_link(os.path.join(case_dir, 'bld'),
               os.path.join(build_dir, 'bld'))
