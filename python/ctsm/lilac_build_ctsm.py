@@ -178,6 +178,10 @@ def build_ctsm(cime_path,
         _link_to_inputdata(build_dir=build_dir)
 
     _stage_runtime_inputs(build_dir=build_dir, no_pnetcdf=no_pnetcdf)
+
+    print('Initial setup complete; it is now safe to work with the runtime inputs in\n'
+          '{}\n'.format(os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME)))
+
     if not no_build:
         _build_case(build_dir=build_dir)
 
