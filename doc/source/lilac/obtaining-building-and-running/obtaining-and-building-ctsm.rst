@@ -31,7 +31,7 @@ Obtain CTSM by running::
 Then build CTSM and its dependencies. On a machine that has been ported to CIME, the
 command will look like this (example given for NCAR's ``cheyenne`` machine)::
 
-  ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
+  ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --machine cheyenne --compiler intel
 
 and then, before building the atmosphere model::
 
@@ -41,7 +41,7 @@ On a machine that has *not* been ported to CIME, you will need to provide some a
 information. Run ``./lilac/build_ctsm -h`` for details, but the basic command will look
 like this::
 
-  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default
+  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default --max-mpitasks-per-node 4 --no-pnetcdf
 
 In both cases, you will then need to include the necessary information in the include and
 link lines of the atmosphere model's build. For a Makefile-based build, this can be done
@@ -82,7 +82,7 @@ Building CTSM requires:
 
 - a NetCDF library version 4.3 or newer built with the same compiler you will use for CTSM
 
-  - a PnetCDF library is optional
+  - a PNetCDF library is optional
 
 - a functioning MPI environment
 
@@ -169,6 +169,11 @@ Some other options to ``build_ctsm`` are supported in this case (but many are no
 they are only applicable to the non-CIME-supported machine workflow); run
 ``./lilac/build_ctsm -h`` for details.
 
+.. note::
+
+   If PNetCDF (parallel NetCDF) is not available on this machine, you will need to add the
+   option ``--no-pnetcdf``.
+
 Besides the build files themselves, ``build_ctsm`` creates the following important files
 that are needed for the build of the atmosphere model:
 
@@ -196,7 +201,7 @@ above<building-ctsm-and-lilac-prerequisites>`.
 
 The minimal amount of information needed is given by the following::
 
-  ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --compiler COMPILER --os OS --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH
+  ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --os OS --compiler COMPILER --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH --max-mpitasks-per-node MAX_MPITASKS_PER_NODE --pnetcdf-path PNETCDF_PATH
 
 where you should fill in the capitalized arguments with appropriate values for your
 machine. Run ``./lilac/build_ctsm -h`` for details on these arguments, as well as documentation
@@ -209,9 +214,15 @@ model performance.
    The given directory (``/PATH/TO/CTSM/BUILD``) must *not* exist. This directory is
    created for you by the build script.
 
+.. note::
+
+   If PNetCDF (parallel NetCDF) is not available on your machine/compiler, you should use
+   the option ``--no-pnetcdf`` instead of ``--pnetcdf-path``. You must specify exactly one
+   of those two options.
+
 Example usage for a Mac (a simple case) is::
 
-  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default
+  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-lib-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default --max-mpitasks-per-node 4 --no-pnetcdf
 
 Example usage for NCAR's ``cheyenne`` machine (a more complex case) is::
 
@@ -221,7 +232,7 @@ Example usage for NCAR's ``cheyenne`` machine (a more complex case) is::
   module load esmf-8.1.0b14-ncdfio-mpt-O mpt/2.21 netcdf/4.7.3 pnetcdf/1.12.1 ncarcompilers/0.5.0
   module load python
 
-  ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --os linux --compiler intel --netcdf-path '$ENV{NETCDF}' --pio-filesystem-hints gpfs --pnetcdf-path '$ENV{PNETCDF}' --esmf-lib-path '$ENV{ESMF_LIBDIR}' --extra-cflags '-xCORE_AVX2 -no-fma' --extra-fflags '-xCORE_AVX2 -no-fma'
+  ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --os linux --compiler intel --netcdf-path '$ENV{NETCDF}' --pio-filesystem-hints gpfs --pnetcdf-path '$ENV{PNETCDF}' --esmf-lib-path '$ENV{ESMF_LIBDIR}' --max-mpitasks-per-node 36 --extra-cflags '-xCORE_AVX2 -no-fma' --extra-fflags '-xCORE_AVX2 -no-fma'
 
 (It's better to use the :ref:`alternative process for a CIME-supported
 machine<building-on-a-cime-supported-machine>` in this case, but the above illustrates

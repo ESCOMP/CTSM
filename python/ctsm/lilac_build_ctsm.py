@@ -236,7 +236,7 @@ Typical usage:
 
     For a fresh build with a machine that has NOT been ported to cime:
 
-        build_ctsm /path/to/nonexistent/directory --compiler COMPILER --os OS --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH --max-mpitasks-per-node MAX_MPITASKS_PER_NODE --pnetcdf-path PNETCDF_PATH
+        build_ctsm /path/to/nonexistent/directory --os OS --compiler COMPILER --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH --max-mpitasks-per-node MAX_MPITASKS_PER_NODE --pnetcdf-path PNETCDF_PATH
 
         If PNetCDF is not available, set --no-pnetcdf instead of --pnetcdf-path.
 
