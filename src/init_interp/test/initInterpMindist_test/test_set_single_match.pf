@@ -110,7 +110,8 @@ contains
 
     call setup_single_veg_patch(pft_type=1)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -122,7 +123,8 @@ contains
     ! The target point is point 3. Both before and after the target point there are
     ! points with (1) same type but different location, and (2) same location but
     ! different type.
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 5, &
          name = 'column', &
          ctype = [my_ctype-1, my_ctype, my_ctype, my_ctype, my_ctype+1], &
@@ -150,7 +152,8 @@ contains
 
     call setup_single_veg_patch(pft_type=1)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -159,7 +162,8 @@ contains
          lat = [my_lat], &
          lon = [my_lon])
 
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'column', &
          ctype = [my_ctype-1, my_ctype, my_ctype+1], &
@@ -186,7 +190,8 @@ contains
 
     call setup_single_veg_patch(pft_type=1)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -195,7 +200,8 @@ contains
          lat = [my_lat], &
          lon = [my_lon])
 
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 1, &
          name = 'column', &
          ctype = [my_ctype+1], &
@@ -224,7 +230,8 @@ contains
 
     call setup_single_veg_patch(pft_type=1)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -233,7 +240,8 @@ contains
          lat = [my_lat], &
          lon = [my_lon])
 
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 2, &
          name = 'column', &
          ctype = [(my_ctype, i=1,2)], &
@@ -266,7 +274,8 @@ contains
 
     call setup_single_veg_patch(pft_type=1)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -276,7 +285,8 @@ contains
          lon = [my_lon])
 
     ! One point differs in lat, one point differs in lon, one point differs in ctype
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'column', &
          ctype = [my_ctype, my_ctype, my_ctype+1], &
@@ -325,7 +335,8 @@ contains
          cweights=[1._r8], &
          ptype=my_ptype)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -338,7 +349,8 @@ contains
     ! Input point #2 has the same ptype, but a different ctype and ltype. Other input
     ! points differ in ptype. With set_mindist, we would choose #2, but with
     ! set_single_match we should abort.
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'pft', &
          ptype = [my_ptype - 1, my_ptype, my_ptype + 1], &
