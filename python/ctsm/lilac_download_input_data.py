@@ -84,3 +84,5 @@ def _create_lilac_input_data_list(rundir):
                     line = line.replace('"', '')
                     line = line.replace("'", "")
                     input_data_list.write(line)
+
+    os.remove(os.path.join(rundir, 'lilac.input_data_list'))

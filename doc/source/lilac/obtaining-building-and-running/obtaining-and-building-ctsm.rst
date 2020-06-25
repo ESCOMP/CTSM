@@ -1,6 +1,6 @@
-.. _obtaining-and-building-ctsm:
-
 .. highlight:: shell
+
+.. _obtaining-and-building-ctsm:
 
 =======================================
  Obtaining and building CTSM and LILAC
