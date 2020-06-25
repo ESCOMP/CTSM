@@ -82,7 +82,8 @@ def main(cime_path):
                    extra_cflags=args.extra_cflags,
                    no_pnetcdf=args.no_pnetcdf,
                    build_debug=args.build_debug,
-                   build_without_openmp=args.build_without_openmp)
+                   build_without_openmp=args.build_without_openmp,
+                   inputdata_path=args.inputdata_path)
 
 def build_ctsm(cime_path,
                build_dir,
@@ -102,7 +103,8 @@ def build_ctsm(cime_path,
                extra_cflags='',
                no_pnetcdf=False,
                build_debug=False,
-               build_without_openmp=False):
+               build_without_openmp=False,
+               inputdata_path=None):
     """Implementation of build_ctsm command
 
     Args:
@@ -137,11 +139,16 @@ def build_ctsm(cime_path,
     no_pnetcdf (bool): if True, use netcdf rather than pnetcdf
     build_debug (bool): if True, build with flags for debugging
     build_without_openmp (bool): if True, build without OpenMP support
+    inputdata_path (str or None): path to existing inputdata directory on this machine
+        If None, an inputdata directory will be created for this build
+        (If machine is given, then we use the machine's inputdata directory by default;
+        but if inputdata_path is given, it overrides the machine's inputdata directory.)
     """
 
     existing_machine = machine is not None
+    existing_inputdata = existing_machine or inputdata_path is not None
     _create_build_dir(build_dir=build_dir,
-                      existing_machine=existing_machine)
+                      existing_inputdata=existing_inputdata)
 
     if machine is None:
         assert os_type is not None, 'with machine absent, os_type must be given'
@@ -169,16 +176,18 @@ def build_ctsm(cime_path,
                  compiler=compiler,
                  machine=machine,
                  build_debug=build_debug,
-                 build_without_openmp=build_without_openmp)
+                 build_without_openmp=build_without_openmp,
+                 inputdata_path=inputdata_path)
 
-    if existing_machine:
-        # For a user-defined machine, we create an inputdata directory for this case. For
-        # an existing cime-ported machine, we still want an inputdata directory alongside
-        # the other directories, but now it will just be a link to the real inputdata
-        # space on that machine. (Note that, for a user-defined machine, it's important
-        # that we have created this directory before creating the case, whereas for an
-        # existing machine, we need to wait until after we have created the case to know
-        # where to make the sym link point to.)
+    if existing_inputdata:
+        # For a user-defined machine without inputdata_path specified, we create an
+        # inputdata directory for this case above. For an existing cime-ported machine, or
+        # one where inputdata_path is specified, we still want an inputdata directory
+        # alongside the other directories, but now it will just be a link to the real
+        # inputdata space on that machine. (Note that, for a user-defined machine, it's
+        # important that we have created this directory before creating the case, whereas
+        # for an existing machine, we need to wait until after we have created the case to
+        # know where to make the sym link point to.)
         _link_to_inputdata(build_dir=build_dir)
 
     _stage_runtime_inputs(build_dir=build_dir, no_pnetcdf=no_pnetcdf)
@@ -314,6 +323,16 @@ Typical usage:
                                       'if this flag is set, then CTSM is built without this support.\n'
                                       'This is mainly useful if your machine/compiler does not support OpenMP.')
     non_rebuild_optional_list.append('build-without-openmp')
+
+    non_rebuild_optional.add_argument('--inputdata-path',
+                                      help='Path to directory containing CTSM\'s NetCDF inputs.\n'
+                                      'For a machine that has been ported to cime, the default is to\n'
+                                      'use this machine\'s standard inputdata location; this argument\n'
+                                      'can be used to override this default.\n'
+                                      'For a user-defined machine, the default is to create an inputdata\n'
+                                      'directory in the build directory; again, this argument can be\n'
+                                      'used to override this default.')
+    non_rebuild_optional_list.append('inputdata-path')
 
     non_rebuild_optional.add_argument('--no-build', action='store_true',
                                       help='Do the pre-build setup, but do not actually build CTSM\n'
@@ -472,19 +491,18 @@ def _get_case_dir(build_dir):
     """Given the path to build_dir, return the path to the case directory"""
     return os.path.join(build_dir, 'case')
 
-def _create_build_dir(build_dir, existing_machine):
+def _create_build_dir(build_dir, existing_inputdata):
     """Create the given build directory and any necessary sub-directories
 
     Args:
     build_dir (str): path to build directory; this directory shouldn't exist yet!
-    existing_machine (bool): whether this build is for a machine known to cime
-        (as opposed to an on-the-fly machine port)
+    existing_inputdata (bool): whether the inputdata directory already exists on this machine
     """
     if os.path.exists(build_dir):
         abort('When running without --rebuild, the build directory must not exist yet\n'
               '(<{}> already exists)'.format(build_dir))
     os.makedirs(build_dir)
-    if not existing_machine:
+    if not existing_inputdata:
         os.makedirs(os.path.join(build_dir, _INPUTDATA_DIRNAME))
 
 def _fill_out_machine_files(build_dir,
@@ -556,7 +574,8 @@ def _fill_out_machine_files(build_dir,
 
 
 def _create_case(cime_path, build_dir, compiler,
-                 machine=None, build_debug=False, build_without_openmp=False):
+                 machine=None, build_debug=False, build_without_openmp=False,
+                 inputdata_path=None):
     """Create a case that can later be used to build the CTSM library and its dependencies
 
     Args:
@@ -568,6 +587,8 @@ def _create_case(cime_path, build_dir, compiler,
         Otherwise, machine should be the name of a machine known to cime
     build_debug (bool): if True, build with flags for debugging
     build_without_openmp (bool): if True, build without OpenMP support
+    inputdata_path (str or None): path to existing inputdata directory on this machine
+        If None, we use the machine's default DIN_LOC_ROOT
     """
     # Note that, for some commands, we want to suppress output, only showing the output if
     # the command fails; for these we use run_cmd_output_on_error. For other commands,
@@ -597,6 +618,8 @@ def _create_case(cime_path, build_dir, compiler,
                           '--driver', 'nuopc',
                           '--run-unsupported']
     create_newcase_cmd.extend(machine_args)
+    if inputdata_path:
+        create_newcase_cmd.extend(['--input-dir', inputdata_path])
     run_cmd_output_on_error(create_newcase_cmd,
                             errmsg='Problem creating CTSM case directory')
 
@@ -620,7 +643,7 @@ def _create_case(cime_path, build_dir, compiler,
                       os.path.join(build_dir, 'ctsm_build_environment.{}'.format(extension)))
 
 def _link_to_inputdata(build_dir):
-    """For an existing machine, make a sym link to the inputdata directory
+    """Make a sym link to an existing inputdata directory
 
     Args:
     build_dir (str): path to build directory

@@ -39,8 +39,9 @@ class TestSysBuildCtsm(unittest.TestCase):
 
         This version specifies a minimal amount of information
         """
+        build_dir = os.path.join(self._tempdir, 'ctsm_build')
         build_ctsm(cime_path=_CIME_PATH,
-                   build_dir=os.path.join(self._tempdir, 'ctsm_build'),
+                   build_dir=build_dir,
                    compiler='gnu',
                    no_build=True,
                    os_type='linux',
@@ -50,7 +51,13 @@ class TestSysBuildCtsm(unittest.TestCase):
                    gmake='gmake',
                    gmake_j=8,
                    no_pnetcdf=True)
-        # no assertions: test passes as long as the command doesn't generate any errors
+        # the critical piece of this test is that the above command doesn't generate any
+        # errors; however we also do some assertions below
+
+        # ensure that inputdata directory was created and is NOT a sym link
+        inputdata = os.path.join(build_dir, 'inputdata')
+        self.assertTrue(os.path.isdir(inputdata))
+        self.assertFalse(os.path.islink(inputdata))
 
     def test_buildSetup_userDefinedMachine_allInfo(self):
         """Get through the case.setup phase with a user-defined machine
@@ -61,8 +68,11 @@ class TestSysBuildCtsm(unittest.TestCase):
 
         This version specifies all possible information
         """
+        build_dir = os.path.join(self._tempdir, 'ctsm_build')
+        inputdata_path = os.path.realpath(os.path.join(self._tempdir, 'my_inputdata'))
+        os.makedirs(inputdata_path)
         build_ctsm(cime_path=_CIME_PATH,
-                   build_dir=os.path.join(self._tempdir, 'ctsm_build'),
+                   build_dir=build_dir,
                    compiler='gnu',
                    no_build=True,
                    os_type='linux',
@@ -77,8 +87,14 @@ class TestSysBuildCtsm(unittest.TestCase):
                    extra_fflags='-foo',
                    extra_cflags='-bar',
                    build_debug=True,
-                   build_without_openmp=True)
-        # no assertions: test passes as long as the command doesn't generate any errors
+                   build_without_openmp=True,
+                   inputdata_path=os.path.join(self._tempdir, 'my_inputdata'))
+        # the critical piece of this test is that the above command doesn't generate any
+        # errors; however we also do some assertions below
+
+        # ensure that inputdata directory is a symlink pointing to the correct location
+        inputdata = os.path.join(build_dir, 'inputdata')
+        self.assertEqual(os.path.realpath(inputdata), inputdata_path)
 
 if __name__ == '__main__':
     unit_testing.setup_for_tests()
