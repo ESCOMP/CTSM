@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Unit tests for build_ctsm
+"""Unit tests for lilac_build_ctsm
 """
 
 import unittest
@@ -8,14 +8,20 @@ from unittest.mock import patch
 from io import StringIO
 
 from ctsm import unit_testing
-from ctsm.build_ctsm import _commandline_args, _check_and_transform_os
+from ctsm.lilac_build_ctsm import _commandline_args, _check_and_transform_os
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
 # pylint: disable=invalid-name
 
+# pylint: disable=line-too-long
+
 class TestBuildCtsm(unittest.TestCase):
-    """Tests of build_ctsm"""
+    """Tests of lilac_build_ctsm"""
+
+    # ------------------------------------------------------------------------
+    # Tests of _commandline_args
+    # ------------------------------------------------------------------------
 
     def test_commandlineArgs_rebuild_valid(self):
         """Test _commandline_args with --rebuild, with a valid argument list (no disallowed args)"""
@@ -99,7 +105,9 @@ class TestBuildCtsm(unittest.TestCase):
                                              '--os', 'linux',
                                              '--compiler', 'intel',
                                              '--netcdf-path', '/path/to/netcdf',
-                                             '--esmf-lib-path', '/path/to/esmf/lib'])
+                                             '--esmf-lib-path', '/path/to/esmf/lib',
+                                             '--max-mpitasks-per-node', '16',
+                                             '--no-pnetcdf'])
 
     @patch('sys.stderr', new_callable=StringIO)
     def test_commandlineArgs_noRebuild_invalid1(self, mock_stderr):
@@ -112,7 +120,9 @@ class TestBuildCtsm(unittest.TestCase):
             _ = _commandline_args(args_to_parse=['build/directory',
                                                  '--os', 'linux',
                                                  '--netcdf-path', '/path/to/netcdf',
-                                                 '--esmf-lib-path', '/path/to/esmf/lib'])
+                                                 '--esmf-lib-path', '/path/to/esmf/lib',
+                                                 '--max-mpitasks-per-node', '16',
+                                                 '--no-pnetcdf'])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
 
     @patch('sys.stderr', new_callable=StringIO)
@@ -126,7 +136,37 @@ class TestBuildCtsm(unittest.TestCase):
             _ = _commandline_args(args_to_parse=['build/directory',
                                                  '--compiler', 'intel',
                                                  '--netcdf-path', '/path/to/netcdf',
-                                                 '--esmf-lib-path', '/path/to/esmf/lib'])
+                                                 '--esmf-lib-path', '/path/to/esmf/lib',
+                                                 '--max-mpitasks-per-node', '16',
+                                                 '--no-pnetcdf'])
+        self.assertRegex(mock_stderr.getvalue(), expected_re)
+
+    @patch('sys.stderr', new_callable=StringIO)
+    def test_commandlineArgs_noRebuild_invalidNeedToDictatePnetcdf(self, mock_stderr):
+        """Test _commandline_args without --rebuild or --machine: invalid b/c nothing specified for pnetcdf"""
+        expected_re = r"For a user-defined machine, need to specify either --no-pnetcdf or --pnetcdf-path"
+        with self.assertRaises(SystemExit):
+            _ = _commandline_args(args_to_parse=['build/directory',
+                                                 '--os', 'linux',
+                                                 '--compiler', 'intel',
+                                                 '--netcdf-path', '/path/to/netcdf',
+                                                 '--esmf-lib-path', '/path/to/esmf/lib',
+                                                 '--max-mpitasks-per-node', '16'])
+        self.assertRegex(mock_stderr.getvalue(), expected_re)
+
+    @patch('sys.stderr', new_callable=StringIO)
+    def test_commandlineArgs_noRebuild_invalidConflictingPnetcdf(self, mock_stderr):
+        """Test _commandline_args without --rebuild or --machine: invalid b/c of conflicting specifications for pnetcdf"""
+        expected_re = r"--no-pnetcdf cannot be given if you set --pnetcdf-path"
+        with self.assertRaises(SystemExit):
+            _ = _commandline_args(args_to_parse=['build/directory',
+                                                 '--os', 'linux',
+                                                 '--compiler', 'intel',
+                                                 '--netcdf-path', '/path/to/netcdf',
+                                                 '--esmf-lib-path', '/path/to/esmf/lib',
+                                                 '--max-mpitasks-per-node', '16',
+                                                 '--no-pnetcdf',
+                                                 '--pnetcdf-path', '/path/to/pnetcdf'])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
 
     def test_commandlineArgs_machine_valid(self):
@@ -176,6 +216,10 @@ class TestBuildCtsm(unittest.TestCase):
                                                  '--compiler', 'intel',
                                                  '--gmake', 'mymake'])
         self.assertRegex(mock_stderr.getvalue(), expected_re)
+
+    # ------------------------------------------------------------------------
+    # Tests of _check_and_transform_os
+    # ------------------------------------------------------------------------
 
     def test_checkAndTransformOs_valid(self):
         """Test _check_and_transform_os with valid input"""

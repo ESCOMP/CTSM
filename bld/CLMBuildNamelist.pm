@@ -1391,9 +1391,6 @@ sub process_namelist_commandline_clm_usr_name {
         $nvars++;
       }
     }
-    if ( $nvars == 0 ) {
-      $log->message("setting clm_usr_name -- but did NOT find any user datasets: $opts->{'clm_usr_name'}", $opts);
-    }
     # Go through all variables and expand any XML env settings in them
     expand_xml_variables_in_namelist( $nl_usrfile, $envxml_ref );
     # Merge input values into namelist.  Previously specified values have higher precedence

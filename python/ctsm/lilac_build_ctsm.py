@@ -1,15 +1,15 @@
-"""Functions implementing build_ctsm command"""
+"""Functions implementing LILAC's build_ctsm command"""
 
 import argparse
 import logging
 import os
-import string
+import shutil
 import subprocess
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.os_utils import run_cmd_output_on_error, make_link
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import abort
+from ctsm.utils import abort, fill_template_file
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +25,22 @@ _MACH_NAME = 'ctsm_build'
 _COMPSET = 'I2000Ctsm50NwpSpNldasRsGs'
 _RES = 'nldas2_rnldas2_mnldas2'
 
+_PATH_TO_TEMPLATES = os.path.join(path_to_ctsm_root(),
+                                  'lilac',
+                                  'bld_templates')
+
+_PATH_TO_MAKE_RUNTIME_INPUTS = os.path.join(path_to_ctsm_root(),
+                                            'lilac',
+                                            'make_runtime_inputs')
+
+_PATH_TO_DOWNLOAD_INPUT_DATA = os.path.join(path_to_ctsm_root(),
+                                            'lilac',
+                                            'download_input_data')
+
 _MACHINE_CONFIG_DIRNAME = 'machine_configuration'
 _INPUTDATA_DIRNAME = 'inputdata'
+_RUNTIME_INPUTS_DIRNAME = 'runtime_inputs'
+
 _GPTL_NANOTIMERS_CPPDEFS = '-DHAVE_NANOTIME -DBIT64 -DHAVE_VPRINTF -DHAVE_BACKTRACE -DHAVE_SLASHPROC -DHAVE_COMM_F2C -DHAVE_TIMES -DHAVE_GETTIMEOFDAY' # pylint: disable=line-too-long
 
 # ========================================================================
@@ -58,6 +72,7 @@ def main(cime_path):
                    os_type=args.os,
                    netcdf_path=args.netcdf_path,
                    esmf_lib_path=args.esmf_lib_path,
+                   max_mpitasks_per_node=args.max_mpitasks_per_node,
                    gmake=args.gmake,
                    gmake_j=args.gmake_j,
                    pnetcdf_path=args.pnetcdf_path,
@@ -65,8 +80,10 @@ def main(cime_path):
                    gptl_nano_timers=args.gptl_nano_timers,
                    extra_fflags=args.extra_fflags,
                    extra_cflags=args.extra_cflags,
+                   no_pnetcdf=args.no_pnetcdf,
                    build_debug=args.build_debug,
-                   build_without_openmp=args.build_without_openmp)
+                   build_without_openmp=args.build_without_openmp,
+                   inputdata_path=args.inputdata_path)
 
 def build_ctsm(cime_path,
                build_dir,
@@ -76,6 +93,7 @@ def build_ctsm(cime_path,
                os_type=None,
                netcdf_path=None,
                esmf_lib_path=None,
+               max_mpitasks_per_node=None,
                gmake=None,
                gmake_j=None,
                pnetcdf_path=None,
@@ -83,8 +101,10 @@ def build_ctsm(cime_path,
                gptl_nano_timers=False,
                extra_fflags='',
                extra_cflags='',
+               no_pnetcdf=False,
                build_debug=False,
-               build_without_openmp=False):
+               build_without_openmp=False,
+               inputdata_path=None):
     """Implementation of build_ctsm command
 
     Args:
@@ -98,6 +118,8 @@ def build_ctsm(cime_path,
     netcdf_path (str or None): path to NetCDF installation
         Must be given if machine isn't given; ignored if machine is given
     esmf_lib_path (str or None): path to ESMF library directory
+        Must be given if machine isn't given; ignored if machine is given
+    max_mpitasks_per_node (int or None): number of physical processors per shared-memory node
         Must be given if machine isn't given; ignored if machine is given
     gmake (str or None): name of GNU make tool
         Must be given if machine isn't given; ignored if machine is given
@@ -114,23 +136,33 @@ def build_ctsm(cime_path,
         Ignored if machine is given
     extra_cflags (str): any extra flags to include when compiling C files
         Ignored if machine is given
+    no_pnetcdf (bool): if True, use netcdf rather than pnetcdf
     build_debug (bool): if True, build with flags for debugging
     build_without_openmp (bool): if True, build without OpenMP support
+    inputdata_path (str or None): path to existing inputdata directory on this machine
+        If None, an inputdata directory will be created for this build
+        (If machine is given, then we use the machine's inputdata directory by default;
+        but if inputdata_path is given, it overrides the machine's inputdata directory.)
     """
 
+    existing_machine = machine is not None
+    existing_inputdata = existing_machine or inputdata_path is not None
     _create_build_dir(build_dir=build_dir,
-                      existing_machine=(machine is not None))
+                      existing_inputdata=existing_inputdata)
 
     if machine is None:
         assert os_type is not None, 'with machine absent, os_type must be given'
         assert netcdf_path is not None, 'with machine absent, netcdf_path must be given'
         assert esmf_lib_path is not None, 'with machine absent, esmf_lib_path must be given'
+        assert max_mpitasks_per_node is not None, ('with machine absent '
+                                                   'max_mpitasks_per_node must be given')
         os_type = _check_and_transform_os(os_type)
         _fill_out_machine_files(build_dir=build_dir,
                                 os_type=os_type,
                                 compiler=compiler,
                                 netcdf_path=netcdf_path,
                                 esmf_lib_path=esmf_lib_path,
+                                max_mpitasks_per_node=max_mpitasks_per_node,
                                 gmake=gmake,
                                 gmake_j=gmake_j,
                                 pnetcdf_path=pnetcdf_path,
@@ -144,7 +176,25 @@ def build_ctsm(cime_path,
                  compiler=compiler,
                  machine=machine,
                  build_debug=build_debug,
-                 build_without_openmp=build_without_openmp)
+                 build_without_openmp=build_without_openmp,
+                 inputdata_path=inputdata_path)
+
+    if existing_inputdata:
+        # For a user-defined machine without inputdata_path specified, we create an
+        # inputdata directory for this case above. For an existing cime-ported machine, or
+        # one where inputdata_path is specified, we still want an inputdata directory
+        # alongside the other directories, but now it will just be a link to the real
+        # inputdata space on that machine. (Note that, for a user-defined machine, it's
+        # important that we have created this directory before creating the case, whereas
+        # for an existing machine, we need to wait until after we have created the case to
+        # know where to make the sym link point to.)
+        _link_to_inputdata(build_dir=build_dir)
+
+    _stage_runtime_inputs(build_dir=build_dir, no_pnetcdf=no_pnetcdf)
+
+    print('Initial setup complete; it is now safe to work with the runtime inputs in\n'
+          '{}\n'.format(os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME)))
+
     if not no_build:
         _build_case(build_dir=build_dir)
 
@@ -203,7 +253,9 @@ Typical usage:
 
     For a fresh build with a machine that has NOT been ported to cime:
 
-        build_ctsm /path/to/nonexistent/directory --compiler COMPILER --os OS --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH
+        build_ctsm /path/to/nonexistent/directory --os OS --compiler COMPILER --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH --max-mpitasks-per-node MAX_MPITASKS_PER_NODE --pnetcdf-path PNETCDF_PATH
+
+        If PNetCDF is not available, set --no-pnetcdf instead of --pnetcdf-path.
 
         (Other optional arguments are also allowed in this usage.)
 
@@ -254,6 +306,14 @@ Typical usage:
         'they are not allowed with --rebuild:')
     non_rebuild_optional_list = []
 
+    non_rebuild_optional.add_argument('--no-pnetcdf', action='store_true',
+                                      help='Use NetCDF instead of PNetCDF for CTSM I/O.\n'
+                                      'On a user-defined machine, you must either set this flag\n'
+                                      'or set --pnetcdf-path. On a cime-ported machine,\n'
+                                      'this flag must be set if PNetCDF is not available\n'
+                                      'for this machine/compiler.')
+    non_rebuild_optional_list.append('no-pnetcdf')
+
     non_rebuild_optional.add_argument('--build-debug', action='store_true',
                                       help='Build with flags for debugging rather than production runs')
     non_rebuild_optional_list.append('build-debug')
@@ -263,6 +323,16 @@ Typical usage:
                                       'if this flag is set, then CTSM is built without this support.\n'
                                       'This is mainly useful if your machine/compiler does not support OpenMP.')
     non_rebuild_optional_list.append('build-without-openmp')
+
+    non_rebuild_optional.add_argument('--inputdata-path',
+                                      help='Path to directory containing CTSM\'s NetCDF inputs.\n'
+                                      'For a machine that has been ported to cime, the default is to\n'
+                                      'use this machine\'s standard inputdata location; this argument\n'
+                                      'can be used to override this default.\n'
+                                      'For a user-defined machine, the default is to create an inputdata\n'
+                                      'directory in the build directory; again, this argument can be\n'
+                                      'used to override this default.')
+    non_rebuild_optional_list.append('inputdata-path')
 
     non_rebuild_optional.add_argument('--no-build', action='store_true',
                                       help='Do the pre-build setup, but do not actually build CTSM\n'
@@ -291,6 +361,11 @@ Typical usage:
                                       'This directory should include an esmf.mk file')
     new_machine_required_list.append('esmf-lib-path')
 
+    new_machine_required.add_argument('--max-mpitasks-per-node', type=int,
+                                      help='Number of physical processors per shared-memory node\n'
+                                      'on this machine')
+    new_machine_required_list.append('max-mpitasks-per-node')
+
     new_machine_optional = parser.add_argument_group(
         title='optional arguments for a user-defined machine',
         description='These arguments are optional if neither --machine nor --rebuild are given; '
@@ -308,7 +383,8 @@ Typical usage:
     new_machine_optional_list.append('gmake-j')
 
     new_machine_optional.add_argument('--pnetcdf-path',
-                                      help='Path to PNetCDF installation, if present\n')
+                                      help='Path to PNetCDF installation, if present\n'
+                                      'You must either specify this or set --no-pnetcdf')
     new_machine_optional_list.append('pnetcdf-path')
 
     new_machine_optional.add_argument('--pio-filesystem-hints', type=str.lower,
@@ -353,6 +429,10 @@ Typical usage:
         else:
             _confirm_args_present(parser, args, "must be provided if neither --machine nor --rebuild are set",
                                   new_machine_required_list)
+            if not args.no_pnetcdf and args.pnetcdf_path is None:
+                parser.error("For a user-defined machine, need to specify either --no-pnetcdf or --pnetcdf-path")
+            if args.no_pnetcdf and args.pnetcdf_path is not None:
+                parser.error("--no-pnetcdf cannot be given if you set --pnetcdf-path")
 
     return args
 
@@ -369,7 +449,7 @@ def _confirm_args_absent(parser, args, errmsg, args_not_allowed):
     """
     for arg in args_not_allowed:
         arg_no_dashes = arg.replace('-', '_')
-        # To determine whether the user specified an argument, we look at whether it's
+        # To determine whether the user specified an argument, we look at whether its
         # value differs from its default value. This won't catch the case where the user
         # explicitly set an argument to its default value, but it's not a big deal if we
         # miss printing an error in that case.
@@ -411,19 +491,18 @@ def _get_case_dir(build_dir):
     """Given the path to build_dir, return the path to the case directory"""
     return os.path.join(build_dir, 'case')
 
-def _create_build_dir(build_dir, existing_machine):
+def _create_build_dir(build_dir, existing_inputdata):
     """Create the given build directory and any necessary sub-directories
 
     Args:
     build_dir (str): path to build directory; this directory shouldn't exist yet!
-    existing_machine (bool): whether this build is for a machine known to cime
-        (as opposed to an on-the-fly machine port)
+    existing_inputdata (bool): whether the inputdata directory already exists on this machine
     """
     if os.path.exists(build_dir):
         abort('When running without --rebuild, the build directory must not exist yet\n'
               '(<{}> already exists)'.format(build_dir))
     os.makedirs(build_dir)
-    if not existing_machine:
+    if not existing_inputdata:
         os.makedirs(os.path.join(build_dir, _INPUTDATA_DIRNAME))
 
 def _fill_out_machine_files(build_dir,
@@ -431,6 +510,7 @@ def _fill_out_machine_files(build_dir,
                             compiler,
                             netcdf_path,
                             esmf_lib_path,
+                            max_mpitasks_per_node,
                             gmake,
                             gmake_j,
                             pnetcdf_path=None,
@@ -442,27 +522,21 @@ def _fill_out_machine_files(build_dir,
 
     For documentation of args, see the documentation in the build_ctsm function
     """
-    path_to_templates = os.path.join(path_to_ctsm_root(),
-                                     'lilac_config',
-                                     'build_templates')
     os.makedirs(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME))
 
     # ------------------------------------------------------------------------
     # Fill in config_machines.xml
     # ------------------------------------------------------------------------
 
-    with open(os.path.join(path_to_templates, 'config_machines_template.xml')) as cm_template_file:
-        cm_template_file_contents = cm_template_file.read()
-    config_machines_template = string.Template(cm_template_file_contents)
-    config_machines = config_machines_template.substitute(
-        OS=os_type,
-        COMPILER=compiler,
-        CIME_OUTPUT_ROOT=build_dir,
-        GMAKE=gmake,
-        GMAKE_J=gmake_j)
-    with open(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, 'config_machines.xml'),
-              'w') as cm_file:
-        cm_file.write(config_machines)
+    fill_template_file(
+        path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'config_machines_template.xml'),
+        path_to_final=os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, 'config_machines.xml'),
+        substitutions={'OS':os_type,
+                       'COMPILER':compiler,
+                       'CIME_OUTPUT_ROOT':build_dir,
+                       'GMAKE':gmake,
+                       'GMAKE_J':gmake_j,
+                       'MAX_MPITASKS_PER_NODE':max_mpitasks_per_node})
 
     # ------------------------------------------------------------------------
     # Fill in config_compilers.xml
@@ -485,24 +559,23 @@ def _fill_out_machine_files(build_dir,
     else:
         pnetcdf_path_tag = ''
 
-    with open(os.path.join(path_to_templates, 'config_compilers_template.xml')) as cc_template_file:
-        cc_template_file_contents = cc_template_file.read()
-    config_compilers_template = string.Template(cc_template_file_contents)
-    config_compilers = config_compilers_template.substitute(
-        COMPILER=compiler,
-        GPTL_CPPDEFS=gptl_cppdefs,
-        NETCDF_PATH=netcdf_path,
-        PIO_FILESYSTEM_HINTS=pio_filesystem_hints_tag,
-        PNETCDF_PATH=pnetcdf_path_tag,
-        ESMF_LIBDIR=esmf_lib_path,
-        EXTRA_CFLAGS=extra_cflags,
-        EXTRA_FFLAGS=extra_fflags)
-    with open(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, 'config_compilers.xml'),
-              'w') as cc_file:
-        cc_file.write(config_compilers)
+    fill_template_file(
+        path_to_template=os.path.join(_PATH_TO_TEMPLATES,
+                                      'config_compilers_template.xml'),
+        path_to_final=os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, 'config_compilers.xml'),
+        substitutions={'COMPILER':compiler,
+                       'GPTL_CPPDEFS':gptl_cppdefs,
+                       'NETCDF_PATH':netcdf_path,
+                       'PIO_FILESYSTEM_HINTS':pio_filesystem_hints_tag,
+                       'PNETCDF_PATH':pnetcdf_path_tag,
+                       'ESMF_LIBDIR':esmf_lib_path,
+                       'EXTRA_CFLAGS':extra_cflags,
+                       'EXTRA_FFLAGS':extra_fflags})
+
 
 def _create_case(cime_path, build_dir, compiler,
-                 machine=None, build_debug=False, build_without_openmp=False):
+                 machine=None, build_debug=False, build_without_openmp=False,
+                 inputdata_path=None):
     """Create a case that can later be used to build the CTSM library and its dependencies
 
     Args:
@@ -514,6 +587,8 @@ def _create_case(cime_path, build_dir, compiler,
         Otherwise, machine should be the name of a machine known to cime
     build_debug (bool): if True, build with flags for debugging
     build_without_openmp (bool): if True, build without OpenMP support
+    inputdata_path (str or None): path to existing inputdata directory on this machine
+        If None, we use the machine's default DIN_LOC_ROOT
     """
     # Note that, for some commands, we want to suppress output, only showing the output if
     # the command fails; for these we use run_cmd_output_on_error. For other commands,
@@ -543,18 +618,20 @@ def _create_case(cime_path, build_dir, compiler,
                           '--driver', 'nuopc',
                           '--run-unsupported']
     create_newcase_cmd.extend(machine_args)
+    if inputdata_path:
+        create_newcase_cmd.extend(['--input-dir', inputdata_path])
     run_cmd_output_on_error(create_newcase_cmd,
                             errmsg='Problem creating CTSM case directory')
-
-    run_cmd_output_on_error([os.path.join(case_dir, 'case.setup')],
-                            errmsg='Problem setting up CTSM case directory',
-                            cwd=case_dir)
 
     subprocess.check_call([xmlchange, 'LILAC_MODE=on'], cwd=case_dir)
     if build_debug:
         subprocess.check_call([xmlchange, 'DEBUG=TRUE'], cwd=case_dir)
     if not build_without_openmp:
         subprocess.check_call([xmlchange, 'FORCE_BUILD_SMP=TRUE'], cwd=case_dir)
+
+    run_cmd_output_on_error([os.path.join(case_dir, 'case.setup')],
+                            errmsg='Problem setting up CTSM case directory',
+                            cwd=case_dir)
 
     make_link(os.path.join(case_dir, 'bld'),
               os.path.join(build_dir, 'bld'))
@@ -564,6 +641,57 @@ def _create_case(cime_path, build_dir, compiler,
         for extension in ('sh', 'csh'):
             make_link(os.path.join(case_dir, '.env_mach_specific.{}'.format(extension)),
                       os.path.join(build_dir, 'ctsm_build_environment.{}'.format(extension)))
+
+def _link_to_inputdata(build_dir):
+    """Make a sym link to an existing inputdata directory
+
+    Args:
+    build_dir (str): path to build directory
+    """
+    inputdata_dir = _xmlquery('DIN_LOC_ROOT', build_dir)
+
+    make_link(inputdata_dir,
+              os.path.join(build_dir, _INPUTDATA_DIRNAME))
+
+def _stage_runtime_inputs(build_dir, no_pnetcdf):
+    """Stage CTSM and LILAC runtime inputs
+
+    Args:
+    build_dir (str): path to build directory
+    no_pnetcdf (bool): if True, use netcdf rather than pnetcdf
+    """
+    os.makedirs(os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME))
+
+    fill_template_file(
+        path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'ctsm_template.cfg'),
+        path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'ctsm.cfg'),
+        substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
+
+    fill_template_file(
+        path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'lilac_in_template'),
+        path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lilac_in'),
+        substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
+
+    pio_stride = _xmlquery('MAX_MPITASKS_PER_NODE', build_dir)
+    if no_pnetcdf:
+        pio_typename = 'netcdf'
+    else:
+        pio_typename = 'pnetcdf'
+    fill_template_file(
+        path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'lnd_modelio_template.nml'),
+        path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lnd_modelio.nml'),
+        substitutions={'PIO_STRIDE':pio_stride,
+                       'PIO_TYPENAME':pio_typename})
+
+    shutil.copyfile(
+        src=os.path.join(_PATH_TO_TEMPLATES, 'user_nl_ctsm'),
+        dst=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'user_nl_ctsm'))
+
+    make_link(_PATH_TO_MAKE_RUNTIME_INPUTS,
+              os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'make_runtime_inputs'))
+
+    make_link(_PATH_TO_DOWNLOAD_INPUT_DATA,
+              os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'download_input_data'))
 
 def _build_case(build_dir):
     """Build the CTSM library and its dependencies
@@ -587,3 +715,12 @@ def _build_case(build_dir):
 
     make_link(os.path.join(case_dir, 'bld', 'ctsm.mk'),
               os.path.join(build_dir, 'ctsm.mk'))
+
+def _xmlquery(varname, build_dir):
+    """Run xmlquery from the case in build_dir and return the value of the given variable"""
+    case_dir = _get_case_dir(build_dir)
+    xmlquery_path = os.path.join(case_dir, 'xmlquery')
+    value = subprocess.check_output([xmlquery_path, '--value', varname],
+                                    cwd=case_dir,
+                                    universal_newlines=True)
+    return value
