@@ -58,6 +58,7 @@ also illustrated in :numref:`Figure ctsm_lilac_runtime_file_workflow`:
 
 .. figure:: ctsm_lilac_runtime_file_workflow.*
 
-   CTSM/LILAC runtime file workflow. Files in black can be (and in some cases must be)
-   edited before running the next step. Files in blue should **not** be edited directly.
+   CTSM/LILAC runtime file workflow. Files in blue can be (and in some cases must be)
+   edited before running the next step. Files in purple (with italicized names) should
+   **not** be edited directly.
 
