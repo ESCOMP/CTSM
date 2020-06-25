@@ -7,7 +7,7 @@ import re
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 
-from CIME.case import Case
+from CIME.case import Case # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
@@ -64,9 +64,10 @@ Script to download any missing input data for CTSM and LILAC
 
     parser.add_argument("--rundir", default=os.getcwd(),
                         help="Full path of the run directory\n"
-                        "(This directory should contain clm.input_data_list and lilac_in, among other files.)\n"
-                        "(Note: it is assumed that this directory exists alongside the other directories\n"
-                        "created by build_ctsm: 'case' and 'inputdata'.)")
+                        "(This directory should contain clm.input_data_list and lilac_in,\n"
+                        "among other files.)\n"
+                        "(Note: it is assumed that this directory exists alongside the other\n"
+                        "directories created by build_ctsm: 'case' and 'inputdata'.)")
 
     add_logging_args(parser)
 
