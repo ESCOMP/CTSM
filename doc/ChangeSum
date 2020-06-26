@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev102 erik/ole 06/26/2020 Some important fixes for LUNA in clm5_0, and small urban issue in clm5_0
   ctsm1.0.dev101 ole/erik 06/17/2020 Changes from Keith to bring a list of variables to the parameter file
   ctsm1.0.dev100    sacks 06/09/2020 Deallocate memory after running init_interp
   ctsm1.0.dev099    sacks 06/08/2020 Update cime, needed for izumi machine updates
