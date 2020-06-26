@@ -212,17 +212,50 @@ produced by ``make_runtime_inputs``). In addition, a few other NetCDF files are 
 ``lilac_in``, of which the file listed in ``atmaero_stream`` is typically a standard input
 file (as opposed to one that you, the user, has provided).
 
-**Idea of inputdata directory... this can be a symlink, or it can be an actual directory,
-depending on how build_ctsm was run.**
+CTSM's standard input files are expected to be in subdirectories of an ``inputdata``
+directory. With the ``build_ctsm`` workflow, this ``inputdata`` directory can be found
+under the specified build directory. Depending on the options used for ``build_ctsm``,
+this may be a new directory or it may be a symbolic link to an existing directory. These
+standard input files are stored on a number of publicly available servers, such as
+https://svn-ccsm-inputdata.cgd.ucar.edu/trunk/inputdata/.
 
-**As a convenience, can run download_input_data.**
+As a convenience, we provide a tool to obtain all of the needed standard input files for
+your configuration: **To download these files to their expected locations, simply run**
+``download_input_data`` **from the** ``runtime_inputs`` **directory.** This script reads
+the file names from ``clm.input_data_list`` and ``lilac_in`` to determine which files need
+to be downloaded.
 
-**There will likely be errors about some files not being able to be obtained, particularly
-for user-provided files.**
+You will likely get some messages like, "Cannot download file since it lives outside of
+the input_data_root", possibly followed by a final message, "Could not find all inputdata
+on any server". As long as these messages just refer to your custom, resolution-specific
+files (and not to CTSM's standard input files), then this is nothing to worry about.
 
 Copying the necessary files to the model's run directory
 ========================================================
 
-.. todo::
+Finally, copy the following files to the directory from which you will run the model:
 
-   TODO: Fill this section in
+- ``lnd_in``: This is the main namelist input file for CTSM
+
+- ``lnd_modelio.nml``: This sets CTSM's PIO (parallel i/o library) configuration settings
+
+- ``lilac_in``: This namelist controls the operation of LILAC
+
+.. note::
+
+   We have not discussed ``lnd_modelio.nml`` above. This is because, if you have run
+   ``build_ctsm`` with appropriate options, then you shouldn't need to make any changes to
+   this file. However, you may want to confirm that two settings, in particular, are set
+   correctly for your machine; these can be important for I/O performance:
+
+   - ``pio_stride``: this should generally be set to the number of physical processors per
+     shared-memory node on your machine. This is set from the ``--max-mpitasks-per-node``
+     argument for a user-defined machine; it should be set automatically for a machine
+     that has been ported to CIME.
+
+   - ``pio_typename``: this should generally be set to either ``pnetcdf`` or
+     ``netcdf``. Using PNetCDF (Parallel NetCDF) can result in significantly better I/O
+     performance, but this is only possible if you have the PNetCDF library on your
+     machine. The default for this variable is controlled by the ``--no-pnetcdf`` argument
+     to ``build_ctsm``, but you can change it here if you mistakenly set or didn't set
+     ``--no-pnetcdf`` when running ``build_ctsm``.
