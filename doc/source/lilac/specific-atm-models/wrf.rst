@@ -278,6 +278,8 @@ Check the last line of the real log file for the following message::
 
     SUCCESS COMPLETE REAL_EM INIT
 
+.. _wrf-create-input-namelists-for-ctsm-and-lilac:
+
 Create input namelists for CTSM and LILAC
 =========================================
 
