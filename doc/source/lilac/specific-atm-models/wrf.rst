@@ -9,7 +9,7 @@
 This section describes the procedure for building and running the CTSM
 library and its dependencies, and linking to these libraries in the WRF
 model's build via LILAC. As such this section repeats some information
-from earlier sections but in recipe form and with minimal detail.
+from earlier sections but in recipe form and with minimal explanation.
 
 .. important::
 
@@ -35,15 +35,17 @@ Clone the CTSM repository::
 .. todo::
 
     Remove "git checkout lilac_cap" from the above when ready
+    Also the clone has been giving me:
+    git-lfs filter-process: git-lfs: command not found
+    fatal: The remote end hung up unexpectedly
+    warning: Clone succeeded, but checkout failed.
+    ...until I type module load git; git lfs install
+    ...do we need to warn users in case they happen to be contributing to doc?
 
-Build CTSM and its dependencies based on instructions from previous sections,
-for example for cheyenne::
+Build CTSM and its dependencies. Again, this example assumes that you are
+working on cheyenne::
 
-    ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne --build-without-openmp
-
-.. todo::
-
-    Remove "--build-without-openmp" from the above when ready
+    ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
 
 Source ctsm_build_environment.sh (bash environment)::
 
@@ -57,14 +59,11 @@ or ctsm_build_environment.csh (Cshell environment):
 
 .. note::
 
-  For additional details on preparing the CTSM, including how to
+  For further detail on preparing the CTSM, including how to
   recompile when making code changes to the CTSM, read Section 3.2:
-  https://escomp.github.io/ctsm-docs/versions/master/html/lilac/obtaining-building-and-running/index.html
   https:../obtaining-building-and-running/index.html
-
-.. todo::
-
-  If the second (relative) link works, remove the first (absolute) link
+  By the way, do not let Section 3.2.2 confuse you. We address that step
+  right after compiling the WRF model (next).
 
 Building the WRF model with CTSM
 --------------------------------
@@ -77,7 +76,7 @@ Building the WRF model with CTSM
 Clone the WRF CTSM branch into your_directory_name::
 
     cd ..
-    git clone git@github.com:billsacks/WRF.git
+    git clone https://github.com/billsacks/WRF.git
     cd WRF
     git checkout lilac_dev
 
@@ -112,7 +111,7 @@ The ./clean command is necessary after any modification of WRF code::
     ./configure
 
 At the prompt choose one of the options, similar to the compiler used 
-for building CTSM. The specific example has been tested successfuly by
+for building CTSM. The specific example has been tested successfully by
 choosing 15 here.
 
 .. todo::
@@ -129,8 +128,8 @@ Now compile em_real and save the log::
 
 .. note::
 
-    The ./compile step might take more than 30 minutes to complete.
-
+    Optional: One may use tmux or nohup for configuring and compiling.
+    Try "man nohup" for more information.
 
 .. note::
 
@@ -139,15 +138,48 @@ Now compile em_real and save the log::
 
 .. note::
 
-    Optional: One may use tmux or nohup for configuring and compiling.
-    Try "man nohup" for more information.
+    The ./compile step may take more than 30 minutes to complete.
+    While you wait, follow the instructions in Section 3.2.2 (next)
 
+Now follow the instructions in this Section::
+
+ https:../obtaining-building-and-running/setting-ctsm-runtime-options.html
+
+In step 3 of that Section we used for this example::
+
+ lnd_domain_file = /glade/work/slevis/barlage_wrf_ctsm/conus/gen_domain_files/domain.lnd.wrf2ctsm_lnd_wrf2ctsm_ocn.191211.nc
+ fsurdat = /glade/work/slevis/git_wrf/ctsm_surf/surfdata_conus_hist_16pfts_Irrig_CMIP6_simyr2000_c191212.nc
+ finidat = /glade/work/slevis/git_wrf/ctsm_init/finidat_interp_dest_wrfinit_snow_ERAI_12month.nc
+
+In step 4 of that Section we used for this example::
+
+ atm_mesh_filename = '/glade/work/slevis/barlage_wrf_ctsm/conus/mesh/wrf2ctsm_land_conus_ESMFMesh_c20191216.nc'
+ lnd_mesh_filename = '/glade/work/slevis/barlage_wrf_ctsm/conus/mesh/wrf2ctsm_land_conus_ESMFMesh_c20191216.nc' 
+
+In step 6 of that Section you will copy some files to your WRF/run
+directory. Then you will be ready to continue.
+
+.. note::
+
+ If you wish to merge your WRF initial conditions from a wrfinput file
+ into the existing CTSM initial condition file, complete the following step.
+
+Type::
+
+ module load ncl
+ ncl transfer_wrfinput_to_ctsm_with_snow.ncl 'finidat="the_existing_finidat_file.nc"' 'wrfinput="your_wrfinput_file"' 'merged="the_merged_finidat_file.nc"'
+
+.. todo::
+
+ Make the above ncl script available.
 
 Compile WRF Preprocessing System (WPS)
 --------------------------------------
 
 The WRF Preprocessing System (WPS) is a set of programs to prepare
 inputs to the real program executable (real.exe) for WRF real-data simulations.
+If you wish to complete the offered example with preexisting inputs, then
+skip to the next section, which is titled "Run WRF."
 
 .. note::
 
@@ -183,8 +215,8 @@ Then, compile WPS::
     Alternatively, you can check the log for successful build message.
 
 
-Run WRF Preprocessing System (WPS)
-----------------------------------
+Run WPS
+-------
 
 Edit namelist.wps for your domain of interest, which should be the same
 domain as used in your WRF namelist.
@@ -278,86 +310,17 @@ Check the last line of the real log file for the following message::
 
     SUCCESS COMPLETE REAL_EM INIT
 
-.. _wrf-create-input-namelists-for-ctsm-and-lilac:
-
-Create input namelists for CTSM and LILAC
-=========================================
-
-Introduce the following diffs to 
-./your_directory_name/ctsm/lilac/atm_driver/<file>
-where <file> is atm_driver_in, ctsm.cfg, and lilac_in.
-In particular, replace the entries preceded by minus signs with the entries
-preceded by plus signs.
-
-diff ./lilac/atm_driver/atm_driver_in ./lilac/atm_driver/atm_driver_in:
-
-.. code-block:: diff
-
-  -  atm_mesh_file = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
-  -  atm_global_nx = 72
-  -  atm_global_ny = 46
-  +  atm_mesh_file = '/glade/work/slevis/barlage_wrf_ctsm/conus/mesh/wrf2ctsm_land_conus_ESMFMesh_c20191216.nc'
-  +  atm_global_nx = 199
-  +  atm_global_ny = 139
-
-diff ./lilac/atm_driver/ctsm.cfg ./lilac/atm_driver/ctsm.cfg:
-
-.. code-block:: diff
-
-  -configuration     = clm
-  -structure         = standard
-  -clm_bldnml_opts   = -bgc sp
-  -gridmask          = gx3v7
-  -lnd_grid          = 4x5 
-  -lnd_domain_file   = domain.lnd.fv4x5_gx3v7.091218.nc
-  -lnd_domain_path   = /glade/p/cesmdata/cseg/inputdata/share/domains
-  -clm_namelist_opts = hist_nhtfrq=-24 hist_mfilt=1 hist_ndens=1
-  +configuration     = nwp
-  +structure         = fast
-  +clm_bldnml_opts   = -bgc sp -clm_usr_name wrf2ctsm
-  +gridmask          = null
-  +lnd_grid          = wrf2ctsm
-  +lnd_domain_file   = domain.lnd.wrf2ctsm_lnd_wrf2ctsm_ocn.191211.nc
-  +lnd_domain_path   = /glade/work/slevis/barlage_wrf_ctsm/conus/gen_domain_files
-  +clm_namelist_opts = hist_nhtfrq=1 hist_mfilt=1 hist_ndens=1 fsurdat="/glade/work/barlage/ctsm/conus/surfdata_conus/surfdata_conus_hist_16pfts_Irrig_CMIP6_simyr2000_c191212.nc" finidat="/glade/scratch/sacks/wrf_code/WRF/test/em_real/nldas_nwp_0109a.clm2.r.2000-04-01-64800.nc" use_init_interp=.true.
-
-diff ./lilac/atm_driver/lilac_in ./lilac/atm_driver/lilac_in:
-
-.. code-block:: diff
-
-  - atm_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
-  + atm_mesh_filename = '/glade/work/slevis/barlage_wrf_ctsm/conus/mesh/wrf2ctsm_land_conus_ESMFMesh_c20191216.nc'
-
-  - lnd_mesh_filename = '/glade/p/cesmdata/cseg/inputdata/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc'
-  + lnd_mesh_filename = '/glade/work/slevis/barlage_wrf_ctsm/conus/mesh/wrf2ctsm_land_conus_ESMFMesh_c20191216.nc'
-
-Before you generate the lnd_in file, you may modify user_nl_clm in
-/glade/scratch/$USER/ctsm_build_dir/case/. For example you may wish to
-point to an alternate CTSM initial condition file. To merge WRF initial
-conditions from a wrfinput file into a CTSM initial condition file, type::
-
- module load ncl
- ncl transfer_wrfinput_to_ctsm_with_snow.ncl 'finidat="finidat_interp_dest.nc"' 'wrfinput="./your_directory_name/WRF/test/em_real/wrfinput_d01.noseaice"' 'merged="finidat_interp_dest_wrfinit_snow.nc"'
-
-.. todo::
-
- Make the above ncl script available. If the finidat and wrfinput files
- need to be consistent for this to work, we should explain how to
- generate a consistent finidat file.
-
-Generate the lnd_in file by running the following from
-./your_directory_name/ctsm/lilac/atm_driver::
-
-  ../../lilac_config/buildnml 
-
-Copy lilac_in, lnd_in, and lnd_modelio.nml to the WRF/run directory.
-
 
 Run WRF
 -------
 
-If real program completed successfully, we should see wrfinput and wrfbdy files
-in our directory.
+If real.exe completed successfully, we should have wrfinput and wrfbdy files
+in our directory. If you plan to use this example's preexisting files, copy
+the following files to your WRF/run directory::
+
+ /glade/work/slevis/git_wrf/WRF/test/em_real/namelist.input.ctsm.2013.d01.12month
+ /glade/work/slevis/git_wrf/WRF/test/em_real/wrfinput_d01.ERAI.12month
+ /glade/work/slevis/git_wrf/WRF/test/em_real/wrfbdy_d01.ERAI.12month
 
 Now run WRF-CTSM. On Cheyenne this means submitting a batch job to PBS (Pro workload management system).
 For detailed instructions on running a batch job on Cheyenne, please check:
@@ -372,6 +335,7 @@ A simple PBS script to run WRF-CTSM on Cheyenne looks like this:
     #PBS -A your_project_code
     #PBS -l walltime=01:00:00
     #PBS -q queue_name
+    #PBS -j oe
     #PBS -k eod
     #PBS -m abe
     #PBS -M your_email_address
@@ -384,6 +348,19 @@ A simple PBS script to run WRF-CTSM on Cheyenne looks like this:
     ### Run the executable
     mpiexec_mpt ./wrf.exe
 
-If you named this script run_wrf_ctsm.csh, then you type next::
+If you named this script run_wrf_ctsm.csh, submit the job like this::
 
     qsub run_wrf_ctsm.csh
+
+If your terminal windows have logged off, repeat
+source ctsm_build_environment.sh (bash environment) before submitting
+the job::
+
+    source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.sh
+
+or ctsm_build_environment.csh (Cshell environment):
+
+.. code-block:: Tcsh
+
+    source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.csh
+
