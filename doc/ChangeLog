@@ -1,4 +1,136 @@
 ===============================================================
+Tag name:  ctsm1.0.dev102
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri Jun 26 01:32:04 MDT 2020
+One-line Summary: Some important fixes for LUNA in clm5_0, and small urban issue in clm5_0
+
+Purpose of changes
+------------------
+
+Fix some important issues that were found in LUNA for the arctic. These changes were large enough
+that we had to re-tune the clm5_0 parameters to give a similar simulation. Leah Birch noticed 
+that the formulations in the code disagreed with the paper. Correcting this caused arctic plants
+to be less productive. In order to compensate parameters for leafcn, and slatop were adjusted for 
+broadleaf_deciduous_boreal_shrub and c3_arctic_grass for clm5_0.
+
+The total vegetation carbon threshold on exit_spinup (from accelerated decomposition (AD) mode) was 
+increased from 0.1 to 1.0. Without this change some PFT's can die out in exit spinup even when
+they have significant carbon stores from the AD spinup mode.
+
+There is an implicit assumption in the urban building energy model that building width equals 
+street width. However, this assumption can/should be relaxed and building width can be derived 
+from the morphology dataset. 
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):  #738 #803 #953 #958 #1056
+ Fixes #1056 -- Remove allpfts dimension
+ Fixes #953 -- Incorrect formula in LUNA uses day time rather than average of day/night
+ Fixes #958 -- LUNA day length factor missing
+ Fixes #738 -- Totvegc threshold increased from 0.1 to 1.
+ Fixes #803 -- No longer assume building width
+
+Known bugs introduced in this tag (include github issue ID): #1060
+   #1060 -- Some code cleanup of luna bug fixes
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_0
+
+[x] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): clm5_0 climate adjusted for arctic plants
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files): New parameter files
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): We 
+  chose some bad names for variables, so we'll clean this up in a seperate step (see #1060)
+
+Changes to tests or testing: None
+
+Code reviewed by: self, olyson, bill-sacks, wweider
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (266 compare differently because of update in paramsfile and jmaxb1)
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:  Yes for clm5_0
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5_0 when Luna on as well as smaller changes for urban
+    - what platforms/compilers: all
+    - nature of change: climate changing, but tuned to respond similar to clm5.0
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+     luna changes: oleson case clm50_ctsm10d089_2deg_GSWP3V1_luna3_jmaxb1-0.17_slatopA_leafcnA_hist
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+    urban changes:
+
+
+http://webext.cgd.ucar.edu/I2000/clm50_ctsm10d098_1deg_GSWP3V1_CON_FIXBUILDENERGY_2000/lnd/clm50_ctsm10d098_1deg_GSWP3V1_CON_FIXBUILDENERGY_2000.1991_2010-clm50_ctsm10d098_1deg_GSWP3V1_CON_2000.1991_2010/setsIndex.html
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #1034 and #962
+(https://github.com/ESCOMP/ctsm/pull)
+   #1034 -- Building energy fix
+   #962 --- Fixes for the LUNA dayl bugs 
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev101
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326), oleson (Keith Oleson)
 Date: Wed Jun 17 23:51:22 MDT 2020
