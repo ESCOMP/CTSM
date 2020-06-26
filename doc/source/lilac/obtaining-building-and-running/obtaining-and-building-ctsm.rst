@@ -64,8 +64,9 @@ Building CTSM requires:
 
 - python3
 
-  - The default version of python (when you run python without specifying 2 vs. 3) should
-    be python3
+  - Note that some scripts in the workflow look for 'python3' and others look for
+    'python'. So python should be available under both of these names (although it is okay
+    for ``python`` to refer to version 2.7.x).
 
 - perl version 5
 

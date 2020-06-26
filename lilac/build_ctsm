@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Script to build CTSM library and its dependencies using cime's build system"""
 
 import os
