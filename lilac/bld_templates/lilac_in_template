@@ -26,7 +26,7 @@
   pio_rearr_comm_enable_isend_comp2io = .false.
   pio_rearr_comm_enable_isend_io2comp = .true.
   pio_rearr_comm_fcd = "2denable"
-  pio_rearr_comm_max_pend_req_comp2io = 0
+  pio_rearr_comm_max_pend_req_comp2io = -2
   pio_rearr_comm_max_pend_req_io2comp = 64
   pio_rearr_comm_type = "p2p"
 /
