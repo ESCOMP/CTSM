@@ -123,7 +123,7 @@ contains
     integer                :: numOwnedElements
     real(r8), pointer      :: ownedElemCoords(:)
     real(r8)               :: mesh_lon, mesh_lat
-    real(r8)               :: tolerance = 1.e-5_r8
+    real(r8), parameter    :: tolerance = 1.e-4_r8
     character(len=*), parameter :: subname='(lilac_atmcap_init): '
     !-------------------------------------------------------------------------
 
