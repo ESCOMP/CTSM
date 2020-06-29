@@ -1152,9 +1152,9 @@ contains
 
          smp_l             =>    soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]                      
          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)                   
-         h2osoi_ice        =>    waterstatebulk_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)                               
-         h2osoi_liq        =>    waterstatebulk_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-         qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col   
+         h2osoi_ice        =>    waterstatebulk_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)                               
+         h2osoi_liq        =>    waterstatebulk_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
+         qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col  &   
          )  ! end associate statement
 
       ! Get time step

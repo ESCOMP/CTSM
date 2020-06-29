@@ -950,7 +950,7 @@ module CLMFatesInterfaceMod
    ! ====================================================================================
 
    subroutine restart( this, bounds_proc, ncid, flag, waterdiagnosticbulk_inst, &
-                             canopystate_inst, soilstate_inst )
+                             waterstatebulk_inst, canopystate_inst, soilstate_inst )
 
       ! ---------------------------------------------------------------------------------
       ! The ability to restart the model is handled through three different types of calls
@@ -982,7 +982,8 @@ module CLMFatesInterfaceMod
       type(bounds_type)              , intent(in)    :: bounds_proc
       type(file_desc_t)              , intent(inout) :: ncid    ! netcdf id
       character(len=*)               , intent(in)    :: flag
-      type(waterdiagnosticbulk_type)          , intent(inout) :: waterdiagnosticbulk_inst
+      type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
+      type(waterstatebulk_type)      , intent(inout) :: waterstatebulk_inst
       type(canopystate_type)         , intent(inout) :: canopystate_inst
       type(soilstate_type)           , intent(inout) :: soilstate_inst
       
@@ -1207,7 +1208,7 @@ module CLMFatesInterfaceMod
                           soilstate_inst%bsw_col(c,1:nlevsoil)
                      
                      this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) = &
-                        waterdiagnosticbulk_inst%waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
+                          waterstatebulk_inst%h2osoi_liq_col(c,1:nlevsoil)
                   end do
 
 
@@ -1925,7 +1926,8 @@ module CLMFatesInterfaceMod
     type(soilbiogeochem_carbonstate_type), intent(in) :: soilbiogeochem_carbonstate_inst
 
     ! locals
-    integer :: s,c
+    real(r8) :: dtime
+    integer  :: s,c
 
     associate(& 
         hr            => soilbiogeochem_carbonflux_inst%hr_col,      & ! (gC/m2/s) total heterotrophic respiration
@@ -1940,7 +1942,7 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
       end do
 
-      dtime = get_step_size()
+      dtime = get_step_size_real()
       
       ! Update history variables that track these variables
       call this%fates_hist%update_history_cbal(nc, &
