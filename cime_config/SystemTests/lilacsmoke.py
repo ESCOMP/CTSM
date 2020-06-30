@@ -113,6 +113,13 @@ class LILACSMOKE(SystemTestsCommon):
                             self._runtime_inputs_dir(),
                             'make_runtime_inputs.log')
 
+        # In lilac_in, we intentionally use the land mesh file for both atm_mesh_filename
+        # and lnd_mesh_filename
+        lnd_mesh = self._case.get_value('LND_DOMAIN_MESH')
+        self._fill_in_variables_in_file(filename='lilac_in',
+                                        replacements={'atm_mesh_filename':lnd_mesh,
+                                                      'lnd_mesh_filename':lnd_mesh})
+
     def _extract_var_from_namelist(self, nl_filename, varname):
         """Tries to find a variable named varname in the given file; returns its value
 
