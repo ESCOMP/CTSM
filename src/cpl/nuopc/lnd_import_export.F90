@@ -859,7 +859,7 @@ contains
          minus=.true., ungridded_index=4, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Fall_methane', bounds, input=lnd2atm_inst%flux_ch4_grc, minus=.true., rc=rc)
+    call state_setexport(exportState, 'Fall_methane', bounds, input=lnd2atm_inst%ch4_surf_flux_tot_grc, minus=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_setexport(exportState, 'Sl_ram1', bounds, input=lnd2atm_inst%ram1_grc, rc=rc)

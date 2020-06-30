@@ -328,15 +328,6 @@ contains
          lnd2atm_inst%flxdst_grc        (bounds%begg:bounds%endg, :), &
          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-
-    ! ch4 flux
-    if (use_lch4) then
-       call c2g( bounds,     &
-            ch4_inst%ch4_surf_flux_tot_col (bounds%begc:bounds%endc), &
-            lnd2atm_inst%flux_ch4_grc      (bounds%begg:bounds%endg), &
-            c2l_scale_type= 'unity', l2g_scale_type='unity' )
-    end if
-
     !----------------------------------------------------
     ! lnd -> rof
     !----------------------------------------------------
