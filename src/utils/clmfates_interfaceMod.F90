@@ -238,7 +238,8 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_inventory_init
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
-     
+     integer                                        :: pass_biogeog 
+
      if (use_fates) then
 
         verbose_output = .false.
@@ -281,6 +282,13 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_spitfire',ival=pass_spitfire)
         
+        if(use_fates_fixed_biogeog)then
+           pass_biogeog = 1
+        else
+           pass_biogeog = 0
+        end if
+        call set_fates_ctrlparms('use_fixed_biogeog',ival=pass_biogeog)
+
         if(use_fates_ed_st3) then
            pass_ed_st3 = 1
         else
