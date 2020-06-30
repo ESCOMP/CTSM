@@ -250,7 +250,6 @@ contains
      use clm_varcon        , only : spval
      use clm_time_manager  , only : get_step_size_real, get_nstep
      use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
-     use clm_instMod       , only : surfalb_inst
      use CanopyStateType   , only : canopystate_type
      use SurfaceAlbedoType , only : surfalb_type
      use subgridAveMod
