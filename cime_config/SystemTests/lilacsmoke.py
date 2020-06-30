@@ -6,9 +6,10 @@ and compset are ignored.
 """
 
 import os
+import shutil
 
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
-from CIME.utils import run_cmd_no_fail, append_testlog
+from CIME.utils import run_cmd_no_fail, append_testlog, symlink_force
 from CIME.build import post_build
 from CIME.test_status import GENERATE_PHASE, BASELINE_PHASE, TEST_PASS_STATUS
 from CIME.XML.standard_module_setup import *
@@ -58,10 +59,105 @@ class LILACSMOKE(SystemTestsCommon):
                 build_dir=build_dir)
             self._run_build_cmd(cmd, exeroot, 'rebuild_ctsm.bldlog')
 
+            self._build_atm_driver()
+
+            self._create_runtime_inputs()
+
             # Setting logs=[] implies that we don't bother gzipping any of the build log
             # files; that seems fine for these purposes (and it keeps the above code
             # simpler).
             post_build(self._case, logs=[], build_complete=True)
+
+    def _build_atm_driver(self):
+        caseroot = self._case.get_value('CASEROOT')
+        lndroot = self._case.get_value('COMP_ROOT_DIR_LND')
+        blddir = os.path.join(caseroot, 'lilac_atm_driver', 'bld')
+
+        if not os.path.exists(blddir):
+            os.makedirs(blddir)
+        symlink_force(os.path.join(lndroot, 'lilac', 'atm_driver', 'Makefile'),
+                      os.path.join(blddir, 'Makefile'))
+        symlink_force(os.path.join(lndroot, 'lilac', 'atm_driver', 'atm_driver.F90'),
+                      os.path.join(blddir, 'atm_driver.F90'))
+        symlink_force(os.path.join(caseroot, 'Macros.make'),
+                      os.path.join(blddir, 'Macros.make'))
+
+        makevars = 'COMPILER={compiler} DEBUG={debug} CTSM_MKFILE={ctsm_mkfile}'.format(
+            compiler=self._case.get_value('COMPILER'),
+            debug=str(self._case.get_value('DEBUG')).upper(),
+            ctsm_mkfile=os.path.join(caseroot, 'lilac_build', 'ctsm.mk'))
+        makecmd = 'make {makevars} atm_driver'.format(makevars=makevars)
+        self._run_build_cmd(makecmd, blddir, 'atm_driver.bldlog')
+
+    def _create_runtime_inputs(self):
+        caseroot = self._case.get_value('CASEROOT')
+        lnd_domain_file = os.path.join(self._case.get_value('LND_DOMAIN_PATH'),
+                                       self._case.get_value('LND_DOMAIN_FILE'))
+
+        # Cheat a bit here: Get the fsurdat file from the already-generated lnd_in file in
+        # the host test case - i.e., from the standard cime-based preview_namelists. But
+        # this isn't really a morally-objectionable cheat, because in the real workflow,
+        # we expect the user to identify fsurdat manually; in this testing situation, we
+        # need to come up with some way to replace this manual identification, so cheating
+        # feels acceptable.
+        self._case.create_namelists(component='lnd')
+        fsurdat = self._extract_var_from_namelist(
+            nl_filename=os.path.join(caseroot, 'CaseDocs', 'lnd_in'),
+            varname='fsurdat')
+
+        self._fill_in_ctsm_cfg(lnd_domain_file=lnd_domain_file,
+                               fsurdat=fsurdat)
+
+        self._run_build_cmd('make_runtime_inputs --rundir {}'.format(self._runtime_inputs_dir()),
+                            self._runtime_inputs_dir(),
+                            'make_runtime_inputs.log')
+
+    def _extract_var_from_namelist(self, nl_filename, varname):
+        """Tries to find a variable named varname in the given file; returns its value
+
+        If not found, aborts
+        """
+        with open(nl_filename) as nl_file:
+            for line in nl_file:
+                match = re.search(r'^ *{} *= *[\'"]([^\'"]+)'.format(varname), line)
+                if match:
+                    return match.group(1)
+        expect(False, '{} not found in {}'.format(varname, nl_filename))
+
+    def _fill_in_ctsm_cfg(self, lnd_domain_file, fsurdat):
+        caseroot = self._case.get_value('CASEROOT')
+        runtime_inputs = self._runtime_inputs_dir()
+        if not os.path.exists(os.path.join(runtime_inputs, 'ctsm.cfg.orig')):
+            shutil.copyfile(src=os.path.join(runtime_inputs, 'ctsm.cfg'),
+                            dst=os.path.join(runtime_inputs, 'ctsm.cfg.orig'))
+        os.remove(os.path.join(runtime_inputs, 'ctsm.cfg'))
+
+        with open(os.path.join(runtime_inputs, 'ctsm.cfg.orig')) as ctsm_cfg_orig:
+            with open(os.path.join(runtime_inputs, 'ctsm.cfg'), 'w') as ctsm_cfg:
+                for line_orig in ctsm_cfg_orig:
+                    line = line_orig
+                    line = self._fill_in_variable(line=line,
+                                                  varname='lnd_domain_file',
+                                                  value=lnd_domain_file)
+                    line = self._fill_in_variable(line=line,
+                                                  varname='fsurdat',
+                                                  value=fsurdat)
+                    ctsm_cfg.write(line)
+
+    def _fill_in_variable(self, line, varname, value):
+        """Fill in a FILL_THIS_IN variable in a config or namelist file
+
+        Returns the line with FILL_THIS_IN replaced with the given value if this line is
+        for varname; otherwise returns line unchanged.
+        """
+        if re.search(r'^ *{} *='.format(varname), line):
+            newline = line.replace('FILL_THIS_IN', value)
+        else:
+            newline = line
+        return newline
+
+    def _runtime_inputs_dir(self):
+        return os.path.join(self._case.get_value('CASEROOT'), 'lilac_build', 'runtime_inputs')
 
     def run_phase(self):
         # FIXME(wjs, 2020-06-10) Fill this in

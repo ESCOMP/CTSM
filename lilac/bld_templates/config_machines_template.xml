@@ -18,14 +18,14 @@
     <DESC>Temporary build information for a CTSM build</DESC>
 
     <!-- OS: the operating system of this machine. Passed to cppflags for
-	 compiled programs as -DVALUE  recognized are LINUX, AIX, Darwin, CNL -->
+         compiled programs as -DVALUE  recognized are LINUX, AIX, Darwin, CNL -->
     <OS>$OS</OS>
 
     <!-- COMPILERS: compilers supported on this machine, comma seperated list, first is default -->
     <COMPILERS>$COMPILER</COMPILERS>
 
     <!-- MPILIBS: mpilibs supported on this machine, comma seperated list,
-	 first is default, mpi-serial is assumed and not required in
+         first is default, mpi-serial is assumed and not required in
          this list.
 
          It appears that the particular value is not important here: all
@@ -35,16 +35,16 @@
     <MPILIBS>mpich</MPILIBS>
 
     <!-- CIME_OUTPUT_ROOT: Base directory for case output,
-	 the case/bld and case/run directories are written below here -->
+         the case/bld and case/run directories are written below here -->
     <CIME_OUTPUT_ROOT>$CIME_OUTPUT_ROOT</CIME_OUTPUT_ROOT>
 
     <!-- DIN_LOC_ROOT: location of the inputdata data directory
-	 inputdata is downloaded automatically on a case by case basis as
-	 long as the user has write access to this directory. -->
+         inputdata is downloaded automatically on a case by case basis as
+         long as the user has write access to this directory. -->
     <DIN_LOC_ROOT>$$CIME_OUTPUT_ROOT/inputdata</DIN_LOC_ROOT>
 
     <!-- DIN_LOC_ROOT_CLMFORC: override of DIN_LOC_ROOT specific to CLM
-	 forcing data -->
+         forcing data -->
     <DIN_LOC_ROOT_CLMFORC>$$CIME_OUTPUT_ROOT/inputdata</DIN_LOC_ROOT_CLMFORC>
 
     <!-- DOUT_S_ROOT: root directory of short term archive files, short term
@@ -84,7 +84,7 @@
     <MAX_MPITASKS_PER_NODE>$MAX_MPITASKS_PER_NODE</MAX_MPITASKS_PER_NODE>
 
     <!-- mpirun: The mpi exec to start a job on this machine, supported values
-	 are values listed in MPILIBS above, default and mpi-serial.
+         are values listed in MPILIBS above, default and mpi-serial.
 
          This is irrelevant for this build-only port.
     -->
@@ -99,8 +99,8 @@
     </mpirun>
 
     <!-- module system: allowed module_system type values are:
-	 module  http://www.tacc.utexas.edu/tacc-projects/mclay/lmod
-	 soft http://www.mcs.anl.gov/hs/software/systems/softenv/softenv-intro.html
+         module  http://www.tacc.utexas.edu/tacc-projects/mclay/lmod
+         soft http://www.mcs.anl.gov/hs/software/systems/softenv/softenv-intro.html
          none
 
          For this build-only port, we don't specify a module system:
