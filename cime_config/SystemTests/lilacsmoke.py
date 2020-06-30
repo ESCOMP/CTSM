@@ -47,10 +47,6 @@ class LILACSMOKE(SystemTestsCommon):
                     compiler=compiler)
                 if debug:
                     cmd += ' --build-debug'
-                # For now, always build this test without threads: it doesn't need
-                # threads, and building unthreaded ensures that it works on a wider range
-                # of machines/compilers
-                cmd += ' --build-without-openmp'
                 self._run_build_cmd(cmd, exeroot, 'build_ctsm.bldlog')
 
             # We call the build script with --rebuild even for an initial build. This is

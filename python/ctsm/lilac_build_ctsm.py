@@ -82,7 +82,7 @@ def main(cime_path):
                    extra_cflags=args.extra_cflags,
                    no_pnetcdf=args.no_pnetcdf,
                    build_debug=args.build_debug,
-                   build_without_openmp=args.build_without_openmp,
+                   build_with_openmp=args.build_with_openmp,
                    inputdata_path=args.inputdata_path)
 
 def build_ctsm(cime_path,
@@ -103,7 +103,7 @@ def build_ctsm(cime_path,
                extra_cflags='',
                no_pnetcdf=False,
                build_debug=False,
-               build_without_openmp=False,
+               build_with_openmp=False,
                inputdata_path=None):
     """Implementation of build_ctsm command
 
@@ -138,7 +138,7 @@ def build_ctsm(cime_path,
         Ignored if machine is given
     no_pnetcdf (bool): if True, use netcdf rather than pnetcdf
     build_debug (bool): if True, build with flags for debugging
-    build_without_openmp (bool): if True, build without OpenMP support
+    build_with_openmp (bool): if True, build with OpenMP support
     inputdata_path (str or None): path to existing inputdata directory on this machine
         If None, an inputdata directory will be created for this build
         (If machine is given, then we use the machine's inputdata directory by default;
@@ -176,7 +176,7 @@ def build_ctsm(cime_path,
                  compiler=compiler,
                  machine=machine,
                  build_debug=build_debug,
-                 build_without_openmp=build_without_openmp,
+                 build_with_openmp=build_with_openmp,
                  inputdata_path=inputdata_path)
 
     if existing_inputdata:
@@ -318,11 +318,12 @@ Typical usage:
                                       help='Build with flags for debugging rather than production runs')
     non_rebuild_optional_list.append('build-debug')
 
-    non_rebuild_optional.add_argument('--build-without-openmp', action='store_true',
-                                      help='By default, CTSM is built with support for OpenMP threading;\n'
-                                      'if this flag is set, then CTSM is built without this support.\n'
-                                      'This is mainly useful if your machine/compiler does not support OpenMP.')
-    non_rebuild_optional_list.append('build-without-openmp')
+    non_rebuild_optional.add_argument('--build-with-openmp', action='store_true',
+                                      help='By default, CTSM is built WITHOUT support for OpenMP threading;\n'
+                                      'if this flag is set, then CTSM is built WITH this support.\n'
+                                      'This is important for performance if you will be running with\n'
+                                      'OpenMP threading-based parallelization, or hybrid MPI/OpenMP.')
+    non_rebuild_optional_list.append('build-with-openmp')
 
     non_rebuild_optional.add_argument('--inputdata-path',
                                       help='Path to directory containing CTSM\'s NetCDF inputs.\n'
@@ -574,7 +575,7 @@ def _fill_out_machine_files(build_dir,
 
 
 def _create_case(cime_path, build_dir, compiler,
-                 machine=None, build_debug=False, build_without_openmp=False,
+                 machine=None, build_debug=False, build_with_openmp=False,
                  inputdata_path=None):
     """Create a case that can later be used to build the CTSM library and its dependencies
 
@@ -586,7 +587,7 @@ def _create_case(cime_path, build_dir, compiler,
         If None, we assume we're using an on-the-fly machine port
         Otherwise, machine should be the name of a machine known to cime
     build_debug (bool): if True, build with flags for debugging
-    build_without_openmp (bool): if True, build without OpenMP support
+    build_with_openmp (bool): if True, build with OpenMP support
     inputdata_path (str or None): path to existing inputdata directory on this machine
         If None, we use the machine's default DIN_LOC_ROOT
     """
@@ -626,7 +627,7 @@ def _create_case(cime_path, build_dir, compiler,
     subprocess.check_call([xmlchange, 'LILAC_MODE=on'], cwd=case_dir)
     if build_debug:
         subprocess.check_call([xmlchange, 'DEBUG=TRUE'], cwd=case_dir)
-    if not build_without_openmp:
+    if build_with_openmp:
         subprocess.check_call([xmlchange, 'FORCE_BUILD_SMP=TRUE'], cwd=case_dir)
 
     run_cmd_output_on_error([os.path.join(case_dir, 'case.setup')],

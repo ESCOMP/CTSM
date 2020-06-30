@@ -87,7 +87,7 @@ class TestSysBuildCtsm(unittest.TestCase):
                    extra_fflags='-foo',
                    extra_cflags='-bar',
                    build_debug=True,
-                   build_without_openmp=True,
+                   build_with_openmp=True,
                    inputdata_path=os.path.join(self._tempdir, 'my_inputdata'))
         # the critical piece of this test is that the above command doesn't generate any
         # errors; however we also do some assertions below
