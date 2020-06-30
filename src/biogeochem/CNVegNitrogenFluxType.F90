@@ -557,29 +557,7 @@ contains
     else 
        vr_suffix = ""
     endif
-! WW added these two fields
-    ! This may just be a crop variable
-    this%livestemn_to_litter_patch(begp:endp) = spval
-    call hist_addfld1d (fname='LIVESTEMN_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='livestem N mortality', &
-         ptr_patch=this%livestemn_to_litter_patch, default='active')
 
-    this%hrv_livestemn_to_litter_patch(begp:endp) = spval
-    call hist_addfld1d (fname='HRV_LIVESTEMN_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='harvest livestem N mortality', &
-         ptr_patch=this%hrv_livestemn_to_litter_patch, default='active')
-
-    this%m_livestemn_to_litter_fire_patch(begp:endp) = spval
-    call hist_addfld1d (fname='M_LIVESTEMN_TO_LITTER_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='live stem N fire mortality to litter', &
-         ptr_patch=this%m_livestemn_to_litter_fire_patch, default='active')
-
-       this%m_livestemn_to_deadstemn_fire_patch(begp:endp) = spval
-       call hist_addfld1d (fname='M_LIVESTEMN_TO_DEADSTEMN_FIRE', units='gN/m^2/s', &
-            avgflag='A', long_name='live stem N fire mortality to dead stem N', &
-            ptr_patch=this%m_livestemn_to_deadstemn_fire_patch, default='active')
-! end WW additions
-    
     this%m_leafn_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_LEAFN_TO_LITTER', units='gN/m^2/s', &
          avgflag='A', long_name='leaf N mortality', &
@@ -603,7 +581,7 @@ contains
     this%m_livestemn_storage_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_LIVESTEMN_STORAGE_TO_LITTER', units='gN/m^2/s', &
          avgflag='A', long_name='live stem N storage mortality', &
-         ptr_patch=this%m_livestemn_storage_to_litter_patch, default='active')
+         ptr_patch=this%m_livestemn_storage_to_litter_patch, default='inactive')
 
     this%m_deadstemn_storage_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_DEADSTEMN_STORAGE_TO_LITTER', units='gN/m^2/s', &
@@ -633,7 +611,7 @@ contains
     this%m_livestemn_xfer_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_LIVESTEMN_XFER_TO_LITTER', units='gN/m^2/s', &
          avgflag='A', long_name='live stem N transfer mortality', &
-         ptr_patch=this%m_livestemn_xfer_to_litter_patch, default='active')
+         ptr_patch=this%m_livestemn_xfer_to_litter_patch, default='inactive')
 
     this%m_deadstemn_xfer_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_DEADSTEMN_XFER_TO_LITTER', units='gN/m^2/s', &
@@ -653,7 +631,7 @@ contains
     this%m_livestemn_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_LIVESTEMN_TO_LITTER', units='gN/m^2/s', &
          avgflag='A', long_name='live stem N mortality', &
-         ptr_patch=this%m_livestemn_to_litter_patch, default='active')
+         ptr_patch=this%m_livestemn_to_litter_patch, default='inactive')
 
     this%m_deadstemn_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_DEADSTEMN_TO_LITTER', units='gN/m^2/s', &
@@ -698,7 +676,7 @@ contains
     this%m_livestemn_storage_to_fire_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_LIVESTEMN_STORAGE_TO_FIRE', units='gN/m^2/s', &
          avgflag='A', long_name='live stem N storage fire loss', &
-         ptr_patch=this%m_livestemn_storage_to_fire_patch, default='active')
+         ptr_patch=this%m_livestemn_storage_to_fire_patch, default='inactive')
 
     this%m_deadstemn_storage_to_fire_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_DEADSTEMN_STORAGE_TO_FIRE', units='gN/m^2/s', &
@@ -728,7 +706,7 @@ contains
     this%m_livestemn_xfer_to_fire_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_LIVESTEMN_XFER_TO_FIRE', units='gN/m^2/s', &
          avgflag='A', long_name='live stem N transfer fire loss', &
-         ptr_patch=this%m_livestemn_xfer_to_fire_patch, default='active')
+         ptr_patch=this%m_livestemn_xfer_to_fire_patch, default='inactive')
 
     this%m_deadstemn_xfer_to_fire_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_DEADSTEMN_XFER_TO_FIRE', units='gN/m^2/s', &
@@ -748,7 +726,7 @@ contains
     this%m_livestemn_to_fire_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_LIVESTEMN_TO_FIRE', units='gN/m^2/s', &
          avgflag='A', long_name='live stem N fire loss', &
-         ptr_patch=this%m_livestemn_to_fire_patch, default='active')
+         ptr_patch=this%m_livestemn_to_fire_patch, default='inactive')
 
     this%m_deadstemn_to_fire_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_DEADSTEMN_TO_FIRE', units='gN/m^2/s', &
@@ -783,7 +761,7 @@ contains
     this%leafn_xfer_to_leafn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_XFER_TO_LEAFN', units='gN/m^2/s', &
          avgflag='A', long_name='leaf N growth from storage', &
-         ptr_patch=this%leafn_xfer_to_leafn_patch, default='active')
+         ptr_patch=this%leafn_xfer_to_leafn_patch, default='inactive')
 
     this%frootn_xfer_to_frootn_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN_XFER_TO_FROOTN', units='gN/m^2/s', &
@@ -793,7 +771,7 @@ contains
     this%livestemn_xfer_to_livestemn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN_XFER_TO_LIVESTEMN', units='gN/m^2/s', &
          avgflag='A', long_name='live stem N growth from storage', &
-         ptr_patch=this%livestemn_xfer_to_livestemn_patch, default='active')
+         ptr_patch=this%livestemn_xfer_to_livestemn_patch, default='inactive')
 
     this%deadstemn_xfer_to_deadstemn_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADSTEMN_XFER_TO_DEADSTEMN', units='gN/m^2/s', &
@@ -818,12 +796,12 @@ contains
     this%leafn_to_retransn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_TO_RETRANSN', units='gN/m^2/s', &
          avgflag='A', long_name='leaf N to retranslocated N pool', &
-         ptr_patch=this%leafn_to_retransn_patch, default='active')
+         ptr_patch=this%leafn_to_retransn_patch, default='inactive')
 
     this%frootn_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN_TO_LITTER', units='gN/m^2/s', &
          avgflag='A', long_name='fine root N litterfall', &
-         ptr_patch=this%frootn_to_litter_patch, default='active')
+         ptr_patch=this%frootn_to_litter_patch, default='inactive')
 
     this%retransn_to_npool_patch(begp:endp) = spval
     call hist_addfld1d (fname='RETRANSN_TO_NPOOL', units='gN/m^2/s', &
@@ -863,22 +841,22 @@ contains
     this%npool_to_livestemn_patch(begp:endp) = spval
     call hist_addfld1d (fname='NPOOL_TO_LIVESTEMN', units='gN/m^2/s', &
          avgflag='A', long_name='allocation to live stem N', &
-         ptr_patch=this%npool_to_livestemn_patch, default='active')
+         ptr_patch=this%npool_to_livestemn_patch, default='inactive')
 
     this%npool_to_livestemn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='NPOOL_TO_LIVESTEMN_STORAGE', units='gN/m^2/s', &
          avgflag='A', long_name='allocation to live stem N storage', &
-         ptr_patch=this%npool_to_livestemn_storage_patch, default='active')
+         ptr_patch=this%npool_to_livestemn_storage_patch, default='inactive')
 
     this%npool_to_deadstemn_patch(begp:endp) = spval
     call hist_addfld1d (fname='NPOOL_TO_DEADSTEMN', units='gN/m^2/s', &
          avgflag='A', long_name='allocation to dead stem N', &
-         ptr_patch=this%npool_to_deadstemn_patch, default='active')
+         ptr_patch=this%npool_to_deadstemn_patch, default='inactive')
 
     this%npool_to_deadstemn_storage_patch(begp:endp) = spval
     call hist_addfld1d (fname='NPOOL_TO_DEADSTEMN_STORAGE', units='gN/m^2/s', &
          avgflag='A', long_name='allocation to dead stem N storage', &
-         ptr_patch=this%npool_to_deadstemn_storage_patch, default='active')
+         ptr_patch=this%npool_to_deadstemn_storage_patch, default='inactive')
 
     this%npool_to_livecrootn_patch(begp:endp) = spval
     call hist_addfld1d (fname='NPOOL_TO_LIVECROOTN', units='gN/m^2/s', &
@@ -913,7 +891,7 @@ contains
     this%livestemn_storage_to_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN_STORAGE_TO_XFER', units='gN/m^2/s', &
          avgflag='A', long_name='live stem N shift storage to transfer', &
-         ptr_patch=this%livestemn_storage_to_xfer_patch, default='active')
+         ptr_patch=this%livestemn_storage_to_xfer_patch, default='inactive')
 
     this%deadstemn_storage_to_xfer_patch(begp:endp) = spval
     call hist_addfld1d (fname='DEADSTEMN_STORAGE_TO_XFER', units='gN/m^2/s', &
@@ -933,12 +911,12 @@ contains
     this%livestemn_to_deadstemn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN_TO_DEADSTEMN', units='gN/m^2/s', &
          avgflag='A', long_name='live stem N turnover', &
-         ptr_patch=this%livestemn_to_deadstemn_patch, default='active')
+         ptr_patch=this%livestemn_to_deadstemn_patch, default='inactive')
 
     this%livestemn_to_retransn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVESTEMN_TO_RETRANSN', units='gN/m^2/s', &
          avgflag='A', long_name='live stem N to retranslocated N pool', &
-         ptr_patch=this%livestemn_to_retransn_patch, default='active')
+         ptr_patch=this%livestemn_to_retransn_patch, default='inactive')
 
     this%livecrootn_to_deadcrootn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LIVECROOTN_TO_DEADCROOTN', units='gN/m^2/s', &
@@ -972,7 +950,7 @@ contains
             ptr_patch=this%fert_patch)
     end if
 
-    if (use_crop) then
+    if (use_crop .and. .not. use_fun) then
        this%soyfixn_patch(begp:endp) = spval
        call hist_addfld1d (fname='SOYFIXN', units='gN/m^2/s', &
             avgflag='A', long_name='soybean fixation', &
@@ -1424,11 +1402,6 @@ contains
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%avail_retransn_patch) 
 
-    call restartvar(ncid=ncid, flag=flag, varname='plant_nalloc', xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%plant_nalloc_patch) 
-
      if ( use_fun ) then
 !       set_missing_vals_to_constant for BACKWARDS_COMPATIBILITY(wrw, 2018-06-28) re. issue #426
 !       special land units previously set to spval, not 0
@@ -1548,12 +1521,6 @@ contains
              long_name='', units='', &
              interpinic_flag='interp', readvar=readvar, data=this%Nuptake_patch)
         call set_missing_vals_to_constant(this%Nuptake_patch, 0._r8)
-
-        call restartvar(ncid=ncid, flag=flag, varname='sminn_to_plant_fun', xtype=ncd_double,            &
-             dim1name='pft', &
-             long_name='Total soil N uptake of FUN', units='gN/m2/s', &
-             interpinic_flag='interp', readvar=readvar, data=this%sminn_to_plant_fun_patch)
-        call set_missing_vals_to_constant(this%sminn_to_plant_fun_patch, 0._r8)
      end if
 ! End BACKWARDS_COMPATIBILITY(wrw, 2018-06-28) re. issue #426
 
