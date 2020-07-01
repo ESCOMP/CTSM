@@ -768,11 +768,10 @@ module CLMFatesInterfaceMod
          ! this will eventually change
          ! today's hlm harvest flag needs to be set no matter what
          if (get_do_harvest()) then
-            this%fates(nc)%bc_in(s)%hlm_do_harvest_today = after_start_of_harvest_ts
             if (after_start_of_harvest_ts) then
-               this%fates(nc)%bc_in(s)%hlm_harvest(1:num_harvest_inst) = harvest_rates(g,1:num_harvest_inst)
+               this%fates(nc)%bc_in(s)%hlm_harvest_rates(1:num_harvest_inst) = harvest_rates(g,1:num_harvest_inst)
             else
-               this%fates(nc)%bc_in(s)%hlm_harvest(1:num_harvest_inst) = 0._r8
+               this%fates(nc)%bc_in(s)%hlm_harvest_rates(1:num_harvest_inst) = 0._r8
             end if
             this%fates(nc)%bc_in(s)%hlm_harvest_catnames(1:num_harvest_inst) = harvest_varnames(1:num_harvest_inst)
          endif

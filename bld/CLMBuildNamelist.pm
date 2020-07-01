@@ -2679,13 +2679,10 @@ sub setup_logic_do_harvest {
       if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
          $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
       }
-      #cdk disabling this for now, but probably there is a better way to do it.
-      #cdk elsif (!&value_is_true($nl->get_value('use_cn'))) {
-      #cdk    $cannot_be_true = "$var can only be set to true when running with CN (use_cn = true)";
-      #cdk }
-      #cdk elsif (&value_is_true($nl->get_value('use_fates'))) {
-      #cdk    $cannot_be_true = "$var currently doesn't work with ED";
-      #cdk }
+
+      elsif (!&value_is_true($nl->get_value('use_cn')) && !&value_is_true($nl->get_value('use_fates'))) {
+         $cannot_be_true = "$var can only be set to true when running with either CN or FATES";
+      }
 
       if ($cannot_be_true) {
          $default_val = ".false.";
