@@ -200,7 +200,7 @@ contains
     use dynTimeInfoMod , only : time_info_type
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds  ! proc-level bounds
+    type(bounds_type), intent(in) :: bounds
     real(r8)         , intent(out):: harvest_rates(bounds%begg: , 1: ) ! output the harvest rates
     logical          , intent(out):: after_start_of_harvest_ts
     !
@@ -210,9 +210,6 @@ contains
 
     character(len=*), parameter :: subname = 'dynHarvest_interp'
     !-----------------------------------------------------------------------
-
-    !!! NOTE I AM NOT USING THE BOUNDS_LEVEL_PROC ASSERTION HERE BECAUSE OF WHERE IN THE CALLING
-    !!! SEQUENCE THIS IS CALLED.  I THINK THIS IS SAFE BUT NEED TO CONFIRM.  --CDK
 
     call dynHarvest_file%time_info%set_current_year()
 
