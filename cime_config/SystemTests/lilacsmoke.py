@@ -204,36 +204,47 @@ class LILACSMOKE(SystemTestsCommon):
                             dst=orig_filepath)
         os.remove(filepath)
 
+        counts = dict.fromkeys(replacements, 0)
         with open(orig_filepath) as orig_file:
             with open(filepath, 'w') as new_file:
                 for orig_line in orig_file:
                     line = orig_line
                     for varname in replacements:
-                        # In practice, at most one of the replacements will be done. But
-                        # it's simplest just to use a loop over all possible replacements.
                         if varname in placeholders:
                             this_placeholder = placeholders[varname]
                         else:
                             this_placeholder = 'FILL_THIS_IN'
-                        line = self._fill_in_variable(line=line,
-                                                      varname=varname,
-                                                      value=replacements[varname],
-                                                      placeholder=this_placeholder)
+                        line, replacement_done = self._fill_in_variable(
+                            line=line,
+                            varname=varname,
+                            value=replacements[varname],
+                            placeholder=this_placeholder)
+                        if replacement_done:
+                            counts[varname] += 1
+                            break
                     new_file.write(line)
+
+        for varname in counts:
+            expect(counts[varname] > 0,
+                   'Did not find any instances of <{}> to replace in {}'.format(varname, filepath))
 
     def _fill_in_variable(self, line, varname, value, placeholder):
         """Fill in a placeholder variable in a config or namelist file
 
-        Returns the line with the given placeholder replaced with the given value if this
-        line is for varname; otherwise returns line unchanged.
+        Returns a tuple: (newline, replacement_done)
+        - newline is the line with the given placeholder replaced with the given value if this
+          line is for varname; otherwise returns line unchanged
+        - replacement_done is True if the replacement was done, otherwise False
         """
         if re.search(r'^ *{} *='.format(varname), line):
             expect(placeholder in line,
                    'Placeholder to replace ({}) not found in <{}>'.format(placeholder, line.strip()))
             newline = line.replace(placeholder, value)
+            replacement_done = True
         else:
             newline = line
-        return newline
+            replacement_done = False
+        return (newline, replacement_done)
 
     def _verify_inputdata_link(self):
         """Verify that the inputdata link has been set up correctly"""
