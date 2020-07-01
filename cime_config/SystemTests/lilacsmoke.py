@@ -3,7 +3,9 @@ Implementation of the CIME LILACSMOKE (LILAC smoke) test.
 
 This is a CTSM-specific test. It tests the building and running of CTSM via LILAC. Compset
 is ignored, but grid is important. Also, it's important that this test use the nuopc
-driver, both for the sake of the build and for extracting some runtime settings.
+driver, both for the sake of the build and for extracting some runtime settings. This test
+should also use the lilac testmod (or a testmod that derives from it) in order to
+establish the user_nl_ctsm file correctly.
 """
 
 import os
@@ -112,6 +114,12 @@ class LILACSMOKE(SystemTestsCommon):
         self._fill_in_variables_in_file(filepath=os.path.join(runtime_inputs, 'ctsm.cfg'),
                                         replacements={'lnd_domain_file':lnd_domain_file,
                                                       'fsurdat':fsurdat})
+
+        # The user_nl_ctsm in the case directory is set up based on the standard testmods
+        # mechanism. We use that one in place of the standard user_nl_ctsm, since the one
+        # in the case directory may contain test-specific modifications.
+        shutil.copyfile(src=os.path.join(caseroot, 'user_nl_ctsm'),
+                        dst=os.path.join(runtime_inputs, 'user_nl_ctsm'))
 
         self._run_build_cmd('make_runtime_inputs --rundir {}'.format(runtime_inputs),
                             runtime_inputs,

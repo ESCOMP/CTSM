@@ -685,7 +685,8 @@ def _stage_runtime_inputs(build_dir, no_pnetcdf):
                        'PIO_TYPENAME':pio_typename})
 
     shutil.copyfile(
-        src=os.path.join(_PATH_TO_TEMPLATES, 'user_nl_ctsm'),
+        src=os.path.join(path_to_ctsm_root(),
+                         'cime_config', 'usermods_dirs', 'lilac', 'user_nl_ctsm'),
         dst=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'user_nl_ctsm'))
 
     make_link(_PATH_TO_MAKE_RUNTIME_INPUTS,
