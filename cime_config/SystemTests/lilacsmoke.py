@@ -130,7 +130,9 @@ class LILACSMOKE(SystemTestsCommon):
         lnd_mesh = self._case.get_value('LND_DOMAIN_MESH')
         self._fill_in_variables_in_file(filepath=os.path.join(runtime_inputs, 'lilac_in'),
                                         replacements={'atm_mesh_filename':lnd_mesh,
-                                                      'lnd_mesh_filename':lnd_mesh})
+                                                      'lnd_mesh_filename':lnd_mesh,
+                                                      'lilac_histfreq_option':'ndays'},
+                                        placeholders={'lilac_histfreq_option':'never'})
 
         # We run download_input_data partly because it may be needed and partly to test
         # this script. Note, though, that some files (the surface dataset, land domain
@@ -184,11 +186,18 @@ class LILACSMOKE(SystemTestsCommon):
                     return match.group(1)
         expect(False, '{} not found in {}'.format(varname, nl_filename))
 
-    def _fill_in_variables_in_file(self, filepath, replacements):
+    def _fill_in_variables_in_file(self, filepath, replacements, placeholders=None):
         """For the given file, make the given replacements
 
         replacements should be a dictionary mapping variable names to their values
+
+        If placeholders is given, it should be a dictionary mapping some subset of
+        variable names to their placeholders. Anything not given here uses a placeholder
+        of 'FILL_THIS_IN'.
         """
+        if placeholders is None:
+            placeholders = {}
+
         orig_filepath = '{}.orig'.format(filepath)
         if not os.path.exists(orig_filepath):
             shutil.copyfile(src=filepath,
@@ -202,19 +211,26 @@ class LILACSMOKE(SystemTestsCommon):
                     for varname in replacements:
                         # In practice, at most one of the replacements will be done. But
                         # it's simplest just to use a loop over all possible replacements.
+                        if varname in placeholders:
+                            this_placeholder = placeholders[varname]
+                        else:
+                            this_placeholder = 'FILL_THIS_IN'
                         line = self._fill_in_variable(line=line,
                                                       varname=varname,
-                                                      value=replacements[varname])
+                                                      value=replacements[varname],
+                                                      placeholder=this_placeholder)
                     new_file.write(line)
 
-    def _fill_in_variable(self, line, varname, value):
-        """Fill in a FILL_THIS_IN variable in a config or namelist file
+    def _fill_in_variable(self, line, varname, value, placeholder):
+        """Fill in a placeholder variable in a config or namelist file
 
-        Returns the line with FILL_THIS_IN replaced with the given value if this line is
-        for varname; otherwise returns line unchanged.
+        Returns the line with the given placeholder replaced with the given value if this
+        line is for varname; otherwise returns line unchanged.
         """
         if re.search(r'^ *{} *='.format(varname), line):
-            newline = line.replace('FILL_THIS_IN', value)
+            expect(placeholder in line,
+                   'Placeholder to replace ({}) not found in <{}>'.format(placeholder, line.strip()))
+            newline = line.replace(placeholder, value)
         else:
             newline = line
         return newline
