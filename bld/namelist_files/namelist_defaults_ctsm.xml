@@ -24,6 +24,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- CO2 volume mixing ratio -->
 <co2_ppmv sim_year="1000"      >379.0</co2_ppmv>
+<co2_ppmv sim_year="1979"      >336.6</co2_ppmv>
+<co2_ppmv sim_year="1982"      >340.6</co2_ppmv>
 <co2_ppmv sim_year="2000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="2010"      >388.8</co2_ppmv>
 <co2_ppmv sim_year="2015"      >397.5</co2_ppmv>
@@ -503,13 +505,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 -->
 
 <!-- How close in years should the date be to use initial conditions -->
-<init_interp_how_close>75</init_interp_how_close>
+<init_interp_how_close>61</init_interp_how_close>
 
 <!-- What simulation years can find initial conditions to interpolate from (find one that's within the how_close years above)-->
-<init_interp_sim_years>1850,2000,2010</init_interp_sim_years>
+<init_interp_sim_years>1850,1982,2000,2010</init_interp_sim_years>
 
 <!-- Interpolate from an initial condition file at startup? -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1850">.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1982">.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000">.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010">.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2015">.true.</use_init_interp>
@@ -578,6 +581,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1982" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+>hgrid=ne0np4.ARCTIC.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+>hgrid=ne120np4.pg3 maxpft=79 mask=tx0.1v3  use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
 <!-- 2010 IC's... -->
@@ -694,6 +705,22 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_CRUv7"
 >lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c190312.nc
+</finidat>
+
+<!-- Present day no crop spinup ARCTIC grid with irrigation on -->
+<finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19820101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1982"
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
+>/glade/work/aherring/grids/var-res/ne0np4.ARCTIC.ne30x4/inic/FHIST_ARCTIC_ne30x4_mt12_1979bc-mg3.clm2.r.1982-01-01-00000_c200424.nc
+</finidat>
+
+<!-- Present day crop spinup at 1/4-degree with irrigation on -->
+<finidat hgrid="ne120np4.pg3"    maxpft="79"  mask="tx0.1v3" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="60101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2000"
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
+>/glade/work/aherring/grids/uniform-res/ne120np4.pg3/inic/F2000climoBgcCrop_ne120pg3_ne120pg3_mt13_7680pes.clm2.r.06-01-00000_c200506.nc
 </finidat>
 
 <!-- Present day and 2010 for coupled cases -->
@@ -914,6 +941,8 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <flanduse_timeseries hgrid="ne30np4"       sim_year_range="1850-2000"  irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
+<flanduse_timeseries hgrid="ne0np4.ARCTIC.ne30x4"       sim_year_range="1850-2000"
+>lnd/clm2/surfdata_map/landuse.timeseries_ne0np4.ARCTIC.ne30x4_hist_78pfts_CMIP6_simyr1850-2015_c191023.nc</flanduse_timeseries>
 
 <!-- Dynamic PFT surface datasets for crop -->
 
