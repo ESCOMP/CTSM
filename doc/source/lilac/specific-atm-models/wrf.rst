@@ -19,14 +19,8 @@ from earlier sections but in recipe form and with minimal explanation.
 Clone CTSM Repository and Build CTSM
 ------------------------------------
 
-Decide where you will work. This is also where the model will write
-output, so on cheyenne you may benefit from starting in
-/glade/scratch/$USER due to the larger disk space there.
-
 Clone the CTSM repository::
 
-    mkdir your_directory_name
-    cd your_directory_name
     git clone https://github.com/ESCOMP/CTSM.git
     cd CTSM
     git checkout lilac_cap
@@ -35,15 +29,9 @@ Clone the CTSM repository::
 .. todo::
 
     Remove "git checkout lilac_cap" from the above when ready
-    Also the clone has been giving me:
-    git-lfs filter-process: git-lfs: command not found
-    fatal: The remote end hung up unexpectedly
-    warning: Clone succeeded, but checkout failed.
-    ...until I type module load git; git lfs install
-    ...do we need to warn users in case they happen to be contributing to doc?
 
-Build CTSM and its dependencies. Again, this example assumes that you are
-working on cheyenne::
+Build CTSM and its dependencies based on the instructions from previous sections,
+for example on Cheyenne::
 
     ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
 
@@ -65,28 +53,25 @@ or ctsm_build_environment.csh (Cshell environment):
   By the way, do not let Section 3.2.2 confuse you. We address that step
   right after compiling the WRF model (next).
 
-Building the WRF model with CTSM
---------------------------------
+Building WRF with CTSM
+----------------------
 
 .. todo::
 
     update the git address to WRF feature branch...
-    and remove "git checkout lilac_dev" below
 
-Clone the WRF CTSM branch into your_directory_name::
+Clone the WRF CTSM feature branch::
 
-    cd ..
     git clone https://github.com/billsacks/WRF.git
     cd WRF
     git checkout lilac_dev
 
 
-Set makefile variables from CTSM needed for the WRF build, for bash::
+Set makefile variables from CTSM needed for the WRF build by setting the following environment.
+For example for Bash::
 
     export WRF_CTSM_MKFILE=/glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
 
-or for Cshell use the setenv command and remove the "=" (here and in
-subsequent cases):
 
 .. code-block:: Tcsh
 
