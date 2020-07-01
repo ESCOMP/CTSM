@@ -29,7 +29,7 @@ atm_driver.o : $(CURDIR)/atm_driver.F90
 	$(MPIFC) -c $(CTSM_INCLUDES) $(FFLAGS) $<
 
 atm_driver: atm_driver.o 
-	$(MPIFC) -o $@ $^ $(CTSM_LIBS)
+	$(MPIFC) -o $@ $^ $(LDFLAGS) $(CTSM_LIBS)
 	mv atm_driver atm_driver.exe
 
 # module dependencies:
