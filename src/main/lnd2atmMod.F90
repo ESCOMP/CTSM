@@ -294,7 +294,7 @@ contains
 
         lnd2atm_inst%lwtgcell_grc(:,:) = 0.0e+00_r8
         do l = bounds%begl,bounds%endl
-            if (lun%itype(p) /= ispval) then
+            if (lun%itype(l) /= ispval) then
                 g = lun%gridcell(l)
                 lnd2atm_inst%lwtgcell_grc(g,lun%itype(l)) = lun%wtgcell(l)
             end if
