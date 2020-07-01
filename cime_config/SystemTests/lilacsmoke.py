@@ -1,8 +1,9 @@
 """
 Implementation of the CIME LILACSMOKE (LILAC smoke) test.
 
-This is a CTSM-specific test. It tests the building and running of CTSM via LILAC. Grid
-and compset are ignored.
+This is a CTSM-specific test. It tests the building and running of CTSM via LILAC. Compset
+is ignored, but grid is important. Also, it's important that this test use the nuopc
+driver, both for the sake of the build and for extracting some runtime settings.
 """
 
 import os
@@ -63,6 +64,8 @@ class LILACSMOKE(SystemTestsCommon):
 
             self._create_runtime_inputs()
 
+            self._setup_atm_driver_rundir()
+
             # Setting logs=[] implies that we don't bother gzipping any of the build log
             # files; that seems fine for these purposes (and it keeps the above code
             # simpler).
@@ -91,6 +94,7 @@ class LILACSMOKE(SystemTestsCommon):
 
     def _create_runtime_inputs(self):
         caseroot = self._case.get_value('CASEROOT')
+        runtime_inputs = self._runtime_inputs_dir()
         lnd_domain_file = os.path.join(self._case.get_value('LND_DOMAIN_PATH'),
                                        self._case.get_value('LND_DOMAIN_FILE'))
 
@@ -105,18 +109,18 @@ class LILACSMOKE(SystemTestsCommon):
             nl_filename=os.path.join(caseroot, 'CaseDocs', 'lnd_in'),
             varname='fsurdat')
 
-        self._fill_in_variables_in_file(filename='ctsm.cfg',
+        self._fill_in_variables_in_file(filepath=os.path.join(runtime_inputs, 'ctsm.cfg'),
                                         replacements={'lnd_domain_file':lnd_domain_file,
                                                       'fsurdat':fsurdat})
 
-        self._run_build_cmd('make_runtime_inputs --rundir {}'.format(self._runtime_inputs_dir()),
-                            self._runtime_inputs_dir(),
+        self._run_build_cmd('make_runtime_inputs --rundir {}'.format(runtime_inputs),
+                            runtime_inputs,
                             'make_runtime_inputs.log')
 
         # In lilac_in, we intentionally use the land mesh file for both atm_mesh_filename
         # and lnd_mesh_filename
         lnd_mesh = self._case.get_value('LND_DOMAIN_MESH')
-        self._fill_in_variables_in_file(filename='lilac_in',
+        self._fill_in_variables_in_file(filepath=os.path.join(runtime_inputs, 'lilac_in'),
                                         replacements={'atm_mesh_filename':lnd_mesh,
                                                       'lnd_mesh_filename':lnd_mesh})
 
@@ -131,9 +135,34 @@ class LILACSMOKE(SystemTestsCommon):
         # they will need to be downloaded manually (e.g., using check_input_data from the
         # test case).
         self._verify_inputdata_link()
-        self._run_build_cmd('download_input_data --rundir {}'.format(self._runtime_inputs_dir()),
-                            self._runtime_inputs_dir(),
+        self._run_build_cmd('download_input_data --rundir {}'.format(runtime_inputs),
+                            runtime_inputs,
                             'download_input_data.log')
+
+    def _setup_atm_driver_rundir(self):
+        caseroot = self._case.get_value('CASEROOT')
+        lndroot = self._case.get_value('COMP_ROOT_DIR_LND')
+        rundir = os.path.join(caseroot, 'lilac_atm_driver', 'run')
+
+        if not os.path.exists(rundir):
+            os.makedirs(rundir)
+            shutil.copyfile(src=os.path.join(lndroot, 'lilac', 'atm_driver', 'atm_driver_in'),
+                            dst=os.path.join(rundir, 'atm_driver_in'))
+
+        # As above: assume the land variables also apply to the atmosphere
+        lnd_mesh = self._case.get_value('LND_DOMAIN_MESH')
+        lnd_nx = self._case.get_value('LND_NX')
+        lnd_ny = self._case.get_value('LND_NY')
+        expect(self._case.get_value('STOP_OPTION') == 'ndays',
+               'LILAC testing currently assumes STOP_OPTION of ndays, not {}'.format(
+                   self._case.get_value('STOP_OPTION')))
+        stop_n = self._case.get_value('STOP_N')
+        self._fill_in_variables_in_file(filepath=os.path.join(rundir, 'atm_driver_in'),
+                                        replacements={'atm_mesh_file':lnd_mesh,
+                                                      'atm_global_nx':str(lnd_nx),
+                                                      'atm_global_ny':str(lnd_ny),
+                                                      'atm_stop_day':str(stop_n+1),
+                                                      'atm_ndays_all_segs':str(stop_n)})
 
     def _extract_var_from_namelist(self, nl_filename, varname):
         """Tries to find a variable named varname in the given file; returns its value
@@ -147,14 +176,11 @@ class LILACSMOKE(SystemTestsCommon):
                     return match.group(1)
         expect(False, '{} not found in {}'.format(varname, nl_filename))
 
-    def _fill_in_variables_in_file(self, filename, replacements):
-        """For the given file in the runtime inputs directory, make the given replacements
+    def _fill_in_variables_in_file(self, filepath, replacements):
+        """For the given file, make the given replacements
 
         replacements should be a dictionary mapping variable names to their values
         """
-        caseroot = self._case.get_value('CASEROOT')
-        runtime_inputs = self._runtime_inputs_dir()
-        filepath = os.path.join(runtime_inputs, filename)
         orig_filepath = '{}.orig'.format(filepath)
         if not os.path.exists(orig_filepath):
             shutil.copyfile(src=filepath,
