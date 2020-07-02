@@ -138,6 +138,8 @@ module CLMFatesInterfaceMod
    use dynHarvestMod          , only : num_harvest_inst, harvest_varnames
    use dynHarvestMod          , only : harvest_units, mass_units, unitless_units
    use dynHarvestMod          , only : dynHarvest_interp_resolve_harvesttypes
+   use FatesConstantsMod      , only : hlm_harvest_area_fraction
+   use FatesConstantsMod      , only : hlm_harvest_carbon
 
    implicit none
    
@@ -337,16 +339,6 @@ module CLMFatesInterfaceMod
         if(get_do_harvest()) then
            pass_logging = 1
            pass_num_lu_harvest_cats = num_harvest_inst
-           ! !!! cdk fo rnow set this inline because harvest_units is being set after this
-           ! if (trim(harvest_units) .eq. trim(unitless_units)) then
-           !    pass_lu_harvest = 1
-           ! else if (trim(harvest_units) .eq. trim(mass_units)) then
-           !    pass_lu_harvest = 2
-           ! else
-           !    write(iulog,*) 'units field not one of the specified options.'
-           !    write(iulog,*) harvest_units
-           !    call endrun(msg=errMsg(sourcefile, __LINE__))
-           ! end if
            pass_lu_harvest = 1
         else
            pass_lu_harvest = 0
@@ -774,6 +766,19 @@ module CLMFatesInterfaceMod
                this%fates(nc)%bc_in(s)%hlm_harvest_rates(1:num_harvest_inst) = 0._r8
             end if
             this%fates(nc)%bc_in(s)%hlm_harvest_catnames(1:num_harvest_inst) = harvest_varnames(1:num_harvest_inst)
+            
+            ! also pass the units that the harvest rates are specified in
+            if (trim(harvest_units) .eq. trim(unitless_units)) then
+               this%fates(nc)%bc_in(s)%hlm_harvest_units = hlm_harvest_area_fraction
+            else if (trim(harvest_units) .eq. trim(mass_units)) then
+               this%fates(nc)%bc_in(s)%hlm_harvest_units = hlm_harvest_carbon
+            else
+               write(iulog,*) 'units field not one of the specified options.'
+               write(iulog,*) harvest_units
+               call endrun(msg=errMsg(sourcefile, __LINE__))
+           end if
+
+
          endif
 
       end do
