@@ -22,8 +22,8 @@ _MACH_NAME = 'ctsm_build'
 
 # these are arbitrary, since we only use the case for its build, not any of the runtime
 # settings; they just need to be valid
-_COMPSET = 'I2000Ctsm50NwpSpNldasRsGs'
-_RES = 'nldas2_rnldas2_mnldas2'
+_COMPSET = 'I2000Ctsm50NwpSpAsRsGs'
+_RES = 'f10_f10_musgs'
 
 _PATH_TO_TEMPLATES = os.path.join(path_to_ctsm_root(),
                                   'lilac',
