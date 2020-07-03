@@ -149,16 +149,7 @@ class LILACSMOKE(SystemTestsCommon):
                                         placeholders={'lilac_histfreq_option':'never'})
 
         # We run download_input_data partly because it may be needed and partly to test
-        # this script. Note, though, that some files (the surface dataset, land domain
-        # file, and land/atm mesh file) will not be downloaded automatically: Because of
-        # the way this test fills in these file paths, they end up pointing to the true
-        # inputdata directory on this machine rather than the sym linked one in
-        # lilac_build_dir (which kind of makes sense, because this simulates files that
-        # the user would provide themselves). Thus, these files live outside of the
-        # inputdata root considered by download_input_data. So if these files are missing,
-        # they will need to be downloaded manually (e.g., using check_input_data from the
-        # test case).
-        self._verify_inputdata_link()
+        # this script.
         self._run_build_cmd('download_input_data --rundir {}'.format(runtime_inputs),
                             runtime_inputs,
                             'download_input_data.log')
@@ -263,13 +254,6 @@ class LILACSMOKE(SystemTestsCommon):
             newline = line
             replacement_done = False
         return (newline, replacement_done)
-
-    def _verify_inputdata_link(self):
-        """Verify that the inputdata link has been set up correctly"""
-        din_loc_root = self._case.get_value('DIN_LOC_ROOT')
-        inputdata = os.path.join(self._case.get_value('CASEROOT'), 'lilac_build', 'inputdata')
-        expect(os.path.realpath(inputdata) == os.path.realpath(din_loc_root),
-               'inputdata not set up with the correct link')
 
     def _runtime_inputs_dir(self):
         return os.path.join(self._case.get_value('CASEROOT'), 'lilac_build', 'runtime_inputs')

@@ -41,9 +41,6 @@ def download_input_data(rundir):
     _create_lilac_input_data_list(rundir)
     case = Case(os.path.realpath(os.path.join(rundir, os.pardir, 'case')))
     case.check_all_input_data(
-        # We deliberately do NOT use realpath in the following, since file names in
-        # namelists will use the inputdata symbolic link
-        input_data_root=os.path.abspath(os.path.join(rundir, os.pardir, 'inputdata')),
         data_list_dir=rundir,
         download=True,
         chksum=False)

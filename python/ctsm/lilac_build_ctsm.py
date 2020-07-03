@@ -179,17 +179,6 @@ def build_ctsm(cime_path,
                  build_with_openmp=build_with_openmp,
                  inputdata_path=inputdata_path)
 
-    if existing_inputdata:
-        # For a user-defined machine without inputdata_path specified, we create an
-        # inputdata directory for this case above. For an existing cime-ported machine, or
-        # one where inputdata_path is specified, we still want an inputdata directory
-        # alongside the other directories, but now it will just be a link to the real
-        # inputdata space on that machine. (Note that, for a user-defined machine, it's
-        # important that we have created this directory before creating the case, whereas
-        # for an existing machine, we need to wait until after we have created the case to
-        # know where to make the sym link point to.)
-        _link_to_inputdata(build_dir=build_dir)
-
     _stage_runtime_inputs(build_dir=build_dir, no_pnetcdf=no_pnetcdf)
 
     print('Initial setup complete; it is now safe to work with the runtime inputs in\n'
@@ -648,17 +637,6 @@ def _create_case(cime_path, build_dir, compiler,
             make_link(os.path.join(case_dir, '.env_mach_specific.{}'.format(extension)),
                       os.path.join(build_dir, 'ctsm_build_environment.{}'.format(extension)))
 
-def _link_to_inputdata(build_dir):
-    """Make a sym link to an existing inputdata directory
-
-    Args:
-    build_dir (str): path to build directory
-    """
-    inputdata_dir = _xmlquery('DIN_LOC_ROOT', build_dir)
-
-    make_link(inputdata_dir,
-              os.path.join(build_dir, _INPUTDATA_DIRNAME))
-
 def _stage_runtime_inputs(build_dir, no_pnetcdf):
     """Stage CTSM and LILAC runtime inputs
 
@@ -668,15 +646,16 @@ def _stage_runtime_inputs(build_dir, no_pnetcdf):
     """
     os.makedirs(os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME))
 
+    inputdata_dir = _xmlquery('DIN_LOC_ROOT', build_dir)
     fill_template_file(
         path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'ctsm_template.cfg'),
         path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'ctsm.cfg'),
-        substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
+        substitutions={'INPUTDATA':inputdata_dir})
 
     fill_template_file(
         path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'lilac_in_template'),
         path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lilac_in'),
-        substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
+        substitutions={'INPUTDATA':inputdata_dir})
 
     pio_stride = _xmlquery('MAX_MPITASKS_PER_NODE', build_dir)
     if no_pnetcdf:
