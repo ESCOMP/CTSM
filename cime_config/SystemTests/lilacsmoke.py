@@ -135,7 +135,8 @@ class LILACSMOKE(SystemTestsCommon):
         shutil.copyfile(src=os.path.join(caseroot, 'user_nl_ctsm'),
                         dst=os.path.join(runtime_inputs, 'user_nl_ctsm'))
 
-        self._run_build_cmd('make_runtime_inputs --rundir {}'.format(runtime_inputs),
+        script_to_run = os.path.join(runtime_inputs, 'make_runtime_inputs')
+        self._run_build_cmd('{} --rundir {}'.format(script_to_run, runtime_inputs),
                             runtime_inputs,
                             'make_runtime_inputs.log')
 
@@ -150,7 +151,8 @@ class LILACSMOKE(SystemTestsCommon):
 
         # We run download_input_data partly because it may be needed and partly to test
         # this script.
-        self._run_build_cmd('download_input_data --rundir {}'.format(runtime_inputs),
+        script_to_run = os.path.join(runtime_inputs, 'download_input_data')
+        self._run_build_cmd('{} --rundir {}'.format(script_to_run, runtime_inputs),
                             runtime_inputs,
                             'download_input_data.log')
 
