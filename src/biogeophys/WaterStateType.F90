@@ -348,9 +348,9 @@ contains
                      this%h2osoi_vol_col(c,j) = 0.0_r8
                   else
                      if(use_fates_planthydro) then
-                         this%h2osoi_vol_col(c,j) = 0.75_r8*watsat_col(c,j)
+                         this%h2osoi_vol_col(c,j) = 0.75_r8*watsat_col(c,j)*ratio
                      else
-                         this%h2osoi_vol_col(c,j) = 0.15_r8
+                         this%h2osoi_vol_col(c,j) = 0.15_r8*ratio
                      end if
                   endif
                end do
