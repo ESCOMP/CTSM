@@ -68,7 +68,7 @@ contains
     end if
     close(fileunit)
 
-    write(histfile_prefix,"(2a)") trim(caseid),'.lilac.hi.'
+    write(histfile_prefix,"(2a)") trim(caseid),'.clm2.lilac_hi.'
 
     !---------------------------------------
     ! Get the clock info

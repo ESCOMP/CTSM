@@ -1,5 +1,5 @@
 &atm_driver_input
-  caseid                = 'test_lilac'      
+  caseid                = 'FILL_THIS_IN'
   atm_mesh_file         = 'FILL_THIS_IN'
   atm_global_nx         = FILL_THIS_IN
   atm_global_ny         = FILL_THIS_IN

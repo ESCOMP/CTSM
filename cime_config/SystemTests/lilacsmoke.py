@@ -6,8 +6,14 @@ is ignored, but grid is important. Also, it's important that this test use the n
 driver, both for the sake of the build and for extracting some runtime settings. This test
 should also use the lilac testmod (or a testmod that derives from it) in order to
 establish the user_nl_ctsm file correctly.
+
+Important directories under CASEROOT are:
+- lilac_build: this contains the build and the runtime inputs for the lilac run
+- lilac_atm_driver: this contains the build of the test driver as well as the run
+  directory in which the test is actually run
 """
 
+import glob
 import os
 import shutil
 
@@ -143,11 +149,14 @@ class LILACSMOKE(SystemTestsCommon):
         # In lilac_in, we intentionally use the land mesh file for both atm_mesh_filename
         # and lnd_mesh_filename
         lnd_mesh = self._case.get_value('LND_DOMAIN_MESH')
+        casename = self._case.get_value('CASE')
         self._fill_in_variables_in_file(filepath=os.path.join(runtime_inputs, 'lilac_in'),
-                                        replacements={'atm_mesh_filename':lnd_mesh,
+                                        replacements={'caseid':casename,
+                                                      'atm_mesh_filename':lnd_mesh,
                                                       'lnd_mesh_filename':lnd_mesh,
                                                       'lilac_histfreq_option':'ndays'},
-                                        placeholders={'lilac_histfreq_option':'never'})
+                                        placeholders={'caseid':'ctsm_lilac',
+                                                      'lilac_histfreq_option':'never'})
 
         # We run download_input_data partly because it may be needed and partly to test
         # this script.
@@ -174,8 +183,10 @@ class LILACSMOKE(SystemTestsCommon):
                'LILAC testing currently assumes STOP_OPTION of ndays, not {}'.format(
                    self._case.get_value('STOP_OPTION')))
         stop_n = self._case.get_value('STOP_N')
+        casename = self._case.get_value('CASE')
         self._fill_in_variables_in_file(filepath=os.path.join(rundir, 'atm_driver_in'),
-                                        replacements={'atm_mesh_file':lnd_mesh,
+                                        replacements={'caseid':casename,
+                                                      'atm_mesh_file':lnd_mesh,
                                                       'atm_global_nx':str(lnd_nx),
                                                       'atm_global_ny':str(lnd_ny),
                                                       'atm_stop_day':str(stop_n+1),
@@ -287,3 +298,28 @@ class LILACSMOKE(SystemTestsCommon):
         os.environ["OMP_NUM_THREADS"] = str(self._case.thread_count)
         cmd = self._case.get_mpirun_cmd(allow_unresolved_envvars=False)
         run_cmd_no_fail(cmd, from_dir=self._atm_driver_rundir())
+
+        self._link_to_output_files()
+
+    def _link_to_output_files(self):
+        """Make links to the output files so that they appear in the directory expected by the test case
+
+        Note: We do the run from a different directory in order to ensure that the run
+        isn't using any of the files that are staged by the test case in the standard run
+        directory. But then we need to create these links afterwards for the sake of
+        baseline generation / comparison.
+        """
+        casename = self._case.get_value('CASE')
+        rundir = self._case.get_value('RUNDIR')
+        pattern = '{}*.nc'.format(casename)
+
+        # First remove any old files from the run directory
+        old_files = glob.glob(os.path.join(rundir, pattern))
+        for one_file in old_files:
+            os.remove(one_file)
+
+        # Now link to new files
+        output_files = glob.glob(os.path.join(self._atm_driver_rundir(), pattern))
+        for one_file in output_files:
+            file_basename = os.path.basename(one_file)
+            symlink_force(one_file, os.path.join(rundir, file_basename))

@@ -564,7 +564,7 @@ contains
     if (masterproc) then
        ! Use an arbitrary time rather than trying to figure out the correct time stamp. This
        ! works because this subroutine is only called once, at the end of the run
-       ierr = nf90_create(trim(caseid)//'.atm.h0.0001-01.nc', nf90_clobber, ncid)
+       ierr = nf90_create(trim(caseid)//'.clm2.lilac_atm_driver_h0.0001-01.nc', nf90_clobber, ncid)
        if (ierr /= nf90_NoErr) call shr_sys_abort(' ERROR: nf90_create atm driver output file')
 
        ierr = nf90_def_dim(ncid, 'atm_nx', atm_global_nx, dimid_x)
