@@ -150,6 +150,7 @@ class LILACSMOKE(SystemTestsCommon):
                             'download_input_data.log')
 
     def _setup_atm_driver_rundir(self):
+        """Set up the directory from which we will actually do the run"""
         caseroot = self._case.get_value('CASEROOT')
         lndroot = self._case.get_value('COMP_ROOT_DIR_LND')
         rundir = os.path.join(caseroot, 'lilac_atm_driver', 'run')
@@ -159,7 +160,7 @@ class LILACSMOKE(SystemTestsCommon):
             shutil.copyfile(src=os.path.join(lndroot, 'lilac', 'atm_driver', 'atm_driver_in'),
                             dst=os.path.join(rundir, 'atm_driver_in'))
 
-        # As above: assume the land variables also apply to the atmosphere
+        # As elsewhere: assume the land variables also apply to the atmosphere
         lnd_mesh = self._case.get_value('LND_DOMAIN_MESH')
         lnd_nx = self._case.get_value('LND_NX')
         lnd_ny = self._case.get_value('LND_NY')
@@ -173,6 +174,10 @@ class LILACSMOKE(SystemTestsCommon):
                                                       'atm_global_ny':str(lnd_ny),
                                                       'atm_stop_day':str(stop_n+1),
                                                       'atm_ndays_all_segs':str(stop_n)})
+
+        for file_to_link in ['lnd_in', 'lnd_modelio.nml', 'lilac_in']:
+            symlink_force(os.path.join(self._runtime_inputs_dir(), file_to_link),
+                          os.path.join(rundir, file_to_link))
 
     def _extract_var_from_namelist(self, nl_filename, varname):
         """Tries to find a variable named varname in the given file; returns its value
