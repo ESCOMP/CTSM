@@ -18,12 +18,14 @@ import os
 import shutil
 
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
-from CIME.utils import run_cmd_no_fail, append_testlog, symlink_force, new_lid
+from CIME.utils import run_cmd, run_cmd_no_fail, symlink_force, new_lid, safe_copy, append_testlog
 from CIME.build import post_build
-from CIME.test_status import GENERATE_PHASE, BASELINE_PHASE, TEST_PASS_STATUS
+from CIME.test_status import NAMELIST_PHASE, GENERATE_PHASE, BASELINE_PHASE, TEST_PASS_STATUS, TEST_FAIL_STATUS
 from CIME.XML.standard_module_setup import *
 
 logger = logging.getLogger(__name__)
+
+_LILAC_RUNTIME_FILES = ['lnd_in', 'lnd_modelio.nml', 'lilac_in']
 
 class LILACSMOKE(SystemTestsCommon):
 
@@ -78,6 +80,8 @@ class LILACSMOKE(SystemTestsCommon):
             self._create_runtime_inputs()
 
             self._setup_atm_driver_rundir()
+
+            self._cmpgen_namelists()
 
             # Setting logs=[] implies that we don't bother gzipping any of the build log
             # files; that seems fine for these purposes (and it keeps the above code
@@ -192,9 +196,50 @@ class LILACSMOKE(SystemTestsCommon):
                                                       'atm_stop_day':str(stop_n+1),
                                                       'atm_ndays_all_segs':str(stop_n)})
 
-        for file_to_link in ['lnd_in', 'lnd_modelio.nml', 'lilac_in']:
+        for file_to_link in _LILAC_RUNTIME_FILES:
             symlink_force(os.path.join(self._runtime_inputs_dir(), file_to_link),
                           os.path.join(rundir, file_to_link))
+
+    def _cmpgen_namelists(self):
+        """Redoes the namelist comparison & generation with appropriate namelists
+
+        The standard namelist comparison & generation is done with the CaseDocs directory
+        from the test case. That isn't appropriate here, because those namelists aren't
+        actually used in this test. Instead, we want to compare & generate the namelists
+        used by the atm_driver-lilac-ctsm execution. Here, we do some file copies and then
+        re-call the namelist comparison & generation script in order to accomplish
+        this. This will overwrite the namelists generated earlier in the test, and will
+        also replace the results of the NLCOMP phase.
+
+        Note that we expect a failure in the NLCOMP phase that is run earlier in the test,
+        because that one will have compared the test's standard CaseDocs with the files
+        generated from here - and those two sets of namelists can be quite different.
+        """
+        caseroot = self._case.get_value('CASEROOT')
+        casedocs = os.path.join(caseroot, 'CaseDocs')
+        if os.path.exists(casedocs):
+            shutil.rmtree(casedocs)
+        os.makedirs(casedocs)
+
+        # case_cmpgen_namelists uses the existence of drv_in to decide whether namelists
+        # need to be regenerated. We do NOT want it to regenerate namelists, so we give it
+        # the file it wants.
+        with open(os.path.join(casedocs, 'drv_in'), 'a') as drv_in:
+            pass
+
+        for onefile in _LILAC_RUNTIME_FILES + ['atm_driver_in']:
+            safe_copy(os.path.join(self._atm_driver_rundir(), onefile),
+                      os.path.join(casedocs, onefile))
+
+        success = self._case.case_cmpgen_namelists()
+        # The setting of the NLCOMP phase status in case_cmpgen_namelists doesn't work
+        # here (probably because the test object has a saved version of the test status
+        # and so, when it goes to write the status of the build phase, it ends up
+        # overwriting whatever was set by case_cmpgen_namelists). So we need to set it
+        # here.
+        with self._test_status:
+            self._test_status.set_status(NAMELIST_PHASE, TEST_PASS_STATUS if success else TEST_FAIL_STATUS,
+                                         comments="(used lilac namelists)")
 
     def _extract_var_from_namelist(self, nl_filename, varname):
         """Tries to find a variable named varname in the given file; returns its value
