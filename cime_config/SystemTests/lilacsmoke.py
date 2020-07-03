@@ -11,6 +11,10 @@ Important directories under CASEROOT are:
 - lilac_build: this contains the build and the runtime inputs for the lilac run
 - lilac_atm_driver: this contains the build of the test driver as well as the run
   directory in which the test is actually run
+
+Note that namelists for this test are generated in the build phase; they are NOT
+regenerated when the test is submitted / run. This means that, if you have made any
+changes that will impact namelists, you will need to rebuild this test.
 """
 
 import glob
