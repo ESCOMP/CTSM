@@ -12,7 +12,7 @@ import os
 import shutil
 
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
-from CIME.utils import run_cmd_no_fail, append_testlog, symlink_force
+from CIME.utils import run_cmd_no_fail, append_testlog, symlink_force, new_lid
 from CIME.build import post_build
 from CIME.test_status import GENERATE_PHASE, BASELINE_PHASE, TEST_PASS_STATUS
 from CIME.XML.standard_module_setup import *
@@ -49,6 +49,9 @@ class LILACSMOKE(SystemTestsCommon):
                     build_dir=build_dir,
                     machine=machine,
                     compiler=compiler)
+                # It isn't straightforward to determine if pnetcdf is available on a
+                # machine. To keep things simple, always run without pnetcdf.
+                cmd += ' --no-pnetcdf'
                 if debug:
                     cmd += ' --build-debug'
                 self._run_build_cmd(cmd, exeroot, 'build_ctsm.bldlog')
@@ -63,6 +66,8 @@ class LILACSMOKE(SystemTestsCommon):
             self._run_build_cmd(cmd, exeroot, 'rebuild_ctsm.bldlog')
 
             self._build_atm_driver()
+
+            self._create_link_to_atm_driver()
 
             self._create_runtime_inputs()
 
@@ -93,6 +98,15 @@ class LILACSMOKE(SystemTestsCommon):
             ctsm_mkfile=os.path.join(caseroot, 'lilac_build', 'ctsm.mk'))
         makecmd = 'make {makevars} atm_driver'.format(makevars=makevars)
         self._run_build_cmd(makecmd, blddir, 'atm_driver.bldlog')
+
+    def _create_link_to_atm_driver(self):
+        caseroot = self._case.get_value('CASEROOT')
+        run_exe = (self._case.get_value('run_exe')).strip()
+
+        # Make a symlink to the atm_driver executable so that the case's run command finds
+        # it in the expected location
+        symlink_force(os.path.join(caseroot, 'lilac_atm_driver', 'bld', 'atm_driver.exe'),
+                      run_exe)
 
     def _create_runtime_inputs(self):
         caseroot = self._case.get_value('CASEROOT')
@@ -151,9 +165,8 @@ class LILACSMOKE(SystemTestsCommon):
 
     def _setup_atm_driver_rundir(self):
         """Set up the directory from which we will actually do the run"""
-        caseroot = self._case.get_value('CASEROOT')
         lndroot = self._case.get_value('COMP_ROOT_DIR_LND')
-        rundir = os.path.join(caseroot, 'lilac_atm_driver', 'run')
+        rundir = self._atm_driver_rundir()
 
         if not os.path.exists(rundir):
             os.makedirs(rundir)
@@ -261,6 +274,9 @@ class LILACSMOKE(SystemTestsCommon):
     def _runtime_inputs_dir(self):
         return os.path.join(self._case.get_value('CASEROOT'), 'lilac_build', 'runtime_inputs')
 
+    def _atm_driver_rundir(self):
+        return os.path.join(self._case.get_value('CASEROOT'), 'lilac_atm_driver', 'run')
+
     @staticmethod
     def _run_build_cmd(cmd, exeroot, logfile):
         """
@@ -277,6 +293,11 @@ class LILACSMOKE(SystemTestsCommon):
             append_testlog(lf.read())
 
     def run_phase(self):
-        # FIXME(wjs, 2020-06-10) Fill this in
-        pass
-
+        # This mimics a bit of what's done in the typical case.run. Note that
+        # case.get_mpirun_cmd creates a command that runs the executable given by
+        # case.run_exe. So it's important that (elsewhere in this test script) we create a
+        # link pointing from that to the atm_driver.exe executable.
+        lid = new_lid()
+        os.environ["OMP_NUM_THREADS"] = str(self._case.thread_count)
+        cmd = self._case.get_mpirun_cmd(allow_unresolved_envvars=False)
+        run_cmd_no_fail(cmd, from_dir=self._atm_driver_rundir())
