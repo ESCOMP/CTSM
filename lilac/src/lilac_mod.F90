@@ -245,12 +245,14 @@ contains
        write(logunit,*) trim(subname) // " ctsm gridded component created"
     end if
 
-    cname = " MOSART "
-    rof_gcomp = ESMF_GridCompCreate(name=cname, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error lilac mosart initialization')
-    call ESMF_LogWrite(subname//"Created "//trim(cname)//" component", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       write(logunit,*) trim(subname) // " mosart gridded component created"
+    if (couple_to_river) then
+       cname = " MOSART "
+       rof_gcomp = ESMF_GridCompCreate(name=cname, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error lilac mosart initialization')
+       call ESMF_LogWrite(subname//"Created "//trim(cname)//" component", ESMF_LOGMSG_INFO)
+       if (mytask == 0) then
+          write(logunit,*) trim(subname) // " mosart gridded component created"
+       end if
     end if
 
     cname = "Coupler from atmosphere to land"
@@ -269,20 +271,22 @@ contains
        write(logunit,*) trim(subname) // " coupler component (land to atmosphere) created"
     end if
 
-    cname = "Coupler from river to land"
-    cpl_rof2lnd_comp = ESMF_CplCompCreate(name=cname, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error lilac cpl_r2l initialization')
-    call ESMF_LogWrite(subname//"Created "//trim(cname)//" component", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       write(logunit,*) trim(subname) // " coupler component (atmosphere to land) created"
-    end if
+    if (couple_to_river) then
+       cname = "Coupler from river to land"
+       cpl_rof2lnd_comp = ESMF_CplCompCreate(name=cname, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error lilac cpl_r2l initialization')
+       call ESMF_LogWrite(subname//"Created "//trim(cname)//" component", ESMF_LOGMSG_INFO)
+       if (mytask == 0) then
+          write(logunit,*) trim(subname) // " coupler component (river to land) created"
+       end if
 
-    cname = "Coupler from land to river"
-    cpl_lnd2rof_comp = ESMF_CplCompCreate(name=cname, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error lilac cpl_l2r initialization')
-    call ESMF_LogWrite(subname//"Created "//trim(cname)//" component", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       write(logunit,*) trim(subname) // " coupler component (land to atmosphere) created"
+       cname = "Coupler from land to river"
+       cpl_lnd2rof_comp = ESMF_CplCompCreate(name=cname, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error lilac cpl_l2r initialization')
+       call ESMF_LogWrite(subname//"Created "//trim(cname)//" component", ESMF_LOGMSG_INFO)
+       if (mytask == 0) then
+          write(logunit,*) trim(subname) // " coupler component (land to river) created"
+       end if
     end if
 
     !-------------------------------------------------------------------------
@@ -307,13 +311,15 @@ contains
        write(logunit,*) trim(subname) // " CTSM setservices finished"
     end if
 
-    ! Register section -- set services -- mosart
-    call ESMF_GridCompSetServices(rof_gcomp, userRoutine=rof_register, userRc=user_rc, rc=rc)
-    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('rof_gcomp register failure')
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('rof_gcomp register failure')
-    call ESMF_LogWrite(subname//"MOSART SetServices finished!", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       write(logunit,*) trim(subname) // " CTSM setservices finished"
+    if (couple_to_river) then
+       ! Register section -- set services -- mosart
+       call ESMF_GridCompSetServices(rof_gcomp, userRoutine=rof_register, userRc=user_rc, rc=rc)
+       if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('rof_gcomp register failure')
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('rof_gcomp register failure')
+       call ESMF_LogWrite(subname//"MOSART SetServices finished!", ESMF_LOGMSG_INFO)
+       if (mytask == 0) then
+          write(logunit,*) trim(subname) // " CTSM setservices finished"
+       end if
     end if
 
     ! Register section -- set services -- coupler atmosphere to land
@@ -325,13 +331,15 @@ contains
        write(logunit,*) trim(subname) // " coupler from atmosphere to land setservices finished"
     end if
 
-    ! Register section -- set services -- river to land
-    call ESMF_CplCompSetServices(cpl_rof2lnd_comp, userRoutine=cpl_rof2lnd_register, userRc=user_rc, rc=rc)
-    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_rof2lnd_comp register failure')
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_rof2lnd_comp register failure')
-    call ESMF_LogWrite(subname//"Coupler from river to land  SetServices finished!", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       write(logunit,*) trim(subname) // " coupler from river to land setservices finished"
+    if (couple_to_river) then
+       ! Register section -- set services -- river to land
+       call ESMF_CplCompSetServices(cpl_rof2lnd_comp, userRoutine=cpl_rof2lnd_register, userRc=user_rc, rc=rc)
+       if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_rof2lnd_comp register failure')
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_rof2lnd_comp register failure')
+       call ESMF_LogWrite(subname//"Coupler from river to land  SetServices finished!", ESMF_LOGMSG_INFO)
+       if (mytask == 0) then
+          write(logunit,*) trim(subname) // " coupler from river to land setservices finished"
+       end if
     end if
 
     ! Register section -- set services -- coupler land to atmosphere
@@ -343,13 +351,15 @@ contains
        write(logunit,*) trim(subname) // " coupler from land to atmosphere setservices finished"
     end if
 
-    ! Register section -- set services -- coupler land to river
-    call ESMF_CplCompSetServices(cpl_lnd2rof_comp, userRoutine=cpl_lnd2rof_register, userRc=user_rc, rc=rc)
-    if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_lnd2rof_comp register failure')
-    if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_lnd2rof_comp register failure')
-    call ESMF_LogWrite(subname//"Coupler from land to river SetServices finished!", ESMF_LOGMSG_INFO)
-    if (mytask == 0) then
-       write(logunit,*) trim(subname) // " coupler from land to river setservices finished"
+    if (couple_to_river) then
+       ! Register section -- set services -- coupler land to river
+       call ESMF_CplCompSetServices(cpl_lnd2rof_comp, userRoutine=cpl_lnd2rof_register, userRc=user_rc, rc=rc)
+       if (chkerr(user_rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_lnd2rof_comp register failure')
+       if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('cpl_lnd2rof_comp register failure')
+       call ESMF_LogWrite(subname//"Coupler from land to river SetServices finished!", ESMF_LOGMSG_INFO)
+       if (mytask == 0) then
+          write(logunit,*) trim(subname) // " coupler from land to river setservices finished"
+       end if
     end if
 
     !-------------------------------------------------------------------------

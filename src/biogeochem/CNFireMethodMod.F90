@@ -21,6 +21,9 @@ module CNFireMethodMod
      ! Read namelist for the fire datasets
      procedure(CNFireReadNML_interface), public, deferred :: CNFireReadNML
 
+     ! Read parameters  for the fire datasets
+     procedure(CNFireReadParams_interface), public, deferred :: CNFireReadParams
+
      ! Interpolate the fire datasets
      procedure(CNFireInterp_interface) , public, deferred :: CNFireInterp
 
@@ -77,6 +80,21 @@ module CNFireMethodMod
     !-----------------------------------------------------------------------
 
   end subroutine CNFireReadNML_interface
+
+  subroutine CNFireReadParams_interface( this, ncid )
+    !
+    ! !DESCRIPTION:
+    ! Read parameters from parameter file
+    !
+    ! USES
+    use ncdio_pio   , only: file_desc_t
+    import :: cnfire_method_type
+    ! !ARGUMENTS:
+    implicit none
+    class(cnfire_method_type)     :: this
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+
+  end subroutine CNFireReadParams_interface
 
   subroutine CNFireInterp_interface(this, bounds)
     !

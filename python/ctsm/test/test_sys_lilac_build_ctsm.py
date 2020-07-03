@@ -54,10 +54,9 @@ class TestSysBuildCtsm(unittest.TestCase):
         # the critical piece of this test is that the above command doesn't generate any
         # errors; however we also do some assertions below
 
-        # ensure that inputdata directory was created and is NOT a sym link
+        # ensure that inputdata directory was created
         inputdata = os.path.join(build_dir, 'inputdata')
         self.assertTrue(os.path.isdir(inputdata))
-        self.assertFalse(os.path.islink(inputdata))
 
     def test_buildSetup_userDefinedMachine_allInfo(self):
         """Get through the case.setup phase with a user-defined machine
@@ -87,14 +86,14 @@ class TestSysBuildCtsm(unittest.TestCase):
                    extra_fflags='-foo',
                    extra_cflags='-bar',
                    build_debug=True,
-                   build_without_openmp=True,
+                   build_with_openmp=True,
                    inputdata_path=os.path.join(self._tempdir, 'my_inputdata'))
         # the critical piece of this test is that the above command doesn't generate any
         # errors; however we also do some assertions below
 
-        # ensure that inputdata directory is a symlink pointing to the correct location
+        # ensure that inputdata directory is NOT created
         inputdata = os.path.join(build_dir, 'inputdata')
-        self.assertEqual(os.path.realpath(inputdata), inputdata_path)
+        self.assertFalse(os.path.exists(inputdata))
 
 if __name__ == '__main__':
     unit_testing.setup_for_tests()

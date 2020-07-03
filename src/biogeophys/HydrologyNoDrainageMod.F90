@@ -8,7 +8,7 @@ Module HydrologyNoDrainageMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use clm_varctl        , only : iulog, use_vichydro, use_fates
-  use clm_varcon        , only : e_ice, denh2o, denice, rpi, spval
+  use clm_varcon        , only : denh2o, denice, rpi, spval
   use CLMFatesInterfaceMod, only : hlm_fates_interface_type
   use atm2lndType       , only : atm2lnd_type
   use AerosolMod        , only : aerosol_type

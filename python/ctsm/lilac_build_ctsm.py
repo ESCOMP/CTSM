@@ -22,8 +22,8 @@ _MACH_NAME = 'ctsm_build'
 
 # these are arbitrary, since we only use the case for its build, not any of the runtime
 # settings; they just need to be valid
-_COMPSET = 'I2000Ctsm50NwpSpNldasRsGs'
-_RES = 'nldas2_rnldas2_mnldas2'
+_COMPSET = 'I2000Ctsm50NwpSpAsRsGs'
+_RES = 'f10_f10_musgs'
 
 _PATH_TO_TEMPLATES = os.path.join(path_to_ctsm_root(),
                                   'lilac',
@@ -82,7 +82,7 @@ def main(cime_path):
                    extra_cflags=args.extra_cflags,
                    no_pnetcdf=args.no_pnetcdf,
                    build_debug=args.build_debug,
-                   build_without_openmp=args.build_without_openmp,
+                   build_with_openmp=args.build_with_openmp,
                    inputdata_path=args.inputdata_path)
 
 def build_ctsm(cime_path,
@@ -103,7 +103,7 @@ def build_ctsm(cime_path,
                extra_cflags='',
                no_pnetcdf=False,
                build_debug=False,
-               build_without_openmp=False,
+               build_with_openmp=False,
                inputdata_path=None):
     """Implementation of build_ctsm command
 
@@ -138,7 +138,7 @@ def build_ctsm(cime_path,
         Ignored if machine is given
     no_pnetcdf (bool): if True, use netcdf rather than pnetcdf
     build_debug (bool): if True, build with flags for debugging
-    build_without_openmp (bool): if True, build without OpenMP support
+    build_with_openmp (bool): if True, build with OpenMP support
     inputdata_path (str or None): path to existing inputdata directory on this machine
         If None, an inputdata directory will be created for this build
         (If machine is given, then we use the machine's inputdata directory by default;
@@ -176,19 +176,8 @@ def build_ctsm(cime_path,
                  compiler=compiler,
                  machine=machine,
                  build_debug=build_debug,
-                 build_without_openmp=build_without_openmp,
+                 build_with_openmp=build_with_openmp,
                  inputdata_path=inputdata_path)
-
-    if existing_inputdata:
-        # For a user-defined machine without inputdata_path specified, we create an
-        # inputdata directory for this case above. For an existing cime-ported machine, or
-        # one where inputdata_path is specified, we still want an inputdata directory
-        # alongside the other directories, but now it will just be a link to the real
-        # inputdata space on that machine. (Note that, for a user-defined machine, it's
-        # important that we have created this directory before creating the case, whereas
-        # for an existing machine, we need to wait until after we have created the case to
-        # know where to make the sym link point to.)
-        _link_to_inputdata(build_dir=build_dir)
 
     _stage_runtime_inputs(build_dir=build_dir, no_pnetcdf=no_pnetcdf)
 
@@ -318,11 +307,12 @@ Typical usage:
                                       help='Build with flags for debugging rather than production runs')
     non_rebuild_optional_list.append('build-debug')
 
-    non_rebuild_optional.add_argument('--build-without-openmp', action='store_true',
-                                      help='By default, CTSM is built with support for OpenMP threading;\n'
-                                      'if this flag is set, then CTSM is built without this support.\n'
-                                      'This is mainly useful if your machine/compiler does not support OpenMP.')
-    non_rebuild_optional_list.append('build-without-openmp')
+    non_rebuild_optional.add_argument('--build-with-openmp', action='store_true',
+                                      help='By default, CTSM is built WITHOUT support for OpenMP threading;\n'
+                                      'if this flag is set, then CTSM is built WITH this support.\n'
+                                      'This is important for performance if you will be running with\n'
+                                      'OpenMP threading-based parallelization, or hybrid MPI/OpenMP.')
+    non_rebuild_optional_list.append('build-with-openmp')
 
     non_rebuild_optional.add_argument('--inputdata-path',
                                       help='Path to directory containing CTSM\'s NetCDF inputs.\n'
@@ -574,7 +564,7 @@ def _fill_out_machine_files(build_dir,
 
 
 def _create_case(cime_path, build_dir, compiler,
-                 machine=None, build_debug=False, build_without_openmp=False,
+                 machine=None, build_debug=False, build_with_openmp=False,
                  inputdata_path=None):
     """Create a case that can later be used to build the CTSM library and its dependencies
 
@@ -586,7 +576,7 @@ def _create_case(cime_path, build_dir, compiler,
         If None, we assume we're using an on-the-fly machine port
         Otherwise, machine should be the name of a machine known to cime
     build_debug (bool): if True, build with flags for debugging
-    build_without_openmp (bool): if True, build without OpenMP support
+    build_with_openmp (bool): if True, build with OpenMP support
     inputdata_path (str or None): path to existing inputdata directory on this machine
         If None, we use the machine's default DIN_LOC_ROOT
     """
@@ -623,10 +613,15 @@ def _create_case(cime_path, build_dir, compiler,
     run_cmd_output_on_error(create_newcase_cmd,
                             errmsg='Problem creating CTSM case directory')
 
+    # PIO2 sometimes causes errors: see
+    # https://github.com/ESCOMP/CTSM/issues/876#issuecomment-653189406 and following
+    # comments in that issue. So use PIO1 for now.
+    subprocess.check_call([xmlchange, 'PIO_VERSION=1'], cwd=case_dir)
+
     subprocess.check_call([xmlchange, 'LILAC_MODE=on'], cwd=case_dir)
     if build_debug:
         subprocess.check_call([xmlchange, 'DEBUG=TRUE'], cwd=case_dir)
-    if not build_without_openmp:
+    if build_with_openmp:
         subprocess.check_call([xmlchange, 'FORCE_BUILD_SMP=TRUE'], cwd=case_dir)
 
     run_cmd_output_on_error([os.path.join(case_dir, 'case.setup')],
@@ -642,17 +637,6 @@ def _create_case(cime_path, build_dir, compiler,
             make_link(os.path.join(case_dir, '.env_mach_specific.{}'.format(extension)),
                       os.path.join(build_dir, 'ctsm_build_environment.{}'.format(extension)))
 
-def _link_to_inputdata(build_dir):
-    """Make a sym link to an existing inputdata directory
-
-    Args:
-    build_dir (str): path to build directory
-    """
-    inputdata_dir = _xmlquery('DIN_LOC_ROOT', build_dir)
-
-    make_link(inputdata_dir,
-              os.path.join(build_dir, _INPUTDATA_DIRNAME))
-
 def _stage_runtime_inputs(build_dir, no_pnetcdf):
     """Stage CTSM and LILAC runtime inputs
 
@@ -662,15 +646,16 @@ def _stage_runtime_inputs(build_dir, no_pnetcdf):
     """
     os.makedirs(os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME))
 
+    inputdata_dir = _xmlquery('DIN_LOC_ROOT', build_dir)
     fill_template_file(
         path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'ctsm_template.cfg'),
         path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'ctsm.cfg'),
-        substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
+        substitutions={'INPUTDATA':inputdata_dir})
 
     fill_template_file(
         path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'lilac_in_template'),
         path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lilac_in'),
-        substitutions={'INPUTDATA':os.path.join(build_dir, _INPUTDATA_DIRNAME)})
+        substitutions={'INPUTDATA':inputdata_dir})
 
     pio_stride = _xmlquery('MAX_MPITASKS_PER_NODE', build_dir)
     if no_pnetcdf:
@@ -684,7 +669,8 @@ def _stage_runtime_inputs(build_dir, no_pnetcdf):
                        'PIO_TYPENAME':pio_typename})
 
     shutil.copyfile(
-        src=os.path.join(_PATH_TO_TEMPLATES, 'user_nl_ctsm'),
+        src=os.path.join(path_to_ctsm_root(),
+                         'cime_config', 'usermods_dirs', 'lilac', 'user_nl_ctsm'),
         dst=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'user_nl_ctsm'))
 
     make_link(_PATH_TO_MAKE_RUNTIME_INPUTS,

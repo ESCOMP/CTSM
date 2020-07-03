@@ -170,10 +170,13 @@ Some other options to ``build_ctsm`` are supported in this case (but many are no
 they are only applicable to the non-CIME-supported machine workflow); run
 ``./lilac/build_ctsm -h`` for details.
 
-.. note::
+.. important::
 
    If PNetCDF (parallel NetCDF) is not available on this machine, you will need to add the
    option ``--no-pnetcdf``.
+
+   If you plan to run with OpenMP threading-based parallelization, or hybrid MPI/OpenMP,
+   then it is important to add ``--build-with-openmp``.
 
 Besides the build files themselves, ``build_ctsm`` creates the following important files
 that are needed for the build of the atmosphere model:
@@ -215,11 +218,14 @@ model performance.
    The given directory (``/PATH/TO/CTSM/BUILD``) must *not* exist. This directory is
    created for you by the build script.
 
-.. note::
+.. important::
 
    If PNetCDF (parallel NetCDF) is not available on your machine/compiler, you should use
    the option ``--no-pnetcdf`` instead of ``--pnetcdf-path``. You must specify exactly one
    of those two options.
+
+   If you plan to run with OpenMP threading-based parallelization, or hybrid MPI/OpenMP,
+   then it is important to add ``--build-with-openmp``.
 
 Example usage for a Mac (a simple case) is::
 

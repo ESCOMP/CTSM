@@ -90,33 +90,14 @@ Script to create runtime inputs when running CTSM via LILAC
     parser.add_argument("--rundir", type=str, default=os.getcwd(),
                         help="Full path of the run directory (containing ctsm.cfg & user_nl_ctsm)")
 
-    parser.add_argument("--existing-res",
-                        help="Use the given out-of-the-box resolution (e.g., '4x5').\n"
-                        "This argument should NOT be provided for a user-defined resolution.\n"
-                        "If this argument is provided, then --existing-mask must also be provided.")
-
-    parser.add_argument("--existing-mask",
-                        help="Use the given out-of-the-box mask (e.g., 'gx3v7').\n"
-                        "This argument should NOT be provided for a user-defined resolution.\n"
-                        "If this argument is provided, then --existing-res must also be provided.")
-
     add_logging_args(parser)
 
     arguments = parser.parse_args()
 
-    # Perform some error checking on arguments, and set derived values
+    # Perform some error checking on arguments
 
     if not os.path.isdir(arguments.rundir):
         abort("rundir {} does not exist".format(arguments.rundir))
-
-    if arguments.existing_res and arguments.existing_mask:
-        arguments.use_existing_res_and_mask = True
-    elif arguments.existing_res and not arguments.existing_mask:
-        abort("If --existing-res is given, then --existing-mask must also be given")
-    elif arguments.existing_mask and not arguments.existing_res:
-        abort("If --existing-mask is given, then --existing-res must also be given")
-    else:
-        arguments.use_existing_res_and_mask = False
 
     return arguments
 
@@ -171,14 +152,10 @@ def determine_bldnml_opts(bgc_mode, crop, vichydro):
     return bldnml_opts
 
 ###############################################################################
-def buildnml(cime_path, rundir, use_existing_res_and_mask,
-             existing_res=None, existing_mask=None):
+def buildnml(cime_path, rundir):
 ###############################################################################
 
     """Build the ctsm namelist
-
-    If use_existing_res_and_mask is True, then existing_res and existing_mask should be
-    specified; otherwise, they are ignored.
     """
 
     # pylint: disable=too-many-locals
@@ -191,12 +168,7 @@ def buildnml(cime_path, rundir, use_existing_res_and_mask,
     config.read(ctsm_cfg_path)
 
     lnd_domain_file = get_config_value(config, 'buildnml_input', 'lnd_domain_file', ctsm_cfg_path)
-    if use_existing_res_and_mask:
-        fsurdat = _UNSET
-    else:
-        # If we're not using an out-of-the-box grid, then require the user to explicitly
-        # specify the surface dataset.
-        fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat', ctsm_cfg_path)
+    fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat', ctsm_cfg_path)
     finidat = get_config_value(config, 'buildnml_input', 'finidat', ctsm_cfg_path)
 
     ctsm_phys = get_config_value(config, 'buildnml_input', 'ctsm_phys', ctsm_cfg_path,
@@ -252,6 +224,8 @@ def buildnml(cime_path, rundir, use_existing_res_and_mask,
     # determine if fsurdat and/or finidat should appear in the -namelist option
     extra_namelist_opts = ''
     if fsurdat != _UNSET:
+        # NOTE(wjs, 2020-06-30) With the current logic, fsurdat should never be _UNSET,
+        # but it's possible that this will change in the future.
         extra_namelist_opts = extra_namelist_opts + " fsurdat = '{}' ".format(fsurdat)
     if finidat != _UNSET:
         extra_namelist_opts = extra_namelist_opts + " finidat = '{}' ".format(finidat)
@@ -287,15 +261,10 @@ def buildnml(cime_path, rundir, use_existing_res_and_mask,
                '-no-megan',
                '-config', os.path.join(rundir, "config_cache.xml"),
                '-envxml_dir', rundir]
-    if use_existing_res_and_mask:
-        command.extend(['-res', existing_res,
-                        '-mask', existing_mask])
-    else:
-        # NOTE(wjs, 2020-06-16) Note that we do NOT use the -mask argument in this case;
-        # it's possible that we should be using it in some circumstances (I haven't looked
-        # into how it's used).
-        command.extend(['-res', 'lilac',
-                        '-clm_usr_name', 'lilac'])
+    # NOTE(wjs, 2020-06-16) Note that we do NOT use the -mask argument; it's possible that
+    # we should be using it in some circumstances (I haven't looked into how it's used).
+    command.extend(['-res', 'lilac',
+                    '-clm_usr_name', 'lilac'])
     command.extend(bldnml_opts.split())
 
     subprocess.check_call(command,
@@ -323,10 +292,6 @@ def main(cime_path):
 
     buildnml(
         cime_path=cime_path,
-        rundir=args.rundir,
-        use_existing_res_and_mask=args.use_existing_res_and_mask,
-        existing_res=args.existing_res,
-        existing_mask=args.existing_mask)
-
+        rundir=args.rundir)
 
 ###############################################################################

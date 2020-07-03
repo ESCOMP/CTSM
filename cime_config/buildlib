@@ -123,9 +123,9 @@ def _main_func():
 
             if lilac_mode == 'on':
                 paths.append(os.path.join(lnd_root,"lilac","src"))
-                mosart_src = os.path.join(lnd_root,"components","mosart","src") 
-                paths.append(os.path.join(mosart_src,"riverroute"))
-                paths.append(os.path.join(mosart_src,"cpl","lilac"))
+                # If we want to build with a real river model (e.g., MOSART), we'll need
+                # to use its directories in place of stub_rof
+                paths.append(os.path.join(lnd_root,"lilac","stub_rof"))
 
             with open(filepath_file, "w") as filepath:
                 filepath.write("\n".join(paths))

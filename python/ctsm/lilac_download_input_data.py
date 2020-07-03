@@ -41,10 +41,10 @@ def download_input_data(rundir):
     _create_lilac_input_data_list(rundir)
     case = Case(os.path.realpath(os.path.join(rundir, os.pardir, 'case')))
     case.check_all_input_data(
-        input_data_root=os.path.realpath(os.path.join(rundir, os.pardir, 'inputdata')),
         data_list_dir=rundir,
         download=True,
         chksum=False)
+    os.remove(os.path.join(rundir, 'lilac.input_data_list'))
 
 # ========================================================================
 # Private functions
@@ -84,5 +84,3 @@ def _create_lilac_input_data_list(rundir):
                     line = line.replace('"', '')
                     line = line.replace("'", "")
                     input_data_list.write(line)
-
-    os.remove(os.path.join(rundir, 'lilac.input_data_list'))

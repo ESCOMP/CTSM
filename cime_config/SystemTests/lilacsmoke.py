@@ -1,14 +1,18 @@
 """
 Implementation of the CIME LILACSMOKE (LILAC smoke) test.
 
-This is a CTSM-specific test. It tests the building and running of CTSM via LILAC. Grid
-and compset are ignored.
+This is a CTSM-specific test. It tests the building and running of CTSM via LILAC. Compset
+is ignored, but grid is important. Also, it's important that this test use the nuopc
+driver, both for the sake of the build and for extracting some runtime settings. This test
+should also use the lilac testmod (or a testmod that derives from it) in order to
+establish the user_nl_ctsm file correctly.
 """
 
 import os
+import shutil
 
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
-from CIME.utils import run_cmd_no_fail, append_testlog
+from CIME.utils import run_cmd_no_fail, append_testlog, symlink_force, new_lid
 from CIME.build import post_build
 from CIME.test_status import GENERATE_PHASE, BASELINE_PHASE, TEST_PASS_STATUS
 from CIME.XML.standard_module_setup import *
@@ -45,12 +49,11 @@ class LILACSMOKE(SystemTestsCommon):
                     build_dir=build_dir,
                     machine=machine,
                     compiler=compiler)
+                # It isn't straightforward to determine if pnetcdf is available on a
+                # machine. To keep things simple, always run without pnetcdf.
+                cmd += ' --no-pnetcdf'
                 if debug:
                     cmd += ' --build-debug'
-                # For now, always build this test without threads: it doesn't need
-                # threads, and building unthreaded ensures that it works on a wider range
-                # of machines/compilers
-                cmd += ' --build-without-openmp'
                 self._run_build_cmd(cmd, exeroot, 'build_ctsm.bldlog')
 
             # We call the build script with --rebuild even for an initial build. This is
@@ -62,14 +65,201 @@ class LILACSMOKE(SystemTestsCommon):
                 build_dir=build_dir)
             self._run_build_cmd(cmd, exeroot, 'rebuild_ctsm.bldlog')
 
+            self._build_atm_driver()
+
+            self._create_link_to_atm_driver()
+
+            self._create_runtime_inputs()
+
+            self._setup_atm_driver_rundir()
+
             # Setting logs=[] implies that we don't bother gzipping any of the build log
             # files; that seems fine for these purposes (and it keeps the above code
             # simpler).
             post_build(self._case, logs=[], build_complete=True)
 
-    def run_phase(self):
-        # FIXME(wjs, 2020-06-10) Fill this in
-        pass
+    def _build_atm_driver(self):
+        caseroot = self._case.get_value('CASEROOT')
+        lndroot = self._case.get_value('COMP_ROOT_DIR_LND')
+        blddir = os.path.join(caseroot, 'lilac_atm_driver', 'bld')
+
+        if not os.path.exists(blddir):
+            os.makedirs(blddir)
+        symlink_force(os.path.join(lndroot, 'lilac', 'atm_driver', 'Makefile'),
+                      os.path.join(blddir, 'Makefile'))
+        symlink_force(os.path.join(lndroot, 'lilac', 'atm_driver', 'atm_driver.F90'),
+                      os.path.join(blddir, 'atm_driver.F90'))
+        symlink_force(os.path.join(caseroot, 'Macros.make'),
+                      os.path.join(blddir, 'Macros.make'))
+
+        makevars = 'COMPILER={compiler} DEBUG={debug} CTSM_MKFILE={ctsm_mkfile}'.format(
+            compiler=self._case.get_value('COMPILER'),
+            debug=str(self._case.get_value('DEBUG')).upper(),
+            ctsm_mkfile=os.path.join(caseroot, 'lilac_build', 'ctsm.mk'))
+        makecmd = 'make {makevars} atm_driver'.format(makevars=makevars)
+        self._run_build_cmd(makecmd, blddir, 'atm_driver.bldlog')
+
+    def _create_link_to_atm_driver(self):
+        caseroot = self._case.get_value('CASEROOT')
+        run_exe = (self._case.get_value('run_exe')).strip()
+
+        # Make a symlink to the atm_driver executable so that the case's run command finds
+        # it in the expected location
+        symlink_force(os.path.join(caseroot, 'lilac_atm_driver', 'bld', 'atm_driver.exe'),
+                      run_exe)
+
+    def _create_runtime_inputs(self):
+        caseroot = self._case.get_value('CASEROOT')
+        runtime_inputs = self._runtime_inputs_dir()
+        lnd_domain_file = os.path.join(self._case.get_value('LND_DOMAIN_PATH'),
+                                       self._case.get_value('LND_DOMAIN_FILE'))
+
+        # Cheat a bit here: Get the fsurdat file from the already-generated lnd_in file in
+        # the host test case - i.e., from the standard cime-based preview_namelists. But
+        # this isn't really a morally-objectionable cheat, because in the real workflow,
+        # we expect the user to identify fsurdat manually; in this testing situation, we
+        # need to come up with some way to replace this manual identification, so cheating
+        # feels acceptable.
+        self._case.create_namelists(component='lnd')
+        fsurdat = self._extract_var_from_namelist(
+            nl_filename=os.path.join(caseroot, 'CaseDocs', 'lnd_in'),
+            varname='fsurdat')
+
+        self._fill_in_variables_in_file(filepath=os.path.join(runtime_inputs, 'ctsm.cfg'),
+                                        replacements={'lnd_domain_file':lnd_domain_file,
+                                                      'fsurdat':fsurdat})
+
+        # The user_nl_ctsm in the case directory is set up based on the standard testmods
+        # mechanism. We use that one in place of the standard user_nl_ctsm, since the one
+        # in the case directory may contain test-specific modifications.
+        shutil.copyfile(src=os.path.join(caseroot, 'user_nl_ctsm'),
+                        dst=os.path.join(runtime_inputs, 'user_nl_ctsm'))
+
+        self._run_build_cmd('make_runtime_inputs --rundir {}'.format(runtime_inputs),
+                            runtime_inputs,
+                            'make_runtime_inputs.log')
+
+        # In lilac_in, we intentionally use the land mesh file for both atm_mesh_filename
+        # and lnd_mesh_filename
+        lnd_mesh = self._case.get_value('LND_DOMAIN_MESH')
+        self._fill_in_variables_in_file(filepath=os.path.join(runtime_inputs, 'lilac_in'),
+                                        replacements={'atm_mesh_filename':lnd_mesh,
+                                                      'lnd_mesh_filename':lnd_mesh,
+                                                      'lilac_histfreq_option':'ndays'},
+                                        placeholders={'lilac_histfreq_option':'never'})
+
+        # We run download_input_data partly because it may be needed and partly to test
+        # this script.
+        self._run_build_cmd('download_input_data --rundir {}'.format(runtime_inputs),
+                            runtime_inputs,
+                            'download_input_data.log')
+
+    def _setup_atm_driver_rundir(self):
+        """Set up the directory from which we will actually do the run"""
+        lndroot = self._case.get_value('COMP_ROOT_DIR_LND')
+        rundir = self._atm_driver_rundir()
+
+        if not os.path.exists(rundir):
+            os.makedirs(rundir)
+            shutil.copyfile(src=os.path.join(lndroot, 'lilac', 'atm_driver', 'atm_driver_in'),
+                            dst=os.path.join(rundir, 'atm_driver_in'))
+
+        # As elsewhere: assume the land variables also apply to the atmosphere
+        lnd_mesh = self._case.get_value('LND_DOMAIN_MESH')
+        lnd_nx = self._case.get_value('LND_NX')
+        lnd_ny = self._case.get_value('LND_NY')
+        expect(self._case.get_value('STOP_OPTION') == 'ndays',
+               'LILAC testing currently assumes STOP_OPTION of ndays, not {}'.format(
+                   self._case.get_value('STOP_OPTION')))
+        stop_n = self._case.get_value('STOP_N')
+        self._fill_in_variables_in_file(filepath=os.path.join(rundir, 'atm_driver_in'),
+                                        replacements={'atm_mesh_file':lnd_mesh,
+                                                      'atm_global_nx':str(lnd_nx),
+                                                      'atm_global_ny':str(lnd_ny),
+                                                      'atm_stop_day':str(stop_n+1),
+                                                      'atm_ndays_all_segs':str(stop_n)})
+
+        for file_to_link in ['lnd_in', 'lnd_modelio.nml', 'lilac_in']:
+            symlink_force(os.path.join(self._runtime_inputs_dir(), file_to_link),
+                          os.path.join(rundir, file_to_link))
+
+    def _extract_var_from_namelist(self, nl_filename, varname):
+        """Tries to find a variable named varname in the given file; returns its value
+
+        If not found, aborts
+        """
+        with open(nl_filename) as nl_file:
+            for line in nl_file:
+                match = re.search(r'^ *{} *= *[\'"]([^\'"]+)'.format(varname), line)
+                if match:
+                    return match.group(1)
+        expect(False, '{} not found in {}'.format(varname, nl_filename))
+
+    def _fill_in_variables_in_file(self, filepath, replacements, placeholders=None):
+        """For the given file, make the given replacements
+
+        replacements should be a dictionary mapping variable names to their values
+
+        If placeholders is given, it should be a dictionary mapping some subset of
+        variable names to their placeholders. Anything not given here uses a placeholder
+        of 'FILL_THIS_IN'.
+        """
+        if placeholders is None:
+            placeholders = {}
+
+        orig_filepath = '{}.orig'.format(filepath)
+        if not os.path.exists(orig_filepath):
+            shutil.copyfile(src=filepath,
+                            dst=orig_filepath)
+        os.remove(filepath)
+
+        counts = dict.fromkeys(replacements, 0)
+        with open(orig_filepath) as orig_file:
+            with open(filepath, 'w') as new_file:
+                for orig_line in orig_file:
+                    line = orig_line
+                    for varname in replacements:
+                        if varname in placeholders:
+                            this_placeholder = placeholders[varname]
+                        else:
+                            this_placeholder = 'FILL_THIS_IN'
+                        line, replacement_done = self._fill_in_variable(
+                            line=line,
+                            varname=varname,
+                            value=replacements[varname],
+                            placeholder=this_placeholder)
+                        if replacement_done:
+                            counts[varname] += 1
+                            break
+                    new_file.write(line)
+
+        for varname in counts:
+            expect(counts[varname] > 0,
+                   'Did not find any instances of <{}> to replace in {}'.format(varname, filepath))
+
+    def _fill_in_variable(self, line, varname, value, placeholder):
+        """Fill in a placeholder variable in a config or namelist file
+
+        Returns a tuple: (newline, replacement_done)
+        - newline is the line with the given placeholder replaced with the given value if this
+          line is for varname; otherwise returns line unchanged
+        - replacement_done is True if the replacement was done, otherwise False
+        """
+        if re.search(r'^ *{} *='.format(varname), line):
+            expect(placeholder in line,
+                   'Placeholder to replace ({}) not found in <{}>'.format(placeholder, line.strip()))
+            newline = line.replace(placeholder, value)
+            replacement_done = True
+        else:
+            newline = line
+            replacement_done = False
+        return (newline, replacement_done)
+
+    def _runtime_inputs_dir(self):
+        return os.path.join(self._case.get_value('CASEROOT'), 'lilac_build', 'runtime_inputs')
+
+    def _atm_driver_rundir(self):
+        return os.path.join(self._case.get_value('CASEROOT'), 'lilac_atm_driver', 'run')
 
     @staticmethod
     def _run_build_cmd(cmd, exeroot, logfile):
@@ -85,3 +275,13 @@ class LILACSMOKE(SystemTestsCommon):
         run_cmd_no_fail(cmd, arg_stdout=logfile, combine_output=True, from_dir=exeroot)
         with open(os.path.join(exeroot, logfile)) as lf:
             append_testlog(lf.read())
+
+    def run_phase(self):
+        # This mimics a bit of what's done in the typical case.run. Note that
+        # case.get_mpirun_cmd creates a command that runs the executable given by
+        # case.run_exe. So it's important that (elsewhere in this test script) we create a
+        # link pointing from that to the atm_driver.exe executable.
+        lid = new_lid()
+        os.environ["OMP_NUM_THREADS"] = str(self._case.thread_count)
+        cmd = self._case.get_mpirun_cmd(allow_unresolved_envvars=False)
+        run_cmd_no_fail(cmd, from_dir=self._atm_driver_rundir())

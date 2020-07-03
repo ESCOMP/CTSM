@@ -57,7 +57,7 @@ module lnd2atmType
      real(r8), pointer :: flxvoc_grc         (:,:) => null() ! VOC flux (size bins)
      real(r8), pointer :: fireflx_grc        (:,:) => null() ! Wild Fire Emissions
      real(r8), pointer :: fireztop_grc       (:)   => null() ! Wild Fire Emissions vertical distribution top
-     real(r8), pointer :: flux_ch4_grc       (:)   => null() ! net CH4 flux (kg C/m**2/s) [+ to atm]
+     real(r8), pointer :: ch4_surf_flux_tot_grc(:) => null() ! net CH4 flux (kg C/m**2/s) [+ to atm]
      ! lnd->rof
 
    contains
@@ -152,7 +152,7 @@ contains
     allocate(this%ram1_grc           (begg:endg))            ; this%ram1_grc           (:)   =ival
     allocate(this%fv_grc             (begg:endg))            ; this%fv_grc             (:)   =ival
     allocate(this%flxdst_grc         (begg:endg,1:ndst))     ; this%flxdst_grc         (:,:) =ival
-    allocate(this%flux_ch4_grc       (begg:endg))            ; this%flux_ch4_grc       (:)   =ival
+    allocate(this%ch4_surf_flux_tot_grc(begg:endg))          ; this%ch4_surf_flux_tot_grc(:) =ival
 
     if (shr_megan_mechcomps_n>0) then
        allocate(this%flxvoc_grc(begg:endg,1:shr_megan_mechcomps_n));  this%flxvoc_grc(:,:)=ival
@@ -279,10 +279,10 @@ contains
          default='inactive')
 
     if (use_lch4) then
-       this%flux_ch4_grc(begg:endg) = 0._r8
+       this%ch4_surf_flux_tot_grc(begg:endg) = 0._r8
        call hist_addfld1d (fname='FCH4', units='kgC/m2/s', &
             avgflag='A', long_name='Gridcell surface CH4 flux to atmosphere (+ to atm)', &
-            ptr_lnd=this%flux_ch4_grc)
+            ptr_lnd=this%ch4_surf_flux_tot_grc)
 
        this%nem_grc(begg:endg) = spval
        call hist_addfld1d (fname='NEM', units='gC/m2/s', &
