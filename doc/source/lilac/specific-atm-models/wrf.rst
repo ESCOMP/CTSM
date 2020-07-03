@@ -220,7 +220,7 @@ To run ungrib.exe, first link the GRIB data files that are going to be used::
     ./link_grib.csh $your_GRIB_data_path
 
 Based on your GRIB data type, link or copy the appropriate VTable to your WPS directory.
-WRF has some prepared VTable under /ungrib/Variable_tables/ folder.
+WRF has some prepared VTable under ``/ungrib/Variable_tables/`` folder.
 
 Extract meteorological fields from GRIB-formatted files::
 
@@ -259,7 +259,7 @@ Run ``real.exe`` to generate initial and boundary conditions.
 Follow WRF instructions for creating initial and boundary conditions. 
 In summary, complete the following steps:
 
-Move or link WPS output files (met_em.d01* files) to your WRF test directory. 
+Move or link WPS output files (``met_em.d01*`` files) to your WRF test directory. 
 
 Edit namelist.input for your WRF domain and desirable configurations.
 This should be the same domain as WPS namelist.
@@ -287,6 +287,8 @@ Check the last line of the real log file for the following message::
 
     SUCCESS COMPLETE REAL_EM INIT
 
+Set CTSM runtime options
+------------------------
 
 Now follow the instructions in this Section::
 
@@ -322,10 +324,10 @@ Type::
 
 
 
-Run WRF
--------
+Run wrf.exe
+-----------
 
-If real.exe completed successfully, we should have wrfinput and wrfbdy files
+If real.exe completed successfully, we should have ``wrfinput`` and ``wrfbdy`` files
 in our directory. 
 
 If you plan to use this example's preexisting files, copy
