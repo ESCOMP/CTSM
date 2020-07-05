@@ -130,6 +130,8 @@ contains
 
     ! local variables
     character(ESMF_MAXSTR)      :: caseid
+    logical                     :: create_esmf_pet_files
+    type(ESMF_LogKind_Flag)     :: logkindflag
     type(ESMF_TimeInterval)     :: timeStep
     type(ESMF_Time)             :: startTime
     integer                     :: yy,mm,dd,sec
@@ -155,7 +157,7 @@ contains
     logical           :: comp_iamin(1) = (/.true./) ! for pio init2
     !------------------------------------------------------------------------
 
-    namelist /lilac_run_input/ caseid
+    namelist /lilac_run_input/ caseid, create_esmf_pet_files
 
     ! Initialize return code
     rc = ESMF_SUCCESS
@@ -164,6 +166,27 @@ contains
     ! Set module variable starttype
     !-------------------------------------------------------------------------
     starttype = starttype_in
+
+    ! ------------------------------------------------------------------------
+    ! Read main namelist
+    ! ------------------------------------------------------------------------
+
+    ! Initialize variables in case not set in namelist (but we expect them to be set)
+    caseid = 'UNSET'
+    create_esmf_pet_files = .false.
+
+    open(newunit=fileunit, status="old", file="lilac_in")
+    read(fileunit, lilac_run_input, iostat=ierr)
+    if (ierr > 0) then
+       call shr_sys_abort(trim(subname) // 'error reading in lilac_run_input')
+    end if
+    close(fileunit)
+
+    if (create_esmf_pet_files) then
+       logkindflag = ESMF_LOGKIND_MULTI
+    else
+       logkindflag = ESMF_LOGKIND_MULTI_ON_ERROR
+    end if
 
     ! ------------------------------------------------------------------------
     ! Complete setup of field lists started in lilac_init1, now that we know the number
@@ -186,7 +209,7 @@ contains
     ! NOTE: the default calendar is set to GREGORIAN and is reset below in the initialization of
     ! the lilac clock
     call ESMF_Initialize(mpiCommunicator=mpicom, defaultCalKind=ESMF_CALKIND_GREGORIAN, &
-         logappendflag=.false., rc=rc)
+         logkindflag=logkindflag, logappendflag=.false., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     call ESMF_LogSet(flush=.true.)
@@ -211,14 +234,6 @@ contains
     !-------------------------------------------------------------------------
     call shr_pio_init2(compids, compLabels, comp_iamin, (/mpicom/), (/mytask/))
     call ESMF_LogWrite(subname//"initialized shr_pio_init2 ...", ESMF_LOGMSG_INFO)
-
-    ! read in caseid
-    open(newunit=fileunit, status="old", file="lilac_in")
-    read(fileunit, lilac_run_input, iostat=ierr)
-    if (ierr > 0) then
-       call shr_sys_abort(trim(subname) // 'error reading in lilac_run_input')
-    end if
-    close(fileunit)
 
     !-------------------------------------------------------------------------
     ! Initial lilac atmosphere cap module variables

@@ -1,5 +1,6 @@
 &lilac_run_input 
  caseid = 'ctsm_lilac'
+ create_esmf_pet_files = .false.
 /
 &lilac_history_input
  lilac_histfreq_option = 'never'
