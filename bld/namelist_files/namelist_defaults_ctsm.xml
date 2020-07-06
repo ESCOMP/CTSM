@@ -19,9 +19,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <sim_year>2000</sim_year>
 
-<!-- Default time step -->
-<dtime>1800</dtime>
-
 <!-- CO2 volume mixing ratio -->
 <co2_ppmv sim_year="1000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="2000"      >379.0</co2_ppmv>

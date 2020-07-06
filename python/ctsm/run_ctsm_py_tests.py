@@ -21,6 +21,15 @@ def main(description):
     args = _commandline_args(description)
     verbosity = _get_verbosity_level(args)
 
+    if args.pattern is not None:
+        pattern = args.pattern
+    elif args.unit:
+        pattern = 'test_unit*.py'
+    elif args.sys:
+        pattern = 'test_sys*.py'
+    else:
+        pattern = 'test*.py'
+
     # This setup_for_tests call is the main motivation for having this wrapper script to
     # run the tests rather than just using 'python -m unittest discover'
     unit_testing.setup_for_tests(enable_critical_logs=args.debug)
@@ -28,7 +37,7 @@ def main(description):
     mydir = os.path.dirname(os.path.abspath(__file__))
     testsuite = unittest.defaultTestLoader.discover(
         start_dir=mydir,
-        pattern=args.pattern)
+        pattern=pattern)
     # NOTE(wjs, 2018-08-29) We may want to change the meaning of '--debug'
     # vs. '--verbose': I could imagine having --verbose set buffer=False, and --debug
     # additionally sets the logging level to much higher - e.g., debug level.
@@ -51,9 +60,17 @@ def _commandline_args(description):
     output_level.add_argument('-d', '--debug', action='store_true',
                               help='Run tests with even more verbosity')
 
-    parser.add_argument('-p', '--pattern', default='test*.py',
-                        help='File name pattern to match\n'
-                        'Default is test*.py')
+    test_subset = parser.add_mutually_exclusive_group()
+
+    test_subset.add_argument('-u', '--unit', action='store_true',
+                             help='Only run unit tests')
+
+    test_subset.add_argument('-s', '--sys', action='store_true',
+                             help='Only run system tests')
+
+    test_subset.add_argument('-p', '--pattern',
+                             help='File name pattern to match\n'
+                             'Default is test*.py')
 
     args = parser.parse_args()
 
