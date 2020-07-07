@@ -1,0 +1,53 @@
+&lilac_run_input 
+ caseid = 'ctsm_lilac'
+ create_esmf_pet_files = .false.
+/
+&lilac_history_input
+ lilac_histfreq_option = 'never'
+ lilac_histfreq_n = 1
+/
+&lilac_atmcap_input
+ atm_mesh_filename = 'FILL_THIS_IN'
+/
+&lilac_lnd_input
+ lnd_mesh_filename = 'FILL_THIS_IN'
+/
+&atmaero_stream 
+ stream_fldfilename='$INPUTDATA/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_WACCM.ensmean_monthly_hist_1849-2015_0.9x1.25_CMIP6_c180926.nc'
+ stream_year_first = 2000
+ stream_year_last = 2000
+/
+&pio_default_inparm
+  pio_async_interface = .false.
+  pio_blocksize = -1
+  pio_buffer_size_limit = -1
+  pio_debug_level = 0
+  pio_rearr_comm_enable_hs_comp2io = .true.
+  pio_rearr_comm_enable_hs_io2comp = .false.
+  pio_rearr_comm_enable_isend_comp2io = .false.
+  pio_rearr_comm_enable_isend_io2comp = .true.
+  pio_rearr_comm_fcd = "2denable"
+  pio_rearr_comm_max_pend_req_comp2io = -2
+  pio_rearr_comm_max_pend_req_io2comp = 64
+  pio_rearr_comm_type = "p2p"
+/
+&papi_inparm
+  papi_ctr1_str = "PAPI_FP_OPS"
+  papi_ctr2_str = "PAPI_NO_CTR"
+  papi_ctr3_str = "PAPI_NO_CTR"
+  papi_ctr4_str = "PAPI_NO_CTR"
+/
+&prof_inparm
+  profile_add_detail = .false.
+  profile_barrier = .false.
+  profile_depth_limit = 4
+  profile_detail_limit = 2
+  profile_disable = .false.
+  profile_global_stats = .true.
+  profile_outpe_num = 1
+  profile_outpe_stride = 0
+  profile_ovhd_measurement = .false.
+  profile_papi_enable = .false.
+  profile_single_file = .false.
+  profile_timer = 4
+/

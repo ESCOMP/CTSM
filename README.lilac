@@ -1,0 +1,110 @@
+========================================================================
+I. Building a CTSM / LILAC library for inclusion in an atmosphere model
+========================================================================
+
+1) check out the code (ctsm and lilac are now bundled together) and built as one library
+
+   > git clone https://github.com/ESCOMP/ctsm.git
+   > git checkout lilac_cap
+   > ./manage_externals/checkout_externals -v
+
+2) set the following environment variables
+   SRCROOT is where ctsm is checked out 
+
+   > export SRCROOT=`pwd`
+   > export CASEDIR=/glade/scratch/$USER/test_lilac
+
+3) build the ctsm/lilac library using a CIME case
+
+   > cd $SRCROOT/cime/scripts
+   > ./create_newcase --case $CASEDIR --compset I2000Clm50SpRsGs --res f45_f45_mg37 --run-unsupported --driver nuopc
+   >  cd $CASEDIR
+   > ./xmlchange LILAC_MODE=on
+   > ./xmlchange DEBUG=TRUE
+   > ./case.setup
+   > ./case.build --sharedlib-only
+
+========================================================================
+II. Building and running the test atmosphere driver
+========================================================================
+
+After following the above instructions for building a CTSM / LILAC
+library (I), do the following:
+
+1) To build the atm_driver executable on cheyenne (***CTSM_MKFILE IS CRITICAL for the operation of the atm_driver makefile)
+
+   > export CTSM_MKFILE=$CASEDIR/bld/ctsm.mk
+   > cd $SRCROOT/lilac/atm_driver
+   > $SRCROOT/cime/tools/configure --comp-interface nuopc --macros-format Makefile --clean
+   > make clean
+   > source ./.env_mach_specific.sh
+   > export DEBUG=TRUE
+   > make COMPILER=intel atm_driver
+
+2) to generate the input namelists
+
+  - to customize the generated namelist - edit the file ctsm.cfg (in this directory)
+  - to create the ctsm namelist FROM THIS DIRECTORY:
+
+    > $SRCROOT/lilac_config/buildnml
+
+  - this will now create the files lnd_in and clm.input_data_list in this directory
+    THIS ONLY NEEDS TO BE DONE ONCE 
+    to futher customize the lnd_in (say to adjust the ctsm history output) edit the generated lnd_in in this directory
+
+3) run the atm_driver on cheyenne
+  
+  > qsub cheyenne.sub
+
+4) compare with latest baselines
+
+   use something like this to compare the last clm and last cpl hist files:
+
+   > basedir=/glade/p/cgd/tss/ctsm_baselines/lilac_20191202
+   > cprnc test_lilac.clm2.h0.2000-01-03-00000.nc $basedir/test_lilac.clm2.h0.2000-01-03-00000.nc | tail -30
+   > cprnc test_lilac.lilac.hi.2000-01-02-81000.nc $basedir/test_lilac.lilac.hi.2000-01-02-81000.nc | tail -30
+   > cprnc -m test_lilac.atm.h0.0001-01.nc $basedir/test_lilac.atm.h0.0001-01.nc | tail -30
+
+5) if there are differences, and those are intentional, then create new
+   baselines
+
+   copy all *.nc files, plus ctsm.cfg, lilac_in and lnd_in to the
+   baseline directory
+
+========================================================================
+III. Linking the CTSM / LILAC library into another atmosphere model
+========================================================================
+
+After following the above instructions for building a CTSM / LILAC
+library (I), you should do the following, assuming that the atmosphere
+model is built using a makefile:
+
+1) Set some environment variable (e.g., CTSM_MKFILE) to point to the
+   ctsm.mk file generated in CTSM's bld directory.
+
+2) Modify the atmosphere model's makefile to include the file given by
+   the environment variable $CTSM_MAKEFILE.
+
+3) In the compilation line for the atmosphere model, add
+   $(CTSM_INCLUDES)
+
+4) In the link line for the atmosphere model, add $(CTSM_LIBS)
+
+========================================================================
+IV. Running CTSM / LILAC from another atmosphere model
+========================================================================
+
+After (III), the following steps are needed to stage the inputs needed
+for running the atmosphere model
+
+1) Generate the input namelists following the instructions given in part
+   (II).
+
+2) Copy the following files from $SRCROOT/lilac/atm_driver into the
+   directory from which the atmosphere model will be run:
+
+   - lilac_in
+   - lnd_in
+   - lnd_modelio.nml
+
+3) Run the atmosphere model

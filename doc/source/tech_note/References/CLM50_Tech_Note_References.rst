@@ -274,6 +274,14 @@ Cao, M., Marshall, S. and Gregson, K., 1996. Global carbon exchange and
 methane emissions from natural wetlands: Application of a process-based
 model. J. Geophys. Res. 101(D9):14,399-14,414.
 
+.. _Chengetal2019:
+
+Cheng, Y. et al., 2019. Parameterizing perennial bioenergy 
+crops in Version 5 of the Community Land Model Based on Site‐Level 
+Observations in the Central Midwestern United States. 
+Journal of Advances in Modeling Earth Systems, 
+2(2013), 1–24. https://doi.org/10.1029/2019MS001719
+
 .. _Chuangetal2006:
 
 Chuang Y.L., Oren R., Bertozzi A.L, Phillips N., Katul G.G. 2006. The

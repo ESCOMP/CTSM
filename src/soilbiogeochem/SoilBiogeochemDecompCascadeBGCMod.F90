@@ -68,12 +68,12 @@ module SoilBiogeochemDecompCascadeBGCMod
      real(r8):: rf_cwdl2_bgc 
      real(r8):: rf_cwdl3_bgc
 
-     real(r8):: tau_l1_bgc    ! turnover time of  litter 1 (yr)
-     real(r8):: tau_l2_l3_bgc ! turnover time of  litter 2 and litter 3 (yr)
-     real(r8):: tau_s1_bgc    ! turnover time of  SOM 1 (yr)
-     real(r8):: tau_s2_bgc    ! turnover time of  SOM 2 (yr)
-     real(r8):: tau_s3_bgc    ! turnover time of  SOM 3 (yr)
-     real(r8):: tau_cwd_bgc   ! corrected fragmentation rate constant CWD
+     real(r8):: tau_l1_bgc    ! 1/turnover time of  litter 1 from Century (l/18.5) (1/yr)
+     real(r8):: tau_l2_l3_bgc ! 1/turnover time of  litter 2 and litter 3 from Century (1/4.9) (1/yr)
+     real(r8):: tau_s1_bgc    ! 1/turnover time of  SOM 1 from Century (1/7.3) (1/yr)
+     real(r8):: tau_s2_bgc    ! 1/turnover time of  SOM 2 from Century (1/0.2) (1/yr)
+     real(r8):: tau_s3_bgc    ! 1/turnover time of  SOM 3 from Century (1/0.0045) (1/yr)
+     real(r8):: tau_cwd_bgc   ! corrected fragmentation rate constant CWD, century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1 (1/0.3) (1/yr)
 
      real(r8) :: cwd_fcel_bgc !cellulose fraction for CWD
      real(r8) :: cwd_flig_bgc !
@@ -668,13 +668,6 @@ contains
     real(r8):: k_s2                         ! decomposition rate constant SOM 2 (1/sec)
     real(r8):: k_s3                         ! decomposition rate constant SOM 3 (1/sec)
     real(r8):: k_frag                       ! fragmentation rate constant CWD (1/sec)
-    real(r8):: tau_l1                       ! turnover time of  litter 1 (yr)
-    real(r8):: tau_l2_l3                    ! turnover time of  litter 2 and litter 3 (yr)
-    real(r8):: tau_l3                       ! turnover time of  litter 3 (yr)
-    real(r8):: tau_s1                       ! turnover time of  SOM 1 (yr)
-    real(r8):: tau_s2                       ! turnover time of  SOM 2 (yr)
-    real(r8):: tau_s3                       ! turnover time of  SOM 3 (yr)
-    real(r8):: tau_cwd                      ! corrected fragmentation rate constant CWD
     real(r8):: cwdc_loss                    ! fragmentation rate for CWD carbon (gC/m2/s)
     real(r8):: cwdn_loss                    ! fragmentation rate for CWD nitrogen (gN/m2/s)
     real(r8):: Q10                          ! temperature dependence
@@ -727,29 +720,6 @@ contains
 
       days_per_year = get_days_per_year()
 
-      ! the belowground parameters from century
-      tau_l1 = 1./18.5
-      tau_l2_l3 = 1./4.9
-      tau_s1 = 1./7.3
-      tau_s2 = 1./0.2
-      tau_s3 = 1./.0045
-
-      ! century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1
-      tau_cwd  = 1./0.3
-
-      ! Todo:  FIX(SPM,032414) - the explicit divide gives different results than when that
-      ! value is placed in the parameters netcdf file.  To get bfb, keep the 
-      ! divide in source.
-
-      !tau_l1 = params_inst%tau_l1_bgc
-      !tau_l2_l3 = params_inst%tau_l2_l3_bgc
-      !tau_s1 = params_inst%tau_s1_bgc
-      !tau_s2 = params_inst%tau_s2_bgc
-      !tau_s3 = params_inst%tau_s3_bgc
-
-      !set turnover rate of coarse woody debris
-      !tau_cwd = params_inst%tau_cwd_bgc
-
       ! set "Q10" parameter
       Q10 = CNParamsShareInst%Q10
 
@@ -760,12 +730,12 @@ contains
       decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
 
       ! translate to per-second time constant
-      k_l1 = 1._r8    / (secspday * days_per_year * tau_l1)
-      k_l2_l3 = 1._r8 / (secspday * days_per_year * tau_l2_l3)
-      k_s1 = 1._r8    / (secspday * days_per_year * tau_s1)
-      k_s2 = 1._r8    / (secspday * days_per_year * tau_s2)
-      k_s3 = 1._r8    / (secspday * days_per_year * tau_s3)
-      k_frag = 1._r8  / (secspday * days_per_year * tau_cwd)
+      k_l1 = 1._r8    / (secspday * days_per_year * params_inst%tau_l1_bgc)
+      k_l2_l3 = 1._r8 / (secspday * days_per_year * params_inst%tau_l2_l3_bgc)
+      k_s1 = 1._r8    / (secspday * days_per_year * params_inst%tau_s1_bgc)
+      k_s2 = 1._r8    / (secspday * days_per_year * params_inst%tau_s2_bgc)
+      k_s3 = 1._r8    / (secspday * days_per_year * params_inst%tau_s3_bgc)
+      k_frag = 1._r8  / (secspday * days_per_year * params_inst%tau_cwd_bgc)
 
      ! calc ref rate
       catanf_30 = catanf(30._r8)

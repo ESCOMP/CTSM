@@ -118,12 +118,14 @@ module decompMod
   public decomp_type
   type(decomp_type),public,target :: ldecomp
 
-  type(mct_gsMap)  ,public,target :: gsMap_lnd_gdc2glo
-  type(mct_gsMap)  ,public,target :: gsMap_gce_gdc2glo
-  type(mct_gsMap)  ,public,target :: gsMap_lun_gdc2glo
-  type(mct_gsMap)  ,public,target :: gsMap_col_gdc2glo
-  type(mct_gsMap)  ,public,target :: gsMap_patch_gdc2glo
-  type(mct_gsMap)  ,public,target :: gsMap_cohort_gdc2glo
+  type(mct_gsMap)  ,public,target :: gsMap_lnd_gdc2glo     ! GS map for full 2D land grid
+  type(mct_gsMap)  ,public,target :: gsMap_gce_gdc2glo     ! GS map for 1D gridcells
+  type(mct_gsMap)  ,public,target :: gsMap_lun_gdc2glo     ! GS map for 1D landunits
+  type(mct_gsMap)  ,public,target :: gsMap_col_gdc2glo     ! GS map for 1d columns
+  type(mct_gsMap)  ,public,target :: gsMap_patch_gdc2glo   ! GS map for 1D patches
+  type(mct_gsMap)  ,public,target :: gsMap_cohort_gdc2glo  ! GS map for 1D cohorts (only for FATES)
+
+  type(mct_gsMap)  ,public,target :: gsMap_lnd2Dsoi_gdc2glo ! GS map for full 3D land grid with soil levels as 3rd dim
   !------------------------------------------------------------------------------
 
 contains

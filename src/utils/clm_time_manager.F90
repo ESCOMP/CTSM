@@ -14,14 +14,12 @@ module clm_time_manager
    ! Public methods
 
    public ::&
-        get_timemgr_defaults,     &! get startup default values
         set_timemgr_init,         &! setup startup values
         timemgr_init,             &! time manager initialization
         timemgr_restart_io,       &! read/write time manager restart info and restart time manager
         timemgr_restart,          &! restart the time manager using info from timemgr_restart
         timemgr_datediff,         &! calculate difference between two time instants
         advance_timestep,         &! increment timestep number
-        get_clock,                &! get the clock from the time-manager
         get_curr_ESMF_Time,       &! get current time in terms of the ESMF_Time
         get_step_size,            &! return step size in seconds
         get_step_size_real,       &! return step size in seconds, real-valued
@@ -54,7 +52,6 @@ module clm_time_manager
         is_end_curr_month,        &! return true on last timestep in current month
         is_beg_curr_year,         &! return true on first timestep in current year
         is_end_curr_year,         &! return true on last timestep in current year
-        is_last_step,             &! return true on last timestep
         is_perpetual,             &! return true if perpetual calendar is in use
         is_near_local_noon,       &! return true if near local noon
         is_restart,               &! return true if this is a restart run
@@ -78,6 +75,9 @@ module clm_time_manager
    integer,  parameter :: uninit_int = -999999999
    real(r8), parameter :: uninit_r8  = -999999999.0
 
+   ! We'll use this really big year to effectively mean infinitely into the future.
+   integer,  parameter :: really_big_year = 999999999
+
    ! Input
    integer, save ::&
         dtime          = uninit_int,  &! timestep in seconds
@@ -86,11 +86,8 @@ module clm_time_manager
 
    ! Input from CESM driver
    integer, save ::&
-        nelapse       = uninit_int,  &! number of timesteps (or days if negative) to extend a run
         start_ymd     = uninit_int,  &! starting date for run in yearmmdd format
         start_tod     = 0,           &! starting time of day for run in seconds
-        stop_ymd      = uninit_int,  &! stopping date for run in yearmmdd format
-        stop_tod      = 0,           &! stopping time of day for run in seconds
         ref_ymd       = uninit_int,  &! reference date for time coordinate in yearmmdd format
         ref_tod       = 0             ! reference time of day for time coordinate in seconds
    type(ESMF_Calendar), target, save   :: tm_cal       ! calendar
@@ -111,7 +108,6 @@ module clm_time_manager
    logical, save :: tm_first_restart_step = .false.    ! true for first step of a restart or branch run
    logical, save :: tm_perp_calendar      = .false.    ! true when using perpetual calendar
    logical, save :: timemgr_set           = .false.    ! true when timemgr initialized
-   integer, save :: nestep                = uninit_int ! ending time-step
    !
    ! Next short-wave radiation calendar day
    ! 
@@ -126,7 +122,6 @@ module clm_time_manager
    private :: timemgr_spmdbcast
    private :: init_calendar
    private :: init_clock
-   private :: calc_nestep
    private :: timemgr_print
    private :: TimeGetymd
    private :: check_timemgr_initialized
@@ -135,57 +130,18 @@ module clm_time_manager
 contains
   !=========================================================================================
 
-  subroutine get_timemgr_defaults( calendar_out,      start_ymd_out,     start_tod_out, ref_ymd_out,        &
-       ref_tod_out,       stop_ymd_out,      stop_tod_out,  nelapse_out,        &
-       dtime_out )
-
-    !---------------------------------------------------------------------------------
-    ! get time manager startup default values
-    ! 
-    ! Arguments
-    character(len=*), optional, intent(OUT) :: calendar_out       ! Calendar type
-    integer         , optional, intent(OUT) :: nelapse_out        ! Number of step (or days) to advance
-    integer         , optional, intent(OUT) :: start_ymd_out      ! Start date       (YYYYMMDD)
-    integer         , optional, intent(OUT) :: start_tod_out      ! Start time of day (sec)
-    integer         , optional, intent(OUT) :: ref_ymd_out        ! Reference date   (YYYYMMDD)
-    integer         , optional, intent(OUT) :: ref_tod_out        ! Reference time of day (sec)
-    integer         , optional, intent(OUT) :: stop_ymd_out       ! Stop date        (YYYYMMDD)
-    integer         , optional, intent(OUT) :: stop_tod_out       ! Stop time of day (sec)
-    integer         , optional, intent(OUT) :: dtime_out          ! Time-step (sec)
-    !
-    character(len=*), parameter :: sub = 'clm::get_timemgr_defaults'
-
-    if ( timemgr_set ) call shr_sys_abort( sub//":: timemgr_init or timemgr_restart already called" )
-    if (present(calendar_out)      ) calendar_out       = trim(calendar)
-    if (present(start_ymd_out)     ) start_ymd_out      = start_ymd
-    if (present(start_tod_out)     ) start_tod_out      = start_tod
-    if (present(ref_ymd_out)       ) ref_ymd_out        = ref_ymd
-    if (present(ref_tod_out)       ) ref_tod_out        = ref_tod
-    if (present(stop_ymd_out)      ) stop_ymd_out       = stop_ymd
-    if (present(stop_tod_out)      ) stop_tod_out       = stop_tod
-    if (present(nelapse_out)       ) nelapse_out        = nelapse
-    if (present(dtime_out)         ) dtime_out          = dtime
-
-  end subroutine get_timemgr_defaults
-
-  !=========================================================================================
-
   subroutine set_timemgr_init( calendar_in,      start_ymd_in,     start_tod_in, ref_ymd_in,        &
-       ref_tod_in,       stop_ymd_in,      stop_tod_in,  perpetual_run_in,  &
-       perpetual_ymd_in, nelapse_in,       dtime_in )
+       ref_tod_in, perpetual_run_in, perpetual_ymd_in, dtime_in )
 
     !---------------------------------------------------------------------------------
     ! set time manager startup values
     ! 
     ! Arguments
     character(len=*), optional, intent(IN) :: calendar_in       ! Calendar type
-    integer         , optional, intent(IN) :: nelapse_in        ! Number of step (or days) to advance
     integer         , optional, intent(IN) :: start_ymd_in      ! Start date       (YYYYMMDD)
     integer         , optional, intent(IN) :: start_tod_in      ! Start time of day (sec)
     integer         , optional, intent(IN) :: ref_ymd_in        ! Reference date   (YYYYMMDD)
     integer         , optional, intent(IN) :: ref_tod_in        ! Reference time of day (sec)
-    integer         , optional, intent(IN) :: stop_ymd_in       ! Stop date        (YYYYMMDD)
-    integer         , optional, intent(IN) :: stop_tod_in       ! Stop time of day (sec)
     logical         , optional, intent(IN) :: perpetual_run_in  ! If in perpetual mode or not
     integer         , optional, intent(IN) :: perpetual_ymd_in  ! Perpetual date   (YYYYMMDD)
     integer         , optional, intent(IN) :: dtime_in          ! Time-step (sec)
@@ -198,8 +154,6 @@ contains
     if (present(start_tod_in)     ) start_tod        = start_tod_in
     if (present(ref_ymd_in)       ) ref_ymd          = ref_ymd_in
     if (present(ref_tod_in)       ) ref_tod          = ref_tod_in
-    if (present(stop_ymd_in)      ) stop_ymd         = stop_ymd_in
-    if (present(stop_tod_in)      ) stop_tod         = stop_tod_in
     if (present(perpetual_run_in) )then
        tm_perp_calendar = perpetual_run_in
        if ( tm_perp_calendar ) then
@@ -208,7 +162,6 @@ contains
           perpetual_ymd    = perpetual_ymd_in
        end if
     end if
-    if (present(nelapse_in)       ) nelapse          = nelapse_in
     if (present(dtime_in)         ) dtime            = dtime_in
 
   end subroutine set_timemgr_init
@@ -224,13 +177,9 @@ contains
     !
     character(len=*), parameter :: sub = 'clm::timemgr_init'
     integer :: rc                            ! return code
-    integer :: yr, mon, day, tod             ! Year, month, day, and second as integers
     type(ESMF_Time) :: start_date            ! start date for run
-    type(ESMF_Time) :: stop_date             ! stop date for run
     type(ESMF_Time) :: curr_date             ! temporary date used in logic
     type(ESMF_Time) :: ref_date              ! reference date for time coordinate
-    logical :: run_length_specified = .false.
-    type(ESMF_Time) :: current               ! current date (from clock)
     type(ESMF_TimeInterval) :: day_step_size ! day step size
     type(ESMF_TimeInterval) :: step_size     ! timestep size
     !---------------------------------------------------------------------------------
@@ -256,52 +205,11 @@ contains
 
     curr_date = start_date
 
-    ! Initalize stop date.
-
-    stop_date = TimeSetymd( 99991231, stop_tod, "stop_date" )
-
     call ESMF_TimeIntervalSet( step_size, s=dtime, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting step_size')
 
     call ESMF_TimeIntervalSet( day_step_size, d=1, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting day_step_size')
-
-    if ( stop_ymd /= uninit_int ) then
-       current = TimeSetymd( stop_ymd, stop_tod, "stop_date" )
-       if ( current < stop_date ) stop_date = current
-       run_length_specified = .true.
-    end if
-    if ( nelapse /= uninit_int ) then
-       if ( nelapse >= 0 ) then
-          current = curr_date + step_size*nelapse
-       else
-          current = curr_date - day_step_size*nelapse
-       end if
-       if ( current < stop_date ) stop_date = current
-       run_length_specified = .true.
-    end if
-    if ( .not. run_length_specified ) then
-       call shr_sys_abort (sub//': Must specify stop_ymd or nelapse')
-    end if
-
-    ! Error check 
-
-    if ( stop_date <= start_date ) then
-       write(iulog,*)sub, ': stop date must be specified later than start date: '
-       call ESMF_TimeGet( start_date, yy=yr, mm=mon, dd=day, s=tod )
-       write(iulog,*) ' Start date (yr, mon, day, tod): ', yr, mon, day, tod
-       call ESMF_TimeGet( stop_date, yy=yr, mm=mon, dd=day, s=tod )
-       write(iulog,*) ' Stop date  (yr, mon, day, tod): ', yr, mon, day, tod
-       call shr_sys_abort
-    end if
-    if ( curr_date >= stop_date ) then
-       write(iulog,*)sub, ': stop date must be specified later than current date: '
-       call ESMF_TimeGet( curr_date, yy=yr, mm=mon, dd=day, s=tod )
-       write(iulog,*) ' Current date (yr, mon, day, tod): ', yr, mon, day, tod
-       call ESMF_TimeGet( stop_date, yy=yr, mm=mon, dd=day, s=tod )
-       write(iulog,*) ' Stop date    (yr, mon, day, tod): ', yr, mon, day, tod
-       call shr_sys_abort
-    end if
 
     ! Initalize reference date for time coordinate.
 
@@ -313,7 +221,7 @@ contains
 
     ! Initialize clock
 
-    call init_clock( start_date, ref_date, curr_date, stop_date )
+    call init_clock( start_date, ref_date, curr_date)
 
     ! Initialize date used for perpetual calendar day calculation.
 
@@ -331,25 +239,52 @@ contains
 
   !=========================================================================================
 
-  subroutine init_clock( start_date, ref_date, curr_date, stop_date )
+  subroutine init_clock( start_date, ref_date, curr_date )
 
     !---------------------------------------------------------------------------------
-    ! Purpose: Initialize the clock based on the start_date, ref_date, and curr_date
-    ! as well as the settings from the namelist specifying the time to stop
+    ! Purpose: Initialize the clock based on the start_date, ref_date and curr_date
     !
     type(ESMF_Time), intent(in) :: start_date  ! start date for run
     type(ESMF_Time), intent(in) :: ref_date    ! reference date for time coordinate
     type(ESMF_Time), intent(in) :: curr_date   ! current date (equal to start_date)
-    type(ESMF_Time), intent(in) :: stop_date   ! stop date for run
     !
     character(len=*), parameter :: sub = 'clm::init_clock'
+    type(ESMF_Time)             :: stop_date         ! stop date for run
     type(ESMF_TimeInterval)     :: step_size         ! timestep size
     type(ESMF_Time)             :: current           ! current date (from clock)
+    integer                     :: yr, mon, day, tod ! Year, month, day, and second as integers
     integer                     :: rc                ! return code
     !---------------------------------------------------------------------------------
 
     call ESMF_TimeIntervalSet( step_size, s=dtime, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting step_size')
+
+    ! We don't use a stop time in the CTSM clock. Instead, we set the clock to
+    ! effectively have a stop time infinitely far into the future, and rely on other
+    ! mechanisms to tell CTSM when to stop. If we were always using the real ESMF
+    ! library, we could avoid setting the stopTime on the clock. But the ESMF time
+    ! manager included in cime appears to require stopTime.
+    call ESMF_TimeSet(stop_date, yy=really_big_year, mm=12, dd=31, s=0, &
+         calendar=tm_cal, rc=rc)
+
+    ! Error check 
+
+    if ( stop_date <= start_date ) then
+       write(iulog,*)sub, ': Assumed stop date is earlier than start date: '
+       call ESMF_TimeGet( start_date, yy=yr, mm=mon, dd=day, s=tod )
+       write(iulog,*) ' Start date (yr, mon, day, tod): ', yr, mon, day, tod
+       call ESMF_TimeGet( stop_date, yy=yr, mm=mon, dd=day, s=tod )
+       write(iulog,*) ' Stop date  (yr, mon, day, tod): ', yr, mon, day, tod
+       call shr_sys_abort
+    end if
+    if ( stop_date <= curr_date ) then
+       write(iulog,*)sub, ': Assumed stop date is earlier than current date: '
+       call ESMF_TimeGet( curr_date, yy=yr, mm=mon, dd=day, s=tod )
+       write(iulog,*) ' Current date (yr, mon, day, tod): ', yr, mon, day, tod
+       call ESMF_TimeGet( stop_date, yy=yr, mm=mon, dd=day, s=tod )
+       write(iulog,*) ' Stop date    (yr, mon, day, tod): ', yr, mon, day, tod
+       call shr_sys_abort
+    end if
 
     ! Initialize the clock
 
@@ -555,11 +490,8 @@ contains
     type(ESMF_Time) :: start_date            ! start date for run
     type(ESMF_Time) :: ref_date              ! reference date for run
     type(ESMF_Time) :: curr_date             ! date of data in restart file
-    type(ESMF_Time) :: stop_date             ! stop date for run
-    type(ESMF_Time) :: current               ! current date (from clock)
     type(ESMF_TimeInterval) :: day_step_size ! day step size
     type(ESMF_TimeInterval) :: step_size     ! timestep size
-    logical :: run_length_specified = .false.
     !---------------------------------------------------------------------------------
     call timemgr_spmdbcast( )
 
@@ -579,51 +511,11 @@ contains
 
     curr_date = TimeSetymd( rst_curr_ymd, rst_curr_tod, "curr_date" )
 
-    ! Initialize stop date from sync clock or namelist input
-
-    stop_date = TimeSetymd( 99991231, stop_tod, "stop_date" )
-
     call ESMF_TimeIntervalSet( step_size, s=dtime, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting step_size')
 
     call ESMF_TimeIntervalSet( day_step_size, d=1, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting day_step_size')
-
-    if    ( stop_ymd /= uninit_int ) then
-       current = TimeSetymd( stop_ymd, stop_tod, "stop_date" )
-       if ( current < stop_date ) stop_date = current
-       run_length_specified = .true.
-    else if ( nelapse /= uninit_int ) then
-       if ( nelapse >= 0 ) then
-          current = curr_date + step_size*nelapse
-       else
-          current = curr_date - day_step_size*nelapse
-       end if
-       if ( current < stop_date ) stop_date = current
-       run_length_specified = .true.
-    end if
-    if ( .not. run_length_specified ) then
-       call shr_sys_abort (sub//': Must specify stop_ymd or nelapse')
-    end if
-
-    ! Error check
-
-    if ( stop_date <= start_date ) then
-       write(iulog,*)sub, ': stop date must be specified later than start date: '
-       call ESMF_TimeGet( start_date, yy=yr, mm=mon, dd=day, s=tod )
-       write(iulog,*) ' Start date (yr, mon, day, tod): ', yr, mon, day, tod
-       call ESMF_TimeGet( stop_date, yy=yr, mm=mon, dd=day, s=tod )
-       write(iulog,*) ' Stop date  (yr, mon, day, tod): ', yr, mon, day, tod
-       call shr_sys_abort
-    end if
-    if ( curr_date >= stop_date ) then
-       write(iulog,*)sub, ': stop date must be specified later than current date: '
-       call ESMF_TimeGet( curr_date, yy=yr, mm=mon, dd=day, s=tod )
-       write(iulog,*) ' Current date (yr, mon, day, tod): ', yr, mon, day, tod
-       call ESMF_TimeGet( stop_date, yy=yr, mm=mon, dd=day, s=tod )
-       write(iulog,*) ' Stop date    (yr, mon, day, tod): ', yr, mon, day, tod
-       call shr_sys_abort
-    end if
 
     ! Initialize nstep_rad_prev from restart info
 
@@ -635,7 +527,7 @@ contains
 
     ! Initialize clock 
 
-    call init_clock( start_date, ref_date, curr_date, stop_date )
+    call init_clock( start_date, ref_date, curr_date)
 
     ! Advance the timestep.  
     ! Data from the restart file corresponds to the last timestep of the previous run.
@@ -646,10 +538,6 @@ contains
 
     tm_first_restart_step = .true.
 
-    ! Calculate ending time step
-
-    call calc_nestep( )
-
     ! Print configuration summary to log file (stdout).
 
     if (masterproc) call timemgr_print()
@@ -657,33 +545,6 @@ contains
     timemgr_set = .true.
 
   end subroutine timemgr_restart
-
-  !=========================================================================================
-
-  subroutine calc_nestep()
-    !---------------------------------------------------------------------------------
-    !
-    ! Calculate ending timestep number
-    ! Calculation of ending timestep number (nestep) assumes a constant stepsize.
-    !
-    character(len=*), parameter :: sub = 'clm::calc_nestep'
-    integer :: ntspday               ! Number of time-steps per day
-    type(ESMF_TimeInterval) :: diff  !
-    type(ESMF_Time) :: start_date    ! start date for run
-    type(ESMF_Time) :: stop_date     ! stop date for run
-    integer :: ndays, nsecs          ! Number of days, seconds to ending time
-    integer :: rc                    ! return code
-    !---------------------------------------------------------------------------------
-
-    call ESMF_ClockGet( tm_clock, stopTime=stop_date, startTime=start_date, rc=rc )
-    call chkrc(rc, sub//': error return from ESMF_ClockGet')
-    ntspday = isecspday/dtime
-    diff = stop_date - start_date
-    call ESMF_TimeIntervalGet( diff, d=ndays, s=nsecs, rc=rc )
-    call chkrc(rc, sub//': error return from ESMF_TimeIntervalGet calculating nestep')
-    nestep = ntspday*ndays + nsecs/dtime
-    if ( mod(nsecs,dtime) /= 0 ) nestep = nestep + 1
-  end subroutine calc_nestep
 
   !=========================================================================================
 
@@ -728,10 +589,6 @@ contains
          start_mon = uninit_int,  &! start month
          start_day = uninit_int,  &! start day of month
          start_tod = uninit_int,  &! start time of day
-         stop_yr   = uninit_int,  &! stop year
-         stop_mon  = uninit_int,  &! stop month
-         stop_day  = uninit_int,  &! stop day of month
-         stop_tod  = uninit_int,  &! stop time of day
          ref_yr    = uninit_int,  &! reference year
          ref_mon   = uninit_int,  &! reference month
          ref_day   = uninit_int,  &! reference day of month
@@ -742,14 +599,13 @@ contains
          curr_tod  = uninit_int    ! current time of day
     integer(ESMF_KIND_I8) :: step_no
     type(ESMF_Time) :: start_date! start date for run
-    type(ESMF_Time) :: stop_date ! stop date for run
     type(ESMF_Time) :: curr_date ! date of data in restart file
     type(ESMF_Time) :: ref_date  ! reference date
     type(ESMF_TimeInterval) :: step ! Time-step
     !---------------------------------------------------------------------------------
 
     call ESMF_ClockGet( tm_clock, startTime=start_date, currTime=curr_date, &
-         refTime=ref_date, stopTime=stop_date, timeStep=step, &
+         refTime=ref_date, timeStep=step, &
          advanceCount=step_no, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
     nstep = step_no
@@ -762,9 +618,6 @@ contains
     call ESMF_TimeGet( start_date, yy=start_yr, mm=start_mon, dd=start_day, &
          s=start_tod, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeGet')
-    call ESMF_TimeGet( stop_date, yy=stop_yr, mm=stop_mon, dd=stop_day, &
-         s=stop_tod, rc=rc )
-    call chkrc(rc, sub//': error return from ESMF_TimeGet')
     call ESMF_TimeGet( ref_date, yy=ref_yr, mm=ref_mon, dd=ref_day, s=ref_tod, &
          rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeGet')
@@ -776,12 +629,9 @@ contains
     write(iulog,*)'  Timestep size (seconds):  ', step_sec
     write(iulog,*)'  Start date (yr mon day tod):     ', start_yr, start_mon, &
          start_day, start_tod
-    write(iulog,*)'  Stop date (yr mon day tod):      ', stop_yr, stop_mon, &
-         stop_day, stop_tod
     write(iulog,*)'  Reference date (yr mon day tod): ', ref_yr, ref_mon, &
          ref_day, ref_tod
     write(iulog,*)'  Current step number:      ', nstep
-    write(iulog,*)'  Ending step number:       ', nestep
     write(iulog,*)'  Current date (yr mon day tod):   ', curr_yr, curr_mon, &
          curr_day, curr_tod
 
@@ -811,30 +661,6 @@ contains
     tm_first_restart_step = .false.
 
   end subroutine advance_timestep
-
-  !=========================================================================================
-
-  subroutine get_clock( clock )
-
-    ! Return the ESMF clock
-
-    type(ESMF_Clock), intent(inout) :: clock
-
-    character(len=*), parameter :: sub = 'clm::get_clock'
-    type(ESMF_TimeInterval) :: step_size
-    type(ESMF_Time) :: start_date, stop_date, ref_date
-    integer :: rc
-
-    if ( .not. check_timemgr_initialized(sub) ) return
-
-    call ESMF_ClockGet( tm_clock, timeStep=step_size, startTime=start_date, &
-         stoptime=stop_date, reftime=ref_date, rc=rc )
-    call chkrc(rc, sub//': error return from ESMF_ClockGet')
-    call ESMF_ClockSet(clock, timeStep=step_size, startTime=start_date, &
-         stoptime=stop_date, reftime=ref_date, rc=rc)
-    call chkrc(rc, sub//': error return from ESMF_ClockSet')
-
-  end subroutine get_clock
 
   !=========================================================================================
 
@@ -1780,34 +1606,6 @@ contains
 
   !=========================================================================================
 
-  logical function is_last_step()
-
-    !---------------------------------------------------------------------------------
-    ! Return true on last timestep.
-
-    ! Local variables
-    character(len=*), parameter :: sub = 'clm::is_last_step'
-    type(ESMF_Time) :: stop_date
-    type(ESMF_Time) :: curr_date
-    type(ESMF_TimeInterval) :: time_step
-    integer :: rc
-    !---------------------------------------------------------------------------------
-
-    if ( .not. check_timemgr_initialized(sub) ) return
-
-    call ESMF_ClockGet( tm_clock, stopTime=stop_date, &
-         currTime=curr_date, TimeStep=time_step, rc=rc )
-    call chkrc(rc, sub//': error return from ESMF_ClockGet')
-    if ( curr_date+time_step > stop_date ) then
-       is_last_step = .true.
-    else
-       is_last_step = .false.
-    end if
-
-  end function is_last_step
-
-  !=========================================================================================
-
   logical function is_perpetual()
 
     ! Return true on last timestep.
@@ -1982,11 +1780,8 @@ contains
     dtime_rad      = uninit_int
     nstep_rad_prev = uninit_int
     
-    nelapse   = uninit_int
     start_ymd = uninit_int
     start_tod = 0
-    stop_ymd  = uninit_int
-    stop_tod  = 0
     ref_ymd   = uninit_int
     ref_tod   = 0
 
@@ -2004,7 +1799,6 @@ contains
     tm_first_restart_step = .false.
     tm_perp_calendar      = .false.
     timemgr_set           = .false.
-    nestep                = uninit_int
 
     nextsw_cday = uninit_r8
     
