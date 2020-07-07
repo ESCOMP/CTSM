@@ -372,7 +372,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_0">lnd/clm2/paramdata/clm5_params.c200425.nc</paramfile>
+<paramfile phys="clm5_0">/glade/p/cgd/tss/people/oleson/modify_param/clm5_params.c200425.slatopA_leafcnA_stemleafA_frtlfA_sdt_kwo.c200618.nc</paramfile>
 <paramfile phys="clm4_5">lnd/clm2/paramdata/clm_params.c200402.nc</paramfile>
 
 <!-- ================================================================== -->
