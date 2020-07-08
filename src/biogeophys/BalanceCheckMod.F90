@@ -152,6 +152,7 @@ contains
             num_nolakec, filter_nolakec, &
             num_lakec, filter_lakec, &
             soilhydrology_inst, &
+            lakestate_inst, &
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
             water_inst%bulk_and_tracers(i)%waterbalance_inst, &
@@ -163,8 +164,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst, waterstate_inst, waterdiagnostic_inst, waterbalance_inst, &
-       use_aquifer_layer)
+       soilhydrology_inst, lakestate_inst, waterstate_inst, & 
+       waterdiagnostic_inst, waterbalance_inst, & use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step, for bulk or a
@@ -177,6 +178,7 @@ contains
     integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
+    type(lakestate_type)      , intent(in)    :: lakestate_inst
     class(waterstate_type)    , intent(inout) :: waterstate_inst
     class(waterdiagnostic_type), intent(in)   :: waterdiagnostic_inst
     class(waterbalance_type)  , intent(inout) :: waterbalance_inst

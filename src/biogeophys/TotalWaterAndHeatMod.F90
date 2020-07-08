@@ -504,8 +504,8 @@ contains
     character(len=*), parameter :: subname = 'AccumulateLiqIceMassLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(liquid_mass) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ice_mass) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(liquid_mass) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ice_mass) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate( &
          lake_icefrac =>    lakestate_inst%lake_icefrac_col, & ! Input:  [real(r8) (:,:) ]  lake  ice fraction
@@ -1058,7 +1058,8 @@ contains
     character(len=*), parameter :: subname = 'AccumulateHeatLake'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(heat) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(heat) == (/bounds%endc/)), sourcefile, __LINE__)
+
 
     associate( &
          dz_lake      => col%dz_lake, &  ! lake layer depth (m)
