@@ -541,7 +541,7 @@ contains
        num_lakec, filter_lakec, &
        waterstate_inst, waterdiagnostic_inst, &
        waterbalance_inst, waterflux_inst, &
-       delta_liq)
+       lakestate_inst, delta_liq)
     !
     ! !DESCRIPTION:
     ! Compute grid cell-level water content and dynbal fluxes after landcover change, for
@@ -557,6 +557,7 @@ contains
     class(waterdiagnostic_type) , intent(in)    :: waterdiagnostic_inst
     class(waterbalance_type)    , intent(inout) :: waterbalance_inst
     class(waterflux_type)       , intent(inout) :: waterflux_inst
+    type(lakestate_type)        , intent(in)    :: lakestate_inst
     real(r8)                    , intent(out)   :: delta_liq(bounds%begg:)  ! change in gridcell h2o liq content
     !
     ! !LOCAL VARIABLES:
@@ -575,7 +576,7 @@ contains
     call dyn_water_content(bounds, &
          num_nolakec, filter_nolakec, &
          num_lakec, filter_lakec, &
-         waterstate_inst, waterdiagnostic_inst, &
+         waterstate_inst, waterdiagnostic_inst, lakestate_inst, &
          liquid_mass = waterbalance_inst%liq2_grc(bounds%begg:bounds%endg), &
          ice_mass    = waterbalance_inst%ice2_grc(bounds%begg:bounds%endg))
 
@@ -623,7 +624,7 @@ contains
     integer                     , intent(in)  :: filter_lakec(:)
     class(waterstate_type)      , intent(in)  :: waterstate_inst
     class(waterdiagnostic_type) , intent(in)  :: waterdiagnostic_inst
-    type(lakestate_type)    , intent(in)     :: lakestate_inst
+    type(lakestate_type)        , intent(in)  :: lakestate_inst
     real(r8)                    , intent(out) :: liquid_mass( bounds%begg: ) ! kg m-2
     real(r8)                    , intent(out) :: ice_mass( bounds%begg: )    ! kg m-2
     !
