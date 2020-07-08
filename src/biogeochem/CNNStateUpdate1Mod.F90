@@ -98,7 +98,7 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
+    type(cnveg_nitrogenflux_type)           , intent(inout) :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
