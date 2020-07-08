@@ -35,7 +35,7 @@ use File::Basename qw(dirname);
 use English;
 use Getopt::Long;
 use IO::File;
-use File::Glob ':glob';
+use File::Glob ':bsd_glob';
 
 #-------------------------------------------------------------------------------
 #
@@ -189,7 +189,6 @@ OPTIONS
                                form \$CASEDIR/user_nl_clm/user_nl_clm_????)
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
                               file specified.
-     -l_ncpl "LND_NCPL"       Number of CLM coupling time-steps in a day.
      -lnd_tuning_mode "value" Use the parameters tuned for the given configuration (CLM version and atmospheric forcing)
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
                               "-mask list" to list valid land masks.
@@ -255,7 +254,6 @@ sub process_commandline {
                help                  => 0,
                glc_nec               => "default",
                light_res             => "default",
-               l_ncpl                => undef,
                lnd_tuning_mode       => "default",
                lnd_frac              => undef,
                dir                   => "$cwd",
@@ -307,7 +305,6 @@ sub process_commandline {
              "infile=s"                  => \$opts{'infile'},
              "lnd_frac=s"                => \$opts{'lnd_frac'},
              "lnd_tuning_mode=s"         => \$opts{'lnd_tuning_mode'},
-             "l_ncpl=i"                  => \$opts{'l_ncpl'},
              "inputdata=s"               => \$opts{'inputdata'},
              "mask=s"                    => \$opts{'mask'},
              "namelist=s"                => \$opts{'namelist'},
@@ -477,7 +474,7 @@ sub read_envxml_case_files {
   my %envxml = ();
   if ( defined($opts->{'envxml_dir'}) ) {
       (-d $opts->{'envxml_dir'})  or  $log->fatal_error( "envxml_dir is not a directory" );
-      my @files = glob( $opts->{'envxml_dir'}."/env_*xml" );
+      my @files = bsd_glob( $opts->{'envxml_dir'}."/env_*xml" );
       ($#files >= 0)              or  $log->fatal_error( "there are no env_*xml files in the envxml_dir" );
       foreach my $file (@files) {
           $log->verbose_message( "Open env.xml file: $file" );
@@ -1394,9 +1391,6 @@ sub process_namelist_commandline_clm_usr_name {
         $nvars++;
       }
     }
-    if ( $nvars == 0 ) {
-      $log->message("setting clm_usr_name -- but did NOT find any user datasets: $opts->{'clm_usr_name'}", $opts);
-    }
     # Go through all variables and expand any XML env settings in them
     expand_xml_variables_in_namelist( $nl_usrfile, $envxml_ref );
     # Merge input values into namelist.  Previously specified values have higher precedence
@@ -1438,7 +1432,7 @@ sub process_namelist_commandline_use_case {
       my $val = $uc_defaults->get_value($var, \%settings );
 
       if ( defined($val) ) {
-        $log->message("CLM adding use_case $opts->{'use_case'} defaults for var '$var' with val '$val'");
+        $log->verbose_message("CLM adding use_case $opts->{'use_case'} defaults for var '$var' with val '$val'");
 
         add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl_usecase, $var, 'val'=>$val);
       }
@@ -1486,7 +1480,6 @@ sub process_namelist_inline_logic {
   setup_logic_co2_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_start_type($opts, $nl_flags, $nl);
-  setup_logic_delta_time($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_decomp_performance($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_snow($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref);
@@ -1857,28 +1850,6 @@ sub setup_logic_start_type {
     if (defined $nl->get_value('nrevsn')) {
       $log->fatal_error("nrevsn should ONLY be set for a branch type.");
     }
-  }
-}
-
-#-------------------------------------------------------------------------------
-
-sub setup_logic_delta_time {
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
-
-  if ( defined($opts->{'l_ncpl'}) ) {
-    my $l_ncpl = $opts->{'l_ncpl'};
-    if ( $l_ncpl <= 0 ) {
-      $log->fatal_error("bad value for -l_ncpl option.");
-    }
-    my $val = ( 3600 * 24 ) / $l_ncpl;
-    my $dtime = $nl->get_value('dtime');
-    if ( ! defined($dtime)  ) {
-      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtime', 'val'=>$val);
-    } elsif ( $dtime ne $val ) {
-      $log->fatal_error("can NOT set both -l_ncpl option (via LND_NCPL env variable) AND dtime namelist variable.");
-    }
-  } else {
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtime', 'hgrid'=>$nl_flags->{'res'});
   }
 }
 
@@ -4203,7 +4174,7 @@ sub validate_options {
            # create the @expect array by listing the files in $use_case_dir
            # and strip off the ".xml" part of the filename
            @expect = ();
-           my @files = glob("$opts->{'use_case_dir'}/*.xml");
+           my @files = bsd_glob("$opts->{'use_case_dir'}/*.xml");
            foreach my $file (@files) {
                $file =~ m{.*/(.*)\.xml};
                &check_use_case_name( $1 );
@@ -4217,7 +4188,7 @@ sub validate_options {
         } else {
            print "Use cases are:...\n\n";
            my @ucases;
-           foreach my $file( sort( glob($opts->{'use_case_dir'}."/*.xml") ) ) {
+           foreach my $file( sort( bsd_glob($opts->{'use_case_dir'}."/*.xml") ) ) {
               my $use_case;
               if ( $file =~ /\/([^\/]+)\.xml$/ ) {
                  &check_use_case_name( $1 );

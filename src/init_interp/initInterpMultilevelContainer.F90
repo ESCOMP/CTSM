@@ -51,12 +51,10 @@ module initInterpMultilevelContainer
      type(interp_multilevel_snow_type), pointer   :: interp_multilevel_levsno1
      type(interp_multilevel_split_type), pointer  :: interp_multilevel_levtot_col
    contains
+     procedure :: init
      procedure :: find_interpolator
+     final :: destroy_interp_multilevel_container_type
   end type interp_multilevel_container_type
-
-  interface interp_multilevel_container_type
-     module procedure constructor
-  end interface interp_multilevel_container_type
 
   ! Private routines
 
@@ -70,21 +68,18 @@ module initInterpMultilevelContainer
 contains
 
   ! ========================================================================
-  ! Constructors
+  ! Public methods
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  function constructor(ncid_source, ncid_dest, bounds_source, bounds_dest, &
-       pftindex, colindex) result(this)
+  subroutine init(this, ncid_source, ncid_dest, bounds_source, bounds_dest, &
+       pftindex, colindex)
     !
     ! !DESCRIPTION:
-    ! Create an interp_multilevel_container_type instance.
+    ! Initialize this interp_multilevel_container_type instance
     !
-    ! !USES:
-    use ncdio_pio, only : file_desc_t
-    ! 
     ! !ARGUMENTS:
-    type(interp_multilevel_container_type) :: this  ! function result
+    class(interp_multilevel_container_type), intent(inout) :: this
     type(file_desc_t), target, intent(inout) :: ncid_source ! netcdf ID for source file
     type(file_desc_t), target, intent(inout) :: ncid_dest   ! netcdf ID for dest file
     type(interp_bounds_type), intent(in) :: bounds_source
@@ -97,7 +92,7 @@ contains
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'constructor'
+    character(len=*), parameter :: subname = 'init'
     !-----------------------------------------------------------------------
 
     allocate(this%interp_multilevel_copy)
@@ -141,11 +136,7 @@ contains
          num_second_levels_source = this%interp_multilevel_levgrnd_col%get_nlev_source(), &
          num_second_levels_dest = this%interp_multilevel_levgrnd_col%get_nlev_dest())
 
-  end function constructor
-
-  ! ========================================================================
-  ! Public methods
-  ! ========================================================================
+  end subroutine init
 
   !-----------------------------------------------------------------------
   function find_interpolator(this, lev_dimname, vec_dimname) result(interpolator)
@@ -489,6 +480,33 @@ contains
     deallocate(snlsno_source_plus_1)
 
   end subroutine create_snow_interpolators
+
+  ! ========================================================================
+  ! Finalizers
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine destroy_interp_multilevel_container_type(this)
+    !
+    ! !DESCRIPTION:
+    ! Finalize routine for interp_multilevel_container_type
+    !
+    ! !ARGUMENTS:
+    type(interp_multilevel_container_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'destroy_interp_multilevel_container_type'
+    !-----------------------------------------------------------------------
+
+    deallocate(this%interp_multilevel_copy)
+    deallocate(this%interp_multilevel_levgrnd_col)
+    deallocate(this%interp_multilevel_levgrnd_pft)
+    deallocate(this%interp_multilevel_levsno)
+    deallocate(this%interp_multilevel_levsno1)
+    deallocate(this%interp_multilevel_levtot_col)
+
+  end subroutine destroy_interp_multilevel_container_type
 
 
 end module initInterpMultilevelContainer
