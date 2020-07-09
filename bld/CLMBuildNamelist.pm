@@ -2309,6 +2309,7 @@ sub setup_logic_initial_conditions {
           # Figure out which sim_year has a usable finidat file that is closest to the desired one
           #
           my $close = $nl->get_value("init_interp_how_close");
+          my $closest_sim_year = undef;
           my @sim_years = split( /,/, $nl->get_value("init_interp_sim_years") );
 SIMYR:    foreach my $sim_yr ( @sim_years ) {
              my $how_close = undef;
@@ -2321,24 +2322,26 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
              }
              if ( ($sim_yr == $sim_years[-1]) || (($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close)) ) {
                 my $group = $definition->get_group_name($useinitvar);
-                my $val = $nl->set_variable_value($group, $useinitvar, $use_init_interp_default );
+                $settings{'sim_year'} = $sim_yr;
                 $settings{$useinitvar} = $defaults->get_value($useinitvar, \%settings);
                 if ( ! defined($settings{$useinitvar}) ) {
-                   $settings{$useinitvar} = ".false.";
+                   $settings{$useinitvar} = $use_init_interp_default;
                 }
-                if ( &value_is_true($nl->get_value($useinitvar) ) ) {
+                if ( &value_is_true($settings{$useinitvar}) ) {
 
                    if ( ($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close) ) {
                       $close = $how_close;
-                      $settings{'sim_year'} = $sim_yr;
+                      $closest_sim_year = $sim_yr;
                    }
                 }
              }
           }    # SIMYR:
+          $settings{'sim_year'} = $closest_sim_year;
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
                       'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(),
                       'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                       'use_fates'=>$nl_flags->{'use_fates'} );
+          $settings{$useinitvar} = $nl->get_value($useinitvar);
           if ( ! &value_is_true($nl->get_value($useinitvar) ) ) {
              if ( $nl_flags->{'clm_start_type'} =~ /startup/  ) {
                 $log->fatal_error("clm_start_type is startup so an initial conditions ($var) file is required, but can't find one without $useinitvar being set to true");
