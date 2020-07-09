@@ -46,7 +46,9 @@ module CanopyHydrologyMod
 
   type, private :: params_type
      real(r8) :: liq_canopy_storage_scalar  ! Canopy-storage-of-liquid-water parameter (kg/m2)
-     real(r8) :: snow_canopy_storage_scalar  ! Canopy-storage-of-snow parameter (kg/m2)
+     real(r8) :: snow_canopy_storage_scalar ! Canopy-storage-of-snow parameter (kg/m2)
+     real(r8) :: snowcan_unload_temp_fact   ! Temperature canopy snow unload scaling (C2 in Eq. 14, Roesch et al. 2001) (K*s)
+     real(r8) :: snowcan_unload_wind_fact   ! Wind canopy snow unload scaling (modifies 1.56e5, where 1.56e5 is C3 in Eq. 15, Roesch et al. 2001) (-)
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -156,6 +158,10 @@ contains
     call readNcdioScalar(ncid, 'liq_canopy_storage_scalar', subname, params_inst%liq_canopy_storage_scalar)
     ! Canopy-storage-of-snow parameter (kg/m2)
     call readNcdioScalar(ncid, 'snow_canopy_storage_scalar', subname, params_inst%snow_canopy_storage_scalar)
+    ! Temperature canopy snow unload scaling (C2 in Eq. 14, Roesch et al. 2001) (K*s)
+    call readNcdioScalar(ncid, 'snowcan_unload_temp_fact', subname, params_inst%snowcan_unload_temp_fact)
+    ! Wind canopy snow unload scaling (modifies 1.56e5, where 1.56e5 is C3 in Eq. 15, Roesch et al. 2001) (-)
+    call readNcdioScalar(ncid, 'snowcan_unload_wind_fact', subname, params_inst%snowcan_unload_wind_fact)
 
    end subroutine readParams
 
@@ -904,8 +910,8 @@ contains
            c = patch%column(p)
            g = patch%gridcell(p)
 
-           qflx_snotempunload(p) = max(0._r8,snocan(p)*(forc_t(c)-270.15_r8)/1.87e5_r8)
-           qflx_snowindunload(p) = 0.5_r8*snocan(p)*forc_wind(g)/1.56e5_r8
+           qflx_snotempunload(p) = max(0._r8,snocan(p)*(forc_t(c)-270.15_r8)/params_inst%snowcan_unload_temp_fact)
+           qflx_snowindunload(p) = params_inst%snowcan_unload_wind_fact*snocan(p)*forc_wind(g)/1.56e5_r8
            qflx_snow_unload(p) = min(qflx_snotempunload(p) + qflx_snowindunload(p), snocan(p)/dtime)
         else
            qflx_snotempunload(p) = 0._r8

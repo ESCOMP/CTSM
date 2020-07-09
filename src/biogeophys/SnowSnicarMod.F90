@@ -34,6 +34,12 @@ module SnowSnicarMod
   public :: SnowAge_grain    ! Snow effective grain size evolution
   public :: SnowAge_init     ! Initial read in of snow-aging file
   public :: SnowOptics_init  ! Initial read in of snow-optics file
+
+  type, private :: params_type
+      real(r8) :: xdrdt         ! Arbitrary factor applied to snow aging rate (-)
+      real(r8) :: snw_rds_refrz ! Effective radius of re-frozen snow (microns)
+  end type params_type
+  type(params_type), private ::  params_inst
   !
   ! !PUBLIC DATA MEMBERS:
   integer,  public, parameter :: sno_nbr_aer =   8        ! number of aerosol species in snowpack
@@ -59,7 +65,6 @@ module SnowSnicarMod
   integer,  parameter :: snw_rds_min_tbl = 30            ! minimium effective radius defined in Mie lookup table [microns]
   integer,  parameter :: snw_rds_min_int = nint(snw_rds_min) ! minimum allowed snow effective radius as integer [microns]
   real(r8), parameter :: snw_rds_max     = 1500._r8      ! maximum allowed snow effective radius [microns]
-  real(r8), parameter :: snw_rds_refrz   = 1000._r8      ! effective radius of re-frozen snow [microns]
 
   real(r8), parameter :: min_snw = 1.0E-30_r8            ! minimum snow mass required for SNICAR RT calculation [kg m-2]
 
@@ -79,7 +84,6 @@ module SnowSnicarMod
 
   ! scaling of the snow aging rate (tuning option):
   logical :: flg_snoage_scl    = .false.                 ! flag for scaling the snow aging rate by some arbitrary factor
-  real(r8), parameter :: xdrdt = 1.0_r8                  ! arbitrary factor applied to snow aging rate
 
   ! snow and aerosol Mie parameters:
   ! (arrays declared here, but are set in iniTimeConst)
@@ -152,6 +156,28 @@ module SnowSnicarMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !----------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_SnowSnicar'
+    !--------------------------------------------------------------------
+
+    ! Arbitrary factor applied to snow aging rate (-)
+    call readNcdioScalar(ncid, 'xdrdt', subname, params_inst%xdrdt)
+    ! Effective radius of re-frozen snow (microns)
+    call readNcdioScalar(ncid, 'snw_rds_refrz', subname, params_inst%snw_rds_refrz)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine SNICAR_RT (flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,  &
@@ -1200,7 +1226,7 @@ contains
             !
             ! Multiply rate of change of effective radius by some constant, xdrdt
             if (flg_snoage_scl) then
-               dr = dr*xdrdt
+               dr = dr*params_inst%xdrdt
             endif
 
 
@@ -1239,7 +1265,8 @@ contains
             snw_rds_fresh = FreshSnowRadius(c_idx, atm2lnd_inst)
 
             ! mass-weighted mean of fresh snow, old snow, and re-frozen snow effective radius
-            snw_rds(c_idx,i) = (snw_rds(c_idx,i)+dr)*frc_oldsnow + snw_rds_fresh*frc_newsnow + snw_rds_refrz*frc_refrz
+            snw_rds(c_idx,i) = (snw_rds(c_idx,i)+dr)*frc_oldsnow + snw_rds_fresh*frc_newsnow + &
+                               params_inst%snw_rds_refrz*frc_refrz
             !
             !**********  5. CHECK BOUNDARIES   ***********
             !
