@@ -510,13 +510,25 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- What simulation years can find initial conditions to interpolate from (find one that's within the how_close years above)-->
 <init_interp_sim_years>1850,1982,2000,2010</init_interp_sim_years>
 
-<!-- Interpolate from an initial condition file at startup? -->
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1850">.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1982">.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000">.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010">.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2015">.true.</use_init_interp>
-<use_init_interp                                                        >.false.</use_init_interp>
+<!--
+
+    Find Initial condition files: The settings use_init_interp, init_interp_attributes and finidat MUST all
+    be coordinated together!
+
+-->
+
+<!-- Can you interpolate from an initial condition file at startup (is there a finidat file to find)? -->
+<!-- NOTE: Make sure all possible lnd_tuning_mode options are accounted for. Some finidat files are only for one mode -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1850"                                >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1982" lnd_tuning_mode="clm5_0_cam6.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false."                             >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"                                >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010" lnd_tuning_mode="clm5_0_cam6.0">.true.</use_init_interp>
+<use_init_interp                                                                                        >.false.</use_init_interp>
+<!-- NOTE: if use_init_interp is FALSE that indicates that you can't interpolate from an initial conditions file that's similar 
+           Either an existing file is too different, too different in the year, or a configuration that can't interpolate
+           initial condition files.
+-->
 
 <!--
   Set attributes to find specific matching finidat files below
