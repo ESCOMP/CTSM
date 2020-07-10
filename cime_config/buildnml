@@ -50,7 +50,6 @@ def buildnml(case, caseroot, compname):
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
-    lnd_ncpl = case.get_value("LND_NCPL")
     lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
     lnd_domain_file = case.get_value("LND_DOMAIN_FILE")
     ninst_lnd = case.get_value("NINST_LND")
@@ -209,12 +208,12 @@ def buildnml(case, caseroot, compname):
         cmd = os.path.join(lnd_root,"bld","build-namelist")
 
         command = ("%s -cimeroot %s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
-                   "%s %s -res %s %s -clm_start_type %s -envxml_dir %s -l_ncpl %s "
+                   "%s %s -res %s %s -clm_start_type %s -envxml_dir %s "
                    "-configuration %s -structure %s "
                    "-lnd_frac %s -glc_nec %s -co2_ppmv %s -co2_type %s -config %s "
                    "%s %s %s %s"
                    %(cmd, _CIMEROOT, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts, 
-                     nomeg, usecase, lnd_grid, clmusr, start_type, caseroot, lnd_ncpl, 
+                     nomeg, usecase, lnd_grid, clmusr, start_type, caseroot,
                      configuration, structure,
                      lndfrac_file, glc_nec, ccsm_co2_ppmv, clm_co2_type, config_cache_file,
                      clm_bldnml_opts, spinup, tuning, gridmask))

@@ -19,9 +19,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <sim_year>2000</sim_year>
 
-<!-- Default time step -->
-<dtime>1800</dtime>
-
 <!-- CO2 volume mixing ratio -->
 <co2_ppmv sim_year="1000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="1979"      >336.6</co2_ppmv>
@@ -395,8 +392,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_0">lnd/clm2/paramdata/clm5_params.c200614.nc</paramfile>
-<paramfile phys="clm4_5">lnd/clm2/paramdata/clm45_params.c200614.nc</paramfile>
+<paramfile phys="clm5_0">lnd/clm2/paramdata/clm5_params.c200624.nc</paramfile>
+<paramfile phys="clm4_5">lnd/clm2/paramdata/clm45_params.c200624.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
@@ -444,7 +441,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_fertilizer use_crop=".true." phys="clm4_5">.true.</use_fertilizer>
 <use_fertilizer use_crop=".true." phys="clm5_0">.true.</use_fertilizer>
 
-<jmaxb1 use_luna=".true." phys="clm5_0">0.093563</jmaxb1>
+<jmaxb1 use_luna=".true." phys="clm5_0">0.17</jmaxb1>
 
 <use_grainproduct>.false.</use_grainproduct>
 <use_grainproduct use_crop=".true." phys="clm4_5">.false.</use_grainproduct> <!-- 1-year grain product pool default to off for clm45 if crop is turned on -->

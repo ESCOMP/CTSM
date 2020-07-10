@@ -319,7 +319,9 @@ module LunaMod
     vcmx25_z      => photosyns_inst%vcmx25_z_patch                    , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 (umol/m2 leaf/s) for canopy layer 
     jmx25_z       => photosyns_inst%jmx25_z_patch                     , & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 (umol electron/m**2/s) for canopy layer
     pnlc_z        => photosyns_inst%pnlc_z_patch                      , & ! Output: [real(r8) (:,:) ] patch proportion of leaf nitrogen allocated for light capture for canopy layer 
-    enzs_z        => photosyns_inst%enzs_z_patch                        & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
+    enzs_z        => photosyns_inst%enzs_z_patch                      , & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
+    vcmx_prevyr   => photosyns_inst%vcmx_prevyr                       , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 from previous year avg
+    jmx_prevyr    => photosyns_inst%jmx_prevyr                          & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from previous year avg
     )  
     !----------------------------------------------------------------------------------------------------------------------------------------------------------
     !set timestep
@@ -345,7 +347,7 @@ module LunaMod
          hourpd = dayl(g) / 3600._r8             
          tleafd10 = t_veg10_day(p) - tfrz
          tleafn10 = t_veg10_night(p) - tfrz
-         tleaf10  = (dayl(g)*tleafd10 +(86400._r8-dayl(g)) * tleafd10)/86400._r8 	     
+         tleaf10  = (dayl(g)*tleafd10 +(86400._r8-dayl(g)) * tleafn10)/86400._r8
          tair10 = t10(p)- tfrz
          relh10 = min(1.0_r8, rh10_p(p))  
 	 rb10v = rb10_p(p)	     
@@ -415,18 +417,20 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb1, PNlcold, PNetold, PNrespold, &
-                              PNcbold, PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
+                              Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor(p), &
+                              PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
                           
                          chg = vcmx25_opt-vcmx25_z(p, z)
                          chg_constrn = min(abs(chg),vcmx25_z(p, z)*max_daily_pchg)
                          vcmx25_z(p, z)  = vcmx25_z(p, z)+sign(1.0_r8,chg)*chg_constrn
+                         vcmx_prevyr(p,z) = vcmx25_z(p,z)
                           
                          chg = jmx25_opt-jmx25_z(p, z)
                          chg_constrn = min(abs(chg),jmx25_z(p, z)*max_daily_pchg)
                          jmx25_z(p, z)  = jmx25_z(p, z)+sign(1.0_r8,chg)*chg_constrn 
+                         jmx_prevyr(p,z) = jmx25_z(p,z)
 
                          PNlc_z(p, z)= PNlcopt
 
@@ -485,8 +489,8 @@ module LunaMod
                 endif !if not C3 plants                   
          else
             do z = 1 , nrad(p)
-               jmx25_z(p, z) = 85._r8
-               vcmx25_z(p, z) = 50._r8
+               jmx25_z(p, z) = jmx_prevyr(p,z)
+               vcmx25_z(p, z) = vcmx_prevyr(p,z)
             end do
          endif !checking for LAI and LNC
      endif !the first daycheck 
@@ -803,7 +807,7 @@ end subroutine Clear24_Climate_LUNA
 !************************************************************************************************************************************************
 !Use the LUNA model to calculate the Nitrogen partioning 
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
-     Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, &
+     Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor, &
      PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
   implicit none
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
@@ -823,6 +827,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: PNetold                    !old value of the proportion of nitrogen allocated to electron transport (unitless)
   real(r8), intent (in) :: PNrespold                  !old value of the proportion of nitrogen allocated to respiration (unitless)
   real(r8), intent (in) :: PNcbold                    !old value of the proportion of nitrogen allocated to carboxylation (unitless)  
+  real(r8), intent (in) :: dayl_factor                !daylight scale factor
   real(r8), intent (out):: PNstoreopt                 !optimal proportion of nitrogen for storage 
   real(r8), intent (out):: PNlcopt                    !optimal proportion of nitrogen for light capture 
   real(r8), intent (out):: PNetopt                    !optimal proportion of nitrogen for electron transport 
@@ -904,7 +909,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   tleafd10c = min(max(tleafd10, Trange1), Trange2)    !constrain the physiological range
   tleafn10c = min(max(tleafn10, Trange1), Trange2)    !constrain the physiological range
   ci = 0.7_r8 * CO2a10 
-  JmaxCoef = Jmaxb1 * ((hourpd / 12.0_r8)**2.0_r8) * (1.0_r8 - exp(-params_inst%relhExp * max(relh10 - &
+  JmaxCoef = Jmaxb1 * dayl_factor * (1.0_r8 - exp(-params_inst%relhExp * max(relh10 - &
       params_inst%minrelh, 0.0_r8) / (1.0_r8 - params_inst%minrelh)))
   do while (PNlcoldi .NE. PNlc .and. jj < 100)      
      Fc = VcmxTKattge(tair10, tleafd10c) * Fc25
