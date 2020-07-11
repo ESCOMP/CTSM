@@ -1953,7 +1953,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_D_Lm12" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/FatesSuccIgnitions">
+  <test name="ERS_D_Lm12" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/Fates_nat_and_anthro_ignitions">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>

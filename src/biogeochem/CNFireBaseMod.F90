@@ -116,7 +116,6 @@ contains
     ! Initialize CN Fire module
     ! !USES:
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl      , only : use_cn
     !
     ! !ARGUMENTS:
     class(cnfire_base_type) :: this
@@ -132,10 +131,8 @@ contains
        allocate( this%forc_hdm(bounds%begg:bounds%endg) )
        this%forc_hdm(bounds%begg:) = nan
 
-       if (use_cn) then
-          call this%hdm_init(bounds, NLFilename)
-          call this%hdm_interp(bounds)
-       end if
+       call this%hdm_init(bounds, NLFilename)
+       call this%hdm_interp(bounds)
 
        call this%lnfm_init(bounds, NLFilename)
        call this%lnfm_interp(bounds)
@@ -255,7 +252,6 @@ contains
     ! Interpolate CN Fire datasets
     !
     ! !USES:
-    use clm_varctl, only: use_cn
     !
     ! !ARGUMENTS:
     class(cnfire_base_type) :: this
@@ -263,9 +259,7 @@ contains
     !-----------------------------------------------------------------------
 
     if ( this%need_lightning_and_popdens ) then
-       if (use_cn) then
-          call this%hdm_interp(bounds)
-       end if
+       call this%hdm_interp(bounds)
        call this%lnfm_interp(bounds)
     end if
 

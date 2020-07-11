@@ -1,5 +1,0 @@
-fire_method = 'spitfire'
-fates_spitfire_mode = 3
-stream_fldfilename_lightng = '/glade/p/cesmdata/cseg/inputdata/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc'
-hist_nhtfrq = 0
-hist_mfilt = 1
