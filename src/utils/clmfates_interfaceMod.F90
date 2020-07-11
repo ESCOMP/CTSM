@@ -396,8 +396,8 @@ module CLMFatesInterfaceMod
       use FatesInterfaceTypesMod, only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
       use subgridMod, only :  natveg_patch_exists
-      use clm_instur      , only : wt_nat_patch
-      use CNFireFactoryMod, only: create_fates_fire_data_method
+      use clm_instur       , only : wt_nat_patch
+      use CNFireFactoryMod , only: create_fates_fire_data_method
 
       implicit none
       
@@ -635,8 +635,6 @@ module CLMFatesInterfaceMod
       ! ed_driver is not a hlm_fates_inst_type procedure because we need an extra step 
       ! to process array bounding information 
       
-      ! !USES
-
       implicit none
       class(hlm_fates_interface_type), intent(inout) :: this
       type(bounds_type),intent(in)                   :: bounds_clump
