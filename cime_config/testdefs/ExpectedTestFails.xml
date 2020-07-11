@@ -12,7 +12,7 @@
   </category>
   <category name="fates">
     <entry issue="NGEET/fates/#559" >FAIL SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesHydro RUN</entry>
-    <entry issue="667"              >FAIL ERS_D_Lm12.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesSuccIgnitions COMPARE_base_rest</entry>
+    <entry issue="667"              >FAIL ERS_D_Lm12.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-Fates_nat_and_anthro_ignitions COMPARE_base_rest</entry>
     <entry issue="667"              >FAIL ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruGs.hobart_nag.clm-FatesHydro RUN</entry>
     <entry issue="667"              >FAIL ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruGs.izumi_nag.clm-FatesHydro RUN</entry>
     <entry issue="NGEET/fates/#510" >FAIL SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruGs.hobart_nag.clm-FatesHydro MEMLEAK</entry>

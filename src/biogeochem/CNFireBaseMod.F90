@@ -132,7 +132,6 @@ contains
 
        call this%hdm_init(bounds, NLFilename)
        call this%hdm_interp(bounds)
-
        call this%lnfm_init(bounds, NLFilename)
        call this%lnfm_interp(bounds)
     end if
@@ -249,8 +248,6 @@ contains
     !
     ! !DESCRIPTION:
     ! Interpolate CN Fire datasets
-    !
-    ! !USES:
     !
     ! !ARGUMENTS:
     class(cnfire_base_type) :: this
