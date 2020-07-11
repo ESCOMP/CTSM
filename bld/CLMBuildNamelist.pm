@@ -2321,6 +2321,7 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
              my $stat = add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
                                  'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 
                                  'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_fates'=>$nl_flags->{'use_fates'},
+                                 'hgrid'=>$nl_flags->{'res'}, 
                                  'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}, 'nofail'=>1 );
              if ( $stat ) {
                 $log->fatal_error("$useinitvar is NOT synchronized with init_interp_attributes");

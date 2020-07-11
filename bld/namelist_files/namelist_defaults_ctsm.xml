@@ -518,7 +518,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- NOTE: Make sure all possible lnd_tuning_mode options are accounted for. Some finidat files are only for one mode -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1850"                                >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1982" lnd_tuning_mode="clm5_0_cam6.0"
-                  maxpft="17"        use_cn=".false."    use_crop=".false."                             >.true.</use_init_interp>
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTIC.ne30x4" >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1982" lnd_tuning_mode="clm5_0_cam6.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTICGRIS.ne30x8" >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"                                >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010" lnd_tuning_mode="clm5_0_cam6.0">.true.</use_init_interp>
 <use_init_interp                                                                                        >.false.</use_init_interp>
@@ -593,7 +595,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1982" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="ne0np4.ARCTIC.ne30x4" use_cn=".false." maxpft="17"
 >hgrid=ne0np4.ARCTIC.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1982" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
@@ -722,6 +730,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
 >/glade/work/aherring/grids/var-res/ne0np4.ARCTIC.ne30x4/inic/FHIST_ARCTIC_ne30x4_mt12_1979bc-mg3.clm2.r.1982-01-01-00000_c200424.nc
+</finidat>
+
+<!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
+<finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19820101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1982"
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
+>/glade/work/aherring/grids/var-res/ne0np4.ARCTICGRIS.ne30x8/inic/FHIST_ARCTICGRIS_ne30x8_mt12_1979bc-mg3.clm2.r.1982-01-01-00000_c200428.nc
 </finidat>
 
 <!-- Present day crop spinup at 1/4-degree with irrigation on -->
@@ -971,17 +987,17 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <flanduse_timeseries hgrid="1x1_numaIA"    sim_year_range="1850-2000"
  use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1x1_numaIA_hist_78pfts_CMIP6_simyr1850-2015_c170917.nc</flanduse_timeseries>
 
-<flanduse_timeseries hgrid="ne30np4"                  sim_year_range="1850-2100"> 
+<flanduse_timeseries hgrid="ne30np4"                  sim_year_range="1850-2000"> 
 lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_ne30np4_hist_78pfts_CMIP6_simyr1850-2015_c200426.nc</flanduse_timeseries>
-<flanduse_timeseries hgrid="ne30np4.pg2"              sim_year_range="1850-2100">
+<flanduse_timeseries hgrid="ne30np4.pg2"              sim_year_range="1850-2000">
 lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_ne30np4.pg2_hist_78pfts_CMIP6_simyr1850-2015_c200426.nc</flanduse_timeseries>
-<flanduse_timeseries hgrid="ne30np4.pg3"                  sim_year_range="1850-2100">
+<flanduse_timeseries hgrid="ne30np4.pg3"                  sim_year_range="1850-2000">
 lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_ne30np4.pg3_hist_78pfts_CMIP6_simyr1850-2015_c200426.nc</flanduse_timeseries>
-<flanduse_timeseries hgrid="ne0np4.ARCTICGRIS.ne30x8" sim_year_range="1850-2100">
+<flanduse_timeseries hgrid="ne0np4.ARCTICGRIS.ne30x8" sim_year_range="1850-2000">
 lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_ne0np4.ARCTICGRIS.ne30x8_hist_78pfts_CMIP6_simyr1850-2015_c200426.nc</flanduse_timeseries>
-<flanduse_timeseries hgrid="ne0np4.ARCTIC.ne30x4"     sim_year_range="1850-2100">
+<flanduse_timeseries hgrid="ne0np4.ARCTIC.ne30x4"     sim_year_range="1850-2000">
 lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_ne0np4.ARCTIC.ne30x4_hist_78pfts_CMIP6_simyr1850-2015_c200426.nc</flanduse_timeseries>
-<flanduse_timeseries hgrid="ne0np4CONUS.ne30x8"       sim_year_range="1850-2100">
+<flanduse_timeseries hgrid="ne0np4CONUS.ne30x8"       sim_year_range="1850-2000">
 lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_ne0np4.CONUS.ne30x8_hist_78pfts_CMIP6_simyr1850-2015_c200426.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="C24"           sim_year_range="1850-2000"
