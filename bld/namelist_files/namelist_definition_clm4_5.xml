@@ -619,11 +619,14 @@ Switch deciding which nutrient model to use in FATES.
 </entry>
 
 <entry id="fates_spitfire_mode" type="integer" category="physics"
-        group="clm_inparm" valid_values="0,1,2,3" value=".false.">
+        group="clm_inparm" valid_values="0,1,2,3,4" value=".false.">
 Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
-Relevant only if use_fates = .true.. Values of 1, 2, and 3 correspond to
-no external inputs, external lightning data, and external confirmed ignition
-data, respectively.
+Relevant only if use_fates = .true.. Set to 1 for no external ignition
+inputs and use of a global constant lightning rate found in fates_params.
+Set to 2 to use an external lightning dataset. Set to 3 to use an
+external confirmed ignitions dataset. Set to 4 to use external lightning
+and population datasets so as to simulate both natural and anthropogenic
+ignitions.
 </entry>
 
 <entry id="use_fates_fixed_biogeog" type="logical" category="physics"

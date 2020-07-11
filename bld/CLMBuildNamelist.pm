@@ -950,8 +950,10 @@ sub setup_cmdl_fire_light_res {
     } else {
        $nl_flags->{$var} = ".false.";
     }
-    # fates_spitfire_mode = 0 for no_fire, 1 for global const. value from
-    # fates_params, 2 for lightning dataset, 3 for successful_ignitions dataset
+    # fates_spitfire_mode = 0 for no_fire
+    # fates_spitfire_mode = 1 for global const. lightning from fates_params
+    # fates_spitfire_mode > 1 for ignitions from datasets as explained
+    #                         in namelist_definition_clm4_5.xml
     if ( $nl_flags->{'fates_spitfire_mode'} > 1 ) {
        $nl_flags->{$var} = ".true.";
     }
@@ -3445,7 +3447,7 @@ sub setup_logic_lightning_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    if ( &value_is_true($nl_flags->{'cnfireson'}) || &value_is_true($nl_flags->{'use_fates'}) ) {
+    if ( &value_is_true($nl_flags->{'cnfireson'}) ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 'use_cn'=>$nl_flags->{'use_cn'},
                   'hgrid'=>$nl_flags->{'res'},
                   'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );

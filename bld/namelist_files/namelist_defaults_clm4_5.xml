@@ -1184,6 +1184,24 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_popdens>
 
+<stream_year_first_popdens use_fates=".true." sim_year="2010" >2010</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="2010" >2010</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="2000" >2000</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="2000" >2000</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="1850" >1850</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="1850" >1850</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="1000" >2000</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="1000" >2000</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_popdens>
+
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
@@ -1202,6 +1220,24 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP5-3.4" >lnd/clm2/firedata/clmforc.Li_2018_SSP5_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP1-2.6" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP2-4.5" >lnd/clm2/firedata/clmforc.Li_2018_SSP2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP3-7.0" >lnd/clm2/firedata/clmforc.Li_2018_SSP3_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP4-6.0" >lnd/clm2/firedata/clmforc.Li_2018_SSP4_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP4-3.4" >lnd/clm2/firedata/clmforc.Li_2018_SSP4_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP5-8.5" >lnd/clm2/firedata/clmforc.Li_2018_SSP5_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP5-3.4" >lnd/clm2/firedata/clmforc.Li_2018_SSP5_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+
 <popdensmapalgo use_cn=".true."                               >bilinear</popdensmapalgo>
 
 <popdensmapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</popdensmapalgo>
@@ -1211,6 +1247,16 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <popdensmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</popdensmapalgo>
+
+<popdensmapalgo use_fates=".true."                    >bilinear</popdensmapalgo>
+
+<popdensmapalgo use_fates=".true." hgrid="1x1_brazil"          >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="1x1_mexicocityMEX"   >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="1x1_vancouverCAN"    >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="1x1_urbanc_alpha"    >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="1x1_camdenNJ"        >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="1x1_asphaltjungleNJ" >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="5x5_amazon"          >nn</popdensmapalgo>
 
 <!-- Urban time varying streams namelist defaults -->
 <stream_year_first_urbantv phys="clm5_0" sim_year_range="1850-2100" >2015</stream_year_first_urbantv>

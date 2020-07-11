@@ -622,7 +622,6 @@ module CLMFatesInterfaceMod
       ! to process array bounding information 
       
       ! !USES
-      use EDParamsMod, only: ED_val_nignitions
 
       implicit none
       class(hlm_fates_interface_type), intent(inout) :: this
@@ -709,12 +708,7 @@ module CLMFatesInterfaceMod
                p = ifp + col%patchi(c)
 
                this%fates(nc)%bc_in(s)%lightning24(ifp) = lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
-            end do
-         else
-            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
-               p = ifp + col%patchi(c)
-
-               this%fates(nc)%bc_in(s)%lightning24(ifp) = ED_val_nignitions / days_per_year  ! #/km2/yr to #/km2/day
+               this%fates(nc)%bc_in(s)%pop_density(ifp) = this%fates_fire_data_method%forc_hdm(g)
             end do
          end if
 
