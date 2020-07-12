@@ -143,6 +143,8 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: current_case
+    ! The following parameters set the ranges of the cases below.
+    ! NB. The same parameters are set in /fates/fire/SFMainMod
     integer, parameter :: no_fire = 0  ! value of no_fire mode
     integer, parameter :: scalar_lightning = 1  ! value of scalar_lightning mode
     integer, parameter :: lightning_data = 2  ! value of lightning_data mode
