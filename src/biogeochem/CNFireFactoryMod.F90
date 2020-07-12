@@ -143,6 +143,11 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: current_case
+    integer, parameter :: no_fire = 0  ! value of no_fire mode
+    integer, parameter :: scalar_lightning = 1  ! value of scalar_lightning mode
+    integer, parameter :: lightning_data = 2  ! value of lightning_data mode
+    integer, parameter :: anthro_ignitions = 4  ! value of anthro_ignitions mode
+
     character(len=*), parameter :: subname = 'create_fates_fire_data_method'
     !-----------------------------------------------------------------------
 
@@ -150,9 +155,9 @@ contains
 
     select case (current_case)
 
-    case (0:1)
+    case (no_fire:scalar_lightning)
        allocate(fates_fire_no_data_type :: fates_fire_data_method)
-    case (2:3)
+    case (lightning_data:anthro_ignitions)
        allocate(fates_fire_data_type :: fates_fire_data_method)
 
     case default
