@@ -795,7 +795,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19820101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1982"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->/glade/work/aherring/grids/var-res/ne0np4.ARCTIC.ne30x4/inic/FHIST_ARCTIC_ne30x4_mt12_1979bc-mg3.clm2.r.1982-01-01-00000_c200424.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1982-01-01.ARCTIC_ne30x4_mt12_simyr1982_c200425.nc
 </finidat>
 
 <!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
@@ -803,7 +803,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19820101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1982"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->/glade/work/aherring/grids/var-res/ne0np4.ARCTICGRIS.ne30x8/inic/FHIST_ARCTICGRIS_ne30x8_mt12_1979bc-mg3.clm2.r.1982-01-01-00000_c200428.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1982-01-01.ARCTICGRIS_ne30x8_mt12_simyr1982_c200428.nc
 </finidat>
 
 <!-- Present day crop spinup at 1/4-degree with irrigation on -->
@@ -811,7 +811,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="60101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->/glade/work/aherring/grids/uniform-res/ne120np4.pg3/inic/F2000climoBgcCrop_ne120pg3_ne120pg3_mt13_7680pes.clm2.r.06-01-00000_c200506.nc
+>lnd/clm2/initdata_map/clmi.F2000.2000-01-01.ne120pg3_mt13_simyr2000_c200506.nc
 </finidat>
 
 <!-- Present day and 2010 for coupled cases -->

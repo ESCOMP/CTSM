@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 862;
+my $ntests = 878;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 528;
+   $ntests += 540;
 }
 plan( tests=>$ntests );
 
@@ -323,6 +323,36 @@ foreach my $options ( "-configuration nwp",
    }
    &cleanup();
 }
+
+print "\n===============================================================================\n";
+print "Test some CAM specific setups for special grids \n";
+print "=================================================================================\n";
+$phys = "clm5_0";
+$mode = "-phys $phys";
+&make_config_cache($phys);
+foreach my $options ( 
+                      "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res ne0np4.ARCTICGRIS.ne30x8 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res 0.9x1.25 -bgc bgc -crop -use_case 20thC_transient -namelist '&a start_ymd=19500101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res ne0np4CONUS.ne30x8 -bgc bgc -crop -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode clm5_0_cam6.0",
+                     ) {
+   &make_env_run();
+   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+   is( $@, '', "options: $options" );
+   $cfiles->checkfilesexist( "$options", $mode );
+   $cfiles->shownmldiff( "default", $mode );
+   if ( defined($opts{'compare'}) ) {
+      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
+      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
+      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+   }
+   if ( defined($opts{'generate'}) ) {
+      $cfiles->copyfiles( "$options", $mode );
+   }
+   &cleanup();
+}
+
 print "\n==============================================================\n";
 print "Test several use_cases and specific configurations for clm5_0\n";
 print "==============================================================\n";
