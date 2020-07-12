@@ -945,17 +945,11 @@ sub setup_cmdl_fire_light_res {
     }
     if ( defined($fire_method) && $fire_method eq "nofire" ) {
        $nl_flags->{$var} = ".false.";
-    } elsif ( &value_is_true($nl->get_value('use_cn')) ) {
+#   } elsif ( &value_is_true($nl->get_value('use_cn')) || $nl_flags->{'fates_spitfire_mode'} > 1 ) {
+    } elsif ( &value_is_true($nl->get_value('use_cn')) || &value_is_true($nl->get_value('use_fates')) ) {
        $nl_flags->{$var} = ".true.";
     } else {
        $nl_flags->{$var} = ".false.";
-    }
-    # fates_spitfire_mode = 0 for no_fire
-    # fates_spitfire_mode = 1 for global const. lightning from fates_params
-    # fates_spitfire_mode > 1 for ignitions from datasets as explained
-    #                         in namelist_definition_clm4_5.xml
-    if ( $nl_flags->{'fates_spitfire_mode'} > 1 ) {
-       $nl_flags->{$var} = ".true.";
     }
   }
 }
