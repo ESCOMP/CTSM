@@ -1140,51 +1140,6 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm50Sp" testmods="clm/basic">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Want at least one test of ne30pg2, because this grid is needed by CAM</option>
-    </options>
-  </test>
-  <test name="SMS_Ld1" grid="ne30pg3_ne30pg3_mg17" compset="I2000Clm50BgcCrop" testmods="clm/basic">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Want at least one test of ne30pg3, because this grid is needed by CAM</option>
-    </options>
-  </test>
-  <test name="SMS_Ld1" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="I1850Clm50BgcCrop" testmods="clm/basic">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Want at least one test of ne0CONUSne30x8, because this grid is needed by CAM</option>
-    </options>
-  </test>
-  <test name="SMS_Ld1" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="ISSP585Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Want at least one test of ne0ARCTICGRISne30x8, because this grid is needed by CAM</option>
-    </options>
-  </test>
-  <test name="SMS_Ld1" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="I1850Clm50Sp" testmods="clm/basic">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Want at least one test of ne0ARCTICGRISne30x8, because this grid is needed by CAM</option>
-    </options>
-  </test>
   <test name="SMS_D" grid="f19_f19_mg17" compset="I2010Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1193,7 +1148,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS" grid="ne0np4.ARCTIC.ne30x4" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start">
+  <test name="ERS" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1202,7 +1157,7 @@
       <option name="comment"  >Run ARCTIC for transient case starting in 1979 as for AMIP CAM cases"</option>
     </options>
   </test>
-  <test name="SMS" grid="ne0np4.ARCTICGRIS.ne30x8" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start">
+  <test name="SMS" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1211,7 +1166,7 @@
       <option name="comment"  >Run ARCTICGRIS for transient case starting in 1979 as for AMIP CAM cases"</option>
     </options>
   </test>
-  <test name="SMS" grid="ne0np4.ARCTICGRIS.ne30x8" compset="ISSP585Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
+  <test name="SMS" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="ISSP585Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1229,7 +1184,7 @@
       <option name="comment"  >Run CONUS for transient case starting in 2013 as for CAM case"</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30np4.pg2" compset="I1850Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
+  <test name="SMS" grid="ne30pg2_g17" compset="I1850Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1238,7 +1193,7 @@
       <option name="comment"  >Run ne30np4.pg2 to make sure will work for CAM"</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30np4.pg3" compset="I2000Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
+  <test name="SMS" grid="ne30pg3_g17" compset="I2000Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
