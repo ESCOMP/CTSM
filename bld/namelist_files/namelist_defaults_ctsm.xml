@@ -505,7 +505,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <init_interp_how_close>61</init_interp_how_close>
 
 <!-- What simulation years can find initial conditions to interpolate from (find one that's within the how_close years above)-->
-<init_interp_sim_years>1850,1982,2000,2010</init_interp_sim_years>
+<init_interp_sim_years>1850,1982,2000,2010,2013</init_interp_sim_years>
 
 <!--
 
@@ -527,6 +527,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
                   maxpft="17"        use_cn=".false."    use_crop=".false."                             >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"                                >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010" lnd_tuning_mode="clm5_0_cam6.0">.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2013" lnd_tuning_mode="clm5_0_cam6.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4CONUS.ne30x8"  >.true.</use_init_interp>
 <use_init_interp                                                                                        >.false.</use_init_interp>
 <!-- NOTE: if use_init_interp is FALSE that indicates that you can't interpolate from an initial conditions file that's similar 
            Either an existing file is too different, too different in the year, or a configuration that can't interpolate
@@ -685,6 +687,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
+<!-- 2013 IC's... -->
+<init_interp_attributes sim_year="2013" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+>hgrid=ne0np4CONUS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
+</init_interp_attributes>
 
 
 <!--
@@ -844,6 +850,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true." use_init_interp=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
 >lnd/clm2/initdata_map/clmi.BHIST.2010-01-01.0.9x1.25_gx1v7_simyr2010_c181015.nc
+</finidat>
+
+<!-- 2013 -->
+<finidat hgrid="ne0np4CONUS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="20130101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="2013"
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam6.0"
+>lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200705.nc
 </finidat>
 
 

@@ -334,7 +334,7 @@ foreach my $options (
                       "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode clm5_0_cam6.0",
                       "-res ne0np4.ARCTICGRIS.ne30x8 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode clm5_0_cam6.0",
                       "-res 0.9x1.25 -bgc bgc -crop -use_case 20thC_transient -namelist '&a start_ymd=19500101/' -lnd_tuning_mode clm5_0_cam6.0",
-                      "-res ne0np4CONUS.ne30x8 -bgc bgc -crop -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res ne0np4CONUS.ne30x8 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode clm5_0_cam6.0",
                      ) {
    &make_env_run();
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
