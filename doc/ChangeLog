@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev105
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326) / Chris Fischer
-Date: Mon Jul 13 14:41:40 MDT 2020
+Date: Mon Jul 13 15:51:21 MDT 2020
 One-line Summary: Bring in some new SE grids for CAM as well as initial condition files for them
 
 Purpose of changes
@@ -90,7 +90,7 @@ CTSM testing: regular
 
   tools-tests (test/tools):
 
-    izumi - 
+    izumi - OK
 
   PTCLM testing (tools/shared/PTCLM/test):
 
