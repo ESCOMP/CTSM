@@ -1,7 +1,7 @@
 Testing capability to read/use lightning frequency & population density
-datasets. Calculates natural ignitions from lightning using the SPITFIRE
-formulation and anthropogenic ignitions using the Li et al. formulation
-copied from CTSM-CN's fire model.
+datasets. Calculates lightning ignitions using the SPITFIRE
+formulation and anthropogenic ignitions using the Li et al. 2012 formulation 
+based on human population density implemented in CTSM-CN's fire model.
 
 Testing does not include a separate test for reading/using a successful
 ignitions dataset which uses the same format and units so handling
@@ -24,4 +24,3 @@ stream_year_last_lightng = 2016
 model_year_align_lightng = 1980
 
 where {...} = /fs/cgd/data0/slevis on izumi and /glade/work/slevis on cheyenne.
-
