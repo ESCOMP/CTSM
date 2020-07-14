@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 842;
+my $ntests = 834;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 510;
+   $ntests += 507;
 }
 plan( tests=>$ntests );
 
@@ -287,15 +287,15 @@ $mode = "-phys $phys";
 &make_config_cache($phys);
 
 print "\n===============================================================================\n";
-print "Test configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case, l_ncpl\n";
+print "Test configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case\n";
 print "=================================================================================\n";
 
-# configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case, l_ncpl
+# configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
 foreach my $options ( "-configuration nwp",
                       "-structure fast",
                       "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
-                      "-use_case 1850_control", "-l_ncpl 1", 
+                      "-use_case 1850_control",
                       "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                       "-envxml_dir . -infile myuser_nl_clm", 
                       "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
@@ -309,10 +309,7 @@ foreach my $options ( "-configuration nwp",
    $cfiles->checkfilesexist( "$options", $mode );
    $cfiles->shownmldiff( "default", $mode );
    my $finidat = `grep finidat lnd_in`;
-   if (      $options eq "-l_ncpl 1" ) {
-      my $dtime = `grep dtime lnd_in`;
-      like( $dtime, "/ 86400\$/", "$options" );
-   } elsif ( $options =~ /myuser_nl_clm/ ) {
+   if ( $options =~ /myuser_nl_clm/ ) {
       my $fsurdat =  `grep fsurdat lnd_in`;
       like( $fsurdat, "/MYDINLOCROOT/lnd/clm2/PTCLMmydatafiles/1x1pt_US-UMB/surfdata_1x1pt_US-UMB_simyr2000_clm4_5_c131122.nc/", "$options" );
    }
@@ -388,21 +385,6 @@ my %failtest = (
                                    },
      "startup without interp"    =>{ options=>"-clm_start_type startup -envxml_dir . -bgc sp -sim_year 1850",
                                      namelst=>"use_init_interp=.false., start_ymd=19200901",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "l_ncpl is zero"            =>{ options=>"-l_ncpl 0 -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "l_ncpl not integer"        =>{ options=>"-l_ncpl 1.0 -envxml_dir .",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "both l_ncpl and dtime"     =>{ options=>"-l_ncpl 24 -envxml_dir .",
-                                     namelst=>"dtime=1800",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },

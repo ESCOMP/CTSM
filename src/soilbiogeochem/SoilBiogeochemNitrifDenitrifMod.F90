@@ -28,11 +28,10 @@ module SoilBiogeochemNitrifDenitrifMod
   private
   !
   public :: readParams                      ! Read in parameters from params file
-  public :: nitrifReadNML                   ! Read in namelist
   public :: SoilBiogeochemNitrifDenitrif    ! Calculate nitrification and 
   !
   type, private :: params_type
-     real(r8) :: k_nitr_max            ! maximum nitrification rate constant (1/s)
+     real(r8) :: k_nitr_max_perday     ! maximum nitrification rate constant (1/day)
      real(r8) :: surface_tension_water ! surface tension of water(J/m^2), Arah an and Vinten 1995
      real(r8) :: rij_kro_a             ! Arah and Vinten 1995)
      real(r8) :: rij_kro_alpha         ! parameter to calculate anoxic fraction of soil  (Arah and Vinten 1995)
@@ -104,85 +103,32 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rij_kro_delta=tempr
 
+    tString='k_nitr_max_perday'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%k_nitr_max_perday=tempr
+
+    tString='denitrif_nitrateconc_coefficient'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%denitrif_nitrateconc_coefficient=tempr
+
+    tString='denitrif_nitrateconc_exponent'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%denitrif_nitrateconc_exponent=tempr
+
+    tString='denitrif_respiration_coefficient'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%denitrif_respiration_coefficient=tempr
+
+    tString='denitrif_respiration_exponent'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%denitrif_respiration_exponent=tempr
+
   end subroutine readParams
-
-  !-----------------------------------------------------------------------
-  subroutine nitrifReadNML( NLFilename )
-    !
-    ! !DESCRIPTION:
-    ! Read the namelist for nitrification/denitrification
-    !
-    ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
-    use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
-    !
-    ! !ARGUMENTS:
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
-    !
-    ! !LOCAL VARIABLES:
-    integer :: ierr                 ! error code
-    integer :: unitn                ! unit for namelist file
-
-    character(len=*), parameter :: subname = 'ReadNML'
-    character(len=*), parameter :: nmlname = 'nitrif_inparm'
-    !-----------------------------------------------------------------------
-    real(r8) :: k_nitr_max_perday, denitrif_respiration_coefficient, &
-             denitrif_respiration_exponent, denitrif_nitrateconc_coefficient, &
-             denitrif_nitrateconc_exponent
-
-    namelist /nitrif_inparm/ k_nitr_max_perday, denitrif_respiration_coefficient, &
-             denitrif_respiration_exponent, denitrif_nitrateconc_coefficient, &
-             denitrif_nitrateconc_exponent
-
-    ! Initialize options to default values, in case they are not specified in
-    ! the namelist
-
-
-    denitrif_respiration_coefficient = 0.1_r8
-    denitrif_respiration_exponent    = 1.3_r8
-    denitrif_nitrateconc_coefficient = 1.15_r8
-    denitrif_nitrateconc_exponent    = 0.57_r8
-
-    k_nitr_max_perday =  0.1_r8
-    if (masterproc) then
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nmlname//'  namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
-       if (ierr == 0) then
-          read(unitn, nml=nitrif_inparm, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
-          end if
-       else
-          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
-       end if
-       call relavu( unitn )
-    end if
-
-    call shr_mpi_bcast (k_nitr_max_perday                      , mpicom)
-    call shr_mpi_bcast (denitrif_respiration_coefficient       , mpicom)
-    call shr_mpi_bcast (denitrif_respiration_exponent          , mpicom)
-    call shr_mpi_bcast (denitrif_nitrateconc_coefficient       , mpicom)
-    call shr_mpi_bcast (denitrif_nitrateconc_exponent          , mpicom)
-
-    params_inst%k_nitr_max =  k_nitr_max_perday / secspday   ! Change units to per second
-    params_inst%denitrif_respiration_coefficient = denitrif_respiration_coefficient
-    params_inst%denitrif_respiration_exponent    = denitrif_respiration_exponent
-    params_inst%denitrif_nitrateconc_coefficient = denitrif_nitrateconc_coefficient
-    params_inst%denitrif_nitrateconc_exponent    = denitrif_nitrateconc_exponent
-
-    if (masterproc) then
-       write(iulog,*) ' '
-       write(iulog,*) nmlname//' settings:'
-       write(iulog,nml=nitrif_inparm)
-       write(iulog,*) ' '
-    end if
-
-  end subroutine nitrifReadNML
 
   !-----------------------------------------------------------------------
   subroutine SoilBiogeochemNitrifDenitrif(bounds, num_soilc, filter_soilc, &
@@ -267,8 +213,7 @@ contains
          denit_resp_exp                =>    params_inst%denitrif_respiration_exponent                          , & ! Input:  [real(r8)        ] exponent for max denitrification rate based on respiration
          denit_nitrate_coef            =>    params_inst%denitrif_nitrateconc_coefficient                       , & ! Input:  [real(r8)        ] coefficient for max denitrification rate based on nitrate concentration
          denit_nitrate_exp             =>    params_inst%denitrif_nitrateconc_exponent                          , & ! Input:  [real(r8)        ] exponent for max denitrification rate based on nitrate concentration
-         k_nitr_max                    =>    params_inst%k_nitr_max                                             , & ! Input:
-
+         k_nitr_max_perday             =>    params_inst%k_nitr_max_perday                                      , & ! Input:  [real(r8)        ] maximum nitrification rate constant (1/day)
          r_psi                         =>    soilbiogeochem_nitrogenflux_inst%r_psi_col                         , & ! Output:  [real(r8) (:,:)  ]                                                  
          anaerobic_frac                =>    soilbiogeochem_nitrogenflux_inst%anaerobic_frac_col                , & ! Output:  [real(r8) (:,:)  ]                                                  
          ! ! subsets of the n flux calcs (for diagnostic/debugging purposes)
@@ -372,7 +317,8 @@ contains
             k_nitr_h2o_vr(c,j) = w_scalar(c,j)
 
             ! nitrification constant is a set scalar * temp, moisture, and ph scalars
-            k_nitr_vr(c,j) = k_nitr_max * k_nitr_t_vr(c,j) * k_nitr_h2o_vr(c,j) * k_nitr_ph_vr(c,j)
+            ! note that k_nitr_max_perday is converted from 1/day to 1/s
+            k_nitr_vr(c,j) = k_nitr_max_perday/secspday * k_nitr_t_vr(c,j) * k_nitr_h2o_vr(c,j) * k_nitr_ph_vr(c,j)
 
             ! first-order decay of ammonium pool with scalar defined above
             pot_f_nit_vr(c,j) = max(smin_nh4_vr(c,j) * k_nitr_vr(c,j), 0._r8)

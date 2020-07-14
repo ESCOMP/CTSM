@@ -67,6 +67,11 @@ module CNFireBaseMod
       real(r8) :: cmb_cmplt_fact(num_fp) = (/ 0.5_r8, 0.25_r8 /) ! combustion completion factor (unitless)
   end type
 
+  type, public :: params_type
+     real(r8) :: prh30                ! Factor related to dependence of fuel combustibility on 30-day running mean of relative humidity (unitless)
+     real(r8) :: ignition_efficiency  ! Ignition efficiency of cloud-to-ground lightning (unitless)
+  end type params_type
+
   !
   type, abstract, extends(fire_base_type) :: cnfire_base_type
     private
@@ -76,6 +81,7 @@ module CNFireBaseMod
       !
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: FireReadNML       ! Read in namelist for CNFire
+      procedure, public :: CNFireReadParams  ! Read in constant parameters from the paramsfile
       procedure, public :: CNFireArea        ! Calculate fire area
       procedure, public :: CNFireFluxes      ! Calculate fire fluxes
       !
@@ -100,6 +106,7 @@ module CNFireBaseMod
   end interface
 
   type(cnfire_const_type), public, protected :: cnfire_const          ! Fire constants shared by Li versons
+  type(params_type)      , public, protected :: cnfire_params         ! Fire parameters shared by Li versions
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -904,5 +911,29 @@ contains
    end associate 
 
   end subroutine CNFireFluxes
+
+  !-----------------------------------------------------------------------
+  subroutine CNFireReadParams( this, ncid )
+    !
+    ! Read in the constant parameters from the input NetCDF parameter file
+    ! !USES:
+    use ncdio_pio   , only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    class(cnfire_base_type)         :: this
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'CNFireReadParams'
+    !--------------------------------------------------------------------
+
+    ! Factor related to dependence of fuel combustibility on 30-day running mean of relative humidity (unitless)
+    call readNcdioScalar(ncid, 'prh30', subname, cnfire_params%prh30)
+    ! Ignition efficiency of cloud-to-ground lightning (unitless)
+    call readNcdioScalar(ncid, 'ignition_efficiency', subname, cnfire_params%ignition_efficiency)
+
+  end subroutine CNFireReadParams
 
 end module CNFireBaseMod

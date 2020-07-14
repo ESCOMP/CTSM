@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """Driver for running CTSM system tests"""
 
-from __future__ import print_function
-
 import os
 import sys
 

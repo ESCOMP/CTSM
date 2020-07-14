@@ -58,7 +58,7 @@ module clm_driver
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
-  use ch4Mod                 , only : ch4, ch4_init_balance_check
+  use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
   use VOCEmissionMod         , only : VOCEmission
   !
@@ -318,6 +318,12 @@ contains
                c14_soilbiogeochem_carbonstate_inst, &
                soilbiogeochem_nitrogenstate_inst)
        end if
+       if (use_lch4) then
+          call ch4_init_gridcell_balance_check(bounds_clump, &
+               filter(nc)%num_nolakec, filter(nc)%nolakec, &
+               filter(nc)%num_lakec, filter(nc)%lakec, &
+               ch4_inst)
+       end if
        call t_stopf('begcnbal_grc')
 
     end do
@@ -397,7 +403,7 @@ contains
        end if
 
        if (use_lch4) then
-          call ch4_init_balance_check(bounds_clump, &
+          call ch4_init_column_balance_check(bounds_clump, &
                filter(nc)%num_nolakec, filter(nc)%nolakec, &
                filter(nc)%num_lakec, filter(nc)%lakec, &
                ch4_inst)
@@ -622,6 +628,7 @@ contains
        ! Determine fluxes
        ! ============================================================================
 
+       call t_startf('bgp_fluxes')
        call t_startf('bgflux')
 
        ! Bareground fluxes for all patches except lakes and urban landunits
@@ -703,6 +710,19 @@ contains
             lakestate_inst,&
             humanindex_inst)
        call t_stopf('bgplake')
+
+       call frictionvel_inst%SetActualRoughnessLengths( &
+            bounds = bounds_clump, &
+            num_exposedvegp = filter(nc)%num_exposedvegp, &
+            filter_exposedvegp = filter(nc)%exposedvegp, &
+            num_noexposedvegp = filter(nc)%num_noexposedvegp, &
+            filter_noexposedvegp = filter(nc)%noexposedvegp, &
+            num_urbanp = filter(nc)%num_urbanp, &
+            filter_urbanp = filter(nc)%urbanp, &
+            num_lakep = filter(nc)%num_lakep, &
+            filter_lakep = filter(nc)%lakep)
+
+       call t_stopf('bgp_fluxes')
 
        if (irrigate) then
 
