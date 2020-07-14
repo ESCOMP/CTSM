@@ -98,6 +98,22 @@ module FireMethodType
   end subroutine FireInterp_interface
 
   !-----------------------------------------------------------------------
+  subroutine CNFireReadParams_interface( this, ncid )
+    !
+    ! Read in the constant parameters from the input NetCDF parameter file
+    ! !USES:
+    use ncdio_pio   , only: file_desc_t
+    import :: fire_method_type
+    !
+    ! !ARGUMENTS:
+    implicit none
+    class(fire_method_type)     :: this
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !--------------------------------------------------------------------
+
+  end subroutine CNFireReadParams_interface
+
+  !-----------------------------------------------------------------------
   subroutine CNFireArea_interface (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, &
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
