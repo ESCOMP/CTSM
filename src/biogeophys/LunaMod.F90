@@ -1052,7 +1052,6 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   JmaxL = theta * PARimx10 / (sqrt(1.0_r8 + (theta * PARimx10 / Jmax)**2.0_r8))        
   NUEchg = (NUEc / NUEcref) * (NUEjref / NUEj)
   Wc2Wj = params_inst%wc2wjb0 * (NUEchg**0.5_r8)
-  Wc2Wj = min(1.0_r8, Wc2Wj)
   Vcmax = Wc2Wj * JmaxL * Kj2Kc
   JmeanL = theta * PARi10 / (sqrt(1.0_r8 + (ELTRNabsorb / Jmax)**2.0_r8))
   if(KcKjFlag.eq.0)then      !update the Kc,Kj, anc ci information
