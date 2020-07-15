@@ -138,7 +138,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 897;
+my $ntests = 898;
 if ( defined($opts{'compare'}) ) {
    $ntests += 552;
 }
@@ -596,6 +596,11 @@ my %failtest = (
                                    },
      "use_cn=true bgc=sp"        =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_cn=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm4_5",
+                                   },
+     "freeliv wo fun"            =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"freelivfix_intercept=9.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },

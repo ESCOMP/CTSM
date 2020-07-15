@@ -1052,6 +1052,9 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <use_fun phys="clm5_0" use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
 <use_fun                                                           >.false.</use_fun>
 
+<freelivfix_intercept use_fun=".true." use_cn=".true.">0.0117d00</freelivfix_intercept>
+<freelivfix_slope_wet use_fun=".true." use_cn=".true.">0.0006d00</freelivfix_slope_wet>
+
 <br_root>0.83d-06</br_root>
 
 <!-- Scalar of leaf respiration to vcmax (used for SP mode and with luna)-->
