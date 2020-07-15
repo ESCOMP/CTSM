@@ -19,11 +19,11 @@
 <irrigate use_crop=".true." phys="clm4_5"                   >.false.</irrigate>
 
 <stream_year_first_ndep phys="clm4_5" use_cn=".true."   >1850</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm4_5" use_cn=".true."   >2015</stream_year_last_ndep>
+<stream_year_last_ndep  phys="clm4_5" use_cn=".true."   >2005</stream_year_last_ndep>
 <model_year_align_ndep  phys="clm4_5" use_cn=".true."   >1850</model_year_align_ndep>
 
 <stream_year_first_ndep phys="clm5_0" use_cn=".true."   >1850</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm5_0" use_cn=".true."   >2015</stream_year_last_ndep>
+<stream_year_last_ndep  phys="clm5_0" use_cn=".true."   >2005</stream_year_last_ndep>
 <model_year_align_ndep  phys="clm5_0" use_cn=".true."   >1850</model_year_align_ndep>
 
 <stream_year_first_popdens phys="clm4_5" cnfireson=".true."   >1850</stream_year_first_popdens>
