@@ -226,7 +226,7 @@ module clm_varctl
                                                                        ! no others enabled
   integer, public            :: fates_spitfire_mode = 0                
   ! > 0 => use spitfire model: see bld/namelist_files/namelist_definition_clm4_5.xml for details
-  ! ignitions: 1=constant, >1=external data sources
+  ! ignitions: 1=constant, >1=external data sources (lightning and/or anthropogenic)
   logical, public            :: use_fates_logging = .false.            ! true => turn on logging module
   logical, public            :: use_fates_planthydro = .false.         ! true => turn on fates hydro
   logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking
