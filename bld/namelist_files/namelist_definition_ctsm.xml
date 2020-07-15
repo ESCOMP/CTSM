@@ -266,9 +266,14 @@ Global constant for deforestation fires (/day)
 Fire occurance for high GDP areas that are tree dominated (fraction)
 </entry>
 
-<entry id="cmb_cmplt_fact" type="real(2)" category="clm_physics"
+<entry id="cmb_cmplt_fact_litter" type="real" category="clm_physics"
        group="lifire_inparm" >
-Combustion completeness factor (for litter and CWD[Course Woody Debris]) (unitless)
+Combustion completeness factor for litter (unitless)
+</entry>
+
+<entry id="cmb_cmplt_fact_cwd" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Combustion completeness factor for CWD[Course Woody Debris] (unitless)
 </entry>
 
 <entry id="ncrit" type="real" category="clm_physics"

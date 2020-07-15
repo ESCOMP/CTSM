@@ -1973,7 +1973,8 @@ sub setup_logic_cnfire {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my @fire_consts = ( "rh_low", "rh_hgh", "bt_min", "bt_max", "cli_scale", "boreal_peatfire_c", "non_boreal_peatfire_c",
-                      "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree", "lfuel", "ufuel", "cmb_cmplt_fact" );
+                      "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree", "lfuel", "ufuel", 
+                      "cmb_cmplt_fact_litter", "cmb_cmplt_fact_cwd" );
   if ( &value_is_true($nl->get_value('use_cn')) ) {
      foreach my $item ( @fire_consts ) {
         if ( ! &value_is_true($nl_flags->{'cnfireson'} ) ) {
