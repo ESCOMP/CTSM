@@ -890,19 +890,24 @@ contains
 !KO                  onset_thresh=1.0_r8
 !KO               end if              
 !KO
-               ! separate into non-arctic seasonally deciduous pfts (temperate broadleaf deciduous
-               ! tree) and arctic/boreal seasonally deciduous pfts (boreal needleleaf deciduous tree,
-               ! boreal broadleaf deciduous tree, boreal broadleaf deciduous shrub, C3 arctic grass)
-               if (onset_gdd(p) > crit_onset_gdd .and. season_decid_temperate(ivt(p)) == 1) then
-                  onset_thresh=1.0_r8
-               else if (season_decid_temperate(ivt(p)) == 0 .and. onset_gddflag(p) == 1.0_r8 .and. &
-                       soila10(p) > SHR_CONST_TKFRZ .and. &
-                       t_a5min(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
-                       dayl(g)>(crit_dayl/2.0_r8) .and. snow_5day(c)<0.1_r8) then
-                  onset_thresh=1.0_r8
-               end if              
+               if ( onset_thresh_depends_on_veg ) then
+                  ! separate into non-arctic seasonally deciduous pfts (temperate broadleaf deciduous
+                  ! tree) and arctic/boreal seasonally deciduous pfts (boreal needleleaf deciduous tree,
+                  ! boreal broadleaf deciduous tree, boreal broadleaf deciduous shrub, C3 arctic grass)
+                  if (onset_gdd(p) > crit_onset_gdd .and. season_decid_temperate(ivt(p)) == 1) then
+                     onset_thresh=1.0_r8
+                  else if (season_decid_temperate(ivt(p)) == 0 .and. onset_gddflag(p) == 1.0_r8 .and. &
+                          soila10(p) > SHR_CONST_TKFRZ .and. &
+                          t_a5min(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
+                          dayl(g)>(crit_dayl/2.0_r8) .and. snow_5day(c)<0.1_r8) then
+                     onset_thresh=1.0_r8
+                  end if              
+               else
+                 ! set onset_flag if critical growing degree-day sum is exceeded
+                 if (onset_gdd(p) > crit_onset_gdd) onset_thresh = 1.0_r8
+               end if
 !KO
-               ! set onset_flag if critical growing degree-day sum is exceeded
+               ! If onset is being triggered
                if (onset_thresh == 1.0_r8) then
                   onset_flag(p) = 1.0_r8
                   dormant_flag(p) = 0.0_r8
@@ -950,11 +955,15 @@ contains
                   if (days_active(p) > 355._r8) pftmayexist(p) = .false.
                end if
 
-               ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
-               ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
-               crit_daylat=54000-720*(65-abs(grc%latdeg(g)))
-               if (crit_daylat < crit_dayl) then
-                  crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
+               if ( min_crtical_dayl_depends_on_lat )then
+                  ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
+                  ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
+                  crit_daylat=54000-720*(65-abs(grc%latdeg(g)))
+                  if (crit_daylat < crit_dayl) then
+                     crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
+                  end if
+               else
+                  crit_daylat = crit_dayl
                end if
                
                ! only begin to test for offset daylength once past the summer sol
