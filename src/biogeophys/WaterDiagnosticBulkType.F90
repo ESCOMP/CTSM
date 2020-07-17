@@ -411,7 +411,7 @@ contains
          units='m',  &
          avgflag='A', &
          long_name=this%info%lname('5day snow avg'), &
-         ptr_col=this%snow_5day_col, c2l_scale_type='urbanf')
+         ptr_col=this%snow_5day_col, c2l_scale_type='urbanf', default='inactive')
 
     call hist_addfld1d ( &
          fname=this%info%fname('SNOW_DEPTH_ICE'), &
