@@ -165,7 +165,8 @@ contains
   subroutine BeginWaterBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
        soilhydrology_inst, lakestate_inst, waterstate_inst, & 
-       waterdiagnostic_inst, waterbalance_inst, & use_aquifer_layer)
+       waterdiagnostic_inst, waterbalance_inst, &
+       use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step, for bulk or a
