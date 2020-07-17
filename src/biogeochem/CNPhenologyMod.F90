@@ -94,7 +94,9 @@ module CNPhenologyMod
   integer, allocatable :: maxplantjday(:,:) ! maximum planting julian day
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
-  real(r8), private :: initial_seed_at_planting = 3._r8 ! Initial seed at planting
+  real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
+  logical,  private :: min_crtical_dayl_depends_on_lat = .false. ! If critical day-length for onset depends on latitude
+  logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -125,7 +127,8 @@ contains
     character(len=*), parameter :: subname = 'CNPhenologyReadNML'
     character(len=*), parameter :: nmlname = 'cnphenology'
     !-----------------------------------------------------------------------
-    namelist /cnphenology/ initial_seed_at_planting
+    namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
+                           min_crtical_dayl_depends_on_lat
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -146,7 +149,9 @@ contains
        call relavu( unitn )
     end if
 
-    call shr_mpi_bcast (initial_seed_at_planting, mpicom)
+    call shr_mpi_bcast (initial_seed_at_planting,        mpicom)
+    call shr_mpi_bcast (onset_thresh_depends_on_veg,     mpicom)
+    call shr_mpi_bcast (min_crtical_dayl_depends_on_lat, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
