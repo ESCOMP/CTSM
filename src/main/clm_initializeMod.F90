@@ -305,6 +305,7 @@ contains
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
     use BalanceCheckMod       , only : BalanceCheckInit
+    use CNFireFactoryMod      , only : scalar_lightning
     !
     ! !ARGUMENTS    
     !
@@ -512,7 +513,7 @@ contains
 
        ! fates_spitfire_mode is assigned an integer value in the namelist
        ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
-       if (fates_spitfire_mode > 1) then
+       if (fates_spitfire_mode > scalar_lightning) then
           call clm_fates%Init2(bounds_proc, NLFilename)
        end if
     end if
