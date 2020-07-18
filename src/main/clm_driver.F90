@@ -111,6 +111,7 @@ contains
     use clm_time_manager     , only : get_curr_date
     use clm_varctl           , only : use_lai_streams, fates_spitfire_mode
     use SatellitePhenologyMod, only : lai_advance
+    use CNFireFactoryMod     , only : scalar_lightning
     !
     ! !ARGUMENTS:
     implicit none
@@ -397,7 +398,7 @@ contains
        call t_stopf('bgc_interp')
     ! fates_spitfire_mode is assigned an integer value in the namelist
     ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
-    else if (fates_spitfire_mode > 1) then
+    else if (fates_spitfire_mode > scalar_lightning) then
        call clm_fates%InterpFileInputs(bounds_proc)
     end if
 

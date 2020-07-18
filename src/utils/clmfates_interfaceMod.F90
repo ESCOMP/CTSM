@@ -621,6 +621,10 @@ module CLMFatesInterfaceMod
       ! ed_driver is not a hlm_fates_inst_type procedure because we need an extra step 
       ! to process array bounding information 
       
+      ! !USES
+      use CNFireFactoryMod, only: scalar_lightning
+
+      ! !ARGUMENTS:
       implicit none
       class(hlm_fates_interface_type), intent(inout) :: this
       type(bounds_type),intent(in)                   :: bounds_clump
@@ -686,7 +690,7 @@ module CLMFatesInterfaceMod
                         model_day, floor(day_of_year), &
                         days_per_year, 1.0_r8/dble(days_per_year))
 
-      if (fates_spitfire_mode > 1) then
+      if (fates_spitfire_mode > scalar_lightning) then
          allocate(lnfm24(bounds_clump%begg:bounds_clump%endg), stat=ier)
          if (ier /= 0) then
             call endrun(msg="allocation error for lnfm24"//&
@@ -700,7 +704,7 @@ module CLMFatesInterfaceMod
 
          c = this%f2hmap(nc)%fcolumn(s)
 
-         if (fates_spitfire_mode > 1) then
+         if (fates_spitfire_mode > scalar_lightning) then
             g = col%gridcell(c)
             do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
                p = ifp + col%patchi(c)

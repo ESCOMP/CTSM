@@ -19,6 +19,17 @@ module CNFireFactoryMod
   public :: create_cnfire_method  ! create an object of class cnfire_method_type
   public :: create_fates_fire_data_method  ! create an object of class cnfire_method_type
 
+  ! These parameters set the ranges of the cases in subroutine
+  ! create_fates_fire_data_method. We declare them public in order to
+  ! use them as flags elsewhere in the CTSM and FATES-SPITFIRE.
+  ! They correspond one-to-one to the fates_spitfire_mode options listed
+  ! in bld/namelist_files/namelist_definition_clm4_5.xml
+  integer, public, parameter :: no_fire = 0  ! value of no_fire mode
+  integer, public, parameter :: scalar_lightning = 1  ! value of scalar_lightning mode
+  integer, public, parameter :: lightning_from_data = 2  ! value of lightning_from_data mode
+  integer, public, parameter :: successful_ignitions = 3  ! value of successful_ignitions mode
+  integer, public, parameter :: anthro_ignitions = 4  ! value of anthro_ignitions mode
+
   ! !PRIVATE DATA MEMBERS:
   character(len=80), private :: fire_method = "li2014qianfrc"
 
@@ -143,12 +154,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: current_case
-    ! The following parameters set the ranges of the cases below.
-    ! NB. The same parameters are set in /fates/fire/SFMainMod
-    integer, parameter :: no_fire = 0  ! value of no_fire mode
-    integer, parameter :: scalar_lightning = 1  ! value of scalar_lightning mode
-    integer, parameter :: lightning_data = 2  ! value of lightning_data mode
-    integer, parameter :: anthro_ignitions = 4  ! value of anthro_ignitions mode
 
     character(len=*), parameter :: subname = 'create_fates_fire_data_method'
     !-----------------------------------------------------------------------
@@ -159,7 +164,7 @@ contains
 
     case (no_fire:scalar_lightning)
        allocate(fates_fire_no_data_type :: fates_fire_data_method)
-    case (lightning_data:anthro_ignitions)
+    case (lightning_from_data:anthro_ignitions)
        allocate(fates_fire_data_type :: fates_fire_data_method)
 
     case default
